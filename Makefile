@@ -48,6 +48,8 @@ CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 DEBUG_OPTIONS = -fsanitize=address -g3 -O0 -DDEBUG
 RELEASE_OPTIONS = -Os -Werror
 
+.PHONY: all debug release clean install test
+
 all: debug
 
 debug:

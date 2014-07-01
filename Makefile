@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TARGET ?= jerry
-
+#CROSS_COMPILE	?= arm-none-eabi-
 OBJ_DIR = obj
 
 SOURCES = \
@@ -24,8 +24,6 @@ INCLUDES = -I src
 
 OBJS = $(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
-
-#CROSS_COMPILE	?= arm-none-eabi-
 
 CC  = $(CROSS_COMPILE)gcc
 LD  = $(CROSS_COMPILE)ld
@@ -45,7 +43,7 @@ CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 #CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 #CFLAGS += -ffunction-sections -fdata-sections
 
-DEBUG_OPTIONS = -fsanitize=address -g3 -O0 -DDEBUG
+DEBUG_OPTIONS = -g3 -O0 -DDEBUG #-fsanitize=address 
 RELEASE_OPTIONS = -Os -Werror
 
 .PHONY: all debug release clean install test

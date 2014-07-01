@@ -1,0 +1,25 @@
+require (leds);
+function LEDsOn () {
+  LEDOn (LED3);
+  LEDOn (LED6);
+  LEDOn (LED7);
+  LEDOn (LED4);
+  LEDOn (LED10);
+  LEDOn (LED8);
+  LEDOn (LED9);
+  LEDOn (LED5);
+}
+function LEDsOff () {
+  LEDOff (LED3);
+  LEDOff (LED6);
+  LEDOff (LED7);
+  LEDOff (LED4);
+  LEDOff (LED10);
+  LEDOff (LED8);
+  LEDOff (LED9);
+  LEDOff (LED5);
+}
+while (true) {
+  setTimeout (LEDsOn, 500);
+  setTimeout (LEDsOff, 500);
+}

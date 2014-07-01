@@ -1,0 +1,26 @@
+var eval = 42;
+eval = eval++;
+eval += (--eval);
+eval -= (++eval);
+eval *= eval--;
+function eval (eval) {
+};
+try {
+}
+catch (eval) {
+}
+function strict () {
+  "use strict";
+  eval (arguments);
+}
+var eval = 42;
+eval = eval++;
+eval += (--eval);
+eval -= (++eval);
+eval *= eval--;
+function eval (eval) {
+};
+try {
+}
+catch (eval) {
+}

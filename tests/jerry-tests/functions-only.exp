@@ -1,0 +1,12 @@
+(function () {
+  if ((this != null)) {
+    return this;
+  }
+  while (true) {
+    if ([][2])     return false;
+  }
+}
+)({}, function () {
+  return [true];
+}
+);

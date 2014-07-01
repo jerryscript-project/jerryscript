@@ -25,18 +25,18 @@ INCLUDES = -I src
 OBJS = $(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
 
-CC  = $(CROSS_COMPILE)gcc
+CC  = $(CROSS_COMPILE)gcc-4.8
 LD  = $(CROSS_COMPILE)ld
 OBJDUMP	= $(CROSS_COMPILE)objdump
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 SIZE	= $(CROSS_COMPILE)size
 
 # General flags
-CFLAGS ?= $(INCLUDES) -Wall -std=c99 -fdiagnostics-color=always
-CFLAGS += -Wextra -Wpedantic -Wformat-security -Wlogical-op
-CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-CFLAGS += -Wconversion -Wsign-conversion -Winline
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS ?= $(INCLUDES) -Wall -std=c99 -m32# -fdiagnostics-color=always
+#CFLAGS += -Wextra -Wpedantic -Wformat-security -Wlogical-op
+#CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
+#CFLAGS += -Wconversion -Wsign-conversion -Winline
+#CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU
 #CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
@@ -46,20 +46,22 @@ CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 DEBUG_OPTIONS = -g3 -O0 -DDEBUG #-fsanitize=address 
 RELEASE_OPTIONS = -Os -Werror
 
+DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
+
 .PHONY: all debug release clean install test
 
 all: debug
 
 debug:
-	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_OPTIONS) $(SOURCES) \
+	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(SOURCES) \
 	-o $(TARGET)
 
 release:
-	$(CC) $(INCLUDES) $(CFLAGS) $(RELEASE_OPTIONS) $(SOURCES) \
+	$(CC) $(INCLUDES) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(SOURCES) \
 	-o $(TARGET)
 
 clean:
-	rm -f $(OBJ_DIR)/*.o *.o
+	rm -f $(OBJ_DIR)/*.o *.o *~ lexer.log parser.log
 	rm -f $(TARGET)
 	rm -f $(TARGET).elf
 	rm -f $(TARGET).bin

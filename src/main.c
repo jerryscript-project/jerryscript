@@ -22,26 +22,32 @@
 #include "parser.h"
 #include "pretty-printer.h"
 
+#include "ctx_manager.h"
+#include "mem_allocator.h"
+
 int
 main (int argc, char **argv)
 {
   bool dump_tokens = false;
-  bool dump_ast = false;
+  bool dump_ast = true;
   const char *file_name = NULL;
   FILE *file = NULL;
 
+  mem_Init ();
+  ctx_Init ();
+
   if (argc > 0)
     for (int i = 1; i < argc; i++)
-      {
-        if (!strcmp ("-t", argv[i]))
-          dump_tokens = true;
-        else if (!strcmp ("-a", argv[i]))
-          dump_ast = true;
-        else if (file_name == NULL)
-          file_name = argv[i];
-        else
-          fatal (ERR_SEVERAL_FILES);
-      }
+    {
+      if (!strcmp ("-t", argv[i]))
+        dump_tokens = true;
+      else if (!strcmp ("-a", argv[i]))
+        dump_ast = true;
+      else if (file_name == NULL)
+        file_name = argv[i];
+      else
+        fatal (ERR_SEVERAL_FILES);
+    }
 
   if (file_name == NULL)
     fatal (ERR_NO_FILES);
@@ -55,33 +61,33 @@ main (int argc, char **argv)
     fatal (ERR_IO);
 
   if (dump_tokens)
+  {
+    token tok;
+    lexer_set_file (file);
+    tok = lexer_next_token ();
+    pp_reset ();
+    while (tok.type != TOK_EOF)
     {
-      token tok;
-      lexer_set_file (file);
+      pp_token (tok);
       tok = lexer_next_token ();
-      pp_reset ();
-      while (tok.type != TOK_EOF)
-        {
-          pp_token (tok);
-          tok = lexer_next_token ();
-        }
     }
+  }
 
   if (dump_ast)
+  {
+    statement *st;
+    lexer_set_file (file);
+    parser_init ();
+    st = parser_parse_statement ();
+    assert (st);
+    while (st->type != STMT_EOF)
     {
-      statement *st;
-      lexer_set_file (file);
-      parser_init ();
+      pp_statement (st);
       st = parser_parse_statement ();
       assert (st);
-      while (st->type != STMT_EOF)
-        {
-          pp_statement (st);
-          st = parser_parse_statement ();
-          assert (st);
-        }
-      pp_finish ();
     }
+    pp_finish ();
+  }
 
   return 0;
 }

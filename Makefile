@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TARGET	?= jerry
+TARGET ?= jerry
 
 OBJ_DIR = obj
 
@@ -33,30 +33,42 @@ OBJDUMP	= $(CROSS_COMPILE)objdump
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 SIZE	= $(CROSS_COMPILE)size
 
-CFLAGS ?= -Wall -std=c99 -Wextra -Wpedantic -fdiagnostics-color=always
-#CFLAGS += -Werror
-#CFLAGS += -Wformat-security -Wformat-nonliteral -Winit-self
-#CFLAGS += -Wconversion -Wsign-conversion -Wlogical-op
-#CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
-#CFLAGS += -Winline -Wstack-protector
+# General flags
+CFLAGS ?= $(INCLUDES) -Wall -std=c99 -fdiagnostics-color=always
+CFLAGS += -Wextra -Wpedantic -Wformat-security -Wlogical-op
+CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
+CFLAGS += -Wconversion -Wsign-conversion -Winline
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
+# Flags for MCU
 #CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
 #CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 #CFLAGS += -ffunction-sections -fdata-sections
 
-#DEBUG_OPTIONS = -fsanitize=address -g3 -O0
-#RELEASE_OPTIONS = -Os
+DEBUG_OPTIONS = -fsanitize=address -g3 -O0 -DDEBUG
+RELEASE_OPTIONS = -Os -Werror
 
-HEADERS = error.h lexer.h pretty-printer.h parser.h
-#OBJS = lexer.o pretty-printer.o parser.o main.o
-DEFINES = -DDEBUG
+all: debug
 
-all:
-	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(SOURCES) \
+debug:
+	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_OPTIONS) $(SOURCES) \
+	-o $(TARGET)
+
+release:
+	$(CC) $(INCLUDES) $(CFLAGS) $(RELEASE_OPTIONS) $(SOURCES) \
 	-o $(TARGET)
 
 clean:
-	rm -f $(OBJ_DIR)/*.o *.o $(TARGET)
+	rm -f $(OBJ_DIR)/*.o *.o
+	rm -f $(TARGET)
+	rm -f $(TARGET).elf
+	rm -f $(TARGET).bin
+	rm -f $(TARGET).map
+	rm -f $(TARGET).hex
+	rm -f $(TARGET).lst
+
+install:
+	st-flash write $(TARGET).bin 0x08000000
 
 test:
 	./tools/jerry_test.sh

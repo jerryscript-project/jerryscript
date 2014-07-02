@@ -13,17 +13,21 @@
  * limitations under the License.
  */
 
-static const char* generated_source = ""
-"while (true) {\n"
-"LEDToggle (LED3);\n"
-"LEDToggle (LED6);\n"
-"LEDToggle (LED7);\n"
-"LEDToggle (LED4);\n"
-"LEDToggle (LED10);\n"
-"LEDToggle (LED8);\n"
-"LEDToggle (LED9);\n"
-"LEDToggle (LED5);\n"
-"\n"
-"wait(500);\n"
-"}\n"
-;
+#include "opcode.h"
+
+#include <stdio.h>
+
+OP_DEFINITION (control_op)
+{
+  printf ("control_op %d, %d\n", arg1, arg2);
+}
+
+OP_DEFINITION (decl_op)
+{
+  printf ("decl_op %d, %d\n", arg1, arg2);
+}
+
+OP_DEFINITION (call_op)
+{
+  printf ("call_op %d, %d\n", arg1, arg2);
+}

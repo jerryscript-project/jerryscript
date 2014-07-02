@@ -18,12 +18,21 @@
 #include <string.h>
 
 #include "error.h"
-#include "lexer.h"
-#include "parser.h"
-#include "pretty-printer.h"
 
 #include "ctx-manager.h"
 #include "mem-allocator.h"
+
+#include "interpreter.h"
+
+#include "generated.h"
+
+void fake_exit ();
+
+void
+fake_exit (void)
+{
+  for (;;);
+}
 
 int
 main (int argc, char **argv)
@@ -58,36 +67,17 @@ main (int argc, char **argv)
   file = fopen (file_name, "r");
 
   if (file == NULL)
+  {
     fatal (ERR_IO);
-
-  if (dump_tokens)
-  {
-    token tok;
-    lexer_set_file (file);
-    tok = lexer_next_token ();
-    pp_reset ();
-    while (tok.type != TOK_EOF)
-    {
-      pp_token (tok);
-      tok = lexer_next_token ();
-    }
   }
 
-  if (dump_ast)
-  {
-    statement *st;
-    lexer_set_file (file);
-    parser_init ();
-    st = parser_parse_statement ();
-    assert (st);
-    while (st->type != STMT_EOF)
-    {
-      pp_statement (st);
-      st = parser_parse_statement ();
-      assert (st);
-    }
-    pp_finish ();
-  }
+  //gen_bytecode (generated_source);
+  gen_bytecode (file);
+  run_int ();
+
+#ifdef __TARGET_MCU
+  fake_exit ();
+#endif 
 
   return 0;
 }

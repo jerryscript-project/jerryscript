@@ -13,17 +13,27 @@
  * limitations under the License.
  */
 
-static const char* generated_source = ""
-"while (true) {\n"
-"LEDToggle (LED3);\n"
-"LEDToggle (LED6);\n"
-"LEDToggle (LED7);\n"
-"LEDToggle (LED4);\n"
-"LEDToggle (LED10);\n"
-"LEDToggle (LED8);\n"
-"LEDToggle (LED9);\n"
-"LEDToggle (LED5);\n"
-"\n"
-"wait(500);\n"
-"}\n"
-;
+/* 
+ * File:   interpreter.h
+ * Author: egavrin
+ *
+ * Created on July 2, 2014, 3:10 PM
+ */
+
+#ifndef INTERPRETER_H
+#define	INTERPRETER_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "opcode.h"
+
+#define FILE_NAME "application.bin"
+
+void safe_opcode(FILE *, opcode_ptr, int, int);
+void gen_bytecode(FILE*);
+void run_int();
+
+#endif	/* INTERPRETER_H */
+

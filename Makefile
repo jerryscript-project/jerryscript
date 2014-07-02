@@ -18,7 +18,9 @@ OBJ_DIR = obj
 
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/*.c))
+	$(wildcard ./src/*.c)\
+	$(wildcard ./src/libperipherals/*.c)\
+	$(wildcard ./src/libcoreint/*.c))
 
 INCLUDES = \
 	-I src \
@@ -48,7 +50,7 @@ CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
 #CFLAGS += -ffunction-sections -fdata-sections
 
 DEBUG_OPTIONS = -g3 -O0 -DDEBUG #-fsanitize=address 
-RELEASE_OPTIONS = -Os -Werror
+RELEASE_OPTIONS = -Os # -Werror
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 

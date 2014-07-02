@@ -15,8 +15,7 @@
 
 #include "pretty-printer.h"
 #include "error.h"
-
-#include <stdbool.h>
+#include "globals.h"
 
 static int intendation;
 static bool was_function_expression;

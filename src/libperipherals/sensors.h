@@ -13,30 +13,16 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
- * @{
+/* 
+ * File:   sensors.h
+ * Author: egavrin
  *
- * \addtogroup ecmagc Garbage collector
- * @{
+ * Created on July 2, 2014, 2:05 PM
  */
 
-#ifndef ECMA_GC_H
-#define ECMA_GC_H
+#ifndef SENSORS_H
+#define	SENSORS_H
 
-/**
- * Garbage collector interface
- */
 
-#include "ecma-globals.h"
+#endif	/* SENSORS_H */
 
-extern void ecma_GCInit( void);
-extern void ecma_RefObject(ecma_Object_t *pObject);
-extern void ecma_DerefObject(ecma_Object_t *pObject);
-extern void ecma_GCRun( void);
-
-#endif /* !ECMA_GC_H */
-
-/**
- * @}
- * @}
- */

@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef JERRY_ECMA_DEFS_H
-#define	JERRY_ECMA_DEFS_H
+#ifndef JERRY_ECMA_GLOBALS_H
+#define	JERRY_ECMA_GLOBALS_H
 
 #include "globals.h"
 #include "mem-allocator.h"
@@ -309,7 +309,7 @@ typedef struct {
     uint8_t m_Elements[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
 } ecma_ArrayNonFirstChunk_t;
 
-#endif	/* JERRY_ECMA_DEFS_H */
+#endif	/* JERRY_ECMA_GLOBALS_H */
 
 /**
  * @}

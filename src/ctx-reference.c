@@ -25,7 +25,7 @@
  */
 
 #include "globals.h"
-#include "ecma-defs.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ctx-reference.h"
 

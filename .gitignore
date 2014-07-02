@@ -1,4 +1,8 @@
+# Produced files
 jerry
+
+# IDE related files
+nbproject
 
 # Compiled Object files
 *.slo

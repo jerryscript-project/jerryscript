@@ -13,30 +13,16 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
- * @{
+/* 
+ * File:   actuators.h
+ * Author: egavrin
  *
- * \addtogroup ecmagc Garbage collector
- * @{
+ * Created on July 2, 2014, 2:06 PM
  */
 
-#ifndef ECMA_GC_H
-#define ECMA_GC_H
+#ifndef ACTUATORS_H
+#define	ACTUATORS_H
 
-/**
- * Garbage collector interface
- */
 
-#include "ecma-globals.h"
+#endif	/* ACTUATORS_H */
 
-extern void ecma_GCInit( void);
-extern void ecma_RefObject(ecma_Object_t *pObject);
-extern void ecma_DerefObject(ecma_Object_t *pObject);
-extern void ecma_GCRun( void);
-
-#endif /* !ECMA_GC_H */
-
-/**
- * @}
- * @}
- */

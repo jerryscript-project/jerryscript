@@ -13,30 +13,21 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
- * @{
+/* 
+ * File:   common-io.h
+ * Author: egavrin
  *
- * \addtogroup ecmagc Garbage collector
- * @{
+ * Created on July 2, 2014, 2:14 PM
  */
 
-#ifndef ECMA_GC_H
-#define ECMA_GC_H
+#ifndef COMMON_IO_H
+#define	COMMON_IO_H
 
-/**
- * Garbage collector interface
- */
+int digital_read(int, int);
+void digital_write(int, int);
 
-#include "ecma-globals.h"
+int analog_read(int, int);
+void analog_write(int, int);
 
-extern void ecma_GCInit( void);
-extern void ecma_RefObject(ecma_Object_t *pObject);
-extern void ecma_DerefObject(ecma_Object_t *pObject);
-extern void ecma_GCRun( void);
+#endif	/* COMMON_IO_H */
 
-#endif /* !ECMA_GC_H */
-
-/**
- * @}
- * @}
- */

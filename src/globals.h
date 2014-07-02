@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_DEFS_H
-#define JERRY_DEFS_H
+#ifndef JERRY_GLOBALS_H
+#define JERRY_GLOBALS_H
 
 #include <assert.h>
 #include <stddef.h>
@@ -42,7 +42,6 @@ typedef signed int int32_t;
 /**
  * Constants
  */
-#define NULL  ((void*)0)
 
 #define JERRY_BITSINBYTE 8
 
@@ -153,4 +152,4 @@ jerry_SetBitFieldValue(uint32_t container, /**< container to insert bit-field to
     return ( container & ~shiftedBitFieldMask) | shiftedNewBitFieldValue;
 } /* jerry_SetBitFieldValue */
 
-#endif /* !JERRY_DEFS_H */
+#endif /* !JERRY_GLOBALS_H */

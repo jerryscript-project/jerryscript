@@ -25,7 +25,7 @@
  */
 
 #include "ecma-alloc.h"
-#include "ecma-defs.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jerry-libc.h"
 

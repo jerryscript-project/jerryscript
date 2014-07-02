@@ -34,7 +34,7 @@
 
 #include "globals.h"
 #include "ecma-alloc.h"
-#include "ecma-defs.h"
+#include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "mem-poolman.h"
 

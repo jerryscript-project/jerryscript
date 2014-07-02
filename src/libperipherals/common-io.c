@@ -13,30 +13,4 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
- * @{
- *
- * \addtogroup ecmagc Garbage collector
- * @{
- */
 
-#ifndef ECMA_GC_H
-#define ECMA_GC_H
-
-/**
- * Garbage collector interface
- */
-
-#include "ecma-globals.h"
-
-extern void ecma_GCInit( void);
-extern void ecma_RefObject(ecma_Object_t *pObject);
-extern void ecma_DerefObject(ecma_Object_t *pObject);
-extern void ecma_GCRun( void);
-
-#endif /* !ECMA_GC_H */
-
-/**
- * @}
- * @}
- */

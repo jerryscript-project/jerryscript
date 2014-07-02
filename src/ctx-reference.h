@@ -18,7 +18,7 @@
 
 #include "ctx-reference.h"
 #include "globals.h"
-#include "ecma-defs.h"
+#include "ecma-globals.h"
 
 /** \addtogroup ctxman Context manager
  * @{

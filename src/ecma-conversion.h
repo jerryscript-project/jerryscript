@@ -23,7 +23,7 @@
 #ifndef JERRY_ECMA_CONVERSION_H
 #define JERRY_ECMA_CONVERSION_H
 
-#include "ecma-defs.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
 
 extern ecma_Object_t* ecma_ToObject( ecma_Value_t value);

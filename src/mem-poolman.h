@@ -27,7 +27,7 @@
 #ifndef JERRY_MEM_POOLMAN_H
 #define JERRY_MEM_POOLMAN_H
 
-#include "defs.h"
+#include "globals.h"
 
 /**
  * Pool chunks's possible sizes

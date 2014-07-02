@@ -24,10 +24,10 @@
  * Heap implementation
  */
 
-#include "defs.h"
-#include "jerry_libc.h"
-#include "mem_allocator.h"
-#include "mem_heap.h"
+#include "globals.h"
+#include "jerry-libc.h"
+#include "mem-allocator.h"
+#include "mem-heap.h"
 
 /**
  * Magic numbers for heap memory blocks

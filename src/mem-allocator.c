@@ -17,11 +17,11 @@
  * Allocator implementation
  */
 
-#include "defs.h"
-#include "mem_allocator.h"
-#include "mem_heap.h"
-#include "mem_poolman.h"
-#include "ctx_manager.h"
+#include "globals.h"
+#include "mem-allocator.h"
+#include "mem-heap.h"
+#include "mem-poolman.h"
+#include "ctx-manager.h"
 
 /**
  * Area for heap

@@ -26,11 +26,11 @@
 
 #define JERRY_MEM_POOL_INTERNAL
 
-#include "defs.h"
-#include "mem_allocator.h"
-#include "mem_heap.h"
-#include "mem_pool.h"
-#include "mem_poolman.h"
+#include "globals.h"
+#include "mem-allocator.h"
+#include "mem-heap.h"
+#include "mem-pool.h"
+#include "mem-poolman.h"
 
 /**
  * Lists of pools for possible chunk sizes

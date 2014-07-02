@@ -20,22 +20,26 @@ SOURCES = \
 	$(sort \
 	$(wildcard ./src/*.c))
 
-INCLUDES = -I src
+INCLUDES = \
+	-I src \
+	-I src/libperipherals \
+	-I src/libcoreint
 
-OBJS = $(sort \
+OBJS = \
+	$(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
 
-CC  = $(CROSS_COMPILE)gcc-4.8
+CC  = $(CROSS_COMPILE)gcc-4.9
 LD  = $(CROSS_COMPILE)ld
 OBJDUMP	= $(CROSS_COMPILE)objdump
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 SIZE	= $(CROSS_COMPILE)size
 
 # General flags
-CFLAGS ?= $(INCLUDES) -Wall -std=c99 -m32# -fdiagnostics-color=always
-#CFLAGS += -Wextra -Wpedantic -Wformat-security -Wlogical-op
+CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
+#CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
 #CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-#CFLAGS += -Wconversion -Wsign-conversion -Winline
+#CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
 #CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU

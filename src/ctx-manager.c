@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-#include "ctx_manager.h"
+#include "ctx-manager.h"
 #include "ctx-reference.h"
-#include "defs.h"
-#include "ecma_alloc.h"
-#include "ecma_defs.h"
-#include "ecma_conversion.h"
-#include "ecma_gc.h"
-#include "ecma_helpers.h"
-#include "jerry_libc.h"
-#include "mem_poolman.h"
+#include "globals.h"
+#include "ecma-alloc.h"
+#include "ecma-defs.h"
+#include "ecma-conversion.h"
+#include "ecma-gc.h"
+#include "ecma-helpers.h"
+#include "jerry-libc.h"
+#include "mem-poolman.h"
 
 /** \addtogroup ctxman Context manager
  * @{

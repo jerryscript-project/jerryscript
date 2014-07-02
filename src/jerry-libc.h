@@ -19,7 +19,7 @@
 #ifndef JERRY_LIBC_H
 #define JERRY_LIBC_H
 
-#include "defs.h"
+#include "globals.h"
 
 extern void *libc_memset(void *s, int c, size_t n);
 extern int libc_memcmp(const void *s1, const void *s2, size_t n);

@@ -24,10 +24,10 @@
  * Implementation of helpers for operations with ECMA data types
  */
 
-#include "ecma_alloc.h"
-#include "ecma_defs.h"
-#include "ecma_helpers.h"
-#include "jerry_libc.h"
+#include "ecma-alloc.h"
+#include "ecma-defs.h"
+#include "ecma-helpers.h"
+#include "jerry-libc.h"
 
 /**
  * Compress pointer.

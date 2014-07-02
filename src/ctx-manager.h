@@ -17,8 +17,8 @@
 #define JERRY_CTX_MANAGER_H
 
 #include "ctx-reference.h"
-#include "defs.h"
-#include "ecma_defs.h"
+#include "globals.h"
+#include "ecma-defs.h"
 
 /** \addtogroup ctxman Context manager
  * @{

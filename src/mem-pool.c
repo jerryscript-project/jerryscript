@@ -26,10 +26,10 @@
 
 #define JERRY_MEM_POOL_INTERNAL
 
-#include "defs.h"
-#include "jerry_libc.h"
-#include "mem_allocator.h"
-#include "mem_pool.h"
+#include "globals.h"
+#include "jerry-libc.h"
+#include "mem-allocator.h"
+#include "mem-pool.h"
 
 /**
  * Magic number to fill free chunks in debug version

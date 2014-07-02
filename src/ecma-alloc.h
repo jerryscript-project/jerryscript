@@ -23,7 +23,7 @@
 #ifndef JERRY_ECMA_ALLOC_H
 #define	JERRY_ECMA_ALLOC_H
 
-#include "ecma_defs.h"
+#include "ecma-defs.h"
 
 /**
  * Allocate memory for ecma-object

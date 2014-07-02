@@ -23,7 +23,7 @@
 #ifndef JERRY_ECMA_HELPERS_H
 #define JERRY_ECMA_HELPERS_H
 
-#include "ecma_defs.h"
+#include "ecma-defs.h"
 
 extern uintptr_t ecma_CompressPointer(void *pointer);
 extern void* ecma_DecompressPointer(uintptr_t compressedPointer);

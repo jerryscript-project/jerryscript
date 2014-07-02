@@ -32,11 +32,11 @@
  *     else - shutdown engine.
  */
 
-#include "defs.h"
-#include "ecma_alloc.h"
-#include "ecma_defs.h"
-#include "ecma_gc.h"
-#include "mem_poolman.h"
+#include "globals.h"
+#include "ecma-alloc.h"
+#include "ecma-defs.h"
+#include "ecma-gc.h"
+#include "mem-poolman.h"
 
 /**
  * Template of an allocation routine.

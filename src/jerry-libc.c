@@ -17,7 +17,7 @@
  * Jerry libc implementation
  */
 
-#include "jerry_libc.h"
+#include "jerry-libc.h"
 
 #include <stdarg.h>
 

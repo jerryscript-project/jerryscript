@@ -23,8 +23,8 @@
 #ifndef JERRY_MEM_ALLOCATOR_H
 #define JERRY_MEM_ALLOCATOR_H
 
-#include "defs.h"
-#include "mem_heap.h"
+#include "globals.h"
+#include "mem-heap.h"
 
 /**
  * Logarithm of required alignment for allocated units/blocks

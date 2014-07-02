@@ -23,8 +23,8 @@
 #ifndef JERRY_ECMA_DEFS_H
 #define	JERRY_ECMA_DEFS_H
 
-#include "defs.h"
-#include "mem_allocator.h"
+#include "globals.h"
+#include "mem-allocator.h"
 
 /** \addtogroup compressedpointer Compressed pointer
  * @{

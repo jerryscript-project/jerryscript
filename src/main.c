@@ -22,8 +22,8 @@
 #include "parser.h"
 #include "pretty-printer.h"
 
-#include "ctx_manager.h"
-#include "mem_allocator.h"
+#include "ctx-manager.h"
+#include "mem-allocator.h"
 
 int
 main (int argc, char **argv)

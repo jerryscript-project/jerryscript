@@ -15,43 +15,26 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
- * \addtogroup ecmaconversion ECMA conversion
+ *
+ * \addtogroup ecmagc Garbage collector
  * @{
  */
 
-#ifndef JERRY_ECMA_CONVERSION_H
-#define JERRY_ECMA_CONVERSION_H
-
-#include "ecma_defs.h"
-#include "ecma_helpers.h"
-
-extern ecma_Object_t* ecma_ToObject( ecma_Value_t value);
-
-/*
- * Stubs
- */
+#ifndef ECMA_GC_H
+#define ECMA_GC_H
 
 /**
- * Convert value to ecma-object.
- * 
- * See also:
- *          ECMA-262 5.1, 9.9.
- * 
- * @return pointer to ecma-object descriptor
+ * Garbage collector interface
  */
-ecma_Object_t*
-ecma_ToObject(ecma_Value_t value) /**< ecma-value */
-{
-    if ( value.m_ValueType == ECMA_TYPE_OBJECT )
-    {
-        return ecma_DecompressPointer( value.m_Value);
-    }
-    
-    JERRY_UNIMPLEMENTED();
-}
 
-#endif /* !JERRY_ECMA_CONVERSION_H */
+#include "ecma-defs.h"
+
+extern void ecma_GCInit( void);
+extern void ecma_RefObject(ecma_Object_t *pObject);
+extern void ecma_DerefObject(ecma_Object_t *pObject);
+extern void ecma_GCRun( void);
+
+#endif /* !ECMA_GC_H */
 
 /**
  * @}

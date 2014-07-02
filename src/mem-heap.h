@@ -26,7 +26,7 @@
 #ifndef JERRY_MEM_HEAP_H
 #define JERRY_MEM_HEAP_H
 
-#include "defs.h"
+#include "globals.h"
 
 /**
  * Type of allocation (argument of mem_Alloc)

@@ -24,9 +24,9 @@
  * Implementation of Reference's operations
  */
 
-#include "defs.h"
-#include "ecma_defs.h"
-#include "ecma_helpers.h"
+#include "globals.h"
+#include "ecma-defs.h"
+#include "ecma-helpers.h"
 #include "ctx-reference.h"
 
 /**

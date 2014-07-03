@@ -30,7 +30,7 @@ opfunc_op_call_1 (OPCODE opdata)
 {
   printf ("op_call_1:idx:%d:%d\n",
           opdata.data.call_1.name_literal_idx,
-          opdata.data.call_1.arg_literal_idx);
+          opdata.data.call_1.arg1_literal_idx);
 }
 
 void
@@ -67,7 +67,7 @@ save_op_call_1 (FILE *file, OPCODE opdata, int arg1, int arg2)
 
   opdata.opfunc_ptr = opfunc_op_call_1;  
   opdata.data.call_1.name_literal_idx = arg1;
-  opdata.data.call_1.arg_literal_idx = arg2;
+  opdata.data.call_1.arg1_literal_idx = arg2;
 
   fwrite (&opdata, sizeof (OPCODE), 1, file);
 }

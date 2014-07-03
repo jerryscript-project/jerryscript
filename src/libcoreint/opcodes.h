@@ -16,11 +16,15 @@
 #ifndef OPCODES_H
 #define	OPCODES_H
 
-#include "stdio.h"
+#include <stdio.h>
+
+#include "globals.h"
 
 #define OPCODE struct __opcode
 #define OP_DEF(name) struct __op_##name
 #define OP(name) struct __op_##name name
+
+#define OP_TYPE_IDX uint8_t
 
 OPCODE;
 
@@ -30,7 +34,7 @@ OP_DEF (nop) { };
 
 OP_DEF (jmp)
 {
-  int opcode_idx;
+  OP_TYPE_IDX opcode_idx;
 };
 
 OP_DEF (decl) { };
@@ -46,23 +50,15 @@ OP_DEF (decl_var_local) { };
 /** Call with 1 argument */
 OP_DEF (call_1)
 {
-  int name_literal_idx;
-  int arg1_literal_idx;
+  OP_TYPE_IDX name_literal_idx;
+  OP_TYPE_IDX arg1_literal_idx;
 };
 
 OP_DEF (call_2)
 {
-  int name_literal_idx;
-  int arg1_literal_idx;
-  int arg2_literal_idx;
-};
-
-OP_DEF (call_3)
-{
-  int name_literal_idx;
-  int arg1_literal_idx;
-  int arg2_literal_idx;
-  int arg3_literal_idx;
+  OP_TYPE_IDX name_literal_idx;
+  OP_TYPE_IDX arg1_literal_idx;
+  OP_TYPE_IDX arg2_literal_idx;
 };
 
 OP_DEF (call_n) { };
@@ -91,7 +87,7 @@ OP_DEF (with_end) { };
 
 OP_DEF (loop_inf)
 {
-  int opcode_idx;
+  OP_TYPE_IDX opcode_idx;
 };
 
 OP_DEF (loop_cond_pre) { };
@@ -100,18 +96,22 @@ OP_DEF (loop_cond_post) { };
 
 OP_DEF (swtch) { };
 
-OPCODE{
-  opfunc opfunc_ptr;
+/** OPCODES */
+union __opdata
+{
+  OP (loop_inf);
+  OP (call_1);
+  OP (call_2);
+  OP (call_n);
 
-  /** OPCODES */
-  union __opdata
-  {
-    OP (loop_inf);
-    OP (call_1);
-    OP (jmp);
-  } data;
-}
-__packed;
+  OP (jmp);
+  OP (nop);
+} data;
+
+OPCODE {
+  opfunc opfunc_ptr;
+  union __opdata data;
+} __packed;
 
 void save_op_jmp (FILE *, OPCODE, int);
 void save_op_call_1 (FILE *, OPCODE, int, int);

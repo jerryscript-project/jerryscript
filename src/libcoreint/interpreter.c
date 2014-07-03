@@ -40,9 +40,13 @@ gen_bytecode (FILE *src_file)
 
   FILE *file = fopen (FILE_NAME, "w+b");
   
-  union __opcodes op0;
+  OPCODE op0;
   
   save_op_loop_inf (file, op0, 1);
+  save_op_call_1 (file, op0, 0, LED_GREEN);
+  save_op_call_1 (file, op0, 0, LED_BLUE);
+  save_op_call_1 (file, op0, 0, LED_ORANGE);
+  save_op_call_1 (file, op0, 0, LED_RED);
   save_op_call_1 (file, op0, 0, LED_GREEN);
   save_op_call_1 (file, op0, 0, LED_BLUE);
   save_op_call_1 (file, op0, 0, LED_ORANGE);
@@ -56,7 +60,7 @@ void
 run_int ()
 {
   FILE *file = fopen (FILE_NAME, "rb");
-  union __opcodes op_curr;
+  OPCODE op_curr;
 
   if (file == NULL)
   {
@@ -66,7 +70,7 @@ run_int ()
 
   while (!feof (file))
   {
-    if (!fread (&op_curr, sizeof (union __opcodes), 1, file))
+    if (!fread (&op_curr, sizeof (OPCODE), 1, file))
     {
       break;
     }

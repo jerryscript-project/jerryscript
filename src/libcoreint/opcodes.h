@@ -18,44 +18,47 @@
 
 #include "stdio.h"
 
-#define OP_RET_TYPE void
-#define OP_INT_TYPE int
+#define OPCODE struct __opcode
+#define OP_DEF(name) struct __op_##name
+#define OP(name) struct __op_##name name
 
-union __opcodes;
+OPCODE;
 
-typedef OP_RET_TYPE (*op_proxy_ptr)(union __opcodes);
+typedef void (*opfunc)(OPCODE);
 
-typedef OP_RET_TYPE (*opfunc_int_ptr)(union __opcodes);
-typedef OP_RET_TYPE (*opfunc_int_int_ptr)(union __opcodes);
-
-union __opcodes 
+OP_DEF (loop_inf)
 {
-  op_proxy_ptr opfunc_ptr;
-  
-  struct __op_loop_inf
-  {
-    opfunc_int_ptr opfunc_ptr;
-    int opcode_idx;
-  } op_loop_inf;
+  int opcode_idx;
+};
 
-  /** Call with 1 argument */
-  struct __op_call_1
-  {
-    opfunc_int_int_ptr opfunc_ptr;
-    int name_literal_idx;
-    int arg_literal_idx;
-  } op_call_1;
+/** Call with 1 argument */
+OP_DEF (call_1)
+{
+  int name_literal_idx;
+  int arg_literal_idx;
+};
 
-  struct __op_jmp
-  {
-    opfunc_int_ptr opfunc_ptr;
-    int opcode_idx;
-  } op_jmp;
-} __packed;
+OP_DEF (jmp)
+{
+  int opcode_idx;
+};
 
-void save_op_jmp(FILE *, union __opcodes, int);
-void save_op_call_1(FILE *, union __opcodes, int, int);
-void save_op_loop_inf(FILE *, union __opcodes, int);
+OPCODE{
+  opfunc opfunc_ptr;
+
+  /** OPCODES */
+  union __opdata
+  {
+    OP (loop_inf);
+    OP (call_1);
+    OP (jmp);
+  } data;
+}
+__packed;
+
+void save_op_jmp (FILE *, OPCODE, int);
+void save_op_call_1 (FILE *, OPCODE, int, int);
+void save_op_loop_inf (FILE *, OPCODE, int);
 
 #endif	/* OPCODES_H */
 

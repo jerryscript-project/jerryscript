@@ -18,21 +18,9 @@
 #include "parser.h"
 #include "pretty-printer.h"
 #include "interpreter.h"
-#include "opcode.h"
+#include "opcodes.h"
 
-
-void
-safe_opcode (FILE *file, opcode_ptr ptr, int arg1, int arg2)
-{
-  curr_opcode.func = ptr;
-  curr_opcode.arg1 = arg1;
-  curr_opcode.arg2 = arg2;
-
-  if (file != NULL)
-  {
-    fwrite (&curr_opcode, sizeof (struct opcode_packed), 1, file);
-  }
-}
+#include "actuators.h"
 
 void
 gen_bytecode (FILE *src_file)
@@ -51,14 +39,15 @@ gen_bytecode (FILE *src_file)
   pp_finish ();
 
   FILE *file = fopen (FILE_NAME, "w+b");
-  int i;
-
-  for (i = 0; i <= 10; i++)
-  {
-    safe_opcode (file, control_op, i, i);
-    safe_opcode (file, decl_op, i, i);
-    safe_opcode (file, call_op, i, i);
-  }
+  
+  union __opcodes op0;
+  
+  save_op_loop_inf (file, op0, 1);
+  save_op_call_1 (file, op0, 0, LED_GREEN);
+  save_op_call_1 (file, op0, 0, LED_BLUE);
+  save_op_call_1 (file, op0, 0, LED_ORANGE);
+  save_op_call_1 (file, op0, 0, LED_RED);
+  save_op_jmp (file, op0, 0);
 
   fclose (file);
 }
@@ -67,6 +56,7 @@ void
 run_int ()
 {
   FILE *file = fopen (FILE_NAME, "rb");
+  union __opcodes op_curr;
 
   if (file == NULL)
   {
@@ -76,10 +66,12 @@ run_int ()
 
   while (!feof (file))
   {
-    fread (&curr_opcode, sizeof (struct opcode_packed), 1, file);
-
-    //printf ("read %d, %d, %p\n", curr_opcode.arg1, curr_opcode.arg2, curr_opcode.func);
-    curr_opcode.func (curr_opcode.arg1, curr_opcode.arg2);
+    if (!fread (&op_curr, sizeof (union __opcodes), 1, file))
+    {
+      break;
+    }
+    
+    op_curr.opfunc_ptr (op_curr);
   }
 
   fclose (file);

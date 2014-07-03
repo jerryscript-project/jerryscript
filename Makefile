@@ -13,29 +13,41 @@
 # limitations under the License.
 
 TARGET ?= jerry
-#CROSS_COMPILE	?= arm-none-eabi-
+CROSS_COMPILE	?= arm-none-eabi-
 OBJ_DIR = obj
 
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/*.c)\
-	$(wildcard ./src/libperipherals/*.c)\
-	$(wildcard ./src/libcoreint/*.c))
+	$(wildcard ./src/*.c) \
+	$(wildcard ./src/libperipherals/*.c) \
+	$(wildcard ./src/libjsparser/*.c) \
+	$(wildcard ./src/libecmaobjects/*.c) \
+	$(wildcard ./src/liballocator/*.c) \
+	$(wildcard ./src/libcoreint/*.c) )
 
 INCLUDES = \
 	-I src \
 	-I src/libperipherals \
+	-I src/libjsparser \
+	-I src/libecmaobjects \
+	-I src/liballocator \
 	-I src/libcoreint
 
 OBJS = \
 	$(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
 
-CC  = $(CROSS_COMPILE)gcc-4.9
-LD  = $(CROSS_COMPILE)ld
-OBJDUMP	= $(CROSS_COMPILE)objdump
-OBJCOPY	= $(CROSS_COMPILE)objcopy
-SIZE	= $(CROSS_COMPILE)size
+CC  = gcc-4.9
+LD  = ld
+OBJDUMP	= objdump
+OBJCOPY	= objcopy
+SIZE	= size
+
+CROSS_CC  = $(CROSS_COMPILE)gcc-4.9
+CROSS_LD  = $(CROSS_COMPILE)ld
+CROSS_OBJDUMP	= $(CROSS_COMPILE)objdump
+CROSS_OBJCOPY	= $(CROSS_COMPILE)objcopy
+CROSS_SIZE	= $(CROSS_COMPILE)size
 
 # General flags
 CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
@@ -49,8 +61,8 @@ CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
 #CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 #CFLAGS += -ffunction-sections -fdata-sections
 
-DEBUG_OPTIONS = -g3 -O0 -DDEBUG #-fsanitize=address 
-RELEASE_OPTIONS = -Os # -Werror
+DEBUG_OPTIONS = -g3 -O0 -DDEBUG# -fsanitize=address
+RELEASE_OPTIONS = -Os -Werror
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 

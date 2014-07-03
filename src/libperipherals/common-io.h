@@ -13,13 +13,6 @@
  * limitations under the License.
  */
 
-/* 
- * File:   common-io.h
- * Author: egavrin
- *
- * Created on July 2, 2014, 2:14 PM
- */
-
 #ifndef COMMON_IO_H
 #define	COMMON_IO_H
 

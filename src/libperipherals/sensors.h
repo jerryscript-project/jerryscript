@@ -13,13 +13,6 @@
  * limitations under the License.
  */
 
-/* 
- * File:   sensors.h
- * Author: egavrin
- *
- * Created on July 2, 2014, 2:05 PM
- */
-
 #ifndef SENSORS_H
 #define	SENSORS_H
 

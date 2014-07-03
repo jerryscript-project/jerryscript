@@ -13,43 +13,49 @@
  * limitations under the License.
  */
 
-/* 
- * File:   opcode.h
- * Author: egavrin
- *
- * Created on July 2, 2014, 3:12 PM
- */
+#ifndef OPCODES_H
+#define	OPCODES_H
 
-#ifndef OPCODE_H
-#define	OPCODE_H
+#include "stdio.h"
 
 #define OP_RET_TYPE void
-#define OP_ARG_TYPE int
+#define OP_INT_TYPE int
 
-#define OP_ATTR_DECL OP_ARG_TYPE, OP_ARG_TYPE
-#define OP_ATTR_DEF OP_ARG_TYPE arg1, OP_ARG_TYPE arg2
+union __opcodes;
 
-#define OP_DECLARATION(opname) OP_RET_TYPE opname (OP_ATTR_DECL)
-#define OP_DEFINITION(opname) OP_RET_TYPE opname (OP_ATTR_DEF)
+typedef OP_RET_TYPE (*op_proxy_ptr)(union __opcodes);
 
-// opcode ptr
-typedef OP_RET_TYPE (*opcode_ptr)(OP_ATTR_DECL);
+typedef OP_RET_TYPE (*opfunc_int_ptr)(union __opcodes);
+typedef OP_RET_TYPE (*opfunc_int_int_ptr)(union __opcodes);
 
-struct
-__attribute__ ((__packed__))
-opcode_packed
+union __opcodes 
 {
-  opcode_ptr func;
-  OP_ARG_TYPE arg1;
-  OP_ARG_TYPE arg2;
-}
-curr_opcode;
+  op_proxy_ptr opfunc_ptr;
+  
+  struct __op_loop_inf
+  {
+    opfunc_int_ptr opfunc_ptr;
+    int opcode_idx;
+  } op_loop_inf;
 
-#define INIT_OPCODE_PTR(func) opcode_ptr func_ptr = ptr;
+  /** Call with 1 argument */
+  struct __op_call_1
+  {
+    opfunc_int_int_ptr opfunc_ptr;
+    int name_literal_idx;
+    int arg_literal_idx;
+  } op_call_1;
 
-OP_DECLARATION (decl_op);
-OP_DECLARATION (call_op);
-OP_DECLARATION (control_op);
+  struct __op_jmp
+  {
+    opfunc_int_ptr opfunc_ptr;
+    int opcode_idx;
+  } op_jmp;
+} __packed;
 
-#endif	/* OPCODE_H */
+void save_op_jmp(FILE *, union __opcodes, int);
+void save_op_call_1(FILE *, union __opcodes, int, int);
+void save_op_loop_inf(FILE *, union __opcodes, int);
+
+#endif	/* OPCODES_H */
 

@@ -13,13 +13,6 @@
  * limitations under the License.
  */
 
-/* 
- * File:   interpreter.h
- * Author: egavrin
- *
- * Created on July 2, 2014, 3:10 PM
- */
-
 #ifndef INTERPRETER_H
 #define	INTERPRETER_H
 
@@ -27,11 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "opcode.h"
+#include "opcodes.h"
 
 #define FILE_NAME "application.bin"
 
-void safe_opcode(FILE *, opcode_ptr, int, int);
 void gen_bytecode(FILE*);
 void run_int();
 

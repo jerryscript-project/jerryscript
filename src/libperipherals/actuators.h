@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
-/* 
- * File:   actuators.h
- * Author: egavrin
- *
- * Created on July 2, 2014, 2:06 PM
- */
-
 #ifndef ACTUATORS_H
 #define	ACTUATORS_H
 
+// STM32 F4
+#define LED_GREEN      12
+#define LED_ORANGE     13
+#define LED_RED        14
+#define LED_BLUE       15
+
+void led_toggle(int);
+void led_on(int);
+void led_off(int);
 
 #endif	/* ACTUATORS_H */
 

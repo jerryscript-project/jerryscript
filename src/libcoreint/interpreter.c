@@ -39,9 +39,9 @@ gen_bytecode (FILE *src_file)
   pp_finish ();
 
   FILE *file = fopen (FILE_NAME, "w+b");
-  
+
   OPCODE op0;
-  
+
   save_op_loop_inf (file, op0, 1);
   save_op_call_1 (file, op0, 0, LED_GREEN);
   save_op_call_1 (file, op0, 0, LED_BLUE);
@@ -61,6 +61,8 @@ run_int ()
 {
   FILE *file = fopen (FILE_NAME, "rb");
   OPCODE op_curr;
+  __int_data.pos = 0;
+
 
   if (file == NULL)
   {
@@ -74,8 +76,11 @@ run_int ()
     {
       break;
     }
-    
+
+    __int_data.pos++;
+
     op_curr.opfunc_ptr (op_curr);
+    fseek (file, __int_data.pos * sizeof (OPCODE), SEEK_SET);
   }
 
   fclose (file);

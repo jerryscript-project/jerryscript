@@ -14,6 +14,7 @@
  */
 
 #include "opcodes.h"
+#include "interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,8 @@ opfunc_loop_inf (OPCODE opdata)
 {
   printf ("loop_inf:idx:%d\n",
           opdata.data.loop_inf.opcode_idx);
+
+  __int_data.pos = opdata.data.loop_inf.opcode_idx;
 }
 
 void
@@ -38,10 +41,9 @@ opfunc_op_jmp (OPCODE opdata)
 {
   printf ("op_jmp:idx:%d\n",
           opdata.data.jmp.opcode_idx);
+
+  __int_data.pos = opdata.data.jmp.opcode_idx;
 }
-
-
-
 
 void
 save_op_jmp (FILE *file, OPCODE opdata, int arg1)
@@ -65,7 +67,7 @@ save_op_call_1 (FILE *file, OPCODE opdata, int arg1, int arg2)
     return;
   }
 
-  opdata.opfunc_ptr = opfunc_op_call_1;  
+  opdata.opfunc_ptr = opfunc_op_call_1;
   opdata.data.call_1.name_literal_idx = arg1;
   opdata.data.call_1.arg1_literal_idx = arg2;
 
@@ -79,7 +81,7 @@ save_op_loop_inf (FILE *file, OPCODE opdata, int arg1)
   {
     return;
   }
-    
+
   opdata.opfunc_ptr = opfunc_loop_inf;
   opdata.data.loop_inf.opcode_idx = arg1;
 

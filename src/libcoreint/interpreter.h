@@ -24,8 +24,14 @@
 
 #define FILE_NAME "application.bin"
 
-void gen_bytecode(FILE*);
-void run_int();
+struct
+{
+  int pos;
+} __int_data;
+
+
+void gen_bytecode (FILE*);
+void run_int ();
 
 #endif	/* INTERPRETER_H */
 

@@ -1,0 +1,15 @@
+- Prohibit eval() usage, same as Function or new  Function
+  eval() requires run time compilation because the source text might not
+  appear in the program or can be generated at run time. Run time compilation
+  is required to support the Function constructor and the Function function
+  when the body is not a string literal.
+- Limit Unicode support
+- Cut Number from 64bit to 32bit/16/8bit
+- Do not allow addition, deletion or assignment to the properties of built-in
+  objects.
+  This limitation is needed to support a more efficient implementation based
+  on static compilation of built-in objects without risking that the objects
+  are mutated on shadowed by dynamically added properties.
+- Do not allow usage of with statement
+  The with makes access to named references inefficient, because the scopes
+  for such access cannot be compiled until run time.

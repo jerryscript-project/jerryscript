@@ -79,7 +79,7 @@ release:
 	-o $(TARGET)
 
 clean:
-	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ lexer.log parser.log
+	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ *.log *.log
 	rm -f $(TARGET)
 	rm -f $(TARGET).elf
 	rm -f $(TARGET).bin

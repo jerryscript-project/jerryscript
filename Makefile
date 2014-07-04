@@ -87,6 +87,9 @@ clean:
 	rm -f $(TARGET).hex
 	rm -f $(TARGET).lst
 
+check:
+	cppcheck ./src/ --enable=all --std=c99 -v
+
 install:
 	st-flash write $(TARGET).bin 0x08000000
 

@@ -24,6 +24,15 @@ SOURCES = \
 	$(wildcard ./src/libecmaobjects/*.c) \
 	$(wildcard ./src/liballocator/*.c) \
 	$(wildcard ./src/libcoreint/*.c) )
+	
+HEADERS = \
+	$(sort \
+	$(wildcard ./src/*.h) \
+	$(wildcard ./src/libperipherals/*.h) \
+	$(wildcard ./src/libjsparser/*.h) \
+	$(wildcard ./src/libecmaobjects/*.h) \
+	$(wildcard ./src/liballocator/*.h) \
+	$(wildcard ./src/libcoreint/*.h) )
 
 INCLUDES = \
 	-I src \
@@ -66,7 +75,7 @@ RELEASE_OPTIONS = -Os -Werror
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 
-.PHONY: all debug release clean install test
+.PHONY: all debug release clean check install
 
 all: debug
 
@@ -86,12 +95,11 @@ clean:
 	rm -f $(TARGET).map
 	rm -f $(TARGET).hex
 	rm -f $(TARGET).lst
+	rm -f jerry.error js.files
 
 check:
-	cppcheck ./src/ --enable=all --std=c99 -v
+	cppcheck $(HEADERS) $(SOURCES) --enable=all --std=c99
+	./tools/jerry_test.sh
 
 install:
 	st-flash write $(TARGET).bin 0x08000000
-
-test:
-	./tools/jerry_test.sh

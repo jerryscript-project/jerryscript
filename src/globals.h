@@ -59,7 +59,7 @@ typedef signed int int32_t;
 
 /**
  * Variable that must not be referenced.
- * 
+ *
  * May be used for static assertion checks.
  */
 extern uint32_t jerry_UnreferencedExpression;
@@ -87,14 +87,14 @@ extern uint32_t jerry_UnreferencedExpression;
 
 /**
  * Aligns @value to @alignment.
- * 
+ *
  * Returns maximum positive value, that divides @alignment and is less than or equal to @value
  */
 #define JERRY_ALIGNDOWN( value, alignment) ( (alignment) * ( (value) / (alignment) ) )
 
 /**
  * Aligns @value to @alignment.
- * 
+ *
  * Returns minimum positive value, that divides @alignment and is more than or equal to @value
  */
 #define JERRY_ALIGNUP( value, alignment)   ( (alignment) * ( ((value) + (alignment) - 1) / (alignment) ) )
@@ -108,19 +108,23 @@ extern uint32_t jerry_UnreferencedExpression;
 /**
  * Bit-fields
  */
-inline uint32_t jerry_ExtractBitField(uint32_t value, uint32_t lsb, uint32_t width);
-inline uint32_t jerry_SetBitFieldValue(uint32_t value, uint32_t bitFieldValue, uint32_t lsb, uint32_t width);
+inline uint32_t jerry_ExtractBitField(uint32_t value, uint32_t lsb,
+                                      uint32_t width);
+inline uint32_t jerry_SetBitFieldValue(uint32_t value, uint32_t bitFieldValue,
+                                       uint32_t lsb, uint32_t width);
 
 /**
  * Extract a bit-field from the integer.
- * 
+ *
  * @return bit-field's value
  */
 inline uint32_t
-jerry_ExtractBitField(uint32_t container, /**< container to extract bit-field from */
+jerry_ExtractBitField(uint32_t
+                      container, /**< container to extract bit-field from */
                       uint32_t lsb, /**< least significant bit of the value
                                      *   to be extracted */
-                      uint32_t width) /**< width of the bit-field to be extracted */ {
+                      uint32_t width) /**< width of the bit-field to be extracted */
+{
     JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
     JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
 
@@ -132,15 +136,17 @@ jerry_ExtractBitField(uint32_t container, /**< container to extract bit-field fr
 
 /**
  * Extract a bit-field from the integer.
- * 
+ *
  * @return bit-field's value
  */
 inline uint32_t
-jerry_SetBitFieldValue(uint32_t container, /**< container to insert bit-field to */
+jerry_SetBitFieldValue(uint32_t
+                       container, /**< container to insert bit-field to */
                        uint32_t newBitFieldValue, /**< value of bit-field to insert */
                        uint32_t lsb, /**< least significant bit of the value
                                       *   to be extracted */
-                       uint32_t width) /**< width of the bit-field to be extracted */ {
+                       uint32_t width) /**< width of the bit-field to be extracted */
+{
     JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
     JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
     JERRY_ASSERT(newBitFieldValue <= (1u << width));

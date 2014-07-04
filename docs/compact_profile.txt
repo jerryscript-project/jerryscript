@@ -5,6 +5,7 @@
   when the body is not a string literal.
 - Limit Unicode support
 - Cut Number from 64bit to 32bit/16/8bit
+- Limit recursion level
 - Do not allow addition, deletion or assignment to the properties of built-in
   objects.
   This limitation is needed to support a more efficient implementation based

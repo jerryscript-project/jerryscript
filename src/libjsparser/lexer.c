@@ -793,5 +793,5 @@ lexer_save_token (token tok)
 void
 lexer_dump_buffer_state ()
 {
-  printf ("%s\n", buffer);
+  //printf ("%s\n", buffer);
 }

@@ -73,7 +73,7 @@ main (int argc, char **argv)
 
   //gen_bytecode (generated_source);
   gen_bytecode (file);
-  run_int ();
+  //run_int ();
 
 #ifdef __TARGET_MCU
   fake_exit ();

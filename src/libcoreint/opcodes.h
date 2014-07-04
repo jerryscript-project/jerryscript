@@ -39,9 +39,12 @@ OP_DEF (jmp)
 
 OP_DEF (decl) { };
 
-OP_DEF (named_func_decl) { };
+OP_DEF (decl_func_named)
+{
+  OP_TYPE_IDX name_literal_idx;
+};
 
-OP_DEF (anon_func_decl) { };
+OP_DEF (decl_func_anon) { };
 
 OP_DEF (decl_var_global) { };
 
@@ -108,10 +111,11 @@ union __opdata
   OP (nop);
 } data;
 
-OPCODE {
+OPCODE{
   opfunc opfunc_ptr;
   union __opdata data;
-} __packed;
+}
+__packed;
 
 void save_op_jmp (FILE *, OPCODE, int);
 void save_op_call_1 (FILE *, OPCODE, int, int);

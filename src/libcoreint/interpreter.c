@@ -32,28 +32,28 @@ gen_bytecode (FILE *src_file)
   assert (st);
   while (st->type != STMT_EOF)
   {
-    pp_statement (st);
+    //pp_statement (st);
     st = parser_parse_statement ();
     assert (st);
   }
-  pp_finish ();
+  //pp_finish ();
 
-  FILE *file = fopen (FILE_NAME, "w+b");
-
-  OPCODE op0;
-
-  save_op_loop_inf (file, op0, 1);
-  save_op_call_1 (file, op0, 0, LED_GREEN);
-  save_op_call_1 (file, op0, 0, LED_BLUE);
-  save_op_call_1 (file, op0, 0, LED_ORANGE);
-  save_op_call_1 (file, op0, 0, LED_RED);
-  save_op_call_1 (file, op0, 0, LED_GREEN);
-  save_op_call_1 (file, op0, 0, LED_BLUE);
-  save_op_call_1 (file, op0, 0, LED_ORANGE);
-  save_op_call_1 (file, op0, 0, LED_RED);
-  save_op_jmp (file, op0, 0);
-
-  fclose (file);
+//  FILE *file = fopen (FILE_NAME, "w+b");
+//
+//  OPCODE op0;
+//
+//  save_op_loop_inf (file, op0, 1);
+//  save_op_call_1 (file, op0, 0, LED_GREEN);
+//  save_op_call_1 (file, op0, 0, LED_BLUE);
+//  save_op_call_1 (file, op0, 0, LED_ORANGE);
+//  save_op_call_1 (file, op0, 0, LED_RED);
+//  save_op_call_1 (file, op0, 0, LED_GREEN);
+//  save_op_call_1 (file, op0, 0, LED_BLUE);
+//  save_op_call_1 (file, op0, 0, LED_ORANGE);
+//  save_op_call_1 (file, op0, 0, LED_RED);
+//  save_op_jmp (file, op0, 0);
+//
+//  fclose (file);
 }
 
 void

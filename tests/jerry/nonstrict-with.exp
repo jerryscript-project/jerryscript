@@ -1,0 +1,10 @@
+with ({}) {
+}
+with ({x : 42}) {
+  var foo = function () {
+    "use strict";
+    return x;
+  };
+}
+with ({}) {
+}

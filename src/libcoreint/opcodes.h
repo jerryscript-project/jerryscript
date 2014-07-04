@@ -26,8 +26,6 @@
 #define OP_DEF(name) struct __op_##name
 #define OP(name) struct __op_##name name
 
-#define OP_TYPE_IDX uint8_t
-
 OPCODE;
 
 typedef void (*opfunc)(OPCODE);
@@ -51,16 +49,15 @@ OPCODE{
 }
 __packed;
 
-#ifdef __HOST
-void save_op_data (FILE*, OPCODE);
-#elif __MCU
 void save_op_data (OPCODE);
-#endif
 
+void opfunc_loop_inf (OPCODE);
+void opfunc_call_1 (OPCODE);
+void opfunc_jmp (OPCODE);
 
-OPCODE get_op_loop_inf (int);
-OPCODE get_op_call_1 (int, int);
-OPCODE get_op_jmp (int arg1);
+OPCODE getop_loop_inf (int);
+OPCODE getop_call_1 (int, int);
+OPCODE getop_jmp (int arg1);
 
 #endif	/* OPCODES_H */
 

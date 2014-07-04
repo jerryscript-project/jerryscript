@@ -16,6 +16,11 @@
 #ifndef OPCODE_STRUCTURES_H
 #define	OPCODE_STRUCTURES_H
 
+ // Jerry bytecode ver:07/04/2014 
+
+// 
+#define OP_TYPE_IDX uint8_t
+
 OP_DEF (nop) { };
 
 OP_DEF (jmp)
@@ -27,8 +32,7 @@ OP_DEF (decl) { };
 
 OP_DEF (decl_func_named)
 {
-  OP_TYPE_IDX name_literal_idx;
-  
+  OP_TYPE_IDX name_literal_idx;  
 };
 
 OP_DEF (decl_func_anon) { };

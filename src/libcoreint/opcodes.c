@@ -17,30 +17,17 @@
 #include "interpreter.h"
 
 void
-#ifdef __HOST
-save_op_data (FILE *file, OPCODE opdata)
-#elif __MCU
 save_op_data (OPCODE opdata)
-#endif
 {
-#ifdef __HOST
-  if (file == NULL)
-  {
-    return;
-  }
-
-  fwrite (&opdata, sizeof (OPCODE), 1, file);
-
-#elif __MCU
-  JERRY_STATIC_ASSERT (false);
-#endif
+  __program[__int_data.pos++] = opdata;
 }
 
 void
 opfunc_loop_inf (OPCODE opdata)
 {
 #ifdef __HOST
-  printf ("loop_inf:idx:%d\n",
+  printf ("%d::loop_inf:idx:%d\n",
+          __int_data.pos,
           opdata.data.loop_inf.opcode_idx);
 #endif
 
@@ -48,20 +35,24 @@ opfunc_loop_inf (OPCODE opdata)
 }
 
 void
-opfunc_op_call_1 (OPCODE opdata)
+opfunc_call_1 (OPCODE opdata)
 {
 #ifdef __HOST
-  printf ("op_call_1:idx:%d:%d\n",
+  printf ("%d::op_call_1:idx:%d:%d\n",
+          __int_data.pos,
           opdata.data.call_1.name_literal_idx,
           opdata.data.call_1.arg1_literal_idx);
 #endif
+
+  __int_data.pos++;
 }
 
 void
-opfunc_op_jmp (OPCODE opdata)
+opfunc_jmp (OPCODE opdata)
 {
 #ifdef __HOST
-  printf ("op_jmp:idx:%d\n",
+  printf ("%d::op_jmp:idx:%d\n",
+          __int_data.pos,
           opdata.data.jmp.opcode_idx);
 #endif
 
@@ -69,22 +60,22 @@ opfunc_op_jmp (OPCODE opdata)
 }
 
 OPCODE
-get_op_jmp (int arg1)
+getop_jmp (int arg1)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_op_jmp;
+  opdata.opfunc_ptr = opfunc_jmp;
   opdata.data.jmp.opcode_idx = arg1;
 
   return opdata;
 }
 
 OPCODE
-get_op_call_1 (int arg1, int arg2)
+getop_call_1 (int arg1, int arg2)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_op_call_1;
+  opdata.opfunc_ptr = opfunc_call_1;
   opdata.data.call_1.name_literal_idx = arg1;
   opdata.data.call_1.arg1_literal_idx = arg2;
 
@@ -92,11 +83,11 @@ get_op_call_1 (int arg1, int arg2)
 }
 
 OPCODE
-get_op_loop_inf (int arg1)
+getop_loop_inf (int arg1)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_op_call_1;
+  opdata.opfunc_ptr = opfunc_loop_inf;
   opdata.data.loop_inf.opcode_idx = arg1;
 
   return opdata;

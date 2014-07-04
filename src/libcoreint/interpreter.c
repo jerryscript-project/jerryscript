@@ -18,54 +18,31 @@
 void
 gen_bytecode ()
 {
-#ifdef __HOST
-  FILE *file = fopen (FILE_NAME, "w+b");
-#endif
+  __int_data.pos = 0;
 
-  //TODO REMOVE
-  {
-    save_op_data (file, get_op_loop_inf (1));
-    save_op_data (file, get_op_call_1 (0, 12));
-    save_op_data (file, get_op_call_1 (0, 13));
-    save_op_data (file, get_op_call_1 (0, 14));
-    save_op_data (file, get_op_call_1 (0, 15));
-    save_op_data (file, get_op_jmp (0)); // mandatory!
-  }
-  
-#ifdef __HOST
-  fclose (file);
+  save_op_data (getop_loop_inf (1));
+  save_op_data (getop_call_1 (0, 12));
+  save_op_data (getop_call_1 (0, 13));
+  save_op_data (getop_call_1 (0, 14));
+  save_op_data (getop_call_1 (0, 15));
+  //save_op_data (getop_jmp (0));
+
+#ifdef __MCU
+  // It's mandatory to restart app!
+  save_op_data (getop_jmp (0));
 #endif
 }
 
 void
 run_int ()
 {
-  OPCODE op_curr;
   __int_data.pos = 0;
+  
+  printf("size%d", sizeof(OPCODE));
 
-#ifdef __HOST
-  FILE *file = fopen (FILE_NAME, "rb");
-
-  if (file == NULL)
+  while (true)
   {
-    fputs ("File error", stderr);
-    exit (1);
+    OPCODE *curr = &__program[__int_data.pos];
+    curr->opfunc_ptr (*curr);
   }
-
-  while (!feof (file))
-  {
-    if (!fread (&op_curr, sizeof (OPCODE), 1, file))
-    {
-      break;
-    }
-
-    __int_data.pos++;
-    op_curr.opfunc_ptr (op_curr);
-
-    fseek (file, __int_data.pos * sizeof (OPCODE), SEEK_SET);
-  }
-
-  fclose (file);
-#endif
 }
-

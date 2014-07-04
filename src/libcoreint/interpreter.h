@@ -16,19 +16,21 @@
 #ifndef INTERPRETER_H
 #define	INTERPRETER_H
 
+#ifdef __HOST
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "opcodes.h"
-
 #define FILE_NAME "application.bin"
+#endif
+
+#include "opcodes.h"
 
 struct
 {
   int pos;
+  int *root_op_addr;
 } __int_data;
-
 
 void gen_bytecode ();
 void run_int ();

@@ -16,14 +16,33 @@
 #include "opcodes.h"
 #include "interpreter.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+void
+#ifdef __HOST
+save_op_data (FILE *file, OPCODE opdata)
+#elif __MCU
+save_op_data (OPCODE opdata)
+#endif
+{
+#ifdef __HOST
+  if (file == NULL)
+  {
+    return;
+  }
+
+  fwrite (&opdata, sizeof (OPCODE), 1, file);
+
+#elif __MCU
+  JERRY_STATIC_ASSERT (false);
+#endif
+}
 
 void
 opfunc_loop_inf (OPCODE opdata)
 {
+#ifdef __HOST
   printf ("loop_inf:idx:%d\n",
           opdata.data.loop_inf.opcode_idx);
+#endif
 
   __int_data.pos = opdata.data.loop_inf.opcode_idx;
 }
@@ -31,16 +50,20 @@ opfunc_loop_inf (OPCODE opdata)
 void
 opfunc_op_call_1 (OPCODE opdata)
 {
+#ifdef __HOST
   printf ("op_call_1:idx:%d:%d\n",
           opdata.data.call_1.name_literal_idx,
           opdata.data.call_1.arg1_literal_idx);
+#endif
 }
 
 void
 opfunc_op_jmp (OPCODE opdata)
 {
+#ifdef __HOST
   printf ("op_jmp:idx:%d\n",
           opdata.data.jmp.opcode_idx);
+#endif
 
   __int_data.pos = opdata.data.jmp.opcode_idx;
 }
@@ -77,15 +100,4 @@ get_op_loop_inf (int arg1)
   opdata.data.loop_inf.opcode_idx = arg1;
 
   return opdata;
-}
-
-void
-save_op_data (FILE *file, OPCODE opdata)
-{
-  if (file == NULL)
-  {
-    return;
-  }
-
-  fwrite (&opdata, sizeof (OPCODE), 1, file);
 }

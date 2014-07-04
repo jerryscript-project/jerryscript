@@ -15,6 +15,7 @@
 TARGET ?= jerry
 CROSS_COMPILE	?= arm-none-eabi-
 OBJ_DIR = obj
+OUT_DIR = ./out
 
 SOURCES = \
 	$(sort \
@@ -51,6 +52,7 @@ LD  = ld
 OBJDUMP	= objdump
 OBJCOPY	= objcopy
 SIZE	= size
+STRIP	= strip
 
 CROSS_CC  = $(CROSS_COMPILE)gcc-4.9
 CROSS_LD  = $(CROSS_COMPILE)ld
@@ -71,35 +73,50 @@ CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
 #CFLAGS += -ffunction-sections -fdata-sections
 
 DEBUG_OPTIONS = -g3 -O0 -DDEBUG# -fsanitize=address
-RELEASE_OPTIONS = -Os -Werror
+RELEASE_OPTIONS = -Os -Werror -DNDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
+TARGET_HOST = -D__HOST
+TARGET_MCU = -D__MCU
 
 .PHONY: all debug release clean check install
 
-all: debug
+all: clean debug release check
 
 debug:
-	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(SOURCES) \
-	-o $(TARGET)
+	mkdir -p $(OUT_DIR)/debug.host/
+	$(CC) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
+	$(SOURCES) -o $(OUT_DIR)/debug.host/$(TARGET)
 
 release:
-	$(CC) $(INCLUDES) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(SOURCES) \
-	-o $(TARGET)
+	mkdir -p $(OUT_DIR)/release.host/
+	$(CC) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(TARGET_HOST) \
+	$(SOURCES) -o $(OUT_DIR)/release.host/$(TARGET)
+	$(STRIP) $(OUT_DIR)/release.host/$(TARGET)
 
 clean:
 	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ *.log *.log
+	rm -rf $(OUT_DIR)
 	rm -f $(TARGET)
 	rm -f $(TARGET).elf
 	rm -f $(TARGET).bin
 	rm -f $(TARGET).map
 	rm -f $(TARGET).hex
 	rm -f $(TARGET).lst
-	rm -f jerry.error js.files
 
 check:
+	mkdir -p $(OUT_DIR)
+	cd $(OUT_DIR)
 	cppcheck $(HEADERS) $(SOURCES) --enable=all --std=c99
-	./tools/jerry_test.sh
+	
+	if [ -f $(OUT_DIR)/release.host/$(TARGET) ]; then \
+	./tools/jerry_test.sh $(OUT_DIR)/release.host/$(TARGET);\
+	fi
+	
+	if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
+	./tools/jerry_test.sh $(OUT_DIR)/debug.host/$(TARGET);\
+	fi
+	
 
 install:
 	st-flash write $(TARGET).bin 0x08000000

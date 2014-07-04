@@ -16,7 +16,9 @@
 #ifndef OPCODES_H
 #define	OPCODES_H
 
+#ifdef __HOST
 #include <stdio.h>
+#endif
 
 #include "globals.h"
 
@@ -30,77 +32,8 @@ OPCODE;
 
 typedef void (*opfunc)(OPCODE);
 
-OP_DEF (nop) { };
+#include "opcode-structures.h"
 
-OP_DEF (jmp)
-{
-  OP_TYPE_IDX opcode_idx;
-};
-
-OP_DEF (decl) { };
-
-OP_DEF (decl_func_named)
-{
-  OP_TYPE_IDX name_literal_idx;
-  
-};
-
-OP_DEF (decl_func_anon) { };
-
-OP_DEF (decl_var_global) { };
-
-OP_DEF (decl_var_local) { };
-
-/** Call with 1 argument */
-OP_DEF (call_1)
-{
-  OP_TYPE_IDX name_literal_idx;
-  OP_TYPE_IDX arg1_literal_idx;
-};
-
-OP_DEF (call_2)
-{
-  OP_TYPE_IDX name_literal_idx;
-  OP_TYPE_IDX arg1_literal_idx;
-  OP_TYPE_IDX arg2_literal_idx;
-};
-
-OP_DEF (call_n) { };
-
-OP_DEF (list_header) { };
-
-OP_DEF (list_element) { };
-
-OP_DEF (list_tail) { };
-
-OP_DEF (try_begin) { };
-
-OP_DEF (try_end) { };
-
-OP_DEF (catch_begin) { };
-
-OP_DEF (catch_end) { };
-
-OP_DEF (finally_begin) { };
-
-OP_DEF (finally_end) { };
-
-OP_DEF (with_begin) { };
-
-OP_DEF (with_end) { };
-
-OP_DEF (loop_inf)
-{
-  OP_TYPE_IDX opcode_idx;
-};
-
-OP_DEF (loop_cond_pre) { };
-
-OP_DEF (loop_cond_post) { };
-
-OP_DEF (swtch) { };
-
-/** OPCODES */
 union __opdata
 {
   OP (loop_inf);
@@ -118,8 +51,12 @@ OPCODE{
 }
 __packed;
 
+#ifdef __HOST
+void save_op_data (FILE*, OPCODE);
+#elif __MCU
+void save_op_data (OPCODE);
+#endif
 
-void save_op_data (FILE *, OPCODE);
 
 OPCODE get_op_loop_inf (int);
 OPCODE get_op_call_1 (int, int);

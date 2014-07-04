@@ -30,7 +30,7 @@ struct
 } __int_data;
 
 
-void gen_bytecode (FILE*);
+void gen_bytecode ();
 void run_int ();
 
 #endif	/* INTERPRETER_H */

@@ -42,6 +42,7 @@ OP_DEF (decl) { };
 OP_DEF (decl_func_named)
 {
   OP_TYPE_IDX name_literal_idx;
+  
 };
 
 OP_DEF (decl_func_anon) { };
@@ -117,9 +118,12 @@ OPCODE{
 }
 __packed;
 
-void save_op_jmp (FILE *, OPCODE, int);
-void save_op_call_1 (FILE *, OPCODE, int, int);
-void save_op_loop_inf (FILE *, OPCODE, int);
+
+void save_op_data (FILE *, OPCODE);
+
+OPCODE get_op_loop_inf (int);
+OPCODE get_op_call_1 (int, int);
+OPCODE get_op_jmp (int arg1);
 
 #endif	/* OPCODES_H */
 

@@ -23,37 +23,18 @@
 #include "actuators.h"
 
 void
-gen_bytecode (FILE *src_file)
+gen_bytecode ()
 {
-  statement *st;
-  lexer_set_file (src_file);
-  parser_init ();
-  st = parser_parse_statement ();
-  assert (st);
-  while (st->type != STMT_EOF)
-  {
-    //pp_statement (st);
-    st = parser_parse_statement ();
-    assert (st);
-  }
-  //pp_finish ();
+  FILE *file = fopen (FILE_NAME, "w+b");
 
-//  FILE *file = fopen (FILE_NAME, "w+b");
-//
-//  OPCODE op0;
-//
-//  save_op_loop_inf (file, op0, 1);
-//  save_op_call_1 (file, op0, 0, LED_GREEN);
-//  save_op_call_1 (file, op0, 0, LED_BLUE);
-//  save_op_call_1 (file, op0, 0, LED_ORANGE);
-//  save_op_call_1 (file, op0, 0, LED_RED);
-//  save_op_call_1 (file, op0, 0, LED_GREEN);
-//  save_op_call_1 (file, op0, 0, LED_BLUE);
-//  save_op_call_1 (file, op0, 0, LED_ORANGE);
-//  save_op_call_1 (file, op0, 0, LED_RED);
-//  save_op_jmp (file, op0, 0);
-//
-//  fclose (file);
+  save_op_data(file, get_op_loop_inf (1));
+  save_op_data(file, get_op_call_1(0, LED_GREEN));
+  save_op_data(file, get_op_call_1(0, LED_BLUE));
+  save_op_data(file, get_op_call_1(0, LED_ORANGE));
+  save_op_data(file, get_op_call_1(0, LED_RED));
+  save_op_data(file, get_op_jmp(0));
+
+  fclose (file);
 }
 
 void

@@ -45,45 +45,47 @@ opfunc_op_jmp (OPCODE opdata)
   __int_data.pos = opdata.data.jmp.opcode_idx;
 }
 
-void
-save_op_jmp (FILE *file, OPCODE opdata, int arg1)
+OPCODE
+get_op_jmp (int arg1)
 {
-  if (file == NULL)
-  {
-    return;
-  }
+  OPCODE opdata;
 
   opdata.opfunc_ptr = opfunc_op_jmp;
   opdata.data.jmp.opcode_idx = arg1;
 
-  fwrite (&opdata, sizeof (OPCODE), 1, file);
+  return opdata;
 }
 
-void
-save_op_call_1 (FILE *file, OPCODE opdata, int arg1, int arg2)
+OPCODE
+get_op_call_1 (int arg1, int arg2)
 {
-  if (file == NULL)
-  {
-    return;
-  }
+  OPCODE opdata;
 
   opdata.opfunc_ptr = opfunc_op_call_1;
   opdata.data.call_1.name_literal_idx = arg1;
   opdata.data.call_1.arg1_literal_idx = arg2;
 
-  fwrite (&opdata, sizeof (OPCODE), 1, file);
+  return opdata;
+}
+
+OPCODE
+get_op_loop_inf (int arg1)
+{
+  OPCODE opdata;
+
+  opdata.opfunc_ptr = opfunc_op_call_1;
+  opdata.data.loop_inf.opcode_idx = arg1;
+
+  return opdata;
 }
 
 void
-save_op_loop_inf (FILE *file, OPCODE opdata, int arg1)
+save_op_data (FILE *file, OPCODE opdata)
 {
   if (file == NULL)
   {
     return;
   }
-
-  opdata.opfunc_ptr = opfunc_loop_inf;
-  opdata.data.loop_inf.opcode_idx = arg1;
 
   fwrite (&opdata, sizeof (OPCODE), 1, file);
 }

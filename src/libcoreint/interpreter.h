@@ -24,16 +24,16 @@
 
 #include "opcodes.h"
 
-OPCODE __program[20];
+OPCODE __program[128];
 
-struct
-{
-  int pos;
-  int *root_op_addr;
+struct {
+    int pos;
+    opfunc func[LAST_OP];
+    int *root_op_addr;
 } __int_data;
 
-void gen_bytecode ();
-void run_int ();
+void gen_bytecode();
+void run_int();
 
 #endif	/* INTERPRETER_H */
 

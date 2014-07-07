@@ -23,41 +23,44 @@
 #include "globals.h"
 
 #define OPCODE struct __opcode
-#define OP_DEF(name) struct __op_##name
-#define OP(name) struct __op_##name name
+
+#define OP_STRUCT_FIELD(name) struct __op_##name name;
+#define OP_ENUM_FIELD(name) name ,
+#define OP_FUNC_DECL(name) void opfunc_##name  (OPCODE);
 
 OPCODE;
-
 typedef void (*opfunc)(OPCODE);
+
+#define OP_LIST(op) \
+  op(loop_inf) \
+  op(call_1) \
+  op(jmp) \
+  //op(call_2) \
+  op(call_n) \
+  op(nop)
 
 #include "opcode-structures.h"
 
+enum __opcode_idx
+{
+  OP_LIST (OP_ENUM_FIELD)
+  LAST_OP
+};
+
 union __opdata
 {
-  OP (loop_inf);
-  OP (call_1);
-  OP (call_2);
-  OP (call_n);
+  OP_LIST (OP_STRUCT_FIELD)
+};
 
-  OP (jmp);
-  OP (nop);
-} data;
+OP_LIST (OP_FUNC_DECL)
 
 OPCODE{
-  opfunc opfunc_ptr;
+  T_IDX op_idx;
   union __opdata data;
 }
 __packed;
 
 void save_op_data (OPCODE);
-
-void opfunc_loop_inf (OPCODE);
-void opfunc_call_1 (OPCODE);
-void opfunc_jmp (OPCODE);
-
-OPCODE getop_loop_inf (int);
-OPCODE getop_call_1 (int, int);
-OPCODE getop_jmp (int arg1);
 
 #endif	/* OPCODES_H */
 

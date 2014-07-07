@@ -60,22 +60,22 @@ opfunc_jmp (OPCODE opdata)
 }
 
 OPCODE
-getop_jmp (int arg1)
+getop_jmp (T_IDX arg1)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_jmp;
+  opdata.op_idx = jmp;
   opdata.data.jmp.opcode_idx = arg1;
 
   return opdata;
 }
 
 OPCODE
-getop_call_1 (int arg1, int arg2)
+getop_call_1 (T_IDX arg1, T_IDX arg2)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_call_1;
+  opdata.op_idx = call_1;
   opdata.data.call_1.name_literal_idx = arg1;
   opdata.data.call_1.arg1_literal_idx = arg2;
 
@@ -83,11 +83,11 @@ getop_call_1 (int arg1, int arg2)
 }
 
 OPCODE
-getop_loop_inf (int arg1)
+getop_loop_inf (T_IDX arg1)
 {
   OPCODE opdata;
 
-  opdata.opfunc_ptr = opfunc_loop_inf;
+  opdata.op_idx = loop_inf;
   opdata.data.loop_inf.opcode_idx = arg1;
 
   return opdata;

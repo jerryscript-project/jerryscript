@@ -34,15 +34,24 @@ gen_bytecode ()
 }
 
 void
+init_int ()
+{
+#define INIT_OP_FUNC(name) __int_data.func[ name ] = opfunc_##name ;
+  JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
+
+  __int_data.pos = 0;
+  OP_LIST (INIT_OP_FUNC)
+}
+
+void
 run_int ()
 {
-  __int_data.pos = 0;
-  
-  printf("size%d", sizeof(OPCODE));
+  init_int ();
 
   while (true)
-  {
-    OPCODE *curr = &__program[__int_data.pos];
-    curr->opfunc_ptr (*curr);
-  }
+    {
+      printf ("size %lu\n", sizeof (OPCODE));
+      OPCODE *curr = &__program[__int_data.pos];
+      __int_data.func[curr->op_idx](*curr);
+    }
 }

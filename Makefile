@@ -47,21 +47,21 @@ OBJS = \
 	$(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
 
-CC  = gcc-4.9
+CC  = gcc#-4.9
 LD  = ld
 OBJDUMP	= objdump
 OBJCOPY	= objcopy
 SIZE	= size
 STRIP	= strip
 
-CROSS_CC  = $(CROSS_COMPILE)gcc-4.9
+CROSS_CC  = $(CROSS_COMPILE)gcc#-4.9
 CROSS_LD  = $(CROSS_COMPILE)ld
 CROSS_OBJDUMP	= $(CROSS_COMPILE)objdump
 CROSS_OBJCOPY	= $(CROSS_COMPILE)objcopy
 CROSS_SIZE	= $(CROSS_COMPILE)size
 
 # General flags
-CFLAGS ?= $(INCLUDES) -std=c99 -m32 -fdiagnostics-color=always
+CFLAGS ?= $(INCLUDES) -std=c99 -m32 #-fdiagnostics-color=always
 #CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
 #CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
 #CFLAGS += -Wconversion -Wsign-conversion -Wformat-security

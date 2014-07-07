@@ -16,77 +16,45 @@
 #ifndef OPCODE_STRUCTURES_H
 #define	OPCODE_STRUCTURES_H
 
- // Jerry bytecode ver:07/04/2014 
+// Jerry bytecode ver:07/04/2014 
+#define OP_DEF(name, list) struct __op_##name { list ;  }
 
-// 
-#define OP_TYPE_IDX uint8_t
+#define OP_CODE_DECL(name, type, ... ) \
+        OP_DEF (name, type##_DECL( __VA_ARGS__ ) ); \
+        OPCODE getop_##name ( type );
 
-OP_DEF (nop) { };
+#define T_IDX uint8_t
+#define T_IDX_IDX T_IDX, T_IDX
+#define T_IDX_IDX_IDX T_IDX, T_IDX, T_IDX
 
-OP_DEF (jmp)
-{
-  OP_TYPE_IDX opcode_idx;
-};
+#define T_IDX_DECL(name) uint8_t name
+#define T_IDX_IDX_DECL(name1, name2) \
+        T_IDX_DECL( name1 ) ; \
+        T_IDX_DECL( name2 )
+#define T_IDX_IDX_IDX_DECL(name1, name2, name3) \
+        T_IDX_DECL( name1 ) ; \
+        T_IDX_DECL( name2 ); \
+        T_IDX_DECL( name3 )
 
-OP_DEF (decl) { };
 
-OP_DEF (decl_func_named)
-{
-  OP_TYPE_IDX name_literal_idx;  
-};
+OP_CODE_DECL(nop, T_IDX, opcode_idx);
+OP_CODE_DECL(jmp, T_IDX, opcode_idx);
+OP_CODE_DECL(loop_inf, T_IDX, opcode_idx);
 
-OP_DEF (decl_func_anon) { };
+OP_CODE_DECL(call_1, T_IDX_IDX,
+             name_literal_idx,
+             arg1_literal_idx);
 
-OP_DEF (decl_var_global) { };
+OP_CODE_DECL(call_2, T_IDX_IDX_IDX,
+             name_literal_idx,
+             arg1_literal_idx,
+             arg2_literal_idx);
 
-OP_DEF (decl_var_local) { };
+OP_CODE_DECL(call_n, T_IDX_IDX_IDX,
+             name_literal_idx,
+             arg1_literal_idx,
+             arg2_literal_idx);
 
-/** Call with 1 argument */
-OP_DEF (call_1)
-{
-  OP_TYPE_IDX name_literal_idx;
-  OP_TYPE_IDX arg1_literal_idx;
-};
-
-OP_DEF (call_2)
-{
-  OP_TYPE_IDX name_literal_idx;
-  OP_TYPE_IDX arg1_literal_idx;
-  OP_TYPE_IDX arg2_literal_idx;
-};
-
-OP_DEF (call_n) { };
-
-OP_DEF (list_header) { };
-OP_DEF (list_element) { };
-OP_DEF (list_tail) { };
-
-OP_DEF (try_begin) { };
-
-OP_DEF (try_end) { };
-
-OP_DEF (catch_begin) { };
-
-OP_DEF (catch_end) { };
-
-OP_DEF (finally_begin) { };
-
-OP_DEF (finally_end) { };
-
-OP_DEF (with_begin) { };
-
-OP_DEF (with_end) { };
-
-OP_DEF (loop_inf)
-{
-  OP_TYPE_IDX opcode_idx;
-};
-
-OP_DEF (loop_cond_pre) { };
-
-OP_DEF (loop_cond_post) { };
-
-OP_DEF (swtch) { };
 
 #endif	/* OPCODE_STRUCTURES_H */
 

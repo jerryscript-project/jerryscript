@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "error.h"
 #include "opcodes.h"
 #include "interpreter.h"
 
@@ -22,16 +23,70 @@ save_op_data (OPCODE opdata)
   __program[__int_data.pos++] = opdata;
 }
 
+void opfunc_loop_init_num (OPCODE opdata) { unreachable (); }
+void opfunc_loop_precond_begin_num (OPCODE opdata) { unreachable (); }
+void opfunc_loop_precond_end_num (OPCODE opdata) { unreachable (); }
+void opfunc_loop_postcond (OPCODE opdata) { unreachable (); }
+void opfunc_call_2 (OPCODE opdata) { unreachable (); }
+void opfunc_call_n (OPCODE opdata) { unreachable (); }
+void opfunc_func_decl_1 (OPCODE opdata) { unreachable (); }
+void opfunc_func_decl_2 (OPCODE opdata) { unreachable (); }
+void opfunc_func_decl_n (OPCODE opdata) { unreachable (); }
+void opfunc_varg_1 (OPCODE opdata) { unreachable (); }
+void opfunc_varg_1_end (OPCODE opdata) { unreachable (); }
+void opfunc_varg_2 (OPCODE opdata) { unreachable (); }
+void opfunc_varg_2_end (OPCODE opdata) { unreachable (); }
+void opfunc_varg_3 (OPCODE opdata) { unreachable (); }
+void opfunc_varg_3_end (OPCODE opdata) { unreachable (); }
+void opfunc_retval (OPCODE opdata) { unreachable (); }
+void opfunc_assignment (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_multiplication (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_devision (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_remainder (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_addition (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_substruction (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_shift_left (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_shift_right (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_shift_uright (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_b_and (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_b_xor (OPCODE opdata) { unreachable (); }
+void opfunc_assignment_b_or (OPCODE opdata) { unreachable (); }
+void opfunc_logical_and (OPCODE opdata) { unreachable (); }
+void opfunc_logical_or (OPCODE opdata) { unreachable (); }
+void opfunc_b_and (OPCODE opdata) { unreachable (); }
+void opfunc_b_or (OPCODE opdata) { unreachable (); }
+void opfunc_b_xor (OPCODE opdata) { unreachable (); }
+void opfunc_b_shift_left (OPCODE opdata) { unreachable (); }
+void opfunc_b_shift_right (OPCODE opdata) { unreachable (); }
+void opfunc_b_shift_uright (OPCODE opdata) { unreachable (); }
+void opfunc_addition (OPCODE opdata) { unreachable (); }
+void opfunc_substraction (OPCODE opdata) { unreachable (); }
+void opfunc_division (OPCODE opdata) { unreachable (); }
+void opfunc_multiplication (OPCODE opdata) { unreachable (); }
+void opfunc_remainder (OPCODE opdata) { unreachable (); }
+void opfunc_jmp_up (OPCODE opdata) { unreachable (); }
+void opfunc_jmp_down (OPCODE opdata) { unreachable (); }
+void opfunc_is_true_jmp (OPCODE opdata) { unreachable (); }
+void opfunc_is_false_jmp (OPCODE opdata) { unreachable (); }
+void opfunc_is_less_than (OPCODE opdata) { unreachable (); }
+void opfunc_is_less_or_equal (OPCODE opdata) { unreachable (); }
+void opfunc_is_greater_than (OPCODE opdata) { unreachable (); }
+void opfunc_is_greater_or_equal (OPCODE opdata) { unreachable (); }
+void opfunc_is_equal_value (OPCODE opdata) { unreachable (); }
+void opfunc_is_not_equal_value (OPCODE opdata) { unreachable (); }
+void opfunc_is_equal_value_type (OPCODE opdata) { unreachable (); }
+void opfunc_is_not_equal_value_type (OPCODE opdata) { unreachable (); }
+
 void
 opfunc_loop_inf (OPCODE opdata)
 {
 #ifdef __HOST
   printf ("%d::loop_inf:idx:%d\n",
           __int_data.pos,
-          opdata.data.loop_inf.opcode_idx);
+          opdata.data.loop_inf.loop_root);
 #endif
 
-  __int_data.pos = opdata.data.loop_inf.opcode_idx;
+  __int_data.pos = opdata.data.loop_inf.loop_root;
 }
 
 void
@@ -40,8 +95,8 @@ opfunc_call_1 (OPCODE opdata)
 #ifdef __HOST
   printf ("%d::op_call_1:idx:%d:%d\n",
           __int_data.pos,
-          opdata.data.call_1.name_literal_idx,
-          opdata.data.call_1.arg1_literal_idx);
+          opdata.data.call_1.name_lit_idx,
+          opdata.data.call_1.arg1_lit_idx);
 #endif
 
   __int_data.pos++;
@@ -76,8 +131,8 @@ getop_call_1 (T_IDX arg1, T_IDX arg2)
   OPCODE opdata;
 
   opdata.op_idx = call_1;
-  opdata.data.call_1.name_literal_idx = arg1;
-  opdata.data.call_1.arg1_literal_idx = arg2;
+  opdata.data.call_1.name_lit_idx = arg1;
+  opdata.data.call_1.arg1_lit_idx = arg2;
 
   return opdata;
 }
@@ -88,7 +143,7 @@ getop_loop_inf (T_IDX arg1)
   OPCODE opdata;
 
   opdata.op_idx = loop_inf;
-  opdata.data.loop_inf.opcode_idx = arg1;
+  opdata.data.loop_inf.loop_root = arg1;
 
   return opdata;
 }

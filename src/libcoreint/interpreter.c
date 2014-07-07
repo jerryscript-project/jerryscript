@@ -20,12 +20,26 @@ gen_bytecode ()
 {
   __int_data.pos = 0;
 
+  /*
+   while (true) {
+    LEDToggle (LED3);
+    LEDToggle (LED6);
+    LEDToggle (LED7);
+    LEDToggle (LED4);
+    LEDToggle (LED10);
+    LEDToggle (LED8);
+    LEDToggle (LED9);
+    LEDToggle (LED5);
+
+    wait(500);
+   }
+   */
   save_op_data (getop_loop_inf (1));
   save_op_data (getop_call_1 (0, 12));
   save_op_data (getop_call_1 (0, 13));
   save_op_data (getop_call_1 (0, 14));
   save_op_data (getop_call_1 (0, 15));
-  //save_op_data (getop_jmp (0));
+  save_op_data (getop_jmp (0));
 
 #ifdef __MCU
   // It's mandatory to restart app!
@@ -49,9 +63,8 @@ run_int ()
   init_int ();
 
   while (true)
-    {
-      printf ("size %lu\n", sizeof (OPCODE));
-      OPCODE *curr = &__program[__int_data.pos];
-      __int_data.func[curr->op_idx](*curr);
-    }
+  {
+    OPCODE *curr = &__program[__int_data.pos];
+    __int_data.func[curr->op_idx](*curr);
+  }
 }

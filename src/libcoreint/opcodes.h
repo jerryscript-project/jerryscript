@@ -28,16 +28,102 @@
 #define OP_ENUM_FIELD(name) name ,
 #define OP_FUNC_DECL(name) void opfunc_##name  (OPCODE);
 
+/** A single bytecode instruction is 32bit wide and has an 8bit opcode field
+ and several operand of 8 of 16 bit.*/
+
+// OPCODE FIELD TYPES
+#define T_IDX uint8_t /** index values */
+
 OPCODE;
 typedef void (*opfunc)(OPCODE);
 
-#define OP_LIST(op) \
-  op(loop_inf) \
-  op(call_1) \
-  op(jmp) \
-  //op(call_2) \
-  op(call_n) \
-  op(nop)
+#define OP_LOOPS(op)                    \
+    op(loop_inf)                        \
+    op(loop_init_num)                   \
+    op(loop_precond_begin_num)          \
+    op(loop_precond_end_num)            \
+    op(loop_postcond)
+
+#define OP_CALLS_AND_ARGS(op)           \
+    op(call_1)                          \
+    op(call_2)                          \
+    op(call_n)                          \
+    op(func_decl_1)                     \
+    op(func_decl_2)                     \
+    op(func_decl_n)                     \
+    op(varg_1)                          \
+    op(varg_1_end)                      \
+    op(varg_2)                          \
+    op(varg_2_end)                      \
+    op(varg_3)                          \
+    op(varg_3_end)                      \
+    op(retval)
+
+#define OP_ASSIGNMENTS(op)              \
+    op(assignment)                      \
+    op(assignment_multiplication)       \
+    op(assignment_devision)             \
+    op(assignment_remainder)            \
+    op(assignment_addition)             \
+    op(assignment_substruction)         \
+    op(assignment_shift_left)           \
+    op(assignment_shift_right)          \
+    op(assignment_shift_uright)         \
+    op(assignment_b_and)                \
+    op(assignment_b_xor)                \
+    op(assignment_b_or)
+
+#define OP_B_SHIFTS(op)                 \
+    op(b_shift_left)                    \
+    op(b_shift_right)                   \
+    op(b_shift_uright)
+
+#define OP_B_BITWISE(op)                \
+    op(b_and)                           \
+    op(b_or)                            \
+    op(b_xor)
+
+#define OP_B_LOGICAL(op)                \
+    op(logical_and)                     \
+    op(logical_or)
+
+#define OP_ARITHMETIC(op)               \
+    op(addition)                        \
+    op(substraction)                    \
+    op(division)                        \
+    op(multiplication)                  \
+    op(remainder)
+
+#define OP_UNCONDITIONAL_JUMPS(op)      \
+    op(jmp)                             \
+    op(jmp_up)                          \
+    op(jmp_down)
+
+#define OP_UNARY_OPS(op)                \
+    op(is_true_jmp)                     \
+    op(is_false_jmp)
+
+#define OP_CONDITIONAL_JUMPS(op)        \
+    OP_UNARY_OPS(op)                    \
+    op(is_less_than)                    \
+    op(is_less_or_equal)                \
+    op(is_greater_than)                 \
+    op(is_greater_or_equal)             \
+    op(is_equal_value)                  \
+    op(is_not_equal_value)              \
+    op(is_equal_value_type)             \
+    op(is_not_equal_value_type)
+
+#define OP_LIST(op)                     \
+  OP_LOOPS(op)                          \
+  OP_CALLS_AND_ARGS(op)                 \
+  OP_ASSIGNMENTS(op)                    \
+  OP_B_LOGICAL(op)                      \
+  OP_B_BITWISE(op)                      \
+  OP_B_SHIFTS(op)                       \
+  OP_ARITHMETIC(op)                     \
+  OP_UNCONDITIONAL_JUMPS(op)            \
+  OP_CONDITIONAL_JUMPS(op)
 
 #include "opcode-structures.h"
 
@@ -54,7 +140,8 @@ union __opdata
 
 OP_LIST (OP_FUNC_DECL)
 
-OPCODE{
+OPCODE
+{
   T_IDX op_idx;
   union __opdata data;
 }

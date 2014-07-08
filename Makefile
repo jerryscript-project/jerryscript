@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TARGET ?= jerry
-CROSS_COMPILE	?= arm-none-eabi-
+CROSS_COMPILE	?= 
 OBJ_DIR = obj
 OUT_DIR = ./out
 
@@ -58,18 +58,12 @@ OBJS = \
 	$(sort \
 	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(MAIN_MODULE_SRC) $(SOURCES))))
 
-CC  = gcc#-4.9
-LD  = ld
-OBJDUMP	= objdump
-OBJCOPY	= objcopy
-SIZE	= size
-STRIP	= strip
-
-CROSS_CC  = $(CROSS_COMPILE)gcc#-4.9
-CROSS_LD  = $(CROSS_COMPILE)ld
-CROSS_OBJDUMP	= $(CROSS_COMPILE)objdump
-CROSS_OBJCOPY	= $(CROSS_COMPILE)objcopy
-CROSS_SIZE	= $(CROSS_COMPILE)size
+CC  = $(CROSS_COMPILE)gcc
+LD  = $(CROSS_COMPILE)ld
+OBJDUMP	= $(CROSS_COMPILE)objdump
+OBJCOPY	= $(CROSS_COMPILE)objcopy
+SIZE	= $(CROSS_COMPILE)size
+STRIP	= $(CROSS_COMPILE)strip
 
 # General flags
 CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
@@ -79,33 +73,33 @@ CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
 #CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU
-#CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
-#CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-#CFLAGS += -ffunction-sections -fdata-sections
+MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
+MCU_CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+MCU_CFLAGS += -ffunction-sections -fdata-sections
 
-DEBUG_OPTIONS = -g3 -O0 -DDEBUG# -fsanitize=address
+DEBUG_OPTIONS = -g3 -O0 -DDEBUG #-fsanitize=address
 RELEASE_OPTIONS = -Os -Werror -DNDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 TARGET_HOST = -D__HOST
 TARGET_MCU = -D__MCU
 
-.PHONY: all debug release clean tests check install
+.PHONY: all debug debug.stm32f3 release clean tests check install
 
 all: clean debug release check
 
-debug:
+debug: clean
 	mkdir -p $(OUT_DIR)/debug.host/
 	$(CC) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
 	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/debug.host/$(TARGET)
 
-release:
+release: clean
 	mkdir -p $(OUT_DIR)/release.host/
 	$(CC) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(TARGET_HOST) \
 	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/release.host/$(TARGET)
 	$(STRIP) $(OUT_DIR)/release.host/$(TARGET)
 
-tests:
+tests: clean
 	mkdir -p $(OUT_DIR)/tests.host/
 	for unit_test in $(UNITTESTS); \
 	do \

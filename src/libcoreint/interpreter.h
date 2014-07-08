@@ -23,6 +23,7 @@
 #endif
 
 #include "opcodes.h"
+#include "ecma-globals.h"
 
 OPCODE __program[128];
 
@@ -31,6 +32,8 @@ opfunc __opfuncs[LAST_OP];
 struct __int_data
 {
   int pos;
+  ecma_Object_t *pThisBinding; /**< this binding for current context */
+  ecma_Object_t *pLexEnv; /**< current lexical environment */
   int *root_op_addr;
 };
 

@@ -396,5 +396,5 @@ OP_CODE_DECL (decl_var, T_IDX,
         
 // TODO New constructor
 
-
 #endif	/* OPCODE_STRUCTURES_H */
+        

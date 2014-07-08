@@ -17,15 +17,21 @@ CROSS_COMPILE	?= arm-none-eabi-
 OBJ_DIR = obj
 OUT_DIR = ./out
 
+MAIN_MODULE_SRC = ./src/main.c
+UNITTESTS_SRC_DIR = ./tests/unit
+
+# FIXME:
+#  Place jerry-libc.c, pretty-printer.c to some subdirectory (libruntime?)
+#  and add them to the SOURCES list through wildcard.
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/*.c) \
+	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c) \
 	$(wildcard ./src/libperipherals/*.c) \
 	$(wildcard ./src/libjsparser/*.c) \
 	$(wildcard ./src/libecmaobjects/*.c) \
 	$(wildcard ./src/liballocator/*.c) \
 	$(wildcard ./src/libcoreint/*.c) )
-	
+
 HEADERS = \
 	$(sort \
 	$(wildcard ./src/*.h) \
@@ -43,9 +49,14 @@ INCLUDES = \
 	-I src/liballocator \
 	-I src/libcoreint
 
+UNITTESTS = \
+	$(sort \
+	$(patsubst %.c,%,$(notdir \
+	$(wildcard $(UNITTESTS_SRC_DIR)/*))))
+
 OBJS = \
 	$(sort \
-	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(SOURCES))))
+	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(MAIN_MODULE_SRC) $(SOURCES))))
 
 CC  = gcc#-4.9
 LD  = ld
@@ -79,20 +90,28 @@ DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 TARGET_HOST = -D__HOST
 TARGET_MCU = -D__MCU
 
-.PHONY: all debug release clean check install
+.PHONY: all debug release clean tests check install
 
 all: clean debug release check
 
 debug:
 	mkdir -p $(OUT_DIR)/debug.host/
 	$(CC) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) -o $(OUT_DIR)/debug.host/$(TARGET)
+	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/debug.host/$(TARGET)
 
 release:
 	mkdir -p $(OUT_DIR)/release.host/
 	$(CC) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) -o $(OUT_DIR)/release.host/$(TARGET)
+	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/release.host/$(TARGET)
 	$(STRIP) $(OUT_DIR)/release.host/$(TARGET)
+
+tests:
+	mkdir -p $(OUT_DIR)/tests.host/
+	for unit_test in $(UNITTESTS); \
+	do \
+		$(CC) -O3 $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
+		$(SOURCES) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(OUT_DIR)/tests.host/"$$unit_test"; \
+	done
 
 clean:
 	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ *.log *.log
@@ -104,19 +123,30 @@ clean:
 	rm -f $(TARGET).hex
 	rm -f $(TARGET).lst
 
-check:
-	mkdir -p $(OUT_DIR)
-	cd $(OUT_DIR)
-	cppcheck $(HEADERS) $(SOURCES) --enable=all --std=c99
+check: tests
+	@mkdir -p $(OUT_DIR)
+	@cd $(OUT_DIR)
+
+	@echo "=== Running cppcheck ==="
+	@cppcheck $(HEADERS) $(SOURCES) --enable=all --std=c99
+	@echo Done
+	@echo
 	
-	if [ -f $(OUT_DIR)/release.host/$(TARGET) ]; then \
-	./tools/jerry_test.sh $(OUT_DIR)/release.host/$(TARGET);\
+	@echo "=== Running unit tests ==="
+	./tools/jerry_unittest.sh $(OUT_DIR)/tests.host $(UNITTESTS)
+	@echo Done
+	@echo
+	
+	@echo "=== Running js tests ==="
+	@ if [ -f $(OUT_DIR)/release.host/$(TARGET) ]; then \
+		./tools/jerry_test.sh $(OUT_DIR)/release.host/$(TARGET);\
 	fi
 	
-	if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
-	./tools/jerry_test.sh $(OUT_DIR)/debug.host/$(TARGET);\
+	@if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
+		./tools/jerry_test.sh $(OUT_DIR)/debug.host/$(TARGET); \
 	fi
-	
+	@echo Done
+	@echo
 
 install:
 	st-flash write $(TARGET).bin 0x08000000

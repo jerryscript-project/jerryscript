@@ -34,8 +34,8 @@ struct __int_data
   int *root_op_addr;
 };
 
-void gen_bytecode ();
-void run_int ();
+void gen_bytecode (void);
+void run_int (void);
 void run_int_from_pos (struct __int_data *);
 
 #endif	/* INTERPRETER_H */

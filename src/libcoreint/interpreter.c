@@ -18,8 +18,6 @@
 void
 gen_bytecode ()
 {
-  __int_data.pos = 0;
-
   /*
    while (true) {
     LEDToggle (LED3);
@@ -34,12 +32,12 @@ gen_bytecode ()
     wait(500);
    }
    */
-  save_op_data (getop_loop_inf (1));
-  save_op_data (getop_call_1 (0, 12));
-  save_op_data (getop_call_1 (0, 13));
-  save_op_data (getop_call_1 (0, 14));
-  save_op_data (getop_call_1 (0, 15));
-  save_op_data (getop_jmp (0));
+  save_op_data (0, getop_loop_inf (1));
+  save_op_data (1, getop_call_1 (0, 12));
+  save_op_data (2, getop_call_1 (0, 13));
+  save_op_data (3, getop_call_1 (0, 14));
+  save_op_data (4, getop_call_1 (0, 15));
+  save_op_data (5, getop_jmp (0));
 
 #ifdef __MCU
   // It's mandatory to restart app!
@@ -50,10 +48,9 @@ gen_bytecode ()
 void
 init_int ()
 {
-#define INIT_OP_FUNC(name) __int_data.func[ name ] = opfunc_##name ;
+#define INIT_OP_FUNC(name) __opfuncs[ name ] = opfunc_##name ;
   JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
 
-  __int_data.pos = 0;
   OP_LIST (INIT_OP_FUNC)
 }
 
@@ -62,9 +59,18 @@ run_int ()
 {
   init_int ();
 
+  struct __int_data int_data;
+  int_data.pos = 0;
+
   while (true)
   {
-    OPCODE *curr = &__program[__int_data.pos];
-    __int_data.func[curr->op_idx](*curr);
+    run_int_from_pos(&int_data);
   }
+}
+
+void
+run_int_from_pos (struct __int_data *int_data)
+{
+  OPCODE *curr = &__program[int_data->pos];
+  __opfuncs[curr->op_idx](*curr, int_data);
 }

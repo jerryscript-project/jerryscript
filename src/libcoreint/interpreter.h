@@ -26,14 +26,17 @@
 
 OPCODE __program[128];
 
-struct {
-    int pos;
-    opfunc func[LAST_OP];
-    int *root_op_addr;
-} __int_data;
+opfunc __opfuncs[LAST_OP];
 
-void gen_bytecode();
-void run_int();
+struct __int_data
+{
+  int pos;
+  int *root_op_addr;
+};
+
+void gen_bytecode ();
+void run_int ();
+void run_int_from_pos (struct __int_data *);
 
 #endif	/* INTERPRETER_H */
 

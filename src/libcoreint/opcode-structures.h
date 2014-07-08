@@ -17,7 +17,12 @@
 #define	OPCODE_STRUCTURES_H
 
 // Jerry bytecode ver:07/04/2014 
-#define OP_DEF(name, list) struct __op_##name { list ;  }
+#define OP_DEF(name, list) struct __op_##name { list ;  } ;
+
+
+#define OP_CODE_DECL_VOID(name) \
+        struct __op_##name { }; \
+        OPCODE getop_##name ();
 
 #define OP_CODE_DECL(name, type, ... ) \
         OP_DEF (name, type##_DECL( __VA_ARGS__ ) ); \
@@ -321,6 +326,7 @@ OP_CODE_DECL (varg_3_end, T_IDX_IDX_IDX,
 /** return value; */
 OP_CODE_DECL (retval, T_IDX,
               ret_value);
+OP_CODE_DECL_VOID (ret);
 
 // LOOPS
 // Lately, all loops should be translated into different JMPs in an optimizer.
@@ -363,7 +369,6 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
               condition,
               body_root);
 
-//// TODO
 ///** for vars...in iter, state, ctl */
 //OP_CODE_DECL (loop_init, T_IDX_IDX_IDX,             
 //              start_idx, stop_idx, step_idx);
@@ -374,6 +379,7 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
 //OP_CODE_DECL (loop_cond_pre_end, T_IDX,             
 //              iterator, body_root);
 
+// Property accessors (array, objects, strings)
 /** Array ops for ILMIR*/
 //OP_CODE_DECL (array_copy, T_IDX_IDX,                /** L = R */
 //              var_left, var_right);
@@ -381,6 +387,16 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
 //              dst, var_left, var_right);
 //OP_CODE_DECL (array_get, T_IDX_IDX_IDX,             /** dst = array[index] */
 //              dst, array, index);
+
+//// TODO
+
+// Variable declarations
+// TODO New constructor
+
+
+
+
+
 
 #endif	/* OPCODE_STRUCTURES_H */
 

@@ -390,13 +390,11 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
 
 //// TODO
 
-// Variable declarations
+// Variable declaration
+OP_CODE_DECL (decl_var, T_IDX,
+              variable)
+        
 // TODO New constructor
 
 
-
-
-
-
 #endif	/* OPCODE_STRUCTURES_H */
-

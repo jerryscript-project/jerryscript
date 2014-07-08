@@ -72,7 +72,7 @@ CROSS_OBJCOPY	= $(CROSS_COMPILE)objcopy
 CROSS_SIZE	= $(CROSS_COMPILE)size
 
 # General flags
-CFLAGS ?= $(INCLUDES) -std=c99 -m32 #-fdiagnostics-color=always
+CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
 #CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
 #CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
 #CFLAGS += -Wconversion -Wsign-conversion -Wformat-security

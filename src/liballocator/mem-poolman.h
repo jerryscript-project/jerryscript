@@ -37,6 +37,7 @@ typedef enum {
     MEM_POOL_CHUNK_TYPE_8, /**< 8-byte chunk */
     MEM_POOL_CHUNK_TYPE_16, /**< 16-byte chunk */
     MEM_POOL_CHUNK_TYPE_32, /**< 32-byte chunk */
+    MEM_POOL_CHUNK_TYPE_64, /**< 64-byte chunk */
     MEM_POOL_CHUNK_TYPE__COUNT /**< count of possible pool chunks' sizes */
 } mem_PoolChunkType_t;
 
@@ -47,7 +48,8 @@ typedef enum {
                                         ((size) == 8 ? MEM_POOL_CHUNK_TYPE_8 : \
                                         ((size) == 16 ? MEM_POOL_CHUNK_TYPE_16 : \
                                         ((size) == 32 ? MEM_POOL_CHUNK_TYPE_32 : \
-                                        jerry_UnreferencedExpression))))
+                                        ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
+                                        jerry_UnreferencedExpression)))))
 
 /**
  * Get chunk size from chunk type.

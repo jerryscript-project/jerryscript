@@ -36,7 +36,7 @@ const size_t test_heap_size = 8 * 1024;
 const uint32_t test_iters = 16384;
 
 // Subiterations count
-const uint32_t test_max_sub_iters = 64;
+const uint32_t test_max_sub_iters = 32;
 
 int
 main( int __unused argc,

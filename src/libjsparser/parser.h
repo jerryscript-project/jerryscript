@@ -41,7 +41,7 @@ formal_parameter_list;
 static const formal_parameter_list
 empty_formal_parameter_list = 
 {
-  .names = { [0] = NULL}
+  .names = { [0] = NULL }
 };
 
 static inline bool

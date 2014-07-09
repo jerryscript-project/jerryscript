@@ -49,8 +49,7 @@ void
 init_int ()
 {
 #define INIT_OP_FUNC(name) __opfuncs[ name ] = opfunc_##name ;
-  // FIXME
-  // JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
+  JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
 
   OP_LIST (INIT_OP_FUNC)
 }

@@ -68,11 +68,11 @@ SIZE	= $(CROSS_COMPILE)size
 STRIP	= $(CROSS_COMPILE)strip
 
 # General flags
-CFLAGS ?= $(INCLUDES) -std=c99 -m32 #-fdiagnostics-color=always
-#CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
-#CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-#CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
-#CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
+CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
+CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
+CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU
 MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb

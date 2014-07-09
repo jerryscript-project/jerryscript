@@ -79,7 +79,7 @@ MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
 MCU_CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 MCU_CFLAGS += -ffunction-sections -fdata-sections
 
-DEBUG_OPTIONS = -g3 -O0 -DJERRY_NDEBUG# -fsanitize=address
+DEBUG_OPTIONS = -g3 -O0 # -fsanitize=address
 RELEASE_OPTIONS = -Os -Werror -DJERRY_NDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS

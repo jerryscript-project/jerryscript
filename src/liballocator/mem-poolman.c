@@ -65,11 +65,11 @@ static void mem_PoolsStatFreePool( mem_PoolChunkType_t);
 static void mem_PoolsStatAllocChunk( mem_PoolChunkType_t);
 static void mem_PoolsStatFreeChunk( mem_PoolChunkType_t);
 #else /* !MEM_STATS */
-#  define mem_PoolsStatsInit()
-#  define mem_PoolsStatAllocPool()
-#  define mem_PoolsStatsFreePool()
-#  define mem_PoolsStatAllocChunk()
-#  define mem_PoolsStatFreeChunk()
+#  define mem_PoolsStatInit()
+#  define mem_PoolsStatAllocPool(v)
+#  define mem_PoolsStatFreePool(v)
+#  define mem_PoolsStatAllocChunk(v)
+#  define mem_PoolsStatFreeChunk(v)
 #endif /* !MEM_STATS */
 
 /**

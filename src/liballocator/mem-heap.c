@@ -119,7 +119,7 @@ static void mem_HeapStatFreeBlock( mem_BlockHeader_t *block_header_p);
 static void mem_HeapStatFreeBlockSplit( void);
 static void mem_HeapStatFreeBlockMerge( void);
 #else /* !MEM_STATS */
-#  define mem_InitStats()
+#  define mem_HeapStatInit()
 #  define mem_HeapStatAllocBlock( v)
 #  define mem_HeapStatFreeBlock( v)
 #  define mem_HeapStatFreeBlockSplit()

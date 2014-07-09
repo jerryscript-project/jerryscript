@@ -93,8 +93,10 @@ main( int __unused argc,
         }
     }
 
+#ifdef MEM_STATS
     mem_PoolsStats_t stats;
     mem_PoolsGetStats( &stats);
+#endif /* MEM_STATS */
 
     __printf("Pools stats:\n");
     for(mem_PoolChunkType_t type = 0;

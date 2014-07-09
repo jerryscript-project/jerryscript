@@ -82,5 +82,7 @@ main( int __unused argc,
         }
     }
 
+    mem_HeapPrint( false);
+
     return 0;
 } /* main */

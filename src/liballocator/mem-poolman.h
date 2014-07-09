@@ -37,6 +37,7 @@ typedef enum {
     MEM_POOL_CHUNK_TYPE_8, /**< 8-byte chunk */
     MEM_POOL_CHUNK_TYPE_16, /**< 16-byte chunk */
     MEM_POOL_CHUNK_TYPE_32, /**< 32-byte chunk */
+    MEM_POOL_CHUNK_TYPE_64, /**< 64-byte chunk */
     MEM_POOL_CHUNK_TYPE__COUNT /**< count of possible pool chunks' sizes */
 } mem_PoolChunkType_t;
 
@@ -47,7 +48,8 @@ typedef enum {
                                         ((size) == 8 ? MEM_POOL_CHUNK_TYPE_8 : \
                                         ((size) == 16 ? MEM_POOL_CHUNK_TYPE_16 : \
                                         ((size) == 32 ? MEM_POOL_CHUNK_TYPE_32 : \
-                                        jerry_UnreferencedExpression))))
+                                        ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
+                                        jerry_UnreferencedExpression)))))
 
 /**
  * Get chunk size from chunk type.
@@ -68,6 +70,31 @@ mem_GetChunkSize( mem_PoolChunkType_t chunkType) /**< chunk type */
 extern void mem_PoolsInit(void);
 extern uint8_t* mem_PoolsAlloc(mem_PoolChunkType_t chunkType);
 extern void mem_PoolsFree(mem_PoolChunkType_t chunkType, uint8_t *pChunk);
+
+#ifdef MEM_STATS
+/**
+ * Pools' memory usage statistics
+ */
+typedef struct
+{
+    /** pools' count, per type */
+    size_t pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** peak pools' count, per type */
+    size_t peak_pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+
+    /** allocated chunks count, per type */
+    size_t allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** peak allocated chunks count, per type */
+    size_t peak_allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** free chunks count, per type */
+    size_t free_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+} mem_PoolsStats_t;
+
+extern void mem_PoolsGetStats( mem_PoolsStats_t *out_pools_stats_p);
+#endif /* MEM_STATS */
 
 #endif /* JERRY_MEM_POOLMAN_H */
 

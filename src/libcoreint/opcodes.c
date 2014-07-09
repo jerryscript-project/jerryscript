@@ -23,60 +23,60 @@ save_op_data (int pos, OPCODE opdata)
   __program[pos] = opdata;
 }
 
-void opfunc_loop_init_num (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_loop_precond_begin_num (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_loop_precond_end_num (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_loop_postcond (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_call_2 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_call_n (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_func_decl_1 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_func_decl_2 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_func_decl_n (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_1 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_1_end (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_2 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_2_end (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_3 (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_varg_3_end (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_retval (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_ret (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_multiplication (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_devision (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_remainder (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_addition (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_substruction (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_left (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_right (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_uright (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_and (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_xor (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_or (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_logical_and (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_logical_or (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_and (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_or (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_xor (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_shift_left (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_shift_right (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_b_shift_uright (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_addition (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_substraction (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_division (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_multiplication (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_remainder (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_jmp_up (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_jmp_down (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_true_jmp (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_false_jmp (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_less_than (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_less_or_equal (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_greater_than (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_greater_or_equal (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_equal_value (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_not_equal_value (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_equal_value_type (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
-void opfunc_is_not_equal_value_type (OPCODE opdata, struct __int_data *int_data) { JERRY_UNREACHABLE (); }
+void opfunc_loop_init_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_loop_precond_begin_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_loop_precond_end_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_loop_postcond (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_call_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_call_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_decl_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_decl_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_decl_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_1_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_2_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_3 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_varg_3_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_retval (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_ret (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_multiplication (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_devision (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_remainder (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_addition (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_substruction (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_shift_left (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_shift_right (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_shift_uright (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_b_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_b_xor (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_assignment_b_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_logical_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_logical_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_xor (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_shift_left (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_shift_right (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_shift_uright (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_addition (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_substraction (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_division (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_multiplication (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_remainder (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_jmp_up (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_jmp_down (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_true_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_false_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_less_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_less_or_equal (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_greater_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_greater_or_equal (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_not_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_is_not_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 
 void
 opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)

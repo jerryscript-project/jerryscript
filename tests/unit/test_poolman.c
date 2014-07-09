@@ -36,7 +36,7 @@ const size_t test_heap_size = 8 * 1024;
 const uint32_t test_iters = 16384;
 
 // Subiterations count
-const uint32_t test_max_sub_iters = 64;
+const uint32_t test_max_sub_iters = 32;
 
 int
 main( int __unused argc,
@@ -92,6 +92,29 @@ main( int __unused argc,
             }
         }
     }
+
+    mem_PoolsStats_t stats;
+    mem_PoolsGetStats( &stats);
+
+    __printf("Pools stats:\n");
+    for(mem_PoolChunkType_t type = 0;
+        type < MEM_POOL_CHUNK_TYPE__COUNT;
+        type++)
+    {
+      __printf(" Chunk size: %u\n"
+                  "  Pools: %lu\n"
+                  "  Allocated chunks: %lu\n"
+                  "  Free chunks: %lu\n"
+                  "  Peak pools: %lu\n"
+                  "  Peak allocated chunks: %lu\n",
+                  mem_GetChunkSize( type),
+                  stats.pools_count[ type ],
+                  stats.allocated_chunks[ type ],
+                  stats.free_chunks[ type ],
+                  stats.peak_pools_count[ type ],
+                  stats.peak_allocated_chunks[ type ]);
+    }
+    __printf("\n");
 
     return 0;
 } /* main */

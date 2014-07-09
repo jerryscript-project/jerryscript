@@ -57,6 +57,10 @@ typedef signed int int32_t;
 #define JERRY_STATIC_ASSERT_GLUE( a, b ) JERRY_STATIC_ASSERT_GLUE_( a, b )
 #define JERRY_STATIC_ASSERT( x ) typedef char JERRY_STATIC_ASSERT_GLUE( static_assertion_failed_, __LINE__) [ ( x ) ? 1 : -1 ] __unused
 
+#define CALL_PRAGMA(x) _Pragma (#x)
+#define TODO(x) CALL_PRAGMA(message ("TODO - " #x))
+#define FIXME(x) CALL_PRAGMA(message ("FIXME - " #x))
+
 /**
  * Variable that must not be referenced.
  *

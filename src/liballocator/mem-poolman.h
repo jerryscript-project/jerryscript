@@ -51,21 +51,7 @@ typedef enum {
                                         ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
                                         jerry_UnreferencedExpression)))))
 
-/**
- * Get chunk size from chunk type.
- * 
- * @return size (in bytes) of chunk of specified type
- */
-static size_t
-mem_GetChunkSize( mem_PoolChunkType_t chunkType) /**< chunk type */
-{
-    uint32_t chunkTypeId = (uint32_t) chunkType;
-
-    JERRY_ASSERT( chunkTypeId < MEM_POOL_CHUNK_TYPE__COUNT );
-
-    return ( 1u << ( chunkTypeId + 2 ) );
-} /* mem_GetChunkSize */
-
+extern size_t mem_GetChunkSize( mem_PoolChunkType_t chunkType);
 
 extern void mem_PoolsInit(void);
 extern uint8_t* mem_PoolsAlloc(mem_PoolChunkType_t chunkType);

@@ -73,6 +73,21 @@ static void mem_PoolsStatFreeChunk( mem_PoolChunkType_t);
 #endif /* !MEM_STATS */
 
 /**
+ * Get chunk size from chunk type.
+ * 
+ * @return size (in bytes) of chunk of specified type
+ */
+size_t
+mem_GetChunkSize( mem_PoolChunkType_t chunkType) /**< chunk type */
+{
+    uint32_t chunkTypeId = (uint32_t) chunkType;
+
+    JERRY_ASSERT( chunkTypeId < MEM_POOL_CHUNK_TYPE__COUNT );
+
+    return ( 1u << ( chunkTypeId + 2 ) );
+} /* mem_GetChunkSize */
+
+/**
  * Initialize pool manager
  */
 void

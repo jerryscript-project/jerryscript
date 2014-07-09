@@ -31,10 +31,10 @@ opfunc __opfuncs[LAST_OP];
 
 struct __int_data
 {
-  int pos;
+  int pos; /**< current opcode to execute */
   ecma_Object_t *pThisBinding; /**< this binding for current context */
   ecma_Object_t *pLexEnv; /**< current lexical environment */
-  int *root_op_addr;
+  int *root_op_addr; /**< pointer to first opcode saved */
 };
 
 void gen_bytecode (void);

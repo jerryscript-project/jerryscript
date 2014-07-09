@@ -96,9 +96,9 @@ typedef struct
  */
 mem_HeapState_t mem_Heap;
 
-static inline size_t mem_get_block_chunks_count( const mem_BlockHeader_t *block_header_p);
-static inline size_t mem_get_block_data_space_size( const mem_BlockHeader_t *block_header_p);
-static inline size_t mem_get_block_chunks_count_from_data_size( size_t block_allocated_size);
+static size_t mem_get_block_chunks_count( const mem_BlockHeader_t *block_header_p);
+static size_t mem_get_block_data_space_size( const mem_BlockHeader_t *block_header_p);
+static size_t mem_get_block_chunks_count_from_data_size( size_t block_allocated_size);
 
 static void mem_InitBlockHeader( uint8_t *pFirstChunk,
                                 size_t sizeInChunks,
@@ -119,7 +119,7 @@ static void mem_HeapStatFreeBlock( mem_BlockHeader_t *block_header_p);
 static void mem_HeapStatFreeBlockSplit( void);
 static void mem_HeapStatFreeBlockMerge( void);
 #else /* !MEM_STATS */
-#  define mem_InitStats()
+#  define mem_HeapStatInit()
 #  define mem_HeapStatAllocBlock( v)
 #  define mem_HeapStatFreeBlock( v)
 #  define mem_HeapStatFreeBlockSplit()
@@ -131,7 +131,7 @@ static void mem_HeapStatFreeBlockMerge( void);
  *
  * @return chunks count
  */
-static inline size_t
+static size_t
 mem_get_block_chunks_count( const mem_BlockHeader_t *block_header_p) /**< block header */
 {
   JERRY_ASSERT( block_header_p != NULL );
@@ -158,7 +158,7 @@ mem_get_block_chunks_count( const mem_BlockHeader_t *block_header_p) /**< block 
  *
  * @return size of block area that can be used to store data
  */
-static inline size_t
+static size_t
 mem_get_block_data_space_size( const mem_BlockHeader_t *block_header_p) /**< block header */
 {
   return mem_get_block_chunks_count( block_header_p) * MEM_HEAP_CHUNK_SIZE - sizeof (mem_BlockHeader_t);
@@ -169,7 +169,7 @@ mem_get_block_data_space_size( const mem_BlockHeader_t *block_header_p) /**< blo
  *
  * @return chunks count
  */
-static inline size_t
+static size_t
 mem_get_block_chunks_count_from_data_size( size_t block_allocated_size) /**< size of block's allocated area */
 {
   return JERRY_ALIGNUP( sizeof (mem_BlockHeader_t) + block_allocated_size, MEM_HEAP_CHUNK_SIZE) / MEM_HEAP_CHUNK_SIZE;

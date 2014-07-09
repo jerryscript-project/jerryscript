@@ -77,7 +77,7 @@ main (int argc, char **argv)
   }
 #endif
 
-  // FIXME: Call parser
+  TODO(Call parser);
 
   //gen_bytecode (generated_source);
   //gen_bytecode ();

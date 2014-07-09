@@ -56,7 +56,7 @@ typedef enum {
  * 
  * @return size (in bytes) of chunk of specified type
  */
-static inline size_t
+static size_t
 mem_GetChunkSize( mem_PoolChunkType_t chunkType) /**< chunk type */
 {
     uint32_t chunkTypeId = (uint32_t) chunkType;

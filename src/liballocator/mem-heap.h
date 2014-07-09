@@ -44,6 +44,31 @@ extern void mem_HeapFreeBlock(uint8_t *ptr);
 extern size_t mem_HeapRecommendAllocationSize(size_t minimumAllocationSize);
 extern void mem_HeapPrint(bool dumpBlockData);
 
+#ifdef MEM_STATS
+/**
+ * Heap memory usage statistics
+ */
+typedef struct {
+    size_t size; /**< size */
+    size_t blocks; /**< blocks count */
+
+    size_t allocated_chunks; /**< currently allocated chunks */
+    size_t peak_allocated_chunks; /**< peak allocated chunks */
+
+    size_t allocated_blocks; /**< currently allocated blocks */
+    size_t peak_allocated_blocks; /**< peak allocated blocks */
+
+    size_t allocated_bytes; /**< currently allocated bytes */
+    size_t peak_allocated_bytes; /**< peak allocated bytes */
+
+    size_t waste_bytes; /**< bytes waste due to blocks filled partially
+                             and due to block headers */
+    size_t peak_waste_bytes; /**< peak bytes waste */
+} mem_HeapStats_t;
+
+extern void mem_HeapGetStats(mem_HeapStats_t *out_heap_stats_p);
+#endif /* MEM_STATS */
+
 /**
  * @}
  * @}

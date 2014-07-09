@@ -93,5 +93,28 @@ main( int __unused argc,
         }
     }
 
+    mem_PoolsStats_t stats;
+    mem_PoolsGetStats( &stats);
+
+    libc_printf("Pools stats:\n");
+    for(mem_PoolChunkType_t type = 0;
+        type < MEM_POOL_CHUNK_TYPE__COUNT;
+        type++)
+    {
+      libc_printf(" Chunk size: %u\n"
+                  "  Pools: %lu\n"
+                  "  Allocated chunks: %lu\n"
+                  "  Free chunks: %lu\n"
+                  "  Peak pools: %lu\n"
+                  "  Peak allocated chunks: %lu\n",
+                  mem_GetChunkSize( type),
+                  stats.pools_count[ type ],
+                  stats.allocated_chunks[ type ],
+                  stats.free_chunks[ type ],
+                  stats.peak_pools_count[ type ],
+                  stats.peak_allocated_chunks[ type ]);
+    }
+    libc_printf("\n");
+
     return 0;
 } /* main */

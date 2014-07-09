@@ -71,6 +71,31 @@ extern void mem_PoolsInit(void);
 extern uint8_t* mem_PoolsAlloc(mem_PoolChunkType_t chunkType);
 extern void mem_PoolsFree(mem_PoolChunkType_t chunkType, uint8_t *pChunk);
 
+#ifdef MEM_STATS
+/**
+ * Pools' memory usage statistics
+ */
+typedef struct
+{
+    /** pools' count, per type */
+    size_t pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** peak pools' count, per type */
+    size_t peak_pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+
+    /** allocated chunks count, per type */
+    size_t allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** peak allocated chunks count, per type */
+    size_t peak_allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    
+    /** free chunks count, per type */
+    size_t free_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+} mem_PoolsStats_t;
+
+extern void mem_PoolsGetStats( mem_PoolsStats_t *out_pools_stats_p);
+#endif /* MEM_STATS */
+
 #endif /* JERRY_MEM_POOLMAN_H */
 
 /**

@@ -27,6 +27,7 @@
 #define JERRY_MEM_POOL_INTERNAL
 
 #include "globals.h"
+#include "jerry-libc.h"
 #include "mem-allocator.h"
 #include "mem-heap.h"
 #include "mem-pool.h"
@@ -51,6 +52,25 @@ mem_PoolState_t mem_PoolForPoolHeaders;
  * Space for pool, containing pool headers
  */
 uint8_t *mem_SpaceForPoolForPoolHeaders;
+
+#ifdef MEM_STATS
+/**
+* Pools' memory usage statistics
+ */
+mem_PoolsStats_t mem_PoolsStats;
+
+static void mem_PoolsStatInit( void);
+static void mem_PoolsStatAllocPool( mem_PoolChunkType_t);
+static void mem_PoolsStatFreePool( mem_PoolChunkType_t);
+static void mem_PoolsStatAllocChunk( mem_PoolChunkType_t);
+static void mem_PoolsStatFreeChunk( mem_PoolChunkType_t);
+#else /* !MEM_STATS */
+#  define mem_PoolsStatsInit()
+#  define mem_PoolsStatAllocPool()
+#  define mem_PoolsStatsFreePool()
+#  define mem_PoolsStatAllocChunk()
+#  define mem_PoolsStatFreeChunk()
+#endif /* !MEM_STATS */
 
 /**
  * Initialize pool manager
@@ -83,6 +103,8 @@ mem_PoolsInit(void)
                  mem_GetChunkSize( chunkType),
                  mem_SpaceForPoolForPoolHeaders,
                  poolSpaceSize);
+
+  mem_PoolsStatInit();
 } /* mem_PoolsInit */
 
 /**
@@ -138,6 +160,8 @@ mem_PoolsAlloc( mem_PoolChunkType_t chunkType) /**< chunk type */
         mem_Pools[ chunkType ] = poolState;
 
         mem_FreeChunksNumber[ chunkType ] += poolState->m_FreeChunksNumber;
+        
+        mem_PoolsStatAllocPool( chunkType);
     }
 
     /**
@@ -158,6 +182,8 @@ mem_PoolsAlloc( mem_PoolChunkType_t chunkType) /**< chunk type */
      * And allocate chunk within it.
      */
     mem_FreeChunksNumber[ chunkType ]--;
+
+    mem_PoolsStatAllocChunk( chunkType);
 
     return mem_PoolAllocChunk( poolState);
 } /* mem_PoolsAlloc */
@@ -189,6 +215,8 @@ mem_PoolsFree( mem_PoolChunkType_t chunkType, /**< the chunk type */
     mem_PoolFreeChunk( poolState, pChunk);
     mem_FreeChunksNumber[ chunkType ]++;
 
+    mem_PoolsStatFreeChunk( chunkType);
+
     /**
      * If all chunks of the pool are free, free the pool itself.
      */
@@ -207,8 +235,88 @@ mem_PoolsFree( mem_PoolChunkType_t chunkType, /**< the chunk type */
         mem_HeapFreeBlock( poolState->m_pPoolStart);
 
         mem_PoolFreeChunk( &mem_PoolForPoolHeaders, (uint8_t*) poolState);
-    }
+
+        mem_PoolsStatFreePool( chunkType);
+  }
 } /* mem_PoolsFree */
+
+#ifdef MEM_STATS
+/**
+ * Get pools memory usage statistics
+ */
+void
+mem_PoolsGetStats( mem_PoolsStats_t *out_pools_stats_p) /**< out: pools' stats */
+{
+  JERRY_ASSERT( out_pools_stats_p != NULL );
+
+  *out_pools_stats_p = mem_PoolsStats;
+} /* mem_PoolsGetStats */
+
+/**
+ * Initalize pools' memory usage statistics account structure
+ */
+static void
+mem_PoolsStatInit( void)
+{
+  libc_memset( &mem_PoolsStats, 0, sizeof (mem_PoolsStats));
+} /* mem_PoolsStatInit */
+
+/**
+ * Account allocation of a pool
+ */
+static void
+mem_PoolsStatAllocPool( mem_PoolChunkType_t chunkType) /**< chunk type */
+{
+  mem_PoolsStats.pools_count[ chunkType ]++;
+  mem_PoolsStats.free_chunks[ chunkType ] = mem_FreeChunksNumber[ chunkType ];
+
+  if ( mem_PoolsStats.pools_count[ chunkType ] > mem_PoolsStats.peak_pools_count[ chunkType ] )
+  {
+    mem_PoolsStats.peak_pools_count[ chunkType ] = mem_PoolsStats.pools_count[ chunkType ];
+  }
+} /* mem_PoolsStatAllocPool */
+
+/**
+ * Account freeing of a pool
+ */
+static void
+mem_PoolsStatFreePool( mem_PoolChunkType_t chunkType) /**< chunk type */
+{
+  JERRY_ASSERT( mem_PoolsStats.pools_count[ chunkType ] > 0 );
+  
+  mem_PoolsStats.pools_count[ chunkType ]--;
+  mem_PoolsStats.free_chunks[ chunkType ] = mem_FreeChunksNumber[ chunkType ];
+} /* mem_PoolsStatFreePool */
+
+/**
+ * Account allocation of chunk in a pool
+ */
+static void
+mem_PoolsStatAllocChunk( mem_PoolChunkType_t chunkType) /**< chunk type */
+{
+  JERRY_ASSERT( mem_PoolsStats.free_chunks[ chunkType ] > 0 );
+  
+  mem_PoolsStats.allocated_chunks[ chunkType ]++;
+  mem_PoolsStats.free_chunks[ chunkType ]--;
+
+  if ( mem_PoolsStats.allocated_chunks[ chunkType ] > mem_PoolsStats.peak_allocated_chunks[ chunkType ] )
+  {
+    mem_PoolsStats.peak_allocated_chunks[ chunkType ] = mem_PoolsStats.allocated_chunks[ chunkType ];
+  }
+} /* mem_PoolsStatAllocChunk */
+
+/**
+ * Account freeing of chunk in a pool
+ */
+static void
+mem_PoolsStatFreeChunk( mem_PoolChunkType_t chunkType) /**< chunk type */
+{
+  JERRY_ASSERT( mem_PoolsStats.allocated_chunks[ chunkType ] > 0 );
+
+  mem_PoolsStats.allocated_chunks[ chunkType ]--;
+  mem_PoolsStats.free_chunks[ chunkType ]++;
+} /* mem_PoolsStatFreeChunk */
+#endif /* MEM_STATS */
 
 /**
  * @}

@@ -16,8 +16,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdbool.h>
-#include <stdio.h>
+#include "mappings.h"
 
 /* Keywords.  */
 typedef enum
@@ -128,7 +127,8 @@ typedef enum
   TOK_XOR_EQ,		// ^=
 
   TOK_DIV,		// /
-  TOK_DIV_EQ		// /=
+  TOK_DIV_EQ,		// /=
+  TOK_EMPTY
 }
 token_type;
 
@@ -151,7 +151,11 @@ typedef struct
 }
 token;
 
+#ifdef JERRY_NDEBUG
 void lexer_set_file (FILE *);
+#else
+void lexer_set_source (const char *);
+#endif
 token lexer_next_token ();
 void lexer_save_token (token);
 

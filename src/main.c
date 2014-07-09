@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef JERRY_NDEBUG
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+#endif
 
 #include "error.h"
 
@@ -40,7 +42,9 @@ main (int argc, char **argv)
   bool dump_tokens = false;
   bool dump_ast = true;
   const char *file_name = NULL;
+#ifdef JERRY_NDEBUG
   FILE *file = NULL;
+#endif
 
   mem_Init ();
   ctx_Init ();
@@ -64,16 +68,20 @@ main (int argc, char **argv)
   if (dump_tokens && dump_ast)
     fatal (ERR_SEVERAL_FILES);
 
+#ifdef JERRY_NDEBUG
   file = fopen (file_name, "r");
 
   if (file == NULL)
   {
     fatal (ERR_IO);
   }
+#endif
+
+  // FIXME: Call parser
 
   //gen_bytecode (generated_source);
-  gen_bytecode ();
-  run_int ();
+  //gen_bytecode ();
+  //run_int ();
 
 #ifdef __TARGET_MCU
   fake_exit ();

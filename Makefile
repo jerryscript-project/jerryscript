@@ -83,8 +83,8 @@ CFLAGS ?= $(INCLUDES) -std=c99 -m32 #-fdiagnostics-color=always
 #CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 #CFLAGS += -ffunction-sections -fdata-sections
 
-DEBUG_OPTIONS = -g3 -O0 -DDEBUG# -fsanitize=address
-RELEASE_OPTIONS = -Os -Werror -DNDEBUG
+DEBUG_OPTIONS = -g3 -O0 -DJERRY_NDEBUG# -fsanitize=address
+RELEASE_OPTIONS = -Os -Werror -DJERRY_NDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768
 TARGET_HOST = -D__HOST

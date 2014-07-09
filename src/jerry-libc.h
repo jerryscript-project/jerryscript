@@ -21,9 +21,30 @@
 
 #include "globals.h"
 
-extern void *libc_memset(void *s, int c, size_t n);
-extern int libc_memcmp(const void *s1, const void *s2, size_t n);
-extern void libc_memcpy(void *s1, const void *s2, size_t n);
-extern int libc_printf(const char *format, ...);
+extern void *__memset (void *s, int c, size_t n);
+extern int __memcmp (const void *s1, const void *s2, size_t n);
+extern void *__memcpy (void *s1, const void *s2, size_t n);
+extern int __printf (const char *format, ...);
+extern int __putchar (int);
+extern void __exit (int);
+
+extern int __strcmp (const char *, const char *);
+extern int __strncmp (const char *, const char *, size_t);
+extern char *__strncpy (char *, const char *, size_t);
+extern float __strtof (const char *, char **);
+extern size_t __strlen (const char *);
+
+extern int __isspace (int);
+extern int __isupper (int);
+extern int __islower (int);
+extern int __isalpha (int);
+extern int __isdigit (int);
+extern int __isxdigit (int);
+
+#define DBL_MANT_DIG    (  52)
+#define DBL_DIG         (  10)
+#define DBL_MIN_EXP     (-324)
+#define DBL_MAX_EXP     ( 308)
+#define HUGE_VAL        (1e37)
 
 #endif /* JERRY_LIBC_H */

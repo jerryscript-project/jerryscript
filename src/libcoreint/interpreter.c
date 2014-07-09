@@ -31,13 +31,13 @@ gen_bytecode ()
 
     wait(500);
    }
-   */
   save_op_data (0, getop_loop_inf (1));
   save_op_data (1, getop_call_1 (0, 12));
   save_op_data (2, getop_call_1 (0, 13));
   save_op_data (3, getop_call_1 (0, 14));
   save_op_data (4, getop_call_1 (0, 15));
   save_op_data (5, getop_jmp (0));
+   */
 
 #ifdef __MCU
   // It's mandatory to restart app!

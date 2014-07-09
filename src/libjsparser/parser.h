@@ -16,8 +16,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <stdio.h>
-#include <stdbool.h>
+#include "mappings.h"
 
 struct source_element_list;
 struct statement_list;
@@ -25,15 +24,31 @@ struct statement;
 struct assignment_expression;
 struct member_expression;
 
+#define MAX_PARAMS 5
+#define MAX_EXPRS 2
+#define MAX_PROPERTIES 5
+#define MAX_DECLS 5
+#define MAX_SUFFIXES 2
+
 /** Represents list of parameters.  */
 typedef struct formal_parameter_list
 {
-  /** Identifier of a parameter. Cannot be NULL.  */
-  const char *name;
-  /** Next parameter: can be NULL.  */
-  struct formal_parameter_list *next;
+  /** Identifiers of a parameter. Next after last parameter is NULL.  */
+  const char *names[MAX_PARAMS];
 }
 formal_parameter_list;
+
+static const formal_parameter_list
+empty_formal_parameter_list = 
+{
+  .names = { [0] = NULL}
+};
+
+static inline bool
+is_formal_parameter_list_empty (formal_parameter_list list)
+{
+  return list.names[0] == NULL;
+}
 
 /** @function_declaration represents both declaration and expression of a function. 
     After this parser must return a block of statements.  */
@@ -42,26 +57,11 @@ typedef struct
   /** Identifier: name of a function. Can be NULL for anonimous functions.  */
   const char *name;
   /** List of parameter of a function. Can be NULL.  */
-  formal_parameter_list *params;
+  formal_parameter_list params;
 }
 function_declaration;
 
 typedef function_declaration function_expression;
-
-/** Represents expression, array literal and list of argument.  */
-typedef struct expression_list
-{
-  /** Single assignment expression. Cannot be NULL for expression and list of arguments.
-      But can be NULL for array literal.  */
-  struct assignment_expression *assign_expr;
-  /** Next expression. Can be NULL.  */
-  struct expression_list *next;
-}
-expression_list;
-
-typedef expression_list expression;
-typedef expression_list array_literal;
-typedef expression_list argument_list;
 
 /** Types of literals: null, bool, decimal and string. 
     Decimal type is represented by LIT_INT and supports only double-word sized integers.  */
@@ -84,7 +84,7 @@ typedef struct
   union
     {
       /** Used by null literal, always NULL.  */
-      void *data;
+      void *none;
       /** String literal value.  */
       const char *str;
       /** Number value.  */
@@ -96,536 +96,257 @@ typedef struct
 }
 literal;
 
-/** type of PropertyName. Can be integer, identifier of string literal.  */
-typedef enum
-{
-  PN_NAME,
-  PN_STRING,
-  PN_NUM
-}
-property_name_type;
-
-/** Represents name of property.  */
 typedef struct
 {
-  /** Type of property name.  */
-  property_name_type type;
+  bool is_literal;
 
-  /** Value of property name.  */
   union
     {
-      /** Identifier.  */
+      void *none;
+      literal lit;
       const char *name;
-      /** Value of string literal.  */
-      const char *str;
-      /** Numeric value.  */
-      int num;
     }
   data;
 }
-property_name;
+operand;
+
+typedef operand property_name;
+
+static const operand 
+empty_operand = 
+{ 
+  .is_literal = false, 
+  .data.none = NULL 
+};
+
+static inline bool 
+is_operand_empty (operand op)
+{
+  return op.is_literal == false && op.data.none == NULL;
+}
+
+typedef struct
+{
+  operand op1, op2;
+}
+operand_pair;
+
+typedef struct
+{
+  operand ops[MAX_PARAMS];
+}
+operand_list;
+
+static const operand_list 
+empty_operand_list = 
+{
+  .ops = { [0] = { .is_literal = false, .data.none = NULL } }
+};
+
+static inline bool
+is_operand_list_empty (operand_list list)
+{
+  return is_operand_empty (list.ops[0]);
+}
+
+typedef operand_list array_literal;
+typedef operand_list argument_list;
+
+typedef struct
+{
+  const char *name;
+  argument_list args;
+}
+call_expression;
 
 /** Represents a single property.  */
 typedef struct
 {
   /** Name of property.  */
-  property_name *name;
+  property_name name;
   /** Value of property.  */
-  struct assignment_expression *assign_expr;
+  operand value;
 }
-property_name_and_value;
+property;
+
+static const property empty_property = 
+{
+  .name = { .is_literal = false, .data.none = NULL },
+  .value = { .is_literal = false, .data.none = NULL }
+};
+
+static inline bool
+is_property_empty (property prop)
+{
+  return is_operand_empty (prop.name) && is_operand_empty (prop.value);
+}
 
 /** List of properties. Represents ObjectLiteral.  */
-typedef struct property_name_and_value_list
-{
-  /** Current property.  */
-  property_name_and_value *nav;
-
-  /** Next property.  */
-  struct property_name_and_value_list *next;
-}
-property_name_and_value_list;
-
-typedef property_name_and_value_list object_literal;
-
-/** Type of PrimaryExpression. Can be ThisLiteral, Identifier, Literal, ArrayLiteral,
-    ObjectLiteral or expression.  */
-typedef enum
-{
-  PE_THIS,
-  PE_NAME,
-  PE_LITERAL,
-  PE_ARRAY,
-  PE_OBJECT,
-  PE_EXPR
-}
-primary_expression_type;
-
-/** PrimaryExpression.  */
 typedef struct
 {
-  /** Type of PrimaryExpression.  */
-  primary_expression_type type;
+  /** Properties.  */
+  property props[MAX_PROPERTIES];
+}
+property_list;
 
-  /** Value of PrimaryExpression.  */
+static const property_list
+empty_property_list =
+{
+  .props = 
+    { [0] = 
+      { .name = 
+          { .is_literal = false, .data.none = NULL }, 
+        .value = 
+          { .is_literal = false, .data.none = NULL }}}
+};
+
+static inline bool
+is_property_list_empty (property_list list)
+{
+  return is_property_empty (list.props[0]);
+}
+
+typedef property_list object_literal;
+
+typedef enum
+{
+  AO_NONE,
+  AO_EQ,
+  AO_MULT_EQ,
+  AO_DIV_EQ,
+  AO_MOD_EQ,
+  AO_PLUS_EQ,
+  AO_MINUS_EQ,
+  AO_LSHIFT_EQ,
+  AO_RSHIFT_EQ,
+  AO_RSHIFT_EX_EQ,
+  AO_AND_EQ,
+  AO_XOR_EQ,
+  AO_OR_EQ
+}
+assignment_operator;
+
+typedef enum
+{
+  ET_NONE,
+  ET_LOGICAL_OR,
+  ET_LOGICAL_AND,
+  ET_BITWISE_OR,
+  ET_BITWISE_XOR,
+  ET_BITWISE_AND,
+  ET_DOUBLE_EQ,
+  ET_NOT_EQ,
+  ET_TRIPLE_EQ,
+  ET_NOT_DOUBLE_EQ,
+  ET_LESS,
+  ET_GREATER,
+  ET_LESS_EQ,
+  ET_GREATER_EQ,
+  ET_INSTANCEOF,
+  ET_IN,
+  ET_LSHIFT,
+  ET_RSHIFT,
+  ET_RSHIFT_EX,
+  ET_PLUS,
+  ET_MINUS,
+  ET_MULT,
+  ET_DIV,
+  ET_MOD,
+  ET_UNARY_DELETE,
+  ET_UNARY_VOID,
+  ET_UNARY_TYPEOF,
+  ET_UNARY_INCREMENT,
+  ET_UNARY_DECREMENT,
+  ET_UNARY_PLUS,
+  ET_UNARY_MINUS,
+  ET_UNARY_COMPL,
+  ET_UNARY_NOT,
+  ET_POSTFIX_INCREMENT,
+  ET_POSTFIX_DECREMENT,
+  ET_CALL,
+  ET_NEW,
+  ET_INDEX,
+  ET_PROP_REF,
+  ET_OBJECT,
+  ET_FUNCTION,
+  ET_ARRAY,
+  ET_SUBEXPRESSION,
+  ET_LITERAL,
+  ET_IDENTIFIER
+}
+expression_type;
+
+typedef struct
+{
+  assignment_operator oper;
+  expression_type type;
+
+  /** NUllable.  */
+  const char *var;
+
   union
     {
-      /** Used for ThisLiteral. Always NULL.  */
       void *none;
-      /** Identifier.  */
-      const char *name;
-      /** Literal.  */
-      literal *lit;
-      /** ArrayLiteral.  */
-      array_literal *array_lit;
-      /** ObjectLiteral.  */
-      object_literal *object_lit;
-      /** Expression.  */
-      expression *expr;
-    }
-  data;
-}
-primary_expression;
-
-/** Type of suffix of MemberExpression. Can be either index-like ([]) or property-like (.).  */
-typedef enum
-{
-  MES_INDEX,
-  MES_PROPERTY
-}
-member_expression_suffix_type;
-
-/** Suffix of MemberExpression.  */
-typedef struct
-{
-  /** Type of suffix.  */
-  member_expression_suffix_type type;
-
-  /** Value of suffix.  */
-  union
-    {
-      /** Used by index-like suffix.  */
-      expression *index_expr;
-      /** Used by property-like suffix.  */
-      const char *name;
-    }
-  data;
-}
-member_expression_suffix;
-
-/** List of MemberExpression's suffixes.  */
-typedef struct member_expression_suffix_list
-{
-  /** Current suffix.  */
-  member_expression_suffix *suffix;
-
-  /** Next suffix.  */
-  struct member_expression_suffix_list *next;
-}
-member_expression_suffix_list;
-
-/** Represents MemberExpression Arguments grammar production.  */
-typedef struct
-{
-  /** MemberExpression.  */
-  struct member_expression *member_expr;
-  /** Arguments.  */
-  argument_list *args;
-}
-member_expression_with_arguments;
-
-/** Types of MemberExpression. Can be PrimaryExpression, 
-    FunctionExpression or MemberExpression Arguments.  */
-typedef enum
-{
-  ME_PRIMARY,
-  ME_FUNCTION,
-  ME_ARGS
-}
-member_expression_type;
-
-/** Represents MemberExpression.  */
-typedef struct member_expression
-{
-  /** Type of MemberExpression.  */
-  member_expression_type type;
-
-  /** Value of MemberExpression.  */
-  union
-    {
-      /** PrimaryExpression.  */
-      primary_expression *primary_expr;
-      /** FunctionExpression.  */
-      function_expression *function_expr;
-      /** MemberExpression Arguments.  */
-      member_expression_with_arguments *args;
-    }
-  data;
-
-  member_expression_suffix_list *suffix_list;
-}
-member_expression;
-
-/** Types of NewExpression. Can be either MemberExpression or NewExpression.  */
-typedef enum
-{
-  NE_MEMBER,
-  NE_NEW
-}
-new_expression_type;
-
-/** Represents NewExpression.  */
-typedef struct new_expression
-{
-  /** Type of NewExpression.  */
-  new_expression_type type;
-
-  /** Value of NewExpression.  */
-  union
-    {
-      /** MemberExpression.  */
-      member_expression *member_expr;
-      /** NewExpression.  */
-      struct new_expression *new_expr;
-    }
-  data;
-}
-new_expression;
-
-/** Types of CallExpression' suffix. Can be Arguments, index-like access ([]) or 
-    property-like access (.).  */
-typedef enum
-{
-  CAS_ARGS,
-  CAS_INDEX,
-  CAS_PROPERTY
-}
-call_expression_suffix_type;
-
-/** Suffix of CallExpression.  */
-typedef struct
-{
-  /** Type of suffix.  */
-  call_expression_suffix_type type;
-
-  /** Value of suffix.  */
-  union
-    {
-      /** Arguments.  */
-      argument_list *args;
-      /** index-like access expression.  */
-      expression *index_expr;
-      /** Identifier of property.  */
-      const char *name;
-    }
-  data;
-}
-call_expression_suffix;
-
-/** List of CallExpression's suffixes.  */
-typedef struct call_expression_suffix_list
-{
-  /** Current suffix.  */
-  call_expression_suffix *suffix;
-
-  /** Next suffix.  */
-  struct call_expression_suffix_list *next;
-}
-call_expression_suffix_list;
-
-/** CallExpression.  */
-typedef struct
-{
-  /** Callee. Cannot be NULL.  */
-  member_expression *member_expr;
-  /** List of arguments. Can be NULL.  */
-  argument_list *args;
-  /** Suffixes of CallExpression. Can be NULL.  */
-  call_expression_suffix_list *suffix_list;
-}
-call_expression;
-
-/** Types of LeftHandSideExpression. Can be either CallExpression or NewExpression.  */
-typedef enum
-{
-  LHSE_CALL,
-  LHSE_NEW
-}
-left_hand_side_expression_type;
-
-/** LeftHandSideExpression.  */
-typedef struct
-{
-  /** Type of LeftHandSideExpression.  */
-  left_hand_side_expression_type type;
-
-  /** Value of LeftHandSideExpression.  */
-  union
-    {
-      /** Value of CallExpression.  */
-      call_expression *call_expr;
-      /** Value of NewExpression.  */
-      new_expression *new_expr;
-    }
-  data;
-}
-left_hand_side_expression;
-
-/** Type of PostfixExpression. Unlike ECMA, it can contain no postfix operator in addition to
-    increment and decrement.  */
-typedef enum
-{
-  PE_NONE,
-  PE_INCREMENT,
-  PE_DECREMENT
-}
-postfix_expression_type;
-
-/** PostfixExpression.  */
-typedef struct
-{
-  /** Type of PostfixExpression.  */
-  postfix_expression_type type;
-  /** LeftHandSideExpression.  */
-  left_hand_side_expression *expr;
-}
-postfix_expression;
-
-/** Types of UnaryExpression. Can be PostfixExpression, delete UnaryExpression, 
-    void UnaryExpression, typeof UnaryExpression, ++ UnaryExpression, -- UnaryExpression,
-    + UnaryExpression, - UnaryExpression, ~ UnaryExpression, ! UnaryExpression.  */
-typedef enum
-{
-  UE_POSTFIX,
-  UE_DELETE,
-  UE_VOID,
-  UE_TYPEOF,
-  UE_INCREMENT,
-  UE_DECREMENT,
-  UE_PLUS,
-  UE_MINUS,
-  UE_COMPL,
-  UE_NOT
-}
-unary_expression_type;
-
-/** UnaryExpression.  */
-typedef struct unary_expression
-{
-  /** Type of UnaryExpression.  */
-  unary_expression_type type;
-
-  /** Data of UnaryExpression.  */
-  union
-    {
-      /** PostfixExpression. Exists only when type of UE_POSTFIX.  */
-      postfix_expression *postfix_expr;
-      /** UnaryExpression after an operator. Exists otherwise.  */ 
-      struct unary_expression *unary_expr;
-    }
-  data;
-}
-unary_expression;
-
-/** Type of MultiplicativeExpression. In addition to ECMA if there is only one operand,
-    we use ME_NONE.  */
-typedef enum
-{
-  ME_NONE,
-  ME_MULT,
-  ME_DIV,
-  ME_MOD
-}
-multiplicative_expression_type;
-
-/** List of MultiplicativeExpressions. It can contain 1..n operands.  */
-typedef struct multiplicative_expression_list
-{
-  /** Type of current MultiplicativeExpression.  */
-  multiplicative_expression_type type;
-  /** Current operand.  */
-  unary_expression *unary_expr;
-
-  /** Next operand.  */
-  struct multiplicative_expression_list *next;
-}
-multiplicative_expression_list;
-
-typedef enum
-{
-  AE_NONE,
-  AE_PLUS,
-  AE_MINUS
-}
-additive_expression_type;
-
-typedef struct additive_expression_list
-{
-  additive_expression_type type;
-  multiplicative_expression_list *mult_expr;
-
-  struct additive_expression_list *next;
-}
-additive_expression_list;
-
-typedef enum
-{
-  SE_NONE,
-  SE_LSHIFT,
-  SE_RSHIFT,
-  SE_RSHIFT_EX
-}
-shift_expression_type;
-
-typedef struct shift_expression_list
-{
-  shift_expression_type type;
-  additive_expression_list *add_expr;
-
-  struct shift_expression_list *next;
-}
-shift_expression_list;
-
-typedef enum
-{
-  RE_NONE,
-  RE_LESS,
-  RE_GREATER,
-  RE_LESS_EQ,
-  RE_GREATER_EQ,
-  RE_INSTANCEOF,
-  RE_IN
-}
-relational_expression_type;
-
-typedef struct relational_expression_list
-{
-  relational_expression_type type;
-  shift_expression_list *shift_expr;
-
-  struct relational_expression_list *next;
-}
-relational_expression_list;
-
-typedef enum
-{
-  EE_NONE,
-  EE_DOUBLE_EQ,
-  EE_NOT_EQ,
-  EE_TRIPLE_EQ,
-  EE_NOT_DOUBLE_EQ
-}
-equality_expression_type;
-
-typedef struct equality_expression_list
-{
-  equality_expression_type type;
-  relational_expression_list *rel_expr;
-
-  struct equality_expression_list *next;
-}
-equality_expression_list;
-
-typedef struct bitwise_and_expression_list
-{
-  equality_expression_list *eq_expr;
-  
-  struct bitwise_and_expression_list *next;
-}
-bitwise_and_expression_list;
-
-typedef struct bitwise_xor_expression_list
-{
-  bitwise_and_expression_list *and_expr;
-  
-  struct bitwise_xor_expression_list *next;
-}
-bitwise_xor_expression_list;
-
-typedef struct bitwise_or_expression_list
-{
-  bitwise_xor_expression_list *xor_expr;
-  
-  struct bitwise_or_expression_list *next;
-}
-bitwise_or_expression_list;
-
-typedef struct logical_and_expression_list
-{
-  bitwise_or_expression_list *or_expr;
-  
-  struct logical_and_expression_list *next;
-}
-logical_and_expression_list;
-
-typedef struct logical_or_expression_list
-{
-  logical_and_expression_list *and_expr;
-  
-  struct logical_or_expression_list *next;
-}
-logical_or_expression_list;
-
-typedef struct
-{
-  logical_or_expression_list *or_expr;
-  struct assignment_expression *then_expr, *else_expr;
-}
-conditional_expression;
-
-typedef enum
-{
-  AE_COND,
-  AE_EQ,
-  AE_MULT_EQ,
-  AE_DIV_EQ,
-  AE_MOD_EQ,
-  AE_PLUS_EQ,
-  AE_MINUS_EQ,
-  AE_LSHIFT_EQ,
-  AE_RSHIFT_EQ,
-  AE_RSHIFT_EX_EQ,
-  AE_AND_EQ,
-  AE_OR_EQ,
-  AE_XOR_EQ
-}
-assignment_expression_type;
-
-typedef struct
-{
-  left_hand_side_expression *left_hand_expr;
-  struct assignment_expression *assign_expr;
-}
-left_hand_and_assignment_expression;
-
-typedef struct assignment_expression
-{
-  assignment_expression_type type;
-
-  union
-    {
-      conditional_expression *cond_expr;
-      left_hand_and_assignment_expression s;
+      operand_pair ops;
+      call_expression call_expr;
+      array_literal arr_lit;
+      object_literal obj_lit;
+      function_expression func_expr;
     }
   data;
 }
 assignment_expression;
+
+static const assignment_expression 
+empty_expression = 
+{
+  .oper = AO_NONE,
+  .type = ET_NONE,
+  .data.none = NULL
+};
+
+static inline bool
+is_expression_empty (assignment_expression expr)
+{
+  return expr.oper == AO_NONE && expr.type == ET_NONE && expr.data.none == NULL;
+}
+
+/** Represents expression, array literal and list of argument.  */
+typedef struct
+{
+  /** Single assignment expression. Cannot be NULL for expression and list of arguments.
+      But can be NULL for array literal.  */
+  assignment_expression exprs[MAX_EXPRS];
+}
+expression_list;
+
+typedef expression_list expression;
 
 /* Statements.  */
 
 typedef struct
 {
   const char *name;
-
-  assignment_expression *ass_expr;
+  assignment_expression assign_expr;
 }
 variable_declaration;
 
-typedef struct variable_declaration_list
+static const variable_declaration
+empty_variable_declaration = 
 {
-  variable_declaration *var_decl;
+  .name = NULL,
+  .assign_expr = { .oper = AO_NONE, .type = ET_NONE, .data.none = NULL }
+};
 
-  struct variable_declaration_list *next;
+static inline bool
+is_variable_declaration_empty (variable_declaration var_decl)
+{
+  return var_decl.name == NULL && is_expression_empty (var_decl.assign_expr);
+}
+
+typedef struct
+{
+  variable_declaration decls[MAX_DECLS];
 }
 variable_declaration_list;
 
@@ -635,8 +356,8 @@ typedef struct
 
   union
     {
-      expression *expr;
-      variable_declaration_list *decl_list;
+      expression expr;
+      variable_declaration_list decl_list;
     }
   data;
 }
@@ -644,8 +365,8 @@ for_statement_initialiser_part;
 
 typedef struct
 {
-  for_statement_initialiser_part *init;
-  expression *limit, *incr;
+  for_statement_initialiser_part init;
+  assignment_expression limit, incr;
 }
 for_statement;
 
@@ -655,8 +376,8 @@ typedef struct
 
   union
     {
-      left_hand_side_expression *left_hand_expr;
-      variable_declaration *decl;
+      assignment_expression left_hand_expr;
+      variable_declaration decl;
     }
   data;
 }
@@ -664,8 +385,8 @@ for_in_statement_initializer_part;
 
 typedef struct
 {
-  for_in_statement_initializer_part *init;
-  expression *list_expr;
+  for_in_statement_initializer_part init;
+  expression list_expr;
 }
 for_in_statement;
 
@@ -675,8 +396,8 @@ typedef struct
 
   union
     {
-      for_statement *for_stmt;
-      for_in_statement *for_in_stmt;
+      for_statement for_stmt;
+      for_in_statement for_in_stmt;
     }
   data;
 }
@@ -684,6 +405,7 @@ for_or_for_in_statement;
 
 typedef enum
 {
+  STMT_NULL,
   STMT_BLOCK_START,
   STMT_BLOCK_END,
   STMT_VARIABLE,
@@ -722,17 +444,30 @@ typedef struct statement
   union
     {
       void *none;
-      variable_declaration_list *var_stmt;
-      expression *expr;
-      for_or_for_in_statement *for_stmt;
+      variable_declaration_list var_stmt;
+      expression expr;
+      for_or_for_in_statement for_stmt;
       const char *name;
-      function_declaration *fun_decl;
+      function_declaration fun_decl;
     }
   data;
 }
 statement;
 
+static const statement
+null_statement = 
+{
+  .type = STMT_NULL,
+  .data.none = NULL
+};
+
+static inline bool
+is_statement_null (statement stmt)
+{
+  return stmt.type == STMT_NULL && stmt.data.none == NULL;
+}
+
 void parser_init ();
-statement *parser_parse_statement ();
+statement parser_parse_statement ();
 
 #endif

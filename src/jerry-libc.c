@@ -29,7 +29,7 @@ extern int vprintf (__const char *__restrict __format, __builtin_va_list __arg);
  * @return @s
  */
 void*
-libc_memset(void *s,  /**< area to set values in */
+__memset(void *s,  /**< area to set values in */
             int c,    /**< value to set */
             size_t n) /**< area size */
 {
@@ -40,7 +40,7 @@ libc_memset(void *s,  /**< area to set values in */
     }
     
     return s;
-} /* libc_memset */
+} /* __memset */
 
 /**
  * memcmp
@@ -50,7 +50,7 @@ libc_memset(void *s,  /**< area to set values in */
  *         1, otherwise
  */
 int
-libc_memcmp(const void *s1, /**< first area */
+__memcmp(const void *s1, /**< first area */
             const void *s2, /**< second area */
             size_t n) /**< area size */
 {
@@ -67,15 +67,15 @@ libc_memcmp(const void *s1, /**< first area */
     }
     
     return 0;
-} /* libc_memcmp */
+} /* __memcmp */
 
 /**
  * memcpy
  */
-void
-libc_memcpy(void *s1, /**< destination */
-            const void *s2, /**< source */
-            size_t n) /**< bytes number */
+void *
+__memcpy(void *s1, /**< destination */
+         const void *s2, /**< source */
+         size_t n) /**< bytes number */
 {
     uint8_t *pArea1 = s1;
     const uint8_t *pArea2 = s2;
@@ -84,7 +84,9 @@ libc_memcpy(void *s1, /**< destination */
     {
         pArea1[ index ] = pArea2[ index ];
     }
-} /* libc_memcpy */
+
+  return s1;
+} /* __memcpy */
 
 /**
  * printf
@@ -92,7 +94,7 @@ libc_memcpy(void *s1, /**< destination */
  * @return number of characters printed
  */
 int
-libc_printf(const char *format, /**< format string */
+__printf(const char *format, /**< format string */
             ...)                /**< parameters' values */
 {
     va_list args;
@@ -104,4 +106,167 @@ libc_printf(const char *format, /**< format string */
     va_end( args);
     
     return ret;
-} /* libc_printf */
+} /* __printf */
+
+/** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
+int
+__putchar (int c)
+{
+  return __printf ("%c", c);
+}
+
+/** exit - cause normal process termination. Infinite loop.  */
+void
+__exit (int status __unused)
+{
+  for (;;)
+    ;
+}
+
+/** Compare two strings. return an integer less than, equal to, or greater than zero 
+    if s1 is found, respectively, to be less than, to match, or be greater than s2.  */
+int
+__strcmp (const char *s1, const char *s2)
+{
+  size_t i;
+  if (s1 == NULL)
+    {
+      if (s2 != NULL)
+        return -1;
+      else
+        return 0;
+    }
+  if (s2 == NULL)
+    return 1;
+
+  for (i = 0; s1[i]; i++)
+    {
+      if (s1[i] > s2[i])
+        return 1;
+      else if (s1[i] < s2[i])
+        return -1;
+    }
+
+  if (s2[i])
+    return -1;
+
+  return 0;
+}
+
+/** Compare two strings. return an integer less than, equal to, or greater than zero 
+    if the first n character of s1 is found, respectively, to be less than, to match, 
+    or be greater than the first n character of s2.  */
+int
+__strncmp (const char *s1, const char *s2, size_t n)
+{
+  size_t i;
+  if (s1 == NULL)
+    {
+      if (s2 != NULL)
+        return -1;
+      else
+        return 0;
+    }
+  if (s2 == NULL)
+    return 1;
+
+  for (i = 0; i < n; i++)
+    {
+      if (s1[i] > s2[i])
+        return 1;
+      else if (s1[i] < s2[i])
+        return -1;
+    }
+
+  return 0;
+}
+
+/** Copy a string. At most n bytes of src are copied.  Warning: If there is no
+    null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
+    @return a pointer to the destination string dest.  */
+char *
+__strncpy(char *dest, const char *src, size_t n)
+{
+  size_t i;
+
+  for (i = 0; i < n; i++)
+    dest[i] = src[i];
+
+  return dest;
+}
+
+/** Convert the initial portion of the string pointed to by nptr to float representation.  */
+float
+__strtof (const char *nptr, char **endptr)
+{
+  (void) nptr;
+  (void) endptr;
+
+  JERRY_UNIMPLEMENTED ();
+}
+
+/** Calculate the length of a string.  */
+size_t
+__strlen (const char *s)
+{
+  size_t i;
+  for (i = 0; s[i]; i++)
+    ;
+  return i;
+}
+
+/** Checks  for  white-space  characters.   In  the "C" and "POSIX" locales, these are: space, 
+    form-feed ('\f'), newline ('\n'), carriage return ('\r'), horizontal tab ('\t'), and vertical tab ('\v').  */
+int 
+__isspace (int c)
+{
+  switch (c)
+  {
+    case ' ':
+    case '\f':
+    case '\n':
+    case '\r':
+    case '\t':
+    case '\v':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+/** Checks for an uppercase letter.  */
+int
+__isupper (int c)
+{
+  return c >= 'A' && c <= 'Z'; 
+}
+
+/** Checks for an lowercase letter.  */
+int
+__islower (int c)
+{
+  return c >= 'a' && c <= 'z';
+}
+
+/** Checks for an alphabetic character. 
+    In the standard "C" locale, it is equivalent to (isupper(c) || islower(c)).  */
+int
+__isalpha (int c)
+{
+  return __isupper (c) || __islower (c);
+}
+
+/** Checks for a digit (0 through 9).  */
+int
+__isdigit (int c)
+{
+  return c >= '0' && c <= '9';
+}
+
+/** checks for a hexadecimal digits, that is, one of
+    0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F.  */
+int
+__isxdigit (int c)
+{
+  return __isdigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}

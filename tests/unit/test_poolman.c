@@ -49,7 +49,7 @@ main( int __unused argc,
 
     srand((unsigned int) time(NULL));
     unsigned int seed = (unsigned int)rand();
-    libc_printf("seed=%u\n", seed);
+    __printf("seed=%u\n", seed);
     srand(seed);
 
     for ( int i = 0; i < test_iters; i++ )
@@ -70,7 +70,7 @@ main( int __unused argc,
 
             if ( ptrs[j] != NULL )
             {
-                libc_memset(ptrs[j], 0, chunkSize);
+                __memset(ptrs[j], 0, chunkSize);
             }
         }
 

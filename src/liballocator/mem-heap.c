@@ -346,7 +346,7 @@ mem_HeapPrint( bool dumpBlockData) /**< print block with data (true)
 {
   mem_CheckHeap();
 
-  libc_printf("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
+  __printf("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
               mem_Heap.m_HeapStart,
               mem_Heap.m_HeapSize,
               (void*) mem_Heap.m_pFirstBlock,
@@ -356,7 +356,7 @@ mem_HeapPrint( bool dumpBlockData) /**< print block with data (true)
        pBlock != NULL;
        pBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ] )
     {
-      libc_printf("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
+      __printf("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
                   (void*) pBlock,
                   pBlock->m_MagicNum,
                   pBlock->m_SizeInChunks,
@@ -370,13 +370,13 @@ mem_HeapPrint( bool dumpBlockData) /**< print block with data (true)
                offset < mem_GetHeapBlockDataSpaceSizeInBytes( pBlock);
                offset++ )
             {
-              libc_printf("%02x ", pBlockData[ offset ]);
+              __printf("%02x ", pBlockData[ offset ]);
             }
-          libc_printf("\n");
+          __printf("\n");
         }
     }
 
-  libc_printf("\n");
+  __printf("\n");
 } /* mem_PrintHeap */
 
 /**

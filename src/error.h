@@ -16,20 +16,16 @@
 #ifndef ERROR_H
 #define ERROR_H 
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "mappings.h"
 
-void lexer_dump_buffer_state ();
-
-#define unreachable() assert(0)
+extern void lexer_dump_buffer_state ();
 
 static inline void
 fatal (int code)
 {
   printf ("FATAL: %d\n", code);
   lexer_dump_buffer_state ();
-  unreachable ();
+  JERRY_UNREACHABLE ();
   exit (code);
 }
 

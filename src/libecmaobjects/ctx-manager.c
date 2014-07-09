@@ -167,7 +167,7 @@ ctx_Init(void)
     JERRY_ASSERT( ctx_ContextsNumber == 0 );
 
 #ifndef JERRY_NDEBUG
-    libc_memset( ctx_Stack, 0, sizeof (ctx_Stack));
+    __memset( ctx_Stack, 0, sizeof (ctx_Stack));
 #endif /* !JERRY_NDEBUG */
 
     ctx_InitGlobalObject();
@@ -382,7 +382,7 @@ ctx_CopyVariable(ctx_SyntacticReference_t *pVarFrom, /**< source variable */
         case ECMA_TYPE_NUMBER:
         {
             ecma_Number_t *pNumberCopy = ecma_AllocNumber();
-            libc_memcpy( pNumberCopy,
+            __memcpy( pNumberCopy,
                         ecma_GetPointer( sourceVariableValue.m_Value),
                         sizeof (ecma_Number_t));
             ecma_SetPointer( destinationVariableValue.m_Value, pNumberCopy);

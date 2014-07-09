@@ -73,7 +73,7 @@ extern uint32_t jerry_UnreferencedExpression;
 /**
  * Mark for unreachable points and unimplemented cases
  */
-#define JERRY_UNREACHABLE() { JERRY_ASSERT( false); __builtin_trap(); }
+#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); __builtin_trap(); } while (0)
 #define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
 
 /**

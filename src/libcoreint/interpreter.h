@@ -16,7 +16,7 @@
 #ifndef INTERPRETER_H
 #define	INTERPRETER_H
 
-#ifdef __HOST
+#ifdef JERRY_NDEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

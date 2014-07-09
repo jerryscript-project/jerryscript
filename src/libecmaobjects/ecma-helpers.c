@@ -221,7 +221,7 @@ ecma_NewEcmaString(const ecma_Char_t *pString, /**< buffer of characters */
     uint8_t *copyPointer = (uint8_t*) pString;
     size_t charsLeft = length;
     size_t charsToCopy = JERRY_MIN( length, sizeof (pStringFirstChunk->m_Elements) / sizeof (ecma_Char_t));
-    libc_memcpy(pStringFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+    __memcpy(pStringFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
     charsLeft -= charsToCopy;
     copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
@@ -233,7 +233,7 @@ ecma_NewEcmaString(const ecma_Char_t *pString, /**< buffer of characters */
         pStringNonFirstChunk = ecma_AllocArrayNonFirstChunk();
 
         size_t charsToCopy = JERRY_MIN( charsLeft, sizeof (pStringNonFirstChunk->m_Elements) / sizeof (ecma_Char_t));
-        libc_memcpy(pStringNonFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+        __memcpy(pStringNonFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
         charsLeft -= charsToCopy;
         copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
@@ -274,7 +274,7 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
     uint8_t *destPointer = pBuffer + sizeof (ecma_Length_t);
     size_t copyChunkChars = JERRY_MIN(sizeof (pFirstChunk->m_Elements) / sizeof (ecma_Char_t),
                                       charsLeft);
-    libc_memcpy( destPointer, pFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
+    __memcpy( destPointer, pFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
     destPointer += copyChunkChars * sizeof (ecma_Char_t);
     charsLeft -= copyChunkChars;
 
@@ -286,7 +286,7 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
 
         copyChunkChars = JERRY_MIN(sizeof (pNonFirstChunk->m_Elements) / sizeof (ecma_Char_t),
                                    charsLeft);
-        libc_memcpy( destPointer, pNonFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
+        __memcpy( destPointer, pNonFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
         destPointer += copyChunkChars * sizeof (ecma_Char_t);
         charsLeft -= copyChunkChars;
 
@@ -307,7 +307,7 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
     JERRY_ASSERT( pFirstChunk != NULL );
 
     ecma_ArrayFirstChunk_t *pFirstChunkCopy = ecma_AllocArrayFirstChunk();
-    libc_memcpy( pFirstChunkCopy, pFirstChunk, sizeof (ecma_ArrayFirstChunk_t));
+    __memcpy( pFirstChunkCopy, pFirstChunk, sizeof (ecma_ArrayFirstChunk_t));
 
     ecma_ArrayNonFirstChunk_t *pNonFirstChunk, *pNonFirstChunkCopy;
     pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
@@ -319,7 +319,7 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
         ecma_SetPointer( *pNextPointer, pNonFirstChunkCopy);
         pNextPointer = &pNonFirstChunkCopy->m_pNextChunk;
 
-        libc_memcpy( pNonFirstChunkCopy, pNonFirstChunk, sizeof (ecma_ArrayNonFirstChunk_t));
+        __memcpy( pNonFirstChunkCopy, pNonFirstChunk, sizeof (ecma_ArrayNonFirstChunk_t));
         
         pNonFirstChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
     }

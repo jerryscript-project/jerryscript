@@ -23,6 +23,6 @@ void pp_reset ();
 void pp_finish ();
 void pp_token (token);
 void pp_keyword (keyword);
-void pp_statement (statement *);
+void pp_statement (statement);
 
 #endif

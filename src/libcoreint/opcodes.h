@@ -16,7 +16,7 @@
 #ifndef OPCODES_H
 #define	OPCODES_H
 
-#ifdef __HOST
+#ifdef JERRY_NDEBUG
 #include <stdio.h>
 #endif
 

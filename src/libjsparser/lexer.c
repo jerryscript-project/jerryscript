@@ -134,7 +134,7 @@ get_char (size_t i)
           if (token_start == buffer_start)
             fatal (ERR_BUFFER_SIZE);
           /* Move parsed token and tail of buffer to head.  */
-          memmove (buffer_start, token_start, tail_size + token_size);
+          __memmove (buffer_start, token_start, tail_size + token_size);
           /* Adjust pointers.  */
           token_start = buffer_start;
           buffer = buffer_start + token_size;
@@ -148,7 +148,7 @@ get_char (size_t i)
         }
       else
         {
-          memmove (buffer_start, buffer, tail_size);
+          __memmove (buffer_start, buffer, tail_size);
           buffer = buffer_start;
           error = fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size, file);
           if (error == 0)
@@ -690,7 +690,7 @@ lexer_next_token (void)
         return (token) { .type = TOK_NEWLINE, .data.none = NULL };
       else
         return 
-#ifdef __HOST
+#ifdef JERRY_NDEBUG
           lexer_next_token_private ();
 #else
           lexer_next_token ();
@@ -785,7 +785,7 @@ lexer_next_token (void)
   // if (tok.type == TOK_CLOSE_BRACE)
     {
       // if (i == 300)
-        fprintf (lexer_debug_log, "lexer_next_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
+        __fprintf (lexer_debug_log, "lexer_next_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
       i++;
     }
   return tok;
@@ -797,7 +797,7 @@ lexer_save_token (token tok)
 {
   #ifdef __HOST
   // if (tok.type == TOK_CLOSE_BRACE)
-    fprintf (lexer_debug_log, "lexer_save_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
+    __fprintf (lexer_debug_log, "lexer_save_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
   #endif
   saved_token = tok;
 }

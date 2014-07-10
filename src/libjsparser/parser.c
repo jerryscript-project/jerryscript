@@ -212,7 +212,7 @@ next_token_must_be (token_type tt)
   if (tok.type != tt)
     {
 #ifdef __HOST
-      printf ("next_token_must_be: 0x%x\n", tt);
+      __printf ("next_token_must_be: 0x%x\n", tt);
 #endif
       fatal (ERR_PARSER);
     }
@@ -1390,6 +1390,6 @@ parser_init (void)
 {
   scope_index = 1;
 #ifdef __HOST
-  debug_file = fopen ("parser.log", "w");
+  debug_file = __fopen ("parser.log", "w");
 #endif
 }

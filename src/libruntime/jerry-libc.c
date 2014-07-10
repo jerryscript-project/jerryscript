@@ -84,6 +84,36 @@ __memcpy(void *s1, /**< destination */
   return s1;
 } /* __memcpy */
 
+/**
+ * memmove
+ *
+ * @return the dest pointer's value
+ */
+void *
+__memmove(void *s1, /**< destination */
+          const void *s2, /**< source */
+          size_t n) /**< bytes number */
+{
+  uint8_t *dest_p = s1;
+  const uint8_t *src_p = s2;
+
+  if ( dest_p < src_p )
+  { /* from begin to end */
+    for ( size_t index = 0; index < n; index++ )
+    {
+        dest_p[ index ] = src_p[ index ];
+    }
+  } else if ( dest_p > src_p )
+  { /* from end to begin */
+    for ( size_t index = 1; index <= n; index++ )
+    {
+        dest_p[ n - index ] = src_p[ n - index ];
+    }
+  }
+
+  return s1;
+} /* __memmove */
+
 /** Compare two strings. return an integer less than, equal to, or greater than zero 
     if s1 is found, respectively, to be less than, to match, or be greater than s2.  */
 int

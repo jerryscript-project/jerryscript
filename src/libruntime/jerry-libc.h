@@ -23,16 +23,17 @@
 
 typedef void FILE;
 
-extern void *__memset (void *s, int c, size_t n);
+extern void* __memset (void *s, int c, size_t n);
 extern int __memcmp (const void *s1, const void *s2, size_t n);
-extern void *__memcpy (void *s1, const void *s2, size_t n);
+extern void* __memcpy (void *s1, const void *s2, size_t n);
+extern void* __memmove (void *dest, const void *src, size_t n);
 extern int __printf (const char *format, ...);
 extern int __putchar (int);
 extern void __noreturn __exit (int);
 
 extern int __strcmp (const char *, const char *);
 extern int __strncmp (const char *, const char *, size_t);
-extern char *__strncpy (char *, const char *, size_t);
+extern char* __strncpy (char *, const char *, size_t);
 extern float __strtof (const char *, char **);
 extern size_t __strlen (const char *);
 
@@ -47,6 +48,7 @@ extern FILE* __fopen(const char *path, const char *mode);
 extern int __fclose(FILE *fp);
 extern size_t __fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern size_t __fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern int __fprintf(FILE *stream, const char *format, ...);
 
 #define DBL_MANT_DIG    (  52)
 #define DBL_DIG         (  10)

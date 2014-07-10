@@ -31,7 +31,7 @@ SUP_STM32F4 = ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32
 #  Add common-io.c and sensors.c
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c) \
+	$(wildcard ./src/libruntime/*.c) \
 	$(wildcard ./src/libperipherals/actuators.c) \
 	$(wildcard ./src/libjsparser/*.c) \
 	$(wildcard ./src/libecmaobjects/*.c) \
@@ -40,11 +40,16 @@ SOURCES = \
 	$(wildcard ./src/libcoreint/*.c) )
 
 SOURCES_STM32F4 = \
-	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
+	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
+        $(wildcard src/libruntime/stm32f4/*)
+
+SOURCES_LINUX = \
+        $(wildcard src/libruntime/linux/*)
 
 HEADERS = \
 	$(sort \
 	$(wildcard ./src/*.h) \
+	$(wildcard ./src/libruntime/*.h) \
 	$(wildcard ./src/libperipherals/*.h) \
 	$(wildcard ./src/libjsparser/*.h) \
 	$(wildcard ./src/libecmaobjects/*.h) \
@@ -54,6 +59,7 @@ HEADERS = \
 
 INCLUDES = \
 	-I src \
+	-I src/libruntime \
 	-I src/libperipherals \
 	-I src/libjsparser \
 	-I src/libecmaobjects \
@@ -129,12 +135,12 @@ debug.stdm32f4.bin: debug.stdm32f4.elf
 debug: clean
 	mkdir -p $(OUT_DIR)/debug.host/
 	$(CC) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/debug.host/$(TARGET)
+	$(SOURCES) $(SOURCES_LINUX) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/debug.host/$(TARGET)
 
 release: clean
 	mkdir -p $(OUT_DIR)/release.host/
 	$(CC) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/release.host/$(TARGET)
+	$(SOURCES) $(SOURCES_LINUX) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/release.host/$(TARGET)
 	$(STRIP) $(OUT_DIR)/release.host/$(TARGET)
 
 tests:
@@ -142,7 +148,7 @@ tests:
 	for unit_test in $(UNITTESTS); \
 	do \
 		$(CC) -O3 $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-		$(SOURCES) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(OUT_DIR)/tests.host/"$$unit_test"; \
+		$(SOURCES) $(SOURCES_LINUX) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(OUT_DIR)/tests.host/"$$unit_test"; \
 	done
 
 clean:

@@ -16,7 +16,6 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -38,6 +37,7 @@ typedef signed int int32_t;
  */
 #define __unused __attribute__((unused))
 #define __packed __attribute__((packed))
+#define __noreturn __attribute__((noreturn))
 
 /**
  * Constants
@@ -68,8 +68,10 @@ typedef signed int int32_t;
  */
 extern uint32_t jerry_UnreferencedExpression;
 
+extern void __noreturn jerry_AssertFail( const char *assertion, const char *file, const uint32_t line);
+
 #ifndef JERRY_NDEBUG
-#define JERRY_ASSERT( x ) assert( x )
+#define JERRY_ASSERT( x ) do { if ( __builtin_expect( !( x ), 0 ) ) { jerry_AssertFail( #x, __FILE__, __LINE__); } } while(0)
 #else /* !JERRY_NDEBUG */
 #define JERRY_ASSERT( x ) (void) (x)
 #endif /* !JERRY_NDEBUG */

@@ -17,7 +17,7 @@
 #define MAPPINGS_H
 
 #ifndef __HOST
-#include "../jerry-libc.h"
+#include "jerry-libc.h"
 #include "allocator.h"
 #include <stdarg.h>
 

@@ -22,6 +22,7 @@
 #include <stdarg.h>
 
 extern int vprintf (__const char *__restrict __format, __builtin_va_list __arg);
+extern void __noreturn exit(int status);
 
 /**
  * memset
@@ -115,12 +116,11 @@ __putchar (int c)
   return __printf ("%c", c);
 }
 
-/** exit - cause normal process termination. Infinite loop.  */
-void
-__exit (int status __unused)
+/** exit - cause normal process termination  */
+void __noreturn
+__exit (int status)
 {
-  for (;;)
-    ;
+  exit( status);
 }
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero 

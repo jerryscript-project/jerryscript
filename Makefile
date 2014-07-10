@@ -35,6 +35,7 @@ SOURCES = \
 	$(wildcard ./src/libperipherals/actuators.c) \
 	$(wildcard ./src/libjsparser/*.c) \
 	$(wildcard ./src/libecmaobjects/*.c) \
+	$(wildcard ./src/libecmaoperations/*.c) \
 	$(wildcard ./src/liballocator/*.c) \
 	$(wildcard ./src/libcoreint/*.c) )
 
@@ -47,6 +48,7 @@ HEADERS = \
 	$(wildcard ./src/libperipherals/*.h) \
 	$(wildcard ./src/libjsparser/*.h) \
 	$(wildcard ./src/libecmaobjects/*.h) \
+	$(wildcard ./src/libecmaoperations/*.h) \
 	$(wildcard ./src/liballocator/*.h) \
 	$(wildcard ./src/libcoreint/*.h) )
 
@@ -55,6 +57,7 @@ INCLUDES = \
 	-I src/libperipherals \
 	-I src/libjsparser \
 	-I src/libecmaobjects \
+	-I src/libecmaoperations \
 	-I src/liballocator \
 	-I src/libcoreint
 

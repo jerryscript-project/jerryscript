@@ -38,6 +38,14 @@
 #include "ecma-gc.h"
 #include "mem-poolman.h"
 
+JERRY_STATIC_ASSERT( sizeof (ecma_Value_t) <= sizeof (uint16_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_Property_t) <= sizeof (uint64_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_Object_t) <= sizeof (uint64_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_ArrayHeader_t) <= sizeof (uint32_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_ArrayFirstChunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
+JERRY_STATIC_ASSERT( sizeof (ecma_ArrayNonFirstChunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
+JERRY_STATIC_ASSERT( sizeof (ecma_CompletionValue_t) == sizeof(uint32_t) );
+
 /**
  * Template of an allocation routine.
  */

@@ -17,6 +17,7 @@
 #include "globals.h"
 #include "jerry-libc.h"
 #include "lexer.h"
+#include "parser.h"
 
 static token saved_token;
 static token empty_token = { .type = TOK_EMPTY, .data.none = NULL };
@@ -131,7 +132,7 @@ get_char (size_t i)
           const size_t token_size = (size_t) (buffer - token_start);
           /* Whole buffer contains single token.  */
           if (token_start == buffer_start)
-            fatal (ERR_BUFFER_SIZE);
+            parser_fatal (ERR_BUFFER_SIZE);
           /* Move parsed token and tail of buffer to head.  */
           __memmove (buffer_start, token_start, tail_size + token_size);
           /* Adjust pointers.  */
@@ -394,7 +395,7 @@ parse_number (void)
         }
 
       if (__isalpha (c) || c == '_' || c == '$')
-        fatal (ERR_INT_LITERAL);
+        parser_fatal (ERR_INT_LITERAL);
 
       tok_length = (size_t) (buffer - token_start);
       // OK, I know that integer overflow can occur here
@@ -417,14 +418,14 @@ parse_number (void)
     {
       c = LA (0);
       if (is_fp && c == '.')
-        fatal (ERR_INT_LITERAL);
+        parser_fatal (ERR_INT_LITERAL);
       if (is_exp && (c == 'e' || c == 'E'))
-        fatal (ERR_INT_LITERAL);
+        parser_fatal (ERR_INT_LITERAL);
 
       if (c == '.')
         {
           if (__isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
-            fatal (ERR_INT_LITERAL);
+            parser_fatal (ERR_INT_LITERAL);
           is_fp = true;
           consume_char ();
           continue;
@@ -435,14 +436,14 @@ parse_number (void)
           if (LA (1) == '-' || LA (1) == '+')
             consume_char ();
           if (!__isdigit (LA (1)))
-            fatal (ERR_INT_LITERAL);
+            parser_fatal (ERR_INT_LITERAL);
           is_exp = true;
           consume_char ();
           continue;
         }
 
       if (__isalpha (c) || c == '_' || c == '$')
-        fatal (ERR_INT_LITERAL);
+        parser_fatal (ERR_INT_LITERAL);
 
       if (!__isdigit (c))
         break;
@@ -507,14 +508,14 @@ parse_string (void)
     {
       c = LA (0);
       if (c == '\0')
-        fatal (ERR_UNCLOSED);
+        parser_fatal (ERR_UNCLOSED);
       if (c == '\n')
-        fatal (ERR_STRING);
+        parser_fatal (ERR_STRING);
       if (c == '\\')
         {
           /* Only single escape character is allowed.  */
           if (LA (1) == 'x' || LA (1) == 'u' || __isdigit (LA (1)))
-            fatal (ERR_STRING);
+            parser_fatal (ERR_STRING);
           if ((LA (1) == '\'' && !is_double_quoted)
               || (LA (1) == '"' && is_double_quoted)
               || LA (1) == '\n')
@@ -630,7 +631,7 @@ replace_comment_by_newline (void)
       if (multiline && c == '\n')
         was_newlines = true;
       if (multiline && c == '\0')
-        fatal (ERR_UNCLOSED);
+        parser_fatal (ERR_UNCLOSED);
       consume_char ();
     }
 }
@@ -769,7 +770,7 @@ lexer_next_token (void)
     default:
       JERRY_UNREACHABLE ();
   }
-  fatal (ERR_NON_CHAR);
+  parser_fatal (ERR_NON_CHAR);
 }
 
 #ifdef __HOST
@@ -806,13 +807,3 @@ lexer_dump_buffer_state (void)
 {
   __printf ("%s\n", buffer);
 }
-
-void
-fatal (int code)
-{
-  __printf ("FATAL: %d\n", code);
-  lexer_dump_buffer_state ();
-  JERRY_UNREACHABLE ();
-  __exit( -code);
-}
-

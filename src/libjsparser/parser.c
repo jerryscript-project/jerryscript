@@ -119,7 +119,7 @@ scope_must_be (unsigned int scopes)
       if (scopes & current_scopes[i].type)
         return;
     }
-  fatal (ERR_PARSER);
+  parser_fatal (ERR_PARSER);
 }
 
 static void
@@ -127,14 +127,14 @@ current_scope_must_be (unsigned int scopes)
 {
   if (scopes & current_scopes[scope_index - 1].type)
     return;
-  fatal (ERR_PARSER);
+  parser_fatal (ERR_PARSER);
 }
 
 static inline void
 current_scope_must_be_global (void)
 {
   if (scope_index != 1)
-    fatal (ERR_PARSER);
+    parser_fatal (ERR_PARSER);
 }
 
 static void
@@ -181,7 +181,7 @@ current_token_must_be(token_type tt)
 #ifdef __HOST
       __printf ("current_token_must_be: 0x%x\n", tt);
 #endif
-      fatal (ERR_PARSER); 
+      parser_fatal (ERR_PARSER); 
     }
 }
 
@@ -202,7 +202,7 @@ next_token_must_be (token_type tt)
 #ifdef __HOST
       __printf ("next_token_must_be: 0x%x\n", tt);
 #endif
-      fatal (ERR_PARSER);
+      parser_fatal (ERR_PARSER);
     }
 }
 
@@ -211,7 +211,7 @@ token_after_newlines_must_be (token_type tt)
 {
   skip_newlines ();
   if (tok.type != tt)
-    fatal (ERR_PARSER);
+    parser_fatal (ERR_PARSER);
 }
 
 static inline void
@@ -219,7 +219,7 @@ token_after_newlines_must_be_keyword (keyword kw)
 {
   skip_newlines ();
   if (!is_keyword (kw))
-    fatal (ERR_PARSER);
+    parser_fatal (ERR_PARSER);
 }
 
 static void
@@ -227,7 +227,7 @@ insert_semicolon (void)
 {
   tok = lexer_next_token ();
   if (tok.type != TOK_NEWLINE && tok.type != TOK_SEMICOLON)
-    fatal (ERR_PARSER);
+    parser_fatal (ERR_PARSER);
 }
 
 /* formal_parameter_list
@@ -959,7 +959,7 @@ parse_for_or_for_in_statement (void)
           else if (is_keyword (KW_IN))
             goto for_in;
           else
-            fatal (ERR_PARSER);
+            parser_fatal (ERR_PARSER);
         }
     }
   JERRY_ASSERT (is_variable_declaration_empty(list.decls[0]));
@@ -973,7 +973,7 @@ parse_for_or_for_in_statement (void)
   else if (is_keyword (KW_IN))
     goto for_in;
   else 
-    fatal (ERR_PARSER);
+    parser_fatal (ERR_PARSER);
 
   JERRY_UNREACHABLE ();
 
@@ -1267,7 +1267,7 @@ parser_parse_statement (void)
       if (tok.type == TOK_NAME)
         {
           if (current_scopes[scope_index - 1].type == SCOPE_CASE)
-            fatal (ERR_PARSER);
+            parser_fatal (ERR_PARSER);
           res.data.name = tok.data.name;
         }
       else
@@ -1382,3 +1382,11 @@ parser_init (void)
 #endif
 }
 
+void
+parser_fatal (jerry_Status_t code)
+{
+  __printf ("FATAL: %d\n", code);
+  lexer_dump_buffer_state ();
+
+  jerry_Exit( code);
+}

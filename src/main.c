@@ -108,14 +108,14 @@ main (int argc, char **argv)
       else if (file_name == NULL)
         file_name = argv[i];
       else
-        fatal (ERR_SEVERAL_FILES);
+        jerry_Exit (ERR_SEVERAL_FILES);
     }
 
   if (file_name == NULL)
-    fatal (ERR_NO_FILES);
+    jerry_Exit (ERR_NO_FILES);
 
   if (dump_tokens && dump_ast)
-    fatal (ERR_SEVERAL_FILES);
+    jerry_Exit (ERR_SEVERAL_FILES);
 
   if (!dump_tokens)
     dump_ast = true;
@@ -125,7 +125,7 @@ main (int argc, char **argv)
 
   if (file == NULL)
   {
-    fatal (ERR_IO);
+    jerry_Exit (ERR_IO);
   }
 
   lexer_set_file (file);

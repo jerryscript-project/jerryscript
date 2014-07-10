@@ -438,4 +438,6 @@ bool is_statement_null (statement);
 void parser_init (void);
 statement parser_parse_statement (void);
 
+void parser_fatal (jerry_Status_t code);
+
 #endif

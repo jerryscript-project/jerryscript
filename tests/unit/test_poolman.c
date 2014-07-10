@@ -52,7 +52,7 @@ main( int __unused argc,
     __printf("seed=%u\n", seed);
     srand(seed);
 
-    for ( int i = 0; i < test_iters; i++ )
+    for ( uint32_t i = 0; i < test_iters; i++ )
     {
         const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
 
@@ -62,7 +62,7 @@ main( int __unused argc,
         for ( size_t j = 0; j < subiters; j++ )
         {
             mem_PoolChunkType_t type = (mem_PoolChunkType_t) (rand() % MEM_POOL_CHUNK_TYPE__COUNT);
-            const uint32_t chunkSize = mem_GetChunkSize( type);
+            const size_t chunkSize = mem_GetChunkSize( type);
 
             types[j] = type;
             ptrs[j] = mem_PoolsAlloc( type);
@@ -81,7 +81,7 @@ main( int __unused argc,
             if ( ptrs[j] != NULL )
             {
                 mem_PoolChunkType_t type = types[j];
-		const uint32_t chunkSize = mem_GetChunkSize( type);
+                const size_t chunkSize = mem_GetChunkSize( type);
 
                 for ( size_t k = 0; k < chunkSize; k++ )
                 {

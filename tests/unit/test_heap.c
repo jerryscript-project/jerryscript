@@ -49,13 +49,13 @@ main( int __unused argc,
 
     mem_HeapPrint( false);
 
-    for ( int i = 0; i < test_iters; i++ )
+    for ( uint32_t i = 0; i < test_iters; i++ )
     {
-        const int subiters = test_sub_iters;
+        const uint32_t subiters = test_sub_iters;
         uint8_t * ptrs[subiters];
         size_t sizes[subiters];
 
-        for ( int j = 0; j < subiters; j++ )
+        for ( uint32_t j = 0; j < subiters; j++ )
         {
             size_t size = (unsigned int) rand() % ( test_threshold_block_size );
             ptrs[j] = mem_HeapAllocBlock( size, ( rand() % 2 ) ? MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
@@ -69,7 +69,7 @@ main( int __unused argc,
 
         // mem_HeapPrint( true);
 
-        for ( int j = 0; j < subiters; j++ )
+        for ( uint32_t j = 0; j < subiters; j++ )
         {
             if ( ptrs[j] != NULL )
             {

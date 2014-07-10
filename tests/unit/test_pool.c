@@ -46,12 +46,12 @@ main( int __unused argc,
     printf("seed=%d\n", k);
     srand((unsigned int) k);
 
-    for ( int i = 0; i < test_iters; i++ )
+    for ( uint32_t i = 0; i < test_iters; i++ )
     {
 	mem_PoolState_t pool;
 	uint8_t test_pool[test_pool_area_size] __attribute__((aligned(MEM_ALIGNMENT)));
 
-	const size_t chunkSize = MEM_ALIGNMENT * ( ( rand() % test_max_chunk_size_divided_by_alignment ) + 1 );
+	const size_t chunkSize = MEM_ALIGNMENT * ( ( (size_t) rand() % test_max_chunk_size_divided_by_alignment ) + 1 );
 
 	mem_PoolInit( &pool, chunkSize, test_pool, sizeof (test_pool));
 

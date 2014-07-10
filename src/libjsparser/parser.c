@@ -17,20 +17,6 @@
 #include "lexer.h"
 #include "parser.h"
 
-extern void lexer_dump_buffer_state(void);
-
-/* FIXME: Make general fatal function call it from libjsparser's fatal */
-extern void fatal(int);
-
-void
-fatal (int code)
-{
-  __printf ("FATAL: %d\n", code);
-  lexer_dump_buffer_state ();
-  JERRY_UNREACHABLE ();
-  __exit( -code);
-}
-
 bool
 is_formal_parameter_list_empty (formal_parameter_list list)
 {

@@ -32,9 +32,6 @@
 #include "parser.h"
 #include "pretty-printer.h"
 
-/* FIXME: Make general fatal function call it from libjsparser's fatal */
-extern void fatal(int);
-
 void fake_exit (void);
 
 void

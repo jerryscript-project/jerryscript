@@ -14,14 +14,12 @@
  */
 
 #include "allocator.h"
+#include "globals.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 
 static token saved_token;
 static token empty_token = { .type = TOK_EMPTY, .data.none = NULL };
-
-/* FIXME: Make general fatal function call it from libjsparser's fatal */
-extern void fatal(int);
 
 typedef struct
 {
@@ -807,5 +805,14 @@ void
 lexer_dump_buffer_state (void)
 {
   __printf ("%s\n", buffer);
+}
+
+void
+fatal (int code)
+{
+  __printf ("FATAL: %d\n", code);
+  lexer_dump_buffer_state ();
+  JERRY_UNREACHABLE ();
+  __exit( -code);
 }
 

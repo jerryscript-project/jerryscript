@@ -161,4 +161,6 @@ void lexer_save_token (token);
 
 void lexer_dump_buffer_state (void);
 
+void fatal(int);
+
 #endif

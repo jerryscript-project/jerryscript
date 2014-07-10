@@ -41,10 +41,10 @@ SOURCES = \
 
 SOURCES_STM32F4 = \
 	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
-        $(wildcard src/libruntime/stm32f4/*)
+        $(wildcard src/libruntime/target/stm32f4/*)
 
 SOURCES_LINUX = \
-        $(wildcard src/libruntime/linux/*)
+        $(wildcard src/libruntime/target/linux/*)
 
 HEADERS = \
 	$(sort \

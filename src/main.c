@@ -14,9 +14,20 @@
  */
 
 #ifdef JERRY_NDEBUG
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#endif
+
+#ifdef __TARGET_MCU
+#include "stm32f4xx.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+
+#define LED_GREEN      12
+#define LED_ORANGE     13
+#define LED_RED        14
+#define LED_BLUE       15
 #endif
 
 #include "error.h"
@@ -33,7 +44,52 @@ void fake_exit (void);
 void
 fake_exit (void)
 {
+#ifdef __TARGET_MCU
+  int pin = LED_RED;
+  uint32_t mode = GPIO_Mode_OUT << (pin * 2);
+  uint32_t speed = GPIO_Speed_100MHz << (pin * 2);
+  uint32_t type = GPIO_OType_PP << pin;
+  uint32_t pullup = GPIO_PuPd_NOPULL << (pin * 2);
+  //
+  //  Initialise the peripheral clock.
+  //
+  RCC->AHB1ENR |= RCC_AHB1Periph_GPIOD;
+  //
+  //  Initilaise the GPIO port.
+  //
+  GPIOD->MODER |= mode;
+  GPIOD->OSPEEDR |= speed;
+  GPIOD->OTYPER |= type;
+  GPIOD->PUPDR |= pullup;
+  //
+  //  Toggle the selected LED indefinitely.
+  //
+  int index;
+  
+  // SOS
+  
+  int dot = 600000;
+  int dash = dot * 3;
+  
+  while (1)
+  {
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin);
+    
+    for (index = 0; index < dash * 7; index++);
+  }
+#else
   for (;;);
+#endif
 }
 
 int

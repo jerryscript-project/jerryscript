@@ -13,21 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ERROR_H
-#define ERROR_H 
+#include "error.h"
 
-#include "mappings.h"
+extern void lexer_dump_buffer_state (void);
 
-void fatal (int);
-
-#define ERR_IO (-1)
-#define ERR_BUFFER_SIZE (-2)
-#define ERR_SEVERAL_FILES (-3)
-#define ERR_NO_FILES (-4)
-#define ERR_NON_CHAR (-5)
-#define ERR_UNCLOSED (-6)
-#define ERR_INT_LITERAL (-7)
-#define ERR_STRING (-8)
-#define ERR_PARSER (-9)
-
-#endif /* ERROR_H */
+void
+fatal (int code)
+{
+  printf ("FATAL: %d\n", code);
+  lexer_dump_buffer_state ();
+  JERRY_UNREACHABLE ();
+  exit (code);
+}

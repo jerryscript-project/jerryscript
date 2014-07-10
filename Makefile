@@ -13,12 +13,16 @@
 # limitations under the License.
 
 TARGET ?= jerry
-CROSS_COMPILE	?= 
-OBJ_DIR = obj
+CROSS_COMPILE	?= arm-none-eabi-
+OBJ_DIR = ./obj
 OUT_DIR = ./out
 
 MAIN_MODULE_SRC = ./src/main.c
 UNITTESTS_SRC_DIR = ./tests/unit
+
+LNK_SCRIPT_STM32F4 = ./third-party/stm32f4.ld
+SUP_STM32F4 = ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f4xx.s
+
 
 # FIXME:
 #  Place jerry-libc.c, pretty-printer.c to some subdirectory (libruntime?)
@@ -33,6 +37,9 @@ SOURCES = \
 	$(wildcard ./src/libecmaobjects/*.c) \
 	$(wildcard ./src/liballocator/*.c) \
 	$(wildcard ./src/libcoreint/*.c) )
+
+SOURCES_STM32F4 = \
+	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
 
 HEADERS = \
 	$(sort \
@@ -51,6 +58,11 @@ INCLUDES = \
 	-I src/liballocator \
 	-I src/libcoreint
 
+INCLUDES_STM32F4 = \
+	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Include \
+	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/inc \
+	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
+
 UNITTESTS = \
 	$(sort \
 	$(patsubst %.c,%,$(notdir \
@@ -58,37 +70,58 @@ UNITTESTS = \
 
 OBJS = \
 	$(sort \
-	$(patsubst %.c,./$(OBJ_DIR)/%.o,$(notdir $(MAIN_MODULE_SRC) $(SOURCES))))
+	$(patsubst %.c,./%.o,$(notdir $(MAIN_MODULE_SRC) $(SOURCES))))
 
-CC  = $(CROSS_COMPILE)gcc
-LD  = $(CROSS_COMPILE)ld
-OBJDUMP	= $(CROSS_COMPILE)objdump
-OBJCOPY	= $(CROSS_COMPILE)objcopy
-SIZE	= $(CROSS_COMPILE)size
-STRIP	= $(CROSS_COMPILE)strip
+CC  = gcc
+LD  = ld
+OBJDUMP	= objdump
+OBJCOPY	= objcopy
+SIZE	= size
+STRIP	= strip
 
 # General flags
 CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
-CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
-CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
+#CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
+#CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
+#CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
+#CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU
 MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
 MCU_CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-MCU_CFLAGS += -ffunction-sections -fdata-sections
+MCU_CFLAGS += -ffunction-sections -fdata-sections -nostdlib -fno-common 
+
+LDFLAGS = -nostartfiles -T$(LNK_SCRIPT_STM32F4)
 
 DEBUG_OPTIONS = -g3 -O0 # -fsanitize=address
 RELEASE_OPTIONS = -Os -Werror -DJERRY_NDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 TARGET_HOST = -D__HOST
-TARGET_MCU = -D__MCU
+TARGET_MCU = -D__TARGET_MCU
 
-.PHONY: all debug debug.stm32f3 release clean tests check install
+#-I third-party/STM32F4-Discovery_FW_V1.1.0/Project/Demonstration \
+
+.PHONY: all debug debug.stdm32f4 release clean tests check install
 
 all: clean debug release check
+
+debug.stdm32f4: clean debug.stdm32f4.bin
+
+debug.stdm32f4.o:
+	mkdir -p $(OUT_DIR)/debug.stdm32f4/
+	$(CROSS_COMPILE)$(CC) \
+	$(SUP_STM32F4) $(SOURCES_STM32F4) $(INCLUDES_STM32F4) \
+	$(CFLAGS) $(MCU_CFLAGS) $(DEBUG_OPTIONS) \
+	$(DEFINES) $(TARGET_MCU) $(MAIN_MODULE_SRC) -c
+
+debug.stdm32f4.elf: debug.stdm32f4.o
+	$(CROSS_COMPILE)$(LD) $(LDFLAGS) -o $(TARGET).elf *.o
+	rm -f *.o
+ 
+debug.stdm32f4.bin: debug.stdm32f4.elf
+	$(CROSS_COMPILE)$(OBJCOPY) -Obinary $(TARGET).elf $(TARGET).bin
+	rm -f *.elf
 
 debug: clean
 	mkdir -p $(OUT_DIR)/debug.host/

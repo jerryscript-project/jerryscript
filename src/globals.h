@@ -48,18 +48,22 @@ typedef enum {
 #define JERRY_BITSINBYTE 8
 
 /**
- * Errors
+ * Error codes
  */
-#define ERR_IO (-1)
-#define ERR_BUFFER_SIZE (-2)
-#define ERR_SEVERAL_FILES (-3)
-#define ERR_NO_FILES (-4)
-#define ERR_NON_CHAR (-5)
-#define ERR_UNCLOSED (-6)
-#define ERR_INT_LITERAL (-7)
-#define ERR_STRING (-8)
-#define ERR_PARSER (-9)
-#define ERR_GENERAL (-255)
+typedef enum
+{
+  ERR_OK = 0,
+  ERR_IO = -1,
+  ERR_BUFFER_SIZE = -2,
+  ERR_SEVERAL_FILES = -3,
+  ERR_NO_FILES = -4,
+  ERR_NON_CHAR = -5,
+  ERR_UNCLOSED = -6,
+  ERR_INT_LITERAL = -7,
+  ERR_STRING = -8,
+  ERR_PARSER = -9,
+  ERR_GENERAL = -255
+} jerry_Status_t;
 
 /**
  * Asserts
@@ -97,6 +101,11 @@ extern void __noreturn jerry_AssertFail( const char *assertion, const char *file
  */
 #define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); __builtin_trap(); } while (0)
 #define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
+
+/**
+ * Exit
+ */
+extern void __noreturn jerry_Exit( jerry_Status_t code);
 
 /**
  * sizeof, offsetof, ...

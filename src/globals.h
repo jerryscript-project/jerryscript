@@ -16,21 +16,22 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
-#include <stddef.h>
-#include <stdbool.h>
-
 /**
  * Types
  */
 typedef unsigned long mword_t;
 typedef mword_t uintptr_t;
-//typedef mword_t size_t;
+typedef mword_t size_t;
 typedef signed long ssize_t;
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 typedef signed int int32_t;
+
+typedef enum {
+    false, true
+} bool;
 
 /**
  * Attributes
@@ -42,8 +43,23 @@ typedef signed int int32_t;
 /**
  * Constants
  */
+#define NULL  ((void*)0)
 
 #define JERRY_BITSINBYTE 8
+
+/**
+ * Errors
+ */
+#define ERR_IO (-1)
+#define ERR_BUFFER_SIZE (-2)
+#define ERR_SEVERAL_FILES (-3)
+#define ERR_NO_FILES (-4)
+#define ERR_NON_CHAR (-5)
+#define ERR_UNCLOSED (-6)
+#define ERR_INT_LITERAL (-7)
+#define ERR_STRING (-8)
+#define ERR_PARSER (-9)
+#define ERR_GENERAL (-255)
 
 /**
  * Asserts

@@ -24,9 +24,5 @@ jerry_AssertFail( const char *assertion, /**< assertion condition string */
 		  const char *file, /**< file name */
                   const uint32_t line) /** line */
 {
-    /**
-     * TODO: Blink with LEDs.
-     *       Save call stack?
-     */
-    while( true );
+  __exit( -ERR_GENERAL);
 } /* jerry_AssertFail */

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
+#include "jerry-libc.h"
 #include "pretty-printer.h"
-#include "error.h"
 
 static int intendation;
 static bool was_function_expression;
@@ -35,11 +35,11 @@ pp_token (token tok)
   switch (tok.type)
     {
        case TOK_NAME:
-         printf ("IDENTIFIER (%s)\n", tok.data.name);
+         __printf ("IDENTIFIER (%s)\n", tok.data.name);
          break;
 
        case TOK_STRING:
-         printf ("STRING (%s)\n", tok.data.str);
+         __printf ("STRING (%s)\n", tok.data.str);
          break;
 
        case TOK_KEYWORD:
@@ -47,227 +47,227 @@ pp_token (token tok)
          break;
 
        case TOK_INT:
-         printf ("INTEGER (%d)\n", tok.data.num);
+         __printf ("INTEGER (%d)\n", tok.data.num);
          break;
 
        case TOK_FLOAT:
-         printf ("FLOAT (%f)\n", tok.data.fp_num);
+         __printf ("FLOAT (%f)\n", tok.data.fp_num);
          break;
 
        case TOK_NULL:
-         printf ("NULL (null)\n");
+         __printf ("NULL (null)\n");
          break;
 
        case TOK_BOOL:
          if (tok.data.is_true)
-           printf ("BOOL (true)\n");
+           __printf ("BOOL (true)\n");
          else
-           printf ("BOOL (false)\n");
+           __printf ("BOOL (false)\n");
          break;
 
 
        case TOK_OPEN_BRACE:
-         printf ("PUNC ({)\n");
+         __printf ("PUNC ({)\n");
          break;
 
        case TOK_CLOSE_BRACE:
-         printf ("PUNC (})\n");
+         __printf ("PUNC (})\n");
          break;
 
        case TOK_OPEN_PAREN:
-         printf ("PUNC (()\n");
+         __printf ("PUNC (()\n");
          break;
 
        case TOK_CLOSE_PAREN:
-         printf ("PUNC ())\n");
+         __printf ("PUNC ())\n");
          break;
 
        case TOK_OPEN_SQUARE:
-         printf ("PUNC ([)\n");
+         __printf ("PUNC ([)\n");
          break;
 
        case TOK_CLOSE_SQUARE:
-         printf ("PUNC (])\n");
+         __printf ("PUNC (])\n");
          break;
 
 
        case TOK_DOT:
-         printf ("PUNC (.)\n");
+         __printf ("PUNC (.)\n");
          break;
 
        case TOK_SEMICOLON:
-         printf ("PUNC (;)\n");
+         __printf ("PUNC (;)\n");
          break;
 
        case TOK_COMMA:
-         printf ("PUNC (,)\n");
+         __printf ("PUNC (,)\n");
          break;
 
        case TOK_LESS:
-         printf ("PUNC (<)\n");
+         __printf ("PUNC (<)\n");
          break;
 
        case TOK_GREATER:
-         printf ("PUNC (>)\n");
+         __printf ("PUNC (>)\n");
          break;
 
        case TOK_LESS_EQ:
-         printf ("PUNC (<=)\n");
+         __printf ("PUNC (<=)\n");
          break;
 
 
        case TOK_GREATER_EQ:
-         printf ("PUNC (>=)\n");
+         __printf ("PUNC (>=)\n");
          break;
 
        case TOK_DOUBLE_EQ:
-         printf ("PUNC (==)\n");
+         __printf ("PUNC (==)\n");
          break;
 
        case TOK_NOT_EQ:
-         printf ("PUNC (!=)\n");
+         __printf ("PUNC (!=)\n");
          break;
 
        case TOK_TRIPLE_EQ:
-         printf ("PUNC (===)\n");
+         __printf ("PUNC (===)\n");
          break;
 
        case TOK_NOT_DOUBLE_EQ:
-         printf ("PUNC (!==)\n");
+         __printf ("PUNC (!==)\n");
          break;
 
 
        case TOK_PLUS:
-         printf ("PUNC (+)\n");
+         __printf ("PUNC (+)\n");
          break;
 
        case TOK_MINUS:
-         printf ("PUNC (-)\n");
+         __printf ("PUNC (-)\n");
          break;
 
        case TOK_MULT:
-         printf ("PUNC (*)\n");
+         __printf ("PUNC (*)\n");
          break;
 
        case TOK_MOD:
-         printf ("PUNC (%%)\n");
+         __printf ("PUNC (%%)\n");
          break;
 
        case TOK_DOUBLE_PLUS:
-         printf ("PUNC (++)\n");
+         __printf ("PUNC (++)\n");
          break;
 
        case TOK_DOUBLE_MINUS:
-         printf ("PUNC (--)\n");
+         __printf ("PUNC (--)\n");
          break;
 
 
        case TOK_LSHIFT:
-         printf ("PUNC (<<)\n");
+         __printf ("PUNC (<<)\n");
          break;
 
        case TOK_RSHIFT:
-         printf ("PUNC (>>)\n");
+         __printf ("PUNC (>>)\n");
          break;
 
        case TOK_RSHIFT_EX:
-         printf ("PUNC (>>>)\n");
+         __printf ("PUNC (>>>)\n");
          break;
 
        case TOK_AND:
-         printf ("PUNC (&)\n");
+         __printf ("PUNC (&)\n");
          break;
 
        case TOK_OR:
-         printf ("PUNC (|)\n");
+         __printf ("PUNC (|)\n");
          break;
 
        case TOK_XOR:
-         printf ("PUNC (^)\n");
+         __printf ("PUNC (^)\n");
          break;
 
 
        case TOK_NOT:
-         printf ("PUNC (!)\n");
+         __printf ("PUNC (!)\n");
          break;
 
        case TOK_COMPL:
-         printf ("PUNC (~)\n");
+         __printf ("PUNC (~)\n");
          break;
 
        case TOK_DOUBLE_AND:
-         printf ("PUNC (&&)\n");
+         __printf ("PUNC (&&)\n");
          break;
 
        case TOK_DOUBLE_OR:
-         printf ("PUNC (||)\n");
+         __printf ("PUNC (||)\n");
          break;
 
        case TOK_QUERY:
-         printf ("PUNC (?)\n");
+         __printf ("PUNC (?)\n");
          break;
 
        case TOK_COLON:
-         printf ("PUNC (:)\n");
+         __printf ("PUNC (:)\n");
          break;
 
 
        case TOK_EQ:
-         printf ("PUNC (=)\n");
+         __printf ("PUNC (=)\n");
          break;
 
        case TOK_PLUS_EQ:
-         printf ("PUNC (+=)\n");
+         __printf ("PUNC (+=)\n");
          break;
 
        case TOK_MINUS_EQ:
-         printf ("PUNC (-=)\n");
+         __printf ("PUNC (-=)\n");
          break;
 
        case TOK_MULT_EQ:
-         printf ("PUNC (*=)\n");
+         __printf ("PUNC (*=)\n");
          break;
 
        case TOK_MOD_EQ:
-         printf ("PUNC (%%=)\n");
+         __printf ("PUNC (%%=)\n");
          break;
 
        case TOK_LSHIFT_EQ:
-         printf ("PUNC (<<=)\n");
+         __printf ("PUNC (<<=)\n");
          break;
 
 
        case TOK_RSHIFT_EQ:
-         printf ("PUNC (>>=)\n");
+         __printf ("PUNC (>>=)\n");
          break;
 
        case TOK_RSHIFT_EX_EQ:
-         printf ("PUNC (>>>=)\n");
+         __printf ("PUNC (>>>=)\n");
          break;
 
        case TOK_AND_EQ:
-         printf ("PUNC (&=)\n");
+         __printf ("PUNC (&=)\n");
          break;
 
        case TOK_OR_EQ:
-         printf ("PUNC (|=)\n");
+         __printf ("PUNC (|=)\n");
          break;
 
        case TOK_XOR_EQ:
-         printf ("PUNC (^=)\n");
+         __printf ("PUNC (^=)\n");
          break;
 
 
        case TOK_DIV:
-         printf ("PUNC (/)\n");
+         __printf ("PUNC (/)\n");
          break;
 
        case TOK_DIV_EQ:
-         printf ("PUNC (/=)\n");
+         __printf ("PUNC (/=)\n");
          break;
 
        case TOK_NEWLINE:
-         printf ("NEWLINE\n");
+         __printf ("NEWLINE\n");
          break;
 
        default:
@@ -286,115 +286,115 @@ pp_keyword (keyword kw)
       break;
 
     case KW_RESERVED:
-      printf ("KEYWORD RESERVED\n");
+      __printf ("KEYWORD RESERVED\n");
       break;
 
 
     case KW_BREAK:
-      printf ("KEYWORD (break)\n");
+      __printf ("KEYWORD (break)\n");
       break;
 
     case KW_CASE:
-      printf ("KEYWORD (case)\n");
+      __printf ("KEYWORD (case)\n");
       break;
 
     case KW_CATCH:
-      printf ("KEYWORD (catch)\n");
+      __printf ("KEYWORD (catch)\n");
       break;
 
     case KW_CONTINUE:
-      printf ("KEYWORD (continue)\n");
+      __printf ("KEYWORD (continue)\n");
       break;
 
     case KW_DEBUGGER:
-      printf ("KEYWORD (debugger)\n");
+      __printf ("KEYWORD (debugger)\n");
       break;
 
     case KW_DEFAULT:
-      printf ("KEYWORD (default)\n");
+      __printf ("KEYWORD (default)\n");
       break;
 
     case KW_DELETE:
-      printf ("KEYWORD (delete)\n");
+      __printf ("KEYWORD (delete)\n");
       break;
 
 
     case KW_DO:
-      printf ("KEYWORD (do)\n");
+      __printf ("KEYWORD (do)\n");
       break;
 
     case KW_ELSE:
-      printf ("KEYWORD (else)\n");
+      __printf ("KEYWORD (else)\n");
       break;
 
     case KW_FINALLY:
-      printf ("KEYWORD (finally)\n");
+      __printf ("KEYWORD (finally)\n");
       break;
 
     case KW_FOR:
-      printf ("KEYWORD (for)\n");
+      __printf ("KEYWORD (for)\n");
       break;
 
     case KW_FUNCTION:
-      printf ("KEYWORD (function)\n");
+      __printf ("KEYWORD (function)\n");
       break;
 
     case KW_IF:
-      printf ("KEYWORD (if)\n");
+      __printf ("KEYWORD (if)\n");
       break;
 
     case KW_IN:
-      printf ("KEYWORD (in)\n");
+      __printf ("KEYWORD (in)\n");
       break;
 
 
     case KW_INSTANCEOF:
-      printf ("KEYWORD (instanceof)\n");
+      __printf ("KEYWORD (instanceof)\n");
       break;
 
     case KW_NEW:
-      printf ("KEYWORD (new)\n");
+      __printf ("KEYWORD (new)\n");
       break;
 
     case KW_RETURN:
-      printf ("KEYWORD (return)\n");
+      __printf ("KEYWORD (return)\n");
       break;
 
     case KW_SWITCH:
-      printf ("KEYWORD (switch)\n");
+      __printf ("KEYWORD (switch)\n");
       break;
 
     case KW_THIS:
-      printf ("KEYWORD (this)\n");
+      __printf ("KEYWORD (this)\n");
       break;
 
     case KW_THROW:
-      printf ("KEYWORD (throw)\n");
+      __printf ("KEYWORD (throw)\n");
       break;
 
     case KW_TRY:
-      printf ("KEYWORD (try)\n");
+      __printf ("KEYWORD (try)\n");
       break;
 
 
     case KW_TYPEOF:
-      printf ("KEYWORD (typeof)\n");
+      __printf ("KEYWORD (typeof)\n");
       break;
 
     case KW_VAR:
-      printf ("KEYWORD (var)\n");
+      __printf ("KEYWORD (var)\n");
       break;
 
     case KW_VOID:
-      printf ("KEYWORD (void)\n");
+      __printf ("KEYWORD (void)\n");
       break;
 
     case KW_WHILE:
-      printf ("KEYWORD (while)\n");
+      __printf ("KEYWORD (while)\n");
       break;
 
     case KW_WITH:
-      printf ("KEYWORD (with)\n");
+      __printf ("KEYWORD (with)\n");
       break;
 
     default:
@@ -404,10 +404,10 @@ pp_keyword (keyword kw)
 }
 
 static void
-intend (void)
+intend ()
 {
   for (int i = 0; i < intendation; i++)
-    putchar (' '); 
+    __putchar (' '); 
 }
 
 static void
@@ -420,20 +420,20 @@ pp_formal_parameter_list (formal_parameter_list param_list)
       if (param_list.names[i] == NULL)
         break;
       if (i != 0)
-        printf (", ");
-      printf ("%s", param_list.names[i]);
+        __printf (", ");
+      __printf ("%s", param_list.names[i]);
     }
 }
 
 static void
 pp_function_declaration (function_declaration func_decl)
 {
-  printf ("function ");
+  __printf ("function ");
   if (func_decl.name)
-    printf ("%s ", func_decl.name);
-  putchar ('(');
+    __printf ("%s ", func_decl.name);
+  __putchar ('(');
   pp_formal_parameter_list (func_decl.params);
-  printf (") ");
+  __printf (") ");
   was_function_expression = true;
 }
 
@@ -443,19 +443,19 @@ pp_literal (literal lit)
   switch (lit.type)
   {
     case LIT_NULL:
-      printf ("null");
+      __printf ("null");
       break;
 
     case LIT_BOOL:
-      printf ("%s", lit.data.is_true ? "true" : "false");
+      __printf ("%s", lit.data.is_true ? "true" : "false");
       break;
 
     case LIT_INT:
-      printf ("%d", lit.data.num);
+      __printf ("%d", lit.data.num);
       break;
 
     case LIT_STR:
-      printf ("\"%s\"", lit.data.str);
+      __printf ("\"%s\"", lit.data.str);
       break;
 
     default:
@@ -470,7 +470,7 @@ pp_operand (operand op)
   if (op.is_literal)
     pp_literal (op.data.lit);
   else
-    printf ("%s", op.data.name);
+    __printf ("%s", op.data.name);
 }
 
 static void
@@ -483,7 +483,7 @@ pp_operand_list (operand_list list)
       if (is_operand_empty (list.ops[i]))
         break;
       if (i != 0)
-        printf (", ");
+        __printf (", ");
       pp_operand (list.ops[i]);
     }
 }
@@ -493,7 +493,7 @@ pp_property (property prop)
 {
   JERRY_ASSERT (!is_property_empty (prop));
   pp_operand (prop.name);
-  printf (" : ");
+  __printf (" : ");
   pp_operand (prop.value);
 }
 
@@ -507,7 +507,7 @@ pp_property_list (property_list prop_list)
       if (is_property_empty (prop_list.props[i]))
         break;
       if (i != 0)
-        printf (", ");
+        __printf (", ");
       pp_property (prop_list.props[i]);
     }
 }
@@ -516,40 +516,40 @@ static void
 pp_call_expression (call_expression expr)
 {
   JERRY_ASSERT (expr.name);
-  printf ("%s (", expr.name);
+  __printf ("%s (", expr.name);
   pp_operand_list (expr.args);
-  printf (")\n");
+  __printf (")\n");
 }
 
 static void
 dump_two_operands (operand_pair pair, const char *operation)
 {
   pp_operand (pair.op1);
-  printf ("%s", operation);
+  __printf ("%s", operation);
   pp_operand (pair.op2);
-  putchar ('\n');
+  __putchar ('\n');
 }
 
 static void
 dump_unary (operand op, const char *operation)
 {
-  printf ("%s", operation);
+  __printf ("%s", operation);
   pp_operand (op);
-  putchar ('\n');
+  __putchar ('\n');
 }
 
 static void
 dump_postfix (operand op, const char *operation)
 {
   pp_operand (op);
-  printf ("%s\n", operation);
+  __printf ("%s\n", operation);
 }
 
 static void
 pp_assignment_expression (assignment_expression expr)
 {
-  if (expr.oper != AO_NONE && expr.var)
-    printf ("%s", expr.var);
+  if (expr.var)
+    __printf ("%s", expr.var);
 
   switch (expr.oper)
   {
@@ -557,51 +557,51 @@ pp_assignment_expression (assignment_expression expr)
       break;
 
     case AO_EQ:
-      printf (" = ");
+      __printf (" = ");
       break;
 
     case AO_MULT_EQ:
-      printf (" *= ");
+      __printf (" *= ");
       break;
 
     case AO_DIV_EQ:
-      printf (" ?= ");
+      __printf (" ?= ");
       break;
 
     case AO_MOD_EQ:
-      printf (" %%= ");
+      __printf (" %%= ");
       break;
 
     case AO_PLUS_EQ:
-      printf (" += ");
+      __printf (" += ");
       break;
 
     case AO_MINUS_EQ:
-      printf (" -= ");
+      __printf (" -= ");
       break;
 
     case AO_LSHIFT_EQ:
-      printf (" <<= ");
+      __printf (" <<= ");
       break;
 
     case AO_RSHIFT_EQ:
-      printf (" >>= ");
+      __printf (" >>= ");
       break;
 
     case AO_RSHIFT_EX_EQ:
-      printf (" >>>= ");
+      __printf (" >>>= ");
       break;
 
     case AO_AND_EQ:
-      printf (" &= ");
+      __printf (" &= ");
       break;
 
     case AO_XOR_EQ:
-      printf (" ^= ");
+      __printf (" ^= ");
       break;
 
     case AO_OR_EQ:
-      printf (" |= ");
+      __printf (" |= ");
       break;
 
     default:
@@ -767,30 +767,30 @@ pp_assignment_expression (assignment_expression expr)
       return;
 
     case ET_NEW:
-      printf ("new ");
+      __printf ("new ");
       pp_operand (expr.data.ops.op1);
       JERRY_ASSERT (is_operand_empty (expr.data.ops.op2));
-      putchar ('\n');
+      __putchar ('\n');
       return;
 
     case ET_INDEX:
       pp_operand (expr.data.ops.op1);
-      putchar ('.');
+      __putchar ('.');
       pp_operand (expr.data.ops.op2);
-      putchar ('\n');
+      __putchar ('\n');
       return;
 
     case ET_PROP_REF:
       pp_operand (expr.data.ops.op1);
-      putchar ('[');
+      __putchar ('[');
       pp_operand (expr.data.ops.op2);
-      printf ("]\n");
+      __printf ("]\n");
       return;
 
     case ET_OBJECT:
-      putchar ('{');
+      __putchar ('{');
       pp_property_list (expr.data.obj_lit);
-      printf ("}\n");
+      __printf ("}\n");
       return;
 
     case ET_FUNCTION:
@@ -798,20 +798,20 @@ pp_assignment_expression (assignment_expression expr)
       return;
 
     case ET_ARRAY:
-      putchar ('[');
+      __putchar ('[');
       pp_operand_list (expr.data.arr_lit);
-      printf ("]\n");
+      __printf ("]\n");
       return;
 
     case ET_SUBEXPRESSION:
-      putchar ('(');
+      __putchar ('(');
       return;
 
     case ET_LITERAL:
     case ET_IDENTIFIER:  
       pp_operand (expr.data.ops.op1);
       JERRY_ASSERT (is_operand_empty (expr.data.ops.op2));
-      putchar ('\n');
+      __putchar ('\n');
       return;
 
     default:
@@ -829,13 +829,13 @@ pp_expression (expression_list expr_list)
       if (is_expression_empty (expr_list.exprs[i]))
         break;
       if (i != 0)
-        printf (", ");
+        __printf (", ");
       pp_assignment_expression (expr_list.exprs[i]);
     }
 
   if (was_subexpression && !was_function_expression)
     {
-      putchar (')');
+      __putchar (')');
       was_subexpression = false;
     }
 }
@@ -843,10 +843,10 @@ pp_expression (expression_list expr_list)
 static void
 pp_variable_declaration (variable_declaration var_decl)
 {
-  printf ("%s", var_decl.name);
+  __printf ("%s", var_decl.name);
   if (!is_expression_empty (var_decl.assign_expr))
     {
-      printf (" = ");
+      __printf (" = ");
       pp_assignment_expression (var_decl.assign_expr);
     }
 }
@@ -856,14 +856,14 @@ pp_variable_declaration_list (variable_declaration_list decl_list)
 {
   int i;
 
-  printf ("var ");
+  __printf ("var ");
 
   for (i = 0; i < MAX_DECLS; i++)
     {
       if (is_variable_declaration_empty (decl_list.decls[i]))
         break;
       if (i != 0)
-        printf (", ");
+        __printf (", ");
       pp_variable_declaration (decl_list.decls[i]);
     }
 }
@@ -873,7 +873,7 @@ pp_for_in_statement_initializer_part (for_in_statement_initializer_part init)
 {
   if (init.is_decl)
     {
-      printf ("var ");
+      __printf ("var ");
       pp_variable_declaration (init.data.decl);
     }
   else if (!is_expression_empty (init.data.left_hand_expr))
@@ -883,11 +883,11 @@ pp_for_in_statement_initializer_part (for_in_statement_initializer_part init)
 static void
 pp_for_in_statement (for_in_statement for_in_stmt)
 {
-  printf ("for (");
+  __printf ("for (");
   pp_for_in_statement_initializer_part (for_in_stmt.init);
-  printf (" in ");
+  __printf (" in ");
   pp_expression (for_in_stmt.list_expr);
-  printf (") ");
+  __printf (") ");
 }
 
 static void
@@ -902,15 +902,15 @@ pp_for_statement_initialiser_part (for_statement_initialiser_part init)
 static void
 pp_for_statement (for_statement for_stmt)
 {
-  printf ("for (");
+  __printf ("for (");
   pp_for_statement_initialiser_part (for_stmt.init);
-  printf ("; ");
+  __printf ("; ");
   if (is_expression_empty (for_stmt.limit))
     pp_assignment_expression (for_stmt.limit);
-  printf ("; ");
+  __printf ("; ");
   if (is_expression_empty (for_stmt.incr))
     pp_assignment_expression (for_stmt.incr);
-  printf (") ");
+  __printf (") ");
 }
 
 static void
@@ -932,25 +932,25 @@ pp_statement (statement stmt)
     {
       if (stmt.type == STMT_EMPTY)
         {
-          printf (";\n");
+          __printf (";\n");
           prev_stmt = stmt.type;
           return;
         }
       else
-        putchar ('\n');
+        __putchar ('\n');
     }
 
   switch (stmt.type)
   {
     case STMT_BLOCK_START:
-      printf ("{\n");
+      __printf ("{\n");
       intendation += 2;
       break;
 
     case STMT_BLOCK_END:
       intendation -= 2;
       intend ();
-      printf ("}");
+      __printf ("}");
       break;
 
     case STMT_VARIABLE:
@@ -959,38 +959,38 @@ pp_statement (statement stmt)
       break;
 
     case STMT_EMPTY:
-      printf (";\n");
+      __printf (";\n");
       break;
 
     case STMT_IF:
       intend ();
-      printf ("if (");
+      __printf ("if (");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_ELSE:
       intend ();
-      printf ("else ");
+      __printf ("else ");
       break;
 
     case STMT_ELSE_IF:
       intend ();
-      printf ("else if(");
+      __printf ("else if(");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_DO:
       intend ();
-      printf ("do ");
+      __printf ("do ");
       break;
 
     case STMT_WHILE:
       intend ();
-      printf ("while (");
+      __printf ("while (");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_FOR_OR_FOR_IN:
@@ -1000,70 +1000,70 @@ pp_statement (statement stmt)
 
     case STMT_CONTINUE:
       intend ();
-      printf ("continue\n");
+      __printf ("continue\n");
       break;
 
     case STMT_BREAK:
       intend ();
-      printf ("break\n");
+      __printf ("break\n");
       break;
 
     case STMT_RETURN:
       intend ();
-      printf ("return ");
+      __printf ("return ");
       pp_expression (stmt.data.expr);
       if (!was_function_expression)
-        printf (";\n");
+        __printf (";\n");
       break;
 
     case STMT_WITH:
       intend ();
-      printf ("with (");
+      __printf ("with (");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_LABELLED:
       intend ();
-      printf ("%s:\n", stmt.data.name);
+      __printf ("%s:\n", stmt.data.name);
       break;
 
     case STMT_SWITCH:
       intend ();
-      printf ("switch (");
+      __printf ("switch (");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_CASE:
       intend ();
-      printf ("case ");
+      __printf ("case ");
       pp_expression (stmt.data.expr);
-      printf (":\n");
+      __printf (":\n");
       break;
 
     case STMT_THROW:
       intend ();
-      printf ("throw ");
+      __printf ("throw ");
       pp_expression (stmt.data.expr);
-      printf (";\n");
+      __printf (";\n");
       break;
 
     case STMT_TRY:
       intend ();
-      printf ("try ");
+      __printf ("try ");
       break;
 
     case STMT_CATCH:
       intend ();
-      printf ("catch (");
+      __printf ("catch (");
       pp_expression (stmt.data.expr);
-      printf (") ");
+      __printf (") ");
       break;
 
     case STMT_FINALLY:
       intend ();
-      printf ("finally ");
+      __printf ("finally ");
       break;
 
     case STMT_EXPRESSION:
@@ -1072,7 +1072,7 @@ pp_statement (statement stmt)
       break;
 
     case STMT_SUBEXPRESSION_END:
-      putchar (')');
+      __putchar (')');
       break;
 
     case STMT_FUNCTION:
@@ -1087,8 +1087,8 @@ pp_statement (statement stmt)
   prev_stmt = stmt.type;
 }
 
-void pp_finish (void)
+void pp_finish ()
 {
   if (prev_stmt == STMT_BLOCK_END)
-    putchar ('\n');
+    __putchar ('\n');
 }

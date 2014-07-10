@@ -14,8 +14,8 @@
  */
 
 #include "ecma-operations.h"
-#include "error.h"
 #include "interpreter.h"
+#include "jerry-libc.h"
 #include "opcodes.h"
 
 void
@@ -90,7 +90,7 @@ void
 opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
 {
 #ifdef __HOST
-  printf ("%d::loop_inf:idx:%d\n",
+  __printf ("%d::loop_inf:idx:%d\n",
           int_data->pos,
           opdata.data.loop_inf.loop_root);
 #endif
@@ -102,7 +102,7 @@ void
 opfunc_call_1 (OPCODE opdata, struct __int_data *int_data)
 {
 #ifdef __HOST
-  printf ("%d::op_call_1:idx:%d:%d\n",
+  __printf ("%d::op_call_1:idx:%d:%d\n",
           int_data->pos,
           opdata.data.call_1.name_lit_idx,
           opdata.data.call_1.arg1_lit_idx);
@@ -115,7 +115,7 @@ void
 opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 {
 #ifdef __HOST
-  printf ("%d::op_jmp:idx:%d\n",
+  __printf ("%d::op_jmp:idx:%d\n",
           int_data->pos,
           opdata.data.jmp.opcode_idx);
 #endif

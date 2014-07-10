@@ -14,15 +14,10 @@
  */
 
 /**
- * Jerry libc implementation
+ * Jerry libc's common functions implementation
  */
 
 #include "jerry-libc.h"
-
-#include <stdarg.h>
-
-extern int vprintf (__const char *__restrict __format, __builtin_va_list __arg);
-extern void __noreturn exit(int status);
 
 /**
  * memset
@@ -88,40 +83,6 @@ __memcpy(void *s1, /**< destination */
 
   return s1;
 } /* __memcpy */
-
-/**
- * printf
- * 
- * @return number of characters printed
- */
-int
-__printf(const char *format, /**< format string */
-            ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-    
-    int ret = vprintf( format, args);
-            
-    va_end( args);
-    
-    return ret;
-} /* __printf */
-
-/** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
-int
-__putchar (int c)
-{
-  return __printf ("%c", c);
-}
-
-/** exit - cause normal process termination  */
-void __noreturn
-__exit (int status)
-{
-  exit( status);
-}
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero 
     if s1 is found, respectively, to be less than, to match, or be greater than s2.  */

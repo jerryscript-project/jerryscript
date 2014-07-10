@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#include "parser.h"
-#include "error.h"
+#include "jerry-libc.h"
 #include "lexer.h"
-#include "error.h"
+#include "parser.h"
 
-extern void lexer_dump_buffer_state (void);
-
+/* FIXME: */
+extern void lexer_dump_buffer_state();
+/* FIXME: Make general fatal function call it from libjsparser's fatal */
 void
 fatal (int code)
 {
-  printf ("FATAL: %d\n", code);
+  __printf ("FATAL: %d\n", code);
   lexer_dump_buffer_state ();
   JERRY_UNREACHABLE ();
-  exit (code);
+  __exit( -code);
 }
 
 bool

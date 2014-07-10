@@ -16,10 +16,6 @@
 #ifndef OPCODES_H
 #define	OPCODES_H
 
-#ifdef JERRY_NDEBUG
-#include <stdio.h>
-#endif
-
 #include "globals.h"
 
 #define OPCODE struct __opcode

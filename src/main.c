@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef __HOST
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-
 #ifdef __TARGET_MCU
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
@@ -30,17 +24,11 @@
 #define LED_BLUE       15
 #endif
 
-#include "error.h"
-
-#include "mem-allocator.h"
-
-#include "interpreter.h"
-
 #include "generated.h"
-
-#include "lexer.h"
-#include "parser.h"
-#include "pretty-printer.h"
+#include "globals.h"
+#include "interpreter.h"
+#include "jerry-libc.h"
+#include "mem-allocator.h"
 
 void fake_exit (void);
 
@@ -111,9 +99,9 @@ main (int argc, char **argv)
   if (argc > 0)
     for (int i = 1; i < argc; i++)
     {
-      if (!strcmp ("-t", argv[i]))
+      if (!__strcmp ("-t", argv[i]))
         dump_tokens = true;
-      else if (!strcmp ("-a", argv[i]))
+      else if (!__strcmp ("-a", argv[i]))
         dump_ast = true;
       else if (file_name == NULL)
         file_name = argv[i];

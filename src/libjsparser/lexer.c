@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "error.h"
+#include "jerry-libc.h"
 #include "lexer.h"
-#include "mappings.h"
 
 static token saved_token;
 static token empty_token = { .type = TOK_EMPTY, .data.none = NULL };
+
+/* FIXME: Make general fatal function call it from libjsparser's fatal */
+extern void fatal(int);
 
 typedef struct
 {
@@ -117,7 +119,7 @@ get_char (size_t i)
       if (error == 0)
         return '\0';
       if (error < BUFFER_SIZE)
-        memset (buffer + error, '\0', BUFFER_SIZE - error);
+        __memset (buffer + error, '\0', BUFFER_SIZE - error);
       buffer_start = buffer;
     }
 
@@ -141,7 +143,7 @@ get_char (size_t i)
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size - token_size)
-            memset (buffer + tail_size + error, '\0',
+            __memset (buffer + tail_size + error, '\0',
                     BUFFER_SIZE - tail_size - token_size - error);
         }
       else
@@ -152,7 +154,7 @@ get_char (size_t i)
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size)
-            memset (buffer + tail_size + error, '\0', BUFFER_SIZE - tail_size - error);
+            __memset (buffer + tail_size + error, '\0', BUFFER_SIZE - tail_size - error);
         }
     }
 
@@ -182,7 +184,7 @@ decode_keyword (void)
 
   for (i = 0; i < size; i++)
     {
-      if (!strncmp (keyword_tokens[i].str, token_start, strlen (keyword_tokens[i].str)))
+      if (!__strncmp (keyword_tokens[i].str, token_start, __strlen (keyword_tokens[i].str)))
         return keyword_tokens[i].tok;
     }
 
@@ -196,7 +198,7 @@ convert_seen_name_to_token (void)
 
   for (i = 0; i < seen_names_num; i++)
     {
-      if (!strncmp (seen_names[i].str, token_start, strlen (seen_names[i].str)))
+      if (!__strncmp (seen_names[i].str, token_start, __strlen (seen_names[i].str)))
         return seen_names[i].tok;
     }
 
@@ -233,7 +235,7 @@ current_token (void)
   JERRY_ASSERT (token_start <= buffer);
   size_t length = (size_t) (buffer - token_start);
   char *res = (char *) malloc (length + 1);
-  strncpy (res, token_start, length);
+  __strncpy (res, token_start, length);
   res[length] = '\0';
   token_start = NULL;
   return res;
@@ -278,11 +280,11 @@ static token
 parse_name (void)
 {
   char c = LA (0);
-  bool every_char_islower = islower (c);
+  bool every_char_islower = __islower (c);
   const char *string = NULL;
   token known_token = empty_token;
 
-  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_');
+  JERRY_ASSERT (__isalpha (c) || c == '$' || c == '_');
 
   new_token ();
   consume_char ();
@@ -291,9 +293,9 @@ parse_name (void)
       c = LA (0);
       if (c == '\0')
         c = c;
-      if (!isalpha (c) && !isdigit (c) && c != '$' && c != '_')
+      if (!__isalpha (c) && !__isdigit (c) && c != '$' && c != '_')
         break;
-      if (every_char_islower && (!islower (c)))
+      if (every_char_islower && (!__islower (c)))
         every_char_islower = false;
       consume_char ();
     }
@@ -366,7 +368,7 @@ parse_number (void)
   size_t tok_length = 0, i;
   int res = 0;
 
-  JERRY_ASSERT (isdigit (c) || c == '.');
+  JERRY_ASSERT (__isdigit (c) || c == '.');
 
   if (c == '0')
     if (LA (1) == 'x' || LA (1) == 'X')
@@ -374,7 +376,7 @@ parse_number (void)
 
   if (c == '.')
     {
-      JERRY_ASSERT (!isalpha (LA (1)));
+      JERRY_ASSERT (!__isalpha (LA (1)));
       is_fp = true;
     }
 
@@ -387,12 +389,12 @@ parse_number (void)
       while (true)
         {
           c = LA (0);
-          if (!isxdigit (c))
+          if (!__isxdigit (c))
             break;
           consume_char ();
         }
 
-      if (isalpha (c) || c == '_' || c == '$')
+      if (__isalpha (c) || c == '_' || c == '$')
         fatal (ERR_INT_LITERAL);
 
       tok_length = (size_t) (buffer - token_start);
@@ -422,7 +424,7 @@ parse_number (void)
 
       if (c == '.')
         {
-          if (isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
+          if (__isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
             fatal (ERR_INT_LITERAL);
           is_fp = true;
           consume_char ();
@@ -433,17 +435,17 @@ parse_number (void)
         {
           if (LA (1) == '-' || LA (1) == '+')
             consume_char ();
-          if (!isdigit (LA (1)))
+          if (!__isdigit (LA (1)))
             fatal (ERR_INT_LITERAL);
           is_exp = true;
           consume_char ();
           continue;
         }
 
-      if (isalpha (c) || c == '_' || c == '$')
+      if (__isalpha (c) || c == '_' || c == '$')
         fatal (ERR_INT_LITERAL);
 
-      if (!isdigit (c))
+      if (!__isdigit (c))
         break;
 
       consume_char ();
@@ -451,7 +453,7 @@ parse_number (void)
 
   if (is_fp || is_exp)
     {
-      float res = strtof (token_start, NULL);
+      float res = __strtof (token_start, NULL);
       token_start = NULL;
       return (token) { .type = TOK_FLOAT, .data.fp_num = res };
     }
@@ -512,7 +514,7 @@ parse_string (void)
       if (c == '\\')
         {
           /* Only single escape character is allowed.  */
-          if (LA (1) == 'x' || LA (1) == 'u' || isdigit (LA (1)))
+          if (LA (1) == 'x' || LA (1) == 'u' || __isdigit (LA (1)))
             fatal (ERR_STRING);
           if ((LA (1) == '\'' && !is_double_quoted)
               || (LA (1) == '"' && is_double_quoted)
@@ -553,7 +555,7 @@ parse_string (void)
       index++;
     }
 
-  memset (index, '\0', length - (size_t) (index - tok));
+  __memset (index, '\0', length - (index - tok));
 
   token_start = NULL;
   // Eat up '"'
@@ -571,7 +573,7 @@ grobble_whitespaces (void)
 {
   char c = LA (0);
 
-  while ((isspace (c) && c != '\n') || c == '\0')
+  while ((__isspace (c) && c != '\n') || c == '\0')
     {
       consume_char ();
       c = LA (0);
@@ -653,10 +655,10 @@ lexer_next_token (void)
 
   JERRY_ASSERT (token_start == NULL);
 
-  if (isalpha (c) || c == '$' || c == '_')
+  if (__isalpha (c) || c == '$' || c == '_')
     return parse_name ();
 
-  if (isdigit (c) || (c == '.' && isdigit (LA (1))))
+  if (__isdigit (c) || (c == '.' && __isdigit (LA (1))))
     return parse_number ();
 
   if (c == '\n')
@@ -671,7 +673,7 @@ lexer_next_token (void)
   if (c == '\'' || c == '"')
     return parse_string ();
 
-  if (isspace (c))
+  if (__isspace (c))
     {
       grobble_whitespaces ();
       return 
@@ -803,5 +805,5 @@ lexer_save_token (token tok)
 void
 lexer_dump_buffer_state (void)
 {
-  printf ("%s\n", buffer);
+  __printf ("%s\n", buffer);
 }

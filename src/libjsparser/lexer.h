@@ -16,7 +16,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "mappings.h"
+#include "globals.h"
 
 /* Keywords.  */
 typedef enum

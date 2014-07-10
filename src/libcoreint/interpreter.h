@@ -16,12 +16,6 @@
 #ifndef INTERPRETER_H
 #define	INTERPRETER_H
 
-#ifdef JERRY_NDEBUG
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-
 #include "opcodes.h"
 #include "ecma-globals.h"
 

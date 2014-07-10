@@ -16,7 +16,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "mappings.h"
+#include "globals.h"
 
 struct source_element_list;
 struct statement_list;

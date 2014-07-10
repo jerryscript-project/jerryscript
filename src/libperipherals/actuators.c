@@ -13,21 +13,20 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-
 #include "actuators.h"
+#include "jerry-libc.h"
 
 void led_toggle(int led_id)
 {
-  printf("led_toogle: %d", led_id);
+  __printf("led_toogle: %d", led_id);
 }
 
 void led_on(int led_id)
 {
-  printf("led_on: %d", led_id);
+  __printf("led_on: %d", led_id);
 }
 
 void led_off(int led_id)
 {
-  printf("led_off: %d", led_id);
+  __printf("led_off: %d", led_id);
 }

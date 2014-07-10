@@ -21,6 +21,8 @@
 
 #include "globals.h"
 
+typedef void FILE;
+
 extern void *__memset (void *s, int c, size_t n);
 extern int __memcmp (const void *s1, const void *s2, size_t n);
 extern void *__memcpy (void *s1, const void *s2, size_t n);
@@ -40,6 +42,11 @@ extern int __islower (int);
 extern int __isalpha (int);
 extern int __isdigit (int);
 extern int __isxdigit (int);
+
+extern FILE* __fopen(const char *path, const char *mode);
+extern int __fclose(FILE *fp);
+extern size_t __fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+extern size_t __fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 #define DBL_MANT_DIG    (  52)
 #define DBL_DIG         (  10)

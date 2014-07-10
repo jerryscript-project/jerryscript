@@ -67,6 +67,10 @@ typedef enum {
     ECMA_SIMPLE_VALUE_NULL, /**< null value */
     ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
     ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
+    ECMA_SIMPLE_VALUE_EMPTY, /**< empty value (see also: ECMA-262 v5, 8.9 Completion specification type) */
+    ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< special value for an array's elements that exists,
+                                           but is stored directly in the array's property list
+                                           (used for array elements with non-default attribute values) */
     ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
 } ecma_SimpleValue_t;
 
@@ -80,6 +84,19 @@ typedef enum {
 } ecma_PropertyType_t;
 
 /**
+ * Type of block evaluation (completion) result.
+ *
+ * See also: ECMA-262 v5, 8.9.
+ */
+typedef enum {
+    ECMA_COMPLETION_TYPE_NORMAL, /**< default block completion */
+    ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
+    ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
+    ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
+    ECMA_COMPLETION_TYPE_THROW /**< block completed with throw */
+} ecma_CompletionType_t;
+
+/**
  * Description of an ecma-value
  */
 typedef struct {
@@ -91,6 +108,22 @@ typedef struct {
      */
     uint32_t m_Value : ECMA_POINTER_FIELD_WIDTH;
 } __packed ecma_Value_t;
+
+/**
+ * Description of a block completion value
+ *
+ * See also: ECMA-262 v5, 8.9.
+ */
+typedef struct {
+    /** Type (ecma_CompletionType_t) */
+    uint32_t completion_type : 3;
+
+    /** Value */
+    ecma_Value_t completion_value;
+
+    /** Target */
+    uint32_t target : 8;
+} __packed ecma_CompletionValue_t;
 
 /**
  * Internal properties' identifiers.

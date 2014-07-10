@@ -32,7 +32,6 @@
 
 #include "error.h"
 
-#include "ctx-manager.h"
 #include "mem-allocator.h"
 
 #include "interpreter.h"
@@ -108,7 +107,6 @@ main (int argc, char **argv)
 #endif
 
   mem_Init ();
-  ctx_Init ();
 
   if (argc > 0)
     for (int i = 1; i < argc; i++)

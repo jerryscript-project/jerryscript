@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "ecma-operations.h"
 #include "error.h"
-#include "opcodes.h"
 #include "interpreter.h"
+#include "opcodes.h"
 
 void
 save_op_data (int pos, OPCODE opdata)
@@ -40,7 +41,14 @@ void opfunc_varg_3 (OPCODE opdata __unused, struct __int_data *int_data __unused
 void opfunc_varg_3_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_retval (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_ret (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+
+void
+opfunc_assignment(OPCODE opdata __unused,
+                  struct __int_data *int_data __unused)
+{
+  JERRY_UNREACHABLE ();
+}
+
 void opfunc_assignment_multiplication (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_assignment_devision (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_assignment_remainder (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }

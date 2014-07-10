@@ -28,7 +28,7 @@
 
 #include "generated.h"
 
-void fake_exit ();
+void fake_exit (void);
 
 void
 fake_exit (void)

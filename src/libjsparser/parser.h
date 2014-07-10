@@ -44,11 +44,7 @@ empty_formal_parameter_list =
   .names = { [0] = NULL }
 };
 
-static inline bool
-is_formal_parameter_list_empty (formal_parameter_list list)
-{
-  return list.names[0] == NULL;
-}
+bool is_formal_parameter_list_empty (formal_parameter_list);
 
 /** @function_declaration represents both declaration and expression of a function. 
     After this parser must return a block of statements.  */
@@ -119,11 +115,7 @@ empty_operand =
   .data.none = NULL 
 };
 
-static inline bool 
-is_operand_empty (operand op)
-{
-  return op.is_literal == false && op.data.none == NULL;
-}
+bool is_operand_empty (operand);
 
 typedef struct
 {
@@ -143,11 +135,7 @@ empty_operand_list =
   .ops = { [0] = { .is_literal = false, .data.none = NULL } }
 };
 
-static inline bool
-is_operand_list_empty (operand_list list)
-{
-  return is_operand_empty (list.ops[0]);
-}
+bool is_operand_list_empty (operand_list);
 
 typedef operand_list array_literal;
 typedef operand_list argument_list;
@@ -175,11 +163,7 @@ static const property empty_property =
   .value = { .is_literal = false, .data.none = NULL }
 };
 
-static inline bool
-is_property_empty (property prop)
-{
-  return is_operand_empty (prop.name) && is_operand_empty (prop.value);
-}
+bool is_property_empty (property);
 
 /** List of properties. Represents ObjectLiteral.  */
 typedef struct
@@ -200,11 +184,7 @@ empty_property_list =
           { .is_literal = false, .data.none = NULL }}}
 };
 
-static inline bool
-is_property_list_empty (property_list list)
-{
-  return is_property_empty (list.props[0]);
-}
+bool is_property_list_empty (property_list);
 
 typedef property_list object_literal;
 
@@ -305,11 +285,7 @@ empty_expression =
   .data.none = NULL
 };
 
-static inline bool
-is_expression_empty (assignment_expression expr)
-{
-  return expr.oper == AO_NONE && expr.type == ET_NONE && expr.data.none == NULL;
-}
+bool is_expression_empty (assignment_expression);
 
 /** Represents expression, array literal and list of argument.  */
 typedef struct
@@ -338,11 +314,7 @@ empty_variable_declaration =
   .assign_expr = { .oper = AO_NONE, .type = ET_NONE, .data.none = NULL }
 };
 
-static inline bool
-is_variable_declaration_empty (variable_declaration var_decl)
-{
-  return var_decl.name == NULL && is_expression_empty (var_decl.assign_expr);
-}
+bool is_variable_declaration_empty (variable_declaration);
 
 typedef struct
 {
@@ -461,13 +433,9 @@ null_statement =
   .data.none = NULL
 };
 
-static inline bool
-is_statement_null (statement stmt)
-{
-  return stmt.type == STMT_NULL && stmt.data.none == NULL;
-}
+bool is_statement_null (statement);
 
-void parser_init ();
-statement parser_parse_statement ();
+void parser_init (void);
+statement parser_parse_statement (void);
 
 #endif

@@ -156,7 +156,7 @@ void lexer_set_file (FILE *);
 #else
 void lexer_set_source (const char *);
 #endif
-token lexer_next_token ();
+token lexer_next_token (void);
 void lexer_save_token (token);
 
 #endif

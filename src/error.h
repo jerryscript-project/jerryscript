@@ -18,16 +18,9 @@
 
 #include "mappings.h"
 
-extern void lexer_dump_buffer_state ();
+extern void lexer_dump_buffer_state (void);
 
-static inline void
-fatal (int code)
-{
-  printf ("FATAL: %d\n", code);
-  lexer_dump_buffer_state ();
-  JERRY_UNREACHABLE ();
-  exit (code);
-}
+void fatal (int);
 
 #define ERR_IO (-1)
 #define ERR_BUFFER_SIZE (-2)

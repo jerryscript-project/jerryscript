@@ -17,33 +17,82 @@
 #include "error.h"
 #include "lexer.h"
 
+bool
+is_formal_parameter_list_empty (formal_parameter_list list)
+{
+  return list.names[0] == NULL;
+}
+
+bool
+is_operand_empty (operand op)
+{
+  return op.is_literal == false && op.data.none == NULL;
+}
+
+bool
+is_operand_list_empty (operand_list list)
+{
+  return is_operand_empty (list.ops[0]);
+}
+
+bool
+is_property_empty (property prop)
+{
+  return is_operand_empty (prop.name) && is_operand_empty (prop.value);
+}
+
+bool
+is_property_list_empty (property_list list)
+{
+  return is_property_empty (list.props[0]);
+}
+
+bool
+is_expression_empty (assignment_expression expr)
+{
+  return expr.oper == AO_NONE && expr.type == ET_NONE && expr.data.none == NULL;
+}
+
+bool
+is_variable_declaration_empty (variable_declaration var_decl)
+{
+  return var_decl.name == NULL && is_expression_empty (var_decl.assign_expr);
+}
+
+bool
+is_statement_null (statement stmt)
+{
+  return stmt.type == STMT_NULL && stmt.data.none == NULL;
+}
+
+
 static token tok;
 
 #ifdef JERRY_NDEBUG
 FILE *debug_file;
 #endif
 
-static expression parse_expression ();
-static assignment_expression parse_assigment_expression ();
+static expression parse_expression (void);
+static assignment_expression parse_assigment_expression (void);
 
 typedef enum
 {
   SCOPE_GLOBAL        = 0,
-  SCOPE_IF            = 1 << 0,
-  SCOPE_BLOCK         = 1 << 1,
-  SCOPE_DO            = 1 << 2,
-  SCOPE_WHILE         = 1 << 3,
-  SCOPE_FOR           = 1 << 4,
+  SCOPE_IF            = 1u << 0,
+  SCOPE_BLOCK         = 1u << 1,
+  SCOPE_DO            = 1u << 2,
+  SCOPE_WHILE         = 1u << 3,
+  SCOPE_FOR           = 1u << 4,
   SCOPE_LOOP          = SCOPE_WHILE | SCOPE_FOR | SCOPE_DO,
-  SCOPE_WITH          = 1 << 5,
-  SCOPE_SWITCH        = 1 << 6,
-  SCOPE_CASE          = 1 << 7,
-  SCOPE_ELSE          = 1 << 8,
-  SCOPE_TRY           = 1 << 9,
-  SCOPE_CATCH         = 1 << 10,
-  SCOPE_FINALLY       = 1 << 11,
-  SCOPE_FUNCTION      = 1 << 12,
-  SCOPE_SUBEXPRESSION = 1 << 13
+  SCOPE_WITH          = 1u << 5,
+  SCOPE_SWITCH        = 1u << 6,
+  SCOPE_CASE          = 1u << 7,
+  SCOPE_ELSE          = 1u << 8,
+  SCOPE_TRY           = 1u << 9,
+  SCOPE_CATCH         = 1u << 10,
+  SCOPE_FINALLY       = 1u << 11,
+  SCOPE_FUNCTION      = 1u << 12,
+  SCOPE_SUBEXPRESSION = 1u << 13
 }
 scope_type;
 
@@ -58,12 +107,12 @@ scope;
 
 static scope current_scopes[MAX_SCOPES];
 
-static int scope_index;
+static unsigned int scope_index;
 
-static inline void
-scope_must_be (int scopes)
+static void
+scope_must_be (unsigned int scopes)
 {
-  int i;
+  size_t i;
 
   for (i = 0; i < scope_index; i++)
     {
@@ -73,8 +122,8 @@ scope_must_be (int scopes)
   fatal (ERR_PARSER);
 }
 
-static inline void
-current_scope_must_be (int scopes)
+static void
+current_scope_must_be (unsigned int scopes)
 {
   if (scopes & current_scopes[scope_index - 1].type)
     return;
@@ -82,7 +131,7 @@ current_scope_must_be (int scopes)
 }
 
 static inline void
-current_scope_must_be_global ()
+current_scope_must_be_global (void)
 {
   if (scope_index != 0)
     fatal (ERR_PARSER);
@@ -98,7 +147,7 @@ push_scope (int type)
 }
 
 static void
-pop_scope ()
+pop_scope (void)
 {
 #ifdef JERRY_NDEBUG
   fprintf (debug_file, "pop_scope: 0x%x\n", current_scopes[scope_index - 1].type);
@@ -106,7 +155,7 @@ pop_scope ()
   scope_index--;
 }
 
-static inline void
+static void
 assert_keyword (keyword kw)
 {
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
@@ -118,13 +167,13 @@ assert_keyword (keyword kw)
     }
 } 
 
-static inline bool
+static bool
 is_keyword (keyword kw)
 {
   return tok.type == TOK_KEYWORD && tok.data.kw == kw;
 }
 
-static inline void
+static void
 current_token_must_be(token_type tt) 
 {
   if (tok.type != tt) 
@@ -136,15 +185,15 @@ current_token_must_be(token_type tt)
     }
 }
 
-static inline void
-skip_newlines ()
+static void
+skip_newlines (void)
 {
   tok = lexer_next_token ();
   while (tok.type == TOK_NEWLINE)
     tok = lexer_next_token ();
 }
 
-static inline void
+static void
 next_token_must_be (token_type tt)
 {
   tok = lexer_next_token ();
@@ -157,7 +206,7 @@ next_token_must_be (token_type tt)
     }
 }
 
-static inline void
+static void
 token_after_newlines_must_be (token_type tt)
 {
   skip_newlines ();
@@ -173,8 +222,8 @@ token_after_newlines_must_be_keyword (keyword kw)
     fatal (ERR_PARSER);
 }
 
-static inline void
-insert_semicolon ()
+static void
+insert_semicolon (void)
 {
   tok = lexer_next_token ();
   if (tok.type != TOK_NEWLINE && tok.type != TOK_SEMICOLON)
@@ -185,7 +234,7 @@ insert_semicolon ()
 	: LT!* Identifier (LT!* ',' LT!* Identifier)*
 	; */
 static formal_parameter_list
-parse_formal_parameter_list ()
+parse_formal_parameter_list (void)
 {
   int i;
   formal_parameter_list res;
@@ -217,7 +266,7 @@ parse_formal_parameter_list ()
    function_body
 	: '{' LT!* sourceElements LT!* '}' */
 static function_declaration
-parse_function_declaration ()
+parse_function_declaration (void)
 {
   function_declaration res;
 
@@ -244,7 +293,7 @@ parse_function_declaration ()
 	: 'function' LT!* Identifier? LT!* '(' formal_parameter_list? LT!* ')' LT!* function_body
 	; */
 static function_expression
-parse_function_expression ()
+parse_function_expression (void)
 {
   function_expression res;
 
@@ -276,7 +325,7 @@ parse_function_expression ()
 }
 
 static literal
-parse_literal ()
+parse_literal (void)
 {
   literal res;
 
@@ -308,7 +357,7 @@ parse_literal ()
 }
 
 static operand
-parse_operand ()
+parse_operand (void)
 {
   operand res;
 
@@ -336,7 +385,7 @@ parse_operand ()
   : operand LT!* ( ',' LT!* operand * LT!* )* 
   ;*/
 static argument_list
-parse_argument_list ()
+parse_argument_list (void)
 {
   argument_list res;
   int i;
@@ -364,7 +413,7 @@ parse_argument_list ()
   : identifier LT!* '(' LT!* arguments * LT!* ')' LT!* 
   ;*/
 static call_expression
-parse_call_expression ()
+parse_call_expression (void)
 {
   call_expression res;
 
@@ -396,7 +445,7 @@ parse_call_expression ()
   : [ arguments ]
   ; */
 static array_literal 
-parse_array_literal ()
+parse_array_literal (void)
 {
   array_literal res;
 
@@ -420,7 +469,7 @@ parse_array_literal ()
   | NumericLiteral
   ; */
 static inline property_name
-parse_property_name ()
+parse_property_name (void)
 {
   switch (tok.type)
   {
@@ -438,7 +487,7 @@ parse_property_name ()
   : property_name LT!* ':' LT!* operand
   ; */
 static property
-parse_property ()
+parse_property (void)
 {
   property res;
 
@@ -455,7 +504,7 @@ parse_property ()
   : LT!* property (LT!* ',' LT!* property)* LT!* 
   ; */
 static object_literal
-parse_object_literal ()
+parse_object_literal (void)
 {
   object_literal res;
   int i;
@@ -488,7 +537,7 @@ parse_unary_expression (assignment_expression *res, expression_type type)
 }
 
 static assignment_expression
-parse_assigment_expression ()
+parse_assigment_expression (void)
 {
   assignment_expression res;
 
@@ -780,7 +829,7 @@ parse_operator:
   ;
   */
 static expression
-parse_expression ()
+parse_expression (void)
 {
   expression res;
   int i;
@@ -808,7 +857,7 @@ parse_expression ()
 	: '=' LT!* assignment_expression
 	; */
 static variable_declaration
-parse_variable_declaration ()
+parse_variable_declaration (void)
 {
   variable_declaration res;
 
@@ -835,7 +884,7 @@ parse_variable_declaration ()
 	  (LT!* ',' LT!* variable_declaration(_no_in))*
 	; */
 static variable_declaration_list
-parse_variable_declaration_list ()
+parse_variable_declaration_list (void)
 {
   variable_declaration_list res;
   int i;
@@ -877,7 +926,7 @@ parse_variable_declaration_list ()
   ;*/
 
 static for_or_for_in_statement
-parse_for_or_for_in_statement ()
+parse_for_or_for_in_statement (void)
 {
   for_or_for_in_statement res;
   variable_declaration_list list;
@@ -985,7 +1034,7 @@ for_in:
   return res;
 }
 
-static inline void
+static void
 parse_expression_inside_parens (statement *res)
 {
   token_after_newlines_must_be (TOK_OPEN_PAREN);
@@ -1058,7 +1107,7 @@ parse_expression_inside_parens (statement *res)
   : 'try' LT!* '{' LT!* statement_list LT!* '}' LT!* (finally_clause | catch_clause (LT!* finally_clause)?)
   ;*/
 statement
-parser_parse_statement ()
+parser_parse_statement (void)
 {
   statement res;
   res.data.none = NULL;
@@ -1168,7 +1217,7 @@ parser_parse_statement ()
       res.type = STMT_VARIABLE;
 
       skip_newlines ();
-      res.data.var_stmt = parse_variable_declaration_list (true);
+      res.data.var_stmt = parse_variable_declaration_list ();
       return res;
     }
   if (tok.type == TOK_SEMICOLON)
@@ -1231,7 +1280,7 @@ parser_parse_statement ()
       tok = lexer_next_token ();
       if (tok.type != TOK_SEMICOLON && tok.type != TOK_NEWLINE)
         {
-          int current_scope_index = scope_index;
+          unsigned int current_scope_index = scope_index;
           res.data.expr = parse_expression ();
           if (current_scope_index == scope_index)
             insert_semicolon ();
@@ -1323,7 +1372,7 @@ parser_parse_statement ()
 }
 
 void
-parser_init ()
+parser_init (void)
 {
   scope_index = 0;
 #ifdef JERRY_NDEBUG

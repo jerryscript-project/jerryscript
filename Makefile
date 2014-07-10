@@ -27,7 +27,7 @@ UNITTESTS_SRC_DIR = ./tests/unit
 #  Add common-io.c and sensors.c
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c) \
+	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c ./src/error.c) \
 	$(wildcard ./src/libperipherals/actuators.c) \
 	$(wildcard ./src/libjsparser/*.c) \
 	$(wildcard ./src/libecmaobjects/*.c) \

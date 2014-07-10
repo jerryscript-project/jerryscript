@@ -38,6 +38,7 @@ struct __int_data
 };
 
 void gen_bytecode (void);
+void init_int (void);
 void run_int (void);
 void run_int_from_pos (struct __int_data *);
 

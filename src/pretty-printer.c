@@ -23,7 +23,7 @@ static bool was_subexpression;
 static statement_type prev_stmt;
 
 void
-pp_reset ()
+pp_reset (void)
 {
   prev_stmt = STMT_EOF;
   intendation = 0;
@@ -404,7 +404,7 @@ pp_keyword (keyword kw)
 }
 
 static void
-intend ()
+intend (void)
 {
   for (int i = 0; i < intendation; i++)
     putchar (' '); 
@@ -1087,7 +1087,7 @@ pp_statement (statement stmt)
   prev_stmt = stmt.type;
 }
 
-void pp_finish ()
+void pp_finish (void)
 {
   if (prev_stmt == STMT_BLOCK_END)
     putchar ('\n');

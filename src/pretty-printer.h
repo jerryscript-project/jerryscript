@@ -19,8 +19,8 @@
 #include "lexer.h"
 #include "parser.h"
 
-void pp_reset ();
-void pp_finish ();
+void pp_reset (void);
+void pp_finish (void);
 void pp_token (token);
 void pp_keyword (keyword);
 void pp_statement (statement);

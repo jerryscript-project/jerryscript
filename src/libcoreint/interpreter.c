@@ -46,7 +46,7 @@ gen_bytecode ()
 }
 
 void
-init_int ()
+init_int (void)
 {
 #define INIT_OP_FUNC(name) __opfuncs[ name ] = opfunc_##name ;
   JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
@@ -55,7 +55,7 @@ init_int ()
 }
 
 void
-run_int ()
+run_int (void)
 {
   init_int ();
 

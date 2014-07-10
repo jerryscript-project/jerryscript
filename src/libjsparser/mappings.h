@@ -58,7 +58,7 @@ putchar (int c)
 static inline void 
 exit (int status)
 {
-  return __exit (status);
+  __exit (status);
 }
 
 static inline int 

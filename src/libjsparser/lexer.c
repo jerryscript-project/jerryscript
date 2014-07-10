@@ -102,10 +102,11 @@ static char *token_start;
 #define BUFFER_SIZE 1024
 
 static char
-get_char (int i)
+get_char (size_t i)
 {
-  int error;
-  const int tail_size = BUFFER_SIZE - (buffer - buffer_start);
+  size_t error;
+  JERRY_ASSERT (buffer >= buffer_start);
+  const size_t tail_size = BUFFER_SIZE - (size_t) (buffer - buffer_start);
 
   JERRY_ASSERT (file);
 
@@ -113,8 +114,6 @@ get_char (int i)
     {
       buffer = (char *) malloc (BUFFER_SIZE);
       error = fread (buffer, 1, BUFFER_SIZE, file);
-      if (error < 0)
-        fatal (ERR_IO);
       if (error == 0)
         return '\0';
       if (error < BUFFER_SIZE)
@@ -127,7 +126,8 @@ get_char (int i)
     /* We are almost at the end of the buffer.  */
       if (token_start)
         {
-          const int token_size = buffer - token_start;
+          JERRY_ASSERT (buffer >= token_start);
+          const size_t token_size = (size_t) (buffer - token_start);
           /* Whole buffer contains single token.  */
           if (token_start == buffer_start)
             fatal (ERR_BUFFER_SIZE);
@@ -138,8 +138,6 @@ get_char (int i)
           buffer = buffer_start + token_size;
           /* Read more characters form input file.  */
           error = fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size - token_size, file);
-          if (error < 0)
-            fatal (ERR_IO);
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size - token_size)
@@ -151,8 +149,6 @@ get_char (int i)
           memmove (buffer_start, buffer, tail_size);
           buffer = buffer_start;
           error = fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size, file);
-          if (error < 0)
-            fatal (ERR_IO);
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size)
@@ -179,7 +175,7 @@ static const char *token_start;
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,
    otherwise return KW_NONE.  */
 static token
-decode_keyword ()
+decode_keyword (void)
 {
   size_t size = sizeof (keyword_tokens) / sizeof (string_and_token);
   size_t i;
@@ -194,7 +190,7 @@ decode_keyword ()
 }
 
 static token
-convert_seen_name_to_token ()
+convert_seen_name_to_token (void)
 {
   size_t i;
 
@@ -216,25 +212,26 @@ add_to_seen_tokens (string_and_token snt)
 }
 
 static inline void
-new_token ()
+new_token (void)
 {
   JERRY_ASSERT (buffer);
   token_start = buffer;
 }
 
-static inline void
-consume_char ()
+static void
+consume_char (void)
 {
   JERRY_ASSERT (buffer);
   buffer++;
 }
 
 static inline const char *
-current_token ()
+current_token (void)
 {
   JERRY_ASSERT (buffer);
   JERRY_ASSERT (token_start);
-  int length = buffer - token_start;
+  JERRY_ASSERT (token_start > buffer);
+  size_t length = (size_t) (buffer - token_start);
   char *res = (char *) malloc (length + 1);
   strncpy (res, token_start, length);
   res[length] = '\0';
@@ -278,7 +275,7 @@ current_token ()
   while (0)
 
 static token
-parse_name ()
+parse_name (void)
 {
   char c = LA (0);
   bool every_char_islower = islower (c);
@@ -360,13 +357,13 @@ hex_to_int (char hex)
 /* In this function we cannot use strtol function
    since there is no octal literals in ECMAscript.  */
 static token
-parse_number ()
+parse_number (void)
 {
   char c = LA (0);
   bool is_hex = false;
   bool is_fp = false;
   bool is_exp = false;
-  int tok_length = 0;
+  size_t tok_length = 0, i;
   int res = 0;
 
   JERRY_ASSERT (isdigit (c) || c == '.');
@@ -398,9 +395,9 @@ parse_number ()
       if (isalpha (c) || c == '_' || c == '$')
         fatal (ERR_INT_LITERAL);
 
-      tok_length = buffer - token_start;
+      tok_length = (size_t) (buffer - token_start);
       // OK, I know that integer overflow can occur here
-      for (int i = 0; i < tok_length; i++)
+      for (i = 0; i < tok_length; i++)
         res = (res << 4) + hex_to_int (token_start[i]);
 
       token_start = NULL;
@@ -459,8 +456,8 @@ parse_number ()
       return (token) { .type = TOK_FLOAT, .data.fp_num = res };
     }
 
-  tok_length = buffer - token_start;
-  for (int i = 0; i < tok_length; i++)
+  tok_length = (size_t) (buffer - token_start);;
+  for (i = 0; i < tok_length; i++)
     res = res * 10 + hex_to_int (token_start[i]);
 
   token_start = NULL;
@@ -487,13 +484,14 @@ escape_char (char c)
 }
 
 static token
-parse_string ()
+parse_string (void)
 {
   char c = LA (0);
   bool is_double_quoted;
   char *tok = NULL;
   char *index = NULL;
-  int length;
+  const char *i;
+  size_t length;
   token res = empty_token;
 
   JERRY_ASSERT (c == '\'' || c == '"');
@@ -532,11 +530,11 @@ parse_string ()
       consume_char ();
     }
 
-  length = buffer - token_start;
+  length = (size_t) (buffer - token_start);
   tok = (char *) malloc (length);
   index = tok;
 
-  for (const char *i = token_start; i < buffer; i++)
+  for (i = token_start; i < buffer; i++)
     {
       if (*i == '\\')
         {
@@ -555,7 +553,7 @@ parse_string ()
       index++;
     }
 
-  memset (index, '\0', length - (index - tok));
+  memset (index, '\0', length - (size_t) (index - tok));
 
   token_start = NULL;
   // Eat up '"'
@@ -569,7 +567,7 @@ parse_string ()
 }
 
 static void
-grobble_whitespaces ()
+grobble_whitespaces (void)
 {
   char c = LA (0);
 
@@ -600,7 +598,7 @@ lexer_set_source (const char * source)
 #endif
 
 static bool
-replace_comment_by_newline ()
+replace_comment_by_newline (void)
 {
   char c = LA (0);
   bool multiline;
@@ -636,11 +634,12 @@ replace_comment_by_newline ()
     }
 }
 
-token
 #ifdef JERRY_NDEBUG
-lexer_next_token_private ()
+static token
+lexer_next_token_private (void)
 #else
-lexer_next_token ()
+token
+lexer_next_token (void)
 #endif
 {
   char c = LA (0);
@@ -776,7 +775,7 @@ lexer_next_token ()
 static int i = 0;
 
 token
-lexer_next_token ()
+lexer_next_token (void)
 {
   token tok = lexer_next_token_private ();
   if (tok.type == TOK_NEWLINE)
@@ -802,7 +801,7 @@ lexer_save_token (token tok)
 }
 
 void
-lexer_dump_buffer_state ()
+lexer_dump_buffer_state (void)
 {
   printf ("%s\n", buffer);
 }

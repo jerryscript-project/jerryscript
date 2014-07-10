@@ -151,12 +151,14 @@ typedef struct
 }
 token;
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 void lexer_set_file (FILE *);
 #else
 void lexer_set_source (const char *);
 #endif
 token lexer_next_token (void);
 void lexer_save_token (token);
+
+void lexer_dump_buffer_state (void);
 
 #endif

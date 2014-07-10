@@ -87,11 +87,11 @@ is_empty (token tok)
   return tok.type == TOK_EMPTY;
 }
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 FILE *lexer_debug_log;
 #endif
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 static FILE *file;
 static char *buffer_start;
 
@@ -169,7 +169,7 @@ static const char *token_start;
 
 #define LA(I)       (*(buffer + I))
 
-#endif // JERRY_NDEBUG
+#endif // __HOST
 
 /* If TOKEN represents a keyword, return decoded keyword,
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,
@@ -230,7 +230,7 @@ current_token (void)
 {
   JERRY_ASSERT (buffer);
   JERRY_ASSERT (token_start);
-  JERRY_ASSERT (token_start > buffer);
+  JERRY_ASSERT (token_start <= buffer);
   size_t length = (size_t) (buffer - token_start);
   char *res = (char *) malloc (length + 1);
   strncpy (res, token_start, length);
@@ -578,7 +578,7 @@ grobble_whitespaces (void)
     }
 }
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 void
 lexer_set_file (FILE *ex_file)
 {
@@ -634,7 +634,7 @@ replace_comment_by_newline (void)
     }
 }
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 static token
 lexer_next_token_private (void)
 #else
@@ -675,7 +675,7 @@ lexer_next_token (void)
     {
       grobble_whitespaces ();
       return 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
         lexer_next_token_private ();
 #else
         lexer_next_token ();
@@ -688,7 +688,7 @@ lexer_next_token (void)
         return (token) { .type = TOK_NEWLINE, .data.none = NULL };
       else
         return 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
           lexer_next_token_private ();
 #else
           lexer_next_token ();
@@ -699,7 +699,7 @@ lexer_next_token (void)
     {
       replace_comment_by_newline ();;
       return 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
         lexer_next_token_private ();
 #else
         lexer_next_token ();
@@ -771,7 +771,7 @@ lexer_next_token (void)
   fatal (ERR_NON_CHAR);
 }
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 static int i = 0;
 
 token
@@ -793,7 +793,7 @@ lexer_next_token (void)
 void
 lexer_save_token (token tok)
 {
-  #ifdef JERRY_NDEBUG
+  #ifdef __HOST
   // if (tok.type == TOK_CLOSE_BRACE)
     fprintf (lexer_debug_log, "lexer_save_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
   #endif

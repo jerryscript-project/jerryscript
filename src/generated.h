@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-static const char* generated_source = ""
+static const char* generated_source __unused = ""
 "while (true) {\n"
 "LEDToggle (LED3);\n"
 "LEDToggle (LED6);\n"

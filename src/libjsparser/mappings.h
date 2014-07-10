@@ -16,7 +16,7 @@
 #ifndef MAPPINGS_H
 #define MAPPINGS_H
 
-#ifndef JERRY_NDEBUG
+#ifndef __HOST
 #include "../jerry-libc.h"
 #include "allocator.h"
 #include <stdarg.h>

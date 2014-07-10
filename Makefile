@@ -31,7 +31,7 @@ SUP_STM32F4 = ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32
 #  Add common-io.c and sensors.c
 SOURCES = \
 	$(sort \
-	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c ./src/error.c) \
+	$(wildcard ./src/jerry-libc.c ./src/pretty-printer.c) \
 	$(wildcard ./src/libperipherals/actuators.c) \
 	$(wildcard ./src/libjsparser/*.c) \
 	$(wildcard ./src/libecmaobjects/*.c) \
@@ -81,10 +81,10 @@ STRIP	= strip
 
 # General flags
 CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
-#CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
-#CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-#CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
-#CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
+CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
+CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
 
 # Flags for MCU
 MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +38,10 @@
 #include "interpreter.h"
 
 #include "generated.h"
+
+#include "lexer.h"
+#include "parser.h"
+#include "pretty-printer.h"
 
 void fake_exit (void);
 
@@ -95,10 +99,11 @@ fake_exit (void)
 int
 main (int argc, char **argv)
 {
+  statement st;
   bool dump_tokens = false;
-  bool dump_ast = true;
+  bool dump_ast = false;
   const char *file_name = NULL;
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
   FILE *file = NULL;
 #endif
 
@@ -124,16 +129,44 @@ main (int argc, char **argv)
   if (dump_tokens && dump_ast)
     fatal (ERR_SEVERAL_FILES);
 
-#ifdef JERRY_NDEBUG
+  if (!dump_tokens)
+    dump_ast = true;
+
+#ifdef __HOST
   file = fopen (file_name, "r");
 
   if (file == NULL)
   {
     fatal (ERR_IO);
   }
+
+  lexer_set_file (file);
+#else
+  lexer_set_source (generated_source);
 #endif
 
-  TODO(Call parser);
+  if (dump_ast)
+    {
+      parser_init ();
+      st = parser_parse_statement ();
+      JERRY_ASSERT (!is_statement_null (st));
+      while (st.type != STMT_EOF)
+        {
+          pp_statement (st);
+          st = parser_parse_statement ();
+          JERRY_ASSERT (!is_statement_null (st));
+        }
+    }
+
+  if (dump_tokens)
+    {
+      token tok = lexer_next_token ();
+      while (tok.type != TOK_EOF)
+        {
+          pp_token (tok);
+          tok = lexer_next_token ();
+        }
+    }
 
   //gen_bytecode (generated_source);
   //gen_bytecode ();

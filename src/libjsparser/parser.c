@@ -16,6 +16,18 @@
 #include "parser.h"
 #include "error.h"
 #include "lexer.h"
+#include "error.h"
+
+extern void lexer_dump_buffer_state (void);
+
+void
+fatal (int code)
+{
+  printf ("FATAL: %d\n", code);
+  lexer_dump_buffer_state ();
+  JERRY_UNREACHABLE ();
+  exit (code);
+}
 
 bool
 is_formal_parameter_list_empty (formal_parameter_list list)
@@ -68,7 +80,7 @@ is_statement_null (statement stmt)
 
 static token tok;
 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
 FILE *debug_file;
 #endif
 
@@ -133,14 +145,14 @@ current_scope_must_be (unsigned int scopes)
 static inline void
 current_scope_must_be_global (void)
 {
-  if (scope_index != 0)
+  if (scope_index != 1)
     fatal (ERR_PARSER);
 }
 
 static void
 push_scope (int type)
 {
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
   fprintf (debug_file, "push_scope: 0x%x\n", type);
 #endif
   current_scopes[scope_index++] = (scope) { .type = type, .was_stmt = false };
@@ -149,7 +161,7 @@ push_scope (int type)
 static void
 pop_scope (void)
 {
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
   fprintf (debug_file, "pop_scope: 0x%x\n", current_scopes[scope_index - 1].type);
 #endif
   scope_index--;
@@ -160,7 +172,7 @@ assert_keyword (keyword kw)
 {
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
     {
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
       printf ("assert_keyword: 0x%x\n", kw);
 #endif
       JERRY_UNREACHABLE ();
@@ -178,7 +190,7 @@ current_token_must_be(token_type tt)
 {
   if (tok.type != tt) 
     {
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
       printf ("current_token_must_be: 0x%x\n", tt);
 #endif
       fatal (ERR_PARSER); 
@@ -199,7 +211,7 @@ next_token_must_be (token_type tt)
   tok = lexer_next_token ();
   if (tok.type != tt)
     {
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
       printf ("next_token_must_be: 0x%x\n", tt);
 #endif
       fatal (ERR_PARSER);
@@ -786,7 +798,7 @@ parse_operator:
       res.type = ET_PROP_REF;
       skip_newlines ();
       res.data.ops.op2 = parse_operand ();
-      assert (!res.data.ops.op2.is_literal);
+      JERRY_ASSERT (!res.data.ops.op2.is_literal);
       return res;
 
     case TOK_OPEN_SQUARE:
@@ -962,7 +974,7 @@ parse_for_or_for_in_statement (void)
             fatal (ERR_PARSER);
         }
     }
-  assert (is_variable_declaration_empty(list.decls[0]));
+  JERRY_ASSERT (is_variable_declaration_empty(list.decls[0]));
 
   /* expression contains left_hand_side_expression.  */
   expr = parse_expression ();
@@ -981,13 +993,13 @@ plain_for:
   res.is_for_in = false;
   if (!is_variable_declaration_empty(list.decls[0]))
     {
-      assert (is_expression_empty(expr.exprs[0]));
+      JERRY_ASSERT (is_expression_empty(expr.exprs[0]));
       res.data.for_stmt.init.is_decl = true;
       res.data.for_stmt.init.data.decl_list = list;
     }
   if (!is_expression_empty(expr.exprs[0]))
     {
-      assert (is_variable_declaration_empty(list.decls[0]));
+      JERRY_ASSERT (is_variable_declaration_empty(list.decls[0]));
       res.data.for_stmt.init.is_decl = false;
       res.data.for_stmt.init.data.expr = expr;
     }
@@ -1015,14 +1027,14 @@ for_in:
   res.is_for_in = true;
   if (!is_variable_declaration_empty(list.decls[0]))
     {
-      assert (is_expression_empty (expr.exprs[0]));
-      assert (is_variable_declaration_empty (list.decls[1]));
+      JERRY_ASSERT (is_expression_empty (expr.exprs[0]));
+      JERRY_ASSERT (is_variable_declaration_empty (list.decls[1]));
       res.data.for_in_stmt.init.is_decl = true;
       res.data.for_in_stmt.init.data.decl = list.decls[0];
     }
   if (!is_expression_empty(expr.exprs[0]))
     { 
-      assert (is_expression_empty(expr.exprs[0]));
+      JERRY_ASSERT (is_expression_empty(expr.exprs[0]));
       res.data.for_in_stmt.init.is_decl = false;
       res.data.for_in_stmt.init.data.left_hand_expr = expr.exprs[0];
     }
@@ -1111,6 +1123,8 @@ parser_parse_statement (void)
 {
   statement res;
   res.data.none = NULL;
+
+  JERRY_ASSERT (scope_index);
 
   skip_newlines ();
 
@@ -1374,8 +1388,8 @@ parser_parse_statement (void)
 void
 parser_init (void)
 {
-  scope_index = 0;
-#ifdef JERRY_NDEBUG
+  scope_index = 1;
+#ifdef __HOST
   debug_file = fopen ("parser.log", "w");
 #endif
 }

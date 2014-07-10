@@ -548,7 +548,7 @@ dump_postfix (operand op, const char *operation)
 static void
 pp_assignment_expression (assignment_expression expr)
 {
-  if (expr.var)
+  if (expr.oper != AO_NONE && expr.var)
     printf ("%s", expr.var);
 
   switch (expr.oper)

@@ -103,7 +103,7 @@ MCU_CFLAGS += -ffunction-sections -fdata-sections -nostdlib -fno-common
 LDFLAGS = -nostartfiles -T$(LNK_SCRIPT_STM32F4)
 
 DEBUG_OPTIONS = -g3 -O0 # -fsanitize=address
-RELEASE_OPTIONS = -Os -Werror -DJERRY_NDEBUG
+RELEASE_OPTIONS = -Os -flto -Werror -DJERRY_NDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 TARGET_HOST = -D__HOST

@@ -163,25 +163,25 @@ clean:
 	rm -f js.files
 
 check: tests
-	@mkdir -p $(OUT_DIR)
-	@cd $(OUT_DIR)
+	@ mkdir -p $(OUT_DIR)
+	@ cd $(OUT_DIR)
 
-	@echo "=== Running cppcheck ==="
-	@cppcheck $(HEADERS) $(SOURCES) --enable=all --std=c99
-	@echo Done
-	@echo
+	@ echo "=== Running cppcheck ==="
+	@ cppcheck $(HEADERS) $(SOURCES) --error-exitcode=1 --enable=all --std=c99
+	@ echo Done
+	@ echo
 	
-	@echo "=== Running unit tests ==="
-	./tools/jerry_unittest.sh $(OUT_DIR)/tests.host $(UNITTESTS)
-	@echo Done
-	@echo
+	@ echo "=== Running unit tests ==="
+	@ ./tools/jerry_unittest.sh $(OUT_DIR)/tests.host $(UNITTESTS)
+	@ echo Done
+	@ echo
 	
-	@echo "=== Running js tests ==="
+	@ echo "=== Running js tests ==="
 	@ if [ -f $(OUT_DIR)/release.host/$(TARGET) ]; then \
 		./tools/jerry_test.sh $(OUT_DIR)/release.host/$(TARGET);\
 	fi
 	
-	@if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
+	@ if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
 		./tools/jerry_test.sh $(OUT_DIR)/debug.host/$(TARGET); \
 	fi
 	@echo Done

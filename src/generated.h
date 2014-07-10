@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "globals.h"
+
 static const char* generated_source __unused = ""
 "while (true) {\n"
 "LEDToggle (LED3);\n"

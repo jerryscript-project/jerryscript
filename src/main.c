@@ -28,7 +28,12 @@
 #include "globals.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
-#include "mem-allocator.h"
+#include "lexer.h"
+#include "parser.h"
+#include "pretty-printer.h"
+
+/* FIXME: Make general fatal function call it from libjsparser's fatal */
+extern void fatal(int);
 
 void fake_exit (void);
 
@@ -119,7 +124,7 @@ main (int argc, char **argv)
     dump_ast = true;
 
 #ifdef __HOST
-  file = fopen (file_name, "r");
+  file = __fopen (file_name, "r");
 
   if (file == NULL)
   {

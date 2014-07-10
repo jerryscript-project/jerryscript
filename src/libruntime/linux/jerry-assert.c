@@ -20,12 +20,13 @@
  * Handle failed assertion
  */
 void __noreturn
-jerry_AssertFail( const char *assertion, /**< assertion condition string */
-		  const char *file, /**< file name */
-                  const uint32_t line) /** line */
+jerry_AssertFail(const char *assertion, /**< assertion condition string */
+                 const char *file, /**< file name */
+                 const uint32_t line) /** line */
 {
   __printf("Assertion '%s' failed at %s:%u\n",
            assertion, file, line);
 
   __exit( -ERR_GENERAL);
 } /* jerry_AssertFail */
+

@@ -17,9 +17,11 @@
 #include "lexer.h"
 #include "parser.h"
 
-/* FIXME: */
-extern void lexer_dump_buffer_state();
+extern void lexer_dump_buffer_state(void);
+
 /* FIXME: Make general fatal function call it from libjsparser's fatal */
+extern void fatal(int);
+
 void
 fatal (int code)
 {
@@ -153,7 +155,7 @@ static void
 push_scope (int type)
 {
 #ifdef __HOST
-  fprintf (debug_file, "push_scope: 0x%x\n", type);
+  __fprintf (debug_file, "push_scope: 0x%x\n", type);
 #endif
   current_scopes[scope_index++] = (scope) { .type = type, .was_stmt = false };
 }
@@ -162,7 +164,7 @@ static void
 pop_scope (void)
 {
 #ifdef __HOST
-  fprintf (debug_file, "pop_scope: 0x%x\n", current_scopes[scope_index - 1].type);
+  __fprintf (debug_file, "pop_scope: 0x%x\n", current_scopes[scope_index - 1].type);
 #endif
   scope_index--;
 }
@@ -173,7 +175,7 @@ assert_keyword (keyword kw)
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
     {
 #ifdef __HOST
-      printf ("assert_keyword: 0x%x\n", kw);
+      __printf ("assert_keyword: 0x%x\n", kw);
 #endif
       JERRY_UNREACHABLE ();
     }
@@ -191,7 +193,7 @@ current_token_must_be(token_type tt)
   if (tok.type != tt) 
     {
 #ifdef __HOST
-      printf ("current_token_must_be: 0x%x\n", tt);
+      __printf ("current_token_must_be: 0x%x\n", tt);
 #endif
       fatal (ERR_PARSER); 
     }
@@ -1393,3 +1395,4 @@ parser_init (void)
   debug_file = __fopen ("parser.log", "w");
 #endif
 }
+

@@ -89,7 +89,7 @@ SIZE	= size
 STRIP	= strip
 
 # General flags
-CFLAGS ?= $(INCLUDES) -std=c99 #-fdiagnostics-color=always
+CFLAGS ?= $(INCLUDES) -std=c99 -Werror #-fdiagnostics-color=always
 CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
 CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
 CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
@@ -103,7 +103,7 @@ MCU_CFLAGS += -ffunction-sections -fdata-sections -nostdlib -fno-common
 LDFLAGS = -nostartfiles -T$(LNK_SCRIPT_STM32F4)
 
 DEBUG_OPTIONS = -g3 -O0 # -fsanitize=address
-RELEASE_OPTIONS = -Os -flto -Werror -DJERRY_NDEBUG
+RELEASE_OPTIONS = -Os -flto -DJERRY_NDEBUG
 
 DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 TARGET_HOST = -D__HOST

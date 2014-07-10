@@ -404,7 +404,7 @@ pp_keyword (keyword kw)
 }
 
 static void
-intend ()
+intend (void)
 {
   for (int i = 0; i < intendation; i++)
     __putchar (' '); 
@@ -548,7 +548,7 @@ dump_postfix (operand op, const char *operation)
 static void
 pp_assignment_expression (assignment_expression expr)
 {
-  if (expr.var)
+  if (expr.oper != AO_NONE && expr.var)
     __printf ("%s", expr.var);
 
   switch (expr.oper)
@@ -1087,7 +1087,7 @@ pp_statement (statement stmt)
   prev_stmt = stmt.type;
 }
 
-void pp_finish ()
+void pp_finish (void)
 {
   if (prev_stmt == STMT_BLOCK_END)
     __putchar ('\n');

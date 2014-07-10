@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "allocator.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 
@@ -115,7 +116,7 @@ get_char (size_t i)
   if (buffer == NULL)
     {
       buffer = (char *) malloc (BUFFER_SIZE);
-      error = fread (buffer, 1, BUFFER_SIZE, file);
+      error = __fread (buffer, 1, BUFFER_SIZE, file);
       if (error == 0)
         return '\0';
       if (error < BUFFER_SIZE)
@@ -139,7 +140,7 @@ get_char (size_t i)
           token_start = buffer_start;
           buffer = buffer_start + token_size;
           /* Read more characters form input file.  */
-          error = fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size - token_size, file);
+          error = __fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size - token_size, file);
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size - token_size)
@@ -150,7 +151,7 @@ get_char (size_t i)
         {
           __memmove (buffer_start, buffer, tail_size);
           buffer = buffer_start;
-          error = fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size, file);
+          error = __fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size, file);
           if (error == 0)
             return '\0';
           if (error < BUFFER_SIZE - tail_size)
@@ -555,7 +556,7 @@ parse_string (void)
       index++;
     }
 
-  __memset (index, '\0', length - (index - tok));
+  __memset (index, '\0', length - (size_t) (index - tok));
 
   token_start = NULL;
   // Eat up '"'
@@ -586,7 +587,7 @@ lexer_set_file (FILE *ex_file)
 {
   JERRY_ASSERT (ex_file);
   file = ex_file;
-  lexer_debug_log = fopen ("lexer.log", "w");
+  lexer_debug_log = __fopen ("lexer.log", "w");
   saved_token = empty_token;
 }
 #else
@@ -690,7 +691,7 @@ lexer_next_token (void)
         return (token) { .type = TOK_NEWLINE, .data.none = NULL };
       else
         return 
-#ifdef JERRY_NDEBUG
+#ifdef __HOST
           lexer_next_token_private ();
 #else
           lexer_next_token ();
@@ -807,3 +808,4 @@ lexer_dump_buffer_state (void)
 {
   __printf ("%s\n", buffer);
 }
+

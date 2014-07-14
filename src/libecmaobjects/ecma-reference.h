@@ -35,12 +35,12 @@ typedef struct {
      * Note:
      *  m_PropertyName is valid only if m_IsPropertyReference is true.
      */
-    uint32_t m_IsPropertyReference : 1;
+    unsigned int m_IsPropertyReference : 1;
 
     /**
      * Flag indicating that this reference is strict (see also: ECMA-262 v5, 8.7).
      */
-    uint32_t m_StrictReference : 1;
+    unsigned int m_StrictReference : 1;
 
     /**
      * Name of variable (Null-terminated string).

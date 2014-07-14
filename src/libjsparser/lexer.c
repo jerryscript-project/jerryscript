@@ -83,7 +83,7 @@ static string_and_token keyword_tokens[] =
 static string_and_token seen_names[MAX_NAMES];
 static size_t seen_names_num;
 
-static inline bool
+static bool
 is_empty (token tok)
 {
   return tok.type == TOK_EMPTY;
@@ -213,7 +213,7 @@ add_to_seen_tokens (string_and_token snt)
   seen_names[seen_names_num++] = snt;
 }
 
-static inline void
+static void
 new_token (void)
 {
   JERRY_ASSERT (buffer);
@@ -227,7 +227,7 @@ consume_char (void)
   buffer++;
 }
 
-static inline const char *
+static const char *
 current_token (void)
 {
   JERRY_ASSERT (buffer);

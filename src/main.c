@@ -14,9 +14,14 @@
  */
 
 #ifdef __TARGET_MCU
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
+#pragma GCC diagnostic pop
 
 #define LED_GREEN      12
 #define LED_ORANGE     13
@@ -38,11 +43,11 @@ void
 fake_exit (void)
 {
 #ifdef __TARGET_MCU
-  int pin = LED_RED;
-  uint32_t mode = GPIO_Mode_OUT << (pin * 2);
-  uint32_t speed = GPIO_Speed_100MHz << (pin * 2);
-  uint32_t type = GPIO_OType_PP << pin;
-  uint32_t pullup = GPIO_PuPd_NOPULL << (pin * 2);
+  uint32_t pin = LED_RED;
+  uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
+  uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
+  uint32_t type = (uint32_t)GPIO_OType_PP << pin;
+  uint32_t pullup = (uint32_t)GPIO_PuPd_NOPULL << (pin * 2);
   //
   //  Initialise the peripheral clock.
   //
@@ -66,17 +71,17 @@ fake_exit (void)
   
   while (1)
   {
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
     
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
     
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (1 << pin);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin);
     
     for (index = 0; index < dash * 7; index++);
   }

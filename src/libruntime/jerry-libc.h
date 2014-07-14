@@ -54,6 +54,6 @@ extern int __fprintf(FILE *stream, const char *format, ...);
 #define DBL_DIG         (  10)
 #define DBL_MIN_EXP     (-324)
 #define DBL_MAX_EXP     ( 308)
-#define HUGE_VAL        (1e37)
+#define HUGE_VAL        (1e37f)
 
 #endif /* JERRY_LIBC_H */

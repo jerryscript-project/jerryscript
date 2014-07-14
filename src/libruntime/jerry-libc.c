@@ -224,7 +224,7 @@ __strtof (const char *nptr, char **endptr)
   (void) endptr;
 
   JERRY_UNIMPLEMENTED ();
-}
+} /* __strtof */
 
 /** Calculate the length of a string.  */
 size_t

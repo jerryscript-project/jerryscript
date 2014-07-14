@@ -51,7 +51,8 @@ pp_token (token tok)
          break;
 
        case TOK_FLOAT:
-         __printf ("FLOAT (%f)\n", tok.data.fp_num);
+       FIXME(int -> float);
+         __printf ("FLOAT (%d)\n", (int)tok.data.fp_num);
          break;
 
        case TOK_NULL:

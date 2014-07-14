@@ -16,22 +16,15 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 /**
  * Types
  */
 typedef unsigned long mword_t;
-typedef mword_t uintptr_t;
-typedef mword_t size_t;
 typedef signed long ssize_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-typedef signed int int32_t;
-
-typedef enum {
-    false, true
-} bool;
 
 /**
  * Attributes
@@ -43,8 +36,6 @@ typedef enum {
 /**
  * Constants
  */
-#define NULL  ((void*)0)
-
 #define JERRY_BITSINBYTE 8
 
 /**
@@ -99,7 +90,7 @@ extern void __noreturn jerry_AssertFail( const char *assertion, const char *file
 /**
  * Mark for unreachable points and unimplemented cases
  */
-#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); __builtin_trap(); } while (0)
+#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); jerry_Exit( ERR_GENERAL); } while (0)
 #define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
 
 /**

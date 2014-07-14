@@ -44,7 +44,7 @@ export TARGET_SYSTEMS = $(TARGET_PC_SYSTEMS) $(TARGET_MCU_SYSTEMS)
 export JERRY_TARGETS = $(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_SYSTEMS),$(__MODE).$(__SYSTEM)))
 export TESTS_TARGET = unittests
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
-export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).flash)
+export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
 export OBJ_DIR = ./obj
 export OUT_DIR = ./out

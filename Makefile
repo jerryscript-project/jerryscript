@@ -12,144 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TARGET ?= jerry
-CROSS_COMPILE	?= arm-none-eabi-
-OBJ_DIR = ./obj
-OUT_DIR = ./out
+#
+# Target naming scheme
+#
+#   Main targets: {dev,debug,release,debug_release}.{linux,stm32f{4}}[.{check,flash}]
+#
+#    Target mode part (before dot):
+#       dev:           - JERRY_NDEBUG; - optimizations; + debug symbols; - -Werror  | local development build
+#       debug:         - JERRY_NDEBUG; - optimizations; + debug symbols; + -Werror  | debug build
+#       debug_release: - JERRY_NDEBUG; + optimizations; + debug symbols; + -Werror  | checked release build
+#       release:       + JERRY_NDEBUG; + optimizations; - debug symbols; + -Werror  | release build
+#
+#    Target system part (after first dot):
+#       linux - target system is linux
+#       stm32f{4} - target is STM32F{4} board 
+#
+#    Target action part (optional, after second dot):
+#       check - run cppcheck on src folder, unit and other tests
+#       flash - flash specified mcu target binary
+#
+#
+#   Unit test target: unittests
+#
 
-MAIN_MODULE_SRC = ./src/main.c
-UNITTESTS_SRC_DIR = ./tests/unit
+export TARGET_MODES = dev debug debug_release release
+export TARGET_PC_SYSTEMS = linux
+export TARGET_MCU_SYSTEMS = $(addprefix stm32f,4) # now only stm32f4 is supported, to add, for example, to stm32f3, change to $(addprefix stm32f,3 4)
+export TARGET_SYSTEMS = $(TARGET_PC_SYSTEMS) $(TARGET_MCU_SYSTEMS)
 
-LNK_SCRIPT_STM32F4 = ./third-party/stm32f4.ld
-SUP_STM32F4 = ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f4xx.s
+# Target list
+export JERRY_TARGETS = $(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_SYSTEMS),$(__MODE).$(__SYSTEM)))
+export TESTS_TARGET = unittests
+export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
+export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).flash)
 
+export OBJ_DIR = ./obj
+export OUT_DIR = ./out
+export UNITTESTS_SRC_DIR = ./tests/unit
 
-# FIXME:
-#  Place jerry-libc.c, pretty-printer.c to some subdirectory (libruntime?)
-#  and add them to the SOURCES list through wildcard.
-# FIXME:
-#  Add common-io.c and sensors.c
-SOURCES = \
-	$(sort \
-	$(wildcard ./src/libruntime/*.c) \
-	$(wildcard ./src/libperipherals/actuators.c) \
-	$(wildcard ./src/libjsparser/*.c) \
-	$(wildcard ./src/libecmaobjects/*.c) \
-	$(wildcard ./src/libecmaoperations/*.c) \
-	$(wildcard ./src/liballocator/*.c) \
-	$(wildcard ./src/libcoreint/*.c) )
+all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 
-SOURCES_STM32F4 = \
-	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
-        $(wildcard src/libruntime/target/stm32f4/*)
-
-SOURCES_LINUX = \
-        $(wildcard src/libruntime/target/linux/*)
-
-HEADERS = \
-	$(sort \
-	$(wildcard ./src/*.h) \
-	$(wildcard ./src/libruntime/*.h) \
-	$(wildcard ./src/libperipherals/*.h) \
-	$(wildcard ./src/libjsparser/*.h) \
-	$(wildcard ./src/libecmaobjects/*.h) \
-	$(wildcard ./src/libecmaoperations/*.h) \
-	$(wildcard ./src/liballocator/*.h) \
-	$(wildcard ./src/libcoreint/*.h) )
-
-INCLUDES = \
-	-I src \
-	-I src/libruntime \
-	-I src/libperipherals \
-	-I src/libjsparser \
-	-I src/libecmaobjects \
-	-I src/libecmaoperations \
-	-I src/liballocator \
-	-I src/libcoreint
-
-INCLUDES_STM32F4 = \
-	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Include \
-	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/inc \
-	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
-
-UNITTESTS = \
-	$(sort \
-	$(patsubst %.c,%,$(notdir \
-	$(wildcard $(UNITTESTS_SRC_DIR)/*))))
-
-OBJS = \
-	$(sort \
-	$(patsubst %.c,./%.o,$(notdir $(MAIN_MODULE_SRC) $(SOURCES))))
-
-CC  = gcc
-LD  = ld
-OBJDUMP	= objdump
-OBJCOPY	= objcopy
-SIZE	= size
-STRIP	= strip
-
-# General flags
-CFLAGS ?= $(INCLUDES) -std=c99 -Werror #-fdiagnostics-color=always
-CFLAGS += -Wall -Wextra -Wpedantic -Wlogical-op -Winline
-CFLAGS += -Wformat-nonliteral -Winit-self -Wstack-protector
-CFLAGS += -Wconversion -Wsign-conversion -Wformat-security
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
-
-# Flags for MCU
-MCU_CFLAGS += -mlittle-endian -mcpu=cortex-m4  -march=armv7e-m -mthumb
-MCU_CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-MCU_CFLAGS += -ffunction-sections -fdata-sections -nostdlib -fno-common 
-
-LDFLAGS = -nostartfiles -T$(LNK_SCRIPT_STM32F4)
-
-DEBUG_OPTIONS = -g3 -O0 # -fsanitize=address
-RELEASE_OPTIONS = -Os -flto -DJERRY_NDEBUG
-
-DEFINES = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
-TARGET_HOST = -D__HOST
-TARGET_MCU = -D__TARGET_MCU
-
-#-I third-party/STM32F4-Discovery_FW_V1.1.0/Project/Demonstration \
-
-.PHONY: all debug debug.stdm32f4 release clean tests check install
-
-all: clean debug release check
-
-debug.stdm32f4: clean debug.stdm32f4.bin
-
-debug.stdm32f4.o:
-	mkdir -p $(OUT_DIR)/debug.stdm32f4/
-	$(CROSS_COMPILE)$(CC) \
-	$(SUP_STM32F4) $(SOURCES_STM32F4) $(INCLUDES_STM32F4) \
-	$(CFLAGS) $(MCU_CFLAGS) $(DEBUG_OPTIONS) \
-	$(DEFINES) $(TARGET_MCU) $(MAIN_MODULE_SRC) -c
-
-debug.stdm32f4.elf: debug.stdm32f4.o
-	$(CROSS_COMPILE)$(LD) $(LDFLAGS) -o $(TARGET).elf *.o
-	rm -f *.o
- 
-debug.stdm32f4.bin: debug.stdm32f4.elf
-	$(CROSS_COMPILE)$(OBJCOPY) -Obinary $(TARGET).elf $(TARGET).bin
-	rm -f *.elf
-
-debug: clean
-	mkdir -p $(OUT_DIR)/debug.host/
-	$(CC) $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) $(SOURCES_LINUX) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/debug.host/$(TARGET)
-
-release: clean
-	mkdir -p $(OUT_DIR)/release.host/
-	$(CC) $(CFLAGS) $(RELEASE_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-	$(SOURCES) $(SOURCES_LINUX) $(MAIN_MODULE_SRC) -o $(OUT_DIR)/release.host/$(TARGET)
-	$(STRIP) $(OUT_DIR)/release.host/$(TARGET)
-
-tests:
-	mkdir -p $(OUT_DIR)/tests.host/
-	for unit_test in $(UNITTESTS); \
-	do \
-		$(CC) -O3 $(CFLAGS) $(DEBUG_OPTIONS) $(DEFINES) $(TARGET_HOST) \
-		$(SOURCES) $(SOURCES_LINUX) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(OUT_DIR)/tests.host/"$$unit_test"; \
-	done
+$(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
+	@echo $@
+	@make -f Makefile.mak TARGET=$@ $@
 
 clean:
 	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ *.log *.log
@@ -161,31 +66,3 @@ clean:
 	rm -f $(TARGET).hex
 	rm -f $(TARGET).lst
 	rm -f js.files
-
-check: tests
-	@ mkdir -p $(OUT_DIR)
-	@ cd $(OUT_DIR)
-
-	@ echo "=== Running cppcheck ==="
-	@ cppcheck $(HEADERS) $(SOURCES) --error-exitcode=1 --enable=all --std=c99
-	@ echo Done
-	@ echo
-	
-	@ echo "=== Running unit tests ==="
-	@ ./tools/jerry_unittest.sh $(OUT_DIR)/tests.host $(UNITTESTS)
-	@ echo Done
-	@ echo
-	
-	@ echo "=== Running js tests ==="
-	@ if [ -f $(OUT_DIR)/release.host/$(TARGET) ]; then \
-		./tools/jerry_test.sh $(OUT_DIR)/release.host/$(TARGET);\
-	fi
-	
-	@ if [ -f $(OUT_DIR)/debug.host/$(TARGET) ]; then \
-		./tools/jerry_test.sh $(OUT_DIR)/debug.host/$(TARGET); \
-	fi
-	@echo Done
-	@echo
-
-install:
-	st-flash write $(TARGET).bin 0x08000000

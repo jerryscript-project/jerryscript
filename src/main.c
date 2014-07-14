@@ -55,10 +55,12 @@ fake_exit (void)
   //
   //  Initilaise the GPIO port.
   //
-  GPIOD->MODER |= mode;
-  GPIOD->OSPEEDR |= speed;
-  GPIOD->OTYPER |= type;
-  GPIOD->PUPDR |= pullup;
+  volatile GPIO_TypeDef* gpio = GPIOD;
+
+  gpio->MODER |= mode;
+  gpio->OSPEEDR |= speed;
+  gpio->OTYPER |= type;
+  gpio->PUPDR |= pullup;
   //
   //  Toggle the selected LED indefinitely.
   //
@@ -68,20 +70,20 @@ fake_exit (void)
   
   int dot = 600000;
   int dash = dot * 3;
-  
+
   while (1)
   {
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
     
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
     
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    GPIOD->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); GPIOD->BSRRH = (uint16_t) (1 << pin);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin);
     
     for (index = 0; index < dash * 7; index++);
   }
@@ -90,19 +92,26 @@ fake_exit (void)
 #endif
 }
 
+#ifdef __HOST
 int
 main (int argc, char **argv)
+#endif /* __HOST */
+#ifdef __TARGET_MCU
+int
+main (void)
+#endif /* __TARGET_MCU */
 {
   statement st;
   bool dump_tokens = false;
   bool dump_ast = false;
-  const char *file_name = NULL;
 #ifdef __HOST
+  const char *file_name = NULL;
   FILE *file = NULL;
 #endif
 
   mem_Init ();
 
+#ifdef __HOST
   if (argc > 0)
     for (int i = 1; i < argc; i++)
     {
@@ -125,7 +134,6 @@ main (int argc, char **argv)
   if (!dump_tokens)
     dump_ast = true;
 
-#ifdef __HOST
   file = __fopen (file_name, "r");
 
   if (file == NULL)

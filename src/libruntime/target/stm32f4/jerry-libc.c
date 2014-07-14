@@ -36,8 +36,13 @@ __printf(const char *format, /**< format string */
     
     va_start( args, format);
     
-    int ret = vprintf( format, args);
-            
+    /**
+     * TODO: Call internal vprintf implementation when it appears.
+     */
+    int ret = 0;
+
+    JERRY_UNIMPLEMENTED();
+
     va_end( args);
     
     return ret;
@@ -52,7 +57,7 @@ __putchar (int c)
 
 /** exit - cause normal process termination  */
 void __noreturn
-__exit (int status)
+__exit (int status __unused)
 {
   /**
    * TODO: Blink LEDs? status -> binary -> LEDs?

@@ -20,7 +20,7 @@
 bool
 is_formal_parameter_list_empty (formal_parameter_list list)
 {
-  return list.names[0] == NULL;
+  return list.names[0] == null_string;
 }
 
 bool
@@ -56,7 +56,7 @@ is_expression_empty (assignment_expression expr)
 bool
 is_variable_declaration_empty (variable_declaration var_decl)
 {
-  return var_decl.name == NULL && is_expression_empty (var_decl.assign_expr);
+  return var_decl.name == null_string && is_expression_empty (var_decl.assign_expr);
 }
 
 bool
@@ -64,7 +64,6 @@ is_statement_null (statement stmt)
 {
   return stmt.type == STMT_NULL && stmt.data.none == NULL;
 }
-
 
 static token tok;
 
@@ -251,7 +250,7 @@ parse_formal_parameter_list (void)
           lexer_save_token (tok);
 
           if (i != MAX_PARAMS - 1)
-            res.names[i + 1] = NULL;
+            res.names[i + 1] = null_string;
           break;
         }
     }
@@ -306,7 +305,7 @@ parse_function_expression (void)
       skip_newlines ();
     }
   else
-    res.name = NULL;
+    res.name = null_string;
 
   current_token_must_be (TOK_OPEN_PAREN);
 
@@ -557,7 +556,7 @@ parse_assigment_expression (void)
         {
           .oper = AO_NONE,
           .type = ET_CALL,
-          .var = NULL,
+          .var = null_string,
           .data.call_expr = parse_call_expression ()
         };
     }
@@ -608,7 +607,7 @@ parse_assigment_expression (void)
     default:
       res.oper = AO_NONE;
       res.data.ops.op1 = (operand) { .is_literal = false, .data.name = res.var };
-      res.var = NULL;
+      res.var = null_string;
       goto parse_operator;
   }
 
@@ -1039,7 +1038,7 @@ parse_expression_inside_parens (statement *res)
 {
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   skip_newlines ();
-  res->data.expr = parse_expression ();
+  res->data.expr = parse_assigment_expression ();
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
 }
 
@@ -1116,6 +1115,37 @@ parser_parse_statement (void)
 
   skip_newlines ();
 
+  if (current_scopes[scope_index - 1].was_stmt 
+      && (current_scopes[scope_index - 1].type 
+          & (SCOPE_IF | SCOPE_WITH | SCOPE_SWITCH | SCOPE_ELSE | SCOPE_CATCH
+             | SCOPE_FUNCTION | SCOPE_WHILE | SCOPE_FOR)))
+    {
+      uint32_t type = current_scopes[scope_index - 1].type;
+      pop_scope ();
+
+      lexer_save_token (tok);
+
+      if (type & SCOPE_IF && !is_keyword (KW_ELSE))
+        return (statement) { .type = STMT_END_IF, .data.none = NULL };
+      if (type & SCOPE_WITH)
+        return (statement) { .type = STMT_END_WITH, .data.none = NULL };
+      if (type & SCOPE_SWITCH)
+        return (statement) { .type = STMT_END_SWITCH, .data.none = NULL };
+      if (type & SCOPE_ELSE)
+        return (statement) { .type = STMT_END_IF, .data.none = NULL };
+      if (type & SCOPE_CATCH && !is_keyword (KW_FINALLY))
+        return (statement) { .type = STMT_END_CATCH, .data.none = NULL };
+      if (type & SCOPE_CATCH)
+        return (statement) { .type = STMT_END_FINALLY, .data.none = NULL };
+      if (type & SCOPE_FUNCTION)
+        return (statement) { .type = STMT_END_FUNCTION, .data.none = NULL };
+      if (type & SCOPE_WHILE)
+        return (statement) { .type = STMT_END_WHILE, .data.none = NULL };
+      if (type & SCOPE_FOR)
+        return (statement) { .type = STMT_END_FOR_OR_FOR_IN, .data.none = NULL };
+
+    }
+
   if (is_keyword (KW_FINALLY))
     {
       res.type = STMT_FINALLY;
@@ -1124,12 +1154,6 @@ parser_parse_statement (void)
       push_scope (SCOPE_FINALLY);
       return res;
     }
-
-  if (current_scopes[scope_index - 1].was_stmt 
-      && (current_scopes[scope_index - 1].type & (SCOPE_IF | SCOPE_DO | SCOPE_WITH | SCOPE_SWITCH | SCOPE_ELSE 
-                                 | SCOPE_CATCH | SCOPE_FINALLY | SCOPE_FUNCTION | SCOPE_WHILE
-                                 | SCOPE_FOR)))
-    pop_scope ();
 
   current_scopes[scope_index - 1].was_stmt = true;
 
@@ -1144,27 +1168,25 @@ parser_parse_statement (void)
     {
       if (tok.type == TOK_CLOSE_PAREN)
         {
-          res.type = STMT_SUBEXPRESSION_END;
+          res.type = STMT_END_SUBEXPRESSION;
           pop_scope ();
           return res;
         }
       res.type = STMT_EXPRESSION;
-      res.data.expr = parse_expression ();
+      res.data.expr = parse_assigment_expression ();
       return res;
     }
   if (tok.type == TOK_OPEN_BRACE)
     {
-      res.type = STMT_BLOCK_START;
       push_scope (SCOPE_BLOCK);
-      return res;
+      return parser_parse_statement ();
     }
   if (tok.type == TOK_CLOSE_BRACE)
     {
       current_scope_must_be (SCOPE_BLOCK);
-      res.type = STMT_BLOCK_END;
       pop_scope ();
       current_scopes[scope_index - 1].was_stmt = true;
-      return res;
+      return parser_parse_statement ();
     }
   if (is_keyword (KW_ELSE))
     {
@@ -1193,6 +1215,7 @@ parser_parse_statement (void)
         {
           insert_semicolon ();
           pop_scope ();
+          res.type = STMT_END_DO_WHILE;
         }
       else
         push_scope (SCOPE_WHILE);
@@ -1236,7 +1259,7 @@ parser_parse_statement (void)
     }
   if (is_keyword (KW_DO))
     {
-      res.type = STMT_DO;
+      res.type = STMT_DO_WHILE;
       push_scope (SCOPE_DO);
       return res;
     }
@@ -1283,7 +1306,7 @@ parser_parse_statement (void)
       if (tok.type != TOK_SEMICOLON && tok.type != TOK_NEWLINE)
         {
           unsigned int current_scope_index = scope_index;
-          res.data.expr = parse_expression ();
+          res.data.expr = parse_assigment_expression ();
           if (current_scope_index == scope_index)
             insert_semicolon ();
         }
@@ -1308,7 +1331,7 @@ parser_parse_statement (void)
     {
       res.type = STMT_THROW;
       tok = lexer_next_token ();
-      res.data.expr = parse_expression ();
+      res.data.expr = parse_assigment_expression ();
       insert_semicolon ();
       return res;
     }
@@ -1324,7 +1347,7 @@ parser_parse_statement (void)
         pop_scope ();
       current_scope_must_be (SCOPE_SWITCH);
       skip_newlines ();
-      res.data.expr = parse_expression ();
+      res.data.expr = parse_assigment_expression ();
       token_after_newlines_must_be (TOK_SEMICOLON);
       push_scope (SCOPE_CASE);
       return res;
@@ -1352,15 +1375,15 @@ parser_parse_statement (void)
         {
           lexer_save_token (tok);
           tok = saved;
-          expression expr = parse_expression ();
+          assignment_expression expr = parse_assigment_expression ();
           res.type = STMT_EXPRESSION;
           res.data.expr = expr;
           return res;
         }
     }
 
-  expression expr = parse_expression ();
-  if (!is_expression_empty (expr.exprs[0]))
+  assignment_expression expr = parse_assigment_expression ();
+  if (!is_expression_empty (expr))
     {
       res.type = STMT_EXPRESSION;
       res.data.expr = expr;

@@ -21,37 +21,10 @@
  */
 
 /**
- * \addtogroup syntacticreference Textual reference to variable/property
+ * \addtogroup reference ECMA-reference
  * @{
  */
 
-/**
- * Syntactic (textual/unresolved) reference to a variable/object's property.
- */
-typedef struct {
-    /**
-     * Flag indicating that this is reference to a property.
-     * 
-     * Note:
-     *  m_PropertyName is valid only if m_IsPropertyReference is true.
-     */
-    unsigned int m_IsPropertyReference : 1;
-
-    /**
-     * Flag indicating that this reference is strict (see also: ECMA-262 v5, 8.7).
-     */
-    unsigned int m_StrictReference : 1;
-
-    /**
-     * Name of variable (Null-terminated string).
-     */
-    ecma_Char_t* m_Name;
-
-    /**
-     * Name of object's property (Null-terminated string).
-     */
-    ecma_Char_t* m_PropertyName;
-} ecma_SyntacticReference_t;
 
 /**
  * @}

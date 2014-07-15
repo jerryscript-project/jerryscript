@@ -116,14 +116,20 @@ typedef struct {
  */
 typedef struct {
     /** Type (ecma_CompletionType_t) */
-    unsigned int completion_type : 3;
+    unsigned int type : 3;
 
     /** Value */
-    ecma_Value_t completion_value;
+    ecma_Value_t value;
 
     /** Target */
     unsigned int target : 8;
 } __packed ecma_CompletionValue_t;
+
+/**
+ * Target value indicating that target field
+ * of ecma_CompletionValue_t defines no target.
+ */
+#define ECMA_TARGET_ID_RESERVED 255
 
 /**
  * Internal properties' identifiers.
@@ -283,7 +289,7 @@ typedef struct ecma_Object_t {
             unsigned int m_pOuterReference : ECMA_POINTER_FIELD_WIDTH;
         } __packed m_LexicalEnvironment;
 
-    } __packed u_Attributes;
+    } __packed u;
 
     /** GC's information */
     ecma_GCInfo_t m_GCInfo;
@@ -341,6 +347,30 @@ typedef struct {
     /** Characters */
     uint8_t m_Elements[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
 } ecma_ArrayNonFirstChunk_t;
+
+/**
+ * \addtogroup reference ECMA-reference
+ * @{
+ */
+
+/**
+ * ECMA-reference (see also: ECMA-262 v5, 8.7).
+ */
+typedef struct
+{
+  /** base value */
+  ecma_Value_t base;
+
+  /** referenced name value pointer */
+  ecma_Char_t *referenced_name_p;
+
+  /** strict reference flag */
+  bool is_strict;
+} ecma_Reference_t;
+
+/**
+ * @}
+ */
 
 #endif	/* JERRY_ECMA_GLOBALS_H */
 

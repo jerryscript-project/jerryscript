@@ -27,8 +27,14 @@
  * @{
  */
 
+/**
+ * Standard ecma-error object constructor.
+ *
+ * @return pointer to ecma-object representing specified error
+ *         with reference counter set to one.
+ */
 ecma_Object_t*
-ecma_NewStandardError( ecma_StandardError_t error_type)
+ecma_NewStandardError( ecma_StandardError_t error_type) /**< native error type */
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( error_type);
 } /* ecma_NewStandardError */

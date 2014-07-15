@@ -111,7 +111,6 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 #
 
 CFLAGS_COMMON ?= $(INCLUDES) -std=c99 # -fsanitize=address -fdiagnostics-color=always 
-CFLAGS_COMMON += -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 
 LDFLAGS ?= 
 
@@ -150,7 +149,8 @@ endif
 # Jerry part sources, headers, includes, cflags, ldflags
 #
 
-CFLAGS_JERRY = $(CFLAGS_COMMON) $(CFLAGS_WARNINGS)
+CFLAGS_JERRY = $(CFLAGS_WARNINGS)
+DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 
 # FIXME:
 #  Add common-io.c and sensors.c
@@ -176,7 +176,7 @@ INCLUDES_JERRY = \
  -I src/libcoreint
 
 ifeq ($(OPTION_NDEBUG),enable)
- CFLAGS_JERRY += -DJERRY_NDEBUG
+ DEFINES_JERRY += -DJERRY_NDEBUG
 endif
 
 ifeq ($(OPTION_WERROR),enable)
@@ -184,10 +184,10 @@ ifeq ($(OPTION_WERROR),enable)
 endif
 
 ifeq ($(OPTION_MCU),disable)
- CFLAGS_JERRY += -D__HOST
+ DEFINES_JERRY += -D__HOST
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
- CFLAGS_JERRY += -D__TARGET_MCU
+ DEFINES_JERRY += -D__TARGET_MCU
 endif
 
 #
@@ -230,7 +230,7 @@ $(JERRY_TARGETS):
 	@mkdir $(OBJ_DIR)
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
-		cmd="$(CC) -c $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(OBJ_DIR)/$$(basename $$jerry_src).$$source_index.o"; \
+		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(OBJ_DIR)/$$(basename $$jerry_src).$$source_index.o"; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
@@ -252,7 +252,7 @@ $(TESTS_TARGET):
 	@mkdir -p $(TARGET_DIR)
 	@for unit_test in $(SOURCES_UNITTESTS); \
 	do \
-		$(CC) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
+		$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
 		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(SOURCES_JERRY) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(TARGET_DIR)/"$$unit_test"; \
 	done
 	@ echo "=== Running unit tests ==="
@@ -263,13 +263,13 @@ $(TESTS_TARGET):
 # FIXME: Change cppcheck's --error-exitcode to 1 after fixing cppcheck's warnings and errors.
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
 	@ echo "=== Running cppcheck ==="
-	@ cppcheck `find src $(UNITTESTS_SRC_DIR) -name *.[ch]` --error-exitcode=0 --enable=all --std=c99
+	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) --error-exitcode=0 --enable=all --std=c99
 	@ echo Done
 	@ echo
 	
 	@ echo "=== Running js tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME);\
+		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME); \
 	fi
 	
 	@echo Done

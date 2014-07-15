@@ -26,6 +26,7 @@
 extern void __noreturn exit(int status);
 extern FILE* fopen(const char *path, const char *mode);
 extern int fclose(FILE *fp);
+extern int rewind (FILE *);
 extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 extern int vprintf (__const char *__restrict __format, __builtin_va_list __arg);
@@ -77,6 +78,14 @@ __fopen(const char *path, /**< file path */
 {
   return fopen( path, mode);
 } /* __fopen */
+
+/** The rewind() function sets the file position 
+  indicator for the stream pointed to by STREAM to the beginning of the file.  */
+void
+__rewind (FILE *stream)
+{
+  rewind (stream);
+}
 
 /**
  * fclose

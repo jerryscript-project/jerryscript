@@ -36,6 +36,13 @@
 #include "lexer.h"
 #include "parser.h"
 #include "pretty-printer.h"
+#include "bytecode-generator.h"
+
+#define DUMP_TOKENS   (1u << 0)
+#define DUMP_AST      (1u << 1)
+#define DUMP_BYTECODE (1u << 2)
+
+#define MAX_STRINGS 100
 
 void fake_exit (void);
 
@@ -70,7 +77,7 @@ fake_exit (void)
   
   int dot = 600000;
   int dash = dot * 3;
-
+  
   while (1)
   {
     gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
@@ -92,18 +99,27 @@ fake_exit (void)
 #endif
 }
 
-#ifdef __HOST
+static inline void
+check_for_several_dumps (uint8_t dump)
+{
+  bool was_bit = 0;
+  for (; dump; dump >>= 1)
+    {
+      if (dump & 1u)
+        {
+          if (was_bit)
+            jerry_Exit (ERR_SEVERAL_FILES);
+          else
+            was_bit = true;
+        }
+    }
+}
+
 int
 main (int argc, char **argv)
-#endif /* __HOST */
-#ifdef __TARGET_MCU
-int
-main (void)
-#endif /* __TARGET_MCU */
 {
   statement st;
-  bool dump_tokens = false;
-  bool dump_ast = false;
+  uint8_t dump = 0;
 #ifdef __HOST
   const char *file_name = NULL;
   FILE *file = NULL;
@@ -111,28 +127,31 @@ main (void)
 
   mem_Init ();
 
-#ifdef __HOST
   if (argc > 0)
     for (int i = 1; i < argc; i++)
     {
       if (!__strcmp ("-t", argv[i]))
-        dump_tokens = true;
+        dump |= DUMP_TOKENS;
       else if (!__strcmp ("-a", argv[i]))
-        dump_ast = true;
+        dump |= DUMP_AST;
+      else if (!__strcmp ("-b", argv[i]))
+        dump |= DUMP_BYTECODE;
+#ifdef __HOST
       else if (file_name == NULL)
         file_name = argv[i];
+#endif
       else
         jerry_Exit (ERR_SEVERAL_FILES);
     }
 
+  check_for_several_dumps (dump);
+
+  if (!dump)
+    dump |= DUMP_BYTECODE;
+
+#ifdef __HOST
   if (file_name == NULL)
     jerry_Exit (ERR_NO_FILES);
-
-  if (dump_tokens && dump_ast)
-    jerry_Exit (ERR_SEVERAL_FILES);
-
-  if (!dump_tokens)
-    dump_ast = true;
 
   file = __fopen (file_name, "r");
 
@@ -146,7 +165,7 @@ main (void)
   lexer_set_source (generated_source);
 #endif
 
-  if (dump_ast)
+  if (dump & DUMP_AST)
     {
       parser_init ();
       st = parser_parse_statement ();
@@ -159,13 +178,46 @@ main (void)
         }
     }
 
-  if (dump_tokens)
+  if (dump & DUMP_TOKENS)
     {
       token tok = lexer_next_token ();
       while (tok.type != TOK_EOF)
         {
           pp_token (tok);
           tok = lexer_next_token ();
+        }
+    }
+
+  if (dump & DUMP_BYTECODE)
+    {
+      const char *strings[MAX_STRINGS];
+      uint8_t strings_num;
+      // First run parser to fill list of strings
+      token tok = lexer_next_token ();
+      while (tok.type != TOK_EOF)
+        tok = lexer_next_token ();
+
+      strings_num = lexer_get_strings (strings);
+
+      // Reset lexer
+#ifdef __HOST
+      __rewind (file);
+      lexer_set_file (file);
+#else
+      lexer_set_source (generated_source);
+#endif
+
+      parser_init ();
+      generator_init ();
+      generator_dump_strings (strings, strings_num);
+      st = parser_parse_statement ();
+      JERRY_ASSERT (!is_statement_null (st));
+      __printf (" ST_TYPE = %d", st.type == STMT_EOF);
+      while (st.type != STMT_EOF)
+        {
+          generator_dump_statement (st);
+          st = parser_parse_statement ();
+          JERRY_ASSERT (!is_statement_null (st));
         }
     }
 

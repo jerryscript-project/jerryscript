@@ -17,15 +17,12 @@
 #include "pretty-printer.h"
 
 static int intendation;
-static bool was_function_expression;
-static bool was_subexpression;
 
-static statement_type prev_stmt;
+#define MAX_NAMES 100
 
 void
 pp_reset (void)
 {
-  prev_stmt = STMT_EOF;
   intendation = 0;
 }
 
@@ -39,7 +36,7 @@ pp_token (token tok)
          break;
 
        case TOK_STRING:
-         __printf ("STRING (%s)\n", tok.data.str);
+         __printf ("STRING (n%d)\n", tok.data.str);
          break;
 
        case TOK_KEYWORD:
@@ -418,11 +415,11 @@ pp_formal_parameter_list (formal_parameter_list param_list)
 
   for (i = 0; i < MAX_PARAMS; i++)
     {
-      if (param_list.names[i] == NULL)
+      if (param_list.names[i] == null_string)
         break;
       if (i != 0)
         __printf (", ");
-      __printf ("%s", param_list.names[i]);
+      __printf ("%s", lexer_get_string_by_id (param_list.names[i]));
     }
 }
 
@@ -431,11 +428,10 @@ pp_function_declaration (function_declaration func_decl)
 {
   __printf ("function ");
   if (func_decl.name)
-    __printf ("%s ", func_decl.name);
+    __printf ("%s ", lexer_get_string_by_id (func_decl.name));
   __putchar ('(');
   pp_formal_parameter_list (func_decl.params);
   __printf (") ");
-  was_function_expression = true;
 }
 
 static void
@@ -471,7 +467,7 @@ pp_operand (operand op)
   if (op.is_literal)
     pp_literal (op.data.lit);
   else
-    __printf ("%s", op.data.name);
+    __printf ("%s", lexer_get_string_by_id (op.data.name));
 }
 
 static void
@@ -516,8 +512,8 @@ pp_property_list (property_list prop_list)
 static void
 pp_call_expression (call_expression expr)
 {
-  JERRY_ASSERT (expr.name);
-  __printf ("%s (", expr.name);
+  JERRY_ASSERT (expr.name < MAX_NAMES);
+  __printf ("%s (", lexer_get_string_by_id (expr.name));
   pp_operand_list (expr.args);
   __printf (")\n");
 }
@@ -833,18 +829,12 @@ pp_expression (expression_list expr_list)
         __printf (", ");
       pp_assignment_expression (expr_list.exprs[i]);
     }
-
-  if (was_subexpression && !was_function_expression)
-    {
-      __putchar (')');
-      was_subexpression = false;
-    }
 }
 
 static void
 pp_variable_declaration (variable_declaration var_decl)
 {
-  __printf ("%s", var_decl.name);
+  __printf ("%s", lexer_get_string_by_id (var_decl.name));
   if (!is_expression_empty (var_decl.assign_expr))
     {
       __printf (" = ");
@@ -926,32 +916,9 @@ pp_for_or_for_in_statement (for_or_for_in_statement for_or_for_in_stmt)
 void
 pp_statement (statement stmt)
 {
-  was_function_expression = false;
-  was_subexpression = false;
-
-  if (prev_stmt == STMT_BLOCK_END)
-    {
-      if (stmt.type == STMT_EMPTY)
-        {
-          __printf (";\n");
-          prev_stmt = stmt.type;
-          return;
-        }
-      else
-        __putchar ('\n');
-    }
-
   switch (stmt.type)
   {
-    case STMT_BLOCK_START:
-      __printf ("{\n");
-      intendation += 2;
-      break;
-
-    case STMT_BLOCK_END:
-      intendation -= 2;
-      intend ();
-      __printf ("}");
+    case STMT_EMPTY:
       break;
 
     case STMT_VARIABLE:
@@ -959,44 +926,67 @@ pp_statement (statement stmt)
       pp_variable_declaration_list (stmt.data.var_stmt);
       break;
 
-    case STMT_EMPTY:
-      __printf (";\n");
-      break;
-
     case STMT_IF:
       intend ();
       __printf ("if (");
-      pp_expression (stmt.data.expr);
-      __printf (") ");
+      pp_assignment_expression (stmt.data.expr);
+      __printf (") {\n");
+      intendation += 2;
       break;
 
     case STMT_ELSE:
+      intendation -= 2;
       intend ();
-      __printf ("else ");
+      __printf ("} else {\n");
+      intendation += 2;
       break;
 
     case STMT_ELSE_IF:
+      intendation -= 2;
       intend ();
-      __printf ("else if(");
-      pp_expression (stmt.data.expr);
-      __printf (") ");
+      __printf ("} else if(");
+      pp_assignment_expression (stmt.data.expr);
+      __printf (") {\n");
+      intendation += 2;
       break;
 
-    case STMT_DO:
+    case STMT_END_IF:
+    case STMT_END_WHILE:
+    case STMT_END_WITH:
+    case STMT_END_SWITCH:
+    case STMT_END_CATCH:
+    case STMT_END_FINALLY:
+    case STMT_END_FUNCTION:
+      intendation -= 2;
       intend ();
-      __printf ("do ");
+      __printf ("}\n");
       break;
+
+    case STMT_DO_WHILE:
+      intend ();
+      __printf ("do {");
+      intendation += 2;
+      break;
+
+    case STMT_END_DO_WHILE:
+      intendation -= 2;
+      intend ();
+      __printf ("} while (");
+      pp_assignment_expression (stmt.data.expr);
+      __printf (");\n");
 
     case STMT_WHILE:
       intend ();
       __printf ("while (");
-      pp_expression (stmt.data.expr);
-      __printf (") ");
+      pp_assignment_expression (stmt.data.expr);
+      __printf (") {\n");
+      intendation += 2;
       break;
 
     case STMT_FOR_OR_FOR_IN:
       intend ();
       pp_for_or_for_in_statement (stmt.data.for_stmt);
+      intendation += 2;
       break;
 
     case STMT_CONTINUE:
@@ -1012,16 +1002,15 @@ pp_statement (statement stmt)
     case STMT_RETURN:
       intend ();
       __printf ("return ");
-      pp_expression (stmt.data.expr);
-      if (!was_function_expression)
-        __printf (";\n");
+      pp_assignment_expression (stmt.data.expr);
       break;
 
     case STMT_WITH:
       intend ();
       __printf ("with (");
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       __printf (") ");
+      intendation += 2;
       break;
 
     case STMT_LABELLED:
@@ -1032,21 +1021,22 @@ pp_statement (statement stmt)
     case STMT_SWITCH:
       intend ();
       __printf ("switch (");
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       __printf (") ");
+      intendation += 2;
       break;
 
     case STMT_CASE:
       intend ();
       __printf ("case ");
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       __printf (":\n");
       break;
 
     case STMT_THROW:
       intend ();
       __printf ("throw ");
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       __printf (";\n");
       break;
 
@@ -1058,38 +1048,34 @@ pp_statement (statement stmt)
     case STMT_CATCH:
       intend ();
       __printf ("catch (");
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       __printf (") ");
+      intendation += 2;
       break;
 
     case STMT_FINALLY:
       intend ();
       __printf ("finally ");
+      intendation += 2;
       break;
 
     case STMT_EXPRESSION:
       intend ();
-      pp_expression (stmt.data.expr);
+      pp_assignment_expression (stmt.data.expr);
       break;
 
-    case STMT_SUBEXPRESSION_END:
+    case STMT_END_SUBEXPRESSION:
       __putchar (')');
       break;
 
     case STMT_FUNCTION:
       intend ();
       pp_function_declaration (stmt.data.fun_decl);
+      __printf ("{\n");
+      intendation += 2;
       break;
 
     default:
       JERRY_UNREACHABLE ();
   }
-
-  prev_stmt = stmt.type;
-}
-
-void pp_finish (void)
-{
-  if (prev_stmt == STMT_BLOCK_END)
-    __putchar ('\n');
 }

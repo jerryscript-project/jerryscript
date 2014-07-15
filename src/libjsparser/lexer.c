@@ -83,7 +83,7 @@ static string_and_token keyword_tokens[] =
 static string_and_token seen_names[MAX_NAMES];
 static uint8_t seen_names_num;
 
-static inline bool
+static bool
 is_empty (token tok)
 {
   return tok.type == TOK_EMPTY;
@@ -233,7 +233,7 @@ lexer_get_string_by_id (string_id id)
   return seen_names[id].str;
 }
 
-static inline void
+static void
 new_token (void)
 {
   JERRY_ASSERT (buffer);
@@ -247,7 +247,7 @@ consume_char (void)
   buffer++;
 }
 
-static inline const char *
+static const char *
 current_token (void)
 {
   JERRY_ASSERT (buffer);

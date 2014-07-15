@@ -20,14 +20,44 @@
 #include "jerry-libc.h"
 
 /**
+ * memcpy alias to __memcpy (for compiler usage)
+ */
+extern void *memcpy(void *s1, const void*s2, size_t n);
+
+/**
+ * memset alias to __memset (for compiler usage)
+ */
+extern void *memset(void *s, int c, size_t n);
+
+/**
+ * memcpy alias to __memcpy (for compiler usage)
+ */
+void* memcpy(void *s1, /**< destination */
+             const void* s2, /**< source */
+             size_t n) /**< bytes number */
+{
+  return __memcpy(s1, s2, n);
+} /* memcpy */
+
+/**
+ * memset alias to __memset (for compiler usage)
+ */
+void* memset(void *s,  /**< area to set values in */
+             int c,    /**< value to set */
+             size_t n) /**< area size */
+{
+  return __memset(s, c, n);
+} /* memset */
+
+/**
  * memset
  * 
  * @return @s
  */
 void*
 __memset(void *s,  /**< area to set values in */
-            int c,    /**< value to set */
-            size_t n) /**< area size */
+         int c,    /**< value to set */
+         size_t n) /**< area size */
 {
     uint8_t *pArea = s;
     for ( size_t index = 0; index < n; index++ )

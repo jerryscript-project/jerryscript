@@ -15,7 +15,10 @@
 #!/bin/bash
 
 DIR="$1"
-UNITTESTS="${*:2}"
+
+rm -f $DIR/unit_tests_run.log
+
+UNITTESTS=$(ls $DIR)
 
 for unit_test in $UNITTESTS;
 do

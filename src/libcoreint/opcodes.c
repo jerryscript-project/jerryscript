@@ -99,7 +99,7 @@ opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
 }
 
 void
-opfunc_call_1 (OPCODE opdata, struct __int_data *int_data)
+opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 {
 #ifdef __HOST
   __printf ("%d::op_call_1:idx:%d:%d\n",

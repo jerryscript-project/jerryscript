@@ -258,7 +258,7 @@ ecma_GCRun( void)
 
         if ( pObject->m_IsLexicalEnvironment )
         {
-            ecma_Object_t *pOuterLexicalEnvironment = ecma_GetPointer( pObject->u_Attributes.m_LexicalEnvironment.m_pOuterReference);
+            ecma_Object_t *pOuterLexicalEnvironment = ecma_GetPointer( pObject->u.m_LexicalEnvironment.m_pOuterReference);
             
             if ( pOuterLexicalEnvironment != NULL )
             {
@@ -266,7 +266,7 @@ ecma_GCRun( void)
             }
         } else
         {
-            ecma_Object_t *pPrototypeObject = ecma_GetPointer( pObject->u_Attributes.m_Object.m_pPrototypeObject);
+            ecma_Object_t *pPrototypeObject = ecma_GetPointer( pObject->u.m_Object.m_pPrototypeObject);
             
             if ( pPrototypeObject != NULL )
             {

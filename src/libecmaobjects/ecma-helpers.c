@@ -20,10 +20,6 @@
  * @{
  */
 
-/**
- * Implementation of helpers for operations with ECMA data types
- */
-
 #include "ecma-alloc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -94,8 +90,8 @@ ecma_CreateObject( ecma_Object_t *pPrototypeObject, /**< pointer to prototybe of
      * (at least with the ctx_GlobalObject variable) */
     pObject->m_GCInfo.u.m_Refs = 1;
 
-    pObject->u_Attributes.m_Object.m_Extensible = isExtensible;
-    ecma_SetPointer( pObject->u_Attributes.m_Object.m_pPrototypeObject, pPrototypeObject);
+    pObject->u.m_Object.m_Extensible = isExtensible;
+    ecma_SetPointer( pObject->u.m_Object.m_pPrototypeObject, pPrototypeObject);
     
     return pObject;
 } /* ecma_CreateObject */
@@ -119,14 +115,14 @@ ecma_CreateLexicalEnvironment(ecma_Object_t *pOuterLexicalEnvironment, /**< oute
     ecma_Object_t *pNewLexicalEnvironment = ecma_AllocObject();
 
     pNewLexicalEnvironment->m_IsLexicalEnvironment = true;
-    pNewLexicalEnvironment->u_Attributes.m_LexicalEnvironment.m_Type = type;
+    pNewLexicalEnvironment->u.m_LexicalEnvironment.m_Type = type;
 
     pNewLexicalEnvironment->m_pProperties = ECMA_NULL_POINTER;
 
     pNewLexicalEnvironment->m_GCInfo.m_IsObjectValid = true;
     pNewLexicalEnvironment->m_GCInfo.u.m_Refs = 1;
 
-    ecma_SetPointer( pNewLexicalEnvironment->u_Attributes.m_LexicalEnvironment.m_pOuterReference, pOuterLexicalEnvironment);
+    ecma_SetPointer( pNewLexicalEnvironment->u.m_LexicalEnvironment.m_pOuterReference, pOuterLexicalEnvironment);
     
     return pNewLexicalEnvironment;
 } /* ecma_CreateLexicalEnvironment */
@@ -157,7 +153,7 @@ ecma_CreateInternalProperty(ecma_Object_t *pObject, /**< the object */
 /**
  * Find internal property in the object's property set.
  * 
- * @return pointer to the property's descriptor, if it is found,
+ * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
 ecma_Property_t*
@@ -203,6 +199,47 @@ ecma_GetInternalProperty(ecma_Object_t *pObject, /**< object descriptor */
     
     return pProperty;
 } /* ecma_GetInternalProperty */
+
+/**
+ * Find named data property or named access property in specified object.
+ *
+ * @return pointer to the property, if it is found,
+ *         NULL - otherwise.
+ */
+ecma_Property_t*
+ecma_FindNamedProperty(ecma_Object_t *obj_p,  /**< object to find property in */
+                       ecma_Char_t *string_p) /**< property's name */
+{
+    JERRY_ASSERT( obj_p != NULL );
+    JERRY_ASSERT( string_p != NULL );
+
+    for ( ecma_Property_t *property_p = ecma_GetPointer( obj_p->m_pProperties);
+          property_p != NULL;
+          property_p = ecma_GetPointer( property_p->m_pNextProperty) )
+    {
+        ecma_ArrayFirstChunk_t *property_name_p;
+
+        if ( property_p->m_Type == ECMA_PROPERTY_NAMEDDATA )
+        {
+          property_name_p = ecma_GetPointer( property_p->u.m_NamedDataProperty.m_pName);
+        } else if ( property_p->m_Type == ECMA_PROPERTY_NAMEDACCESSOR )
+        {
+          property_name_p = ecma_GetPointer( property_p->u.m_NamedAccessorProperty.m_pName);
+        } else
+        {
+          continue;
+        }
+
+        JERRY_ASSERT( property_name_p != NULL );
+
+	if ( ecma_CompareCharBufferToEcmaString( string_p, property_name_p) )
+        {
+          return property_p;
+        }
+    }
+
+    return NULL;
+} /* ecma_FindNamedProperty */
 
 /**
  * Allocate new ecma-string and fill it with characters from specified buffer

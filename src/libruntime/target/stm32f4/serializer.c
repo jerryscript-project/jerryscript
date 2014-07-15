@@ -13,6 +13,17 @@
  * limitations under the License.
  */
 
+#include "serializer.h"
 #include "globals.h"
+
+void
+serializer_init (void)
+{
+}
+
+void
+serializer_dump_data (const void *data __unused, size_t size __unused)
+{
+}
 
 TODO (Dump memory)

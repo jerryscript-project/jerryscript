@@ -18,6 +18,8 @@
 
 #include "globals.h"
 
+typedef uint8_t string_id;
+
 /* Keywords.  */
 typedef enum
 {
@@ -141,11 +143,11 @@ typedef struct
   {
     void *none;
     keyword kw;
-    const char *name;
+    string_id name;
     bool is_true;
     int num;
     float fp_num;
-    const char *str;
+    string_id str;
   }
   data;
 }
@@ -160,5 +162,9 @@ token lexer_next_token (void);
 void lexer_save_token (token);
 
 void lexer_dump_buffer_state (void);
+
+uint8_t lexer_get_strings (const char **);
+
+const char *lexer_get_string_by_id (string_id id);
 
 #endif

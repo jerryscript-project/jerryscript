@@ -81,7 +81,7 @@ static string_and_token keyword_tokens[] =
 #define MAX_NAMES 100
 
 static string_and_token seen_names[MAX_NAMES];
-static size_t seen_names_num;
+static uint8_t seen_names_num;
 
 static inline bool
 is_empty (token tok)
@@ -210,7 +210,27 @@ add_to_seen_tokens (string_and_token snt)
 {
   JERRY_ASSERT (seen_names_num < MAX_NAMES);
 
+  snt.tok.data.name = (string_id) seen_names_num;
   seen_names[seen_names_num++] = snt;
+}
+
+uint8_t
+lexer_get_strings (const char **strings)
+{
+  int i;
+
+  for (i = 0; i < seen_names_num; i++)
+    strings[i] = seen_names[i].str;
+
+  return seen_names_num;
+}
+
+const char *
+lexer_get_string_by_id (string_id id)
+{
+  JERRY_ASSERT (id < seen_names_num);
+
+  return seen_names[id].str;
 }
 
 static inline void
@@ -318,7 +338,7 @@ parse_name (void)
     }
 
   string = current_token ();
-  known_token = (token) { .type = TOK_NAME, .data.name = string };
+  known_token = (token) { .type = TOK_NAME, .data.name = seen_names_num };
   
   add_to_seen_tokens ((string_and_token) { .str = string, .tok = known_token });
 
@@ -561,7 +581,7 @@ parse_string (void)
   // Eat up '"'
   consume_char ();
 
-  res = (token) { .type = TOK_STRING, .data.str = tok };
+  res = (token) { .type = TOK_STRING, .data.str = seen_names_num };
 
   add_to_seen_tokens ((string_and_token) { .str = tok, .tok = res });
 
@@ -588,6 +608,7 @@ lexer_set_file (FILE *ex_file)
   file = ex_file;
   lexer_debug_log = __fopen ("lexer.log", "w");
   saved_token = empty_token;
+  buffer = buffer_start = token_start = NULL;
 }
 #else
 void

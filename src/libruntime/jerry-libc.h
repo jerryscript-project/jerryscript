@@ -44,11 +44,12 @@ extern int __isalpha (int);
 extern int __isdigit (int);
 extern int __isxdigit (int);
 
-extern FILE* __fopen(const char *path, const char *mode);
-extern int __fclose(FILE *fp);
-extern size_t __fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern size_t __fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern int __fprintf(FILE *stream, const char *format, ...);
+extern FILE* __fopen(const char *, const char *);
+extern int __fclose(FILE *);
+extern void __rewind(FILE *);
+extern size_t __fread(void *, size_t, size_t, FILE *);
+extern size_t __fwrite(const void *, size_t, size_t, FILE *);
+extern int __fprintf(FILE *, const char *, ...);
 
 #define DBL_MANT_DIG    (  52)
 #define DBL_DIG         (  10)

@@ -113,7 +113,7 @@ TARGET_MCU = -D__TARGET_MCU
 
 .PHONY: all debug debug.stdm32f4 release clean tests check install
 
-all: clean debug release check
+all: debug release
 
 debug.stdm32f4: clean debug.stdm32f4.bin
 

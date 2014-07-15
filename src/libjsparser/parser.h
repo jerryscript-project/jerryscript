@@ -18,12 +18,7 @@
 
 #include "globals.h"
 
-struct source_element_list;
-struct statement_list;
-struct statement;
-struct assignment_expression;
-struct member_expression;
-
+#define null_string 255
 #define MAX_PARAMS 5
 #define MAX_EXPRS 2
 #define MAX_PROPERTIES 5
@@ -34,14 +29,14 @@ struct member_expression;
 typedef struct formal_parameter_list
 {
   /** Identifiers of a parameter. Next after last parameter is NULL.  */
-  const char *names[MAX_PARAMS];
+  uint8_t names[MAX_PARAMS];
 }
 formal_parameter_list;
 
 static const formal_parameter_list
 empty_formal_parameter_list = 
 {
-  .names = { [0] = NULL }
+  .names = { [0] = null_string }
 };
 
 bool is_formal_parameter_list_empty (formal_parameter_list);
@@ -51,7 +46,7 @@ bool is_formal_parameter_list_empty (formal_parameter_list);
 typedef struct
 {
   /** Identifier: name of a function. Can be NULL for anonimous functions.  */
-  const char *name;
+  uint8_t name;
   /** List of parameter of a function. Can be NULL.  */
   formal_parameter_list params;
 }
@@ -82,7 +77,7 @@ typedef struct
       /** Used by null literal, always NULL.  */
       void *none;
       /** String literal value.  */
-      const char *str;
+      uint8_t str;
       /** Number value.  */
       int num;
       /** Boolean value.  */
@@ -100,7 +95,7 @@ typedef struct
     {
       void *none;
       literal lit;
-      const char *name;
+      uint8_t name;
     }
   data;
 }
@@ -142,7 +137,7 @@ typedef operand_list argument_list;
 
 typedef struct
 {
-  const char *name;
+  uint8_t name;
   argument_list args;
 }
 call_expression;
@@ -262,7 +257,7 @@ typedef struct
   expression_type type;
 
   /** NUllable.  */
-  const char *var;
+  uint8_t var;
 
   union
     {
@@ -302,7 +297,7 @@ typedef expression_list expression;
 
 typedef struct
 {
-  const char *name;
+  uint8_t name;
   assignment_expression assign_expr;
 }
 variable_declaration;
@@ -310,7 +305,7 @@ variable_declaration;
 static const variable_declaration
 empty_variable_declaration = 
 {
-  .name = NULL,
+  .name = null_string,
   .assign_expr = { .oper = AO_NONE, .type = ET_NONE, .data.none = NULL }
 };
 
@@ -378,33 +373,40 @@ for_or_for_in_statement;
 typedef enum
 {
   STMT_NULL,
-  STMT_BLOCK_START,
-  STMT_BLOCK_END,
   STMT_VARIABLE,
   STMT_EMPTY,
   STMT_IF,
   STMT_ELSE,
   STMT_ELSE_IF,
-  STMT_DO,
-
+  STMT_END_IF,
+  STMT_DO_WHILE,
+  STMT_END_DO_WHILE,
   STMT_WHILE,
+
+  STMT_END_WHILE,
   STMT_FOR_OR_FOR_IN,
+  STMT_END_FOR_OR_FOR_IN,
   STMT_CONTINUE,
   STMT_BREAK,
-
   STMT_RETURN,
   STMT_WITH,
+  STMT_END_WITH,
   STMT_LABELLED,
   STMT_SWITCH,
+
+  STMT_END_SWITCH,
   STMT_CASE,
   STMT_THROW,
-
   STMT_TRY,
   STMT_CATCH,
+  STMT_END_CATCH,
   STMT_FINALLY,
+  STMT_END_FINALLY,
   STMT_EXPRESSION,
-  STMT_SUBEXPRESSION_END,
+  STMT_END_SUBEXPRESSION,
+
   STMT_FUNCTION,
+  STMT_END_FUNCTION,
   STMT_EOF
 }
 statement_type;
@@ -417,9 +419,9 @@ typedef struct statement
     {
       void *none;
       variable_declaration_list var_stmt;
-      expression expr;
+      assignment_expression expr;
       for_or_for_in_statement for_stmt;
-      const char *name;
+      uint8_t name;
       function_declaration fun_decl;
     }
   data;

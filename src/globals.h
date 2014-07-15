@@ -90,8 +90,10 @@ extern void __noreturn jerry_AssertFail( const char *assertion, const char *file
 /**
  * Mark for unreachable points and unimplemented cases
  */
+extern void jerry_RefUnusedVariables(int unused_variables_follow, ...);
 #define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); jerry_Exit( ERR_GENERAL); } while (0)
 #define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
+#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) do { JERRY_UNIMPLEMENTED(); if ( false ) { jerry_RefUnusedVariables( 0, __VA_ARGS__); } } while (0)
 
 /**
  * Exit

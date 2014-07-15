@@ -115,6 +115,23 @@ ecma_MakeCompletionValue(ecma_CompletionType_t type, /**< type */
 } /* ecma_MakeCompletionValue */
 
 /**
+ * Throw completion value constructor.
+ */
+ecma_CompletionValue_t
+ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
+{
+  JERRY_ASSERT( exception_p != NULL && !exception_p->m_IsLexicalEnvironment );
+
+  ecma_Value_t exception;
+  exception.m_ValueType = ECMA_TYPE_OBJECT;
+  ecma_SetPointer( exception.m_Value, exception_p);
+
+  return ecma_MakeCompletionValue(ECMA_COMPLETION_TYPE_THROW,
+                                  exception,
+                                  ECMA_TARGET_ID_RESERVED);                                  
+} /* ecma_MakeThrowValue */
+
+/**
  * @}
  * @}
  */

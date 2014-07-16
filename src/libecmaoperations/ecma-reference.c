@@ -53,7 +53,7 @@ ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment
     ecma_CompletionValue_t completion_value;
     completion_value = ecma_OpHasBinding( lex_env_iter_p, name_p);
 
-    JERRY_ASSERT( completion_value.type == ECMA_COMPLETION_TYPE_NORMAL );
+    JERRY_ASSERT( ecma_IsCompletionValueNormalBoolean( completion_value) );
 
     if ( ecma_IsValueTrue( completion_value.value) )
     {

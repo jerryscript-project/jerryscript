@@ -54,22 +54,11 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
     op(varg_2_end)                      \
     op(varg_3)                          \
     op(varg_3_end)                      \
-    op(retval)\
+    op(retval)                          \
     op(ret)
 
 #define OP_ASSIGNMENTS(op)              \
-    op(assignment)                      \
-    op(assignment_multiplication)       \
-    op(assignment_devision)             \
-    op(assignment_remainder)            \
-    op(assignment_addition)             \
-    op(assignment_substruction)         \
-    op(assignment_shift_left)           \
-    op(assignment_shift_right)          \
-    op(assignment_shift_uright)         \
-    op(assignment_b_and)                \
-    op(assignment_b_xor)                \
-    op(assignment_b_or)
+    op(assignment)
 
 #define OP_B_SHIFTS(op)                 \
     op(b_shift_left)                    \
@@ -85,6 +74,18 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
     op(logical_and)                     \
     op(logical_or)
 
+#define OP_EQUALITY(op)                 \
+    op(equal_value)                     \
+    op(not_equal_value)                 \
+    op(equal_value_type)                \
+    op(not_equal_value_type)            
+
+#define OP_RELATIONAL(op)               \
+    op(less_than)                       \
+    op(greater_than)                    \
+    op(less_or_equal_than)              \
+    op(greater_or_equal_than)
+
 #define OP_ARITHMETIC(op)               \
     op(addition)                        \
     op(substraction)                    \
@@ -95,7 +96,8 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
 #define OP_UNCONDITIONAL_JUMPS(op)      \
     op(jmp)                             \
     op(jmp_up)                          \
-    op(jmp_down)
+    op(jmp_down)                        \
+    op(nop)
 
 #define OP_UNARY_OPS(op)                \
     op(is_true_jmp)                     \
@@ -119,6 +121,8 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
   OP_B_LOGICAL(op)                      \
   OP_B_BITWISE(op)                      \
   OP_B_SHIFTS(op)                       \
+  OP_EQUALITY(op)                       \
+  OP_RELATIONAL(op)                     \
   OP_ARITHMETIC(op)                     \
   OP_UNCONDITIONAL_JUMPS(op)            \
   OP_CONDITIONAL_JUMPS(op)

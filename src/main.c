@@ -212,7 +212,6 @@ main (int argc, char **argv)
       generator_dump_strings (strings, strings_num);
       st = parser_parse_statement ();
       JERRY_ASSERT (!is_statement_null (st));
-      __printf (" ST_TYPE = %d", st.type == STMT_EOF);
       while (st.type != STMT_EOF)
         {
           generator_dump_statement (st);

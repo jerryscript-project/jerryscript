@@ -228,66 +228,63 @@ OP_CODE_DECL (logical_or, T_IDX_IDX_IDX,
               var_left,
               var_right)
 
+// Equality operations.
+
+/** dst = L == R.  */
+OP_CODE_DECL (equal_value, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L != R.  */
+OP_CODE_DECL (not_equal_value, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L === R.  */
+OP_CODE_DECL (equal_value_type, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L !== R.  */
+OP_CODE_DECL (not_equal_value_type, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+// Relational operations.
+
+/** dst = L < R.  */
+OP_CODE_DECL (less_than, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L > R.  */
+OP_CODE_DECL (greater_than, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L <= R.  */
+OP_CODE_DECL (less_or_equal_than, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L >= R.  */
+OP_CODE_DECL (greater_or_equal_than, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
 // Assignment operators.
 // Assign value to LEFT operand based on value of RIGHT operand.
 
 /** L = R */
 OP_CODE_DECL (assignment, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L *= R */
-OP_CODE_DECL (assignment_multiplication, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L /= R */
-OP_CODE_DECL (assignment_devision, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L %= R */
-OP_CODE_DECL (assignment_remainder, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L += R */
-OP_CODE_DECL (assignment_addition, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L -= R */
-OP_CODE_DECL (assignment_substruction, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L <<= R */
-OP_CODE_DECL (assignment_shift_left, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L >>= R */
-OP_CODE_DECL (assignment_shift_right, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L >>>= R */
-OP_CODE_DECL (assignment_shift_uright, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L &= R */
-OP_CODE_DECL (assignment_b_and, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L ^= R */
-OP_CODE_DECL (assignment_b_xor, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L |= R */
-OP_CODE_DECL (assignment_b_or, T_IDX_IDX,
               value_left,
               value_right)
 
@@ -361,6 +358,8 @@ OP_CODE_DECL (varg_3_end, T_IDX_IDX_IDX,
 OP_CODE_DECL (retval, T_IDX,
               ret_value)
 OP_CODE_DECL_VOID (ret)
+
+OP_CODE_DECL_VOID (nop)
 
 // LOOPS
 // Lately, all loops should be translated into different JMPs in an optimizer.

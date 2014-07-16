@@ -41,6 +41,15 @@ void opfunc_varg_3 (OPCODE opdata __unused, struct __int_data *int_data __unused
 void opfunc_varg_3_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_retval (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_ret (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_nop (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_not_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_not_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_less_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_greater_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_less_or_equal_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_greater_or_equal_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 
 void
 opfunc_assignment(OPCODE opdata __unused,
@@ -49,17 +58,6 @@ opfunc_assignment(OPCODE opdata __unused,
   JERRY_UNREACHABLE ();
 }
 
-void opfunc_assignment_multiplication (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_devision (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_remainder (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_addition (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_substruction (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_left (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_right (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_shift_uright (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_xor (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_assignment_b_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_logical_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_logical_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
@@ -150,18 +148,15 @@ GETOP_IMPL_3 (b_or, dst, var_left, var_right)
 GETOP_IMPL_3 (b_xor, dst, var_left, var_right)
 GETOP_IMPL_3 (logical_and, dst, var_left, var_right)
 GETOP_IMPL_3 (logical_or, dst, var_left, var_right)
+GETOP_IMPL_3 (equal_value, dst, var_left, var_right)
+GETOP_IMPL_3 (not_equal_value, dst, var_left, var_right)
+GETOP_IMPL_3 (equal_value_type, dst, var_left, var_right)
+GETOP_IMPL_3 (not_equal_value_type, dst, var_left, var_right)
+GETOP_IMPL_3 (less_than, dst, var_left, var_right)
+GETOP_IMPL_3 (greater_than, dst, var_left, var_right)
+GETOP_IMPL_3 (less_or_equal_than, dst, var_left, var_right)
+GETOP_IMPL_3 (greater_or_equal_than, dst, var_left, var_right)
 GETOP_IMPL_2 (assignment, value_left, value_right)
-GETOP_IMPL_2 (assignment_multiplication, value_left, value_right)
-GETOP_IMPL_2 (assignment_devision, value_left, value_right)
-GETOP_IMPL_2 (assignment_remainder, value_left, value_right)
-GETOP_IMPL_2 (assignment_addition, value_left, value_right)
-GETOP_IMPL_2 (assignment_substruction, value_left, value_right)
-GETOP_IMPL_2 (assignment_shift_left, value_left, value_right)
-GETOP_IMPL_2 (assignment_shift_right, value_left, value_right)
-GETOP_IMPL_2 (assignment_shift_uright, value_left, value_right)
-GETOP_IMPL_2 (assignment_b_and, value_left, value_right)
-GETOP_IMPL_2 (assignment_b_xor, value_left, value_right)
-GETOP_IMPL_2 (assignment_b_or, value_left, value_right)
 GETOP_IMPL_2 (call_1, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (call_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (call_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
@@ -176,6 +171,7 @@ GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_1 (retval, ret_value)
 GETOP_IMPL_0 (ret)
+GETOP_IMPL_0 (nop)
 GETOP_IMPL_1 (loop_inf, loop_root)
 GETOP_IMPL_3 (loop_init_num, start, stop, step)
 GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)

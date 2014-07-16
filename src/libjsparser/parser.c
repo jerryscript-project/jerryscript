@@ -541,7 +541,10 @@ parse_assigment_expression (void)
   assignment_expression res;
 
   if (tok.type != TOK_NAME)
-    goto parse_operands;
+    {
+      res.oper = AO_NONE;
+      goto parse_operands;
+    }
 
   current_token_must_be (TOK_NAME);
 
@@ -813,7 +816,10 @@ parse_operator:
     default:
       lexer_save_token (tok);
       res.oper = AO_NONE;
-      res.type = ET_NONE; 
+      if (res.data.ops.op1.is_literal)
+        res.type = ET_LITERAL;
+      else
+        res.type = ET_IDENTIFIER;
       res.data.ops.op2 = empty_operand;
       return res;
   }

@@ -20,6 +20,8 @@
  * @{
  */
 
+#include "ecma-alloc.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "globals.h"
@@ -31,10 +33,10 @@
  *         false - otherwise.
  */
 bool
-ecma_IsUndefinedValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueUndefined( ecma_Value_t value) /**< ecma-value */
 {
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_UNDEFINED );
-} /* ecma_IsUndefinedValue */
+} /* ecma_IsValueUndefined */
 
 /**
  * Check if the value is null.
@@ -43,10 +45,10 @@ ecma_IsUndefinedValue( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsNullValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueNull( ecma_Value_t value) /**< ecma-value */
 {
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_NULL );
-} /* ecma_IsNullValue */
+} /* ecma_IsValueNull */
 
 /**
  * Check if the value is boolean.
@@ -55,11 +57,11 @@ ecma_IsNullValue( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsBooleanValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueBoolean( ecma_Value_t value) /**< ecma-value */
 {
   return ( ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_FALSE )
            || ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_TRUE ) );
-} /* ecma_IsBooleanValue */
+} /* ecma_IsValueBoolean */
 
 /**
  * Check if the value is true.
@@ -73,7 +75,7 @@ ecma_IsBooleanValue( ecma_Value_t value) /**< ecma-value */
 bool
 ecma_IsValueTrue( ecma_Value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT( ecma_IsBooleanValue( value) );
+  JERRY_ASSERT( ecma_IsValueBoolean( value) );
 
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_TRUE );
 } /* ecma_IsValueTrue */
@@ -104,6 +106,115 @@ ecma_MakeObjectValue( ecma_Object_t* object_p) /**< object to reference in value
 } /* ecma_MakeObjectValue */
 
 /**
+ * Copy ecma-value.
+ *
+ * Note:
+ *  Operation algorithm.
+ *   switch (valuetype)
+ *    case simple:
+ *      simply return the value as it was passed;
+ *    case number/string:
+ *      copy the number/string
+ *      and return new ecma-value
+ *      pointing to copy of the number/string;
+ *    case object;
+ *      increase reference counter of the object
+ *      and return the value as it was passed.
+ *
+ * @return See note.
+ */
+ecma_Value_t
+ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
+{
+  ecma_Value_t value_copy;
+
+  switch ( (ecma_Type_t)value.m_ValueType )
+  {
+    case ECMA_TYPE_SIMPLE:
+      {
+        value_copy = value;
+      }
+    case ECMA_TYPE_NUMBER:
+      {
+        ecma_Number_t *num_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( num_p != NULL );
+
+        ecma_Number_t *number_copy_p = ecma_AllocNumber();
+        *number_copy_p = *num_p;
+
+        value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_NUMBER };
+        ecma_SetPointer( value_copy.m_Value, number_copy_p);
+      }
+    case ECMA_TYPE_STRING:
+      {
+        ecma_ArrayFirstChunk_t *string_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( string_p != NULL );
+
+        ecma_ArrayFirstChunk_t *string_copy_p = ecma_DuplicateEcmaString( string_p);
+
+        value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_STRING };
+        ecma_SetPointer( value_copy.m_Value, string_copy_p);
+      }
+    case ECMA_TYPE_OBJECT:
+      {
+        ecma_Object_t *obj_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( obj_p != NULL );
+
+        ecma_RefObject( obj_p);
+
+        value_copy = value;
+      }
+    case ECMA_TYPE__COUNT:
+      {
+        JERRY_UNREACHABLE();
+      }
+  }
+
+  return value_copy;
+} /* ecma_CopyValue */
+
+/**
+ * Free memory used for the value
+ */
+void
+ecma_FreeValue( ecma_Value_t value) /**< value description */
+{
+  switch ( (ecma_Type_t) value.m_ValueType )
+  {
+    case ECMA_TYPE_SIMPLE:
+      {
+        /* doesn't hold additional memory */
+        break;
+      }
+
+    case ECMA_TYPE_NUMBER:
+      {
+        ecma_Number_t *pNumber = ecma_GetPointer( value.m_Value);
+        ecma_DeallocNumber( pNumber);
+        break;
+      }
+
+    case ECMA_TYPE_STRING:
+      {
+        ecma_ArrayFirstChunk_t *pString = ecma_GetPointer( value.m_Value);
+        ecma_FreeArray( pString);
+        break;
+      }
+
+    case ECMA_TYPE_OBJECT:
+      {
+        ecma_DerefObject( ecma_GetPointer( value.m_Value));
+        break;
+      }
+
+    case ECMA_TYPE__COUNT:
+      {
+        JERRY_UNREACHABLE();
+      }
+  }
+} /* ecma_FreeValue */
+
+/**
  * Completion value constructor
  */
 ecma_CompletionValue_t
@@ -130,6 +241,36 @@ ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
                                   exception,
                                   ECMA_TARGET_ID_RESERVED);                                  
 } /* ecma_MakeThrowValue */
+
+/**
+ * Check if the completion value is normal true.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains ecma-true simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
+           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
+           && value.value.m_Value == ECMA_SIMPLE_VALUE_TRUE );
+} /* ecma_IsCompletionValueNormalTrue */
+
+/**
+ * Check if the completion value is normal false.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains ecma-false simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
+           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
+           && value.value.m_Value == ECMA_SIMPLE_VALUE_FALSE );
+} /* ecma_IsCompletionValueNormalFalse */
 
 /**
  * @}

@@ -21,6 +21,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jerry-libc.h"
@@ -201,17 +202,50 @@ ecma_GetInternalProperty(ecma_Object_t *pObject, /**< object descriptor */
 } /* ecma_GetInternalProperty */
 
 /**
+ * Create named data property with given name, attributes and undefined value
+ * in the specified object.
+ *
+ * @return pointer to newly created property
+ */
+ecma_Property_t*
+ecma_CreateNamedProperty(ecma_Object_t *obj_p, /**< object */
+                         ecma_Char_t *name_p, /**< property name */
+                         ecma_PropertyWritableValue_t writable, /**< 'writable' attribute */
+                         ecma_PropertyEnumerableValue_t enumerable, /**< 'enumerable' attribute */
+                         ecma_PropertyConfigurableValue_t configurable) /**< 'configurable' attribute */
+{
+  JERRY_ASSERT( obj_p != NULL && name_p != NULL );
+
+  ecma_Property_t *prop = ecma_AllocProperty();
+
+  prop->m_Type = ECMA_PROPERTY_NAMEDDATA;
+
+  ecma_SetPointer( prop->u.m_NamedDataProperty.m_pName, ecma_NewEcmaString( name_p));
+
+  prop->u.m_NamedDataProperty.m_Writable = writable;
+  prop->u.m_NamedDataProperty.m_Enumerable = enumerable;
+  prop->u.m_NamedDataProperty.m_Configurable = configurable;
+
+  prop->u.m_NamedDataProperty.m_Value = ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  ecma_SetPointer( prop->m_pNextProperty, ecma_GetPointer( obj_p->m_pProperties));
+  ecma_SetPointer( obj_p->m_pProperties, prop);
+
+  return prop;
+} /* ecma_CreateNamedProperty */
+
+/**
  * Find named data property or named access property in specified object.
  *
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
 ecma_Property_t*
-ecma_FindNamedProperty(ecma_Object_t *obj_p,  /**< object to find property in */
-                       ecma_Char_t *string_p) /**< property's name */
+ecma_FindNamedProperty(ecma_Object_t *obj_p, /**< object to find property in */
+                       ecma_Char_t *name_p) /**< property's name */
 {
     JERRY_ASSERT( obj_p != NULL );
-    JERRY_ASSERT( string_p != NULL );
+    JERRY_ASSERT( name_p != NULL );
 
     for ( ecma_Property_t *property_p = ecma_GetPointer( obj_p->m_pProperties);
           property_p != NULL;
@@ -232,7 +266,7 @@ ecma_FindNamedProperty(ecma_Object_t *obj_p,  /**< object to find property in */
 
         JERRY_ASSERT( property_name_p != NULL );
 
-	if ( ecma_CompareCharBufferToEcmaString( string_p, property_name_p) )
+	if ( ecma_CompareCharBufferToEcmaString( name_p, property_name_p) )
         {
           return property_p;
         }
@@ -242,16 +276,217 @@ ecma_FindNamedProperty(ecma_Object_t *obj_p,  /**< object to find property in */
 } /* ecma_FindNamedProperty */
 
 /**
+ * Get named data property or named access property in specified object.
+ *
+ * Warning:
+ *         the property must exist
+ *
+ * @return pointer to the property, if it is found,
+ *         NULL - otherwise.
+ */
+ecma_Property_t*
+ecma_GetNamedProperty(ecma_Object_t *obj_p, /**< object to find property in */
+                      ecma_Char_t *name_p) /**< property's name */
+{
+    JERRY_ASSERT( obj_p != NULL );
+    JERRY_ASSERT( name_p != NULL );
+
+    ecma_Property_t *property_p = ecma_FindNamedProperty( obj_p, name_p);
+
+    JERRY_ASSERT( property_p != NULL );
+
+    return property_p;
+} /* ecma_GetNamedProperty */
+
+/**
+ * Get named data property in specified object.
+ *
+ * Warning:
+ *         the property must exist and be named data property
+ *
+ * @return pointer to the property, if it is found,
+ *         NULL - otherwise.
+ */
+ecma_Property_t*
+ecma_GetNamedDataProperty(ecma_Object_t *obj_p, /**< object to find property in */
+                          ecma_Char_t *name_p) /**< property's name */
+{
+    JERRY_ASSERT( obj_p != NULL );
+    JERRY_ASSERT( name_p != NULL );
+
+    ecma_Property_t *property_p = ecma_FindNamedProperty( obj_p, name_p);
+
+    JERRY_ASSERT( property_p != NULL && property_p->m_Type == ECMA_PROPERTY_NAMEDDATA );
+
+    return property_p;
+} /* ecma_GetNamedDataProperty */
+
+/**
+ * Free the named data property and values it references.
+ */
+void
+ecma_FreeNamedDataProperty( ecma_Property_t *pProperty) /**< the property */
+{
+  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDDATA );
+
+  ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedDataProperty.m_pName));
+  ecma_FreeValue( pProperty->u.m_NamedDataProperty.m_Value);
+
+  ecma_DeallocProperty( pProperty);
+} /* ecma_FreeNamedDataProperty */
+
+/**
+ * Free the named accessor property and values it references.
+ */
+void
+ecma_FreeNamedAccessorProperty( ecma_Property_t *pProperty) /**< the property */
+{
+  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDACCESSOR );
+
+  ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedAccessorProperty.m_pName));
+
+  ecma_Object_t *pGet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pGet);
+  ecma_Object_t *pSet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pSet);
+
+  if ( pGet != NULL )
+  {
+    ecma_DerefObject( pGet);
+  }
+
+  if ( pSet != NULL )
+  {
+    ecma_DerefObject( pSet);
+  }
+
+  ecma_DeallocProperty( pProperty);
+} /* ecma_FreeNamedAccessorProperty */
+
+/**
+ * Free the internal property and values it references.
+ */
+void
+ecma_FreeInternalProperty( ecma_Property_t *pProperty) /**< the property */
+{
+  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_INTERNAL );
+
+  ecma_InternalPropertyId_t propertyId = pProperty->u.m_InternalProperty.m_InternalPropertyType;
+  uint32_t propertyValue = pProperty->u.m_InternalProperty.m_Value;
+
+  switch ( propertyId )
+  {
+    case ECMA_INTERNAL_PROPERTY_CLASS: /* a string */
+    case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array */
+    case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
+      {
+        ecma_FreeArray( ecma_GetPointer( propertyValue));
+        break;
+      }
+
+    case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
+    case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
+      {
+        ecma_DerefObject( ecma_GetPointer( propertyValue));
+        break;
+      }
+
+    case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_Object_t */
+    case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_Object_t */
+    case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean flag */
+      {
+        break;
+      }
+  }
+
+  ecma_DeallocProperty( pProperty);
+} /* ecma_FreeInternalProperty */
+
+/**
+ * Free the property and values it references.
+ */
+void
+ecma_FreeProperty(ecma_Property_t *prop_p) /**< property */
+{
+  switch ( (ecma_PropertyType_t) prop_p->m_Type )
+  {
+    case ECMA_PROPERTY_NAMEDDATA:
+      {
+        ecma_FreeNamedDataProperty( prop_p);
+
+        break;
+      }
+
+    case ECMA_PROPERTY_NAMEDACCESSOR:
+      {
+        ecma_FreeNamedAccessorProperty( prop_p);
+
+        break;
+      }
+
+    case ECMA_PROPERTY_INTERNAL:
+      {
+        ecma_FreeInternalProperty( prop_p);
+
+        break;
+      }
+  }
+} /* ecma_FreeProperty */
+
+/**
+ * Delete the object's property.
+ *
+ * Warning: specified property must be owned by specified object.
+ */
+void
+ecma_DeleteProperty(ecma_Object_t *obj_p, /**< object */
+                    ecma_Property_t *prop_p) /**< property */
+{
+  for ( ecma_Property_t *cur_prop_p = ecma_GetPointer( obj_p->m_pProperties), *prev_prop_p = NULL, *next_prop_p;
+        cur_prop_p != NULL;
+        prev_prop_p = cur_prop_p, cur_prop_p = next_prop_p )
+  {
+    next_prop_p = ecma_GetPointer( cur_prop_p->m_pNextProperty);
+
+    if ( cur_prop_p == prop_p )
+    {
+      ecma_FreeProperty( prop_p);
+
+      if ( prev_prop_p == NULL )
+      {
+        ecma_SetPointer( obj_p->m_pProperties, next_prop_p);
+      } else
+      {
+        ecma_SetPointer( prev_prop_p->m_pNextProperty, next_prop_p);
+      }
+
+      return;
+    }
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_DeleteProperty */
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  * 
  * @return Pointer to first chunk of an array, containing allocated string
  */
 ecma_ArrayFirstChunk_t*
-ecma_NewEcmaString(const ecma_Char_t *pString, /**< buffer of characters */
-                   ecma_Length_t length) /**< length of string, in characters */
+ecma_NewEcmaString(const ecma_Char_t *pString) /**< zero-terminated string of ecma-characters */
 {
-    JERRY_ASSERT( length == 0 || pString != NULL );
+    ecma_Length_t length = 0;
 
+    /*
+     * TODO: Do not precalculate length.
+     */
+    if ( pString != NULL )
+    {
+      const ecma_Char_t *iter_p = pString;
+      while ( *iter_p++ )
+      {
+        length++;
+      }
+    }
+ 
     ecma_ArrayFirstChunk_t *pStringFirstChunk = ecma_AllocArrayFirstChunk();
 
     pStringFirstChunk->m_Header.m_UnitNumber = length;
@@ -395,13 +630,13 @@ ecma_FreeArray( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk of the arr
 
     ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
 
-    ecma_FreeArrayFirstChunk( pFirstChunk);
+    ecma_DeallocArrayFirstChunk( pFirstChunk);
 
     while ( pNonFirstChunk != NULL )
     {
         ecma_ArrayNonFirstChunk_t *pNextChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
 
-        ecma_FreeArrayNonFirstChunk( pNonFirstChunk);
+        ecma_DeallocArrayNonFirstChunk( pNonFirstChunk);
 
         pNonFirstChunk = pNextChunk;
     }

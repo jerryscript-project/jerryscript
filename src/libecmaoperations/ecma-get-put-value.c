@@ -18,7 +18,6 @@
  */
 
 #include "ecma-exceptions.h"
-#include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-operations.h"
@@ -31,49 +30,6 @@
  */
 
 /**
- * Resolve syntactic reference to ECMA-reference.
- *
- * Warning: string pointed by name_p
- *          must not be freed or reused
- *          until the reference is freed.
- *
- * @return ECMA-reference (if base value is an object, upon return
- *         it's reference counter is increased by one).
- */
-ecma_Reference_t
-ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment */
-                              ecma_Char_t *name_p, /**< identifier's name */
-                              bool is_strict) /**< strict reference flag */
-{
-  JERRY_ASSERT( lex_env_p != NULL );
-
-  ecma_Object_t *lex_env_iter_p = lex_env_p;
-  
-  while ( lex_env_iter_p != NULL )
-  {
-    ecma_CompletionValue_t completion_value;
-    completion_value = ecma_OpHasBinding( lex_env_iter_p, name_p);
-
-    JERRY_ASSERT( completion_value.type == ECMA_COMPLETION_TYPE_NORMAL );
-
-    if ( ecma_IsValueTrue( completion_value.value) )
-    {
-      ecma_RefObject( lex_env_iter_p);
-
-      return (ecma_Reference_t) { .base = ecma_MakeObjectValue( lex_env_iter_p),
-                                  .referenced_name_p = name_p,
-                                  .is_strict = is_strict };
-    }
-
-    lex_env_iter_p = ecma_GetPointer( lex_env_iter_p->u.m_LexicalEnvironment.m_pOuterReference);
-  }
-
-  return (ecma_Reference_t) { .base = ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED),
-                              .referenced_name_p = NULL,
-                              .is_strict = is_strict };
-} /* ecma_OpGetIdentifierReference */
-
-/**
  * GetValue operation.
  *
  * See also: ECMA-262 v5, 8.7.1
@@ -82,28 +38,31 @@ ecma_CompletionValue_t
 ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
 {
   const ecma_Value_t base = ref_p->base;
-  const bool is_unresolvable_reference = ecma_IsUndefinedValue( base);
-  const bool has_primitive_base = ( ecma_IsBooleanValue( base)
+  const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
+  const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
                                     || base.m_ValueType == ECMA_TYPE_STRING );
   const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );
                                      
+  // GetValue_3
   if ( is_unresolvable_reference )
   {
     return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_REFERENCE));
   }
 
+  // GetValue_4
   if ( is_property_reference )
   {
-    if ( !has_primitive_base )
+    if ( !has_primitive_base ) // GetValue_4.a
     {
       ecma_Object_t *obj_p = ecma_GetPointer( base.m_Value);
       JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
       
-      /* return [[Get]]( obj_p as this, ref_p->referenced_name_p) */
+      // GetValue_4.b case 1
+      /* return [[Get]]( base as this, ref_p->referenced_name_p) */
       JERRY_UNIMPLEMENTED();
     } else
-    { 
+    { // GetValue_4.b case 2
       /*
        ecma_Object_t *obj_p = ecma_ToObject( base);
        JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
@@ -126,7 +85,7 @@ ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
                                             ECMA_TARGET_ID_RESERVED);
          } else
          {
-           [[Call]]( getter, base as this);
+           return [[Call]]( getter, base as this);
          }
        }
       */
@@ -134,6 +93,7 @@ ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
     }
   } else
   {
+    // GetValue_5
     ecma_Object_t *lex_env_p = ecma_GetPointer( base.m_Value);
 
     JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
@@ -151,7 +111,116 @@ ecma_CompletionValue_t
 ecma_OpSetValue(ecma_Reference_t *ref_p, /**< ECMA-reference */
                 ecma_Value_t value) /**< ECMA-value */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( ref_p, value);
+  const ecma_Value_t base = ref_p->base;
+  const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
+  const bool has_primitive_base = ( ecma_IsValueBoolean( base)
+                                    || base.m_ValueType == ECMA_TYPE_NUMBER
+                                    || base.m_ValueType == ECMA_TYPE_STRING );
+  const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );
+
+  if ( is_unresolvable_reference ) // PutValue_3
+  {
+    if ( ref_p->is_strict ) // PutValue_3.a
+    {
+      return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_REFERENCE));
+    } else // PutValue_3.b
+    {
+      /*
+       ecma_Object_t *global_object_p = ecma_GetGlobalObject();
+
+       return global_object_p->[[Put]]( ref_p->referenced_name_p, value, false);
+      */
+
+      JERRY_UNIMPLEMENTED();      
+    }
+  } else if ( is_property_reference ) // PutValue_4
+  {
+    if ( !has_primitive_base ) // PutValue_4.a
+    {
+      // PutValue_4.b case 1
+
+      /* return [[Put]]( base as this, ref_p->referenced_name_p, value, ref_p->is_strict); */
+      JERRY_UNIMPLEMENTED();      
+    } else
+    {
+      // PutValue_4.b case 2
+
+      /*
+       // PutValue_sub_1
+       ecma_Object_t *obj_p = ecma_ToObject( base);
+       JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
+
+       // PutValue_sub_2
+       if ( !obj_p->[[CanPut]]( ref_p->referenced_name_p) )
+       {
+         // PutValue_sub_2.a
+         if ( ref_p->is_strict )
+         {
+           return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
+         } else
+         { // PutValue_sub_2.b
+           return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                            ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                            ECMA_TARGET_ID_RESERVED);
+         }
+       }
+
+       // PutValue_sub_3
+       ecma_Property_t *own_prop = obj_p->[[GetOwnProperty]]( ref_p->referenced_name_p);
+
+       // PutValue_sub_4
+       if ( ecma_OpIsDataDescriptor( own_prop) )
+       {
+         // PutValue_sub_4.a
+         if ( ref_p->is_strict )
+         {
+           return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
+         } else
+         { // PutValue_sub_4.b
+           return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                            ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                            ECMA_TARGET_ID_RESERVED);
+         }
+       }
+
+       // PutValue_sub_5
+       ecma_Property_t *prop = obj_p->[[GetProperty]]( ref_p->referenced_name_p);
+
+       // PutValue_sub_6
+       if ( ecma_OpIsAccessorDescriptor( prop) )
+       {
+         // PutValue_sub_6.a
+         ecma_Object_t *setter = ecma_GetPointer( property->u.m_NamedAccessorProperty.m_pSet);
+         JERRY_ASSERT( setter != NULL );
+
+         // PutValue_sub_6.b
+         return [[Call]]( setter, base as this, value);
+       } else // PutValue_sub_7
+       {
+         // PutValue_sub_7.a
+         if ( ref_p->is_strict )
+         {
+           return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
+         }
+       }
+
+       // PutValue_sub_8
+       return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                        ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                        ECMA_TARGET_ID_RESERVED);
+       */
+
+      JERRY_UNIMPLEMENTED();
+    }
+  } else
+  {
+    // PutValue_7
+    ecma_Object_t *lex_env_p = ecma_GetPointer( base.m_Value);
+
+    JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+
+    return ecma_OpSetMutableBinding( lex_env_p, ref_p->referenced_name_p, value, ref_p->is_strict);
+  }
 } /* ecma_OpSetValue */
 
 /**

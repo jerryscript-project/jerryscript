@@ -48,6 +48,8 @@ JERRY_STATIC_ASSERT( sizeof (ecma_CompletionValue_t) == sizeof(uint32_t) );
 
 /**
  * Template of an allocation routine.
+ *
+ * FIXME: Run GC only if allocation failed.
  */
 #define ALLOC( ecmaType) ecma_ ## ecmaType ## _t * \
 ecma_Alloc ## ecmaType (void) \
@@ -62,13 +64,13 @@ ecma_Alloc ## ecmaType (void) \
 }
 
 /**
- * Free routine template
+ * Deallocation routine template
  */
-#define FREE( ecmaType) void \
-ecma_Free ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
+#define DEALLOC( ecmaType) void \
+ecma_Dealloc ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
 { \
     mem_PoolsFree( mem_SizeToPoolChunkType( sizeof(ecma_ ## ecmaType ## _t)), \
-                   (uint8_t*) p ## ecmaType); \
+                      (uint8_t*) p ## ecmaType); \
 }
 
 /**
@@ -76,7 +78,7 @@ ecma_Free ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
  */
 #define DECLARE_ROUTINES_FOR( ecmaType) \
     ALLOC( ecmaType) \
-    FREE( ecmaType)
+    DEALLOC( ecmaType)
 
 DECLARE_ROUTINES_FOR (Object)
 DECLARE_ROUTINES_FOR (Property)

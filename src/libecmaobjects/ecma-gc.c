@@ -98,120 +98,6 @@ ecma_GCInit( void)
 } /* ecma_GCInit */
 
 /**
- * Garbage collect described value
- */
-static void
-ecma_GCValue( ecma_Value_t valueDescription) /**< value description */
-{
-    switch ( (ecma_Type_t) valueDescription.m_ValueType )
-    {
-        case ECMA_TYPE_SIMPLE:
-          {
-            /* doesn't hold additional memory */
-            break;
-          }
-
-        case ECMA_TYPE_NUMBER:
-        {
-            ecma_Number_t *pNumber = ecma_GetPointer( valueDescription.m_Value);
-            ecma_FreeNumber( pNumber);
-            break;
-        }
-
-        case ECMA_TYPE_STRING:
-        {
-            ecma_ArrayFirstChunk_t *pString = ecma_GetPointer( valueDescription.m_Value);
-            ecma_FreeArray( pString);
-            break;
-        }
-
-        case ECMA_TYPE_OBJECT:
-        {
-            ecma_DerefObject( ecma_GetPointer( valueDescription.m_Value));
-            break;
-        }
-
-        case ECMA_TYPE__COUNT:
-        {
-            JERRY_UNREACHABLE();
-        }
-    }
-} /* ecma_GCValue */
-
-/**
- * Garbage collect a named data property
- */
-static void
-ecma_GCNamedDataProperty( ecma_Property_t *pProperty) /**< the property */
-{
-    JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDDATA );
-
-    ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedDataProperty.m_pName));
-    ecma_GCValue( pProperty->u.m_NamedDataProperty.m_Value);
-} /* ecma_GCNamedDataProperty */
-
-/**
- * Garbage collect a named accessor property
- */
-static void
-ecma_GCNamedAccessorProperty( ecma_Property_t *pProperty) /**< the property */
-{
-    JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDACCESSOR );
-
-    ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedAccessorProperty.m_pName));
-
-    ecma_Object_t *pGet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pGet);
-    ecma_Object_t *pSet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pSet);
-
-    if ( pGet != NULL )
-    {
-        ecma_DerefObject( pGet);
-    }
-
-    if ( pSet != NULL )
-    {
-        ecma_DerefObject( pSet);
-    }
-} /* ecma_GCNamedAccessorProperty */
-
-/**
- * Garbage collect an internal property
- */
-static void
-ecma_GCInternalProperty( ecma_Property_t *pProperty) /**< the property */
-{
-    JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_INTERNAL );
-
-    ecma_InternalPropertyId_t propertyId = pProperty->u.m_InternalProperty.m_InternalPropertyType;
-    uint32_t propertyValue = pProperty->u.m_InternalProperty.m_Value;
-
-    switch ( propertyId )
-    {
-        case ECMA_INTERNAL_PROPERTY_CLASS: /* a string */
-        case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array */
-        case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
-        {
-            ecma_FreeArray( ecma_GetPointer( propertyValue));
-            break;
-        }
-
-        case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
-        case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
-        {
-            ecma_DerefObject( ecma_GetPointer( propertyValue));
-            break;
-        }
-
-        case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_Object_t */
-        case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_Object_t */
-        case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean flag */
-        {
-            break;
-        }
-    }
-} /* ecma_GCInternalProperty */
-
-/**
  * Run garbage collecting
  */
 void
@@ -228,31 +114,8 @@ ecma_GCRun( void)
               property != NULL;
               property = pNextProperty )
         {
-            switch ( (ecma_PropertyType_t) property->m_Type )
-            {
-                case ECMA_PROPERTY_NAMEDDATA:
-                {
-                    ecma_GCNamedDataProperty( property);
-
-                    break;
-                }
-
-                case ECMA_PROPERTY_NAMEDACCESSOR:
-                {
-                    ecma_GCNamedAccessorProperty( property);
-
-                    break;
-                }
-
-                case ECMA_PROPERTY_INTERNAL:
-                {
-                    ecma_GCInternalProperty( property);
-
-                    break;
-                }
-            }
-
             pNextProperty = ecma_GetPointer( property->m_pNextProperty);
+
             ecma_FreeProperty( property);
         }
 
@@ -274,7 +137,7 @@ ecma_GCRun( void)
             }
         }
         
-        ecma_FreeObject( pObject);
+        ecma_DeallocObject( pObject);
     }
 } /* ecma_RunGC */
 

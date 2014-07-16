@@ -18,7 +18,7 @@
 void
 init_int (void)
 {
-#define INIT_OP_FUNC(name) __opfuncs[ name ] = opfunc_##name ;
+#define INIT_OP_FUNC(name) __opfuncs[ __op__idx_##name ] = opfunc_##name ;
   JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
 
   OP_LIST (INIT_OP_FUNC)

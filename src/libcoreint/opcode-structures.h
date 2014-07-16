@@ -43,14 +43,14 @@
 #define GETOP_IMPL_0(name) \
         OPCODE getop_##name () { \
           OPCODE opdata; \
-          opdata.op_idx = name; \
+          opdata.op_idx = __op__idx_##name; \
           return opdata; \
         }
 
 #define GETOP_IMPL_1(name, field1) \
         OPCODE getop_##name (T_IDX arg1) { \
           OPCODE opdata; \
-          opdata.op_idx = name; \
+          opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
           return opdata; \
         }
@@ -58,7 +58,7 @@
 #define GETOP_IMPL_2(name, field1, field2) \
         OPCODE getop_##name (T_IDX arg1, T_IDX arg2) { \
           OPCODE opdata; \
-          opdata.op_idx = name; \
+          opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
           opdata.data.name.field2 = arg2; \
           return opdata; \
@@ -67,7 +67,7 @@
 #define GETOP_IMPL_3(name, field1, field2, field3) \
         OPCODE getop_##name (T_IDX arg1, T_IDX arg2, T_IDX arg3) { \
           OPCODE opdata; \
-          opdata.op_idx = name; \
+          opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
           opdata.data.name.field2 = arg2; \
           opdata.data.name.field3 = arg3; \

@@ -22,7 +22,7 @@
 struct __int_data;
 
 #define OP_STRUCT_FIELD(name) struct __op_##name name;
-#define OP_ENUM_FIELD(name) name ,
+#define OP_ENUM_FIELD(name) __op__idx_##name ,
 #define OP_FUNC_DECL(name) void opfunc_##name  (OPCODE, struct __int_data *);
 
 /** A single bytecode instruction is 32bit wide and has an 8bit opcode field

@@ -212,7 +212,7 @@ ecma_GCRun( void)
             }
 
             pNextProperty = ecma_GetPointer( property->m_pNextProperty);
-            ecma_FreeProperty( property);
+            ecma_DeallocProperty( property);
         }
 
         if ( pObject->m_IsLexicalEnvironment )
@@ -233,7 +233,7 @@ ecma_GCRun( void)
             }
         }
         
-        ecma_FreeObject( pObject);
+        ecma_DeallocObject( pObject);
     }
 } /* ecma_RunGC */
 

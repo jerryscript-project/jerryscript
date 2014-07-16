@@ -395,13 +395,13 @@ ecma_FreeArray( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk of the arr
 
     ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
 
-    ecma_FreeArrayFirstChunk( pFirstChunk);
+    ecma_DeallocArrayFirstChunk( pFirstChunk);
 
     while ( pNonFirstChunk != NULL )
     {
         ecma_ArrayNonFirstChunk_t *pNextChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
 
-        ecma_FreeArrayNonFirstChunk( pNonFirstChunk);
+        ecma_DeallocArrayNonFirstChunk( pNonFirstChunk);
 
         pNonFirstChunk = pNextChunk;
     }

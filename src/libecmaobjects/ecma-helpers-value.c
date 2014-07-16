@@ -190,7 +190,7 @@ ecma_FreeValue( ecma_Value_t value) /**< value description */
     case ECMA_TYPE_NUMBER:
       {
         ecma_Number_t *pNumber = ecma_GetPointer( value.m_Value);
-        ecma_FreeNumber( pNumber);
+        ecma_DeallocNumber( pNumber);
         break;
       }
 

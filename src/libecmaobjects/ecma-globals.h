@@ -154,6 +154,33 @@ typedef enum {
 } ecma_InternalPropertyId_t;
 
 /**
+ * Property's 'Writable' attribute's values description.
+ */
+typedef enum
+{
+  ECMA_PROPERTY_WRITABLE, /**< property's 'Writable' attribute is true */
+  ECMA_PROPERTY_NOT_WRITABLE /**< property's 'Writable' attribute is false */
+} ecma_PropertyWritableValue_t;
+
+/**
+ * Property's 'Enumerable' attribute's values description.
+ */
+typedef enum
+{
+  ECMA_PROPERTY_ENUMERABLE, /**< property's 'Enumerable' attribute is true */
+  ECMA_PROPERTY_NOT_ENUMERABLE /**< property's 'Enumerable' attribute is false */
+} ecma_PropertyEnumerableValue_t;
+
+/**
+ * Property's 'Configurable' attribute's values description.
+ */
+typedef enum
+{
+  ECMA_PROPERTY_CONFIGURABLE, /**< property's 'Configurable' attribute is true */
+  ECMA_PROPERTY_NOT_CONFIGURABLE /**< property's 'Configurable' attribute is false */
+} ecma_PropertyConfigurableValue_t;
+
+/**
  * Description of ecma-property.
  */
 typedef struct ecma_Property_t {
@@ -171,13 +198,13 @@ typedef struct ecma_Property_t {
             /** Compressed pointer to property's name (pointer to String) */
             unsigned int m_pName : ECMA_POINTER_FIELD_WIDTH;
 
-            /** Attribute 'Writable' */
+            /** Attribute 'Writable' (ecma_PropertyWritableValue_t) */
             unsigned int m_Writable : 1;
 
-            /** Attribute 'Enumerable' */
+            /** Attribute 'Enumerable' (ecma_PropertyEnumerableValue_t) */
             unsigned int m_Enumerable : 1;
 
-            /** Attribute 'Configurable' */
+            /** Attribute 'Configurable' (ecma_PropertyConfigurableValue_t) */
             unsigned int m_Configurable : 1;
 
             /** Value */
@@ -189,10 +216,10 @@ typedef struct ecma_Property_t {
             /** Compressed pointer to property's name (pointer to String) */
             unsigned int m_pName : ECMA_POINTER_FIELD_WIDTH;
 
-            /** Attribute 'Enumerable' */
+            /** Attribute 'Enumerable' (ecma_PropertyEnumerableValue_t) */
             unsigned int m_Enumerable : 1;
 
-            /** Attribute 'Configurable' */
+            /** Attribute 'Configurable' (ecma_PropertyConfigurableValue_t) */
             unsigned int m_Configurable : 1;
 
             /** Compressed pointer to property's getter */

@@ -49,6 +49,9 @@ extern bool ecma_IsValueTrue( ecma_Value_t value);
 
 extern ecma_Value_t ecma_MakeSimpleValue( ecma_SimpleValue_t value);
 extern ecma_Value_t ecma_MakeObjectValue( ecma_Object_t* object_p);
+extern ecma_Value_t ecma_CopyValue( const ecma_Value_t value);
+extern void ecma_FreeValue( const ecma_Value_t value);
+
 extern ecma_CompletionValue_t ecma_MakeCompletionValue( ecma_CompletionType_t type, ecma_Value_t value, uint8_t target);
 extern ecma_CompletionValue_t ecma_MakeThrowValue( ecma_Object_t *exception_p);
 

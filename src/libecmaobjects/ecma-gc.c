@@ -98,47 +98,6 @@ ecma_GCInit( void)
 } /* ecma_GCInit */
 
 /**
- * Garbage collect described value
- */
-static void
-ecma_GCValue( ecma_Value_t valueDescription) /**< value description */
-{
-    switch ( (ecma_Type_t) valueDescription.m_ValueType )
-    {
-        case ECMA_TYPE_SIMPLE:
-          {
-            /* doesn't hold additional memory */
-            break;
-          }
-
-        case ECMA_TYPE_NUMBER:
-        {
-            ecma_Number_t *pNumber = ecma_GetPointer( valueDescription.m_Value);
-            ecma_FreeNumber( pNumber);
-            break;
-        }
-
-        case ECMA_TYPE_STRING:
-        {
-            ecma_ArrayFirstChunk_t *pString = ecma_GetPointer( valueDescription.m_Value);
-            ecma_FreeArray( pString);
-            break;
-        }
-
-        case ECMA_TYPE_OBJECT:
-        {
-            ecma_DerefObject( ecma_GetPointer( valueDescription.m_Value));
-            break;
-        }
-
-        case ECMA_TYPE__COUNT:
-        {
-            JERRY_UNREACHABLE();
-        }
-    }
-} /* ecma_GCValue */
-
-/**
  * Garbage collect a named data property
  */
 static void
@@ -147,7 +106,7 @@ ecma_GCNamedDataProperty( ecma_Property_t *pProperty) /**< the property */
     JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDDATA );
 
     ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedDataProperty.m_pName));
-    ecma_GCValue( pProperty->u.m_NamedDataProperty.m_Value);
+    ecma_FreeValue( pProperty->u.m_NamedDataProperty.m_Value);
 } /* ecma_GCNamedDataProperty */
 
 /**

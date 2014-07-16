@@ -20,6 +20,8 @@
  * @{
  */
 
+#include "ecma-alloc.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "globals.h"
@@ -102,6 +104,115 @@ ecma_MakeObjectValue( ecma_Object_t* object_p) /**< object to reference in value
 
   return object_value;
 } /* ecma_MakeObjectValue */
+
+/**
+ * Copy ecma-value.
+ *
+ * Note:
+ *  Operation algorithm.
+ *   switch (valuetype)
+ *    case simple:
+ *      simply return the value as it was passed;
+ *    case number/string:
+ *      copy the number/string
+ *      and return new ecma-value
+ *      pointing to copy of the number/string;
+ *    case object;
+ *      increase reference counter of the object
+ *      and return the value as it was passed.
+ *
+ * @return See note.
+ */
+ecma_Value_t
+ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
+{
+  ecma_Value_t value_copy;
+
+  switch ( (ecma_Type_t)value.m_ValueType )
+  {
+    case ECMA_TYPE_SIMPLE:
+      {
+        value_copy = value;
+      }
+    case ECMA_TYPE_NUMBER:
+      {
+        ecma_Number_t *num_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( num_p != NULL );
+
+        ecma_Number_t *number_copy_p = ecma_AllocNumber();
+        *number_copy_p = *num_p;
+
+        value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_NUMBER };
+        ecma_SetPointer( value_copy.m_Value, number_copy_p);
+      }
+    case ECMA_TYPE_STRING:
+      {
+        ecma_ArrayFirstChunk_t *string_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( string_p != NULL );
+
+        ecma_ArrayFirstChunk_t *string_copy_p = ecma_DuplicateEcmaString( string_p);
+
+        value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_STRING };
+        ecma_SetPointer( value_copy.m_Value, string_copy_p);
+      }
+    case ECMA_TYPE_OBJECT:
+      {
+        ecma_Object_t *obj_p = ecma_GetPointer( value.m_Value);
+        JERRY_ASSERT( obj_p != NULL );
+
+        ecma_RefObject( obj_p);
+
+        value_copy = value;
+      }
+    case ECMA_TYPE__COUNT:
+      {
+        JERRY_UNREACHABLE();
+      }
+  }
+
+  return value_copy;
+} /* ecma_CopyValue */
+
+/**
+ * Free memory used for the value
+ */
+void
+ecma_FreeValue( ecma_Value_t value) /**< value description */
+{
+  switch ( (ecma_Type_t) value.m_ValueType )
+  {
+    case ECMA_TYPE_SIMPLE:
+      {
+        /* doesn't hold additional memory */
+        break;
+      }
+
+    case ECMA_TYPE_NUMBER:
+      {
+        ecma_Number_t *pNumber = ecma_GetPointer( value.m_Value);
+        ecma_FreeNumber( pNumber);
+        break;
+      }
+
+    case ECMA_TYPE_STRING:
+      {
+        ecma_ArrayFirstChunk_t *pString = ecma_GetPointer( value.m_Value);
+        ecma_FreeArray( pString);
+        break;
+      }
+
+    case ECMA_TYPE_OBJECT:
+      {
+        ecma_DerefObject( ecma_GetPointer( value.m_Value));
+        break;
+      }
+
+    case ECMA_TYPE__COUNT:
+      {
+        JERRY_UNREACHABLE();
+      }
+  }
+} /* ecma_FreeValue */
 
 /**
  * Completion value constructor

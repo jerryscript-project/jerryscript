@@ -54,7 +54,7 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
     op(varg_2_end)                      \
     op(varg_3)                          \
     op(varg_3_end)                      \
-    op(retval)\
+    op(retval)                          \
     op(ret)
 
 #define OP_ASSIGNMENTS(op)              \

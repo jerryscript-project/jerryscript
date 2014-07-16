@@ -149,7 +149,5 @@ OPCODE
 }
 __packed;
 
-void save_op_data (int, OPCODE);
-
 #endif	/* OPCODES_H */
 

@@ -31,7 +31,6 @@ struct __int_data
   int *root_op_addr; /**< pointer to first opcode saved */
 };
 
-void gen_bytecode (void);
 void init_int (void);
 void run_int (void);
 void run_int_from_pos (struct __int_data *);

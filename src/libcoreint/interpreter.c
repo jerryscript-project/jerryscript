@@ -16,31 +16,6 @@
 #include "interpreter.h"
 
 void
-gen_bytecode ()
-{
-  /*
-   while (true) {
-    LEDToggle (LED3);
-    LEDToggle (LED6);
-    LEDToggle (LED7);
-    LEDToggle (LED4);
-    LEDToggle (LED10);
-    LEDToggle (LED8);
-    LEDToggle (LED9);
-    LEDToggle (LED5);
-
-    wait(500);
-   }
-   */
-  //  save_op_data (0, getop_loop_inf (1));
-  //  save_op_data (1, getop_call_1 (0, 12));
-  //  save_op_data (2, getop_call_1 (0, 13));
-  //  save_op_data (3, getop_call_1 (0, 14));
-  //  save_op_data (4, getop_call_1 (0, 15));
-  //  save_op_data (5, getop_jmp (0));
-}
-
-void
 init_int (void)
 {
 #define INIT_OP_FUNC(name) __opfuncs[ name ] = opfunc_##name ;

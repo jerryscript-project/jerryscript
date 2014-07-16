@@ -18,12 +18,6 @@
 #include "jerry-libc.h"
 #include "opcodes.h"
 
-void
-save_op_data (int pos, OPCODE opdata)
-{
-  __program[pos] = opdata;
-}
-
 void opfunc_loop_init_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_loop_precond_begin_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_loop_precond_end_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }

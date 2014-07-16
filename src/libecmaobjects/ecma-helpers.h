@@ -62,11 +62,20 @@ extern ecma_Object_t* ecma_CreateLexicalEnvironment( ecma_Object_t *pOuterLexica
 extern ecma_Property_t* ecma_CreateInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
 extern ecma_Property_t* ecma_FindInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
 extern ecma_Property_t* ecma_GetInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
-extern ecma_Property_t* ecma_SetInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
 
-extern ecma_Property_t *ecma_FindNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *string_p);
+extern ecma_Property_t *ecma_CreateNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p, ecma_PropertyWritableValue_t writable, ecma_PropertyEnumerableValue_t enumerable, ecma_PropertyConfigurableValue_t configurable);
+extern ecma_Property_t *ecma_FindNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
+extern ecma_Property_t *ecma_GetNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
+extern ecma_Property_t *ecma_GetNamedDataProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
 
-extern ecma_ArrayFirstChunk_t* ecma_NewEcmaString( const ecma_Char_t *pString, ecma_Length_t length);
+extern void ecma_FreeInternalProperty(ecma_Property_t *prop_p);
+extern void ecma_FreeNamedDataProperty(ecma_Property_t *prop_p);
+extern void ecma_FreeNamedAccessorProperty(ecma_Property_t *prop_p);
+extern void ecma_FreeProperty(ecma_Property_t *prop_p);
+
+extern void ecma_DeleteProperty( ecma_Object_t *obj_p, ecma_Property_t *prop_p);
+
+extern ecma_ArrayFirstChunk_t* ecma_NewEcmaString( const ecma_Char_t *pString);
 extern ssize_t ecma_CopyEcmaStringCharsToBuffer( ecma_ArrayFirstChunk_t *pFirstChunk, uint8_t *pBuffer, size_t bufferSize);
 extern ecma_ArrayFirstChunk_t* ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk);
 extern bool ecma_CompareCharBufferToEcmaString( ecma_Char_t *pString, ecma_ArrayFirstChunk_t *pEcmaString);

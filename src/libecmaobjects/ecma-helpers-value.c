@@ -33,10 +33,10 @@
  *         false - otherwise.
  */
 bool
-ecma_IsUndefinedValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueUndefined( ecma_Value_t value) /**< ecma-value */
 {
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_UNDEFINED );
-} /* ecma_IsUndefinedValue */
+} /* ecma_IsValueUndefined */
 
 /**
  * Check if the value is null.
@@ -45,10 +45,10 @@ ecma_IsUndefinedValue( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsNullValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueNull( ecma_Value_t value) /**< ecma-value */
 {
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_NULL );
-} /* ecma_IsNullValue */
+} /* ecma_IsValueNull */
 
 /**
  * Check if the value is boolean.
@@ -57,11 +57,11 @@ ecma_IsNullValue( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsBooleanValue( ecma_Value_t value) /**< ecma-value */
+ecma_IsValueBoolean( ecma_Value_t value) /**< ecma-value */
 {
   return ( ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_FALSE )
            || ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_TRUE ) );
-} /* ecma_IsBooleanValue */
+} /* ecma_IsValueBoolean */
 
 /**
  * Check if the value is true.
@@ -75,7 +75,7 @@ ecma_IsBooleanValue( ecma_Value_t value) /**< ecma-value */
 bool
 ecma_IsValueTrue( ecma_Value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT( ecma_IsBooleanValue( value) );
+  JERRY_ASSERT( ecma_IsValueBoolean( value) );
 
   return ( value.m_ValueType == ECMA_TYPE_SIMPLE && value.m_Value == ECMA_SIMPLE_VALUE_TRUE );
 } /* ecma_IsValueTrue */
@@ -241,6 +241,36 @@ ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
                                   exception,
                                   ECMA_TARGET_ID_RESERVED);                                  
 } /* ecma_MakeThrowValue */
+
+/**
+ * Check if the completion value is normal true.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains ecma-true simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
+           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
+           && value.value.m_Value == ECMA_SIMPLE_VALUE_TRUE );
+} /* ecma_IsCompletionValueNormalTrue */
+
+/**
+ * Check if the completion value is normal false.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains ecma-false simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
+           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
+           && value.value.m_Value == ECMA_SIMPLE_VALUE_FALSE );
+} /* ecma_IsCompletionValueNormalFalse */
 
 /**
  * @}

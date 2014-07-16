@@ -38,8 +38,8 @@ ecma_CompletionValue_t
 ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
 {
   const ecma_Value_t base = ref_p->base;
-  const bool is_unresolvable_reference = ecma_IsUndefinedValue( base);
-  const bool has_primitive_base = ( ecma_IsBooleanValue( base)
+  const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
+  const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
                                     || base.m_ValueType == ECMA_TYPE_STRING );
   const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );
@@ -112,8 +112,8 @@ ecma_OpSetValue(ecma_Reference_t *ref_p, /**< ECMA-reference */
                 ecma_Value_t value) /**< ECMA-value */
 {
   const ecma_Value_t base = ref_p->base;
-  const bool is_unresolvable_reference = ecma_IsUndefinedValue( base);
-  const bool has_primitive_base = ( ecma_IsBooleanValue( base)
+  const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
+  const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
                                     || base.m_ValueType == ECMA_TYPE_STRING );
   const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );

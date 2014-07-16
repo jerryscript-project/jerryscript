@@ -42,9 +42,9 @@ extern void* ecma_DecompressPointer(uintptr_t compressedPointer);
     (field) = ecma_CompressPointer( nonCompressedPointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1)
 
 /* ecma-helpers-value.c */
-extern bool ecma_IsUndefinedValue( ecma_Value_t value);
-extern bool ecma_IsNullValue( ecma_Value_t value);
-extern bool ecma_IsBooleanValue( ecma_Value_t value);
+extern bool ecma_IsValueUndefined( ecma_Value_t value);
+extern bool ecma_IsValueNull( ecma_Value_t value);
+extern bool ecma_IsValueBoolean( ecma_Value_t value);
 extern bool ecma_IsValueTrue( ecma_Value_t value);
 
 extern ecma_Value_t ecma_MakeSimpleValue( ecma_SimpleValue_t value);
@@ -54,6 +54,9 @@ extern void ecma_FreeValue( const ecma_Value_t value);
 
 extern ecma_CompletionValue_t ecma_MakeCompletionValue( ecma_CompletionType_t type, ecma_Value_t value, uint8_t target);
 extern ecma_CompletionValue_t ecma_MakeThrowValue( ecma_Object_t *exception_p);
+
+extern bool ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value);
+extern bool ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value);
 
 extern ecma_Object_t* ecma_CreateObject( ecma_Object_t *pPrototypeObject, bool isExtensible);
 extern ecma_Object_t* ecma_CreateLexicalEnvironment( ecma_Object_t *pOuterLexicalEnvironment, ecma_LexicalEnvironmentType_t type);

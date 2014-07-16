@@ -53,13 +53,14 @@ ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment
     ecma_CompletionValue_t completion_value;
     completion_value = ecma_OpHasBinding( lex_env_iter_p, name_p);
 
-    JERRY_ASSERT( ecma_IsCompletionValueNormalBoolean( completion_value) );
-
-    if ( ecma_IsValueTrue( completion_value.value) )
+    if ( ecma_IsCompletionValueNormalTrue( completion_value) )
     {
       return ecma_MakeReference( ecma_MakeObjectValue( lex_env_iter_p),
                                  name_p,
                                  is_strict);
+    } else
+    {
+      JERRY_ASSERT( ecma_IsCompletionValueNormalFalse( completion_value) );
     }
 
     lex_env_iter_p = ecma_GetPointer( lex_env_iter_p->u.m_LexicalEnvironment.m_pOuterReference);

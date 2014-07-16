@@ -18,7 +18,6 @@
  */
 
 #include "ecma-exceptions.h"
-#include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-operations.h"
@@ -29,49 +28,6 @@
  * \addtogroup ecmaoperations ECMA-defined operations
  * @{
  */
-
-/**
- * Resolve syntactic reference to ECMA-reference.
- *
- * Warning: string pointed by name_p
- *          must not be freed or reused
- *          until the reference is freed.
- *
- * @return ECMA-reference (if base value is an object, upon return
- *         it's reference counter is increased by one).
- */
-ecma_Reference_t
-ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment */
-                              ecma_Char_t *name_p, /**< identifier's name */
-                              bool is_strict) /**< strict reference flag */
-{
-  JERRY_ASSERT( lex_env_p != NULL );
-
-  ecma_Object_t *lex_env_iter_p = lex_env_p;
-  
-  while ( lex_env_iter_p != NULL )
-  {
-    ecma_CompletionValue_t completion_value;
-    completion_value = ecma_OpHasBinding( lex_env_iter_p, name_p);
-
-    JERRY_ASSERT( completion_value.type == ECMA_COMPLETION_TYPE_NORMAL );
-
-    if ( ecma_IsValueTrue( completion_value.value) )
-    {
-      ecma_RefObject( lex_env_iter_p);
-
-      return (ecma_Reference_t) { .base = ecma_MakeObjectValue( lex_env_iter_p),
-                                  .referenced_name_p = name_p,
-                                  .is_strict = is_strict };
-    }
-
-    lex_env_iter_p = ecma_GetPointer( lex_env_iter_p->u.m_LexicalEnvironment.m_pOuterReference);
-  }
-
-  return (ecma_Reference_t) { .base = ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED),
-                              .referenced_name_p = NULL,
-                              .is_strict = is_strict };
-} /* ecma_OpGetIdentifierReference */
 
 /**
  * GetValue operation.

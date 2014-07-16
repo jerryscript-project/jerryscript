@@ -123,36 +123,62 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
   int_data->pos = opdata.data.jmp.opcode_idx;
 }
 
-OPCODE
-getop_jmp (T_IDX arg1)
-{
-  OPCODE opdata;
+/** Opcode generators.  */
+GETOP_IMPL_2 (is_less_than, value_left, value_right)
+GETOP_IMPL_2 (is_less_or_equal, value_left, value_right)
+GETOP_IMPL_2 (is_greater_than, value_left, value_right)
+GETOP_IMPL_2 (is_greater_or_equal, value_left, value_right)
+GETOP_IMPL_2 (is_equal_value, value_left, value_right)
+GETOP_IMPL_2 (is_not_equal_value, value_left, value_right)
+GETOP_IMPL_2 (is_equal_value_type, value_left, value_right)
+GETOP_IMPL_2 (is_not_equal_value_type, value_left, value_right)
+GETOP_IMPL_2 (is_true_jmp, value, opcode)
+GETOP_IMPL_2 (is_false_jmp, value, opcode)
+GETOP_IMPL_1 (jmp, opcode_idx)
+GETOP_IMPL_1 (jmp_up, opcode_count)
+GETOP_IMPL_1 (jmp_down, opcode_count)
+GETOP_IMPL_3 (addition, dst, var_left, var_right)
+GETOP_IMPL_3 (substraction, dst, var_left, var_right)
+GETOP_IMPL_3 (division, dst, var_left, var_right)
+GETOP_IMPL_3 (multiplication, dst, var_left, var_right)
+GETOP_IMPL_3 (remainder, dst, var_left, var_right)
+GETOP_IMPL_3 (b_shift_left, dst, var_left, var_right)
+GETOP_IMPL_3 (b_shift_right, dst, var_left, var_right)
+GETOP_IMPL_3 (b_shift_uright, dst, var_left, var_right)
+GETOP_IMPL_3 (b_and, dst, var_left, var_right)
+GETOP_IMPL_3 (b_or, dst, var_left, var_right)
+GETOP_IMPL_3 (b_xor, dst, var_left, var_right)
+GETOP_IMPL_3 (logical_and, dst, var_left, var_right)
+GETOP_IMPL_3 (logical_or, dst, var_left, var_right)
+GETOP_IMPL_2 (assignment, value_left, value_right)
+GETOP_IMPL_2 (assignment_multiplication, value_left, value_right)
+GETOP_IMPL_2 (assignment_devision, value_left, value_right)
+GETOP_IMPL_2 (assignment_remainder, value_left, value_right)
+GETOP_IMPL_2 (assignment_addition, value_left, value_right)
+GETOP_IMPL_2 (assignment_substruction, value_left, value_right)
+GETOP_IMPL_2 (assignment_shift_left, value_left, value_right)
+GETOP_IMPL_2 (assignment_shift_right, value_left, value_right)
+GETOP_IMPL_2 (assignment_shift_uright, value_left, value_right)
+GETOP_IMPL_2 (assignment_b_and, value_left, value_right)
+GETOP_IMPL_2 (assignment_b_xor, value_left, value_right)
+GETOP_IMPL_2 (assignment_b_or, value_left, value_right)
+GETOP_IMPL_2 (call_1, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (call_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_3 (call_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_2 (func_decl_1, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_1 (varg_1, arg1_lit_idx)
+GETOP_IMPL_1 (varg_1_end, arg1_lit_idx)
+GETOP_IMPL_2 (varg_2, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_2 (varg_2_end, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
+GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
+GETOP_IMPL_1 (retval, ret_value)
+GETOP_IMPL_0 (ret)
+GETOP_IMPL_1 (loop_inf, loop_root)
+GETOP_IMPL_3 (loop_init_num, start, stop, step)
+GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
+GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
+GETOP_IMPL_2 (loop_postcond, condition, body_root)
 
-  opdata.op_idx = jmp;
-  opdata.data.jmp.opcode_idx = arg1;
-
-  return opdata;
-}
-
-OPCODE
-getop_call_1 (T_IDX arg1, T_IDX arg2)
-{
-  OPCODE opdata;
-
-  opdata.op_idx = call_1;
-  opdata.data.call_1.name_lit_idx = arg1;
-  opdata.data.call_1.arg1_lit_idx = arg2;
-
-  return opdata;
-}
-
-OPCODE
-getop_loop_inf (T_IDX arg1)
-{
-  OPCODE opdata;
-
-  opdata.op_idx = loop_inf;
-  opdata.data.loop_inf.loop_root = arg1;
-
-  return opdata;
-}

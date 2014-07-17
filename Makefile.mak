@@ -254,8 +254,10 @@ $(TESTS_TARGET):
 	@mkdir -p $(TARGET_DIR)
 	@for unit_test in $(SOURCES_UNITTESTS); \
 	do \
-		$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
-		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(SOURCES_JERRY) $(UNITTESTS_SRC_DIR)/"$$unit_test".c -o $(TARGET_DIR)/"$$unit_test"; \
+		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
+		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(SOURCES_JERRY) $(UNITTESTS_SRC_DIR)/$$unit_test.c -o $(TARGET_DIR)/$$unit_test"; \
+		$$cmd; \
+		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 	done
 	@ echo "=== Running unit tests ==="
 	@ ./tools/jerry_unittest.sh $(TARGET_DIR)

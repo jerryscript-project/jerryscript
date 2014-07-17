@@ -103,17 +103,6 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
     op(is_true_jmp)                     \
     op(is_false_jmp)
 
-#define OP_CONDITIONAL_JUMPS(op)        \
-    OP_UNARY_OPS(op)                    \
-    op(is_less_than)                    \
-    op(is_less_or_equal)                \
-    op(is_greater_than)                 \
-    op(is_greater_or_equal)             \
-    op(is_equal_value)                  \
-    op(is_not_equal_value)              \
-    op(is_equal_value_type)             \
-    op(is_not_equal_value_type)
-
 #define OP_LIST(op)                     \
   OP_LOOPS(op)                          \
   OP_CALLS_AND_ARGS(op)                 \
@@ -125,7 +114,7 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
   OP_RELATIONAL(op)                     \
   OP_ARITHMETIC(op)                     \
   OP_UNCONDITIONAL_JUMPS(op)            \
-  OP_CONDITIONAL_JUMPS(op)
+  OP_UNARY_OPS(op)
 
 #include "opcode-structures.h"
 

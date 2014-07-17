@@ -74,52 +74,6 @@
           return opdata; \
         }
 
-// All conditional jumps should be followed by a JMP instruction, which holds
-// the target of conditional JMP. If condition is TRUE, than JMP to the target.
-// Otherwise they fall through to the instruction after the JMP.
-// if (true) { JMP } else { INSTR_AFTER_JMP }
-// NOTE: We cannot swap L < R to R > L, because of floating-point semantics.
-
-/** L < R   */
-OP_CODE_DECL (is_less_than, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L <= R  */
-OP_CODE_DECL (is_less_or_equal, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L > R   */
-OP_CODE_DECL (is_greater_than, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L >= R  */
-OP_CODE_DECL (is_greater_or_equal, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L == R  */
-OP_CODE_DECL (is_equal_value, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L != R  */
-OP_CODE_DECL (is_not_equal_value, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L === R */
-OP_CODE_DECL (is_equal_value_type, T_IDX_IDX,
-              value_left,
-              value_right)
-
-/** L !== R */
-OP_CODE_DECL (is_not_equal_value_type, T_IDX_IDX,
-              value_left,
-              value_right)
-
 /** Instruction tests if BOOLEAN value is TRUE and JMP to DST */
 OP_CODE_DECL (is_true_jmp, T_IDX_IDX,
               value,

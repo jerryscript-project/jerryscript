@@ -69,14 +69,6 @@ void opfunc_jmp_up (OPCODE opdata __unused, struct __int_data *int_data __unused
 void opfunc_jmp_down (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_is_true_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_is_false_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_less_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_less_or_equal (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_greater_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_greater_or_equal (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_not_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_is_not_equal_value_type (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 
 void
 opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
@@ -116,14 +108,6 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 }
 
 /** Opcode generators.  */
-GETOP_IMPL_2 (is_less_than, value_left, value_right)
-GETOP_IMPL_2 (is_less_or_equal, value_left, value_right)
-GETOP_IMPL_2 (is_greater_than, value_left, value_right)
-GETOP_IMPL_2 (is_greater_or_equal, value_left, value_right)
-GETOP_IMPL_2 (is_equal_value, value_left, value_right)
-GETOP_IMPL_2 (is_not_equal_value, value_left, value_right)
-GETOP_IMPL_2 (is_equal_value_type, value_left, value_right)
-GETOP_IMPL_2 (is_not_equal_value_type, value_left, value_right)
 GETOP_IMPL_2 (is_true_jmp, value, opcode)
 GETOP_IMPL_2 (is_false_jmp, value, opcode)
 GETOP_IMPL_1 (jmp, opcode_idx)

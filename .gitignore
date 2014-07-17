@@ -22,3 +22,7 @@ nbproject
 *~
 js.files
 core
+
+# ctags and ID database
+tags
+ID

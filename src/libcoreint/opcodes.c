@@ -17,7 +17,75 @@
 #include "ecma-operations.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
+#include "mem-heap.h"
 #include "opcodes.h"
+
+/**
+ * String literal copy descriptor.
+ */
+typedef struct
+{
+  ecma_Char_t *str_p; /**< pointer to copied string literal */
+  ecma_Char_t literal_copy[32]; /**< buffer with string literal,
+                                     if it is stored locally
+                                     (i.e. not in the heap) */
+} string_literal_copy;
+
+/**
+ * Initialize string literal copy.
+ */
+static void __unused
+init_string_literal_copy(T_IDX idx, /**< literal identifier */
+                         string_literal_copy *str_lit_descr_p) /**< pointer to string literal copy descriptor */
+{
+  JERRY_ASSERT( str_lit_descr_p != NULL );
+
+  ssize_t sz = try_get_string_by_idx( idx,
+                                      str_lit_descr_p->literal_copy,
+                                      sizeof(str_lit_descr_p->literal_copy));
+  if ( sz > 0 )
+    {
+      str_lit_descr_p->str_p = str_lit_descr_p->literal_copy;
+    }
+  else
+    {
+      JERRY_ASSERT( sz < 0 );
+
+      ssize_t req_sz = -sz;
+
+      str_lit_descr_p->str_p = mem_HeapAllocBlock( (size_t)req_sz,
+                                                  MEM_HEAP_ALLOC_SHORT_TERM);
+
+      sz = try_get_string_by_idx( idx,
+                                  str_lit_descr_p->str_p,
+                                  req_sz);
+
+      JERRY_ASSERT( sz > 0 );
+    }
+} /* init_string_literal */
+
+/**
+ * Free string literal copy.
+ */
+static void __unused
+free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string literal copy descriptor */
+{
+  JERRY_ASSERT( str_lit_descr_p != NULL );
+  JERRY_ASSERT( str_lit_descr_p->str_p != NULL );
+
+  if ( str_lit_descr_p->str_p == str_lit_descr_p->literal_copy )
+    {
+      /* copy is inside descriptor */
+    }
+  else
+    {
+      mem_HeapFreeBlock( str_lit_descr_p->str_p);
+    }
+
+  str_lit_descr_p->str_p = NULL;
+
+  return;
+} /* free_string_literal */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
     op(is_true_jmp)                     \

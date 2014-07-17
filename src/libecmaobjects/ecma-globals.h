@@ -160,8 +160,8 @@ typedef enum {
  */
 typedef enum
 {
-  ECMA_PROPERTY_WRITABLE, /**< property's 'Writable' attribute is true */
-  ECMA_PROPERTY_NOT_WRITABLE /**< property's 'Writable' attribute is false */
+  ECMA_PROPERTY_NOT_WRITABLE, /**< property's 'Writable' attribute is false */
+  ECMA_PROPERTY_WRITABLE /**< property's 'Writable' attribute is true */
 } ecma_PropertyWritableValue_t;
 
 /**
@@ -169,8 +169,8 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_ENUMERABLE, /**< property's 'Enumerable' attribute is true */
-  ECMA_PROPERTY_NOT_ENUMERABLE /**< property's 'Enumerable' attribute is false */
+  ECMA_PROPERTY_NOT_ENUMERABLE, /**< property's 'Enumerable' attribute is false */
+  ECMA_PROPERTY_ENUMERABLE /**< property's 'Enumerable' attribute is true */
 } ecma_PropertyEnumerableValue_t;
 
 /**
@@ -178,8 +178,8 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_CONFIGURABLE, /**< property's 'Configurable' attribute is true */
-  ECMA_PROPERTY_NOT_CONFIGURABLE /**< property's 'Configurable' attribute is false */
+  ECMA_PROPERTY_NOT_CONFIGURABLE, /**< property's 'Configurable' attribute is false */
+  ECMA_PROPERTY_CONFIGURABLE /**< property's 'Configurable' attribute is true */
 } ecma_PropertyConfigurableValue_t;
 
 /**

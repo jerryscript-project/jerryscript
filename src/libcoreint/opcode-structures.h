@@ -308,6 +308,10 @@ OP_CODE_DECL (varg_3_end, T_IDX_IDX_IDX,
               arg2_lit_idx,
               arg3_lit_idx)
 
+/** exit with status code; */
+OP_CODE_DECL (exitval, T_IDX,
+              status_code)
+
 /** return value; */
 OP_CODE_DECL (retval, T_IDX,
               ret_value)

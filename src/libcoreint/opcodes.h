@@ -55,6 +55,7 @@ typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
     op(varg_2_end)                      \
     op(varg_3)                          \
     op(varg_3_end)                      \
+    op(exitval)                         \
     op(retval)                          \
     op(ret)
 

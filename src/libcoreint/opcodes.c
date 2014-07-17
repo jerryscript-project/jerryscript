@@ -123,6 +123,30 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
                                    ECMA_TARGET_ID_RESERVED);
 }
 
+/**
+ * Exit from script with specified status code:
+ *   0 - for successful completion
+ *   1 - to indicate failure.
+ *
+ * Note: this is not ECMA specification-defined, but internal
+ *       implementation-defined opcode for end of script
+ *       and assertions inside of unit tests.
+ */
+ecma_CompletionValue_t
+opfunc_exitval(OPCODE opdata, /**< operation data */
+               struct __int_data *int_data __unused) /**< interpreter context */
+{
+  JERRY_ASSERT( opdata.data.exitval.status_code == 0
+                || opdata.data.exitval.status_code == 1 );
+
+  ecma_Value_t exit_status = ecma_MakeSimpleValue( opdata.data.exitval.status_code == 0 ? ECMA_SIMPLE_VALUE_TRUE
+                                                                                        : ECMA_SIMPLE_VALUE_FALSE);
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_EXIT,
+                                   exit_status,
+                                   ECMA_TARGET_ID_RESERVED);
+} /* opfunc_exitval */
+
+
 /** Opcode generators.  */
 GETOP_IMPL_2 (is_true_jmp, value, opcode)
 GETOP_IMPL_2 (is_false_jmp, value, opcode)
@@ -163,6 +187,7 @@ GETOP_IMPL_2 (varg_2, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_2 (varg_2_end, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
+GETOP_IMPL_1 (exitval, status_code)
 GETOP_IMPL_1 (retval, ret_value)
 GETOP_IMPL_0 (ret)
 GETOP_IMPL_0 (nop)

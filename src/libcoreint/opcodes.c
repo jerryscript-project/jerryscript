@@ -69,6 +69,7 @@ void opfunc_jmp_up (OPCODE opdata __unused, struct __int_data *int_data __unused
 void opfunc_jmp_down (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_is_true_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_is_false_jmp (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_var_decl (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 
 void
 opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
@@ -155,4 +156,5 @@ GETOP_IMPL_3 (loop_init_num, start, stop, step)
 GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
 GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
 GETOP_IMPL_2 (loop_postcond, condition, body_root)
+GETOP_IMPL_1 (var_decl, variable)
 

@@ -114,7 +114,8 @@ typedef void (*opfunc)(OPCODE, struct __int_data *);
   OP_RELATIONAL(op)                     \
   OP_ARITHMETIC(op)                     \
   OP_UNCONDITIONAL_JUMPS(op)            \
-  OP_UNARY_OPS(op)
+  OP_UNARY_OPS(op)                      \
+  op(var_decl)
 
 #include "opcode-structures.h"
 

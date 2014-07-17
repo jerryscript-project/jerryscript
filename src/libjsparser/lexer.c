@@ -312,7 +312,7 @@ parse_name (void)
     {
       c = LA (0);
       if (c == '\0')
-        c = c;
+        break;
       if (!__isalpha (c) && !__isdigit (c) && c != '$' && c != '_')
         break;
       if (every_char_islower && (!__islower (c)))

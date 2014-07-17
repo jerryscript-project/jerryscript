@@ -226,26 +226,28 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@rm -rf $(OBJ_DIR)
-	@mkdir $(OBJ_DIR)
+	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
-		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(OBJ_DIR)/$$(basename $$jerry_src).$$source_index.o"; \
+		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src \
+                     -o $(TARGET_DIR)/obj/$$(basename $$jerry_src).$$source_index.o"; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
 	done; \
 	for thirdparty_src in $(SOURCES_THIRDPARTY); do \
-		cmd="$(CC) -c $(CFLAGS_COMMON) $(CFLAGS_THIRDPARTY) $(INCLUDES_THIRDPARTY) $$thirdparty_src -o $(OBJ_DIR)/$$(basename $$thirdparty_src).$$source_index.o"; \
+		cmd="$(CC) -c $(CFLAGS_COMMON) $(CFLAGS_THIRDPARTY) $(INCLUDES_THIRDPARTY) $$thirdparty_src \
+                     -o $(TARGET_DIR)/obj/$$(basename $$thirdparty_src).$$source_index.o"; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
 	done; \
-	cmd="$(CC) $(CFLAGS_COMMON) $(OBJ_DIR)/* $(LDFLAGS) -o $(TARGET_DIR)/$(ENGINE_NAME)"; \
+	cmd="$(CC) $(CFLAGS_COMMON) $(TARGET_DIR)/obj/* $(LDFLAGS) -o $(TARGET_DIR)/$(ENGINE_NAME)"; \
 	$$cmd; \
 	if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi;
 	@if [ "$(OPTION_STRIP)" = "enable" ]; then $(STRIP) $(TARGET_DIR)/$(ENGINE_NAME) || exit $$?; fi;
 	@if [ "$(OPTION_MCU)" = "enable" ]; then $(OBJCOPY) -Obinary $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/$(ENGINE_NAME).bin || exit $$?; fi;
+	@rm -rf $(TARGET_DIR)/obj
 
 $(TESTS_TARGET):
 	@echo $@ $(TARGET_DIR)
@@ -260,16 +262,16 @@ $(TESTS_TARGET):
 	@ echo Done
 	@ echo
 
-# FIXME: Change cppcheck's --error-exitcode to 1 after fixing cppcheck's warnings and errors.
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
+	@ mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running cppcheck ==="
-	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) --error-exitcode=0 --enable=all --std=c99
+	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --enable=all --std=c99 1>/dev/null
 	@ echo Done
 	@ echo
-	
 	@ echo "=== Running js tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME); \
+		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
 	fi
 	
 	@echo Done

@@ -46,7 +46,6 @@ export TESTS_TARGET = unittests
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
 export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
-export OBJ_DIR = ./obj
 export OUT_DIR = ./out
 export UNITTESTS_SRC_DIR = ./tests/unit
 
@@ -54,15 +53,7 @@ all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
 	@echo $@
-	@make -f Makefile.mak TARGET=$@ $@
+	@$(MAKE) -f Makefile.mak TARGET=$@ $@
 
 clean:
-	rm -f $(OBJ_DIR)/*.o *.bin *.o *~ *.log *.log
 	rm -rf $(OUT_DIR)
-	rm -f $(TARGET)
-	rm -f $(TARGET).elf
-	rm -f $(TARGET).bin
-	rm -f $(TARGET).map
-	rm -f $(TARGET).hex
-	rm -f $(TARGET).lst
-	rm -f js.files

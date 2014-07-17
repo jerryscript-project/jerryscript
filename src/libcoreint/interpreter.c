@@ -44,3 +44,33 @@ run_int_from_pos (struct __int_data *int_data)
   OPCODE *curr = &__program[int_data->pos];
   __opfuncs[curr->op_idx](*curr, int_data);
 }
+
+/**
+ * Copy zero-terminated string literal value to specified buffer.
+ *
+ * @return upon success - number of bytes actually copied,
+ *         otherwise (buffer size is not enough) - negated minimum required buffer size.
+ */
+ssize_t
+try_get_string_by_idx(T_IDX idx, /**< literal id */
+                      ecma_Char_t *buffer_p, /**< buffer */
+                      ssize_t buffer_size) /**< buffer size */
+{
+  TODO( Actual string literal retrievement );
+
+  ssize_t req_length = 2; // TODO
+
+  JERRY_ASSERT( idx < 'z' - 'a' + 1 );
+
+  if ( buffer_size < req_length )
+  {
+    return -req_length;
+  }
+
+  // TODO
+
+  buffer_p[0] = (ecma_Char_t) ('a' + idx);
+  buffer_p[1] = 0;
+
+  return req_length;
+} /* try_get_string_by_idx */

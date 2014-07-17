@@ -325,7 +325,7 @@ typedef struct ecma_Object_t {
 /**
  * Description of an ecma-character
  */
-typedef uint16_t ecma_Char_t;
+typedef uint8_t ecma_Char_t;
 
 /**
  * Description of an ecma-number

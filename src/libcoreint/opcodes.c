@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-helpers.h"
 #include "ecma-operations.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -66,13 +67,13 @@
     op(var_decl)
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
-  void opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
+  ecma_CompletionValue_t opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
     JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( opdata, int_data); \
   }
 OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP)
 #undef DEFINE_UNIMPLEMENTED_OP
 
-void
+ecma_CompletionValue_t
 opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
 {
 #ifdef __HOST
@@ -82,9 +83,13 @@ opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
 #endif
 
   int_data->pos = opdata.data.loop_inf.loop_root;
+
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                   ECMA_TARGET_ID_RESERVED);
 }
 
-void
+ecma_CompletionValue_t
 opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 {
 #ifdef __HOST
@@ -95,9 +100,14 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 #endif
 
   int_data->pos++;
+
+  // FIXME
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                   ECMA_TARGET_ID_RESERVED);
 }
 
-void
+ecma_CompletionValue_t
 opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 {
 #ifdef __HOST
@@ -107,6 +117,10 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 #endif
 
   int_data->pos = opdata.data.jmp.opcode_idx;
+
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                   ECMA_TARGET_ID_RESERVED);
 }
 
 /** Opcode generators.  */

@@ -16,6 +16,7 @@
 #ifndef OPCODES_H
 #define	OPCODES_H
 
+#include "ecma-globals.h"
 #include "globals.h"
 
 #define OPCODE struct __opcode
@@ -23,7 +24,7 @@ struct __int_data;
 
 #define OP_STRUCT_FIELD(name) struct __op_##name name;
 #define OP_ENUM_FIELD(name) __op__idx_##name ,
-#define OP_FUNC_DECL(name) void opfunc_##name  (OPCODE, struct __int_data *);
+#define OP_FUNC_DECL(name) ecma_CompletionValue_t opfunc_##name  (OPCODE, struct __int_data *);
 
 /** A single bytecode instruction is 32bit wide and has an 8bit opcode field
  and several operand of 8 of 16 bit.*/
@@ -32,7 +33,7 @@ struct __int_data;
 #define T_IDX uint8_t /** index values */
 
 OPCODE;
-typedef void (*opfunc)(OPCODE, struct __int_data *);
+typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
 
 #define OP_LOOPS(op)                    \
     op(loop_inf)                        \

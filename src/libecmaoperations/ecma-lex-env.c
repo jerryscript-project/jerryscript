@@ -49,6 +49,8 @@ ecma_OpHasBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
 
       has_binding = ( property_p != NULL ) ? ECMA_SIMPLE_VALUE_TRUE
                                            : ECMA_SIMPLE_VALUE_FALSE;
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -87,6 +89,8 @@ ecma_OpCreateMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment *
                                 is_deletable ? ECMA_PROPERTY_CONFIGURABLE
                                              : ECMA_PROPERTY_NOT_CONFIGURABLE); 
 
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -128,6 +132,8 @@ ecma_OpSetMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
       {
         return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
       }
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -183,6 +189,8 @@ ecma_OpGetBindingValue(ecma_Object_t *lex_env_p, /**< lexical environment */
                                            ECMA_TARGET_ID_RESERVED);
         }
       }
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {

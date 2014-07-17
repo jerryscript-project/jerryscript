@@ -27,8 +27,8 @@ opfunc __opfuncs[LAST_OP];
 struct __int_data
 {
   int pos; /**< current opcode to execute */
-  ecma_Object_t *pThisBinding; /**< this binding for current context */
-  ecma_Object_t *pLexEnv; /**< current lexical environment */
+  ecma_Object_t *this_binding_p; /**< this binding for current context */
+  ecma_Object_t *lex_env_p; /**< current lexical environment */
   int *root_op_addr; /**< pointer to first opcode saved */
 };
 

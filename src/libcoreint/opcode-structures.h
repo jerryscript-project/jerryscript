@@ -383,7 +383,7 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
 
 // Variable declaration
 OP_CODE_DECL (var_decl, T_IDX,
-              variable)
+              variable_name)
         
 // TODO New constructor
 

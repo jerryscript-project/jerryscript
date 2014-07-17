@@ -131,8 +131,7 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
     op(remainder)                       \
     op(jmp_up)                          \
     op(jmp_down)                        \
-    op(nop)                             \
-    op(var_decl)
+    op(nop)
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
   ecma_CompletionValue_t opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
@@ -190,6 +189,43 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
                                    ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
                                    ECMA_TARGET_ID_RESERVED);
 }
+
+/**
+ * Variable declaration.
+ *
+ * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
+ */
+ecma_CompletionValue_t
+opfunc_var_decl(OPCODE opdata, /**< operation data */
+                struct __int_data *int_data __unused) /**< interpreter context */
+{
+  string_literal_copy variable_name;
+  init_string_literal_copy( opdata.data.var_decl.variable_name, &variable_name);
+
+  if ( ecma_IsCompletionValueNormalFalse( ecma_OpHasBinding( int_data->lex_env_p,
+                                                             variable_name.str_p)) )
+  {
+    ecma_OpCreateMutableBinding( int_data->lex_env_p,
+                                 variable_name.str_p,
+                                 false); // FIXME: Pass configurableBindings
+
+    /* Skipping SetMutableBinding as we have already checked that there were not
+     * any binding with specified name in current lexical environment 
+     * and CreateMutableBinding sets the created binding's value to undefined */
+    JERRY_ASSERT( ecma_is_completion_value_normal_simple_value( ecma_OpGetBindingValue( int_data->lex_env_p,
+                                                                                        variable_name.str_p,
+                                                                                        true),
+                                                                ECMA_SIMPLE_VALUE_UNDEFINED) );
+  }
+
+  free_string_literal_copy( &variable_name);
+
+  int_data->pos++;
+
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                   ECMA_TARGET_ID_RESERVED);
+} /* opfunc_var_decl */
 
 /**
  * Exit from script with specified status code:
@@ -264,5 +300,5 @@ GETOP_IMPL_3 (loop_init_num, start, stop, step)
 GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
 GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
 GETOP_IMPL_2 (loop_postcond, condition, body_root)
-GETOP_IMPL_1 (var_decl, variable)
+GETOP_IMPL_1 (var_decl, variable_name)
 

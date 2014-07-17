@@ -16,15 +16,16 @@
 #ifndef JERRY_ECMA_OPERATIONS_H
 #define JERRY_ECMA_OPERATIONS_H
 
+#include "ecma-globals.h"
+#include "ecma-lex-env.h"
+#include "ecma-reference.h"
+
 /** \addtogroup ecma ---TODO---
  * @{
  * 
  * \addtogroup ecmaoperations ECMA-defined operations
  * @{
  */
-
-#include "ecma-globals.h"
-#include "ecma-reference.h"
 
 extern ecma_Reference_t ecma_OpGetIdentifierReference( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
 

@@ -243,6 +243,22 @@ ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
 } /* ecma_MakeThrowValue */
 
 /**
+ * Check if the completion value is specified normal simple value.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains specified simple ecma-value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_normal_simple_value(ecma_CompletionValue_t value, /**< completion value */
+                                             ecma_SimpleValue_t simple_value) /**< simple value to check for equality with */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
+           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
+           && value.value.m_Value == simple_value );
+} /* ecma_is_completion_value_normal_simple_value */
+
+/**
  * Check if the completion value is normal true.
  *
  * @return true - if the completion type is normal and
@@ -252,9 +268,7 @@ ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
 bool
 ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion value */
 {
-  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
-           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
-           && value.value.m_Value == ECMA_SIMPLE_VALUE_TRUE );
+  return ecma_is_completion_value_normal_simple_value( value, ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_IsCompletionValueNormalTrue */
 
 /**
@@ -267,9 +281,7 @@ ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion 
 bool
 ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value) /**< completion value */
 {
-  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
-           && value.value.m_ValueType == ECMA_TYPE_SIMPLE
-           && value.value.m_Value == ECMA_SIMPLE_VALUE_FALSE );
+  return ecma_is_completion_value_normal_simple_value( value, ECMA_SIMPLE_VALUE_FALSE);
 } /* ecma_IsCompletionValueNormalFalse */
 
 /**

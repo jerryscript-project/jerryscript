@@ -82,7 +82,7 @@ extern void ecma_DeleteProperty( ecma_Object_t *obj_p, ecma_Property_t *prop_p);
 extern ecma_ArrayFirstChunk_t* ecma_NewEcmaString( const ecma_Char_t *pString);
 extern ssize_t ecma_CopyEcmaStringCharsToBuffer( ecma_ArrayFirstChunk_t *pFirstChunk, uint8_t *pBuffer, size_t bufferSize);
 extern ecma_ArrayFirstChunk_t* ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk);
-extern bool ecma_CompareCharBufferToEcmaString( ecma_Char_t *pString, ecma_ArrayFirstChunk_t *pEcmaString);
+extern bool ecma_CompareZtStringToEcmaString( const ecma_Char_t *pString, const ecma_ArrayFirstChunk_t *pEcmaString);
 
 extern void ecma_FreeArray( ecma_ArrayFirstChunk_t *pFirstChunk);
 

@@ -347,7 +347,7 @@ typedef struct {
     uint16_t m_pNextChunk;
 
     /** Number of elements in the Array */
-    uint16_t m_UnitNumber;
+    ecma_Length_t m_UnitNumber;
 } ecma_ArrayHeader_t;
 
 /**
@@ -363,7 +363,7 @@ typedef struct {
     ecma_ArrayHeader_t m_Header;
 
     /** Elements */
-    uint8_t m_Elements[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_ArrayHeader_t) ];
+    uint8_t m_Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_ArrayHeader_t) ];
 } ecma_ArrayFirstChunk_t;
 
 /**
@@ -374,7 +374,7 @@ typedef struct {
     uint16_t m_pNextChunk;
 
     /** Characters */
-    uint8_t m_Elements[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
+    uint8_t m_Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
 } ecma_ArrayNonFirstChunk_t;
 
 /**

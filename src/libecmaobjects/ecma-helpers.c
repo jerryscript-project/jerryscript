@@ -266,7 +266,7 @@ ecma_FindNamedProperty(ecma_Object_t *obj_p, /**< object to find property in */
 
         JERRY_ASSERT( property_name_p != NULL );
 
-	if ( ecma_CompareCharBufferToEcmaString( name_p, property_name_p) )
+	if ( ecma_CompareZtStringToEcmaString( name_p, property_name_p) )
         {
           return property_p;
         }
@@ -492,20 +492,22 @@ ecma_NewEcmaString(const ecma_Char_t *pString) /**< zero-terminated string of ec
     pStringFirstChunk->m_Header.m_UnitNumber = length;
     uint8_t *copyPointer = (uint8_t*) pString;
     size_t charsLeft = length;
-    size_t charsToCopy = JERRY_MIN( length, sizeof (pStringFirstChunk->m_Elements) / sizeof (ecma_Char_t));
-    __memcpy(pStringFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+    size_t charsToCopy = JERRY_MIN( length, sizeof (pStringFirstChunk->m_Data) / sizeof (ecma_Char_t));
+    __memcpy(pStringFirstChunk->m_Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
     charsLeft -= charsToCopy;
     copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
     ecma_ArrayNonFirstChunk_t *pStringNonFirstChunk;
+
+    JERRY_STATIC_ASSERT( ECMA_POINTER_FIELD_WIDTH <= sizeof(uint16_t) * JERRY_BITSINBYTE );
     uint16_t *pNextChunkCompressedPointer = &pStringFirstChunk->m_Header.m_pNextChunk;
 
     while ( charsLeft > 0 )
     {
         pStringNonFirstChunk = ecma_AllocArrayNonFirstChunk();
 
-        size_t charsToCopy = JERRY_MIN( charsLeft, sizeof (pStringNonFirstChunk->m_Elements) / sizeof (ecma_Char_t));
-        __memcpy(pStringNonFirstChunk->m_Elements, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+        size_t charsToCopy = JERRY_MIN( charsLeft, sizeof (pStringNonFirstChunk->m_Data) / sizeof (ecma_Char_t));
+        __memcpy(pStringNonFirstChunk->m_Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
         charsLeft -= charsToCopy;
         copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
@@ -525,7 +527,7 @@ ecma_NewEcmaString(const ecma_Char_t *pString) /**< zero-terminated string of ec
  * 
  * @return number of bytes, actually copied to the buffer, if string's content was copied successfully;
  *         negative number, which is calculated as negation of buffer size, that is required
- *         to hold the string's cpntent (in case size of buffer is insuficcient).
+ *         to hold the string's content (in case size of buffer is insuficcient).
  */
 ssize_t
 ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first chunk of ecma-string */
@@ -544,9 +546,9 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
 
     size_t charsLeft = stringLength;
     uint8_t *destPointer = pBuffer + sizeof (ecma_Length_t);
-    size_t copyChunkChars = JERRY_MIN(sizeof (pFirstChunk->m_Elements) / sizeof (ecma_Char_t),
+    size_t copyChunkChars = JERRY_MIN(sizeof (pFirstChunk->m_Data) / sizeof (ecma_Char_t),
                                       charsLeft);
-    __memcpy( destPointer, pFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
+    __memcpy( destPointer, pFirstChunk->m_Data, copyChunkChars * sizeof (ecma_Char_t));
     destPointer += copyChunkChars * sizeof (ecma_Char_t);
     charsLeft -= copyChunkChars;
 
@@ -556,9 +558,9 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
     {
         JERRY_ASSERT( charsLeft < stringLength );
 
-        copyChunkChars = JERRY_MIN(sizeof (pNonFirstChunk->m_Elements) / sizeof (ecma_Char_t),
+        copyChunkChars = JERRY_MIN(sizeof (pNonFirstChunk->m_Data) / sizeof (ecma_Char_t),
                                    charsLeft);
-        __memcpy( destPointer, pNonFirstChunk->m_Elements, copyChunkChars * sizeof (ecma_Char_t));
+        __memcpy( destPointer, pNonFirstChunk->m_Data, copyChunkChars * sizeof (ecma_Char_t));
         destPointer += copyChunkChars * sizeof (ecma_Char_t);
         charsLeft -= copyChunkChars;
 
@@ -583,7 +585,7 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
 
     ecma_ArrayNonFirstChunk_t *pNonFirstChunk, *pNonFirstChunkCopy;
     pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
-    uint16_t *pNextPointer = &pFirstChunk->m_Header.m_pNextChunk;
+    uint16_t *pNextPointer = &pFirstChunkCopy->m_Header.m_pNextChunk;
     
     while ( pNonFirstChunk != NULL )
     {
@@ -602,23 +604,66 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
 } /* ecma_DuplicateEcmaString */
 
 /**
- * Compare null-terminated string to ecma-string
+ * Compare zero-terminated string to ecma-string
  * 
  * @return true - if strings are equal;
  *         false - otherwise.
  */
 bool
-ecma_CompareCharBufferToEcmaString(ecma_Char_t *pString, /**< null-terminated string */
-                                   ecma_ArrayFirstChunk_t *pEcmaString) /* ecma-string */
+ecma_CompareZtStringToEcmaString(const ecma_Char_t *pString, /**< zero-terminated string */
+                                 const ecma_ArrayFirstChunk_t *pEcmaString) /* ecma-string */
 {
-    JERRY_ASSERT( pString != NULL );
-    JERRY_ASSERT( pEcmaString != NULL );
+  JERRY_ASSERT( pString != NULL );
+  JERRY_ASSERT( pEcmaString != NULL );
 
-    /*
-     * TODO:
-     */
-    JERRY_UNIMPLEMENTED();
-} /* ecma_CompareCharBufferToEcmaString */
+  const ecma_Char_t *str_iter_p = pString;
+  ecma_Length_t ecma_str_len = pEcmaString->m_Header.m_UnitNumber;
+  const ecma_Char_t *current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->m_Data,
+        *current_chunk_chars_end = (ecma_Char_t*) (pEcmaString->m_Data
+                                                   + sizeof(pEcmaString->m_Data));
+
+  JERRY_STATIC_ASSERT( ECMA_POINTER_FIELD_WIDTH <= sizeof(uint16_t) * JERRY_BITSINBYTE );
+  const uint16_t *next_chunk_compressed_pointer_p = &pEcmaString->m_Header.m_pNextChunk;
+
+  for ( ecma_Length_t str_index = 0;
+        str_index < ecma_str_len;
+        str_index++, str_iter_p++, current_chunk_chars_cur++ )
+    {
+      JERRY_ASSERT( current_chunk_chars_cur <= current_chunk_chars_end );
+
+      if ( current_chunk_chars_cur == current_chunk_chars_end )
+        {
+          /* switching to next chunk */
+          ecma_ArrayNonFirstChunk_t *next_chunk_p = ecma_GetPointer( *next_chunk_compressed_pointer_p);
+
+          JERRY_ASSERT( next_chunk_p != NULL );
+
+          current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->m_Data;
+          current_chunk_chars_end = (ecma_Char_t*) (next_chunk_p->m_Data + sizeof(next_chunk_p->m_Data));
+
+          next_chunk_compressed_pointer_p = &next_chunk_p->m_pNextChunk;
+        }
+
+      if ( *str_iter_p != *current_chunk_chars_cur )
+        {
+          /* 
+           * Either *str_iter_p is 0 (zero-terminated string is shorter),
+           * or the character is just different.
+           *
+           * In both cases strings are not equal.
+           */
+          return false;
+        }
+    }
+
+  /*
+   * Now, we have reached end of ecma-string.
+   *
+   * If we have also reached end of zero-terminated string, than strings are equal.
+   * Otherwise zero-terminated string is longer.
+   */
+  return ( *str_iter_p == 0 );
+} /* ecma_CompareZtStringToEcmaString */
 
 /**
  * Free all chunks of an array

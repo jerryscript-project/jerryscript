@@ -13,36 +13,100 @@
  * limitations under the License.
  */
 
+#include "ecma-helpers.h"
 #include "interpreter.h"
 
-void
-init_int (void)
-{
-#define INIT_OP_FUNC(name) __opfuncs[ __op__idx_##name ] = opfunc_##name ;
-  JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
-
+#define INIT_OP_FUNC(name) [ __op__idx_##name ] = opfunc_##name,
+static const opfunc __opfuncs[LAST_OP] = {
   OP_LIST (INIT_OP_FUNC)
-}
+};
+#undef INIT_OP_FUNC
 
+JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
+
+const OPCODE *__program = NULL;
+
+/**
+ * Initialize interpreter.
+ */
 void
+init_int( const OPCODE *program_p) /**< pointer to byte-code program */
+{
+  JERRY_ASSERT( __program == NULL );
+
+  __program = program_p;
+} /* init_int */
+
+bool
 run_int (void)
 {
-  init_int ();
+  JERRY_ASSERT( __program != NULL );
 
   struct __int_data int_data;
   int_data.pos = 0;
+  int_data.this_binding_p = NULL;
+  int_data.lex_env_p = ecma_CreateLexicalEnvironment( NULL,
+                                                      ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
-  while (true)
+  ecma_CompletionValue_t completion = run_int_from_pos( &int_data);
+
+  switch ( (ecma_CompletionType_t)completion.type )
   {
-    run_int_from_pos (&int_data);
+    case ECMA_COMPLETION_TYPE_NORMAL:
+      {
+        JERRY_UNREACHABLE();
+      }
+    case ECMA_COMPLETION_TYPE_EXIT:
+      {
+        return ecma_IsValueTrue( completion.value);
+      }
+    case ECMA_COMPLETION_TYPE_BREAK:
+    case ECMA_COMPLETION_TYPE_CONTINUE:
+    case ECMA_COMPLETION_TYPE_RETURN:
+      {
+        TODO( Throw SyntaxError );
+
+        JERRY_UNIMPLEMENTED();
+      }
+    case ECMA_COMPLETION_TYPE_THROW:
+      {
+        TODO( Handle unhandled exception );
+
+        JERRY_UNIMPLEMENTED();
+      }
   }
+
+  JERRY_UNREACHABLE();
 }
 
-void
+ecma_CompletionValue_t
 run_int_from_pos (struct __int_data *int_data)
 {
-  OPCODE *curr = &__program[int_data->pos];
-  __opfuncs[curr->op_idx](*curr, int_data);
+  ecma_CompletionValue_t completion;
+
+  while ( true )
+    {
+      do
+        {
+          const OPCODE *curr = &__program[int_data->pos];
+          completion = __opfuncs[curr->op_idx](*curr, int_data);
+        } while ( completion.type == ECMA_COMPLETION_TYPE_NORMAL );
+
+      if ( completion.type == ECMA_COMPLETION_TYPE_BREAK )
+        {
+          JERRY_UNIMPLEMENTED();
+
+          continue;
+        }
+      else if ( completion.type == ECMA_COMPLETION_TYPE_CONTINUE )
+        {
+          JERRY_UNIMPLEMENTED();
+
+          continue;
+        }
+
+      return completion;
+    }
 }
 
 /**
@@ -68,7 +132,6 @@ try_get_string_by_idx(T_IDX idx, /**< literal id */
   }
 
   // TODO
-
   buffer_p[0] = (ecma_Char_t) ('a' + idx);
   buffer_p[1] = 0;
 

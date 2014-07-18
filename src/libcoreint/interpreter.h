@@ -20,10 +20,6 @@
 #include "globals.h"
 #include "opcodes.h"
 
-OPCODE __program[128];
-
-opfunc __opfuncs[LAST_OP];
-
 struct __int_data
 {
   int pos; /**< current opcode to execute */
@@ -32,9 +28,9 @@ struct __int_data
   int *root_op_addr; /**< pointer to first opcode saved */
 };
 
-void init_int (void);
-void run_int (void);
-void run_int_from_pos (struct __int_data *);
+void init_int (const OPCODE* program_p);
+bool run_int (void);
+ecma_CompletionValue_t run_int_from_pos (struct __int_data *);
 
 ssize_t try_get_string_by_idx( T_IDX idx, ecma_Char_t *buffer_p, ssize_t buffer_size);
 

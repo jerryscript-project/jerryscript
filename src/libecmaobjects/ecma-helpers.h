@@ -54,6 +54,7 @@ extern void ecma_FreeValue( const ecma_Value_t value);
 
 extern ecma_CompletionValue_t ecma_MakeCompletionValue( ecma_CompletionType_t type, ecma_Value_t value, uint8_t target);
 extern ecma_CompletionValue_t ecma_MakeThrowValue( ecma_Object_t *exception_p);
+extern void ecma_free_completion_value( ecma_CompletionValue_t completion_value);
 
 extern bool ecma_is_completion_value_normal_simple_value( ecma_CompletionValue_t value, ecma_SimpleValue_t simple_value);
 extern bool ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value);

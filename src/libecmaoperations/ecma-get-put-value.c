@@ -33,6 +33,9 @@
  * GetValue operation.
  *
  * See also: ECMA-262 v5, 8.7.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
 ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
@@ -106,6 +109,9 @@ ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
  * SetValue operation.
  *
  * See also: ECMA-262 v5, 8.7.1
+
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
 ecma_OpSetValue(ecma_Reference_t *ref_p, /**< ECMA-reference */

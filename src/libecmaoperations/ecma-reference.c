@@ -36,8 +36,8 @@
  *          must not be freed or reused
  *          until the reference is freed.
  *
- * @return ECMA-reference (if base value is an object, upon return
- *         it's reference counter is increased by one).
+ * @return ECMA-reference
+ *         Returned value must be freed through ecma_FreeReference.
  */
 ecma_Reference_t
 ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -78,8 +78,8 @@ ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment
  *          must not be freed or reused
  *          until the reference is freed.
  *
- * @return ECMA-reference (if base_p it not NULL, then upon return
- *         corresponding object's reference counter is increased by one).
+ * @return ECMA-reference
+ *         Returned value must be freed through ecma_FreeReference.
  */
 ecma_Reference_t
 ecma_MakeReference(ecma_Value_t base, /**< base value */
@@ -95,7 +95,7 @@ ecma_MakeReference(ecma_Value_t base, /**< base value */
  * Free specified ECMA-reference.
  *
  * Warning:
- *         after freeing all copy of the reference become invalid.
+ *         freeing invalidates all copies of the reference.
  */
 void
 ecma_FreeReference( const ecma_Reference_t ref) /**< reference */

@@ -37,8 +37,8 @@ extern ecma_CompletionValue_t ecma_OpDeleteBinding( ecma_Object_t *lex_env_p, ec
 extern ecma_CompletionValue_t ecma_OpImplicitThisValue( ecma_Object_t *lex_env_p);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern ecma_CompletionValue_t ecma_OpCreateImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p);
-extern ecma_CompletionValue_t ecma_OpInitializeImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, ecma_Value_t value);
+extern void ecma_OpCreateImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p);
+extern void ecma_OpInitializeImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, ecma_Value_t value);
 
 /**
  * @}

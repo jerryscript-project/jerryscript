@@ -32,6 +32,10 @@
  * HasBinding operation.
  *
  * See also: ECMA-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Return value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_CompletionValue_t
 ecma_OpHasBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -67,6 +71,10 @@ ecma_OpHasBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
  * CreateMutableBinding operation.
  *
  * see also: ecma-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Return value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_CompletionValue_t
 ecma_OpCreateMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -107,6 +115,9 @@ ecma_OpCreateMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment *
  * SetMutableBinding operation.
  *
  * See also: ECMA-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
 ecma_OpSetMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -127,7 +138,8 @@ ecma_OpSetMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
 
       if ( property_p->u.m_NamedDataProperty.m_Writable == ECMA_PROPERTY_WRITABLE )
       {
-        property_p->u.m_NamedDataProperty.m_Value = value;
+        ecma_FreeValue( property_p->u.m_NamedDataProperty.m_Value);
+        property_p->u.m_NamedDataProperty.m_Value = ecma_CopyValue( value);
       } else if ( is_strict )
       {
         return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
@@ -150,6 +162,9 @@ ecma_OpSetMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
  * GetBindingValue operation.
  *
  * See also: ECMA-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
 ecma_OpGetBindingValue(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -173,7 +188,7 @@ ecma_OpGetBindingValue(ecma_Object_t *lex_env_p, /**< lexical environment */
       if ( property_p->u.m_NamedDataProperty.m_Writable == ECMA_PROPERTY_WRITABLE )
       {
         return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                         prop_value,
+                                         ecma_CopyValue( prop_value),
                                          ECMA_TARGET_ID_RESERVED);
       } else if ( prop_value.m_ValueType == ECMA_TYPE_SIMPLE
                   && prop_value.m_Value == ECMA_SIMPLE_VALUE_EMPTY )
@@ -205,6 +220,10 @@ ecma_OpGetBindingValue(ecma_Object_t *lex_env_p, /**< lexical environment */
  * DeleteBinding operation.
  *
  * See also: ECMA-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Return value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_CompletionValue_t
 ecma_OpDeleteBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
@@ -255,6 +274,9 @@ ecma_OpDeleteBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
  * ImplicitThisValue operation.
  *
  * See also: ECMA-262 v5, 10.2.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
 ecma_OpImplicitThisValue( ecma_Object_t *lex_env_p) /**< lexical environment */
@@ -283,7 +305,7 @@ ecma_OpImplicitThisValue( ecma_Object_t *lex_env_p) /**< lexical environment */
  *
  * See also: ECMA-262 v5, 10.2.1
  */
-ecma_CompletionValue_t
+void
 ecma_OpCreateImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                               ecma_Char_t *name_p) /**< argument N */
 {
@@ -323,7 +345,7 @@ ecma_OpCreateImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment
  *
  * See also: ECMA-262 v5, 10.2.1
  */
-ecma_CompletionValue_t
+void
 ecma_OpInitializeImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                                   ecma_Char_t *name_p, /**< argument N */
                                   ecma_Value_t value) /**< argument V */
@@ -343,7 +365,7 @@ ecma_OpInitializeImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environ
                       && prop_p->u.m_NamedDataProperty.m_Value.m_ValueType == ECMA_TYPE_SIMPLE
                       && prop_p->u.m_NamedDataProperty.m_Value.m_Value == ECMA_SIMPLE_VALUE_EMPTY );
 
-        prop_p->u.m_NamedDataProperty.m_Value = value;
+        prop_p->u.m_NamedDataProperty.m_Value = ecma_CopyValue( value);
       }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {

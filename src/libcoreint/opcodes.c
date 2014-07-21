@@ -191,9 +191,13 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 }
 
 /**
- * Variable declaration.
+ * Variable declaration opcode handler.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
+ *
+ * @return completion value
+ *         Returned value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_CompletionValue_t
 opfunc_var_decl(OPCODE opdata, /**< operation data */
@@ -235,6 +239,10 @@ opfunc_var_decl(OPCODE opdata, /**< operation data */
  * Note: this is not ECMA specification-defined, but internal
  *       implementation-defined opcode for end of script
  *       and assertions inside of unit tests.
+ *
+ * @return completion value
+ *         Returned value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_CompletionValue_t
 opfunc_exitval(OPCODE opdata, /**< operation data */

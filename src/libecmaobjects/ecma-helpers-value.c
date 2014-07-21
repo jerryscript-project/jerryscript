@@ -133,6 +133,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
     case ECMA_TYPE_SIMPLE:
       {
         value_copy = value;
+
+        break;
       }
     case ECMA_TYPE_NUMBER:
       {
@@ -144,6 +146,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
 
         value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_NUMBER };
         ecma_SetPointer( value_copy.m_Value, number_copy_p);
+
+        break;
       }
     case ECMA_TYPE_STRING:
       {
@@ -154,6 +158,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
 
         value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_STRING };
         ecma_SetPointer( value_copy.m_Value, string_copy_p);
+
+        break;
       }
     case ECMA_TYPE_OBJECT:
       {
@@ -163,6 +169,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
         ecma_RefObject( obj_p);
 
         value_copy = value;
+
+        break;
       }
     case ECMA_TYPE__COUNT:
       {

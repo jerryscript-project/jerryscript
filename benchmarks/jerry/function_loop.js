@@ -14,6 +14,7 @@
 
 var x = 7;
 var y = 3;
+var count = 1000000;
 
 function cse_opt(x, y)
 {

@@ -137,3 +137,16 @@ try_get_string_by_idx(T_IDX idx, /**< literal id */
 
   return req_length;
 } /* try_get_string_by_idx */
+
+/**
+ * Get number literal value.
+ *
+ * @return value of number literal, corresponding to specified literal id
+ */
+ecma_Number_t
+get_number_by_idx(T_IDX idx) /**< literal id */
+{
+  TODO( Actual number literal retrievement );
+
+  return (float)idx;
+} /* get_number_by_idx */

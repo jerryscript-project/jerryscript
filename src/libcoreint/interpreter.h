@@ -33,6 +33,7 @@ bool run_int (void);
 ecma_CompletionValue_t run_int_from_pos (struct __int_data *);
 
 ssize_t try_get_string_by_idx( T_IDX idx, ecma_Char_t *buffer_p, ssize_t buffer_size);
+ecma_Number_t get_number_by_idx(T_IDX idx);
 
 #endif	/* INTERPRETER_H */
 

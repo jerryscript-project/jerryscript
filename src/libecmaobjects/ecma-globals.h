@@ -332,7 +332,7 @@ typedef uint8_t ecma_Char_t;
 /**
  * Description of an ecma-number
  */
-typedef double ecma_Number_t;
+typedef float ecma_Number_t;
 
 /**
  * Description of arrays'/strings' length

@@ -13,6 +13,12 @@
  * limitations under the License.
  */
 
+#ifndef JERRY_ECMA_CONVERSION_H
+#define JERRY_ECMA_CONVERSION_H
+
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+
 /** \addtogroup ecma ---TODO---
  * @{
  * 
@@ -20,40 +26,13 @@
  * @{
  */
 
-#ifndef JERRY_ECMA_CONVERSION_H
-#define JERRY_ECMA_CONVERSION_H
-
-#include "ecma-globals.h"
-#include "ecma-helpers.h"
-
-extern ecma_Object_t* ecma_ToObject( ecma_Value_t value);
-
-/*
- * Stubs
- */
+extern ecma_CompletionValue_t ecma_op_check_object_coercible( ecma_Value_t value);
+extern ecma_CompletionValue_t ecma_op_to_primitive( ecma_Value_t value);
+extern ecma_CompletionValue_t ecma_op_to_object( ecma_Value_t value);
 
 /**
- * Convert value to ecma-object.
- * 
- * See also:
- *          ECMA-262 5.1, 9.9.
- * 
- * @return pointer to ecma-object descriptor
+ * @}
+ * @}
  */
-ecma_Object_t*
-ecma_ToObject(ecma_Value_t value) /**< ecma-value */
-{
-    if ( value.m_ValueType == ECMA_TYPE_OBJECT )
-    {
-        return ecma_DecompressPointer( value.m_Value);
-    }
-    
-    JERRY_UNIMPLEMENTED();
-}
 
 #endif /* !JERRY_ECMA_CONVERSION_H */
-
-/**
- * @}
- * @}
- */

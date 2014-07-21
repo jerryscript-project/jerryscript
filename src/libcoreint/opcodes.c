@@ -204,7 +204,7 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
  * See also: ECMA-262 v5, 11.13.1
  *
  * @return completion value
- *         Returned value must be freed with ecma_FreeCompletionValue
+ *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_CompletionValue_t
 opfunc_assignment (OPCODE opdata, /**< operation data */

@@ -277,6 +277,18 @@ ecma_free_completion_value( ecma_CompletionValue_t completion_value) /**< comple
 } /* ecma_free_completion_value */
 
 /**
+ * Check if the completion value is normal value.
+ *
+ * @return true - if the completion type is normal,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_normal( ecma_CompletionValue_t value)
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_NORMAL );
+} /* ecma_is_completion_value_normal */
+
+/**
  * Check if the completion value is specified normal simple value.
  *
  * @return true - if the completion type is normal and

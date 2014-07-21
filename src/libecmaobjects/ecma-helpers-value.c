@@ -121,6 +121,9 @@ ecma_MakeObjectValue( ecma_Object_t* object_p) /**< object to reference in value
  *      increase reference counter of the object
  *      and return the value as it was passed.
  *
+ * TODO:
+ *      reference counter in strings
+ *
  * @return See note.
  */
 ecma_Value_t
@@ -133,6 +136,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
     case ECMA_TYPE_SIMPLE:
       {
         value_copy = value;
+
+        break;
       }
     case ECMA_TYPE_NUMBER:
       {
@@ -144,6 +149,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
 
         value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_NUMBER };
         ecma_SetPointer( value_copy.m_Value, number_copy_p);
+
+        break;
       }
     case ECMA_TYPE_STRING:
       {
@@ -154,6 +161,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
 
         value_copy = (ecma_Value_t) { .m_ValueType = ECMA_TYPE_STRING };
         ecma_SetPointer( value_copy.m_Value, string_copy_p);
+
+        break;
       }
     case ECMA_TYPE_OBJECT:
       {
@@ -163,6 +172,8 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
         ecma_RefObject( obj_p);
 
         value_copy = value;
+
+        break;
       }
     case ECMA_TYPE__COUNT:
       {
@@ -174,7 +185,7 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
 } /* ecma_CopyValue */
 
 /**
- * Free memory used for the value
+ * Free the ecma-value
  */
 void
 ecma_FreeValue( ecma_Value_t value) /**< value description */
@@ -216,6 +227,8 @@ ecma_FreeValue( ecma_Value_t value) /**< value description */
 
 /**
  * Completion value constructor
+ *
+ * @return completion value
  */
 ecma_CompletionValue_t
 ecma_MakeCompletionValue(ecma_CompletionType_t type, /**< type */
@@ -227,20 +240,41 @@ ecma_MakeCompletionValue(ecma_CompletionType_t type, /**< type */
 
 /**
  * Throw completion value constructor.
+ *
+ * @return 'throw' completion value
  */
 ecma_CompletionValue_t
 ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
 {
   JERRY_ASSERT( exception_p != NULL && !exception_p->m_IsLexicalEnvironment );
 
-  ecma_Value_t exception;
-  exception.m_ValueType = ECMA_TYPE_OBJECT;
-  ecma_SetPointer( exception.m_Value, exception_p);
+  ecma_Value_t exception = ecma_MakeObjectValue( exception_p);
 
   return ecma_MakeCompletionValue(ECMA_COMPLETION_TYPE_THROW,
                                   exception,
                                   ECMA_TARGET_ID_RESERVED);                                  
 } /* ecma_MakeThrowValue */
+
+/**
+ * Free the completion value.
+ */
+void
+ecma_free_completion_value( ecma_CompletionValue_t completion_value) /**< completion value */
+{
+  switch ( completion_value.type )
+    {
+    case ECMA_COMPLETION_TYPE_NORMAL:
+    case ECMA_COMPLETION_TYPE_THROW:
+    case ECMA_COMPLETION_TYPE_RETURN:
+      ecma_FreeValue( completion_value.value);
+      break;
+    case ECMA_COMPLETION_TYPE_CONTINUE:
+    case ECMA_COMPLETION_TYPE_BREAK:
+    case ECMA_COMPLETION_TYPE_EXIT:
+      JERRY_ASSERT( completion_value.value.m_ValueType == ECMA_TYPE_SIMPLE );
+      break;
+    }
+} /* ecma_free_completion_value */
 
 /**
  * Check if the completion value is specified normal simple value.

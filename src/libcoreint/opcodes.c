@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-operations.h"
 #include "interpreter.h"
@@ -107,7 +108,6 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
     op(varg_3_end)                      \
     op(retval)                          \
     op(ret)                             \
-    op(assignment)                      \
     op(b_shift_left)                    \
     op(b_shift_right)                   \
     op(b_shift_uright)                  \
@@ -189,6 +189,126 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
                                    ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
                                    ECMA_TARGET_ID_RESERVED);
 }
+
+/**
+ * Assignment opcode handler.
+ *
+ * Note:
+ *      This handler implements case of assignment of a literal's or a variable's
+ *      value to a variable. Assignment to an object's property is not implemented
+ *      by this opcode.
+ *
+ *      FIXME: Add cross link with 'property accessor assignment` opcode.
+ *
+ * See also: ECMA-262 v5, 11.13.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_FreeCompletionValue
+ */
+ecma_CompletionValue_t
+opfunc_assignment (OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.assignment.var_left;
+  const opcode_arg_type_operand type_value_right = opdata.data.assignment.type_value_right;
+  const T_IDX src_val_descr = opdata.data.assignment.value_right;
+
+  // FIXME:
+  const bool is_strict = false;
+
+  int_data->pos++;
+
+  ecma_Value_t right_value;
+
+  switch ( type_value_right )
+  {
+    case OPCODE_ARG_TYPE_SIMPLE:
+      {
+        right_value = ecma_MakeSimpleValue( src_val_descr);
+        break;
+      }
+    case OPCODE_ARG_TYPE_STRING:
+      {
+        string_literal_copy str_value;
+        ecma_ArrayFirstChunk_t *ecma_string_p;
+
+        init_string_literal_copy( src_val_descr, &str_value);
+        ecma_string_p = ecma_NewEcmaString( str_value.str_p);
+        free_string_literal_copy( &str_value);
+
+        right_value.m_ValueType = ECMA_TYPE_STRING;
+        ecma_SetPointer( right_value.m_Value, ecma_string_p);
+        break;
+      }
+    case OPCODE_ARG_TYPE_VARIABLE:
+      {
+        string_literal_copy src_variable_name;
+        ecma_Reference_t src_reference;
+
+        init_string_literal_copy( src_val_descr, &src_variable_name);
+
+        src_reference = ecma_OpGetIdentifierReference( int_data->lex_env_p,
+                                                       src_variable_name.str_p,
+                                                       is_strict);
+
+        ecma_CompletionValue_t get_value_completion = ecma_op_get_value( &src_reference);
+
+        JERRY_ASSERT( get_value_completion.type == ECMA_COMPLETION_TYPE_NORMAL
+                      || get_value_completion.type == ECMA_COMPLETION_TYPE_THROW );
+
+        ecma_FreeReference( src_reference);
+
+        free_string_literal_copy( &src_variable_name);
+
+        if ( get_value_completion.type == ECMA_COMPLETION_TYPE_NORMAL )
+        {
+          right_value = get_value_completion.value;
+        } else
+        {
+          return get_value_completion;
+        }
+
+        break;
+      }
+    case OPCODE_ARG_TYPE_NUMBER:
+    case OPCODE_ARG_TYPE_SMALLINT:
+      JERRY_UNIMPLEMENTED();
+  }
+
+  ecma_CompletionValue_t completion_value;
+
+  string_literal_copy dst_variable_name;
+  ecma_Reference_t dst_reference;
+
+  init_string_literal_copy( dst_var_idx, &dst_variable_name);
+
+  dst_reference = ecma_OpGetIdentifierReference( int_data->lex_env_p,
+                                                 dst_variable_name.str_p,
+                                                 is_strict);
+
+  // FIXME: Move magic strings to header file and make them ecma_Char_t[]
+  // FIXME: Replace strcmp with ecma_Char_t[] comparator
+  if ( dst_reference.is_strict
+       && ( __strcmp( (char*)dst_reference.referenced_name_p, "eval") == 0
+            || __strcmp( (char*)dst_reference.referenced_name_p, "arguments") == 0 )
+       && ( dst_reference.base.m_ValueType == ECMA_TYPE_OBJECT )
+       && ( ecma_GetPointer( dst_reference.base.m_Value) != NULL )
+       && ( ( (ecma_Object_t*) ecma_GetPointer( dst_reference.base.m_Value) )->m_IsLexicalEnvironment ) )
+  {
+    completion_value = ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_SYNTAX));
+  } else
+  {
+    completion_value = ecma_op_put_value( &dst_reference, right_value);
+  }
+
+  ecma_FreeValue( right_value);
+
+  ecma_FreeReference( dst_reference);
+
+  free_string_literal_copy( &dst_variable_name);
+
+  return completion_value;
+} /* opfunc_assignment */
 
 /**
  * Variable declaration opcode handler.

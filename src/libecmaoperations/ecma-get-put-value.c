@@ -108,7 +108,7 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
 } /* ecma_op_get_value */
 
 /**
- * SetValue operation.
+ * PutValue operation.
  *
  * See also: ECMA-262 v5, 8.7.1
 

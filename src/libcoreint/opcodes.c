@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-operations.h"
@@ -271,7 +272,25 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
         break;
       }
     case OPCODE_ARG_TYPE_NUMBER:
+      {
+        ecma_Number_t *num_p = ecma_AllocNumber();
+        *num_p = get_number_by_idx( src_val_descr);
+
+        right_value.m_ValueType = ECMA_TYPE_NUMBER;        
+        ecma_SetPointer( right_value.m_Value, num_p);
+
+        break;
+      }
     case OPCODE_ARG_TYPE_SMALLINT:
+      {
+        ecma_Number_t *num_p = ecma_AllocNumber();
+        *num_p = src_val_descr;
+
+        right_value.m_ValueType = ECMA_TYPE_NUMBER;        
+        ecma_SetPointer( right_value.m_Value, num_p);
+
+        break;
+      }
       JERRY_UNIMPLEMENTED();
   }
 

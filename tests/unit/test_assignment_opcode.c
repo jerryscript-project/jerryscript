@@ -30,6 +30,8 @@ main( int __unused argc,
     getop_var_decl( 1),
     getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
     getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
+    getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),
+    getop_assignment( 1, OPCODE_ARG_TYPE_NUMBER, 2),
     getop_exitval( 0)
   };
 

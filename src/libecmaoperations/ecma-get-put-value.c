@@ -38,7 +38,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
-ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
+ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
 {
   const ecma_Value_t base = ref_p->base;
   const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
@@ -103,7 +103,7 @@ ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
 
     return ecma_OpGetBindingValue( lex_env_p, ref_p->referenced_name_p, ref_p->is_strict);
   }
-} /* ecma_OpGetValue */
+} /* ecma_op_get_value */
 
 /**
  * SetValue operation.
@@ -114,8 +114,8 @@ ecma_OpGetValue( ecma_Reference_t *ref_p) /**< ECMA-reference */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
-ecma_OpSetValue(ecma_Reference_t *ref_p, /**< ECMA-reference */
-                ecma_Value_t value) /**< ECMA-value */
+ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
+                  ecma_Value_t value) /**< ECMA-value */
 {
   const ecma_Value_t base = ref_p->base;
   const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
@@ -227,7 +227,7 @@ ecma_OpSetValue(ecma_Reference_t *ref_p, /**< ECMA-reference */
 
     return ecma_OpSetMutableBinding( lex_env_p, ref_p->referenced_name_p, value, ref_p->is_strict);
   }
-} /* ecma_OpSetValue */
+} /* ecma_op_put_value */
 
 /**
  * @}

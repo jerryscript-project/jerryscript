@@ -29,8 +29,8 @@
 
 extern ecma_Reference_t ecma_OpGetIdentifierReference( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
 
-extern ecma_CompletionValue_t ecma_OpGetValue( ecma_Reference_t *ref_p);
-extern ecma_CompletionValue_t ecma_OpSetValue( ecma_Reference_t *ref_p, ecma_Value_t value);
+extern ecma_CompletionValue_t ecma_op_get_value( ecma_Reference_t *ref_p);
+extern ecma_CompletionValue_t ecma_op_put_value( ecma_Reference_t *ref_p, ecma_Value_t value);
 
 /**
  * @}

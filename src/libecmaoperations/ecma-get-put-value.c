@@ -45,7 +45,9 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
   const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
                                     || base.m_ValueType == ECMA_TYPE_STRING );
-  const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );
+  const bool has_object_base = ( base.m_ValueType == ECMA_TYPE_OBJECT
+                                 && !((ecma_Object_t*)ecma_GetPointer(base.m_Value))->m_IsLexicalEnvironment );
+  const bool is_property_reference = has_primitive_base || has_object_base;
                                      
   // GetValue_3
   if ( is_unresolvable_reference )
@@ -73,7 +75,7 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
        if ( property->m_Type == ECMA_PROPERTY_NAMEDDATA )
        {
          return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                          property->u.m_NamedDataProperty.m_Value,
+                                          ecma_CopyValue( property->u.m_NamedDataProperty.m_Value),
                                           ECMA_TARGET_ID_RESERVED);
        } else
        {
@@ -122,7 +124,9 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
   const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
                                     || base.m_ValueType == ECMA_TYPE_STRING );
-  const bool is_property_reference = has_primitive_base || ( base.m_ValueType == ECMA_TYPE_OBJECT );
+  const bool has_object_base = ( base.m_ValueType == ECMA_TYPE_OBJECT
+                                 && !((ecma_Object_t*)ecma_GetPointer(base.m_Value))->m_IsLexicalEnvironment );
+  const bool is_property_reference = has_primitive_base || has_object_base;
 
   if ( is_unresolvable_reference ) // PutValue_3
   {

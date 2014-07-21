@@ -90,6 +90,22 @@ ecma_MakeSimpleValue( ecma_SimpleValue_t value) /**< simple value */
 } /* ecma_MakeSimpleValue */
 
 /**
+ * Number value constructor
+ */
+ecma_Value_t
+ecma_MakeNumberValue( ecma_Number_t* num_p) /**< number to reference in value */
+{
+  JERRY_ASSERT( num_p != NULL );
+
+  ecma_Value_t number_value;
+
+  number_value.m_ValueType = ECMA_TYPE_NUMBER;
+  ecma_SetPointer( number_value.m_Value, num_p);
+
+  return number_value;
+} /* ecma_MakeNumberValue */
+
+/**
  * Object value constructor
  */
 ecma_Value_t
@@ -256,6 +272,32 @@ ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
 } /* ecma_MakeThrowValue */
 
 /**
+ * Empty completion value constructor.
+ *
+ * @return (normal, empty, reserved) completion value.
+ */
+ecma_CompletionValue_t
+ecma_make_empty_completion_value( void)
+{
+  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+                                   ECMA_TARGET_ID_RESERVED);
+} /* ecma_make_empty_completion_value */
+
+/**
+ * Copy ecma-completion value.
+ *
+ * @return (source.type, ecma_CopyValue( source.value), source.target).
+ */
+ecma_CompletionValue_t
+ecma_copy_completion_value( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ecma_MakeCompletionValue( value.type,
+                                   ecma_CopyValue( value.value),
+                                   value.target);
+} /* ecma_copy_completion_value */
+
+/**
  * Free the completion value.
  */
 void
@@ -283,10 +325,35 @@ ecma_free_completion_value( ecma_CompletionValue_t completion_value) /**< comple
  *         false - otherwise.
  */
 bool
-ecma_is_completion_value_normal( ecma_CompletionValue_t value)
+ecma_is_completion_value_normal( ecma_CompletionValue_t value) /**< completion value */
 {
   return ( value.type == ECMA_COMPLETION_TYPE_NORMAL );
 } /* ecma_is_completion_value_normal */
+
+/**
+ * Check if the completion value is throw value.
+ *
+ * @return true - if the completion type is throw,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_throw( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ( value.type == ECMA_COMPLETION_TYPE_THROW );
+} /* ecma_is_completion_value_throw */
+
+/**
+ * Check if the completion value is normal or throw value.
+ *
+ * @return true - if the completion type is normal or throw,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_normal_or_throw( ecma_CompletionValue_t value) /**< completion value */
+{
+  return ecma_is_completion_value_normal( value)
+         || ecma_is_completion_value_throw( value);
+} /* ecma_is_completion_value_normal_or_throw */
 
 /**
  * Check if the completion value is specified normal simple value.

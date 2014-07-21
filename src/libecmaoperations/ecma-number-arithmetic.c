@@ -13,28 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_OPERATIONS_H
-#define JERRY_ECMA_OPERATIONS_H
-
 #include "ecma-globals.h"
-#include "ecma-lex-env.h"
-#include "ecma-reference.h"
+#include "ecma-number-arithmetic.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
- * \addtogroup ecmaoperations ECMA-defined operations
+ */
+
+/**
+ * \addtogroup numberarithmetic ECMA number arithmetic operations
  * @{
  */
 
-extern ecma_Reference_t ecma_OpGetIdentifierReference( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
+/**
+ * ECMA-defined number multiplication.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.5.1
+ *
+ * @return number - result of multiplication.
+ */
+ecma_Number_t
+ecma_op_number_multiply(ecma_Number_t left_num, /**< left operand */
+                        ecma_Number_t right_num) /**< right operand */
+{
+  TODO( Implement according to ECMA );
 
-extern ecma_CompletionValue_t ecma_op_get_value( ecma_Reference_t ref);
-extern ecma_CompletionValue_t ecma_op_put_value( ecma_Reference_t ref, ecma_Value_t value);
+  return left_num * right_num;
+} /* ecma_op_number_multiply */
 
 /**
  * @}
  * @}
  */
-
-#endif /* JERRY_ECMA_OPERATIONS_H */

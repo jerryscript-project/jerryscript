@@ -38,9 +38,9 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
-ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
+ecma_op_get_value( ecma_Reference_t ref) /**< ECMA-reference */
 {
-  const ecma_Value_t base = ref_p->base;
+  const ecma_Value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
   const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
@@ -64,14 +64,14 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
       JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
       
       // GetValue_4.b case 1
-      /* return [[Get]]( base as this, ref_p->referenced_name_p) */
+      /* return [[Get]]( base as this, ref.referenced_name_p) */
       JERRY_UNIMPLEMENTED();
     } else
     { // GetValue_4.b case 2
       /*
        ecma_Object_t *obj_p = ecma_ToObject( base);
        JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
-       ecma_Property_t *property = obj_p->[[GetProperty]]( ref_p->referenced_name_p);
+       ecma_Property_t *property = obj_p->[[GetProperty]]( ref.referenced_name_p);
        if ( property->m_Type == ECMA_PROPERTY_NAMEDDATA )
        {
          return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
@@ -103,7 +103,7 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
 
     JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
 
-    return ecma_OpGetBindingValue( lex_env_p, ref_p->referenced_name_p, ref_p->is_strict);
+    return ecma_OpGetBindingValue( lex_env_p, ref.referenced_name_p, ref.is_strict);
   }
 } /* ecma_op_get_value */
 
@@ -116,10 +116,10 @@ ecma_op_get_value( ecma_Reference_t *ref_p) /**< ECMA-reference */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_CompletionValue_t
-ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
+ecma_op_put_value(ecma_Reference_t ref, /**< ECMA-reference */
                   ecma_Value_t value) /**< ECMA-value */
 {
-  const ecma_Value_t base = ref_p->base;
+  const ecma_Value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_IsValueUndefined( base);
   const bool has_primitive_base = ( ecma_IsValueBoolean( base)
                                     || base.m_ValueType == ECMA_TYPE_NUMBER
@@ -130,7 +130,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
 
   if ( is_unresolvable_reference ) // PutValue_3
   {
-    if ( ref_p->is_strict ) // PutValue_3.a
+    if ( ref.is_strict ) // PutValue_3.a
     {
       return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_REFERENCE));
     } else // PutValue_3.b
@@ -138,7 +138,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
       /*
        ecma_Object_t *global_object_p = ecma_GetGlobalObject();
 
-       return global_object_p->[[Put]]( ref_p->referenced_name_p, value, false);
+       return global_object_p->[[Put]]( ref.referenced_name_p, value, false);
       */
 
       JERRY_UNIMPLEMENTED();      
@@ -149,7 +149,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
     {
       // PutValue_4.b case 1
 
-      /* return [[Put]]( base as this, ref_p->referenced_name_p, value, ref_p->is_strict); */
+      /* return [[Put]]( base as this, ref.referenced_name_p, value, ref.is_strict); */
       JERRY_UNIMPLEMENTED();      
     } else
     {
@@ -161,10 +161,10 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
        JERRY_ASSERT( obj_p != NULL && !obj_p->m_IsLexicalEnvironment );
 
        // PutValue_sub_2
-       if ( !obj_p->[[CanPut]]( ref_p->referenced_name_p) )
+       if ( !obj_p->[[CanPut]]( ref.referenced_name_p) )
        {
          // PutValue_sub_2.a
-         if ( ref_p->is_strict )
+         if ( ref.is_strict )
          {
            return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
          } else
@@ -176,13 +176,13 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
        }
 
        // PutValue_sub_3
-       ecma_Property_t *own_prop = obj_p->[[GetOwnProperty]]( ref_p->referenced_name_p);
+       ecma_Property_t *own_prop = obj_p->[[GetOwnProperty]]( ref.referenced_name_p);
 
        // PutValue_sub_4
        if ( ecma_OpIsDataDescriptor( own_prop) )
        {
          // PutValue_sub_4.a
-         if ( ref_p->is_strict )
+         if ( ref.is_strict )
          {
            return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
          } else
@@ -194,7 +194,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
        }
 
        // PutValue_sub_5
-       ecma_Property_t *prop = obj_p->[[GetProperty]]( ref_p->referenced_name_p);
+       ecma_Property_t *prop = obj_p->[[GetProperty]]( ref.referenced_name_p);
 
        // PutValue_sub_6
        if ( ecma_OpIsAccessorDescriptor( prop) )
@@ -208,7 +208,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
        } else // PutValue_sub_7
        {
          // PutValue_sub_7.a
-         if ( ref_p->is_strict )
+         if ( ref.is_strict )
          {
            return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
          }
@@ -229,7 +229,7 @@ ecma_op_put_value(ecma_Reference_t *ref_p, /**< ECMA-reference */
 
     JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
 
-    return ecma_OpSetMutableBinding( lex_env_p, ref_p->referenced_name_p, value, ref_p->is_strict);
+    return ecma_OpSetMutableBinding( lex_env_p, ref.referenced_name_p, value, ref.is_strict);
   }
 } /* ecma_op_put_value */
 

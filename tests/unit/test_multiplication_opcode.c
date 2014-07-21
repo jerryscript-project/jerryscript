@@ -13,28 +13,31 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_OPERATIONS_H
-#define JERRY_ECMA_OPERATIONS_H
-
-#include "ecma-globals.h"
-#include "ecma-lex-env.h"
-#include "ecma-reference.h"
-
-/** \addtogroup ecma ---TODO---
- * @{
- * 
- * \addtogroup ecmaoperations ECMA-defined operations
- * @{
- */
-
-extern ecma_Reference_t ecma_OpGetIdentifierReference( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
-
-extern ecma_CompletionValue_t ecma_op_get_value( ecma_Reference_t ref);
-extern ecma_CompletionValue_t ecma_op_put_value( ecma_Reference_t ref, ecma_Value_t value);
+#include "globals.h"
+#include "interpreter.h"
+#include "mem-allocator.h"
+#include "opcodes.h"
 
 /**
- * @}
- * @}
+ * Unit test's main function.
  */
+int
+main( int __unused argc,
+      char __unused **argv)
+{
+  const OPCODE test_program[] = {
+    getop_var_decl( 0),
+    getop_var_decl( 1),
+    getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),
+    getop_assignment( 1, OPCODE_ARG_TYPE_NUMBER, 2),
+    getop_multiplication( 0, 0, 1),
+    getop_exitval( 0)
+  };
 
-#endif /* JERRY_ECMA_OPERATIONS_H */
+  mem_Init();
+
+  init_int( test_program);
+
+  return run_int() ? 0
+                   : 1;
+} /* main */

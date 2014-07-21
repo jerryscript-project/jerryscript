@@ -48,15 +48,20 @@ extern bool ecma_IsValueBoolean( ecma_Value_t value);
 extern bool ecma_IsValueTrue( ecma_Value_t value);
 
 extern ecma_Value_t ecma_MakeSimpleValue( ecma_SimpleValue_t value);
+extern ecma_Value_t ecma_MakeNumberValue( ecma_Number_t* num_p);
 extern ecma_Value_t ecma_MakeObjectValue( ecma_Object_t* object_p);
 extern ecma_Value_t ecma_CopyValue( const ecma_Value_t value);
 extern void ecma_FreeValue( const ecma_Value_t value);
 
 extern ecma_CompletionValue_t ecma_MakeCompletionValue( ecma_CompletionType_t type, ecma_Value_t value, uint8_t target);
 extern ecma_CompletionValue_t ecma_MakeThrowValue( ecma_Object_t *exception_p);
+extern ecma_CompletionValue_t ecma_make_empty_completion_value( void);
+extern ecma_CompletionValue_t ecma_copy_completion_value( ecma_CompletionValue_t value);
 extern void ecma_free_completion_value( ecma_CompletionValue_t completion_value);
 
 extern bool ecma_is_completion_value_normal( ecma_CompletionValue_t value);
+extern bool ecma_is_completion_value_throw( ecma_CompletionValue_t value);
+extern bool ecma_is_completion_value_normal_or_throw( ecma_CompletionValue_t value);
 extern bool ecma_is_completion_value_normal_simple_value( ecma_CompletionValue_t value, ecma_SimpleValue_t simple_value);
 extern bool ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value);
 extern bool ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value);

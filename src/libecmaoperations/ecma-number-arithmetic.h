@@ -13,28 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_OPERATIONS_H
-#define JERRY_ECMA_OPERATIONS_H
+#ifndef ECMA_NUMBER_H
+#define ECMA_NUMBER_H
 
 #include "ecma-globals.h"
-#include "ecma-lex-env.h"
-#include "ecma-reference.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
- * \addtogroup ecmaoperations ECMA-defined operations
+ */
+
+/**
+ * \addtogroup numberarithmetic ECMA number arithmetic operations
  * @{
  */
 
-extern ecma_Reference_t ecma_OpGetIdentifierReference( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
-
-extern ecma_CompletionValue_t ecma_op_get_value( ecma_Reference_t ref);
-extern ecma_CompletionValue_t ecma_op_put_value( ecma_Reference_t ref, ecma_Value_t value);
+extern ecma_Number_t ecma_op_number_multiply( ecma_Number_t left_num, ecma_Number_t right_num);
 
 /**
  * @}
  * @}
  */
 
-#endif /* JERRY_ECMA_OPERATIONS_H */
+#endif /* ECMA_NUMBER_H */

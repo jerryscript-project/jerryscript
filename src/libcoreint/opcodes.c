@@ -14,8 +14,10 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
+#include "ecma-number-arithmetic.h"
 #include "ecma-operations.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -89,6 +91,61 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
   return;
 } /* free_string_literal */
 
+/**
+ * Get variable's value.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_CompletionValue_t
+get_variable_value(struct __int_data *int_data, /* interpreter context */
+                   T_IDX var_idx) /* variable identifier */
+{
+  string_literal_copy var_name;
+  ecma_Reference_t ref;
+  ecma_CompletionValue_t ret_value;
+
+  init_string_literal_copy( var_idx, &var_name);
+  ref = ecma_OpGetIdentifierReference( int_data->lex_env_p,
+                                       var_name.str_p,
+                                       int_data->is_strict);
+
+  ret_value = ecma_op_get_value( ref);
+
+  ecma_FreeReference( ref);
+  free_string_literal_copy( &var_name);
+
+  return ret_value;
+} /* get_variable_value */
+
+/**
+ * Set variable's value.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_CompletionValue_t
+set_variable_value(struct __int_data *int_data, /**< interpreter context */
+                   T_IDX var_idx, /**< variable identifier */
+                   ecma_Value_t value) /**< value to set */
+{
+  string_literal_copy var_name;
+  ecma_Reference_t ref;
+  ecma_CompletionValue_t ret_value;
+
+  init_string_literal_copy( var_idx, &var_name);
+  ref = ecma_OpGetIdentifierReference( int_data->lex_env_p,
+                                       var_name.str_p,
+                                       int_data->is_strict);
+
+  ret_value = ecma_op_put_value( ref, value);
+
+  ecma_FreeReference( ref);
+  free_string_literal_copy( &var_name);
+
+  return ret_value;
+} /* set_variable_value */
+
 #define OP_UNIMPLEMENTED_LIST(op) \
     op(is_true_jmp)                     \
     op(is_false_jmp)                    \
@@ -128,7 +185,6 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
     op(addition)                        \
     op(substraction)                    \
     op(division)                        \
-    op(multiplication)                  \
     op(remainder)                       \
     op(jmp_up)                          \
     op(jmp_down)                        \
@@ -240,29 +296,15 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
       }
     case OPCODE_ARG_TYPE_VARIABLE:
       {
-        string_literal_copy src_variable_name;
-        ecma_Reference_t src_reference;
-
-        init_string_literal_copy( src_val_descr, &src_variable_name);
-
-        src_reference = ecma_OpGetIdentifierReference( int_data->lex_env_p,
-                                                       src_variable_name.str_p,
-                                                       int_data->is_strict);
-
-        ecma_CompletionValue_t get_value_completion = ecma_op_get_value( &src_reference);
-
-        JERRY_ASSERT( get_value_completion.type == ECMA_COMPLETION_TYPE_NORMAL
-                      || get_value_completion.type == ECMA_COMPLETION_TYPE_THROW );
-
-        ecma_FreeReference( src_reference);
-
-        free_string_literal_copy( &src_variable_name);
-
-        if ( get_value_completion.type == ECMA_COMPLETION_TYPE_NORMAL )
+        ecma_CompletionValue_t get_value_completion = get_variable_value( int_data,
+                                                                          src_val_descr);                                                                         
+        if ( ecma_is_completion_value_normal( get_value_completion) )
         {
           right_value = get_value_completion.value;
         } else
         {
+          JERRY_ASSERT( ecma_is_completion_value_throw( get_value_completion) );
+
           return get_value_completion;
         }
 
@@ -314,7 +356,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
     completion_value = ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_SYNTAX));
   } else
   {
-    completion_value = ecma_op_put_value( &dst_reference, right_value);
+    completion_value = ecma_op_put_value( dst_reference, right_value);
   }
 
   ecma_FreeValue( right_value);
@@ -325,6 +367,95 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
 
   return completion_value;
 } /* opfunc_assignment */
+
+/**
+ * Multiplicatoin opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.5, 11.5.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_CompletionValue_t
+opfunc_multiplication (OPCODE opdata, /**< operation data */
+                       struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.multiplication.dst;
+  const T_IDX left_var_idx = opdata.data.multiplication.var_left;
+  const T_IDX right_var_idx = opdata.data.multiplication.var_right;
+
+  int_data->pos++;
+
+  ecma_CompletionValue_t left_value = ecma_make_empty_completion_value(),
+                         right_value = ecma_make_empty_completion_value(),
+                         num_left_value = ecma_make_empty_completion_value(),
+                         num_right_value = ecma_make_empty_completion_value(),
+                         ret_value = ecma_make_empty_completion_value();
+
+  left_value = get_variable_value( int_data, left_var_idx);
+
+  if ( ecma_is_completion_value_throw( left_value) )
+    {
+      ret_value = ecma_copy_completion_value( left_value);
+    }
+  else
+    {
+      JERRY_ASSERT( ecma_is_completion_value_normal( left_value) );
+
+      right_value = get_variable_value( int_data, right_var_idx);
+
+      if ( ecma_is_completion_value_throw( right_value) )
+        {
+          ret_value = ecma_copy_completion_value( right_value);
+        }
+      else
+        {
+          JERRY_ASSERT( ecma_is_completion_value_normal( right_value) );
+
+          num_left_value = ecma_op_to_number( left_value.value);
+
+          if ( ecma_is_completion_value_throw( num_left_value) )
+            {
+              ret_value = ecma_copy_completion_value( num_left_value);
+            }
+          else
+            {
+              JERRY_ASSERT( ecma_is_completion_value_normal( num_left_value) );
+
+              num_right_value = ecma_op_to_number( right_value.value);
+
+              if ( ecma_is_completion_value_throw( num_right_value) )
+                {
+                  ret_value = ecma_copy_completion_value( num_right_value);
+                }
+              else
+                {
+                  JERRY_ASSERT( ecma_is_completion_value_normal( num_right_value) );
+
+                  ecma_Number_t *left_p, *right_p, *res_p;
+                  left_p = (ecma_Number_t*)ecma_GetPointer( num_left_value.value.m_Value);
+                  right_p = (ecma_Number_t*)ecma_GetPointer( num_right_value.value.m_Value);
+                  res_p = ecma_AllocNumber();
+
+                  *res_p = ecma_op_number_multiply( *left_p, *right_p);
+
+                  ret_value = set_variable_value( int_data,
+                                                  dst_var_idx,
+                                                  ecma_MakeNumberValue( res_p));
+
+                  ecma_DeallocNumber( res_p);
+                }
+            }
+        }
+    }
+
+  ecma_free_completion_value( left_value);
+  ecma_free_completion_value( right_value);
+  ecma_free_completion_value( num_left_value);
+  ecma_free_completion_value( num_right_value);
+
+  return ret_value;
+} /* opfunc_multiplication */
 
 /**
  * Variable declaration opcode handler.

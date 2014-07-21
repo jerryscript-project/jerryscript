@@ -47,6 +47,8 @@ run_int (void)
   int_data.this_binding_p = NULL;
   int_data.lex_env_p = ecma_CreateLexicalEnvironment( NULL,
                                                       ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  FIXME( Strict mode );
+  int_data.is_strict = false;
 
   ecma_CompletionValue_t completion = run_int_from_pos( &int_data);
 

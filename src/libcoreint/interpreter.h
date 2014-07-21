@@ -25,7 +25,7 @@ struct __int_data
   int pos; /**< current opcode to execute */
   ecma_Object_t *this_binding_p; /**< this binding for current context */
   ecma_Object_t *lex_env_p; /**< current lexical environment */
-  int *root_op_addr; /**< pointer to first opcode saved */
+  bool is_strict; /**< is current code execution mode strict? */
 };
 
 void init_int (const OPCODE* program_p);

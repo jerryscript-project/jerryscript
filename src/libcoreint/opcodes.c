@@ -214,9 +214,6 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
   const opcode_arg_type_operand type_value_right = opdata.data.assignment.type_value_right;
   const T_IDX src_val_descr = opdata.data.assignment.value_right;
 
-  // FIXME:
-  const bool is_strict = false;
-
   int_data->pos++;
 
   ecma_Value_t right_value;
@@ -250,7 +247,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
 
         src_reference = ecma_OpGetIdentifierReference( int_data->lex_env_p,
                                                        src_variable_name.str_p,
-                                                       is_strict);
+                                                       int_data->is_strict);
 
         ecma_CompletionValue_t get_value_completion = ecma_op_get_value( &src_reference);
 
@@ -303,10 +300,10 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
 
   dst_reference = ecma_OpGetIdentifierReference( int_data->lex_env_p,
                                                  dst_variable_name.str_p,
-                                                 is_strict);
+                                                 int_data->is_strict);
 
-  // FIXME: Move magic strings to header file and make them ecma_Char_t[]
-  // FIXME: Replace strcmp with ecma_Char_t[] comparator
+  FIXME( Move magic strings to header file and make them ecma_Char_t[] );
+  FIXME( Replace strcmp with ecma_Char_t[] comparator );
   if ( dst_reference.is_strict
        && ( __strcmp( (char*)dst_reference.referenced_name_p, "eval") == 0
             || __strcmp( (char*)dst_reference.referenced_name_p, "arguments") == 0 )
@@ -348,9 +345,10 @@ opfunc_var_decl(OPCODE opdata, /**< operation data */
   if ( ecma_IsCompletionValueNormalFalse( ecma_OpHasBinding( int_data->lex_env_p,
                                                              variable_name.str_p)) )
   {
+    FIXME( Pass configurableBindings that is true if and only if current code is eval code );
     ecma_OpCreateMutableBinding( int_data->lex_env_p,
                                  variable_name.str_p,
-                                 false); // FIXME: Pass configurableBindings
+                                 false);
 
     /* Skipping SetMutableBinding as we have already checked that there were not
      * any binding with specified name in current lexical environment 

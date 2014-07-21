@@ -141,5 +141,18 @@ OPCODE
 }
 __packed;
 
+/**
+ * Descriptor of assignment's second argument
+ * that specifies type of third argument.
+ */
+typedef enum
+{
+  OPCODE_ARG_TYPE_SIMPLE, /**< ecma_SimpleValue_t */
+  OPCODE_ARG_TYPE_SMALLINT, /**< small integer: from -128 to 127 */
+  OPCODE_ARG_TYPE_NUMBER, /**< index of number literal */
+  OPCODE_ARG_TYPE_STRING, /**< index of string literal */
+  OPCODE_ARG_TYPE_VARIABLE /**< index of variable name */
+} opcode_arg_type_operand;
+
 #endif	/* OPCODES_H */
 

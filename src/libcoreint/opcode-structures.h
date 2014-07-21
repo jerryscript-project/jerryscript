@@ -238,8 +238,9 @@ OP_CODE_DECL (greater_or_equal_than, T_IDX_IDX_IDX,
 // Assign value to LEFT operand based on value of RIGHT operand.
 
 /** L = R */
-OP_CODE_DECL (assignment, T_IDX_IDX,
-              value_left,
+OP_CODE_DECL (assignment, T_IDX_IDX_IDX,
+              var_left,
+              type_value_right,
               value_right)
 
 // Functions calls, declarations and argument handling

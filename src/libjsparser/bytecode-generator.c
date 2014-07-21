@@ -131,6 +131,33 @@ first_operand_as_literal (statement stmt)
   return oper.data.lit;
 }
 
+static opcode_arg_type_operand
+first_operand_type (statement stmt)
+{
+  JERRY_ASSERT (expression_has_operands (stmt));
+  if (!first_operand (stmt).is_literal)
+    {
+      return OPCODE_ARG_TYPE_VARIABLE;
+    }
+
+  literal lit = first_operand(stmt).data.lit;
+
+  TODO( Small integer -> OPCODE_ARG_TYPE_SMALLINT );
+
+  switch ( lit.type )
+    {
+    case LIT_NULL:
+    case LIT_BOOL:
+      return OPCODE_ARG_TYPE_SIMPLE;
+    case LIT_INT:
+      return OPCODE_ARG_TYPE_NUMBER;
+    case LIT_STR:
+      return OPCODE_ARG_TYPE_STRING;
+    }
+
+  JERRY_UNREACHABLE();
+}
+
 static uint8_t
 first_operand_id (statement stmt)
 {
@@ -378,7 +405,9 @@ generator_dump_statement (statement stmt)
                   break;
 
                 case AO_EQ:
-                  opcode = getop_assignment (lhs (stmt), first_operand_id (stmt));
+                  opcode = getop_assignment (lhs (stmt),
+                                             first_operand_type(stmt),
+                                             first_operand_id (stmt));
                   dump_opcode (&opcode);
                   return;
 

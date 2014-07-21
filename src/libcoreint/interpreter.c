@@ -148,5 +148,5 @@ get_number_by_idx(T_IDX idx) /**< literal id */
 {
   TODO( Actual number literal retrievement );
 
-  return (float)idx;
+  return (ecma_Number_t)idx;
 } /* get_number_by_idx */

@@ -253,11 +253,14 @@ add_num_to_seen_tokens (num_and_token nat)
 uint8_t
 lexer_get_strings (const char **strings)
 {
-  int i;
-
   if (strings)
+  {
+    int i;
     for (i = 0; i < seen_names_count; i++)
+    {
       strings[i] = seen_names[i].str;
+    }
+  }
 
   return seen_names_count;
 }
@@ -276,7 +279,9 @@ lexer_get_nums (int *nums)
   int i;
 
   for (i = 0; i < seen_nums_count; i++)
+  {
     nums[i] = seen_nums[i].num;
+  }
 
   return seen_nums_count;
 }

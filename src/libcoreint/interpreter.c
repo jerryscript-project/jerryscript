@@ -92,6 +92,10 @@ run_int_from_pos (struct __int_data *int_data)
         {
           const OPCODE *curr = &__program[int_data->pos];
           completion = __opfuncs[curr->op_idx](*curr, int_data);
+
+          JERRY_ASSERT( !ecma_is_completion_value_normal( completion)
+                        || ecma_is_completion_value_normal_simple_value(completion,
+                                                                        ECMA_SIMPLE_VALUE_EMPTY) );
         } while ( completion.type == ECMA_COMPLETION_TYPE_NORMAL );
 
       if ( completion.type == ECMA_COMPLETION_TYPE_BREAK )

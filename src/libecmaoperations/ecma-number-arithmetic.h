@@ -27,7 +27,12 @@
  * @{
  */
 
+extern ecma_Number_t ecma_op_number_add( ecma_Number_t left_num, ecma_Number_t right_num);
+extern ecma_Number_t ecma_op_number_substract( ecma_Number_t left_num, ecma_Number_t right_num);
 extern ecma_Number_t ecma_op_number_multiply( ecma_Number_t left_num, ecma_Number_t right_num);
+extern ecma_Number_t ecma_op_number_divide( ecma_Number_t left_num, ecma_Number_t right_num);
+extern ecma_Number_t ecma_op_number_remainder( ecma_Number_t left_num, ecma_Number_t right_num);
+extern ecma_Number_t ecma_op_number_negate( ecma_Number_t num);
 
 /**
  * @}

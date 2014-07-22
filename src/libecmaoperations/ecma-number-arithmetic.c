@@ -26,6 +26,38 @@
  */
 
 /**
+ * ECMA-defined number addition.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.6.3
+ *
+ * @return number - result of addition.
+ */
+ecma_Number_t
+ecma_op_number_add(ecma_Number_t left_num, /**< left operand */
+                   ecma_Number_t right_num) /**< right operand */
+{
+  TODO( Implement according to ECMA );
+
+  return left_num + right_num;
+} /* ecma_op_number_add */
+
+/**
+ * ECMA-defined number substraction.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.6.3
+ *
+ * @return number - result of substraction.
+ */
+ecma_Number_t
+ecma_op_number_substract(ecma_Number_t left_num, /**< left operand */
+                         ecma_Number_t right_num) /**< right operand */
+{
+  return ecma_op_number_add( left_num, ecma_op_number_negate( right_num));
+} /* ecma_op_number_substract */
+
+/**
  * ECMA-defined number multiplication.
  *
  * See also:
@@ -41,6 +73,54 @@ ecma_op_number_multiply(ecma_Number_t left_num, /**< left operand */
 
   return left_num * right_num;
 } /* ecma_op_number_multiply */
+
+/**
+ * ECMA-defined number division.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.5.2
+ *
+ * @return number - result of division.
+ */
+ecma_Number_t
+ecma_op_number_divide(ecma_Number_t left_num, /**< left operand */
+                      ecma_Number_t right_num) /**< right operand */
+{
+  TODO( Implement according to ECMA );
+
+  return left_num / right_num;
+} /* ecma_op_number_divide */
+
+/**
+ * ECMA-defined number remainder calculation.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.5.3
+ *
+ * @return number - calculated remainder.
+ */
+ecma_Number_t
+ecma_op_number_remainder(ecma_Number_t left_num, /**< left operand */
+                         ecma_Number_t right_num) /**< right operand */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( left_num, right_num);
+} /* ecma_op_number_remainder */
+
+/**
+ * ECMA-defined number negation.
+ *
+ * See also:
+ *          ECMA-262 v5, 11.4.7
+ *
+ * @return number - result of negation.
+ */
+ecma_Number_t
+ecma_op_number_negate(ecma_Number_t num) /**< operand */
+{
+  TODO( Implement according to ECMA );
+
+  return -num;
+} /* ecma_op_number_negate */
 
 /**
  * @}

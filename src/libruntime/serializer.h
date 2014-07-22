@@ -22,4 +22,6 @@ void serializer_init (void);
 
 void serializer_dump_data (const void *, size_t);
 
+void serializer_rewrite_data (const int8_t, const void *, size_t);
+
 #endif // SERIALIZER_H

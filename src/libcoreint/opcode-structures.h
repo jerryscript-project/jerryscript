@@ -166,6 +166,11 @@ OP_CODE_DECL (b_xor, T_IDX_IDX_IDX,
               var_left,
               var_right)
 
+/** dst = ~ R */
+OP_CODE_DECL (b_not, T_IDX_IDX,
+              dst,
+              var_right)
+
 // Binary logical operators.
 // Operands are booleans.
 // Return boolean.
@@ -180,6 +185,11 @@ OP_CODE_DECL (logical_and, T_IDX_IDX_IDX,
 OP_CODE_DECL (logical_or, T_IDX_IDX_IDX,
               dst,
               var_left,
+              var_right)
+
+/** dst = ! R */
+OP_CODE_DECL (logical_not, T_IDX_IDX,
+              dst,
               var_right)
 
 // Equality operations.
@@ -234,6 +244,18 @@ OP_CODE_DECL (greater_or_equal_than, T_IDX_IDX_IDX,
               var_left,
               var_right)
 
+/** dst = L instanceof R.  */
+OP_CODE_DECL (instanceof, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
+/** dst = L in R.  */
+OP_CODE_DECL (in, T_IDX_IDX_IDX,
+              dst,
+              var_left,
+              var_right)
+
 // Assignment operators.
 // Assign value to LEFT operand based on value of RIGHT operand.
 
@@ -245,22 +267,43 @@ OP_CODE_DECL (assignment, T_IDX_IDX_IDX,
 
 // Functions calls, declarations and argument handling
 
-/** name(arg1); */
-OP_CODE_DECL (call_1, T_IDX_IDX,
+/** a = name(); */
+OP_CODE_DECL (call_0, T_IDX_IDX,
+              lhs,
+              name_lit_idx)
+
+/** a = name(arg1); */
+OP_CODE_DECL (call_1, T_IDX_IDX_IDX,
+              lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** name(arg1, arg2); */
-OP_CODE_DECL (call_2, T_IDX_IDX_IDX,
-              name_lit_idx,
-              arg1_lit_idx,
-              arg2_lit_idx)
-
-/** name(arg1, arg2, ... */
+/** a = name(arg1, ... */
 OP_CODE_DECL (call_n, T_IDX_IDX_IDX,
+              lhs,
               name_lit_idx,
-              arg1_lit_idx,
-              arg2_lit_idx)
+              arg1_lit_idx)
+
+/** a = new name(); */
+OP_CODE_DECL (construct_0, T_IDX_IDX,
+              lhs,
+              name_lit_idx)
+
+/** a = new name(arg1); */
+OP_CODE_DECL (construct_1, T_IDX_IDX_IDX,
+              lhs,
+              name_lit_idx,
+              arg1_lit_idx)
+
+/** a = new name(arg1, ... */
+OP_CODE_DECL (construct_n, T_IDX_IDX_IDX,
+              lhs,
+              name_lit_idx,
+              arg1_lit_idx)
+
+/** name(); */
+OP_CODE_DECL (func_decl_0, T_IDX,
+              name_lit_idx)
 
 /** name(arg1); */
 OP_CODE_DECL (func_decl_1, T_IDX_IDX,
@@ -279,18 +322,26 @@ OP_CODE_DECL (func_decl_n, T_IDX_IDX_IDX,
               arg1_lit_idx,
               arg2_lit_idx)
 
-/** ..., arg1, ... */
-OP_CODE_DECL (varg_1, T_IDX,
+/** a = name(); */
+OP_CODE_DECL (func_expr_0, T_IDX_IDX,
+              lhs,
+              name_lit_idx)
+
+/** a = name(arg1); */
+OP_CODE_DECL (func_expr_1, T_IDX_IDX_IDX,
+              lhs,
+              name_lit_idx,
+              arg1_lit_idx)
+
+/** a = name(arg1,  ... */
+OP_CODE_DECL (func_expr_n, T_IDX_IDX_IDX,
+              lhs,
+              name_lit_idx,
               arg1_lit_idx)
 
 /** ..., arg1); */
 OP_CODE_DECL (varg_1_end, T_IDX,
               arg1_lit_idx)
-
-/** ..., arg1, arg2, ... */
-OP_CODE_DECL (varg_2, T_IDX_IDX,
-              arg1_lit_idx,
-              arg2_lit_idx)
 
 /** ..., arg1, arg2); */
 OP_CODE_DECL (varg_2_end, T_IDX_IDX,
@@ -361,26 +412,91 @@ OP_CODE_DECL (loop_postcond, T_IDX_IDX,
               condition,
               body_root)
 
-///** for vars...in iter, state, ctl */
-//OP_CODE_DECL (loop_init, T_IDX_IDX_IDX,             
-//              start_idx, stop_idx, step_idx)
-///** loop (condition) */
-//OP_CODE_DECL (loop_cond_pre_begin, T_IDX_IDX,       
-//              condition, body_root)
-///** i++;*/
-//OP_CODE_DECL (loop_cond_pre_end, T_IDX,             
-//              iterator, body_root)
+/** a = []  */
+OP_CODE_DECL (array_0, T_IDX,
+              lhs)
 
-// Property accessors (array, objects, strings)
-/** Array ops for ILMIR*/
-//OP_CODE_DECL (array_copy, T_IDX_IDX,                /** L = R */
-//              var_left, var_right)
-//OP_CODE_DECL (array_set, T_IDX_IDX_IDX,             /** array[index] = src */
-//              dst, var_left, var_right)
-//OP_CODE_DECL (array_get, T_IDX_IDX_IDX,             /** dst = array[index] */
-//              dst, array, index)
+/** a = [b]  */
+OP_CODE_DECL (array_1, T_IDX_IDX,
+              lhs,
+              elem1)
 
-//// TODO
+/** a = [b, c]  */
+OP_CODE_DECL (array_2, T_IDX_IDX_IDX,
+              lhs,
+              elem1,
+              elem2)
+
+/** a = [b, c ...  */
+OP_CODE_DECL (array_n, T_IDX_IDX_IDX,
+              lhs,
+              elem1,
+              elem2)
+
+/** a = b : c  */
+OP_CODE_DECL (prop, T_IDX_IDX_IDX,
+              lhs,
+              name,
+              value)
+
+/** a = b.c OR a = b[c]  */
+OP_CODE_DECL (prop_access, T_IDX_IDX_IDX,
+              lhs,
+              obj,
+              prop)
+
+/** a = get prop ()  */
+OP_CODE_DECL (prop_get_decl, T_IDX_IDX,
+              lhs,
+              prop)
+
+/** a = set prop (arg)  */
+OP_CODE_DECL (prop_set_decl, T_IDX_IDX_IDX,
+              lhs,
+              prop,
+              arg)
+
+/** a = { }  */
+OP_CODE_DECL (obj_0, T_IDX,
+              lhs)
+
+/** a = { b }  */
+OP_CODE_DECL (obj_1, T_IDX_IDX,
+              lhs,
+              arg1)
+
+/** a = { b, c }  */
+OP_CODE_DECL (obj_2, T_IDX_IDX_IDX,
+              lhs,
+              arg1,
+              arg2)
+
+/** a = { b, c ...  */
+OP_CODE_DECL (obj_n, T_IDX_IDX_IDX,
+              lhs,
+              arg1,
+              arg2)
+
+/** a = this  */
+OP_CODE_DECL (this, T_IDX,
+              lhs)
+
+/** a = delete b  */
+OP_CODE_DECL (delete, T_IDX_IDX,
+              lhs,
+              obj)
+
+/** a = delete b  */
+OP_CODE_DECL (typeof, T_IDX_IDX,
+              lhs,
+              obj)
+
+/** with (b) {  */
+OP_CODE_DECL (with, T_IDX,
+              expr)
+
+/** }  */
+OP_CODE_DECL_VOID (end_with)
 
 // Variable declaration
 OP_CODE_DECL (var_decl, T_IDX,

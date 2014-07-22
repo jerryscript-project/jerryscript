@@ -43,21 +43,45 @@ typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
     op(loop_postcond)
 
 #define OP_CALLS_AND_ARGS(op)           \
+    op(call_0)                          \
     op(call_1)                          \
-    op(call_2)                          \
     op(call_n)                          \
+    op(construct_0)                     \
+    op(construct_1)                     \
+    op(construct_n)                     \
+    op(func_decl_0)                     \
     op(func_decl_1)                     \
     op(func_decl_2)                     \
     op(func_decl_n)                     \
-    op(varg_1)                          \
+    op(func_expr_0)                     \
+    op(func_expr_1)                     \
+    op(func_expr_n)                     \
     op(varg_1_end)                      \
-    op(varg_2)                          \
     op(varg_2_end)                      \
     op(varg_3)                          \
     op(varg_3_end)                      \
     op(exitval)                         \
     op(retval)                          \
     op(ret)
+
+#define OP_INITS(op)                    \
+    op(array_0)                         \
+    op(array_1)                         \
+    op(array_2)                         \
+    op(array_n)                         \
+    op(prop)                            \
+    op(prop_access)                     \
+    op(prop_get_decl)                   \
+    op(prop_set_decl)                   \
+    op(obj_0)                           \
+    op(obj_1)                           \
+    op(obj_2)                           \
+    op(obj_n)                           \
+    op(this)                            \
+    op(delete)                          \
+    op(typeof)                          \
+    op(with)                            \
+    op(end_with)                        
 
 #define OP_ASSIGNMENTS(op)              \
     op(assignment)
@@ -70,11 +94,13 @@ typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
 #define OP_B_BITWISE(op)                \
     op(b_and)                           \
     op(b_or)                            \
-    op(b_xor)
+    op(b_xor)                           \
+    op(b_not)
 
 #define OP_B_LOGICAL(op)                \
     op(logical_and)                     \
-    op(logical_or)
+    op(logical_or)                      \
+    op(logical_not)
 
 #define OP_EQUALITY(op)                 \
     op(equal_value)                     \
@@ -86,7 +112,9 @@ typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
     op(less_than)                       \
     op(greater_than)                    \
     op(less_or_equal_than)              \
-    op(greater_or_equal_than)
+    op(greater_or_equal_than)           \
+    op(instanceof)                      \
+    op(in)
 
 #define OP_ARITHMETIC(op)               \
     op(addition)                        \
@@ -108,6 +136,7 @@ typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
 #define OP_LIST(op)                     \
   OP_LOOPS(op)                          \
   OP_CALLS_AND_ARGS(op)                 \
+  OP_INITS(op)                          \
   OP_ASSIGNMENTS(op)                    \
   OP_B_LOGICAL(op)                      \
   OP_B_BITWISE(op)                      \

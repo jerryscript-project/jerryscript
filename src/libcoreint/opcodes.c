@@ -322,14 +322,12 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(loop_precond_begin_num)          \
     op(loop_precond_end_num)            \
     op(loop_postcond)                   \
-    op(call_2)                          \
+    op(call_0)                          \
     op(call_n)                          \
     op(func_decl_1)                     \
     op(func_decl_2)                     \
     op(func_decl_n)                     \
-    op(varg_1)                          \
     op(varg_1_end)                      \
-    op(varg_2)                          \
     op(varg_2_end)                      \
     op(varg_3)                          \
     op(varg_3_end)                      \
@@ -353,7 +351,35 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(greater_or_equal_than)           \
     op(jmp_up)                          \
     op(jmp_down)                        \
-    op(nop)
+    op(nop)                             \
+    op(construct_0)                     \
+    op(construct_1)                     \
+    op(construct_n)                     \
+    op(func_decl_0)                     \
+    op(func_expr_0)                     \
+    op(func_expr_1)                     \
+    op(func_expr_n)                     \
+    op(array_0)                         \
+    op(array_1)                         \
+    op(array_2)                         \
+    op(array_n)                         \
+    op(prop)                            \
+    op(prop_access)                     \
+    op(prop_get_decl)                   \
+    op(prop_set_decl)                   \
+    op(obj_0)                           \
+    op(obj_1)                           \
+    op(obj_2)                           \
+    op(obj_n)                           \
+    op(this)                            \
+    op(delete)                          \
+    op(typeof)                          \
+    op(with)                            \
+    op(end_with)                        \
+    op(logical_not)                     \
+    op(b_not)                           \
+    op(instanceof)                      \
+    op(in)                   
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
   ecma_CompletionValue_t opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
@@ -796,15 +822,13 @@ GETOP_IMPL_3 (greater_than, dst, var_left, var_right)
 GETOP_IMPL_3 (less_or_equal_than, dst, var_left, var_right)
 GETOP_IMPL_3 (greater_or_equal_than, dst, var_left, var_right)
 GETOP_IMPL_3 (assignment, var_left, type_value_right, value_right)
-GETOP_IMPL_2 (call_1, name_lit_idx, arg1_lit_idx)
-GETOP_IMPL_3 (call_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_3 (call_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_2 (call_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (call_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (call_n, lhs, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_2 (func_decl_1, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_1 (varg_1, arg1_lit_idx)
 GETOP_IMPL_1 (varg_1_end, arg1_lit_idx)
-GETOP_IMPL_2 (varg_2, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_2 (varg_2_end, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
@@ -818,4 +842,32 @@ GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
 GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
 GETOP_IMPL_2 (loop_postcond, condition, body_root)
 GETOP_IMPL_1 (var_decl, variable_name)
+GETOP_IMPL_2 (b_not, dst, var_right)
+GETOP_IMPL_2 (logical_not, dst, var_right)
+GETOP_IMPL_3 (instanceof, dst, var_left, var_right)
+GETOP_IMPL_3 (in, dst, var_left, var_right)
+GETOP_IMPL_2 (construct_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (construct_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (construct_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_1 (func_decl_0, name_lit_idx)
+GETOP_IMPL_2 (func_expr_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (func_expr_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (func_expr_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_1 (array_0, lhs)
+GETOP_IMPL_2 (array_1, lhs, elem1)
+GETOP_IMPL_3 (array_2, lhs, elem1, elem2)
+GETOP_IMPL_3 (array_n, lhs, elem1, elem2)
+GETOP_IMPL_3 (prop, lhs, name, value)
+GETOP_IMPL_3 (prop_access, lhs, obj, prop)
+GETOP_IMPL_2 (prop_get_decl, lhs, prop)
+GETOP_IMPL_3 (prop_set_decl, lhs, prop, arg)
+GETOP_IMPL_1 (obj_0, lhs)
+GETOP_IMPL_2 (obj_1, lhs, arg1)
+GETOP_IMPL_3 (obj_2, lhs, arg1, arg2)
+GETOP_IMPL_3 (obj_n, lhs, arg1, arg2)
+GETOP_IMPL_1 (this, lhs)
+GETOP_IMPL_2 (delete, lhs, obj)
+GETOP_IMPL_2 (typeof, lhs, obj)
+GETOP_IMPL_1 (with, expr)
+GETOP_IMPL_0 (end_with)
 

@@ -22,19 +22,42 @@ void opfunc_loop_init_num (OPCODE opdata __unused, struct __int_data *int_data _
 void opfunc_loop_precond_begin_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_loop_precond_end_num (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_loop_postcond (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_call_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_call_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_call_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_construct_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_construct_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_construct_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_decl_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_func_decl_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_func_decl_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_func_decl_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_varg_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_expr_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_expr_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_func_expr_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_varg_1_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
-void opfunc_varg_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_varg_2_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_varg_3 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_varg_3_end (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_retval (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_ret (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_array_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_array_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_array_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_array_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_obj_0 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_obj_1 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_obj_2 (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_obj_n (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_prop (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_prop_access (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_prop_get_decl (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_prop_set_decl (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_this (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_delete (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_typeof (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_with (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_end_with (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_decl_var (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_nop (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_not_equal_value (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
@@ -44,6 +67,8 @@ void opfunc_less_than (OPCODE opdata __unused, struct __int_data *int_data __unu
 void opfunc_greater_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_less_or_equal_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_greater_or_equal_than (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_instanceof (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_in (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 
 void
 opfunc_assignment(OPCODE opdata __unused,
@@ -54,9 +79,11 @@ opfunc_assignment(OPCODE opdata __unused,
 
 void opfunc_logical_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_logical_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_logical_not (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_and (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_or (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_xor (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
+void opfunc_b_not (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_shift_left (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_shift_right (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
 void opfunc_b_shift_uright (OPCODE opdata __unused, struct __int_data *int_data __unused) { JERRY_UNREACHABLE (); }
@@ -124,8 +151,10 @@ GETOP_IMPL_3 (b_shift_uright, dst, var_left, var_right)
 GETOP_IMPL_3 (b_and, dst, var_left, var_right)
 GETOP_IMPL_3 (b_or, dst, var_left, var_right)
 GETOP_IMPL_3 (b_xor, dst, var_left, var_right)
+GETOP_IMPL_2 (b_not, dst, var_right)
 GETOP_IMPL_3 (logical_and, dst, var_left, var_right)
 GETOP_IMPL_3 (logical_or, dst, var_left, var_right)
+GETOP_IMPL_2 (logical_not, dst, var_right)
 GETOP_IMPL_3 (equal_value, dst, var_left, var_right)
 GETOP_IMPL_3 (not_equal_value, dst, var_left, var_right)
 GETOP_IMPL_3 (equal_value_type, dst, var_left, var_right)
@@ -134,16 +163,23 @@ GETOP_IMPL_3 (less_than, dst, var_left, var_right)
 GETOP_IMPL_3 (greater_than, dst, var_left, var_right)
 GETOP_IMPL_3 (less_or_equal_than, dst, var_left, var_right)
 GETOP_IMPL_3 (greater_or_equal_than, dst, var_left, var_right)
+GETOP_IMPL_3 (instanceof, dst, var_left, var_right)
+GETOP_IMPL_3 (in, dst, var_left, var_right)
 GETOP_IMPL_2 (assignment, value_left, value_right)
-GETOP_IMPL_2 (call_1, name_lit_idx, arg1_lit_idx)
-GETOP_IMPL_3 (call_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_3 (call_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
+GETOP_IMPL_2 (call_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (call_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (call_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_2 (construct_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (construct_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (construct_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_1 (func_decl_0, name_lit_idx)
 GETOP_IMPL_2 (func_decl_1, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_1 (varg_1, arg1_lit_idx)
+GETOP_IMPL_2 (func_expr_0, lhs, name_lit_idx)
+GETOP_IMPL_3 (func_expr_1, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (func_expr_n, lhs, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_1 (varg_1_end, arg1_lit_idx)
-GETOP_IMPL_2 (varg_2, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_2 (varg_2_end, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
@@ -155,4 +191,22 @@ GETOP_IMPL_3 (loop_init_num, start, stop, step)
 GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
 GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
 GETOP_IMPL_2 (loop_postcond, condition, body_root)
+GETOP_IMPL_1 (array_0, lhs)
+GETOP_IMPL_2 (array_1, lhs, elem1)
+GETOP_IMPL_3 (array_2, lhs, elem1, elem2)
+GETOP_IMPL_3 (array_n, lhs, elem1, elem2)
+GETOP_IMPL_3 (prop, lhs, name, value)
+GETOP_IMPL_3 (prop_access, lhs, obj, prop)
+GETOP_IMPL_2 (prop_get_decl, lhs, prop)
+GETOP_IMPL_3 (prop_set_decl, lhs, prop, arg)
+GETOP_IMPL_1 (obj_0, lhs)
+GETOP_IMPL_2 (obj_1, lhs, arg1)
+GETOP_IMPL_3 (obj_2, lhs, arg1, arg2)
+GETOP_IMPL_3 (obj_n, lhs, arg1, arg2)
+GETOP_IMPL_1 (this, lhs)
+GETOP_IMPL_2 (delete, lhs, obj)
+GETOP_IMPL_2 (typeof, lhs, obj)
+GETOP_IMPL_1 (with, expr)
+GETOP_IMPL_0 (end_with)
+GETOP_IMPL_1 (decl_var, variable)
 

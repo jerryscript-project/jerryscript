@@ -15,17 +15,39 @@
 
 #include "serializer.h"
 #include "jerry-libc.h"
+#include "opcodes.h"
+
+FILE *dump;
+
+#define OPCODE_STR(op) \
+  #op,
+
+static char* massive[] = {
+  OP_LIST (OPCODE_STR)
+  ""
+};
 
 void
 serializer_init (void)
 {
 }
 
+static int opcode_counter = 0;
+
 void
 serializer_dump_data (const void *data, size_t size)
 {
   size_t i;
 
-  for (i = 0; i < size; i++) 
-    __putchar (((char *) data)[i]);
+  __printf ("%03d: %20s ", opcode_counter++, massive[(int)((char*)data)[0]]);
+  for (i = 1; i < size; i++)
+    __printf ("%4d ", ((char*)data)[i]);
+
+  __printf ("\n");
+}
+
+void
+serializer_rewrite_data (const int8_t offset __unused, const void *data __unused, size_t size __unused)
+{
+  TODO (implement);
 }

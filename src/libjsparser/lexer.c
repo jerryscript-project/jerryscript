@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "allocator.h"
+#include "mem-allocator.h"
 #include "globals.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
 
 static token saved_token;
-static token empty_token = { .type = TOK_EMPTY, .data.none = NULL };
+static token empty_token = { .type = TOK_EMPTY, .data.uid = 0 };
 
 typedef struct
 {
@@ -45,7 +45,7 @@ static string_and_token keyword_tokens[] =
   { .str = "enum", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "export", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "extends", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "false", .tok = { .type = TOK_BOOL, .data.is_true = false } },
+  { .str = "false", .tok = { .type = TOK_BOOL, .data.uid = false } },
   { .str = "finally", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FINALLY } },
   { .str = "for", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FOR } },
   { .str = "function", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FUNCTION } },
@@ -57,7 +57,7 @@ static string_and_token keyword_tokens[] =
   { .str = "implements", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "let", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "new", .tok = { .type = TOK_KEYWORD, .data.kw = KW_NEW } },
-  { .str = "null", .tok = { .type = TOK_NULL, .data.none = NULL } },
+  { .str = "null", .tok = { .type = TOK_NULL, .data.uid = 0 } },
   { .str = "package", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "private", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
   { .str = "protected", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
@@ -68,7 +68,7 @@ static string_and_token keyword_tokens[] =
   { .str = "switch", .tok = { .type = TOK_KEYWORD, .data.kw = KW_SWITCH } },
   { .str = "this", .tok = { .type = TOK_KEYWORD, .data.kw = KW_THIS } },
   { .str = "throw", .tok = { .type = TOK_KEYWORD, .data.kw = KW_THROW } },
-  { .str = "true", .tok = { .type = TOK_BOOL, .data.is_true = true } },
+  { .str = "true", .tok = { .type = TOK_BOOL, .data.uid = true } },
   { .str = "try", .tok = { .type = TOK_KEYWORD, .data.kw = KW_TRY } },
   { .str = "typeof", .tok = { .type = TOK_KEYWORD, .data.kw = KW_TYPEOF } },
   { .str = "var", .tok = { .type = TOK_KEYWORD, .data.kw = KW_VAR } },
@@ -78,10 +78,25 @@ static string_and_token keyword_tokens[] =
   { .str = "yield", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } }
 };
 
+typedef struct
+{
+  int num;
+  token tok;
+}
+num_and_token;
+
 #define MAX_NAMES 100
+#define MAX_NUMS 25
 
 static string_and_token seen_names[MAX_NAMES];
-static uint8_t seen_names_num;
+static uint8_t seen_names_count = 0;
+
+static num_and_token seen_nums[MAX_NAMES] = 
+{
+  [0] = { .num = 0, .tok = { .type = TOK_INT, .data.uid = 0 } },
+  [1] = { .num = 1, .tok = { .type = TOK_INT, .data.uid = 1 } }
+};
+static uint8_t seen_nums_count = 2;
 
 static bool
 is_empty (token tok)
@@ -114,7 +129,7 @@ get_char (size_t i)
 
   if (buffer == NULL)
     {
-      buffer = (char *) malloc (BUFFER_SIZE);
+      buffer = (char *) mem_HeapAllocBlock (BUFFER_SIZE, MEM_HEAP_ALLOC_SHORT_TERM);
       error = __fread (buffer, 1, BUFFER_SIZE, file);
       if (error == 0)
         return '\0';
@@ -184,7 +199,7 @@ decode_keyword (void)
 
   for (i = 0; i < size; i++)
     {
-      if (!__strncmp (keyword_tokens[i].str, token_start, __strlen (keyword_tokens[i].str)))
+      if (!__strncmp (keyword_tokens[i].str, token_start, (size_t) (buffer - token_start)))
         return keyword_tokens[i].tok;
     }
 
@@ -196,9 +211,9 @@ convert_seen_name_to_token (void)
 {
   size_t i;
 
-  for (i = 0; i < seen_names_num; i++)
+  for (i = 0; i < seen_names_count; i++)
     {
-      if (!__strncmp (seen_names[i].str, token_start, __strlen (seen_names[i].str)))
+      if (!__strncmp (seen_names[i].str, token_start, (size_t) (buffer - token_start)))
         return seen_names[i].tok;
     }
 
@@ -206,12 +221,33 @@ convert_seen_name_to_token (void)
 }
 
 static void
-add_to_seen_tokens (string_and_token snt)
+add_name_to_seen_tokens (string_and_token snt)
 {
-  JERRY_ASSERT (seen_names_num < MAX_NAMES);
+  JERRY_ASSERT (seen_names_count < MAX_NAMES);
 
-  snt.tok.data.name = (string_id) seen_names_num;
-  seen_names[seen_names_num++] = snt;
+  seen_names[seen_names_count++] = snt;
+}
+
+static token
+convert_seen_num_to_token (int num)
+{
+  size_t i;
+
+  for (i = 0; i < seen_nums_count; i++)
+    {
+      if (seen_nums[i].num == num)
+        return seen_nums[i].tok;
+    }
+
+  return empty_token;
+}
+
+static void
+add_num_to_seen_tokens (num_and_token nat)
+{
+  JERRY_ASSERT (seen_nums_count < MAX_NUMS);
+
+  seen_nums[seen_nums_count++] = nat;
 }
 
 uint8_t
@@ -219,18 +255,30 @@ lexer_get_strings (const char **strings)
 {
   int i;
 
-  for (i = 0; i < seen_names_num; i++)
-    strings[i] = seen_names[i].str;
+  if (strings)
+    for (i = 0; i < seen_names_count; i++)
+      strings[i] = seen_names[i].str;
 
-  return seen_names_num;
+  return seen_names_count;
 }
 
 const char *
-lexer_get_string_by_id (string_id id)
+lexer_get_string_by_id (uint8_t id)
 {
-  JERRY_ASSERT (id < seen_names_num);
+  JERRY_ASSERT (id < seen_names_count);
 
   return seen_names[id].str;
+}
+
+uint8_t
+lexer_get_nums (int *nums)
+{
+  int i;
+
+  for (i = 0; i < seen_nums_count; i++)
+    nums[i] = seen_nums[i].num;
+
+  return seen_nums_count;
 }
 
 static void
@@ -254,7 +302,7 @@ current_token (void)
   JERRY_ASSERT (token_start);
   JERRY_ASSERT (token_start <= buffer);
   size_t length = (size_t) (buffer - token_start);
-  char *res = (char *) malloc (length + 1);
+  char *res = (char *) mem_HeapAllocBlock (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
   __strncpy (res, token_start, length);
   res[length] = '\0';
   token_start = NULL;
@@ -265,7 +313,7 @@ current_token (void)
   do \
     { \
       buffer += NUM; \
-      return (token) { .type = TOK, .data.none = NULL }; \
+      return (token) { .type = TOK, .data.uid = 0 }; \
     } \
   while (0)
 
@@ -338,9 +386,9 @@ parse_name (void)
     }
 
   string = current_token ();
-  known_token = (token) { .type = TOK_NAME, .data.name = seen_names_num };
+  known_token = (token) { .type = TOK_NAME, .data.uid = seen_names_count };
   
-  add_to_seen_tokens ((string_and_token) { .str = string, .tok = known_token });
+  add_name_to_seen_tokens ((string_and_token) { .str = string, .tok = known_token });
 
   return known_token;
 }
@@ -387,6 +435,7 @@ parse_number (void)
   bool is_exp = false;
   size_t tok_length = 0, i;
   int res = 0;
+  token known_token;
 
   JERRY_ASSERT (__isdigit (c) || c == '.');
 
@@ -423,7 +472,14 @@ parse_number (void)
         res = (res << 4) + hex_to_int (token_start[i]);
 
       token_start = NULL;
-      return (token) { .type = TOK_INT, .data.num = res };
+
+      known_token = convert_seen_num_to_token (res);
+      if (!is_empty (known_token))
+        return known_token;
+
+      known_token = (token) { .type = TOK_INT, .data.uid = seen_nums_count };
+      add_num_to_seen_tokens ((num_and_token) { .num = res, .tok = known_token });
+      return known_token;
     }
 
   JERRY_ASSERT (!is_hex && !is_exp);
@@ -475,7 +531,8 @@ parse_number (void)
     {
       float res = __strtof (token_start, NULL);
       token_start = NULL;
-      return (token) { .type = TOK_FLOAT, .data.fp_num = res };
+      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (res);
+      return empty_token;
     }
 
   tok_length = (size_t) (buffer - token_start);;
@@ -484,7 +541,13 @@ parse_number (void)
 
   token_start = NULL;
 
-  return (token) { .type = TOK_INT, .data.num = res };
+  known_token = convert_seen_num_to_token (res);
+  if (!is_empty (known_token))
+    return known_token;
+
+  known_token = (token) { .type = TOK_INT, .data.uid = seen_nums_count };
+  add_num_to_seen_tokens ((num_and_token) { .num = res, .tok = known_token });
+  return known_token;
 }
 
 static char
@@ -513,7 +576,7 @@ parse_string (void)
   char *tok = NULL;
   char *index = NULL;
   const char *i;
-  size_t length;
+  size_t length, num;
   token res = empty_token;
 
   JERRY_ASSERT (c == '\'' || c == '"');
@@ -553,7 +616,7 @@ parse_string (void)
     }
 
   length = (size_t) (buffer - token_start);
-  tok = (char *) malloc (length);
+  tok = (char *) mem_HeapAllocBlock (length, MEM_HEAP_ALLOC_SHORT_TERM);
   index = tok;
 
   for (i = token_start; i < buffer; i++)
@@ -581,9 +644,18 @@ parse_string (void)
   // Eat up '"'
   consume_char ();
 
-  res = (token) { .type = TOK_STRING, .data.str = seen_names_num };
+  for (num = 0; num < seen_names_count; num++)
+    {
+      if (!__strncmp (seen_names[num].str, tok, __strlen (tok)))
+        {
+          mem_HeapFreeBlock ((uint8_t*) tok);
+          return seen_names[num].tok;
+        }
+    }
 
-  add_to_seen_tokens ((string_and_token) { .str = tok, .tok = res });
+  res = (token) { .type = TOK_STRING, .data.uid = seen_names_count };
+
+  add_name_to_seen_tokens ((string_and_token) { .str = tok, .tok = res });
 
   return res;
 }
@@ -593,7 +665,7 @@ grobble_whitespaces (void)
 {
   char c = LA (0);
 
-  while ((__isspace (c) && c != '\n') || c == '\0')
+  while ((__isspace (c) && c != '\n'))
     {
       consume_char ();
       c = LA (0);
@@ -685,11 +757,11 @@ lexer_next_token (void)
   if (c == '\n')
     {
       consume_char ();
-      return (token) { .type = TOK_NEWLINE, .data.none = NULL };
+      return (token) { .type = TOK_NEWLINE, .data.uid = 0 };
     }
 
   if (c == '\0')
-    return (token) { .type = TOK_EOF, .data.none = NULL };;
+    return (token) { .type = TOK_EOF, .data.uid = 0 };;
 
   if (c == '\'' || c == '"')
     return parse_string ();
@@ -708,7 +780,7 @@ lexer_next_token (void)
   if (c == '/' && LA (1) == '*')
     {
       if (replace_comment_by_newline ())
-        return (token) { .type = TOK_NEWLINE, .data.none = NULL };
+        return (token) { .type = TOK_NEWLINE, .data.uid = 0 };
       else
         return 
 #ifdef __HOST
@@ -803,11 +875,11 @@ lexer_next_token (void)
   token tok = lexer_next_token_private ();
   if (tok.type == TOK_NEWLINE)
     return tok;
-  // if (tok.type == TOK_CLOSE_BRACE)
+  if (tok.type == TOK_CLOSE_PAREN)
     {
       // if (i == 300)
-        __fprintf (lexer_debug_log, "lexer_next_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
-      i++;
+        __fprintf (lexer_debug_log, "lexer_next_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
+        i++;
     }
   return tok;
 }
@@ -816,10 +888,10 @@ lexer_next_token (void)
 void
 lexer_save_token (token tok)
 {
-  #ifdef __HOST
-  // if (tok.type == TOK_CLOSE_BRACE)
-    __fprintf (lexer_debug_log, "lexer_save_token(%d): type=0x%x, data=%p\n", i, tok.type, tok.data.none);
-  #endif
+#ifdef __HOST
+  if (tok.type == TOK_CLOSE_PAREN)
+    __fprintf (lexer_debug_log, "lexer_save_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
+#endif
   saved_token = tok;
 }
 

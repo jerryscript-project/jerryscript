@@ -319,7 +319,6 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
         lhs = 0, 
         args[3+1/* +1 for stack protector */], 
         current_arg = 0;
-  bool is_first_opcode = true;
 
   switch (alt)
   {
@@ -361,6 +360,7 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
   skip_newlines ();
   if (tok.type != close_tt)
     {
+      bool is_first_opcode = true;
       while (true)
         {
           if (is_first_opcode)

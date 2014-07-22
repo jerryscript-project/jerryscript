@@ -243,6 +243,78 @@ set_variable_value(struct __int_data *int_data, /**< interpreter context */
   return ret_value;
 } /* set_variable_value */
 
+/**
+ * Number arithmetic operations.
+ */
+typedef enum
+{
+  number_arithmetic_addition, /**< addition */
+  number_arithmetic_substraction, /**< substraction */
+  number_arithmetic_multiplication, /**< multiplication */
+  number_arithmetic_division, /**< division */
+  number_arithmetic_remainder, /**< remainder calculation */
+} number_arithmetic_op;
+
+/**
+ * Perform ECMA number arithmetic operation.
+ *
+ * The algorithm of the operation is following:
+ *   leftNum = ToNumber( leftValue);
+ *   rightNum = ToNumber( rightValue);
+ *   result = leftNum ArithmeticOp rightNum;
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_CompletionValue_t
+do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
+                     T_IDX dst_var_idx, /**< destination variable identifier */
+                     number_arithmetic_op op, /**< number arithmetic operation */
+                     ecma_Value_t left_value, /**< left value */
+                     ecma_Value_t right_value) /** right value */
+{
+  ecma_CompletionValue_t ret_value;
+
+  TRY_CATCH(num_left_value, ecma_op_to_number( left_value), ret_value);
+  TRY_CATCH(num_right_value, ecma_op_to_number( right_value), ret_value);
+
+  ecma_Number_t *left_p, *right_p, *res_p;
+  left_p = (ecma_Number_t*)ecma_GetPointer( num_left_value.value.m_Value);
+  right_p = (ecma_Number_t*)ecma_GetPointer( num_right_value.value.m_Value);
+
+  res_p = ecma_AllocNumber();
+
+  switch ( op )
+    {
+    case number_arithmetic_addition:
+      *res_p = ecma_op_number_add( *left_p, *right_p);
+      break;
+    case number_arithmetic_substraction:
+      *res_p = ecma_op_number_substract( *left_p, *right_p);
+      break;
+    case number_arithmetic_multiplication:
+      *res_p = ecma_op_number_multiply( *left_p, *right_p);
+      break;
+    case number_arithmetic_division:
+      *res_p = ecma_op_number_divide( *left_p, *right_p);
+      break;
+    case number_arithmetic_remainder:
+      *res_p = ecma_op_number_remainder( *left_p, *right_p);
+      break;
+    }
+
+  ret_value = set_variable_value(int_data,
+                                 dst_var_idx,
+                                 ecma_MakeNumberValue( res_p));
+
+  ecma_DeallocNumber( res_p);
+
+  FINALIZE( num_right_value);
+  FINALIZE( num_left_value);
+
+  return ret_value;
+} /* do_number_arithmetic */
+
 #define OP_UNIMPLEMENTED_LIST(op) \
     op(is_true_jmp)                     \
     op(is_false_jmp)                    \
@@ -281,8 +353,6 @@ set_variable_value(struct __int_data *int_data, /**< interpreter context */
     op(greater_or_equal_than)           \
     op(addition)                        \
     op(substraction)                    \
-    op(division)                        \
-    op(remainder)                       \
     op(jmp_up)                          \
     op(jmp_down)                        \
     op(nop)
@@ -444,7 +514,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
 } /* opfunc_assignment */
 
 /**
- * Multiplicatoin opcode handler.
+ * Multiplication opcode handler.
  *
  * See also: ECMA-262 v5, 11.5, 11.5.1
  *
@@ -452,8 +522,8 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_CompletionValue_t
-opfunc_multiplication (OPCODE opdata, /**< operation data */
-                       struct __int_data *int_data) /**< interpreter context */
+opfunc_multiplication(OPCODE opdata, /**< operation data */
+                      struct __int_data *int_data) /**< interpreter context */
 {
   const T_IDX dst_var_idx = opdata.data.multiplication.dst;
   const T_IDX left_var_idx = opdata.data.multiplication.var_left;
@@ -465,29 +535,88 @@ opfunc_multiplication (OPCODE opdata, /**< operation data */
 
   TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
   TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
-  TRY_CATCH(num_left_value, ecma_op_to_number( left_value.value), ret_value);
-  TRY_CATCH(num_right_value, ecma_op_to_number( right_value.value), ret_value);
 
-  ecma_Number_t *left_p, *right_p, *res_p;
-  left_p = (ecma_Number_t*)ecma_GetPointer( num_left_value.value.m_Value);
-  right_p = (ecma_Number_t*)ecma_GetPointer( num_right_value.value.m_Value);
+  ret_value = do_number_arithmetic(int_data,
+                                   dst_var_idx,
+                                   number_arithmetic_multiplication,
+                                   left_value.value,
+                                   right_value.value);
 
-  res_p = ecma_AllocNumber();
-  *res_p = ecma_op_number_multiply( *left_p, *right_p);
-
-  ret_value = set_variable_value(int_data,
-                                 dst_var_idx,
-                                 ecma_MakeNumberValue( res_p));
-
-  ecma_DeallocNumber( res_p);
-
-  FINALIZE( num_right_value);
-  FINALIZE( num_left_value);
-  FINALIZE( right_value);
-  FINALIZE( left_value);
+  FINALIZE(right_value);
+  FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_multiplication */
+
+/**
+ * Division opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.5, 11.5.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_CompletionValue_t
+opfunc_division(OPCODE opdata, /**< operation data */
+                struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.division.dst;
+  const T_IDX left_var_idx = opdata.data.division.var_left;
+  const T_IDX right_var_idx = opdata.data.division.var_right;
+
+  int_data->pos++;
+
+  ecma_CompletionValue_t ret_value;
+
+  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic(int_data,
+                                   dst_var_idx,
+                                   number_arithmetic_division,
+                                   left_value.value,
+                                   right_value.value);
+
+  FINALIZE(right_value);
+  FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_division */
+
+/**
+ * Remainder calculation opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.5, 11.5.3
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_CompletionValue_t
+opfunc_remainder(OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.remainder.dst;
+  const T_IDX left_var_idx = opdata.data.remainder.var_left;
+  const T_IDX right_var_idx = opdata.data.remainder.var_right;
+
+  int_data->pos++;
+
+  ecma_CompletionValue_t ret_value;
+
+  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic(int_data,
+                                   dst_var_idx,
+                                   number_arithmetic_remainder,
+                                   left_value.value,
+                                   right_value.value);
+
+  FINALIZE(right_value);
+  FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_remainder */
 
 /**
  * Variable declaration opcode handler.

@@ -103,7 +103,11 @@ ecma_Number_t
 ecma_op_number_remainder(ecma_Number_t left_num, /**< left operand */
                          ecma_Number_t right_num) /**< right operand */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( left_num, right_num);
+  TODO( Implement according to ECMA );
+
+  ecma_Number_t n = left_num, d = right_num;
+
+  return ( n - d * (ecma_Number_t)( (int32_t)( n / d ) ) );
 } /* ecma_op_number_remainder */
 
 /**

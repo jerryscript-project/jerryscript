@@ -610,6 +610,19 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
  *         false - otherwise.
  */
 bool
+ecma_CompareEcmaStringToEcmaString(const ecma_ArrayFirstChunk_t *string1_p, /* ecma-string */
+                                   const ecma_ArrayFirstChunk_t *string2_p) /* ecma-string */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( string1_p, string2_p);
+} /* ecma_CompareEcmaStringToEcmaString */
+
+/**
+ * Compare zero-terminated string to ecma-string
+ * 
+ * @return true - if strings are equal;
+ *         false - otherwise.
+ */
+bool
 ecma_CompareZtStringToEcmaString(const ecma_Char_t *pString, /**< zero-terminated string */
                                  const ecma_ArrayFirstChunk_t *pEcmaString) /* ecma-string */
 {

@@ -351,8 +351,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(greater_than)                    \
     op(less_or_equal_than)              \
     op(greater_or_equal_than)           \
-    op(addition)                        \
-    op(substraction)                    \
     op(jmp_up)                          \
     op(jmp_down)                        \
     op(nop)
@@ -512,6 +510,88 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
       return assignment_completion_value;
     }
 } /* opfunc_assignment */
+
+/**
+ * Addition opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.6.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_CompletionValue_t
+opfunc_addition(OPCODE opdata, /**< operation data */
+                struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.addition.dst;
+  const T_IDX left_var_idx = opdata.data.addition.var_left;
+  const T_IDX right_var_idx = opdata.data.addition.var_right;
+
+  int_data->pos++;
+
+  ecma_CompletionValue_t ret_value;
+
+  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  TRY_CATCH(prim_left_value, ecma_op_to_primitive( left_value.value), ret_value);
+  TRY_CATCH(prim_right_value, ecma_op_to_primitive( right_value.value), ret_value);
+
+  if ( prim_left_value.value.m_ValueType == ECMA_TYPE_STRING
+       || prim_right_value.value.m_ValueType == ECMA_TYPE_STRING )
+    {
+      JERRY_UNIMPLEMENTED();
+    }
+  else
+    {
+      ret_value = do_number_arithmetic(int_data,
+                                       dst_var_idx,
+                                       number_arithmetic_addition,
+                                       prim_left_value.value,
+                                       prim_right_value.value);
+    }
+
+  FINALIZE(prim_right_value);
+  FINALIZE(prim_left_value);
+  FINALIZE(right_value);
+  FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_addition */
+
+/**
+ * Substraction opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.6.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_CompletionValue_t
+opfunc_substraction(OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.substraction.dst;
+  const T_IDX left_var_idx = opdata.data.substraction.var_left;
+  const T_IDX right_var_idx = opdata.data.substraction.var_right;
+
+  int_data->pos++;
+
+  ecma_CompletionValue_t ret_value;
+
+  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic(int_data,
+                                   dst_var_idx,
+                                   number_arithmetic_substraction,
+                                   left_value.value,
+                                   right_value.value);
+
+  FINALIZE(right_value);
+  FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_substraction */
 
 /**
  * Multiplication opcode handler.

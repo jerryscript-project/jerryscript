@@ -69,9 +69,10 @@ jerry_Exit( jerry_Status_t code) /**< status code */
       case ERR_GENERAL:
         __printf("ERR_GENERAL\n");
         break;
-      default:
-        __printf( "Return code is zero");
     }
+
+    /* The failed assertion is 'Return code is zero' */
+    jerry_AssertFail( "Return code is zero", __FILE__, __LINE__);
   }
 #endif /* !JERRY_NDEBUG */  
 

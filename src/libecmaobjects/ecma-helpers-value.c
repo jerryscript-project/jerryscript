@@ -106,6 +106,22 @@ ecma_MakeNumberValue( ecma_Number_t* num_p) /**< number to reference in value */
 } /* ecma_MakeNumberValue */
 
 /**
+ * String value constructor
+ */
+ecma_Value_t
+ecma_make_string_value( ecma_ArrayFirstChunk_t* ecma_string_p) /**< string to reference in value */
+{
+  JERRY_ASSERT( ecma_string_p != NULL );
+
+  ecma_Value_t string_value;
+
+  string_value.m_ValueType = ECMA_TYPE_STRING;
+  ecma_SetPointer( string_value.m_Value, ecma_string_p);
+
+  return string_value;
+} /* ecma_make_string_value */
+
+/**
  * Object value constructor
  */
 ecma_Value_t
@@ -341,19 +357,6 @@ ecma_is_completion_value_throw( ecma_CompletionValue_t value) /**< completion va
 {
   return ( value.type == ECMA_COMPLETION_TYPE_THROW );
 } /* ecma_is_completion_value_throw */
-
-/**
- * Check if the completion value is normal or throw value.
- *
- * @return true - if the completion type is normal or throw,
- *         false - otherwise.
- */
-bool
-ecma_is_completion_value_normal_or_throw( ecma_CompletionValue_t value) /**< completion value */
-{
-  return ecma_is_completion_value_normal( value)
-         || ecma_is_completion_value_throw( value);
-} /* ecma_is_completion_value_normal_or_throw */
 
 /**
  * Check if the completion value is specified normal simple value.

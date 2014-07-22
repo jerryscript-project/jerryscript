@@ -96,6 +96,12 @@ extern void jerry_RefUnusedVariables(int unused_variables_follow, ...);
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) do { JERRY_UNIMPLEMENTED(); if ( false ) { jerry_RefUnusedVariables( 0, __VA_ARGS__); } } while (0)
 
 /**
+ * Conditions' likeliness, unlikeliness.
+ */
+#define likely( x ) ( __builtin_expect( !!( x ), 1 ) )
+#define unlikely( x ) ( __builtin_expect( !!( x ), 0 ) )
+
+/**
  * Exit
  */
 extern void __noreturn jerry_Exit( jerry_Status_t code);

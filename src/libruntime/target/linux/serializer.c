@@ -22,9 +22,17 @@ _FILE *dump;
 #define OPCODE_STR(op) \
   #op,
 
-static char* massive[] = {
+#define OPCODE_SIZE(op) \
+  sizeof (struct __op_##op) + 1,
+
+static char* opcode_names[] = {
   OP_LIST (OPCODE_STR)
   ""
+};
+
+static uint8_t opcode_sizes[] = {
+  OP_LIST (OPCODE_SIZE)
+  0
 };
 
 void
@@ -42,7 +50,7 @@ serializer_dump_strings (const char *strings[], uint8_t size)
   for (i = 0; i < size; i++)
     {
       __printf ("%3d %3d %20s\n", i, offset, strings[i]);
-      offset = (uint8_t ) (offset + __strlen (strings[i]));
+      offset = (uint8_t ) (offset + __strlen (strings[i]) + 1);
     }
 
   return offset;
@@ -70,9 +78,10 @@ void
 serializer_dump_opcode (const void *opcode)
 {
   uint8_t i;
+  int opcode_num = (int)((char*)opcode)[0];
 
-  __printf ("%03d: %20s ", opcode_counter++, massive[(int)((char*)opcode)[0]]);
-  for (i = 1; i < 4; i++)
+  __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
+  for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((char*)opcode)[i]);
 
   __printf ("\n");
@@ -82,9 +91,10 @@ void
 serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
 {
   uint8_t i;
+  int opcode_num = (int)((char*)opcode)[0];
 
-  __printf ("%03d: %20s ", loc, massive[(int)((char*)opcode)[0]]);
-  for (i = 1; i < 4; i++)
+  __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
+  for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((char*)opcode)[i]);
 
   __printf ("// REWRITE\n");

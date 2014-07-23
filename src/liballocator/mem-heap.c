@@ -477,7 +477,7 @@ mem_heap_print( bool dump_block_data) /**< print block with data (true)
 #endif /* MEM_STATS */
 
   __printf("\n");
-} /* mem_PrintHeap */
+} /* mem_heap_print */
 
 /**
  * Check heap consistency
@@ -534,7 +534,7 @@ mem_heap_stat_init()
 
   mem_heap_stats.size = mem_heap.heap_size;
   mem_heap_stats.blocks = 1;
-} /* mem_InitStats */
+} /* mem_heap_stat_init */
 
 /**
  * Account block allocation

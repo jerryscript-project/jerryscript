@@ -78,9 +78,7 @@ ecma_op_check_object_coercible( ecma_value_t value) /**< ecma-value */
       }
   }
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                     ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 } /* ecma_op_check_object_coercible */
 
 /**

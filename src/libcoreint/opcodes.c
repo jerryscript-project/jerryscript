@@ -399,9 +399,7 @@ opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
 
   int_data->pos = opdata.data.loop_inf.loop_root;
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 }
 
 ecma_completion_value_t
@@ -417,9 +415,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   int_data->pos++;
 
   // FIXME
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 }
 
 ecma_completion_value_t
@@ -433,9 +429,7 @@ opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
 
   int_data->pos = opdata.data.jmp.opcode_idx;
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 }
 
 /**
@@ -761,9 +755,7 @@ opfunc_var_decl(OPCODE opdata, /**< operation data */
 
   int_data->pos++;
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 } /* opfunc_var_decl */
 
 /**

@@ -106,9 +106,7 @@ ecma_op_create_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environmen
     }
   }  
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 } /* ecma_op_create_mutable_binding */
 
 /**
@@ -153,9 +151,7 @@ ecma_op_set_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environment *
     }
   }  
 
-  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_empty_completion_value();
 } /* ecma_op_set_mutable_binding */
 
 /**

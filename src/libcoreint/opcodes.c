@@ -345,8 +345,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(greater_than)                    \
     op(less_or_equal_than)              \
     op(greater_or_equal_than)           \
-    op(jmp_up)                          \
-    op(jmp_down)                        \
     op(nop)                             \
     op(construct_0)                     \
     op(construct_1)                     \
@@ -400,19 +398,52 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   return ecma_make_empty_completion_value();
 }
 
+/**
+ * Jump opcode handler.
+ *
+ * Note:
+ *      the opcode changes current opcode position to specified opcode index
+ */
 ecma_completion_value_t
-opfunc_jmp (OPCODE opdata, struct __int_data *int_data)
+opfunc_jmp (OPCODE opdata, /**< operation data */
+            struct __int_data *int_data) /**< interpreter context */
 {
-#ifdef __HOST
-  __printf ("%d::op_jmp:idx:%d\n",
-          int_data->pos,
-          opdata.data.jmp.opcode_idx);
-#endif
-
   int_data->pos = opdata.data.jmp.opcode_idx;
 
   return ecma_make_empty_completion_value();
-}
+} /* opfunc_jmp */
+
+/**
+ * Jump down opcode handler.
+ *
+ * Note:
+ *      the opcode changes adds specified value to current opcode position
+ */
+ecma_completion_value_t
+opfunc_jmp_down (OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos += opdata.data.jmp_down.opcode_count;
+
+  return ecma_make_empty_completion_value();
+} /* opfunc_jmp_down */
+
+/**
+ * Jump up opcode handler.
+ *
+ * Note:
+ *      the opcode changes substracts specified value from current opcode position
+ */
+ecma_completion_value_t
+opfunc_jmp_up (OPCODE opdata, /**< operation data */
+               struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos -= opdata.data.jmp_up.opcode_count;
+
+  JERRY_ASSERT( int_data->pos >= 0 );
+
+  return ecma_make_empty_completion_value();
+} /* opfunc_jmp_up */
 
 /**
  * Assignment opcode handler.

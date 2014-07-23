@@ -35,7 +35,7 @@ static void parse_statement (void);
 static T_IDX parse_assignment_expression (void);
 static void parse_source_element_list (void);
 
-static T_IDX temp_name, min_temp_name, strings_count;
+static T_IDX temp_name, min_temp_name;
 
 static T_IDX
 next_temp_name (void)
@@ -415,14 +415,6 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
             case AL_CONSTRUCT_EXPR:
             case AL_CALL_EXPR:
               args[current_arg] = parse_assignment_expression ();
-              /* it's num literal.  */
-              if (strings_count < args[current_arg]
-                  && args[current_arg] < min_temp_name)
-                {
-                  T_IDX lhs = next_temp_name ();
-                  DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_NUMBER, lhs, args[current_arg]);
-                  args[current_arg] = lhs;
-                }
               break;
 
             case AL_OBJECT_LIT:
@@ -626,13 +618,30 @@ parse_object_literal (void)
 static T_IDX
 parse_literal (void)
 {
+  T_IDX lhs;
+
   switch (tok.type)
   {
     case TOK_NULL:
+      lhs = next_temp_name ();
+      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_SIMPLE, lhs, ECMA_SIMPLE_VALUE_NULL);
+      return lhs;
+
     case TOK_BOOL:
+      lhs = next_temp_name ();
+      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_SIMPLE, lhs, 
+                   tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      return lhs;
+
     case TOK_INT:
+      lhs = next_temp_name ();
+      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_NUMBER, lhs, tok.data.uid);
+      return lhs;
+
     case TOK_STRING:
-      return tok.data.uid;
+      lhs = next_temp_name ();
+      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_STRING, lhs, tok.data.uid);
+      return lhs;
 
     default:
       JERRY_UNREACHABLE ();
@@ -1820,7 +1829,6 @@ void
 parser_init (void)
 {
   temp_name = min_temp_name = lexer_get_reserved_ids_count ();
-  strings_count = lexer_get_strings (NULL);
 #ifdef __HOST
   debug_file = __fopen ("parser.log", "w");
 #endif

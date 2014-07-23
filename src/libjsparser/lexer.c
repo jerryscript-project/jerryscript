@@ -178,6 +178,16 @@ get_char (size_t i)
 
 #define LA(I) 			(get_char (I))
 
+static void
+dump_current_line (void)
+{
+  const char *i;
+
+  for (i = buffer; *i != '\n' && *i != 0; i++)
+    __putchar (*i);
+  __putchar ('\n');
+}
+
 #else
 
 /* Represents the contents of a file.  */
@@ -898,9 +908,17 @@ static int i = 0;
 token
 lexer_next_token (void)
 {
+  LA (0); // Init buffers
+  
+  if (buffer == buffer_start)
+    dump_current_line ();
+
   token tok = lexer_next_token_private ();
   if (tok.type == TOK_NEWLINE)
-    return tok;
+    {
+      dump_current_line ();
+      return tok;
+    }
   if (tok.type == TOK_CLOSE_BRACE)
     {
       // if (i == 300)

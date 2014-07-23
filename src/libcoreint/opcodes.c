@@ -166,9 +166,9 @@ do_strict_eval_arguments_check( ecma_reference_t ref) /**< ECMA-reference */
   return ( ref.is_strict
           && ( __strcmp( (char*)ref.referenced_name_p, "eval") == 0
               || __strcmp( (char*)ref.referenced_name_p, "arguments") == 0 )
-          && ( ref.base.ValueType == ECMA_TYPE_OBJECT )
-          && ( ecma_get_pointer( ref.base.Value) != NULL )
-          && ( ( (ecma_object_t*) ecma_get_pointer( ref.base.Value) )->IsLexicalEnvironment ) );
+          && ( ref.base.value_type == ECMA_TYPE_OBJECT )
+          && ( ecma_get_pointer( ref.base.value) != NULL )
+          && ( ( (ecma_object_t*) ecma_get_pointer( ref.base.value) )->is_lexical_environment ) );
 } /* do_strict_eval_arguments_check */
 
 /**
@@ -279,8 +279,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
   TRY_CATCH(num_right_value, ecma_op_to_number( right_value), ret_value);
 
   ecma_number_t *left_p, *right_p, *res_p;
-  left_p = (ecma_number_t*)ecma_get_pointer( num_left_value.value.Value);
-  right_p = (ecma_number_t*)ecma_get_pointer( num_right_value.value.Value);
+  left_p = (ecma_number_t*)ecma_get_pointer( num_left_value.value.value);
+  right_p = (ecma_number_t*)ecma_get_pointer( num_right_value.value.value);
 
   res_p = ecma_alloc_number();
 
@@ -562,8 +562,8 @@ opfunc_addition(OPCODE opdata, /**< operation data */
   TRY_CATCH(prim_left_value, ecma_op_to_primitive( left_value.value), ret_value);
   TRY_CATCH(prim_right_value, ecma_op_to_primitive( right_value.value), ret_value);
 
-  if ( prim_left_value.value.ValueType == ECMA_TYPE_STRING
-       || prim_right_value.value.ValueType == ECMA_TYPE_STRING )
+  if ( prim_left_value.value.value_type == ECMA_TYPE_STRING
+       || prim_right_value.value.value_type == ECMA_TYPE_STRING )
     {
       JERRY_UNIMPLEMENTED();
     }

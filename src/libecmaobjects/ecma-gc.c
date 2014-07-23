@@ -42,49 +42,49 @@ static ecma_object_t *ecma_gc_objs_to_free_queue;
  *          After this operation the object is not longer valid for general use.
  */
 static void
-ecma_gc_queue( ecma_object_t *pObject) /**< object */
+ecma_gc_queue( ecma_object_t *object_p) /**< object */
 {
-    JERRY_ASSERT( pObject != NULL );
-    JERRY_ASSERT( pObject->GCInfo.IsObjectValid );
-    JERRY_ASSERT( pObject->GCInfo.u.Refs == 0 );
+    JERRY_ASSERT( object_p != NULL );
+    JERRY_ASSERT( object_p->GCInfo.is_object_valid );
+    JERRY_ASSERT( object_p->GCInfo.u.refs == 0 );
 
-    pObject->GCInfo.IsObjectValid = false;
-    ecma_set_pointer( pObject->GCInfo.u.NextQueuedForGC, ecma_gc_objs_to_free_queue);
+    object_p->GCInfo.is_object_valid = false;
+    ecma_set_pointer( object_p->GCInfo.u.next_queued_for_gc, ecma_gc_objs_to_free_queue);
 
-    ecma_gc_objs_to_free_queue = pObject;
+    ecma_gc_objs_to_free_queue = object_p;
 } /* ecma_gc_queue */
 
 /**
  * Increase reference counter of an object
  */
 void
-ecma_ref_object(ecma_object_t *pObject) /**< object */
+ecma_ref_object(ecma_object_t *object_p) /**< object */
 {
-    JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
+    JERRY_ASSERT(object_p->GCInfo.is_object_valid);
 
-    pObject->GCInfo.u.Refs++;
+    object_p->GCInfo.u.refs++;
 
     /**
      * Check that value was not overflowed
      */
-    JERRY_ASSERT(pObject->GCInfo.u.Refs > 0);
+    JERRY_ASSERT(object_p->GCInfo.u.refs > 0);
 } /* ecma_ref_object */
 
 /**
  * Decrease reference counter of an object
  */
 void
-ecma_deref_object(ecma_object_t *pObject) /**< object */
+ecma_deref_object(ecma_object_t *object_p) /**< object */
 {
-    JERRY_ASSERT(pObject != NULL);
-    JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
-    JERRY_ASSERT(pObject->GCInfo.u.Refs > 0);
+    JERRY_ASSERT(object_p != NULL);
+    JERRY_ASSERT(object_p->GCInfo.is_object_valid);
+    JERRY_ASSERT(object_p->GCInfo.u.refs > 0);
 
-    pObject->GCInfo.u.Refs--;
+    object_p->GCInfo.u.refs--;
 
-    if ( pObject->GCInfo.u.Refs == 0 )
+    if ( object_p->GCInfo.u.refs == 0 )
     {
-        ecma_gc_queue( pObject);
+        ecma_gc_queue( object_p);
     }
 } /* ecma_deref_object */
 
@@ -105,39 +105,39 @@ ecma_gc_run( void)
 {
     while ( ecma_gc_objs_to_free_queue != NULL )
     {
-        ecma_object_t *pObject = ecma_gc_objs_to_free_queue;
-        ecma_gc_objs_to_free_queue = ecma_get_pointer( pObject->GCInfo.u.NextQueuedForGC);
+        ecma_object_t *object_p = ecma_gc_objs_to_free_queue;
+        ecma_gc_objs_to_free_queue = ecma_get_pointer( object_p->GCInfo.u.next_queued_for_gc);
 
-        JERRY_ASSERT( !pObject->GCInfo.IsObjectValid );
+        JERRY_ASSERT( !object_p->GCInfo.is_object_valid );
 
-        for ( ecma_property_t *property = ecma_get_pointer( pObject->pProperties), *pNextProperty;
+        for ( ecma_property_t *property = ecma_get_pointer( object_p->properties_p), *next_property_p;
               property != NULL;
-              property = pNextProperty )
+              property = next_property_p )
         {
-            pNextProperty = ecma_get_pointer( property->pNextProperty);
+            next_property_p = ecma_get_pointer( property->next_property_p);
 
             ecma_free_property( property);
         }
 
-        if ( pObject->IsLexicalEnvironment )
+        if ( object_p->is_lexical_environment )
         {
-            ecma_object_t *pOuterLexicalEnvironment = ecma_get_pointer( pObject->u.LexicalEnvironment.pOuterReference);
+            ecma_object_t *outer_lexical_environment_p = ecma_get_pointer( object_p->u.lexical_environment.outer_reference_p);
             
-            if ( pOuterLexicalEnvironment != NULL )
+            if ( outer_lexical_environment_p != NULL )
             {
-                ecma_deref_object( pOuterLexicalEnvironment);
+                ecma_deref_object( outer_lexical_environment_p);
             }
         } else
         {
-            ecma_object_t *pPrototypeObject = ecma_get_pointer( pObject->u.Object.pPrototypeObject);
+            ecma_object_t *prototype_object_p = ecma_get_pointer( object_p->u.object.prototype_object_p);
             
-            if ( pPrototypeObject != NULL )
+            if ( prototype_object_p != NULL )
             {
-                ecma_deref_object( pPrototypeObject);
+                ecma_deref_object( prototype_object_p);
             }
         }
         
-        ecma_dealloc_object( pObject);
+        ecma_dealloc_object( object_p);
     }
 } /* ecma_gc_run */
 

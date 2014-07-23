@@ -31,23 +31,23 @@
  *      Compact the struct
  */
 typedef struct mem_pool_state_t {
-    uint8_t *pPoolStart; /**< first address of pool space */
-    size_t PoolSize; /**< pool space size */
+    uint8_t *pool_start_p; /**< first address of pool space */
+    size_t pool_size; /**< pool space size */
 
-    size_t ChunkSize; /**< size of one chunk */
+    size_t chunk_size; /**< size of one chunk */
 
-    mword_t *pBitmap; /**< bitmap - pool chunks' state */
-    uint8_t *pChunks; /**< chunks with data */
+    mword_t *bitmap_p; /**< bitmap - pool chunks' state */
+    uint8_t *chunks_p; /**< chunks with data */
 
-    size_t ChunksNumber; /**< number of chunks */
-    size_t FreeChunksNumber; /**< number of free chunks */
+    size_t chunks_number; /**< number of chunks */
+    size_t free_chunks_number; /**< number of free chunks */
 
-    struct mem_pool_state_t *pNextPool; /**< pointer to the next pool with same chunk size */
+    struct mem_pool_state_t *next_pool_p; /**< pointer to the next pool with same chunk size */
 } mem_pool_state_t;
 
-extern void mem_pool_init(mem_pool_state_t *pPool, size_t chunkSize, uint8_t *poolStart, size_t poolSize);
-extern uint8_t* mem_pool_alloc_chunk(mem_pool_state_t *pPool);
-extern void mem_pool_free_chunk(mem_pool_state_t *pPool, uint8_t *pChunk);
+extern void mem_pool_init(mem_pool_state_t *pool_p, size_t chunk_size, uint8_t *pool_start, size_t pool_size);
+extern uint8_t* mem_pool_alloc_chunk(mem_pool_state_t *pool_p);
+extern void mem_pool_free_chunk(mem_pool_state_t *pool_p, uint8_t *chunk_p);
 
 #endif /* JERRY_MEM_POOL_H */
 

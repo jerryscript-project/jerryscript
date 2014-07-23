@@ -103,12 +103,12 @@ typedef enum {
  */
 typedef struct {
     /** Value type (ecma_type_t) */
-    unsigned int ValueType : 2;
+    unsigned int value_type : 2;
 
     /**
-     * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on ValueType)
+     * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
      */
-    unsigned int Value : ECMA_POINTER_FIELD_WIDTH;
+    unsigned int value : ECMA_POINTER_FIELD_WIDTH;
 } __packed ecma_value_t;
 
 /**
@@ -187,10 +187,10 @@ typedef enum
  */
 typedef struct ecma_property_t {
     /** Property's type (ecma_property_type_t) */
-    unsigned int Type : 2;
+    unsigned int type : 2;
 
     /** Compressed pointer to next property */
-    unsigned int pNextProperty : ECMA_POINTER_FIELD_WIDTH;
+    unsigned int next_property_p : ECMA_POINTER_FIELD_WIDTH;
 
     /** Property's details (depending on Type) */
     union {
@@ -198,47 +198,47 @@ typedef struct ecma_property_t {
         /** Description of named data property */
         struct __packed ecma_named_data_property_t {
             /** Compressed pointer to property's name (pointer to String) */
-            unsigned int pName : ECMA_POINTER_FIELD_WIDTH;
+            unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
 
             /** Attribute 'Writable' (ecma_property_writable_value_t) */
-            unsigned int Writable : 1;
+            unsigned int writable : 1;
 
             /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-            unsigned int Enumerable : 1;
+            unsigned int enumerable : 1;
 
             /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-            unsigned int Configurable : 1;
+            unsigned int configurable : 1;
 
             /** Value */
-            ecma_value_t Value;
-        } NamedDataProperty;
+            ecma_value_t value;
+        } named_data_property;
 
         /** Description of named accessor property */
         struct __packed ecma_named_accessor_property_t {
             /** Compressed pointer to property's name (pointer to String) */
-            unsigned int pName : ECMA_POINTER_FIELD_WIDTH;
+            unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
 
             /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-            unsigned int Enumerable : 1;
+            unsigned int enumerable : 1;
 
             /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-            unsigned int Configurable : 1;
+            unsigned int configurable : 1;
 
             /** Compressed pointer to property's getter */
-            unsigned int pGet : ECMA_POINTER_FIELD_WIDTH;
+            unsigned int get_p : ECMA_POINTER_FIELD_WIDTH;
 
             /** Compressed pointer to property's setter */
-            unsigned int pSet : ECMA_POINTER_FIELD_WIDTH;
-        } NamedAccessorProperty;
+            unsigned int set_p : ECMA_POINTER_FIELD_WIDTH;
+        } named_accessor_property;
 
         /** Description of internal property */
         struct __packed ecma_internal_property_t {
             /** Internal property's type */
-            unsigned int InternalPropertyType : 4;
+            unsigned int internal_property_type : 4;
 
             /** Value (may be a compressed pointer) */
-            unsigned int Value : ECMA_POINTER_FIELD_WIDTH;
-        } InternalProperty;
+            unsigned int value : ECMA_POINTER_FIELD_WIDTH;
+        } internal_property;
     } u;
 } ecma_property_t;
 
@@ -250,22 +250,22 @@ typedef struct {
      * Flag that indicates if the object is valid for normal usage.
      * If the flag is zero, then the object is not valid and is queued for GC.
      */
-    unsigned int IsObjectValid : 1;
+    unsigned int is_object_valid : 1;
 
-    /** Details (depending on IsObjectValid) */
+    /** Details (depending on is_object_valid) */
     union {
         /**
-         * Number of refs to the object (if IsObjectValid).
+         * Number of refs to the object (if is_object_valid).
          * 
          * Note: It is not a pointer. Maximum value of reference counter
          *       willn't be bigger than overall count of variables/objects/properties,
          *       which is limited by size of address space allocated for JerryScript
          *       (and, consequently, by ECMA_POINTER_FIELD_WIDTH).
          */
-        unsigned int Refs : ECMA_POINTER_FIELD_WIDTH;
+        unsigned int refs : ECMA_POINTER_FIELD_WIDTH;
 
-        /** Compressed pointer to next object in the list of objects, queued for GC (if !IsObjectValid) */
-        unsigned int NextQueuedForGC : ECMA_POINTER_FIELD_WIDTH;
+        /** Compressed pointer to next object in the list of objects, queued for GC (if !is_object_valid) */
+        unsigned int next_queued_for_gc : ECMA_POINTER_FIELD_WIDTH;
     } __packed u;
 } ecma_gc_info_t;
 
@@ -279,44 +279,44 @@ typedef enum {
 
 /**
  * Description of ECMA-object or lexical environment
- * (depending on IsLexicalEnvironment).
+ * (depending on is_lexical_environment).
  */
 typedef struct ecma_object_t {
     /** Compressed pointer to property list */
-    unsigned int pProperties : ECMA_POINTER_FIELD_WIDTH;
+    unsigned int properties_p : ECMA_POINTER_FIELD_WIDTH;
 
     /** Flag indicating whether it is a general object (false)
         or a lexical environment (true) */
-    unsigned int IsLexicalEnvironment : 1;
+    unsigned int is_lexical_environment : 1;
 
     /**
      * Attributes of either general object or lexical environment
-     * (depending on IsLexicalEnvironment)
+     * (depending on is_lexical_environment)
      */
     union {
         /**
-         * A general object's attributes (if !IsLexicalEnvironment)
+         * A general object's attributes (if !is_lexical_environment)
          */
         struct {
             /** Attribute 'Extensible' */
-            unsigned int Extensible : 1;
+            unsigned int extensible : 1;
 
             /** Compressed pointer to prototype object (ecma_object_t) */
-            unsigned int pPrototypeObject : ECMA_POINTER_FIELD_WIDTH;
-        } __packed Object;
+            unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;
+        } __packed object;
 
         /**
-         * A lexical environment's attribute (if IsLexicalEnvironment)
+         * A lexical environment's attribute (if is_lexical_environment)
          */
         struct {
             /**
              * Type of lexical environment (ecma_lexical_environment_type_t).
              */
-            unsigned int Type : 1;
+            unsigned int type : 1;
 
             /** Compressed pointer to outer lexical environment */
-            unsigned int pOuterReference : ECMA_POINTER_FIELD_WIDTH;
-        } __packed LexicalEnvironment;
+            unsigned int outer_reference_p : ECMA_POINTER_FIELD_WIDTH;
+        } __packed lexical_environment;
 
     } __packed u;
 
@@ -344,10 +344,10 @@ typedef uint16_t ecma_length_t;
  */
 typedef struct {
     /** Compressed pointer to next chunk */
-    uint16_t pNextChunk;
+    uint16_t next_chunk_p;
 
     /** Number of elements in the Array */
-    ecma_length_t UnitNumber;
+    ecma_length_t unit_number;
 } ecma_array_header_t;
 
 /**
@@ -360,10 +360,10 @@ typedef struct {
  */
 typedef struct {
     /** Array's header */
-    ecma_array_header_t Header;
+    ecma_array_header_t header;
 
     /** Elements */
-    uint8_t Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_array_header_t) ];
+    uint8_t data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_array_header_t) ];
 } ecma_array_first_chunk_t;
 
 /**
@@ -371,10 +371,10 @@ typedef struct {
  */
 typedef struct {
     /** Compressed pointer to next chunk */
-    uint16_t pNextChunk;
+    uint16_t next_chunk_p;
 
     /** Characters */
-    uint8_t Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
+    uint8_t data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
 } ecma_array_non_first_chunk_t;
 
 /**

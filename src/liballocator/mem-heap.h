@@ -38,11 +38,11 @@ typedef enum {
     MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
 } mem_heap_alloc_term_t;
 
-extern void mem_heap_init(uint8_t *heapStart, size_t heapSize);
-extern uint8_t* mem_heap_alloc_block(size_t sizeInBytes, mem_heap_alloc_term_t allocTerm);
+extern void mem_heap_init(uint8_t *heap_start, size_t heap_size);
+extern uint8_t* mem_heap_alloc_block(size_t size_in_bytes, mem_heap_alloc_term_t alloc_term);
 extern void mem_heap_free_block(uint8_t *ptr);
-extern size_t mem_heap_recommend_allocation_size(size_t minimumAllocationSize);
-extern void mem_heap_print(bool dumpBlockData);
+extern size_t mem_heap_recommend_allocation_size(size_t minimum_allocation_size);
+extern void mem_heap_print(bool dump_block_data);
 
 #ifdef MEM_STATS
 /**

@@ -51,34 +51,34 @@ JERRY_STATIC_ASSERT( sizeof (ecma_completion_value_t) == sizeof(uint32_t) );
  *
  * FIXME: Run GC only if allocation failed.
  */
-#define ALLOC( ecmaType) ecma_ ## ecmaType ## _t * \
-ecma_alloc_ ## ecmaType (void) \
+#define ALLOC( ecma_type) ecma_ ## ecma_type ## _t * \
+ecma_alloc_ ## ecma_type (void) \
 { \
-    ecma_ ## ecmaType ## _t *p ## ecmaType = (ecma_ ## ecmaType ## _t *) \
-        mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecmaType ## _t))); \
+    ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
+        mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
     \
     ecma_gc_run(); \
-    JERRY_ASSERT( p ## ecmaType != NULL ); \
+    JERRY_ASSERT( p ## ecma_type != NULL ); \
     \
-    return p ## ecmaType; \
+    return p ## ecma_type; \
 }
 
 /**
  * Deallocation routine template
  */
-#define DEALLOC( ecmaType) void \
-ecma_dealloc_ ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
+#define DEALLOC( ecma_type) void \
+ecma_dealloc_ ## ecma_type( ecma_ ## ecma_type ## _t *p ## ecma_type) \
 { \
-    mem_pools_free( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecmaType ## _t)), \
-                      (uint8_t*) p ## ecmaType); \
+    mem_pools_free( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t)), \
+                      (uint8_t*) p ## ecma_type); \
 }
 
 /**
  * Declaration of alloc/free routine for specified ecma-type.
  */
-#define DECLARE_ROUTINES_FOR( ecmaType) \
-    ALLOC( ecmaType) \
-    DEALLOC( ecmaType)
+#define DECLARE_ROUTINES_FOR( ecma_type) \
+    ALLOC( ecma_type) \
+    DEALLOC( ecma_type)
 
 DECLARE_ROUTINES_FOR (object)
 DECLARE_ROUTINES_FOR (property)

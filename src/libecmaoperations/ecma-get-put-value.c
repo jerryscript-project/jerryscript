@@ -43,10 +43,10 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
   const ecma_value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined( base);
   const bool has_primitive_base = ( ecma_is_value_boolean( base)
-                                    || base.ValueType == ECMA_TYPE_NUMBER
-                                    || base.ValueType == ECMA_TYPE_STRING );
-  const bool has_object_base = ( base.ValueType == ECMA_TYPE_OBJECT
-                                 && !((ecma_object_t*)ecma_get_pointer(base.Value))->IsLexicalEnvironment );
+                                    || base.value_type == ECMA_TYPE_NUMBER
+                                    || base.value_type == ECMA_TYPE_STRING );
+  const bool has_object_base = ( base.value_type == ECMA_TYPE_OBJECT
+                                 && !((ecma_object_t*)ecma_get_pointer(base.value))->is_lexical_environment );
   const bool is_property_reference = has_primitive_base || has_object_base;
                                      
   // GetValue_3
@@ -60,8 +60,8 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
   {
     if ( !has_primitive_base ) // GetValue_4.a
     {
-      ecma_object_t *obj_p = ecma_get_pointer( base.Value);
-      JERRY_ASSERT( obj_p != NULL && !obj_p->IsLexicalEnvironment );
+      ecma_object_t *obj_p = ecma_get_pointer( base.value);
+      JERRY_ASSERT( obj_p != NULL && !obj_p->is_lexical_environment );
       
       // GetValue_4.b case 1
       /* return [[Get]]( base as this, ref.referenced_name_p) */
@@ -70,18 +70,18 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
     { // GetValue_4.b case 2
       /*
        ecma_object_t *obj_p = ecma_ToObject( base);
-       JERRY_ASSERT( obj_p != NULL && !obj_p->IsLexicalEnvironment );
+       JERRY_ASSERT( obj_p != NULL && !obj_p->is_lexical_environment );
        ecma_property_t *property = obj_p->[[GetProperty]]( ref.referenced_name_p);
        if ( property->Type == ECMA_PROPERTY_NAMEDDATA )
        {
          return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                          ecma_copy_value( property->u.NamedDataProperty.Value),
+                                          ecma_copy_value( property->u.named_data_property.value),
                                           ECMA_TARGET_ID_RESERVED);
        } else
        {
          JERRY_ASSERT( property->Type == ECMA_PROPERTY_NAMEDACCESSOR );
 
-         ecma_object_t *getter = ecma_get_pointer( property->u.NamedAccessorProperty.pGet);
+         ecma_object_t *getter = ecma_get_pointer( property->u.named_accessor_property.get_p);
 
          if ( getter == NULL )
          {
@@ -99,9 +99,9 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
   } else
   {
     // GetValue_5
-    ecma_object_t *lex_env_p = ecma_get_pointer( base.Value);
+    ecma_object_t *lex_env_p = ecma_get_pointer( base.value);
 
-    JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
+    JERRY_ASSERT( lex_env_p != NULL && lex_env_p->is_lexical_environment );
 
     return ecma_op_get_binding_value( lex_env_p, ref.referenced_name_p, ref.is_strict);
   }
@@ -122,10 +122,10 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
   const ecma_value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined( base);
   const bool has_primitive_base = ( ecma_is_value_boolean( base)
-                                    || base.ValueType == ECMA_TYPE_NUMBER
-                                    || base.ValueType == ECMA_TYPE_STRING );
-  const bool has_object_base = ( base.ValueType == ECMA_TYPE_OBJECT
-                                 && !((ecma_object_t*)ecma_get_pointer(base.Value))->IsLexicalEnvironment );
+                                    || base.value_type == ECMA_TYPE_NUMBER
+                                    || base.value_type == ECMA_TYPE_STRING );
+  const bool has_object_base = ( base.value_type == ECMA_TYPE_OBJECT
+                                 && !((ecma_object_t*)ecma_get_pointer(base.value))->is_lexical_environment );
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   if ( is_unresolvable_reference ) // PutValue_3
@@ -158,7 +158,7 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
       /*
        // PutValue_sub_1
        ecma_object_t *obj_p = ecma_ToObject( base);
-       JERRY_ASSERT( obj_p != NULL && !obj_p->IsLexicalEnvironment );
+       JERRY_ASSERT( obj_p != NULL && !obj_p->is_lexical_environment );
 
        // PutValue_sub_2
        if ( !obj_p->[[CanPut]]( ref.referenced_name_p) )
@@ -200,7 +200,7 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
        if ( ecma_OpIsAccessorDescriptor( prop) )
        {
          // PutValue_sub_6.a
-         ecma_object_t *setter = ecma_get_pointer( property->u.NamedAccessorProperty.pSet);
+         ecma_object_t *setter = ecma_get_pointer( property->u.named_accessor_property.set_p);
          JERRY_ASSERT( setter != NULL );
 
          // PutValue_sub_6.b
@@ -225,9 +225,9 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
   } else
   {
     // PutValue_7
-    ecma_object_t *lex_env_p = ecma_get_pointer( base.Value);
+    ecma_object_t *lex_env_p = ecma_get_pointer( base.value);
 
-    JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
+    JERRY_ASSERT( lex_env_p != NULL && lex_env_p->is_lexical_environment );
 
     return ecma_op_set_mutable_binding( lex_env_p, ref.referenced_name_p, value, ref.is_strict);
   }

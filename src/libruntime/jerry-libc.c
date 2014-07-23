@@ -59,10 +59,10 @@ __memset(void *s,  /**< area to set values in */
          int c,    /**< value to set */
          size_t n) /**< area size */
 {
-    uint8_t *pArea = s;
+    uint8_t *area_p = s;
     for ( size_t index = 0; index < n; index++ )
     {
-        pArea[ index ] = (uint8_t)c;
+        area_p[ index ] = (uint8_t)c;
     }
     
     return s;
@@ -80,13 +80,13 @@ __memcmp(const void *s1, /**< first area */
             const void *s2, /**< second area */
             size_t n) /**< area size */
 {
-    const uint8_t *pArea1 = s1, *pArea2 = s2;
+    const uint8_t *area1_p = s1, *area2_p = s2;
     for ( size_t index = 0; index < n; index++ )
     {
-        if ( pArea1[ index ] < pArea2[ index ] )
+        if ( area1_p[ index ] < area2_p[ index ] )
         {
             return -1;
-        } else if ( pArea1[ index ] > pArea2[ index ] )
+        } else if ( area1_p[ index ] > area2_p[ index ] )
         {
             return 1;
         }
@@ -103,12 +103,12 @@ __memcpy(void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
 {
-    uint8_t *pArea1 = s1;
-    const uint8_t *pArea2 = s2;
+    uint8_t *area1_p = s1;
+    const uint8_t *area2_p = s2;
     
     for ( size_t index = 0; index < n; index++ )
     {
-        pArea1[ index ] = pArea2[ index ];
+        area1_p[ index ] = area2_p[ index ];
     }
 
   return s1;

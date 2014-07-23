@@ -51,11 +51,11 @@ typedef enum {
                                         ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
                                         jerry_unreferenced_expression)))))
 
-extern size_t mem_get_chunk_size( mem_pool_chunk_type_t chunkType);
+extern size_t mem_get_chunk_size( mem_pool_chunk_type_t chunk_type);
 
 extern void mem_pools_init(void);
-extern uint8_t* mem_pools_alloc(mem_pool_chunk_type_t chunkType);
-extern void mem_pools_free(mem_pool_chunk_type_t chunkType, uint8_t *pChunk);
+extern uint8_t* mem_pools_alloc(mem_pool_chunk_type_t chunk_type);
+extern void mem_pools_free(mem_pool_chunk_type_t chunk_type, uint8_t *chunk_p);
 
 #ifdef MEM_STATS
 /**

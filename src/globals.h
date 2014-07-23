@@ -140,7 +140,7 @@ extern void __noreturn jerry_exit( jerry_status_t code);
  */
 inline uint32_t jerry_extract_bit_field(uint32_t value, uint32_t lsb,
                                       uint32_t width);
-inline uint32_t jerry_set_bit_field_value(uint32_t value, uint32_t bitFieldValue,
+inline uint32_t jerry_set_bit_field_value(uint32_t value, uint32_t bit_field_value,
                                        uint32_t lsb, uint32_t width);
 
 /**
@@ -158,10 +158,10 @@ jerry_extract_bit_field(uint32_t
     JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
     JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
 
-    uint32_t shiftedValue = container >> lsb;
-    uint32_t bitFieldMask = (1u << width) - 1;
+    uint32_t shifted_value = container >> lsb;
+    uint32_t bit_field_mask = (1u << width) - 1;
 
-    return ( shiftedValue & bitFieldMask);
+    return ( shifted_value & bit_field_mask);
 } /* jerry_extract_bit_field */
 
 /**
@@ -172,20 +172,20 @@ jerry_extract_bit_field(uint32_t
 inline uint32_t
 jerry_set_bit_field_value(uint32_t
                        container, /**< container to insert bit-field to */
-                       uint32_t newBitFieldValue, /**< value of bit-field to insert */
+                       uint32_t new_bit_field_value, /**< value of bit-field to insert */
                        uint32_t lsb, /**< least significant bit of the value
                                       *   to be extracted */
                        uint32_t width) /**< width of the bit-field to be extracted */
 {
     JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
     JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
-    JERRY_ASSERT(newBitFieldValue <= (1u << width));
+    JERRY_ASSERT(new_bit_field_value <= (1u << width));
 
-    uint32_t bitFieldMask = (1u << width) - 1;
-    uint32_t shiftedBitFieldMask = bitFieldMask << lsb;
-    uint32_t shiftedNewBitFieldValue = newBitFieldValue << lsb;
+    uint32_t bit_field_mask = (1u << width) - 1;
+    uint32_t shifted_bit_field_mask = bit_field_mask << lsb;
+    uint32_t shifted_new_bit_field_value = new_bit_field_value << lsb;
 
-    return ( container & ~shiftedBitFieldMask) | shiftedNewBitFieldValue;
+    return ( container & ~shifted_bit_field_mask) | shifted_new_bit_field_value;
 } /* jerry_set_bit_field_value */
 
 #endif /* !JERRY_GLOBALS_H */

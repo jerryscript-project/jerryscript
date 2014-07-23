@@ -410,8 +410,6 @@ opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
   const T_IDX cond_var_idx = opdata.data.is_true_jmp.value;
   const T_IDX dst_opcode_idx = opdata.data.is_true_jmp.opcode;
 
-  int_data->pos = dst_opcode_idx;
-
   ecma_completion_value_t ret_value;
 
   TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
@@ -421,7 +419,11 @@ opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
 
   if ( ecma_is_value_true( to_bool_completion.value) )
     {
-      int_data->pos = opdata.data.jmp.opcode_idx;
+      int_data->pos = dst_opcode_idx;
+    }
+  else
+    {
+      int_data->pos++;
     }
 
   ret_value = ecma_make_empty_completion_value();
@@ -445,8 +447,6 @@ opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
   const T_IDX cond_var_idx = opdata.data.is_false_jmp.value;
   const T_IDX dst_opcode_idx = opdata.data.is_false_jmp.opcode;
 
-  int_data->pos = dst_opcode_idx;
-
   ecma_completion_value_t ret_value;
 
   TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
@@ -456,7 +456,11 @@ opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
 
   if ( !ecma_is_value_true( to_bool_completion.value) )
     {
-      int_data->pos = opdata.data.jmp.opcode_idx;
+      int_data->pos = dst_opcode_idx;
+    }
+  else
+    {
+      int_data->pos++;
     }
 
   ret_value = ecma_make_empty_completion_value();

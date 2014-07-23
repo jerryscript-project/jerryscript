@@ -27,7 +27,9 @@ main( int __unused argc,
 {
   const OPCODE test_program[] = {
     getop_var_decl( 0),
-    getop_exitval( 0)
+    getop_is_true_jmp( 0, 3),
+    getop_exitval( 0),
+    getop_exitval( 1)
   };
 
   mem_init();

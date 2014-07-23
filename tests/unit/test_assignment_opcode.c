@@ -26,13 +26,17 @@ main( int __unused argc,
       char __unused **argv)
 {
   const OPCODE test_program[] = {
-    getop_var_decl( 0),
-    getop_var_decl( 1),
-    getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
-    getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
-    getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),
-    getop_assignment( 1, OPCODE_ARG_TYPE_NUMBER, 2),
-    getop_exitval( 0)
+    /*  0: */ getop_var_decl( 0),
+    /*  1: */ getop_var_decl( 1),
+    /*  2: */ getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
+    /*  3: */ getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
+    /*  4: */ getop_is_true_jmp( 1, 6),
+    /*  5: */ getop_jmp_down( 5),
+    /*  6: */ getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),
+    /*  7: */ getop_assignment( 1, OPCODE_ARG_TYPE_NUMBER, 2),
+    /*  8: */ getop_is_false_jmp( 1, 10),
+    /*  9: */ getop_exitval( 0),
+    /* 10: */ getop_exitval( 1)
   };
 
   mem_init();

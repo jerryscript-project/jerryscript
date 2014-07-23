@@ -316,8 +316,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
 } /* do_number_arithmetic */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op(is_true_jmp)                     \
-    op(is_false_jmp)                    \
     op(call_0)                          \
     op(call_n)                          \
     op(func_decl_1)                     \
@@ -399,7 +397,81 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 }
 
 /**
- * Jump opcode handler.
+ * 'Jump if true' opcode handler.
+ *
+ * Note:
+ *      the opcode changes current opcode position to specified opcode index
+ *      if argument evaluates to true.
+ */
+ecma_completion_value_t
+opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX cond_var_idx = opdata.data.is_true_jmp.value;
+  const T_IDX dst_opcode_idx = opdata.data.is_true_jmp.opcode;
+
+  ecma_completion_value_t ret_value;
+
+  TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean( cond_value.value);
+  JERRY_ASSERT( ecma_is_completion_value_normal( to_bool_completion) );
+
+  if ( ecma_is_value_true( to_bool_completion.value) )
+    {
+      int_data->pos = dst_opcode_idx;
+    }
+  else
+    {
+      int_data->pos++;
+    }
+
+  ret_value = ecma_make_empty_completion_value();
+
+  FINALIZE(cond_value);
+
+  return ret_value;
+} /* opfunc_is_true_jmp */
+
+/**
+ * 'Jump if false' opcode handler.
+ *
+ * Note:
+ *      the opcode changes current opcode position to specified opcode index
+ *      if argument evaluates to false.
+ */
+ecma_completion_value_t
+opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
+                     struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX cond_var_idx = opdata.data.is_false_jmp.value;
+  const T_IDX dst_opcode_idx = opdata.data.is_false_jmp.opcode;
+
+  ecma_completion_value_t ret_value;
+
+  TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean( cond_value.value);
+  JERRY_ASSERT( ecma_is_completion_value_normal( to_bool_completion) );
+
+  if ( !ecma_is_value_true( to_bool_completion.value) )
+    {
+      int_data->pos = dst_opcode_idx;
+    }
+  else
+    {
+      int_data->pos++;
+    }
+
+  ret_value = ecma_make_empty_completion_value();
+
+  FINALIZE(cond_value);
+
+  return ret_value;
+} /* opfunc_is_false_jmp */
+
+/**
+ * 'Jump' opcode handler.
  *
  * Note:
  *      the opcode changes current opcode position to specified opcode index
@@ -414,7 +486,7 @@ opfunc_jmp (OPCODE opdata, /**< operation data */
 } /* opfunc_jmp */
 
 /**
- * Jump down opcode handler.
+ * 'Jump down' opcode handler.
  *
  * Note:
  *      the opcode changes adds specified value to current opcode position
@@ -429,7 +501,7 @@ opfunc_jmp_down (OPCODE opdata, /**< operation data */
 } /* opfunc_jmp_down */
 
 /**
- * Jump up opcode handler.
+ * 'Jump up' opcode handler.
  *
  * Note:
  *      the opcode changes substracts specified value from current opcode position
@@ -446,7 +518,7 @@ opfunc_jmp_up (OPCODE opdata, /**< operation data */
 } /* opfunc_jmp_up */
 
 /**
- * Assignment opcode handler.
+ * 'Assignment' opcode handler.
  *
  * Note:
  *      This handler implements case of assignment of a literal's or a variable's
@@ -545,7 +617,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
 } /* opfunc_assignment */
 
 /**
- * Addition opcode handler.
+ * 'Addition' opcode handler.
  *
  * See also: ECMA-262 v5, 11.6.1
  *
@@ -592,7 +664,7 @@ opfunc_addition(OPCODE opdata, /**< operation data */
 } /* opfunc_addition */
 
 /**
- * Substraction opcode handler.
+ * 'Substraction' opcode handler.
  *
  * See also: ECMA-262 v5, 11.6.2
  *
@@ -627,7 +699,7 @@ opfunc_substraction(OPCODE opdata, /**< operation data */
 } /* opfunc_substraction */
 
 /**
- * Multiplication opcode handler.
+ * 'Multiplication' opcode handler.
  *
  * See also: ECMA-262 v5, 11.5, 11.5.1
  *
@@ -662,7 +734,7 @@ opfunc_multiplication(OPCODE opdata, /**< operation data */
 } /* opfunc_multiplication */
 
 /**
- * Division opcode handler.
+ * 'Division' opcode handler.
  *
  * See also: ECMA-262 v5, 11.5, 11.5.2
  *
@@ -697,7 +769,7 @@ opfunc_division(OPCODE opdata, /**< operation data */
 } /* opfunc_division */
 
 /**
- * Remainder calculation opcode handler.
+ * 'Remainder calculation' opcode handler.
  *
  * See also: ECMA-262 v5, 11.5, 11.5.3
  *
@@ -732,7 +804,7 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
 } /* opfunc_remainder */
 
 /**
- * Variable declaration opcode handler.
+ * 'Variable declaration' opcode handler.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
  *

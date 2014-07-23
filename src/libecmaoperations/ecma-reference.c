@@ -86,9 +86,11 @@ ecma_make_reference(ecma_value_t base, /**< base value */
                    ecma_char_t *name_p, /**< referenced name */
                    bool is_strict) /**< strict reference flag */
 {
-  return (ecma_reference_t) { .base = ecma_copy_value( base),
-                              .referenced_name_p = name_p,
-                              .is_strict = is_strict };
+  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value( base),
+                                              .referenced_name_p = name_p,
+                                              .is_strict = is_strict };
+
+  return ref;
 } /* ecma_make_reference */
 
 /**

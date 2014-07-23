@@ -27,7 +27,7 @@ static uint8_t current_opcode_in_buffer = 0;
 static uint8_t opcode_counter = 0;
 
 #ifdef __HOST
-FILE *debug_file;
+_FILE *debug_file;
 #endif
 
 static T_IDX parse_expression (void);

@@ -40,12 +40,120 @@
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
 
-void fake_exit (void);
+static void
+jerry_run( const char *script_source,
+           size_t script_source_size __unused)
+{
+  const char *strings[MAX_STRINGS];
+  int nums[MAX_NUMS];
+  uint8_t strings_num, nums_count;
+  uint8_t offset;
+
+  mem_init();
+
+  TODO( Consider using script_source_size in lexer to check buffer boundaries );
+
+  lexer_init( script_source);
+
+  lexer_run_first_pass();
+
+  strings_num = lexer_get_strings (strings);
+  nums_count = lexer_get_nums (nums);
+  lexer_adjust_num_ids ();
+
+  offset = serializer_dump_strings (strings, strings_num);
+  serializer_dump_nums (nums, nums_count, offset, strings_num);
+
+  parser_init ();
+  parser_parse_program ();
+
+  //gen_bytecode (generated_source);
+  //gen_bytecode ();
+  //run_int ();
+} /* jerry_run */
+
+#ifdef __HOST
+static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
+
+static const char*
+read_source( const char *script_file_name,
+             size_t *out_source_size_p)
+{
+  _FILE *file = __fopen (script_file_name, "r");
+
+  if (file == NULL)
+    {
+      jerry_exit (ERR_IO);
+    }
+
+  int fseek_status = __fseek( file, 0, __SEEK_END);
+
+  if ( fseek_status != 0 )
+    {
+      jerry_exit (ERR_IO);
+    }
+
+  long script_len = __ftell( file);
+
+  if ( script_len < 0 )
+    {
+      jerry_exit (ERR_IO);
+    }
+
+  __rewind( file);
+
+  const size_t source_size = (size_t)script_len;
+  size_t bytes_read = 0;
+ 
+  while ( bytes_read < source_size )
+    {
+      bytes_read += __fread( source_buffer, 1, source_size, file);
+
+      if ( __ferror( file) != 0 )
+        {
+          jerry_exit (ERR_IO);
+        }
+    }
+
+  __fclose( file);
+
+  *out_source_size_p = source_size;
+  return (const char*)source_buffer;
+}
+
+int
+main (int argc __unused,
+      char **argv __unused)
+{
+  const char *file_name = NULL;
+
+  if (argc > 2)
+    {
+      jerry_exit (ERR_SEVERAL_FILES);
+    }
+  else if (argc == 2)
+    {
+      file_name = argv[1];
+    }
+  else
+    {
+      jerry_exit (ERR_NO_FILES);
+    }
+ 
+  size_t source_size;
+  const char *source_p = read_source( file_name, &source_size);
+
+  jerry_run( source_p,
+             source_size);
+
+  return 0;
+}
+#elif !defined(__HOST) && defined(__TARGET_MCU)
+void fake_exit(void);
 
 void
 fake_exit (void)
 {
-#ifdef __TARGET_MCU
   uint32_t pin = LED_RED;
   uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
   uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
@@ -90,76 +198,21 @@ fake_exit (void)
     
     for (index = 0; index < dash * 7; index++);
   }
-#else
-  for (;;);
-#endif
 }
 
 int
-main (int argc __unused,
-      char **argv __unused)
+main(void)
 {
-#ifdef __HOST
-  const char *file_name = NULL;
-  FILE *file = NULL;
-#endif
-  const char *strings[MAX_STRINGS];
-  int nums[MAX_NUMS];
-  uint8_t strings_num, nums_count, offset;
+  const char *source_p = generated_source;
+  const size_t source_size = sizeof(generated_source);
 
-  mem_init ();
+  jerry_run( source_p,
+             source_size);
 
-#ifdef __HOST
-  if (argc > 0)
-    {
-      if (file_name == NULL)
-        file_name = argv[1];
-      else
-        jerry_exit (ERR_SEVERAL_FILES);
-    }
-#endif
+  fake_exit();
 
-#ifdef __HOST
-  if (file_name == NULL)
-    jerry_exit (ERR_NO_FILES);
-
-  file = __fopen (file_name, "r");
-
-  if (file == NULL)
-  {
-    jerry_exit (ERR_IO);
-  }
-
-  lexer_set_file (file);
-#else
-  lexer_set_source (generated_source);
-#endif
-
-  // First run parser to fill list of strings
-  token tok = lexer_next_token ();
-  while (tok.type != TOK_EOF)
-    tok = lexer_next_token ();
-
-  strings_num = lexer_get_strings (strings);
-  nums_count = lexer_get_nums (nums);
-  lexer_adjust_num_ids ();
-
-  // Reset lexer
-#ifdef __HOST
-  __rewind (file);
-  lexer_set_file (file);
-#else
-  lexer_set_source (generated_source);
-#endif
-
-  parser_init ();
-  offset = serializer_dump_strings (strings, strings_num);
-  serializer_dump_nums (nums, nums_count, offset, strings_num);
-  parser_parse_program ();
-
-#ifdef __TARGET_MCU
-  fake_exit ();
-#endif 
-
-  return 0;
+  JERRY_UNREACHABLE();
 }
+#else /* !__HOST && !__TARGET_MCU */
+# error "!__HOST && !__TARGET_MCU"
+#endif /* !__HOST && !__TARGET_MCU */

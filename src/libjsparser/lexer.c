@@ -104,79 +104,15 @@ is_empty (token tok)
   return tok.type == TOK_EMPTY;
 }
 
-#ifdef __HOST
-FILE *lexer_debug_log;
-#endif
+/* Represents the contents of a script.  */
+static const char *buffer_start = NULL;
+static const char *buffer = NULL;
+static const char *token_start;
+
+#define LA(I)       (*(buffer + I))
 
 #ifdef __HOST
-static FILE *file;
-static char *buffer_start;
-
-/* Represents the contents of a file.  */
-static char *buffer = NULL;
-static char *token_start;
-
-#define BUFFER_SIZE 1024
-
-static char
-get_char (size_t i)
-{
-  size_t error;
-  JERRY_ASSERT (buffer >= buffer_start);
-  const size_t tail_size = BUFFER_SIZE - (size_t) (buffer - buffer_start);
-
-  JERRY_ASSERT (file);
-
-  if (buffer == NULL)
-    {
-      buffer = (char *) mem_heap_alloc_block (BUFFER_SIZE, MEM_HEAP_ALLOC_SHORT_TERM);
-      error = __fread (buffer, 1, BUFFER_SIZE, file);
-      if (error == 0)
-        return '\0';
-      if (error < BUFFER_SIZE)
-        __memset (buffer + error, '\0', BUFFER_SIZE - error);
-      buffer_start = buffer;
-    }
-
-  if (tail_size <= i)
-    {
-    /* We are almost at the end of the buffer.  */
-      if (token_start)
-        {
-          JERRY_ASSERT (buffer >= token_start);
-          const size_t token_size = (size_t) (buffer - token_start);
-          /* Whole buffer contains single token.  */
-          if (token_start == buffer_start)
-            parser_fatal (ERR_BUFFER_SIZE);
-          /* Move parsed token and tail of buffer to head.  */
-          __memmove (buffer_start, token_start, tail_size + token_size);
-          /* Adjust pointers.  */
-          token_start = buffer_start;
-          buffer = buffer_start + token_size;
-          /* Read more characters form input file.  */
-          error = __fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size - token_size, file);
-          if (error == 0)
-            return '\0';
-          if (error < BUFFER_SIZE - tail_size - token_size)
-            __memset (buffer + tail_size + error, '\0',
-                    BUFFER_SIZE - tail_size - token_size - error);
-        }
-      else
-        {
-          __memmove (buffer_start, buffer, tail_size);
-          buffer = buffer_start;
-          error = __fread (buffer + tail_size, 1, BUFFER_SIZE - tail_size, file);
-          if (error == 0)
-            return '\0';
-          if (error < BUFFER_SIZE - tail_size)
-            __memset (buffer + tail_size + error, '\0', BUFFER_SIZE - tail_size - error);
-        }
-    }
-
-  return *(buffer + i);
-}
-
-#define LA(I) 			(get_char (I))
+_FILE *lexer_debug_log;
 
 static void
 dump_current_line (void)
@@ -187,16 +123,7 @@ dump_current_line (void)
     __putchar (*i);
   __putchar ('\n');
 }
-
-#else
-
-/* Represents the contents of a file.  */
-static const char *buffer = NULL;
-static const char *token_start;
-
-#define LA(I)       (*(buffer + I))
-
-#endif // __HOST
+#endif
 
 /* If TOKEN represents a keyword, return decoded keyword,
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,
@@ -708,25 +635,20 @@ grobble_whitespaces (void)
     }
 }
 
-#ifdef __HOST
-void
-lexer_set_file (FILE *ex_file)
-{
-  JERRY_ASSERT (ex_file);
-  file = ex_file;
-  lexer_debug_log = __fopen ("lexer.log", "w");
-  saved_token = empty_token;
-  buffer = buffer_start = token_start = NULL;
-}
-#else
-void
+static void
 lexer_set_source (const char * source)
 {
-  buffer = source;
-  saved_token = empty_token;
+  buffer_start = source;
+  buffer = buffer_start;
 }
 
-#endif
+static void
+lexer_rewind( void)
+{
+  JERRY_ASSERT( buffer_start != NULL );
+
+  buffer = buffer_start;
+}
 
 static bool
 replace_comment_by_newline (void)
@@ -765,13 +687,8 @@ replace_comment_by_newline (void)
     }
 }
 
-#ifdef __HOST
 static token
 lexer_next_token_private (void)
-#else
-token
-lexer_next_token (void)
-#endif
 {
   char c = LA (0);
 
@@ -805,12 +722,7 @@ lexer_next_token (void)
   if (__isspace (c))
     {
       grobble_whitespaces ();
-      return 
-#ifdef __HOST
-        lexer_next_token_private ();
-#else
-        lexer_next_token ();
-#endif
+      return lexer_next_token_private ();
     }
 
   if (c == '/' && LA (1) == '*')
@@ -818,23 +730,13 @@ lexer_next_token (void)
       if (replace_comment_by_newline ())
         return (token) { .type = TOK_NEWLINE, .data.uid = 0 };
       else
-        return 
-#ifdef __HOST
-          lexer_next_token_private ();
-#else
-          lexer_next_token ();
-#endif
+        return lexer_next_token_private ();
     }
 
   if (c == '/' && LA (1) == '/')
     {
       replace_comment_by_newline ();;
-      return 
-#ifdef __HOST
-        lexer_next_token_private ();
-#else
-        lexer_next_token ();
-#endif
+      return lexer_next_token_private ();
     }
 
   switch (c)
@@ -904,16 +806,19 @@ lexer_next_token (void)
 
 #ifdef __HOST
 static int i = 0;
+#endif /* __HOST */
 
 token
 lexer_next_token (void)
 {
-  LA (0); // Init buffers
-  
+#ifdef __HOST
   if (buffer == buffer_start)
     dump_current_line ();
+#endif /* __HOST */
 
   token tok = lexer_next_token_private ();
+
+#ifdef __HOST
   if (tok.type == TOK_NEWLINE)
     {
       dump_current_line ();
@@ -925,9 +830,9 @@ lexer_next_token (void)
         __fprintf (lexer_debug_log, "lexer_next_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
         i++;
     }
+#endif /* __HOST */
   return tok;
 }
-#endif
 
 void
 lexer_save_token (token tok)
@@ -935,7 +840,7 @@ lexer_save_token (token tok)
 #ifdef __HOST
   if (tok.type == TOK_CLOSE_BRACE)
     __fprintf (lexer_debug_log, "lexer_save_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
-#endif
+#endif /* __HOST */
   saved_token = tok;
 }
 
@@ -944,3 +849,25 @@ lexer_dump_buffer_state (void)
 {
   __printf ("%s\n", buffer);
 }
+
+void
+lexer_init( const char *source)
+{
+  saved_token = empty_token;
+  lexer_set_source( source);
+
+#ifdef __HOST
+  lexer_debug_log = __fopen ("lexer.log", "w");
+#endif /* __HOST */
+}
+
+void
+lexer_run_first_pass( void)
+{
+  token tok = lexer_next_token ();
+  while (tok.type != TOK_EOF)
+    tok = lexer_next_token (); 
+
+  lexer_rewind();
+}
+

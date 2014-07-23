@@ -19,26 +19,31 @@
 void
 serializer_init (void)
 {
+  JERRY_UNIMPLEMENTED();
 }
 
 uint8_t
-serializer_dump_strings (const char *strings[] __unused, uint8_t size __unused)
+serializer_dump_strings (const char *strings[], uint8_t size)
 {
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( strings, size);
 }
 
 void 
-serializer_dump_nums (const int nums[] __unused, uint8_t size __unused, uint8_t offset __unused, uint8_t strings_num __unused)
+serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
 {
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( nums, size, offset, strings_num);
 }
 
 void
-serializer_dump_opcode (const void *opcode __unused)
+serializer_dump_opcode (const void *opcode)
 {
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( opcode);
 }
 
 void
-serializer_rewrite_opcode (const int8_t offset __unused, const void *opcode __unused)
+serializer_rewrite_opcode (const int8_t offset, const void *opcode)
 {
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, opcode);
 }
 
 

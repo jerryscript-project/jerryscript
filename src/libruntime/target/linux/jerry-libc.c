@@ -21,16 +21,8 @@
 #include "jerry-libc.h"
 
 #include <stdarg.h>
-
-
-extern void __noreturn exit(int status);
-extern FILE* fopen(const char *path, const char *mode);
-extern int fclose(FILE *fp);
-extern int rewind (FILE *);
-extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern int vprintf (__const char *__restrict __format, __builtin_va_list __arg);
-extern int vfprintf (FILE *stream, __const char *__restrict __format, __builtin_va_list __arg);
+#include <stdio.h>
+#include <stdlib.h>
 
 /**
  * printf
@@ -69,10 +61,10 @@ __exit (int status)
 /**
  * fopen
  *
- * @return FILE pointer - upon successful completion,
+ * @return _FILE pointer - upon successful completion,
  *         NULL - otherwise
  */
-FILE*
+_FILE*
 __fopen(const char *path, /**< file path */
         const char *mode) /**< file open mode */
 {
@@ -82,7 +74,7 @@ __fopen(const char *path, /**< file path */
 /** The rewind() function sets the file position 
   indicator for the stream pointed to by STREAM to the beginning of the file.  */
 void
-__rewind (FILE *stream)
+__rewind (_FILE *stream)
 {
   rewind (stream);
 }
@@ -94,10 +86,45 @@ __rewind (FILE *stream)
  *         non-zero value - otherwise.
  */
 int
-__fclose(FILE *fp) /**< stream pointer */
+__fclose(_FILE *fp) /**< stream pointer */
 {
   return fclose( fp);
 } /* __fclose */
+
+/**
+ * fseek
+ */
+int
+__fseek(_FILE * fp, /**< stream pointer */
+        long offset, /**< offset */
+        _whence_t whence) /**< specifies position type
+                               to add offset to */
+{
+  int whence_real;
+  switch ( whence )
+  {
+    case __SEEK_SET:
+      whence_real = SEEK_SET;
+      break;
+    case __SEEK_CUR:
+      whence_real = SEEK_CUR;
+      break;
+    case __SEEK_END:
+      whence_real = SEEK_END;
+      break;
+  }
+
+  return fseek( fp, offset, whence_real);
+} /* __fseek */
+
+/**
+ * ftell
+ */
+long
+__ftell(_FILE * fp) /**< stream pointer */
+{
+  return ftell( fp);
+} /* __ftell */
 
 /**
  * fread
@@ -108,7 +135,7 @@ size_t
 __fread(void *ptr, /**< address of buffer to read to */
         size_t size, /**< size of elements to read */
         size_t nmemb, /**< number of elements to read */
-        FILE *stream) /**< stream pointer */
+        _FILE *stream) /**< stream pointer */
 {
   return fread(ptr, size, nmemb, stream);
 } /* __fread */
@@ -122,10 +149,19 @@ size_t
 __fwrite(const void *ptr, /**< data to write */
          size_t size, /**< size of elements to write */
          size_t nmemb, /**< number of elements */
-         FILE *stream) /**< stream pointer */
+         _FILE *stream) /**< stream pointer */
 {
   return fwrite(ptr, size, nmemb, stream);
 } /* __fwrite */
+
+/**
+ * ferror
+ */
+int
+__ferror(_FILE * fp) /**< stream pointer */
+{
+  return ferror( fp);
+} /* __ferror */
 
 /**
  * fprintf
@@ -133,7 +169,7 @@ __fwrite(const void *ptr, /**< data to write */
  * @return number of characters printed
  */
 int
-__fprintf(FILE *stream, /**< stream pointer */
+__fprintf(_FILE *stream, /**< stream pointer */
           const char *format, /**< format string */
          ...)                /**< parameters' values */
 {

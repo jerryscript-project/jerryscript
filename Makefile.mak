@@ -184,7 +184,7 @@ ifeq ($(OPTION_WERROR),enable)
 endif
 
 ifeq ($(OPTION_MCU),disable)
- DEFINES_JERRY += -D__HOST
+ DEFINES_JERRY += -D__HOST -DJERRY_SOURCE_BUFFER_SIZE=1048576
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU

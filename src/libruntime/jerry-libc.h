@@ -21,7 +21,7 @@
 
 #include "globals.h"
 
-typedef void FILE;
+typedef void _FILE;
 
 extern void* __memset (void *s, int c, size_t n);
 extern int __memcmp (const void *s1, const void *s2, size_t n);
@@ -44,12 +44,26 @@ extern int __isalpha (int);
 extern int __isdigit (int);
 extern int __isxdigit (int);
 
-extern FILE* __fopen(const char *, const char *);
-extern int __fclose(FILE *);
-extern void __rewind(FILE *);
-extern size_t __fread(void *, size_t, size_t, FILE *);
-extern size_t __fwrite(const void *, size_t, size_t, FILE *);
-extern int __fprintf(FILE *, const char *, ...);
+/**
+ * 'whence' argument of __fseek that identifies position
+ * the 'offset' argument is added to.
+ */
+typedef enum
+{
+  __SEEK_SET, /**< relative to begin of file */
+  __SEEK_CUR, /**< relative to current position */
+  __SEEK_END /**< relative to end of file */
+} _whence_t;
+
+extern _FILE* __fopen(const char *, const char *);
+extern int __fclose(_FILE *);
+extern int __fseek(_FILE *, long offset, _whence_t);
+extern long __ftell(_FILE *);
+extern void __rewind(_FILE *);
+extern size_t __fread(void *, size_t, size_t, _FILE *);
+extern size_t __fwrite(const void *, size_t, size_t, _FILE *);
+extern int __ferror(_FILE *);
+extern int __fprintf(_FILE *, const char *, ...);
 
 #define DBL_MANT_DIG    (  52)
 #define DBL_DIG         (  10)

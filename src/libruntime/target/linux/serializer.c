@@ -17,7 +17,7 @@
 #include "jerry-libc.h"
 #include "opcodes.h"
 
-FILE *dump;
+_FILE *dump;
 
 #define OPCODE_STR(op) \
   #op,

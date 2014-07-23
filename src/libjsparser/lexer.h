@@ -147,11 +147,8 @@ typedef struct
 } __packed
 token;
 
-#ifdef __HOST
-void lexer_set_file (FILE *);
-#else
-void lexer_set_source (const char *);
-#endif
+void lexer_init(const char *);
+void lexer_run_first_pass( void);
 token lexer_next_token (void);
 void lexer_save_token (token);
 void lexer_dump_buffer_state (void);

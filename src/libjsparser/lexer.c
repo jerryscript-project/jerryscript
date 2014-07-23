@@ -88,7 +88,7 @@ num_and_token;
 #define MAX_NAMES 100
 #define MAX_NUMS 25
 
-static string_and_token seen_names[MAX_NAMES];
+static string_and_token seen_names[MAX_NUMS];
 static uint8_t seen_names_count = 0;
 
 static num_and_token seen_nums[MAX_NAMES] = 
@@ -254,15 +254,19 @@ uint8_t
 lexer_get_strings (const char **strings)
 {
   if (strings)
-  {
-    int i;
-    for (i = 0; i < seen_names_count; i++)
     {
-      strings[i] = seen_names[i].str;
+      int i;
+      for (i = 0; i < seen_names_count; i++)
+        strings[i] = seen_names[i].str;
     }
-  }
 
   return seen_names_count;
+}
+
+uint8_t
+lexer_get_reserved_ids_count (void)
+{
+  return (uint8_t) (seen_names_count + seen_nums_count);
 }
 
 const char *
@@ -278,12 +282,29 @@ lexer_get_nums (int *nums)
 {
   int i;
 
+  if (!nums)
+    return seen_nums_count;
+
   for (i = 0; i < seen_nums_count; i++)
-  {
     nums[i] = seen_nums[i].num;
-  }
 
   return seen_nums_count;
+}
+
+void
+lexer_adjust_num_ids (void)
+{
+  size_t i;
+
+  for (i = 0; i < seen_nums_count; i++)
+    seen_nums[i].tok.data.uid = (uint8_t) (seen_nums[i].tok.data.uid + seen_names_count);
+
+  for (i = 0; i < sizeof (keyword_tokens) / sizeof (string_and_token); i++)
+    {
+      if (!__strncmp ("true", keyword_tokens[i].str, 4)
+          || !__strncmp ("false", keyword_tokens[i].str, 5))
+        keyword_tokens[i].tok.data.uid = (uint8_t) (keyword_tokens[i].tok.data.uid + seen_names_count);
+    }
 }
 
 static void

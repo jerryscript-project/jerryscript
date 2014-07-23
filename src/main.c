@@ -35,12 +35,10 @@
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
-
-#define DUMP_TOKENS   (1u << 0)
-#define DUMP_AST      (1u << 1)
-#define DUMP_BYTECODE (1u << 2)
+#include "serializer.h"
 
 #define MAX_STRINGS 100
+#define MAX_NUMS 25
 
 void fake_exit (void);
 
@@ -104,6 +102,9 @@ main (int argc, char **argv)
   const char *file_name = NULL;
   FILE *file = NULL;
 #endif
+  const char *strings[MAX_STRINGS];
+  int nums[MAX_NUMS];
+  uint8_t strings_num, nums_count, offset;
 
   mem_init ();
 
@@ -133,14 +134,14 @@ main (int argc, char **argv)
   lexer_set_source (generated_source);
 #endif
 
-  // const char *strings[MAX_STRINGS];
-  // uint8_t strings_num;
   // First run parser to fill list of strings
   token tok = lexer_next_token ();
   while (tok.type != TOK_EOF)
     tok = lexer_next_token ();
 
-  // strings_num = lexer_get_strings (strings);
+  strings_num = lexer_get_strings (strings);
+  nums_count = lexer_get_nums (nums);
+  lexer_adjust_num_ids ();
 
   // Reset lexer
 #ifdef __HOST
@@ -151,12 +152,9 @@ main (int argc, char **argv)
 #endif
 
   parser_init ();
-  TODO (serializer_dump_data (strings strings_num));
+  offset = serializer_dump_strings (strings, strings_num);
+  serializer_dump_nums (nums, nums_count, offset, strings_num);
   parser_parse_program ();
-
-  //gen_bytecode (generated_source);
-  //gen_bytecode ();
-  //run_int ();
 
 #ifdef __TARGET_MCU
   fake_exit ();

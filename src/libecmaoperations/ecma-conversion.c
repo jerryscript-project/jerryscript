@@ -117,6 +117,78 @@ ecma_op_to_primitive( ecma_value_t value) /**< ecma-value */
 } /* ecma_op_to_primitive */
 
 /**
+ * ToBoolean operation.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.2
+ *
+ * @return completion value
+ *         Returned value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
+ */
+ecma_completion_value_t
+ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
+{
+  ecma_simple_value_t res = ECMA_SIMPLE_VALUE_EMPTY;
+
+  switch ( (ecma_type_t)value.value_type )
+  {
+    case ECMA_TYPE_NUMBER:
+      {
+        ecma_number_t *num_p = ecma_get_pointer( value.value);
+
+        TODO( Implement according to ECMA );
+        res = ( *num_p == 0 ) ? ECMA_SIMPLE_VALUE_FALSE:
+                                ECMA_SIMPLE_VALUE_TRUE;
+
+        break;
+      }
+    case ECMA_TYPE_SIMPLE:
+      {
+        if ( ecma_is_value_boolean (value ) )
+        {
+          res = value.value;
+        } else if ( ecma_is_value_undefined (value)
+                    || ecma_is_value_null( value) )
+        {
+          res = ECMA_SIMPLE_VALUE_FALSE;
+        } else
+        {
+          JERRY_UNREACHABLE();
+        }
+
+        break;
+      }
+    case ECMA_TYPE_STRING:
+      {
+        ecma_array_first_chunk_t *str_p = ecma_get_pointer( value.value);
+
+        res = ( str_p->header.unit_number == 0 ) ? ECMA_SIMPLE_VALUE_FALSE:
+                                                   ECMA_SIMPLE_VALUE_TRUE;
+
+        break;
+      }
+    case ECMA_TYPE_OBJECT:
+      {
+        res = ECMA_SIMPLE_VALUE_TRUE;
+
+        break;
+      }
+    case ECMA_TYPE__COUNT:
+      {
+        JERRY_UNREACHABLE();
+      }
+  }
+
+  JERRY_ASSERT( res == ECMA_SIMPLE_VALUE_FALSE
+                || res == ECMA_SIMPLE_VALUE_TRUE );
+
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                     ecma_make_simple_value( res),
+                                     ECMA_TARGET_ID_RESERVED);
+} /* ecma_op_to_boolean */
+
+/**
  * ToNumber operation.
  *
  * See also:

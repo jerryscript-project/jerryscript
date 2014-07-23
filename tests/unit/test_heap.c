@@ -40,14 +40,14 @@ main( int __unused argc,
 {
     uint8_t test_native_heap[test_heap_size];
 
-    mem_HeapInit( test_native_heap, sizeof (test_native_heap));
+    mem_heap_init( test_native_heap, sizeof (test_native_heap));
 
     srand((unsigned int) time(NULL));
     int k = rand();
     printf("seed=%d\n", k);
     srand((unsigned int) k);
 
-    mem_HeapPrint( false);
+    mem_heap_print( false);
 
     for ( uint32_t i = 0; i < test_iters; i++ )
     {
@@ -58,7 +58,7 @@ main( int __unused argc,
         for ( uint32_t j = 0; j < subiters; j++ )
         {
             size_t size = (unsigned int) rand() % ( test_threshold_block_size );
-            ptrs[j] = mem_HeapAllocBlock( size, ( rand() % 2 ) ? MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+            ptrs[j] = mem_heap_alloc_block( size, ( rand() % 2 ) ? MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
             sizes[j] = size;
             if ( ptrs[j] != NULL )
             {
@@ -67,7 +67,7 @@ main( int __unused argc,
             // JERRY_ASSERT(ptrs[j] != NULL);
         }
 
-        // mem_HeapPrint( true);
+        // mem_heap_print( true);
 
         for ( uint32_t j = 0; j < subiters; j++ )
         {
@@ -77,12 +77,12 @@ main( int __unused argc,
                 {
                     JERRY_ASSERT( ptrs[j][k] == 0 );
                 }
-                mem_HeapFreeBlock( ptrs[j]);
+                mem_heap_free_block( ptrs[j]);
             }
         }
     }
 
-    mem_HeapPrint( false);
+    mem_heap_print( false);
 
     return 0;
 } /* main */

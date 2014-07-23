@@ -44,8 +44,8 @@ main( int __unused argc,
 {
     uint8_t heap[test_heap_size] __attribute__((aligned(MEM_ALIGNMENT)));
 
-    mem_HeapInit( heap, sizeof (heap));
-    mem_PoolsInit();
+    mem_heap_init( heap, sizeof (heap));
+    mem_pools_init();
 
     srand((unsigned int) time(NULL));
     unsigned int seed = (unsigned int)rand();
@@ -57,49 +57,49 @@ main( int __unused argc,
         const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
 
         uint8_t * ptrs[subiters];
-        mem_PoolChunkType_t types[subiters];
+        mem_pool_chunk_type_t types[subiters];
 
         for ( size_t j = 0; j < subiters; j++ )
         {
-            mem_PoolChunkType_t type = (mem_PoolChunkType_t) (rand() % MEM_POOL_CHUNK_TYPE__COUNT);
-            const size_t chunkSize = mem_GetChunkSize( type);
+            mem_pool_chunk_type_t type = (mem_pool_chunk_type_t) (rand() % MEM_POOL_CHUNK_TYPE__COUNT);
+            const size_t chunk_size = mem_get_chunk_size( type);
 
             types[j] = type;
-            ptrs[j] = mem_PoolsAlloc( type);
+            ptrs[j] = mem_pools_alloc( type);
             JERRY_ASSERT(ptrs[j] != NULL);
 
             if ( ptrs[j] != NULL )
             {
-                __memset(ptrs[j], 0, chunkSize);
+                __memset(ptrs[j], 0, chunk_size);
             }
         }
 
-        // mem_HeapPrint( false);
+        // mem_heap_print( false);
         
         for ( size_t j = 0; j < subiters; j++ )
         {
             if ( ptrs[j] != NULL )
             {
-                mem_PoolChunkType_t type = types[j];
-                const size_t chunkSize = mem_GetChunkSize( type);
+                mem_pool_chunk_type_t type = types[j];
+                const size_t chunk_size = mem_get_chunk_size( type);
 
-                for ( size_t k = 0; k < chunkSize; k++ )
+                for ( size_t k = 0; k < chunk_size; k++ )
                 {
                     JERRY_ASSERT( ((uint8_t*) ptrs[j])[k] == 0 );
                 }
                 
-                mem_PoolsFree( type, ptrs[j]);
+                mem_pools_free( type, ptrs[j]);
             }
         }
     }
 
 #ifdef MEM_STATS
-    mem_PoolsStats_t stats;
-    mem_PoolsGetStats( &stats);
+    mem_pools_stats_t stats;
+    mem_pools_get_stats( &stats);
 #endif /* MEM_STATS */
 
     __printf("Pools stats:\n");
-    for(mem_PoolChunkType_t type = 0;
+    for(mem_pool_chunk_type_t type = 0;
         type < MEM_POOL_CHUNK_TYPE__COUNT;
         type++)
     {
@@ -109,7 +109,7 @@ main( int __unused argc,
                   "  Free chunks: %lu\n"
                   "  Peak pools: %lu\n"
                   "  Peak allocated chunks: %lu\n",
-                  mem_GetChunkSize( type),
+                  mem_get_chunk_size( type),
                   stats.pools_count[ type ],
                   stats.allocated_chunks[ type ],
                   stats.free_chunks[ type ],

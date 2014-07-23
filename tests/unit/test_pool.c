@@ -48,41 +48,41 @@ main( int __unused argc,
 
     for ( uint32_t i = 0; i < test_iters; i++ )
     {
-	mem_PoolState_t pool;
+	mem_pool_state_t pool;
 	uint8_t test_pool[test_pool_area_size] __attribute__((aligned(MEM_ALIGNMENT)));
 
-	const size_t chunkSize = MEM_ALIGNMENT * ( ( (size_t) rand() % test_max_chunk_size_divided_by_alignment ) + 1 );
+	const size_t chunk_size = MEM_ALIGNMENT * ( ( (size_t) rand() % test_max_chunk_size_divided_by_alignment ) + 1 );
 
-	mem_PoolInit( &pool, chunkSize, test_pool, sizeof (test_pool));
+	mem_pool_init( &pool, chunk_size, test_pool, sizeof (test_pool));
 
         const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
         uint8_t* ptrs[subiters];
 
         for ( size_t j = 0; j < subiters; j++ )
         {
-            ptrs[j] = mem_PoolAllocChunk( &pool);
+            ptrs[j] = mem_pool_alloc_chunk( &pool);
 
 	    // TODO: Enable check with condition that j <= minimum count of chunks that fit in the pool
             // JERRY_ASSERT(ptrs[j] != NULL);
 
             if ( ptrs[j] != NULL )
             {
-                memset(ptrs[j], 0, chunkSize);
+                memset(ptrs[j], 0, chunk_size);
             }
         }
 
-        // mem_HeapPrint( true);
+        // mem_heap_print( true);
 
         for ( size_t j = 0; j < subiters; j++ )
         {
             if ( ptrs[j] != NULL )
             {
-                for ( size_t k = 0; k < chunkSize; k++ )
+                for ( size_t k = 0; k < chunk_size; k++ )
                 {
                     JERRY_ASSERT( ((uint8_t*)ptrs[j])[k] == 0 );
                 }
 
-                mem_PoolFreeChunk( &pool, ptrs[j]);
+                mem_pool_free_chunk( &pool, ptrs[j]);
             }
         }
     }

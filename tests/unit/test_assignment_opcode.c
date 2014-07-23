@@ -35,7 +35,7 @@ main( int __unused argc,
     getop_exitval( 0)
   };
 
-  mem_Init();
+  mem_init();
 
   init_int( test_program);
 

@@ -267,7 +267,7 @@ typedef struct {
         /** Compressed pointer to next object in the list of objects, queued for GC (if !IsObjectValid) */
         unsigned int NextQueuedForGC : ECMA_POINTER_FIELD_WIDTH;
     } __packed u;
-} ecma_GC_info_t;
+} ecma_gc_info_t;
 
 /**
  * Types of lexical environments
@@ -321,7 +321,7 @@ typedef struct ecma_object_t {
     } __packed u;
 
     /** GC's information */
-    ecma_GC_info_t GCInfo;
+    ecma_gc_info_t GCInfo;
 } ecma_object_t;
 
 /**

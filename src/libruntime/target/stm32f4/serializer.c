@@ -41,7 +41,7 @@ serializer_dump_opcode (const void *opcode)
 }
 
 void
-serializer_rewrite_opcode (const int8_t offset, const void *opcode)
+serializer_rewrite_opcode (const uint8_t offset, const void *opcode)
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, opcode);
 }

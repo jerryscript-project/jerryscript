@@ -27,3 +27,10 @@ serializer_dump_data (const void *data __unused, size_t size __unused)
 }
 
 TODO (Dump memory)
+
+void
+serializer_rewrite_data (const int8_t offset, const void *data, size_t size)
+{
+  TODO (implement);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, data, size);
+}

@@ -55,7 +55,7 @@ assert_keyword (keyword kw)
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
     {
 #ifdef __HOST
-      __printf ("assert_keyword: 0x%x\n", kw);
+      __printf ("assert_keyword: %d\n", kw);
 #endif
       JERRY_UNREACHABLE ();
     }
@@ -73,7 +73,7 @@ current_token_must_be(token_type tt)
   if (tok.type != tt) 
     {
 #ifdef __HOST
-      __printf ("current_token_must_be: 0x%x\n", tt);
+      __printf ("current_token_must_be: %d\n", tt);
 #endif
       parser_fatal (ERR_PARSER); 
     }
@@ -94,7 +94,7 @@ next_token_must_be (token_type tt)
   if (tok.type != tt)
     {
 #ifdef __HOST
-      __printf ("next_token_must_be: 0x%x\n", tt);
+      __printf ("next_token_must_be: %d\n", tt);
 #endif
       parser_fatal (ERR_PARSER);
     }
@@ -771,43 +771,39 @@ parse_call_expression (void)
   obj = lhs;
 
   skip_newlines ();
-  if (tok.type == TOK_OPEN_PAREN || tok.type == TOK_OPEN_SQUARE 
-      || tok.type == TOK_DOT)
+  while (tok.type == TOK_OPEN_PAREN || tok.type == TOK_OPEN_SQUARE 
+         || tok.type == TOK_DOT)
     {
-      while (tok.type == TOK_OPEN_PAREN || tok.type == TOK_OPEN_SQUARE 
-             || tok.type == TOK_DOT)
-        {
-          switch (tok.type)
-          {
-            case TOK_OPEN_PAREN:
-              lhs = parse_argument_list (AL_CALL_EXPR, obj);
-              break;
-    
-            case TOK_OPEN_SQUARE:
-              NEXT (prop, expression);
-              next_token_must_be (TOK_CLOSE_SQUARE);
-    
-              DUMP_OPCODE (prop_access, lhs, obj, prop);
-              obj = lhs;
-              skip_newlines ();
-              break;
-    
-            case TOK_DOT:
-              token_after_newlines_must_be (TOK_NAME);
-              prop = tok.data.uid;
-    
-              DUMP_OPCODE (prop_access, lhs, obj, prop);
-              obj = lhs;
-              skip_newlines ();
-              break;
-    
-            default:
-              JERRY_UNREACHABLE ();
-          }
-        }
+      switch (tok.type)
+      {
+        case TOK_OPEN_PAREN:
+          lhs = parse_argument_list (AL_CALL_EXPR, obj);
+          skip_newlines ();
+          break;
+
+        case TOK_OPEN_SQUARE:
+          NEXT (prop, expression);
+          next_token_must_be (TOK_CLOSE_SQUARE);
+
+          DUMP_OPCODE (prop_access, lhs, obj, prop);
+          obj = lhs;
+          skip_newlines ();
+          break;
+
+        case TOK_DOT:
+          token_after_newlines_must_be (TOK_NAME);
+          prop = tok.data.uid;
+
+          DUMP_OPCODE (prop_access, lhs, obj, prop);
+          obj = lhs;
+          skip_newlines ();
+          break;
+
+        default:
+          JERRY_UNREACHABLE ();
+      }
     }
-  else
-    lexer_save_token (tok);
+  lexer_save_token (tok);
 
   return obj;
 }
@@ -1663,7 +1659,10 @@ static void
 parse_statement (void)
 {
   if (tok.type == TOK_CLOSE_BRACE)
-    return;
+    {
+      lexer_save_token (tok);
+      return;
+    }
   if (tok.type == TOK_OPEN_BRACE)
     {
       skip_newlines ();
@@ -1682,7 +1681,6 @@ parse_statement (void)
     }
   if (tok.type == TOK_SEMICOLON)
     {
-      skip_newlines ();
       return;
     }
   if (is_keyword (KW_IF))
@@ -1789,7 +1787,11 @@ static void
 parse_source_element_list (void)
 {
   while (tok.type != TOK_EOF && tok.type != TOK_CLOSE_BRACE)
-    parse_source_element ();
+    {
+      parse_source_element ();
+      skip_newlines ();
+    }
+  lexer_save_token (tok);
 }
 
 /* program

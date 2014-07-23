@@ -880,7 +880,7 @@ lexer_next_token (void)
   token tok = lexer_next_token_private ();
   if (tok.type == TOK_NEWLINE)
     return tok;
-  if (tok.type == TOK_CLOSE_PAREN)
+  if (tok.type == TOK_CLOSE_BRACE)
     {
       // if (i == 300)
         __fprintf (lexer_debug_log, "lexer_next_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
@@ -894,7 +894,7 @@ void
 lexer_save_token (token tok)
 {
 #ifdef __HOST
-  if (tok.type == TOK_CLOSE_PAREN)
+  if (tok.type == TOK_CLOSE_BRACE)
     __fprintf (lexer_debug_log, "lexer_save_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
 #endif
   saved_token = tok;

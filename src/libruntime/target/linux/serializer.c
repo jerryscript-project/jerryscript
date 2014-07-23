@@ -79,11 +79,11 @@ serializer_dump_opcode (const void *opcode)
 }
 
 void
-serializer_rewrite_opcode (const int8_t offset, const void *opcode)
+serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
 {
   uint8_t i;
 
-  __printf ("%03d: %20s ", opcode_counter + offset, massive[(int)((char*)opcode)[0]]);
+  __printf ("%03d: %20s ", loc, massive[(int)((char*)opcode)[0]]);
   for (i = 1; i < 4; i++)
     __printf ("%4d ", ((char*)opcode)[i]);
 

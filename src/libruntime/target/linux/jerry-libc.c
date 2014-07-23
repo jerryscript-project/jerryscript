@@ -100,7 +100,7 @@ __fseek(_FILE * fp, /**< stream pointer */
         _whence_t whence) /**< specifies position type
                                to add offset to */
 {
-  int whence_real;
+  int whence_real = SEEK_CUR;
   switch ( whence )
   {
     case __SEEK_SET:

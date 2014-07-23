@@ -34,14 +34,14 @@
 /**
  * Magic number to fill free chunks in debug version
  */
-static const uint8_t mem_PoolFreeChunkMagicNum = 0x71;
+static const uint8_t mem_pool_free_chunk_magic_num = 0x71;
 
 /**
  * Number of bits in a single bitmap's bits' block.
  */
-static const mword_t mem_BitmapBitsInBlock = sizeof (mword_t) * JERRY_BITSINBYTE;
+static const mword_t mem_bitmap_bits_in_block = sizeof (mword_t) * JERRY_BITSINBYTE;
 
-static void mem_CheckPool( mem_PoolState_t *pPool);
+static void mem_check_pool( mem_pool_state_t *pPool);
 
 /**
  * Initialization of memory pool.
@@ -53,7 +53,7 @@ static void mem_CheckPool( mem_PoolState_t *pPool);
  *         it is incorrect to suppose, that chunk number = poolSize / chunkSize.
  */
 void
-mem_PoolInit(mem_PoolState_t *pPool, /**< pool */
+mem_pool_init(mem_pool_state_t *pPool, /**< pool */
              size_t chunkSize,       /**< size of one chunk */
              uint8_t *poolStart,     /**< start of pool space */
              size_t poolSize)        /**< pool space size */
@@ -114,19 +114,19 @@ mem_PoolInit(mem_PoolState_t *pPool, /**< pool */
     __memset( pPool->pBitmap, 0, bitmapAreaSize);
 
 #ifndef JERRY_NDEBUG
-    __memset( pPool->pChunks, mem_PoolFreeChunkMagicNum, chunksAreaSize);
+    __memset( pPool->pChunks, mem_pool_free_chunk_magic_num, chunksAreaSize);
 #endif /* JERRY_NDEBUG */
 
-    mem_CheckPool( pPool);
-} /* mem_PoolInit */
+    mem_check_pool( pPool);
+} /* mem_pool_init */
 
 /**
  * Allocate a chunk in the pool
  */
 uint8_t*
-mem_PoolAllocChunk(mem_PoolState_t *pPool) /**< pool */
+mem_pool_alloc_chunk(mem_pool_state_t *pPool) /**< pool */
 {
-    mem_CheckPool( pPool);
+    mem_check_pool( pPool);
 
     if ( pPool->FreeChunksNumber == 0 )
     {
@@ -144,7 +144,7 @@ mem_PoolAllocChunk(mem_PoolState_t *pPool) /**< pool */
         } else
         {
             bitmapBlockIndex++;
-            chunkIndex += mem_BitmapBitsInBlock;
+            chunkIndex += mem_bitmap_bits_in_block;
         }
     }
 
@@ -158,7 +158,7 @@ mem_PoolAllocChunk(mem_PoolState_t *pPool) /**< pool */
 
     mword_t bit = 1;
     for ( size_t bitIndex = 0;
-          bitIndex < mem_BitmapBitsInBlock && chunkIndex < pPool->ChunksNumber;
+          bitIndex < mem_bitmap_bits_in_block && chunkIndex < pPool->ChunksNumber;
           bitIndex++, chunkIndex++, bit <<= 1 )
     {
         if ( ~pPool->pBitmap[ bitmapBlockIndex ] & bit )
@@ -169,7 +169,7 @@ mem_PoolAllocChunk(mem_PoolState_t *pPool) /**< pool */
             uint8_t *pChunk = &pPool->pChunks[ chunkIndex * pPool->ChunkSize ];
             pPool->FreeChunksNumber--;
 
-            mem_CheckPool( pPool);
+            mem_check_pool( pPool);
 
             return pChunk;
         }
@@ -177,42 +177,42 @@ mem_PoolAllocChunk(mem_PoolState_t *pPool) /**< pool */
 
     /* that zero bit is at the end of the bitmap and doesn't correspond to any chunk */
     return NULL;
-} /* mem_PoolAllocChunk */
+} /* mem_pool_alloc_chunk */
 
 /**
  * Free the chunk in the pool
  */
 void
-mem_PoolFreeChunk(mem_PoolState_t *pPool,  /**< pool */
+mem_pool_free_chunk(mem_pool_state_t *pPool,  /**< pool */
                   uint8_t *pChunk)         /**< chunk pointer */
 {
     JERRY_ASSERT( pPool->FreeChunksNumber < pPool->ChunksNumber );
     JERRY_ASSERT( pChunk >= pPool->pChunks && pChunk <= pPool->pChunks + pPool->ChunksNumber * pPool->ChunkSize );
     JERRY_ASSERT( ( (uintptr_t) pChunk - (uintptr_t) pPool->pChunks ) % pPool->ChunkSize == 0 );
 
-    mem_CheckPool( pPool);
+    mem_check_pool( pPool);
 
     size_t chunkIndex = (size_t) (pChunk - pPool->pChunks) / pPool->ChunkSize;
-    size_t bitmapBlockIndex = chunkIndex / mem_BitmapBitsInBlock;
-    size_t bitmapBitInBlock = chunkIndex % mem_BitmapBitsInBlock;
+    size_t bitmapBlockIndex = chunkIndex / mem_bitmap_bits_in_block;
+    size_t bitmapBitInBlock = chunkIndex % mem_bitmap_bits_in_block;
     mword_t bitMask = ( 1lu << bitmapBitInBlock );
 
 #ifndef JERRY_NDEBUG
-    __memset( (uint8_t*) pChunk, mem_PoolFreeChunkMagicNum, pPool->ChunkSize);
+    __memset( (uint8_t*) pChunk, mem_pool_free_chunk_magic_num, pPool->ChunkSize);
 #endif /* JERRY_NDEBUG */
     JERRY_ASSERT( pPool->pBitmap[ bitmapBlockIndex ] & bitMask );
 
     pPool->pBitmap[ bitmapBlockIndex ] &= ~bitMask;
     pPool->FreeChunksNumber++;
 
-    mem_CheckPool( pPool);
-} /* mem_PoolFreeChunk */
+    mem_check_pool( pPool);
+} /* mem_pool_free_chunk */
 
 /**
  * Check pool state consistency
  */
 static void
-mem_CheckPool( mem_PoolState_t __unused *pPool) /**< pool (unused #ifdef JERRY_NDEBUG) */
+mem_check_pool( mem_pool_state_t __unused *pPool) /**< pool (unused #ifdef JERRY_NDEBUG) */
 {
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT( pPool->ChunksNumber != 0 );
@@ -221,7 +221,7 @@ mem_CheckPool( mem_PoolState_t __unused *pPool) /**< pool (unused #ifdef JERRY_N
     JERRY_ASSERT( (uint8_t*) pPool->pChunks > pPool->pPoolStart );
 
     uint8_t freeChunkTemplate[ pPool->ChunkSize ];
-    __memset( &freeChunkTemplate, mem_PoolFreeChunkMagicNum, sizeof (freeChunkTemplate));
+    __memset( &freeChunkTemplate, mem_pool_free_chunk_magic_num, sizeof (freeChunkTemplate));
 
     size_t metFreeChunksNumber = 0;
 
@@ -235,7 +235,7 @@ mem_CheckPool( mem_PoolState_t __unused *pPool) /**< pool (unused #ifdef JERRY_N
 
         mword_t bitMask = 1;
         for ( size_t bitmapBitInBlock = 0;
-              chunkIndex < pPool->ChunksNumber && bitmapBitInBlock < mem_BitmapBitsInBlock;
+              chunkIndex < pPool->ChunksNumber && bitmapBitInBlock < mem_bitmap_bits_in_block;
               bitmapBitInBlock++, bitMask <<= 1, chunkIndex++ )
         {
             if ( ~bitmapBlock & bitMask )
@@ -249,7 +249,7 @@ mem_CheckPool( mem_PoolState_t __unused *pPool) /**< pool (unused #ifdef JERRY_N
 
     JERRY_ASSERT( metFreeChunksNumber == pPool->FreeChunksNumber );
 #endif /* !JERRY_NDEBUG */
-} /* mem_CheckPool */
+} /* mem_check_pool */
 
 /**
  * @}

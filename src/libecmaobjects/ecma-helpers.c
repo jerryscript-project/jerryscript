@@ -41,7 +41,7 @@ ecma_CompressPointer(void *pointer) /**< pointer to compress */
 
     JERRY_ASSERT(intPtr % MEM_ALIGNMENT == 0);
 
-    intPtr -= mem_GetBasePointer();
+    intPtr -= mem_get_base_pointer();
     intPtr >>= MEM_ALIGNMENT_LOG;
 
     JERRY_ASSERT((intPtr & ~((1u << ECMA_POINTER_FIELD_WIDTH) - 1)) == 0);
@@ -63,7 +63,7 @@ ecma_DecompressPointer(uintptr_t compressedPointer) /**< pointer to decompress *
     uintptr_t intPtr = compressedPointer;
 
     intPtr <<= MEM_ALIGNMENT_LOG;
-    intPtr += mem_GetBasePointer();
+    intPtr += mem_get_base_pointer();
 
     return (void*) intPtr;
 } /* ecma_DecompressPointer */

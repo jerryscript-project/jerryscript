@@ -129,7 +129,7 @@ get_char (size_t i)
 
   if (buffer == NULL)
     {
-      buffer = (char *) mem_HeapAllocBlock (BUFFER_SIZE, MEM_HEAP_ALLOC_SHORT_TERM);
+      buffer = (char *) mem_heap_alloc_block (BUFFER_SIZE, MEM_HEAP_ALLOC_SHORT_TERM);
       error = __fread (buffer, 1, BUFFER_SIZE, file);
       if (error == 0)
         return '\0';
@@ -307,7 +307,7 @@ current_token (void)
   JERRY_ASSERT (token_start);
   JERRY_ASSERT (token_start <= buffer);
   size_t length = (size_t) (buffer - token_start);
-  char *res = (char *) mem_HeapAllocBlock (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
+  char *res = (char *) mem_heap_alloc_block (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
   __strncpy (res, token_start, length);
   res[length] = '\0';
   token_start = NULL;
@@ -621,7 +621,7 @@ parse_string (void)
     }
 
   length = (size_t) (buffer - token_start);
-  tok = (char *) mem_HeapAllocBlock (length, MEM_HEAP_ALLOC_SHORT_TERM);
+  tok = (char *) mem_heap_alloc_block (length, MEM_HEAP_ALLOC_SHORT_TERM);
   index = tok;
 
   for (i = token_start; i < buffer; i++)
@@ -653,7 +653,7 @@ parse_string (void)
     {
       if (!__strncmp (seen_names[num].str, tok, __strlen (tok)))
         {
-          mem_HeapFreeBlock ((uint8_t*) tok);
+          mem_heap_free_block ((uint8_t*) tok);
           return seen_names[num].tok;
         }
     }

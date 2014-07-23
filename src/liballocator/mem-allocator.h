@@ -36,8 +36,8 @@
  */
 #define MEM_ALIGNMENT       (1 << MEM_ALIGNMENT_LOG)
 
-extern void mem_Init(void);
-uintptr_t mem_GetBasePointer(void);
+extern void mem_init(void);
+uintptr_t mem_get_base_pointer(void);
 
 #endif /* !JERRY_MEM_ALLOCATOR_H */
 

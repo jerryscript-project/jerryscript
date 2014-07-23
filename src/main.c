@@ -105,7 +105,7 @@ main (int argc, char **argv)
   FILE *file = NULL;
 #endif
 
-  mem_Init ();
+  mem_init ();
 
 #ifdef __HOST
   if (argc > 0)

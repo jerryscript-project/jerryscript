@@ -25,7 +25,7 @@
 /**
  * Area for heap
  */
-static uint8_t mem_HeapArea[ MEM_HEAP_AREA_SIZE ] __attribute__((aligned(MEM_ALIGNMENT)));
+static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__((aligned(MEM_ALIGNMENT)));
 
 /**
  * Check that heap area is less or equal than 64K.
@@ -36,17 +36,17 @@ JERRY_STATIC_ASSERT( MEM_HEAP_AREA_SIZE <= 64 * 1024 );
  * Initialize memory allocators.
  */
 void
-mem_Init( void)
+mem_init( void)
 {
-    mem_HeapInit( mem_HeapArea, sizeof (mem_HeapArea));
-    mem_PoolsInit();
-} /* mem_Init */
+    mem_heap_init( mem_heap_area, sizeof (mem_heap_area));
+    mem_pools_init();
+} /* mem_init */
 
 /**
  * Get base pointer for allocation area.
  */
 uintptr_t
-mem_GetBasePointer( void)
+mem_get_base_pointer( void)
 {
-    return (uintptr_t) mem_HeapArea;
-} /* mem_GetBasePointer */
+    return (uintptr_t) mem_heap_area;
+} /* mem_get_base_pointer */

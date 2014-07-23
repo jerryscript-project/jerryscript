@@ -114,7 +114,7 @@ init_string_literal_copy(T_IDX idx, /**< literal identifier */
 
       ssize_t req_sz = -sz;
 
-      str_lit_descr_p->str_p = mem_HeapAllocBlock( (size_t)req_sz,
+      str_lit_descr_p->str_p = mem_heap_alloc_block( (size_t)req_sz,
                                                   MEM_HEAP_ALLOC_SHORT_TERM);
 
       sz = try_get_string_by_idx( idx,
@@ -140,7 +140,7 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
     }
   else
     {
-      mem_HeapFreeBlock( str_lit_descr_p->str_p);
+      mem_heap_free_block( str_lit_descr_p->str_p);
     }
 
   str_lit_descr_p->str_p = NULL;

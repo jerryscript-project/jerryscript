@@ -31,18 +31,18 @@
 /**
  * Type of allocation (argument of mem_Alloc)
  *
- * @see mem_HeapAllocBlock
+ * @see mem_heap_alloc_block
  */
 typedef enum {
     MEM_HEAP_ALLOC_SHORT_TERM, /**< allocated region will be freed soon */
     MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
-} mem_HeapAllocTerm_t;
+} mem_heap_alloc_term_t;
 
-extern void mem_HeapInit(uint8_t *heapStart, size_t heapSize);
-extern uint8_t* mem_HeapAllocBlock(size_t sizeInBytes, mem_HeapAllocTerm_t allocTerm);
-extern void mem_HeapFreeBlock(uint8_t *ptr);
-extern size_t mem_HeapRecommendAllocationSize(size_t minimumAllocationSize);
-extern void mem_HeapPrint(bool dumpBlockData);
+extern void mem_heap_init(uint8_t *heapStart, size_t heapSize);
+extern uint8_t* mem_heap_alloc_block(size_t sizeInBytes, mem_heap_alloc_term_t allocTerm);
+extern void mem_heap_free_block(uint8_t *ptr);
+extern size_t mem_heap_recommend_allocation_size(size_t minimumAllocationSize);
+extern void mem_heap_print(bool dumpBlockData);
 
 #ifdef MEM_STATS
 /**
@@ -64,9 +64,9 @@ typedef struct {
     size_t waste_bytes; /**< bytes waste due to blocks filled partially
                              and due to block headers */
     size_t peak_waste_bytes; /**< peak bytes waste */
-} mem_HeapStats_t;
+} mem_heap_stats_t;
 
-extern void mem_HeapGetStats(mem_HeapStats_t *out_heap_stats_p);
+extern void mem_heap_get_stats(mem_heap_stats_t *out_heap_stats_p);
 #endif /* MEM_STATS */
 
 /**

@@ -20,9 +20,10 @@
 #include "serializer.h"
 
 #define MAX_OPCODES 10
+#define INVALID_VALUE 255
 
 static token tok;
-static OPCODE opcode, opcodes_buffer[10];
+static OPCODE opcode, opcodes_buffer[MAX_OPCODES];
 static uint8_t current_opcode_in_buffer = 0;
 static uint8_t opcode_counter = 0;
 
@@ -136,7 +137,7 @@ insert_semicolon (void)
   do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_opcode (&opcode); opcode_counter++; } while (0)
 
 #define REWRITE_OPCODE(OC, GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode ((int8_t) (OC - opcode_counter), &opcode); } while (0)
+  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode (OC, &opcode); } while (0)
 
 static T_IDX
 integer_zero (void)
@@ -624,23 +625,23 @@ parse_literal (void)
   {
     case TOK_NULL:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_SIMPLE, lhs, ECMA_SIMPLE_VALUE_NULL);
+      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_NULL);
       return lhs;
 
     case TOK_BOOL:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_SIMPLE, lhs, 
+      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, 
                    tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
       return lhs;
 
     case TOK_INT:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_NUMBER, lhs, tok.data.uid);
+      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, tok.data.uid);
       return lhs;
 
     case TOK_STRING:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, OPCODE_ARG_TYPE_STRING, lhs, tok.data.uid);
+      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_STRING, tok.data.uid);
       return lhs;
 
     default:
@@ -1143,7 +1144,7 @@ parse_conditional_expression (bool *was_conditional)
 
       DUMP_OPCODE (is_true_jmp, expr, (uint8_t) (opcode_counter + 2));
       jmp_oc = opcode_counter;
-      DUMP_OPCODE (jmp_down, 1);
+      DUMP_OPCODE (jmp_down, INVALID_VALUE);
 
       NEXT (lhs, assignment_expression);
       DUMP_OPCODE (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
@@ -1151,7 +1152,7 @@ parse_conditional_expression (bool *was_conditional)
 
       REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
       jmp_oc = opcode_counter;
-      DUMP_OPCODE (jmp_down, 1);
+      DUMP_OPCODE (jmp_down, INVALID_VALUE);
 
       NEXT (lhs, assignment_expression);
       DUMP_OPCODE (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
@@ -1435,10 +1436,10 @@ plain_for:
     stop = integer_one ();
 
   end_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, stop, 1);
+  DUMP_OPCODE (is_false_jmp, stop, INVALID_VALUE);
 
   body_oc = opcode_counter;
-  DUMP_OPCODE (jmp_down, 1);
+  DUMP_OPCODE (jmp_down, INVALID_VALUE);
 
   step_oc = opcode_counter;
   skip_newlines ();
@@ -1450,10 +1451,8 @@ plain_for:
   DUMP_OPCODE (jmp_up, (uint8_t) (opcode_counter - cond_oc));
   REWRITE_OPCODE (body_oc, jmp_down, (uint8_t) (opcode_counter - body_oc));
 
-  token_after_newlines_must_be (TOK_OPEN_BRACE);
   skip_newlines ();
-  parse_source_element_list ();
-  next_token_must_be (TOK_CLOSE_BRACE);
+  parse_statement ();
 
   DUMP_OPCODE (jmp_up, (uint8_t) (opcode_counter - step_oc));
   REWRITE_OPCODE (end_oc, is_false_jmp, stop, opcode_counter);
@@ -1506,7 +1505,7 @@ parse_if_statement (void)
 
   cond = parse_expression_inside_parens ();
   cond_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, cond, 1);
+  DUMP_OPCODE (is_false_jmp, cond, INVALID_VALUE);
 
   skip_newlines ();
   parse_statement ();
@@ -1556,7 +1555,7 @@ parse_while_statement (void)
   cond_oc = opcode_counter;
   cond = parse_expression_inside_parens ();
   jmp_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, cond, 1);
+  DUMP_OPCODE (is_false_jmp, cond, INVALID_VALUE);
 
   skip_newlines ();
   parse_statement ();

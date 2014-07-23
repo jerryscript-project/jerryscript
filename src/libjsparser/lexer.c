@@ -119,11 +119,23 @@ dump_current_line (void)
 {
   const char *i;
 
+  __printf ("// ");
+
   for (i = buffer; *i != '\n' && *i != 0; i++)
     __putchar (*i);
   __putchar ('\n');
 }
 #endif
+
+static bool
+current_token_equals_to (const char *str)
+{
+  if (__strlen (str) != (size_t) (buffer - token_start))
+    return false;
+  if (!__strncmp (str, token_start, (size_t) (buffer - token_start)))
+    return true;
+  return false;
+}
 
 /* If TOKEN represents a keyword, return decoded keyword,
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,
@@ -136,7 +148,7 @@ decode_keyword (void)
 
   for (i = 0; i < size; i++)
     {
-      if (!__strncmp (keyword_tokens[i].str, token_start, (size_t) (buffer - token_start)))
+      if (current_token_equals_to (keyword_tokens[i].str))
         return keyword_tokens[i].tok;
     }
 
@@ -150,7 +162,7 @@ convert_seen_name_to_token (void)
 
   for (i = 0; i < seen_names_count; i++)
     {
-      if (!__strncmp (seen_names[i].str, token_start, (size_t) (buffer - token_start)))
+      if (current_token_equals_to (seen_names[i].str))
         return seen_names[i].tok;
     }
 
@@ -238,8 +250,8 @@ lexer_adjust_num_ids (void)
 
   for (i = 0; i < sizeof (keyword_tokens) / sizeof (string_and_token); i++)
     {
-      if (!__strncmp ("true", keyword_tokens[i].str, 4)
-          || !__strncmp ("false", keyword_tokens[i].str, 5))
+      if (!__strcmp ("true", keyword_tokens[i].str)
+          || !__strcmp ("false", keyword_tokens[i].str))
         keyword_tokens[i].tok.data.uid = (uint8_t) (keyword_tokens[i].tok.data.uid + seen_names_count);
     }
 }
@@ -609,7 +621,7 @@ parse_string (void)
 
   for (num = 0; num < seen_names_count; num++)
     {
-      if (!__strncmp (seen_names[num].str, tok, __strlen (tok)))
+      if (!__strcmp (seen_names[num].str, tok))
         {
           mem_heap_free_block ((uint8_t*) tok);
           return seen_names[num].tok;

@@ -35,13 +35,6 @@ struct __int_data;
 OPCODE;
 typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
 
-#define OP_LOOPS(op)                    \
-    op(loop_inf)                        \
-    op(loop_init_num)                   \
-    op(loop_precond_begin_num)          \
-    op(loop_precond_end_num)            \
-    op(loop_postcond)
-
 #define OP_CALLS_AND_ARGS(op)           \
     op(call_0)                          \
     op(call_1)                          \
@@ -134,7 +127,6 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op(is_false_jmp)
 
 #define OP_LIST(op)                     \
-  OP_LOOPS(op)                          \
   OP_CALLS_AND_ARGS(op)                 \
   OP_INITS(op)                          \
   OP_ASSIGNMENTS(op)                    \

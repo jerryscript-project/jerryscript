@@ -318,10 +318,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
 #define OP_UNIMPLEMENTED_LIST(op) \
     op(is_true_jmp)                     \
     op(is_false_jmp)                    \
-    op(loop_init_num)                   \
-    op(loop_precond_begin_num)          \
-    op(loop_precond_end_num)            \
-    op(loop_postcond)                   \
     op(call_0)                          \
     op(call_n)                          \
     op(func_decl_1)                     \
@@ -387,20 +383,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
   }
 OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP)
 #undef DEFINE_UNIMPLEMENTED_OP
-
-ecma_completion_value_t
-opfunc_loop_inf (OPCODE opdata, struct __int_data *int_data)
-{
-#ifdef __HOST
-  __printf ("%d::loop_inf:idx:%d\n",
-          int_data->pos,
-          opdata.data.loop_inf.loop_root);
-#endif
-
-  int_data->pos = opdata.data.loop_inf.loop_root;
-
-  return ecma_make_empty_completion_value();
-}
 
 ecma_completion_value_t
 opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
@@ -828,11 +810,6 @@ GETOP_IMPL_1 (exitval, status_code)
 GETOP_IMPL_1 (retval, ret_value)
 GETOP_IMPL_0 (ret)
 GETOP_IMPL_0 (nop)
-GETOP_IMPL_1 (loop_inf, loop_root)
-GETOP_IMPL_3 (loop_init_num, start, stop, step)
-GETOP_IMPL_2 (loop_precond_begin_num, condition, after_loop_op)
-GETOP_IMPL_3 (loop_precond_end_num, iterator, step, precond_begin)
-GETOP_IMPL_2 (loop_postcond, condition, body_root)
 GETOP_IMPL_1 (var_decl, variable_name)
 GETOP_IMPL_2 (b_not, dst, var_right)
 GETOP_IMPL_2 (logical_not, dst, var_right)

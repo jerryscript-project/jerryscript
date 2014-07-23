@@ -26,6 +26,6 @@ void serializer_dump_nums (const int *, uint8_t, uint8_t, uint8_t);
 
 void serializer_dump_opcode (const void *);
 
-void serializer_rewrite_opcode (const int8_t, const void *);
+void serializer_rewrite_opcode (const uint8_t, const void *);
 
 #endif // SERIALIZER_H

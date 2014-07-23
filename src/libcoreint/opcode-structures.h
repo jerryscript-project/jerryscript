@@ -371,47 +371,6 @@ OP_CODE_DECL_VOID (ret)
 
 OP_CODE_DECL_VOID (nop)
 
-// LOOPS
-// Lately, all loops should be translated into different JMPs in an optimizer.
-
-/** End of body of infinite loop should be ended with unconditional JMP
- *  to loop_root (ie. next op after loop condition)  */
-OP_CODE_DECL (loop_inf, T_IDX,
-              loop_root)
-
-/** Numeric loop initialization.
- *  for (start,stop,step)
- */
-OP_CODE_DECL (loop_init_num, T_IDX_IDX_IDX,
-              start,
-              stop,
-              step)
-
-/** Check loop (condition).
- *  if (loop cond is true)
- *  { next_op }
- *  else
- *  { goto after_loop_op; }
- */
-OP_CODE_DECL (loop_precond_begin_num, T_IDX_IDX,
-              condition,
-              after_loop_op)
-
-/** i++;
- * Increment iterator on step and JMP to PRECOND
- */
-OP_CODE_DECL (loop_precond_end_num, T_IDX_IDX_IDX,
-              iterator,
-              step,
-              precond_begin)
-
-/** do {...} while (cond);
- *  If condition is true, JMP to BODY_ROOT
- */
-OP_CODE_DECL (loop_postcond, T_IDX_IDX,
-              condition,
-              body_root)
-
 /** a = []  */
 OP_CODE_DECL (array_0, T_IDX,
               lhs)

@@ -45,11 +45,11 @@ static void
 ecma_GCQueue( ecma_Object_t *pObject) /**< object */
 {
     JERRY_ASSERT( pObject != NULL );
-    JERRY_ASSERT( pObject->m_GCInfo.m_IsObjectValid );
-    JERRY_ASSERT( pObject->m_GCInfo.u.m_Refs == 0 );
+    JERRY_ASSERT( pObject->GCInfo.IsObjectValid );
+    JERRY_ASSERT( pObject->GCInfo.u.Refs == 0 );
 
-    pObject->m_GCInfo.m_IsObjectValid = false;
-    ecma_SetPointer( pObject->m_GCInfo.u.m_NextQueuedForGC, ecma_GC_Queue);
+    pObject->GCInfo.IsObjectValid = false;
+    ecma_SetPointer( pObject->GCInfo.u.NextQueuedForGC, ecma_GC_Queue);
 
     ecma_GC_Queue = pObject;
 } /* ecma_QueueGC */
@@ -60,14 +60,14 @@ ecma_GCQueue( ecma_Object_t *pObject) /**< object */
 void
 ecma_RefObject(ecma_Object_t *pObject) /**< object */
 {
-    JERRY_ASSERT(pObject->m_GCInfo.m_IsObjectValid);
+    JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
 
-    pObject->m_GCInfo.u.m_Refs++;
+    pObject->GCInfo.u.Refs++;
 
     /**
      * Check that value was not overflowed
      */
-    JERRY_ASSERT(pObject->m_GCInfo.u.m_Refs > 0);
+    JERRY_ASSERT(pObject->GCInfo.u.Refs > 0);
 } /* ecma_RefObject */
 
 /**
@@ -77,12 +77,12 @@ void
 ecma_DerefObject(ecma_Object_t *pObject) /**< object */
 {
     JERRY_ASSERT(pObject != NULL);
-    JERRY_ASSERT(pObject->m_GCInfo.m_IsObjectValid);
-    JERRY_ASSERT(pObject->m_GCInfo.u.m_Refs > 0);
+    JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
+    JERRY_ASSERT(pObject->GCInfo.u.Refs > 0);
 
-    pObject->m_GCInfo.u.m_Refs--;
+    pObject->GCInfo.u.Refs--;
 
-    if ( pObject->m_GCInfo.u.m_Refs == 0 )
+    if ( pObject->GCInfo.u.Refs == 0 )
     {
         ecma_GCQueue( pObject);
     }
@@ -106,22 +106,22 @@ ecma_GCRun( void)
     while ( ecma_GC_Queue != NULL )
     {
         ecma_Object_t *pObject = ecma_GC_Queue;
-        ecma_GC_Queue = ecma_GetPointer( pObject->m_GCInfo.u.m_NextQueuedForGC);
+        ecma_GC_Queue = ecma_GetPointer( pObject->GCInfo.u.NextQueuedForGC);
 
-        JERRY_ASSERT( !pObject->m_GCInfo.m_IsObjectValid );
+        JERRY_ASSERT( !pObject->GCInfo.IsObjectValid );
 
-        for ( ecma_Property_t *property = ecma_GetPointer( pObject->m_pProperties), *pNextProperty;
+        for ( ecma_Property_t *property = ecma_GetPointer( pObject->pProperties), *pNextProperty;
               property != NULL;
               property = pNextProperty )
         {
-            pNextProperty = ecma_GetPointer( property->m_pNextProperty);
+            pNextProperty = ecma_GetPointer( property->pNextProperty);
 
             ecma_FreeProperty( property);
         }
 
-        if ( pObject->m_IsLexicalEnvironment )
+        if ( pObject->IsLexicalEnvironment )
         {
-            ecma_Object_t *pOuterLexicalEnvironment = ecma_GetPointer( pObject->u.m_LexicalEnvironment.m_pOuterReference);
+            ecma_Object_t *pOuterLexicalEnvironment = ecma_GetPointer( pObject->u.LexicalEnvironment.pOuterReference);
             
             if ( pOuterLexicalEnvironment != NULL )
             {
@@ -129,7 +129,7 @@ ecma_GCRun( void)
             }
         } else
         {
-            ecma_Object_t *pPrototypeObject = ecma_GetPointer( pObject->u.m_Object.m_pPrototypeObject);
+            ecma_Object_t *pPrototypeObject = ecma_GetPointer( pObject->u.Object.pPrototypeObject);
             
             if ( pPrototypeObject != NULL )
             {

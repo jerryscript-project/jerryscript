@@ -40,11 +40,11 @@
 ecma_CompletionValue_t
 ecma_op_check_object_coercible( ecma_Value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.m_ValueType )
+  switch ( (ecma_Type_t)value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
       {
-        switch ( (ecma_SimpleValue_t)value.m_Value )
+        switch ( (ecma_SimpleValue_t)value.Value )
         {
           case ECMA_SIMPLE_VALUE_UNDEFINED:
           case ECMA_SIMPLE_VALUE_NULL:
@@ -95,7 +95,7 @@ ecma_op_check_object_coercible( ecma_Value_t value) /**< ecma-value */
 ecma_CompletionValue_t
 ecma_op_to_primitive( ecma_Value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.m_ValueType )
+  switch ( (ecma_Type_t)value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
     case ECMA_TYPE_NUMBER:
@@ -130,7 +130,7 @@ ecma_op_to_primitive( ecma_Value_t value) /**< ecma-value */
 ecma_CompletionValue_t
 ecma_op_to_number( ecma_Value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.m_ValueType )
+  switch ( (ecma_Type_t)value.ValueType )
   {
     case ECMA_TYPE_NUMBER:
       {

@@ -41,11 +41,11 @@ ecma_CompletionValue_t
 ecma_OpHasBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                   ecma_Char_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
 
   ecma_SimpleValue_t has_binding = ECMA_SIMPLE_VALUE_UNDEFINED;
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -81,10 +81,10 @@ ecma_OpCreateMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment *
                             ecma_Char_t *name_p, /**< argument N */
                             bool is_deletable) /**< argument D */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
   JERRY_ASSERT( name_p != NULL );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -125,21 +125,21 @@ ecma_OpSetMutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                          ecma_Value_t value, /**< argument V */
                          bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
   JERRY_ASSERT( name_p != NULL );
 
   JERRY_ASSERT( ecma_IsCompletionValueNormalTrue( ecma_OpHasBinding( lex_env_p, name_p)) );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
       ecma_Property_t *property_p = ecma_GetNamedDataProperty( lex_env_p, name_p);    
 
-      if ( property_p->u.m_NamedDataProperty.m_Writable == ECMA_PROPERTY_WRITABLE )
+      if ( property_p->u.NamedDataProperty.Writable == ECMA_PROPERTY_WRITABLE )
       {
-        ecma_FreeValue( property_p->u.m_NamedDataProperty.m_Value);
-        property_p->u.m_NamedDataProperty.m_Value = ecma_CopyValue( value);
+        ecma_FreeValue( property_p->u.NamedDataProperty.Value);
+        property_p->u.NamedDataProperty.Value = ecma_CopyValue( value);
       } else if ( is_strict )
       {
         return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
@@ -171,27 +171,27 @@ ecma_OpGetBindingValue(ecma_Object_t *lex_env_p, /**< lexical environment */
                        ecma_Char_t *name_p, /**< argument N */
                        bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
   JERRY_ASSERT( name_p != NULL );
 
   JERRY_ASSERT( ecma_IsCompletionValueNormalTrue( ecma_OpHasBinding( lex_env_p, name_p)) );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
       ecma_Property_t *property_p = ecma_GetNamedDataProperty( lex_env_p, name_p);    
 
-      ecma_Value_t prop_value = property_p->u.m_NamedDataProperty.m_Value;
+      ecma_Value_t prop_value = property_p->u.NamedDataProperty.Value;
 
       /* is the binding mutable? */
-      if ( property_p->u.m_NamedDataProperty.m_Writable == ECMA_PROPERTY_WRITABLE )
+      if ( property_p->u.NamedDataProperty.Writable == ECMA_PROPERTY_WRITABLE )
       {
         return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
                                          ecma_CopyValue( prop_value),
                                          ECMA_TARGET_ID_RESERVED);
-      } else if ( prop_value.m_ValueType == ECMA_TYPE_SIMPLE
-                  && prop_value.m_Value == ECMA_SIMPLE_VALUE_EMPTY )
+      } else if ( prop_value.ValueType == ECMA_TYPE_SIMPLE
+                  && prop_value.Value == ECMA_SIMPLE_VALUE_EMPTY )
       {
         /* unitialized immutable binding */
         if ( is_strict )
@@ -229,10 +229,10 @@ ecma_CompletionValue_t
 ecma_OpDeleteBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                      ecma_Char_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
   JERRY_ASSERT( name_p != NULL );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
@@ -244,9 +244,9 @@ ecma_OpDeleteBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
           ret_val = ECMA_SIMPLE_VALUE_TRUE;
         } else
         {
-          JERRY_ASSERT( prop_p->m_Type == ECMA_PROPERTY_NAMEDDATA );
+          JERRY_ASSERT( prop_p->Type == ECMA_PROPERTY_NAMEDDATA );
 
-          if ( prop_p->u.m_NamedDataProperty.m_Configurable == ECMA_PROPERTY_NOT_CONFIGURABLE )
+          if ( prop_p->u.NamedDataProperty.Configurable == ECMA_PROPERTY_NOT_CONFIGURABLE )
           {
             ret_val = ECMA_SIMPLE_VALUE_FALSE;
           } else
@@ -281,9 +281,9 @@ ecma_OpDeleteBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
 ecma_CompletionValue_t
 ecma_OpImplicitThisValue( ecma_Object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
@@ -309,9 +309,9 @@ void
 ecma_OpCreateImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment */
                               ecma_Char_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
@@ -327,9 +327,9 @@ ecma_OpCreateImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environment
                                                             ECMA_PROPERTY_NOT_ENUMERABLE,
                                                             ECMA_PROPERTY_NOT_CONFIGURABLE);
 
-        JERRY_ASSERT( prop_p->u.m_NamedDataProperty.m_Value.m_ValueType == ECMA_TYPE_SIMPLE );
+        JERRY_ASSERT( prop_p->u.NamedDataProperty.Value.ValueType == ECMA_TYPE_SIMPLE );
 
-        prop_p->u.m_NamedDataProperty.m_Value.m_Value = ECMA_SIMPLE_VALUE_EMPTY;
+        prop_p->u.NamedDataProperty.Value.Value = ECMA_SIMPLE_VALUE_EMPTY;
       }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -350,9 +350,9 @@ ecma_OpInitializeImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environ
                                   ecma_Char_t *name_p, /**< argument N */
                                   ecma_Value_t value) /**< argument V */
 {
-  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->m_IsLexicalEnvironment );
+  JERRY_ASSERT( lex_env_p != NULL && lex_env_p->IsLexicalEnvironment );
 
-  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.m_LexicalEnvironment.m_Type )
+  switch ( (ecma_LexicalEnvironmentType_t) lex_env_p->u.LexicalEnvironment.Type )
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
@@ -361,11 +361,11 @@ ecma_OpInitializeImmutableBinding(ecma_Object_t *lex_env_p, /**< lexical environ
         ecma_Property_t *prop_p = ecma_GetNamedDataProperty( lex_env_p, name_p);
 
         /* The binding must be unitialized immutable binding */
-        JERRY_ASSERT( prop_p->u.m_NamedDataProperty.m_Writable == ECMA_PROPERTY_NOT_WRITABLE
-                      && prop_p->u.m_NamedDataProperty.m_Value.m_ValueType == ECMA_TYPE_SIMPLE
-                      && prop_p->u.m_NamedDataProperty.m_Value.m_Value == ECMA_SIMPLE_VALUE_EMPTY );
+        JERRY_ASSERT( prop_p->u.NamedDataProperty.Writable == ECMA_PROPERTY_NOT_WRITABLE
+                      && prop_p->u.NamedDataProperty.Value.ValueType == ECMA_TYPE_SIMPLE
+                      && prop_p->u.NamedDataProperty.Value.Value == ECMA_SIMPLE_VALUE_EMPTY );
 
-        prop_p->u.m_NamedDataProperty.m_Value = ecma_CopyValue( value);
+        prop_p->u.NamedDataProperty.Value = ecma_CopyValue( value);
       }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {

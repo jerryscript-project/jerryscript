@@ -63,7 +63,7 @@ ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, /**< lexical environment
       JERRY_ASSERT( ecma_IsCompletionValueNormalFalse( completion_value) );
     }
 
-    lex_env_iter_p = ecma_GetPointer( lex_env_iter_p->u.m_LexicalEnvironment.m_pOuterReference);
+    lex_env_iter_p = ecma_GetPointer( lex_env_iter_p->u.LexicalEnvironment.pOuterReference);
   }
 
   return ecma_MakeReference( ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED),

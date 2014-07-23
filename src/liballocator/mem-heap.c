@@ -64,10 +64,10 @@ typedef enum
  */
 typedef struct mem_BlockHeader_t
 {
-  mem_MagicNumOfBlock_t m_MagicNum;                              /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
-                                                                      and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
-  struct mem_BlockHeader_t *m_Neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks */
-  size_t allocated_bytes;                                        /**< allocated area size - for allocated blocks; 0 - for free blocks */
+  mem_MagicNumOfBlock_t MagicNum;                              /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
+                                                                    and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
+  struct mem_BlockHeader_t *Neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks */
+  size_t allocated_bytes;                                      /**< allocated area size - for allocated blocks; 0 - for free blocks */
 } mem_BlockHeader_t;
 
 /**
@@ -85,10 +85,10 @@ JERRY_STATIC_ASSERT( MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0 );
  */
 typedef struct
 {
-  uint8_t* m_HeapStart;             /**< first address of heap space */
-  size_t m_HeapSize;                /**< heap space size */
-  mem_BlockHeader_t* m_pFirstBlock; /**< first block of the heap */
-  mem_BlockHeader_t* m_pLastBlock;  /**< last block of the heap */
+  uint8_t* HeapStart;             /**< first address of heap space */
+  size_t HeapSize;                /**< heap space size */
+  mem_BlockHeader_t* pFirstBlock; /**< first block of the heap */
+  mem_BlockHeader_t* pLastBlock;  /**< last block of the heap */
 } mem_HeapState_t;
 
 /**
@@ -136,18 +136,18 @@ mem_get_block_chunks_count( const mem_BlockHeader_t *block_header_p) /**< block 
 {
   JERRY_ASSERT( block_header_p != NULL );
 
-  const mem_BlockHeader_t *next_block_p = block_header_p->m_Neighbours[ MEM_DIRECTION_NEXT ];
+  const mem_BlockHeader_t *next_block_p = block_header_p->Neighbours[ MEM_DIRECTION_NEXT ];
   size_t dist_till_block_end;
 
   if ( next_block_p == NULL )
   {
-    dist_till_block_end = (size_t) ( mem_Heap.m_HeapStart + mem_Heap.m_HeapSize - (uint8_t*) block_header_p );
+    dist_till_block_end = (size_t) ( mem_Heap.HeapStart + mem_Heap.HeapSize - (uint8_t*) block_header_p );
   } else
   {
     dist_till_block_end = (size_t) ( (uint8_t*) next_block_p - (uint8_t*) block_header_p );
   }
 
-  JERRY_ASSERT( dist_till_block_end <= mem_Heap.m_HeapSize );
+  JERRY_ASSERT( dist_till_block_end <= mem_Heap.HeapSize );
   JERRY_ASSERT( dist_till_block_end % MEM_HEAP_CHUNK_SIZE == 0 );
 
   return dist_till_block_end / MEM_HEAP_CHUNK_SIZE;
@@ -187,17 +187,17 @@ mem_HeapInit(uint8_t *heapStart, /**< first address of heap space */
   JERRY_ASSERT( heapSize % MEM_HEAP_CHUNK_SIZE == 0 );
   JERRY_ASSERT( (uintptr_t) heapStart % MEM_ALIGNMENT == 0);
 
-  mem_Heap.m_HeapStart = heapStart;
-  mem_Heap.m_HeapSize = heapSize;
+  mem_Heap.HeapStart = heapStart;
+  mem_Heap.HeapSize = heapSize;
 
-  mem_InitBlockHeader(mem_Heap.m_HeapStart,
+  mem_InitBlockHeader(mem_Heap.HeapStart,
                       0,
                       MEM_BLOCK_FREE,
                       NULL,
                       NULL);
 
-  mem_Heap.m_pFirstBlock = (mem_BlockHeader_t*) mem_Heap.m_HeapStart;
-  mem_Heap.m_pLastBlock = mem_Heap.m_pFirstBlock;
+  mem_Heap.pFirstBlock = (mem_BlockHeader_t*) mem_Heap.HeapStart;
+  mem_Heap.pLastBlock = mem_Heap.pFirstBlock;
 
   mem_HeapStatInit();
 } /* mem_HeapInit */
@@ -216,16 +216,16 @@ mem_InitBlockHeader( uint8_t *pFirstChunk,         /**< address of the first chu
 
   if ( blockState == MEM_BLOCK_FREE )
   {
-    pBlockHeader->m_MagicNum = MEM_MAGIC_NUM_OF_FREE_BLOCK;
+    pBlockHeader->MagicNum = MEM_MAGIC_NUM_OF_FREE_BLOCK;
 
     JERRY_ASSERT( allocated_bytes == 0 );
   } else
   {
-    pBlockHeader->m_MagicNum = MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK;
+    pBlockHeader->MagicNum = MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK;
   }
 
-  pBlockHeader->m_Neighbours[ MEM_DIRECTION_PREV ] = pPrevBlock;
-  pBlockHeader->m_Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
+  pBlockHeader->Neighbours[ MEM_DIRECTION_PREV ] = pPrevBlock;
+  pBlockHeader->Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
   pBlockHeader->allocated_bytes = allocated_bytes;
 
   JERRY_ASSERT( allocated_bytes <= mem_get_block_data_space_size( pBlockHeader) );
@@ -255,18 +255,18 @@ mem_HeapAllocBlock( size_t sizeInBytes,           /**< size of region to allocat
 
   if ( allocTerm == MEM_HEAP_ALLOC_SHORT_TERM )
   {
-    pBlock = mem_Heap.m_pFirstBlock;
+    pBlock = mem_Heap.pFirstBlock;
     direction = MEM_DIRECTION_NEXT;
   } else
   {
-    pBlock = mem_Heap.m_pLastBlock;
+    pBlock = mem_Heap.pLastBlock;
     direction = MEM_DIRECTION_PREV;
   }
 
   /* searching for appropriate block */
   while ( pBlock != NULL )
   {
-    if ( pBlock->m_MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
+    if ( pBlock->MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
     {
       if ( mem_get_block_data_space_size( pBlock) >= sizeInBytes )
       {
@@ -274,10 +274,10 @@ mem_HeapAllocBlock( size_t sizeInBytes,           /**< size of region to allocat
       }
     } else
     {
-      JERRY_ASSERT( pBlock->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+      JERRY_ASSERT( pBlock->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
     }
 
-    pBlock = pBlock->m_Neighbours[ direction ];
+    pBlock = pBlock->Neighbours[ direction ];
   }
 
   if ( pBlock == NULL )
@@ -292,8 +292,8 @@ mem_HeapAllocBlock( size_t sizeInBytes,           /**< size of region to allocat
 
   JERRY_ASSERT( newBlockSizeInChunks <= foundBlockSizeInChunks );
 
-  mem_BlockHeader_t *pPrevBlock = pBlock->m_Neighbours[ MEM_DIRECTION_PREV ];
-  mem_BlockHeader_t *pNextBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ];
+  mem_BlockHeader_t *pPrevBlock = pBlock->Neighbours[ MEM_DIRECTION_PREV ];
+  mem_BlockHeader_t *pNextBlock = pBlock->Neighbours[ MEM_DIRECTION_NEXT ];
 
   if ( newBlockSizeInChunks < foundBlockSizeInChunks )
   {
@@ -310,7 +310,7 @@ mem_HeapAllocBlock( size_t sizeInBytes,           /**< size of region to allocat
 
     if ( pNextBlock == NULL )
     {
-      mem_Heap.m_pLastBlock = pNewFreeBlock;
+      mem_Heap.pLastBlock = pNewFreeBlock;
     }
 
     pNextBlock = pNewFreeBlock;
@@ -342,57 +342,57 @@ void
 mem_HeapFreeBlock( uint8_t *ptr) /**< pointer to beginning of data space of the block */
 {
   /* checking that ptr points to the heap */
-  JERRY_ASSERT( ptr >= mem_Heap.m_HeapStart
-               && ptr <= mem_Heap.m_HeapStart + mem_Heap.m_HeapSize );
+  JERRY_ASSERT( ptr >= mem_Heap.HeapStart
+                && ptr <= mem_Heap.HeapStart + mem_Heap.HeapSize );
 
   mem_CheckHeap();
 
   mem_BlockHeader_t *pBlock = (mem_BlockHeader_t*) ptr - 1;
-  mem_BlockHeader_t *pPrevBlock = pBlock->m_Neighbours[ MEM_DIRECTION_PREV ];
-  mem_BlockHeader_t *pNextBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ];
+  mem_BlockHeader_t *pPrevBlock = pBlock->Neighbours[ MEM_DIRECTION_PREV ];
+  mem_BlockHeader_t *pNextBlock = pBlock->Neighbours[ MEM_DIRECTION_NEXT ];
 
   mem_HeapStatFreeBlock( pBlock);
 
   /* checking magic nums that are neighbour to data space */
-  JERRY_ASSERT( pBlock->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+  JERRY_ASSERT( pBlock->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
   if ( pNextBlock != NULL )
   {
-    JERRY_ASSERT( pNextBlock->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK
-                 || pNextBlock->m_MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK );
+    JERRY_ASSERT( pNextBlock->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK
+                 || pNextBlock->MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK );
   }
 
-  pBlock->m_MagicNum = MEM_MAGIC_NUM_OF_FREE_BLOCK;
+  pBlock->MagicNum = MEM_MAGIC_NUM_OF_FREE_BLOCK;
 
   if ( pNextBlock != NULL
-       && pNextBlock->m_MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
+       && pNextBlock->MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
   {
     /* merge with the next block */
     mem_HeapStatFreeBlockMerge();
 
-    pNextBlock = pNextBlock->m_Neighbours[ MEM_DIRECTION_NEXT ];
-    pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
+    pNextBlock = pNextBlock->Neighbours[ MEM_DIRECTION_NEXT ];
+    pBlock->Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
     if ( pNextBlock != NULL )
     {
-      pNextBlock->m_Neighbours[ MEM_DIRECTION_PREV ] = pBlock;
+      pNextBlock->Neighbours[ MEM_DIRECTION_PREV ] = pBlock;
     } else
     {
-      mem_Heap.m_pLastBlock = pBlock;
+      mem_Heap.pLastBlock = pBlock;
     }
   }
 
   if ( pPrevBlock != NULL
-       && pPrevBlock->m_MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
+       && pPrevBlock->MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK )
   {
     /* merge with the previous block */
     mem_HeapStatFreeBlockMerge();
 
-    pPrevBlock->m_Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
+    pPrevBlock->Neighbours[ MEM_DIRECTION_NEXT ] = pNextBlock;
     if ( pNextBlock != NULL )
     {
-      pNextBlock->m_Neighbours[ MEM_DIRECTION_PREV ] = pBlock->m_Neighbours[ MEM_DIRECTION_PREV ];
+      pNextBlock->Neighbours[ MEM_DIRECTION_PREV ] = pBlock->Neighbours[ MEM_DIRECTION_PREV ];
     } else
     {
-      mem_Heap.m_pLastBlock = pPrevBlock;
+      mem_Heap.pLastBlock = pPrevBlock;
     }
   }
 
@@ -423,21 +423,21 @@ mem_HeapPrint( bool dumpBlockData) /**< print block with data (true)
   mem_CheckHeap();
 
   __printf("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
-              mem_Heap.m_HeapStart,
-              mem_Heap.m_HeapSize,
-              (void*) mem_Heap.m_pFirstBlock,
-              (void*) mem_Heap.m_pLastBlock);
+           mem_Heap.HeapStart,
+           mem_Heap.HeapSize,
+           (void*) mem_Heap.pFirstBlock,
+           (void*) mem_Heap.pLastBlock);
 
-  for ( mem_BlockHeader_t *pBlock = mem_Heap.m_pFirstBlock;
+  for ( mem_BlockHeader_t *pBlock = mem_Heap.pFirstBlock;
         pBlock != NULL;
-        pBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ] )
+        pBlock = pBlock->Neighbours[ MEM_DIRECTION_NEXT ] )
   {
     __printf("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
                 (void*) pBlock,
-                pBlock->m_MagicNum,
+                pBlock->MagicNum,
                 mem_get_block_chunks_count( pBlock),
-                (void*) pBlock->m_Neighbours[ MEM_DIRECTION_PREV ],
-                (void*) pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ]);
+                (void*) pBlock->Neighbours[ MEM_DIRECTION_PREV ],
+                (void*) pBlock->Neighbours[ MEM_DIRECTION_NEXT ]);
 
     if ( dumpBlockData )
     {
@@ -486,20 +486,20 @@ static void
 mem_CheckHeap( void)
 {
 #ifndef JERRY_NDEBUG
-  JERRY_ASSERT( (uint8_t*) mem_Heap.m_pFirstBlock == mem_Heap.m_HeapStart );
-  JERRY_ASSERT( mem_Heap.m_HeapSize % MEM_HEAP_CHUNK_SIZE == 0 );
+  JERRY_ASSERT( (uint8_t*) mem_Heap.pFirstBlock == mem_Heap.HeapStart );
+  JERRY_ASSERT( mem_Heap.HeapSize % MEM_HEAP_CHUNK_SIZE == 0 );
 
   bool isLastBlockWasMet = false;
-  for ( mem_BlockHeader_t *pBlock = mem_Heap.m_pFirstBlock;
+  for ( mem_BlockHeader_t *pBlock = mem_Heap.pFirstBlock;
         pBlock != NULL;
-        pBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ] )
+        pBlock = pBlock->Neighbours[ MEM_DIRECTION_NEXT ] )
   {
     JERRY_ASSERT( pBlock != NULL );
-    JERRY_ASSERT( pBlock->m_MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK
-                 || pBlock->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+    JERRY_ASSERT( pBlock->MagicNum == MEM_MAGIC_NUM_OF_FREE_BLOCK
+                 || pBlock->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
 
-    mem_BlockHeader_t *pNextBlock = pBlock->m_Neighbours[ MEM_DIRECTION_NEXT ];
-    if ( pBlock == mem_Heap.m_pLastBlock )
+    mem_BlockHeader_t *pNextBlock = pBlock->Neighbours[ MEM_DIRECTION_NEXT ];
+    if ( pBlock == mem_Heap.pLastBlock )
     {
       isLastBlockWasMet = true;
 
@@ -532,7 +532,7 @@ mem_HeapStatInit()
 {
   __memset( &mem_HeapStats, 0, sizeof (mem_HeapStats));
 
-  mem_HeapStats.size = mem_Heap.m_HeapSize;
+  mem_HeapStats.size = mem_Heap.HeapSize;
   mem_HeapStats.blocks = 1;
 } /* mem_InitStats */
 
@@ -542,7 +542,7 @@ mem_HeapStatInit()
 static void
 mem_HeapStatAllocBlock( mem_BlockHeader_t *block_header_p) /**< allocated block */
 {
-  JERRY_ASSERT( block_header_p->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+  JERRY_ASSERT( block_header_p->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
 
   const size_t chunks = mem_get_block_chunks_count( block_header_p);
   const size_t bytes = block_header_p->allocated_bytes;
@@ -584,7 +584,7 @@ mem_HeapStatAllocBlock( mem_BlockHeader_t *block_header_p) /**< allocated block 
 static void
 mem_HeapStatFreeBlock( mem_BlockHeader_t *block_header_p) /**< block to be freed */
 {
-  JERRY_ASSERT( block_header_p->m_MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+  JERRY_ASSERT( block_header_p->MagicNum == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
 
   const size_t chunks = mem_get_block_chunks_count( block_header_p);
   const size_t bytes = block_header_p->allocated_bytes;

@@ -83,16 +83,16 @@ ecma_CreateObject( ecma_Object_t *pPrototypeObject, /**< pointer to prototybe of
 {
     ecma_Object_t *pObject = ecma_AllocObject();
 
-    pObject->m_pProperties = ECMA_NULL_POINTER;
-    pObject->m_IsLexicalEnvironment = false;
-    pObject->m_GCInfo.m_IsObjectValid = true;
+    pObject->pProperties = ECMA_NULL_POINTER;
+    pObject->IsLexicalEnvironment = false;
+    pObject->GCInfo.IsObjectValid = true;
 
     /* The global object is always referenced
      * (at least with the ctx_GlobalObject variable) */
-    pObject->m_GCInfo.u.m_Refs = 1;
+    pObject->GCInfo.u.Refs = 1;
 
-    pObject->u.m_Object.m_Extensible = isExtensible;
-    ecma_SetPointer( pObject->u.m_Object.m_pPrototypeObject, pPrototypeObject);
+    pObject->u.Object.Extensible = isExtensible;
+    ecma_SetPointer( pObject->u.Object.pPrototypeObject, pPrototypeObject);
     
     return pObject;
 } /* ecma_CreateObject */
@@ -115,15 +115,15 @@ ecma_CreateLexicalEnvironment(ecma_Object_t *pOuterLexicalEnvironment, /**< oute
 {
     ecma_Object_t *pNewLexicalEnvironment = ecma_AllocObject();
 
-    pNewLexicalEnvironment->m_IsLexicalEnvironment = true;
-    pNewLexicalEnvironment->u.m_LexicalEnvironment.m_Type = type;
+    pNewLexicalEnvironment->IsLexicalEnvironment = true;
+    pNewLexicalEnvironment->u.LexicalEnvironment.Type = type;
 
-    pNewLexicalEnvironment->m_pProperties = ECMA_NULL_POINTER;
+    pNewLexicalEnvironment->pProperties = ECMA_NULL_POINTER;
 
-    pNewLexicalEnvironment->m_GCInfo.m_IsObjectValid = true;
-    pNewLexicalEnvironment->m_GCInfo.u.m_Refs = 1;
+    pNewLexicalEnvironment->GCInfo.IsObjectValid = true;
+    pNewLexicalEnvironment->GCInfo.u.Refs = 1;
 
-    ecma_SetPointer( pNewLexicalEnvironment->u.m_LexicalEnvironment.m_pOuterReference, pOuterLexicalEnvironment);
+    ecma_SetPointer( pNewLexicalEnvironment->u.LexicalEnvironment.pOuterReference, pOuterLexicalEnvironment);
     
     return pNewLexicalEnvironment;
 } /* ecma_CreateLexicalEnvironment */
@@ -140,13 +140,13 @@ ecma_CreateInternalProperty(ecma_Object_t *pObject, /**< the object */
 {
     ecma_Property_t *pNewProperty = ecma_AllocProperty();
     
-    pNewProperty->m_Type = ECMA_PROPERTY_INTERNAL;
+    pNewProperty->Type = ECMA_PROPERTY_INTERNAL;
     
-    ecma_SetPointer( pNewProperty->m_pNextProperty, ecma_GetPointer( pObject->m_pProperties));
-    ecma_SetPointer( pObject->m_pProperties, pNewProperty);
+    ecma_SetPointer( pNewProperty->pNextProperty, ecma_GetPointer( pObject->pProperties));
+    ecma_SetPointer( pObject->pProperties, pNewProperty);
 
-    pNewProperty->u.m_InternalProperty.m_InternalPropertyType = propertyId;
-    pNewProperty->u.m_InternalProperty.m_Value = ECMA_NULL_POINTER;
+    pNewProperty->u.InternalProperty.InternalPropertyType = propertyId;
+    pNewProperty->u.InternalProperty.Value = ECMA_NULL_POINTER;
     
     return pNewProperty;
 } /* ecma_CreateInternalProperty */
@@ -166,13 +166,13 @@ ecma_FindInternalProperty(ecma_Object_t *pObject, /**< object descriptor */
     JERRY_ASSERT( propertyId != ECMA_INTERNAL_PROPERTY_PROTOTYPE
                  && propertyId != ECMA_INTERNAL_PROPERTY_EXTENSIBLE );
 
-    for ( ecma_Property_t *pProperty = ecma_GetPointer( pObject->m_pProperties);
+    for ( ecma_Property_t *pProperty = ecma_GetPointer( pObject->pProperties);
           pProperty != NULL;
-          pProperty = ecma_GetPointer( pProperty->m_pNextProperty) )
+          pProperty = ecma_GetPointer( pProperty->pNextProperty) )
     {
-        if ( pProperty->m_Type == ECMA_PROPERTY_INTERNAL )
+        if ( pProperty->Type == ECMA_PROPERTY_INTERNAL )
         {
-            if ( pProperty->u.m_InternalProperty.m_InternalPropertyType == propertyId )
+            if ( pProperty->u.InternalProperty.InternalPropertyType == propertyId )
             {
                 return pProperty;
             }
@@ -218,18 +218,18 @@ ecma_CreateNamedProperty(ecma_Object_t *obj_p, /**< object */
 
   ecma_Property_t *prop = ecma_AllocProperty();
 
-  prop->m_Type = ECMA_PROPERTY_NAMEDDATA;
+  prop->Type = ECMA_PROPERTY_NAMEDDATA;
 
-  ecma_SetPointer( prop->u.m_NamedDataProperty.m_pName, ecma_NewEcmaString( name_p));
+  ecma_SetPointer( prop->u.NamedDataProperty.pName, ecma_NewEcmaString( name_p));
 
-  prop->u.m_NamedDataProperty.m_Writable = writable;
-  prop->u.m_NamedDataProperty.m_Enumerable = enumerable;
-  prop->u.m_NamedDataProperty.m_Configurable = configurable;
+  prop->u.NamedDataProperty.Writable = writable;
+  prop->u.NamedDataProperty.Enumerable = enumerable;
+  prop->u.NamedDataProperty.Configurable = configurable;
 
-  prop->u.m_NamedDataProperty.m_Value = ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop->u.NamedDataProperty.Value = ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  ecma_SetPointer( prop->m_pNextProperty, ecma_GetPointer( obj_p->m_pProperties));
-  ecma_SetPointer( obj_p->m_pProperties, prop);
+  ecma_SetPointer( prop->pNextProperty, ecma_GetPointer( obj_p->pProperties));
+  ecma_SetPointer( obj_p->pProperties, prop);
 
   return prop;
 } /* ecma_CreateNamedProperty */
@@ -247,18 +247,18 @@ ecma_FindNamedProperty(ecma_Object_t *obj_p, /**< object to find property in */
     JERRY_ASSERT( obj_p != NULL );
     JERRY_ASSERT( name_p != NULL );
 
-    for ( ecma_Property_t *property_p = ecma_GetPointer( obj_p->m_pProperties);
+    for ( ecma_Property_t *property_p = ecma_GetPointer( obj_p->pProperties);
           property_p != NULL;
-          property_p = ecma_GetPointer( property_p->m_pNextProperty) )
+          property_p = ecma_GetPointer( property_p->pNextProperty) )
     {
         ecma_ArrayFirstChunk_t *property_name_p;
 
-        if ( property_p->m_Type == ECMA_PROPERTY_NAMEDDATA )
+        if ( property_p->Type == ECMA_PROPERTY_NAMEDDATA )
         {
-          property_name_p = ecma_GetPointer( property_p->u.m_NamedDataProperty.m_pName);
-        } else if ( property_p->m_Type == ECMA_PROPERTY_NAMEDACCESSOR )
+          property_name_p = ecma_GetPointer( property_p->u.NamedDataProperty.pName);
+        } else if ( property_p->Type == ECMA_PROPERTY_NAMEDACCESSOR )
         {
-          property_name_p = ecma_GetPointer( property_p->u.m_NamedAccessorProperty.m_pName);
+          property_name_p = ecma_GetPointer( property_p->u.NamedAccessorProperty.pName);
         } else
         {
           continue;
@@ -316,7 +316,7 @@ ecma_GetNamedDataProperty(ecma_Object_t *obj_p, /**< object to find property in 
 
     ecma_Property_t *property_p = ecma_FindNamedProperty( obj_p, name_p);
 
-    JERRY_ASSERT( property_p != NULL && property_p->m_Type == ECMA_PROPERTY_NAMEDDATA );
+    JERRY_ASSERT( property_p != NULL && property_p->Type == ECMA_PROPERTY_NAMEDDATA );
 
     return property_p;
 } /* ecma_GetNamedDataProperty */
@@ -327,10 +327,10 @@ ecma_GetNamedDataProperty(ecma_Object_t *obj_p, /**< object to find property in 
 void
 ecma_FreeNamedDataProperty( ecma_Property_t *pProperty) /**< the property */
 {
-  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDDATA );
+  JERRY_ASSERT( pProperty->Type == ECMA_PROPERTY_NAMEDDATA );
 
-  ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedDataProperty.m_pName));
-  ecma_FreeValue( pProperty->u.m_NamedDataProperty.m_Value);
+  ecma_FreeArray( ecma_GetPointer( pProperty->u.NamedDataProperty.pName));
+  ecma_FreeValue( pProperty->u.NamedDataProperty.Value);
 
   ecma_DeallocProperty( pProperty);
 } /* ecma_FreeNamedDataProperty */
@@ -341,12 +341,12 @@ ecma_FreeNamedDataProperty( ecma_Property_t *pProperty) /**< the property */
 void
 ecma_FreeNamedAccessorProperty( ecma_Property_t *pProperty) /**< the property */
 {
-  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_NAMEDACCESSOR );
+  JERRY_ASSERT( pProperty->Type == ECMA_PROPERTY_NAMEDACCESSOR );
 
-  ecma_FreeArray( ecma_GetPointer( pProperty->u.m_NamedAccessorProperty.m_pName));
+  ecma_FreeArray( ecma_GetPointer( pProperty->u.NamedAccessorProperty.pName));
 
-  ecma_Object_t *pGet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pGet);
-  ecma_Object_t *pSet = ecma_GetPointer(pProperty->u.m_NamedAccessorProperty.m_pSet);
+  ecma_Object_t *pGet = ecma_GetPointer(pProperty->u.NamedAccessorProperty.pGet);
+  ecma_Object_t *pSet = ecma_GetPointer(pProperty->u.NamedAccessorProperty.pSet);
 
   if ( pGet != NULL )
   {
@@ -367,10 +367,10 @@ ecma_FreeNamedAccessorProperty( ecma_Property_t *pProperty) /**< the property */
 void
 ecma_FreeInternalProperty( ecma_Property_t *pProperty) /**< the property */
 {
-  JERRY_ASSERT( pProperty->m_Type == ECMA_PROPERTY_INTERNAL );
+  JERRY_ASSERT( pProperty->Type == ECMA_PROPERTY_INTERNAL );
 
-  ecma_InternalPropertyId_t propertyId = pProperty->u.m_InternalProperty.m_InternalPropertyType;
-  uint32_t propertyValue = pProperty->u.m_InternalProperty.m_Value;
+  ecma_InternalPropertyId_t propertyId = pProperty->u.InternalProperty.InternalPropertyType;
+  uint32_t propertyValue = pProperty->u.InternalProperty.Value;
 
   switch ( propertyId )
   {
@@ -406,7 +406,7 @@ ecma_FreeInternalProperty( ecma_Property_t *pProperty) /**< the property */
 void
 ecma_FreeProperty(ecma_Property_t *prop_p) /**< property */
 {
-  switch ( (ecma_PropertyType_t) prop_p->m_Type )
+  switch ( (ecma_PropertyType_t) prop_p->Type )
   {
     case ECMA_PROPERTY_NAMEDDATA:
       {
@@ -440,11 +440,11 @@ void
 ecma_DeleteProperty(ecma_Object_t *obj_p, /**< object */
                     ecma_Property_t *prop_p) /**< property */
 {
-  for ( ecma_Property_t *cur_prop_p = ecma_GetPointer( obj_p->m_pProperties), *prev_prop_p = NULL, *next_prop_p;
+  for ( ecma_Property_t *cur_prop_p = ecma_GetPointer( obj_p->pProperties), *prev_prop_p = NULL, *next_prop_p;
         cur_prop_p != NULL;
         prev_prop_p = cur_prop_p, cur_prop_p = next_prop_p )
   {
-    next_prop_p = ecma_GetPointer( cur_prop_p->m_pNextProperty);
+    next_prop_p = ecma_GetPointer( cur_prop_p->pNextProperty);
 
     if ( cur_prop_p == prop_p )
     {
@@ -452,10 +452,10 @@ ecma_DeleteProperty(ecma_Object_t *obj_p, /**< object */
 
       if ( prev_prop_p == NULL )
       {
-        ecma_SetPointer( obj_p->m_pProperties, next_prop_p);
+        ecma_SetPointer( obj_p->pProperties, next_prop_p);
       } else
       {
-        ecma_SetPointer( prev_prop_p->m_pNextProperty, next_prop_p);
+        ecma_SetPointer( prev_prop_p->pNextProperty, next_prop_p);
       }
 
       return;
@@ -489,30 +489,30 @@ ecma_NewEcmaString(const ecma_Char_t *pString) /**< zero-terminated string of ec
  
     ecma_ArrayFirstChunk_t *pStringFirstChunk = ecma_AllocArrayFirstChunk();
 
-    pStringFirstChunk->m_Header.m_UnitNumber = length;
+    pStringFirstChunk->Header.UnitNumber = length;
     uint8_t *copyPointer = (uint8_t*) pString;
     size_t charsLeft = length;
-    size_t charsToCopy = JERRY_MIN( length, sizeof (pStringFirstChunk->m_Data) / sizeof (ecma_Char_t));
-    __memcpy(pStringFirstChunk->m_Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+    size_t charsToCopy = JERRY_MIN( length, sizeof (pStringFirstChunk->Data) / sizeof (ecma_Char_t));
+    __memcpy(pStringFirstChunk->Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
     charsLeft -= charsToCopy;
     copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
     ecma_ArrayNonFirstChunk_t *pStringNonFirstChunk;
 
     JERRY_STATIC_ASSERT( ECMA_POINTER_FIELD_WIDTH <= sizeof(uint16_t) * JERRY_BITSINBYTE );
-    uint16_t *pNextChunkCompressedPointer = &pStringFirstChunk->m_Header.m_pNextChunk;
+    uint16_t *pNextChunkCompressedPointer = &pStringFirstChunk->Header.pNextChunk;
 
     while ( charsLeft > 0 )
     {
         pStringNonFirstChunk = ecma_AllocArrayNonFirstChunk();
 
-        size_t charsToCopy = JERRY_MIN( charsLeft, sizeof (pStringNonFirstChunk->m_Data) / sizeof (ecma_Char_t));
-        __memcpy(pStringNonFirstChunk->m_Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
+        size_t charsToCopy = JERRY_MIN( charsLeft, sizeof (pStringNonFirstChunk->Data) / sizeof (ecma_Char_t));
+        __memcpy(pStringNonFirstChunk->Data, copyPointer, charsToCopy * sizeof (ecma_Char_t));
         charsLeft -= charsToCopy;
         copyPointer += charsToCopy * sizeof (ecma_Char_t);
 
         ecma_SetPointer( *pNextChunkCompressedPointer, pStringNonFirstChunk);
-        pNextChunkCompressedPointer = &pStringNonFirstChunk->m_pNextChunk;
+        pNextChunkCompressedPointer = &pStringNonFirstChunk->pNextChunk;
     }
 
     *pNextChunkCompressedPointer = ECMA_NULL_POINTER;
@@ -534,7 +534,7 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
                                  uint8_t *pBuffer, /**< destination buffer */
                                  size_t bufferSize) /**< size of buffer */
 {
-    ecma_Length_t stringLength = pFirstChunk->m_Header.m_UnitNumber;
+    ecma_Length_t stringLength = pFirstChunk->Header.UnitNumber;
     size_t requiredBufferSize = sizeof (ecma_Length_t) + sizeof (ecma_Char_t) * stringLength;
 
     if ( requiredBufferSize < bufferSize )
@@ -546,25 +546,25 @@ ecma_CopyEcmaStringCharsToBuffer(ecma_ArrayFirstChunk_t *pFirstChunk, /**< first
 
     size_t charsLeft = stringLength;
     uint8_t *destPointer = pBuffer + sizeof (ecma_Length_t);
-    size_t copyChunkChars = JERRY_MIN(sizeof (pFirstChunk->m_Data) / sizeof (ecma_Char_t),
+    size_t copyChunkChars = JERRY_MIN(sizeof (pFirstChunk->Data) / sizeof (ecma_Char_t),
                                       charsLeft);
-    __memcpy( destPointer, pFirstChunk->m_Data, copyChunkChars * sizeof (ecma_Char_t));
+    __memcpy( destPointer, pFirstChunk->Data, copyChunkChars * sizeof (ecma_Char_t));
     destPointer += copyChunkChars * sizeof (ecma_Char_t);
     charsLeft -= copyChunkChars;
 
-    ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
+    ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->Header.pNextChunk);
 
     while ( charsLeft > 0 )
     {
         JERRY_ASSERT( charsLeft < stringLength );
 
-        copyChunkChars = JERRY_MIN(sizeof (pNonFirstChunk->m_Data) / sizeof (ecma_Char_t),
+        copyChunkChars = JERRY_MIN(sizeof (pNonFirstChunk->Data) / sizeof (ecma_Char_t),
                                    charsLeft);
-        __memcpy( destPointer, pNonFirstChunk->m_Data, copyChunkChars * sizeof (ecma_Char_t));
+        __memcpy( destPointer, pNonFirstChunk->Data, copyChunkChars * sizeof (ecma_Char_t));
         destPointer += copyChunkChars * sizeof (ecma_Char_t);
         charsLeft -= copyChunkChars;
 
-        pNonFirstChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
+        pNonFirstChunk = ecma_GetPointer( pNonFirstChunk->pNextChunk);
     }
 
     return (ssize_t) requiredBufferSize;
@@ -584,18 +584,18 @@ ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk 
     __memcpy( pFirstChunkCopy, pFirstChunk, sizeof (ecma_ArrayFirstChunk_t));
 
     ecma_ArrayNonFirstChunk_t *pNonFirstChunk, *pNonFirstChunkCopy;
-    pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
-    uint16_t *pNextPointer = &pFirstChunkCopy->m_Header.m_pNextChunk;
+    pNonFirstChunk = ecma_GetPointer( pFirstChunk->Header.pNextChunk);
+    uint16_t *pNextPointer = &pFirstChunkCopy->Header.pNextChunk;
     
     while ( pNonFirstChunk != NULL )
     {
         pNonFirstChunkCopy = ecma_AllocArrayNonFirstChunk();
         ecma_SetPointer( *pNextPointer, pNonFirstChunkCopy);
-        pNextPointer = &pNonFirstChunkCopy->m_pNextChunk;
+        pNextPointer = &pNonFirstChunkCopy->pNextChunk;
 
         __memcpy( pNonFirstChunkCopy, pNonFirstChunk, sizeof (ecma_ArrayNonFirstChunk_t));
         
-        pNonFirstChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
+        pNonFirstChunk = ecma_GetPointer( pNonFirstChunk->pNextChunk);
     }
     
     *pNextPointer = ECMA_NULL_POINTER;
@@ -630,13 +630,13 @@ ecma_CompareZtStringToEcmaString(const ecma_Char_t *pString, /**< zero-terminate
   JERRY_ASSERT( pEcmaString != NULL );
 
   const ecma_Char_t *str_iter_p = pString;
-  ecma_Length_t ecma_str_len = pEcmaString->m_Header.m_UnitNumber;
-  const ecma_Char_t *current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->m_Data,
-        *current_chunk_chars_end = (ecma_Char_t*) (pEcmaString->m_Data
-                                                   + sizeof(pEcmaString->m_Data));
+  ecma_Length_t ecma_str_len = pEcmaString->Header.UnitNumber;
+  const ecma_Char_t *current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->Data,
+        *current_chunk_chars_end = (ecma_Char_t*) (pEcmaString->Data
+                                                   + sizeof(pEcmaString->Data));
 
   JERRY_STATIC_ASSERT( ECMA_POINTER_FIELD_WIDTH <= sizeof(uint16_t) * JERRY_BITSINBYTE );
-  const uint16_t *next_chunk_compressed_pointer_p = &pEcmaString->m_Header.m_pNextChunk;
+  const uint16_t *next_chunk_compressed_pointer_p = &pEcmaString->Header.pNextChunk;
 
   for ( ecma_Length_t str_index = 0;
         str_index < ecma_str_len;
@@ -651,10 +651,10 @@ ecma_CompareZtStringToEcmaString(const ecma_Char_t *pString, /**< zero-terminate
 
           JERRY_ASSERT( next_chunk_p != NULL );
 
-          current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->m_Data;
-          current_chunk_chars_end = (ecma_Char_t*) (next_chunk_p->m_Data + sizeof(next_chunk_p->m_Data));
+          current_chunk_chars_cur = (ecma_Char_t*) pEcmaString->Data;
+          current_chunk_chars_end = (ecma_Char_t*) (next_chunk_p->Data + sizeof(next_chunk_p->Data));
 
-          next_chunk_compressed_pointer_p = &next_chunk_p->m_pNextChunk;
+          next_chunk_compressed_pointer_p = &next_chunk_p->pNextChunk;
         }
 
       if ( *str_iter_p != *current_chunk_chars_cur )
@@ -686,13 +686,13 @@ ecma_FreeArray( ecma_ArrayFirstChunk_t *pFirstChunk) /**< first chunk of the arr
 {
     JERRY_ASSERT( pFirstChunk != NULL );
 
-    ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->m_Header.m_pNextChunk);
+    ecma_ArrayNonFirstChunk_t *pNonFirstChunk = ecma_GetPointer( pFirstChunk->Header.pNextChunk);
 
     ecma_DeallocArrayFirstChunk( pFirstChunk);
 
     while ( pNonFirstChunk != NULL )
     {
-        ecma_ArrayNonFirstChunk_t *pNextChunk = ecma_GetPointer( pNonFirstChunk->m_pNextChunk);
+        ecma_ArrayNonFirstChunk_t *pNextChunk = ecma_GetPointer( pNonFirstChunk->pNextChunk);
 
         ecma_DeallocArrayNonFirstChunk( pNonFirstChunk);
 

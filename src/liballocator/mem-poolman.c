@@ -171,10 +171,10 @@ mem_PoolsAlloc( mem_PoolChunkType_t chunkType) /**< chunk type */
                      poolSpace,
                      poolSpaceSize);
 
-        poolState->m_pNextPool = mem_Pools[ chunkType ];
+        poolState->pNextPool = mem_Pools[ chunkType ];
         mem_Pools[ chunkType ] = poolState;
 
-        mem_FreeChunksNumber[ chunkType ] += poolState->m_FreeChunksNumber;
+        mem_FreeChunksNumber[ chunkType ] += poolState->FreeChunksNumber;
         
         mem_PoolsStatAllocPool( chunkType);
     }
@@ -186,9 +186,9 @@ mem_PoolsAlloc( mem_PoolChunkType_t chunkType) /**< chunk type */
      */
     mem_PoolState_t *poolState = mem_Pools[ chunkType ];
 
-    while ( poolState->m_FreeChunksNumber == 0 )
+    while ( poolState->FreeChunksNumber == 0 )
     {
-        poolState = poolState->m_pNextPool;
+        poolState = poolState->pNextPool;
 
         JERRY_ASSERT( poolState != NULL );
     }
@@ -215,11 +215,11 @@ mem_PoolsFree( mem_PoolChunkType_t chunkType, /**< the chunk type */
     /**
      * Search for the pool containing specified chunk.
      */
-    while ( !( pChunk >= poolState->m_pChunks
-              && pChunk <= poolState->m_pPoolStart + poolState->m_PoolSize ) )
+    while ( !( pChunk >= poolState->pChunks
+               && pChunk <= poolState->pPoolStart + poolState->PoolSize ) )
     {
         prevPoolState = poolState;
-        poolState = poolState->m_pNextPool;
+        poolState = poolState->pNextPool;
 
         JERRY_ASSERT( poolState != NULL );
     }
@@ -235,19 +235,19 @@ mem_PoolsFree( mem_PoolChunkType_t chunkType, /**< the chunk type */
     /**
      * If all chunks of the pool are free, free the pool itself.
      */
-    if ( poolState->m_FreeChunksNumber == poolState->m_ChunksNumber )
+    if ( poolState->FreeChunksNumber == poolState->ChunksNumber )
     {
         if ( prevPoolState != NULL )
         {
-            prevPoolState->m_pNextPool = poolState->m_pNextPool;
+            prevPoolState->pNextPool = poolState->pNextPool;
         } else
         {
-            mem_Pools[ chunkType ] = poolState->m_pNextPool;
+            mem_Pools[ chunkType ] = poolState->pNextPool;
         }
 
-        mem_FreeChunksNumber[ chunkType ] -= poolState->m_ChunksNumber;
+        mem_FreeChunksNumber[ chunkType ] -= poolState->ChunksNumber;
 
-        mem_HeapFreeBlock( poolState->m_pPoolStart);
+        mem_HeapFreeBlock( poolState->pPoolStart);
 
         mem_PoolFreeChunk( &mem_PoolForPoolHeaders, (uint8_t*) poolState);
 

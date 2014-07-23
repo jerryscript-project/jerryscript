@@ -39,16 +39,16 @@ ecma_abstract_equality_compare(ecma_Value_t x, /**< first operand */
   const bool is_x_undefined = ecma_IsValueUndefined( x);
   const bool is_x_null = ecma_IsValueNull( x);
   const bool is_x_boolean = ecma_IsValueBoolean( x);
-  const bool is_x_number = ( x.m_ValueType == ECMA_TYPE_NUMBER );
-  const bool is_x_string = ( x.m_ValueType == ECMA_TYPE_STRING );
-  const bool is_x_object = ( x.m_ValueType == ECMA_TYPE_OBJECT );
+  const bool is_x_number = ( x.ValueType == ECMA_TYPE_NUMBER );
+  const bool is_x_string = ( x.ValueType == ECMA_TYPE_STRING );
+  const bool is_x_object = ( x.ValueType == ECMA_TYPE_OBJECT );
 
   const bool is_y_undefined = ecma_IsValueUndefined( y);
   const bool is_y_null = ecma_IsValueNull( y);
   const bool is_y_boolean = ecma_IsValueBoolean( y);
-  const bool is_y_number = ( y.m_ValueType == ECMA_TYPE_NUMBER );
-  const bool is_y_string = ( y.m_ValueType == ECMA_TYPE_STRING );
-  const bool is_y_object = ( y.m_ValueType == ECMA_TYPE_OBJECT );
+  const bool is_y_number = ( y.ValueType == ECMA_TYPE_NUMBER );
+  const bool is_y_string = ( y.ValueType == ECMA_TYPE_STRING );
+  const bool is_y_object = ( y.ValueType == ECMA_TYPE_OBJECT );
 
   const bool is_types_equal = ( ( is_x_undefined && is_y_undefined )
                                 || ( is_x_null && is_y_null )
@@ -68,26 +68,26 @@ ecma_abstract_equality_compare(ecma_Value_t x, /**< first operand */
       return true;
     } else if ( is_x_number )
     { // c.
-      ecma_Number_t x_num = *(ecma_Number_t*)( ecma_GetPointer(x.m_Value) );
-      ecma_Number_t y_num = *(ecma_Number_t*)( ecma_GetPointer(y.m_Value) );
+      ecma_Number_t x_num = *(ecma_Number_t*)( ecma_GetPointer(x.Value) );
+      ecma_Number_t y_num = *(ecma_Number_t*)( ecma_GetPointer(y.Value) );
 
       TODO( Implement according to ECMA );
 
       return (x_num == y_num);
     } else if ( is_x_string )
     { // d.
-      ecma_ArrayFirstChunk_t* x_str = (ecma_ArrayFirstChunk_t*)( ecma_GetPointer(x.m_Value) );
-      ecma_ArrayFirstChunk_t* y_str = (ecma_ArrayFirstChunk_t*)( ecma_GetPointer(y.m_Value) );
+      ecma_ArrayFirstChunk_t* x_str = (ecma_ArrayFirstChunk_t*)( ecma_GetPointer(x.Value) );
+      ecma_ArrayFirstChunk_t* y_str = (ecma_ArrayFirstChunk_t*)( ecma_GetPointer(y.Value) );
 
       return ecma_CompareEcmaStringToEcmaString( x_str, y_str);
     } else if ( is_x_boolean )
     { // e.
-      return ( x.m_Value == y.m_Value );
+      return ( x.Value == y.Value );
     } else
     { // f.
       JERRY_ASSERT( is_x_object );
       
-      return ( x.m_Value == y.m_Value );
+      return ( x.Value == y.Value );
     }
   } else if ( ( is_x_null && is_y_undefined )
               || ( is_x_undefined && is_y_null ) )

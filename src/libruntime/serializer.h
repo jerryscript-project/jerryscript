@@ -20,8 +20,12 @@
 
 void serializer_init (void);
 
-void serializer_dump_data (const void *, size_t);
+uint8_t serializer_dump_strings (const char **, uint8_t);
 
-void serializer_rewrite_data (const int8_t, const void *, size_t);
+void serializer_dump_nums (const int *, uint8_t, uint8_t, uint8_t);
+
+void serializer_dump_opcode (const void *);
+
+void serializer_rewrite_opcode (const int8_t, const void *);
 
 #endif // SERIALIZER_H

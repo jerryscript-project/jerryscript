@@ -32,22 +32,58 @@ serializer_init (void)
 {
 }
 
+uint8_t
+serializer_dump_strings (const char *strings[], uint8_t size)
+{
+  uint8_t i;
+  uint8_t offset = size;
+
+  __printf ("STRINGS %d:\n", size);
+  for (i = 0; i < size; i++)
+    {
+      __printf ("%3d %3d %20s\n", i, offset, strings[i]);
+      offset = (uint8_t ) (offset + __strlen (strings[i]));
+    }
+
+  return offset;
+}
+
+void 
+serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
+{
+  uint8_t i;
+
+  offset = (uint8_t) (offset + size);
+  __printf ("NUMS %d:\n", size);
+  for (i = 0; i < size; i++)
+    {
+      __printf ("%3d %3d %7d\n", i + strings_num, offset, nums[i]);
+      offset = (uint8_t) (offset + 4);
+    }
+}
+
 static int opcode_counter = 0;
 
 void
-serializer_dump_data (const void *data, size_t size)
+serializer_dump_opcode (const void *opcode)
 {
-  size_t i;
+  uint8_t i;
 
-  __printf ("%03d: %20s ", opcode_counter++, massive[(int)((char*)data)[0]]);
-  for (i = 1; i < size; i++)
-    __printf ("%4d ", ((char*)data)[i]);
+  __printf ("%03d: %20s ", opcode_counter++, massive[(int)((char*)opcode)[0]]);
+  for (i = 1; i < 4; i++)
+    __printf ("%4d ", ((char*)opcode)[i]);
 
   __printf ("\n");
 }
 
 void
-serializer_rewrite_data (const int8_t offset __unused, const void *data __unused, size_t size __unused)
+serializer_rewrite_opcode (const int8_t offset, const void *opcode)
 {
-  TODO (implement);
+  uint8_t i;
+
+  __printf ("%03d: %20s ", opcode_counter + offset, massive[(int)((char*)opcode)[0]]);
+  for (i = 1; i < 4; i++)
+    __printf ("%4d ", ((char*)opcode)[i]);
+
+  __printf ("// REWRITE\n");
 }

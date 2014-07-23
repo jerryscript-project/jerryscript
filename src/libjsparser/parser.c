@@ -130,19 +130,19 @@ insert_semicolon (void)
   do { skip_newlines (); ID = parse_##TYPE (); } while (0)
 
 #define DUMP_VOID_OPCODE(GETOP) \
-  do { opcode=getop_##GETOP (); serializer_dump_data (&opcode, sizeof (OPCODE)); opcode_counter++; } while (0)
+  do { opcode=getop_##GETOP (); serializer_dump_opcode (&opcode); opcode_counter++; } while (0)
 
 #define DUMP_OPCODE(GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_data (&opcode, sizeof (OPCODE)); opcode_counter++; } while (0)
+  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_opcode (&opcode); opcode_counter++; } while (0)
 
 #define REWRITE_OPCODE(OC, GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_data ((int8_t) (OC - opcode_counter), &opcode, sizeof (OPCODE)); } while (0)
+  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode ((int8_t) (OC - opcode_counter), &opcode); } while (0)
 
 static T_IDX
 integer_zero (void)
 {
   T_IDX lhs = next_temp_name ();
-  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, 0);
+  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 0);
   return lhs;
 }
 
@@ -150,7 +150,7 @@ static T_IDX
 integer_one (void)
 {
   T_IDX lhs = next_temp_name ();
-  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, 1);
+  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 1);
   return lhs;
 }
 
@@ -167,7 +167,7 @@ dump_saved_opcodes (void)
 {
   uint8_t i;
   for (i = 0; i < current_opcode_in_buffer; i++)
-    serializer_dump_data (&opcodes_buffer[i], sizeof (OPCODE));
+    serializer_dump_opcode (&opcodes_buffer[i]);
   current_opcode_in_buffer = 0;
 }
 
@@ -1805,12 +1805,13 @@ parser_parse_program (void)
 
   skip_newlines ();
   JERRY_ASSERT (tok.type == TOK_EOF);
+  DUMP_OPCODE (exitval, 0);
 }
 
 void
 parser_init (void)
 {
-  temp_name = min_temp_name = lexer_get_strings (NULL);
+  temp_name = min_temp_name = lexer_get_reserved_ids_count ();
 #ifdef __HOST
   debug_file = __fopen ("parser.log", "w");
 #endif

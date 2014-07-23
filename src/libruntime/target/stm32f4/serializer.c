@@ -21,16 +21,25 @@ serializer_init (void)
 {
 }
 
-void
-serializer_dump_data (const void *data __unused, size_t size __unused)
+uint8_t
+serializer_dump_strings (const char *strings[] __unused, uint8_t size __unused)
 {
 }
+
+void 
+serializer_dump_nums (const int nums[] __unused, uint8_t size __unused, uint8_t offset __unused, uint8_t strings_num __unused)
+{
+}
+
+void
+serializer_dump_opcode (const void *opcode __unused)
+{
+}
+
+void
+serializer_rewrite_opcode (const int8_t offset __unused, const void *opcode __unused)
+{
+}
+
 
 TODO (Dump memory)
-
-void
-serializer_rewrite_data (const int8_t offset, const void *data, size_t size)
-{
-  TODO (implement);
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, data, size);
-}

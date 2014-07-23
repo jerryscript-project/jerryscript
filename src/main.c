@@ -36,6 +36,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "serializer.h"
+#include "deserializer.h"
 
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
@@ -67,9 +68,8 @@ jerry_run( const char *script_source,
   parser_init ();
   parser_parse_program ();
 
-  //gen_bytecode (generated_source);
-  //gen_bytecode ();
-  //run_int ();
+  init_int (deserializer_get_bytecode ());
+  run_int ();
 } /* jerry_run */
 
 #ifdef __HOST

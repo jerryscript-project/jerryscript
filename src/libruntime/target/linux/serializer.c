@@ -15,7 +15,7 @@
 
 #include "serializer.h"
 #include "jerry-libc.h"
-#include "opcodes.h"
+#include "bytecode-linux.h"
 
 _FILE *dump;
 
@@ -44,24 +44,39 @@ uint8_t
 serializer_dump_strings (const char *strings[], uint8_t size)
 {
   uint8_t i;
-  uint8_t offset = size;
+  uint8_t offset = (uint8_t) (size + 1), res;
 
   __printf ("STRINGS %d:\n", size);
   for (i = 0; i < size; i++)
     {
       __printf ("%3d %3d %20s\n", i, offset, strings[i]);
-      offset = (uint8_t ) (offset + __strlen (strings[i]) + 1);
+      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
     }
 
-  return offset;
+  bytecode_data = mem_heap_alloc_block (offset, MEM_HEAP_ALLOC_SHORT_TERM);
+  res = offset;
+
+  bytecode_data[0] = size;
+  offset = (uint8_t) (size + 1);
+  for (i = 0; i < size; i++)
+    {
+      bytecode_data[i + 1] = offset;
+      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
+    }
+
+  for (i = 0; i < size; i++)
+    __strncpy ((void *) (bytecode_data + bytecode_data[i + 1]), strings[i], __strlen (strings[i]) + 1);
+
+  return res;
 }
 
 void 
 serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
 {
-  uint8_t i;
+  uint8_t i, *data;
+  JERRY_STATIC_ASSERT (sizeof (int) == 4);
 
-  offset = (uint8_t) (offset + size);
+  offset = (uint8_t) (offset + size + 1);
   __printf ("NUMS %d:\n", size);
   for (i = 0; i < size; i++)
     {
@@ -70,6 +85,18 @@ serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t st
     }
 
   __printf ("\n");
+
+  data = mem_heap_alloc_block ((size_t) (offset + size * 4), MEM_HEAP_ALLOC_LONG_TERM);
+  mem_heap_free_block (bytecode_data);
+  bytecode_data = data;
+  data += offset;
+  data[0] = size;
+  data++;
+  for (i = 0; i < size; i++)
+    {
+      __memcpy (data, nums + i, 4);
+      data += 4;
+    }
 }
 
 static int opcode_counter = 0;
@@ -80,6 +107,7 @@ serializer_dump_opcode (const void *opcode)
   uint8_t i;
   int opcode_num = (int)((char*)opcode)[0];
 
+  bytecode_opcodes[opcode_counter] = *((OPCODE*)opcode);
   __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((char*)opcode)[i]);
@@ -93,6 +121,7 @@ serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
   uint8_t i;
   int opcode_num = (int)((char*)opcode)[0];
 
+  bytecode_opcodes[loc] = *((OPCODE*)opcode);
   __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((char*)opcode)[i]);

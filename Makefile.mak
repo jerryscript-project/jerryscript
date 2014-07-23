@@ -163,7 +163,7 @@ SOURCES_JERRY = \
  $(wildcard ./src/libecmaoperations/*.c) \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*)
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
 
 INCLUDES_JERRY = \
  -I src \

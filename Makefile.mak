@@ -265,6 +265,7 @@ $(TESTS_TARGET):
 	@ echo
 
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
+	@ make unittests
 	@ mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running cppcheck ==="
 	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \

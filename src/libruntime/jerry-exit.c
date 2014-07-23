@@ -27,7 +27,7 @@
  * and call assertion fail handler.
  */
 void __noreturn
-jerry_Exit( jerry_Status_t code) /**< status code */
+jerry_exit( jerry_status_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
   if ( code != ERR_OK )
@@ -72,10 +72,10 @@ jerry_Exit( jerry_Status_t code) /**< status code */
     }
 
     /* The failed assertion is 'Return code is zero' */
-    jerry_AssertFail( "Return code is zero", __FILE__, __LINE__);
+    jerry_assert_fail( "Return code is zero", __FILE__, __LINE__);
   }
 #endif /* !JERRY_NDEBUG */  
 
   __exit( -code );
-} /* jerry_Exit */
+} /* jerry_exit */
 

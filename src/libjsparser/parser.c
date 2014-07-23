@@ -1815,10 +1815,10 @@ parser_init (void)
 }
 
 void
-parser_fatal (jerry_Status_t code)
+parser_fatal (jerry_status_t code)
 {
   __printf ("FATAL: %d\n", code);
   lexer_dump_buffer_state ();
 
-  jerry_Exit( code);
+  jerry_exit( code);
 }

@@ -49,7 +49,7 @@ typedef enum {
                                         ((size) == 16 ? MEM_POOL_CHUNK_TYPE_16 : \
                                         ((size) == 32 ? MEM_POOL_CHUNK_TYPE_32 : \
                                         ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
-                                        jerry_UnreferencedExpression)))))
+                                        jerry_unreferenced_expression)))))
 
 extern size_t mem_get_chunk_size( mem_pool_chunk_type_t chunkType);
 

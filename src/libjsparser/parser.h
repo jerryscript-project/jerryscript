@@ -21,6 +21,6 @@
 void parser_init (void);
 void parser_parse_program (void);
 
-void parser_fatal (jerry_Status_t code);
+void parser_fatal (jerry_status_t code);
 
 #endif

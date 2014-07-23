@@ -113,19 +113,19 @@ main (int argc, char **argv)
       if (file_name == NULL)
         file_name = argv[1];
       else
-        jerry_Exit (ERR_SEVERAL_FILES);
+        jerry_exit (ERR_SEVERAL_FILES);
     }
 #endif
 
 #ifdef __HOST
   if (file_name == NULL)
-    jerry_Exit (ERR_NO_FILES);
+    jerry_exit (ERR_NO_FILES);
 
   file = __fopen (file_name, "r");
 
   if (file == NULL)
   {
-    jerry_Exit (ERR_IO);
+    jerry_exit (ERR_IO);
   }
 
   lexer_set_file (file);

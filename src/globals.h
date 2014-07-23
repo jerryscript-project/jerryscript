@@ -54,7 +54,7 @@ typedef enum
   ERR_STRING = -8,
   ERR_PARSER = -9,
   ERR_GENERAL = -255
-} jerry_Status_t;
+} jerry_status_t;
 
 /**
  * Asserts
@@ -77,12 +77,12 @@ typedef enum
  *
  * May be used for static assertion checks.
  */
-extern uint32_t jerry_UnreferencedExpression;
+extern uint32_t jerry_unreferenced_expression;
 
-extern void __noreturn jerry_AssertFail( const char *assertion, const char *file, const uint32_t line);
+extern void __noreturn jerry_assert_fail( const char *assertion, const char *file, const uint32_t line);
 
 #ifndef JERRY_NDEBUG
-#define JERRY_ASSERT( x ) do { if ( __builtin_expect( !( x ), 0 ) ) { jerry_AssertFail( #x, __FILE__, __LINE__); } } while(0)
+#define JERRY_ASSERT( x ) do { if ( __builtin_expect( !( x ), 0 ) ) { jerry_assert_fail( #x, __FILE__, __LINE__); } } while(0)
 #else /* !JERRY_NDEBUG */
 #define JERRY_ASSERT( x ) (void) (x)
 #endif /* !JERRY_NDEBUG */
@@ -90,10 +90,10 @@ extern void __noreturn jerry_AssertFail( const char *assertion, const char *file
 /**
  * Mark for unreachable points and unimplemented cases
  */
-extern void jerry_RefUnusedVariables(int unused_variables_follow, ...);
-#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); jerry_Exit( ERR_GENERAL); } while (0)
+extern void jerry_ref_unused_variables(int unused_variables_follow, ...);
+#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); jerry_exit( ERR_GENERAL); } while (0)
 #define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
-#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) do { JERRY_UNIMPLEMENTED(); if ( false ) { jerry_RefUnusedVariables( 0, __VA_ARGS__); } } while (0)
+#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) do { JERRY_UNIMPLEMENTED(); if ( false ) { jerry_ref_unused_variables( 0, __VA_ARGS__); } } while (0)
 
 /**
  * Conditions' likeliness, unlikeliness.
@@ -104,7 +104,7 @@ extern void jerry_RefUnusedVariables(int unused_variables_follow, ...);
 /**
  * Exit
  */
-extern void __noreturn jerry_Exit( jerry_Status_t code);
+extern void __noreturn jerry_exit( jerry_status_t code);
 
 /**
  * sizeof, offsetof, ...
@@ -138,9 +138,9 @@ extern void __noreturn jerry_Exit( jerry_Status_t code);
 /**
  * Bit-fields
  */
-inline uint32_t jerry_ExtractBitField(uint32_t value, uint32_t lsb,
+inline uint32_t jerry_extract_bit_field(uint32_t value, uint32_t lsb,
                                       uint32_t width);
-inline uint32_t jerry_SetBitFieldValue(uint32_t value, uint32_t bitFieldValue,
+inline uint32_t jerry_set_bit_field_value(uint32_t value, uint32_t bitFieldValue,
                                        uint32_t lsb, uint32_t width);
 
 /**
@@ -149,7 +149,7 @@ inline uint32_t jerry_SetBitFieldValue(uint32_t value, uint32_t bitFieldValue,
  * @return bit-field's value
  */
 inline uint32_t
-jerry_ExtractBitField(uint32_t
+jerry_extract_bit_field(uint32_t
                       container, /**< container to extract bit-field from */
                       uint32_t lsb, /**< least significant bit of the value
                                      *   to be extracted */
@@ -162,7 +162,7 @@ jerry_ExtractBitField(uint32_t
     uint32_t bitFieldMask = (1u << width) - 1;
 
     return ( shiftedValue & bitFieldMask);
-} /* jerry_ExtractBitField */
+} /* jerry_extract_bit_field */
 
 /**
  * Extract a bit-field from the integer.
@@ -170,7 +170,7 @@ jerry_ExtractBitField(uint32_t
  * @return bit-field's value
  */
 inline uint32_t
-jerry_SetBitFieldValue(uint32_t
+jerry_set_bit_field_value(uint32_t
                        container, /**< container to insert bit-field to */
                        uint32_t newBitFieldValue, /**< value of bit-field to insert */
                        uint32_t lsb, /**< least significant bit of the value
@@ -186,6 +186,6 @@ jerry_SetBitFieldValue(uint32_t
     uint32_t shiftedNewBitFieldValue = newBitFieldValue << lsb;
 
     return ( container & ~shiftedBitFieldMask) | shiftedNewBitFieldValue;
-} /* jerry_SetBitFieldValue */
+} /* jerry_set_bit_field_value */
 
 #endif /* !JERRY_GLOBALS_H */

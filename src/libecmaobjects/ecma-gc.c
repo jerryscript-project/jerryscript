@@ -33,7 +33,7 @@
 /**
  * Queue of objects, awaiting for GC
  */
-static ecma_Object_t *ecma_GC_Queue;
+static ecma_object_t *ecma_gc_objs_to_free_queue;
 
 /**
  * Queue object for GC.
@@ -42,23 +42,23 @@ static ecma_Object_t *ecma_GC_Queue;
  *          After this operation the object is not longer valid for general use.
  */
 static void
-ecma_GCQueue( ecma_Object_t *pObject) /**< object */
+ecma_gc_queue( ecma_object_t *pObject) /**< object */
 {
     JERRY_ASSERT( pObject != NULL );
     JERRY_ASSERT( pObject->GCInfo.IsObjectValid );
     JERRY_ASSERT( pObject->GCInfo.u.Refs == 0 );
 
     pObject->GCInfo.IsObjectValid = false;
-    ecma_SetPointer( pObject->GCInfo.u.NextQueuedForGC, ecma_GC_Queue);
+    ecma_set_pointer( pObject->GCInfo.u.NextQueuedForGC, ecma_gc_objs_to_free_queue);
 
-    ecma_GC_Queue = pObject;
-} /* ecma_QueueGC */
+    ecma_gc_objs_to_free_queue = pObject;
+} /* ecma_gc_queue */
 
 /**
  * Increase reference counter of an object
  */
 void
-ecma_RefObject(ecma_Object_t *pObject) /**< object */
+ecma_ref_object(ecma_object_t *pObject) /**< object */
 {
     JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
 
@@ -68,13 +68,13 @@ ecma_RefObject(ecma_Object_t *pObject) /**< object */
      * Check that value was not overflowed
      */
     JERRY_ASSERT(pObject->GCInfo.u.Refs > 0);
-} /* ecma_RefObject */
+} /* ecma_ref_object */
 
 /**
  * Decrease reference counter of an object
  */
 void
-ecma_DerefObject(ecma_Object_t *pObject) /**< object */
+ecma_deref_object(ecma_object_t *pObject) /**< object */
 {
     JERRY_ASSERT(pObject != NULL);
     JERRY_ASSERT(pObject->GCInfo.IsObjectValid);
@@ -84,62 +84,62 @@ ecma_DerefObject(ecma_Object_t *pObject) /**< object */
 
     if ( pObject->GCInfo.u.Refs == 0 )
     {
-        ecma_GCQueue( pObject);
+        ecma_gc_queue( pObject);
     }
-} /* ecma_DerefObject */
+} /* ecma_deref_object */
 
 /**
  * Initialize garbage collector
  */
 void
-ecma_GCInit( void)
+ecma_gc_init( void)
 {
-    ecma_GC_Queue = NULL;
-} /* ecma_GCInit */
+    ecma_gc_objs_to_free_queue = NULL;
+} /* ecma_gc_init */
 
 /**
  * Run garbage collecting
  */
 void
-ecma_GCRun( void)
+ecma_gc_run( void)
 {
-    while ( ecma_GC_Queue != NULL )
+    while ( ecma_gc_objs_to_free_queue != NULL )
     {
-        ecma_Object_t *pObject = ecma_GC_Queue;
-        ecma_GC_Queue = ecma_GetPointer( pObject->GCInfo.u.NextQueuedForGC);
+        ecma_object_t *pObject = ecma_gc_objs_to_free_queue;
+        ecma_gc_objs_to_free_queue = ecma_get_pointer( pObject->GCInfo.u.NextQueuedForGC);
 
         JERRY_ASSERT( !pObject->GCInfo.IsObjectValid );
 
-        for ( ecma_Property_t *property = ecma_GetPointer( pObject->pProperties), *pNextProperty;
+        for ( ecma_property_t *property = ecma_get_pointer( pObject->pProperties), *pNextProperty;
               property != NULL;
               property = pNextProperty )
         {
-            pNextProperty = ecma_GetPointer( property->pNextProperty);
+            pNextProperty = ecma_get_pointer( property->pNextProperty);
 
-            ecma_FreeProperty( property);
+            ecma_free_property( property);
         }
 
         if ( pObject->IsLexicalEnvironment )
         {
-            ecma_Object_t *pOuterLexicalEnvironment = ecma_GetPointer( pObject->u.LexicalEnvironment.pOuterReference);
+            ecma_object_t *pOuterLexicalEnvironment = ecma_get_pointer( pObject->u.LexicalEnvironment.pOuterReference);
             
             if ( pOuterLexicalEnvironment != NULL )
             {
-                ecma_DerefObject( pOuterLexicalEnvironment);
+                ecma_deref_object( pOuterLexicalEnvironment);
             }
         } else
         {
-            ecma_Object_t *pPrototypeObject = ecma_GetPointer( pObject->u.Object.pPrototypeObject);
+            ecma_object_t *pPrototypeObject = ecma_get_pointer( pObject->u.Object.pPrototypeObject);
             
             if ( pPrototypeObject != NULL )
             {
-                ecma_DerefObject( pPrototypeObject);
+                ecma_deref_object( pPrototypeObject);
             }
         }
         
-        ecma_DeallocObject( pObject);
+        ecma_dealloc_object( pObject);
     }
-} /* ecma_RunGC */
+} /* ecma_gc_run */
 
 /**
  * @}

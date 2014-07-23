@@ -28,9 +28,9 @@
  * @{
  */
 
-extern ecma_Reference_t ecma_OpGetIdentifierReference(ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
-extern ecma_Reference_t ecma_MakeReference( ecma_Value_t base, ecma_Char_t *name_p, bool is_strict);
-extern void ecma_FreeReference( const ecma_Reference_t ref);
+extern ecma_reference_t ecma_op_get_identifier_reference(ecma_object_t *lex_env_p, ecma_char_t *name_p, bool is_strict);
+extern ecma_reference_t ecma_make_reference( ecma_value_t base, ecma_char_t *name_p, bool is_strict);
+extern void ecma_free_reference( const ecma_reference_t ref);
 
 /**
  * @}

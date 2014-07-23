@@ -29,16 +29,16 @@
  */
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
-extern ecma_CompletionValue_t ecma_OpHasBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p);
-extern ecma_CompletionValue_t ecma_OpCreateMutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_deletable);
-extern ecma_CompletionValue_t ecma_OpSetMutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, ecma_Value_t value, bool is_strict);
-extern ecma_CompletionValue_t ecma_OpGetBindingValue( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, bool is_strict);
-extern ecma_CompletionValue_t ecma_OpDeleteBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p);
-extern ecma_CompletionValue_t ecma_OpImplicitThisValue( ecma_Object_t *lex_env_p);
+extern ecma_completion_value_t ecma_op_has_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p);
+extern ecma_completion_value_t ecma_op_create_mutable_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p, bool is_deletable);
+extern ecma_completion_value_t ecma_op_set_mutable_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p, ecma_value_t value, bool is_strict);
+extern ecma_completion_value_t ecma_op_get_binding_value( ecma_object_t *lex_env_p, ecma_char_t *name_p, bool is_strict);
+extern ecma_completion_value_t ecma_op_delete_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p);
+extern ecma_completion_value_t ecma_op_implicit_this_value( ecma_object_t *lex_env_p);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern void ecma_OpCreateImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p);
-extern void ecma_OpInitializeImmutableBinding( ecma_Object_t *lex_env_p, ecma_Char_t *name_p, ecma_Value_t value);
+extern void ecma_op_create_immutable_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p);
+extern void ecma_op_initialize_immutable_binding( ecma_object_t *lex_env_p, ecma_char_t *name_p, ecma_value_t value);
 
 /**
  * @}

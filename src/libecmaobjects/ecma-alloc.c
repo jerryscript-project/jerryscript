@@ -38,13 +38,13 @@
 #include "ecma-gc.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT( sizeof (ecma_Value_t) <= sizeof (uint16_t) );
-JERRY_STATIC_ASSERT( sizeof (ecma_Property_t) <= sizeof (uint64_t) );
-JERRY_STATIC_ASSERT( sizeof (ecma_Object_t) <= sizeof (uint64_t) );
-JERRY_STATIC_ASSERT( sizeof (ecma_ArrayHeader_t) <= sizeof (uint32_t) );
-JERRY_STATIC_ASSERT( sizeof (ecma_ArrayFirstChunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
-JERRY_STATIC_ASSERT( sizeof (ecma_ArrayNonFirstChunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
-JERRY_STATIC_ASSERT( sizeof (ecma_CompletionValue_t) == sizeof(uint32_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_value_t) <= sizeof (uint16_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_property_t) <= sizeof (uint64_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_object_t) <= sizeof (uint64_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_array_header_t) <= sizeof (uint32_t) );
+JERRY_STATIC_ASSERT( sizeof (ecma_array_first_chunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
+JERRY_STATIC_ASSERT( sizeof (ecma_array_non_first_chunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
+JERRY_STATIC_ASSERT( sizeof (ecma_completion_value_t) == sizeof(uint32_t) );
 
 /**
  * Template of an allocation routine.
@@ -52,12 +52,12 @@ JERRY_STATIC_ASSERT( sizeof (ecma_CompletionValue_t) == sizeof(uint32_t) );
  * FIXME: Run GC only if allocation failed.
  */
 #define ALLOC( ecmaType) ecma_ ## ecmaType ## _t * \
-ecma_Alloc ## ecmaType (void) \
+ecma_alloc_ ## ecmaType (void) \
 { \
     ecma_ ## ecmaType ## _t *p ## ecmaType = (ecma_ ## ecmaType ## _t *) \
         mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecmaType ## _t))); \
     \
-    ecma_GCRun(); \
+    ecma_gc_run(); \
     JERRY_ASSERT( p ## ecmaType != NULL ); \
     \
     return p ## ecmaType; \
@@ -67,7 +67,7 @@ ecma_Alloc ## ecmaType (void) \
  * Deallocation routine template
  */
 #define DEALLOC( ecmaType) void \
-ecma_Dealloc ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
+ecma_dealloc_ ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
 { \
     mem_pools_free( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecmaType ## _t)), \
                       (uint8_t*) p ## ecmaType); \
@@ -80,11 +80,11 @@ ecma_Dealloc ## ecmaType( ecma_ ## ecmaType ## _t *p ## ecmaType) \
     ALLOC( ecmaType) \
     DEALLOC( ecmaType)
 
-DECLARE_ROUTINES_FOR (Object)
-DECLARE_ROUTINES_FOR (Property)
-DECLARE_ROUTINES_FOR (Number)
-DECLARE_ROUTINES_FOR (ArrayFirstChunk)
-DECLARE_ROUTINES_FOR (ArrayNonFirstChunk)
+DECLARE_ROUTINES_FOR (object)
+DECLARE_ROUTINES_FOR (property)
+DECLARE_ROUTINES_FOR (number)
+DECLARE_ROUTINES_FOR (array_first_chunk)
+DECLARE_ROUTINES_FOR (array_non_first_chunk)
 
 /**
  * @}

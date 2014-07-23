@@ -24,7 +24,7 @@ struct __int_data;
 
 #define OP_STRUCT_FIELD(name) struct __op_##name name;
 #define OP_ENUM_FIELD(name) __op__idx_##name ,
-#define OP_FUNC_DECL(name) ecma_CompletionValue_t opfunc_##name  (OPCODE, struct __int_data *);
+#define OP_FUNC_DECL(name) ecma_completion_value_t opfunc_##name  (OPCODE, struct __int_data *);
 
 /** A single bytecode instruction is 32bit wide and has an 8bit opcode field
  and several operand of 8 of 16 bit.*/
@@ -33,7 +33,7 @@ struct __int_data;
 #define T_IDX uint8_t /** index values */
 
 OPCODE;
-typedef ecma_CompletionValue_t (*opfunc)(OPCODE, struct __int_data *);
+typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
 
 #define OP_LOOPS(op)                    \
     op(loop_inf)                        \
@@ -176,7 +176,7 @@ __packed;
  */
 typedef enum
 {
-  OPCODE_ARG_TYPE_SIMPLE, /**< ecma_SimpleValue_t */
+  OPCODE_ARG_TYPE_SIMPLE, /**< ecma_simple_value_t */
   OPCODE_ARG_TYPE_SMALLINT, /**< small integer: from -128 to 127 */
   OPCODE_ARG_TYPE_NUMBER, /**< index of number literal */
   OPCODE_ARG_TYPE_STRING, /**< index of string literal */

@@ -26,10 +26,10 @@
  * @{
  */
 
-extern ecma_CompletionValue_t ecma_op_check_object_coercible( ecma_Value_t value);
-extern ecma_CompletionValue_t ecma_op_to_primitive( ecma_Value_t value);
-extern ecma_CompletionValue_t ecma_op_to_number( ecma_Value_t value);
-extern ecma_CompletionValue_t ecma_op_to_object( ecma_Value_t value);
+extern ecma_completion_value_t ecma_op_check_object_coercible( ecma_value_t value);
+extern ecma_completion_value_t ecma_op_to_primitive( ecma_value_t value);
+extern ecma_completion_value_t ecma_op_to_number( ecma_value_t value);
+extern ecma_completion_value_t ecma_op_to_object( ecma_value_t value);
 
 /**
  * @}

@@ -57,7 +57,7 @@ typedef enum {
     ECMA_TYPE_STRING, /**< pointer to description of a string */
     ECMA_TYPE_OBJECT, /**< pointer to description of an object */
     ECMA_TYPE__COUNT /**< count of types */
-} ecma_Type_t;
+} ecma_type_t;
 
 /**
  * Simple ecma-values
@@ -72,7 +72,7 @@ typedef enum {
                                            but is stored directly in the array's property list
                                            (used for array elements with non-default attribute values) */
     ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
-} ecma_SimpleValue_t;
+} ecma_simple_value_t;
 
 /**
  * Type of ecma-property
@@ -81,7 +81,7 @@ typedef enum {
     ECMA_PROPERTY_NAMEDDATA, /**< named data property */
     ECMA_PROPERTY_NAMEDACCESSOR, /**< named accessor property */
     ECMA_PROPERTY_INTERNAL /**< internal property */
-} ecma_PropertyType_t;
+} ecma_property_type_t;
 
 /**
  * Type of block evaluation (completion) result.
@@ -96,20 +96,20 @@ typedef enum {
     ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
     ECMA_COMPLETION_TYPE_EXIT /**< implementation-defined completion type
                                    for finishing script execution */
-} ecma_CompletionType_t;
+} ecma_completion_type_t;
 
 /**
  * Description of an ecma-value
  */
 typedef struct {
-    /** Value type (ecma_Type_t) */
+    /** Value type (ecma_type_t) */
     unsigned int ValueType : 2;
 
     /**
-     * Simple value (ecma_SimpleValue_t) or compressed pointer to value (depending on ValueType)
+     * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on ValueType)
      */
     unsigned int Value : ECMA_POINTER_FIELD_WIDTH;
-} __packed ecma_Value_t;
+} __packed ecma_value_t;
 
 /**
  * Description of a block completion value
@@ -117,19 +117,19 @@ typedef struct {
  * See also: ECMA-262 v5, 8.9.
  */
 typedef struct {
-    /** Type (ecma_CompletionType_t) */
+    /** Type (ecma_completion_type_t) */
     unsigned int type : 3;
 
     /** Value */
-    ecma_Value_t value;
+    ecma_value_t value;
 
     /** Target */
     unsigned int target : 8;
-} __packed ecma_CompletionValue_t;
+} __packed ecma_completion_value_t;
 
 /**
  * Target value indicating that target field
- * of ecma_CompletionValue_t defines no target.
+ * of ecma_completion_value_t defines no target.
  */
 #define ECMA_TARGET_ID_RESERVED 255
 
@@ -153,7 +153,7 @@ typedef enum {
 
     /** Part of an array, that is indexed by strings */
     ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES
-} ecma_InternalPropertyId_t;
+} ecma_internal_property_id_t;
 
 /**
  * Property's 'Writable' attribute's values description.
@@ -162,7 +162,7 @@ typedef enum
 {
   ECMA_PROPERTY_NOT_WRITABLE, /**< property's 'Writable' attribute is false */
   ECMA_PROPERTY_WRITABLE /**< property's 'Writable' attribute is true */
-} ecma_PropertyWritableValue_t;
+} ecma_property_writable_value_t;
 
 /**
  * Property's 'Enumerable' attribute's values description.
@@ -171,7 +171,7 @@ typedef enum
 {
   ECMA_PROPERTY_NOT_ENUMERABLE, /**< property's 'Enumerable' attribute is false */
   ECMA_PROPERTY_ENUMERABLE /**< property's 'Enumerable' attribute is true */
-} ecma_PropertyEnumerableValue_t;
+} ecma_property_enumerable_value_t;
 
 /**
  * Property's 'Configurable' attribute's values description.
@@ -180,13 +180,13 @@ typedef enum
 {
   ECMA_PROPERTY_NOT_CONFIGURABLE, /**< property's 'Configurable' attribute is false */
   ECMA_PROPERTY_CONFIGURABLE /**< property's 'Configurable' attribute is true */
-} ecma_PropertyConfigurableValue_t;
+} ecma_property_configurable_value_t;
 
 /**
  * Description of ecma-property.
  */
-typedef struct ecma_Property_t {
-    /** Property's type (ecma_PropertyType_t) */
+typedef struct ecma_property_t {
+    /** Property's type (ecma_property_type_t) */
     unsigned int Type : 2;
 
     /** Compressed pointer to next property */
@@ -196,32 +196,32 @@ typedef struct ecma_Property_t {
     union {
 
         /** Description of named data property */
-        struct __packed ecma_NamedDataProperty_t {
+        struct __packed ecma_named_data_property_t {
             /** Compressed pointer to property's name (pointer to String) */
             unsigned int pName : ECMA_POINTER_FIELD_WIDTH;
 
-            /** Attribute 'Writable' (ecma_PropertyWritableValue_t) */
+            /** Attribute 'Writable' (ecma_property_writable_value_t) */
             unsigned int Writable : 1;
 
-            /** Attribute 'Enumerable' (ecma_PropertyEnumerableValue_t) */
+            /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
             unsigned int Enumerable : 1;
 
-            /** Attribute 'Configurable' (ecma_PropertyConfigurableValue_t) */
+            /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
             unsigned int Configurable : 1;
 
             /** Value */
-            ecma_Value_t Value;
+            ecma_value_t Value;
         } NamedDataProperty;
 
         /** Description of named accessor property */
-        struct __packed ecma_NamedAccessorProperty_t {
+        struct __packed ecma_named_accessor_property_t {
             /** Compressed pointer to property's name (pointer to String) */
             unsigned int pName : ECMA_POINTER_FIELD_WIDTH;
 
-            /** Attribute 'Enumerable' (ecma_PropertyEnumerableValue_t) */
+            /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
             unsigned int Enumerable : 1;
 
-            /** Attribute 'Configurable' (ecma_PropertyConfigurableValue_t) */
+            /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
             unsigned int Configurable : 1;
 
             /** Compressed pointer to property's getter */
@@ -232,7 +232,7 @@ typedef struct ecma_Property_t {
         } NamedAccessorProperty;
 
         /** Description of internal property */
-        struct __packed ecma_InternalProperty_t {
+        struct __packed ecma_internal_property_t {
             /** Internal property's type */
             unsigned int InternalPropertyType : 4;
 
@@ -240,7 +240,7 @@ typedef struct ecma_Property_t {
             unsigned int Value : ECMA_POINTER_FIELD_WIDTH;
         } InternalProperty;
     } u;
-} ecma_Property_t;
+} ecma_property_t;
 
 /**
  * Description of GC's information layout
@@ -267,7 +267,7 @@ typedef struct {
         /** Compressed pointer to next object in the list of objects, queued for GC (if !IsObjectValid) */
         unsigned int NextQueuedForGC : ECMA_POINTER_FIELD_WIDTH;
     } __packed u;
-} ecma_GCInfo_t;
+} ecma_GC_info_t;
 
 /**
  * Types of lexical environments
@@ -275,13 +275,13 @@ typedef struct {
 typedef enum {
     ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< declarative lexical environment */
     ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND /**< object-bound lexical environment */
-} ecma_LexicalEnvironmentType_t;
+} ecma_lexical_environment_type_t;
 
 /**
  * Description of ECMA-object or lexical environment
  * (depending on IsLexicalEnvironment).
  */
-typedef struct ecma_Object_t {
+typedef struct ecma_object_t {
     /** Compressed pointer to property list */
     unsigned int pProperties : ECMA_POINTER_FIELD_WIDTH;
 
@@ -301,7 +301,7 @@ typedef struct ecma_Object_t {
             /** Attribute 'Extensible' */
             unsigned int Extensible : 1;
 
-            /** Compressed pointer to prototype object (ecma_Object_t) */
+            /** Compressed pointer to prototype object (ecma_object_t) */
             unsigned int pPrototypeObject : ECMA_POINTER_FIELD_WIDTH;
         } __packed Object;
 
@@ -310,7 +310,7 @@ typedef struct ecma_Object_t {
          */
         struct {
             /**
-             * Type of lexical environment (ecma_LexicalEnvironmentType_t).
+             * Type of lexical environment (ecma_lexical_environment_type_t).
              */
             unsigned int Type : 1;
 
@@ -321,23 +321,23 @@ typedef struct ecma_Object_t {
     } __packed u;
 
     /** GC's information */
-    ecma_GCInfo_t GCInfo;
-} ecma_Object_t;
+    ecma_GC_info_t GCInfo;
+} ecma_object_t;
 
 /**
  * Description of an ecma-character
  */
-typedef uint8_t ecma_Char_t;
+typedef uint8_t ecma_char_t;
 
 /**
  * Description of an ecma-number
  */
-typedef float ecma_Number_t;
+typedef float ecma_number_t;
 
 /**
  * Description of arrays'/strings' length
  */
-typedef uint16_t ecma_Length_t;
+typedef uint16_t ecma_length_t;
 
 /**
  * Description of an Array's header
@@ -347,8 +347,8 @@ typedef struct {
     uint16_t pNextChunk;
 
     /** Number of elements in the Array */
-    ecma_Length_t UnitNumber;
-} ecma_ArrayHeader_t;
+    ecma_length_t UnitNumber;
+} ecma_array_header_t;
 
 /**
  * Size of a chunk, containing a String's part, in bytes
@@ -360,11 +360,11 @@ typedef struct {
  */
 typedef struct {
     /** Array's header */
-    ecma_ArrayHeader_t Header;
+    ecma_array_header_t Header;
 
     /** Elements */
-    uint8_t Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_ArrayHeader_t) ];
-} ecma_ArrayFirstChunk_t;
+    uint8_t Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_array_header_t) ];
+} ecma_array_first_chunk_t;
 
 /**
  * Description of non-first chunk in a chain of chunks that contains an Array
@@ -375,7 +375,7 @@ typedef struct {
 
     /** Characters */
     uint8_t Data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
-} ecma_ArrayNonFirstChunk_t;
+} ecma_array_non_first_chunk_t;
 
 /**
  * \addtogroup reference ECMA-reference
@@ -388,14 +388,14 @@ typedef struct {
 typedef struct
 {
   /** base value */
-  ecma_Value_t base;
+  ecma_value_t base;
 
   /** referenced name value pointer */
-  ecma_Char_t *referenced_name_p;
+  ecma_char_t *referenced_name_p;
 
   /** strict reference flag */
   bool is_strict;
-} ecma_Reference_t;
+} ecma_reference_t;
 
 /**
  * @}

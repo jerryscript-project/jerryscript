@@ -41,9 +41,9 @@ typedef enum
   ECMA_ERROR_SYNTAX, /**< SyntaxError */
   ECMA_ERROR_TYPE, /**< TypeError */
   ECMA_ERROR_URI /**< URIError */
-} ecma_StandardError_t;
+} ecma_standard_error_t;
 
-extern ecma_Object_t *ecma_NewStandardError( ecma_StandardError_t error_type);
+extern ecma_object_t *ecma_new_standard_error( ecma_standard_error_t error_type);
 
 /**
  * @}

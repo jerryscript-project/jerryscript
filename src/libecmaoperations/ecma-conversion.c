@@ -37,19 +37,19 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_CompletionValue_t
-ecma_op_check_object_coercible( ecma_Value_t value) /**< ecma-value */
+ecma_completion_value_t
+ecma_op_check_object_coercible( ecma_value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.ValueType )
+  switch ( (ecma_type_t)value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
       {
-        switch ( (ecma_SimpleValue_t)value.Value )
+        switch ( (ecma_simple_value_t)value.Value )
         {
           case ECMA_SIMPLE_VALUE_UNDEFINED:
           case ECMA_SIMPLE_VALUE_NULL:
             {
-              return ecma_MakeThrowValue( ecma_NewStandardError( ECMA_ERROR_TYPE));
+              return ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_TYPE));
             }
           case ECMA_SIMPLE_VALUE_FALSE:
           case ECMA_SIMPLE_VALUE_TRUE:
@@ -78,9 +78,9 @@ ecma_op_check_object_coercible( ecma_Value_t value) /**< ecma-value */
       }
   }
 
-  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
+                                     ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
+                                     ECMA_TARGET_ID_RESERVED);
 } /* ecma_op_check_object_coercible */
 
 /**
@@ -92,18 +92,18 @@ ecma_op_check_object_coercible( ecma_Value_t value) /**< ecma-value */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_CompletionValue_t
-ecma_op_to_primitive( ecma_Value_t value) /**< ecma-value */
+ecma_completion_value_t
+ecma_op_to_primitive( ecma_value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.ValueType )
+  switch ( (ecma_type_t)value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
     case ECMA_TYPE_NUMBER:
     case ECMA_TYPE_STRING:
       {
-        return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_CopyValue( value),
-                                         ECMA_TARGET_ID_RESERVED);
+        return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
+                                           ecma_copy_value( value),
+                                           ECMA_TARGET_ID_RESERVED);
       }
     case ECMA_TYPE_OBJECT:
       {
@@ -127,16 +127,16 @@ ecma_op_to_primitive( ecma_Value_t value) /**< ecma-value */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_CompletionValue_t
-ecma_op_to_number( ecma_Value_t value) /**< ecma-value */
+ecma_completion_value_t
+ecma_op_to_number( ecma_value_t value) /**< ecma-value */
 {
-  switch ( (ecma_Type_t)value.ValueType )
+  switch ( (ecma_type_t)value.ValueType )
   {
     case ECMA_TYPE_NUMBER:
       {
-        return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_CopyValue( value),
-                                         ECMA_TARGET_ID_RESERVED);
+        return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
+                                           ecma_copy_value( value),
+                                           ECMA_TARGET_ID_RESERVED);
       }
     case ECMA_TYPE_SIMPLE:
     case ECMA_TYPE_STRING:
@@ -145,10 +145,10 @@ ecma_op_to_number( ecma_Value_t value) /**< ecma-value */
       }
     case ECMA_TYPE_OBJECT:
       {
-        ecma_CompletionValue_t completion_to_primitive = ecma_op_to_primitive( value);
+        ecma_completion_value_t completion_to_primitive = ecma_op_to_primitive( value);
         JERRY_ASSERT( ecma_is_completion_value_normal( completion_to_primitive) );
 
-        ecma_CompletionValue_t completion_to_number = ecma_op_to_number( completion_to_primitive.value);
+        ecma_completion_value_t completion_to_number = ecma_op_to_number( completion_to_primitive.value);
         ecma_free_completion_value( completion_to_primitive);
 
         return completion_to_number;
@@ -171,8 +171,8 @@ ecma_op_to_number( ecma_Value_t value) /**< ecma-value */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_CompletionValue_t
-ecma_op_to_object( ecma_Value_t value) /**< ecma-value */
+ecma_completion_value_t
+ecma_op_to_object( ecma_value_t value) /**< ecma-value */
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( value);
 } /* ecma_op_to_object */

@@ -25,73 +25,73 @@
 
 #include "ecma-globals.h"
 
-extern uintptr_t ecma_CompressPointer(void *pointer);
-extern void* ecma_DecompressPointer(uintptr_t compressedPointer);
+extern uintptr_t ecma_compress_pointer(void *pointer);
+extern void* ecma_decompress_pointer(uintptr_t compressedPointer);
 
 /**
  * Get value of pointer from specified compressed pointer field.
  */
-#define ecma_GetPointer( field) \
-    ecma_DecompressPointer( field)
+#define ecma_get_pointer( field) \
+    ecma_decompress_pointer( field)
 
 /**
  * Set value of compressed pointer field so that it will correspond
  * to specified nonCompressedPointer.
  */
-#define ecma_SetPointer( field, nonCompressedPointer) \
-    (field) = ecma_CompressPointer( nonCompressedPointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1)
+#define ecma_set_pointer( field, nonCompressedPointer) \
+    (field) = ecma_compress_pointer( nonCompressedPointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1)
 
 /* ecma-helpers-value.c */
-extern bool ecma_IsValueUndefined( ecma_Value_t value);
-extern bool ecma_IsValueNull( ecma_Value_t value);
-extern bool ecma_IsValueBoolean( ecma_Value_t value);
-extern bool ecma_IsValueTrue( ecma_Value_t value);
+extern bool ecma_is_value_undefined( ecma_value_t value);
+extern bool ecma_is_value_null( ecma_value_t value);
+extern bool ecma_is_value_boolean( ecma_value_t value);
+extern bool ecma_is_value_true( ecma_value_t value);
 
-extern ecma_Value_t ecma_MakeSimpleValue( ecma_SimpleValue_t value);
-extern ecma_Value_t ecma_MakeNumberValue( ecma_Number_t* num_p);
-extern ecma_Value_t ecma_make_string_value( ecma_ArrayFirstChunk_t* ecma_string_p);
-extern ecma_Value_t ecma_MakeObjectValue( ecma_Object_t* object_p);
-extern ecma_Value_t ecma_CopyValue( const ecma_Value_t value);
-extern void ecma_FreeValue( const ecma_Value_t value);
+extern ecma_value_t ecma_make_simple_value( ecma_simple_value_t value);
+extern ecma_value_t ecma_make_number_value( ecma_number_t* num_p);
+extern ecma_value_t ecma_make_string_value( ecma_array_first_chunk_t* ecma_string_p);
+extern ecma_value_t ecma_make_object_value( ecma_object_t* object_p);
+extern ecma_value_t ecma_copy_value( const ecma_value_t value);
+extern void ecma_free_value( const ecma_value_t value);
 
-extern ecma_CompletionValue_t ecma_MakeCompletionValue( ecma_CompletionType_t type, ecma_Value_t value, uint8_t target);
-extern ecma_CompletionValue_t ecma_MakeThrowValue( ecma_Object_t *exception_p);
-extern ecma_CompletionValue_t ecma_make_empty_completion_value( void);
-extern ecma_CompletionValue_t ecma_copy_completion_value( ecma_CompletionValue_t value);
-extern void ecma_free_completion_value( ecma_CompletionValue_t completion_value);
+extern ecma_completion_value_t ecma_make_completion_value( ecma_completion_type_t type, ecma_value_t value, uint8_t target);
+extern ecma_completion_value_t ecma_make_throw_value( ecma_object_t *exception_p);
+extern ecma_completion_value_t ecma_make_empty_completion_value( void);
+extern ecma_completion_value_t ecma_copy_completion_value( ecma_completion_value_t value);
+extern void ecma_free_completion_value( ecma_completion_value_t completion_value);
 
-extern bool ecma_is_completion_value_normal( ecma_CompletionValue_t value);
-extern bool ecma_is_completion_value_throw( ecma_CompletionValue_t value);
-extern bool ecma_is_completion_value_normal_simple_value( ecma_CompletionValue_t value, ecma_SimpleValue_t simple_value);
-extern bool ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value);
-extern bool ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value);
+extern bool ecma_is_completion_value_normal( ecma_completion_value_t value);
+extern bool ecma_is_completion_value_throw( ecma_completion_value_t value);
+extern bool ecma_is_completion_value_normal_simple_value( ecma_completion_value_t value, ecma_simple_value_t simple_value);
+extern bool ecma_is_completion_value_normal_false( ecma_completion_value_t value);
+extern bool ecma_is_completion_value_normal_true( ecma_completion_value_t value);
 
-extern ecma_Object_t* ecma_CreateObject( ecma_Object_t *pPrototypeObject, bool isExtensible);
-extern ecma_Object_t* ecma_CreateLexicalEnvironment( ecma_Object_t *pOuterLexicalEnvironment, ecma_LexicalEnvironmentType_t type);
+extern ecma_object_t* ecma_create_object( ecma_object_t *pPrototypeObject, bool isExtensible);
+extern ecma_object_t* ecma_create_lexical_environment( ecma_object_t *pOuterLexicalEnvironment, ecma_lexical_environment_type_t type);
 
 /* ecma-helpers.c */
-extern ecma_Property_t* ecma_CreateInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
-extern ecma_Property_t* ecma_FindInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
-extern ecma_Property_t* ecma_GetInternalProperty(ecma_Object_t *pObject, ecma_InternalPropertyId_t propertyId);
+extern ecma_property_t* ecma_create_internal_property(ecma_object_t *pObject, ecma_internal_property_id_t propertyId);
+extern ecma_property_t* ecma_find_internal_property(ecma_object_t *pObject, ecma_internal_property_id_t propertyId);
+extern ecma_property_t* ecma_get_internal_property(ecma_object_t *pObject, ecma_internal_property_id_t propertyId);
 
-extern ecma_Property_t *ecma_CreateNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p, ecma_PropertyWritableValue_t writable, ecma_PropertyEnumerableValue_t enumerable, ecma_PropertyConfigurableValue_t configurable);
-extern ecma_Property_t *ecma_FindNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
-extern ecma_Property_t *ecma_GetNamedProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
-extern ecma_Property_t *ecma_GetNamedDataProperty(ecma_Object_t *obj_p, ecma_Char_t *name_p);
+extern ecma_property_t *ecma_create_named_property(ecma_object_t *obj_p, ecma_char_t *name_p, ecma_property_writable_value_t writable, ecma_property_enumerable_value_t enumerable, ecma_property_configurable_value_t configurable);
+extern ecma_property_t *ecma_find_named_property(ecma_object_t *obj_p, ecma_char_t *name_p);
+extern ecma_property_t *ecma_get_named_property(ecma_object_t *obj_p, ecma_char_t *name_p);
+extern ecma_property_t *ecma_get_named_data_property(ecma_object_t *obj_p, ecma_char_t *name_p);
 
-extern void ecma_FreeInternalProperty(ecma_Property_t *prop_p);
-extern void ecma_FreeNamedDataProperty(ecma_Property_t *prop_p);
-extern void ecma_FreeNamedAccessorProperty(ecma_Property_t *prop_p);
-extern void ecma_FreeProperty(ecma_Property_t *prop_p);
+extern void ecma_free_internal_property(ecma_property_t *prop_p);
+extern void ecma_free_named_data_property(ecma_property_t *prop_p);
+extern void ecma_free_named_accessor_property(ecma_property_t *prop_p);
+extern void ecma_free_property(ecma_property_t *prop_p);
 
-extern void ecma_DeleteProperty( ecma_Object_t *obj_p, ecma_Property_t *prop_p);
+extern void ecma_delete_property( ecma_object_t *obj_p, ecma_property_t *prop_p);
 
-extern ecma_ArrayFirstChunk_t* ecma_NewEcmaString( const ecma_Char_t *pString);
-extern ssize_t ecma_CopyEcmaStringCharsToBuffer( ecma_ArrayFirstChunk_t *pFirstChunk, uint8_t *pBuffer, size_t bufferSize);
-extern ecma_ArrayFirstChunk_t* ecma_DuplicateEcmaString( ecma_ArrayFirstChunk_t *pFirstChunk);
-extern bool ecma_CompareZtStringToEcmaString( const ecma_Char_t *pString, const ecma_ArrayFirstChunk_t *pEcmaString);
-extern bool ecma_CompareEcmaStringToEcmaString(const ecma_ArrayFirstChunk_t *string1_p, const ecma_ArrayFirstChunk_t *string2_p);
-extern void ecma_FreeArray( ecma_ArrayFirstChunk_t *pFirstChunk);
+extern ecma_array_first_chunk_t* ecma_new_ecma_string( const ecma_char_t *pString);
+extern ssize_t ecma_copy_ecma_string_chars_to_buffer( ecma_array_first_chunk_t *pFirstChunk, uint8_t *pBuffer, size_t bufferSize);
+extern ecma_array_first_chunk_t* ecma_duplicate_ecma_string( ecma_array_first_chunk_t *pFirstChunk);
+extern bool ecma_compare_zt_string_to_ecma_string( const ecma_char_t *pString, const ecma_array_first_chunk_t *pEcmaString);
+extern bool ecma_compare_ecma_string_to_ecma_string(const ecma_array_first_chunk_t *string1_p, const ecma_array_first_chunk_t *string2_p);
+extern void ecma_free_array( ecma_array_first_chunk_t *pFirstChunk);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

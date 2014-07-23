@@ -45,14 +45,14 @@ run_int (void)
   struct __int_data int_data;
   int_data.pos = 0;
   int_data.this_binding_p = NULL;
-  int_data.lex_env_p = ecma_CreateLexicalEnvironment( NULL,
-                                                      ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  int_data.lex_env_p = ecma_create_lexical_environment( NULL,
+                                                        ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
   FIXME( Strict mode );
   int_data.is_strict = false;
 
-  ecma_CompletionValue_t completion = run_int_from_pos( &int_data);
+  ecma_completion_value_t completion = run_int_from_pos( &int_data);
 
-  switch ( (ecma_CompletionType_t)completion.type )
+  switch ( (ecma_completion_type_t)completion.type )
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
       {
@@ -60,7 +60,7 @@ run_int (void)
       }
     case ECMA_COMPLETION_TYPE_EXIT:
       {
-        return ecma_IsValueTrue( completion.value);
+        return ecma_is_value_true( completion.value);
       }
     case ECMA_COMPLETION_TYPE_BREAK:
     case ECMA_COMPLETION_TYPE_CONTINUE:
@@ -81,10 +81,10 @@ run_int (void)
   JERRY_UNREACHABLE();
 }
 
-ecma_CompletionValue_t
+ecma_completion_value_t
 run_int_from_pos (struct __int_data *int_data)
 {
-  ecma_CompletionValue_t completion;
+  ecma_completion_value_t completion;
 
   while ( true )
     {
@@ -123,7 +123,7 @@ run_int_from_pos (struct __int_data *int_data)
  */
 ssize_t
 try_get_string_by_idx(T_IDX idx, /**< literal id */
-                      ecma_Char_t *buffer_p, /**< buffer */
+                      ecma_char_t *buffer_p, /**< buffer */
                       ssize_t buffer_size) /**< buffer size */
 {
   TODO( Actual string literal retrievement );
@@ -138,7 +138,7 @@ try_get_string_by_idx(T_IDX idx, /**< literal id */
   }
 
   // TODO
-  buffer_p[0] = (ecma_Char_t) ('a' + idx);
+  buffer_p[0] = (ecma_char_t) ('a' + idx);
   buffer_p[1] = 0;
 
   return req_length;
@@ -149,10 +149,10 @@ try_get_string_by_idx(T_IDX idx, /**< literal id */
  *
  * @return value of number literal, corresponding to specified literal id
  */
-ecma_Number_t
+ecma_number_t
 get_number_by_idx(T_IDX idx) /**< literal id */
 {
   TODO( Actual number literal retrievement );
 
-  return (ecma_Number_t)idx;
+  return (ecma_number_t)idx;
 } /* get_number_by_idx */

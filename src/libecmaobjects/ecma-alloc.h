@@ -30,60 +30,60 @@
  * 
  * @return pointer to allocated memory
  */
-extern ecma_Object_t *ecma_AllocObject(void);
+extern ecma_object_t *ecma_alloc_object(void);
 
 /**
  * Dealloc memory from an ecma-object
  */
-extern void ecma_DeallocObject( ecma_Object_t *pObject);
+extern void ecma_dealloc_object( ecma_object_t *pObject);
 
 /**
  * Allocate memory for ecma-property
  * 
  * @return pointer to allocated memory
  */
-extern ecma_Property_t *ecma_AllocProperty(void);
+extern ecma_property_t *ecma_alloc_property(void);
 
 /**
  * Dealloc memory from an ecma-property
  */
-extern void ecma_DeallocProperty( ecma_Property_t *pProperty);
+extern void ecma_dealloc_property( ecma_property_t *pProperty);
 
 /**
  * Allocate memory for ecma-number
  * 
  * @return pointer to allocated memory
  */
-extern ecma_Number_t *ecma_AllocNumber(void);
+extern ecma_number_t *ecma_alloc_number(void);
 
 /**
  * Dealloc memory from an ecma-number
  */
-extern void ecma_DeallocNumber( ecma_Number_t *pNumber);
+extern void ecma_dealloc_number( ecma_number_t *pNumber);
 
 /**
  * Allocate memory for first chunk of an ecma-array
  * 
  * @return pointer to allocated memory
  */
-extern ecma_ArrayFirstChunk_t *ecma_AllocArrayFirstChunk(void);
+extern ecma_array_first_chunk_t *ecma_alloc_array_first_chunk(void);
 
 /**
  * Dealloc memory from first chunk of an ecma-array
  */
-extern void ecma_DeallocArrayFirstChunk( ecma_ArrayFirstChunk_t *pFirstChunk);
+extern void ecma_dealloc_array_first_chunk( ecma_array_first_chunk_t *pFirstChunk);
 
 /**
  * Allocate memory for non-first chunk of an ecma-array
  * 
  * @return pointer to allocated memory
  */
-extern ecma_ArrayNonFirstChunk_t *ecma_AllocArrayNonFirstChunk(void);
+extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk(void);
 
 /**
  * Dealloc memory from non-first chunk of an ecma-array
  */
-extern void ecma_DeallocArrayNonFirstChunk( ecma_ArrayNonFirstChunk_t *pNumber);
+extern void ecma_dealloc_array_non_first_chunk( ecma_array_non_first_chunk_t *pNumber);
 
 #endif /* JERRY_ECMA_ALLOC_H */
 

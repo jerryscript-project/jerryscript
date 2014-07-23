@@ -29,10 +29,10 @@
 
 #include "ecma-globals.h"
 
-extern void ecma_GCInit( void);
-extern void ecma_RefObject(ecma_Object_t *pObject);
-extern void ecma_DerefObject(ecma_Object_t *pObject);
-extern void ecma_GCRun( void);
+extern void ecma_gc_init( void);
+extern void ecma_ref_object(ecma_object_t *pObject);
+extern void ecma_deref_object(ecma_object_t *pObject);
+extern void ecma_gc_run( void);
 
 #endif /* !ECMA_GC_H */
 

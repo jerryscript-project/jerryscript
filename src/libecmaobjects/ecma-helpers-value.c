@@ -33,10 +33,10 @@
  *         false - otherwise.
  */
 bool
-ecma_IsValueUndefined( ecma_Value_t value) /**< ecma-value */
+ecma_is_value_undefined( ecma_value_t value) /**< ecma-value */
 {
   return ( value.ValueType == ECMA_TYPE_SIMPLE && value.Value == ECMA_SIMPLE_VALUE_UNDEFINED );
-} /* ecma_IsValueUndefined */
+} /* ecma_is_value_undefined */
 
 /**
  * Check if the value is null.
@@ -45,10 +45,10 @@ ecma_IsValueUndefined( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsValueNull( ecma_Value_t value) /**< ecma-value */
+ecma_is_value_null( ecma_value_t value) /**< ecma-value */
 {
   return ( value.ValueType == ECMA_TYPE_SIMPLE && value.Value == ECMA_SIMPLE_VALUE_NULL );
-} /* ecma_IsValueNull */
+} /* ecma_is_value_null */
 
 /**
  * Check if the value is boolean.
@@ -57,11 +57,11 @@ ecma_IsValueNull( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsValueBoolean( ecma_Value_t value) /**< ecma-value */
+ecma_is_value_boolean( ecma_value_t value) /**< ecma-value */
 {
   return ( ( value.ValueType == ECMA_TYPE_SIMPLE && value.Value == ECMA_SIMPLE_VALUE_FALSE )
            || ( value.ValueType == ECMA_TYPE_SIMPLE && value.Value == ECMA_SIMPLE_VALUE_TRUE ) );
-} /* ecma_IsValueBoolean */
+} /* ecma_is_value_boolean */
 
 /**
  * Check if the value is true.
@@ -73,50 +73,50 @@ ecma_IsValueBoolean( ecma_Value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_IsValueTrue( ecma_Value_t value) /**< ecma-value */
+ecma_is_value_true( ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT( ecma_IsValueBoolean( value) );
+  JERRY_ASSERT( ecma_is_value_boolean( value) );
 
   return ( value.ValueType == ECMA_TYPE_SIMPLE && value.Value == ECMA_SIMPLE_VALUE_TRUE );
-} /* ecma_IsValueTrue */
+} /* ecma_is_value_true */
 
 /**
  * Simple value constructor
  */
-ecma_Value_t
-ecma_MakeSimpleValue( ecma_SimpleValue_t value) /**< simple value */
+ecma_value_t
+ecma_make_simple_value( ecma_simple_value_t value) /**< simple value */
 {
-  return (ecma_Value_t) { .ValueType = ECMA_TYPE_SIMPLE, .Value = value };
-} /* ecma_MakeSimpleValue */
+  return (ecma_value_t) { .ValueType = ECMA_TYPE_SIMPLE, .Value = value };
+} /* ecma_make_simple_value */
 
 /**
  * Number value constructor
  */
-ecma_Value_t
-ecma_MakeNumberValue( ecma_Number_t* num_p) /**< number to reference in value */
+ecma_value_t
+ecma_make_number_value( ecma_number_t* num_p) /**< number to reference in value */
 {
   JERRY_ASSERT( num_p != NULL );
 
-  ecma_Value_t number_value;
+  ecma_value_t number_value;
 
   number_value.ValueType = ECMA_TYPE_NUMBER;
-  ecma_SetPointer( number_value.Value, num_p);
+  ecma_set_pointer( number_value.Value, num_p);
 
   return number_value;
-} /* ecma_MakeNumberValue */
+} /* ecma_make_number_value */
 
 /**
  * String value constructor
  */
-ecma_Value_t
-ecma_make_string_value( ecma_ArrayFirstChunk_t* ecma_string_p) /**< string to reference in value */
+ecma_value_t
+ecma_make_string_value( ecma_array_first_chunk_t* ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT( ecma_string_p != NULL );
 
-  ecma_Value_t string_value;
+  ecma_value_t string_value;
 
   string_value.ValueType = ECMA_TYPE_STRING;
-  ecma_SetPointer( string_value.Value, ecma_string_p);
+  ecma_set_pointer( string_value.Value, ecma_string_p);
 
   return string_value;
 } /* ecma_make_string_value */
@@ -124,18 +124,18 @@ ecma_make_string_value( ecma_ArrayFirstChunk_t* ecma_string_p) /**< string to re
 /**
  * Object value constructor
  */
-ecma_Value_t
-ecma_MakeObjectValue( ecma_Object_t* object_p) /**< object to reference in value */
+ecma_value_t
+ecma_make_object_value( ecma_object_t* object_p) /**< object to reference in value */
 {
   JERRY_ASSERT( object_p != NULL );
 
-  ecma_Value_t object_value;
+  ecma_value_t object_value;
 
   object_value.ValueType = ECMA_TYPE_OBJECT;
-  ecma_SetPointer( object_value.Value, object_p);
+  ecma_set_pointer( object_value.Value, object_p);
 
   return object_value;
-} /* ecma_MakeObjectValue */
+} /* ecma_make_object_value */
 
 /**
  * Copy ecma-value.
@@ -158,12 +158,12 @@ ecma_MakeObjectValue( ecma_Object_t* object_p) /**< object to reference in value
  *
  * @return See note.
  */
-ecma_Value_t
-ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
+ecma_value_t
+ecma_copy_value( const ecma_value_t value) /**< ecma-value */
 {
-  ecma_Value_t value_copy;
+  ecma_value_t value_copy;
 
-  switch ( (ecma_Type_t)value.ValueType )
+  switch ( (ecma_type_t)value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
       {
@@ -173,35 +173,35 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
       }
     case ECMA_TYPE_NUMBER:
       {
-        ecma_Number_t *num_p = ecma_GetPointer( value.Value);
+        ecma_number_t *num_p = ecma_get_pointer( value.Value);
         JERRY_ASSERT( num_p != NULL );
 
-        ecma_Number_t *number_copy_p = ecma_AllocNumber();
+        ecma_number_t *number_copy_p = ecma_alloc_number();
         *number_copy_p = *num_p;
 
-        value_copy = (ecma_Value_t) { .ValueType = ECMA_TYPE_NUMBER };
-        ecma_SetPointer( value_copy.Value, number_copy_p);
+        value_copy = (ecma_value_t) { .ValueType = ECMA_TYPE_NUMBER };
+        ecma_set_pointer( value_copy.Value, number_copy_p);
 
         break;
       }
     case ECMA_TYPE_STRING:
       {
-        ecma_ArrayFirstChunk_t *string_p = ecma_GetPointer( value.Value);
+        ecma_array_first_chunk_t *string_p = ecma_get_pointer( value.Value);
         JERRY_ASSERT( string_p != NULL );
 
-        ecma_ArrayFirstChunk_t *string_copy_p = ecma_DuplicateEcmaString( string_p);
+        ecma_array_first_chunk_t *string_copy_p = ecma_duplicate_ecma_string( string_p);
 
-        value_copy = (ecma_Value_t) { .ValueType = ECMA_TYPE_STRING };
-        ecma_SetPointer( value_copy.Value, string_copy_p);
+        value_copy = (ecma_value_t) { .ValueType = ECMA_TYPE_STRING };
+        ecma_set_pointer( value_copy.Value, string_copy_p);
 
         break;
       }
     case ECMA_TYPE_OBJECT:
       {
-        ecma_Object_t *obj_p = ecma_GetPointer( value.Value);
+        ecma_object_t *obj_p = ecma_get_pointer( value.Value);
         JERRY_ASSERT( obj_p != NULL );
 
-        ecma_RefObject( obj_p);
+        ecma_ref_object( obj_p);
 
         value_copy = value;
 
@@ -214,15 +214,15 @@ ecma_CopyValue( const ecma_Value_t value) /**< ecma-value */
   }
 
   return value_copy;
-} /* ecma_CopyValue */
+} /* ecma_copy_value */
 
 /**
  * Free the ecma-value
  */
 void
-ecma_FreeValue( ecma_Value_t value) /**< value description */
+ecma_free_value( ecma_value_t value) /**< value description */
 {
-  switch ( (ecma_Type_t) value.ValueType )
+  switch ( (ecma_type_t) value.ValueType )
   {
     case ECMA_TYPE_SIMPLE:
       {
@@ -232,21 +232,21 @@ ecma_FreeValue( ecma_Value_t value) /**< value description */
 
     case ECMA_TYPE_NUMBER:
       {
-        ecma_Number_t *pNumber = ecma_GetPointer( value.Value);
-        ecma_DeallocNumber( pNumber);
+        ecma_number_t *pNumber = ecma_get_pointer( value.Value);
+        ecma_dealloc_number( pNumber);
         break;
       }
 
     case ECMA_TYPE_STRING:
       {
-        ecma_ArrayFirstChunk_t *pString = ecma_GetPointer( value.Value);
-        ecma_FreeArray( pString);
+        ecma_array_first_chunk_t *pString = ecma_get_pointer( value.Value);
+        ecma_free_array( pString);
         break;
       }
 
     case ECMA_TYPE_OBJECT:
       {
-        ecma_DerefObject( ecma_GetPointer( value.Value));
+        ecma_deref_object( ecma_get_pointer( value.Value));
         break;
       }
 
@@ -255,61 +255,61 @@ ecma_FreeValue( ecma_Value_t value) /**< value description */
         JERRY_UNREACHABLE();
       }
   }
-} /* ecma_FreeValue */
+} /* ecma_free_value */
 
 /**
  * Completion value constructor
  *
  * @return completion value
  */
-ecma_CompletionValue_t
-ecma_MakeCompletionValue(ecma_CompletionType_t type, /**< type */
-                         ecma_Value_t value, /**< value */
+ecma_completion_value_t
+ecma_make_completion_value(ecma_completion_type_t type, /**< type */
+                         ecma_value_t value, /**< value */
                          uint8_t target) /**< target */
 {
-  return (ecma_CompletionValue_t) { .type = type, .value = value, .target = target };
-} /* ecma_MakeCompletionValue */
+  return (ecma_completion_value_t) { .type = type, .value = value, .target = target };
+} /* ecma_make_completion_value */
 
 /**
  * Throw completion value constructor.
  *
  * @return 'throw' completion value
  */
-ecma_CompletionValue_t
-ecma_MakeThrowValue( ecma_Object_t *exception_p) /**< an object */
+ecma_completion_value_t
+ecma_make_throw_value( ecma_object_t *exception_p) /**< an object */
 {
   JERRY_ASSERT( exception_p != NULL && !exception_p->IsLexicalEnvironment );
 
-  ecma_Value_t exception = ecma_MakeObjectValue( exception_p);
+  ecma_value_t exception = ecma_make_object_value( exception_p);
 
-  return ecma_MakeCompletionValue(ECMA_COMPLETION_TYPE_THROW,
+  return ecma_make_completion_value(ECMA_COMPLETION_TYPE_THROW,
                                   exception,
                                   ECMA_TARGET_ID_RESERVED);                                  
-} /* ecma_MakeThrowValue */
+} /* ecma_make_throw_value */
 
 /**
  * Empty completion value constructor.
  *
  * @return (normal, empty, reserved) completion value.
  */
-ecma_CompletionValue_t
+ecma_completion_value_t
 ecma_make_empty_completion_value( void)
 {
-  return ecma_MakeCompletionValue( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_MakeSimpleValue( ECMA_SIMPLE_VALUE_EMPTY),
+  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
+                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
                                    ECMA_TARGET_ID_RESERVED);
 } /* ecma_make_empty_completion_value */
 
 /**
  * Copy ecma-completion value.
  *
- * @return (source.type, ecma_CopyValue( source.value), source.target).
+ * @return (source.type, ecma_copy_value( source.value), source.target).
  */
-ecma_CompletionValue_t
-ecma_copy_completion_value( ecma_CompletionValue_t value) /**< completion value */
+ecma_completion_value_t
+ecma_copy_completion_value( ecma_completion_value_t value) /**< completion value */
 {
-  return ecma_MakeCompletionValue( value.type,
-                                   ecma_CopyValue( value.value),
+  return ecma_make_completion_value( value.type,
+                                   ecma_copy_value( value.value),
                                    value.target);
 } /* ecma_copy_completion_value */
 
@@ -317,14 +317,14 @@ ecma_copy_completion_value( ecma_CompletionValue_t value) /**< completion value 
  * Free the completion value.
  */
 void
-ecma_free_completion_value( ecma_CompletionValue_t completion_value) /**< completion value */
+ecma_free_completion_value( ecma_completion_value_t completion_value) /**< completion value */
 {
   switch ( completion_value.type )
     {
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
-      ecma_FreeValue( completion_value.value);
+      ecma_free_value( completion_value.value);
       break;
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
@@ -341,7 +341,7 @@ ecma_free_completion_value( ecma_CompletionValue_t completion_value) /**< comple
  *         false - otherwise.
  */
 bool
-ecma_is_completion_value_normal( ecma_CompletionValue_t value) /**< completion value */
+ecma_is_completion_value_normal( ecma_completion_value_t value) /**< completion value */
 {
   return ( value.type == ECMA_COMPLETION_TYPE_NORMAL );
 } /* ecma_is_completion_value_normal */
@@ -353,7 +353,7 @@ ecma_is_completion_value_normal( ecma_CompletionValue_t value) /**< completion v
  *         false - otherwise.
  */
 bool
-ecma_is_completion_value_throw( ecma_CompletionValue_t value) /**< completion value */
+ecma_is_completion_value_throw( ecma_completion_value_t value) /**< completion value */
 {
   return ( value.type == ECMA_COMPLETION_TYPE_THROW );
 } /* ecma_is_completion_value_throw */
@@ -366,8 +366,8 @@ ecma_is_completion_value_throw( ecma_CompletionValue_t value) /**< completion va
  *         false - otherwise.
  */
 bool
-ecma_is_completion_value_normal_simple_value(ecma_CompletionValue_t value, /**< completion value */
-                                             ecma_SimpleValue_t simple_value) /**< simple value to check for equality with */
+ecma_is_completion_value_normal_simple_value(ecma_completion_value_t value, /**< completion value */
+                                             ecma_simple_value_t simple_value) /**< simple value to check for equality with */
 {
   return ( value.type == ECMA_COMPLETION_TYPE_NORMAL
            && value.value.ValueType == ECMA_TYPE_SIMPLE
@@ -382,10 +382,10 @@ ecma_is_completion_value_normal_simple_value(ecma_CompletionValue_t value, /**< 
  *         false - otherwise.
  */
 bool
-ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion value */
+ecma_is_completion_value_normal_true( ecma_completion_value_t value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value( value, ECMA_SIMPLE_VALUE_TRUE);
-} /* ecma_IsCompletionValueNormalTrue */
+} /* ecma_is_completion_value_normal_true */
 
 /**
  * Check if the completion value is normal false.
@@ -395,10 +395,10 @@ ecma_IsCompletionValueNormalTrue( ecma_CompletionValue_t value) /**< completion 
  *         false - otherwise.
  */
 bool
-ecma_IsCompletionValueNormalFalse( ecma_CompletionValue_t value) /**< completion value */
+ecma_is_completion_value_normal_false( ecma_completion_value_t value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value( value, ECMA_SIMPLE_VALUE_FALSE);
-} /* ecma_IsCompletionValueNormalFalse */
+} /* ecma_is_completion_value_normal_false */
 
 /**
  * @}

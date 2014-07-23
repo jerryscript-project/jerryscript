@@ -60,6 +60,8 @@ serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t st
       __printf ("%3d %3d %7d\n", i + strings_num, offset, nums[i]);
       offset = (uint8_t) (offset + 4);
     }
+
+  __printf ("\n");
 }
 
 static int opcode_counter = 0;

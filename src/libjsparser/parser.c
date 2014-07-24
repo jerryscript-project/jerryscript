@@ -25,7 +25,8 @@
 static token tok;
 static OPCODE opcode, opcodes_buffer[MAX_OPCODES];
 static uint8_t current_opcode_in_buffer = 0;
-static uint8_t opcode_counter = 0, sub_assignment_exprs = 0;
+static uint8_t opcode_counter = 0;
+static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
 
 #ifdef __HOST
 _FILE *debug_file;
@@ -45,8 +46,24 @@ next_temp_name (void)
 }
 
 static void
+start_new_scope (void)
+{
+  JERRY_ASSERT (temp_name_stack_head < MAX_OPCODES);
+  temp_name_stack[temp_name_stack_head++] = temp_name;
+  max_temp_name = min_temp_name;
+}
+
+static void
+finish_scope (void)
+{
+  temp_name = temp_name_stack[--temp_name_stack_head];
+}
+
+static void
 reset_temp_name (void)
 {
+  if (max_temp_name < temp_name)
+    max_temp_name = temp_name;
   temp_name = min_temp_name;
 }
 
@@ -1175,17 +1192,8 @@ parse_conditional_expression (bool *was_conditional)
 static T_IDX
 parse_assignment_expression (void)
 {
-  T_IDX lhs, rhs, reg_var_decl_loc;
+  T_IDX lhs, rhs;
   bool was_conditional = false;
-
-  if (!sub_assignment_exprs)
-    {
-      reset_temp_name ();
-      reg_var_decl_loc = opcode_counter;
-      DUMP_OPCODE (reg_var_decl, min_temp_name, INVALID_VALUE);
-    }
-
-  sub_assignment_exprs++;
 
   lhs = parse_conditional_expression (&was_conditional);
   if (was_conditional)
@@ -1261,13 +1269,7 @@ parse_assignment_expression (void)
   }
 
 end:
-
-  sub_assignment_exprs--;
-  if (!sub_assignment_exprs)
-    {
-      REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (temp_name - 1));
-      dump_saved_opcodes ();
-    }
+  dump_saved_opcodes ();
   return lhs;
 }
 
@@ -1687,6 +1689,8 @@ parse_try_statement (void)
 static void
 parse_statement (void)
 {
+  reset_temp_name ();
+
   if (tok.type == TOK_CLOSE_BRACE)
     {
       lexer_save_token (tok);
@@ -1815,12 +1819,20 @@ parse_source_element (void)
 static void
 parse_source_element_list (void)
 {
+  T_IDX reg_var_decl_loc;
+
+  start_new_scope ();
+  reg_var_decl_loc = opcode_counter;
+  DUMP_OPCODE (reg_var_decl, min_temp_name, INVALID_VALUE);
+
   while (tok.type != TOK_EOF && tok.type != TOK_CLOSE_BRACE)
     {
       parse_source_element ();
       skip_newlines ();
     }
   lexer_save_token (tok);
+  REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (max_temp_name - 1));
+  finish_scope ();
 }
 
 /* program
@@ -1840,7 +1852,7 @@ parser_parse_program (void)
 void
 parser_init (void)
 {
-  temp_name = min_temp_name = lexer_get_reserved_ids_count ();
+  max_temp_name = temp_name = min_temp_name = lexer_get_reserved_ids_count ();
 #ifdef __HOST
   debug_file = __fopen ("parser.log", "w");
 #endif

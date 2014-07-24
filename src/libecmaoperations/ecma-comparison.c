@@ -35,8 +35,8 @@
  *         false - otherwise.
  */
 bool
-ecma_abstract_equality_compare(ecma_value_t x, /**< first operand */
-                               ecma_value_t y) /**< second operand */
+ecma_op_abstract_equality_compare(ecma_value_t x, /**< first operand */
+                                  ecma_value_t y) /**< second operand */
 {
   const bool is_x_undefined = ecma_is_value_undefined( x);
   const bool is_x_null = ecma_is_value_null( x);
@@ -99,7 +99,7 @@ ecma_abstract_equality_compare(ecma_value_t x, /**< first operand */
   {
     JERRY_UNIMPLEMENTED();
   }
-} /* ecma_abstract_equality_compare */
+} /* ecma_op_abstract_equality_compare */
 
 /**
  * ECMA abstract relational comparison routine.
@@ -110,9 +110,9 @@ ecma_abstract_equality_compare(ecma_value_t x, /**< first operand */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_abstract_relational_compare(ecma_value_t x, /**< first operand */
-                                 ecma_value_t y, /**< second operand */
-                                 bool left_first) /**< 'LeftFirst' flag */
+ecma_op_abstract_relational_compare(ecma_value_t x, /**< first operand */
+                                    ecma_value_t y, /**< second operand */
+                                    bool left_first) /**< 'LeftFirst' flag */
 {
   ecma_completion_value_t ret_value, px, py;
 
@@ -167,7 +167,7 @@ ecma_abstract_relational_compare(ecma_value_t x, /**< first operand */
   ECMA_FINALIZE( prim_first_converted_value);
 
   return ret_value;
-} /* ecma_abstract_relational_compare */
+} /* ecma_op_abstract_relational_compare */
 
 /**
  * @}

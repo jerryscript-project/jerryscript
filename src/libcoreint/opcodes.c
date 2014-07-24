@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
@@ -340,12 +341,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(b_xor)                           \
     op(logical_and)                     \
     op(logical_or)                      \
-    op(equal_value)                     \
-    op(not_equal_value)                 \
     op(equal_value_type)                \
     op(not_equal_value_type)            \
-    op(less_than)                       \
-    op(greater_than)                    \
     op(less_or_equal_than)              \
     op(greater_or_equal_than)           \
     op(nop)                             \
@@ -834,6 +831,175 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_remainder */
+
+/**
+ * 'Equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_equal_value(OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_abstract_equality_compare( left_value.value, right_value.value);
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
+                                                                                          : ECMA_SIMPLE_VALUE_FALSE));
+
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_equal_value */
+
+/**
+ * 'Does-not-equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_not_equal_value(OPCODE opdata, /**< operation data */
+                       struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.not_equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.not_equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.not_equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_abstract_equality_compare( left_value.value, right_value.value);
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                                                                          : ECMA_SIMPLE_VALUE_TRUE));
+
+
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_not_equal_value */
+
+/**
+ * 'Less-than' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.8.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_less_than(OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.less_than.dst;
+  const T_IDX left_var_idx = opdata.data.less_than.var_left;
+  const T_IDX right_var_idx = opdata.data.less_than.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(compare_result,
+                 ecma_op_abstract_relational_compare (left_value.value,
+                                                      right_value.value,
+                                                      true),
+                 ret_value);
+
+  ecma_simple_value_t res;
+
+  if ( ecma_is_value_undefined( compare_result.value) )
+    {
+      res = ECMA_SIMPLE_VALUE_FALSE;
+    }
+  else
+    {
+      JERRY_ASSERT( ecma_is_value_boolean( compare_result.value) );
+
+      res = compare_result.value.value;
+    }
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value( res));
+
+  ECMA_FINALIZE(compare_result);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_less_than */
+
+/**
+ * 'Greater-than' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.8.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_greater_than(OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.greater_than.dst;
+  const T_IDX left_var_idx = opdata.data.greater_than.var_left;
+  const T_IDX right_var_idx = opdata.data.greater_than.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(compare_result,
+                 ecma_op_abstract_relational_compare (right_value.value,
+                                                      left_value.value,
+                                                      false),
+                 ret_value);
+
+  ecma_simple_value_t res;
+
+  if ( ecma_is_value_undefined( compare_result.value) )
+    {
+      res = ECMA_SIMPLE_VALUE_FALSE;
+    }
+  else
+    {
+      JERRY_ASSERT( ecma_is_value_boolean( compare_result.value) );
+
+      res = compare_result.value.value;
+    }
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value( res));
+
+  ECMA_FINALIZE(compare_result);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_greater_than */
 
 /**
  * 'Register variable declaration' opcode handler.

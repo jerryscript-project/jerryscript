@@ -183,27 +183,42 @@ get_variable_value(struct __int_data *int_data, /**< interpreter context */
                    bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                         See also: do_strict_eval_arguments_check */
 {
-  string_literal_copy var_name;
-  ecma_reference_t ref;
   ecma_completion_value_t ret_value;
 
-  init_string_literal_copy( var_idx, &var_name);
-  ref = ecma_op_get_identifier_reference( int_data->lex_env_p,
-                                       var_name.str_p,
-                                       int_data->is_strict);
+  if ( var_idx >= int_data->min_reg_num
+       && var_idx <= int_data->max_reg_num )
+  {
+    ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
 
-  if ( unlikely( do_eval_or_arguments_check
-                 && do_strict_eval_arguments_check( ref) ) )
+    JERRY_ASSERT( !ecma_is_value_empty( reg_value) );
+
+    ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                            ecma_copy_value( reg_value),
+                                            ECMA_TARGET_ID_RESERVED);
+  }
+  else
+  {
+    string_literal_copy var_name;
+    ecma_reference_t ref;
+
+    init_string_literal_copy( var_idx, &var_name);
+    ref = ecma_op_get_identifier_reference( int_data->lex_env_p,
+        var_name.str_p,
+        int_data->is_strict);
+
+    if ( unlikely( do_eval_or_arguments_check
+          && do_strict_eval_arguments_check( ref) ) )
     {
       ret_value = ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_SYNTAX));
     }
-  else
+    else
     {
       ret_value = ecma_op_get_value( ref);
     }
 
-  ecma_free_reference( ref);
-  free_string_literal_copy( &var_name);
+    ecma_free_reference( ref);
+    free_string_literal_copy( &var_name);
+  }
 
   return ret_value;
 } /* get_variable_value */
@@ -219,26 +234,44 @@ set_variable_value(struct __int_data *int_data, /**< interpreter context */
                    T_IDX var_idx, /**< variable identifier */
                    ecma_value_t value) /**< value to set */
 {
-  string_literal_copy var_name;
-  ecma_reference_t ref;
   ecma_completion_value_t ret_value;
 
-  init_string_literal_copy( var_idx, &var_name);
-  ref = ecma_op_get_identifier_reference( int_data->lex_env_p,
-                                       var_name.str_p,
-                                       int_data->is_strict);
+  if ( var_idx >= int_data->min_reg_num
+       && var_idx <= int_data->max_reg_num )
+  {
+    ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
 
-  if ( unlikely( do_strict_eval_arguments_check( ref) ) )
+    if ( !ecma_is_value_empty( reg_value) )
+    {
+      ecma_free_value( reg_value);
+    }
+
+    int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value( value);
+
+    ret_value = ecma_make_empty_completion_value();
+  }
+  else
+  {
+    string_literal_copy var_name;
+    ecma_reference_t ref;
+
+    init_string_literal_copy( var_idx, &var_name);
+    ref = ecma_op_get_identifier_reference( int_data->lex_env_p,
+        var_name.str_p,
+        int_data->is_strict);
+
+    if ( unlikely( do_strict_eval_arguments_check( ref) ) )
     {
       ret_value = ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_SYNTAX));
     }
-  else
+    else
     {
       ret_value = ecma_op_put_value( ref, value);
     }
 
-  ecma_free_reference( ref);
-  free_string_literal_copy( &var_name);
+    ecma_free_reference( ref);
+    free_string_literal_copy( &var_name);
+  }
 
   return ret_value;
 } /* set_variable_value */
@@ -372,13 +405,13 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(b_not)                           \
     op(instanceof)                      \
     op(in)                              \
-    op(reg_var_decl)                   
+    static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
   ecma_completion_value_t opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
     JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( opdata, int_data); \
   }
-OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP)
+OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP);
 #undef DEFINE_UNIMPLEMENTED_OP
 
 ecma_completion_value_t
@@ -805,6 +838,18 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
 } /* opfunc_remainder */
 
 /**
+ * 'Register variable declaration' opcode handler.
+ *
+ * The opcode is meta-opcode that is not supposed to be executed.
+ */
+ecma_completion_value_t
+opfunc_reg_var_decl(OPCODE opdata __unused, /**< operation data */
+                    struct __int_data *int_data __unused) /**< interpreter context */
+{
+  JERRY_UNREACHABLE();
+} /* opfunc_reg_var_decl */
+
+/**
  * 'Variable declaration' opcode handler.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
@@ -815,25 +860,25 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_var_decl(OPCODE opdata, /**< operation data */
-                struct __int_data *int_data __unused) /**< interpreter context */
+                struct __int_data *int_data) /**< interpreter context */
 {
   string_literal_copy variable_name;
   init_string_literal_copy( opdata.data.var_decl.variable_name, &variable_name);
 
-  if ( ecma_is_completion_value_normal_false( ecma_op_has_binding( int_data->lex_env_p,
-                                                             variable_name.str_p)) )
+  if ( ecma_is_completion_value_normal_false( ecma_op_has_binding (int_data->lex_env_p,
+                                                                   variable_name.str_p)) )
   {
     FIXME( Pass configurableBindings that is true if and only if current code is eval code );
-    ecma_op_create_mutable_binding( int_data->lex_env_p,
-                                 variable_name.str_p,
-                                 false);
+    ecma_op_create_mutable_binding (int_data->lex_env_p,
+                                    variable_name.str_p,
+                                    false);
 
     /* Skipping SetMutableBinding as we have already checked that there were not
      * any binding with specified name in current lexical environment 
      * and CreateMutableBinding sets the created binding's value to undefined */
-    JERRY_ASSERT( ecma_is_completion_value_normal_simple_value( ecma_op_get_binding_value( int_data->lex_env_p,
-                                                                                        variable_name.str_p,
-                                                                                        true),
+    JERRY_ASSERT( ecma_is_completion_value_normal_simple_value( ecma_op_get_binding_value (int_data->lex_env_p,
+                                                                                           variable_name.str_p,
+                                                                                           true),
                                                                 ECMA_SIMPLE_VALUE_UNDEFINED) );
   }
 

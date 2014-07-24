@@ -42,6 +42,7 @@ extern void* ecma_decompress_pointer(uintptr_t compressed_pointer);
     (field) = ecma_compress_pointer( non_compressed_pointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1)
 
 /* ecma-helpers-value.c */
+extern bool ecma_is_value_empty( ecma_value_t value);
 extern bool ecma_is_value_undefined( ecma_value_t value);
 extern bool ecma_is_value_null( ecma_value_t value);
 extern bool ecma_is_value_boolean( ecma_value_t value);

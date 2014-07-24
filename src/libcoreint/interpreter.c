@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "globals.h"
 #include "interpreter.h"
+#include "jerry-libc.h"
 
 #define INIT_OP_FUNC(name) [ __op__idx_##name ] = opfunc_##name,
 static const opfunc __opfuncs[LAST_OP] = {
@@ -42,15 +45,17 @@ run_int (void)
 {
   JERRY_ASSERT( __program != NULL );
 
-  struct __int_data int_data;
-  int_data.pos = 0;
-  int_data.this_binding_p = NULL;
-  int_data.lex_env_p = ecma_create_lexical_environment( NULL,
-                                                        ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  const int start_pos = 0;
+  ecma_object_t *this_binding_p = NULL;
+  ecma_object_t *lex_env_p = ecma_create_lexical_environment (NULL,
+                                                              ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
   FIXME( Strict mode );
-  int_data.is_strict = false;
+  const bool is_strict = false;
 
-  ecma_completion_value_t completion = run_int_from_pos( &int_data);
+  ecma_completion_value_t completion = run_int_from_pos (start_pos,
+                                                         this_binding_p,
+                                                         lex_env_p,
+                                                         is_strict);
 
   switch ( (ecma_completion_type_t)completion.type )
   {
@@ -82,16 +87,43 @@ run_int (void)
 }
 
 ecma_completion_value_t
-run_int_from_pos (struct __int_data *int_data)
+run_int_from_pos (int start_pos,
+                  ecma_object_t *this_binding_p,
+                  ecma_object_t *lex_env_p,
+                  bool is_strict)
 {
   ecma_completion_value_t completion;
+
+  const OPCODE *curr = &__program[start_pos];
+  JERRY_ASSERT( curr->op_idx == __op__idx_reg_var_decl );
+
+  const T_IDX min_reg_num = curr->data.reg_var_decl.min;
+  const T_IDX max_reg_num = curr->data.reg_var_decl.max;
+  JERRY_ASSERT( max_reg_num >= min_reg_num );
+
+  const uint32_t regs_num = (uint32_t) (max_reg_num - min_reg_num + 1);
+
+  ecma_value_t regs[ regs_num ];
+
+  /* memseting with zero initializes each 'register' to empty value */
+  __memset (regs, 0, sizeof(regs));
+  JERRY_ASSERT( ecma_is_value_empty( regs[0]) );
+
+  struct __int_data int_data;
+  int_data.pos = start_pos + 1;
+  int_data.this_binding_p = this_binding_p;
+  int_data.lex_env_p = lex_env_p;
+  int_data.is_strict = is_strict;
+  int_data.min_reg_num = min_reg_num;
+  int_data.max_reg_num = max_reg_num;
+  int_data.regs_p = regs;
 
   while ( true )
     {
       do
         {
-          const OPCODE *curr = &__program[int_data->pos];
-          completion = __opfuncs[curr->op_idx](*curr, int_data);
+          const OPCODE *curr = &__program[int_data.pos];
+          completion = __opfuncs[curr->op_idx](*curr, &int_data);
 
           JERRY_ASSERT( !ecma_is_completion_value_normal( completion)
                         || ecma_is_completion_value_normal_simple_value(completion,
@@ -109,6 +141,13 @@ run_int_from_pos (struct __int_data *int_data)
           JERRY_UNIMPLEMENTED();
 
           continue;
+        }
+
+      for ( uint32_t reg_index = 0;
+            reg_index < regs_num;
+            reg_index++ )
+        {
+          ecma_free_value( regs[ reg_index ] );
         }
 
       return completion;

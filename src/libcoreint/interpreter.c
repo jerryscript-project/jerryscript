@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "deserializer.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "globals.h"
@@ -167,18 +168,19 @@ try_get_string_by_idx(T_IDX idx, /**< literal id */
 {
   TODO( Actual string literal retrievement );
 
-  ssize_t req_length = 2; // TODO
-
-  JERRY_ASSERT( idx < 'z' - 'a' + 1 );
+  const ecma_char_t *str_p = deserialize_string_by_id( idx);
+  JERRY_ASSERT( str_p != NULL );
+  
+  FIXME( strlen for ecma_char_t );
+  ssize_t req_length = (ssize_t)__strlen( (const char*)str_p) + 1;
 
   if ( buffer_size < req_length )
   {
     return -req_length;
   }
 
-  // TODO
-  buffer_p[0] = (ecma_char_t) ('a' + idx);
-  buffer_p[1] = 0;
+  FIXME( strncpy for ecma_char_t );
+  __strncpy( (char*)buffer_p, (const char*)str_p, (size_t)req_length);
 
   return req_length;
 } /* try_get_string_by_idx */
@@ -193,5 +195,8 @@ get_number_by_idx(T_IDX idx) /**< literal id */
 {
   TODO( Actual number literal retrievement );
 
-  return (ecma_number_t)idx;
+  FIXME( /* conversion of value returned from deserialize_num_by_id to ecma_number_t */ );
+  ecma_number_t num = (ecma_number_t) deserialize_num_by_id( idx);
+
+  return num;
 } /* get_number_by_idx */

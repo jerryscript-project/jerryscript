@@ -59,13 +59,6 @@ else
  OPTION_OPTIMIZE = disable
 endif
 
-# -Werror
-ifeq ($(TARGET_MODE),dev)
- OPTION_WERROR = disable
-else
- OPTION_WERROR = enable
-endif
-
 # Is MCU target?
 ifeq ($(filter-out $(TARGET_MCU_SYSTEMS),$(TARGET_SYSTEM)),)
 	OPTION_MCU = enable
@@ -149,7 +142,7 @@ endif
 # Jerry part sources, headers, includes, cflags, ldflags
 #
 
-CFLAGS_JERRY = $(CFLAGS_WARNINGS)
+CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR)
 DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 
 # FIXME:
@@ -179,10 +172,6 @@ INCLUDES_JERRY = \
 
 ifeq ($(OPTION_NDEBUG),enable)
  DEFINES_JERRY += -DJERRY_NDEBUG
-endif
-
-ifeq ($(OPTION_WERROR),enable)
- CFLAGS_JERRY += $(CFLAGS_WERROR)
 endif
 
 ifeq ($(OPTION_MCU),disable)

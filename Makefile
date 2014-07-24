@@ -15,10 +15,9 @@
 #
 # Target naming scheme
 #
-#   Main targets: {dev,debug,release,debug_release}.{linux,stm32f{4}}[.{check,flash}]
+#   Main targets: {debug,release,debug_release}.{linux,stm32f{4}}[.{check,flash}]
 #
 #    Target mode part (before dot):
-#       dev:           - JERRY_NDEBUG; - optimizations; + debug symbols; - -Werror  | local development build
 #       debug:         - JERRY_NDEBUG; - optimizations; + debug symbols; + -Werror  | debug build
 #       debug_release: - JERRY_NDEBUG; + optimizations; + debug symbols; + -Werror  | checked release build
 #       release:       + JERRY_NDEBUG; + optimizations; - debug symbols; + -Werror  | release build
@@ -35,7 +34,7 @@
 #   Unit test target: unittests
 #
 
-export TARGET_MODES = dev debug debug_release release
+export TARGET_MODES = debug debug_release release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,4) # now only stm32f4 is supported, to add, for example, to stm32f3, change to $(addprefix stm32f,3 4)
 export TARGET_SYSTEMS = $(TARGET_PC_SYSTEMS) $(TARGET_MCU_SYSTEMS)

@@ -418,13 +418,22 @@ ecma_completion_value_t
 opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 {
 #ifdef __HOST
-  __printf ("%d::op_call_1:idx:%d:%d\n",
+  __printf ("%d::op_call_1:idx:%d:%d\t",
           int_data->pos,
           opdata.data.call_1.name_lit_idx,
           opdata.data.call_1.arg1_lit_idx);
 #endif
 
   int_data->pos++;
+
+  string_literal_copy str_value;
+  init_string_literal_copy( opdata.data.call_1.name_lit_idx, &str_value);
+
+#ifdef __HOST
+  __printf("%s\n", str_value.str_p);
+#endif
+
+  free_string_literal_copy( &str_value);
 
   // FIXME
   return ecma_make_empty_completion_value();

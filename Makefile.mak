@@ -162,7 +162,8 @@ SOURCES_JERRY = \
  $(wildcard ./src/libecmaobjects/*.c) \
  $(wildcard ./src/libecmaoperations/*.c) \
  $(wildcard ./src/liballocator/*.c) \
- $(wildcard ./src/libcoreint/*.c) ) \
+ $(wildcard ./src/libcoreint/*.c) \
+ $(wildcard ./src/liboptimizer/*.c) ) \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
 
 INCLUDES_JERRY = \
@@ -173,6 +174,7 @@ INCLUDES_JERRY = \
  -I src/libecmaobjects \
  -I src/libecmaoperations \
  -I src/liballocator \
+ -I src/liboptimizer \
  -I src/libcoreint
 
 ifeq ($(OPTION_NDEBUG),enable)

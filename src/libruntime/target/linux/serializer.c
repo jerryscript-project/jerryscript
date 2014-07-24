@@ -146,3 +146,27 @@ serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
 
   __printf ("// REWRITE\n");
 }
+
+void
+serializer_print_opcodes (void)
+{
+  int loc = -1, i;
+  OPCODE* opcode;
+  int opcode_num;
+
+  __printf ("AFTER OPTIMIZER:\n");
+
+  do
+    {
+      loc++;
+
+      opcode = bytecode_opcodes + loc;
+      opcode_num = (int)((char*)opcode)[0];
+
+      __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
+      for (i = 1; i < opcode_sizes[opcode_num]; i++)
+        __printf ("%4d ", ((char*)opcode)[i]);
+      __printf ("\n");
+    }
+  while (opcode->op_idx != __op__idx_exitval);
+}

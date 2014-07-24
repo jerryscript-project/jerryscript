@@ -409,6 +409,10 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(b_not)                           \
     op(instanceof)                      \
     op(in)                              \
+    op(post_incr)                       \
+    op(post_decr)                       \
+    op(pre_incr)                        \
+    op(pre_decr)                        \
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
@@ -950,6 +954,10 @@ GETOP_IMPL_1 (jmp, opcode_idx)
 GETOP_IMPL_1 (jmp_up, opcode_count)
 GETOP_IMPL_1 (jmp_down, opcode_count)
 GETOP_IMPL_3 (addition, dst, var_left, var_right)
+GETOP_IMPL_2 (post_incr, dst, var_right)
+GETOP_IMPL_2 (post_decr, dst, var_right)
+GETOP_IMPL_2 (pre_incr, dst, var_right)
+GETOP_IMPL_2 (pre_decr, dst, var_right)
 GETOP_IMPL_3 (substraction, dst, var_left, var_right)
 GETOP_IMPL_3 (division, dst, var_left, var_right)
 GETOP_IMPL_3 (multiplication, dst, var_left, var_right)

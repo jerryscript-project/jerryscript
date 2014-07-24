@@ -22,10 +22,17 @@ uint8_t num_size = 0;
 const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
-  uint8_t size = *bytecode_data, *data = bytecode_data, offset;
+  uint8_t size, *data, offset;
+
+  if (bytecode_data == NULL)
+    return NULL;
+  
+  size = *bytecode_data;
 
   if (id >= size)
     return NULL;
+
+  data = bytecode_data;
 
   data += id + 1;
 

@@ -23,9 +23,8 @@
 #define INVALID_VALUE 255
 
 static token tok;
-static OPCODE opcode, opcodes_buffer[MAX_OPCODES];
-static uint8_t current_opcode_in_buffer = 0;
-static uint8_t opcode_counter = 0;
+static OPCODE opcode;
+static T_IDX opcode_counter = 0;
 static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
 
 #ifdef __HOST
@@ -170,23 +169,6 @@ integer_one (void)
   T_IDX lhs = next_temp_name ();
   DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 1);
   return lhs;
-}
-
-static void
-save_opcode (void)
-{
-  JERRY_ASSERT (current_opcode_in_buffer < MAX_OPCODES);
-
-  opcodes_buffer[current_opcode_in_buffer++] = opcode;
-}
-
-static void
-dump_saved_opcodes (void)
-{
-  uint8_t i;
-  for (i = 0; i < current_opcode_in_buffer; i++)
-    serializer_dump_opcode (&opcodes_buffer[i]);
-  current_opcode_in_buffer = 0;
 }
 
 /* property_name
@@ -859,18 +841,18 @@ parse_left_hand_side_expression (void)
 static T_IDX
 parse_postfix_expression (void)
 {
-  T_IDX expr = parse_left_hand_side_expression ();
+  T_IDX expr = parse_left_hand_side_expression (), lhs;
 
   tok = lexer_next_token ();
   if (tok.type == TOK_DOUBLE_PLUS)
     {
-      opcode = getop_addition (expr, expr, integer_one ());
-      save_opcode ();
+      lhs = next_temp_name ();
+      DUMP_OPCODE (post_incr, lhs, expr);
     }
   else if (tok.type == TOK_DOUBLE_MINUS)
     {
-      opcode = getop_substraction (expr, expr, integer_one ());
-      save_opcode ();
+      lhs = next_temp_name ();
+      DUMP_OPCODE (post_decr, lhs, expr);
     }
   else
     lexer_save_token (tok);
@@ -890,13 +872,15 @@ parse_unary_expression (void)
   switch (tok.type)
   {
     case TOK_DOUBLE_PLUS:
+      lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (addition, expr, expr, integer_one ());
+      DUMP_OPCODE (pre_incr, lhs, expr);
       return expr;
 
     case TOK_DOUBLE_MINUS:
+      lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (substraction, expr, expr, integer_one ());
+      DUMP_OPCODE (pre_decr, lhs, expr);
       return expr;
 
     case TOK_PLUS:
@@ -1198,7 +1182,7 @@ parse_assignment_expression (void)
   lhs = parse_conditional_expression (&was_conditional);
   if (was_conditional)
     {
-      goto end;
+      return lhs;
     }
 
   skip_newlines ();
@@ -1268,8 +1252,6 @@ parse_assignment_expression (void)
         lexer_save_token (tok);
   }
 
-end:
-  dump_saved_opcodes ();
   return lhs;
 }
 

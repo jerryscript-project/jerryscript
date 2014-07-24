@@ -16,9 +16,11 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#ifdef __TARGET_MCU
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
+#endif
 #pragma GCC diagnostic pop
 
 #include "actuators.h"

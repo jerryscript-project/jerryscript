@@ -110,6 +110,10 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op(in)
 
 #define OP_ARITHMETIC(op)               \
+    op(post_incr)                       \
+    op(post_decr)                       \
+    op(pre_incr)                        \
+    op(pre_decr)                        \
     op(addition)                        \
     op(substraction)                    \
     op(division)                        \

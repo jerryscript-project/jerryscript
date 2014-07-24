@@ -46,5 +46,10 @@ serializer_rewrite_opcode (const uint8_t offset, const void *opcode)
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, opcode);
 }
 
+void
+serializer_print_opcodes (void)
+{
+  JERRY_UNREACHABLE ();
+}
 
 TODO (Dump memory)

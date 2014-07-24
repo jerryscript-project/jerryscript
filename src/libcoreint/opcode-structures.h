@@ -460,8 +460,11 @@ OP_CODE_DECL_VOID (end_with)
 // Variable declaration
 OP_CODE_DECL (var_decl, T_IDX,
               variable_name)
+
+OP_CODE_DECL (reg_var_decl, T_IDX_IDX,
+              min,
+              max)
         
-// TODO New constructor
 
 #endif	/* OPCODE_STRUCTURES_H */
         

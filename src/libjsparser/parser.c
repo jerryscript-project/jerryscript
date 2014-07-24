@@ -25,7 +25,7 @@
 static token tok;
 static OPCODE opcode, opcodes_buffer[MAX_OPCODES];
 static uint8_t current_opcode_in_buffer = 0;
-static uint8_t opcode_counter = 0;
+static uint8_t opcode_counter = 0, sub_assignment_exprs = 0;
 
 #ifdef __HOST
 _FILE *debug_file;
@@ -1175,16 +1175,22 @@ parse_conditional_expression (bool *was_conditional)
 static T_IDX
 parse_assignment_expression (void)
 {
-  T_IDX lhs, rhs;
+  T_IDX lhs, rhs, reg_var_decl_loc;
   bool was_conditional = false;
 
-  reset_temp_name ();
+  if (!sub_assignment_exprs)
+    {
+      reset_temp_name ();
+      reg_var_decl_loc = opcode_counter;
+      DUMP_OPCODE (reg_var_decl, min_temp_name, INVALID_VALUE);
+    }
+
+  sub_assignment_exprs++;
 
   lhs = parse_conditional_expression (&was_conditional);
   if (was_conditional)
     {
-      dump_saved_opcodes ();
-      return lhs;
+      goto end;
     }
 
   skip_newlines ();
@@ -1254,7 +1260,14 @@ parse_assignment_expression (void)
         lexer_save_token (tok);
   }
 
-  dump_saved_opcodes ();
+end:
+
+  sub_assignment_exprs--;
+  if (!sub_assignment_exprs)
+    {
+      REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (temp_name - 1));
+      dump_saved_opcodes ();
+    }
   return lhs;
 }
 

@@ -371,7 +371,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(logical_not)                     \
     op(b_not)                           \
     op(instanceof)                      \
-    op(in)                   
+    op(in)                              \
+    op(reg_var_decl)                   
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
   ecma_completion_value_t opfunc_ ## op(OPCODE opdata, struct __int_data *int_data) { \
@@ -942,4 +943,5 @@ GETOP_IMPL_2 (delete, lhs, obj)
 GETOP_IMPL_2 (typeof, lhs, obj)
 GETOP_IMPL_1 (with, expr)
 GETOP_IMPL_0 (end_with)
+GETOP_IMPL_2 (reg_var_decl, min, max)
 

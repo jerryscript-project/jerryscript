@@ -16,15 +16,19 @@
 #ifndef ACTUATORS_H
 #define	ACTUATORS_H
 
+#include "globals.h"
+
 // STM32 F4
 #define LED_GREEN      12
 #define LED_ORANGE     13
 #define LED_RED        14
 #define LED_BLUE       15
 
-void led_toggle(int);
-void led_on(int);
-void led_off(int);
+void led_toggle(uint32_t);
+void led_on(uint32_t);
+void led_off(uint32_t);
+void led_blink_once(uint32_t);
+void blink_once (uint32_t);
 
 #endif	/* ACTUATORS_H */
 

@@ -25,6 +25,10 @@
 #include "mem-heap.h"
 #include "opcodes.h"
 
+#include "actuators.h"
+#include "common-io.h"
+#include "sensors.h"
+
 /**
  * Note:
  *      The note describes exception handling in opcode handlers that perform operations,
@@ -416,7 +420,10 @@ OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP);
 
 ecma_completion_value_t
 opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
-{
+{  
+  ecma_completion_value_t ret_value;
+  ret_value = ecma_make_empty_completion_value ();
+
 #ifdef __HOST
   __printf ("%d::op_call_1:idx:%d:%d\t",
           int_data->pos,
@@ -432,11 +439,21 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
 #ifdef __HOST
   __printf("%s\n", str_value.str_p);
 #endif
+  
+  if (!__strcmp ((const char*)str_value.str_p, "LEDToggle"))
+  {
+    TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    uint32_t int_num = (uint32_t)*num_p;
+    led_blink_once (int_num);
+    ret_value = ecma_make_empty_completion_value ();
+    FINALIZE (cond_value);
+  }
 
-  free_string_literal_copy( &str_value);
+  free_string_literal_copy (&str_value);
 
-  // FIXME
-  return ecma_make_empty_completion_value();
+  return ret_value;
 }
 
 /**

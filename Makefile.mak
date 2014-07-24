@@ -110,7 +110,7 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 # Common
 #
 
-CFLAGS_COMMON ?= $(INCLUDES) -std=c99 -fsanitize=address -fdiagnostics-color=always 
+CFLAGS_COMMON ?= $(INCLUDES) -std=c99 #-fsanitize=address -fdiagnostics-color=always 
 
 LDFLAGS ?= 
 

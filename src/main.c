@@ -154,7 +154,7 @@ void fake_exit(void);
 void
 fake_exit (void)
 {
-  uint32_t pin = LED_RED;
+  uint32_t pin = LED_ORANGE;
   uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
   uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
   uint32_t type = (uint32_t)GPIO_OType_PP << pin;
@@ -175,7 +175,7 @@ fake_exit (void)
   //
   //  Toggle the selected LED indefinitely.
   //
-  int index;
+  volatile int index;
   
   // SOS
   
@@ -203,6 +203,9 @@ fake_exit (void)
 int
 main(void)
 {
+  
+  //fake_exit();
+  
   const char *source_p = generated_source;
   const size_t source_size = sizeof(generated_source);
 

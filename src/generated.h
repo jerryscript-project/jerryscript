@@ -15,17 +15,6 @@
 
 #include "globals.h"
 
-static const char* generated_source __unused = ""
-"while (true) {\n"
-"LEDToggle (LED3);\n"
-"LEDToggle (LED6);\n"
-"LEDToggle (LED7);\n"
-"LEDToggle (LED4);\n"
-"LEDToggle (LED10);\n"
-"LEDToggle (LED8);\n"
-"LEDToggle (LED9);\n"
-"LEDToggle (LED5);\n"
-"\n"
-"wait(500);\n"
-"}\n"
+static const char* generated_source  = ""
+"LEDToggle (14);\n"
 ;

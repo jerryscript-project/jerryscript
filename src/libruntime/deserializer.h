@@ -18,8 +18,8 @@
 
 #include "globals.h"
 
-const char *deserializer_get_string_by_id (uint8_t);
-int deserializer_get_num_by_id (uint8_t);
-const void *deserializer_get_bytecode (void);
+const char *deserialize_string_by_id (uint8_t);
+int deserialize_num_by_id (uint8_t);
+const void *deserialize_bytecode (void);
 
 #endif //DESERIALIZER_H

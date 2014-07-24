@@ -71,7 +71,7 @@ serializer_dump_strings (const char *strings[], uint8_t size)
 #ifndef JERRY_NDEBUG
   for (i = 0; i < size; i++)
     {
-      JERRY_ASSERT (!__strcmp (strings[i], deserializer_get_string_by_id (i)));
+      JERRY_ASSERT (!__strcmp (strings[i], deserialize_string_by_id (i)));
     }
 #endif
 
@@ -110,7 +110,7 @@ serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t st
 #ifndef JERRY_NDEBUG
   for (i = 0; i < size; i++)
     {
-      JERRY_ASSERT (nums[i] == deserializer_get_num_by_id ((uint8_t) (i + strings_num)));
+      JERRY_ASSERT (nums[i] == deserialize_num_by_id ((uint8_t) (i + strings_num)));
     }
 #endif
 }

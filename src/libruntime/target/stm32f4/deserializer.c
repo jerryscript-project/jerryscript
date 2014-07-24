@@ -18,19 +18,19 @@
 TODO (Implement)
 
 const char *
-deserializer_get_string_by_id (uint8_t id)
+deserialize_string_by_id (uint8_t id)
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (id);
 }
 
 int 
-deserializer_get_num_by_id (uint8_t id)
+deserialize_num_by_id (uint8_t id)
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (id);
 }
 
 const void *
-deserializer_get_bytecode (void)
+deserialize_bytecode (void)
 {
   JERRY_UNIMPLEMENTED ();
 }

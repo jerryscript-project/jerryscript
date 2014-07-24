@@ -68,7 +68,7 @@ jerry_run( const char *script_source,
   parser_init ();
   parser_parse_program ();
 
-  init_int (deserializer_get_bytecode ());
+  init_int (deserialize_bytecode ());
   run_int ();
 } /* jerry_run */
 

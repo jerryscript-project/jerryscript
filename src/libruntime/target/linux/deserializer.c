@@ -17,7 +17,7 @@
 #include "bytecode-linux.h"
 
 const char *
-deserializer_get_string_by_id (uint8_t id)
+deserialize_string_by_id (uint8_t id)
 {
   uint8_t size = *bytecode_data, *data = bytecode_data, offset;
 
@@ -32,7 +32,7 @@ deserializer_get_string_by_id (uint8_t id)
 }
 
 int 
-deserializer_get_num_by_id (uint8_t id)
+deserialize_num_by_id (uint8_t id)
 {
   int *num_data;
   uint8_t str_size, str_offset, *data, num_size;
@@ -58,7 +58,7 @@ deserializer_get_num_by_id (uint8_t id)
 }
 
 const void *
-deserializer_get_bytecode (void)
+deserialize_bytecode (void)
 {
   return bytecode_opcodes;
 }

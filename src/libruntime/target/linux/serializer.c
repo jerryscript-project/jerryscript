@@ -16,6 +16,7 @@
 #include "serializer.h"
 #include "jerry-libc.h"
 #include "bytecode-linux.h"
+#include "deserializer.h"
 
 _FILE *dump;
 
@@ -67,26 +68,34 @@ serializer_dump_strings (const char *strings[], uint8_t size)
   for (i = 0; i < size; i++)
     __strncpy ((void *) (bytecode_data + bytecode_data[i + 1]), strings[i], __strlen (strings[i]) + 1);
 
+#ifndef JERRY_NDEBUG
+  for (i = 0; i < size; i++)
+    {
+      JERRY_ASSERT (!__strcmp (strings[i], deserializer_get_string_by_id (i)));
+    }
+#endif
+
   return res;
 }
 
 void 
 serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
 {
-  uint8_t i, *data;
+  uint8_t i, *data, num_offset;
   JERRY_STATIC_ASSERT (sizeof (int) == 4);
 
-  offset = (uint8_t) (offset + size + 1);
+  num_offset = (uint8_t) (offset + size + 1);
   __printf ("NUMS %d:\n", size);
   for (i = 0; i < size; i++)
     {
-      __printf ("%3d %3d %7d\n", i + strings_num, offset, nums[i]);
-      offset = (uint8_t) (offset + 4);
+      __printf ("%3d %3d %7d\n", i + strings_num, num_offset, nums[i]);
+      num_offset = (uint8_t) (num_offset + 4);
     }
 
   __printf ("\n");
 
-  data = mem_heap_alloc_block ((size_t) (offset + size * 4), MEM_HEAP_ALLOC_LONG_TERM);
+  data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
+  __memcpy (data, bytecode_data, offset);
   mem_heap_free_block (bytecode_data);
   bytecode_data = data;
   data += offset;
@@ -97,6 +106,13 @@ serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t st
       __memcpy (data, nums + i, 4);
       data += 4;
     }
+
+#ifndef JERRY_NDEBUG
+  for (i = 0; i < size; i++)
+    {
+      JERRY_ASSERT (nums[i] == deserializer_get_num_by_id ((uint8_t) (i + strings_num)));
+    }
+#endif
 }
 
 static int opcode_counter = 0;

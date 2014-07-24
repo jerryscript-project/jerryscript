@@ -39,14 +39,17 @@ deserializer_get_num_by_id (uint8_t id)
 
   str_size = *bytecode_data;
   data = bytecode_data + str_size;
+  if (id < str_size)
+    return 0;
+  id = (uint8_t) (id - str_size);
   str_offset = *data;
   data = bytecode_data + str_offset;
 
   while (*data)
     data++;
 
+  num_size = *(++data);
   num_data = (int *) ++data;
-  num_size = *data;
 
   if (id >= num_size)
     return 0;

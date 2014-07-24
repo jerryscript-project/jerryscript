@@ -26,11 +26,17 @@ struct __int_data
   ecma_object_t *this_binding_p; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
+  T_IDX min_reg_num; /**< minimum idx used for register identification */
+  T_IDX max_reg_num; /**< maximum idx used for register identification */
+  ecma_value_t *regs_p; /**< register variables */
 };
 
 void init_int (const OPCODE* program_p);
 bool run_int (void);
-ecma_completion_value_t run_int_from_pos (struct __int_data *);
+ecma_completion_value_t run_int_from_pos (int start_pos,
+                                          ecma_object_t *this_binding_p,
+                                          ecma_object_t *lex_env_p,
+                                          bool is_strict);
 
 ssize_t try_get_string_by_idx( T_IDX idx, ecma_char_t *buffer_p, ssize_t buffer_size);
 ecma_number_t get_number_by_idx(T_IDX idx);

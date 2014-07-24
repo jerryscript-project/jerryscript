@@ -26,6 +26,7 @@ main( int __unused argc,
       char __unused **argv)
 {
   const OPCODE test_program[] = {
+    getop_reg_var_decl( 255, 255),
     getop_var_decl( 0),
     getop_var_decl( 1),
     getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),

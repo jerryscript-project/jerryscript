@@ -63,11 +63,11 @@ typedef enum {
  * Simple ecma-values
  */
 typedef enum {
+    ECMA_SIMPLE_VALUE_EMPTY, /**< empty value (see also: ECMA-262 v5, 8.9 Completion specification type) */
     ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
     ECMA_SIMPLE_VALUE_NULL, /**< null value */
     ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
     ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-    ECMA_SIMPLE_VALUE_EMPTY, /**< empty value (see also: ECMA-262 v5, 8.9 Completion specification type) */
     ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< special value for an array's elements that exists,
                                            but is stored directly in the array's property list
                                            (used for array elements with non-default attribute values) */

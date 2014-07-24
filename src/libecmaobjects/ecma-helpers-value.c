@@ -27,6 +27,18 @@
 #include "globals.h"
 
 /**
+ * Check if the value is empty.
+ *
+ * @return true - if the value contains implementation-defined empty simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_value_empty( ecma_value_t value) /**< ecma-value */
+{
+  return ( value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_EMPTY );
+} /* ecma_is_value_empty */
+
+/**
  * Check if the value is undefined.
  *
  * @return true - if the value contains ecma-undefined simple value,

@@ -37,6 +37,7 @@
 #include "parser.h"
 #include "serializer.h"
 #include "deserializer.h"
+#include "optimizer-passes.h"
 
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
@@ -49,6 +50,7 @@ jerry_run( const char *script_source,
   int nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint8_t offset;
+  const OPCODE *opcodes;
 
   mem_init();
 
@@ -68,7 +70,15 @@ jerry_run( const char *script_source,
   parser_init ();
   parser_parse_program ();
 
-  init_int (deserialize_bytecode ());
+  opcodes = deserialize_bytecode ();
+
+  optimizer_run_passes ((OPCODE *) opcodes);
+
+#ifdef __HOST
+  serializer_print_opcodes ();
+#endif
+
+  init_int (opcodes);
   run_int ();
 } /* jerry_run */
 

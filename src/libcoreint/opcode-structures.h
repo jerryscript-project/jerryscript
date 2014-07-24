@@ -256,6 +256,26 @@ OP_CODE_DECL (in, T_IDX_IDX_IDX,
               var_left,
               var_right)
 
+/** dst = var_right++.  */
+OP_CODE_DECL (post_incr, T_IDX_IDX,
+              dst,
+              var_right)
+
+/** dst = var_right--.  */
+OP_CODE_DECL (post_decr, T_IDX_IDX,
+              dst,
+              var_right)
+
+/** dst = ++var_right.  */
+OP_CODE_DECL (pre_incr, T_IDX_IDX,
+              dst,
+              var_right)
+
+/** dst = --var_right.  */
+OP_CODE_DECL (pre_decr, T_IDX_IDX,
+              dst,
+              var_right)
+
 // Assignment operators.
 // Assign value to LEFT operand based on value of RIGHT operand.
 

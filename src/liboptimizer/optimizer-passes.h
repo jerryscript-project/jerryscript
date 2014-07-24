@@ -13,21 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef SERIALIZER_H
-#define SERIALIZER_H 
+#ifndef OPTIMIZER_PASSES_H
+#define OPTIMIZER_PASSES_H
 
 #include "globals.h"
+#include "opcodes.h"
 
-void serializer_init (void);
+void optimizer_run_passes (OPCODE *);
 
-uint8_t serializer_dump_strings (const char **, uint8_t);
-
-void serializer_dump_nums (const int *, uint8_t, uint8_t, uint8_t);
-
-void serializer_dump_opcode (const void *);
-
-void serializer_rewrite_opcode (const uint8_t, const void *);
-
-void serializer_print_opcodes (void);
-
-#endif // SERIALIZER_H
+#endif // OPTIMIZER_PASSES_H

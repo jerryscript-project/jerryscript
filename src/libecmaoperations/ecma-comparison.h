@@ -26,7 +26,8 @@
  * @{
  */
 
-extern bool ecma_abstract_equality_compare( ecma_value_t x, ecma_value_t y);
+extern bool ecma_op_abstract_equality_compare( ecma_value_t x, ecma_value_t y);
+extern ecma_completion_value_t ecma_op_abstract_relational_compare(ecma_value_t x, ecma_value_t y, bool left_first);
 
 /**
  * @}

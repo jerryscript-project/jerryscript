@@ -14,11 +14,13 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-operations.h"
+#include "ecma-try-catch-macro.h"
 #include "globals.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -39,51 +41,18 @@
  *
  *      1. At the beginning of the handler there should be declared opcode handler's 'return value' variable.
  *
- *      2. All exceptionable operations except the last should be enclosed in TRY_CATCH macro.
+ *      2. All exceptionable operations except the last should be enclosed in ECMA_TRY_CATCH macro.
  *         All subsequent operations in the opcode handler should be placed into block between
- *         the TRY_CATCH and corresponding FINALIZE.
+ *         the ECMA_TRY_CATCH and corresponding ECMA_FINALIZE.
  *
  *      3. The last exceptionable's operation result should be assigned directly to opcode handler's
- *         'return value' variable without using TRY_CATCH macro.
+ *         'return value' variable without using ECMA_TRY_CATCH macro.
  *
- *      4. After last FINALIZE statement there should be only one operator.
+ *      4. After last ECMA_FINALIZE statement there should be only one operator.
  *         The operator should return from the opcode handler with it's 'return value'.
  *
  *      5. No other operations with opcode handler's 'return value' variable should be performed.
  */
-
-/**
- * The macro defines try-block that initializes variable 'var' with 'op'
- * and checks for exceptions that might be thrown during initialization.
- *
- * If no exception was thrown, then code after the try-block is executed.
- * Otherwise, throw-completion value is just copied to return_value.
- *
- * Note:
- *      Each TRY_CATCH should have it's own corresponding FINALIZE
- *      statement with same argument as corresponding TRY_CATCH's first argument.
- */
-#define TRY_CATCH(var, op, return_value) \
-  ecma_completion_value_t var = op; \
-  if ( unlikely( ecma_is_completion_value_throw( var) ) ) \
-  { \
-    return_value = ecma_copy_completion_value( var); \
-  } \
-  else \
-  { \
-    JERRY_ASSERT( ecma_is_completion_value_normal( var) )
-
-/**
- * The macro marks end of code block that is executed if no exception
- * was catched by corresponding TRY_CATCH and frees variable,
- * initialized by the TRY_CATCH.
- *
- * Note:
- *      Each TRY_CATCH should be followed by FINALIZE with same
- *      argument as corresponding TRY_CATCH's first argument.
- */
-#define FINALIZE(var) } \
-  ecma_free_completion_value( var)
 
 /**
  * String literal copy descriptor.
@@ -312,8 +281,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(num_left_value, ecma_op_to_number( left_value), ret_value);
-  TRY_CATCH(num_right_value, ecma_op_to_number( right_value), ret_value);
+  ECMA_TRY_CATCH(num_left_value, ecma_op_to_number( left_value), ret_value);
+  ECMA_TRY_CATCH(num_right_value, ecma_op_to_number( right_value), ret_value);
 
   ecma_number_t *left_p, *right_p, *res_p;
   left_p = (ecma_number_t*)ecma_get_pointer( num_left_value.value.value);
@@ -346,8 +315,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
 
   ecma_dealloc_number( res_p);
 
-  FINALIZE( num_right_value);
-  FINALIZE( num_left_value);
+  ECMA_FINALIZE( num_right_value);
+  ECMA_FINALIZE( num_left_value);
 
   return ret_value;
 } /* do_number_arithmetic */
@@ -372,12 +341,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(b_xor)                           \
     op(logical_and)                     \
     op(logical_or)                      \
-    op(equal_value)                     \
-    op(not_equal_value)                 \
     op(equal_value_type)                \
     op(not_equal_value_type)            \
-    op(less_than)                       \
-    op(greater_than)                    \
     op(less_or_equal_than)              \
     op(greater_or_equal_than)           \
     op(nop)                             \
@@ -446,13 +411,13 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   
   if (!__strcmp ((const char*)str_value.str_p, "LEDToggle"))
   {
-    TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
     ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     led_blink_once (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    FINALIZE (cond_value);
+    ECMA_FINALIZE (cond_value);
   }
 
   free_string_literal_copy (&str_value);
@@ -476,7 +441,7 @@ opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean( cond_value.value);
   JERRY_ASSERT( ecma_is_completion_value_normal( to_bool_completion) );
@@ -492,7 +457,7 @@ opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value();
 
-  FINALIZE(cond_value);
+  ECMA_FINALIZE(cond_value);
 
   return ret_value;
 } /* opfunc_is_true_jmp */
@@ -513,7 +478,7 @@ opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(cond_value, get_variable_value( int_data, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean( cond_value.value);
   JERRY_ASSERT( ecma_is_completion_value_normal( to_bool_completion) );
@@ -529,7 +494,7 @@ opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value();
 
-  FINALIZE(cond_value);
+  ECMA_FINALIZE(cond_value);
 
   return ret_value;
 } /* opfunc_is_false_jmp */
@@ -700,10 +665,10 @@ opfunc_addition(OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
-  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
-  TRY_CATCH(prim_left_value, ecma_op_to_primitive( left_value.value), ret_value);
-  TRY_CATCH(prim_right_value, ecma_op_to_primitive( right_value.value), ret_value);
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(prim_left_value, ecma_op_to_primitive( left_value.value, ECMA_PREFERRED_TYPE_NO), ret_value);
+  ECMA_TRY_CATCH(prim_right_value, ecma_op_to_primitive( right_value.value, ECMA_PREFERRED_TYPE_NO), ret_value);
 
   if ( prim_left_value.value.value_type == ECMA_TYPE_STRING
        || prim_right_value.value.value_type == ECMA_TYPE_STRING )
@@ -719,10 +684,10 @@ opfunc_addition(OPCODE opdata, /**< operation data */
                                        prim_right_value.value);
     }
 
-  FINALIZE(prim_right_value);
-  FINALIZE(prim_left_value);
-  FINALIZE(right_value);
-  FINALIZE(left_value);
+  ECMA_FINALIZE(prim_right_value);
+  ECMA_FINALIZE(prim_left_value);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_addition */
@@ -747,8 +712,8 @@ opfunc_substraction(OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
-  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic(int_data,
                                    dst_var_idx,
@@ -756,8 +721,8 @@ opfunc_substraction(OPCODE opdata, /**< operation data */
                                    left_value.value,
                                    right_value.value);
 
-  FINALIZE(right_value);
-  FINALIZE(left_value);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_substraction */
@@ -782,8 +747,8 @@ opfunc_multiplication(OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
-  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic(int_data,
                                    dst_var_idx,
@@ -791,8 +756,8 @@ opfunc_multiplication(OPCODE opdata, /**< operation data */
                                    left_value.value,
                                    right_value.value);
 
-  FINALIZE(right_value);
-  FINALIZE(left_value);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_multiplication */
@@ -817,8 +782,8 @@ opfunc_division(OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
-  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic(int_data,
                                    dst_var_idx,
@@ -826,8 +791,8 @@ opfunc_division(OPCODE opdata, /**< operation data */
                                    left_value.value,
                                    right_value.value);
 
-  FINALIZE(right_value);
-  FINALIZE(left_value);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_division */
@@ -852,8 +817,8 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
-  TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic(int_data,
                                    dst_var_idx,
@@ -861,11 +826,180 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
                                    left_value.value,
                                    right_value.value);
 
-  FINALIZE(right_value);
-  FINALIZE(left_value);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
 
   return ret_value;
 } /* opfunc_remainder */
+
+/**
+ * 'Equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_equal_value(OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_abstract_equality_compare( left_value.value, right_value.value);
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
+                                                                                          : ECMA_SIMPLE_VALUE_FALSE));
+
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_equal_value */
+
+/**
+ * 'Does-not-equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_not_equal_value(OPCODE opdata, /**< operation data */
+                       struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.not_equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.not_equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.not_equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_abstract_equality_compare( left_value.value, right_value.value);
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                                                                          : ECMA_SIMPLE_VALUE_TRUE));
+
+
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_not_equal_value */
+
+/**
+ * 'Less-than' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.8.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_less_than(OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.less_than.dst;
+  const T_IDX left_var_idx = opdata.data.less_than.var_left;
+  const T_IDX right_var_idx = opdata.data.less_than.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(compare_result,
+                 ecma_op_abstract_relational_compare (left_value.value,
+                                                      right_value.value,
+                                                      true),
+                 ret_value);
+
+  ecma_simple_value_t res;
+
+  if ( ecma_is_value_undefined( compare_result.value) )
+    {
+      res = ECMA_SIMPLE_VALUE_FALSE;
+    }
+  else
+    {
+      JERRY_ASSERT( ecma_is_value_boolean( compare_result.value) );
+
+      res = compare_result.value.value;
+    }
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value( res));
+
+  ECMA_FINALIZE(compare_result);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_less_than */
+
+/**
+ * 'Greater-than' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.8.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_greater_than(OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.greater_than.dst;
+  const T_IDX left_var_idx = opdata.data.greater_than.var_left;
+  const T_IDX right_var_idx = opdata.data.greater_than.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH(left_value, get_variable_value( int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(right_value, get_variable_value( int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH(compare_result,
+                 ecma_op_abstract_relational_compare (right_value.value,
+                                                      left_value.value,
+                                                      false),
+                 ret_value);
+
+  ecma_simple_value_t res;
+
+  if ( ecma_is_value_undefined( compare_result.value) )
+    {
+      res = ECMA_SIMPLE_VALUE_FALSE;
+    }
+  else
+    {
+      JERRY_ASSERT( ecma_is_value_boolean( compare_result.value) );
+
+      res = compare_result.value.value;
+    }
+
+  ret_value = set_variable_value( int_data, dst_var_idx, ecma_make_simple_value( res));
+
+  ECMA_FINALIZE(compare_result);
+  ECMA_FINALIZE(right_value);
+  ECMA_FINALIZE(left_value);
+
+  return ret_value;
+} /* opfunc_greater_than */
 
 /**
  * 'Register variable declaration' opcode handler.

@@ -17,6 +17,7 @@
 #include "interpreter.h"
 #include "mem-allocator.h"
 #include "opcodes.h"
+#include "serializer.h"
 
 /**
  * Unit test's main function.
@@ -41,6 +42,12 @@ main( int __unused argc,
   };
 
   mem_init();
+
+  const char *strings[] = { "a",
+                            "b" };
+  int nums [] = { 2 };
+  uint8_t offset = serializer_dump_strings( strings, 2);
+  serializer_dump_nums( nums, 1, offset, 2);
 
   init_int( test_program);
 

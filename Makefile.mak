@@ -241,15 +241,30 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)/obj
 
 $(TESTS_TARGET):
-	@echo $@ $(TARGET_DIR)
+	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
+	@mkdir -p $(TARGET_DIR)/obj
+	@source_index=0; \
+	for jerry_src in $(SOURCES_JERRY); \
+        do \
+                cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
+                $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(TARGET_DIR)/obj/$$(basename $$jerry_src).$$source_index.o"; \
+                echo $$cmd; \
+                echo; \
+                $$cmd; \
+		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
+		source_index=$$(($$source_index+1)); \
+        done
 	@for unit_test in $(SOURCES_UNITTESTS); \
 	do \
 		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
-		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(SOURCES_JERRY) $(UNITTESTS_SRC_DIR)/$$unit_test.c -o $(TARGET_DIR)/$$unit_test"; \
+		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -o $(TARGET_DIR)/$$unit_test"; \
+        echo $$cmd; \
+        echo; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 	done
+	@ rm -rf $(TARGET_DIR)/obj
 	@ echo "=== Running unit tests ==="
 	@ ./tools/jerry_unittest.sh $(TARGET_DIR)
 	@ echo Done

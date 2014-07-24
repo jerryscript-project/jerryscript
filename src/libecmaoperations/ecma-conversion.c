@@ -91,7 +91,8 @@ ecma_op_check_object_coercible( ecma_value_t value) /**< ecma-value */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_primitive( ecma_value_t value) /**< ecma-value */
+ecma_op_to_primitive( ecma_value_t value, /**< ecma-value */
+                      ecma_preferred_type_hint preferred_type) /**< preferred type hint */
 {
   switch ( (ecma_type_t)value.value_type )
   {
@@ -105,7 +106,7 @@ ecma_op_to_primitive( ecma_value_t value) /**< ecma-value */
       }
     case ECMA_TYPE_OBJECT:
       {
-        JERRY_UNIMPLEMENTED();
+        JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(preferred_type);
       }
     case ECMA_TYPE__COUNT:
       {
@@ -215,7 +216,7 @@ ecma_op_to_number( ecma_value_t value) /**< ecma-value */
       }
     case ECMA_TYPE_OBJECT:
       {
-        ecma_completion_value_t completion_to_primitive = ecma_op_to_primitive( value);
+        ecma_completion_value_t completion_to_primitive = ecma_op_to_primitive( value, ECMA_PREFERRED_TYPE_NUMBER);
         JERRY_ASSERT( ecma_is_completion_value_normal( completion_to_primitive) );
 
         ecma_completion_value_t completion_to_number = ecma_op_to_number( completion_to_primitive.value);

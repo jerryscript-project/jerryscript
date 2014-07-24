@@ -16,7 +16,10 @@
 #include "deserializer.h"
 #include "bytecode-linux.h"
 
-const char *
+int *num_data = NULL;
+uint8_t num_size = 0;
+
+const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
   uint8_t size = *bytecode_data, *data = bytecode_data, offset;
@@ -28,28 +31,33 @@ deserialize_string_by_id (uint8_t id)
 
   offset = *data;
 
-  return (char*) (bytecode_data + offset);
+  return bytecode_data + offset;
 }
 
 int 
 deserialize_num_by_id (uint8_t id)
 {
-  int *num_data;
-  uint8_t str_size, str_offset, *data, num_size;
+  uint8_t str_size, str_offset, *data;
 
   str_size = *bytecode_data;
-  data = bytecode_data + str_size;
   if (id < str_size)
-    return 0;
+    {
+      return 0;
+    }
   id = (uint8_t) (id - str_size);
-  str_offset = *data;
-  data = bytecode_data + str_offset;
+  
+  if (num_data == NULL)
+    {
+      data = bytecode_data + str_size;
+      str_offset = *data;
+      data = bytecode_data + str_offset;
 
-  while (*data)
-    data++;
-
-  num_size = *(++data);
-  num_data = (int *) ++data;
+      while (*data)
+        data++;
+  
+      num_size = *(++data);
+      num_data = (int *) ++data;
+    }
 
   if (id >= num_size)
     return 0;
@@ -61,4 +69,17 @@ const void *
 deserialize_bytecode (void)
 {
   return bytecode_opcodes;
+}
+
+uint8_t 
+deserialize_min_temp (void)
+{
+  uint8_t str_size = *bytecode_data;
+  
+  if (num_size == 0)
+    {
+      deserialize_num_by_id (str_size); // Init num_data and num_size
+    }
+
+  return (uint8_t) (str_size + num_size);
 }

@@ -17,9 +17,11 @@
 #define DESERIALIZER_H
 
 #include "globals.h"
+#include "ecma-globals.h"
 
-const char *deserialize_string_by_id (uint8_t);
+const ecma_char_t *deserialize_string_by_id (uint8_t);
 int deserialize_num_by_id (uint8_t);
 const void *deserialize_bytecode (void);
+uint8_t deserialize_min_temp (void);
 
 #endif //DESERIALIZER_H

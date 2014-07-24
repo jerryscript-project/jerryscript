@@ -17,7 +17,7 @@
 
 TODO (Implement)
 
-const char *
+const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (id);
@@ -31,6 +31,12 @@ deserialize_num_by_id (uint8_t id)
 
 const void *
 deserialize_bytecode (void)
+{
+  JERRY_UNIMPLEMENTED ();
+}
+
+uint8_t 
+deserialize_min_temp (void)
 {
   JERRY_UNIMPLEMENTED ();
 }

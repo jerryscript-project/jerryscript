@@ -82,7 +82,7 @@ main( int __unused argc,
         }
     }
 
-    mem_heap_print( false);
+    mem_heap_print( true, false, true);
 
     return 0;
 } /* main */

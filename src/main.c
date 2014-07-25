@@ -144,6 +144,8 @@ main (int argc __unused,
   jerry_run( source_p,
              source_size);
 
+  mem_heap_print( false, false, true);
+
   return 0;
 }
 #endif

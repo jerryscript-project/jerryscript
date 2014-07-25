@@ -41,6 +41,13 @@ endif
 # Options setup
 #
 
+# DWARF version
+ifeq ($(dwarf4),1)
+    OPTION_DWARF4 := enable
+else
+    OPTION_DWARF4 := disable
+endif
+
 # JERRY_NDEBUG, debug symbols
 ifeq ($(TARGET_MODE),release)
  OPTION_NDEBUG = enable
@@ -93,6 +100,12 @@ LDFLAGS_NO_OPTIMIZE ?=
 
 # Debug symbols
 CFLAGS_DEBUG_SYMS ?= -g3
+
+ifeq ($(OPTION_DWARF4),enable)
+     CFLAGS_DEBUG_SYMS += -gdwarf-4
+else
+     CFLAGS_DEBUG_SYMS += -gdwarf-3
+endif
 
 # Cortex-M4 MCU
 CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \

@@ -33,6 +33,10 @@
 #
 #   Unit test target: unittests
 #
+# Options
+#
+#   dwarf4=1 - use DWARF v4 format for debug information
+#
 
 export TARGET_MODES = debug debug_release release
 export TARGET_PC_SYSTEMS = linux
@@ -47,6 +51,8 @@ export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(for
 
 export OUT_DIR = ./out
 export UNITTESTS_SRC_DIR = ./tests/unit
+
+export dwarf4
 
 all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 

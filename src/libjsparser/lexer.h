@@ -155,7 +155,7 @@ void lexer_dump_buffer_state (void);
 uint8_t lexer_get_strings (const char **);
 uint8_t lexer_get_reserved_ids_count (void);
 const char *lexer_get_string_by_id (uint8_t);
-uint8_t lexer_get_nums (int *);
+uint8_t lexer_get_nums (int32_t *);
 void lexer_adjust_num_ids (void);
 
 #endif

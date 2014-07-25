@@ -227,7 +227,7 @@ lexer_get_string_by_id (uint8_t id)
 }
 
 uint8_t
-lexer_get_nums (int *nums)
+lexer_get_nums (int32_t *nums)
 {
   int i;
 
@@ -368,7 +368,7 @@ parse_name (void)
   return known_token;
 }
 
-static int
+static int32_t
 hex_to_int (char hex)
 {
   switch (hex)
@@ -409,7 +409,7 @@ parse_number (void)
   bool is_fp = false;
   bool is_exp = false;
   size_t tok_length = 0, i;
-  int res = 0;
+  int32_t res = 0;
   token known_token;
 
   JERRY_ASSERT (__isdigit (c) || c == '.');

@@ -14,29 +14,81 @@
  */
 
 #include "deserializer.h"
+#include "bytecode-stm.h"
 
-TODO (Implement)
+TODO (Read from flash)
+
+int *num_data = NULL;
+uint8_t num_size = 0;
 
 const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (id);
+  uint8_t size, *data, offset;
+
+  if (bytecode_data == NULL)
+    return NULL;
+  
+  size = *bytecode_data;
+
+  if (id >= size)
+    return NULL;
+
+  data = bytecode_data;
+
+  data += id + 1;
+
+  offset = *data;
+
+  return bytecode_data + offset;
 }
 
 int 
 deserialize_num_by_id (uint8_t id)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (id);
+  uint8_t str_size, str_offset, *data;
+
+  str_size = *bytecode_data;
+  if (id < str_size)
+    {
+      return 0;
+    }
+  id = (uint8_t) (id - str_size);
+  
+  if (num_data == NULL)
+    {
+      data = bytecode_data + str_size;
+      str_offset = *data;
+      data = bytecode_data + str_offset;
+
+      while (*data)
+        data++;
+  
+      num_size = *(++data);
+      num_data = (int *) ++data;
+    }
+
+  if (id >= num_size)
+    return 0;
+
+  return num_data[id];
 }
 
 const void *
 deserialize_bytecode (void)
 {
-  JERRY_UNIMPLEMENTED ();
+  return bytecode_opcodes;
 }
 
 uint8_t 
 deserialize_min_temp (void)
 {
-  JERRY_UNIMPLEMENTED ();
+  uint8_t str_size = *bytecode_data;
+  
+  if (num_size == 0)
+    {
+      deserialize_num_by_id (str_size); // Init num_data and num_size
+    }
+
+  return (uint8_t) (str_size + num_size);
 }

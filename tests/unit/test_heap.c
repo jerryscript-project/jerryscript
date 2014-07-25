@@ -47,7 +47,7 @@ main( int __unused argc,
     printf("seed=%d\n", k);
     srand((unsigned int) k);
 
-    mem_heap_print( false, false, true);
+    mem_heap_print( true, false, true);
 
     for ( uint32_t i = 0; i < test_iters; i++ )
     {

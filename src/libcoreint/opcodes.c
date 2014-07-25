@@ -374,10 +374,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(b_not)                           \
     op(instanceof)                      \
     op(in)                              \
-    op(post_incr)                       \
-    op(post_decr)                       \
-    op(pre_incr)                        \
-    op(pre_decr)                        \
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
@@ -875,6 +871,206 @@ opfunc_remainder(OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_remainder */
+
+/**
+ * 'Pre increment' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_pre_incr(OPCODE opdata, /**< operation data */
+                struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.pre_incr.dst;
+  const T_IDX incr_var_idx = opdata.data.pre_incr.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  // 1., 2., 3.
+  ECMA_TRY_CATCH(old_value, get_variable_value( int_data, incr_var_idx, true), ret_value);
+  ECMA_TRY_CATCH(old_num_value, ecma_op_to_number( old_value.value), ret_value);
+
+  // 4.
+  ecma_number_t* new_num_p = ecma_alloc_number();
+  
+  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  *new_num_p= ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
+
+  ecma_value_t new_num_value = ecma_make_number_value( new_num_p);
+
+  // 5.
+  ret_value = set_variable_value (int_data,
+                                  incr_var_idx,
+                                  new_num_value);
+
+  // assignment of operator result to register variable
+  ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
+                                                                   dst_var_idx,
+                                                                   new_num_value);
+  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
+                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+
+  ecma_dealloc_number( new_num_p);
+
+  ECMA_FINALIZE(old_num_value);
+  ECMA_FINALIZE(old_value);
+
+  return ret_value;
+} /* opfunc_pre_incr */
+
+/**
+ * 'Pre decrement' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_pre_decr(OPCODE opdata, /**< operation data */
+                struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.pre_decr.dst;
+  const T_IDX decr_var_idx = opdata.data.pre_decr.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  // 1., 2., 3.
+  ECMA_TRY_CATCH(old_value, get_variable_value( int_data, decr_var_idx, true), ret_value);
+  ECMA_TRY_CATCH(old_num_value, ecma_op_to_number( old_value.value), ret_value);
+
+  // 4.
+  ecma_number_t* new_num_p = ecma_alloc_number();
+  
+  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  *new_num_p= ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+
+  ecma_value_t new_num_value = ecma_make_number_value( new_num_p);
+
+  // 5.
+  ret_value = set_variable_value (int_data,
+                                  decr_var_idx,
+                                  new_num_value);
+
+  // assignment of operator result to register variable
+  ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
+                                                                   dst_var_idx,
+                                                                   new_num_value);
+  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
+                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+
+  ecma_dealloc_number( new_num_p);
+
+  ECMA_FINALIZE(old_num_value);
+  ECMA_FINALIZE(old_value);
+
+  return ret_value;
+} /* opfunc_pre_decr */
+
+/**
+ * 'Post increment' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.3.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_post_incr(OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.post_incr.dst;
+  const T_IDX incr_var_idx = opdata.data.post_incr.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  // 1., 2., 3.
+  ECMA_TRY_CATCH(old_value, get_variable_value( int_data, incr_var_idx, true), ret_value);
+  ECMA_TRY_CATCH(old_num_value, ecma_op_to_number( old_value.value), ret_value);
+
+  // 4.
+  ecma_number_t* new_num_p = ecma_alloc_number();
+  
+  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  *new_num_p= ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
+
+  // 5.
+  ret_value = set_variable_value (int_data,
+                                  incr_var_idx,
+                                  ecma_make_number_value( new_num_p));
+
+  ecma_dealloc_number( new_num_p);
+
+  // assignment of operator result to register variable
+  ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
+                                                                   dst_var_idx,
+                                                                   old_value.value);
+  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
+                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+
+  ECMA_FINALIZE(old_num_value);
+  ECMA_FINALIZE(old_value);
+
+  return ret_value;
+} /* opfunc_post_incr */
+
+/**
+ * 'Post decrement' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.3.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_post_decr(OPCODE opdata, /**< operation data */
+                 struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.post_decr.dst;
+  const T_IDX decr_var_idx = opdata.data.post_decr.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  // 1., 2., 3.
+  ECMA_TRY_CATCH(old_value, get_variable_value( int_data, decr_var_idx, true), ret_value);
+  ECMA_TRY_CATCH(old_num_value, ecma_op_to_number( old_value.value), ret_value);
+
+  // 4.
+  ecma_number_t* new_num_p = ecma_alloc_number();
+  
+  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  *new_num_p= ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+
+  // 5.
+  ret_value = set_variable_value (int_data,
+                                  decr_var_idx,
+                                  ecma_make_number_value( new_num_p));
+
+  ecma_dealloc_number( new_num_p);
+
+  // assignment of operator result to register variable
+  ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
+                                                                   dst_var_idx,
+                                                                   old_value.value);
+  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
+                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+
+  ECMA_FINALIZE(old_num_value);
+  ECMA_FINALIZE(old_value);
+
+  return ret_value;
+} /* opfunc_post_decr */
 
 /**
  * 'Equals' opcode handler.

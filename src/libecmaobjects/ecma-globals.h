@@ -335,6 +335,16 @@ typedef uint8_t ecma_char_t;
 typedef float ecma_number_t;
 
 /**
+ * Value '0' of ecma_number_t
+ */
+#define ECMA_NUMBER_ZERO ((ecma_number_t) 0)
+
+/**
+ * Value '1' of ecma_number_t
+ */
+#define ECMA_NUMBER_ONE  ((ecma_number_t) 1)
+
+/**
  * Description of arrays'/strings' length
  */
 typedef uint16_t ecma_length_t;

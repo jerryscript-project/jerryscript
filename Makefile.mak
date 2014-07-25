@@ -91,6 +91,7 @@ CFLAGS_WARNINGS ?= -Wall -Wextra -Wpedantic -Wlogical-op -Winline \
                    -Wconversion -Wsign-conversion -Wformat-security \
                    -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS_WERROR ?= -Werror
+CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
 # Optimizations
 CFLAGS_OPTIMIZE ?= -Os -flto
@@ -155,7 +156,7 @@ endif
 # Jerry part sources, headers, includes, cflags, ldflags
 #
 
-CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR)
+CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR) $(CFLAGS_WFATAL_ERRORS)
 DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=$$((256)) -DMEM_HEAP_AREA_SIZE=$$((32768)) -DMEM_STATS
 
 # FIXME:

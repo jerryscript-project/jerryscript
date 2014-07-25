@@ -94,15 +94,15 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint8_t offset, uint8_
 static int opcode_counter = 0;
 
 void
-serializer_dump_opcode (const void *opcode)
+serializer_dump_opcode (OPCODE opcode)
 {
-  bytecode_opcodes[opcode_counter++] = *((OPCODE*)opcode);
+  bytecode_opcodes[opcode_counter++] = opcode;
 }
 
 void
-serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
+serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
 {
-  bytecode_opcodes[loc] = *((OPCODE*)opcode);
+  bytecode_opcodes[loc] = opcode;
 }
 
 void

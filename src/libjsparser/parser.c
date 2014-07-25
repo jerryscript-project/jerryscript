@@ -27,10 +27,6 @@ static OPCODE opcode;
 static T_IDX opcode_counter = 0;
 static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
 
-#ifdef __HOST
-_FILE *debug_file;
-#endif
-
 static T_IDX parse_expression (void);
 static void parse_statement (void);
 static T_IDX parse_assignment_expression (void);
@@ -147,13 +143,13 @@ insert_semicolon (void)
   do { skip_newlines (); ID = parse_##TYPE (); } while (0)
 
 #define DUMP_VOID_OPCODE(GETOP) \
-  do { opcode=getop_##GETOP (); serializer_dump_opcode (&opcode); opcode_counter++; } while (0)
+  do { opcode=getop_##GETOP (); serializer_dump_opcode (opcode); opcode_counter++; } while (0)
 
 #define DUMP_OPCODE(GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_opcode (&opcode); opcode_counter++; } while (0)
+  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_opcode (opcode); opcode_counter++; } while (0)
 
 #define REWRITE_OPCODE(OC, GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode (OC, &opcode); } while (0)
+  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode (OC, opcode); } while (0)
 
 static T_IDX
 integer_zero (void)
@@ -1835,9 +1831,6 @@ void
 parser_init (void)
 {
   max_temp_name = temp_name = min_temp_name = lexer_get_reserved_ids_count ();
-#ifdef __HOST
-  debug_file = __fopen ("parser.log", "w");
-#endif
 }
 
 void

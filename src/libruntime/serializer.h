@@ -17,6 +17,7 @@
 #define SERIALIZER_H 
 
 #include "globals.h"
+#include "opcodes.h"
 
 void serializer_init (void);
 
@@ -24,9 +25,9 @@ uint8_t serializer_dump_strings (const char **, uint8_t);
 
 void serializer_dump_nums (const int32_t *, uint8_t, uint8_t, uint8_t);
 
-void serializer_dump_opcode (const void *);
+void serializer_dump_opcode (OPCODE);
 
-void serializer_rewrite_opcode (const uint8_t, const void *);
+void serializer_rewrite_opcode (const uint8_t, OPCODE);
 
 void serializer_print_opcodes (void);
 

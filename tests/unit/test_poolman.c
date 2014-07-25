@@ -66,7 +66,7 @@ main( int __unused argc,
 
             types[j] = type;
             ptrs[j] = mem_pools_alloc( type);
-            JERRY_ASSERT(ptrs[j] != NULL);
+            // JERRY_ASSERT(ptrs[j] != NULL);
 
             if ( ptrs[j] != NULL )
             {

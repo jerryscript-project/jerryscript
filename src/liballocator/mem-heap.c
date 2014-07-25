@@ -463,17 +463,19 @@ mem_heap_print( bool dump_block_headers, /**< print block headers */
   if ( dump_stats )
     {
       __printf("Heap stats:\n");
-      __printf("  Size = %lu\n"
+      __printf("  Heap size = %lu bytes\n"
+               "  Chunk size = %lu bytes\n"
                "  Blocks count = %lu\n"
                "  Allocated blocks count = %lu\n"
                "  Allocated chunks count = %lu\n"
-               "  Allocated bytes count = %lu\n"
-               "  Waste bytes count = %lu\n"
+               "  Allocated = %lu bytes\n"
+               "  Waste = %lu bytes\n"
                "  Peak allocated blocks count = %lu\n"
                "  Peak allocated chunks count = %lu\n"
-               "  Peak allocated bytes count = %lu\n"
-               "  Peak waste bytes count = %lu\n",
+               "  Peak allocated= %lu bytes\n"
+               "  Peak waste = %lu bytes\n",
                mem_heap_stats.size,
+               MEM_HEAP_CHUNK_SIZE,
                mem_heap_stats.blocks,
                mem_heap_stats.allocated_blocks,
                mem_heap_stats.allocated_chunks,

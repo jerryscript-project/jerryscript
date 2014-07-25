@@ -150,7 +150,7 @@ DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=256 -DMEM_HEAP_AREA_SIZE=32768 -DMEM_STATS
 SOURCES_JERRY = \
  $(sort \
  $(wildcard ./src/libruntime/*.c) \
- $(wildcard ./src/libperipherals/actuators.c) \
+ $(wildcard ./src/libperipherals/*.c) \
  $(wildcard ./src/libjsparser/*.c) \
  $(wildcard ./src/libecmaobjects/*.c) \
  $(wildcard ./src/libecmaoperations/*.c) \

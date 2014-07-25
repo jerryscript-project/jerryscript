@@ -13,18 +13,48 @@
  * limitations under the License.
  */
 
+#ifdef __TARGET_MCU
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-#ifdef __TARGET_MCU
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
-#endif
 #pragma GCC diagnostic pop
+#endif
 
 #include "actuators.h"
 #include "jerry-libc.h"
+
+void
+led_toggle (uint32_t led_id)
+{
+  __printf ("led_toggle: %d\n", led_id);
+}
+
+void
+led_on (uint32_t led_id)
+{
+  __printf ("led_on: %d\n", led_id);
+}
+
+void
+led_off (uint32_t led_id)
+{
+  __printf ("led_off: %d\n", led_id);
+}
+
+void
+led_blink_once (uint32_t led_id)
+{
+#ifdef __HOST
+  __printf ("led_blink_once: %d\n", led_id);
+#endif
+
+#ifdef __TARGET_MCU
+  blink_once (led_id);
+#endif
+}
 
 #ifdef __TARGET_MCU
 
@@ -32,19 +62,17 @@ void
 blink_once (uint32_t led)
 {
   uint32_t pin = led;
-  uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
-  uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
-  uint32_t type = (uint32_t)GPIO_OType_PP << pin;
-  uint32_t pullup = (uint32_t)GPIO_PuPd_NOPULL << (pin * 2);
-  
+  uint32_t mode = (uint32_t) GPIO_Mode_OUT << (pin * 2);
+  uint32_t speed = (uint32_t) GPIO_Speed_100MHz << (pin * 2);
+  uint32_t type = (uint32_t) GPIO_OType_PP << pin;
+  uint32_t pullup = (uint32_t) GPIO_PuPd_NOPULL << (pin * 2);
+
   TODO (INITIALIZE ONCE);
-  //
+
   //  Initialise the peripheral clock.
-  //
   RCC->AHB1ENR |= RCC_AHB1Periph_GPIOD;
-  //
+
   //  Initilaise the GPIO port.
-  //
   volatile GPIO_TypeDef* gpio = GPIOD;
 
   gpio->MODER |= mode;
@@ -54,44 +82,27 @@ blink_once (uint32_t led)
   //
   //  Toggle the selected LED indefinitely.
   //
-  int index;
-  
+  volatile int index;
+
   int dot = 600000;
   int dash = dot * 3;
-  
+
   while (1)
   {
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin);
+    for (index = 0; index < dot; index++);
+    gpio->BSRRH = (uint16_t) (1 << pin);
+    for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin);
+    for (index = 0; index < dot; index++);
+    gpio->BSRRH = (uint16_t) (1 << pin);
+    for (index = 0; index < dash; index++);
+    gpio->BSRRL = (uint16_t) (1 << pin);
+    for (index = 0; index < dot; index++);
+    gpio->BSRRH = (uint16_t) (1 << pin);
+    for (index = 0; index < dash; index++);
 
     for (index = 0; index < dash * 7; index++);
   }
 }
 #endif
-
-void led_toggle(uint32_t led_id)
-{
-  __printf("led_toggle: %d\n", led_id);
-}
-
-void led_on(uint32_t led_id)
-{
-  __printf("led_on: %d\n", led_id);
-}
-
-void led_off(uint32_t led_id)
-{
-  __printf("led_off: %d\n", led_id);
-}
-
-void led_blink_once(uint32_t led_id)
-{
-#ifdef __HOST
-  __printf("led_blink_once: %d\n", led_id);
-#endif
-
-#ifdef __TARGET_MCU
-  blink_once(led_id);
-#endif
-}

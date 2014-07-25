@@ -14,19 +14,7 @@
  */
 
 #ifdef __TARGET_MCU
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include "stm32f4xx.h"
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
-#pragma GCC diagnostic pop
-
-#define LED_GREEN      12
-#define LED_ORANGE     13
-#define LED_RED        14
-#define LED_BLUE       15
+#include "common-io.h"
 #include "generated.h"
 #endif
 
@@ -158,64 +146,12 @@ main (int argc __unused,
 
   return 0;
 }
-#elif !defined(__HOST) && defined(__TARGET_MCU)
-void fake_exit(void);
+#endif
 
-void
-fake_exit (void)
-{
-  uint32_t pin = LED_ORANGE;
-  uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
-  uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
-  uint32_t type = (uint32_t)GPIO_OType_PP << pin;
-  uint32_t pullup = (uint32_t)GPIO_PuPd_NOPULL << (pin * 2);
-  //
-  //  Initialise the peripheral clock.
-  //
-  RCC->AHB1ENR |= RCC_AHB1Periph_GPIOD;
-  //
-  //  Initilaise the GPIO port.
-  //
-  volatile GPIO_TypeDef* gpio = GPIOD;
-
-  gpio->MODER |= mode;
-  gpio->OSPEEDR |= speed;
-  gpio->OTYPER |= type;
-  gpio->PUPDR |= pullup;
-  //
-  //  Toggle the selected LED indefinitely.
-  //
-  volatile int index;
-  
-  // SOS
-  
-  int dot = 600000;
-  int dash = dot * 3;
-  
-  while (1)
-  {
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dash; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin); for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin);
-    
-    for (index = 0; index < dash * 7; index++);
-  }
-}
-
+#ifdef __TARGET_MCU
 int
 main(void)
 {
-  
-  //fake_exit();
-  
   const char *source_p = generated_source;
   const size_t source_size = sizeof(generated_source);
 
@@ -226,6 +162,4 @@ main(void)
 
   JERRY_UNREACHABLE();
 }
-#else /* !__HOST && !__TARGET_MCU */
-# error "!__HOST && !__TARGET_MCU"
-#endif /* !__HOST && !__TARGET_MCU */
+#endif

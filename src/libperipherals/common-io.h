@@ -16,11 +16,20 @@
 #ifndef COMMON_IO_H
 #define	COMMON_IO_H
 
-int digital_read(int, int);
-void digital_write(int, int);
+#include "globals.h"
 
-int analog_read(int, int);
-void analog_write(int, int);
+int digital_read(uint32_t, uint32_t);
+void digital_write(uint32_t, uint32_t);
+
+int analog_read(uint32_t, uint32_t);
+void analog_write(uint32_t, uint32_t);
+    
+void wait_ms(uint32_t);
+
+
+#ifdef __TARGET_MCU
+void fake_exit(void);
+#endif
 
 #endif	/* COMMON_IO_H */
 

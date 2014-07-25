@@ -35,7 +35,7 @@ jerry_run( const char *script_source,
            size_t script_source_size __unused)
 {
   const char *strings[MAX_STRINGS];
-  int nums[MAX_NUMS];
+  int32_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint8_t offset;
   const OPCODE *opcodes;

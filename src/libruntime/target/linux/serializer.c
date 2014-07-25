@@ -79,10 +79,9 @@ serializer_dump_strings (const char *strings[], uint8_t size)
 }
 
 void 
-serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
+serializer_dump_nums (const int32_t nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
 {
   uint8_t i, *data, num_offset;
-  JERRY_STATIC_ASSERT (sizeof (int) == 4);
 
   num_offset = (uint8_t) (offset + size + 1);
   __printf ("NUMS %d:\n", size);

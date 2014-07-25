@@ -15,35 +15,94 @@
 
 #include "serializer.h"
 #include "globals.h"
+#include "serializer.h"
+#include "jerry-libc.h"
+#include "bytecode-stm.h"
+#include "deserializer.h"
+
+TODO (Dump to flash)
 
 void
 serializer_init (void)
 {
-  JERRY_UNIMPLEMENTED();
 }
 
 uint8_t
 serializer_dump_strings (const char *strings[], uint8_t size)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( strings, size);
+  uint8_t i;
+  uint8_t offset = (uint8_t) (size + 1), res;
+
+  for (i = 0; i < size; i++)
+    {
+      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
+    }
+
+  bytecode_data = mem_heap_alloc_block (offset, MEM_HEAP_ALLOC_SHORT_TERM);
+  res = offset;
+
+  bytecode_data[0] = size;
+  offset = (uint8_t) (size + 1);
+  for (i = 0; i < size; i++)
+    {
+      bytecode_data[i + 1] = offset;
+      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
+    }
+
+  for (i = 0; i < size; i++)
+    __strncpy ((void *) (bytecode_data + bytecode_data[i + 1]), strings[i], __strlen (strings[i]) + 1);
+
+#ifndef JERRY_NDEBUG
+  for (i = 0; i < size; i++)
+    {
+      JERRY_ASSERT (!__strcmp (strings[i], (const char *) deserialize_string_by_id (i)));
+    }
+#endif
+
+  return res;
 }
 
 void 
-serializer_dump_nums (const int nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
+serializer_dump_nums (const int32_t nums[], uint8_t size, uint8_t offset, uint8_t strings_num __unused)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( nums, size, offset, strings_num);
+  uint8_t i, *data;
+
+  data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
+  __memcpy (data, bytecode_data, offset);
+  mem_heap_free_block (bytecode_data);
+
+  bytecode_data = data;
+  data += offset;
+  data[0] = size;
+  data++;
+  for (i = 0; i < size; i++)
+    {
+      __memcpy (data, nums + i, 4);
+      data += 4;
+    }
+
+#ifndef JERRY_NDEBUG
+  for (i = 0; i < size; i++)
+    {
+      JERRY_ASSERT (nums[i] == deserialize_num_by_id ((uint8_t) (i + strings_num)));
+    }
+
+  JERRY_ASSERT (deserialize_min_temp () == (uint8_t) (size + strings_num));
+#endif
 }
+
+static int opcode_counter = 0;
 
 void
 serializer_dump_opcode (const void *opcode)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( opcode);
+  bytecode_opcodes[opcode_counter++] = *((OPCODE*)opcode);
 }
 
 void
-serializer_rewrite_opcode (const uint8_t offset, const void *opcode)
+serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( offset, opcode);
+  bytecode_opcodes[loc] = *((OPCODE*)opcode);
 }
 
 void
@@ -51,5 +110,3 @@ serializer_print_opcodes (void)
 {
   JERRY_UNREACHABLE ();
 }
-
-TODO (Dump memory)

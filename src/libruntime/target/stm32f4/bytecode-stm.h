@@ -13,21 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef SERIALIZER_H
-#define SERIALIZER_H 
+#ifndef BYTECODE_STM_H
+#define BYTECODE_STM_H
 
-#include "globals.h"
+#include "opcodes.h"
 
-void serializer_init (void);
+#define MAX_OPCODES 255
 
-uint8_t serializer_dump_strings (const char **, uint8_t);
+/* bytecode_data contains identifiers, string and num literals.
+   Memory map if the following.
 
-void serializer_dump_nums (const int32_t *, uint8_t, uint8_t, uint8_t);
+   bytecode_data {
+      U8 strs_count;
+      U8 string_offsets[str_count];
+      U8* strings[str_count];
 
-void serializer_dump_opcode (const void *);
+      U8 nums_count;
+      U32 nums[nums_count];
+   } */
+uint8_t *bytecode_data;
+OPCODE bytecode_opcodes[MAX_OPCODES];
 
-void serializer_rewrite_opcode (const uint8_t, const void *);
-
-void serializer_print_opcodes (void);
-
-#endif // SERIALIZER_H
+#endif // BYTECODE_STM_H

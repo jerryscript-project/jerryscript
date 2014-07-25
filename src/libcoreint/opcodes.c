@@ -415,7 +415,51 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
     ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
+    led_toggle (int_num);
+    ret_value = ecma_make_empty_completion_value ();
+    ECMA_FINALIZE (cond_value);
+  }
+  
+  if (!__strcmp ((const char*)str_value.str_p, "LEDOn"))
+  {
+    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    uint32_t int_num = (uint32_t)*num_p;
+    led_on (int_num);
+    ret_value = ecma_make_empty_completion_value ();
+    ECMA_FINALIZE (cond_value);
+  }
+  
+  if (!__strcmp ((const char*)str_value.str_p, "LEDOff"))
+  {
+    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    uint32_t int_num = (uint32_t)*num_p;
+    led_off (int_num);
+    ret_value = ecma_make_empty_completion_value ();
+    ECMA_FINALIZE (cond_value);
+  }
+  
+  if (!__strcmp ((const char*)str_value.str_p, "LEDOnce"))
+  {
+    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    uint32_t int_num = (uint32_t)*num_p;
     led_blink_once (int_num);
+    ret_value = ecma_make_empty_completion_value ();
+    ECMA_FINALIZE (cond_value);
+  }
+  
+  if (!__strcmp ((const char*)str_value.str_p, "wait"))
+  {
+    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+    JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    uint32_t int_num = (uint32_t)*num_p;
+    wait_ms (int_num);
     ret_value = ecma_make_empty_completion_value ();
     ECMA_FINALIZE (cond_value);
   }

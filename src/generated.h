@@ -15,9 +15,21 @@
 
 #include "globals.h"
 
-static const char* generated_source  = ""
-"LEDToggle (12);\n"
-"LEDToggle (13);\n"
-"LEDToggle (14);\n"
-"LEDToggle (15);\n"
-;
+static const char* generated_source = ""
+        "var tmp, a, b = 1, c = 2, d, e = 3, g = 4;\n"
+        "var count = 10000*10000;\n"
+        "for (var i = 0; i < count; i += 1)\n"
+        "{\n"
+        "  tmp = b * c;\n"
+        "  a = tmp + g;\n"
+        "  d = tmp * e;\n"
+        "\n"
+        "  if (i % 1000 == 0) \n"
+        "  { \n"
+        "    LEDToggle (12);\n"
+        "    LEDToggle (13);\n"
+        "    LEDToggle (14);\n"
+        "    LEDToggle (15);\n"
+        "  }\n"
+        "}\n"
+        ;

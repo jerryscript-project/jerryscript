@@ -36,9 +36,9 @@ led_toggle (uint32_t led_id)
 
 
 #ifdef __TARGET_MCU
-  init_led (led_id);
+    init_led (led_id);
 
-  GPIOD->ODR ^= (uint16_t) (1 << led_id);
+    GPIOD->ODR ^= (uint16_t) (1 << led_id);
 #endif
 }
 
@@ -54,6 +54,7 @@ led_on (uint32_t led_id)
   init_led (led_id);
 
   GPIOD->BSRRH = (uint16_t) (1 << led_id);
+  GPIOD->BSRRL = (uint16_t) (1 << led_id);
 #endif
 }
 
@@ -67,6 +68,7 @@ led_off (uint32_t led_id)
 #ifdef __TARGET_MCU
   init_led (led_id);
 
+  GPIOD->BSRRL = (uint16_t) (1 << led_id);
   GPIOD->BSRRH = (uint16_t) (1 << led_id);
 #endif
 }
@@ -81,13 +83,11 @@ led_blink_once (uint32_t led_id)
 #ifdef __TARGET_MCU
   init_led (led_id);
 
-  uint32_t dot = 600000 * 3;
+  uint32_t dot = 300000;
 
   GPIOD->BSRRL = (uint16_t) (1 << led_id);
   wait_ms (dot);
-
   GPIOD->BSRRH = (uint16_t) (1 << led_id);
-  wait_ms (dot);
 #endif
 }
 

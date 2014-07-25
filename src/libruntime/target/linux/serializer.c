@@ -116,32 +116,32 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint8_t offset, uint8_
 #endif
 }
 
-static int opcode_counter = 0;
+static int32_t opcode_counter = 0;
 
 void
-serializer_dump_opcode (const void *opcode)
+serializer_dump_opcode (OPCODE opcode)
 {
   uint8_t i;
-  int opcode_num = (int)((char*)opcode)[0];
+  uint8_t opcode_num = opcode.op_idx;
 
-  bytecode_opcodes[opcode_counter] = *((OPCODE*)opcode);
+  bytecode_opcodes[opcode_counter] = opcode;
   __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
-    __printf ("%4d ", ((char*)opcode)[i]);
+    __printf ("%4d ", ((uint8_t*)&opcode)[i]);
 
   __printf ("\n");
 }
 
 void
-serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
+serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
 {
   uint8_t i;
-  int opcode_num = (int)((char*)opcode)[0];
+  uint8_t opcode_num = opcode.op_idx;
 
-  bytecode_opcodes[loc] = *((OPCODE*)opcode);
+  bytecode_opcodes[loc] = opcode;
   __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
-    __printf ("%4d ", ((char*)opcode)[i]);
+    __printf ("%4d ", ((uint8_t*)&opcode)[i]);
 
   __printf ("// REWRITE\n");
 }
@@ -149,9 +149,9 @@ serializer_rewrite_opcode (const uint8_t loc, const void *opcode)
 void
 serializer_print_opcodes (void)
 {
-  int loc = -1, i;
+  int32_t loc = -1, i;
   OPCODE* opcode;
-  int opcode_num;
+  uint8_t opcode_num;
 
   __printf ("AFTER OPTIMIZER:\n");
 
@@ -160,11 +160,11 @@ serializer_print_opcodes (void)
       loc++;
 
       opcode = bytecode_opcodes + loc;
-      opcode_num = (int)((char*)opcode)[0];
+      opcode_num = opcode->op_idx;
 
       __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
       for (i = 1; i < opcode_sizes[opcode_num]; i++)
-        __printf ("%4d ", ((char*)opcode)[i]);
+        __printf ("%4d ", ((uint8_t*)opcode)[i]);
       __printf ("\n");
     }
   while (opcode->op_idx != __op__idx_exitval);

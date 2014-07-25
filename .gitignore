@@ -22,6 +22,7 @@ nbproject
 *~
 js.files
 core
+vgcore.*
 **.orig
 
 # ctags and ID database

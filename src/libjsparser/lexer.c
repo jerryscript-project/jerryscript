@@ -88,7 +88,7 @@ num_and_token;
 #define MAX_NAMES 100
 #define MAX_NUMS 25
 
-static string_and_token seen_names[MAX_NUMS];
+static string_and_token seen_names[MAX_NAMES];
 static uint8_t seen_names_count = 0;
 
 static num_and_token seen_nums[MAX_NAMES] = 
@@ -112,7 +112,6 @@ static const char *token_start;
 #define LA(I)       (*(buffer + I))
 
 #ifdef __HOST
-_FILE *lexer_debug_log;
 
 static void
 dump_current_line (void)
@@ -816,10 +815,6 @@ lexer_next_token_private (void)
   parser_fatal (ERR_NON_CHAR);
 }
 
-#ifdef __HOST
-static int i = 0;
-#endif /* __HOST */
-
 token
 lexer_next_token (void)
 {
@@ -836,12 +831,6 @@ lexer_next_token (void)
       dump_current_line ();
       return tok;
     }
-  if (tok.type == TOK_CLOSE_BRACE)
-    {
-      // if (i == 300)
-        __fprintf (lexer_debug_log, "lexer_next_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
-        i++;
-    }
 #endif /* __HOST */
   return tok;
 }
@@ -849,10 +838,6 @@ lexer_next_token (void)
 void
 lexer_save_token (token tok)
 {
-#ifdef __HOST
-  if (tok.type == TOK_CLOSE_BRACE)
-    __fprintf (lexer_debug_log, "lexer_save_token(%d): type=%d, data=%d\n", i, tok.type, tok.data.uid);
-#endif /* __HOST */
   saved_token = tok;
 }
 
@@ -867,10 +852,6 @@ lexer_init( const char *source)
 {
   saved_token = empty_token;
   lexer_set_source( source);
-
-#ifdef __HOST
-  lexer_debug_log = __fopen ("lexer.log", "w");
-#endif /* __HOST */
 }
 
 void

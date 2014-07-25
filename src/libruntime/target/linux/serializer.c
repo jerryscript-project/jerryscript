@@ -124,7 +124,9 @@ serializer_dump_opcode (OPCODE opcode)
   uint8_t i;
   uint8_t opcode_num = opcode.op_idx;
 
+  JERRY_ASSERT( opcode_counter < MAX_OPCODES );
   bytecode_opcodes[opcode_counter] = opcode;
+
   __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((uint8_t*)&opcode)[i]);
@@ -138,7 +140,9 @@ serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
   uint8_t i;
   uint8_t opcode_num = opcode.op_idx;
 
+  JERRY_ASSERT( loc < MAX_OPCODES );
   bytecode_opcodes[loc] = opcode;
+
   __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
   for (i = 1; i < opcode_sizes[opcode_num]; i++)
     __printf ("%4d ", ((uint8_t*)&opcode)[i]);

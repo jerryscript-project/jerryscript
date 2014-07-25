@@ -16,5 +16,8 @@
 #include "globals.h"
 
 static const char* generated_source  = ""
+"LEDToggle (12);\n"
+"LEDToggle (13);\n"
 "LEDToggle (14);\n"
+"LEDToggle (15);\n"
 ;

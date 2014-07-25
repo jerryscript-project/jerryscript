@@ -157,9 +157,5 @@ main(void)
 
   jerry_run( source_p,
              source_size);
-
-  fake_exit();
-
-  JERRY_UNREACHABLE();
 }
 #endif

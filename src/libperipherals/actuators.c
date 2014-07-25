@@ -24,24 +24,51 @@
 #endif
 
 #include "actuators.h"
+#include "common-io.h"
 #include "jerry-libc.h"
 
 void
 led_toggle (uint32_t led_id)
 {
+#ifdef __HOST
   __printf ("led_toggle: %d\n", led_id);
+#endif
+
+
+#ifdef __TARGET_MCU
+  init_led (led_id);
+
+  GPIOD->ODR ^= (uint16_t) (1 << led_id);
+#endif
 }
 
 void
 led_on (uint32_t led_id)
 {
+#ifdef __HOST
   __printf ("led_on: %d\n", led_id);
+#endif
+
+
+#ifdef __TARGET_MCU
+  init_led (led_id);
+
+  GPIOD->BSRRH = (uint16_t) (1 << led_id);
+#endif
 }
 
 void
 led_off (uint32_t led_id)
 {
+#ifdef __HOST
   __printf ("led_off: %d\n", led_id);
+#endif
+
+#ifdef __TARGET_MCU
+  init_led (led_id);
+
+  GPIOD->BSRRH = (uint16_t) (1 << led_id);
+#endif
 }
 
 void
@@ -52,16 +79,23 @@ led_blink_once (uint32_t led_id)
 #endif
 
 #ifdef __TARGET_MCU
-  blink_once (led_id);
+  init_led (led_id);
+
+  uint32_t dot = 600000 * 3;
+
+  GPIOD->BSRRL = (uint16_t) (1 << led_id);
+  wait_ms (dot);
+
+  GPIOD->BSRRH = (uint16_t) (1 << led_id);
+  wait_ms (dot);
 #endif
 }
 
 #ifdef __TARGET_MCU
-
 void
-blink_once (uint32_t led)
+init_led (uint32_t led_id)
 {
-  uint32_t pin = led;
+  uint32_t pin = led_id;
   uint32_t mode = (uint32_t) GPIO_Mode_OUT << (pin * 2);
   uint32_t speed = (uint32_t) GPIO_Speed_100MHz << (pin * 2);
   uint32_t type = (uint32_t) GPIO_OType_PP << pin;
@@ -79,30 +113,5 @@ blink_once (uint32_t led)
   gpio->OSPEEDR |= speed;
   gpio->OTYPER |= type;
   gpio->PUPDR |= pullup;
-  //
-  //  Toggle the selected LED indefinitely.
-  //
-  volatile int index;
-
-  int dot = 600000;
-  int dash = dot * 3;
-
-  while (1)
-  {
-    gpio->BSRRL = (uint16_t) (1 << pin);
-    for (index = 0; index < dot; index++);
-    gpio->BSRRH = (uint16_t) (1 << pin);
-    for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin);
-    for (index = 0; index < dot; index++);
-    gpio->BSRRH = (uint16_t) (1 << pin);
-    for (index = 0; index < dash; index++);
-    gpio->BSRRL = (uint16_t) (1 << pin);
-    for (index = 0; index < dot; index++);
-    gpio->BSRRH = (uint16_t) (1 << pin);
-    for (index = 0; index < dash; index++);
-
-    for (index = 0; index < dash * 7; index++);
-  }
 }
 #endif

@@ -701,6 +701,96 @@ ecma_free_array( ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of th
 } /* ecma_free_array */
 
 /**
+ * ECMA property descriptor constructor.
+ *
+ * @return ecma property descriptor
+ */
+ecma_property_descriptor_t
+ecma_make_property_descriptor( bool is_value_defined, /**< is [[Value]] defined */
+                               bool is_get_defined, /**< is [[Get]] defined */
+                               bool is_set_defined, /**< is [[Set]] defined */
+                               bool is_writable_defined, /**< is [[Writable]] defined */
+                               bool is_enumerable_defined, /**< is [[Enumerable]] defined */
+                               bool is_configurable_defined, /**< is [[Configurable]] defined */
+                               ecma_value_t value, /**< [[Value]] */
+                               ecma_value_t get, /**< [[Get]] */
+                               ecma_value_t set, /**< [[Set]] */
+                               ecma_property_writable_value_t writable, /**< [[Writable]] */
+                               ecma_property_enumerable_value_t enumerable, /**< [[Enumerable]] */
+                               ecma_property_configurable_value_t configurable) /**< [[Configurable]] */
+{
+  ecma_property_descriptor_t prop_desc;
+
+  prop_desc.is_value_defined = is_value_defined;
+  prop_desc.is_get_defined = is_get_defined;
+  prop_desc.is_set_defined = is_set_defined;
+  prop_desc.is_writable_defined = is_writable_defined;
+  prop_desc.is_enumerable_defined = is_enumerable_defined;
+  prop_desc.is_configurable_defined = is_configurable_defined;
+
+  if ( prop_desc.is_value_defined )
+    {
+      prop_desc.value = value;
+    }
+
+  if ( prop_desc.is_get_defined )
+    {
+      prop_desc.get = get;
+    }
+
+  if ( prop_desc.is_set_defined )
+    {
+      prop_desc.set = set;
+    }
+
+  if ( prop_desc.is_writable_defined )
+    {
+      prop_desc.writable = writable;
+    }
+
+  if ( prop_desc.is_enumerable_defined )
+    {
+      prop_desc.enumerable = enumerable;
+    }
+
+  if ( prop_desc.is_configurable_defined )
+    {
+      prop_desc.configurable = configurable;
+    }
+
+  return prop_desc;
+} /* ecma_make_property_descriptor */
+
+/**
+ * Free the ecma property descriptor.
+ */
+void
+ecma_free_property_descriptor( ecma_property_descriptor_t prop_desc) /**< ECMA property descriptor */
+{
+  if ( prop_desc.is_value_defined )
+    {
+      ecma_free_value( prop_desc.value);
+    }
+
+  if ( prop_desc.is_get_defined )
+    {
+      ecma_free_value( prop_desc.get);
+    }
+
+  if ( prop_desc.is_set_defined )
+    {
+      ecma_free_value( prop_desc.set);
+    }
+
+  prop_desc.is_value_defined = false;
+  prop_desc.is_get_defined = false;
+  prop_desc.is_set_defined = false;
+  prop_desc.is_writable_defined = false;
+  prop_desc.is_enumerable_defined = false;
+  prop_desc.is_configurable_defined = false;
+} /* ecma_free_property_descriptor */
+
+/**
  * @}
  * @}
  */

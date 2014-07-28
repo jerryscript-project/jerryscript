@@ -30,17 +30,14 @@
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
 
-static const OPCODE *opcodes;
-
-static void
+static const OPCODE *
 parser_run (const char *script_source, size_t script_source_size __unused)
 {
   const char *strings[MAX_STRINGS];
   int32_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint8_t offset;
-
-  mem_init();
+  const OPCODE *opcodes;
 
   TODO( Consider using script_source_size in lexer to check buffer boundaries );
 
@@ -65,12 +62,24 @@ parser_run (const char *script_source, size_t script_source_size __unused)
 #ifdef __HOST
   serializer_print_opcodes ();
 #endif
+
+  return opcodes;
 }
 
 static void
-jerry_run (const char *script_source, size_t script_source_size)
+jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only)
 {
-  parser_run (script_source, script_source_size);
+  const OPCODE *opcodes;
+
+  mem_init();
+
+  opcodes = parser_run (script_source, script_source_size);
+
+  if (is_parse_only)
+    {
+	    return;
+    }
+
   init_int (opcodes);
   run_int ();
 } /* jerry_run */
@@ -156,14 +165,7 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_source( file_name, &source_size);
 
-  if (parse_only)
-    {
-      parser_run (source_p, source_size);
-    }
-  else
-    {
-      jerry_run (source_p, source_size);
-    }
+  jerry_run (source_p, source_size, parse_only);
 
   mem_heap_print( false, false, true);
 

@@ -293,7 +293,7 @@ $(PARSER_TESTS_TARGET): debug.$(TARGET_SYSTEM)
 	@mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running parser tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		./tools/jerry_test_parser.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
+		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check --parse-only; \
 	fi
 
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)

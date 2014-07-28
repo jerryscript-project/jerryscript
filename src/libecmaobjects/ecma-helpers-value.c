@@ -283,6 +283,24 @@ ecma_make_completion_value(ecma_completion_type_t type, /**< type */
 } /* ecma_make_completion_value */
 
 /**
+ * Simple normal completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_simple_completion_value( ecma_simple_value_t simple_value) /**< simple ecma-value */
+{
+  JERRY_ASSERT( simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
+                || simple_value == ECMA_SIMPLE_VALUE_NULL
+                || simple_value == ECMA_SIMPLE_VALUE_FALSE
+                || simple_value == ECMA_SIMPLE_VALUE_TRUE );
+
+  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
+                                     ecma_make_simple_value( simple_value),
+                                     ECMA_TARGET_ID_RESERVED);
+} /* ecma_make_simple_completion_value */
+
+/**
  * Throw completion value constructor.
  *
  * @return 'throw' completion value
@@ -308,8 +326,8 @@ ecma_completion_value_t
 ecma_make_empty_completion_value( void)
 {
   return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                   ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
-                                   ECMA_TARGET_ID_RESERVED);
+                                     ecma_make_simple_value( ECMA_SIMPLE_VALUE_EMPTY),
+                                     ECMA_TARGET_ID_RESERVED);
 } /* ecma_make_empty_completion_value */
 
 /**
@@ -321,8 +339,8 @@ ecma_completion_value_t
 ecma_copy_completion_value( ecma_completion_value_t value) /**< completion value */
 {
   return ecma_make_completion_value( value.type,
-                                   ecma_copy_value( value.value),
-                                   value.target);
+                                     ecma_copy_value( value.value),
+                                     value.target);
 } /* ecma_copy_completion_value */
 
 /**
@@ -411,6 +429,20 @@ ecma_is_completion_value_normal_false( ecma_completion_value_t value) /**< compl
 {
   return ecma_is_completion_value_normal_simple_value( value, ECMA_SIMPLE_VALUE_FALSE);
 } /* ecma_is_completion_value_normal_false */
+
+/**
+ * Check if the completion value is normal empty value.
+ *
+ * @return true - if the completion type is normal and
+ *                value contains empty simple value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_empty_completion_value( ecma_completion_value_t value) /**< completion value */
+{
+  return ( ecma_is_completion_value_normal( value)
+           && ecma_is_value_empty( value.value) );
+} /* ecma_is_empty_completion_value */
 
 /**
  * @}

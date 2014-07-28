@@ -246,7 +246,7 @@ typedef struct ecma_property_t {
  * Description of GC's information layout
  */
 typedef struct {
-    FIXME( /* Handle cyclic dependencies */ );
+    FIXME( /* Handle cyclic dependencies */ )
 
     /**
      * Flag that indicates if the object is valid for normal usage.

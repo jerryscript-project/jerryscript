@@ -277,6 +277,8 @@ current_token (void)
   JERRY_ASSERT (token_start <= buffer);
   size_t length = (size_t) (buffer - token_start);
   char *res = (char *) mem_heap_alloc_block (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
+  if (res == NULL)
+    parser_fatal (ERR_MEMORY);
   __strncpy (res, token_start, length);
   res[length] = '\0';
   token_start = NULL;

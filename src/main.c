@@ -181,6 +181,6 @@ main(void)
   const size_t source_size = sizeof(generated_source);
 
   jerry_run( source_p,
-             source_size);
+             source_size, false);
 }
 #endif

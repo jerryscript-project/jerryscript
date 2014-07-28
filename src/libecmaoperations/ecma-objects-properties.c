@@ -166,7 +166,7 @@ ecma_op_object_default_value( ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_object_define_own_property( ecma_object_t *obj_p, /**< the object */
                                     ecma_array_first_chunk_t *property_name_p, /**< property name */
-                                    ecma_property_t property_desc, /**< property descriptor */
+                                    ecma_property_descriptor_t property_desc, /**< property descriptor */
                                     bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( obj_p, property_name_p, property_desc, is_throw);

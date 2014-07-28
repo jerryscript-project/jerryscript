@@ -41,7 +41,7 @@ extern ecma_completion_value_t ecma_op_object_delete( ecma_object_t *obj_p,
 extern ecma_completion_value_t ecma_op_object_default_value( ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
 extern ecma_completion_value_t ecma_op_object_define_own_property( ecma_object_t *obj_p,
                                                                    ecma_array_first_chunk_t *property_name_p,
-                                                                   ecma_property_t property_desc,
+                                                                   ecma_property_descriptor_t property_desc,
                                                                    bool is_throw);
 
 /**

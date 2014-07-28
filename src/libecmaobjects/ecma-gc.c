@@ -68,6 +68,11 @@ ecma_ref_object(ecma_object_t *object_p) /**< object */
      * Check that value was not overflowed
      */
     JERRY_ASSERT(object_p->GCInfo.u.refs > 0);
+
+    if ( unlikely( object_p->GCInfo.u.refs == 0 ) )
+      {
+        JERRY_UNREACHABLE();
+      }
 } /* ecma_ref_object */
 
 /**

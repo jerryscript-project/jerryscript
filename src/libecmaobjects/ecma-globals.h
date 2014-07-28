@@ -246,6 +246,8 @@ typedef struct ecma_property_t {
  * Description of GC's information layout
  */
 typedef struct {
+    FIXME( /* Handle cyclic dependencies */ );
+
     /**
      * Flag that indicates if the object is valid for normal usage.
      * If the flag is zero, then the object is not valid and is queued for GC.
@@ -258,9 +260,9 @@ typedef struct {
          * Number of refs to the object (if is_object_valid).
          * 
          * Note: It is not a pointer. Maximum value of reference counter
-         *       willn't be bigger than overall count of variables/objects/properties,
-         *       which is limited by size of address space allocated for JerryScript
-         *       (and, consequently, by ECMA_POINTER_FIELD_WIDTH).
+         *       willn't be bigger than overall count of variables/objects/properties.
+         *       The width of the field will be sufficient in most cases. However, it is not theoretically
+         *       guaranteed. Overflow is handled in ecma_ref_object by stopping the engine.
          */
         unsigned int refs : ECMA_POINTER_FIELD_WIDTH;
 

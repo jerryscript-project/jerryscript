@@ -24,6 +24,7 @@ js.files
 core
 vgcore.*
 **.orig
+**.directory
 
 # ctags and ID database
 tags

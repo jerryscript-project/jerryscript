@@ -37,6 +37,11 @@ ifeq ($(TARGET_MODE),$(TESTS_TARGET))
  TARGET_SYSTEM = linux
 endif
 
+# parse-only mode -> linux system
+ifeq ($(TARGET_MODE),$(PARSER_TESTS_TARGET))
+ TARGET_SYSTEM = linux
+endif
+
 #
 # Options setup
 #
@@ -283,6 +288,13 @@ $(TESTS_TARGET):
 	@ ./tools/jerry_unittest.sh $(TARGET_DIR)
 	@ echo Done
 	@ echo
+
+$(PARSER_TESTS_TARGET): debug.$(TARGET_SYSTEM)
+	@mkdir -p $(TARGET_DIR)/check
+	@ echo "=== Running parser tests ==="
+	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
+		./tools/jerry_test_parser.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
+	fi
 
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
 	@ make unittests

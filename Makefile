@@ -46,6 +46,7 @@ export TARGET_SYSTEMS = $(TARGET_PC_SYSTEMS) $(TARGET_MCU_SYSTEMS)
 # Target list
 export JERRY_TARGETS = $(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_SYSTEMS),$(__MODE).$(__SYSTEM)))
 export TESTS_TARGET = unittests
+export PARSER_TESTS_TARGET = testparser
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
 export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
@@ -56,7 +57,7 @@ export dwarf4
 
 all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 
-$(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
+$(JERRY_TARGETS) $(TESTS_TARGET) $(PARSER_TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
 	@echo $@
 	@$(MAKE) -f Makefile.mak TARGET=$@ $@
 

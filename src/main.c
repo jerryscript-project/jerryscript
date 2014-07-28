@@ -30,15 +30,15 @@
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
 
+static const OPCODE *opcodes;
+
 static void
-jerry_run( const char *script_source,
-           size_t script_source_size __unused)
+parser_run (const char *script_source, size_t script_source_size __unused)
 {
   const char *strings[MAX_STRINGS];
   int32_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint8_t offset;
-  const OPCODE *opcodes;
 
   mem_init();
 
@@ -65,7 +65,12 @@ jerry_run( const char *script_source,
 #ifdef __HOST
   serializer_print_opcodes ();
 #endif
+}
 
+static void
+jerry_run (const char *script_source, size_t script_source_size)
+{
+  parser_run (script_source, script_source_size);
   init_int (opcodes);
   run_int ();
 } /* jerry_run */
@@ -124,16 +129,26 @@ main (int argc __unused,
       char **argv __unused)
 {
   const char *file_name = NULL;
+  bool parse_only = false;
+  int i;
 
-  if (argc > 2)
+  for (i = 1; i < argc; i++)
     {
-      jerry_exit (ERR_SEVERAL_FILES);
+      if (!__strcmp ("--parse-only", argv[i]))
+        {
+          parse_only = true;
+        }
+      else if (file_name)
+        {
+          jerry_exit (ERR_SEVERAL_FILES);
+        }
+      else
+        {
+          file_name = argv[i];
+        }
     }
-  else if (argc == 2)
-    {
-      file_name = argv[1];
-    }
-  else
+
+  if (!file_name)
     {
       jerry_exit (ERR_NO_FILES);
     }
@@ -141,8 +156,14 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_source( file_name, &source_size);
 
-  jerry_run( source_p,
-             source_size);
+  if (parse_only)
+    {
+      parser_run (source_p, source_size);
+    }
+  else
+    {
+      jerry_run (source_p, source_size);
+    }
 
   mem_heap_print( false, false, true);
 

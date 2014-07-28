@@ -269,7 +269,7 @@ typedef struct {
         /** Compressed pointer to next object in the list of objects, queued for GC (if !is_object_valid) */
         unsigned int next_queued_for_gc : ECMA_POINTER_FIELD_WIDTH;
     } __packed u;
-} ecma_gc_info_t;
+} __packed ecma_gc_info_t;
 
 /**
  * Types of lexical environments
@@ -278,6 +278,20 @@ typedef enum {
     ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< declarative lexical environment */
     ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND /**< object-bound lexical environment */
 } ecma_lexical_environment_type_t;
+
+/**
+ * Internal object types
+ */
+typedef enum {
+    ECMA_GENERAL_OBJECT, /**< all objects that are not String (15.5), Function (15.3),
+                              Arguments (10.6), Array (15.4) specification-defined objects
+                              and not host objects */
+    ECMA_STRING_OBJECT, /**< String objects (15.5) */
+    ECMA_FUNCTION_OBJECT, /**< Function objects (15.3) */
+    ECMA_ARGUMENTS_OBJECT, /**< Arguments object (10.6) */
+    ECMA_ARRAY_OBJECT, /**< Array object (15.4) */
+    ECMA_HOST_OBJECT /**< Host object */
+} ecma_object_type_t;
 
 /**
  * Description of ECMA-object or lexical environment
@@ -303,6 +317,9 @@ typedef struct ecma_object_t {
             /** Attribute 'Extensible' */
             unsigned int extensible : 1;
 
+            /** Implementation internal object type (ecma_object_type_t) */
+            unsigned int object_type : 3;
+
             /** Compressed pointer to prototype object (ecma_object_t) */
             unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;
         } __packed object;
@@ -324,7 +341,7 @@ typedef struct ecma_object_t {
 
     /** GC's information */
     ecma_gc_info_t GCInfo;
-} ecma_object_t;
+} __packed ecma_object_t;
 
 /**
  * Description of an ecma-character

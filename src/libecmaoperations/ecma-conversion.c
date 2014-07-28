@@ -92,7 +92,7 @@ ecma_op_check_object_coercible( ecma_value_t value) /**< ecma-value */
  */
 ecma_completion_value_t
 ecma_op_to_primitive( ecma_value_t value, /**< ecma-value */
-                      ecma_preferred_type_hint preferred_type) /**< preferred type hint */
+                      ecma_preferred_type_hint_t preferred_type) /**< preferred type hint */
 {
   switch ( (ecma_type_t)value.value_type )
   {

@@ -25,7 +25,7 @@ var numOfIterations = 10;
 
 while (1)
 {
-  for (var j = 0; j < numOfIterations / 2; j += 1)
+  for (var j = 0; j < numOfIterations; j += 1)
   {
     LEDOn(12);
     LEDOn(13);

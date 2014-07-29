@@ -14,6 +14,7 @@
  */
 
 #include "serializer.h"
+#include "parser.h"
 #include "jerry-libc.h"
 #include "bytecode-linux.h"
 #include "deserializer.h"
@@ -41,32 +42,35 @@ serializer_init (void)
 {
 }
 
-uint8_t
+uint16_t
 serializer_dump_strings (const char *strings[], uint8_t size)
 {
   uint8_t i;
-  uint8_t offset = (uint8_t) (size + 1), res;
+  uint16_t offset = (uint16_t) (size * 2 + 1), res;
 
   __printf ("STRINGS %d:\n", size);
   for (i = 0; i < size; i++)
     {
-      __printf ("%3d %3d %20s\n", i, offset, strings[i]);
-      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
+      __printf ("%3d %5d %20s\n", i, offset, strings[i]);
+      offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
     }
 
   bytecode_data = mem_heap_alloc_block (offset, MEM_HEAP_ALLOC_SHORT_TERM);
   res = offset;
 
   bytecode_data[0] = size;
-  offset = (uint8_t) (size + 1);
+  offset = (uint16_t) (size * 2 + 1);
   for (i = 0; i < size; i++)
     {
-      bytecode_data[i + 1] = offset;
-      offset = (uint8_t) (offset + __strlen (strings[i]) + 1);
+      *((uint16_t *) (bytecode_data + i * 2 + 1)) = offset;
+      offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
     }
 
   for (i = 0; i < size; i++)
-    __strncpy ((void *) (bytecode_data + bytecode_data[i + 1]), strings[i], __strlen (strings[i]) + 1);
+    {
+      offset = *((uint16_t *) (bytecode_data + i * 2 + 1));
+      __strncpy ((char *) (bytecode_data + offset), strings[i], __strlen (strings[i]) + 1);
+    }
 
 #ifndef JERRY_NDEBUG
   for (i = 0; i < size; i++)
@@ -79,21 +83,22 @@ serializer_dump_strings (const char *strings[], uint8_t size)
 }
 
 void 
-serializer_dump_nums (const int32_t nums[], uint8_t size, uint8_t offset, uint8_t strings_num)
+serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num)
 {
-  uint8_t i, *data, num_offset;
+  uint8_t i, *data;
 
-  num_offset = (uint8_t) (offset + size + 1);
   __printf ("NUMS %d:\n", size);
   for (i = 0; i < size; i++)
     {
-      __printf ("%3d %3d %7d\n", i + strings_num, num_offset, nums[i]);
-      num_offset = (uint8_t) (num_offset + 4);
+      __printf ("%3d %7d\n", i + strings_num, nums[i]);
     }
 
   __printf ("\n");
 
   data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
+  if (!data)
+    parser_fatal (ERR_MEMORY);
+  
   __memcpy (data, bytecode_data, offset);
   mem_heap_free_block (bytecode_data);
   bytecode_data = data;

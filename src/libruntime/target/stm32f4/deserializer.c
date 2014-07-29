@@ -24,7 +24,8 @@ uint8_t num_size = 0;
 const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
-  uint8_t size, *data, offset;
+  uint8_t size, *data;
+  uint16_t offset;
 
   if (bytecode_data == NULL)
     return NULL;
@@ -36,17 +37,18 @@ deserialize_string_by_id (uint8_t id)
 
   data = bytecode_data;
 
-  data += id + 1;
+  data += id * 2 + 1;
 
-  offset = *data;
+  offset = *((uint16_t *) data);
 
-  return bytecode_data + offset;
+  return ((const ecma_char_t *) bytecode_data + offset);
 }
 
 int 
 deserialize_num_by_id (uint8_t id)
 {
-  uint8_t str_size, str_offset, *data;
+  uint16_t str_size, str_offset;
+  uint8_t *data;
 
   str_size = *bytecode_data;
   if (id < str_size)
@@ -57,8 +59,9 @@ deserialize_num_by_id (uint8_t id)
   
   if (num_data == NULL)
     {
-      data = bytecode_data + str_size;
-      str_offset = *data;
+      // Go to last string's offset
+      data = (uint8_t *) (bytecode_data + str_size * 2 - 1);
+      str_offset = *((uint16_t *) data);
       data = bytecode_data + str_offset;
 
       while (*data)

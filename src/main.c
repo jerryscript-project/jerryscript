@@ -36,7 +36,7 @@ parser_run (const char *script_source, size_t script_source_size __unused)
   const char *strings[MAX_STRINGS];
   int32_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
-  uint8_t offset;
+  uint16_t offset;
   const OPCODE *opcodes;
 
   TODO( Consider using script_source_size in lexer to check buffer boundaries );

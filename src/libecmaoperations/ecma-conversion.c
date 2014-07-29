@@ -44,25 +44,18 @@ ecma_op_check_object_coercible( ecma_value_t value) /**< ecma-value */
   {
     case ECMA_TYPE_SIMPLE:
       {
-        switch ( (ecma_simple_value_t)value.value )
-        {
-          case ECMA_SIMPLE_VALUE_UNDEFINED:
-          case ECMA_SIMPLE_VALUE_NULL:
-            {
-              return ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_TYPE));
-            }
-          case ECMA_SIMPLE_VALUE_FALSE:
-          case ECMA_SIMPLE_VALUE_TRUE:
-            {
-              break;
-            }
-          case ECMA_SIMPLE_VALUE_EMPTY:
-          case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
-          case ECMA_SIMPLE_VALUE__COUNT:
-            {
-              JERRY_UNREACHABLE();
-            }
-        }
+        if ( ecma_is_value_undefined( value) )
+          {
+            return ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_TYPE));
+          }
+        else if ( ecma_is_value_boolean( value) )
+          {
+            break;
+          }
+        else
+          {
+            JERRY_UNREACHABLE();
+          }
 
         break;
       }
@@ -130,8 +123,6 @@ ecma_op_to_primitive( ecma_value_t value, /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
 {
-  ecma_simple_value_t res = ECMA_SIMPLE_VALUE_EMPTY;
-
   switch ( (ecma_type_t)value.value_type )
   {
     case ECMA_TYPE_NUMBER:
@@ -139,8 +130,9 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
         ecma_number_t *num_p = ecma_get_pointer( value.value);
 
         TODO( Implement according to ECMA );
-        res = ( *num_p == 0 ) ? ECMA_SIMPLE_VALUE_FALSE:
-                                ECMA_SIMPLE_VALUE_TRUE;
+
+        return ecma_make_simple_completion_value( ( *num_p == 0 ) ? ECMA_SIMPLE_VALUE_FALSE
+                                                                  : ECMA_SIMPLE_VALUE_TRUE );
 
         break;
       }
@@ -148,11 +140,11 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
       {
         if ( ecma_is_value_boolean (value ) )
         {
-          res = value.value;
+          return ecma_make_simple_completion_value( value.value);
         } else if ( ecma_is_value_undefined (value)
                     || ecma_is_value_null( value) )
         {
-          res = ECMA_SIMPLE_VALUE_FALSE;
+          return ecma_make_simple_completion_value( ECMA_SIMPLE_VALUE_FALSE);
         } else
         {
           JERRY_UNREACHABLE();
@@ -164,14 +156,14 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
       {
         ecma_array_first_chunk_t *str_p = ecma_get_pointer( value.value);
 
-        res = ( str_p->header.unit_number == 0 ) ? ECMA_SIMPLE_VALUE_FALSE:
-                                                   ECMA_SIMPLE_VALUE_TRUE;
+        return ecma_make_simple_completion_value( ( str_p->header.unit_number == 0 ) ? ECMA_SIMPLE_VALUE_FALSE
+                                                                                     : ECMA_SIMPLE_VALUE_TRUE );
 
         break;
       }
     case ECMA_TYPE_OBJECT:
       {
-        res = ECMA_SIMPLE_VALUE_TRUE;
+        return ecma_make_simple_completion_value( ECMA_SIMPLE_VALUE_TRUE);
 
         break;
       }
@@ -181,12 +173,7 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
       }
   }
 
-  JERRY_ASSERT( res == ECMA_SIMPLE_VALUE_FALSE
-                || res == ECMA_SIMPLE_VALUE_TRUE );
-
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_simple_value( res),
-                                     ECMA_TARGET_ID_RESERVED);
+  JERRY_UNREACHABLE();
 } /* ecma_op_to_boolean */
 
 /**

@@ -56,6 +56,7 @@ extern ecma_value_t ecma_copy_value( const ecma_value_t value);
 extern void ecma_free_value( const ecma_value_t value);
 
 extern ecma_completion_value_t ecma_make_completion_value( ecma_completion_type_t type, ecma_value_t value, uint8_t target);
+extern ecma_completion_value_t ecma_make_simple_completion_value( ecma_simple_value_t simple_value);
 extern ecma_completion_value_t ecma_make_throw_value( ecma_object_t *exception_p);
 extern ecma_completion_value_t ecma_make_empty_completion_value( void);
 extern ecma_completion_value_t ecma_copy_completion_value( ecma_completion_value_t value);
@@ -64,8 +65,9 @@ extern void ecma_free_completion_value( ecma_completion_value_t completion_value
 extern bool ecma_is_completion_value_normal( ecma_completion_value_t value);
 extern bool ecma_is_completion_value_throw( ecma_completion_value_t value);
 extern bool ecma_is_completion_value_normal_simple_value( ecma_completion_value_t value, ecma_simple_value_t simple_value);
-extern bool ecma_is_completion_value_normal_false( ecma_completion_value_t value);
 extern bool ecma_is_completion_value_normal_true( ecma_completion_value_t value);
+extern bool ecma_is_completion_value_normal_false( ecma_completion_value_t value);
+extern bool ecma_is_empty_completion_value( ecma_completion_value_t value);
 
 extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible);
 extern ecma_object_t* ecma_create_lexical_environment( ecma_object_t *outer_lexical_environment_p, ecma_lexical_environment_type_t type);
@@ -93,6 +95,21 @@ extern ecma_array_first_chunk_t* ecma_duplicate_ecma_string( ecma_array_first_ch
 extern bool ecma_compare_zt_string_to_ecma_string( const ecma_char_t *string_p, const ecma_array_first_chunk_t *ecma_string_p);
 extern bool ecma_compare_ecma_string_to_ecma_string(const ecma_array_first_chunk_t *string1_p, const ecma_array_first_chunk_t *string2_p);
 extern void ecma_free_array( ecma_array_first_chunk_t *first_chunk_p);
+
+extern ecma_property_descriptor_t ecma_make_property_descriptor( bool is_value_defined,
+                                                                 bool is_get_defined,
+                                                                 bool is_set_defined,
+                                                                 bool is_writable_defined,
+                                                                 bool is_enumerable_defined,
+                                                                 bool is_configurable_defined,
+                                                                 ecma_value_t value,
+                                                                 ecma_value_t get,
+                                                                 ecma_value_t set,
+                                                                 ecma_property_writable_value_t writable,
+                                                                 ecma_property_enumerable_value_t enumerable,
+                                                                 ecma_property_configurable_value_t configurable);
+
+extern void ecma_free_property_descriptor( ecma_property_descriptor_t prop_desc);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

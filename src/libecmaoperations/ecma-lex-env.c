@@ -186,8 +186,7 @@ ecma_op_get_binding_value(ecma_object_t *lex_env_p, /**< lexical environment */
         return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
                                          ecma_copy_value( prop_value),
                                          ECMA_TARGET_ID_RESERVED);
-      } else if ( prop_value.value_type == ECMA_TYPE_SIMPLE
-                  && prop_value.value == ECMA_SIMPLE_VALUE_EMPTY )
+      } else if ( ecma_is_value_empty( prop_value) )
       {
         /* unitialized immutable binding */
         if ( is_strict )
@@ -318,13 +317,14 @@ ecma_op_create_immutable_binding(ecma_object_t *lex_env_p, /**< lexical environm
          *         Whether immutable bindings are deletable seems not to be defined by ECMA v5.
          */
         ecma_property_t *prop_p = ecma_create_named_property( lex_env_p,
-                                                            name_p,
-                                                            ECMA_PROPERTY_NOT_WRITABLE,
-                                                            ECMA_PROPERTY_NOT_ENUMERABLE,
-                                                            ECMA_PROPERTY_NOT_CONFIGURABLE);
+                                                              name_p,
+                                                              ECMA_PROPERTY_NOT_WRITABLE,
+                                                              ECMA_PROPERTY_NOT_ENUMERABLE,
+                                                              ECMA_PROPERTY_NOT_CONFIGURABLE);
 
-        JERRY_ASSERT( prop_p->u.named_data_property.value.value_type == ECMA_TYPE_SIMPLE );
+        JERRY_ASSERT( ecma_is_value_undefined( prop_p->u.named_data_property.value ) );
 
+        prop_p->u.named_data_property.value.value_type = ECMA_TYPE_SIMPLE;
         prop_p->u.named_data_property.value.value = ECMA_SIMPLE_VALUE_EMPTY;
       }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
@@ -358,8 +358,7 @@ ecma_op_initialize_immutable_binding(ecma_object_t *lex_env_p, /**< lexical envi
 
         /* The binding must be unitialized immutable binding */
         JERRY_ASSERT( prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE
-                      && prop_p->u.named_data_property.value.value_type == ECMA_TYPE_SIMPLE
-                      && prop_p->u.named_data_property.value.value == ECMA_SIMPLE_VALUE_EMPTY );
+                      && ecma_is_value_empty( prop_p->u.named_data_property.value) );
 
         prop_p->u.named_data_property.value = ecma_copy_value( value);
       }

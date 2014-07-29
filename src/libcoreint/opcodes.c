@@ -912,8 +912,7 @@ opfunc_pre_incr(OPCODE opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    new_num_value);
-  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
-                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+  JERRY_ASSERT( ecma_is_empty_completion_value( reg_assignment_res) );
 
   ecma_dealloc_number( new_num_p);
 
@@ -963,8 +962,7 @@ opfunc_pre_decr(OPCODE opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    new_num_value);
-  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
-                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+  JERRY_ASSERT( ecma_is_empty_completion_value (reg_assignment_res) );
 
   ecma_dealloc_number( new_num_p);
 
@@ -1014,8 +1012,7 @@ opfunc_post_incr(OPCODE opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    old_value.value);
-  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
-                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+  JERRY_ASSERT( ecma_is_empty_completion_value( reg_assignment_res) );
 
   ECMA_FINALIZE(old_num_value);
   ECMA_FINALIZE(old_value);
@@ -1063,8 +1060,7 @@ opfunc_post_decr(OPCODE opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    old_value.value);
-  JERRY_ASSERT( ecma_is_completion_value_normal_simple_value (reg_assignment_res,
-                                                              ECMA_SIMPLE_VALUE_EMPTY) );
+  JERRY_ASSERT( ecma_is_empty_completion_value (reg_assignment_res) );
 
   ECMA_FINALIZE(old_num_value);
   ECMA_FINALIZE(old_value);

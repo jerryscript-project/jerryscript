@@ -98,6 +98,12 @@ else
 	OPTION_MCU = disable
 endif
 
+ifeq ($(musl),1)
+     OPTION_MUSL := enable
+else
+     OPTION_MUSL := disable
+endif
+
 #
 # Target CPU
 #
@@ -142,7 +148,7 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 # Common
 #
 
-CFLAGS_COMMON ?= $(INCLUDES) -std=c99 #-fsanitize=address -fdiagnostics-color=always 
+CFLAGS_COMMON ?= $(INCLUDES) -std=c99
 
 LDFLAGS ?= 
 
@@ -214,7 +220,15 @@ ifeq ($(OPTION_NDEBUG),enable)
 endif
 
 ifeq ($(OPTION_MCU),disable)
- DEFINES_JERRY += -D__HOST -DJERRY_SOURCE_BUFFER_SIZE=1048576
+ DEFINES_JERRY += -D__HOST -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
+ CFLAGS_COMMON +=  -fno-stack-protector
+ 
+ ifeq ($(OPTION_MUSL),enable)
+  CC := musl-$(CC) 
+  CFLAGS_COMMON += -static
+ else
+  CFLAGS_COMMON += -fsanitize=address
+ endif
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU
@@ -326,7 +340,7 @@ $(PARSER_TESTS_TARGET): debug.$(TARGET_SYSTEM)
 	fi
 
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
-	@ make unittests
+	@ make unittests testparser
 	@ mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running cppcheck ==="
 	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \

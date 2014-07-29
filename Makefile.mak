@@ -104,6 +104,12 @@ else
      OPTION_MUSL := disable
 endif
 
+ifeq ($(color),1)
+     OPTION_COLOR := enable
+else
+     OPTION_COLOR := disable
+endif
+
 #
 # Target CPU
 #
@@ -221,13 +227,16 @@ endif
 
 ifeq ($(OPTION_MCU),disable)
  DEFINES_JERRY += -D__HOST -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
- CFLAGS_COMMON +=  -fno-stack-protector
+ CFLAGS_COMMON += -fno-stack-protector
  
  ifeq ($(OPTION_MUSL),enable)
   CC := musl-$(CC) 
   CFLAGS_COMMON += -static
  else
   CFLAGS_COMMON += -fsanitize=address
+ endif
+ ifeq ($(OPTION_COLOR),enable)
+  CFLAGS_COMMON += -fdiagnostics-color=always
  endif
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib

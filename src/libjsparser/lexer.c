@@ -24,74 +24,16 @@ static token empty_token = { .type = TOK_EMPTY, .data.uid = 0 };
 
 typedef struct
 {
-  const char *str;
-  token tok;
-}
-string_and_token;
-
-static string_and_token keyword_tokens[] = 
-{
-  { .str = "break", .tok = { .type = TOK_KEYWORD, .data.kw = KW_BREAK } },
-  { .str = "case", .tok = { .type = TOK_KEYWORD, .data.kw = KW_CASE } },
-  { .str = "catch", .tok = { .type = TOK_KEYWORD, .data.kw = KW_CATCH } },
-  { .str = "class", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "const", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "continue", .tok = { .type = TOK_KEYWORD, .data.kw = KW_CONTINUE } },
-  { .str = "debugger", .tok = { .type = TOK_KEYWORD, .data.kw = KW_DEBUGGER } },
-  { .str = "default", .tok = { .type = TOK_KEYWORD, .data.kw = KW_DEFAULT } },
-  { .str = "delete", .tok = { .type = TOK_KEYWORD, .data.kw = KW_DELETE } },
-  { .str = "do", .tok = { .type = TOK_KEYWORD, .data.kw = KW_DO } },
-  { .str = "else", .tok = { .type = TOK_KEYWORD, .data.kw = KW_ELSE } },
-  { .str = "enum", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "export", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "extends", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "false", .tok = { .type = TOK_BOOL, .data.uid = false } },
-  { .str = "finally", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FINALLY } },
-  { .str = "for", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FOR } },
-  { .str = "function", .tok = { .type = TOK_KEYWORD, .data.kw = KW_FUNCTION } },
-  { .str = "if", .tok = { .type = TOK_KEYWORD, .data.kw = KW_IF } },
-  { .str = "instanceof", .tok = { .type = TOK_KEYWORD, .data.kw = KW_INSTANCEOF } },
-  { .str = "interface", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "in", .tok = { .type = TOK_KEYWORD, .data.kw = KW_IN } },
-  { .str = "import", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "implements", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "let", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "new", .tok = { .type = TOK_KEYWORD, .data.kw = KW_NEW } },
-  { .str = "null", .tok = { .type = TOK_NULL, .data.uid = 0 } },
-  { .str = "package", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "private", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "protected", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "public", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "return", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RETURN } },
-  { .str = "static", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "super", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } },
-  { .str = "switch", .tok = { .type = TOK_KEYWORD, .data.kw = KW_SWITCH } },
-  { .str = "this", .tok = { .type = TOK_KEYWORD, .data.kw = KW_THIS } },
-  { .str = "throw", .tok = { .type = TOK_KEYWORD, .data.kw = KW_THROW } },
-  { .str = "true", .tok = { .type = TOK_BOOL, .data.uid = true } },
-  { .str = "try", .tok = { .type = TOK_KEYWORD, .data.kw = KW_TRY } },
-  { .str = "typeof", .tok = { .type = TOK_KEYWORD, .data.kw = KW_TYPEOF } },
-  { .str = "var", .tok = { .type = TOK_KEYWORD, .data.kw = KW_VAR } },
-  { .str = "void", .tok = { .type = TOK_KEYWORD, .data.kw = KW_VOID } },
-  { .str = "while", .tok = { .type = TOK_KEYWORD, .data.kw = KW_WHILE } },
-  { .str = "with", .tok = { .type = TOK_KEYWORD, .data.kw = KW_WITH } },
-  { .str = "yield", .tok = { .type = TOK_KEYWORD, .data.kw = KW_RESERVED } }
-};
-
-typedef struct
-{
   int num;
   token tok;
 }
 num_and_token;
 
-#define MAX_NAMES 100
 #define MAX_NUMS 25
 
-static string_and_token seen_names[MAX_NAMES];
 static uint8_t seen_names_count = 0;
 
-static num_and_token seen_nums[MAX_NAMES] = 
+static num_and_token seen_nums[MAX_NUMS] = 
 {
   [0] = { .num = 0, .tok = { .type = TOK_INT, .data.uid = 0 } },
   [1] = { .num = 1, .tok = { .type = TOK_INT, .data.uid = 1 } }
@@ -111,8 +53,41 @@ static const char *token_start;
 
 #define LA(I)       (*(buffer + I))
 
-#ifdef __HOST
+/* Continuous array of NULL-terminated strings.  */
+static char *strings_cache = NULL;
+static size_t strings_cache_size = 0;
 
+static void
+increase_strings_cache (void)
+{
+  char *new_cache;
+  size_t new_cache_size;
+
+  // if strings_cache_size == 0, allocator recommend minimum size that is more than 0
+  new_cache_size = mem_heap_recommend_allocation_size (strings_cache_size * 2);
+  new_cache = (char *) mem_heap_alloc_block (new_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+  if (!new_cache)
+    {
+      // Allocator alligns recommended memory size
+      new_cache_size = mem_heap_recommend_allocation_size (strings_cache_size + 1);
+      new_cache = (char *) mem_heap_alloc_block (new_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+      if (!new_cache)
+        parser_fatal (ERR_MEMORY);
+    }
+
+  if (strings_cache)
+    {
+      __memcpy (new_cache, strings_cache, strings_cache_size);
+      mem_heap_free_block ((uint8_t *) strings_cache);
+    }
+
+  strings_cache = new_cache;
+  strings_cache_size = new_cache_size;
+}
+
+#ifdef __HOST
 static void
 dump_current_line (void)
 {
@@ -142,38 +117,155 @@ current_token_equals_to (const char *str)
 static token
 decode_keyword (void)
 {
-  size_t size = sizeof (keyword_tokens) / sizeof (string_and_token);
-  size_t i;
+  if (current_token_equals_to ("break"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_BREAK };
+  if (current_token_equals_to ("case"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_CASE };
+  if (current_token_equals_to ("catch"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_CATCH };
+  if (current_token_equals_to ("class"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("const"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("continue"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_CONTINUE };
+  if (current_token_equals_to ("debugger"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_DEBUGGER };
+  if (current_token_equals_to ("default"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_DEFAULT };
+  if (current_token_equals_to ("delete"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_DELETE };
+  if (current_token_equals_to ("do"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_DO };
+  if (current_token_equals_to ("else"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_ELSE };
+  if (current_token_equals_to ("enum"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("export"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("extends"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("false"))
+   return (token) { .type = TOK_BOOL, .data.uid = false };
+  if (current_token_equals_to ("finally"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_FINALLY };
+  if (current_token_equals_to ("for"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_FOR };
+  if (current_token_equals_to ("function"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_FUNCTION };
+  if (current_token_equals_to ("if"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_IF };
+  if (current_token_equals_to ("instanceof"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_INSTANCEOF };
+  if (current_token_equals_to ("interface"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("in"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_IN };
+  if (current_token_equals_to ("import"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("implements"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("let"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("new"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_NEW };
+  if (current_token_equals_to ("null"))
+   return (token) { .type = TOK_NULL, .data.uid = 0 };
+  if (current_token_equals_to ("package"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("private"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("protected"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("public"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("return"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RETURN };
+  if (current_token_equals_to ("static"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("super"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  if (current_token_equals_to ("switch"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_SWITCH };
+  if (current_token_equals_to ("this"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_THIS };
+  if (current_token_equals_to ("throw"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_THROW };
+  if (current_token_equals_to ("true"))
+   return (token) { .type = TOK_BOOL, .data.uid = true };
+  if (current_token_equals_to ("try"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_TRY };
+  if (current_token_equals_to ("typeof"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_TYPEOF };
+  if (current_token_equals_to ("var"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_VAR };
+  if (current_token_equals_to ("void"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_VOID };
+  if (current_token_equals_to ("while"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_WHILE };
+  if (current_token_equals_to ("with"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_WITH };
+  if (current_token_equals_to ("yield"))
+   return (token) { .type = TOK_KEYWORD, .data.kw = KW_RESERVED };
+  return empty_token;
+}
 
-  for (i = 0; i < size; i++)
+static token
+convert_seen_name_to_token (token_type tt, const char *string)
+{
+  uint8_t i;
+  char *current_string = strings_cache;
+  JERRY_ASSERT (strings_cache);
+
+  for (i = 0; i < seen_names_count; i++)
     {
-      if (current_token_equals_to (keyword_tokens[i].str))
-        return keyword_tokens[i].tok;
+      if ((string == NULL && current_token_equals_to (current_string))
+          || (string != NULL && !__strcmp (current_string, string)))
+        {
+          return (token) { .type = tt, .data.uid = i };
+        }
+
+      current_string += __strlen (current_string) + 1;
     }
 
   return empty_token;
 }
 
 static token
-convert_seen_name_to_token (void)
+add_token_to_seen_names (token_type tt, const char *string)
 {
   size_t i;
+  char *current_string = strings_cache;
+  size_t required_size;
+  size_t len = (string == NULL ? (size_t) (buffer - token_start) : __strlen (string));
 
+  // Go to unused memory of cache
   for (i = 0; i < seen_names_count; i++)
+    current_string += __strlen (current_string) + 1;
+
+  required_size = (size_t) (current_string - strings_cache) + len + 1;
+  if (required_size > strings_cache_size)
     {
-      if (current_token_equals_to (seen_names[i].str))
-        return seen_names[i].tok;
+      size_t offset = (size_t) (current_string - strings_cache);
+      increase_strings_cache ();
+
+      // Now our pointer are invalid, adjust it
+      current_string = strings_cache + offset;
     }
 
-  return empty_token;
-}
+  if (string == NULL)
+    {
+      // Copy current token with terminating NULL
+      __strncpy (current_string, token_start, (size_t) (buffer - token_start));
+      current_string += buffer - token_start;
+      *current_string = '\0';
+    }
+  else
+    {
+      __memcpy (current_string, string, __strlen (string) + 1); 
+    }
 
-static void
-add_name_to_seen_tokens (string_and_token snt)
-{
-  JERRY_ASSERT (seen_names_count < MAX_NAMES);
-
-  seen_names[seen_names_count++] = snt;
+  return (token) { .type = tt, .data.uid = seen_names_count++ };
 }
 
 static token
@@ -203,9 +295,13 @@ lexer_get_strings (const char **strings)
 {
   if (strings)
     {
+      char *current_string = strings_cache;
       int i;
       for (i = 0; i < seen_names_count; i++)
-        strings[i] = seen_names[i].str;
+        {
+          strings[i] = current_string;
+          current_string += __strlen (current_string) + 1;
+        }
     }
 
   return seen_names_count;
@@ -220,9 +316,14 @@ lexer_get_reserved_ids_count (void)
 const char *
 lexer_get_string_by_id (uint8_t id)
 {
+  int i;
+  char *current_string = strings_cache;
   JERRY_ASSERT (id < seen_names_count);
 
-  return seen_names[id].str;
+  for (i = 0 ; i < id; i++)
+    current_string += __strlen (current_string) + 1;
+
+  return current_string;
 }
 
 uint8_t
@@ -246,13 +347,6 @@ lexer_adjust_num_ids (void)
 
   for (i = 0; i < seen_nums_count; i++)
     seen_nums[i].tok.data.uid = (uint8_t) (seen_nums[i].tok.data.uid + seen_names_count);
-
-  for (i = 0; i < sizeof (keyword_tokens) / sizeof (string_and_token); i++)
-    {
-      if (!__strcmp ("true", keyword_tokens[i].str)
-          || !__strcmp ("false", keyword_tokens[i].str))
-        keyword_tokens[i].tok.data.uid = (uint8_t) (keyword_tokens[i].tok.data.uid + seen_names_count);
-    }
 }
 
 static void
@@ -267,22 +361,6 @@ consume_char (void)
 {
   JERRY_ASSERT (buffer);
   buffer++;
-}
-
-static const char *
-current_token (void)
-{
-  JERRY_ASSERT (buffer);
-  JERRY_ASSERT (token_start);
-  JERRY_ASSERT (token_start <= buffer);
-  size_t length = (size_t) (buffer - token_start);
-  char *res = (char *) mem_heap_alloc_block (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
-  if (res == NULL)
-    parser_fatal (ERR_MEMORY);
-  __strncpy (res, token_start, length);
-  res[length] = '\0';
-  token_start = NULL;
-  return res;
 }
 
 #define RETURN_PUNC_EX(TOK, NUM) \
@@ -325,7 +403,6 @@ parse_name (void)
 {
   char c = LA (0);
   bool every_char_islower = __islower (c);
-  const char *string = NULL;
   token known_token = empty_token;
 
   JERRY_ASSERT (__isalpha (c) || c == '$' || c == '_');
@@ -348,24 +425,17 @@ parse_name (void)
     {
       known_token = decode_keyword ();
       if (!is_empty (known_token))
-        {
-          token_start = NULL;
-          return known_token;
-        }
+        goto end;
     }
 
-  known_token = convert_seen_name_to_token ();
+  known_token = convert_seen_name_to_token (TOK_NAME, NULL);
   if (!is_empty (known_token))
-    {
-      token_start = NULL;
-      return known_token;
-    }
-
-  string = current_token ();
-  known_token = (token) { .type = TOK_NAME, .data.uid = seen_names_count };
+    goto end;
   
-  add_name_to_seen_tokens ((string_and_token) { .str = string, .tok = known_token });
+  known_token = add_token_to_seen_names (TOK_NAME, NULL);
 
+end:
+  token_start = NULL;
   return known_token;
 }
 
@@ -552,8 +622,8 @@ parse_string (void)
   char *tok = NULL;
   char *index = NULL;
   const char *i;
-  size_t length, num;
-  token res = empty_token;
+  size_t length;
+  token known_token = empty_token;
 
   JERRY_ASSERT (c == '\'' || c == '"');
 
@@ -592,9 +662,11 @@ parse_string (void)
     }
 
   length = (size_t) (buffer - token_start);
-  tok = (char *) mem_heap_alloc_block (length, MEM_HEAP_ALLOC_SHORT_TERM);
+  tok = (char *) mem_heap_alloc_block (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
+  __memset (tok, '\0', length + 1);
   index = tok;
 
+  // Copy current token to TOK and replace escape sequences by there meanings 
   for (i = token_start; i < buffer; i++)
     {
       if (*i == '\\')
@@ -614,26 +686,19 @@ parse_string (void)
       index++;
     }
 
-  __memset (index, '\0', length - (size_t) (index - tok));
-
-  token_start = NULL;
   // Eat up '"'
   consume_char ();
 
-  for (num = 0; num < seen_names_count; num++)
-    {
-      if (!__strcmp (seen_names[num].str, tok))
-        {
-          mem_heap_free_block ((uint8_t*) tok);
-          return seen_names[num].tok;
-        }
-    }
+  known_token = convert_seen_name_to_token (TOK_STRING, tok);
+  if (!is_empty (known_token))
+    goto end;
 
-  res = (token) { .type = TOK_STRING, .data.uid = seen_names_count };
+  known_token = add_token_to_seen_names (TOK_STRING, tok);
 
-  add_name_to_seen_tokens ((string_and_token) { .str = tok, .tok = res });
-
-  return res;
+end:
+  mem_heap_free_block ((uint8_t *) tok);
+  token_start = NULL;
+  return known_token;
 }
 
 static void
@@ -854,6 +919,7 @@ lexer_init( const char *source)
 {
   saved_token = empty_token;
   lexer_set_source( source);
+  increase_strings_cache ();
 }
 
 void
@@ -866,3 +932,8 @@ lexer_run_first_pass( void)
   lexer_rewind();
 }
 
+void
+lexer_free (void)
+{
+  mem_heap_free_block ((uint8_t *) strings_cache);
+}

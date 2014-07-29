@@ -51,6 +51,8 @@ parser_run (const char *script_source, size_t script_source_size __unused)
 
   offset = serializer_dump_strings (strings, strings_num);
   serializer_dump_nums (nums, nums_count, offset, strings_num);
+  
+  lexer_free ();
 
   parser_init ();
   parser_parse_program ();

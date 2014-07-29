@@ -53,6 +53,26 @@ else
     OPTION_DWARF4 := disable
 endif
 
+# Print TODO, FIXME
+ifeq ($(todo),1)
+    OPTION_TODO := enable
+else
+    OPTION_TODO := disable
+endif
+
+ifeq ($(fixme),1)
+    OPTION_FIXME := enable
+else
+    OPTION_FIXME := disable
+endif
+
+# Compilation command line echoing
+ifeq ($(echo),1)
+     OPTION_ECHO := enable
+else
+     OPTION_ECHO := disable
+endif
+
 # JERRY_NDEBUG, debug symbols
 ifeq ($(TARGET_MODE),release)
  OPTION_NDEBUG = enable
@@ -200,6 +220,14 @@ else
  DEFINES_JERRY += -D__TARGET_MCU
 endif
 
+ifeq ($(OPTION_TODO),enable)
+ DEFINES_JERRY += -DJERRY_PRINT_TODO
+endif
+
+ifeq ($(OPTION_FIXME),enable)
+ DEFINES_JERRY += -DJERRY_PRINT_FIXME
+endif
+
 #
 # Third-party sources, headers, includes, cflags, ldflags
 #
@@ -241,6 +269,7 @@ $(JERRY_TARGETS):
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
 		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src \
                      -o $(TARGET_DIR)/obj/$$(basename $$jerry_src).$$source_index.o"; \
+                if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
@@ -248,11 +277,13 @@ $(JERRY_TARGETS):
 	for thirdparty_src in $(SOURCES_THIRDPARTY); do \
 		cmd="$(CC) -c $(CFLAGS_COMMON) $(CFLAGS_THIRDPARTY) $(INCLUDES_THIRDPARTY) $$thirdparty_src \
                      -o $(TARGET_DIR)/obj/$$(basename $$thirdparty_src).$$source_index.o"; \
+                if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
 	done; \
 	cmd="$(CC) $(CFLAGS_COMMON) $(TARGET_DIR)/obj/* $(LDFLAGS) -o $(TARGET_DIR)/$(ENGINE_NAME)"; \
+        if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 	$$cmd; \
 	if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi;
 	@if [ "$(OPTION_STRIP)" = "enable" ]; then $(STRIP) $(TARGET_DIR)/$(ENGINE_NAME) || exit $$?; fi;
@@ -268,8 +299,7 @@ $(TESTS_TARGET):
         do \
                 cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
                 $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(TARGET_DIR)/obj/$$(basename $$jerry_src).$$source_index.o"; \
-                echo $$cmd; \
-                echo; \
+                if [ "$(option_echo)" = "enable" ]; then echo $$cmd; echo; fi; \
                 $$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 		source_index=$$(($$source_index+1)); \
@@ -278,8 +308,7 @@ $(TESTS_TARGET):
 	do \
 		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
 		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -o $(TARGET_DIR)/$$unit_test"; \
-        echo $$cmd; \
-        echo; \
+                if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 	done

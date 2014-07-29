@@ -41,6 +41,7 @@ typedef enum
 } ecma_preferred_type_hint_t;
 
 extern ecma_completion_value_t ecma_op_check_object_coercible( ecma_value_t value);
+extern bool ecma_op_same_value( ecma_value_t x, ecma_value_t y);
 extern ecma_completion_value_t ecma_op_to_primitive( ecma_value_t value, ecma_preferred_type_hint_t preferred_type);
 extern ecma_completion_value_t ecma_op_to_boolean( ecma_value_t value);
 extern ecma_completion_value_t ecma_op_to_number( ecma_value_t value);

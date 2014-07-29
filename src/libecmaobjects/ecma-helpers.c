@@ -208,11 +208,11 @@ ecma_get_internal_property(ecma_object_t *object_p, /**< object descriptor */
  * @return pointer to newly created property
  */
 ecma_property_t*
-ecma_create_named_property(ecma_object_t *obj_p, /**< object */
-                         ecma_char_t *name_p, /**< property name */
-                         ecma_property_writable_value_t writable, /**< 'writable' attribute */
-                         ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
-                         ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
+                                ecma_char_t *name_p, /**< property name */
+                                ecma_property_writable_value_t writable, /**< 'writable' attribute */
+                                ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
+                                ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
 {
   JERRY_ASSERT( obj_p != NULL && name_p != NULL );
 
@@ -232,7 +232,40 @@ ecma_create_named_property(ecma_object_t *obj_p, /**< object */
   ecma_set_pointer( obj_p->properties_p, prop);
 
   return prop;
-} /* ecma_create_named_property */
+} /* ecma_create_named_data_property */
+
+/**
+ * Create named accessor property with given name, attributes, getter and setter.
+ *
+ * @return pointer to newly created property
+ */
+ecma_property_t*
+ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
+                                    ecma_char_t *name_p, /**< property name */
+                                    ecma_object_t *get_p, /**< getter */
+                                    ecma_object_t *set_p, /**< setter */
+                                    ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
+                                    ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+{
+  JERRY_ASSERT( obj_p != NULL && name_p != NULL );
+
+  ecma_property_t *prop_p = ecma_alloc_property();
+
+  prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
+
+  ecma_set_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
+
+  ecma_set_pointer( prop_p->u.named_accessor_property.get_p, get_p);
+  ecma_set_pointer( prop_p->u.named_accessor_property.set_p, set_p);
+
+  prop_p->u.named_accessor_property.enumerable = enumerable;
+  prop_p->u.named_accessor_property.configurable = configurable;
+
+  ecma_set_pointer( prop_p->next_property_p, ecma_get_pointer( obj_p->properties_p));
+  ecma_set_pointer( obj_p->properties_p, prop_p);
+
+  return prop_p;
+} /* ecma_create_named_accessor_property */
 
 /**
  * Find named data property or named access property in specified object.

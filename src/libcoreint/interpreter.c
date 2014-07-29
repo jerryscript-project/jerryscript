@@ -127,8 +127,7 @@ run_int_from_pos (int start_pos,
           completion = __opfuncs[curr->op_idx](*curr, &int_data);
 
           JERRY_ASSERT( !ecma_is_completion_value_normal( completion)
-                        || ecma_is_completion_value_normal_simple_value(completion,
-                                                                        ECMA_SIMPLE_VALUE_EMPTY) );
+                        || ecma_is_empty_completion_value( completion) );
         } while ( completion.type == ECMA_COMPLETION_TYPE_NORMAL );
 
       if ( completion.type == ECMA_COMPLETION_TYPE_BREAK )

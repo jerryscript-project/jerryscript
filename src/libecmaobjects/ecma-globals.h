@@ -63,12 +63,18 @@ typedef enum {
  * Simple ecma-values
  */
 typedef enum {
-    ECMA_SIMPLE_VALUE_EMPTY, /**< empty value (see also: ECMA-262 v5, 8.9 Completion specification type) */
+    /**
+     * Empty value is implementation defined value, used for:
+     *   - representing empty value in completion values (see also: ECMA-262 v5, 8.9 Completion specification type);
+     *   - values of uninitialized immutable bindings;
+     *   - values of empty register variables.
+     */
+    ECMA_SIMPLE_VALUE_EMPTY,
     ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
     ECMA_SIMPLE_VALUE_NULL, /**< null value */
     ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
     ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-    ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< special value for an array's elements that exists,
+    ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exists,
                                            but is stored directly in the array's property list
                                            (used for array elements with non-default attribute values) */
     ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
@@ -183,7 +189,7 @@ typedef enum
 } ecma_property_configurable_value_t;
 
 /**
- * Description of ecma-property.
+ * Description of ecma-property
  */
 typedef struct ecma_property_t {
     /** Property's type (ecma_property_type_t) */
@@ -342,6 +348,54 @@ typedef struct ecma_object_t {
     /** GC's information */
     ecma_gc_info_t GCInfo;
 } __packed ecma_object_t;
+
+/**
+ * Description of ECMA property descriptor
+ *
+ * See also: ECMA-262 v5, 8.10.
+ *
+ * Note:
+ *      If a component of descriptor is undefined then corresponding
+ *      field should contain it's default value.
+ */
+typedef struct
+{
+  /** Is [[Value]] defined? */
+  unsigned int is_value_defined : 1;
+
+  /** Is [[Get]] defined? */
+  unsigned int is_get_defined : 1;
+
+  /** Is [[Set]] defined? */
+  unsigned int is_set_defined : 1;
+
+  /** Is [[Writable]] defined? */
+  unsigned int is_writable_defined : 1;
+
+  /** Is [[Enumerable]] defined? */
+  unsigned int is_enumerable_defined : 1;
+
+  /** Is [[Configurable]] defined? */
+  unsigned int is_configurable_defined : 1;
+
+  /** [[Value]] */
+  ecma_value_t value;
+
+  /** [[Get]] */
+  ecma_object_t* get_p;
+
+  /** [[Set]] */
+  ecma_object_t* set_p;
+
+  /** [[Writable]] */
+  ecma_property_writable_value_t writable;
+
+  /** [[Enumerable]] */
+  ecma_property_enumerable_value_t enumerable;
+
+  /** [[Configurable]] */
+  ecma_property_configurable_value_t configurable;
+} ecma_property_descriptor_t;
 
 /**
  * Description of an ecma-character

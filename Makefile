@@ -53,7 +53,12 @@ export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(for
 export OUT_DIR = ./out
 export UNITTESTS_SRC_DIR = ./tests/unit
 
+export SHELL=/bin/bash
+
 export dwarf4
+export echo
+export todo
+export fixme
 
 all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 

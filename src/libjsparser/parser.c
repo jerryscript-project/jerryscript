@@ -538,7 +538,7 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 static void
 parse_function_declaration (void)
 {
-  T_IDX name;
+  T_IDX name, jmp_oc;
 
   assert_keyword (KW_FUNCTION);
 
@@ -549,6 +549,9 @@ parse_function_declaration (void)
   skip_newlines ();
   parse_argument_list (AL_FUNC_DECL, name);
 
+  jmp_oc = opcode_counter;
+  DUMP_OPCODE (jmp_down, INVALID_VALUE);
+
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   skip_newlines ();
@@ -557,6 +560,7 @@ parse_function_declaration (void)
   next_token_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
+  REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
 }
 
 /* function_expression
@@ -565,7 +569,7 @@ parse_function_declaration (void)
 static T_IDX
 parse_function_expression (void)
 {
-  T_IDX name, lhs;
+  T_IDX name, lhs, jmp_oc;
 
   assert_keyword  (KW_FUNCTION);
 
@@ -581,6 +585,9 @@ parse_function_expression (void)
   skip_newlines ();
   lhs = parse_argument_list (AL_FUNC_EXPR, name);  
 
+  jmp_oc = opcode_counter;
+  DUMP_OPCODE (jmp_down, INVALID_VALUE);
+
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   skip_newlines ();
@@ -589,6 +596,7 @@ parse_function_expression (void)
   token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
+  REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
 
   return lhs;
 }

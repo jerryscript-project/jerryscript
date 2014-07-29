@@ -208,11 +208,11 @@ ecma_get_internal_property(ecma_object_t *object_p, /**< object descriptor */
  * @return pointer to newly created property
  */
 ecma_property_t*
-ecma_create_named_property(ecma_object_t *obj_p, /**< object */
-                         ecma_char_t *name_p, /**< property name */
-                         ecma_property_writable_value_t writable, /**< 'writable' attribute */
-                         ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
-                         ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
+                                ecma_char_t *name_p, /**< property name */
+                                ecma_property_writable_value_t writable, /**< 'writable' attribute */
+                                ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
+                                ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
 {
   JERRY_ASSERT( obj_p != NULL && name_p != NULL );
 
@@ -232,7 +232,40 @@ ecma_create_named_property(ecma_object_t *obj_p, /**< object */
   ecma_set_pointer( obj_p->properties_p, prop);
 
   return prop;
-} /* ecma_create_named_property */
+} /* ecma_create_named_data_property */
+
+/**
+ * Create named accessor property with given name, attributes, getter and setter.
+ *
+ * @return pointer to newly created property
+ */
+ecma_property_t*
+ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
+                                    ecma_char_t *name_p, /**< property name */
+                                    ecma_object_t *get_p, /**< getter */
+                                    ecma_object_t *set_p, /**< setter */
+                                    ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
+                                    ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+{
+  JERRY_ASSERT( obj_p != NULL && name_p != NULL );
+
+  ecma_property_t *prop_p = ecma_alloc_property();
+
+  prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
+
+  ecma_set_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
+
+  ecma_set_pointer( prop_p->u.named_accessor_property.get_p, get_p);
+  ecma_set_pointer( prop_p->u.named_accessor_property.set_p, set_p);
+
+  prop_p->u.named_accessor_property.enumerable = enumerable;
+  prop_p->u.named_accessor_property.configurable = configurable;
+
+  ecma_set_pointer( prop_p->next_property_p, ecma_get_pointer( obj_p->properties_p));
+  ecma_set_pointer( obj_p->properties_p, prop_p);
+
+  return prop_p;
+} /* ecma_create_named_accessor_property */
 
 /**
  * Find named data property or named access property in specified object.
@@ -699,96 +732,6 @@ ecma_free_array( ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of th
         non_first_chunk_p = next_chunk_p;
     }
 } /* ecma_free_array */
-
-/**
- * ECMA property descriptor constructor.
- *
- * @return ecma property descriptor
- */
-ecma_property_descriptor_t
-ecma_make_property_descriptor( bool is_value_defined, /**< is [[Value]] defined */
-                               bool is_get_defined, /**< is [[Get]] defined */
-                               bool is_set_defined, /**< is [[Set]] defined */
-                               bool is_writable_defined, /**< is [[Writable]] defined */
-                               bool is_enumerable_defined, /**< is [[Enumerable]] defined */
-                               bool is_configurable_defined, /**< is [[Configurable]] defined */
-                               ecma_value_t value, /**< [[Value]] */
-                               ecma_value_t get, /**< [[Get]] */
-                               ecma_value_t set, /**< [[Set]] */
-                               ecma_property_writable_value_t writable, /**< [[Writable]] */
-                               ecma_property_enumerable_value_t enumerable, /**< [[Enumerable]] */
-                               ecma_property_configurable_value_t configurable) /**< [[Configurable]] */
-{
-  ecma_property_descriptor_t prop_desc;
-
-  prop_desc.is_value_defined = is_value_defined;
-  prop_desc.is_get_defined = is_get_defined;
-  prop_desc.is_set_defined = is_set_defined;
-  prop_desc.is_writable_defined = is_writable_defined;
-  prop_desc.is_enumerable_defined = is_enumerable_defined;
-  prop_desc.is_configurable_defined = is_configurable_defined;
-
-  if ( prop_desc.is_value_defined )
-    {
-      prop_desc.value = value;
-    }
-
-  if ( prop_desc.is_get_defined )
-    {
-      prop_desc.get = get;
-    }
-
-  if ( prop_desc.is_set_defined )
-    {
-      prop_desc.set = set;
-    }
-
-  if ( prop_desc.is_writable_defined )
-    {
-      prop_desc.writable = writable;
-    }
-
-  if ( prop_desc.is_enumerable_defined )
-    {
-      prop_desc.enumerable = enumerable;
-    }
-
-  if ( prop_desc.is_configurable_defined )
-    {
-      prop_desc.configurable = configurable;
-    }
-
-  return prop_desc;
-} /* ecma_make_property_descriptor */
-
-/**
- * Free the ecma property descriptor.
- */
-void
-ecma_free_property_descriptor( ecma_property_descriptor_t prop_desc) /**< ECMA property descriptor */
-{
-  if ( prop_desc.is_value_defined )
-    {
-      ecma_free_value( prop_desc.value);
-    }
-
-  if ( prop_desc.is_get_defined )
-    {
-      ecma_free_value( prop_desc.get);
-    }
-
-  if ( prop_desc.is_set_defined )
-    {
-      ecma_free_value( prop_desc.set);
-    }
-
-  prop_desc.is_value_defined = false;
-  prop_desc.is_get_defined = false;
-  prop_desc.is_set_defined = false;
-  prop_desc.is_writable_defined = false;
-  prop_desc.is_enumerable_defined = false;
-  prop_desc.is_configurable_defined = false;
-} /* ecma_free_property_descriptor */
 
 /**
  * @}

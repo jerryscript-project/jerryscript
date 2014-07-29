@@ -90,12 +90,12 @@ ecma_op_create_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environmen
     {
       JERRY_ASSERT( ecma_is_completion_value_normal_false( ecma_op_has_binding( lex_env_p, name_p)) );
 
-      ecma_create_named_property( lex_env_p,
-                                name_p,
-                                ECMA_PROPERTY_WRITABLE,
-                                ECMA_PROPERTY_NOT_ENUMERABLE,
-                                is_deletable ? ECMA_PROPERTY_CONFIGURABLE
-                                             : ECMA_PROPERTY_NOT_CONFIGURABLE); 
+      ecma_create_named_data_property( lex_env_p,
+                                       name_p,
+                                       ECMA_PROPERTY_WRITABLE,
+                                       ECMA_PROPERTY_NOT_ENUMERABLE,
+                                       is_deletable ? ECMA_PROPERTY_CONFIGURABLE
+                                                    : ECMA_PROPERTY_NOT_CONFIGURABLE); 
 
 
       break;
@@ -316,11 +316,11 @@ ecma_op_create_immutable_binding(ecma_object_t *lex_env_p, /**< lexical environm
          * Warning:
          *         Whether immutable bindings are deletable seems not to be defined by ECMA v5.
          */
-        ecma_property_t *prop_p = ecma_create_named_property( lex_env_p,
-                                                              name_p,
-                                                              ECMA_PROPERTY_NOT_WRITABLE,
-                                                              ECMA_PROPERTY_NOT_ENUMERABLE,
-                                                              ECMA_PROPERTY_NOT_CONFIGURABLE);
+        ecma_property_t *prop_p = ecma_create_named_data_property( lex_env_p,
+                                                                   name_p,
+                                                                   ECMA_PROPERTY_NOT_WRITABLE,
+                                                                   ECMA_PROPERTY_NOT_ENUMERABLE,
+                                                                   ECMA_PROPERTY_NOT_CONFIGURABLE);
 
         JERRY_ASSERT( ecma_is_value_undefined( prop_p->u.named_data_property.value ) );
 

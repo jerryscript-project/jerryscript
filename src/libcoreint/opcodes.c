@@ -20,6 +20,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-magic-strings.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-operations.h"
 #include "ecma-try-catch-macro.h"
@@ -136,11 +137,10 @@ free_string_literal_copy(string_literal_copy *str_lit_descr_p) /**< string liter
 static bool
 do_strict_eval_arguments_check( ecma_reference_t ref) /**< ECMA-reference */
 {
-  FIXME( Move magic strings to header file and make them ecma_char_t[] );
   FIXME( Replace strcmp with ecma_char_t[] comparator );
   return ( ref.is_strict
-          && ( __strcmp( (char*)ref.referenced_name_p, "eval") == 0
-              || __strcmp( (char*)ref.referenced_name_p, "arguments") == 0 )
+          && ( __strcmp( (char*)ref.referenced_name_p, (char*)ecma_get_magic_string( ECMA_MAGIC_STRING_EVAL)) == 0
+              || __strcmp( (char*)ref.referenced_name_p, (char*)ecma_get_magic_string( ECMA_MAGIC_STRING_ARGUMENTS)) == 0 )
           && ( ref.base.value_type == ECMA_TYPE_OBJECT )
           && ( ecma_get_pointer( ref.base.value) != NULL )
           && ( ( (ecma_object_t*) ecma_get_pointer( ref.base.value) )->is_lexical_environment ) );

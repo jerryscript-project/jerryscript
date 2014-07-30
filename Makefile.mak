@@ -196,8 +196,6 @@ endif
 CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR) $(CFLAGS_WFATAL_ERRORS)
 DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=$$((64)) -DMEM_HEAP_AREA_SIZE=$$((2 * 1024 + 512)) -DMEM_STATS
 
-# FIXME:
-#  Add common-io.c and sensors.c
 SOURCES_JERRY = \
  $(sort \
  $(wildcard ./src/libruntime/*.c) \
@@ -288,6 +286,7 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
+	@ ./tools/jerry_gen_version_h.sh ./src/version.h
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
 		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src \

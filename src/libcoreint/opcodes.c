@@ -17,6 +17,7 @@
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-operations.h"
@@ -349,7 +350,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(construct_0)                     \
     op(construct_1)                     \
     op(construct_n)                     \
-    op(func_decl_0)                     \
     op(func_expr_0)                     \
     op(func_expr_1)                     \
     op(func_expr_n)                     \
@@ -1290,6 +1290,73 @@ opfunc_var_decl(OPCODE opdata, /**< operation data */
 
   return ecma_make_empty_completion_value();
 } /* opfunc_var_decl */
+
+ /**
+ * 'Function declaration with no parameters' opcode handler.
+ *
+ * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 5).
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_func_decl_0(OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  string_literal_copy function_name;
+  init_string_literal_copy( opdata.data.func_decl_0.name_lit_idx, &function_name);
+
+  TODO( Check if code of function itself is strict );
+
+  const bool is_strict = int_data->is_strict;
+
+  const interp_bytecode_idx varg_first_opcode_idx = (interp_bytecode_idx) (int_data->pos + 1);
+  int_data->pos = varg_first_opcode_idx;
+
+  TODO( Iterate vargs );
+
+  const interp_bytecode_idx jmp_down_opcode_idx = (interp_bytecode_idx) (int_data->pos);
+
+  TODO( ASSERT( Current opcode is jmp_down ) );
+
+  const interp_bytecode_idx function_code_opcode_idx = (interp_bytecode_idx) (jmp_down_opcode_idx + 1);
+
+  // a.
+  const ecma_char_t *fn = function_name.str_p;
+
+  // b.
+  TODO( Pass formal parameter list );
+  ecma_object_t *fo = ecma_op_create_function_object( NULL,
+                                                      0,
+                                                      int_data->lex_env_p,
+                                                      is_strict,
+                                                      function_code_opcode_idx);
+  ecma_value_t fo_value = ecma_make_object_value( fo);
+  
+  // c.
+  bool func_already_declared = ecma_is_completion_value_normal_true( ecma_op_has_binding (int_data->lex_env_p, fn));
+
+  // d.
+  if ( !func_already_declared )
+    {
+      FIXME( Pass configurableBindings that is true if and only if current code is eval code );
+      ecma_op_create_mutable_binding( int_data->lex_env_p,
+                                      fn,
+                                      false);
+    }
+
+  // e.
+  TODO( Check if current lexical environment is global environment and implement the case );
+
+  // f.
+  ecma_completion_value_t ret_value = ecma_op_set_mutable_binding( int_data->lex_env_p, fn, fo_value, is_strict);
+
+  ecma_free_value( fo_value);
+
+  free_string_literal_copy( &function_name);
+
+  return ret_value;
+} /* opfunc_func_decl_0 */
 
 /**
  * Exit from script with specified status code:

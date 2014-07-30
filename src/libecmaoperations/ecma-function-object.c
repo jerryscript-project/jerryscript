@@ -58,9 +58,9 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   // 6., 7.
   TODO( Decide how to setup [[Call]] and [[Construct]] );
 
+  // 9.
   ecma_ref_object( scope_p);
 
-  // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_SCOPE);
   ecma_set_pointer( scope_prop_p->u.internal_property.value, scope_p);
 

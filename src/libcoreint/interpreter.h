@@ -25,7 +25,7 @@ typedef uint16_t interp_bytecode_idx;
 struct __int_data
 {
   interp_bytecode_idx pos; /**< current opcode to execute */
-  ecma_object_t *this_binding_p; /**< this binding for current context */
+  ecma_value_t this_binding; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   T_IDX min_reg_num; /**< minimum idx used for register identification */
@@ -36,7 +36,7 @@ struct __int_data
 void init_int (const OPCODE* program_p);
 bool run_int (void);
 ecma_completion_value_t run_int_from_pos (interp_bytecode_idx start_pos,
-                                          ecma_object_t *this_binding_p,
+                                          ecma_value_t this_binding_value,
                                           ecma_object_t *lex_env_p,
                                           bool is_strict);
 

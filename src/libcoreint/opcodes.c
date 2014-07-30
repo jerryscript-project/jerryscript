@@ -1397,7 +1397,7 @@ opfunc_call_0( OPCODE opdata, /**< operation data */
                                                                       ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
       ret_value = run_int_from_pos( code_idx,
-                                    NULL,
+                                    ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
                                     new_lex_env_p,
                                     false);
 

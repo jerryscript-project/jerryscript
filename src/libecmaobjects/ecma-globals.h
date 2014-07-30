@@ -295,7 +295,8 @@ typedef enum {
                                    Arguments (10.6), Array (15.4) specification-defined objects
                                    and not host objects */
     ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
-    ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3) */
+    ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
+    ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
     ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
     ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
     ECMA_OBJECT_TYPE_HOST /**< Host object */

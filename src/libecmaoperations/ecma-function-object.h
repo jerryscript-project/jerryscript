@@ -37,6 +37,11 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[],
 
 extern ecma_object_t* ecma_op_get_throw_type_error( void);
 
+extern ecma_completion_value_t ecma_op_function_call( ecma_object_t *func_obj_p,
+                                                      ecma_value_t this_arg_value,
+                                                      ecma_value_t* arguments_list_p,
+                                                      size_t arguments_list_len);
+
 /**
  * @}
  * @}

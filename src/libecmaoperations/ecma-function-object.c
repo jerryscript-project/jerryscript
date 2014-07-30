@@ -19,6 +19,8 @@
 #include "ecma-helpers.h"
 #include "ecma-magic-strings.h"
 #include "ecma-objects-properties.h"
+#include "ecma-try-catch-macro.h"
+#include "globals.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
@@ -26,6 +28,51 @@
  * \addtogroup ecmafunctionobject ECMA Function object related routines
  * @{
  */
+
+/**
+ * Pack 'is_strict' flag and opcode index to value
+ * that can be stored in an [[Code]] internal property.
+ *
+ * @return packed value
+ */
+static uint32_t
+ecma_pack_code_internal_property_value( bool is_strict, /**< is code strict? */
+                                        interp_bytecode_idx opcode_idx) /**< index of first opcode */
+{
+  uint32_t value = opcode_idx;
+  const uint32_t is_strict_bit_offset = sizeof(value) * JERRY_BITSINBYTE - 1;
+
+  JERRY_ASSERT( ( ( value ) & ( 1u << is_strict_bit_offset ) ) == 0 );
+
+  if ( is_strict )
+    {
+      value |= ( 1u << is_strict_bit_offset );
+    }
+
+  return value;
+} /* ecma_pack_code_internal_property_value */
+
+/**
+ * Unpack 'is_strict' flag and opcode index from value
+ * that can be stored in an [[Code]] internal property.
+ *
+ * @return opcode index
+ */
+static interp_bytecode_idx
+ecma_unpack_code_internal_property_value( uint32_t value, /**< packed value */
+                                          bool* out_is_strict_p) /**< out: is code strict? */
+{
+  JERRY_ASSERT( out_is_strict_p != NULL );
+
+  const uint32_t is_strict_bit_offset = sizeof(value) * JERRY_BITSINBYTE - 1;
+
+  bool is_strict = ( ( value & ( 1u << is_strict_bit_offset ) ) != 0 );
+  *out_is_strict_p = is_strict;
+
+  interp_bytecode_idx opcode_idx = (interp_bytecode_idx) ( value & ~( 1u << is_strict_bit_offset ) );
+
+  return opcode_idx;
+} /* ecma_unpack_code_internal_property_value */
 
 /**
  * IsCallable operation.
@@ -48,7 +95,8 @@ ecma_op_is_callable( ecma_value_t value) /**< ecma-value */
   JERRY_ASSERT( obj_p != NULL );
   JERRY_ASSERT( !obj_p->is_lexical_environment );
 
-  return true;
+  return ( obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION
+           || obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION );
 } /* ecma_op_is_callable */
 
 /**
@@ -95,7 +143,8 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
 
   // 12.
   ecma_property_t *code_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_CODE);
-  code_prop_p->u.internal_property.value = first_opcode_idx;
+  code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value( is_strict,
+                                                                                   first_opcode_idx);
 
   // 16.
   FIXME( Use 'new Object()' instead );
@@ -180,6 +229,102 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
 
   return f;
 } /* ecma_op_create_function_object */
+
+/**
+ * [[Call]] implementation for Function objects,
+ * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
+ * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
+                       ecma_value_t this_arg_value, /**< 'this' argument's value */
+                       ecma_value_t* arguments_list_p, /**< arguments list */
+                       size_t arguments_list_len) /**< length of arguments list */
+{
+  JERRY_ASSERT( func_obj_p != NULL && !func_obj_p->is_lexical_environment );
+  JERRY_ASSERT( ecma_op_is_callable( ecma_make_object_value( func_obj_p)) );
+  JERRY_ASSERT( arguments_list_len == 0 || arguments_list_p != NULL );
+
+  if ( func_obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION )
+    {
+      ecma_completion_value_t ret_value;
+
+      /* Entering Function Code (ECMA-262 v5, 10.4.3) */
+
+      ecma_property_t *scope_prop_p = ecma_get_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+      ecma_property_t *code_prop_p = ecma_get_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
+
+      ecma_object_t *scope_p = ecma_get_pointer( scope_prop_p->u.internal_property.value);
+      uint32_t code_prop_value = code_prop_p->u.internal_property.value;
+
+      bool is_strict;
+      // 8.
+      interp_bytecode_idx code_first_opcode_idx = ecma_unpack_code_internal_property_value( code_prop_value, &is_strict);
+
+      ecma_value_t this_binding;
+      // 1.
+      if ( is_strict )
+        {
+          this_binding = ecma_copy_value( this_arg_value);
+        }
+      else if ( ecma_is_value_undefined( this_arg_value)
+                || ecma_is_value_null( this_arg_value) )
+        {
+          // 2.
+          FIXME( Assign Global object when it will be implemented );
+
+          this_binding = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
+        }
+      else
+        {
+          // 3., 4.
+          ecma_completion_value_t completion = ecma_op_to_object( this_arg_value);
+          JERRY_ASSERT( ecma_is_completion_value_normal( completion) );
+
+          this_binding = completion.value;
+        }
+
+      // 5.
+      ecma_object_t *local_env_p = ecma_create_lexical_environment( scope_p, ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+
+      // 9.
+      /* Declaration binding instantiation (ECMA-262 v5, 10.5), block 4 */
+      TODO( Perform declaration binding instantion when [[FormalParameters]] list will be supported );
+      if ( arguments_list_len != 0 )
+        {
+          JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( arguments_list_p );
+        }
+    
+      ecma_completion_value_t completion = run_int_from_pos( code_first_opcode_idx,
+                                                             this_binding,
+                                                             local_env_p,
+                                                             is_strict);
+      if ( ecma_is_completion_value_normal( completion) )
+        {
+          JERRY_ASSERT( ecma_is_empty_completion_value( completion) );
+
+          ret_value = ecma_make_simple_completion_value( ECMA_SIMPLE_VALUE_UNDEFINED);
+        }
+      else
+        {
+          ret_value = completion;
+        }
+
+      ecma_deref_object( local_env_p);
+      ecma_free_value( this_binding);
+
+      return ret_value;
+    }
+  else
+    {
+      JERRY_ASSERT( func_obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION );
+
+      JERRY_UNIMPLEMENTED();
+    }
+} /* ecma_op_function_call */
 
 /**
  * Get [[ThrowTypeError]] Function Object

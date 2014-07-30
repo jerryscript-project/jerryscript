@@ -14,6 +14,7 @@
  */
 
 #include "ecma-exceptions.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects-properties.h"
@@ -546,16 +547,28 @@ ecma_op_object_define_own_property( ecma_object_t *obj_p, /**< the object */
           if ( is_property_desc_generic_descriptor
                || is_property_desc_data_descriptor )
             {
-              ecma_create_named_data_property( obj_p,
-                                               property_name_p,
-                                               property_desc.writable,
-                                               property_desc.enumerable,
-                                               property_desc.configurable);
+              ecma_property_t *new_prop_p = ecma_create_named_data_property( obj_p,
+                                                                             property_name_p,
+                                                                             property_desc.writable,
+                                                                             property_desc.enumerable,
+                                                                             property_desc.configurable);
+
+              new_prop_p->u.named_data_property.value = ecma_copy_value( property_desc.value);
             }
           else
             {
               // b.
               JERRY_ASSERT( is_property_desc_accessor_descriptor );
+
+              if ( property_desc.get_p != NULL )
+                {
+                  ecma_ref_object( property_desc.get_p);
+                }
+
+              if ( property_desc.set_p != NULL )
+                {
+                  ecma_ref_object( property_desc.set_p);
+                }
 
               ecma_create_named_accessor_property( obj_p,
                                                    property_name_p,

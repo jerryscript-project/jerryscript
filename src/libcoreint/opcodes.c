@@ -564,7 +564,9 @@ ecma_completion_value_t
 opfunc_jmp_down (OPCODE opdata, /**< operation data */
                  struct __int_data *int_data) /**< interpreter context */
 {
-  int_data->pos += opdata.data.jmp_down.opcode_count;
+  JERRY_ASSERT( int_data->pos <= int_data->pos + opdata.data.jmp_up.opcode_count );
+
+  int_data->pos = (interp_bytecode_idx) ( int_data->pos + opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_down */
@@ -579,9 +581,9 @@ ecma_completion_value_t
 opfunc_jmp_up (OPCODE opdata, /**< operation data */
                struct __int_data *int_data) /**< interpreter context */
 {
-  int_data->pos -= opdata.data.jmp_up.opcode_count;
+  JERRY_ASSERT( int_data->pos >= opdata.data.jmp_up.opcode_count );
 
-  JERRY_ASSERT( int_data->pos >= 0 );
+  int_data->pos = (interp_bytecode_idx) ( int_data->pos - opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_up */

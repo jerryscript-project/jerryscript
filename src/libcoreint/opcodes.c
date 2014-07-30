@@ -565,7 +565,7 @@ opfunc_jmp_down (OPCODE opdata, /**< operation data */
 {
   JERRY_ASSERT( int_data->pos <= int_data->pos + opdata.data.jmp_up.opcode_count );
 
-  int_data->pos = (interp_bytecode_idx) ( int_data->pos + opdata.data.jmp_down.opcode_count );
+  int_data->pos = (op_idx_t) ( int_data->pos + opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_down */
@@ -582,7 +582,7 @@ opfunc_jmp_up (OPCODE opdata, /**< operation data */
 {
   JERRY_ASSERT( int_data->pos >= opdata.data.jmp_up.opcode_count );
 
-  int_data->pos = (interp_bytecode_idx) ( int_data->pos - opdata.data.jmp_down.opcode_count );
+  int_data->pos = (op_idx_t) ( int_data->pos - opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_up */
@@ -1309,16 +1309,16 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
 
   const bool is_strict = int_data->is_strict;
 
-  const interp_bytecode_idx varg_first_opcode_idx = (interp_bytecode_idx) (int_data->pos + 1);
+  const op_idx_t varg_first_opcode_idx = (op_idx_t) (int_data->pos + 1);
   int_data->pos = varg_first_opcode_idx;
 
   TODO( Iterate vargs );
 
-  const interp_bytecode_idx jmp_down_opcode_idx = (interp_bytecode_idx) (int_data->pos);
+  const op_idx_t jmp_down_opcode_idx = (op_idx_t) (int_data->pos);
 
   TODO( ASSERT( Current opcode is jmp_down ) );
 
-  const interp_bytecode_idx function_code_opcode_idx = (interp_bytecode_idx) (jmp_down_opcode_idx + 1);
+  const op_idx_t function_code_opcode_idx = (op_idx_t) (jmp_down_opcode_idx + 1);
 
   // a.
   const ecma_char_t *fn = function_name.str_p;

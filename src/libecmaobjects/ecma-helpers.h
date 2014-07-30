@@ -69,7 +69,7 @@ extern bool ecma_is_completion_value_normal_true( ecma_completion_value_t value)
 extern bool ecma_is_completion_value_normal_false( ecma_completion_value_t value);
 extern bool ecma_is_empty_completion_value( ecma_completion_value_t value);
 
-extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible);
+extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible, ecma_object_type_t type);
 extern ecma_object_t* ecma_create_lexical_environment( ecma_object_t *outer_lexical_environment_p, ecma_lexical_environment_type_t type);
 
 /* ecma-helpers.c */
@@ -77,11 +77,11 @@ extern ecma_property_t* ecma_create_internal_property(ecma_object_t *object_p, e
 extern ecma_property_t* ecma_find_internal_property(ecma_object_t *object_p, ecma_internal_property_id_t property_id);
 extern ecma_property_t* ecma_get_internal_property(ecma_object_t *object_p, ecma_internal_property_id_t property_id);
 
-extern ecma_property_t *ecma_create_named_data_property(ecma_object_t *obj_p, ecma_char_t *name_p, ecma_property_writable_value_t writable, ecma_property_enumerable_value_t enumerable, ecma_property_configurable_value_t configurable);
-extern ecma_property_t *ecma_create_named_accessor_property(ecma_object_t *obj_p, ecma_char_t *name_p, ecma_object_t *get_p, ecma_object_t *set_p, ecma_property_enumerable_value_t enumerable, ecma_property_configurable_value_t configurable);
-extern ecma_property_t *ecma_find_named_property(ecma_object_t *obj_p, ecma_char_t *name_p);
-extern ecma_property_t *ecma_get_named_property(ecma_object_t *obj_p, ecma_char_t *name_p);
-extern ecma_property_t *ecma_get_named_data_property(ecma_object_t *obj_p, ecma_char_t *name_p);
+extern ecma_property_t *ecma_create_named_data_property(ecma_object_t *obj_p, const ecma_char_t *name_p, ecma_property_writable_value_t writable, ecma_property_enumerable_value_t enumerable, ecma_property_configurable_value_t configurable);
+extern ecma_property_t *ecma_create_named_accessor_property(ecma_object_t *obj_p, const ecma_char_t *name_p, ecma_object_t *get_p, ecma_object_t *set_p, ecma_property_enumerable_value_t enumerable, ecma_property_configurable_value_t configurable);
+extern ecma_property_t *ecma_find_named_property(ecma_object_t *obj_p, const ecma_char_t *name_p);
+extern ecma_property_t *ecma_get_named_property(ecma_object_t *obj_p, const ecma_char_t *name_p);
+extern ecma_property_t *ecma_get_named_data_property(ecma_object_t *obj_p, const ecma_char_t *name_p);
 
 extern void ecma_free_internal_property(ecma_property_t *prop_p);
 extern void ecma_free_named_data_property(ecma_property_t *prop_p);

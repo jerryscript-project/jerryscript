@@ -20,9 +20,11 @@
 #include "globals.h"
 #include "opcodes.h"
 
+typedef uint16_t interp_bytecode_idx;
+
 struct __int_data
 {
-  int pos; /**< current opcode to execute */
+  interp_bytecode_idx pos; /**< current opcode to execute */
   ecma_object_t *this_binding_p; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
@@ -33,7 +35,7 @@ struct __int_data
 
 void init_int (const OPCODE* program_p);
 bool run_int (void);
-ecma_completion_value_t run_int_from_pos (int start_pos,
+ecma_completion_value_t run_int_from_pos (interp_bytecode_idx start_pos,
                                           ecma_object_t *this_binding_p,
                                           ecma_object_t *lex_env_p,
                                           bool is_strict);

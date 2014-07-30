@@ -231,10 +231,12 @@ ifeq ($(OPTION_MCU),disable)
  
  ifeq ($(OPTION_MUSL),enable)
   CC := musl-$(CC) 
+  DEFINES_JERRY += -DLIBC_MUSL
   CFLAGS_COMMON += -static
  else
   CFLAGS_COMMON += -fsanitize=address
  endif
+
  ifeq ($(OPTION_COLOR),enable)
   CFLAGS_COMMON += -fdiagnostics-color=always
  endif

@@ -26,7 +26,6 @@
 #include "serializer.h"
 #include "deserializer.h"
 #include "optimizer-passes.h"
-#include "version.h"
 
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
@@ -144,13 +143,16 @@ main (int argc __unused,
   bool parse_only = false;
   int i;
   
-  __printf("Build date: \t%s\n", jerry_build_date);
-  __printf("Commit hash:\t%s\n", jerry_commit_hash);
-  __printf("Branch name:\t%s\n", jerry_branch_name);
-  
   for (i = 1; i < argc; i++)
     {
-      if (!__strcmp ("--parse-only", argv[i]))
+      if (!__strcmp ("-v", argv[i]))
+        {
+          __printf("Build date: \t%s\n", JERRY_BUILD_DATE);
+          __printf("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
+          __printf("Branch name:\t%s\n", JERRY_BRANCH_NAME);
+          __printf("\n");
+        }
+      else if (!__strcmp ("--parse-only", argv[i]))
         {
           parse_only = true;
         }

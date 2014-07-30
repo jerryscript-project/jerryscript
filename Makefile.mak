@@ -193,8 +193,15 @@ endif
 # Jerry part sources, headers, includes, cflags, ldflags
 #
 
+GIT_BRANCH=$(shell git symbolic-ref -q HEAD)
+GIT_HASH=$(shell git rev-parse HEAD)
+BUILD_DATE=$(shell date +'%d/%m/%Y')
+
 CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR) $(CFLAGS_WFATAL_ERRORS)
 DEFINES_JERRY = -DMEM_HEAP_CHUNK_SIZE=$$((64)) -DMEM_HEAP_AREA_SIZE=$$((2 * 1024 + 512)) -DMEM_STATS
+DEFINES_JERRY += -DJERRY_BUILD_DATE="\"$(BUILD_DATE)\"" \
+                 -DJERRY_COMMIT_HASH="\"$(GIT_HASH)\"" \
+                 -DJERRY_BRANCH_NAME="\"$(GIT_BRANCH)\""
 
 SOURCES_JERRY = \
  $(sort \
@@ -288,7 +295,6 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
-	@ ./tools/jerry_gen_version_h.sh ./src/version.h
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
 		cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src \

@@ -147,6 +147,8 @@ typedef enum {
     ECMA_INTERNAL_PROPERTY_PROTOTYPE, /**< [[Prototype]] */
     ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
     ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
+    ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
+    ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
 
     /** provideThis property of lexical environment */
     ECMA_INTERNAL_PROPERTY_PROVIDE_THIS,
@@ -243,7 +245,7 @@ typedef struct ecma_property_t {
             unsigned int internal_property_type : 4;
 
             /** Value (may be a compressed pointer) */
-            unsigned int value : ECMA_POINTER_FIELD_WIDTH;
+            uint32_t value;
         } internal_property;
     } u;
 } ecma_property_t;
@@ -289,15 +291,33 @@ typedef enum {
  * Internal object types
  */
 typedef enum {
-    ECMA_GENERAL_OBJECT, /**< all objects that are not String (15.5), Function (15.3),
-                              Arguments (10.6), Array (15.4) specification-defined objects
-                              and not host objects */
-    ECMA_STRING_OBJECT, /**< String objects (15.5) */
-    ECMA_FUNCTION_OBJECT, /**< Function objects (15.3) */
-    ECMA_ARGUMENTS_OBJECT, /**< Arguments object (10.6) */
-    ECMA_ARRAY_OBJECT, /**< Array object (15.4) */
-    ECMA_HOST_OBJECT /**< Host object */
+    ECMA_OBJECT_TYPE_GENERAL, /**< all objects that are not String (15.5), Function (15.3),
+                                   Arguments (10.6), Array (15.4) specification-defined objects
+                                   and not host objects */
+    ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
+    ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3) */
+    ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
+    ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
+    ECMA_OBJECT_TYPE_HOST /**< Host object */
 } ecma_object_type_t;
+
+/**
+ * ECMA-defined object classes
+ */
+typedef enum {
+    ECMA_OBJECT_CLASS_OBJECT, /**< "Object" */
+    ECMA_OBJECT_CLASS_FUNCTION, /**< "Function" */
+    ECMA_OBJECT_CLASS_ARGUMENTS, /**< "Arguments" */
+    ECMA_OBJECT_CLASS_ARRAY, /**< "Array" */
+    ECMA_OBJECT_CLASS_BOOLEAN, /**< "Boolean" */
+    ECMA_OBJECT_CLASS_DATE, /**< "Date" */
+    ECMA_OBJECT_CLASS_ERROR, /**< "Error" */
+    ECMA_OBJECT_CLASS_JSON, /**< "JSON" */
+    ECMA_OBJECT_CLASS_MATH, /**< "Math" */
+    ECMA_OBJECT_CLASS_NUMBER, /**< "Number" */
+    ECMA_OBJECT_CLASS_REGEXP, /**< "RegExp" */
+    ECMA_OBJECT_CLASS_STRING /**< "String" */
+} ecma_object_class_t;
 
 /**
  * Description of ECMA-object or lexical environment
@@ -324,7 +344,7 @@ typedef struct ecma_object_t {
             unsigned int extensible : 1;
 
             /** Implementation internal object type (ecma_object_type_t) */
-            unsigned int object_type : 3;
+            unsigned int type : 3;
 
             /** Compressed pointer to prototype object (ecma_object_t) */
             unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;

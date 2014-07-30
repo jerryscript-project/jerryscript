@@ -69,7 +69,7 @@ extern bool ecma_is_completion_value_normal_true( ecma_completion_value_t value)
 extern bool ecma_is_completion_value_normal_false( ecma_completion_value_t value);
 extern bool ecma_is_empty_completion_value( ecma_completion_value_t value);
 
-extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible);
+extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible, ecma_object_type_t type);
 extern ecma_object_t* ecma_create_lexical_environment( ecma_object_t *outer_lexical_environment_p, ecma_lexical_environment_type_t type);
 
 /* ecma-helpers.c */

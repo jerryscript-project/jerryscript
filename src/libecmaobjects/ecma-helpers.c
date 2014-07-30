@@ -79,7 +79,8 @@ ecma_decompress_pointer(uintptr_t compressed_pointer) /**< pointer to decompress
  */
 ecma_object_t*
 ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe of the object (or NULL) */
-                  bool is_extensible) /**< value of extensible attribute */
+                    bool is_extensible, /**< value of extensible attribute */
+                    ecma_object_type_t type) /**< object type */
 {
     ecma_object_t *object_p = ecma_alloc_object();
 
@@ -93,6 +94,7 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
 
     object_p->u.object.extensible = is_extensible;
     ecma_set_pointer( object_p->u.object.prototype_object_p, prototype_object_p);
+    object_p->u.object.type = type;
     
     return object_p;
 } /* ecma_create_object */
@@ -111,7 +113,7 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
  */
 ecma_object_t*
 ecma_create_lexical_environment(ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
-                              ecma_lexical_environment_type_t type) /**< type of lexical environment to create */
+                                ecma_lexical_environment_type_t type) /**< type of lexical environment to create */
 {
     ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
 
@@ -122,6 +124,11 @@ ecma_create_lexical_environment(ecma_object_t *outer_lexical_environment_p, /**<
 
     new_lexical_environment_p->GCInfo.is_object_valid = true;
     new_lexical_environment_p->GCInfo.u.refs = 1;
+
+    if ( outer_lexical_environment_p != NULL )
+      {
+        ecma_ref_object( outer_lexical_environment_p);
+      }
 
     ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
     
@@ -407,9 +414,9 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
 
   switch ( property_id )
   {
-    case ECMA_INTERNAL_PROPERTY_CLASS: /* a string */
     case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
+    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* an array */
       {
         ecma_free_array( ecma_get_pointer( property_value));
         break;
@@ -425,6 +432,8 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean flag */
+    case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
+    case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
       {
         break;
       }

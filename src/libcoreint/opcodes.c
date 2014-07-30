@@ -1359,6 +1359,24 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
 } /* opfunc_func_decl_0 */
 
 /**
+ * 'Return with no expression' opcode handler.
+ *
+ * See also: ECMA-262 v5, 12.9
+ *
+ * @return completion value
+ *         Returned value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
+ */
+ecma_completion_value_t
+opfunc_ret( OPCODE opdata __unused, /**< operation data */
+            struct __int_data *int_data __unused) /**< interpreter context */
+{
+  return ecma_make_completion_value( ECMA_COMPLETION_TYPE_RETURN,
+                                     ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
+                                     ECMA_TARGET_ID_RESERVED);
+} /* opfunc_ret */
+
+/**
  * Exit from script with specified status code:
  *   0 - for successful completion
  *   1 - to indicate failure.

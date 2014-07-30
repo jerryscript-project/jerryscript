@@ -26,6 +26,30 @@
  */
 
 /**
+ * IsCallable operation.
+ *
+ * See also: ECMA-262 v5, 9.11
+ *
+ * @return true, if value is callable object;
+ *         false - otherwise.
+ */
+bool
+ecma_op_is_callable( ecma_value_t value) /**< ecma-value */
+{
+  if ( value.value_type != ECMA_TYPE_OBJECT )
+    {
+      return false;
+    }
+
+  ecma_object_t *obj_p = ecma_get_pointer( value.value);
+
+  JERRY_ASSERT( obj_p != NULL );
+  JERRY_ASSERT( !obj_p->is_lexical_environment );
+
+  return true;
+} /* ecma_op_is_callable */
+
+/**
  * Function object creation operation.
  *
  * See also: ECMA-262 v5, 13.2
@@ -44,9 +68,9 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
 
   ecma_object_t *f = ecma_create_object( NULL, true, ECMA_OBJECT_TYPE_FUNCTION);
 
-  // 2., 8
+  // 2., 6., 7., 8.
   /*
-   * We don't setup [[Get]], [[HasInstance]] for each function object.
+   * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
    * Instead we set the object's type to ECMA_OBJECT_TYPE_FUNCTION
    * that defines which version of [[Get]] routine should be used on demand.
    */
@@ -54,9 +78,6 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   // 3.
   ecma_property_t *class_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_FUNCTION;
-
-  // 6., 7.
-  TODO( Decide how to setup [[Call]] and [[Construct]] );
 
   // 9.
   ecma_ref_object( scope_p);

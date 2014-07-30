@@ -474,7 +474,7 @@ typedef struct
   ecma_value_t base;
 
   /** referenced name value pointer */
-  ecma_char_t *referenced_name_p;
+  const ecma_char_t *referenced_name_p;
 
   /** strict reference flag */
   bool is_strict;

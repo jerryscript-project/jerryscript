@@ -41,8 +41,8 @@
  */
 ecma_reference_t
 ecma_op_get_identifier_reference(ecma_object_t *lex_env_p, /**< lexical environment */
-                              ecma_char_t *name_p, /**< identifier's name */
-                              bool is_strict) /**< strict reference flag */
+                                 const ecma_char_t *name_p, /**< identifier's name */
+                                 bool is_strict) /**< strict reference flag */
 {
   JERRY_ASSERT( lex_env_p != NULL );
 
@@ -83,8 +83,8 @@ ecma_op_get_identifier_reference(ecma_object_t *lex_env_p, /**< lexical environm
  */
 ecma_reference_t
 ecma_make_reference(ecma_value_t base, /**< base value */
-                   ecma_char_t *name_p, /**< referenced name */
-                   bool is_strict) /**< strict reference flag */
+                    const ecma_char_t *name_p, /**< referenced name */
+                    bool is_strict) /**< strict reference flag */
 {
   ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value( base),
                                               .referenced_name_p = name_p,

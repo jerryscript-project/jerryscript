@@ -132,11 +132,11 @@ ecma_create_lexical_environment(ecma_object_t *outer_lexical_environment_p, /**<
  * Create internal property in an object and link it
  * into the object's properties' linked-list
  * 
- * @return pointer to newly created property's des
+ * @return pointer to newly created property
  */
 ecma_property_t*
 ecma_create_internal_property(ecma_object_t *object_p, /**< the object */
-                            ecma_internal_property_id_t property_id) /**< internal property identifier */
+                              ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
     ecma_property_t *new_property_p = ecma_alloc_property();
     
@@ -209,7 +209,7 @@ ecma_get_internal_property(ecma_object_t *object_p, /**< object descriptor */
  */
 ecma_property_t*
 ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
-                                ecma_char_t *name_p, /**< property name */
+                                const ecma_char_t *name_p, /**< property name */
                                 ecma_property_writable_value_t writable, /**< 'writable' attribute */
                                 ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
                                 ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
@@ -241,7 +241,7 @@ ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
-                                    ecma_char_t *name_p, /**< property name */
+                                    const ecma_char_t *name_p, /**< property name */
                                     ecma_object_t *get_p, /**< getter */
                                     ecma_object_t *set_p, /**< setter */
                                     ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
@@ -275,7 +275,7 @@ ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_find_named_property(ecma_object_t *obj_p, /**< object to find property in */
-                       ecma_char_t *name_p) /**< property's name */
+                         const ecma_char_t *name_p) /**< property's name */
 {
     JERRY_ASSERT( obj_p != NULL );
     JERRY_ASSERT( name_p != NULL );
@@ -319,7 +319,7 @@ ecma_find_named_property(ecma_object_t *obj_p, /**< object to find property in *
  */
 ecma_property_t*
 ecma_get_named_property(ecma_object_t *obj_p, /**< object to find property in */
-                      ecma_char_t *name_p) /**< property's name */
+                        const ecma_char_t *name_p) /**< property's name */
 {
     JERRY_ASSERT( obj_p != NULL );
     JERRY_ASSERT( name_p != NULL );
@@ -342,7 +342,7 @@ ecma_get_named_property(ecma_object_t *obj_p, /**< object to find property in */
  */
 ecma_property_t*
 ecma_get_named_data_property(ecma_object_t *obj_p, /**< object to find property in */
-                          ecma_char_t *name_p) /**< property's name */
+                             const ecma_char_t *name_p) /**< property's name */
 {
     JERRY_ASSERT( obj_p != NULL );
     JERRY_ASSERT( name_p != NULL );
@@ -657,15 +657,15 @@ ecma_compare_ecma_string_to_ecma_string(const ecma_array_first_chunk_t *string1_
  */
 bool
 ecma_compare_zt_string_to_ecma_string(const ecma_char_t *string_p, /**< zero-terminated string */
-                                 const ecma_array_first_chunk_t *ecma_string_p) /* ecma-string */
+                                      const ecma_array_first_chunk_t *ecma_string_p) /* ecma-string */
 {
   JERRY_ASSERT( string_p != NULL );
   JERRY_ASSERT( ecma_string_p != NULL );
 
   const ecma_char_t *str_iter_p = string_p;
   ecma_length_t ecma_str_len = ecma_string_p->header.unit_number;
-  const ecma_char_t *current_chunk_chars_cur = (ecma_char_t*) ecma_string_p->data,
-        *current_chunk_chars_end = (ecma_char_t*) (ecma_string_p->data
+  const ecma_char_t *current_chunk_chars_cur = (const ecma_char_t*) ecma_string_p->data,
+        *current_chunk_chars_end = (const ecma_char_t*) (ecma_string_p->data
                                                    + sizeof(ecma_string_p->data));
 
   JERRY_STATIC_ASSERT( ECMA_POINTER_FIELD_WIDTH <= sizeof(uint16_t) * JERRY_BITSINBYTE );
@@ -684,8 +684,8 @@ ecma_compare_zt_string_to_ecma_string(const ecma_char_t *string_p, /**< zero-ter
 
           JERRY_ASSERT( next_chunk_p != NULL );
 
-          current_chunk_chars_cur = (ecma_char_t*) ecma_string_p->data;
-          current_chunk_chars_end = (ecma_char_t*) (next_chunk_p->data + sizeof(next_chunk_p->data));
+          current_chunk_chars_cur = (const ecma_char_t*) ecma_string_p->data;
+          current_chunk_chars_end = (const ecma_char_t*) (next_chunk_p->data + sizeof(next_chunk_p->data));
 
           next_chunk_compressed_pointer_p = &next_chunk_p->next_chunk_p;
         }

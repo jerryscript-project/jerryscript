@@ -27,7 +27,7 @@
  * @{
  */
 
-extern ecma_reference_t ecma_op_get_identifier_reference( ecma_object_t *lex_env_p, ecma_char_t *name_p, bool is_strict);
+extern ecma_reference_t ecma_op_get_identifier_reference( ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_strict);
 
 extern ecma_completion_value_t ecma_op_get_value( ecma_reference_t ref);
 extern ecma_completion_value_t ecma_op_put_value( ecma_reference_t ref, ecma_value_t value);

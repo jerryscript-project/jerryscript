@@ -18,6 +18,7 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
+#include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-operations.h"
@@ -323,7 +324,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
 } /* do_number_arithmetic */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op(call_0)                          \
     op(call_n)                          \
     op(func_decl_1)                     \
     op(func_decl_2)                     \
@@ -1356,6 +1356,67 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_func_decl_0 */
+
+/**
+ * 'Function call with no arguments' opcode handler.
+ *
+ * See also: ECMA-262 v5, 13.2.1
+ *
+ * TODO: Move the call mechanic to ecma_op_function_call
+ *       Rewrite from scratch.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_call_0( OPCODE opdata, /**< operation data */
+               struct __int_data *int_data) /**< interpreter context */
+{  
+  const T_IDX func_name_lit_idx = opdata.data.call_0.name_lit_idx;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH( func_value, get_variable_value( int_data, func_name_lit_idx, false), ret_value);
+
+  if ( func_value.value.value_type != ECMA_TYPE_OBJECT )
+    {
+      ret_value = ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_TYPE));
+    }
+  else
+    {
+      ecma_object_t *func_obj_p = ecma_get_pointer( func_value.value.value);
+      ecma_property_t* code_prop_p = ecma_find_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
+      ecma_property_t* scope_prop_p = ecma_find_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+
+      interp_bytecode_idx code_idx = (interp_bytecode_idx) code_prop_p->u.internal_property.value;
+      ecma_object_t *scope_p = ecma_get_pointer( scope_prop_p->u.internal_property.value);
+
+      ecma_object_t *new_lex_env_p = ecma_create_lexical_environment( scope_p,
+                                                                      ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+
+      ret_value = run_int_from_pos( code_idx,
+                                    NULL,
+                                    new_lex_env_p,
+                                    false);
+
+      if ( ret_value.type == ECMA_COMPLETION_TYPE_RETURN )
+        {
+          ecma_value_t returned_value = ret_value.value;
+
+          ecma_free_value( returned_value);
+
+          ret_value = ecma_make_empty_completion_value();
+        }
+
+      ecma_deref_object( new_lex_env_p);
+    }
+
+  ECMA_FINALIZE( func_value);
+
+  return ret_value;
+} /* opfunc_call_0 */
 
 /**
  * 'Return with no expression' opcode handler.

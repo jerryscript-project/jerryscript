@@ -333,7 +333,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(varg_3)                          \
     op(varg_3_end)                      \
     op(retval)                          \
-    op(ret)                             \
     op(b_shift_left)                    \
     op(b_shift_right)                   \
     op(b_shift_uright)                  \

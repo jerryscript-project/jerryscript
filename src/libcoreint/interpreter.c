@@ -46,7 +46,7 @@ run_int (void)
 {
   JERRY_ASSERT( __program != NULL );
 
-  const op_idx_t start_pos = 0;
+  const opcode_counter_t start_pos = 0;
   ecma_value_t this_binding_value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
   ecma_object_t *lex_env_p = ecma_create_lexical_environment (NULL,
                                                               ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
@@ -88,7 +88,7 @@ run_int (void)
 }
 
 ecma_completion_value_t
-run_int_from_pos (op_idx_t start_pos,
+run_int_from_pos (opcode_counter_t start_pos,
                   ecma_value_t this_binding_value,
                   ecma_object_t *lex_env_p,
                   bool is_strict)
@@ -111,7 +111,7 @@ run_int_from_pos (op_idx_t start_pos,
   JERRY_ASSERT( ecma_is_value_empty( regs[0]) );
 
   struct __int_data int_data;
-  int_data.pos = (op_idx_t) (start_pos + 1);
+  int_data.pos = (opcode_counter_t) (start_pos + 1);
   int_data.this_binding = this_binding_value;
   int_data.lex_env_p = lex_env_p;
   int_data.is_strict = is_strict;

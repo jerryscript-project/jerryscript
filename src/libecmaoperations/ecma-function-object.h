@@ -33,7 +33,7 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[],
                                 size_t formal_parameters_number,
                                 ecma_object_t *scope_p,
                                 bool is_strict,
-                                op_idx_t first_opcode_idx);
+                                opcode_counter_t first_opcode_idx);
 
 extern ecma_object_t* ecma_op_get_throw_type_error( void);
 

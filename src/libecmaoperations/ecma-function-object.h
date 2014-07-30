@@ -35,6 +35,8 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[],
                                 bool is_strict,
                                 interp_bytecode_idx first_opcode_idx);
 
+extern ecma_object_t* ecma_op_get_throw_type_error( void);
+
 /**
  * @}
  * @}

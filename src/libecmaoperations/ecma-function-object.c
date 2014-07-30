@@ -17,6 +17,8 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-magic-strings.h"
+#include "ecma-objects-properties.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
@@ -72,7 +74,7 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   /*
    * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
    * Instead we set the object's type to ECMA_OBJECT_TYPE_FUNCTION
-   * that defines which version of [[Get]] routine should be used on demand.
+   * that defines which version of the routine should be used on demand.
    */
 
   // 3.
@@ -95,11 +97,102 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   ecma_property_t *code_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_CODE);
   code_prop_p->u.internal_property.value = first_opcode_idx;
 
-  TODO( Steps 16 - 19 );
-  (void)is_strict;
+  // 16.
+  FIXME( Use 'new Object()' instead );
+  ecma_object_t *proto_p = ecma_create_object( NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  // 17.
+  ecma_ref_object( f);
+
+  ecma_property_descriptor_t prop_desc = (ecma_property_descriptor_t) {
+      .is_value_defined = true,
+      .value = ecma_make_object_value( f),
+
+      .is_writable_defined = true,
+      .writable = ECMA_PROPERTY_WRITABLE,
+
+      .is_enumerable_defined = true,
+      .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+
+      .is_configurable_defined = true,
+      .configurable = ECMA_PROPERTY_CONFIGURABLE,
+
+      .is_get_defined = false,
+      .get_p = NULL,
+
+      .is_set_defined = false,
+      .set_p = NULL
+  };
+  ecma_op_object_define_own_property( proto_p,
+                                      ecma_get_magic_string( ECMA_MAGIC_STRING_CONSTRUCTOR),
+                                      prop_desc,
+                                      false);
+
+  // 18.
+  ecma_ref_object( proto_p);
+
+  prop_desc.value = ecma_make_object_value( proto_p);
+  prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+  ecma_op_object_define_own_property( f,
+                                      ecma_get_magic_string( ECMA_MAGIC_STRING_PROTOTYPE),
+                                      prop_desc,
+                                      false);
+
+  ecma_deref_object( proto_p);
+
+  // 19.
+  if ( is_strict )
+    {
+      ecma_object_t *thrower_p = ecma_op_get_throw_type_error();
+
+      prop_desc = (ecma_property_descriptor_t) {
+          .is_value_defined = false,
+          .value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
+
+          .is_writable_defined = false,
+          .writable = ECMA_PROPERTY_NOT_WRITABLE,
+
+          .is_enumerable_defined = true,
+          .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+
+          .is_configurable_defined = true,
+          .configurable = ECMA_PROPERTY_NOT_CONFIGURABLE,
+
+          .is_get_defined = true,
+          .get_p = thrower_p,
+
+          .is_set_defined = true,
+          .set_p = thrower_p
+      };
+
+      ecma_op_object_define_own_property( f,
+                                          ecma_get_magic_string( ECMA_MAGIC_STRING_CALLER),
+                                          prop_desc,
+                                          false);
+
+      ecma_op_object_define_own_property( f,
+                                          ecma_get_magic_string( ECMA_MAGIC_STRING_ARGUMENTS),
+                                          prop_desc,
+                                          false);
+
+      ecma_deref_object( thrower_p);
+    }
 
   return f;
 } /* ecma_op_create_function_object */
+
+/**
+ * Get [[ThrowTypeError]] Function Object
+ *
+ * @return pointer to unique [[ThrowTypeError]] Function Object
+ */
+ecma_object_t*
+ecma_op_get_throw_type_error( void)
+{
+  TODO( Create [[ThrowTypeError]] during engine initialization and return it from here );
+
+  JERRY_UNIMPLEMENTED();
+} /* ecma_op_get_throw_type_error */
 
 /**
  * @}

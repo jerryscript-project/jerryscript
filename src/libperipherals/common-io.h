@@ -36,6 +36,9 @@ void SysTick_Handler(void);
 
 void time_tick_decrement(void);
 void wait_1ms(void);
+
+void set_sys_tick_counter(uint32_t);
+uint32_t get_sys_tick_counter(void);
 #endif
 
 #endif	/* COMMON_IO_H */

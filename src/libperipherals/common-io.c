@@ -141,6 +141,18 @@ initialize_sys_tick (void)
 
 }
 
+void
+set_sys_tick_counter(uint32_t set_value)
+{
+  sys_tick_counter = set_value;
+}
+
+uint32_t
+get_sys_tick_counter(void)
+{
+  return sys_tick_counter;
+}
+
 void SysTick_Handler(void) {
     time_tick_decrement();
 }

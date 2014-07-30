@@ -565,7 +565,7 @@ opfunc_jmp_down (OPCODE opdata, /**< operation data */
 {
   JERRY_ASSERT( int_data->pos <= int_data->pos + opdata.data.jmp_up.opcode_count );
 
-  int_data->pos = (interp_bytecode_idx) ( int_data->pos + opdata.data.jmp_down.opcode_count );
+  int_data->pos = (opcode_counter_t) ( int_data->pos + opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_down */
@@ -582,7 +582,7 @@ opfunc_jmp_up (OPCODE opdata, /**< operation data */
 {
   JERRY_ASSERT( int_data->pos >= opdata.data.jmp_up.opcode_count );
 
-  int_data->pos = (interp_bytecode_idx) ( int_data->pos - opdata.data.jmp_down.opcode_count );
+  int_data->pos = (opcode_counter_t) ( int_data->pos - opdata.data.jmp_down.opcode_count );
 
   return ecma_make_empty_completion_value();
 } /* opfunc_jmp_up */
@@ -1309,16 +1309,16 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
 
   const bool is_strict = int_data->is_strict;
 
-  const interp_bytecode_idx varg_first_opcode_idx = (interp_bytecode_idx) (int_data->pos + 1);
+  const opcode_counter_t varg_first_opcode_idx = (opcode_counter_t) (int_data->pos + 1);
   int_data->pos = varg_first_opcode_idx;
 
   TODO( Iterate vargs );
 
-  const interp_bytecode_idx jmp_down_opcode_idx = (interp_bytecode_idx) (int_data->pos);
+  const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
 
   TODO( ASSERT( Current opcode is jmp_down ) );
 
-  const interp_bytecode_idx function_code_opcode_idx = (interp_bytecode_idx) (jmp_down_opcode_idx + 1);
+  const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
 
   // a.
   const ecma_char_t *fn = function_name.str_p;
@@ -1360,10 +1360,7 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
 /**
  * 'Function call with no arguments' opcode handler.
  *
- * See also: ECMA-262 v5, 13.2.1
- *
- * TODO: Move the call mechanic to ecma_op_function_call
- *       Rewrite from scratch.
+ * See also: ECMA-262 v5, 11.2.3
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -1373,6 +1370,7 @@ opfunc_call_0( OPCODE opdata, /**< operation data */
                struct __int_data *int_data) /**< interpreter context */
 {  
   const T_IDX func_name_lit_idx = opdata.data.call_0.name_lit_idx;
+  const T_IDX lhs_var_idx = opdata.data.call_0.lhs;
 
   int_data->pos++;
 
@@ -1380,37 +1378,28 @@ opfunc_call_0( OPCODE opdata, /**< operation data */
 
   ECMA_TRY_CATCH( func_value, get_variable_value( int_data, func_name_lit_idx, false), ret_value);
 
-  if ( func_value.value.value_type != ECMA_TYPE_OBJECT )
+  if ( !ecma_op_is_callable( func_value.value) )
     {
       ret_value = ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_TYPE));
     }
   else
     {
       ecma_object_t *func_obj_p = ecma_get_pointer( func_value.value.value);
-      ecma_property_t* code_prop_p = ecma_find_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
-      ecma_property_t* scope_prop_p = ecma_find_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
 
-      interp_bytecode_idx code_idx = (interp_bytecode_idx) code_prop_p->u.internal_property.value;
-      ecma_object_t *scope_p = ecma_get_pointer( scope_prop_p->u.internal_property.value);
+      ECMA_TRY_CATCH( this_value, ecma_op_implicit_this_value( int_data->lex_env_p), ret_value);
 
-      ecma_object_t *new_lex_env_p = ecma_create_lexical_environment( scope_p,
-                                                                      ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
-
-      ret_value = run_int_from_pos( code_idx,
-                                    ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
-                                    new_lex_env_p,
-                                    false);
+      ret_value = ecma_op_function_call( func_obj_p, this_value.value, NULL, 0);
 
       if ( ret_value.type == ECMA_COMPLETION_TYPE_RETURN )
         {
           ecma_value_t returned_value = ret_value.value;
 
-          ecma_free_value( returned_value);
+          ret_value = set_variable_value( int_data, lhs_var_idx, returned_value);
 
-          ret_value = ecma_make_empty_completion_value();
+          ecma_free_value( returned_value);
         }
 
-      ecma_deref_object( new_lex_env_p);
+      ECMA_FINALIZE( this_value);
     }
 
   ECMA_FINALIZE( func_value);

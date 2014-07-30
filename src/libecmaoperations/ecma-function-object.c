@@ -37,7 +37,7 @@
  */
 static uint32_t
 ecma_pack_code_internal_property_value( bool is_strict, /**< is code strict? */
-                                        interp_bytecode_idx opcode_idx) /**< index of first opcode */
+                                        opcode_counter_t opcode_idx) /**< index of first opcode */
 {
   uint32_t value = opcode_idx;
   const uint32_t is_strict_bit_offset = sizeof(value) * JERRY_BITSINBYTE - 1;
@@ -58,7 +58,7 @@ ecma_pack_code_internal_property_value( bool is_strict, /**< is code strict? */
  *
  * @return opcode index
  */
-static interp_bytecode_idx
+static opcode_counter_t
 ecma_unpack_code_internal_property_value( uint32_t value, /**< packed value */
                                           bool* out_is_strict_p) /**< out: is code strict? */
 {
@@ -69,7 +69,7 @@ ecma_unpack_code_internal_property_value( uint32_t value, /**< packed value */
   bool is_strict = ( ( value & ( 1u << is_strict_bit_offset ) ) != 0 );
   *out_is_strict_p = is_strict;
 
-  interp_bytecode_idx opcode_idx = (interp_bytecode_idx) ( value & ~( 1u << is_strict_bit_offset ) );
+  opcode_counter_t opcode_idx = (opcode_counter_t) ( value & ~( 1u << is_strict_bit_offset ) );
 
   return opcode_idx;
 } /* ecma_unpack_code_internal_property_value */
@@ -111,7 +111,7 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
                                 size_t formal_parameters_number, /**< formal parameters list's length */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
-                                interp_bytecode_idx first_opcode_idx) /**< index of first opcode of function's body */
+                                opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
 {
   // 1., 4., 13.
   FIXME( Setup prototype of Function object to built-in Function prototype object (15.3.3.1) );
@@ -262,7 +262,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
 
       bool is_strict;
       // 8.
-      interp_bytecode_idx code_first_opcode_idx = ecma_unpack_code_internal_property_value( code_prop_value, &is_strict);
+      opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value( code_prop_value, &is_strict);
 
       ecma_value_t this_binding;
       // 1.

@@ -60,7 +60,7 @@ export echo
 export todo
 export fixme
 
-all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
+all: clean $(TESTS_TARGET) $(CHECK_TARGETS)
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(PARSER_TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
 	@echo $@

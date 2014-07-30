@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
+#include "common-io.h"
+#include "jerry-libc.h"
+
 #ifdef __TARGET_MCU
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#include "stm32f4xx_conf.h"
 #include "stm32f4xx.h"
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
 #pragma GCC diagnostic pop
-
-#ifdef __HOST
-#include <time.h>
-#endif
 
 // STM32 F4
 #define LED_GREEN      12
@@ -33,9 +32,6 @@
 #define LED_BLUE       15
 
 #endif
-
-#include "common-io.h"
-#include "jerry-libc.h"
 
 int
 digital_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
@@ -76,40 +72,36 @@ wait_ms (uint32_t time_ms)
 #endif
 
 #ifdef __TARGET_MCU
-  volatile uint32_t index;
-  for (index = 0; index < time_ms; index++);
+  while (time_ms--)
+  {
+    wait_1ms ();
+  }
 #endif
 }
 
 #ifdef __TARGET_MCU
+
+void initialize_timer()
+{
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+    TIM_TimeBaseInitTypeDef timerInitStructure; 
+    timerInitStructure.TIM_Prescaler = 40000;
+    timerInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    timerInitStructure.TIM_Period = 500;
+    timerInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    timerInitStructure.TIM_RepetitionCounter = 0;
+    TIM_TimeBaseInit(TIM2, &timerInitStructure);
+    TIM_Cmd(TIM2, ENABLE);
+}
+
 void
 fake_exit (void)
 {
   uint32_t pin = LED_ORANGE;
-  uint32_t mode = (uint32_t)GPIO_Mode_OUT << (pin * 2);
-  uint32_t speed = (uint32_t)GPIO_Speed_100MHz << (pin * 2);
-  uint32_t type = (uint32_t)GPIO_OType_PP << pin;
-  uint32_t pullup = (uint32_t)GPIO_PuPd_NOPULL << (pin * 2);
-  //
-  //  Initialise the peripheral clock.
-  //
-  RCC->AHB1ENR |= RCC_AHB1Periph_GPIOD;
-  //
-  //  Initilaise the GPIO port.
-  //
   volatile GPIO_TypeDef* gpio = GPIOD;
-
-  gpio->MODER |= mode;
-  gpio->OSPEEDR |= speed;
-  gpio->OTYPER |= type;
-  gpio->PUPDR |= pullup;
-  //
-  //  Toggle the selected LED indefinitely.
-  //
   volatile int index;
-  
-  // SOS
-  
+
   int dot = 600000;
   int dash = dot * 3;
   
@@ -128,6 +120,46 @@ fake_exit (void)
     gpio->BSRRL = (uint16_t) (1 << pin); for (index = 0; index < dot; index++); gpio->BSRRH = (uint16_t) (1 << pin);
     
     for (index = 0; index < dash * 7; index++);
+  }
+}
+
+
+
+static __IO uint32_t sys_tick_counter;
+
+void
+initialize_sys_tick (void)
+{
+  /****************************************
+   *SystemFrequency/1000      1ms         *
+   *SystemFrequency/100000    10us        *
+   *SystemFrequency/1000000   1us         *
+   *****************************************/
+  while (SysTick_Config (SystemCoreClock / 1000000) != 0)
+  {
+  } // One SysTick interrupt now equals 1us
+
+}
+
+void SysTick_Handler(void) {
+    time_tick_decrement();
+}
+
+void
+time_tick_decrement (void)
+{
+  if (sys_tick_counter != 0x00)
+  {
+    sys_tick_counter--;
+  }
+}
+
+void
+wait_1ms (void)
+{
+  sys_tick_counter = 1000;
+  while (sys_tick_counter != 0)
+  {
   }
 }
 #endif

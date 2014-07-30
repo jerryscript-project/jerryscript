@@ -24,7 +24,7 @@ void led_off(uint32_t);
 void led_blink_once(uint32_t);
 
 #ifdef __TARGET_MCU
-void init_led (uint32_t);
+void initialize_leds(void);
 #endif
 
 #endif	/* ACTUATORS_H */

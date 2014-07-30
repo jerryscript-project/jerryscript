@@ -15,6 +15,8 @@
 
 #ifdef __TARGET_MCU
 #include "common-io.h"
+#include "actuators.h"
+#include "sensors.h"
 #include "generated.h"
 #endif
 
@@ -186,6 +188,10 @@ main (int argc __unused,
 int
 main(void)
 {
+  initialize_sys_tick();
+  initialize_leds();
+  initialize_timer();
+  
   const char *source_p = generated_source;
   const size_t source_size = sizeof(generated_source);
 

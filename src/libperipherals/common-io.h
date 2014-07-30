@@ -29,6 +29,13 @@ void wait_ms(uint32_t);
 
 #ifdef __TARGET_MCU
 void fake_exit(void);
+
+void initialize_timer(void);
+void initialize_sys_tick(void);
+void SysTick_Handler(void);
+
+void time_tick_decrement(void);
+void wait_1ms(void);
 #endif
 
 #endif	/* COMMON_IO_H */

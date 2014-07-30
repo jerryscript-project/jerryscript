@@ -17,9 +17,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#include "stm32f4xx_conf.h"
 #include "stm32f4xx.h"
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
 #pragma GCC diagnostic pop
 #endif
 
@@ -36,8 +35,6 @@ led_toggle (uint32_t led_id)
 
 
 #ifdef __TARGET_MCU
-    init_led (led_id);
-
     GPIOD->ODR ^= (uint16_t) (1 << led_id);
 #endif
 }
@@ -51,10 +48,7 @@ led_on (uint32_t led_id)
 
 
 #ifdef __TARGET_MCU
-  init_led (led_id);
-
-  GPIOD->BSRRH = (uint16_t) (1 << led_id);
-  GPIOD->BSRRL = (uint16_t) (1 << led_id);
+  GPIO_WriteBit(GPIOD, (uint16_t) (1 << led_id), Bit_SET);
 #endif
 }
 
@@ -66,10 +60,7 @@ led_off (uint32_t led_id)
 #endif
 
 #ifdef __TARGET_MCU
-  init_led (led_id);
-
-  GPIOD->BSRRL = (uint16_t) (1 << led_id);
-  GPIOD->BSRRH = (uint16_t) (1 << led_id);
+  GPIO_WriteBit(GPIOD, (uint16_t) (1 << led_id), Bit_RESET);
 #endif
 }
 
@@ -81,8 +72,6 @@ led_blink_once (uint32_t led_id)
 #endif
 
 #ifdef __TARGET_MCU
-  init_led (led_id);
-
   uint32_t dot = 300000;
 
   GPIOD->BSRRL = (uint16_t) (1 << led_id);
@@ -92,26 +81,16 @@ led_blink_once (uint32_t led_id)
 }
 
 #ifdef __TARGET_MCU
-void
-init_led (uint32_t led_id)
+void initialize_leds()
 {
-  uint32_t pin = led_id;
-  uint32_t mode = (uint32_t) GPIO_Mode_OUT << (pin * 2);
-  uint32_t speed = (uint32_t) GPIO_Speed_100MHz << (pin * 2);
-  uint32_t type = (uint32_t) GPIO_OType_PP << pin;
-  uint32_t pullup = (uint32_t) GPIO_PuPd_NOPULL << (pin * 2);
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-  TODO (INITIALIZE ONCE);
+    GPIO_InitTypeDef gpioStructure;
+    gpioStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+    gpioStructure.GPIO_Mode = GPIO_Mode_OUT;
+    gpioStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_Init(GPIOD, &gpioStructure);
 
-  //  Initialise the peripheral clock.
-  RCC->AHB1ENR |= RCC_AHB1Periph_GPIOD;
-
-  //  Initilaise the GPIO port.
-  volatile GPIO_TypeDef* gpio = GPIOD;
-
-  gpio->MODER |= mode;
-  gpio->OSPEEDR |= speed;
-  gpio->OTYPER |= type;
-  gpio->PUPDR |= pullup;
+    GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
 }
 #endif

@@ -196,9 +196,9 @@ main (int argc __unused,
 
 #ifdef __TARGET_MCU
 static uint32_t start;
-static uint32_t finish_native_ms;
-static uint32_t finish_parse_ms;
-static uint32_t finish_int_ms;
+static uint32_t finish_native_ms __unused;
+static uint32_t finish_parse_ms __unused;
+static uint32_t finish_int_ms __unused;
 
 int
 main (void)

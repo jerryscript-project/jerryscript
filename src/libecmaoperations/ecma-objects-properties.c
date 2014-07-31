@@ -33,7 +33,7 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-ecma_reject( bool is_throw)
+ecma_reject( bool is_throw) /**< Throw flag */
 {
   if ( is_throw )
     {

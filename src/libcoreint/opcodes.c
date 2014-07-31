@@ -1270,9 +1270,11 @@ opfunc_var_decl(OPCODE opdata, /**< operation data */
                                                                    variable_name.str_p)) )
   {
     FIXME( Pass configurableBindings that is true if and only if current code is eval code );
-    ecma_op_create_mutable_binding (int_data->lex_env_p,
-                                    variable_name.str_p,
-                                    false);
+    ecma_completion_value_t completion = ecma_op_create_mutable_binding (int_data->lex_env_p,
+                                                                         variable_name.str_p,
+                                                                         false);
+
+    JERRY_ASSERT( ecma_is_empty_completion_value( completion) );
 
     /* Skipping SetMutableBinding as we have already checked that there were not
      * any binding with specified name in current lexical environment 
@@ -1339,9 +1341,11 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
   if ( !func_already_declared )
     {
       FIXME( Pass configurableBindings that is true if and only if current code is eval code );
-      ecma_op_create_mutable_binding( int_data->lex_env_p,
-                                      fn,
-                                      false);
+      ecma_completion_value_t completion = ecma_op_create_mutable_binding( int_data->lex_env_p,
+                                                                           fn,
+                                                                           false);
+
+      JERRY_ASSERT( ecma_is_empty_completion_value( completion) );
     }
 
   // e.

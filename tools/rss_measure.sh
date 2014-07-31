@@ -22,7 +22,6 @@ OUTPUT=
 
 $JERRY $TEST &
 PID=$!
-echo $PID; 
 
 while true;
 do

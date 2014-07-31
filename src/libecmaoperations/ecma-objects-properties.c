@@ -196,25 +196,11 @@ ecma_op_object_put( ecma_object_t *obj_p, /**< the object */
   if ( own_desc_p->type == ECMA_PROPERTY_NAMEDDATA )
     {
       // a.
-      ecma_property_descriptor_t value_desc = (ecma_property_descriptor_t) {
-          .is_value_defined = true,
-          .value = value,
-
-          .is_get_defined = false,
-          .get_p = NULL,
-
-          .is_set_defined = false,
-          .set_p = NULL,
-
-          .is_writable_defined = false,
-          .writable = ECMA_PROPERTY_NOT_WRITABLE,
-
-          .is_enumerable_defined = false,
-          .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
-
-          .is_configurable_defined = false,
-          .configurable = ECMA_PROPERTY_NOT_CONFIGURABLE,
-      };
+      ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor();
+        {
+          value_desc.is_value_defined = true;
+          value_desc.value = value;
+        }
 
       // b., c.
       return ecma_op_object_define_own_property( obj_p,
@@ -245,26 +231,21 @@ ecma_op_object_put( ecma_object_t *obj_p, /**< the object */
       // 6.
 
       // a.
-      ecma_property_descriptor_t new_desc = (ecma_property_descriptor_t) {
-          .is_value_defined = true,
-          .value = value,
+      ecma_property_descriptor_t new_desc = ecma_make_empty_property_descriptor();
+        {
+          new_desc.is_value_defined = true;
+          new_desc.value = value;
 
-          .is_get_defined = false,
-          .get_p = NULL,
+          new_desc.is_writable_defined = true;
+          new_desc.writable = ECMA_PROPERTY_WRITABLE;
 
-          .is_set_defined = false,
-          .set_p = NULL,
+          new_desc.is_enumerable_defined = true;
+          new_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
 
-          .is_writable_defined = true,
-          .writable = ECMA_PROPERTY_WRITABLE,
+          new_desc.is_configurable_defined = true;
+          new_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+        }
 
-          .is_enumerable_defined = true,
-          .enumerable = ECMA_PROPERTY_ENUMERABLE,
-
-          .is_configurable_defined = true,
-          .configurable = ECMA_PROPERTY_CONFIGURABLE
-      };
-      
       // b.
       return ecma_op_object_define_own_property( obj_p,
                                                  property_name_p,

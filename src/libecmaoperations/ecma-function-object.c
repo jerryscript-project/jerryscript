@@ -153,25 +153,21 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   // 17.
   ecma_ref_object( f);
 
-  ecma_property_descriptor_t prop_desc = (ecma_property_descriptor_t) {
-      .is_value_defined = true,
-      .value = ecma_make_object_value( f),
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor();
+    {
+      prop_desc.is_value_defined = true;
+      prop_desc.value = ecma_make_object_value( f);
 
-      .is_writable_defined = true,
-      .writable = ECMA_PROPERTY_WRITABLE,
+      prop_desc.is_writable_defined = true;
+      prop_desc.writable = ECMA_PROPERTY_WRITABLE;
 
-      .is_enumerable_defined = true,
-      .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+      prop_desc.is_enumerable_defined = true;
+      prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
 
-      .is_configurable_defined = true,
-      .configurable = ECMA_PROPERTY_CONFIGURABLE,
+      prop_desc.is_configurable_defined = true;
+      prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+    }
 
-      .is_get_defined = false,
-      .get_p = NULL,
-
-      .is_set_defined = false,
-      .set_p = NULL
-  };
   ecma_op_object_define_own_property( proto_p,
                                       ecma_get_magic_string( ECMA_MAGIC_STRING_CONSTRUCTOR),
                                       prop_desc,
@@ -194,25 +190,20 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
     {
       ecma_object_t *thrower_p = ecma_op_get_throw_type_error();
 
-      prop_desc = (ecma_property_descriptor_t) {
-          .is_value_defined = false,
-          .value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
+      prop_desc = ecma_make_empty_property_descriptor();
+        {
+          prop_desc.is_enumerable_defined = true;
+          prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
 
-          .is_writable_defined = false,
-          .writable = ECMA_PROPERTY_NOT_WRITABLE,
+          prop_desc.is_configurable_defined = true;
+          prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
 
-          .is_enumerable_defined = true,
-          .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+          prop_desc.is_get_defined = true;
+          prop_desc.get_p = thrower_p;
 
-          .is_configurable_defined = true,
-          .configurable = ECMA_PROPERTY_NOT_CONFIGURABLE,
-
-          .is_get_defined = true,
-          .get_p = thrower_p,
-
-          .is_set_defined = true,
-          .set_p = thrower_p
-      };
+          prop_desc.is_set_defined = true;
+          prop_desc.set_p = thrower_p;
+        }
 
       ecma_op_object_define_own_property( f,
                                           ecma_get_magic_string( ECMA_MAGIC_STRING_CALLER),

@@ -743,6 +743,38 @@ ecma_free_array( ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of th
 } /* ecma_free_array */
 
 /**
+ * Construct empty property descriptor.
+ *
+ * @return property descriptor with all *_defined properties set to false,
+ *         and rest properties set to default values (ECMA-262 v5, Table 7).
+ */
+ecma_property_descriptor_t
+ecma_make_empty_property_descriptor( void)
+{
+  ecma_property_descriptor_t prop_desc = (ecma_property_descriptor_t) {
+        .is_value_defined = false,
+        .value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
+
+        .is_writable_defined = false,
+        .writable = ECMA_PROPERTY_NOT_WRITABLE,
+
+        .is_enumerable_defined = false,
+        .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+
+        .is_configurable_defined = false,
+        .configurable = ECMA_PROPERTY_NOT_CONFIGURABLE,
+
+        .is_get_defined = false,
+        .get_p = NULL,
+
+        .is_set_defined = false,
+        .set_p = NULL
+  };
+
+  return prop_desc;
+} /* ecma_make_empty_property_descriptor */
+
+/**
  * @}
  * @}
  */

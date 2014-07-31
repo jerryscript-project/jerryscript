@@ -146,6 +146,7 @@ main (int argc __unused,
 {
   const char *file_name = NULL;
   bool parse_only = false;
+  bool print_mem_stats = false;
   int i;
   
   for (i = 1; i < argc; i++)
@@ -156,6 +157,10 @@ main (int argc __unused,
           __printf("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
           __printf("Branch name:\t%s\n", JERRY_BRANCH_NAME);
           __printf("\n");
+        }
+      if (!__strcmp ("--mem-stats", argv[i]))
+        {
+          print_mem_stats = true;
         }
       else if (!__strcmp ("--parse-only", argv[i]))
         {
@@ -181,8 +186,10 @@ main (int argc __unused,
 
   jerry_run (source_p, source_size, parse_only);
 
-  mem_heap_print( false, false, true);
-
+  if (print_mem_stats)
+    {
+      mem_heap_print( false, false, true);
+    }
   return 0;
 }
 #endif

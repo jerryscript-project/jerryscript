@@ -237,7 +237,7 @@ ifeq ($(OPTION_NDEBUG),enable)
 endif
 
 ifeq ($(OPTION_MCU),disable)
- DEFINES_JERRY += -D__HOST -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
+ DEFINES_JERRY += -D__TARGET_HOST_x64 -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
  CFLAGS_COMMON += -fno-stack-protector
  
  ifeq ($(OPTION_MUSL),enable)

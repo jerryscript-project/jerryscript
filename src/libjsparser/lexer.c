@@ -96,7 +96,7 @@ increase_strings_cache (void)
   strings_cache_size = new_cache_size;
 }
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
 static void
 dump_current_line (void)
 {
@@ -897,20 +897,20 @@ lexer_next_token_private (void)
 token
 lexer_next_token (void)
 {
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   if (buffer == buffer_start)
     dump_current_line ();
-#endif /* __HOST */
+#endif /* __TARGET_HOST_x64 */
 
   token tok = lexer_next_token_private ();
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   if (tok.type == TOK_NEWLINE)
     {
       dump_current_line ();
       return tok;
     }
-#endif /* __HOST */
+#endif /* __TARGET_HOST_x64 */
   return tok;
 }
 

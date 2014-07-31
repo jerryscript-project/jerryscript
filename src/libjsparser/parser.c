@@ -68,7 +68,7 @@ assert_keyword (keyword kw)
 {
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
     {
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
       __printf ("assert_keyword: %d\n", kw);
 #endif
       JERRY_UNREACHABLE ();
@@ -86,7 +86,7 @@ current_token_must_be(token_type tt)
 {
   if (tok.type != tt) 
     {
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
       __printf ("current_token_must_be: %d\n", tt);
 #endif
       parser_fatal (ERR_PARSER); 
@@ -107,7 +107,7 @@ next_token_must_be (token_type tt)
   tok = lexer_next_token ();
   if (tok.type != tt)
     {
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
       __printf ("next_token_must_be: %d\n", tt);
 #endif
       parser_fatal (ERR_PARSER);

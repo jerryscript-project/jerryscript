@@ -388,7 +388,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   ecma_completion_value_t ret_value;
   ret_value = ecma_make_empty_completion_value ();
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   __printf ("%d::op_call_1:idx:%d:%d\t",
           int_data->pos,
           opdata.data.call_1.name_lit_idx,
@@ -400,7 +400,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   string_literal_copy str_value;
   init_string_literal_copy( opdata.data.call_1.name_lit_idx, &str_value);
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   __printf("%s\n", str_value.str_p);
 #endif
   

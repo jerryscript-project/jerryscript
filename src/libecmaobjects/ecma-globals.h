@@ -242,7 +242,7 @@ typedef struct ecma_property_t {
         /** Description of internal property */
         struct __packed ecma_internal_property_t {
             /** Internal property's type */
-            unsigned int internal_property_type : 4;
+            unsigned int type : 4;
 
             /** Value (may be a compressed pointer) */
             uint32_t value;

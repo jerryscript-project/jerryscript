@@ -88,8 +88,6 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
     object_p->is_lexical_environment = false;
     object_p->GCInfo.is_object_valid = true;
 
-    /* The global object is always referenced
-     * (at least with the ctx_GlobalObject variable) */
     object_p->GCInfo.u.refs = 1;
 
     object_p->u.object.extensible = is_extensible;
@@ -133,8 +131,8 @@ ecma_create_decl_lex_env(ecma_object_t *outer_lexical_environment_p) /**< outer 
 } /* ecma_create_decl_lex_env */
 
 /**
- * Create a declarative lexical environment with specified outer lexical environment
- * (or NULL if the environment is not nested).
+ * Create a object lexical environment with specified outer lexical environment
+ * (or NULL if the environment is not nested), binding object and provideThis flag.
  * 
  * See also: ECMA-262 v5, 10.2.1.2
  *
@@ -193,7 +191,7 @@ ecma_create_internal_property(ecma_object_t *object_p, /**< the object */
     ecma_set_pointer( new_property_p->next_property_p, ecma_get_pointer( object_p->properties_p));
     ecma_set_pointer( object_p->properties_p, new_property_p);
 
-    new_property_p->u.internal_property.internal_property_type = property_id;
+    new_property_p->u.internal_property.type = property_id;
     new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
     
     return new_property_p;
@@ -212,7 +210,7 @@ ecma_find_internal_property(ecma_object_t *object_p, /**< object descriptor */
     JERRY_ASSERT( object_p != NULL );
 
     JERRY_ASSERT( property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
-                 && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE );
+                  && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE );
 
     for ( ecma_property_t *property_p = ecma_get_pointer( object_p->properties_p);
           property_p != NULL;
@@ -220,7 +218,7 @@ ecma_find_internal_property(ecma_object_t *object_p, /**< object descriptor */
     {
         if ( property_p->type == ECMA_PROPERTY_INTERNAL )
         {
-            if ( property_p->u.internal_property.internal_property_type == property_id )
+            if ( property_p->u.internal_property.type == property_id )
             {
                 return property_p;
             }
@@ -450,7 +448,7 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT( property_p->type == ECMA_PROPERTY_INTERNAL );
 
-  ecma_internal_property_id_t property_id = property_p->u.internal_property.internal_property_type;
+  ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
   uint32_t property_value = property_p->u.internal_property.value;
 
   switch ( property_id )

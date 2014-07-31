@@ -732,7 +732,7 @@ ecma_compare_zt_string_to_ecma_string(const ecma_char_t *string_p, /**< zero-ter
 
           JERRY_ASSERT( next_chunk_p != NULL );
 
-          current_chunk_chars_cur = (const ecma_char_t*) ecma_string_p->data;
+          current_chunk_chars_cur = (const ecma_char_t*) next_chunk_p->data;
           current_chunk_chars_end = (const ecma_char_t*) (next_chunk_p->data + sizeof(next_chunk_p->data));
 
           next_chunk_compressed_pointer_p = &next_chunk_p->next_chunk_p;

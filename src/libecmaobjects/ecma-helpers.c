@@ -170,6 +170,7 @@ ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< oute
   provide_this_prop_p->u.internal_property.value = provide_this;
 
   ecma_property_t *binding_object_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
+  ecma_ref_object( binding_obj_p);
   ecma_set_pointer( binding_object_prop_p->u.internal_property.value, binding_obj_p);
 
   return new_lexical_environment_p;

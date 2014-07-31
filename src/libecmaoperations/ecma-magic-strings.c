@@ -44,6 +44,8 @@ ecma_get_magic_string( ecma_magic_string_id_t id) /**< magic string id */
       return (ecma_char_t*) "constructor";
     case ECMA_MAGIC_STRING_CALLER:
       return (ecma_char_t*) "caller";
+    case ECMA_MAGIC_STRING_UNDEFINED:
+      return (ecma_char_t*) "undefined";
     }
 
   JERRY_UNREACHABLE();

@@ -13,36 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_MAGIC_STRINGS_H
-#define ECMA_MAGIC_STRINGS_H
+#ifndef ECMA_GLOBAL_OBJECT_H
+#define ECMA_GLOBAL_OBJECT_H
 
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
  * 
- * \addtogroup ecmamagicstrings Collection of magic string constants used in ECMA
+ * \addtogroup ecmaglobalobject ECMA Global object related routines
  * @{
  */
 
-/**
- * Identifiers of ECMA magic string constants
- */
-typedef enum
-{
-  ECMA_MAGIC_STRING_ARGUMENTS, /**< "arguments" */
-  ECMA_MAGIC_STRING_EVAL, /**< "eval" */
-  ECMA_MAGIC_STRING_PROTOTYPE, /**< "prototype" */
-  ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
-  ECMA_MAGIC_STRING_CALLER, /**< "caller" */
-  ECMA_MAGIC_STRING_UNDEFINED /**< undefined */
-} ecma_magic_string_id_t;
-
-extern const ecma_char_t* ecma_get_magic_string( ecma_magic_string_id_t id);
+extern ecma_object_t* ecma_op_create_global_object( void);
 
 /**
  * @}
  * @}
  */
 
-#endif /* ECMA_MAGIC_STRINGS_H */
+#endif /* !ECMA_GLOBAL_OBJECT_H */

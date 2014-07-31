@@ -33,7 +33,7 @@
 #define MAX_NUMS 25
 
 static const OPCODE *
-parser_run (const char *script_source, size_t script_source_size __unused, bool is_show_opcodes)
+parser_run (const char *script_source, size_t script_source_size, bool is_show_opcodes)
 {
   const char *strings[MAX_STRINGS];
   int32_t nums[MAX_NUMS];
@@ -41,9 +41,7 @@ parser_run (const char *script_source, size_t script_source_size __unused, bool 
   uint16_t offset;
   const OPCODE *opcodes;
 
-  TODO( Consider using script_source_size in lexer to check buffer boundaries );
-
-  lexer_init( script_source, is_show_opcodes);
+  lexer_init( script_source, script_source_size, is_show_opcodes);
 
   lexer_run_first_pass();
 
@@ -98,48 +96,60 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
 static const char*
-read_source( const char *script_file_name,
-             size_t *out_source_size_p)
+read_sources (const char *script_file_names[],
+              size_t files_count,
+              size_t *out_source_size_p)
 {
-  _FILE *file = __fopen (script_file_name, "r");
+  size_t i;
+  uint8_t *source_buffer_tail = source_buffer;
 
-  if (file == NULL)
+  for (i = 0; i < files_count; i++)
     {
-      jerry_exit (ERR_IO);
-    }
+      const char *script_file_name = script_file_names[i];
 
-  int fseek_status = __fseek( file, 0, __SEEK_END);
+      _FILE *file = __fopen (script_file_name, "r");
 
-  if ( fseek_status != 0 )
-    {
-      jerry_exit (ERR_IO);
-    }
-
-  long script_len = __ftell( file);
-
-  if ( script_len < 0 )
-    {
-      jerry_exit (ERR_IO);
-    }
-
-  __rewind( file);
-
-  const size_t source_size = (size_t)script_len;
-  size_t bytes_read = 0;
- 
-  while ( bytes_read < source_size )
-    {
-      bytes_read += __fread( source_buffer, 1, source_size, file);
-
-      if ( __ferror( file) != 0 )
+      if (file == NULL)
         {
           jerry_exit (ERR_IO);
         }
+
+      int fseek_status = __fseek( file, 0, __SEEK_END);
+
+      if ( fseek_status != 0 )
+        {
+          jerry_exit (ERR_IO);
+        }
+
+      long script_len = __ftell( file);
+
+      if ( script_len < 0 )
+        {
+          jerry_exit (ERR_IO);
+        }
+
+      __rewind( file);
+
+      const size_t source_size = (size_t)script_len;
+      size_t bytes_read = 0;
+     
+      while ( bytes_read < source_size )
+        {
+          bytes_read += __fread( source_buffer_tail, 1, source_size, file);
+
+          if ( __ferror( file) != 0 )
+            {
+              jerry_exit (ERR_IO);
+            }
+        }
+
+      __fclose( file);
+
+      source_buffer_tail += source_size;
+
+      *out_source_size_p += source_size;
     }
 
-  __fclose( file);
-
-  *out_source_size_p = source_size;
   return (const char*)source_buffer;
 }
 
@@ -147,10 +157,11 @@ int
 main (int argc __unused,
       char **argv __unused)
 {
-  const char *file_name = NULL;
+  const char *file_names[argc];
   bool parse_only = false, show_opcodes = false;
   bool print_mem_stats = false;
   int i;
+  size_t files_counter = 0;
 
   for (i = 1; i < argc; i++)
     {
@@ -173,23 +184,19 @@ main (int argc __unused,
         {
           show_opcodes = true;
         }
-      else if (file_name)
-        {
-          jerry_exit (ERR_SEVERAL_FILES);
-        }
       else
         {
-          file_name = argv[i];
+          file_names[files_counter++] = argv[i];
         }
     }
 
-  if (!file_name)
+  if (files_counter == 0)
     {
       jerry_exit (ERR_NO_FILES);
     }
  
   size_t source_size;
-  const char *source_p = read_source( file_name, &source_size);
+  const char *source_p = read_sources (file_names, files_counter, &source_size);
 
   jerry_run (source_p, source_size, parse_only, show_opcodes);
 

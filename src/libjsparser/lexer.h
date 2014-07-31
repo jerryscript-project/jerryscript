@@ -147,7 +147,7 @@ typedef struct
 } __packed
 token;
 
-void lexer_init(const char *, bool);
+void lexer_init(const char *, size_t, bool);
 void lexer_free (void);
 void lexer_run_first_pass( void);
 token lexer_next_token (void);

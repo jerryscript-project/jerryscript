@@ -22,6 +22,7 @@
 static token saved_token;
 static token empty_token = { .type = TOK_EMPTY, .data.uid = 0 };
 static bool allow_dump_lines = false;
+static size_t buffer_size = 0;
 
 typedef struct
 {
@@ -52,7 +53,14 @@ static const char *buffer_start = NULL;
 static const char *buffer = NULL;
 static const char *token_start;
 
-#define LA(I)       (*(buffer + I))
+static char
+get_char (size_t i)
+{
+  JERRY_ASSERT (i < buffer_size);
+  return *(buffer + i);
+}
+
+#define LA(I)       (get_char (I))
 
 /* Continuous array of NULL-terminated strings.  */
 static char *strings_cache = NULL;
@@ -919,10 +927,11 @@ lexer_dump_buffer_state (void)
 }
 
 void
-lexer_init (const char *source, bool show_opcodes)
+lexer_init (const char *source, size_t source_size, bool show_opcodes)
 {
   saved_token = empty_token;
   allow_dump_lines = show_opcodes;
+  buffer_size = source_size;
   lexer_set_source (source);
   increase_strings_cache ();
 }

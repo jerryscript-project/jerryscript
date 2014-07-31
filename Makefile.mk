@@ -110,6 +110,12 @@ else
      OPTION_COLOR := disable
 endif
 
+ifeq ($(sanitize),1)
+     OPTION_SANITIZE := enable
+else
+     OPTION_SANITIZE := disable
+endif
+
 #
 # Target CPU
 #
@@ -132,7 +138,7 @@ CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
 # Optimizations
 CFLAGS_OPTIMIZE ?= -Os -flto
-CFLAGS_NO_OPTIMIZE ?= -O0
+CFLAGS_NO_OPTIMIZE ?= -Og
 LDFLAGS_OPTIMIZE ?=
 LDFLAGS_NO_OPTIMIZE ?=
 
@@ -239,7 +245,9 @@ ifeq ($(OPTION_MCU),disable)
   DEFINES_JERRY += -DLIBC_MUSL
   CFLAGS_COMMON += -static
  else
-  CFLAGS_COMMON += -fsanitize=address
+   ifeq ($(OPTION_SANITIZE),enable)
+     CFLAGS_COMMON += -fsanitize=address
+   endif
  endif
 
  ifeq ($(OPTION_COLOR),enable)

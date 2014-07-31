@@ -54,6 +54,7 @@ typedef enum
   ERR_STRING = -8,
   ERR_PARSER = -9,
   ERR_MEMORY = -10,
+  ERR_SYSCALL = -11,
   ERR_GENERAL = -255
 } jerry_status_t;
 

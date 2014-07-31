@@ -59,12 +59,14 @@ export dwarf4
 export echo
 export todo
 export fixme
+export color
+export sanitize
 
 all: clean $(TESTS_TARGET) $(CHECK_TARGETS)
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(PARSER_TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
 	@echo $@
-	@$(MAKE) -f Makefile.mak TARGET=$@ $@
+	@$(MAKE) -f Makefile.mk TARGET=$@ $@
 
 clean:
 	rm -rf $(OUT_DIR)

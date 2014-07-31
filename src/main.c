@@ -61,7 +61,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
 
   optimizer_run_passes ((OPCODE *) opcodes);
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   serializer_print_opcodes ();
 #endif
 
@@ -87,12 +87,12 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 
   init_int (opcodes);
   
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
   run_int ();
 #endif
 } /* jerry_run */
 
-#ifdef __HOST
+#ifdef __TARGET_HOST_x64
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
 static const char*

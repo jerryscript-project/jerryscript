@@ -69,6 +69,9 @@ jerry_exit( jerry_status_t code) /**< status code */
       case ERR_MEMORY:
         __printf("ERR_MEMORY\n");
         break;
+      case ERR_SYSCALL:
+        JERRY_UNREACHABLE();
+        break;
       case ERR_GENERAL:
         __printf("ERR_GENERAL\n");
         break;

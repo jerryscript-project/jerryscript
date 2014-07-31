@@ -40,6 +40,8 @@ extern ecma_completion_value_t ecma_op_implicit_this_value( ecma_object_t *lex_e
 extern void ecma_op_create_immutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p);
 extern void ecma_op_initialize_immutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p, ecma_value_t value);
 
+extern ecma_object_t* ecma_op_create_global_environment( void);
+
 /**
  * @}
  * @}

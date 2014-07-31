@@ -16,6 +16,7 @@
 #include "deserializer.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-lex-env.h"
 #include "globals.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -48,7 +49,7 @@ run_int (void)
 
   const opcode_counter_t start_pos = 0;
   ecma_value_t this_binding_value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
-  ecma_object_t *lex_env_p = ecma_create_decl_lex_env (NULL);
+  ecma_object_t *lex_env_p = ecma_op_create_global_environment();
   FIXME( Strict mode );
   const bool is_strict = false;
 

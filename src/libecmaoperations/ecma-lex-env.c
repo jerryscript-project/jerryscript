@@ -475,6 +475,23 @@ ecma_op_initialize_immutable_binding(ecma_object_t *lex_env_p, /**< lexical envi
 } /* ecma_op_initialize_immutable_binding */
 
 /**
+ * The Global Environment constructor.
+ *
+ * See also: ECMA-262 v5, 10.2.3
+ *
+ * @return pointer to created lexical environment
+ */
+ecma_object_t*
+ecma_op_create_global_environment( void)
+{
+  ecma_object_t *glob_obj_p = ecma_op_create_global_object();
+
+  ecma_object_t *glob_env_p = ecma_create_object_lex_env( NULL, glob_obj_p, false);
+
+  return glob_env_p;
+} /* ecma_op_create_global_environment */
+
+/**
  * @}
  * @}
  */

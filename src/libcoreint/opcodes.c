@@ -459,6 +459,16 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
     ECMA_FINALIZE (cond_value);
   }
 
+  if (!__strcmp ((const char *) str_value.str_p, "exit"))
+    {
+      ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
+      JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
+      ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+      opfunc_exitval (getop_exitval ((T_IDX)*num_p), int_data);
+      ret_value = ecma_make_empty_completion_value ();
+      ECMA_FINALIZE (cond_value);
+    }
+
   free_string_literal_copy (&str_value);
 
   return ret_value;

@@ -137,7 +137,11 @@ CFLAGS_WERROR ?= -Werror
 CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
 # Optimizations
-CFLAGS_OPTIMIZE ?= -Os -flto
+ifeq ($(OPTION_MCU),disable)
+    CFLAGS_OPTIMIZE ?= -O3 -flto
+else
+    CFLAGS_OPTIMIZE ?= -Os -flto
+endif
 CFLAGS_NO_OPTIMIZE ?= -Og
 LDFLAGS_OPTIMIZE ?=
 LDFLAGS_NO_OPTIMIZE ?=

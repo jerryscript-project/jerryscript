@@ -85,6 +85,10 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
     }
 
   init_int (opcodes);
+  
+#ifdef __HOST
+  run_int ();
+#endif
 } /* jerry_run */
 
 #ifdef __HOST

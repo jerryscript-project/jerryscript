@@ -457,7 +457,7 @@ typedef struct {
 /**
  * Size of a chunk, containing a String's part, in bytes
  */
-#define ECMA_ARRAY_CHUNK_SIZE_IN_BYTES  8
+#define ECMA_ARRAY_CHUNK_SIZE_IN_BYTES  32
 
 /**
  * Description of first chunk in a chain of chunks that contains an Array.

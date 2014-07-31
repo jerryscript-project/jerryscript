@@ -21,6 +21,7 @@
 
 static token saved_token;
 static token empty_token = { .type = TOK_EMPTY, .data.uid = 0 };
+static bool allow_dump_lines = false;
 
 typedef struct
 {
@@ -92,6 +93,9 @@ static void
 dump_current_line (void)
 {
   const char *i;
+
+  if (!allow_dump_lines)
+    return;
 
   __printf ("// ");
 
@@ -915,10 +919,11 @@ lexer_dump_buffer_state (void)
 }
 
 void
-lexer_init( const char *source)
+lexer_init (const char *source, bool show_opcodes)
 {
   saved_token = empty_token;
-  lexer_set_source( source);
+  allow_dump_lines = show_opcodes;
+  lexer_set_source (source);
   increase_strings_cache ();
 }
 

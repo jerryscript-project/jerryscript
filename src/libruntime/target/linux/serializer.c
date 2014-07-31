@@ -99,9 +99,8 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
         {
           __printf ("%3d %7d\n", i + strings_num, nums[i]);
         }
+      __printf ("\n");
     }
-
-  __printf ("\n");
 
   data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
   if (!data)
@@ -148,6 +147,8 @@ serializer_dump_opcode (OPCODE opcode)
 
       __printf ("\n");
     }
+  else
+    opcode_counter++;
 }
 
 void

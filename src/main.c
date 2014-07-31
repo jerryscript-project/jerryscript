@@ -33,7 +33,7 @@
 #define MAX_NUMS 25
 
 static const OPCODE *
-parser_run (const char *script_source, size_t script_source_size __unused)
+parser_run (const char *script_source, size_t script_source_size __unused, bool is_show_opcodes)
 {
   const char *strings[MAX_STRINGS];
   int32_t nums[MAX_NUMS];
@@ -43,7 +43,7 @@ parser_run (const char *script_source, size_t script_source_size __unused)
 
   TODO( Consider using script_source_size in lexer to check buffer boundaries );
 
-  lexer_init( script_source);
+  lexer_init( script_source, is_show_opcodes);
 
   lexer_run_first_pass();
 
@@ -80,7 +80,7 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 
   serializer_init (is_show_opcodes);
 
-  opcodes = parser_run (script_source, script_source_size);
+  opcodes = parser_run (script_source, script_source_size, is_show_opcodes);
 
   if (is_parse_only)
     {

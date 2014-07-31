@@ -19,7 +19,7 @@
 #include "globals.h"
 #include "opcodes.h"
 
-void serializer_init (void);
+void serializer_init (bool show_opcodes);
 
 uint16_t serializer_dump_strings (const char **, uint8_t);
 

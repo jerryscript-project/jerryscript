@@ -71,11 +71,14 @@ parser_run (const char *script_source, size_t script_source_size __unused)
 }
 
 static void
-jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only)
+jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only, 
+           bool is_show_opcodes)
 {
   const OPCODE *opcodes;
 
   mem_init();
+
+  serializer_init (is_show_opcodes);
 
   opcodes = parser_run (script_source, script_source_size);
 
@@ -145,10 +148,10 @@ main (int argc __unused,
       char **argv __unused)
 {
   const char *file_name = NULL;
-  bool parse_only = false;
+  bool parse_only = false, show_opcodes = false;
   bool print_mem_stats = false;
   int i;
-  
+
   for (i = 1; i < argc; i++)
     {
       if (!__strcmp ("-v", argv[i]))
@@ -165,6 +168,10 @@ main (int argc __unused,
       else if (!__strcmp ("--parse-only", argv[i]))
         {
           parse_only = true;
+        }
+      else if (!__strcmp ("--show-opcodes", argv[i]))
+        {
+          show_opcodes = true;
         }
       else if (file_name)
         {
@@ -184,7 +191,7 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_source( file_name, &source_size);
 
-  jerry_run (source_p, source_size, parse_only);
+  jerry_run (source_p, source_size, parse_only, show_opcodes);
 
   if (print_mem_stats)
     {
@@ -215,7 +222,7 @@ main (void)
   set_sys_tick_counter ((uint32_t) - 1);
   start = get_sys_tick_counter ();
   jerry_run (source_p,
-             source_size, false);
+             source_size, false, false);
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
   led_on (14);
 

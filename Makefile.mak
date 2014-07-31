@@ -289,7 +289,7 @@ endif
 SOURCES_UNITTESTS = \
  	 $(sort \
  	 $(patsubst %.c,%,$(notdir \
- 	 $(wildcard $(UNITTESTS_SRC_DIR)/*))))
+ 	 $(wildcard $(UNITTESTS_SRC_DIR)/*.c))))
 
 .PHONY: all clean check install $(JERRY_TARGETS) $(TESTS_TARGET)
 
@@ -352,7 +352,7 @@ $(TESTS_TARGET):
 	@ echo Done
 	@ echo
 
-$(PARSER_TESTS_TARGET): debug.$(TARGET_SYSTEM)
+$(PARSER_TESTS_TARGET): debug_release.$(TARGET_SYSTEM)
 	@mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running parser tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \

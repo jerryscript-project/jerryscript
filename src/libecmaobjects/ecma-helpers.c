@@ -100,44 +100,84 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
 } /* ecma_create_object */
 
 /**
- * Create a lexical environment with specified outer lexical environment
+ * Create a declarative lexical environment with specified outer lexical environment
  * (or NULL if the environment is not nested).
  * 
+ * See also: ECMA-262 v5, 10.2.1.1
+ *
  * Reference counter's value will be set to one.
- * 
- * Warning: after object-bound lexical environment is created,
- *          caller must create internal properties, that
- *          specify the bound object and value of 'provideThis'.
  * 
  * @return pointer to the descriptor of lexical environment
  */
 ecma_object_t*
-ecma_create_lexical_environment(ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
-                                ecma_lexical_environment_type_t type) /**< type of lexical environment to create */
+ecma_create_decl_lex_env(ecma_object_t *outer_lexical_environment_p) /**< outer lexical environment */
 {
-    ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
+  ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
 
-    new_lexical_environment_p->is_lexical_environment = true;
-    new_lexical_environment_p->u.lexical_environment.type = type;
+  new_lexical_environment_p->is_lexical_environment = true;
+  new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
 
-    new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
+  new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
 
-    new_lexical_environment_p->GCInfo.is_object_valid = true;
-    new_lexical_environment_p->GCInfo.u.refs = 1;
+  new_lexical_environment_p->GCInfo.is_object_valid = true;
+  new_lexical_environment_p->GCInfo.u.refs = 1;
 
-    if ( outer_lexical_environment_p != NULL )
-      {
-        ecma_ref_object( outer_lexical_environment_p);
-      }
+  if ( outer_lexical_environment_p != NULL )
+    {
+      ecma_ref_object( outer_lexical_environment_p);
+    }
 
-    ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
-    
-    return new_lexical_environment_p;
-} /* ecma_create_lexical_environment */
+  ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+
+  return new_lexical_environment_p;
+} /* ecma_create_decl_lex_env */
 
 /**
- * Create internal property in an object and link it
- * into the object's properties' linked-list
+ * Create a declarative lexical environment with specified outer lexical environment
+ * (or NULL if the environment is not nested).
+ * 
+ * See also: ECMA-262 v5, 10.2.1.2
+ *
+ * Reference counter's value will be set to one.
+ * 
+ * @return pointer to the descriptor of lexical environment
+ */
+ecma_object_t*
+ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
+                           ecma_object_t *binding_obj_p, /**< binding object */
+                           bool provide_this) /**< provideThis flag */
+{
+  JERRY_ASSERT( binding_obj_p != NULL );
+
+  ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
+
+  new_lexical_environment_p->is_lexical_environment = true;
+  new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND;
+
+  new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
+
+  new_lexical_environment_p->GCInfo.is_object_valid = true;
+  new_lexical_environment_p->GCInfo.u.refs = 1;
+
+  if ( outer_lexical_environment_p != NULL )
+    {
+      ecma_ref_object( outer_lexical_environment_p);
+    }
+
+  ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+
+  ecma_property_t *provide_this_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_PROVIDE_THIS);
+  provide_this_prop_p->u.internal_property.value = provide_this;
+
+  ecma_property_t *binding_object_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
+  ecma_set_pointer( binding_object_prop_p->u.internal_property.value, binding_obj_p);
+
+  return new_lexical_environment_p;
+} /* ecma_create_object_lex_env */
+
+/**
+ * Create internal property in an object and link it into
+ * the object's properties' linked-list (at start of the list).
  * 
  * @return pointer to newly created property
  */
@@ -431,7 +471,7 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
-    case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean flag */
+    case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
     case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
       {

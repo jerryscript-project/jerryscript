@@ -48,8 +48,7 @@ run_int (void)
 
   const opcode_counter_t start_pos = 0;
   ecma_value_t this_binding_value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
-  ecma_object_t *lex_env_p = ecma_create_lexical_environment (NULL,
-                                                              ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  ecma_object_t *lex_env_p = ecma_create_decl_lex_env (NULL);
   FIXME( Strict mode );
   const bool is_strict = false;
 

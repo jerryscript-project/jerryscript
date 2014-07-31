@@ -71,7 +71,8 @@ extern bool ecma_is_empty_completion_value( ecma_completion_value_t value);
 
 /* ecma-helpers.c */
 extern ecma_object_t* ecma_create_object( ecma_object_t *prototype_object_p, bool is_extensible, ecma_object_type_t type);
-extern ecma_object_t* ecma_create_lexical_environment( ecma_object_t *outer_lexical_environment_p, ecma_lexical_environment_type_t type);
+extern ecma_object_t* ecma_create_decl_lex_env( ecma_object_t *outer_lexical_environment_p);
+extern ecma_object_t* ecma_create_object_lex_env( ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p, bool provide_this);
 
 extern ecma_property_t* ecma_create_internal_property(ecma_object_t *object_p, ecma_internal_property_id_t property_id);
 extern ecma_property_t* ecma_find_internal_property(ecma_object_t *object_p, ecma_internal_property_id_t property_id);

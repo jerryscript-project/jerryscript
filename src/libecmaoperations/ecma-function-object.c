@@ -279,7 +279,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
         }
 
       // 5.
-      ecma_object_t *local_env_p = ecma_create_lexical_environment( scope_p, ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+      ecma_object_t *local_env_p = ecma_create_decl_lex_env( scope_p);
 
       // 9.
       /* Declaration binding instantiation (ECMA-262 v5, 10.5), block 4 */

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "optimizer-passes.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
@@ -1819,6 +1820,7 @@ parse_source_element_list (void)
   lexer_save_token (tok);
   REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (max_temp_name - 1));
   finish_scope ();
+  optimizer_reorder_scope ((uint16_t) (reg_var_decl_loc + 1), opcode_counter);
 }
 
 /* program

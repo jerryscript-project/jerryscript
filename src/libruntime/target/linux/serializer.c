@@ -37,9 +37,12 @@ static uint8_t opcode_sizes[] = {
   0
 };
 
+static bool print_opcodes;
+
 void
-serializer_init (void)
+serializer_init (bool show_opcodes)
 {
+  print_opcodes = show_opcodes;
 }
 
 uint16_t
@@ -48,10 +51,12 @@ serializer_dump_strings (const char *strings[], uint8_t size)
   uint8_t i;
   uint16_t offset = (uint16_t) (size * 2 + 1), res;
 
-  __printf ("STRINGS %d:\n", size);
+  if (print_opcodes)
+    __printf ("STRINGS %d:\n", size);
   for (i = 0; i < size; i++)
     {
-      __printf ("%3d %5d %20s\n", i, offset, strings[i]);
+      if (print_opcodes)
+        __printf ("%3d %5d %20s\n", i, offset, strings[i]);
       offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
     }
 
@@ -87,10 +92,13 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
 {
   uint8_t i, *data;
 
-  __printf ("NUMS %d:\n", size);
-  for (i = 0; i < size; i++)
+  if (print_opcodes)
     {
-      __printf ("%3d %7d\n", i + strings_num, nums[i]);
+      __printf ("NUMS %d:\n", size);
+      for (i = 0; i < size; i++)
+        {
+          __printf ("%3d %7d\n", i + strings_num, nums[i]);
+        }
     }
 
   __printf ("\n");
@@ -132,11 +140,14 @@ serializer_dump_opcode (OPCODE opcode)
   JERRY_ASSERT( opcode_counter < MAX_OPCODES );
   bytecode_opcodes[opcode_counter] = opcode;
 
-  __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
-  for (i = 1; i < opcode_sizes[opcode_num]; i++)
-    __printf ("%4d ", ((uint8_t*)&opcode)[i]);
+  if (print_opcodes)
+    {
+      __printf ("%03d: %20s ", opcode_counter++, opcode_names[opcode_num]);
+      for (i = 1; i < opcode_sizes[opcode_num]; i++)
+        __printf ("%4d ", ((uint8_t*)&opcode)[i]);
 
-  __printf ("\n");
+      __printf ("\n");
+    }
 }
 
 void
@@ -148,11 +159,14 @@ serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
   JERRY_ASSERT( loc < MAX_OPCODES );
   bytecode_opcodes[loc] = opcode;
 
-  __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
-  for (i = 1; i < opcode_sizes[opcode_num]; i++)
-    __printf ("%4d ", ((uint8_t*)&opcode)[i]);
+  if (print_opcodes)
+    {
+      __printf ("%03d: %20s ", loc, opcode_names[opcode_num]);
+      for (i = 1; i < opcode_sizes[opcode_num]; i++)
+        __printf ("%4d ", ((uint8_t*)&opcode)[i]);
 
-  __printf ("// REWRITE\n");
+      __printf ("// REWRITE\n");
+    }
 }
 
 void
@@ -162,6 +176,9 @@ serializer_print_opcodes (void)
   OPCODE* opcode;
   uint8_t opcode_num;
 
+  if (!print_opcodes)
+    return;
+  
   __printf ("AFTER OPTIMIZER:\n");
 
   do
@@ -176,5 +193,5 @@ serializer_print_opcodes (void)
         __printf ("%4d ", ((uint8_t*)opcode)[i]);
       __printf ("\n");
     }
-  while (opcode->op_idx != __op__idx_exitval);
+  while (opcode->op_idx != __op__idx_exitval && (*(uint16_t *) opcode != 0x0));
 }

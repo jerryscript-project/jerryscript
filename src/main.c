@@ -69,11 +69,14 @@ parser_run (const char *script_source, size_t script_source_size __unused)
 }
 
 static void
-jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only)
+jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only, 
+           bool is_show_opcodes)
 {
   const OPCODE *opcodes;
 
   mem_init();
+
+  serializer_init (is_show_opcodes);
 
   opcodes = parser_run (script_source, script_source_size);
 
@@ -140,7 +143,7 @@ main (int argc __unused,
       char **argv __unused)
 {
   const char *file_name = NULL;
-  bool parse_only = false;
+  bool parse_only = false, show_opcodes = false;
   int i;
 
   for (i = 1; i < argc; i++)
@@ -148,6 +151,10 @@ main (int argc __unused,
       if (!__strcmp ("--parse-only", argv[i]))
         {
           parse_only = true;
+        }
+      else if (!__strcmp ("--show-opcodes", argv[i]))
+        {
+          show_opcodes = true;
         }
       else if (file_name)
         {
@@ -167,7 +174,7 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_source( file_name, &source_size);
 
-  jerry_run (source_p, source_size, parse_only);
+  jerry_run (source_p, source_size, parse_only, show_opcodes);
 
   mem_heap_print( false, false, true);
 
@@ -183,6 +190,6 @@ main(void)
   const size_t source_size = sizeof(generated_source);
 
   jerry_run( source_p,
-             source_size, false);
+             source_size, false, false);
 }
 #endif

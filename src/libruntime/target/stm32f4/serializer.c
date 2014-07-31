@@ -24,7 +24,7 @@
 TODO (Dump to flash)
 
 void
-serializer_init (void)
+serializer_init (bool show_opcodes __unused)
 {
 }
 

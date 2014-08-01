@@ -137,15 +137,10 @@ read_sources (const char *script_file_names[],
           jerry_exit (ERR_MEMORY);
         }
 
-      size_t bytes_read = 0;
-      while ( bytes_read < current_source_size )
+      size_t bytes_read = __fread( source_buffer, 1, current_source_size, file);
+      if ( bytes_read < current_source_size )
         {
-          bytes_read += __fread( source_buffer_tail + bytes_read, sizeof(uint8_t), current_source_size - bytes_read, file);
-
-          if ( __ferror( file) != 0 )
-            {
-              jerry_exit (ERR_IO);
-            }
+          jerry_exit (ERR_IO);
         }
 
       __fclose( file);

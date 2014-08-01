@@ -99,9 +99,15 @@ else
 endif
 
 ifeq ($(musl),1)
-     OPTION_MUSL := enable
+     OPTION_LIBC_MUSL := enable
 else
-     OPTION_MUSL := disable
+     OPTION_LIBC_MUSL := disable
+endif
+
+ifeq ($(libc_raw),1)
+     OPTION_LIBC_RAW := enable
+else
+     OPTION_LIBC_RAW := disable
 endif
 
 ifeq ($(color),1)
@@ -219,7 +225,7 @@ SOURCES_JERRY = \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) \
  $(wildcard ./src/liboptimizer/*.c) ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.[cS])
 
 INCLUDES_JERRY = \
  -I src \
@@ -240,14 +246,20 @@ ifeq ($(OPTION_MCU),disable)
  DEFINES_JERRY += -D__TARGET_HOST_x64 -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
  CFLAGS_COMMON += -fno-stack-protector
  
- ifeq ($(OPTION_MUSL),enable)
+ ifeq ($(OPTION_LIBC_MUSL),enable)
   CC := musl-$(CC) 
   DEFINES_JERRY += -DLIBC_MUSL
   CFLAGS_COMMON += -static
  else
+  ifeq ($(OPTION_LIBC_RAW),enable)
+   DEFINES_JERRY += -DLIBC_RAW
+   CFLAGS_COMMON += -nostdlib
+  else
+   CFLAGS_COMMON += -DLIBC_STD
    ifeq ($(OPTION_SANITIZE),enable)
      CFLAGS_COMMON += -fsanitize=address
    endif
+  endif
  endif
 
  ifeq ($(OPTION_COLOR),enable)

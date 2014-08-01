@@ -17,6 +17,7 @@
 #define LINUX_X86_ASM_H
 
 FIXME( Implement x86 ABI );
+#error "Not implemented"
 
 /*
  * mov syscall_no -> %rax

@@ -14,6 +14,7 @@
  */
 
 #include "globals.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-global-object.h"
 #include "ecma-helpers.h"
@@ -27,6 +28,27 @@
  */
 
 /**
+ * Global object
+ */
+static ecma_object_t* ecma_global_object_p = NULL;
+
+/**
+ * Get Global object
+ *
+ * @return pointer to the Global object
+ *         caller should free the reference by calling ecma_deref_object
+ */
+ecma_object_t*
+ecma_get_global_object( void)
+{
+  JERRY_ASSERT( ecma_global_object_p != NULL );
+
+  ecma_ref_object( ecma_global_object_p);
+
+  return ecma_global_object_p;
+} /* ecma_get_global_object */
+
+/**
  * The Global Object construction routine.
  *
  * See also: ECMA-262 v5, 15.1
@@ -36,6 +58,8 @@
 ecma_object_t*
 ecma_op_create_global_object( void)
 {
+  JERRY_ASSERT( ecma_global_object_p == NULL );
+
   ecma_object_t *glob_obj_p = ecma_create_object( NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_property_t *undefined_prop_p = ecma_create_named_data_property( glob_obj_p,
@@ -46,6 +70,9 @@ ecma_op_create_global_object( void)
   JERRY_ASSERT( ecma_is_value_undefined( undefined_prop_p->u.named_data_property.value) );
 
   TODO( /* Define NaN, Infinity, eval, parseInt, parseFloat, isNaN, isFinite properties */ );
+
+  ecma_ref_object( glob_obj_p);
+  ecma_global_object_p = glob_obj_p;
 
   return glob_obj_p;
 } /* ecma_op_create_global_object */

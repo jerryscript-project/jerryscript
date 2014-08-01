@@ -130,12 +130,17 @@ read_sources (const char *script_file_names[],
 
       __rewind( file);
 
-      const size_t source_size = (size_t)script_len;
-      size_t bytes_read = 0;
+      const size_t current_source_size = (size_t)script_len;
      
-      while ( bytes_read < source_size )
+      if ( source_buffer_tail + current_source_size >= source_buffer + sizeof(source_buffer) )
         {
-          bytes_read += __fread( source_buffer_tail, 1, source_size, file);
+          jerry_exit (ERR_MEMORY);
+        }
+
+      size_t bytes_read = 0;
+      while ( bytes_read < current_source_size )
+        {
+          bytes_read += __fread( source_buffer_tail + bytes_read, sizeof(uint8_t), current_source_size - bytes_read, file);
 
           if ( __ferror( file) != 0 )
             {
@@ -145,10 +150,13 @@ read_sources (const char *script_file_names[],
 
       __fclose( file);
 
-      source_buffer_tail += source_size;
-
-      *out_source_size_p += source_size;
+      source_buffer_tail += current_source_size;
     }
+
+  const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
+  JERRY_ASSERT( source_size < sizeof(source_buffer) );
+
+  *out_source_size_p = source_size;
 
   return (const char*)source_buffer;
 }

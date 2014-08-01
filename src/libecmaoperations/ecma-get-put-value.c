@@ -18,8 +18,11 @@
  */
 
 #include "ecma-exceptions.h"
+#include "ecma-gc.h"
+#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
+#include "ecma-objects-properties.h"
 #include "ecma-operations.h"
 
 /** \addtogroup ecma ---TODO---
@@ -135,13 +138,19 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
       return ecma_make_throw_value( ecma_new_standard_error( ECMA_ERROR_REFERENCE));
     } else // PutValue_3.b
     {
-      /*
-       ecma_object_t *global_object_p = ecma_GetGlobalObject();
+       ecma_object_t *global_object_p = ecma_get_global_object();
 
-       return global_object_p->[[Put]]( ref.referenced_name_p, value, false);
-      */
+       ecma_completion_value_t completion = ecma_op_object_put( global_object_p,
+                                                                ref.referenced_name_p,
+                                                                value,
+                                                                false);
 
-      JERRY_UNIMPLEMENTED();      
+       ecma_deref_object( global_object_p);
+
+       JERRY_ASSERT( ecma_is_completion_value_normal_true( completion)
+                     || ecma_is_completion_value_normal_false( completion) );
+
+       return ecma_make_empty_completion_value();
     }
   } else if ( is_property_reference ) // PutValue_4
   {

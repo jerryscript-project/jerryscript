@@ -14,12 +14,12 @@
 
 #!/bin/bash
 
-echo "#include \"globals.h\"" > "generated.h"
-echo "" >> "generated.h"
-echo "static const char* generated_source = \"\"" >> "generated.h"
+echo "#include \"globals.h\"" > $2
+echo "" >> $2
+echo "static const char* generated_source = \"\"" >> $2
 while read line
 do
-  echo "\"$line\n\"" >> "generated.h"
+  echo "\"$line\n\"" >> $2
 done < $1
-echo ";" >> "generated.h"
+echo ";" >> $2
 

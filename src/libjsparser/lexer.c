@@ -56,7 +56,8 @@ static const char *token_start;
 static char
 get_char (size_t i)
 {
-  JERRY_ASSERT ((buffer + i) < (buffer_start + buffer_size));
+  if ((buffer + i) >= (buffer_start + buffer_size))
+    return '\0';
   return *(buffer + i);
 }
 

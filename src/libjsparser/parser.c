@@ -1818,7 +1818,12 @@ parse_source_element_list (void)
       skip_newlines ();
     }
   lexer_save_token (tok);
-  REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (max_temp_name - 1));
+  if (max_temp_name > min_temp_name)
+    REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (max_temp_name - 1));
+  else if (max_temp_name == min_temp_name)
+    REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name);
+  else
+    JERRY_UNREACHABLE ();
   finish_scope ();
   optimizer_reorder_scope ((uint16_t) (reg_var_decl_loc + 1), opcode_counter);
 }

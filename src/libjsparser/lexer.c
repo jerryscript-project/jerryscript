@@ -56,7 +56,7 @@ static const char *token_start;
 static char
 get_char (size_t i)
 {
-  JERRY_ASSERT (i < buffer_size);
+  JERRY_ASSERT ((buffer + i) < (buffer_start + buffer_size));
   return *(buffer + i);
 }
 
@@ -950,4 +950,6 @@ void
 lexer_free (void)
 {
   mem_heap_free_block ((uint8_t *) strings_cache);
+  strings_cache = NULL;
+  strings_cache_size = 0;
 }

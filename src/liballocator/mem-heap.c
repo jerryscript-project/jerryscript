@@ -33,13 +33,6 @@
  * Valgrind-related options and headers
  */
 #ifndef JERRY_NVALGRIND
-# define VALGRIND_NOACCESS_STRUCT( s)
-# define VALGRIND_UNDEFINED_STRUCT( s)
-# define VALGRIND_DEFINED_STRUCT( s)
-# define VALGRIND_NOACCESS_SPACE( p, s)
-# define VALGRIND_UNDEFINED_SPACE( p, s)
-# define VALGRIND_DEFINED_SPACET( p, s)
-#else /* !JERRRY_NVALGRIND */
 # include "memcheck.h"
 
 # define VALGRIND_NOACCESS_STRUCT( s)    VALGRIND_MAKE_MEM_NOACCESS( ( s ), sizeof( *( s ) ) )
@@ -48,6 +41,13 @@
 # define VALGRIND_NOACCESS_SPACE( p, s)  VALGRIND_MAKE_MEM_NOACCESS( ( p ), ( s ) )
 # define VALGRIND_UNDEFINED_SPACE( p, s) VALGRIND_MAKE_MEM_UNDEFINED( ( p ), ( s ) )
 # define VALGRIND_DEFINED_SPACET( p, s)  VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
+#else /* !JERRRY_NVALGRIND */
+# define VALGRIND_NOACCESS_STRUCT( s)
+# define VALGRIND_UNDEFINED_STRUCT( s)
+# define VALGRIND_DEFINED_STRUCT( s)
+# define VALGRIND_NOACCESS_SPACE( p, s)
+# define VALGRIND_UNDEFINED_SPACE( p, s)
+# define VALGRIND_DEFINED_SPACET( p, s)
 #endif /* !JERRY_NVALGRIND */
 
 /**
@@ -253,9 +253,9 @@ mem_init_block_header( uint8_t *first_chunk_p,         /**< address of the first
   block_header_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
   block_header_p->allocated_bytes = allocated_bytes;
 
-  VALGRIND_NOACCESS_STRUCT( block_header_p);
-
   JERRY_ASSERT( allocated_bytes <= mem_get_block_data_space_size( block_header_p) );
+
+  VALGRIND_NOACCESS_STRUCT( block_header_p);
 } /* mem_init_block_header */
 
 /**

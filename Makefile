@@ -61,6 +61,8 @@ export todo
 export fixme
 export color
 export sanitize
+export musl
+export libc_raw
 
 all: clean $(TESTS_TARGET) $(CHECK_TARGETS)
 

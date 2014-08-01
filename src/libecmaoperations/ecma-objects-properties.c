@@ -212,7 +212,8 @@ ecma_op_object_put( ecma_object_t *obj_p, /**< the object */
   ecma_property_t *own_desc_p = ecma_op_object_get_own_property( obj_p, property_name_p);
 
   // 3.
-  if ( own_desc_p->type == ECMA_PROPERTY_NAMEDDATA )
+  if ( own_desc_p != NULL
+       && own_desc_p->type == ECMA_PROPERTY_NAMEDDATA )
     {
       // a.
       ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor();
@@ -232,7 +233,8 @@ ecma_op_object_put( ecma_object_t *obj_p, /**< the object */
   ecma_property_t *desc_p = ecma_op_object_get_property( obj_p, property_name_p);
 
   // 5.
-  if ( desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR )
+  if ( desc_p != NULL
+       && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR )
     {
       // a.
       ecma_object_t *setter_p = ecma_get_pointer( desc_p->u.named_accessor_property.set_p);

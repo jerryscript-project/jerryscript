@@ -24,8 +24,12 @@ for unit_test in $UNITTESTS;
 do
   echo -n "Running $unit_test... ";
 
-  $DIR/$unit_test 2>&1 >> $DIR/unit_tests_run.log;
-  if [ $? -eq 0 ];
+  $VALGRIND $DIR/$unit_test >&$DIR/unit_tests_run.log.tmp;
+  status_code=$?
+  cat $DIR/unit_tests_run.log.tmp >> $DIR/unit_tests_run.log
+  rm $DIR/unit_tests_run.log.tmp
+
+  if [ $status_code -eq 0 ];
   then
     echo OK;
   else

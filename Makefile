@@ -61,6 +61,7 @@ export todo
 export fixme
 export color
 export sanitize
+export valgrind
 export musl
 export libc_raw
 

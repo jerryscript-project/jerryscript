@@ -29,6 +29,27 @@
 #include "mem-allocator.h"
 #include "mem-heap.h"
 
+/*
+ * Valgrind-related options and headers
+ */
+#ifndef JERRY_NVALGRIND
+# define VALGRIND_NOACCESS_STRUCT( s)
+# define VALGRIND_UNDEFINED_STRUCT( s)
+# define VALGRIND_DEFINED_STRUCT( s)
+# define VALGRIND_NOACCESS_SPACE( p, s)
+# define VALGRIND_UNDEFINED_SPACE( p, s)
+# define VALGRIND_DEFINED_SPACET( p, s)
+#else /* !JERRRY_NVALGRIND */
+# include "memcheck.h"
+
+# define VALGRIND_NOACCESS_STRUCT( s)    VALGRIND_MAKE_MEM_NOACCESS( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_UNDEFINED_STRUCT( s)   VALGRIND_MAKE_MEM_UNDEFINED( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_DEFINED_STRUCT( s)     VALGRIND_MAKE_MEM_DEFINED( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_NOACCESS_SPACE( p, s)  VALGRIND_MAKE_MEM_NOACCESS( ( p ), ( s ) )
+# define VALGRIND_UNDEFINED_SPACE( p, s) VALGRIND_MAKE_MEM_UNDEFINED( ( p ), ( s ) )
+# define VALGRIND_DEFINED_SPACET( p, s)  VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
+#endif /* !JERRY_NVALGRIND */
+
 /**
  * Magic numbers for heap memory blocks
  */
@@ -190,6 +211,8 @@ mem_heap_init(uint8_t *heap_start, /**< first address of heap space */
   mem_heap.heap_start = heap_start;
   mem_heap.heap_size = heap_size;
 
+  VALGRIND_NOACCESS_SPACE( heap_start, heap_size);
+
   mem_init_block_header(mem_heap.heap_start,
                       0,
                       MEM_BLOCK_FREE,
@@ -214,6 +237,8 @@ mem_init_block_header( uint8_t *first_chunk_p,         /**< address of the first
 {
   mem_block_header_t *block_header_p = (mem_block_header_t*) first_chunk_p;
 
+  VALGRIND_UNDEFINED_STRUCT( block_header_p);
+
   if ( block_state == MEM_BLOCK_FREE )
   {
     block_header_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
@@ -227,6 +252,8 @@ mem_init_block_header( uint8_t *first_chunk_p,         /**< address of the first
   block_header_p->neighbours[ MEM_DIRECTION_PREV ] = prev_block_p;
   block_header_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
   block_header_p->allocated_bytes = allocated_bytes;
+
+  VALGRIND_NOACCESS_STRUCT( block_header_p);
 
   JERRY_ASSERT( allocated_bytes <= mem_get_block_data_space_size( block_header_p) );
 } /* mem_init_block_header */
@@ -266,6 +293,8 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
   /* searching for appropriate block */
   while ( block_p != NULL )
   {
+    VALGRIND_DEFINED_STRUCT( block_p);
+
     if ( block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK )
     {
       if ( mem_get_block_data_space_size( block_p) >= size_in_bytes )
@@ -277,7 +306,11 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
       JERRY_ASSERT( block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
     }
 
-    block_p = block_p->neighbours[ direction ];
+    mem_block_header_t *next_block_p = block_p->neighbours[ direction ];
+
+    VALGRIND_NOACCESS_STRUCT( block_p);
+
+    block_p = next_block_p;
   }
 
   if ( block_p == NULL )
@@ -301,10 +334,10 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
 
     uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
     mem_init_block_header(new_free_block_first_chunk_p,
-                        0,
-                        MEM_BLOCK_FREE,
-                        block_p /* there we will place new allocated block */,
-                        next_block_p);
+                          0,
+                          MEM_BLOCK_FREE,
+                          block_p /* there we will place new allocated block */,
+                          next_block_p);
 
     mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
 
@@ -322,15 +355,21 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
                       prev_block_p,
                       next_block_p);
 
+  VALGRIND_DEFINED_STRUCT( block_p);
+
   mem_heap_stat_alloc_block( block_p);
 
   JERRY_ASSERT( mem_get_block_data_space_size( block_p) >= size_in_bytes );
+
+  VALGRIND_NOACCESS_STRUCT( block_p);
 
   mem_check_heap();
 
   /* return data space beginning address */
   uint8_t *data_space_p = (uint8_t*) (block_p + 1);
   JERRY_ASSERT( (uintptr_t) data_space_p % MEM_ALIGNMENT == 0);
+
+  VALGRIND_UNDEFINED_SPACE( data_space_p, size_in_bytes);
 
   return data_space_p;
 } /* mem_heap_alloc_block */
@@ -348,53 +387,89 @@ mem_heap_free_block( uint8_t *ptr) /**< pointer to beginning of data space of th
   mem_check_heap();
 
   mem_block_header_t *block_p = (mem_block_header_t*) ptr - 1;
+
+  VALGRIND_DEFINED_STRUCT( block_p);
+
   mem_block_header_t *prev_block_p = block_p->neighbours[ MEM_DIRECTION_PREV ];
   mem_block_header_t *next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
 
   mem_heap_stat_free_block( block_p);
 
+  VALGRIND_NOACCESS_SPACE( ptr, block_p->allocated_bytes);
+
   /* checking magic nums that are neighbour to data space */
   JERRY_ASSERT( block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
   if ( next_block_p != NULL )
   {
+    VALGRIND_DEFINED_STRUCT( next_block_p);
+
     JERRY_ASSERT( next_block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK
                  || next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK );
+
+    VALGRIND_NOACCESS_STRUCT( next_block_p);
   }
 
   block_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
 
-  if ( next_block_p != NULL
-       && next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK )
-  {
-    /* merge with the next block */
-    mem_heap_stat_free_block_merge();
+  if ( next_block_p != NULL )
+    {
+      VALGRIND_DEFINED_STRUCT( next_block_p);
 
-    next_block_p = next_block_p->neighbours[ MEM_DIRECTION_NEXT ];
-    block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
-    if ( next_block_p != NULL )
-    {
-      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p;
-    } else
-    {
-      mem_heap.last_block_p = block_p;
+      if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK )
+        {
+          /* merge with the next block */
+          mem_heap_stat_free_block_merge();
+
+          mem_block_header_t *next_next_block_p = next_block_p->neighbours[ MEM_DIRECTION_NEXT ];
+
+          VALGRIND_NOACCESS_STRUCT( next_block_p);
+
+          next_block_p = next_next_block_p;
+
+          VALGRIND_DEFINED_STRUCT( next_block_p);
+
+          block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+          if ( next_block_p != NULL )
+            {
+              next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p;
+            }
+          else
+            {
+              mem_heap.last_block_p = block_p;
+            }
+        }
+
+      VALGRIND_NOACCESS_STRUCT( next_block_p);
     }
-  }
 
-  if ( prev_block_p != NULL
-       && prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK )
-  {
-    /* merge with the previous block */
-    mem_heap_stat_free_block_merge();
+  if ( prev_block_p != NULL )
+    {
+      VALGRIND_DEFINED_STRUCT( prev_block_p);
 
-    prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
-    if ( next_block_p != NULL )
-    {
-      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p->neighbours[ MEM_DIRECTION_PREV ];
-    } else
-    {
-      mem_heap.last_block_p = prev_block_p;
+      if ( prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK )
+        {
+          /* merge with the previous block */
+          mem_heap_stat_free_block_merge();
+
+          prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+          if ( next_block_p != NULL )
+            {
+              VALGRIND_DEFINED_STRUCT( next_block_p);
+
+              next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p->neighbours[ MEM_DIRECTION_PREV ];
+
+              VALGRIND_NOACCESS_STRUCT( next_block_p);
+            }
+          else
+            {
+              mem_heap.last_block_p = prev_block_p;
+            }
+        }
+
+      VALGRIND_NOACCESS_STRUCT( prev_block_p);
     }
-  }
+
+  VALGRIND_NOACCESS_STRUCT( block_p);
 
   mem_check_heap();
 } /* mem_heap_free_block */
@@ -434,10 +509,12 @@ mem_heap_print( bool dump_block_headers, /**< print block headers */
                (void*) mem_heap.first_block_p,
                (void*) mem_heap.last_block_p);
 
-      for ( mem_block_header_t *block_p = mem_heap.first_block_p;
+      for ( mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
            block_p != NULL;
-           block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ] )
+           block_p = next_block_p )
         {
+          VALGRIND_DEFINED_STRUCT( block_p);
+
           __printf("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
                    (void*) block_p,
                    block_p->magic_num,
@@ -456,6 +533,10 @@ mem_heap_print( bool dump_block_headers, /**< print block headers */
                 }
               __printf("\n");
             }
+
+          next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+
+          VALGRIND_NOACCESS_STRUCT( block_p);
         }
     }
 
@@ -502,15 +583,17 @@ mem_check_heap( void)
   JERRY_ASSERT( mem_heap.heap_size % MEM_HEAP_CHUNK_SIZE == 0 );
 
   bool is_last_block_was_met = false;
-  for ( mem_block_header_t *block_p = mem_heap.first_block_p;
+  for ( mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
         block_p != NULL;
-        block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ] )
+        block_p = next_block_p )
   {
-    JERRY_ASSERT( block_p != NULL );
+    VALGRIND_DEFINED_STRUCT( block_p);
+
     JERRY_ASSERT( block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
                  || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
 
-    mem_block_header_t *next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+    next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+
     if ( block_p == mem_heap.last_block_p )
     {
       is_last_block_was_met = true;
@@ -520,7 +603,9 @@ mem_check_heap( void)
     {
       JERRY_ASSERT( next_block_p != NULL );
     }
-  }
+
+    VALGRIND_NOACCESS_STRUCT( block_p);
+ }
 
   JERRY_ASSERT( is_last_block_was_met );
 #endif /* !JERRY_NDEBUG */

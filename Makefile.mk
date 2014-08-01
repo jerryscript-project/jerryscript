@@ -105,6 +105,10 @@ else
 endif
 
 ifeq ($(libc_raw),1)
+     ifeq ($(OPTION_LIBC_MUSL),enable)
+      $(error LIBC_RAW and LIBC_MUSL are mutually exclusive)
+     endif
+
      OPTION_LIBC_RAW := enable
 else
      OPTION_LIBC_RAW := disable
@@ -117,9 +121,26 @@ else
 endif
 
 ifeq ($(sanitize),1)
+     ifeq ($(OPTION_LIBC_MUSL),enable)
+      $(error ASAN and LIBC_MUSL are mutually exclusive)
+     endif
+     ifeq ($(OPTION_LIBC_RAW),enable)
+      $(error ASAN and LIBC_RAW are mutually exclusive)
+     endif
+
      OPTION_SANITIZE := enable
 else
      OPTION_SANITIZE := disable
+endif
+
+ifeq ($(valgrind),1)
+     OPTION_VALGRIND := enable
+
+     ifeq ($(OPTION_SANITIZE),enable)
+      $(error ASAN and Valgrind are mutually exclusive)
+     endif
+else
+     OPTION_VALGRIND := disable
 endif
 
 #
@@ -278,12 +299,19 @@ ifeq ($(OPTION_FIXME),enable)
  DEFINES_JERRY += -DJERRY_PRINT_FIXME
 endif
 
+ifeq ($(OPTION_VALGRIND),enable)
+ VALGRIND_CMD := "valgrind --track-origins=yes"
+else
+ VALGRIND_CMD :=
+ DEFINES_JERRY += -DJERRY_NVALGRIND
+endif
+
 #
 # Third-party sources, headers, includes, cflags, ldflags
 #
 
 SOURCES_THIRDPARTY =
-INCLUDES_THIRDPARTY =
+INCLUDES_THIRDPARTY = -I third-party/valgrind/
 CFLAGS_THIRDPARTY =
 
 ifeq ($(TARGET_SYSTEM),stm32f4)
@@ -368,15 +396,15 @@ $(TESTS_TARGET):
 	done
 	@ rm -rf $(TARGET_DIR)/obj
 	@ echo "=== Running unit tests ==="
-	@ ./tools/jerry_unittest.sh $(TARGET_DIR)
+	@ VALGRIND=$(VALGRIND_CMD) ./tools/jerry_unittest.sh $(TARGET_DIR)
 	@ echo Done
 	@ echo
 
 $(PARSER_TESTS_TARGET): debug_release.$(TARGET_SYSTEM)
-	@mkdir -p $(TARGET_DIR)/check
+	@ mkdir -p $(TARGET_DIR)/check
 	@ echo "=== Running parser tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check --parse-only; \
+		VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check --parse-only; \
 	fi
 
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
@@ -389,7 +417,7 @@ $(CHECK_TARGETS): $(TARGET_OF_ACTION)
 	@ echo
 	@ echo "=== Running js tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
+		VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
 	fi
 	
 	@echo Done

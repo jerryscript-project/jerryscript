@@ -351,12 +351,11 @@ __fwrite(const void *ptr, /**< data to write */
          size_t nmemb, /**< number of elements */
          _FILE *stream) /**< stream pointer */
 {
-  long int ret;
   size_t bytes_written = 0;
 
   do
     {
-      ret = syscall_3( __NR_write, (long int)stream, (long int) ((uint8_t*)ptr + bytes_written), (long int) (size * nmemb - bytes_written));
+      long int ret = syscall_3( __NR_write, (long int)stream, (long int) ((uint8_t*)ptr + bytes_written), (long int) (size * nmemb - bytes_written));
 
       bytes_written += (size_t)ret;
     } while (bytes_written != size * nmemb);

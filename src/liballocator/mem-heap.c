@@ -35,12 +35,12 @@
 #ifndef JERRY_NVALGRIND
 # include "memcheck.h"
 
-# define VALGRIND_NOACCESS_STRUCT( s)    VALGRIND_MAKE_MEM_NOACCESS( ( s ), sizeof( *( s ) ) )
-# define VALGRIND_UNDEFINED_STRUCT( s)   VALGRIND_MAKE_MEM_UNDEFINED( ( s ), sizeof( *( s ) ) )
-# define VALGRIND_DEFINED_STRUCT( s)     VALGRIND_MAKE_MEM_DEFINED( ( s ), sizeof( *( s ) ) )
-# define VALGRIND_NOACCESS_SPACE( p, s)  VALGRIND_MAKE_MEM_NOACCESS( ( p ), ( s ) )
-# define VALGRIND_UNDEFINED_SPACE( p, s) VALGRIND_MAKE_MEM_UNDEFINED( ( p ), ( s ) )
-# define VALGRIND_DEFINED_SPACET( p, s)  VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
+# define VALGRIND_NOACCESS_STRUCT( s)    (void)VALGRIND_MAKE_MEM_NOACCESS( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_UNDEFINED_STRUCT( s)   (void)VALGRIND_MAKE_MEM_UNDEFINED( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_DEFINED_STRUCT( s)     (void)VALGRIND_MAKE_MEM_DEFINED( ( s ), sizeof( *( s ) ) )
+# define VALGRIND_NOACCESS_SPACE( p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS( ( p ), ( s ) )
+# define VALGRIND_UNDEFINED_SPACE( p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED( ( p ), ( s ) )
+# define VALGRIND_DEFINED_SPACET( p, s)  (void)VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
 #else /* !JERRRY_NVALGRIND */
 # define VALGRIND_NOACCESS_STRUCT( s)
 # define VALGRIND_UNDEFINED_STRUCT( s)

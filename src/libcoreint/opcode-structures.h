@@ -465,7 +465,7 @@ OP_CODE_DECL (delete, T_IDX_IDX,
               lhs,
               obj)
 
-/** a = delete b  */
+/** a = typeof b  */
 OP_CODE_DECL (typeof, T_IDX_IDX,
               lhs,
               obj)

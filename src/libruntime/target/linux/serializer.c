@@ -128,7 +128,7 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
 #endif
 }
 
-static int32_t opcode_counter = 0;
+static opcode_counter_t opcode_counter = 0;
 
 void
 serializer_dump_opcode (OPCODE opcode)
@@ -152,7 +152,7 @@ serializer_dump_opcode (OPCODE opcode)
 }
 
 void
-serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
+serializer_rewrite_opcode (const opcode_counter_t loc, OPCODE opcode)
 {
   uint8_t i;
   uint8_t opcode_num = opcode.op_idx;

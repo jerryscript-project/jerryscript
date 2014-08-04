@@ -124,9 +124,6 @@ ifeq ($(sanitize),1)
      ifeq ($(OPTION_LIBC_MUSL),enable)
       $(error ASAN and LIBC_MUSL are mutually exclusive)
      endif
-     ifeq ($(OPTION_LIBC_RAW),enable)
-      $(error ASAN and LIBC_RAW are mutually exclusive)
-     endif
 
      OPTION_SANITIZE := enable
 else
@@ -236,7 +233,7 @@ DEFINES_JERRY += -DJERRY_BUILD_DATE="\"$(BUILD_DATE)\"" \
                  -DJERRY_COMMIT_HASH="\"$(GIT_HASH)\"" \
                  -DJERRY_BRANCH_NAME="\"$(GIT_BRANCH)\""
 
-SOURCES_JERRY = \
+SOURCES_JERRY_C = \
  $(sort \
  $(wildcard ./src/libruntime/*.c) \
  $(wildcard ./src/libperipherals/*.c) \
@@ -246,7 +243,12 @@ SOURCES_JERRY = \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) \
  $(wildcard ./src/liboptimizer/*.c) ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.[cS])
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
+
+SOURCES_JERRY_ASM = \
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.S)
+
+SOURCES_JERRY = $(SOURCES_JERRY_C) $(SOURCES_JERRY_ASM)
 
 INCLUDES_JERRY = \
  -I src \
@@ -272,14 +274,18 @@ ifeq ($(OPTION_MCU),disable)
   DEFINES_JERRY += -DLIBC_MUSL
   CFLAGS_COMMON += -static
  else
-  ifeq ($(OPTION_LIBC_RAW),enable)
-   DEFINES_JERRY += -DLIBC_RAW
-   CFLAGS_COMMON += -nostdlib
-  else
-   CFLAGS_COMMON += -DLIBC_STD
    ifeq ($(OPTION_SANITIZE),enable)
      CFLAGS_COMMON += -fsanitize=address
    endif
+
+  ifeq ($(OPTION_LIBC_RAW),enable)
+   DEFINES_JERRY += -DLIBC_RAW
+   CFLAGS_COMMON += -nostdlib
+   ifeq ($(OPTION_SANITIZE),enable)
+     LDFLAGS += -lasan
+   endif
+  else
+   CFLAGS_COMMON += -DLIBC_STD
   endif
  endif
 
@@ -346,7 +352,7 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@echo "=== Running cppcheck ==="
-	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
 	@echo Done
 	@echo

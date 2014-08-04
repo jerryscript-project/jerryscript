@@ -107,7 +107,7 @@ serializer_dump_opcode (OPCODE opcode)
 }
 
 void
-serializer_rewrite_opcode (const uint8_t loc, OPCODE opcode)
+serializer_rewrite_opcode (const opcode_counter_t loc, OPCODE opcode)
 {
   bytecode_opcodes[loc] = opcode;
 }

@@ -347,7 +347,7 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@echo "=== Running cppcheck ==="
 	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all --suppress=sizeofwithnumericparameter --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
+          --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
 	@echo Done
 	@echo
 	@mkdir -p $(TARGET_DIR)

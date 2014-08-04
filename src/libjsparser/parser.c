@@ -222,7 +222,7 @@ insert_semicolon (void)
 
 #define DUMP_OPCODE_1(GETOP, OP1) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
@@ -230,8 +230,8 @@ insert_semicolon (void)
 
 #define DUMP_OPCODE_2(GETOP, OP1, OP2) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
-    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
+    JERRY_ASSERT (0+OP2 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
@@ -239,9 +239,9 @@ insert_semicolon (void)
 
 #define DUMP_OPCODE_3(GETOP, OP1, OP2, OP3) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
-    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
-    JERRY_ASSERT (sizeof (OP3) == 1 || OP3 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
+    JERRY_ASSERT (0+OP2 <= 255); \
+    JERRY_ASSERT (0+OP3 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
@@ -249,24 +249,24 @@ insert_semicolon (void)
 
 #define REWRITE_OPCODE_1(OC, GETOP, OP1) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)
 
 #define REWRITE_OPCODE_2(OC, GETOP, OP1, OP2) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
-    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
+    JERRY_ASSERT (0+OP2 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)
 
 #define REWRITE_OPCODE_3(OC, GETOP, OP1, OP2, OP3) \
   do { \
-    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
-    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
-    JERRY_ASSERT (sizeof (OP3) == 1 || OP3 <= 255); \
+    JERRY_ASSERT (0+OP1 <= 255); \
+    JERRY_ASSERT (0+OP2 <= 255); \
+    JERRY_ASSERT (0+OP3 <= 255); \
     opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)

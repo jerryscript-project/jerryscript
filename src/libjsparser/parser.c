@@ -19,14 +19,43 @@
 #include "parser.h"
 #include "opcodes.h"
 #include "serializer.h"
+#include "interpreter.h"
 
 #define MAX_OPCODES 10
+#define MAX_NESTINGS 10
 #define INVALID_VALUE 255
+
+typedef enum
+{
+  REWRITABLE_CONTINUE = 0,
+  REWRITABLE_BREAK,
+  REWRITABLE_OPCODES_COUNT
+}
+rewritable_opcode_type;
+
+typedef struct
+{
+  uint8_t size;
+  uint8_t head;
+  opcode_counter_t *oc_stack;
+} __packed
+rewritable_opcode;
+
+#define NESTING_ITERATIONAL 1
+#define NESTING_SWITCH      2
+#define NESTING_FUNCTION    3
 
 static token tok;
 static OPCODE opcode;
-static T_IDX opcode_counter = 0;
+static opcode_counter_t opcode_counter = 0;
 static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
+static uint8_t nestings[MAX_NESTINGS], nestings_head = 0;
+
+static rewritable_opcode rewritable_opcodes[REWRITABLE_OPCODES_COUNT] = 
+{
+  [REWRITABLE_CONTINUE] = { .size = 0, .head = 0, .oc_stack = NULL },
+  [REWRITABLE_BREAK] = { .size = 0, .head = 0, .oc_stack = NULL }
+};
 
 static T_IDX parse_expression (void);
 static void parse_statement (void);
@@ -61,6 +90,47 @@ reset_temp_name (void)
   if (max_temp_name < temp_name)
     max_temp_name = temp_name;
   temp_name = min_temp_name;
+}
+
+static void
+push_nesting (uint8_t nesting_type)
+{
+  JERRY_ASSERT (nestings_head < MAX_NESTINGS);
+
+  nestings[nestings_head++] = nesting_type;
+}
+
+static void
+pop_nesting (uint8_t nesting_type)
+{
+  JERRY_ASSERT (nestings_head > 0);
+  JERRY_ASSERT (nestings[nestings_head - 1] == nesting_type);
+
+  nestings_head--;
+}
+
+static void
+must_be_inside_but_not_in (uint8_t inside[], uint8_t insides_count, uint8_t not_in)
+{
+  int8_t i;
+
+  if (nestings_head == 0)
+    parser_fatal (ERR_PARSER);
+
+  for (i = (int8_t) (nestings_head - 1); i >= 0; i--)
+    {
+      int8_t j;
+      if (nestings[i] == not_in)
+        parser_fatal (ERR_PARSER);
+
+      for (j = 0; j < insides_count; j++)
+        {
+          if (nestings[i] == inside[j])
+            return;
+        }
+    }
+
+  parser_fatal (ERR_PARSER);
 }
 
 static void
@@ -144,19 +214,68 @@ insert_semicolon (void)
   do { skip_newlines (); ID = parse_##TYPE (); } while (0)
 
 #define DUMP_VOID_OPCODE(GETOP) \
-  do { opcode=getop_##GETOP (); serializer_dump_opcode (opcode); opcode_counter++; } while (0)
+  do { \
+    opcode=getop_##GETOP (); \
+    serializer_dump_opcode (opcode); \
+    opcode_counter++; \
+  } while (0)
 
-#define DUMP_OPCODE(GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_dump_opcode (opcode); opcode_counter++; } while (0)
+#define DUMP_OPCODE_1(GETOP, OP1) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1)); \
+    serializer_dump_opcode (opcode); \
+    opcode_counter++; \
+  } while (0)
 
-#define REWRITE_OPCODE(OC, GETOP, ...) \
-  do { opcode=getop_##GETOP (__VA_ARGS__); serializer_rewrite_opcode (OC, opcode); } while (0)
+#define DUMP_OPCODE_2(GETOP, OP1, OP2) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
+    serializer_dump_opcode (opcode); \
+    opcode_counter++; \
+  } while (0)
+
+#define DUMP_OPCODE_3(GETOP, OP1, OP2, OP3) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    JERRY_ASSERT (sizeof (OP3) == 1 || OP3 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
+    serializer_dump_opcode (opcode); \
+    opcode_counter++; \
+  } while (0)
+
+#define REWRITE_OPCODE_1(OC, GETOP, OP1) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1)); \
+    serializer_rewrite_opcode (OC, opcode); \
+  } while (0)
+
+#define REWRITE_OPCODE_2(OC, GETOP, OP1, OP2) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
+    serializer_rewrite_opcode (OC, opcode); \
+  } while (0)
+
+#define REWRITE_OPCODE_3(OC, GETOP, OP1, OP2, OP3) \
+  do { \
+    JERRY_ASSERT (sizeof (OP1) == 1 || OP1 <= 255); \
+    JERRY_ASSERT (sizeof (OP2) == 1 || OP2 <= 255); \
+    JERRY_ASSERT (sizeof (OP3) == 1 || OP3 <= 255); \
+    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
+    serializer_rewrite_opcode (OC, opcode); \
+  } while (0)
 
 static T_IDX
 integer_zero (void)
 {
   T_IDX lhs = next_temp_name ();
-  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 0);
+  DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 0);
   return lhs;
 }
 
@@ -164,8 +283,64 @@ static T_IDX
 integer_one (void)
 {
   T_IDX lhs = next_temp_name ();
-  DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 1);
+  DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 1);
   return lhs;
+}
+
+static void
+add_to_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
+{
+  rewritable_opcode op = rewritable_opcodes[type];
+  if (op.oc_stack == NULL)
+    {
+      op.size = op.head = 1;
+      op.oc_stack = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t), MEM_HEAP_ALLOC_SHORT_TERM);
+      op.oc_stack[0] = oc;
+      return;
+    }
+
+  if (op.head == op.size)
+    {
+      opcode_counter_t *temp = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t) * op.size * 2, 
+                                                                            MEM_HEAP_ALLOC_SHORT_TERM);
+      __memcpy (temp, op.oc_stack, op.size * sizeof (opcode_counter_t));
+      op.size = (uint8_t) (op.size * 2);
+      temp[op.head++] = oc;
+      mem_heap_free_block ((uint8_t *) op.oc_stack);
+      op.oc_stack = temp;
+      return;
+    }
+
+  op.oc_stack[op.head++] = oc;
+}
+
+static void
+rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
+{
+  uint8_t i;
+  rewritable_opcode op = rewritable_opcodes[type];
+
+  for (i = 0; i < op.head; i++)
+    {
+      switch (type)
+      {
+        case REWRITABLE_CONTINUE:
+          REWRITE_OPCODE_1 (op.oc_stack[i], jmp_up, oc);
+          break;
+        case REWRITABLE_BREAK:
+          REWRITE_OPCODE_1 (op.oc_stack[i], jmp_down, oc);
+          break;
+        default:
+          JERRY_UNREACHABLE ();
+      }
+    }
+
+  if (op.oc_stack)
+    {
+      mem_heap_free_block ((uint8_t *) op.oc_stack);
+    }
+  op.oc_stack = NULL;
+  op.head = op.size = 0;
 }
 
 /* property_name
@@ -201,7 +376,7 @@ parse_property_name_and_value (void)
   token_after_newlines_must_be (TOK_COLON);
   NEXT (value, assignment_expression);
 
-  DUMP_OPCODE (prop, lhs, name, value);
+  DUMP_OPCODE_3 (prop, lhs, name, value);
 
   return lhs;
 }
@@ -228,7 +403,7 @@ parse_property_assignment (void)
       token_after_newlines_must_be (TOK_CLOSE_PAREN);
       token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-      DUMP_OPCODE (prop_get_decl, lhs, name);
+      DUMP_OPCODE_2 (prop_get_decl, lhs, name);
 
       skip_newlines ();
       parse_source_element_list ();
@@ -248,7 +423,7 @@ parse_property_assignment (void)
       token_after_newlines_must_be (TOK_CLOSE_PAREN);
       token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-      DUMP_OPCODE (prop_set_decl, lhs, name, arg);
+      DUMP_OPCODE_3 (prop_set_decl, lhs, name, arg);
 
       skip_newlines ();
       parse_source_element_list ();
@@ -267,7 +442,7 @@ dump_varg_3 (T_IDX current_param, T_IDX params[3])
 {
   if (current_param == 3)
     {
-      DUMP_OPCODE (varg_3, params[0], params[1], params[2]);
+      DUMP_OPCODE_3 (varg_3, params[0], params[1], params[2]);
       current_param = 0;
     }
 }
@@ -278,15 +453,15 @@ dump_varg_end (T_IDX current_param, T_IDX params[3])
   switch (current_param)
   {
     case 0:
-      DUMP_OPCODE (varg_1_end, params[0]);
+      DUMP_OPCODE_1 (varg_1_end, params[0]);
       break;
               
     case 1:
-      DUMP_OPCODE (varg_2_end, params[0], params[1]);
+      DUMP_OPCODE_2 (varg_2_end, params[0], params[1]);
       break;
               
     case 2:
-      DUMP_OPCODE (varg_3_end, params[0], params[1], params[2]);
+      DUMP_OPCODE_3 (varg_3_end, params[0], params[1], params[2]);
       break;
 
     default:
@@ -367,27 +542,27 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
                   switch (alt)
                   {
                     case AL_FUNC_DECL:
-                      DUMP_OPCODE (func_decl_n, obj, args[0], args[1]);
+                      DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
                       break;
 
                     case AL_FUNC_EXPR:
-                      DUMP_OPCODE (func_expr_n, lhs, obj, args[0]);
+                      DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
                       break;
 
                     case AL_ARRAY_LIT:
-                      DUMP_OPCODE (array_n, lhs, args[0], args[1]);
+                      DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
                       break;
 
                     case AL_OBJECT_LIT:
-                      DUMP_OPCODE (obj_n, lhs, args[0], args[1]);
+                      DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
                       break;
 
                     case AL_CONSTRUCT_EXPR:
-                      DUMP_OPCODE (construct_n, lhs, obj, args[0]);
+                      DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
                       break;
 
                     case AL_CALL_EXPR:
-                      DUMP_OPCODE (call_n, lhs, obj, args[0]);
+                      DUMP_OPCODE_3 (call_n, lhs, obj, args[0]);
                       break;
                     
                     default:
@@ -440,27 +615,27 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
               switch (alt)
               {
                 case AL_FUNC_DECL:
-                  DUMP_OPCODE (func_decl_1, obj, args[0]);
+                  DUMP_OPCODE_2 (func_decl_1, obj, args[0]);
                   break;
 
                 case AL_FUNC_EXPR:
-                  DUMP_OPCODE (func_expr_1, lhs, obj, args[0]);
+                  DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
                   break;
 
                 case AL_ARRAY_LIT:
-                  DUMP_OPCODE (array_1, lhs, args[0]);
+                  DUMP_OPCODE_2 (array_1, lhs, args[0]);
                   break;
 
                 case AL_OBJECT_LIT:
-                  DUMP_OPCODE (obj_1, lhs, args[0]);
+                  DUMP_OPCODE_2 (obj_1, lhs, args[0]);
                   break;
 
                 case AL_CONSTRUCT_EXPR:
-                  DUMP_OPCODE (construct_1, lhs, obj, args[0]);
+                  DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
                   break;
 
                 case AL_CALL_EXPR:
-                  DUMP_OPCODE (call_1, lhs, obj, args[0]);
+                  DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
                   break;
 
                 default:
@@ -472,15 +647,15 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
               switch (alt)
               {
                 case AL_FUNC_DECL:
-                  DUMP_OPCODE (func_decl_2, obj, args[0], args[1]);
+                  DUMP_OPCODE_3 (func_decl_2, obj, args[0], args[1]);
                   break;
 
                 case AL_ARRAY_LIT:
-                  DUMP_OPCODE (array_2, lhs, args[0], args[1]);
+                  DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
                   break;
 
                 case AL_OBJECT_LIT:
-                  DUMP_OPCODE (obj_2, lhs, args[0], args[1]);
+                  DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
                   break;
 
                 default:
@@ -498,27 +673,27 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
       switch (alt)
       {
         case AL_FUNC_DECL:
-          DUMP_OPCODE (func_decl_0, obj);
+          DUMP_OPCODE_1 (func_decl_0, obj);
           break;
 
         case AL_FUNC_EXPR:
-          DUMP_OPCODE (func_expr_0, lhs, obj);
+          DUMP_OPCODE_2 (func_expr_0, lhs, obj);
           break;
 
         case AL_ARRAY_LIT:
-          DUMP_OPCODE (array_0, lhs);
+          DUMP_OPCODE_1 (array_0, lhs);
           break;
 
         case AL_OBJECT_LIT:
-          DUMP_OPCODE (obj_0, lhs);
+          DUMP_OPCODE_1 (obj_0, lhs);
           break;
 
         case AL_CONSTRUCT_EXPR:
-          DUMP_OPCODE (construct_0, lhs, obj);
+          DUMP_OPCODE_2 (construct_0, lhs, obj);
           break;
 
         case AL_CALL_EXPR:
-          DUMP_OPCODE (call_0, lhs, obj);
+          DUMP_OPCODE_2 (call_0, lhs, obj);
           break;
 
         default:
@@ -539,7 +714,8 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 static void
 parse_function_declaration (void)
 {
-  T_IDX name, jmp_oc;
+  T_IDX name;
+  opcode_counter_t jmp_oc;
 
   assert_keyword (KW_FUNCTION);
 
@@ -551,17 +727,19 @@ parse_function_declaration (void)
   parse_argument_list (AL_FUNC_DECL, name);
 
   jmp_oc = opcode_counter;
-  DUMP_OPCODE (jmp_down, INVALID_VALUE);
+  DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   skip_newlines ();
+  push_nesting (NESTING_FUNCTION);
   parse_source_element_list ();
+  pop_nesting (NESTING_FUNCTION);
 
   next_token_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
-  REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
+  REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
 }
 
 /* function_expression
@@ -570,7 +748,8 @@ parse_function_declaration (void)
 static T_IDX
 parse_function_expression (void)
 {
-  T_IDX name, lhs, jmp_oc;
+  T_IDX name, lhs;
+  opcode_counter_t jmp_oc;
 
   assert_keyword  (KW_FUNCTION);
 
@@ -587,17 +766,19 @@ parse_function_expression (void)
   lhs = parse_argument_list (AL_FUNC_EXPR, name);  
 
   jmp_oc = opcode_counter;
-  DUMP_OPCODE (jmp_down, INVALID_VALUE);
+  DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   skip_newlines ();
+  push_nesting (NESTING_FUNCTION);
   parse_source_element_list ();
+  pop_nesting (NESTING_FUNCTION);
 
   token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
-  REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
+  REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
 
   return lhs;
 }
@@ -629,23 +810,23 @@ parse_literal (void)
   {
     case TOK_NULL:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_NULL);
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_NULL);
       return lhs;
 
     case TOK_BOOL:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, 
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, 
                    tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
       return lhs;
 
     case TOK_INT:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, tok.data.uid);
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, tok.data.uid);
       return lhs;
 
     case TOK_STRING:
       lhs = next_temp_name ();
-      DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_STRING, tok.data.uid);
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_STRING, tok.data.uid);
       return lhs;
 
     default:
@@ -669,7 +850,7 @@ parse_primary_expression (void)
   if (is_keyword (KW_THIS))
     {
       lhs = next_temp_name ();
-      DUMP_OPCODE (this, lhs);
+      DUMP_OPCODE_1 (this, lhs);
       return lhs;
     }
   else if (tok.type == TOK_NAME)
@@ -752,7 +933,7 @@ parse_member_expression (void)
       else 
         JERRY_UNREACHABLE ();
 
-      DUMP_OPCODE (prop_access, lhs, obj, prop);
+      DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
       obj = lhs;
       skip_newlines ();
     }
@@ -807,7 +988,7 @@ parse_call_expression (void)
           NEXT (prop, expression);
           next_token_must_be (TOK_CLOSE_SQUARE);
 
-          DUMP_OPCODE (prop_access, lhs, obj, prop);
+          DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
           obj = lhs;
           skip_newlines ();
           break;
@@ -816,7 +997,7 @@ parse_call_expression (void)
           token_after_newlines_must_be (TOK_NAME);
           prop = tok.data.uid;
 
-          DUMP_OPCODE (prop_access, lhs, obj, prop);
+          DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
           obj = lhs;
           skip_newlines ();
           break;
@@ -852,12 +1033,12 @@ parse_postfix_expression (void)
   if (tok.type == TOK_DOUBLE_PLUS)
     {
       lhs = next_temp_name ();
-      DUMP_OPCODE (post_incr, lhs, expr);
+      DUMP_OPCODE_2 (post_incr, lhs, expr);
     }
   else if (tok.type == TOK_DOUBLE_MINUS)
     {
       lhs = next_temp_name ();
-      DUMP_OPCODE (post_decr, lhs, expr);
+      DUMP_OPCODE_2 (post_decr, lhs, expr);
     }
   else
     lexer_save_token (tok);
@@ -879,37 +1060,37 @@ parse_unary_expression (void)
     case TOK_DOUBLE_PLUS:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (pre_incr, lhs, expr);
+      DUMP_OPCODE_2 (pre_incr, lhs, expr);
       return expr;
 
     case TOK_DOUBLE_MINUS:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (pre_decr, lhs, expr);
+      DUMP_OPCODE_2 (pre_decr, lhs, expr);
       return expr;
 
     case TOK_PLUS:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (addition, lhs, integer_zero (), expr);
+      DUMP_OPCODE_3 (addition, lhs, integer_zero (), expr);
       return lhs;
 
     case TOK_MINUS:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (substraction, lhs, integer_zero (), expr);
+      DUMP_OPCODE_3 (substraction, lhs, integer_zero (), expr);
       return lhs;
 
     case TOK_COMPL:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (b_not, lhs, expr);
+      DUMP_OPCODE_2 (b_not, lhs, expr);
       return lhs;
 
     case TOK_NOT:
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
-      DUMP_OPCODE (logical_not, lhs, expr);
+      DUMP_OPCODE_2 (logical_not, lhs, expr);
       return lhs;
 
     case TOK_KEYWORD:
@@ -917,7 +1098,7 @@ parse_unary_expression (void)
         { 
           lhs = next_temp_name ();
           NEXT (expr, unary_expression);
-          DUMP_OPCODE (delete, lhs, expr);
+          DUMP_OPCODE_2 (delete, lhs, expr);
           return lhs;
         }
       if (is_keyword (KW_VOID)) 
@@ -926,7 +1107,7 @@ parse_unary_expression (void)
         { 
           lhs = next_temp_name ();
           NEXT (expr, unary_expression);
-          DUMP_OPCODE (typeof, lhs, expr);
+          DUMP_OPCODE_2 (typeof, lhs, expr);
           return lhs;
         }
       /* FALLTHRU.  */
@@ -939,7 +1120,7 @@ parse_unary_expression (void)
 #define DUMP_OF(GETOP, EXPR) \
     lhs = next_temp_name (); \
     NEXT (expr2, EXPR);\
-    DUMP_OPCODE (GETOP, lhs, expr1, expr2); \
+    DUMP_OPCODE_3 (GETOP, lhs, expr1, expr2); \
     expr1 = lhs; \
     break;
 
@@ -1146,23 +1327,24 @@ parse_conditional_expression (bool *was_conditional)
   skip_newlines ();
   if (tok.type == TOK_QUERY)
     {
-      T_IDX lhs, jmp_oc, res = next_temp_name ();
+      T_IDX lhs, res = next_temp_name ();
+      opcode_counter_t jmp_oc;
 
-      DUMP_OPCODE (is_true_jmp, expr, (uint8_t) (opcode_counter + 2));
+      DUMP_OPCODE_2 (is_true_jmp, expr, opcode_counter + 2);
       jmp_oc = opcode_counter;
-      DUMP_OPCODE (jmp_down, INVALID_VALUE);
+      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
       NEXT (lhs, assignment_expression);
-      DUMP_OPCODE (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
+      DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
       token_after_newlines_must_be (TOK_COLON);
 
-      REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
+      REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
       jmp_oc = opcode_counter;
-      DUMP_OPCODE (jmp_down, INVALID_VALUE);
+      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
       NEXT (lhs, assignment_expression);
-      DUMP_OPCODE (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
-      REWRITE_OPCODE (jmp_oc, jmp_down, (uint8_t) (opcode_counter - jmp_oc));
+      DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
+      REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
 
       *was_conditional = true;
       return res;
@@ -1195,62 +1377,62 @@ parse_assignment_expression (void)
     {  
       case TOK_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (assignment, lhs, OPCODE_ARG_TYPE_VARIABLE, rhs);
+        DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_VARIABLE, rhs);
         break;
 
       case TOK_MULT_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (multiplication, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (multiplication, lhs, lhs, rhs);
         break;
 
       case TOK_DIV_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (division, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (division, lhs, lhs, rhs);
         break;
         
       case TOK_MOD_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (remainder, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (remainder, lhs, lhs, rhs);
         break;
         
       case TOK_PLUS_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (addition, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (addition, lhs, lhs, rhs);
         break;
         
       case TOK_MINUS_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (substraction, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (substraction, lhs, lhs, rhs);
         break;
         
       case TOK_LSHIFT_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_shift_left, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_shift_left, lhs, lhs, rhs);
         break;
         
       case TOK_RSHIFT_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_shift_right, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_shift_right, lhs, lhs, rhs);
         break;
         
       case TOK_RSHIFT_EX_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_shift_uright, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_shift_uright, lhs, lhs, rhs);
         break;
         
       case TOK_AND_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_and, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_and, lhs, lhs, rhs);
         break;
         
       case TOK_XOR_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_xor, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_xor, lhs, lhs, rhs);
         break;
         
       case TOK_OR_EQ:
         NEXT (rhs, assignment_expression);
-        DUMP_OPCODE (b_or, lhs, lhs, rhs);
+        DUMP_OPCODE_3 (b_or, lhs, lhs, rhs);
         break;
         
       default:
@@ -1295,13 +1477,13 @@ parse_variable_declaration (void)
 
   current_token_must_be (TOK_NAME);
   name = tok.data.uid;
-  DUMP_OPCODE (var_decl, name);
+  DUMP_OPCODE_1 (var_decl, name);
 
   skip_newlines ();
   if (tok.type == TOK_EQ)
     {
       NEXT (expr, assignment_expression);
-      DUMP_OPCODE (assignment, name, OPCODE_ARG_TYPE_VARIABLE, expr);
+      DUMP_OPCODE_3 (assignment, name, OPCODE_ARG_TYPE_VARIABLE, expr);
     }
   else
     lexer_save_token (tok);
@@ -1354,7 +1536,8 @@ parse_variable_declaration_list (bool *several_decls)
 static void
 parse_for_or_for_in_statement (void)
 {
-  T_IDX stop, cond_oc, body_oc, step_oc, end_oc;
+  T_IDX stop;
+  opcode_counter_t cond_oc, body_oc, step_oc, end_oc;
 
   assert_keyword  (KW_FOR);
   token_after_newlines_must_be (TOK_OPEN_PAREN);
@@ -1438,10 +1621,10 @@ plain_for:
     stop = integer_one ();
 
   end_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, stop, INVALID_VALUE);
+  DUMP_OPCODE_2 (is_false_jmp, stop, INVALID_VALUE);
 
   body_oc = opcode_counter;
-  DUMP_OPCODE (jmp_down, INVALID_VALUE);
+  DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
   step_oc = opcode_counter;
   skip_newlines ();
@@ -1450,14 +1633,19 @@ plain_for:
       parse_assignment_expression ();
       next_token_must_be (TOK_CLOSE_PAREN);
     }
-  DUMP_OPCODE (jmp_up, (uint8_t) (opcode_counter - cond_oc));
-  REWRITE_OPCODE (body_oc, jmp_down, (uint8_t) (opcode_counter - body_oc));
+  DUMP_OPCODE_1 (jmp_up, opcode_counter - cond_oc);
+  REWRITE_OPCODE_1 (body_oc, jmp_down, opcode_counter - body_oc);
 
   skip_newlines ();
+  push_nesting (NESTING_ITERATIONAL);
   parse_statement ();
+  pop_nesting (NESTING_ITERATIONAL);
 
-  DUMP_OPCODE (jmp_up, (uint8_t) (opcode_counter - step_oc));
-  REWRITE_OPCODE (end_oc, is_false_jmp, stop, opcode_counter);
+  DUMP_OPCODE_1 (jmp_up, opcode_counter - step_oc);
+  REWRITE_OPCODE_2 (end_oc, is_false_jmp, stop, opcode_counter);
+
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, step_oc);
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
   return;
 
 for_in:
@@ -1485,14 +1673,16 @@ parse_statement_list (void)
     {
       parse_statement ();
 
-      tok = lexer_next_token ();
-      if (tok.type != TOK_NEWLINE && tok.type != TOK_SEMICOLON)
+      skip_newlines ();
+      while (tok.type == TOK_SEMICOLON)
+        {
+          skip_newlines ();
+        }
+      if (tok.type == TOK_CLOSE_BRACE)
         {
           lexer_save_token (tok);
           return;
         }
-
-      skip_newlines ();
     }
 }
 
@@ -1502,17 +1692,18 @@ parse_statement_list (void)
 static void
 parse_if_statement (void)
 {
-  T_IDX cond, cond_oc;
+  T_IDX cond;
+  opcode_counter_t cond_oc;
   assert_keyword (KW_IF);
 
   cond = parse_expression_inside_parens ();
   cond_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, cond, INVALID_VALUE);
+  DUMP_OPCODE_2 (is_false_jmp, cond, INVALID_VALUE);
 
   skip_newlines ();
   parse_statement ();
 
-  REWRITE_OPCODE (cond_oc, is_false_jmp, cond, opcode_counter);
+  REWRITE_OPCODE_2 (cond_oc, is_false_jmp, cond, opcode_counter);
 
   skip_newlines ();
   if (is_keyword (KW_ELSE))
@@ -1530,18 +1721,24 @@ parse_if_statement (void)
 static void
 parse_do_while_statement (void)
 {
-  T_IDX cond, loop_oc;
+  T_IDX cond;
+  opcode_counter_t loop_oc;
 
   assert_keyword (KW_DO);
 
   loop_oc = opcode_counter;
 
   skip_newlines ();
+  push_nesting (NESTING_ITERATIONAL);
   parse_statement ();
+  pop_nesting (NESTING_ITERATIONAL);
 
   token_after_newlines_must_be_keyword (KW_WHILE);
   cond = parse_expression_inside_parens ();
-  DUMP_OPCODE (is_true_jmp, cond, loop_oc);
+  DUMP_OPCODE_2 (is_true_jmp, cond, loop_oc);
+
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, loop_oc);
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
 }
 
 /* while_statement
@@ -1550,20 +1747,26 @@ parse_do_while_statement (void)
 static void
 parse_while_statement (void)
 {
-  T_IDX cond, cond_oc, jmp_oc;
+  T_IDX cond;
+  opcode_counter_t cond_oc, jmp_oc;
 
   assert_keyword (KW_WHILE);
 
   cond_oc = opcode_counter;
   cond = parse_expression_inside_parens ();
   jmp_oc = opcode_counter;
-  DUMP_OPCODE (is_false_jmp, cond, INVALID_VALUE);
+  DUMP_OPCODE_2 (is_false_jmp, cond, INVALID_VALUE);
 
   skip_newlines ();
+  push_nesting (NESTING_ITERATIONAL);
   parse_statement ();
+  pop_nesting (NESTING_ITERATIONAL);
 
-  DUMP_OPCODE (jmp_up, (uint8_t) (opcode_counter - cond_oc));
-  REWRITE_OPCODE (jmp_oc, is_false_jmp, cond, opcode_counter);
+  DUMP_OPCODE_1 (jmp_up, opcode_counter - cond_oc);
+  REWRITE_OPCODE_2 (jmp_oc, is_false_jmp, cond, opcode_counter);
+
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, cond_oc);
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
 }
 
 /* with_statement
@@ -1576,7 +1779,7 @@ parse_with_statement (void)
   assert_keyword (KW_WITH);
   expr = parse_expression_inside_parens ();
 
-  DUMP_OPCODE (with, expr); 
+  DUMP_OPCODE_1 (with, expr); 
 
   skip_newlines ();
   parse_statement ();
@@ -1725,11 +1928,19 @@ parse_statement (void)
     }
   if (is_keyword (KW_CONTINUE))
     {
-      JERRY_UNIMPLEMENTED ();
+      must_be_inside_but_not_in ((uint8_t[]){NESTING_ITERATIONAL, NESTING_SWITCH}, 2, 
+                                 NESTING_FUNCTION);
+      add_to_rewritable_opcodes (REWRITABLE_CONTINUE, opcode_counter);
+      DUMP_OPCODE_1 (jmp_up, INVALID_VALUE);
+      return;
     }
   if (is_keyword (KW_BREAK))
     {
-      JERRY_UNIMPLEMENTED ();
+      must_be_inside_but_not_in ((uint8_t[]){NESTING_ITERATIONAL, NESTING_SWITCH}, 2, 
+                                 NESTING_FUNCTION);
+      add_to_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
+      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+      return;
     }
   if (is_keyword (KW_RETURN))
     {
@@ -1738,7 +1949,7 @@ parse_statement (void)
       if (tok.type != TOK_SEMICOLON)
         {
           expr = parse_expression ();
-          DUMP_OPCODE (retval, expr);
+          DUMP_OPCODE_1 (retval, expr);
         }
       else
         DUMP_VOID_OPCODE (ret);
@@ -1806,11 +2017,11 @@ parse_source_element (void)
 static void
 parse_source_element_list (void)
 {
-  T_IDX reg_var_decl_loc;
+  opcode_counter_t reg_var_decl_loc;
 
   start_new_scope ();
   reg_var_decl_loc = opcode_counter;
-  DUMP_OPCODE (reg_var_decl, min_temp_name, INVALID_VALUE);
+  DUMP_OPCODE_2 (reg_var_decl, min_temp_name, INVALID_VALUE);
 
   while (tok.type != TOK_EOF && tok.type != TOK_CLOSE_BRACE)
     {
@@ -1819,9 +2030,9 @@ parse_source_element_list (void)
     }
   lexer_save_token (tok);
   if (max_temp_name > min_temp_name)
-    REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, (uint8_t) (max_temp_name - 1));
+    REWRITE_OPCODE_2 (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name - 1);
   else if (max_temp_name == min_temp_name)
-    REWRITE_OPCODE (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name);
+    REWRITE_OPCODE_2 (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name);
   else
     JERRY_UNREACHABLE ();
   finish_scope ();
@@ -1839,7 +2050,7 @@ parser_parse_program (void)
 
   skip_newlines ();
   JERRY_ASSERT (tok.type == TOK_EOF);
-  DUMP_OPCODE (exitval, 0);
+  DUMP_OPCODE_1 (exitval, 0);
 }
 
 void

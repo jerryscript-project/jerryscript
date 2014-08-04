@@ -18,6 +18,7 @@
 
 #include "globals.h"
 #include "opcodes.h"
+#include "interpreter.h"
 
 void serializer_init (bool show_opcodes);
 
@@ -27,7 +28,7 @@ void serializer_dump_nums (const int32_t *, uint8_t, uint16_t, uint8_t);
 
 void serializer_dump_opcode (OPCODE);
 
-void serializer_rewrite_opcode (const uint8_t, OPCODE);
+void serializer_rewrite_opcode (const opcode_counter_t, OPCODE);
 
 void serializer_print_opcodes (void);
 

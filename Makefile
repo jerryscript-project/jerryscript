@@ -110,7 +110,7 @@ precommit: clean git_status_pre_test_check build
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 	@ if [ "`git status --porcelain 2>&1 | grep -v -e '^?? out/$$' | wc -l`" == "0" ]; \
           then \
-            echo -e "\e[0;32m OK to push\e[0m"; \
+            echo -e "\e[0;32m OK to push\e[0m\n"; \
           else \
             echo -e "\e[1;33m $(GIT_STATUS_NOT_CLEAN_MSG). $(GIT_STATUS_CONSIDER_CLEAN_MSG).\e[0m\n"; \
           fi;

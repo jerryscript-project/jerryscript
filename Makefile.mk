@@ -18,29 +18,33 @@ LNK_SCRIPT_STM32F4 = ./third-party/stm32f4.ld
 
 # Parsing target
 #   '.' -> ' '
-TARGET_SPACED = $(subst ., ,$(TARGET))
+TARGET_SPACED := $(subst ., ,$(TARGET))
 #   extract target mode part
-TARGET_MODE   = $(word 1,$(TARGET_SPACED))
+TARGET_MODE   := $(word 1,$(TARGET_SPACED))
+#   extract target system part with modifiers
+TARGET_SYSTEM_AND_MODS := $(word 2,$(TARGET_SPACED))
+TARGET_SYSTEM_AND_MODS_SPACED := $(subst -, ,$(TARGET_SYSTEM_AND_MODS))
+
 #   extract target system part
-TARGET_SYSTEM = $(word 2,$(TARGET_SPACED))
+TARGET_SYSTEM := $(word 1,$(TARGET_SYSTEM_AND_MODS_SPACED))
+
+#   extract modifiers
+TARGET_MODS := $(wordlist 2, $(words $(TARGET_SYSTEM_AND_MODS_SPACED)), $(TARGET_SYSTEM_AND_MODS_SPACED))
+
 #   extract optional action part
-TARGET_ACTION = $(word 3,$(TARGET_SPACED))
+TARGET_ACTION := $(word 3,$(TARGET_SPACED))
 
 # Target used as dependency of an action (check, flash, etc.)
-TARGET_OF_ACTION = $(TARGET_MODE).$(TARGET_SYSTEM)
-
-# target folder name in $(OUT_DIR)
-TARGET_DIR=$(OUT_DIR)/$(TARGET_MODE).$(TARGET_SYSTEM)
+TARGET_OF_ACTION := $(TARGET_MODE).$(TARGET_SYSTEM_AND_MODS)
 
 # unittests mode -> linux system
 ifeq ($(TARGET_MODE),$(TESTS_TARGET))
- TARGET_SYSTEM = linux
+ TARGET_SYSTEM := linux
+ TARGET_SYSTEM_AND_MODS := $(TARGET_SYSTEM)
 endif
 
-# parse-only mode -> linux system
-ifeq ($(TARGET_MODE),$(PARSER_TESTS_TARGET))
- TARGET_SYSTEM = linux
-endif
+# target folder name in $(OUT_DIR)
+TARGET_DIR=$(OUT_DIR)/$(TARGET_MODE).$(TARGET_SYSTEM_AND_MODS)
 
 #
 # Options setup
@@ -73,6 +77,13 @@ else
      OPTION_ECHO := disable
 endif
 
+# -fdiagnostics-color=always
+ifeq ($(color),1)
+     OPTION_COLOR := enable
+else
+     OPTION_COLOR := disable
+endif
+
 # JERRY_NDEBUG, debug symbols
 ifeq ($(TARGET_MODE),release)
  OPTION_NDEBUG = enable
@@ -98,13 +109,13 @@ else
 	OPTION_MCU = disable
 endif
 
-ifeq ($(musl),1)
+ifeq ($(filter musl,$(TARGET_MODS)), musl)
      OPTION_LIBC_MUSL := enable
 else
      OPTION_LIBC_MUSL := disable
 endif
 
-ifeq ($(libc_raw),1)
+ifeq ($(filter libc_raw,$(TARGET_MODS)), libc_raw)
      ifeq ($(OPTION_LIBC_MUSL),enable)
       $(error LIBC_RAW and LIBC_MUSL are mutually exclusive)
      endif
@@ -114,13 +125,7 @@ else
      OPTION_LIBC_RAW := disable
 endif
 
-ifeq ($(color),1)
-     OPTION_COLOR := enable
-else
-     OPTION_COLOR := disable
-endif
-
-ifeq ($(sanitize),1)
+ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)
      ifeq ($(OPTION_LIBC_MUSL),enable)
       $(error ASAN and LIBC_MUSL are mutually exclusive)
      endif
@@ -130,7 +135,7 @@ else
      OPTION_SANITIZE := disable
 endif
 
-ifeq ($(valgrind),1)
+ifeq ($(filter valgrind,$(TARGET_MODS)), valgrind)
      OPTION_VALGRIND := enable
 
      ifeq ($(OPTION_SANITIZE),enable)
@@ -306,7 +311,7 @@ ifeq ($(OPTION_FIXME),enable)
 endif
 
 ifeq ($(OPTION_VALGRIND),enable)
- VALGRIND_CMD := "valgrind --track-origins=yes"
+ VALGRIND_CMD := "valgrind --error-exitcode=254 --track-origins=yes"
 else
  VALGRIND_CMD :=
  DEFINES_JERRY += -DJERRY_NVALGRIND
@@ -351,11 +356,8 @@ all: clean $(JERRY_TARGETS)
 
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
-	@echo "=== Running cppcheck ==="
-	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@cppcheck $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
-	@echo Done
-	@echo
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
@@ -387,6 +389,8 @@ $(TESTS_TARGET):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
+	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY); \
         do \
@@ -406,28 +410,30 @@ $(TESTS_TARGET):
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
 	done
 	@ rm -rf $(TARGET_DIR)/obj
-	@ echo "=== Running unit tests ==="
-	@ VALGRIND=$(VALGRIND_CMD) ./tools/jerry_unittest.sh $(TARGET_DIR)
-	@ echo Done
-	@ echo
+	@ VALGRIND=$(VALGRIND_CMD) ./tools/jerry_unittest.sh $(TARGET_DIR) $(TESTS_OPTS)
 
-$(PARSER_TESTS_TARGET): debug_release.$(TARGET_SYSTEM)
+$(CHECK_TARGETS):
+	@ if [ ! -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then echo $(TARGET_OF_ACTION) is not built yet; exit 1; fi;
+	@ if [ ! -d "$(TESTS_DIR)" ]; then echo \"$(TESTS_DIR)\" is not a directory; exit 1; fi;
+	@ rm -rf $(TARGET_DIR)/check
 	@ mkdir -p $(TARGET_DIR)/check
-	@ echo "=== Running parser tests ==="
-	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check --parse-only; \
-	fi
+	@ if [ "$(OUTPUT_TO_LOG)" = "enable" ]; \
+          then \
+            ADD_OPTS="--output-to-log"; \
+          fi; \
+          VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
+          status_code=$$?; \
+          if [ $$status_code -ne 0 ]; \
+          then \
+            echo $(TARGET) failed; \
+            if [ "$(OUTPUT_TO_LOG)" = "enable" ]; \
+            then \
+              echo See log in $(TARGET_DIR)/check directory for details.; \
+            fi; \
+            \
+            exit $$status_code; \
+          fi;
 
-$(CHECK_TARGETS): $(TARGET_OF_ACTION)
-	@ make unittests testparser
-	@ mkdir -p $(TARGET_DIR)/check
-	@ echo "=== Running js tests ==="
-	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
-		VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \
-	fi
-	
-	@echo Done
-	@echo
 
 $(FLASH_TARGETS): $(TARGET_OF_ACTION)
 	st-flash write $(OUT_DIR)/$(TARGET_OF_ACTION)/jerry.bin 0x08000000 || exit $$?

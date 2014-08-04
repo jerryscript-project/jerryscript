@@ -15,6 +15,18 @@
 #!/bin/bash
 
 DIR="$1"
+shift
+
+OPTION_SILENT=disable
+while (( "$#" ))
+do
+  if [ "$1" = "--silent" ]
+  then
+    OPTION_SILENT=enable
+  fi
+
+  shift
+done
 
 rm -f $DIR/unit_tests_run.log
 
@@ -22,7 +34,7 @@ UNITTESTS=$(ls $DIR)
 
 for unit_test in $UNITTESTS;
 do
-  echo -n "Running $unit_test... ";
+  [ $OPTION_SILENT = "enable" ] || echo -n "Running $unit_test... ";
 
   $VALGRIND $DIR/$unit_test >&$DIR/unit_tests_run.log.tmp;
   status_code=$?
@@ -31,9 +43,9 @@ do
 
   if [ $status_code -eq 0 ];
   then
-    echo OK;
+    [ $OPTION_SILENT = "enable" ] || echo OK;
   else
-    echo FAILED;
+    [ $OPTION_SILENT = "enable" ] || echo FAILED;
     exit 1;
   fi;
 done

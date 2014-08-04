@@ -108,7 +108,7 @@ precommit: clean git_status_pre_test_check build
 	@ echo -e "Parse-only testing completed successfully. Starting full tests run.\n"
 	@ echo -e "\e[0;31mFIXME:\e[0m Full testing skipped.\n"; # $(MAKE) -s $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./tests/jerry OUTPUT_TO_LOG=enable
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
-	@ if [ "`git status --porcelain 2>&1 | grep -v -e '^?? out/$' | wc -l`" == "0" ]; \
+	@ if [ "`git status --porcelain 2>&1 | grep -v -e '^?? out/$$' | wc -l`" == "0" ]; \
           then \
             echo -e "\e[0;32m OK to push\e[0m"; \
           else \

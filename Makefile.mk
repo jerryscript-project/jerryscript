@@ -345,6 +345,11 @@ all: clean $(JERRY_TARGETS)
 
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
+	@echo "=== Running cppcheck ==="
+	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
+	@echo Done
+	@echo
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
@@ -410,11 +415,6 @@ $(PARSER_TESTS_TARGET): debug_release.$(TARGET_SYSTEM)
 $(CHECK_TARGETS): $(TARGET_OF_ACTION)
 	@ make unittests testparser
 	@ mkdir -p $(TARGET_DIR)/check
-	@ echo "=== Running cppcheck ==="
-	@ cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=0 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
-	@ echo Done
-	@ echo
 	@ echo "=== Running js tests ==="
 	@ if [ -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then \
 		VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check; \

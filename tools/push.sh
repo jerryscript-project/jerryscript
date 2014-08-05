@@ -47,7 +47,7 @@ fi
 
 commits_to_push=`git log origin/master..master | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = ""; } { s = $2" "s; } END { print s; }'`
 
-echo $commits_to_push | grep "[^ ]"
+echo $commits_to_push | grep "[^ ]" >& /dev/null
 status_code=$?
 if [ $status_code -ne 0 ]
 then
@@ -105,7 +105,7 @@ then
 
     git push
 
-    echo -e "\e[0;32mPushed successfully\e[0m"
+    echo -e "\n\e[0;32m     Pushed successfully\e[0m\n"
     exit 0
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"

@@ -87,9 +87,7 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 
   init_int (opcodes);
   
-#ifdef __TARGET_HOST_x64
   run_int ();
-#endif
 } /* jerry_run */
 
 #ifdef __TARGET_HOST_x64
@@ -212,7 +210,7 @@ main (int argc __unused,
 #endif
 
 #ifdef __TARGET_MCU
-static uint32_t start;
+static uint32_t start __unused;
 static uint32_t finish_native_ms __unused;
 static uint32_t finish_parse_ms __unused;
 static uint32_t finish_int_ms __unused;
@@ -224,8 +222,6 @@ main (void)
   initialize_leds ();
   initialize_timer ();
 
-  led_on (13);
-
   const char *source_p = generated_source;
   const size_t source_size = sizeof (generated_source);
 
@@ -234,13 +230,5 @@ main (void)
   jerry_run (source_p,
              source_size, false, false);
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
-  led_on (14);
-
-  set_sys_tick_counter ((uint32_t) - 1);
-  start = get_sys_tick_counter ();
-  run_int ();
-  finish_int_ms = (start - get_sys_tick_counter ()) / 1000;
-
-  led_on (15);
 }
 #endif

@@ -59,7 +59,7 @@ do
   echo -n " > "
   git log  --pretty=format:"%H %s" | grep $commit_hash | grep -o " .*"
   echo
-  
+
   git checkout $commit_hash >&/dev/null
   status_code=$?
   if [ $status_code -ne 0 ]
@@ -102,7 +102,7 @@ then
     exit 1
   fi
 else
-  echo "\e[1;33mPre-commit testing not passed. Cancelling push.\e[0m"
+  echo -e "\e[1;33mPre-commit testing not passed. Cancelling push.\e[0m"
 
   exit 1
 fi

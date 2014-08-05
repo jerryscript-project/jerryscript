@@ -151,8 +151,6 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   ecma_object_t *proto_p = ecma_create_object( NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
   // 17.
-  ecma_ref_object( f);
-
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor();
     {
       prop_desc.is_value_defined = true;
@@ -174,8 +172,6 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
                                       false);
 
   // 18.
-  ecma_ref_object( proto_p);
-
   prop_desc.value = ecma_make_object_value( proto_p);
   prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
   ecma_op_object_define_own_property( f,

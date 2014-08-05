@@ -67,13 +67,11 @@ do
     exit 1
   fi
 
-  precommit_testing_output=`make -j precommit 2>&1`
+  make -j precommit 2>&1
   status_code=$?
   if [ $status_code -ne 0 ]
   then
     echo "Pre-commit testing for '$commit_hash' failed"
-    echo
-    echo $precommit_testing_output
     echo
 
     ok_to_push=0

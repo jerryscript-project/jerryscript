@@ -45,7 +45,15 @@ then
   exit 1
 fi
 
-commits_to_push=`git log origin/master..master | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = "";} {s = $2" "s;} END {print s;}'`
+commits_to_push=`git log origin/master..master | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = ""; } { s = $2" "s; } END { print s; }'`
+
+echo $commits_to_push | grep "[^ ]"
+status_code=$?
+if [ $status_code -ne 0 ]
+then
+  echo "Nothing to push"
+  exit 0
+fi
 
 echo
 echo "===== Starting pre-push commit testing series ====="
@@ -90,12 +98,14 @@ echo
 
 if [ $ok_to_push -eq 1 ]
 then
-  if [ "`git status --porcelain 2>&1 | grep -v -e '^?? out/$$' | wc -l`" == "0" ]
+  if [ "`git status --porcelain 2>&1 | wc -l`" == "0" ]
   then
-    echo "git push"
+    echo "Pushing..."
     echo
 
     git push
+
+    echo -e "\e[0;32mPushed successfully\e[0m"
     exit 0
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"

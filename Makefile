@@ -75,7 +75,7 @@ export color
 
 build: clean $(JERRY_TARGETS)
 
-all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
+all: precommit
 
 PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
                               debug.linux-valgrind.check \
@@ -85,7 +85,12 @@ PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
                               release.linux-musl-valgrind.check \
                               release.linux-libc_raw-valgrind.check
 
-precommit: clean build
+push: ./tools/push.sh
+	@ ./tools/push.sh
+
+precommit: clean
+	@ echo -e "\nBuilding...\n\n"
+	@ $(MAKE) -s build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
 	@ echo -e "All targets were built successfully. Starting unit tests' build and run.\n"
 	@ $(MAKE) -s unittests TESTS_OPTS="--silent"

@@ -16,6 +16,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define NAME_TO_ID(op) (__op__idx_##op)
+
 #define OPCODE_SIZE(op) \
   sizeof (struct __op_##op) + 1,
 
@@ -35,7 +37,11 @@ opcodes_equal (const OPCODE *opcodes1, OPCODE *opcodes2, uint16_t size)
 
       if (opcode_num1 != opcode_num2)
         return false;
-    
+      
+      if (opcode_num1 == NAME_TO_ID (nop) || opcode_num1 == NAME_TO_ID (ret)
+          || opcode_num1 == NAME_TO_ID (end_with))
+        return true;
+      
       for (j = 1; j < opcode_sizes[opcode_num1]; j++)
         if (((uint8_t*)&opcodes1[i])[j] != ((uint8_t*)&opcodes2[i])[j])
           return false;

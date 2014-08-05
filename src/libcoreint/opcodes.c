@@ -345,7 +345,6 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
     op(not_equal_value_type)            \
     op(less_or_equal_than)              \
     op(greater_or_equal_than)           \
-    op(nop)                             \
     op(construct_0)                     \
     op(construct_1)                     \
     op(construct_n)                     \
@@ -381,6 +380,18 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
   }
 OP_UNIMPLEMENTED_LIST(DEFINE_UNIMPLEMENTED_OP);
 #undef DEFINE_UNIMPLEMENTED_OP
+
+/**
+ * 'Nop' opcode handler.
+ */
+ecma_completion_value_t
+opfunc_nop (OPCODE opdata __unused, /**< operation data */
+            struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos++;
+
+  return ecma_make_empty_completion_value();
+} /* opfunc_nop */
 
 ecma_completion_value_t
 opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)

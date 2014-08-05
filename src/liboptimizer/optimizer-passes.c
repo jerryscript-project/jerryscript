@@ -322,6 +322,7 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
   OPCODE *first_opcode = opcodes + scope_start;
   OPCODE *last_opcode = opcodes + scope_end;
   OPCODE *current_opcode, *processed_opcode = first_opcode;
+  OPCODE *var_decls_start;
 
   for (current_opcode = processed_opcode; current_opcode != last_opcode; current_opcode++)
     {
@@ -374,13 +375,40 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
         current_opcode++;
     }
   
+  var_decls_start = processed_opcode;
   for (current_opcode = processed_opcode; current_opcode != last_opcode; current_opcode++)
     {
       if (current_opcode->op_idx == NAME_TO_ID (var_decl))
         {
-          optimizer_move_opcodes (current_opcode, processed_opcode, 1);
-          optimizer_adjust_jumps (processed_opcode + 1, current_opcode + 1, 1);
-          processed_opcode++;
+          // If variable already declared, replace it with nop
+          bool was_decl = false;
+          if (var_decls_start->op_idx == NAME_TO_ID (var_decl) && var_decls_start != current_opcode)
+            {
+              OPCODE *var_decls_iterator;
+              for (var_decls_iterator = var_decls_start; 
+                   var_decls_iterator != processed_opcode; 
+                   var_decls_iterator++)
+                {
+                  JERRY_ASSERT (var_decls_iterator->op_idx == NAME_TO_ID (var_decl));
+                  if (var_decls_iterator->data.var_decl.variable_name 
+                      == current_opcode->data.var_decl.variable_name)
+                    {
+                      was_decl = true;
+                      break;
+                    }
+                }
+            }
+
+          if (was_decl)
+            {
+              current_opcode->op_idx = NAME_TO_ID (nop);
+            }
+          else
+            {
+              optimizer_move_opcodes (current_opcode, processed_opcode, 1);
+              optimizer_adjust_jumps (processed_opcode + 1, current_opcode + 1, 1);
+              processed_opcode++;
+            }
         }
     }
 }

@@ -78,7 +78,7 @@ build: clean $(JERRY_TARGETS)
 all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 
 GIT_STATUS_NOT_CLEAN_MSG="Git status of current directory is not clean"
-GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files and locally commiting all changes and running \'make precommit\' again"
+GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files, locally commiting all changes and running \'make precommit\' again"
 PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
                               debug.linux-valgrind.check \
                               debug_release.linux-sanitize.check \

@@ -56,8 +56,10 @@ echo
 for commit_hash in $commits_to_push
 do
   echo " > Testing $commit_hash"
+  echo -n " > "
+  git log  --pretty=format:"%H %s" | grep $commit_hash | grep -o " .*"
   echo
-
+  
   git checkout $commit_hash >&/dev/null
   status_code=$?
   if [ $status_code -ne 0 ]

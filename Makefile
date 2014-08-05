@@ -77,8 +77,6 @@ build: clean $(JERRY_TARGETS)
 
 all: clean $(JERRY_TARGETS) $(TESTS_TARGET) $(CHECK_TARGETS)
 
-GIT_STATUS_NOT_CLEAN_MSG="Git status of current directory is not clean"
-GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files, locally commiting all changes and running \'make precommit\' again"
 PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
                               debug.linux-valgrind.check \
                               debug_release.linux-sanitize.check \
@@ -87,16 +85,7 @@ PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
                               release.linux-musl-valgrind.check \
                               release.linux-libc_raw-valgrind.check
 
-git_status_pre_test_check:
-	@ clear
-	@ if [ "`git status --porcelain 2>&1 | wc -l`" != "0" ]; \
-          then \
-            echo -e "\n  \e[1;90m$(GIT_STATUS_NOT_CLEAN_MSG):\n"; \
-            git status ; \
-            echo -e "\n\n  $(GIT_STATUS_CONSIDER_CLEAN_MSG).\e[0m\n"; \
-          fi
-
-precommit: clean git_status_pre_test_check build
+precommit: clean build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
 	@ echo -e "All targets were built successfully. Starting unit tests' build and run.\n"
 	@ $(MAKE) -s unittests TESTS_OPTS="--silent"
@@ -106,12 +95,6 @@ precommit: clean git_status_pre_test_check build
 	@ echo -e "Parse-only testing completed successfully. Starting full tests run.\n"
 	@ echo -e "\e[0;31mFIXME:\e[0m Full testing skipped.\n"; # $(MAKE) -s $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./tests/jerry OUTPUT_TO_LOG=enable
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
-	@ if [ "`git status --porcelain 2>&1 | grep -v -e '^?? out/$$' | wc -l`" == "0" ]; \
-          then \
-            echo -e "\e[0;32m OK to push\e[0m\n"; \
-          else \
-            echo -e "\e[1;33m $(GIT_STATUS_NOT_CLEAN_MSG). $(GIT_STATUS_CONSIDER_CLEAN_MSG).\e[0m\n"; \
-          fi;
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS) $(CHECK_TARGETS):
 	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@

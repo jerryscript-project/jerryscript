@@ -315,7 +315,7 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
   uint8_t i = 1;
   uint8_t opcode_num = opcode.op_idx;
 
-  __printf ("%03d: %20s ", oc++, opcode_names[opcode_num]);
+  __printf ("%03d: %20s ", oc, opcode_names[opcode_num]);
   if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret) 
       && opcode_num != NAME_TO_ID (end_with))
     {

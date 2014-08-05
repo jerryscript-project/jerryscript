@@ -192,8 +192,8 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
              20: is_false_jmp 21
              21: assignment
           */
-          if (current_opcode->data.is_true_jmp.opcode <= opcode_to_counter (first_opcode)
-              && current_opcode->data.is_false_jmp.opcode < opcode_to_counter (last_opcode) - value)
+          if (current_opcode->data.is_false_jmp.opcode >= opcode_to_counter (first_opcode)
+              && current_opcode->data.is_false_jmp.opcode <= opcode_to_counter (last_opcode) - value)
             {
               current_opcode->data.is_false_jmp.opcode = (T_IDX) (current_opcode->data.is_false_jmp.opcode + value);
               continue;

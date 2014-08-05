@@ -90,12 +90,12 @@ push: ./tools/push.sh
 
 precommit: clean
 	@ echo -e "\nBuilding...\n\n"
-	@ $(MAKE) -s build
+	@ $(MAKE) build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
 	@ echo -e "All targets were built successfully. Starting unit tests' build and run.\n"
-	@ $(MAKE) -s unittests TESTS_OPTS="--silent"
+	@ $(MAKE) unittests TESTS_OPTS="--silent"
 	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
-	@ $(MAKE) -s $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./tests/jerry TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable
+	@ $(MAKE) $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./tests/jerry TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable
 	@ echo -e "\e[0;31mFIXME:\e[0m './benchmarks/jerry parse-only' testing skipped.\n"; # $(MAKE) -s $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./benchmarks/jerry TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable
 	@ echo -e "Parse-only testing completed successfully. Starting full tests run.\n"
 	@ echo -e "\e[0;31mFIXME:\e[0m Full testing skipped.\n"; # $(MAKE) -s $(PRECOMMIT_CHECK_TARGETS_LIST) TESTS_DIR=./tests/jerry OUTPUT_TO_LOG=enable

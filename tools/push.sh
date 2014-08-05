@@ -78,7 +78,7 @@ do
   git log  --pretty=format:"%H %s" | grep $commit_hash | grep -o " .*"
   echo
 
-  make -j precommit 2>&1
+  make -s -j precommit 2>&1
   status_code=$?
   if [ $status_code -ne 0 ]
   then

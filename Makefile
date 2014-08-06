@@ -114,23 +114,22 @@ precommit: clean
             [ $$result_ok -eq 1 ] || exit 1; \
           done
 	@ echo -e "Parse-only testing completed successfully. Starting full tests run.\n"
-	@ echo -e "\e[0;31mFIXME:\e[0m Full testing skipped.\n";
 	@ # Full testing
-	@ # for path in "./tests/jerry" "./benchmarks/jerry"; \
-          # do \
-          #   run_ids=""; \
-          #   for check_target in $(PRECOMMIT_CHECK_TARGETS_LIST); \
-          #   do \
-          #     $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS_DIR="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
-          #     run_ids="$$run_ids $$!"; \
-          #   done; \
-          #   result_ok=1; \
-          #   for run_id in $$run_ids; \
-          #   do \
-          #     wait $$run_id || result_ok=0; \
-          #   done; \
-          #   [ $$result_ok -eq 1 ] || exit 1; \
-          # done
+	@ for path in "./tests/jerry"; \
+          do \
+            run_ids=""; \
+            for check_target in $(PRECOMMIT_CHECK_TARGETS_LIST); \
+            do \
+              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS_DIR="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
+              run_ids="$$run_ids $$!"; \
+            done; \
+            result_ok=1; \
+            for run_id in $$run_ids; \
+            do \
+              wait $$run_id || result_ok=0; \
+            done; \
+            [ $$result_ok -eq 1 ] || exit 1; \
+          done
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS):

@@ -103,9 +103,7 @@ then
     echo "Pushing..."
     echo
 
-    git push
-
-    echo -e "\n\e[0;32m     Pushed successfully\e[0m\n"
+    git push && echo -e "\n\e[0;32m     Pushed successfully\e[0m\n" || echo -e "\n\e[1;33m     Push failed\e[0m"
     exit 0
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"

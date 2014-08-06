@@ -97,7 +97,7 @@ endif
 
 # Optimizations
 ifeq ($(filter-out debug_release release $(TESTS_TARGET),$(TARGET_MODE)),)
- OPTION_OPTIMIZE = enable
+ OPTION_OPTIMIZE = disable #enable
 else
  OPTION_OPTIMIZE = disable
 endif

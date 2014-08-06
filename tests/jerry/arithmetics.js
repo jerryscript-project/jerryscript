@@ -15,5 +15,6 @@
 var a = 1;
 var b = 2;
 
-assertEquals(a+b, 3);
-assertEquals(b+a, 3);
+assert(a+b == 3);
+assert(b+a == 3);
+assert(b+a != 4);

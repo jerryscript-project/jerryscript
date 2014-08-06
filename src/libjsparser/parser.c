@@ -343,6 +343,55 @@ rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
   op.head = op.size = 0;
 }
 
+static int8_t
+intrinsic_argument_count (const char *intrinsic)
+{
+  if (!__strcmp (intrinsic, "assert"))
+    {
+      return 1;
+    }
+
+  return -1;
+}
+
+static bool
+is_intrinsic (T_IDX obj)
+{
+  /* Every literal is represented by assignment to tmp.
+     so if result of parse_primary_expression less then strings count,
+     it is identifier, check for intrinsics.  */
+  uint8_t strings_count = lexer_get_strings (NULL);
+  if (obj < strings_count)
+    {
+      const char *string = lexer_get_string_by_id (obj);
+      return intrinsic_argument_count (string) >= 0;
+    }
+
+  return false;
+}
+
+static void
+dump_intrinsic (T_IDX obj, T_IDX args[3])
+{
+  uint8_t strings_count = lexer_get_strings (NULL);
+  if (obj < strings_count)
+    {
+      const char *string = lexer_get_string_by_id (obj);
+      if (!__strcmp (string, "assert"))
+        {
+          /* Dump opcodes like
+             is_true_jmp arg, +2
+             exitval 1
+          */
+          DUMP_OPCODE_2 (is_true_jmp, args[0], opcode_counter + 2);
+          DUMP_OPCODE_1 (exitval, 1);
+          return;
+        }
+    }
+
+  JERRY_UNREACHABLE ();
+}
+
 /* property_name
   : Identifier
   | StringLiteral
@@ -502,10 +551,20 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 
     case AL_FUNC_EXPR:
     case AL_CONSTRUCT_EXPR:
+      open_tt = TOK_OPEN_PAREN;
+      close_tt = TOK_CLOSE_PAREN;
+      first_opcode_args_count = 1;
+      lhs = next_temp_name ();
+      break;
+
     case AL_CALL_EXPR:
       open_tt = TOK_OPEN_PAREN;
       close_tt = TOK_CLOSE_PAREN;
       first_opcode_args_count = 1;
+      if (is_intrinsic (obj))
+        {
+          break;
+        }
       lhs = next_temp_name ();
       break;
 
@@ -562,6 +621,10 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
                       break;
 
                     case AL_CALL_EXPR:
+                      if (is_intrinsic (obj))
+                        {
+                          parser_fatal (ERR_PARSER);
+                        }
                       DUMP_OPCODE_3 (call_n, lhs, obj, args[0]);
                       break;
                     
@@ -635,7 +698,14 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
                   break;
 
                 case AL_CALL_EXPR:
-                  DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
+                  if (is_intrinsic (obj))
+                    {
+                      dump_intrinsic (obj, args);
+                    }
+                  else
+                    {
+                      DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
+                    }
                   break;
 
                 default:
@@ -901,7 +971,9 @@ parse_member_expression (void)
 {
   T_IDX lhs, obj, prop;
   if (is_keyword (KW_FUNCTION))
-    obj = parse_function_expression ();
+    {
+      obj = parse_function_expression ();
+    }
   else if (is_keyword (KW_NEW))
     {
       T_IDX member;
@@ -911,7 +983,9 @@ parse_member_expression (void)
       obj = parse_argument_list (AL_CONSTRUCT_EXPR, member);
     }
   else
-    obj = parse_primary_expression ();
+    {
+      obj = parse_primary_expression ();
+    }
 
   skip_newlines ();
   while (tok.type == TOK_OPEN_SQUARE || tok.type == TOK_DOT)

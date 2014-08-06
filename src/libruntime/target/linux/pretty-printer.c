@@ -120,7 +120,38 @@ dump_variable (T_IDX id)
   case NAME_TO_ID (op): \
     dump_variable (opcode.data.op.lhs); \
     __printf (" " equals " "); \
-    dump_variable (opcode.data.op.op2); \
+    if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SIMPLE) { \
+      switch (opcode.data.op.op2) { \
+        case ECMA_SIMPLE_VALUE_NULL: \
+          __printf ("null"); \
+          break; \
+        case ECMA_SIMPLE_VALUE_FALSE: \
+          __printf ("false"); \
+          break; \
+        case ECMA_SIMPLE_VALUE_TRUE: \
+          __printf ("true"); \
+          break; \
+        default: \
+          JERRY_UNREACHABLE (); \
+      } \
+      __printf (": SIMPLE"); \
+    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_STRING) { \
+      __printf ("'%s'", deserialize_string_by_id (opcode.data.op.op2)); \
+      __printf (": STRING"); \
+    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_NUMBER) {\
+      __printf ("%d", deserialize_num_by_id (opcode.data.op.op2)); \
+      __printf (": NUMBER"); \
+    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SMALLINT) {\
+      __printf ("%d", opcode.data.op.op2); \
+      __printf (": NUMBER"); \
+    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_VARIABLE) {\
+      dump_variable (opcode.data.op.op2); \
+      __printf (": TYPEOF("); \
+      dump_variable (opcode.data.op.op2); \
+      __printf (")"); \
+    } else { \
+      JERRY_UNREACHABLE (); \
+    } \
     __printf (";"); \
     break;
 
@@ -331,7 +362,7 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
   switch (opcode_num)
   {
     CASE_CONDITIONAL_JUMP (is_true_jmp, "if (", value, ") goto", opcode)
-    CASE_CONDITIONAL_JUMP (is_false_jmp, "if (!", value, ") goto", opcode)
+    CASE_CONDITIONAL_JUMP (is_false_jmp, "if (", value, " == false) goto", opcode)
 
     CASE_UNCONDITIONAL_JUMP (jmp, "goto", 0, +, opcode_idx)
     CASE_UNCONDITIONAL_JUMP (jmp_up, "goto", oc, -, opcode_count)

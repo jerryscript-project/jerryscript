@@ -68,7 +68,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   return opcodes;
 }
 
-static void
+static int
 jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only, 
            bool is_show_opcodes)
 {
@@ -82,12 +82,12 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 
   if (is_parse_only)
     {
-	    return;
+      return 0;
     }
 
   init_int (opcodes);
   
-  run_int ();
+  return run_int () ? 0 : 1;
 } /* jerry_run */
 
 #ifdef __TARGET_HOST_x64
@@ -199,13 +199,14 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_sources (file_names, files_counter, &source_size);
 
-  jerry_run (source_p, source_size, parse_only, show_opcodes);
+  int ret = jerry_run (source_p, source_size, parse_only, show_opcodes);
 
   if (print_mem_stats)
     {
       mem_heap_print( false, false, true);
     }
-  return 0;
+
+  return ret;
 }
 #endif
 

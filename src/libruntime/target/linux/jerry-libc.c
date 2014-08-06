@@ -40,21 +40,6 @@ FIXME( Rename __unused )
 #include <fcntl.h>
 
 /**
- * stdin file descriptor
- */
-#define LIBC_STDIN   0
-
-/**
- * stdout file descriptor
- */
-#define LIBC_STDOUT  1
-
-/**
- * stderr file descriptor
- */
-#define LIBC_STDERR  2
-
-/**
  * Exit program with ERR_SYSCALL if syscall_ret_val is negative
  */
 #define LIBC_EXIT_ON_ERROR( syscall_ret_val) \
@@ -124,32 +109,11 @@ syscall_3( long int syscall_no, /**< syscall number */
   return ret;
 } /* syscall_3 */
 
-/**
- * printf
- * 
- * @return number of characters printed
- */
-int
-__printf(const char *format, /**< format string */
-         ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-
-    FIXME( Implement real printf and move it to common part of libruntime );
-    long int ret = syscall_3( __NR_write, LIBC_STDOUT, (long int)format, (long int)__strlen(format));
-
-    va_end( args);
-    
-    return (int)ret;
-} /* __printf */
-
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
 __putchar (int c)
 {
-  syscall_3( __NR_write, LIBC_STDOUT, (long int)&c, 1);
+  __fwrite( &c, 1, sizeof(char), LIBC_STDOUT);
 
   return c;
 } /* __putchar */
@@ -160,9 +124,9 @@ __putchar (int c)
 void __noreturn
 __exit (int status) /**< status code */
 {
-  syscall_1( __NR_close, LIBC_STDIN);
-  syscall_1( __NR_close, LIBC_STDOUT);
-  syscall_1( __NR_close, LIBC_STDERR);
+  syscall_1( __NR_close, (long int)LIBC_STDIN);
+  syscall_1( __NR_close, (long int)LIBC_STDOUT);
+  syscall_1( __NR_close, (long int)LIBC_STDERR);
 
   syscall_1( __NR_exit_group, status);
 
@@ -363,57 +327,20 @@ __fwrite(const void *ptr, /**< data to write */
   return bytes_written;
 } /* __fwrite */
 
-/**
- * fprintf
- * 
- * @return number of characters printed
- */
-int
-__fprintf(_FILE *stream, /**< stream pointer */
-          const char *format, /**< format string */
-          ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-    
-    long int ret = syscall_3( __NR_write, (long int)stream, (long int)format, (long int)__strlen(format));
-            
-    va_end( args);
-    
-    return (int)ret;
-} /* __fprintf */
-
-#elif defined(LIBC_STD) || defined(LIBC_MUSL)
+#elif defined(LIBC_MUSL)
 
 #include <stdio.h>
 #include <stdlib.h>
 
-/**
- * printf
- * 
- * @return number of characters printed
- */
-int
-__printf(const char *format, /**< format string */
-         ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-    
-    int ret = vprintf( format, args);
-            
-    va_end( args);
-    
-    return ret;
-} /* __printf */
+const _FILE **libc_stdin = (void*)&stdin;
+const _FILE **libc_stdout = (void*)&stdout;
+const _FILE **libc_stderr = (void*)&stderr;
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
 __putchar (int c)
 {
-  return __printf ("%c", c);
+  return putchar( c);
 } /* __putchar */
 
 /** exit - cause normal process termination  */
@@ -519,34 +446,6 @@ __fwrite(const void *ptr, /**< data to write */
   return fwrite(ptr, size, nmemb, stream);
 } /* __fwrite */
 
-/**
- * ferror
- */
-int
-__ferror(_FILE * fp) /**< stream pointer */
-{
-  return ferror( fp);
-} /* __ferror */
-
-/**
- * fprintf
- * 
- * @return number of characters printed
- */
-int
-__fprintf(_FILE *stream, /**< stream pointer */
-          const char *format, /**< format string */
-         ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-    
-    int ret = vfprintf( stream, format, args);
-            
-    va_end( args);
-    
-    return ret;
-} /* __fprintf */
-
-#endif /* LIBC_STD || LIBC_MUSL */
+#else /* !LIBC_RAW && !LIBC_MUSL */
+# error "!LIBC_RAW && !LIBC_MUSL"
+#endif /* !LIBC_RAW && !LIBC_MUSL */

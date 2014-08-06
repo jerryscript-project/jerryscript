@@ -97,7 +97,7 @@ endif
 
 # Optimizations
 ifeq ($(filter-out debug_release release $(TESTS_TARGET),$(TARGET_MODE)),)
- OPTION_OPTIMIZE = enable
+ OPTION_OPTIMIZE = disable #enable
 else
  OPTION_OPTIMIZE = disable
 endif
@@ -167,7 +167,7 @@ CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
 # Optimizations
 CFLAGS_OPTIMIZE ?= -Os -flto
-CFLAGS_NO_OPTIMIZE ?= -Og
+CFLAGS_NO_OPTIMIZE ?= -O0
 LDFLAGS_OPTIMIZE ?=
 LDFLAGS_NO_OPTIMIZE ?=
 

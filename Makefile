@@ -45,8 +45,7 @@ export TARGET_MODES = debug debug_release release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,4) # now only stm32f4 is supported, to add, for example, to stm32f3, change to $(addprefix stm32f,3 4)
 
-export TARGET_PC_MODS = libc_raw musl sanitize valgrind \
-                        libc_raw-sanitize libc_raw-valgrind \
+export TARGET_PC_MODS = musl sanitize valgrind \
                         musl-valgrind
 
 export TARGET_MCU_MODS =

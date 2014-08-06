@@ -50,6 +50,13 @@ TARGET_DIR=$(OUT_DIR)/$(TARGET_MODE).$(TARGET_SYSTEM_AND_MODS)
 # Options setup
 #
 
+# Is MCU target?
+ifeq ($(filter-out $(TARGET_MCU_SYSTEMS),$(TARGET_SYSTEM)),)
+	OPTION_MCU = enable
+else
+	OPTION_MCU = disable
+endif
+
 # DWARF version
 ifeq ($(dwarf4),1)
     OPTION_DWARF4 := enable
@@ -79,6 +86,10 @@ endif
 
 # -fdiagnostics-color=always
 ifeq ($(color),1)
+     ifeq ($(OPTION_MCU),enable)
+      $(error MCU target doesn\'t support coloring compiler's output)
+     endif
+
      OPTION_COLOR := enable
 else
      OPTION_COLOR := disable
@@ -102,31 +113,18 @@ else
  OPTION_OPTIMIZE = disable
 endif
 
-# Is MCU target?
-ifeq ($(filter-out $(TARGET_MCU_SYSTEMS),$(TARGET_SYSTEM)),)
-	OPTION_MCU = enable
-else
-	OPTION_MCU = disable
-endif
-
 ifeq ($(filter musl,$(TARGET_MODS)), musl)
-     OPTION_LIBC_MUSL := enable
-else
-     OPTION_LIBC_MUSL := disable
-endif
-
-ifeq ($(filter libc_raw,$(TARGET_MODS)), libc_raw)
-     ifeq ($(OPTION_LIBC_MUSL),enable)
-      $(error LIBC_RAW and LIBC_MUSL are mutually exclusive)
+     ifeq ($(OPTION_MCU),enable)
+      $(error MCU target doesn\'t support LIBC_MUSL)
      endif
 
-     OPTION_LIBC_RAW := enable
+     OPTION_LIBC := musl
 else
-     OPTION_LIBC_RAW := disable
+     OPTION_LIBC := raw
 endif
 
 ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)
-     ifeq ($(OPTION_LIBC_MUSL),enable)
+     ifeq ($(OPTION_LIBC),musl)
       $(error ASAN and LIBC_MUSL are mutually exclusive)
      endif
 
@@ -266,6 +264,21 @@ INCLUDES_JERRY = \
  -I src/liboptimizer \
  -I src/libcoreint
 
+# libc
+ifeq ($(OPTION_LIBC),musl)
+  CC := musl-$(CC) 
+  DEFINES_JERRY += -DLIBC_MUSL
+  CFLAGS_COMMON += -static
+else
+  DEFINES_JERRY += -DLIBC_RAW
+  CFLAGS_COMMON += -nostdlib
+
+  ifeq ($(OPTION_SANITIZE),enable)
+    CFLAGS_COMMON += -fsanitize=address
+    LDFLAGS += -lasan
+  endif
+endif
+
 ifeq ($(OPTION_NDEBUG),enable)
  DEFINES_JERRY += -DJERRY_NDEBUG
 endif
@@ -273,33 +286,13 @@ endif
 ifeq ($(OPTION_MCU),disable)
  DEFINES_JERRY += -D__TARGET_HOST_x64 -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
  CFLAGS_COMMON += -fno-stack-protector
- 
- ifeq ($(OPTION_LIBC_MUSL),enable)
-  CC := musl-$(CC) 
-  DEFINES_JERRY += -DLIBC_MUSL
-  CFLAGS_COMMON += -static
- else
-   ifeq ($(OPTION_SANITIZE),enable)
-     CFLAGS_COMMON += -fsanitize=address
-   endif
-
-  ifeq ($(OPTION_LIBC_RAW),enable)
-   DEFINES_JERRY += -DLIBC_RAW
-   CFLAGS_COMMON += -nostdlib
-   ifeq ($(OPTION_SANITIZE),enable)
-     LDFLAGS += -lasan
-   endif
-  else
-   CFLAGS_COMMON += -DLIBC_STD
-  endif
- endif
-
- ifeq ($(OPTION_COLOR),enable)
-  CFLAGS_COMMON += -fdiagnostics-color=always
- endif
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU
+endif
+
+ifeq ($(OPTION_COLOR),enable)
+  CFLAGS_COMMON += -fdiagnostics-color=always
 endif
 
 ifeq ($(OPTION_TODO),enable)
@@ -404,7 +397,7 @@ $(TESTS_TARGET):
 	@for unit_test in $(SOURCES_UNITTESTS); \
 	do \
 		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
-		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -o $(TARGET_DIR)/$$unit_test"; \
+		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -lc -o $(TARGET_DIR)/$$unit_test"; \
                 if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 		$$cmd; \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \

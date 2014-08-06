@@ -23,36 +23,11 @@
 
 extern void __noreturn exit(int status);
 
-/**
- * printf
- * 
- * @return number of characters printed
- */
-int
-__printf(const char *format, /**< format string */
-         ...)                /**< parameters' values */
-{
-    va_list args;
-    
-    va_start( args, format);
-    
-    /**
-     * TODO: Call internal vprintf implementation when it appears.
-     */
-    int ret = 0;
-
-    JERRY_UNIMPLEMENTED();
-
-    va_end( args);
-    
-    return ret;
-} /* __printf */
-
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
 __putchar (int c)
 {
-  return __printf ("%c", c);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(c);
 } /* __putchar */
 
 /** exit - cause normal process termination  */
@@ -65,3 +40,18 @@ __exit (int status __unused)
 
   while(true);
 } /* __exit */
+
+/**
+ * fwrite
+ *
+ * @return number of bytes written
+ */
+size_t
+__fwrite(const void *ptr, /**< data to write */
+         size_t size, /**< size of elements to write */
+         size_t nmemb, /**< number of elements */
+         _FILE *stream) /**< stream pointer */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( ptr, size, nmemb, stream);
+} /* __fwrite */
+

@@ -14,7 +14,7 @@
  */
 
 #include "deserializer.h"
-#include "bytecode-linux.h"
+#include "bytecode-data.h"
 
 int *num_data = NULL;
 uint8_t num_size = 0;

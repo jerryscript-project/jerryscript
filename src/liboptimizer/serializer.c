@@ -15,24 +15,27 @@
 
 #include "serializer.h"
 #include "parser.h"
-#include "globals.h"
-#include "serializer.h"
 #include "jerry-libc.h"
-#include "bytecode-stm.h"
+#include "bytecode-data.h"
 #include "deserializer.h"
+#include "pretty-printer.h"
 
-TODO (Dump to flash)
+static bool print_opcodes;
 
 void
-serializer_init (bool show_opcodes __unused)
+serializer_init (bool show_opcodes)
 {
+  print_opcodes = show_opcodes;
 }
 
 uint16_t
 serializer_dump_strings (const char *strings[], uint8_t size)
 {
   uint8_t i;
-  uint16_t offset = (uint8_t) (size * 2 + 1), res;
+  uint16_t offset = (uint16_t) (size * 2 + 1), res;
+
+  if (print_opcodes)
+    pp_strings (strings, size);
 
   for (i = 0; i < size; i++)
     {
@@ -67,9 +70,12 @@ serializer_dump_strings (const char *strings[], uint8_t size)
 }
 
 void 
-serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num __unused)
+serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num)
 {
   uint8_t i, *data;
+
+  if (print_opcodes)
+    pp_nums (nums, size, strings_num);
 
   data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
   if (!data)
@@ -77,7 +83,6 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
   
   __memcpy (data, bytecode_data, offset);
   mem_heap_free_block (bytecode_data);
-
   bytecode_data = data;
   data += offset;
   data[0] = size;
@@ -98,22 +103,42 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
 #endif
 }
 
-static int opcode_counter = 0;
+static opcode_counter_t opcode_counter = 0;
 
 void
 serializer_dump_opcode (OPCODE opcode)
 {
+  if (print_opcodes)
+    pp_opcode (opcode_counter, opcode, false);
+
+  JERRY_ASSERT( opcode_counter < MAX_OPCODES );
   bytecode_opcodes[opcode_counter++] = opcode;
 }
 
 void
 serializer_rewrite_opcode (const opcode_counter_t loc, OPCODE opcode)
 {
+  JERRY_ASSERT( loc < MAX_OPCODES );
   bytecode_opcodes[loc] = opcode;
+
+  if (print_opcodes)
+    {
+      pp_opcode (loc, opcode, true);
+    }
 }
 
 void
 serializer_print_opcodes (void)
 {
-  JERRY_UNREACHABLE ();
+  opcode_counter_t loc;
+
+  if (!print_opcodes)
+    return;
+  
+  __printf ("AFTER OPTIMIZER:\n");
+
+  for (loc = 0; (*(uint32_t *) (bytecode_opcodes + loc) != 0x0); loc++)
+    {
+      pp_opcode (loc, bytecode_opcodes[loc], false);
+    }
 }

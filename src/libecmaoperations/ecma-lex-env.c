@@ -193,8 +193,10 @@ ecma_op_set_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environment *
 
       if ( property_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE )
         {
-          ecma_free_value( property_p->u.named_data_property.value);
-          property_p->u.named_data_property.value = ecma_copy_value( value);
+          ecma_free_value( property_p->u.named_data_property.value, false);
+          property_p->u.named_data_property.value = ecma_copy_value( value, false);
+
+          ecma_gc_update_may_ref_younger_object_flag_by_value( lex_env_p, value);
         }
       else if ( is_strict )
         {
@@ -256,7 +258,7 @@ ecma_op_get_binding_value(ecma_object_t *lex_env_p, /**< lexical environment */
       if ( property_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE )
       {
         return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                           ecma_copy_value( prop_value),
+                                           ecma_copy_value( prop_value, true),
                                            ECMA_TARGET_ID_RESERVED);
       } else if ( ecma_is_value_empty( prop_value) )
       {
@@ -463,7 +465,9 @@ ecma_op_initialize_immutable_binding(ecma_object_t *lex_env_p, /**< lexical envi
         JERRY_ASSERT( prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE
                       && ecma_is_value_empty( prop_p->u.named_data_property.value) );
 
-        prop_p->u.named_data_property.value = ecma_copy_value( value);
+        prop_p->u.named_data_property.value = ecma_copy_value( value, false);
+
+        ecma_gc_update_may_ref_younger_object_flag_by_value( lex_env_p, value);
       }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {

@@ -80,7 +80,7 @@ ecma_op_object_get( ecma_object_t *obj_p, /**< the object */
   if ( prop_p->type == ECMA_PROPERTY_NAMEDDATA )
     {
       return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value( prop_p->u.named_data_property.value),
+                                         ecma_copy_value( prop_p->u.named_data_property.value, true),
                                          ECMA_TARGET_ID_RESERVED);
     }
   else
@@ -547,22 +547,14 @@ ecma_op_object_define_own_property( ecma_object_t *obj_p, /**< the object */
                                                                              property_desc.enumerable,
                                                                              property_desc.configurable);
 
-              new_prop_p->u.named_data_property.value = ecma_copy_value( property_desc.value);
+              new_prop_p->u.named_data_property.value = ecma_copy_value( property_desc.value, false);
+
+              ecma_gc_update_may_ref_younger_object_flag_by_value( obj_p, property_desc.value);
             }
           else
             {
               // b.
               JERRY_ASSERT( is_property_desc_accessor_descriptor );
-
-              if ( property_desc.get_p != NULL )
-                {
-                  ecma_ref_object( property_desc.get_p);
-                }
-
-              if ( property_desc.set_p != NULL )
-                {
-                  ecma_ref_object( property_desc.set_p);
-                }
 
               ecma_create_named_accessor_property( obj_p,
                                                    property_name_p,
@@ -757,8 +749,10 @@ ecma_op_object_define_own_property( ecma_object_t *obj_p, /**< the object */
     {
       JERRY_ASSERT( is_current_data_descriptor );
 
-      ecma_free_value( current_p->u.named_data_property.value);
-      current_p->u.named_data_property.value = ecma_copy_value( property_desc.value);
+      ecma_free_value( current_p->u.named_data_property.value, false);
+      current_p->u.named_data_property.value = ecma_copy_value( property_desc.value, false);
+
+      ecma_gc_update_may_ref_younger_object_flag_by_value( obj_p, property_desc.value);
     }
 
   if ( property_desc.is_writable_defined )
@@ -772,16 +766,18 @@ ecma_op_object_define_own_property( ecma_object_t *obj_p, /**< the object */
     {
       JERRY_ASSERT( is_current_accessor_descriptor );
 
-      ecma_ref_object( property_desc.get_p);
       ecma_set_pointer( current_p->u.named_accessor_property.get_p, property_desc.get_p);
+
+      ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, property_desc.get_p);
     }
 
   if ( property_desc.is_set_defined )
     {
       JERRY_ASSERT( is_current_accessor_descriptor );
 
-      ecma_ref_object( property_desc.set_p);
       ecma_set_pointer( current_p->u.named_accessor_property.set_p, property_desc.set_p);
+
+      ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, property_desc.set_p);
     }
 
   if ( property_desc.is_enumerable_defined )

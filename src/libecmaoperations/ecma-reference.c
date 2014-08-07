@@ -86,7 +86,7 @@ ecma_make_reference(ecma_value_t base, /**< base value */
                     const ecma_char_t *name_p, /**< referenced name */
                     bool is_strict) /**< strict reference flag */
 {
-  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value( base),
+  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value( base, true),
                                               .referenced_name_p = name_p,
                                               .is_strict = is_strict };
 
@@ -102,7 +102,7 @@ ecma_make_reference(ecma_value_t base, /**< base value */
 void
 ecma_free_reference( const ecma_reference_t ref) /**< reference */
 {
-  ecma_free_value( ref.base);
+  ecma_free_value( ref.base, true);
 } /* ecma_free_reference */
 
 /**

@@ -83,12 +83,10 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
                     ecma_object_type_t type) /**< object type */
 {
     ecma_object_t *object_p = ecma_alloc_object();
+    ecma_init_gc_info( object_p);
 
     object_p->properties_p = ECMA_NULL_POINTER;
     object_p->is_lexical_environment = false;
-    object_p->GCInfo.is_object_valid = true;
-
-    object_p->GCInfo.u.refs = 1;
 
     object_p->u.object.extensible = is_extensible;
     ecma_set_pointer( object_p->u.object.prototype_object_p, prototype_object_p);
@@ -111,19 +109,12 @@ ecma_object_t*
 ecma_create_decl_lex_env(ecma_object_t *outer_lexical_environment_p) /**< outer lexical environment */
 {
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
+  ecma_init_gc_info( new_lexical_environment_p);
 
   new_lexical_environment_p->is_lexical_environment = true;
   new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
 
   new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
-
-  new_lexical_environment_p->GCInfo.is_object_valid = true;
-  new_lexical_environment_p->GCInfo.u.refs = 1;
-
-  if ( outer_lexical_environment_p != NULL )
-    {
-      ecma_ref_object( outer_lexical_environment_p);
-    }
 
   ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
 
@@ -148,19 +139,12 @@ ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< oute
   JERRY_ASSERT( binding_obj_p != NULL );
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object();
+  ecma_init_gc_info( new_lexical_environment_p);
 
   new_lexical_environment_p->is_lexical_environment = true;
   new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND;
 
   new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
-
-  new_lexical_environment_p->GCInfo.is_object_valid = true;
-  new_lexical_environment_p->GCInfo.u.refs = 1;
-
-  if ( outer_lexical_environment_p != NULL )
-    {
-      ecma_ref_object( outer_lexical_environment_p);
-    }
 
   ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
 
@@ -168,8 +152,9 @@ ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< oute
   provide_this_prop_p->u.internal_property.value = provide_this;
 
   ecma_property_t *binding_object_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
-  ecma_ref_object( binding_obj_p);
   ecma_set_pointer( binding_object_prop_p->u.internal_property.value, binding_obj_p);
+
+  ecma_gc_update_may_ref_younger_object_flag_by_object( new_lexical_environment_p, binding_obj_p);
 
   return new_lexical_environment_p;
 } /* ecma_create_object_lex_env */
@@ -302,7 +287,10 @@ ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
   ecma_set_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
 
   ecma_set_pointer( prop_p->u.named_accessor_property.get_p, get_p);
+  ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, get_p);
+
   ecma_set_pointer( prop_p->u.named_accessor_property.set_p, set_p);
+  ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, set_p);
 
   prop_p->u.named_accessor_property.enumerable = enumerable;
   prop_p->u.named_accessor_property.configurable = configurable;
@@ -409,7 +397,7 @@ ecma_free_named_data_property( ecma_property_t *property_p) /**< the property */
   JERRY_ASSERT( property_p->type == ECMA_PROPERTY_NAMEDDATA );
 
   ecma_free_array( ecma_get_pointer( property_p->u.named_data_property.name_p));
-  ecma_free_value( property_p->u.named_data_property.value);
+  ecma_free_value( property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property( property_p);
 } /* ecma_free_named_data_property */
@@ -423,19 +411,6 @@ ecma_free_named_accessor_property( ecma_property_t *property_p) /**< the propert
   JERRY_ASSERT( property_p->type == ECMA_PROPERTY_NAMEDACCESSOR );
 
   ecma_free_array( ecma_get_pointer( property_p->u.named_accessor_property.name_p));
-
-  ecma_object_t *get_p = ecma_get_pointer(property_p->u.named_accessor_property.get_p);
-  ecma_object_t *set_p = ecma_get_pointer(property_p->u.named_accessor_property.set_p);
-
-  if ( get_p != NULL )
-  {
-    ecma_deref_object( get_p);
-  }
-
-  if ( set_p != NULL )
-  {
-    ecma_deref_object( set_p);
-  }
 
   ecma_dealloc_property( property_p);
 } /* ecma_free_named_accessor_property */
@@ -463,11 +438,6 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
-      {
-        ecma_deref_object( ecma_get_pointer( property_value));
-        break;
-      }
-
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */

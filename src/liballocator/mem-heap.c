@@ -342,9 +342,13 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
     mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
 
     if ( next_block_p == NULL )
-    {
-      mem_heap.last_block_p = new_free_block_p;
-    }
+      {
+        mem_heap.last_block_p = new_free_block_p;
+      }
+    else
+      {
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = (mem_block_header_t*) new_free_block_first_chunk_p;
+      }
 
     next_block_p = new_free_block_p;
   }
@@ -583,6 +587,8 @@ mem_check_heap( void)
   JERRY_ASSERT( mem_heap.heap_size % MEM_HEAP_CHUNK_SIZE == 0 );
 
   bool is_last_block_was_met = false;
+  size_t chunk_sizes_sum = 0;
+
   for ( mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
         block_p != NULL;
         block_p = next_block_p )
@@ -591,6 +597,7 @@ mem_check_heap( void)
 
     JERRY_ASSERT( block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
                  || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+    chunk_sizes_sum += mem_get_block_chunks_count( block_p);
 
     next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
 
@@ -607,7 +614,39 @@ mem_check_heap( void)
     VALGRIND_NOACCESS_STRUCT( block_p);
  }
 
+  JERRY_ASSERT( chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size );
   JERRY_ASSERT( is_last_block_was_met );
+
+  bool is_first_block_was_met = false;
+  chunk_sizes_sum = 0;
+
+  for ( mem_block_header_t *block_p = mem_heap.last_block_p, *prev_block_p;
+        block_p != NULL;
+        block_p = prev_block_p )
+  {
+    VALGRIND_DEFINED_STRUCT( block_p);
+
+    JERRY_ASSERT( block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
+                 || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK );
+    chunk_sizes_sum += mem_get_block_chunks_count( block_p);
+
+    prev_block_p = block_p->neighbours[ MEM_DIRECTION_PREV ];
+
+    if ( block_p == mem_heap.first_block_p )
+    {
+      is_first_block_was_met = true;
+
+      JERRY_ASSERT( prev_block_p == NULL );
+    } else
+    {
+      JERRY_ASSERT( prev_block_p != NULL );
+    }
+
+    VALGRIND_NOACCESS_STRUCT( block_p);
+ }
+
+  JERRY_ASSERT( chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size );
+  JERRY_ASSERT( is_first_block_was_met );
 #endif /* !JERRY_NDEBUG */
 } /* mem_check_heap */
 

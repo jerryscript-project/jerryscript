@@ -1338,8 +1338,9 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
   TODO( Iterate vargs );
 
   const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
-
-  TODO( ASSERT( Current opcode is jmp_down ) );
+  OPCODE jmp_down_opcode = read_opcode( jmp_down_opcode_idx );
+  JERRY_ASSERT( jmp_down_opcode.op_idx == __op__idx_jmp_down );
+  int_data->pos = (opcode_counter_t) ( jmp_down_opcode_idx + jmp_down_opcode.data.jmp_down.opcode_count );
 
   const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
 

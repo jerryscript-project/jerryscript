@@ -205,3 +205,12 @@ get_number_by_idx(T_IDX idx) /**< literal id */
 
   return num;
 } /* get_number_by_idx */
+
+/**
+ * Get specified opcode from the program.
+ */
+OPCODE
+read_opcode(opcode_counter_t counter) /**< opcode counter */
+{
+  return __program[ counter ];
+} /* read_opcode */

@@ -40,7 +40,10 @@
 
 JERRY_STATIC_ASSERT( sizeof (ecma_value_t) <= sizeof (uint16_t) );
 JERRY_STATIC_ASSERT( sizeof (ecma_property_t) <= sizeof (uint64_t) );
-JERRY_STATIC_ASSERT( sizeof (ecma_object_t) <= sizeof (uint64_t) );
+
+FIXME( Pack ecma_object_t )
+JERRY_STATIC_ASSERT( sizeof (ecma_object_t) <= 2 * sizeof (uint64_t) );
+
 JERRY_STATIC_ASSERT( sizeof (ecma_array_header_t) <= sizeof (uint32_t) );
 JERRY_STATIC_ASSERT( sizeof (ecma_array_first_chunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
 JERRY_STATIC_ASSERT( sizeof (ecma_array_non_first_chunk_t) == ECMA_ARRAY_CHUNK_SIZE_IN_BYTES );
@@ -54,13 +57,25 @@ JERRY_STATIC_ASSERT( sizeof (ecma_completion_value_t) == sizeof(uint32_t) );
 #define ALLOC( ecma_type) ecma_ ## ecma_type ## _t * \
 ecma_alloc_ ## ecma_type (void) \
 { \
-    ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
+  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
+                                  mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
+  \
+  if ( likely( p ## ecma_type != NULL ) ) \
+    { \
+      return p ## ecma_type; \
+    } \
+  \
+  ecma_gc_run( ECMA_GC_GEN_0 ); \
+  \
+  p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
         mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
-    \
-    ecma_gc_run(); \
-    JERRY_ASSERT( p ## ecma_type != NULL ); \
-    \
-    return p ## ecma_type; \
+  \
+  if ( likely( p ## ecma_type != NULL ) ) \
+    { \
+      return p ## ecma_type; \
+    } \
+  \
+  JERRY_UNREACHABLE(); \
 }
 
 /**

@@ -162,7 +162,7 @@ ecma_make_object_value( ecma_object_t* object_p) /**< object to reference in val
  *      and return new ecma-value
  *      pointing to copy of the number/string;
  *    case object;
- *      increase reference counter of the object
+ *      increase reference counter of the object if do_ref_if_object is true
  *      and return the value as it was passed.
  *
  * TODO:
@@ -171,7 +171,9 @@ ecma_make_object_value( ecma_object_t* object_p) /**< object to reference in val
  * @return See note.
  */
 ecma_value_t
-ecma_copy_value( const ecma_value_t value) /**< ecma-value */
+ecma_copy_value( const ecma_value_t value, /**< ecma-value */
+                 bool do_ref_if_object) /**< if the value is object value,
+                                             increment reference counter of object */
 {
   ecma_value_t value_copy;
 
@@ -213,7 +215,10 @@ ecma_copy_value( const ecma_value_t value) /**< ecma-value */
         ecma_object_t *obj_p = ecma_get_pointer( value.value);
         JERRY_ASSERT( obj_p != NULL );
 
-        ecma_ref_object( obj_p);
+        if ( do_ref_if_object )
+          {
+            ecma_ref_object( obj_p);
+          }
 
         value_copy = value;
 
@@ -232,7 +237,9 @@ ecma_copy_value( const ecma_value_t value) /**< ecma-value */
  * Free the ecma-value
  */
 void
-ecma_free_value( ecma_value_t value) /**< value description */
+ecma_free_value( ecma_value_t value, /**< value description */
+                 bool do_deref_if_object) /**< if the value is object value,
+                                               decrement reference counter of object */
 {
   switch ( (ecma_type_t) value.value_type )
   {
@@ -258,7 +265,10 @@ ecma_free_value( ecma_value_t value) /**< value description */
 
     case ECMA_TYPE_OBJECT:
       {
-        ecma_deref_object( ecma_get_pointer( value.value));
+        if ( do_deref_if_object )
+          {
+            ecma_deref_object( ecma_get_pointer( value.value));
+          }
         break;
       }
 
@@ -339,7 +349,7 @@ ecma_completion_value_t
 ecma_copy_completion_value( ecma_completion_value_t value) /**< completion value */
 {
   return ecma_make_completion_value( value.type,
-                                     ecma_copy_value( value.value),
+                                     ecma_copy_value( value.value, true),
                                      value.target);
 } /* ecma_copy_completion_value */
 
@@ -354,7 +364,7 @@ ecma_free_completion_value( ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
-      ecma_free_value( completion_value.value);
+      ecma_free_value( completion_value.value, true);
       break;
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:

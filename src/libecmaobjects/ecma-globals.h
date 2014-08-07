@@ -254,29 +254,32 @@ typedef struct ecma_property_t {
  * Description of GC's information layout
  */
 typedef struct {
-    FIXME( /* Handle cyclic dependencies */ )
+    /**
+     * Reference counter of the object.
+     *
+     *  Number of references to the object from stack variables.
+     */
+    unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
 
     /**
-     * Flag that indicates if the object is valid for normal usage.
-     * If the flag is zero, then the object is not valid and is queued for GC.
+     * Identifier of GC generation.
      */
-    unsigned int is_object_valid : 1;
+    unsigned int generation : 2;
 
-    /** Details (depending on is_object_valid) */
-    union {
-        /**
-         * Number of refs to the object (if is_object_valid).
-         * 
-         * Note: It is not a pointer. Maximum value of reference counter
-         *       willn't be bigger than overall count of variables/objects/properties.
-         *       The width of the field will be sufficient in most cases. However, it is not theoretically
-         *       guaranteed. Overflow is handled in ecma_ref_object by stopping the engine.
-         */
-        unsigned int refs : ECMA_POINTER_FIELD_WIDTH;
+    /**
+     * Compressed pointer to next object in the global list of objects with same generation.
+     */
+    unsigned int next : ECMA_POINTER_FIELD_WIDTH;
 
-        /** Compressed pointer to next object in the list of objects, queued for GC (if !is_object_valid) */
-        unsigned int next_queued_for_gc : ECMA_POINTER_FIELD_WIDTH;
-    } __packed u;
+    /**
+     * Marker that is set if the object was visited during graph traverse.
+     */
+    unsigned int visited : 1;
+
+    /**
+     * Flag indicating that the object may reference objects of younger generations in its properties.
+     */
+    unsigned int may_ref_younger_objects : 1;
 } __packed ecma_gc_info_t;
 
 /**
@@ -367,8 +370,10 @@ typedef struct ecma_object_t {
     } __packed u;
 
     /** GC's information */
-    ecma_gc_info_t GCInfo;
-} __packed ecma_object_t;
+    ecma_gc_info_t gc_info;
+    
+    FIXME( Remove aligned attribute after packing the struct )
+} __packed __attribute__((aligned(16))) ecma_object_t;
 
 /**
  * Description of ECMA property descriptor

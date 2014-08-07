@@ -167,7 +167,7 @@ ecma_op_to_primitive( ecma_value_t value, /**< ecma-value */
     case ECMA_TYPE_STRING:
       {
         return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                           ecma_copy_value( value),
+                                           ecma_copy_value( value, true),
                                            ECMA_TARGET_ID_RESERVED);
       }
     case ECMA_TYPE_OBJECT:
@@ -266,7 +266,7 @@ ecma_op_to_number( ecma_value_t value) /**< ecma-value */
     case ECMA_TYPE_NUMBER:
       {
         return ecma_make_completion_value( ECMA_COMPLETION_TYPE_NORMAL,
-                                           ecma_copy_value( value),
+                                           ecma_copy_value( value, true),
                                            ECMA_TARGET_ID_RESERVED);
       }
     case ECMA_TYPE_SIMPLE:

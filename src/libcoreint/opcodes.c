@@ -168,7 +168,7 @@ get_variable_value(struct __int_data *int_data, /**< interpreter context */
     JERRY_ASSERT( !ecma_is_value_empty( reg_value) );
 
     ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                            ecma_copy_value( reg_value),
+                                            ecma_copy_value( reg_value, true),
                                             ECMA_TARGET_ID_RESERVED);
   }
   else
@@ -218,10 +218,10 @@ set_variable_value(struct __int_data *int_data, /**< interpreter context */
 
     if ( !ecma_is_value_empty( reg_value) )
     {
-      ecma_free_value( reg_value);
+      ecma_free_value( reg_value, true);
     }
 
-    int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value( value);
+    int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value( value, true);
 
     ret_value = ecma_make_empty_completion_value();
   }
@@ -1375,7 +1375,7 @@ opfunc_func_decl_0(OPCODE opdata, /**< operation data */
   // f.
   ecma_completion_value_t ret_value = ecma_op_set_mutable_binding( int_data->lex_env_p, fn, fo_value, is_strict);
 
-  ecma_free_value( fo_value);
+  ecma_free_value( fo_value, true);
 
   free_string_literal_copy( &function_name);
 
@@ -1421,7 +1421,7 @@ opfunc_call_0( OPCODE opdata, /**< operation data */
 
           ret_value = set_variable_value( int_data, lhs_var_idx, returned_value);
 
-          ecma_free_value( returned_value);
+          ecma_free_value( returned_value, true);
         }
 
       ECMA_FINALIZE( this_value);

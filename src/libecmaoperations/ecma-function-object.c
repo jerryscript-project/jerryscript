@@ -130,10 +130,10 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
   class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_FUNCTION;
 
   // 9.
-  ecma_ref_object( scope_p);
-
   ecma_property_t *scope_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_SCOPE);
   ecma_set_pointer( scope_prop_p->u.internal_property.value, scope_p);
+
+  ecma_gc_update_may_ref_younger_object_flag_by_object( f, scope_p);
 
   // 10., 11., 14., 15.
   if ( formal_parameters_number != 0 )
@@ -255,7 +255,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
       // 1.
       if ( is_strict )
         {
-          this_binding = ecma_copy_value( this_arg_value);
+          this_binding = ecma_copy_value( this_arg_value, true);
         }
       else if ( ecma_is_value_undefined( this_arg_value)
                 || ecma_is_value_null( this_arg_value) )
@@ -301,7 +301,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
         }
 
       ecma_deref_object( local_env_p);
-      ecma_free_value( this_binding);
+      ecma_free_value( this_binding, true);
 
       return ret_value;
     }

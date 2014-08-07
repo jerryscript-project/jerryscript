@@ -147,7 +147,7 @@ run_int_from_pos (opcode_counter_t start_pos,
             reg_index < regs_num;
             reg_index++ )
         {
-          ecma_free_value( regs[ reg_index ] );
+          ecma_free_value( regs[ reg_index ], true);
         }
 
       return completion;

@@ -588,7 +588,7 @@ ecma_copy_ecma_string_chars_to_buffer(ecma_array_first_chunk_t *first_chunk_p, /
     ecma_length_t string_length = first_chunk_p->header.unit_number;
     size_t required_buffer_size = sizeof (ecma_length_t) + sizeof (ecma_char_t) * string_length;
 
-    if ( required_buffer_size < buffer_size )
+    if ( required_buffer_size > buffer_size )
     {
         return -(ssize_t) required_buffer_size;
     }

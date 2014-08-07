@@ -150,6 +150,35 @@ ecma_gc_mark( ecma_object_t *object_p, /**< start object */
 
   bool does_reference_object_to_traverse = false;
 
+  if ( object_p->is_lexical_environment )
+    {
+      ecma_object_t *lex_env_p = ecma_get_pointer( object_p->u.lexical_environment.outer_reference_p);
+      if ( lex_env_p != NULL
+           && lex_env_p->gc_info.generation <= maximum_gen_to_traverse )
+        {
+          if ( !lex_env_p->gc_info.visited )
+            {
+              ecma_gc_mark( lex_env_p, ECMA_GC_GEN_COUNT);
+            }
+
+          does_reference_object_to_traverse = true;
+        }
+    }
+  else
+    {
+      ecma_object_t *proto_p = ecma_get_pointer( object_p->u.object.prototype_object_p);
+      if ( proto_p != NULL
+           && proto_p->gc_info.generation <= maximum_gen_to_traverse )
+        {
+          if ( !proto_p->gc_info.visited )
+            {
+              ecma_gc_mark( proto_p, ECMA_GC_GEN_COUNT);
+            }
+
+          does_reference_object_to_traverse = true;
+        }
+    }
+
   for ( ecma_property_t *property_p = ecma_get_pointer( object_p->properties_p), *next_property_p;
         property_p != NULL;
         property_p = next_property_p )

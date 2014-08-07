@@ -40,14 +40,14 @@
 # define VALGRIND_DEFINED_STRUCT( s)     (void)VALGRIND_MAKE_MEM_DEFINED( ( s ), sizeof( *( s ) ) )
 # define VALGRIND_NOACCESS_SPACE( p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS( ( p ), ( s ) )
 # define VALGRIND_UNDEFINED_SPACE( p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED( ( p ), ( s ) )
-# define VALGRIND_DEFINED_SPACET( p, s)  (void)VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
+# define VALGRIND_DEFINED_SPACE( p, s)   (void)VALGRIND_MAKE_MEM_DEFINED( ( p ), ( s ) )
 #else /* !JERRRY_NVALGRIND */
 # define VALGRIND_NOACCESS_STRUCT( s)
 # define VALGRIND_UNDEFINED_STRUCT( s)
 # define VALGRIND_DEFINED_STRUCT( s)
 # define VALGRIND_NOACCESS_SPACE( p, s)
 # define VALGRIND_UNDEFINED_SPACE( p, s)
-# define VALGRIND_DEFINED_SPACET( p, s)
+# define VALGRIND_DEFINED_SPACE( p, s)
 #endif /* !JERRY_NVALGRIND */
 
 /**
@@ -224,6 +224,22 @@ mem_heap_init(uint8_t *heap_start, /**< first address of heap space */
 
   mem_heap_stat_init();
 } /* mem_heap_init */
+
+/**
+ * Finalize heap
+ */
+void
+mem_heap_finalize(void)
+{
+  VALGRIND_DEFINED_SPACE( mem_heap.heap_start, mem_heap.heap_size);
+
+  JERRY_ASSERT( mem_heap.first_block_p == mem_heap.last_block_p );
+  JERRY_ASSERT( mem_heap.first_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK );
+
+  VALGRIND_NOACCESS_SPACE( mem_heap.heap_start, mem_heap.heap_size);
+
+  __memset( &mem_heap, 0, sizeof(mem_heap));
+} /* mem_heap_finalize */
 
 /**
  * Initialize block header

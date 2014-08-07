@@ -39,6 +39,7 @@ typedef enum {
 } mem_heap_alloc_term_t;
 
 extern void mem_heap_init(uint8_t *heap_start, size_t heap_size);
+extern void mem_heap_finalize(void);
 extern uint8_t* mem_heap_alloc_block(size_t size_in_bytes, mem_heap_alloc_term_t alloc_term);
 extern void mem_heap_free_block(uint8_t *ptr);
 extern size_t mem_heap_recommend_allocation_size(size_t minimum_allocation_size);

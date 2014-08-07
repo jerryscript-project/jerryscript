@@ -492,6 +492,8 @@ ecma_op_create_global_environment( void)
 
   ecma_object_t *glob_env_p = ecma_create_object_lex_env( NULL, glob_obj_p, false);
 
+  ecma_deref_object( glob_obj_p);
+
   return glob_env_p;
 } /* ecma_op_create_global_environment */
 

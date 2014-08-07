@@ -78,6 +78,19 @@ ecma_op_create_global_object( void)
 } /* ecma_op_create_global_object */
 
 /**
+ * Remove global reference to the global object.
+ *
+ * Warning:
+ *         the routine should be called only from ecma_finalize
+ */
+void
+ecma_finalize_global_object(void)
+{
+  ecma_deref_object( ecma_global_object_p);
+  ecma_global_object_p = NULL;
+} /* ecma_free_global_object */
+
+/**
  * @}
  * @}
  */

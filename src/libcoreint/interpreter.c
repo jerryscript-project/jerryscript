@@ -14,9 +14,11 @@
  */
 
 #include "deserializer.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
+#include "ecma-operations.h"
 #include "globals.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -66,6 +68,10 @@ run_int (void)
       }
     case ECMA_COMPLETION_TYPE_EXIT:
       {
+        ecma_deref_object( lex_env_p);
+        ecma_finalize();
+        ecma_gc_run( ECMA_GC_GEN_COUNT - 1);
+
         return ecma_is_value_true( completion.value);
       }
     case ECMA_COMPLETION_TYPE_BREAK:

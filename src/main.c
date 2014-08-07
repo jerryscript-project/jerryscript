@@ -68,9 +68,9 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   return opcodes;
 }
 
-static int
-jerry_run (const char *script_source, size_t script_source_size, bool is_parse_only, 
-           bool is_show_opcodes)
+static bool
+jerry_run (const char *script_source, size_t script_source_size,
+           bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
 {
   const OPCODE *opcodes;
 
@@ -82,12 +82,18 @@ jerry_run (const char *script_source, size_t script_source_size, bool is_parse_o
 
   if (is_parse_only)
     {
-      return 0;
+      return true;
     }
 
   init_int (opcodes);
   
-  return run_int () ? 0 : 1;
+  bool is_success = run_int ();
+
+  serializer_free();
+
+  mem_finalize( is_show_mem_stats);
+
+  return is_success;
 } /* jerry_run */
 
 #ifdef __TARGET_HOST_x64
@@ -199,14 +205,9 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_sources (file_names, files_counter, &source_size);
 
-  int ret = jerry_run (source_p, source_size, parse_only, show_opcodes);
+  bool is_success = jerry_run (source_p, source_size, parse_only, show_opcodes, print_mem_stats);
 
-  if (print_mem_stats)
-    {
-      mem_heap_print( false, false, true);
-    }
-
-  return ret;
+  return is_success ? 0 : 1;
 }
 #endif
 
@@ -229,7 +230,7 @@ main (void)
   set_sys_tick_counter ((uint32_t) - 1);
   start = get_sys_tick_counter ();
   jerry_run (source_p,
-             source_size, false, false);
+             source_size, false, false, false);
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
 }
 #endif

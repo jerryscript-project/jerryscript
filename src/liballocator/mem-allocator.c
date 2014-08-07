@@ -38,9 +38,26 @@ JERRY_STATIC_ASSERT( MEM_HEAP_AREA_SIZE <= 64 * 1024 );
 void
 mem_init( void)
 {
-    mem_heap_init( mem_heap_area, sizeof (mem_heap_area));
-    mem_pools_init();
+  mem_heap_init( mem_heap_area, sizeof (mem_heap_area));
+  mem_pools_init();
 } /* mem_init */
+
+/**
+ * Finalize memory allocators.
+ */
+void
+mem_finalize( bool is_show_mem_stats) /**< show heap memory stats
+                                           before finalization? */
+{
+  mem_pools_finalize();
+
+  if (is_show_mem_stats)
+    {
+      mem_heap_print( false, false, true);
+    }
+
+  mem_heap_finalize();
+} /* mem_finalize */
 
 /**
  * Get base pointer for allocation area.
@@ -48,5 +65,5 @@ mem_init( void)
 uintptr_t
 mem_get_base_pointer( void)
 {
-    return (uintptr_t) mem_heap_area;
+  return (uintptr_t) mem_heap_area;
 } /* mem_get_base_pointer */

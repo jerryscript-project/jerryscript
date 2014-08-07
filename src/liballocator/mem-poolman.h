@@ -54,6 +54,7 @@ typedef enum {
 extern size_t mem_get_chunk_size( mem_pool_chunk_type_t chunk_type);
 
 extern void mem_pools_init(void);
+extern void mem_pools_finalize(void);
 extern uint8_t* mem_pools_alloc(mem_pool_chunk_type_t chunk_type);
 extern void mem_pools_free(mem_pool_chunk_type_t chunk_type, uint8_t *chunk_p);
 

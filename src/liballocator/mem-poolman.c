@@ -123,6 +123,26 @@ mem_pools_init(void)
 } /* mem_pools_init */
 
 /**
+ * Finalize pool manager
+ */
+void
+mem_pools_finalize(void)
+{
+  for ( uint32_t i = 0; i < MEM_POOL_CHUNK_TYPE__COUNT; i++ )
+    {
+      JERRY_ASSERT( mem_pools[ i ] == NULL );
+      JERRY_ASSERT( mem_free_chunks_number[ i ] == 0 );
+    }
+
+  JERRY_ASSERT( mem_pool_for_pool_headers.chunks_number == mem_pool_for_pool_headers.free_chunks_number );
+
+  __memset( &mem_pool_for_pool_headers, 0, sizeof(mem_pool_for_pool_headers));
+
+  mem_heap_free_block( mem_space_for_pool_for_pool_headers);
+  mem_space_for_pool_for_pool_headers = NULL;
+} /* mem_pools_finalize */
+
+/**
  * Allocate a chunk of specified size
  * 
  * @return pointer to allocated chunk, if allocation was successful,

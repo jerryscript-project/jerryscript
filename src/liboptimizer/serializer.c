@@ -22,6 +22,8 @@
 
 static bool print_opcodes;
 
+uint8_t *bytecode_data = NULL;
+
 void
 serializer_init (bool show_opcodes)
 {
@@ -141,4 +143,11 @@ serializer_print_opcodes (void)
     {
       pp_opcode (loc, bytecode_opcodes[loc], false);
     }
+}
+
+void
+serializer_free (void)
+{
+  mem_heap_free_block( bytecode_data);
+  bytecode_data = NULL;
 }

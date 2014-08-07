@@ -27,6 +27,7 @@
 
 extern ecma_object_t* ecma_get_global_object(void);
 extern ecma_object_t* ecma_op_create_global_object( void);
+extern void ecma_finalize_global_object( void);
 
 /**
  * @}

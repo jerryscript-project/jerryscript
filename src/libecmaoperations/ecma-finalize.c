@@ -13,30 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_OPERATIONS_H
-#define JERRY_ECMA_OPERATIONS_H
-
+#include "ecma-operations.h"
 #include "ecma-globals.h"
-#include "ecma-lex-env.h"
-#include "ecma-reference.h"
-
-/** \addtogroup ecma ---TODO---
- * @{
- * 
- * \addtogroup ecmaoperations ECMA-defined operations
- * @{
- */
-
-extern ecma_reference_t ecma_op_get_identifier_reference( ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_strict);
-
-extern ecma_completion_value_t ecma_op_get_value( ecma_reference_t ref);
-extern ecma_completion_value_t ecma_op_put_value( ecma_reference_t ref, ecma_value_t value);
-
-extern void ecma_finalize( void);
+#include "ecma-global-object.h"
+#include "globals.h"
 
 /**
- * @}
- * @}
+ * ECMA object model finalization routine
  */
-
-#endif /* JERRY_ECMA_OPERATIONS_H */
+void
+ecma_finalize(void)
+{
+  ecma_finalize_global_object();
+} /* ecma_finalize */

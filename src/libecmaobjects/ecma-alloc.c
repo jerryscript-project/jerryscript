@@ -65,16 +65,20 @@ ecma_alloc_ ## ecma_type (void) \
       return p ## ecma_type; \
     } \
   \
-  ecma_gc_run( ECMA_GC_GEN_0 ); \
-  \
-  p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-        mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
-  \
-  if ( likely( p ## ecma_type != NULL ) ) \
+  for ( ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; \
+        gen_id < ECMA_GC_GEN_COUNT; \
+        gen_id++ ) \
     { \
-      return p ## ecma_type; \
+      ecma_gc_run( gen_id ); \
+      \
+      p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
+      mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
+      \
+      if ( likely( p ## ecma_type != NULL ) ) \
+        { \
+          return p ## ecma_type; \
+        } \
     } \
-  \
   JERRY_UNREACHABLE(); \
 }
 

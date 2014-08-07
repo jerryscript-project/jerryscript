@@ -323,8 +323,6 @@ ecma_gc_run( ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 {
   JERRY_ASSERT( max_gen_to_collect < ECMA_GC_GEN_COUNT );
 
-  bool was_something_sweeped = false;
-
   /* clearing visited flags for all objects of generations to be processed */
   for ( ecma_gc_gen_t gen_id = 0; gen_id <= max_gen_to_collect; gen_id++ )
     {
@@ -386,8 +384,6 @@ ecma_gc_run( ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 
           if ( !obj_iter_p->gc_info.visited )
             {
-              was_something_sweeped = true;
-
               ecma_gc_sweep( obj_iter_p);
 
               if ( likely( obj_prev_p != NULL ) )
@@ -450,12 +446,6 @@ ecma_gc_run( ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
         }
     }
 #endif /* !JERRY_NDEBUG */
-
-  if ( !was_something_sweeped
-       && max_gen_to_collect != ECMA_GC_GEN_COUNT - 1 )
-    {
-      ecma_gc_run( max_gen_to_collect + 1);
-    }
 } /* ecma_gc_run */
 
 /**

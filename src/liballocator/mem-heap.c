@@ -363,7 +363,11 @@ mem_heap_alloc_block( size_t size_in_bytes,           /**< size of region to all
       }
     else
       {
+        VALGRIND_DEFINED_STRUCT( next_block_p);
+
         next_block_p->neighbours[ MEM_DIRECTION_PREV ] = (mem_block_header_t*) new_free_block_first_chunk_p;
+
+        VALGRIND_NOACCESS_STRUCT( next_block_p);
       }
 
     next_block_p = new_free_block_p;

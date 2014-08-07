@@ -179,12 +179,15 @@ mem_pools_alloc( mem_pool_chunk_type_t chunk_type) /**< chunk type */
                                                 MEM_HEAP_ALLOC_LONG_TERM);
 
         if ( pool_space == NULL )
-        {
+          {
             /**
-             * Not enough memory.
+             * Not enough memory. Freeing pool header that was allocated above.
              */
+
+            mem_pool_free_chunk( &mem_pool_for_pool_headers, (uint8_t*) pool_state);
+
             return NULL;
-        }
+          }
 
         mem_pool_init( pool_state,
                      chunk_size,

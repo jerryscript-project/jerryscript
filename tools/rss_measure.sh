@@ -62,5 +62,5 @@ echo -e $RSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { 
 echo -e $PSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Pss average:\t\t%f Kb\tPss max: %d Kb\n", sum / n, max; }'
 echo -e $SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Share average:\t\t%f Kb\tShare max: %d Kb\n", sum / n, max; }'
 echo -e "---"
-echo -e "Exec time:\t\t"$EXEC_TIME "secs"
+echo -e "Exec time:\t\t$EXEC_TIME secs"
 echo ===================

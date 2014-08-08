@@ -76,17 +76,17 @@ build: clean $(JERRY_TARGETS)
 
 all: precommit
 
-PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-sanitize.check \
-                              debug.linux-valgrind.check \
+PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-valgrind.check \
                               debug.linux-musl-valgrind.check \
-                              debug_release.linux-sanitize.check \
                               debug_release.linux-valgrind.check \
                               debug_release.linux-musl.check \
-                              release.linux-sanitize.check \
                               release.linux-musl-valgrind.check \
                               release.linux-valgrind.check \
                               release.linux.check
 
+                              #debug.linux-sanitize.check \
+                              release.linux-sanitize.check \
+                              debug_release.linux-sanitize.check
 push: ./tools/push.sh
 	@ ./tools/push.sh
 

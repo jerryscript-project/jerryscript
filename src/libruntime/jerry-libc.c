@@ -33,6 +33,11 @@ extern void *memcpy(void *s1, const void*s2, size_t n);
 extern void *memset(void *s, int c, size_t n);
 
 /**
+ * memmove alias to __memmove (for compiler usage)
+ */
+extern void *memmove(void *s1, const void*s2, size_t n);
+
+/**
  * memcpy alias to __memcpy (for compiler usage)
  */
 void* memcpy(void *s1, /**< destination */
@@ -51,6 +56,16 @@ void* memset(void *s,  /**< area to set values in */
 {
   return __memset(s, c, n);
 } /* memset */
+
+/**
+ * memmove alias to __memmove (for compiler usage)
+ */
+void* memmove(void *s1, /**< destination*/
+             const void*s2, /**< source */
+             size_t n) /**< area size */
+{
+  return __memmove(s1, s2, n);
+} /* memmove */
 #endif /* LIBC_MUSL */
 
 /**

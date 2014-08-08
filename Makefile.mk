@@ -250,6 +250,18 @@ SOURCES_JERRY_C = \
  $(wildcard ./src/liboptimizer/*.c) ) \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
 
+SOURCES_JERRY_H = \
+ $(sort \
+ $(wildcard ./src/libruntime/*.h) \
+ $(wildcard ./src/libperipherals/*.h) \
+ $(wildcard ./src/libjsparser/*.h) \
+ $(wildcard ./src/libecmaobjects/*.h) \
+ $(wildcard ./src/libecmaoperations/*.h) \
+ $(wildcard ./src/liballocator/*.h) \
+ $(wildcard ./src/libcoreint/*.h) \
+ $(wildcard ./src/liboptimizer/*.h) ) \
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.h)
+
 SOURCES_JERRY_ASM = \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.S)
 
@@ -353,6 +365,7 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@cppcheck $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
+	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(SOURCES_JERRY_H) #-e 
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \

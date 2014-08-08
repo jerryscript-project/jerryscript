@@ -24,6 +24,8 @@
 #ifndef JERRY_MEM_POOL_H
 #define JERRY_MEM_POOL_H
 
+typedef uint32_t mem_pool_chunk_offset_t;
+
 /**
  * State of a memory pool
  *
@@ -34,16 +36,16 @@ typedef struct mem_pool_state_t {
     uint8_t *pool_start_p; /**< first address of pool space */
     size_t pool_size; /**< pool space size */
 
-    size_t chunk_size; /**< size of one chunk */
+    size_t chunk_size_log; /**< log of size of one chunk */
 
-    mword_t *bitmap_p; /**< bitmap - pool chunks' state */
-    uint8_t *chunks_p; /**< chunks with data */
+    mem_pool_chunk_offset_t chunks_number; /**< number of chunks */
+    mem_pool_chunk_offset_t free_chunks_number; /**< number of free chunks */
 
-    size_t chunks_number; /**< number of chunks */
-    size_t free_chunks_number; /**< number of free chunks */
+    mem_pool_chunk_offset_t first_free_chunk; /**< offset of first free chunk
+                                                   from the beginning of the pool */
 
     struct mem_pool_state_t *next_pool_p; /**< pointer to the next pool with same chunk size */
-} mem_pool_state_t;
+} __attribute__((aligned(64))) mem_pool_state_t;
 
 extern void mem_pool_init(mem_pool_state_t *pool_p, size_t chunk_size, uint8_t *pool_start, size_t pool_size);
 extern uint8_t* mem_pool_alloc_chunk(mem_pool_state_t *pool_p);

@@ -93,31 +93,30 @@ mem_get_chunk_size( mem_pool_chunk_type_t chunk_type) /**< chunk type */
 void
 mem_pools_init(void)
 {
-    for ( uint32_t i = 0; i < MEM_POOL_CHUNK_TYPE__COUNT; i++ )
+  for ( uint32_t i = 0; i < MEM_POOL_CHUNK_TYPE__COUNT; i++ )
     {
-        mem_pools[ i ] = NULL;
-        mem_free_chunks_number[ i ] = 0;
+      mem_pools[ i ] = NULL;
+      mem_free_chunks_number[ i ] = 0;
     }
 
-    /**
-     * Space, at least for four pool headers and a bitmap entry.
-     * 
-     * TODO: Research.
-     */
-    size_t pool_space_size = mem_heap_recommend_allocation_size( 4 * sizeof (mem_pool_state_t) + sizeof (mword_t) );
+  /**
+   * Space, at least for four pool headers and a bitmap entry.
+   * 
+   * TODO: Research.
+   */
+  size_t pool_space_size = mem_heap_recommend_allocation_size( 4 * sizeof (mem_pool_state_t) );
 
-    mem_space_for_pool_for_pool_headers = mem_heap_alloc_block(pool_space_size,
-                                                        MEM_HEAP_ALLOC_LONG_TERM);
+  mem_space_for_pool_for_pool_headers = mem_heap_alloc_block( pool_space_size, MEM_HEAP_ALLOC_LONG_TERM);
 
-    /*
-     * Get chunk type, checking that there is a type corresponding to specified size.
-     */
-    const mem_pool_chunk_type_t chunk_type = mem_size_to_pool_chunk_type( sizeof(mem_pool_state_t));
-    
-    mem_pool_init(&mem_pool_for_pool_headers,
-                 mem_get_chunk_size( chunk_type),
-                 mem_space_for_pool_for_pool_headers,
-                 pool_space_size);
+  /*
+   * Get chunk type, checking that there is a type corresponding to specified size.
+   */
+  const mem_pool_chunk_type_t chunk_type = mem_size_to_pool_chunk_type( sizeof(mem_pool_state_t));
+
+  mem_pool_init(&mem_pool_for_pool_headers,
+                mem_get_chunk_size( chunk_type),
+                mem_space_for_pool_for_pool_headers,
+                pool_space_size);
 
   mem_pools_stat_init();
 } /* mem_pools_init */
@@ -238,7 +237,7 @@ mem_pools_free(mem_pool_chunk_type_t chunk_type, /**< the chunk type */
     /**
      * Search for the pool containing specified chunk.
      */
-    while ( !( chunk_p >= pool_state->chunks_p
+    while ( !( chunk_p >= pool_state->pool_start_p
                && chunk_p <= pool_state->pool_start_p + pool_state->pool_size ) )
     {
         prev_pool_state = pool_state;

@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
+#include "mem-poolman.h"
 
 extern void srand (unsigned int __seed);
 extern int rand (void);
@@ -51,7 +52,7 @@ main( int __unused argc,
 	mem_pool_state_t pool;
 	uint8_t test_pool[test_pool_area_size] __attribute__((aligned(MEM_ALIGNMENT)));
 
-	const size_t chunk_size = MEM_ALIGNMENT * ( ( (size_t) rand() % test_max_chunk_size_divided_by_alignment ) + 1 );
+	const size_t chunk_size = mem_get_chunk_size( rand() % MEM_POOL_CHUNK_TYPE__COUNT );
 
 	mem_pool_init( &pool, chunk_size, test_pool, sizeof (test_pool));
 

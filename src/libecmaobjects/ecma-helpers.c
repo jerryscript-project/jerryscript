@@ -32,10 +32,7 @@
 uintptr_t
 ecma_compress_pointer(void *pointer) /**< pointer to compress */
 {
-    if ( pointer == NULL )
-    {
-        return ECMA_NULL_POINTER;
-    }
+    JERRY_ASSERT( pointer != NULL );
 
     uintptr_t int_ptr = (uintptr_t) pointer;
 
@@ -55,10 +52,7 @@ ecma_compress_pointer(void *pointer) /**< pointer to compress */
 void*
 ecma_decompress_pointer(uintptr_t compressed_pointer) /**< pointer to decompress */
 {
-    if ( compressed_pointer == ECMA_NULL_POINTER )
-    {
-        return NULL;
-    }
+    JERRY_ASSERT( compressed_pointer != ECMA_NULL_POINTER );
 
     uintptr_t int_ptr = compressed_pointer;
 
@@ -173,8 +167,9 @@ ecma_create_internal_property(ecma_object_t *object_p, /**< the object */
     
     new_property_p->type = ECMA_PROPERTY_INTERNAL;
     
-    ecma_set_pointer( new_property_p->next_property_p, ecma_get_pointer( object_p->properties_p));
-    ecma_set_pointer( object_p->properties_p, new_property_p);
+    ecma_property_t *list_head_p = ecma_get_pointer( object_p->properties_p);
+    ecma_set_pointer( new_property_p->next_property_p, list_head_p);
+    ecma_set_non_null_pointer( object_p->properties_p, new_property_p);
 
     new_property_p->u.internal_property.type = property_id;
     new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
@@ -247,22 +242,24 @@ ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
 {
   JERRY_ASSERT( obj_p != NULL && name_p != NULL );
 
-  ecma_property_t *prop = ecma_alloc_property();
+  ecma_property_t *prop_p = ecma_alloc_property();
 
-  prop->type = ECMA_PROPERTY_NAMEDDATA;
+  prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
-  ecma_set_pointer( prop->u.named_data_property.name_p, ecma_new_ecma_string( name_p));
+  ecma_set_non_null_pointer( prop_p->u.named_data_property.name_p, ecma_new_ecma_string( name_p));
 
-  prop->u.named_data_property.writable = writable;
-  prop->u.named_data_property.enumerable = enumerable;
-  prop->u.named_data_property.configurable = configurable;
+  prop_p->u.named_data_property.writable = writable;
+  prop_p->u.named_data_property.enumerable = enumerable;
+  prop_p->u.named_data_property.configurable = configurable;
 
-  prop->u.named_data_property.value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_p->u.named_data_property.value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  ecma_set_pointer( prop->next_property_p, ecma_get_pointer( obj_p->properties_p));
-  ecma_set_pointer( obj_p->properties_p, prop);
+  ecma_property_t *list_head_p = ecma_get_pointer( obj_p->properties_p);
 
-  return prop;
+  ecma_set_pointer( prop_p->next_property_p, list_head_p);
+  ecma_set_non_null_pointer( obj_p->properties_p, prop_p);
+
+  return prop_p;
 } /* ecma_create_named_data_property */
 
 /**
@@ -284,7 +281,7 @@ ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
-  ecma_set_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
+  ecma_set_non_null_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
 
   ecma_set_pointer( prop_p->u.named_accessor_property.get_p, get_p);
   ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, get_p);
@@ -295,8 +292,9 @@ ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
   prop_p->u.named_accessor_property.enumerable = enumerable;
   prop_p->u.named_accessor_property.configurable = configurable;
 
-  ecma_set_pointer( prop_p->next_property_p, ecma_get_pointer( obj_p->properties_p));
-  ecma_set_pointer( obj_p->properties_p, prop_p);
+  ecma_property_t *list_head_p = ecma_get_pointer( obj_p->properties_p);
+  ecma_set_pointer( prop_p->next_property_p, list_head_p);
+  ecma_set_non_null_pointer( obj_p->properties_p, prop_p);
 
   return prop_p;
 } /* ecma_create_named_accessor_property */
@@ -562,7 +560,7 @@ ecma_new_ecma_string(const ecma_char_t *string_p) /**< zero-terminated string of
         chars_left -= chars_to_copy;
         copy_pointer += chars_to_copy * sizeof (ecma_char_t);
 
-        ecma_set_pointer( *next_chunk_compressed_pointer_p, string_non_first_chunk_p);
+        ecma_set_non_null_pointer( *next_chunk_compressed_pointer_p, string_non_first_chunk_p);
         next_chunk_compressed_pointer_p = &string_non_first_chunk_p->next_chunk_p;
     }
 

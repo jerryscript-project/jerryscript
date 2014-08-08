@@ -194,7 +194,7 @@ ecma_copy_value( const ecma_value_t value, /**< ecma-value */
         *number_copy_p = *num_p;
 
         value_copy = (ecma_value_t) { .value_type = ECMA_TYPE_NUMBER };
-        ecma_set_pointer( value_copy.value, number_copy_p);
+        ecma_set_non_null_pointer( value_copy.value, number_copy_p);
 
         break;
       }

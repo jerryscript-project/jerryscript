@@ -32,14 +32,28 @@ extern void* ecma_decompress_pointer(uintptr_t compressed_pointer);
  * Get value of pointer from specified compressed pointer field.
  */
 #define ecma_get_pointer( field) \
-    ecma_decompress_pointer( field)
+    ( ( unlikely( field == ECMA_NULL_POINTER ) ) ? NULL : ecma_decompress_pointer( field) )
 
 /**
  * Set value of compressed pointer field so that it will correspond
  * to specified non_compressed_pointer.
  */
 #define ecma_set_pointer( field, non_compressed_pointer) \
-    (field) = ecma_compress_pointer( non_compressed_pointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1)
+  do { \
+      void *__temp_pointer = non_compressed_pointer; \
+      non_compressed_pointer = __temp_pointer; \
+     } \
+  while(0); \
+    (field) = ( unlikely ( ( non_compressed_pointer ) == NULL ) ? ECMA_NULL_POINTER \
+                                                                : ecma_compress_pointer( non_compressed_pointer) \
+                                                                  & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1) )
+
+/**
+ * Set value of non-null compressed pointer field so that it will correspond
+ * to specified non_compressed_pointer.
+ */
+#define ecma_set_non_null_pointer( field, non_compressed_pointer) \
+    (field) = ( ecma_compress_pointer( non_compressed_pointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1) )
 
 /* ecma-helpers-value.c */
 extern bool ecma_is_value_empty( ecma_value_t value);

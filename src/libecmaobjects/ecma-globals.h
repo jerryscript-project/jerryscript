@@ -460,11 +460,6 @@ typedef struct {
 } ecma_array_header_t;
 
 /**
- * Size of a chunk, containing a String's part, in bytes
- */
-#define ECMA_ARRAY_CHUNK_SIZE_IN_BYTES  8
-
-/**
  * Description of first chunk in a chain of chunks that contains an Array.
  */
 typedef struct {
@@ -472,7 +467,7 @@ typedef struct {
     ecma_array_header_t header;
 
     /** Elements */
-    uint8_t data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (ecma_array_header_t) ];
+    uint8_t data[ sizeof(uint64_t) - sizeof (ecma_array_header_t) ];
 } ecma_array_first_chunk_t;
 
 /**
@@ -483,7 +478,7 @@ typedef struct {
     uint16_t next_chunk_p;
 
     /** Characters */
-    uint8_t data[ ECMA_ARRAY_CHUNK_SIZE_IN_BYTES - sizeof (uint16_t) ];
+    uint8_t data[ sizeof(uint64_t) - sizeof (uint16_t) ];
 } ecma_array_non_first_chunk_t;
 
 /**

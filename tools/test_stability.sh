@@ -29,9 +29,11 @@ commits_to_push=`git log -$NUM_COMMITS | grep "^commit [0-9a-f]*$" | awk 'BEGIN 
 
 for commit_hash in $commits_to_push
 do
-  echo "Testing..."
-  git log --format=%B -n 1 $commit_hash
-  make clean $TARGET
+  git checkout $commit_hash >&/dev/null
+
+  echo -e -n " > Testing...\n >  "
+  echo `git log --format=%B -n 1 $commit_hash`
+  make -s $TARGET
   ./tools/rss_measure.sh ./out/$TARGET/jerry $BENCH
   echo
 done

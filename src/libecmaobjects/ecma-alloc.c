@@ -58,7 +58,7 @@ JERRY_STATIC_ASSERT( sizeof (ecma_completion_value_t) == sizeof(uint32_t) );
 ecma_alloc_ ## ecma_type (void) \
 { \
   ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-                                  mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
+                                  mem_pools_alloc(); \
   \
   if ( likely( p ## ecma_type != NULL ) ) \
     { \
@@ -72,7 +72,7 @@ ecma_alloc_ ## ecma_type (void) \
       ecma_gc_run( gen_id ); \
       \
       p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-      mem_pools_alloc( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t))); \
+      mem_pools_alloc(); \
       \
       if ( likely( p ## ecma_type != NULL ) ) \
         { \
@@ -88,8 +88,7 @@ ecma_alloc_ ## ecma_type (void) \
 #define DEALLOC( ecma_type) void \
 ecma_dealloc_ ## ecma_type( ecma_ ## ecma_type ## _t *p ## ecma_type) \
 { \
-    mem_pools_free( mem_size_to_pool_chunk_type( sizeof(ecma_ ## ecma_type ## _t)), \
-                      (uint8_t*) p ## ecma_type); \
+    mem_pools_free( (uint8_t*) p ## ecma_type); \
 }
 
 /**

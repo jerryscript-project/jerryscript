@@ -24,15 +24,13 @@
 #define JERRY_ECMA_HELPERS_H
 
 #include "ecma-globals.h"
-
-extern uintptr_t ecma_compress_pointer(void *pointer);
-extern void* ecma_decompress_pointer(uintptr_t compressed_pointer);
+#include "mem-allocator.h"
 
 /**
  * Get value of pointer from specified compressed pointer field.
  */
 #define ecma_get_pointer( field) \
-    ( ( unlikely( field == ECMA_NULL_POINTER ) ) ? NULL : ecma_decompress_pointer( field) )
+    ( ( unlikely( field == ECMA_NULL_POINTER ) ) ? NULL : mem_decompress_pointer( field) )
 
 /**
  * Set value of compressed pointer field so that it will correspond
@@ -45,7 +43,7 @@ extern void* ecma_decompress_pointer(uintptr_t compressed_pointer);
      } \
   while(0); \
     (field) = ( unlikely ( ( non_compressed_pointer ) == NULL ) ? ECMA_NULL_POINTER \
-                                                                : ecma_compress_pointer( non_compressed_pointer) \
+                                                                : mem_compress_pointer( non_compressed_pointer) \
                                                                   & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1) )
 
 /**
@@ -53,7 +51,7 @@ extern void* ecma_decompress_pointer(uintptr_t compressed_pointer);
  * to specified non_compressed_pointer.
  */
 #define ecma_set_non_null_pointer( field, non_compressed_pointer) \
-    (field) = ( ecma_compress_pointer( non_compressed_pointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1) )
+    (field) = ( mem_compress_pointer( non_compressed_pointer) & ( ( 1u << ECMA_POINTER_FIELD_WIDTH ) - 1) )
 
 /* ecma-helpers-value.c */
 extern bool ecma_is_value_empty( ecma_value_t value);

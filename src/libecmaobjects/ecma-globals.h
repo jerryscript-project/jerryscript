@@ -37,12 +37,12 @@
  * The offset is shifted right by MEM_ALIGNMENT_LOG.
  * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
  */
-#define ECMA_POINTER_FIELD_WIDTH 14
+#define ECMA_POINTER_FIELD_WIDTH MEM_COMPRESSED_POINTER_WIDTH
 
 /**
- * The null value for compressed pointers
+ * The NULL value for compressed pointers
  */
-#define ECMA_NULL_POINTER 0
+#define ECMA_NULL_POINTER MEM_COMPRESSED_POINTER_NULL
 
 /**
  * @}

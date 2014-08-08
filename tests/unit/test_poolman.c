@@ -29,9 +29,6 @@ extern void srand (unsigned int __seed);
 extern int rand (void);
 extern long int time (long int *__timer);
 
-// Heap size is 8K
-const size_t test_heap_size = 8 * 1024;
-
 // Iterations count
 const uint32_t test_iters = 16384;
 
@@ -42,81 +39,63 @@ int
 main( int __unused argc,
       char __unused **argv)
 {
-    uint8_t heap[test_heap_size] __attribute__((aligned(MEM_ALIGNMENT)));
+  mem_init();
 
-    mem_heap_init( heap, sizeof (heap));
-    mem_pools_init();
+  srand((unsigned int) time(NULL));
+  unsigned int seed = (unsigned int)rand();
+  __printf("seed=%u\n", seed);
+  srand(seed);
 
-    srand((unsigned int) time(NULL));
-    unsigned int seed = (unsigned int)rand();
-    __printf("seed=%u\n", seed);
-    srand(seed);
-
-    for ( uint32_t i = 0; i < test_iters; i++ )
+  for ( uint32_t i = 0; i < test_iters; i++ )
     {
-        const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
+      const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
 
-        uint8_t * ptrs[subiters];
-        mem_pool_chunk_type_t types[subiters];
-
-        for ( size_t j = 0; j < subiters; j++ )
+      uint8_t *ptrs[subiters];
+      for ( size_t j = 0; j < subiters; j++ )
         {
-            mem_pool_chunk_type_t type = (mem_pool_chunk_type_t) (rand() % MEM_POOL_CHUNK_TYPE__COUNT);
-            const size_t chunk_size = mem_get_chunk_size( type);
+          ptrs[j] = mem_pools_alloc();
+          // JERRY_ASSERT(ptrs[j] != NULL);
 
-            types[j] = type;
-            ptrs[j] = mem_pools_alloc( type);
-            // JERRY_ASSERT(ptrs[j] != NULL);
-
-            if ( ptrs[j] != NULL )
+          if ( ptrs[j] != NULL )
             {
-                __memset(ptrs[j], 0, chunk_size);
+              __memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
             }
         }
 
-        // mem_heap_print( false);
-        
-        for ( size_t j = 0; j < subiters; j++ )
-        {
-            if ( ptrs[j] != NULL )
-            {
-                mem_pool_chunk_type_t type = types[j];
-                const size_t chunk_size = mem_get_chunk_size( type);
+      // mem_heap_print( false);
 
-                for ( size_t k = 0; k < chunk_size; k++ )
+      for ( size_t j = 0; j < subiters; j++ )
+        {
+          if ( ptrs[j] != NULL )
+            {
+              for ( size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++ )
                 {
-                    JERRY_ASSERT( ((uint8_t*) ptrs[j])[k] == 0 );
+                  JERRY_ASSERT( ((uint8_t*) ptrs[j])[k] == 0 );
                 }
-                
-                mem_pools_free( type, ptrs[j]);
+
+              mem_pools_free( ptrs[j]);
             }
         }
     }
 
 #ifdef MEM_STATS
-    mem_pools_stats_t stats;
-    mem_pools_get_stats( &stats);
+  mem_pools_stats_t stats;
+  mem_pools_get_stats( &stats);
+
+  __printf("Pools stats:\n");
+  __printf(" Chunk size: %u\n"
+           "  Pools: %lu\n"
+           "  Allocated chunks: %lu\n"
+           "  Free chunks: %lu\n"
+           "  Peak pools: %lu\n"
+           "  Peak allocated chunks: %lu\n\n",
+           MEM_POOL_CHUNK_SIZE,
+           stats.pools_count,
+           stats.allocated_chunks,
+           stats.free_chunks,
+           stats.peak_pools_count,
+           stats.peak_allocated_chunks);
 #endif /* MEM_STATS */
 
-    __printf("Pools stats:\n");
-    for(mem_pool_chunk_type_t type = 0;
-        type < MEM_POOL_CHUNK_TYPE__COUNT;
-        type++)
-    {
-      __printf(" Chunk size: %u\n"
-                  "  Pools: %lu\n"
-                  "  Allocated chunks: %lu\n"
-                  "  Free chunks: %lu\n"
-                  "  Peak pools: %lu\n"
-                  "  Peak allocated chunks: %lu\n",
-                  mem_get_chunk_size( type),
-                  stats.pools_count[ type ],
-                  stats.allocated_chunks[ type ],
-                  stats.free_chunks[ type ],
-                  stats.peak_pools_count[ type ],
-                  stats.peak_allocated_chunks[ type ]);
-    }
-    __printf("\n");
-
-    return 0;
+  return 0;
 } /* main */

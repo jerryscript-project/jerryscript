@@ -27,42 +27,6 @@
 #include "jerry-libc.h"
 
 /**
- * Compress pointer.
- */
-uintptr_t
-ecma_compress_pointer(void *pointer) /**< pointer to compress */
-{
-    JERRY_ASSERT( pointer != NULL );
-
-    uintptr_t int_ptr = (uintptr_t) pointer;
-
-    JERRY_ASSERT(int_ptr % MEM_ALIGNMENT == 0);
-
-    int_ptr -= mem_get_base_pointer();
-    int_ptr >>= MEM_ALIGNMENT_LOG;
-
-    JERRY_ASSERT((int_ptr & ~((1u << ECMA_POINTER_FIELD_WIDTH) - 1)) == 0);
-
-    return int_ptr;
-} /* ecma_compress_pointer */
-
-/**
- * Decompress pointer.
- */
-void*
-ecma_decompress_pointer(uintptr_t compressed_pointer) /**< pointer to decompress */
-{
-    JERRY_ASSERT( compressed_pointer != ECMA_NULL_POINTER );
-
-    uintptr_t int_ptr = compressed_pointer;
-
-    int_ptr <<= MEM_ALIGNMENT_LOG;
-    int_ptr += mem_get_base_pointer();
-
-    return (void*) int_ptr;
-} /* ecma_decompress_pointer */
-
-/**
  * Create an object with specified prototype object
  * (or NULL prototype if there is not prototype for the object)
  * and value of 'Extensible' attribute.

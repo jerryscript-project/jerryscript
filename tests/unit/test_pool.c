@@ -35,9 +35,6 @@ const uint32_t test_iters = 64;
 // Subiterations count
 const uint32_t test_max_sub_iters = 1024;
 
-// Maximum size of chunk divided by MEM_ALIGNMENT
-const uint32_t test_max_chunk_size_divided_by_alignment = 32;
-
 int
 main( int __unused argc,
       char __unused **argv)
@@ -49,26 +46,24 @@ main( int __unused argc,
 
     for ( uint32_t i = 0; i < test_iters; i++ )
     {
-	mem_pool_state_t pool;
 	uint8_t test_pool[test_pool_area_size] __attribute__((aligned(MEM_ALIGNMENT)));
+	mem_pool_state_t* pool_p = (mem_pool_state_t*) test_pool;
 
-	const size_t chunk_size = mem_get_chunk_size( rand() % MEM_POOL_CHUNK_TYPE__COUNT );
-
-	mem_pool_init( &pool, chunk_size, test_pool, sizeof (test_pool));
+	mem_pool_init( pool_p, sizeof (test_pool));
 
         const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
         uint8_t* ptrs[subiters];
 
         for ( size_t j = 0; j < subiters; j++ )
         {
-            ptrs[j] = mem_pool_alloc_chunk( &pool);
+            ptrs[j] = mem_pool_alloc_chunk( pool_p);
 
 	    // TODO: Enable check with condition that j <= minimum count of chunks that fit in the pool
             // JERRY_ASSERT(ptrs[j] != NULL);
 
             if ( ptrs[j] != NULL )
             {
-                memset(ptrs[j], 0, chunk_size);
+                memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
             }
         }
 
@@ -78,12 +73,12 @@ main( int __unused argc,
         {
             if ( ptrs[j] != NULL )
             {
-                for ( size_t k = 0; k < chunk_size; k++ )
+                for ( size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++ )
                 {
                     JERRY_ASSERT( ((uint8_t*)ptrs[j])[k] == 0 );
                 }
 
-                mem_pool_free_chunk( &pool, ptrs[j]);
+                mem_pool_free_chunk( pool_p, ptrs[j]);
             }
         }
     }

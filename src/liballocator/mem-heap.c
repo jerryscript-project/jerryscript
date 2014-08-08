@@ -27,6 +27,7 @@
 #include "globals.h"
 #include "jerry-libc.h"
 #include "mem-allocator.h"
+#include "mem-config.h"
 #include "mem-heap.h"
 
 /*
@@ -201,12 +202,13 @@ mem_get_block_chunks_count_from_data_size( size_t block_allocated_size) /**< siz
  */
 void
 mem_heap_init(uint8_t *heap_start, /**< first address of heap space */
-             size_t heap_size)    /**< heap space size */
+              size_t heap_size)    /**< heap space size */
 {
   JERRY_ASSERT( heap_start != NULL );
   JERRY_ASSERT( heap_size != 0 );
   JERRY_ASSERT( heap_size % MEM_HEAP_CHUNK_SIZE == 0 );
   JERRY_ASSERT( (uintptr_t) heap_start % MEM_ALIGNMENT == 0);
+  JERRY_ASSERT( heap_size <= ( 1u << MEM_HEAP_OFFSET_LOG ) );
 
   mem_heap.heap_start = heap_start;
   mem_heap.heap_size = heap_size;

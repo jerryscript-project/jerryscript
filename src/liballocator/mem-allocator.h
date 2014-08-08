@@ -24,21 +24,29 @@
 #define JERRY_MEM_ALLOCATOR_H
 
 #include "globals.h"
+#include "mem-config.h"
 #include "mem-heap.h"
 
 /**
- * Logarithm of required alignment for allocated units/blocks
+ * Representation of NULL value for compressed pointers
  */
-#define MEM_ALIGNMENT_LOG   2
+#define MEM_COMPRESSED_POINTER_NULL 0
 
 /**
  * Required alignment for allocated units/blocks
  */
 #define MEM_ALIGNMENT       (1 << MEM_ALIGNMENT_LOG)
 
+/**
+ * Width of compressed memory pointer
+ */
+#define MEM_COMPRESSED_POINTER_WIDTH ( MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG )
+
 extern void mem_init(void);
 extern void mem_finalize(bool is_show_mem_stats);
-uintptr_t mem_get_base_pointer(void);
+
+extern uintptr_t mem_compress_pointer(void *pointer);
+extern void* mem_decompress_pointer(uintptr_t compressed_pointer);
 
 #endif /* !JERRY_MEM_ALLOCATOR_H */
 

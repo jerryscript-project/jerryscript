@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup pool Memory pool
- * @{
- */
-
 #ifndef JERRY_MEM_POOL_INTERNAL
 #error "Please, use mem_poolman.h instead of mem_pool.h"
 #endif
@@ -24,35 +20,42 @@
 #ifndef JERRY_MEM_POOL_H
 #define JERRY_MEM_POOL_H
 
-typedef uint32_t mem_pool_chunk_offset_t;
+#include "mem-config.h"
+
+/** \addtogroup pool Memory pool
+ * @{
+ */
+
+/**
+ * Get pool's space size
+ */
+#define MEM_POOL_SPACE_START( pool_header_p) ( (uint8_t*) ( (mem_pool_state_t*) pool_header_p + 1 ) )
+
+/**
+ * Index of chunk in a pool
+ */
+typedef uint16_t mem_pool_chunk_index_t;
 
 /**
  * State of a memory pool
- *
- * TODO:
- *      Compact the struct
  */
 typedef struct mem_pool_state_t {
-    uint8_t *pool_start_p; /**< first address of pool space */
-    size_t pool_size; /**< pool space size */
+    unsigned int chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< number of chunks (mem_pool_chunk_index_t) */
+    unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< number of free chunks (mem_pool_chunk_index_t) */
 
-    size_t chunk_size_log; /**< log of size of one chunk */
+    unsigned int first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< offset of first free chunk
+                                                                         from the beginning of the pool
+                                                                         (mem_pool_chunk_index_t) */
 
-    mem_pool_chunk_offset_t chunks_number; /**< number of chunks */
-    mem_pool_chunk_offset_t free_chunks_number; /**< number of free chunks */
+    unsigned int next_pool_cp : MEM_HEAP_OFFSET_LOG; /**< pointer to the next pool with same chunk size */
+} mem_pool_state_t;
 
-    mem_pool_chunk_offset_t first_free_chunk; /**< offset of first free chunk
-                                                   from the beginning of the pool */
-
-    struct mem_pool_state_t *next_pool_p; /**< pointer to the next pool with same chunk size */
-} __attribute__((aligned(64))) mem_pool_state_t;
-
-extern void mem_pool_init(mem_pool_state_t *pool_p, size_t chunk_size, uint8_t *pool_start, size_t pool_size);
+extern void mem_pool_init(mem_pool_state_t *pool_p, size_t pool_size);
 extern uint8_t* mem_pool_alloc_chunk(mem_pool_state_t *pool_p);
 extern void mem_pool_free_chunk(mem_pool_state_t *pool_p, uint8_t *chunk_p);
-
-#endif /* JERRY_MEM_POOL_H */
 
 /**
  * @}
  */
+
+#endif /* JERRY_MEM_POOL_H */

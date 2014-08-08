@@ -29,34 +29,10 @@
 
 #include "globals.h"
 
-/**
- * Pool chunks's possible sizes
- */
-typedef enum {
-    MEM_POOL_CHUNK_TYPE_4, /**< 4-byte chunk */
-    MEM_POOL_CHUNK_TYPE_8, /**< 8-byte chunk */
-    MEM_POOL_CHUNK_TYPE_16, /**< 16-byte chunk */
-    MEM_POOL_CHUNK_TYPE_32, /**< 32-byte chunk */
-    MEM_POOL_CHUNK_TYPE_64, /**< 64-byte chunk */
-    MEM_POOL_CHUNK_TYPE__COUNT /**< count of possible pool chunks' sizes */
-} mem_pool_chunk_type_t;
-
-/**
- * Convert size to pool chunk type.
- */
-#define mem_size_to_pool_chunk_type( size) ((size) == 4 ? MEM_POOL_CHUNK_TYPE_4 : \
-                                        ((size) == 8 ? MEM_POOL_CHUNK_TYPE_8 : \
-                                        ((size) == 16 ? MEM_POOL_CHUNK_TYPE_16 : \
-                                        ((size) == 32 ? MEM_POOL_CHUNK_TYPE_32 : \
-                                        ((size) == 64 ? MEM_POOL_CHUNK_TYPE_64 : \
-                                        jerry_unreferenced_expression)))))
-
-extern size_t mem_get_chunk_size( mem_pool_chunk_type_t chunk_type);
-
 extern void mem_pools_init(void);
 extern void mem_pools_finalize(void);
-extern uint8_t* mem_pools_alloc(mem_pool_chunk_type_t chunk_type);
-extern void mem_pools_free(mem_pool_chunk_type_t chunk_type, uint8_t *chunk_p);
+extern uint8_t* mem_pools_alloc(void);
+extern void mem_pools_free(uint8_t *chunk_p);
 
 #ifdef MEM_STATS
 /**
@@ -64,20 +40,20 @@ extern void mem_pools_free(mem_pool_chunk_type_t chunk_type, uint8_t *chunk_p);
  */
 typedef struct
 {
-    /** pools' count, per type */
-    size_t pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    /** pools' count */
+    size_t pools_count;
     
-    /** peak pools' count, per type */
-    size_t peak_pools_count[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    /** peak pools' count */
+    size_t peak_pools_count;
 
-    /** allocated chunks count, per type */
-    size_t allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    /** allocated chunks count */
+    size_t allocated_chunks;
     
-    /** peak allocated chunks count, per type */
-    size_t peak_allocated_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    /** peak allocated chunks count */
+    size_t peak_allocated_chunks;
     
-    /** free chunks count, per type */
-    size_t free_chunks[ MEM_POOL_CHUNK_TYPE__COUNT ];
+    /** free chunks count */
+    size_t free_chunks;
 } mem_pools_stats_t;
 
 extern void mem_pools_get_stats( mem_pools_stats_t *out_pools_stats_p);

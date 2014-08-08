@@ -12,43 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
+#!/bin/bash +x
 
 JERRY=$1
 TEST=$2
 RAW_OUTPUT=$3
 SLEEP=0.3
+REPEATS=5
 
 RSS_OUTPUT=
 PSS_OUTPUT=
 SHARE_OUTPUT=
 RSS_SHARE_OUTPUT=
 
+function run_test()
+{
+  $JERRY $TEST &
+  PID=$!
+
+  while true;
+  do
+    RSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Rss | awk '{sum += $2;} END {print sum;}'`
+      [ "$RSS_SUM" != "" ] || break;
+
+    PSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Pss | awk '{sum += $2;} END {print sum;}'`
+      [ "$PSS_SUM" != "" ] || break;
+
+    SHARE_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Share | awk '{sum += $2;} END {print sum;}'`
+      [ "$SHARE_SUM" != "" ] || break;
+
+    RSS_SHARE_SUM=$(($RSS_SUM - $SHARE_SUM))
+
+    sleep $SLEEP
+
+    RSS_OUTPUT="$RSS_OUTPUT $RSS_SUM\n"
+    PSS_OUTPUT="$PSS_OUTPUT $PSS_SUM\n"
+    SHARE_OUTPUT="$SHARE_OUTPUT $SHARE_SUM\n"
+    RSS_SHARE_OUTPUT="$RSS_SHARE_OUTPUT $RSS_SHARE_SUM\n"
+
+    done
+}
+
 START=$(date +%s.%N)
 
-$JERRY $TEST &
-PID=$!
-
-while true;
+for i in 1 2 3 4 5
 do
-RSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Rss | awk '{sum += $2;} END {print sum;}'`
-[ "$RSS_SUM" != "" ] || break;
-
-PSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Pss | awk '{sum += $2;} END {print sum;}'`
-[ "$PSS_SUM" != "" ] || break;
-
-SHARE_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Share | awk '{sum += $2;} END {print sum;}'`
-[ "$SHARE_SUM" != "" ] || break;
-
-RSS_SHARE_SUM=$(($RSS_SUM - $SHARE_SUM))
-
-sleep $SLEEP
-
-RSS_OUTPUT="$RSS_OUTPUT $RSS_SUM\n"
-PSS_OUTPUT="$PSS_OUTPUT $PSS_SUM\n"
-SHARE_OUTPUT="$SHARE_OUTPUT $SHARE_SUM\n"
-RSS_SHARE_OUTPUT="$RSS_SHARE_OUTPUT $RSS_SHARE_SUM\n"
-
+  run_test
 done
 
 FINISH=$(date +%s.%N)
@@ -56,9 +65,9 @@ EXEC_TIME=$(echo "$FINISH - $START" | bc)
 
 if [ "$RAW_OUTPUT" != "" ];
 then
-  echo -e $RSS_OUTPUT;
-  echo -e $PSS_OUTPUT;
-  echo -e $SHARE_OUTPUT;
+     echo -e $RSS_OUTPUT;
+     echo -e $PSS_OUTPUT;
+     echo -e $SHARE_OUTPUT;
 fi;
 
 echo ===================

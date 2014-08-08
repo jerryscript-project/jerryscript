@@ -17,8 +17,13 @@
 JERRY=$1
 TEST=$2
 RAW_OUTPUT=$3
+SLEEP=0.3
 
-OUTPUT=
+RSS_OUTPUT=
+PSS_OUTPUT=
+SHARE_OUTPUT=
+
+START=$(date +%s.%N)
 
 $JERRY $TEST &
 PID=$!
@@ -28,15 +33,34 @@ do
 RSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Rss | awk '{sum += $2;} END {print sum;}'`
 [ "$RSS_SUM" != "" ] || break;
 
-OUTPUT="$OUTPUT $RSS_SUM\n"
+PSS_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Pss | awk '{sum += $2;} END {print sum;}'`
+[ "$PSS_SUM" != "" ] || break;
+
+SHARE_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Share | awk '{sum += $2;} END {print sum;}'`
+[ "$SHARE_SUM" != "" ] || break;
+
+sleep $SLEEP
+
+RSS_OUTPUT="$RSS_OUTPUT $RSS_SUM\n"
+PSS_OUTPUT="$PSS_OUTPUT $PSS_SUM\n"
+SHARE_OUTPUT="$SHARE_OUTPUT $SHARE_SUM\n"
 done
+
+FINISH=$(date +%s.%N)
+EXEC_TIME=$(echo "$FINISH - $START" | bc)
 
 if [ "$RAW_OUTPUT" != "" ];
 then
-  echo -e $OUTPUT;
+  echo -e $RSS_OUTPUT;
+  echo -e $PSS_OUTPUT;
+  echo -e $SHARE_OUTPUT;
 fi;
 
 echo
 echo ===================
-echo -e $OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss average: %f Kb, Rss max: %d Kb\n", sum / n, max; }'
+echo -e $RSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss average:\t\t%f Kb\tRss max: %d Kb\n", sum / n, max; }'
+echo -e $PSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Pss average:\t\t%f Kb\tPss max: %d Kb\n", sum / n, max; }'
+echo -e $SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Share average:\t\t%f Kb\tShare max: %d Kb\n", sum / n, max; }'
+echo -e "---"
+echo -e "Exec time:\t\t"$EXEC_TIME "secs"
 echo ===================

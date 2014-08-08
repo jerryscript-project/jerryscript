@@ -365,7 +365,7 @@ $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@cppcheck $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
-	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(SOURCES_JERRY_H) #-e 
+	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(SOURCES_JERRY_H) -e 
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \

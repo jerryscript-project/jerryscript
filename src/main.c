@@ -41,9 +41,9 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   uint16_t offset;
   const OPCODE *opcodes;
 
-  lexer_init( script_source, script_source_size, is_show_opcodes);
+  lexer_init ( script_source, script_source_size, is_show_opcodes);
 
-  lexer_run_first_pass();
+  lexer_run_first_pass ();
 
   strings_num = lexer_get_strings (strings);
   nums_count = lexer_get_nums (nums);
@@ -153,7 +153,7 @@ read_sources (const char *script_file_names[],
     }
 
   const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
-  JERRY_ASSERT( source_size < sizeof(source_buffer) );
+  JERRY_ASSERT( source_size < sizeof(source_buffer));
 
   *out_source_size_p = source_size;
 
@@ -174,10 +174,10 @@ main (int argc __unused,
     {
       if (!__strcmp ("-v", argv[i]))
         {
-          __printf("Build date: \t%s\n", JERRY_BUILD_DATE);
-          __printf("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
-          __printf("Branch name:\t%s\n", JERRY_BRANCH_NAME);
-          __printf("\n");
+          __printf ("Build date: \t%s\n", JERRY_BUILD_DATE);
+          __printf ("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
+          __printf ("Branch name:\t%s\n", JERRY_BRANCH_NAME);
+          __printf ("\n");
         }
       if (!__strcmp ("--mem-stats", argv[i]))
         {

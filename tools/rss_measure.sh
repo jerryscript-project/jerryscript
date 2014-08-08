@@ -61,7 +61,6 @@ then
   echo -e $SHARE_OUTPUT;
 fi;
 
-echo
 echo ===================
 echo -e $RSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss average:\t\t%d Kb\tRss max: %d Kb\n", sum / n, max; }'
 echo -e $PSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Pss average:\t\t%d Kb\tPss max: %d Kb\n", sum / n, max; }'

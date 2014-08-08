@@ -76,7 +76,11 @@ build: clean $(JERRY_TARGETS)
 
 all: precommit
 
-PRECOMMIT_CHECK_TARGETS_LIST= debug.linux-valgrind.check \
+PRECOMMIT_CHECK_TARGETS_LIST= debug.linux.check \
+                              release.linux.check \
+                              debug_release.linux.check
+
+                              #debug.linux-valgrind.check \
                               debug.linux-musl-valgrind.check \
                               debug_release.linux-valgrind.check \
                               debug_release.linux-musl.check \

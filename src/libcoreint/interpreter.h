@@ -14,7 +14,7 @@
  */
 
 #ifndef INTERPRETER_H
-#define	INTERPRETER_H
+#define INTERPRETER_H
 
 #include "ecma-globals.h"
 #include "globals.h"
@@ -40,10 +40,10 @@ ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
                                           ecma_object_t *lex_env_p,
                                           bool is_strict);
 
-ssize_t try_get_string_by_idx( T_IDX idx, ecma_char_t *buffer_p, ssize_t buffer_size);
-ecma_number_t get_number_by_idx(T_IDX idx);
+ssize_t try_get_string_by_idx (T_IDX idx, ecma_char_t *buffer_p, ssize_t buffer_size);
+ecma_number_t get_number_by_idx (T_IDX idx);
 
-OPCODE read_opcode(opcode_counter_t counter);
+OPCODE read_opcode (opcode_counter_t counter);
 
-#endif	/* INTERPRETER_H */
+#endif /* INTERPRETER_H */
 

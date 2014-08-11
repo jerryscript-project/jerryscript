@@ -62,9 +62,9 @@ typedef uint8_t keyword;
 /* Type of tokens.  */
 typedef uint8_t token_type;
 
-#define TOK_EOF 0		// End of file
-#define TOK_NAME 1		// Identifier
-#define TOK_KEYWORD 2		// Keyword
+#define TOK_EOF 0 // End of file
+#define TOK_NAME 1 // Identifier
+#define TOK_KEYWORD 2 // Keyword
 #define TOK_INT 3
 #define TOK_FLOAT 4
 
@@ -72,84 +72,84 @@ typedef uint8_t token_type;
 #define TOK_BOOL 6
 #define TOK_NEWLINE 7
 #define TOK_STRING 8
-#define TOK_OPEN_BRACE 9	// {
+#define TOK_OPEN_BRACE 9 // {
 
-#define TOK_CLOSE_BRACE 10	// }
-#define TOK_OPEN_PAREN 11	// (
-#define TOK_CLOSE_PAREN 12	// )
-#define TOK_OPEN_SQUARE 13	// [
-#define TOK_CLOSE_SQUARE 14	// [
+#define TOK_CLOSE_BRACE 10 // }
+#define TOK_OPEN_PAREN 11 // (
+#define TOK_CLOSE_PAREN 12 // )
+#define TOK_OPEN_SQUARE 13 // [
+#define TOK_CLOSE_SQUARE 14 // [
 
-#define TOK_DOT 15		// .
-#define TOK_SEMICOLON 16	// ;
-#define TOK_COMMA 17		// ,
-#define TOK_LESS 18		// <
-#define TOK_GREATER 19		// >
+#define TOK_DOT 15 // .
+#define TOK_SEMICOLON 16 // ;
+#define TOK_COMMA 17 // ,
+#define TOK_LESS 18 // <
+#define TOK_GREATER 19 // >
 
-#define TOK_LESS_EQ 20		// <=
-#define TOK_GREATER_EQ 21	// <=
-#define TOK_DOUBLE_EQ 22	// ==
-#define TOK_NOT_EQ 23		// !=
-#define TOK_TRIPLE_EQ 24	// ===
+#define TOK_LESS_EQ 20 // <=
+#define TOK_GREATER_EQ 21 // <=
+#define TOK_DOUBLE_EQ 22 // ==
+#define TOK_NOT_EQ 23 // !=
+#define TOK_TRIPLE_EQ 24 // ===
 
-#define TOK_NOT_DOUBLE_EQ 25	// !==
-#define TOK_PLUS 26		// +
-#define TOK_MINUS 27		// -
-#define TOK_MULT 28		// *
-#define TOK_MOD 29		// %
+#define TOK_NOT_DOUBLE_EQ 25 // !==
+#define TOK_PLUS 26 // +
+#define TOK_MINUS 27 // -
+#define TOK_MULT 28 // *
+#define TOK_MOD 29 // %
 
-#define TOK_DOUBLE_PLUS 30	// ++
-#define TOK_DOUBLE_MINUS 31	// --
-#define TOK_LSHIFT 32		// <<
-#define TOK_RSHIFT 33		// >>
-#define TOK_RSHIFT_EX 34	// >>>
+#define TOK_DOUBLE_PLUS 30 // ++
+#define TOK_DOUBLE_MINUS 31 // --
+#define TOK_LSHIFT 32 // <<
+#define TOK_RSHIFT 33 // >>
+#define TOK_RSHIFT_EX 34 // >>>
 
-#define TOK_AND 35		// &
-#define TOK_OR 36		// |
-#define TOK_XOR 37		// ^
-#define TOK_NOT 38		// !
-#define TOK_COMPL 39		// ~
+#define TOK_AND 35 // &
+#define TOK_OR 36 // |
+#define TOK_XOR 37 // ^
+#define TOK_NOT 38 // !
+#define TOK_COMPL 39 // ~
 
-#define TOK_DOUBLE_AND 40	// &&
-#define TOK_DOUBLE_OR 41	// ||
-#define TOK_QUERY 42		// ?
-#define TOK_COLON 43		// :
-#define TOK_EQ 44		// =
+#define TOK_DOUBLE_AND 40 // &&
+#define TOK_DOUBLE_OR 41 // ||
+#define TOK_QUERY 42 // ?
+#define TOK_COLON 43 // :
+#define TOK_EQ 44 // =
 
-#define TOK_PLUS_EQ 45		// +=
-#define TOK_MINUS_EQ 46		// -=
-#define TOK_MULT_EQ 47		// *=
-#define TOK_MOD_EQ 48		// %=
-#define TOK_LSHIFT_EQ 49	// <<=
+#define TOK_PLUS_EQ 45 // +=
+#define TOK_MINUS_EQ 46 // -=
+#define TOK_MULT_EQ 47 // *=
+#define TOK_MOD_EQ 48 // %=
+#define TOK_LSHIFT_EQ 49 // <<=
 
-#define TOK_RSHIFT_EQ 50	// >>=
-#define TOK_RSHIFT_EX_EQ 51	// >>>=
-#define TOK_AND_EQ 52		// &=
-#define TOK_OR_EQ 53		// |=
-#define TOK_XOR_EQ 54		// ^=
+#define TOK_RSHIFT_EQ 50 // >>=
+#define TOK_RSHIFT_EX_EQ 51 // >>>=
+#define TOK_AND_EQ 52 // &=
+#define TOK_OR_EQ 53 // |=
+#define TOK_XOR_EQ 54 // ^=
 
-#define TOK_DIV 55		// /
-#define TOK_DIV_EQ 56		// /=
+#define TOK_DIV 55 // /
+#define TOK_DIV_EQ 56 // /=
 #define TOK_EMPTY 57
 
 
 /* Represents the contents of a token.  */
-typedef struct 
+typedef struct
 {
   token_type type;
 
   union
-    {
-      keyword kw;
-      uint8_t uid;
-    }
+  {
+    keyword kw;
+    uint8_t uid;
+  }
   data;
 } __packed
 token;
 
-void lexer_init(const char *, size_t, bool);
+void lexer_init (const char *, size_t, bool);
 void lexer_free (void);
-void lexer_run_first_pass( void);
+void lexer_run_first_pass (void);
 token lexer_next_token (void);
 void lexer_save_token (token);
 void lexer_dump_buffer_state (void);

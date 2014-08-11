@@ -86,7 +86,7 @@ mem_pools_finalize( void)
 
 /**
  * Allocate a chunk of specified size
- * 
+ *
  * @return pointer to allocated chunk, if allocation was successful,
  *         or NULL - if not enough memory.
  */
@@ -100,7 +100,7 @@ mem_pools_alloc( void)
     {
         /**
          * Space, at least for header and eight chunks.
-         * 
+         *
          * TODO: Config.
          */
         size_t pool_size = mem_heap_recommend_allocation_size( sizeof(mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE );
@@ -122,13 +122,13 @@ mem_pools_alloc( void)
         mem_pools = pool_state;
 
         mem_free_chunks_number += pool_state->chunks_number;
-        
+
         mem_pools_stat_alloc_pool();
     }
 
     /**
      * Now there is definitely at least one pool of specified type with at least one free chunk.
-     * 
+     *
      * Search for the pool.
      */
     mem_pool_state_t *pool_state = mem_pools;
@@ -249,7 +249,7 @@ static void
 mem_pools_stat_free_pool( void)
 {
   JERRY_ASSERT( mem_pools_stats.pools_count > 0 );
-  
+
   mem_pools_stats.pools_count--;
   mem_pools_stats.free_chunks = mem_free_chunks_number;
 } /* mem_pools_stat_free_pool */
@@ -261,7 +261,7 @@ static void
 mem_pools_stat_alloc_chunk(void)
 {
   JERRY_ASSERT( mem_pools_stats.free_chunks > 0 );
-  
+
   mem_pools_stats.allocated_chunks++;
   mem_pools_stats.free_chunks--;
 

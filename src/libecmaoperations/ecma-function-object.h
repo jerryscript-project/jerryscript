@@ -21,7 +21,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmafunctionobject ECMA Function object related routines
  * @{
  */

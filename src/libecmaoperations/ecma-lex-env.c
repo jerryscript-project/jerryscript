@@ -71,7 +71,7 @@ ecma_op_has_binding(ecma_object_t *lex_env_p, /**< lexical environment */
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      ecma_property_t *property_p = ecma_find_named_property( lex_env_p, name_p);    
+      ecma_property_t *property_p = ecma_find_named_property( lex_env_p, name_p);
 
       has_binding = ( property_p != NULL ) ? ECMA_SIMPLE_VALUE_TRUE
                                            : ECMA_SIMPLE_VALUE_FALSE;
@@ -87,7 +87,7 @@ ecma_op_has_binding(ecma_object_t *lex_env_p, /**< lexical environment */
 
       break;
     }
-  }  
+  }
 
   return ecma_make_completion_value(ECMA_COMPLETION_TYPE_NORMAL,
                                     ecma_make_simple_value( has_binding),
@@ -121,7 +121,7 @@ ecma_op_create_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environmen
                                        ECMA_PROPERTY_WRITABLE,
                                        ECMA_PROPERTY_NOT_ENUMERABLE,
                                        is_deletable ? ECMA_PROPERTY_CONFIGURABLE
-                                                    : ECMA_PROPERTY_NOT_CONFIGURABLE); 
+                                                    : ECMA_PROPERTY_NOT_CONFIGURABLE);
 
 
       break;
@@ -161,7 +161,7 @@ ecma_op_create_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environmen
           return completion;
         }
     }
-  }  
+  }
 
   return ecma_make_empty_completion_value();
 } /* ecma_op_create_mutable_binding */
@@ -189,7 +189,7 @@ ecma_op_set_mutable_binding(ecma_object_t *lex_env_p, /**< lexical environment *
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      ecma_property_t *property_p = ecma_get_named_data_property( lex_env_p, name_p);    
+      ecma_property_t *property_p = ecma_get_named_data_property( lex_env_p, name_p);
 
       if ( property_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE )
         {
@@ -250,7 +250,7 @@ ecma_op_get_binding_value(ecma_object_t *lex_env_p, /**< lexical environment */
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      ecma_property_t *property_p = ecma_get_named_data_property( lex_env_p, name_p);    
+      ecma_property_t *property_p = ecma_get_named_data_property( lex_env_p, name_p);
 
       ecma_value_t prop_value = property_p->u.named_data_property.value;
 
@@ -294,7 +294,7 @@ ecma_op_get_binding_value(ecma_object_t *lex_env_p, /**< lexical environment */
 
       return ecma_op_object_get( binding_obj_p, name_p);
     }
-  }  
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_op_get_binding_value */
@@ -350,7 +350,7 @@ ecma_op_delete_binding(ecma_object_t *lex_env_p, /**< lexical environment */
 
       return ecma_op_object_delete( binding_obj_p, name_p, false);
     }
-  }  
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_op_delete_binding */
@@ -395,7 +395,7 @@ ecma_op_implicit_this_value( ecma_object_t *lex_env_p) /**< lexical environment 
           return ecma_make_simple_completion_value( ECMA_SIMPLE_VALUE_UNDEFINED);
         }
     }
-  }  
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_op_implicit_this_value */
@@ -436,7 +436,7 @@ ecma_op_create_immutable_binding(ecma_object_t *lex_env_p, /**< lexical environm
     {
       JERRY_UNREACHABLE();
     }
-  }  
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_op_create_immutable_binding */
@@ -473,7 +473,7 @@ ecma_op_initialize_immutable_binding(ecma_object_t *lex_env_p, /**< lexical envi
     {
       JERRY_UNREACHABLE();
     }
-  }  
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_op_initialize_immutable_binding */

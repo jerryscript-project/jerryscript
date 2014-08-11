@@ -502,7 +502,7 @@ mem_heap_free_block( uint8_t *ptr) /**< pointer to beginning of data space of th
 
 /**
  * Recommend allocation size based on chunk size.
- * 
+ *
  * @return recommended allocation size
  */
 size_t

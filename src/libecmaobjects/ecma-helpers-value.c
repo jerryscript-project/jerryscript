@@ -15,7 +15,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */
@@ -324,7 +324,7 @@ ecma_make_throw_value( ecma_object_t *exception_p) /**< an object */
 
   return ecma_make_completion_value(ECMA_COMPLETION_TYPE_THROW,
                                   exception,
-                                  ECMA_TARGET_ID_RESERVED);                                  
+                                  ECMA_TARGET_ID_RESERVED);
 } /* ecma_make_throw_value */
 
 /**

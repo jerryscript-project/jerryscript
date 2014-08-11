@@ -24,7 +24,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmafunctionobject ECMA Function object related routines
  * @{
  */
@@ -284,7 +284,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
         {
           JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( arguments_list_p );
         }
-    
+
       ecma_completion_value_t completion = run_int_from_pos( code_first_opcode_idx,
                                                              this_binding,
                                                              local_env_p,

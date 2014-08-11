@@ -15,7 +15,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */

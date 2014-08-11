@@ -21,7 +21,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmacomparison ECMA comparison
  * @{
  */
@@ -88,7 +88,7 @@ ecma_op_abstract_equality_compare(ecma_value_t x, /**< first operand */
     } else
     { // f.
       JERRY_ASSERT( is_x_object );
-      
+
       return ( x.value == y.value );
     }
   } else if ( ( is_x_null && is_y_undefined )

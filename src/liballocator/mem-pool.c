@@ -41,7 +41,7 @@ static void mem_check_pool( mem_pool_state_t *pool_p);
 
 /**
  * Initialization of memory pool.
- * 
+ *
  * Pool will be located in the segment [pool_start; pool_start + pool_size).
  * Part of pool space will be used for bitmap and the rest will store chunks.
  */
@@ -77,7 +77,7 @@ mem_pool_init(mem_pool_state_t *pool_p, /**< pool */
           chunk_index < chunks_number;
           chunk_index++ )
       {
-        mem_pool_chunk_index_t *next_free_chunk_index_p = 
+        mem_pool_chunk_index_t *next_free_chunk_index_p =
           (mem_pool_chunk_index_t*) MEM_POOL_CHUNK_ADDRESS( pool_p, chunk_index);
 
         *next_free_chunk_index_p = (mem_pool_chunk_index_t) (chunk_index + 1u);

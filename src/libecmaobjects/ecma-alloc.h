@@ -27,7 +27,7 @@
 
 /**
  * Allocate memory for ecma-object
- * 
+ *
  * @return pointer to allocated memory
  */
 extern ecma_object_t *ecma_alloc_object(void);
@@ -39,7 +39,7 @@ extern void ecma_dealloc_object( ecma_object_t *object_p);
 
 /**
  * Allocate memory for ecma-property
- * 
+ *
  * @return pointer to allocated memory
  */
 extern ecma_property_t *ecma_alloc_property(void);
@@ -51,7 +51,7 @@ extern void ecma_dealloc_property( ecma_property_t *property_p);
 
 /**
  * Allocate memory for ecma-number
- * 
+ *
  * @return pointer to allocated memory
  */
 extern ecma_number_t *ecma_alloc_number(void);
@@ -63,7 +63,7 @@ extern void ecma_dealloc_number( ecma_number_t *number_p);
 
 /**
  * Allocate memory for first chunk of an ecma-array
- * 
+ *
  * @return pointer to allocated memory
  */
 extern ecma_array_first_chunk_t *ecma_alloc_array_first_chunk(void);
@@ -75,7 +75,7 @@ extern void ecma_dealloc_array_first_chunk( ecma_array_first_chunk_t *first_chun
 
 /**
  * Allocate memory for non-first chunk of an ecma-array
- * 
+ *
  * @return pointer to allocated memory
  */
 extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk(void);

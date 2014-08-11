@@ -17,7 +17,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmamagicstrings Collection of magic string constants used in ECMA
  * @{
  */

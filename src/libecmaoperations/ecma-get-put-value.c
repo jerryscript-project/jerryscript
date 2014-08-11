@@ -27,7 +27,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmaoperations ECMA-defined operations
  * @{
  */
@@ -51,7 +51,7 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
   const bool has_object_base = ( base.value_type == ECMA_TYPE_OBJECT
                                  && !((ecma_object_t*)ecma_get_pointer(base.value))->is_lexical_environment );
   const bool is_property_reference = has_primitive_base || has_object_base;
-                                     
+
   // GetValue_3
   if ( is_unresolvable_reference )
   {
@@ -65,7 +65,7 @@ ecma_op_get_value( ecma_reference_t ref) /**< ECMA-reference */
     {
       ecma_object_t *obj_p = ecma_get_pointer( base.value);
       JERRY_ASSERT( obj_p != NULL && !obj_p->is_lexical_environment );
-      
+
       // GetValue_4.b case 1
       /* return [[Get]]( base as this, ref.referenced_name_p) */
       JERRY_UNIMPLEMENTED();
@@ -159,7 +159,7 @@ ecma_op_put_value(ecma_reference_t ref, /**< ECMA-reference */
       // PutValue_4.b case 1
 
       /* return [[Put]]( base as this, ref.referenced_name_p, value, ref.is_strict); */
-      JERRY_UNIMPLEMENTED();      
+      JERRY_UNIMPLEMENTED();
     } else
     {
       // PutValue_4.b case 2

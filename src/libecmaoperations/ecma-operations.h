@@ -22,7 +22,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmaoperations ECMA-defined operations
  * @{
  */

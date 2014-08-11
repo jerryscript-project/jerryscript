@@ -23,7 +23,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmaconversion ECMA conversion routines
  * @{
  */
@@ -134,7 +134,7 @@ ecma_op_same_value( ecma_value_t x, /**< ecma-value */
       ecma_array_first_chunk_t* x_str_p = (ecma_array_first_chunk_t*)( ecma_get_pointer(x.value) );
       ecma_array_first_chunk_t* y_str_p = (ecma_array_first_chunk_t*)( ecma_get_pointer(y.value) );
 
-      return ecma_compare_ecma_string_to_ecma_string( x_str_p, y_str_p);  
+      return ecma_compare_ecma_string_to_ecma_string( x_str_p, y_str_p);
     }
 
   if ( is_x_boolean )

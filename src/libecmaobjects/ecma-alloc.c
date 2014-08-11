@@ -22,7 +22,7 @@
 
 /**
  * Implementation of routins for allocation/freeing memory for ECMA data types.
- * 
+ *
  * All allocation routines from this module have the same structure:
  *  1. Try to allocate memory.
  *  2. If allocation was successful, return pointer to the allocated block.

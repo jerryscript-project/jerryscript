@@ -42,16 +42,16 @@ typedef struct
 {
     /** pools' count */
     size_t pools_count;
-    
+
     /** peak pools' count */
     size_t peak_pools_count;
 
     /** allocated chunks count */
     size_t allocated_chunks;
-    
+
     /** peak allocated chunks count */
     size_t peak_allocated_chunks;
-    
+
     /** free chunks count */
     size_t free_chunks;
 } mem_pools_stats_t;

@@ -20,7 +20,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmaglobalobject ECMA Global object related routines
  * @{
  */

@@ -15,7 +15,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */
@@ -30,9 +30,9 @@
  * Create an object with specified prototype object
  * (or NULL prototype if there is not prototype for the object)
  * and value of 'Extensible' attribute.
- * 
+ *
  * Reference counter's value will be set to one.
- * 
+ *
  * @return pointer to the object's descriptor
  */
 ecma_object_t*
@@ -49,18 +49,18 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
     object_p->u.object.extensible = is_extensible;
     ecma_set_pointer( object_p->u.object.prototype_object_p, prototype_object_p);
     object_p->u.object.type = type;
-    
+
     return object_p;
 } /* ecma_create_object */
 
 /**
  * Create a declarative lexical environment with specified outer lexical environment
  * (or NULL if the environment is not nested).
- * 
+ *
  * See also: ECMA-262 v5, 10.2.1.1
  *
  * Reference counter's value will be set to one.
- * 
+ *
  * @return pointer to the descriptor of lexical environment
  */
 ecma_object_t*
@@ -82,11 +82,11 @@ ecma_create_decl_lex_env(ecma_object_t *outer_lexical_environment_p) /**< outer 
 /**
  * Create a object lexical environment with specified outer lexical environment
  * (or NULL if the environment is not nested), binding object and provideThis flag.
- * 
+ *
  * See also: ECMA-262 v5, 10.2.1.2
  *
  * Reference counter's value will be set to one.
- * 
+ *
  * @return pointer to the descriptor of lexical environment
  */
 ecma_object_t*
@@ -120,7 +120,7 @@ ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< oute
 /**
  * Create internal property in an object and link it into
  * the object's properties' linked-list (at start of the list).
- * 
+ *
  * @return pointer to newly created property
  */
 ecma_property_t*
@@ -128,22 +128,22 @@ ecma_create_internal_property(ecma_object_t *object_p, /**< the object */
                               ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
     ecma_property_t *new_property_p = ecma_alloc_property();
-    
+
     new_property_p->type = ECMA_PROPERTY_INTERNAL;
-    
+
     ecma_property_t *list_head_p = ecma_get_pointer( object_p->properties_p);
     ecma_set_pointer( new_property_p->next_property_p, list_head_p);
     ecma_set_non_null_pointer( object_p->properties_p, new_property_p);
 
     new_property_p->u.internal_property.type = property_id;
     new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
-    
+
     return new_property_p;
 } /* ecma_create_internal_property */
 
 /**
  * Find internal property in the object's property set.
- * 
+ *
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
@@ -174,10 +174,10 @@ ecma_find_internal_property(ecma_object_t *object_p, /**< object descriptor */
 
 /**
  * Get an internal property.
- * 
+ *
  * Warning:
  *         the property must exist
- * 
+ *
  * @return pointer to the property
  */
 ecma_property_t*
@@ -185,9 +185,9 @@ ecma_get_internal_property(ecma_object_t *object_p, /**< object descriptor */
                          ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
     ecma_property_t *property_p = ecma_find_internal_property( object_p, property_id);
-    
+
     JERRY_ASSERT( property_p != NULL );
-    
+
     return property_p;
 } /* ecma_get_internal_property */
 
@@ -480,7 +480,7 @@ ecma_delete_property(ecma_object_t *obj_p, /**< object */
 
 /**
  * Allocate new ecma-string and fill it with characters from specified buffer
- * 
+ *
  * @return Pointer to first chunk of an array, containing allocated string
  */
 ecma_array_first_chunk_t*
@@ -499,7 +499,7 @@ ecma_new_ecma_string(const ecma_char_t *string_p) /**< zero-terminated string of
         length++;
       }
     }
- 
+
     ecma_array_first_chunk_t *string_first_chunk_p = ecma_alloc_array_first_chunk();
 
     string_first_chunk_p->header.unit_number = length;
@@ -535,9 +535,9 @@ ecma_new_ecma_string(const ecma_char_t *string_p) /**< zero-terminated string of
 
 /**
  * Copy ecma-string's contents to a buffer.
- * 
+ *
  * Buffer will contain length of string, in characters, followed by string's characters.
- * 
+ *
  * @return number of bytes, actually copied to the buffer, if string's content was copied successfully;
  *         negative number, which is calculated as negation of buffer size, that is required
  *         to hold the string's content (in case size of buffer is insuficcient).
@@ -585,7 +585,7 @@ ecma_copy_ecma_string_chars_to_buffer(ecma_array_first_chunk_t *first_chunk_p, /
 
 /**
  * Duplicate an ecma-string.
- * 
+ *
  * @return pointer to new ecma-string's first chunk
  */
 ecma_array_first_chunk_t*
@@ -599,7 +599,7 @@ ecma_duplicate_ecma_string( ecma_array_first_chunk_t *first_chunk_p) /**< first 
     ecma_array_non_first_chunk_t *non_first_chunk_p, *non_first_chunk_copy_p;
     non_first_chunk_p = ecma_get_pointer( first_chunk_p->header.next_chunk_p);
     uint16_t *next_pointer_p = &first_chunk_copy_p->header.next_chunk_p;
-    
+
     while ( non_first_chunk_p != NULL )
     {
         non_first_chunk_copy_p = ecma_alloc_array_non_first_chunk();
@@ -607,10 +607,10 @@ ecma_duplicate_ecma_string( ecma_array_first_chunk_t *first_chunk_p) /**< first 
         next_pointer_p = &non_first_chunk_copy_p->next_chunk_p;
 
         __memcpy( non_first_chunk_copy_p, non_first_chunk_p, sizeof (ecma_array_non_first_chunk_t));
-        
+
         non_first_chunk_p = ecma_get_pointer( non_first_chunk_p->next_chunk_p);
     }
-    
+
     *next_pointer_p = ECMA_NULL_POINTER;
 
     return first_chunk_copy_p;
@@ -618,7 +618,7 @@ ecma_duplicate_ecma_string( ecma_array_first_chunk_t *first_chunk_p) /**< first 
 
 /**
  * Compare zero-terminated string to ecma-string
- * 
+ *
  * @return true - if strings are equal;
  *         false - otherwise.
  */
@@ -631,7 +631,7 @@ ecma_compare_ecma_string_to_ecma_string(const ecma_array_first_chunk_t *string1_
 
 /**
  * Compare zero-terminated string to ecma-string
- * 
+ *
  * @return true - if strings are equal;
  *         false - otherwise.
  */
@@ -672,7 +672,7 @@ ecma_compare_zt_string_to_ecma_string(const ecma_char_t *string_p, /**< zero-ter
 
       if ( *str_iter_p != *current_chunk_chars_cur )
         {
-          /* 
+          /*
            * Either *str_iter_p is 0 (zero-terminated string is shorter),
            * or the character is just different.
            *

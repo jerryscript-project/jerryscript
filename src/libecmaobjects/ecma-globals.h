@@ -32,7 +32,7 @@
 
 /**
  * Ecma-pointer field is used to calculate ecma-value's address.
- * 
+ *
  * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
  * The offset is shifted right by MEM_ALIGNMENT_LOG.
  * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
@@ -371,7 +371,7 @@ typedef struct ecma_object_t {
 
     /** GC's information */
     ecma_gc_info_t gc_info;
-    
+
     FIXME( Remove aligned attribute after packing the struct )
 } __packed __attribute__((aligned(16))) ecma_object_t;
 

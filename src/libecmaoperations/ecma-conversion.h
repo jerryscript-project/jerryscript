@@ -21,7 +21,7 @@
 
 /** \addtogroup ecma ---TODO---
  * @{
- * 
+ *
  * \addtogroup ecmaconversion ECMA conversion
  * @{
  */

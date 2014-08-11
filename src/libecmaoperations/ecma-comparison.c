@@ -36,7 +36,7 @@
  */
 bool
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
-                                  ecma_value_t y) /**< second operand */
+                                   ecma_value_t y) /**< second operand */
 {
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
@@ -53,18 +53,18 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   const bool is_y_object = (y.value_type == ECMA_TYPE_OBJECT);
 
   const bool is_types_equal = ((is_x_undefined && is_y_undefined)
-                                || (is_x_null && is_y_null)
-                                || (is_x_boolean && is_y_boolean)
-                                || (is_x_number && is_y_number)
-                                || (is_x_string && is_y_string)
-                                || (is_x_object && is_y_object));
+                               || (is_x_null && is_y_null)
+                               || (is_x_boolean && is_y_boolean)
+                               || (is_x_number && is_y_number)
+                               || (is_x_string && is_y_string)
+                               || (is_x_object && is_y_object));
 
   if (is_types_equal)
   {
     // 1.
 
     if (is_x_undefined
-         || is_x_null)
+        || is_x_null)
     {
       // a., b.
       return true;
@@ -92,7 +92,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       return (x.value == y.value);
     }
   } else if ((is_x_null && is_y_undefined)
-              || (is_x_undefined && is_y_null))
+             || (is_x_undefined && is_y_null))
   { // 2., 3.
     return true;
   } else
@@ -111,8 +111,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
  */
 ecma_completion_value_t
 ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
-                                    ecma_value_t y, /**< second operand */
-                                    bool left_first) /**< 'LeftFirst' flag */
+                                     ecma_value_t y, /**< second operand */
+                                     bool left_first) /**< 'LeftFirst' flag */
 {
   ecma_completion_value_t ret_value, px, py;
 
@@ -134,38 +134,38 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   const bool is_py_string = (py.value.value_type == ECMA_TYPE_STRING);
 
   if (!(is_px_string && is_py_string))
-    { // 3.
-      // a.
-      ECMA_TRY_CATCH(nx, ecma_op_to_number (px.value), ret_value);
+  { // 3.
+    // a.
+    ECMA_TRY_CATCH(nx, ecma_op_to_number (px.value), ret_value);
 
-      // b.
-      ECMA_TRY_CATCH(ny, ecma_op_to_number (py.value), ret_value);
+    // b.
+    ECMA_TRY_CATCH(ny, ecma_op_to_number (py.value), ret_value);
 
-      ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.value.value);
-      ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.value.value);
+    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.value.value);
+    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.value.value);
 
-      TODO(/* Implement according to ECMA */);
+    TODO(/* Implement according to ECMA */);
 
-      if (*num_x_p >= *num_y_p)
-        {
-          ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                  ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE),
-                                                  ECMA_TARGET_ID_RESERVED);
-        }
-      else
-        {
-          ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                  ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE),
-                                                  ECMA_TARGET_ID_RESERVED);
-        }
-
-      ECMA_FINALIZE(ny);
-      ECMA_FINALIZE(nx);
+    if (*num_x_p >= *num_y_p)
+    {
+      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE),
+                                              ECMA_TARGET_ID_RESERVED);
     }
+    else
+    {
+      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE),
+                                              ECMA_TARGET_ID_RESERVED);
+    }
+
+    ECMA_FINALIZE(ny);
+    ECMA_FINALIZE(nx);
+  }
   else
-    { // 4.
-      JERRY_UNIMPLEMENTED();
-    }
+  { // 4.
+    JERRY_UNIMPLEMENTED();
+  }
 
   ECMA_FINALIZE(prim_second_converted_value);
   ECMA_FINALIZE(prim_first_converted_value);

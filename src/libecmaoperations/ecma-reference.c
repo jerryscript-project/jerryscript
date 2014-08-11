@@ -41,8 +41,8 @@
  */
 ecma_reference_t
 ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environment */
-                                 const ecma_char_t *name_p, /**< identifier's name */
-                                 bool is_strict) /**< strict reference flag */
+                                  const ecma_char_t *name_p, /**< identifier's name */
+                                  bool is_strict) /**< strict reference flag */
 {
   JERRY_ASSERT(lex_env_p != NULL);
 
@@ -56,8 +56,8 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
     if (ecma_is_completion_value_normal_true (completion_value))
     {
       return ecma_make_reference (ecma_make_object_value (lex_env_iter_p),
-                                 name_p,
-                                 is_strict);
+                                  name_p,
+                                  is_strict);
     } else
     {
       JERRY_ASSERT(ecma_is_completion_value_normal_false (completion_value));
@@ -67,8 +67,8 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
   }
 
   return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                             name_p,
-                             is_strict);
+                              name_p,
+                              is_strict);
 } /* ecma_op_get_identifier_reference */
 
 /**
@@ -83,12 +83,15 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
  */
 ecma_reference_t
 ecma_make_reference (ecma_value_t base, /**< base value */
-                    const ecma_char_t *name_p, /**< referenced name */
-                    bool is_strict) /**< strict reference flag */
+                     const ecma_char_t *name_p, /**< referenced name */
+                     bool is_strict) /**< strict reference flag */
 {
-  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value (base, true),
-                                              .referenced_name_p = name_p,
-                                              .is_strict = is_strict };
+  ecma_reference_t ref = (ecma_reference_t)
+  {
+    .base = ecma_copy_value (base, true),
+    .referenced_name_p = name_p,
+    .is_strict = is_strict
+  };
 
   return ref;
 } /* ecma_make_reference */

@@ -33,20 +33,14 @@ ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
   TODO(Support UTF-16);
 
   switch (id)
-    {
-    case ECMA_MAGIC_STRING_ARGUMENTS:
-      return (ecma_char_t*) "arguments";
-    case ECMA_MAGIC_STRING_EVAL:
-      return (ecma_char_t*) "eval";
-    case ECMA_MAGIC_STRING_PROTOTYPE:
-      return (ecma_char_t*) "prototype";
-    case ECMA_MAGIC_STRING_CONSTRUCTOR:
-      return (ecma_char_t*) "constructor";
-    case ECMA_MAGIC_STRING_CALLER:
-      return (ecma_char_t*) "caller";
-    case ECMA_MAGIC_STRING_UNDEFINED:
-      return (ecma_char_t*) "undefined";
-    }
+  {
+    case ECMA_MAGIC_STRING_ARGUMENTS: return (ecma_char_t*) "arguments";
+    case ECMA_MAGIC_STRING_EVAL: return (ecma_char_t*) "eval";
+    case ECMA_MAGIC_STRING_PROTOTYPE: return (ecma_char_t*) "prototype";
+    case ECMA_MAGIC_STRING_CONSTRUCTOR: return (ecma_char_t*) "constructor";
+    case ECMA_MAGIC_STRING_CALLER: return (ecma_char_t*) "caller";
+    case ECMA_MAGIC_STRING_UNDEFINED: return (ecma_char_t*) "undefined";
+  }
 
   JERRY_UNREACHABLE();
 } /* ecma_get_magic_string */

@@ -55,30 +55,30 @@ JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
  * FIXME: Run GC only if allocation failed.
  */
 #define ALLOC(ecma_type) ecma_ ## ecma_type ## _t * \
-ecma_alloc_ ## ecma_type (void) \
+  ecma_alloc_ ## ecma_type (void) \
 { \
   ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-                                  mem_pools_alloc (); \
+  mem_pools_alloc (); \
   \
   if (likely (p ## ecma_type != NULL)) \
+  { \
+    return p ## ecma_type; \
+  } \
+  \
+  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; \
+       gen_id < ECMA_GC_GEN_COUNT; \
+       gen_id++) \
+  { \
+    ecma_gc_run (gen_id); \
+    \
+    p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
+    mem_pools_alloc (); \
+    \
+    if (likely (p ## ecma_type != NULL)) \
     { \
       return p ## ecma_type; \
     } \
-  \
-  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; \
-        gen_id < ECMA_GC_GEN_COUNT; \
-        gen_id++) \
-    { \
-      ecma_gc_run (gen_id); \
-      \
-      p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-      mem_pools_alloc (); \
-      \
-      if (likely (p ## ecma_type != NULL)) \
-        { \
-          return p ## ecma_type; \
-        } \
-    } \
+  } \
   JERRY_UNREACHABLE(); \
 }
 
@@ -86,17 +86,17 @@ ecma_alloc_ ## ecma_type (void) \
  * Deallocation routine template
  */
 #define DEALLOC(ecma_type) void \
-ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *p ## ecma_type) \
+  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *p ## ecma_type) \
 { \
-    mem_pools_free ((uint8_t*) p ## ecma_type); \
+  mem_pools_free ((uint8_t*) p ## ecma_type); \
 }
 
 /**
  * Declaration of alloc/free routine for specified ecma-type.
  */
 #define DECLARE_ROUTINES_FOR(ecma_type) \
-    ALLOC(ecma_type) \
-    DEALLOC(ecma_type)
+  ALLOC(ecma_type) \
+  DEALLOC(ecma_type)
 
 DECLARE_ROUTINES_FOR (object)
 DECLARE_ROUTINES_FOR (property)

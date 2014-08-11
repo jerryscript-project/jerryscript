@@ -51,42 +51,45 @@
 /**
  * Type of ecma-value
  */
-typedef enum {
-    ECMA_TYPE_SIMPLE, /**< simple value */
-    ECMA_TYPE_NUMBER, /**< 64-bit integer */
-    ECMA_TYPE_STRING, /**< pointer to description of a string */
-    ECMA_TYPE_OBJECT, /**< pointer to description of an object */
-    ECMA_TYPE__COUNT /**< count of types */
+typedef enum
+{
+  ECMA_TYPE_SIMPLE, /**< simple value */
+  ECMA_TYPE_NUMBER, /**< 64-bit integer */
+  ECMA_TYPE_STRING, /**< pointer to description of a string */
+  ECMA_TYPE_OBJECT, /**< pointer to description of an object */
+  ECMA_TYPE__COUNT /**< count of types */
 } ecma_type_t;
 
 /**
  * Simple ecma-values
  */
-typedef enum {
-    /**
-     * Empty value is implementation defined value, used for:
-     *   - representing empty value in completion values (see also: ECMA-262 v5, 8.9 Completion specification type);
-     *   - values of uninitialized immutable bindings;
-     *   - values of empty register variables.
-     */
-    ECMA_SIMPLE_VALUE_EMPTY,
-    ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
-    ECMA_SIMPLE_VALUE_NULL, /**< null value */
-    ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
-    ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-    ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exists,
-                                           but is stored directly in the array's property list
-                                           (used for array elements with non-default attribute values) */
-    ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
+typedef enum
+{
+  /**
+   * Empty value is implementation defined value, used for:
+   *   - representing empty value in completion values (see also: ECMA-262 v5, 8.9 Completion specification type);
+   *   - values of uninitialized immutable bindings;
+   *   - values of empty register variables.
+   */
+  ECMA_SIMPLE_VALUE_EMPTY,
+  ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
+  ECMA_SIMPLE_VALUE_NULL, /**< null value */
+  ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
+  ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
+  ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exists,
+                                         but is stored directly in the array's property list
+                                         (used for array elements with non-default attribute values) */
+  ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
 } ecma_simple_value_t;
 
 /**
  * Type of ecma-property
  */
-typedef enum {
-    ECMA_PROPERTY_NAMEDDATA, /**< named data property */
-    ECMA_PROPERTY_NAMEDACCESSOR, /**< named accessor property */
-    ECMA_PROPERTY_INTERNAL /**< internal property */
+typedef enum
+{
+  ECMA_PROPERTY_NAMEDDATA, /**< named data property */
+  ECMA_PROPERTY_NAMEDACCESSOR, /**< named accessor property */
+  ECMA_PROPERTY_INTERNAL /**< internal property */
 } ecma_property_type_t;
 
 /**
@@ -94,27 +97,29 @@ typedef enum {
  *
  * See also: ECMA-262 v5, 8.9.
  */
-typedef enum {
-    ECMA_COMPLETION_TYPE_NORMAL, /**< default block completion */
-    ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
-    ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
-    ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
-    ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
-    ECMA_COMPLETION_TYPE_EXIT /**< implementation-defined completion type
-                                   for finishing script execution */
+typedef enum
+{
+  ECMA_COMPLETION_TYPE_NORMAL, /**< default block completion */
+  ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
+  ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
+  ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
+  ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
+  ECMA_COMPLETION_TYPE_EXIT /**< implementation-defined completion type
+                                 for finishing script execution */
 } ecma_completion_type_t;
 
 /**
  * Description of an ecma-value
  */
-typedef struct {
-    /** Value type (ecma_type_t) */
-    unsigned int value_type : 2;
+typedef struct
+{
+  /** Value type (ecma_type_t) */
+  unsigned int value_type : 2;
 
-    /**
-     * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
-     */
-    unsigned int value : ECMA_POINTER_FIELD_WIDTH;
+  /**
+   * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
+   */
+  unsigned int value : ECMA_POINTER_FIELD_WIDTH;
 } __packed ecma_value_t;
 
 /**
@@ -122,15 +127,16 @@ typedef struct {
  *
  * See also: ECMA-262 v5, 8.9.
  */
-typedef struct {
-    /** Type (ecma_completion_type_t) */
-    unsigned int type : 3;
+typedef struct
+{
+  /** Type (ecma_completion_type_t) */
+  unsigned int type : 3;
 
-    /** Value */
-    ecma_value_t value;
+  /** Value */
+  ecma_value_t value;
 
-    /** Target */
-    unsigned int target : 8;
+  /** Target */
+  unsigned int target : 8;
 } __packed ecma_completion_value_t;
 
 /**
@@ -142,25 +148,26 @@ typedef struct {
 /**
  * Internal properties' identifiers.
  */
-typedef enum {
-    ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
-    ECMA_INTERNAL_PROPERTY_PROTOTYPE, /**< [[Prototype]] */
-    ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
-    ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
-    ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
-    ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
+typedef enum
+{
+  ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
+  ECMA_INTERNAL_PROPERTY_PROTOTYPE, /**< [[Prototype]] */
+  ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
+  ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
+  ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
+  ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
 
-    /** provideThis property of lexical environment */
-    ECMA_INTERNAL_PROPERTY_PROVIDE_THIS,
+  /** provideThis property of lexical environment */
+  ECMA_INTERNAL_PROPERTY_PROVIDE_THIS,
 
-    /** binding object of lexical environment */
-    ECMA_INTERNAL_PROPERTY_BINDING_OBJECT,
+  /** binding object of lexical environment */
+  ECMA_INTERNAL_PROPERTY_BINDING_OBJECT,
 
-    /** Part of an array, that is indexed by numbers */
-    ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES,
+  /** Part of an array, that is indexed by numbers */
+  ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES,
 
-    /** Part of an array, that is indexed by strings */
-    ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES
+  /** Part of an array, that is indexed by strings */
+  ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES
 } ecma_internal_property_id_t;
 
 /**
@@ -193,186 +200,198 @@ typedef enum
 /**
  * Description of ecma-property
  */
-typedef struct ecma_property_t {
-    /** Property's type (ecma_property_type_t) */
-    unsigned int type : 2;
+typedef struct ecma_property_t
+{
+  /** Property's type (ecma_property_type_t) */
+  unsigned int type : 2;
 
-    /** Compressed pointer to next property */
-    unsigned int next_property_p : ECMA_POINTER_FIELD_WIDTH;
+  /** Compressed pointer to next property */
+  unsigned int next_property_p : ECMA_POINTER_FIELD_WIDTH;
 
-    /** Property's details (depending on Type) */
-    union {
+  /** Property's details (depending on Type) */
+  union
+  {
+    /** Description of named data property */
+    struct __packed ecma_named_data_property_t
+    {
+      /** Compressed pointer to property's name (pointer to String) */
+      unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
 
-        /** Description of named data property */
-        struct __packed ecma_named_data_property_t {
-            /** Compressed pointer to property's name (pointer to String) */
-            unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
+      /** Attribute 'Writable' (ecma_property_writable_value_t) */
+      unsigned int writable : 1;
 
-            /** Attribute 'Writable' (ecma_property_writable_value_t) */
-            unsigned int writable : 1;
+      /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
+      unsigned int enumerable : 1;
 
-            /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-            unsigned int enumerable : 1;
+      /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
+      unsigned int configurable : 1;
 
-            /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-            unsigned int configurable : 1;
+      /** Value */
+      ecma_value_t value;
+    } named_data_property;
 
-            /** Value */
-            ecma_value_t value;
-        } named_data_property;
+    /** Description of named accessor property */
+    struct __packed ecma_named_accessor_property_t
+    {
+      /** Compressed pointer to property's name (pointer to String) */
+      unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
 
-        /** Description of named accessor property */
-        struct __packed ecma_named_accessor_property_t {
-            /** Compressed pointer to property's name (pointer to String) */
-            unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
+      /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
+      unsigned int enumerable : 1;
 
-            /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-            unsigned int enumerable : 1;
+      /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
+      unsigned int configurable : 1;
 
-            /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-            unsigned int configurable : 1;
+      /** Compressed pointer to property's getter */
+      unsigned int get_p : ECMA_POINTER_FIELD_WIDTH;
 
-            /** Compressed pointer to property's getter */
-            unsigned int get_p : ECMA_POINTER_FIELD_WIDTH;
+      /** Compressed pointer to property's setter */
+      unsigned int set_p : ECMA_POINTER_FIELD_WIDTH;
+    } named_accessor_property;
 
-            /** Compressed pointer to property's setter */
-            unsigned int set_p : ECMA_POINTER_FIELD_WIDTH;
-        } named_accessor_property;
+    /** Description of internal property */
+    struct __packed ecma_internal_property_t
+    {
+      /** Internal property's type */
+      unsigned int type : 4;
 
-        /** Description of internal property */
-        struct __packed ecma_internal_property_t {
-            /** Internal property's type */
-            unsigned int type : 4;
-
-            /** Value (may be a compressed pointer) */
-            uint32_t value;
-        } internal_property;
-    } u;
+      /** Value (may be a compressed pointer) */
+      uint32_t value;
+    } internal_property;
+  } u;
 } ecma_property_t;
 
 /**
  * Description of GC's information layout
  */
-typedef struct {
-    /**
-     * Reference counter of the object.
-     *
-     *  Number of references to the object from stack variables.
-     */
-    unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
+typedef struct
+{
+  /**
+   * Reference counter of the object.
+   *
+   *  Number of references to the object from stack variables.
+   */
+  unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
 
-    /**
-     * Identifier of GC generation.
-     */
-    unsigned int generation : 2;
+  /**
+   * Identifier of GC generation.
+   */
+  unsigned int generation : 2;
 
-    /**
-     * Compressed pointer to next object in the global list of objects with same generation.
-     */
-    unsigned int next : ECMA_POINTER_FIELD_WIDTH;
+  /**
+   * Compressed pointer to next object in the global list of objects with same generation.
+   */
+  unsigned int next : ECMA_POINTER_FIELD_WIDTH;
 
-    /**
-     * Marker that is set if the object was visited during graph traverse.
-     */
-    unsigned int visited : 1;
+  /**
+   * Marker that is set if the object was visited during graph traverse.
+   */
+  unsigned int visited : 1;
 
-    /**
-     * Flag indicating that the object may reference objects of younger generations in its properties.
-     */
-    unsigned int may_ref_younger_objects : 1;
+  /**
+   * Flag indicating that the object may reference objects of younger generations in its properties.
+   */
+  unsigned int may_ref_younger_objects : 1;
 } __packed ecma_gc_info_t;
 
 /**
  * Types of lexical environments
  */
-typedef enum {
-    ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< declarative lexical environment */
-    ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND /**< object-bound lexical environment */
+typedef enum
+{
+  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< declarative lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND /**< object-bound lexical environment */
 } ecma_lexical_environment_type_t;
 
 /**
  * Internal object types
  */
-typedef enum {
-    ECMA_OBJECT_TYPE_GENERAL, /**< all objects that are not String (15.5), Function (15.3),
-                                   Arguments (10.6), Array (15.4) specification-defined objects
-                                   and not host objects */
-    ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
-    ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
-    ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
-    ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
-    ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
-    ECMA_OBJECT_TYPE_HOST /**< Host object */
+typedef enum
+{
+  ECMA_OBJECT_TYPE_GENERAL, /**< all objects that are not String (15.5), Function (15.3),
+                                 Arguments (10.6), Array (15.4) specification-defined objects
+                                 and not host objects */
+  ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
+  ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
+  ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_HOST /**< Host object */
 } ecma_object_type_t;
 
 /**
  * ECMA-defined object classes
  */
-typedef enum {
-    ECMA_OBJECT_CLASS_OBJECT, /**< "Object" */
-    ECMA_OBJECT_CLASS_FUNCTION, /**< "Function" */
-    ECMA_OBJECT_CLASS_ARGUMENTS, /**< "Arguments" */
-    ECMA_OBJECT_CLASS_ARRAY, /**< "Array" */
-    ECMA_OBJECT_CLASS_BOOLEAN, /**< "Boolean" */
-    ECMA_OBJECT_CLASS_DATE, /**< "Date" */
-    ECMA_OBJECT_CLASS_ERROR, /**< "Error" */
-    ECMA_OBJECT_CLASS_JSON, /**< "JSON" */
-    ECMA_OBJECT_CLASS_MATH, /**< "Math" */
-    ECMA_OBJECT_CLASS_NUMBER, /**< "Number" */
-    ECMA_OBJECT_CLASS_REGEXP, /**< "RegExp" */
-    ECMA_OBJECT_CLASS_STRING /**< "String" */
+typedef enum
+{
+  ECMA_OBJECT_CLASS_OBJECT, /**< "Object" */
+  ECMA_OBJECT_CLASS_FUNCTION, /**< "Function" */
+  ECMA_OBJECT_CLASS_ARGUMENTS, /**< "Arguments" */
+  ECMA_OBJECT_CLASS_ARRAY, /**< "Array" */
+  ECMA_OBJECT_CLASS_BOOLEAN, /**< "Boolean" */
+  ECMA_OBJECT_CLASS_DATE, /**< "Date" */
+  ECMA_OBJECT_CLASS_ERROR, /**< "Error" */
+  ECMA_OBJECT_CLASS_JSON, /**< "JSON" */
+  ECMA_OBJECT_CLASS_MATH, /**< "Math" */
+  ECMA_OBJECT_CLASS_NUMBER, /**< "Number" */
+  ECMA_OBJECT_CLASS_REGEXP, /**< "RegExp" */
+  ECMA_OBJECT_CLASS_STRING /**< "String" */
 } ecma_object_class_t;
 
 /**
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
-typedef struct ecma_object_t {
-    /** Compressed pointer to property list */
-    unsigned int properties_p : ECMA_POINTER_FIELD_WIDTH;
+typedef struct ecma_object_t
+{
+  /** Compressed pointer to property list */
+  unsigned int properties_p : ECMA_POINTER_FIELD_WIDTH;
 
-    /** Flag indicating whether it is a general object (false)
-        or a lexical environment (true) */
-    unsigned int is_lexical_environment : 1;
+  /** Flag indicating whether it is a general object (false)
+       or a lexical environment (true) */
+  unsigned int is_lexical_environment : 1;
+
+  /**
+   * Attributes of either general object or lexical environment
+   * (depending on is_lexical_environment)
+   */
+  union
+  {
+    /**
+     * A general object's attributes (if !is_lexical_environment)
+     */
+    struct
+    {
+      /** Attribute 'Extensible' */
+      unsigned int extensible : 1;
+
+      /** Implementation internal object type (ecma_object_type_t) */
+      unsigned int type : 3;
+
+      /** Compressed pointer to prototype object (ecma_object_t) */
+      unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;
+    } __packed object;
 
     /**
-     * Attributes of either general object or lexical environment
-     * (depending on is_lexical_environment)
+     * A lexical environment's attribute (if is_lexical_environment)
      */
-    union {
-        /**
-         * A general object's attributes (if !is_lexical_environment)
-         */
-        struct {
-            /** Attribute 'Extensible' */
-            unsigned int extensible : 1;
+    struct
+    {
+      /**
+       * Type of lexical environment (ecma_lexical_environment_type_t).
+       */
+      unsigned int type : 1;
 
-            /** Implementation internal object type (ecma_object_type_t) */
-            unsigned int type : 3;
+      /** Compressed pointer to outer lexical environment */
+      unsigned int outer_reference_p : ECMA_POINTER_FIELD_WIDTH;
+    } __packed lexical_environment;
 
-            /** Compressed pointer to prototype object (ecma_object_t) */
-            unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;
-        } __packed object;
+  } __packed u;
 
-        /**
-         * A lexical environment's attribute (if is_lexical_environment)
-         */
-        struct {
-            /**
-             * Type of lexical environment (ecma_lexical_environment_type_t).
-             */
-            unsigned int type : 1;
+  /** GC's information */
+  ecma_gc_info_t gc_info;
 
-            /** Compressed pointer to outer lexical environment */
-            unsigned int outer_reference_p : ECMA_POINTER_FIELD_WIDTH;
-        } __packed lexical_environment;
-
-    } __packed u;
-
-    /** GC's information */
-    ecma_gc_info_t gc_info;
-
-    FIXME(Remove aligned attribute after packing the struct)
+  FIXME(Remove aligned attribute after packing the struct)
 } __packed __attribute__ ((aligned (16))) ecma_object_t;
 
 /**
@@ -451,34 +470,37 @@ typedef uint16_t ecma_length_t;
 /**
  * Description of an Array's header
  */
-typedef struct {
-    /** Compressed pointer to next chunk */
-    uint16_t next_chunk_p;
+typedef struct
+{
+  /** Compressed pointer to next chunk */
+  uint16_t next_chunk_p;
 
-    /** Number of elements in the Array */
-    ecma_length_t unit_number;
+  /** Number of elements in the Array */
+  ecma_length_t unit_number;
 } ecma_array_header_t;
 
 /**
  * Description of first chunk in a chain of chunks that contains an Array.
  */
-typedef struct {
-    /** Array's header */
-    ecma_array_header_t header;
+typedef struct
+{
+  /** Array's header */
+  ecma_array_header_t header;
 
-    /** Elements */
-    uint8_t data[ sizeof (uint64_t) - sizeof (ecma_array_header_t) ];
+  /** Elements */
+  uint8_t data[ sizeof (uint64_t) - sizeof (ecma_array_header_t) ];
 } ecma_array_first_chunk_t;
 
 /**
  * Description of non-first chunk in a chain of chunks that contains an Array
  */
-typedef struct {
-    /** Compressed pointer to next chunk */
-    uint16_t next_chunk_p;
+typedef struct
+{
+  /** Compressed pointer to next chunk */
+  uint16_t next_chunk_p;
 
-    /** Characters */
-    uint8_t data[ sizeof (uint64_t) - sizeof (uint16_t) ];
+  /** Characters */
+  uint8_t data[ sizeof (uint64_t) - sizeof (uint16_t) ];
 } ecma_array_non_first_chunk_t;
 
 /**

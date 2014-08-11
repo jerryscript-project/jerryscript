@@ -72,7 +72,7 @@ bool
 ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
 {
   return ((value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_FALSE)
-           || (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE));
+          || (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE));
 } /* ecma_is_value_boolean */
 
 /**
@@ -98,7 +98,11 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 ecma_value_t
 ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
 {
-  return (ecma_value_t) { .value_type = ECMA_TYPE_SIMPLE, .value = value };
+  return (ecma_value_t)
+  {
+    .value_type = ECMA_TYPE_SIMPLE,
+    .value = value
+  };
 } /* ecma_make_simple_value */
 
 /**
@@ -180,54 +184,60 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
   switch ((ecma_type_t)value.value_type)
   {
     case ECMA_TYPE_SIMPLE:
-      {
-        value_copy = value;
+    {
+      value_copy = value;
 
-        break;
-      }
+      break;
+    }
     case ECMA_TYPE_NUMBER:
+    {
+      ecma_number_t *num_p = ECMA_GET_POINTER(value.value);
+      JERRY_ASSERT(num_p != NULL);
+
+      ecma_number_t *number_copy_p = ecma_alloc_number ();
+      *number_copy_p = *num_p;
+
+      value_copy = (ecma_value_t)
       {
-        ecma_number_t *num_p = ECMA_GET_POINTER(value.value);
-        JERRY_ASSERT(num_p != NULL);
+        .value_type = ECMA_TYPE_NUMBER
+      };
+      ECMA_SET_NON_NULL_POINTER(value_copy.value, number_copy_p);
 
-        ecma_number_t *number_copy_p = ecma_alloc_number ();
-        *number_copy_p = *num_p;
-
-        value_copy = (ecma_value_t) { .value_type = ECMA_TYPE_NUMBER };
-        ECMA_SET_NON_NULL_POINTER(value_copy.value, number_copy_p);
-
-        break;
-      }
+      break;
+    }
     case ECMA_TYPE_STRING:
+    {
+      ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
+      JERRY_ASSERT(string_p != NULL);
+
+      ecma_array_first_chunk_t *string_copy_p = ecma_duplicate_ecma_string (string_p);
+
+      value_copy = (ecma_value_t)
       {
-        ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
-        JERRY_ASSERT(string_p != NULL);
+        .value_type = ECMA_TYPE_STRING
+      };
+      ECMA_SET_POINTER(value_copy.value, string_copy_p);
 
-        ecma_array_first_chunk_t *string_copy_p = ecma_duplicate_ecma_string (string_p);
-
-        value_copy = (ecma_value_t) { .value_type = ECMA_TYPE_STRING };
-        ECMA_SET_POINTER(value_copy.value, string_copy_p);
-
-        break;
-      }
+      break;
+    }
     case ECMA_TYPE_OBJECT:
+    {
+      ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
+      JERRY_ASSERT(obj_p != NULL);
+
+      if (do_ref_if_object)
       {
-        ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
-        JERRY_ASSERT(obj_p != NULL);
-
-        if (do_ref_if_object)
-          {
-            ecma_ref_object (obj_p);
-          }
-
-        value_copy = value;
-
-        break;
+        ecma_ref_object (obj_p);
       }
+
+      value_copy = value;
+
+      break;
+    }
     case ECMA_TYPE__COUNT:
-      {
-        JERRY_UNREACHABLE();
-      }
+    {
+      JERRY_UNREACHABLE();
+    }
   }
 
   return value_copy;
@@ -244,38 +254,38 @@ ecma_free_value (ecma_value_t value, /**< value description */
   switch ((ecma_type_t) value.value_type)
   {
     case ECMA_TYPE_SIMPLE:
-      {
-        /* doesn't hold additional memory */
-        break;
-      }
+    {
+      /* doesn't hold additional memory */
+      break;
+    }
 
     case ECMA_TYPE_NUMBER:
-      {
-        ecma_number_t *number_p = ECMA_GET_POINTER(value.value);
-        ecma_dealloc_number (number_p);
-        break;
-      }
+    {
+      ecma_number_t *number_p = ECMA_GET_POINTER(value.value);
+      ecma_dealloc_number (number_p);
+      break;
+    }
 
     case ECMA_TYPE_STRING:
-      {
-        ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
-        ecma_free_array (string_p);
-        break;
-      }
+    {
+      ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
+      ecma_free_array (string_p);
+      break;
+    }
 
     case ECMA_TYPE_OBJECT:
+    {
+      if (do_deref_if_object)
       {
-        if (do_deref_if_object)
-          {
-            ecma_deref_object (ECMA_GET_POINTER(value.value));
-          }
-        break;
+        ecma_deref_object (ECMA_GET_POINTER(value.value));
       }
+      break;
+    }
 
     case ECMA_TYPE__COUNT:
-      {
-        JERRY_UNREACHABLE();
-      }
+    {
+      JERRY_UNREACHABLE();
+    }
   }
 } /* ecma_free_value */
 
@@ -286,10 +296,15 @@ ecma_free_value (ecma_value_t value, /**< value description */
  */
 ecma_completion_value_t
 ecma_make_completion_value (ecma_completion_type_t type, /**< type */
-                         ecma_value_t value, /**< value */
-                         uint8_t target) /**< target */
+                            ecma_value_t value, /**< value */
+                            uint8_t target) /**< target */
 {
-  return (ecma_completion_value_t) { .type = type, .value = value, .target = target };
+  return (ecma_completion_value_t)
+  {
+    .type = type,
+    .value = value,
+    .target = target
+  };
 } /* ecma_make_completion_value */
 
 /**
@@ -301,9 +316,9 @@ ecma_completion_value_t
 ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple ecma-value */
 {
   JERRY_ASSERT(simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
-                || simple_value == ECMA_SIMPLE_VALUE_NULL
-                || simple_value == ECMA_SIMPLE_VALUE_FALSE
-                || simple_value == ECMA_SIMPLE_VALUE_TRUE);
+               || simple_value == ECMA_SIMPLE_VALUE_NULL
+               || simple_value == ECMA_SIMPLE_VALUE_FALSE
+               || simple_value == ECMA_SIMPLE_VALUE_TRUE);
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                      ecma_make_simple_value (simple_value),
@@ -323,8 +338,8 @@ ecma_make_throw_value (ecma_object_t *exception_p) /**< an object */
   ecma_value_t exception = ecma_make_object_value (exception_p);
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW,
-                                  exception,
-                                  ECMA_TARGET_ID_RESERVED);
+                                     exception,
+                                     ECMA_TARGET_ID_RESERVED);
 } /* ecma_make_throw_value */
 
 /**
@@ -360,18 +375,18 @@ void
 ecma_free_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
   switch (completion_value.type)
-    {
+  {
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
-      ecma_free_value (completion_value.value, true);
-      break;
+    ecma_free_value (completion_value.value, true);
+    break;
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
     case ECMA_COMPLETION_TYPE_EXIT:
-      JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
-      break;
-    }
+    JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
+    break;
+  }
 } /* ecma_free_completion_value */
 
 /**
@@ -411,8 +426,8 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
                                                                                      for equality with */
 {
   return (value.type == ECMA_COMPLETION_TYPE_NORMAL
-           && value.value.value_type == ECMA_TYPE_SIMPLE
-           && value.value.value == simple_value);
+          && value.value.value_type == ECMA_TYPE_SIMPLE
+          && value.value.value == simple_value);
 } /* ecma_is_completion_value_normal_simple_value */
 
 /**
@@ -452,7 +467,7 @@ bool
 ecma_is_empty_completion_value (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_is_completion_value_normal (value)
-           && ecma_is_value_empty (value.value));
+          && ecma_is_value_empty (value.value));
 } /* ecma_is_empty_completion_value */
 
 /**

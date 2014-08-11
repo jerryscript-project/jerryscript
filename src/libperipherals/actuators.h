@@ -14,18 +14,18 @@
  */
 
 #ifndef ACTUATORS_H
-#define	ACTUATORS_H
+#define ACTUATORS_H
 
 #include "globals.h"
 
-void led_toggle(uint32_t);
-void led_on(uint32_t);
-void led_off(uint32_t);
-void led_blink_once(uint32_t);
+void led_toggle (uint32_t);
+void led_on (uint32_t);
+void led_off (uint32_t);
+void led_blink_once (uint32_t);
 
 #ifdef __TARGET_MCU
-void initialize_leds(void);
+void initialize_leds (void);
 #endif
 
-#endif	/* ACTUATORS_H */
+#endif /* ACTUATORS_H */
 

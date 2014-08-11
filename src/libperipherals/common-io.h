@@ -14,32 +14,31 @@
  */
 
 #ifndef COMMON_IO_H
-#define	COMMON_IO_H
+#define COMMON_IO_H
 
 #include "globals.h"
 
-int digital_read(uint32_t, uint32_t);
-void digital_write(uint32_t, uint32_t);
+int digital_read (uint32_t, uint32_t);
+void digital_write (uint32_t, uint32_t);
 
-int analog_read(uint32_t, uint32_t);
-void analog_write(uint32_t, uint32_t);
-    
-void wait_ms(uint32_t);
+int analog_read (uint32_t, uint32_t);
+void analog_write (uint32_t, uint32_t);
 
+void wait_ms (uint32_t);
 
 #ifdef __TARGET_MCU
-void fake_exit(void);
+void fake_exit (void);
 
-void initialize_timer(void);
-void initialize_sys_tick(void);
-void SysTick_Handler(void);
+void initialize_timer (void);
+void initialize_sys_tick (void);
+void SysTick_Handler (void);
 
-void time_tick_decrement(void);
-void wait_1ms(void);
+void time_tick_decrement (void);
+void wait_1ms (void);
 
-void set_sys_tick_counter(uint32_t);
-uint32_t get_sys_tick_counter(void);
+void set_sys_tick_counter (uint32_t);
+uint32_t get_sys_tick_counter (void);
 #endif
 
-#endif	/* COMMON_IO_H */
+#endif /* COMMON_IO_H */
 

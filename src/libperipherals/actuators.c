@@ -35,7 +35,7 @@ led_toggle (uint32_t led_id)
 
 
 #ifdef __TARGET_MCU
-    GPIOD->ODR ^= (uint16_t) (1 << led_id);
+  GPIOD->ODR ^= (uint16_t) (1 << led_id);
 #endif
 }
 
@@ -48,7 +48,7 @@ led_on (uint32_t led_id)
 
 
 #ifdef __TARGET_MCU
-  GPIO_WriteBit(GPIOD, (uint16_t) (1 << led_id), Bit_SET);
+  GPIO_WriteBit (GPIOD, (uint16_t) (1 << led_id), Bit_SET);
 #endif
 }
 
@@ -60,7 +60,7 @@ led_off (uint32_t led_id)
 #endif
 
 #ifdef __TARGET_MCU
-  GPIO_WriteBit(GPIOD, (uint16_t) (1 << led_id), Bit_RESET);
+  GPIO_WriteBit (GPIOD, (uint16_t) (1 << led_id), Bit_RESET);
 #endif
 }
 
@@ -81,16 +81,20 @@ led_blink_once (uint32_t led_id)
 }
 
 #ifdef __TARGET_MCU
-void initialize_leds()
+
+void
+initialize_leds ()
 {
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+  RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOD, ENABLE);
 
-    GPIO_InitTypeDef gpioStructure;
-    gpioStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-    gpioStructure.GPIO_Mode = GPIO_Mode_OUT;
-    gpioStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_Init(GPIOD, &gpioStructure);
+  GPIO_InitTypeDef gpioStructure;
+  gpioStructure.GPIO_Pin = GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;
+  gpioStructure.GPIO_Mode = GPIO_Mode_OUT;
+  gpioStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_Init (GPIOD, &gpioStructure);
 
-    GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+  GPIO_WriteBit (GPIOD,
+                 GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;,
+                 Bit_RESET);
 }
 #endif

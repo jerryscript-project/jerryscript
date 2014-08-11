@@ -14,9 +14,8 @@
  */
 
 #ifndef SENSORS_H
-#define	SENSORS_H
+#define SENSORS_H
 
 #include "globals.h"
 
-#endif	/* SENSORS_H */
-
+#endif /* SENSORS_H */

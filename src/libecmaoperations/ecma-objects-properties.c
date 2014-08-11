@@ -581,12 +581,12 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   const bool is_current_data_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDDATA);
   const bool is_current_accessor_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  const ecma_property_enumerable_value_t current_enumerable =
-    is_current_data_descriptor ? current_p->u.named_data_property.enumerable
-    : current_p->u.named_accessor_property.enumerable;
-  const ecma_property_configurable_value_t current_configurable =
-    is_current_data_descriptor ? current_p->u.named_data_property.configurable
-    : current_p->u.named_accessor_property.configurable;
+  const ecma_property_enumerable_value_t current_enumerable = (is_current_data_descriptor ?
+                                                               current_p->u.named_data_property.enumerable
+                                                               : current_p->u.named_accessor_property.enumerable);
+  const ecma_property_configurable_value_t current_configurable = (is_current_data_descriptor ?
+                                                                   current_p->u.named_data_property.configurable
+                                                                   : current_p->u.named_accessor_property.configurable);
 
   JERRY_ASSERT(is_current_data_descriptor || is_current_accessor_descriptor);
 

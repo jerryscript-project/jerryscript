@@ -28,11 +28,11 @@
  * @return pointer to magic string contant
  */
 const ecma_char_t*
-ecma_get_magic_string( ecma_magic_string_id_t id) /**< magic string id */
+ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
-  TODO( Support UTF-16 );
+  TODO(Support UTF-16);
 
-  switch ( id )
+  switch (id)
     {
     case ECMA_MAGIC_STRING_ARGUMENTS:
       return (ecma_char_t*) "arguments";

@@ -40,33 +40,33 @@
  *         Returned value must be freed through ecma_free_reference.
  */
 ecma_reference_t
-ecma_op_get_identifier_reference(ecma_object_t *lex_env_p, /**< lexical environment */
+ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environment */
                                  const ecma_char_t *name_p, /**< identifier's name */
                                  bool is_strict) /**< strict reference flag */
 {
-  JERRY_ASSERT( lex_env_p != NULL );
+  JERRY_ASSERT(lex_env_p != NULL);
 
   ecma_object_t *lex_env_iter_p = lex_env_p;
 
-  while ( lex_env_iter_p != NULL )
+  while (lex_env_iter_p != NULL)
   {
     ecma_completion_value_t completion_value;
-    completion_value = ecma_op_has_binding( lex_env_iter_p, name_p);
+    completion_value = ecma_op_has_binding (lex_env_iter_p, name_p);
 
-    if ( ecma_is_completion_value_normal_true( completion_value) )
+    if (ecma_is_completion_value_normal_true (completion_value))
     {
-      return ecma_make_reference( ecma_make_object_value( lex_env_iter_p),
+      return ecma_make_reference (ecma_make_object_value (lex_env_iter_p),
                                  name_p,
                                  is_strict);
     } else
     {
-      JERRY_ASSERT( ecma_is_completion_value_normal_false( completion_value) );
+      JERRY_ASSERT(ecma_is_completion_value_normal_false (completion_value));
     }
 
-    lex_env_iter_p = ECMA_GET_POINTER( lex_env_iter_p->u.lexical_environment.outer_reference_p);
+    lex_env_iter_p = ECMA_GET_POINTER(lex_env_iter_p->u.lexical_environment.outer_reference_p);
   }
 
-  return ecma_make_reference( ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED),
+  return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                              name_p,
                              is_strict);
 } /* ecma_op_get_identifier_reference */
@@ -82,11 +82,11 @@ ecma_op_get_identifier_reference(ecma_object_t *lex_env_p, /**< lexical environm
  *         Returned value must be freed through ecma_free_reference.
  */
 ecma_reference_t
-ecma_make_reference(ecma_value_t base, /**< base value */
+ecma_make_reference (ecma_value_t base, /**< base value */
                     const ecma_char_t *name_p, /**< referenced name */
                     bool is_strict) /**< strict reference flag */
 {
-  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value( base, true),
+  ecma_reference_t ref = (ecma_reference_t) { .base = ecma_copy_value (base, true),
                                               .referenced_name_p = name_p,
                                               .is_strict = is_strict };
 
@@ -100,9 +100,9 @@ ecma_make_reference(ecma_value_t base, /**< base value */
  *         freeing invalidates all copies of the reference.
  */
 void
-ecma_free_reference( const ecma_reference_t ref) /**< reference */
+ecma_free_reference (const ecma_reference_t ref) /**< reference */
 {
-  ecma_free_value( ref.base, true);
+  ecma_free_value (ref.base, true);
 } /* ecma_free_reference */
 
 /**

@@ -29,13 +29,13 @@
  */
 #define ECMA_TRY_CATCH(var, op, return_value) \
   ecma_completion_value_t var = op; \
-  if ( unlikely( ecma_is_completion_value_throw( var) ) ) \
+  if (unlikely (ecma_is_completion_value_throw (var))) \
   { \
-    return_value = ecma_copy_completion_value( var); \
+    return_value = ecma_copy_completion_value (var); \
   } \
   else \
   { \
-    JERRY_ASSERT( ecma_is_completion_value_normal( var) )
+    JERRY_ASSERT(ecma_is_completion_value_normal (var))
 
 /**
  * The macro marks end of code block that is executed if no exception
@@ -47,6 +47,6 @@
  *      argument as corresponding ECMA_TRY_CATCH's first argument.
  */
 #define ECMA_FINALIZE(var) } \
-  ecma_free_completion_value( var)
+  ecma_free_completion_value (var)
 
 #endif /* !ECMA_TRY_CATCH_MACRO_H */

@@ -43,7 +43,7 @@ typedef enum
   ECMA_ERROR_URI /**< URIError */
 } ecma_standard_error_t;
 
-extern ecma_object_t *ecma_new_standard_error( ecma_standard_error_t error_type);
+extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
 
 /**
  * @}

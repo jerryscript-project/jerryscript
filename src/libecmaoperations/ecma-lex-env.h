@@ -29,18 +29,18 @@
  */
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
-extern ecma_completion_value_t ecma_op_has_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p);
-extern ecma_completion_value_t ecma_op_create_mutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_deletable);
-extern ecma_completion_value_t ecma_op_set_mutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p, ecma_value_t value, bool is_strict);
-extern ecma_completion_value_t ecma_op_get_binding_value( ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_strict);
-extern ecma_completion_value_t ecma_op_delete_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p);
-extern ecma_completion_value_t ecma_op_implicit_this_value( ecma_object_t *lex_env_p);
+extern ecma_completion_value_t ecma_op_has_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p);
+extern ecma_completion_value_t ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_deletable);
+extern ecma_completion_value_t ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p, ecma_value_t value, bool is_strict);
+extern ecma_completion_value_t ecma_op_get_binding_value (ecma_object_t *lex_env_p, const ecma_char_t *name_p, bool is_strict);
+extern ecma_completion_value_t ecma_op_delete_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p);
+extern ecma_completion_value_t ecma_op_implicit_this_value (ecma_object_t *lex_env_p);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern void ecma_op_create_immutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p);
-extern void ecma_op_initialize_immutable_binding( ecma_object_t *lex_env_p, const ecma_char_t *name_p, ecma_value_t value);
+extern void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p);
+extern void ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, const ecma_char_t *name_p, ecma_value_t value);
 
-extern ecma_object_t* ecma_op_create_global_environment( void);
+extern ecma_object_t* ecma_op_create_global_environment (void);
 
 /**
  * @}

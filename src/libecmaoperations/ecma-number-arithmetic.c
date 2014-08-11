@@ -34,10 +34,10 @@
  * @return number - result of addition.
  */
 ecma_number_t
-ecma_op_number_add(ecma_number_t left_num, /**< left operand */
+ecma_op_number_add (ecma_number_t left_num, /**< left operand */
                    ecma_number_t right_num) /**< right operand */
 {
-  TODO( Implement according to ECMA );
+  TODO(Implement according to ECMA);
 
   return left_num + right_num;
 } /* ecma_op_number_add */
@@ -51,10 +51,10 @@ ecma_op_number_add(ecma_number_t left_num, /**< left operand */
  * @return number - result of substraction.
  */
 ecma_number_t
-ecma_op_number_substract(ecma_number_t left_num, /**< left operand */
+ecma_op_number_substract (ecma_number_t left_num, /**< left operand */
                          ecma_number_t right_num) /**< right operand */
 {
-  return ecma_op_number_add( left_num, ecma_op_number_negate( right_num));
+  return ecma_op_number_add (left_num, ecma_op_number_negate (right_num));
 } /* ecma_op_number_substract */
 
 /**
@@ -66,10 +66,10 @@ ecma_op_number_substract(ecma_number_t left_num, /**< left operand */
  * @return number - result of multiplication.
  */
 ecma_number_t
-ecma_op_number_multiply(ecma_number_t left_num, /**< left operand */
+ecma_op_number_multiply (ecma_number_t left_num, /**< left operand */
                         ecma_number_t right_num) /**< right operand */
 {
-  TODO( Implement according to ECMA );
+  TODO(Implement according to ECMA);
 
   return left_num * right_num;
 } /* ecma_op_number_multiply */
@@ -83,10 +83,10 @@ ecma_op_number_multiply(ecma_number_t left_num, /**< left operand */
  * @return number - result of division.
  */
 ecma_number_t
-ecma_op_number_divide(ecma_number_t left_num, /**< left operand */
+ecma_op_number_divide (ecma_number_t left_num, /**< left operand */
                       ecma_number_t right_num) /**< right operand */
 {
-  TODO( Implement according to ECMA );
+  TODO(Implement according to ECMA);
 
   return left_num / right_num;
 } /* ecma_op_number_divide */
@@ -100,14 +100,14 @@ ecma_op_number_divide(ecma_number_t left_num, /**< left operand */
  * @return number - calculated remainder.
  */
 ecma_number_t
-ecma_op_number_remainder(ecma_number_t left_num, /**< left operand */
+ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                          ecma_number_t right_num) /**< right operand */
 {
-  TODO( Implement according to ECMA );
+  TODO(Implement according to ECMA);
 
   ecma_number_t n = left_num, d = right_num;
 
-  return ( n - d * (ecma_number_t)( (int32_t)( n / d ) ) );
+  return (n - d * (ecma_number_t)((int32_t)(n / d)));
 } /* ecma_op_number_remainder */
 
 /**
@@ -119,9 +119,9 @@ ecma_op_number_remainder(ecma_number_t left_num, /**< left operand */
  * @return number - result of negation.
  */
 ecma_number_t
-ecma_op_number_negate(ecma_number_t num) /**< operand */
+ecma_op_number_negate (ecma_number_t num) /**< operand */
 {
-  TODO( Implement according to ECMA );
+  TODO(Implement according to ECMA);
 
   return -num;
 } /* ecma_op_number_negate */

@@ -22,7 +22,7 @@
  * ECMA object model finalization routine
  */
 void
-ecma_finalize(void)
+ecma_finalize (void)
 {
-  ecma_finalize_global_object();
+  ecma_finalize_global_object ();
 } /* ecma_finalize */

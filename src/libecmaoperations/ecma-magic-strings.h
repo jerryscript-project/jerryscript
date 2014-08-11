@@ -38,7 +38,7 @@ typedef enum
   ECMA_MAGIC_STRING_UNDEFINED /**< undefined */
 } ecma_magic_string_id_t;
 
-extern const ecma_char_t* ecma_get_magic_string( ecma_magic_string_id_t id);
+extern const ecma_char_t* ecma_get_magic_string (ecma_magic_string_id_t id);
 
 /**
  * @}

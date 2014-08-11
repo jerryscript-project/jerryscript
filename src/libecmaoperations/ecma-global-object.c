@@ -39,11 +39,11 @@ static ecma_object_t* ecma_global_object_p = NULL;
  *         caller should free the reference by calling ecma_deref_object
  */
 ecma_object_t*
-ecma_get_global_object( void)
+ecma_get_global_object (void)
 {
-  JERRY_ASSERT( ecma_global_object_p != NULL );
+  JERRY_ASSERT(ecma_global_object_p != NULL);
 
-  ecma_ref_object( ecma_global_object_p);
+  ecma_ref_object (ecma_global_object_p);
 
   return ecma_global_object_p;
 } /* ecma_get_global_object */
@@ -56,22 +56,22 @@ ecma_get_global_object( void)
  * @return pointer to the constructed object
  */
 ecma_object_t*
-ecma_op_create_global_object( void)
+ecma_op_create_global_object (void)
 {
-  JERRY_ASSERT( ecma_global_object_p == NULL );
+  JERRY_ASSERT(ecma_global_object_p == NULL);
 
-  ecma_object_t *glob_obj_p = ecma_create_object( NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *glob_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
-  ecma_property_t *undefined_prop_p = ecma_create_named_data_property( glob_obj_p,
-                                                                       ecma_get_magic_string( ECMA_MAGIC_STRING_UNDEFINED),
+  ecma_property_t *undefined_prop_p = ecma_create_named_data_property (glob_obj_p,
+                                                                       ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED),
                                                                        ECMA_PROPERTY_NOT_WRITABLE,
                                                                        ECMA_PROPERTY_NOT_ENUMERABLE,
                                                                        ECMA_PROPERTY_NOT_CONFIGURABLE);
-  JERRY_ASSERT( ecma_is_value_undefined( undefined_prop_p->u.named_data_property.value) );
+  JERRY_ASSERT(ecma_is_value_undefined (undefined_prop_p->u.named_data_property.value));
 
-  TODO( /* Define NaN, Infinity, eval, parseInt, parseFloat, isNaN, isFinite properties */ );
+  TODO(/* Define NaN, Infinity, eval, parseInt, parseFloat, isNaN, isFinite properties */);
 
-  ecma_ref_object( glob_obj_p);
+  ecma_ref_object (glob_obj_p);
   ecma_global_object_p = glob_obj_p;
 
   return glob_obj_p;
@@ -84,9 +84,9 @@ ecma_op_create_global_object( void)
  *         the routine should be called only from ecma_finalize
  */
 void
-ecma_finalize_global_object(void)
+ecma_finalize_global_object (void)
 {
-  ecma_deref_object( ecma_global_object_p);
+  ecma_deref_object (ecma_global_object_p);
   ecma_global_object_p = NULL;
 } /* ecma_free_global_object */
 

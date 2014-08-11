@@ -14,41 +14,42 @@
  */
 
 #ifndef OPCODE_STRUCTURES_H
-#define	OPCODE_STRUCTURES_H
+#define OPCODE_STRUCTURES_H
 
-// Jerry bytecode ver:07/04/2014 
-#define OP_DEF(name, list) struct __op_##name { list ;  } ;
+#define OP_DEF(name, list) struct __op_##name { list ; } ;
 
 
 #define OP_CODE_DECL_VOID(name) \
         struct __op_##name { T_IDX __do_not_use; }; \
-        OPCODE getop_##name ( void );
+        OPCODE getop_##name (void);
 
-#define OP_CODE_DECL(name, type, ... ) \
-        OP_DEF (name, type##_DECL( __VA_ARGS__ ) ) \
-        OPCODE getop_##name ( type );
+#define OP_CODE_DECL(name, type, ...) \
+        OP_DEF (name, type##_DECL(__VA_ARGS__)) \
+        OPCODE getop_##name (type);
 
 #define T_IDX_IDX T_IDX, T_IDX
 #define T_IDX_IDX_IDX T_IDX, T_IDX, T_IDX
 
 #define T_IDX_DECL(name) T_IDX name
 #define T_IDX_IDX_DECL(name1, name2) \
-        T_IDX_DECL( name1 ) ; \
-        T_IDX_DECL( name2 )
+        T_IDX_DECL (name1) ; \
+        T_IDX_DECL (name2)
 #define T_IDX_IDX_IDX_DECL(name1, name2, name3) \
-        T_IDX_DECL( name1 ) ; \
-        T_IDX_DECL( name2 ); \
-        T_IDX_DECL( name3 )
+        T_IDX_DECL (name1) ; \
+        T_IDX_DECL (name2); \
+        T_IDX_DECL (name3)
 
 #define GETOP_IMPL_0(name) \
-        OPCODE getop_##name () { \
+        OPCODE getop_##name () \
+        { \
           OPCODE opdata; \
           opdata.op_idx = __op__idx_##name; \
           return opdata; \
         }
 
 #define GETOP_IMPL_1(name, field1) \
-        OPCODE getop_##name (T_IDX arg1) { \
+        OPCODE getop_##name (T_IDX arg1) \
+        { \
           OPCODE opdata; \
           opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
@@ -56,7 +57,8 @@
         }
 
 #define GETOP_IMPL_2(name, field1, field2) \
-        OPCODE getop_##name (T_IDX arg1, T_IDX arg2) { \
+        OPCODE getop_##name (T_IDX arg1, T_IDX arg2) \
+        { \
           OPCODE opdata; \
           opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
@@ -65,7 +67,8 @@
         }
 
 #define GETOP_IMPL_3(name, field1, field2, field3) \
-        OPCODE getop_##name (T_IDX arg1, T_IDX arg2, T_IDX arg3) { \
+        OPCODE getop_##name (T_IDX arg1, T_IDX arg2, T_IDX arg3) \
+        { \
           OPCODE opdata; \
           opdata.op_idx = __op__idx_##name; \
           opdata.data.name.field1 = arg1; \
@@ -287,73 +290,73 @@ OP_CODE_DECL (assignment, T_IDX_IDX_IDX,
 
 // Functions calls, declarations and argument handling
 
-/** a = name(); */
+/** a = name (); */
 OP_CODE_DECL (call_0, T_IDX_IDX,
               lhs,
               name_lit_idx)
 
-/** a = name(arg1); */
+/** a = name (arg1); */
 OP_CODE_DECL (call_1, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** a = name(arg1, ... */
+/** a = name (arg1, ... */
 OP_CODE_DECL (call_n, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** a = new name(); */
+/** a = new name (); */
 OP_CODE_DECL (construct_0, T_IDX_IDX,
               lhs,
               name_lit_idx)
 
-/** a = new name(arg1); */
+/** a = new name (arg1); */
 OP_CODE_DECL (construct_1, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** a = new name(arg1, ... */
+/** a = new name (arg1, ... */
 OP_CODE_DECL (construct_n, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** name(); */
+/** name (); */
 OP_CODE_DECL (func_decl_0, T_IDX,
               name_lit_idx)
 
-/** name(arg1); */
+/** name (arg1); */
 OP_CODE_DECL (func_decl_1, T_IDX_IDX,
               name_lit_idx,
               arg1_lit_idx)
 
-/** name(arg1, arg2); */
+/** name (arg1, arg2); */
 OP_CODE_DECL (func_decl_2, T_IDX_IDX_IDX,
               name_lit_idx,
               arg1_lit_idx,
               arg2_lit_idx)
 
-/** name(arg1, arg2, ... */
+/** name (arg1, arg2, ... */
 OP_CODE_DECL (func_decl_n, T_IDX_IDX_IDX,
               name_lit_idx,
               arg1_lit_idx,
               arg2_lit_idx)
 
-/** a = name(); */
+/** a = name (); */
 OP_CODE_DECL (func_expr_0, T_IDX_IDX,
               lhs,
               name_lit_idx)
 
-/** a = name(arg1); */
+/** a = name (arg1); */
 OP_CODE_DECL (func_expr_1, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
               arg1_lit_idx)
 
-/** a = name(arg1,  ... */
+/** a = name (arg1,  ... */
 OP_CODE_DECL (func_expr_n, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
@@ -484,7 +487,6 @@ OP_CODE_DECL (var_decl, T_IDX,
 OP_CODE_DECL (reg_var_decl, T_IDX_IDX,
               min,
               max)
-        
 
-#endif	/* OPCODE_STRUCTURES_H */
-        
+
+#endif /* OPCODE_STRUCTURES_H */

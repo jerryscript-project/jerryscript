@@ -14,7 +14,7 @@
  */
 
 #ifndef OPCODES_H
-#define	OPCODES_H
+#define OPCODES_H
 
 #include "ecma-globals.h"
 #include "globals.h"
@@ -24,7 +24,7 @@ struct __int_data;
 
 #define OP_STRUCT_FIELD(name) struct __op_##name name;
 #define OP_ENUM_FIELD(name) __op__idx_##name ,
-#define OP_FUNC_DECL(name) ecma_completion_value_t opfunc_##name  (OPCODE, struct __int_data *);
+#define OP_FUNC_DECL(name) ecma_completion_value_t opfunc_##name (OPCODE, struct __int_data *);
 
 /** A single bytecode instruction is 32bit wide and has an 8bit opcode field
  and several operand of 8 of 16 bit.*/
@@ -33,9 +33,10 @@ struct __int_data;
 #define T_IDX uint8_t /** index values */
 
 OPCODE;
-typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
+typedef
+ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
 
-#define OP_CALLS_AND_ARGS(op)           \
+#define OP_CALLS_AND_ARGS(op)            \
     op (call_0)                          \
     op (call_1)                          \
     op (call_n)                          \
@@ -57,7 +58,7 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op (retval)                          \
     op (ret)
 
-#define OP_INITS(op)                    \
+#define OP_INITS(op)                     \
     op (array_0)                         \
     op (array_1)                         \
     op (array_2)                         \
@@ -74,34 +75,34 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op (delete)                          \
     op (typeof)                          \
     op (with)                            \
-    op (end_with)                        
+    op (end_with)
 
-#define OP_ASSIGNMENTS(op)              \
+#define OP_ASSIGNMENTS(op)               \
     op (assignment)
 
-#define OP_B_SHIFTS(op)                 \
+#define OP_B_SHIFTS(op)                  \
     op (b_shift_left)                    \
     op (b_shift_right)                   \
     op (b_shift_uright)
 
-#define OP_B_BITWISE(op)                \
+#define OP_B_BITWISE(op)                 \
     op (b_and)                           \
     op (b_or)                            \
     op (b_xor)                           \
     op (b_not)
 
-#define OP_B_LOGICAL(op)                \
+#define OP_B_LOGICAL(op)                 \
     op (logical_and)                     \
     op (logical_or)                      \
     op (logical_not)
 
-#define OP_EQUALITY(op)                 \
+#define OP_EQUALITY(op)                  \
     op (equal_value)                     \
     op (not_equal_value)                 \
     op (equal_value_type)                \
-    op (not_equal_value_type)            
+    op (not_equal_value_type)
 
-#define OP_RELATIONAL(op)               \
+#define OP_RELATIONAL(op)                \
     op (less_than)                       \
     op (greater_than)                    \
     op (less_or_equal_than)              \
@@ -109,7 +110,7 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op (instanceof)                      \
     op (in)
 
-#define OP_ARITHMETIC(op)               \
+#define OP_ARITHMETIC(op)                \
     op (post_incr)                       \
     op (post_decr)                       \
     op (pre_incr)                        \
@@ -120,17 +121,17 @@ typedef ecma_completion_value_t (*opfunc)(OPCODE, struct __int_data *);
     op (multiplication)                  \
     op (remainder)
 
-#define OP_UNCONDITIONAL_JUMPS(op)      \
+#define OP_UNCONDITIONAL_JUMPS(op)       \
     op (jmp)                             \
     op (jmp_up)                          \
     op (jmp_down)                        \
     op (nop)
 
-#define OP_UNARY_OPS(op)                \
+#define OP_UNARY_OPS(op)                 \
     op (is_true_jmp)                     \
     op (is_false_jmp)
 
-#define OP_LIST(op)                     \
+#define OP_LIST(op)                      \
   OP_CALLS_AND_ARGS (op)                 \
   OP_INITS (op)                          \
   OP_ASSIGNMENTS (op)                    \
@@ -180,5 +181,4 @@ typedef enum
   OPCODE_ARG_TYPE_VARIABLE /**< index of variable name */
 } opcode_arg_type_operand;
 
-#endif	/* OPCODES_H */
-
+#endif /* OPCODES_H */

@@ -12,24 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var i = 0;
-for (; i < 100; i++) {}
-assertEquals (i, 100);
+var b = 5;
 
-for (var j = 0; j < 100; j++) {}
-assertEquals (i, 100);
-
-for (i = 0;;) {
-	if (i == 100) {
-		break;
-		assertUnreachable ();
-	}
-	i++;
-}
-assertEquals (i, 100);
-
-for (i = 0; i < 10; i++) {
-	for (j = 0; j < 10; j++) {}
-}
-assertEquals (i, 100);
-assertEquals (j, 100);
+assert((b += 10) == 15);
+assert((b -= 3) == 12);
+assert((b *= 10) == 120);
+assert((b /= 10) == 12);
+assert((b %= 10) == 2);

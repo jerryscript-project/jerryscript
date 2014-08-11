@@ -12,20 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert((1 + 2) == 3);
-assert((2 + 1) == 3);
-assert((2 + 1) != 4);
+var a = 21;
+var b = 10;
+var c;
 
-assert((7 + 7) == 14);
-assert((7 - 7) == 0);
-assert((7 * 7) == 49);
-assert((7 / 7) == 1);
-assert((7 + 7) == 14);
-assert((7 % 7) == 0);
+c = a + b;
+assert(c == 31);
 
-var number = 81;
-assert((number + 9) == 90);
-assert((number - 9) == 72);
-assert((number * 10) == 810);
-assert((number / 9) == 9);
-assert((number % 79) == 2);
+c = a - b;
+assert(c == 11);
+
+c = a * b;
+assert(c == 210);
+
+c = a / b;
+assert(c == 2.1);
+
+c = a % b;
+assert(c == 1);
+
+c = a++;
+assert(c == 21);
+
+c = a--;
+assert(c == 22);

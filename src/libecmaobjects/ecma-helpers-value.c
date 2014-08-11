@@ -98,11 +98,13 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 ecma_value_t
 ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
 {
-  return (ecma_value_t)
+  ecma_value_t ret_value = (ecma_value_t)
   {
     .value_type = ECMA_TYPE_SIMPLE,
     .value = value
   };
+
+  return ret_value;
 } /* ecma_make_simple_value */
 
 /**
@@ -299,12 +301,14 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
                             ecma_value_t value, /**< value */
                             uint8_t target) /**< target */
 {
-  return (ecma_completion_value_t)
+  ecma_completion_value_t ret_value = (ecma_completion_value_t)
   {
     .type = type,
     .value = value,
     .target = target
   };
+
+  return ret_value;
 } /* ecma_make_completion_value */
 
 /**

@@ -45,7 +45,7 @@ size_t mem_free_chunks_number;
 
 #ifdef MEM_STATS
 /**
-* Pools' memory usage statistics
+ * Pools' memory usage statistics
  */
 mem_pools_stats_t mem_pools_stats;
 
@@ -93,61 +93,68 @@ mem_pools_finalize (void)
 uint8_t*
 mem_pools_alloc (void)
 {
+  /**
+   * If there are no free chunks, allocate new pool.
+   */
+  if (mem_free_chunks_number == 0)
+  {
     /**
-     * If there are no free chunks, allocate new pool.
-     */
-    if (mem_free_chunks_number == 0)
-    {
-        /**
-         * Space, at least for header and eight chunks.
-         *
-         * TODO: Config.
-         */
-        size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE);
-
-        mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (pool_size, MEM_HEAP_ALLOC_LONG_TERM);
-
-        if (pool_state == NULL)
-        {
-            /**
-             * Not enough space for new pool.
-             */
-            return NULL;
-        }
-
-        mem_pool_init (pool_state, pool_size);
-
-        pool_state->next_pool_cp = (mem_pools == NULL) ? MEM_COMPRESSED_POINTER_NULL
-                                                         : (uint16_t) mem_compress_pointer (mem_pools);
-        mem_pools = pool_state;
-
-        mem_free_chunks_number += pool_state->chunks_number;
-
-        mem_pools_stat_alloc_pool ();
-    }
-
-    /**
-     * Now there is definitely at least one pool of specified type with at least one free chunk.
+     * Space, at least for header and eight chunks.
      *
-     * Search for the pool.
+     * TODO: Config.
      */
-    mem_pool_state_t *pool_state = mem_pools;
+    size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE);
 
-    while (pool_state->first_free_chunk == pool_state->chunks_number)
+    mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (pool_size, MEM_HEAP_ALLOC_LONG_TERM);
+
+    if (pool_state == NULL)
     {
-        pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
-
-        JERRY_ASSERT(pool_state != NULL);
+      /**
+       * Not enough space for new pool.
+       */
+      return NULL;
     }
 
-    /**
-     * And allocate chunk within it.
-     */
-    mem_free_chunks_number--;
+    mem_pool_init (pool_state, pool_size);
 
-    mem_pools_stat_alloc_chunk ();
+    if (mem_pools == NULL)
+    {
+      pool_state->next_pool_cp = MEM_COMPRESSED_POINTER_NULL;
+    }
+    else
+    {
+      pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+    }
 
-    return mem_pool_alloc_chunk (pool_state);
+    mem_pools = pool_state;
+
+    mem_free_chunks_number += pool_state->chunks_number;
+
+    mem_pools_stat_alloc_pool ();
+  }
+
+  /**
+   * Now there is definitely at least one pool of specified type with at least one free chunk.
+   *
+   * Search for the pool.
+   */
+  mem_pool_state_t *pool_state = mem_pools;
+
+  while (pool_state->first_free_chunk == pool_state->chunks_number)
+  {
+    pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+
+    JERRY_ASSERT(pool_state != NULL);
+  }
+
+  /**
+   * And allocate chunk within it.
+   */
+  mem_free_chunks_number--;
+
+  mem_pools_stat_alloc_chunk ();
+
+  return mem_pool_alloc_chunk (pool_state);
 } /* mem_pools_alloc */
 
 /**
@@ -156,53 +163,53 @@ mem_pools_alloc (void)
 void
 mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 {
-    mem_pool_state_t *pool_state = mem_pools, *prev_pool_state = NULL;
+  mem_pool_state_t *pool_state = mem_pools, *prev_pool_state = NULL;
 
-    /**
-     * Search for the pool containing specified chunk.
-     */
-    while (!(chunk_p >= MEM_POOL_SPACE_START(pool_state)
-               && chunk_p <= MEM_POOL_SPACE_START(pool_state) + pool_state->chunks_number * MEM_POOL_CHUNK_SIZE))
+  /**
+   * Search for the pool containing specified chunk.
+   */
+  while (!(chunk_p >= MEM_POOL_SPACE_START(pool_state)
+           && chunk_p <= MEM_POOL_SPACE_START(pool_state) + pool_state->chunks_number * MEM_POOL_CHUNK_SIZE))
+  {
+    prev_pool_state = pool_state;
+    pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+
+    JERRY_ASSERT(pool_state != NULL);
+  }
+
+  /**
+   * Free the chunk
+   */
+  mem_pool_free_chunk (pool_state, chunk_p);
+  mem_free_chunks_number++;
+
+  mem_pools_stat_free_chunk ();
+
+  /**
+   * If all chunks of the pool are free, free the pool itself.
+   */
+  if (pool_state->free_chunks_number == pool_state->chunks_number)
+  {
+    if (prev_pool_state != NULL)
     {
-        prev_pool_state = pool_state;
-        pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
-
-        JERRY_ASSERT(pool_state != NULL);
+      prev_pool_state->next_pool_cp = pool_state->next_pool_cp;
+    } else
+    {
+      if (pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL)
+      {
+        mem_pools = NULL;
+      }
+      else
+      {
+        mem_pools = mem_decompress_pointer (pool_state->next_pool_cp);
+      }
     }
 
-    /**
-     * Free the chunk
-     */
-    mem_pool_free_chunk (pool_state, chunk_p);
-    mem_free_chunks_number++;
+    mem_free_chunks_number -= pool_state->chunks_number;
 
-    mem_pools_stat_free_chunk ();
+    mem_heap_free_block ((uint8_t*)pool_state);
 
-    /**
-     * If all chunks of the pool are free, free the pool itself.
-     */
-    if (pool_state->free_chunks_number == pool_state->chunks_number)
-    {
-        if (prev_pool_state != NULL)
-        {
-            prev_pool_state->next_pool_cp = pool_state->next_pool_cp;
-        } else
-        {
-            if (pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL)
-              {
-                mem_pools = NULL;
-              }
-            else
-              {
-                mem_pools = mem_decompress_pointer (pool_state->next_pool_cp);
-              }
-        }
-
-        mem_free_chunks_number -= pool_state->chunks_number;
-
-        mem_heap_free_block ((uint8_t*)pool_state);
-
-        mem_pools_stat_free_pool ();
+    mem_pools_stat_free_pool ();
   }
 } /* mem_pools_free */
 

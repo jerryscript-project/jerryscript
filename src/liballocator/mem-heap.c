@@ -87,10 +87,10 @@ typedef enum
 typedef struct mem_block_header_t
 {
   mem_magic_num_of_block_t magic_num; /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
-                                        and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
+                                           and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
   struct mem_block_header_t *neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks */
-  size_t allocated_bytes;                                      /**< allocated area size - for allocated blocks;
-                                                                    0 - for free blocks */
+  size_t allocated_bytes;                                       /**< allocated area size - for allocated blocks;
+                                                                     0 - for free blocks */
 } mem_block_header_t;
 
 /**
@@ -108,8 +108,8 @@ JERRY_STATIC_ASSERT(MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0);
  */
 typedef struct
 {
-  uint8_t* heap_start;             /**< first address of heap space */
-  size_t heap_size;                /**< heap space size */
+  uint8_t* heap_start; /**< first address of heap space */
+  size_t heap_size; /**< heap space size */
   mem_block_header_t* first_block_p; /**< first block of the heap */
   mem_block_header_t* last_block_p;  /**< last block of the heap */
 } mem_heap_state_t;
@@ -124,10 +124,10 @@ static size_t mem_get_block_data_space_size (const mem_block_header_t *block_hea
 static size_t mem_get_block_chunks_count_from_data_size (size_t block_allocated_size);
 
 static void mem_init_block_header (uint8_t *first_chunk_p,
-                                size_t size_in_chunks,
-                                mem_block_state_t block_state,
-                                mem_block_header_t *prev_block_p,
-                                mem_block_header_t *next_block_p);
+                                   size_t size_in_chunks,
+                                   mem_block_state_t block_state,
+                                   mem_block_header_t *prev_block_p,
+                                   mem_block_header_t *next_block_p);
 static void mem_check_heap (void);
 
 #ifdef MEM_STATS
@@ -203,7 +203,7 @@ mem_get_block_chunks_count_from_data_size (size_t block_allocated_size) /**< siz
  */
 void
 mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
-              size_t heap_size)    /**< heap space size */
+               size_t heap_size)    /**< heap space size */
 {
   JERRY_ASSERT(heap_start != NULL);
   JERRY_ASSERT(heap_size != 0);
@@ -217,10 +217,10 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
   VALGRIND_NOACCESS_SPACE(heap_start, heap_size);
 
   mem_init_block_header (mem_heap.heap_start,
-                      0,
-                      MEM_BLOCK_FREE,
-                      NULL,
-                      NULL);
+                         0,
+                         MEM_BLOCK_FREE,
+                         NULL,
+                         NULL);
 
   mem_heap.first_block_p = (mem_block_header_t*) mem_heap.heap_start;
   mem_heap.last_block_p = mem_heap.first_block_p;
@@ -249,10 +249,10 @@ mem_heap_finalize (void)
  */
 static void
 mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first chunk to use for the block */
-                    size_t allocated_bytes,        /**< size of block's allocated area */
-                    mem_block_state_t block_state,   /**< state of the block (allocated or free) */
-                    mem_block_header_t *prev_block_p, /**< previous block */
-                    mem_block_header_t *next_block_p) /**< next block */
+                       size_t allocated_bytes,        /**< size of block's allocated area */
+                       mem_block_state_t block_state,   /**< state of the block (allocated or free) */
+                       mem_block_header_t *prev_block_p, /**< previous block */
+                       mem_block_header_t *next_block_p) /**< next block */
 {
   mem_block_header_t *block_header_p = (mem_block_header_t*) first_chunk_p;
 
@@ -292,7 +292,7 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
  */
 uint8_t*
 mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to allocate in bytes */
-                   mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   mem_block_header_t *block_p;
   mem_direction_t direction;
@@ -353,34 +353,34 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
     uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
     mem_init_block_header (new_free_block_first_chunk_p,
-                          0,
-                          MEM_BLOCK_FREE,
-                          block_p /* there we will place new allocated block */,
-                          next_block_p);
+                           0,
+                           MEM_BLOCK_FREE,
+                           block_p /* there we will place new allocated block */,
+                           next_block_p);
 
     mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
 
     if (next_block_p == NULL)
-      {
-        mem_heap.last_block_p = new_free_block_p;
-      }
+    {
+      mem_heap.last_block_p = new_free_block_p;
+    }
     else
-      {
-        VALGRIND_DEFINED_STRUCT(next_block_p);
+    {
+      VALGRIND_DEFINED_STRUCT(next_block_p);
 
-        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = (mem_block_header_t*) new_free_block_first_chunk_p;
+      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = (mem_block_header_t*) new_free_block_first_chunk_p;
 
-        VALGRIND_NOACCESS_STRUCT(next_block_p);
-      }
+      VALGRIND_NOACCESS_STRUCT(next_block_p);
+    }
 
     next_block_p = new_free_block_p;
   }
 
   mem_init_block_header ((uint8_t*) block_p,
-                      size_in_bytes,
-                      MEM_BLOCK_ALLOCATED,
-                      prev_block_p,
-                      next_block_p);
+                         size_in_bytes,
+                         MEM_BLOCK_ALLOCATED,
+                         prev_block_p,
+                         next_block_p);
 
   VALGRIND_DEFINED_STRUCT(block_p);
 
@@ -409,7 +409,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
 {
   /* checking that ptr points to the heap */
   JERRY_ASSERT(ptr >= mem_heap.heap_start
-                && ptr <= mem_heap.heap_start + mem_heap.heap_size);
+               && ptr <= mem_heap.heap_start + mem_heap.heap_size);
 
   mem_check_heap ();
 
@@ -439,62 +439,62 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
   block_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
 
   if (next_block_p != NULL)
+  {
+    VALGRIND_DEFINED_STRUCT(next_block_p);
+
+    if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
     {
-      VALGRIND_DEFINED_STRUCT(next_block_p);
+      /* merge with the next block */
+      mem_heap_stat_free_block_merge ();
 
-      if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
-        {
-          /* merge with the next block */
-          mem_heap_stat_free_block_merge ();
-
-          mem_block_header_t *next_next_block_p = next_block_p->neighbours[ MEM_DIRECTION_NEXT ];
-
-          VALGRIND_NOACCESS_STRUCT(next_block_p);
-
-          next_block_p = next_next_block_p;
-
-          VALGRIND_DEFINED_STRUCT(next_block_p);
-
-          block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
-          if (next_block_p != NULL)
-            {
-              next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p;
-            }
-          else
-            {
-              mem_heap.last_block_p = block_p;
-            }
-        }
+      mem_block_header_t *next_next_block_p = next_block_p->neighbours[ MEM_DIRECTION_NEXT ];
 
       VALGRIND_NOACCESS_STRUCT(next_block_p);
+
+      next_block_p = next_next_block_p;
+
+      VALGRIND_DEFINED_STRUCT(next_block_p);
+
+      block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+      if (next_block_p != NULL)
+      {
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p;
+      }
+      else
+      {
+        mem_heap.last_block_p = block_p;
+      }
     }
+
+    VALGRIND_NOACCESS_STRUCT(next_block_p);
+  }
 
   if (prev_block_p != NULL)
+  {
+    VALGRIND_DEFINED_STRUCT(prev_block_p);
+
+    if (prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
     {
-      VALGRIND_DEFINED_STRUCT(prev_block_p);
+      /* merge with the previous block */
+      mem_heap_stat_free_block_merge ();
 
-      if (prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
-        {
-          /* merge with the previous block */
-          mem_heap_stat_free_block_merge ();
+      prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+      if (next_block_p != NULL)
+      {
+        VALGRIND_DEFINED_STRUCT(next_block_p);
 
-          prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
-          if (next_block_p != NULL)
-            {
-              VALGRIND_DEFINED_STRUCT(next_block_p);
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p->neighbours[ MEM_DIRECTION_PREV ];
 
-              next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p->neighbours[ MEM_DIRECTION_PREV ];
-
-              VALGRIND_NOACCESS_STRUCT(next_block_p);
-            }
-          else
-            {
-              mem_heap.last_block_p = prev_block_p;
-            }
-        }
-
-      VALGRIND_NOACCESS_STRUCT(prev_block_p);
+        VALGRIND_NOACCESS_STRUCT(next_block_p);
+      }
+      else
+      {
+        mem_heap.last_block_p = prev_block_p;
+      }
     }
+
+    VALGRIND_NOACCESS_STRUCT(prev_block_p);
+  }
 
   VALGRIND_NOACCESS_STRUCT(block_p);
 
@@ -522,7 +522,7 @@ mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum
 void
 mem_heap_print (bool dump_block_headers, /**< print block headers */
                 bool dump_block_data, /**< print block with data (true)
-                                        or print only block header (false) */
+                                           or print only block header (false) */
                 bool dump_stats) /**< print heap stats */
 {
   mem_check_heap ();
@@ -530,71 +530,71 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
   JERRY_ASSERT(!dump_block_data || dump_block_headers);
 
   if (dump_block_headers)
+  {
+    __printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
+              mem_heap.heap_start,
+              mem_heap.heap_size,
+              (void*) mem_heap.first_block_p,
+              (void*) mem_heap.last_block_p);
+
+    for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
+         block_p != NULL;
+         block_p = next_block_p)
     {
-      __printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
-               mem_heap.heap_start,
-               mem_heap.heap_size,
-               (void*) mem_heap.first_block_p,
-               (void*) mem_heap.last_block_p);
+      VALGRIND_DEFINED_STRUCT(block_p);
 
-      for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
-           block_p != NULL;
-           block_p = next_block_p)
+      __printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
+                (void*) block_p,
+                block_p->magic_num,
+                mem_get_block_chunks_count (block_p),
+                (void*) block_p->neighbours[ MEM_DIRECTION_PREV ],
+                (void*) block_p->neighbours[ MEM_DIRECTION_NEXT ]);
+
+      if (dump_block_data)
+      {
+        uint8_t *block_data_p = (uint8_t*) (block_p + 1);
+        for (uint32_t offset = 0;
+             offset < mem_get_block_data_space_size (block_p);
+             offset++)
         {
-          VALGRIND_DEFINED_STRUCT(block_p);
-
-          __printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
-                   (void*) block_p,
-                   block_p->magic_num,
-                   mem_get_block_chunks_count (block_p),
-                   (void*) block_p->neighbours[ MEM_DIRECTION_PREV ],
-                   (void*) block_p->neighbours[ MEM_DIRECTION_NEXT ]);
-
-          if (dump_block_data)
-            {
-              uint8_t *block_data_p = (uint8_t*) (block_p + 1);
-              for (uint32_t offset = 0;
-                   offset < mem_get_block_data_space_size (block_p);
-                   offset++)
-                {
-                  __printf ("%02x ", block_data_p[ offset ]);
-                }
-              __printf ("\n");
-            }
-
-          next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
-
-          VALGRIND_NOACCESS_STRUCT(block_p);
+          __printf ("%02x ", block_data_p[ offset ]);
         }
+        __printf ("\n");
+      }
+
+      next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+
+      VALGRIND_NOACCESS_STRUCT(block_p);
     }
+  }
 
 #ifdef MEM_STATS
   if (dump_stats)
-    {
-      __printf ("Heap stats:\n");
-      __printf ("  Heap size = %lu bytes\n"
-               "  Chunk size = %lu bytes\n"
-               "  Blocks count = %lu\n"
-               "  Allocated blocks count = %lu\n"
-               "  Allocated chunks count = %lu\n"
-               "  Allocated = %lu bytes\n"
-               "  Waste = %lu bytes\n"
-               "  Peak allocated blocks count = %lu\n"
-               "  Peak allocated chunks count = %lu\n"
-               "  Peak allocated= %lu bytes\n"
-               "  Peak waste = %lu bytes\n",
-               mem_heap_stats.size,
-               MEM_HEAP_CHUNK_SIZE,
-               mem_heap_stats.blocks,
-               mem_heap_stats.allocated_blocks,
-               mem_heap_stats.allocated_chunks,
-               mem_heap_stats.allocated_bytes,
-               mem_heap_stats.waste_bytes,
-               mem_heap_stats.peak_allocated_blocks,
-               mem_heap_stats.peak_allocated_chunks,
-               mem_heap_stats.peak_allocated_bytes,
-               mem_heap_stats.peak_waste_bytes);
-    }
+  {
+    __printf ("Heap stats:\n");
+    __printf ("  Heap size = %lu bytes\n"
+              "  Chunk size = %lu bytes\n"
+              "  Blocks count = %lu\n"
+              "  Allocated blocks count = %lu\n"
+              "  Allocated chunks count = %lu\n"
+              "  Allocated = %lu bytes\n"
+              "  Waste = %lu bytes\n"
+              "  Peak allocated blocks count = %lu\n"
+              "  Peak allocated chunks count = %lu\n"
+              "  Peak allocated= %lu bytes\n"
+              "  Peak waste = %lu bytes\n",
+              mem_heap_stats.size,
+              MEM_HEAP_CHUNK_SIZE,
+              mem_heap_stats.blocks,
+              mem_heap_stats.allocated_blocks,
+              mem_heap_stats.allocated_chunks,
+              mem_heap_stats.allocated_bytes,
+              mem_heap_stats.waste_bytes,
+              mem_heap_stats.peak_allocated_blocks,
+              mem_heap_stats.peak_allocated_chunks,
+              mem_heap_stats.peak_allocated_bytes,
+              mem_heap_stats.peak_waste_bytes);
+  }
 #endif /* MEM_STATS */
 
   __printf ("\n");
@@ -614,8 +614,8 @@ mem_check_heap (void)
   size_t chunk_sizes_sum = 0;
 
   for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
-        block_p != NULL;
-        block_p = next_block_p)
+       block_p != NULL;
+       block_p = next_block_p)
   {
     VALGRIND_DEFINED_STRUCT(block_p);
 
@@ -636,7 +636,7 @@ mem_check_heap (void)
     }
 
     VALGRIND_NOACCESS_STRUCT(block_p);
- }
+  }
 
   JERRY_ASSERT(chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
   JERRY_ASSERT(is_last_block_was_met);
@@ -645,8 +645,8 @@ mem_check_heap (void)
   chunk_sizes_sum = 0;
 
   for (mem_block_header_t *block_p = mem_heap.last_block_p, *prev_block_p;
-        block_p != NULL;
-        block_p = prev_block_p)
+       block_p != NULL;
+       block_p = prev_block_p)
   {
     VALGRIND_DEFINED_STRUCT(block_p);
 
@@ -667,7 +667,7 @@ mem_check_heap (void)
     }
 
     VALGRIND_NOACCESS_STRUCT(block_p);
- }
+  }
 
   JERRY_ASSERT(chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
   JERRY_ASSERT(is_first_block_was_met);

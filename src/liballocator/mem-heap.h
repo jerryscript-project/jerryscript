@@ -33,9 +33,10 @@
  *
  * @see mem_heap_alloc_block
  */
-typedef enum {
-    MEM_HEAP_ALLOC_SHORT_TERM, /**< allocated region will be freed soon */
-    MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
+typedef enum
+{
+  MEM_HEAP_ALLOC_SHORT_TERM, /**< allocated region will be freed soon */
+  MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
 } mem_heap_alloc_term_t;
 
 extern void mem_heap_init (uint8_t *heap_start, size_t heap_size);
@@ -49,22 +50,23 @@ extern void mem_heap_print (bool dump_block_headers, bool dump_block_data, bool 
 /**
  * Heap memory usage statistics
  */
-typedef struct {
-    size_t size; /**< size */
-    size_t blocks; /**< blocks count */
+typedef struct
+{
+  size_t size; /**< size */
+  size_t blocks; /**< blocks count */
 
-    size_t allocated_chunks; /**< currently allocated chunks */
-    size_t peak_allocated_chunks; /**< peak allocated chunks */
+  size_t allocated_chunks; /**< currently allocated chunks */
+  size_t peak_allocated_chunks; /**< peak allocated chunks */
 
-    size_t allocated_blocks; /**< currently allocated blocks */
-    size_t peak_allocated_blocks; /**< peak allocated blocks */
+  size_t allocated_blocks; /**< currently allocated blocks */
+  size_t peak_allocated_blocks; /**< peak allocated blocks */
 
-    size_t allocated_bytes; /**< currently allocated bytes */
-    size_t peak_allocated_bytes; /**< peak allocated bytes */
+  size_t allocated_bytes; /**< currently allocated bytes */
+  size_t peak_allocated_bytes; /**< peak allocated bytes */
 
-    size_t waste_bytes; /**< bytes waste due to blocks filled partially
-                             and due to block headers */
-    size_t peak_waste_bytes; /**< peak bytes waste */
+  size_t waste_bytes; /**< bytes waste due to blocks filled partially
+                           and due to block headers */
+  size_t peak_waste_bytes; /**< peak bytes waste */
 } mem_heap_stats_t;
 
 extern void mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p);

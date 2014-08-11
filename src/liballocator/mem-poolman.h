@@ -40,20 +40,20 @@ extern void mem_pools_free (uint8_t *chunk_p);
  */
 typedef struct
 {
-    /** pools' count */
-    size_t pools_count;
+  /** pools' count */
+  size_t pools_count;
 
-    /** peak pools' count */
-    size_t peak_pools_count;
+  /** peak pools' count */
+  size_t peak_pools_count;
 
-    /** allocated chunks count */
-    size_t allocated_chunks;
+  /** allocated chunks count */
+  size_t allocated_chunks;
 
-    /** peak allocated chunks count */
-    size_t peak_allocated_chunks;
+  /** peak allocated chunks count */
+  size_t peak_allocated_chunks;
 
-    /** free chunks count */
-    size_t free_chunks;
+  /** free chunks count */
+  size_t free_chunks;
 } mem_pools_stats_t;
 
 extern void mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p);

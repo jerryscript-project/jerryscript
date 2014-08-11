@@ -43,11 +43,11 @@ ecma_get_lex_env_binding_object( ecma_object_t* obj_lex_env_p) /**< object lexic
                 && obj_lex_env_p->is_lexical_environment
                 && obj_lex_env_p->u.lexical_environment.type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND );
 
-  ecma_property_t *binding_obj_prop_p = ecma_get_pointer( obj_lex_env_p->properties_p);
+  ecma_property_t *binding_obj_prop_p = ECMA_GET_POINTER( obj_lex_env_p->properties_p);
   JERRY_ASSERT( binding_obj_prop_p != NULL
                 && binding_obj_prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_BINDING_OBJECT );
 
-  return ecma_get_pointer( binding_obj_prop_p->u.internal_property.value);
+  return ECMA_GET_POINTER( binding_obj_prop_p->u.internal_property.value);
 } /* ecma_get_lex_env_binding_object */
 
 /**

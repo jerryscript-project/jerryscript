@@ -90,7 +90,7 @@ ecma_op_is_callable( ecma_value_t value) /**< ecma-value */
       return false;
     }
 
-  ecma_object_t *obj_p = ecma_get_pointer( value.value);
+  ecma_object_t *obj_p = ECMA_GET_POINTER( value.value);
 
   JERRY_ASSERT( obj_p != NULL );
   JERRY_ASSERT( !obj_p->is_lexical_environment );
@@ -131,7 +131,7 @@ ecma_op_create_function_object( const ecma_char_t* formal_parameter_list_p[], /*
 
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property( f, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ecma_set_pointer( scope_prop_p->u.internal_property.value, scope_p);
+  ECMA_SET_POINTER( scope_prop_p->u.internal_property.value, scope_p);
 
   ecma_gc_update_may_ref_younger_object_flag_by_object( f, scope_p);
 
@@ -244,7 +244,7 @@ ecma_op_function_call( ecma_object_t *func_obj_p, /**< Function object */
       ecma_property_t *scope_prop_p = ecma_get_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
       ecma_property_t *code_prop_p = ecma_get_internal_property( func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
 
-      ecma_object_t *scope_p = ecma_get_pointer( scope_prop_p->u.internal_property.value);
+      ecma_object_t *scope_p = ECMA_GET_POINTER( scope_prop_p->u.internal_property.value);
       uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
       bool is_strict;

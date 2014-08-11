@@ -47,7 +47,7 @@ ecma_create_object( ecma_object_t *prototype_object_p, /**< pointer to prototybe
     object_p->is_lexical_environment = false;
 
     object_p->u.object.extensible = is_extensible;
-    ecma_set_pointer( object_p->u.object.prototype_object_p, prototype_object_p);
+    ECMA_SET_POINTER( object_p->u.object.prototype_object_p, prototype_object_p);
     object_p->u.object.type = type;
 
     return object_p;
@@ -74,7 +74,7 @@ ecma_create_decl_lex_env(ecma_object_t *outer_lexical_environment_p) /**< outer 
 
   new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
 
-  ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+  ECMA_SET_POINTER( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
 
   return new_lexical_environment_p;
 } /* ecma_create_decl_lex_env */
@@ -104,13 +104,13 @@ ecma_create_object_lex_env(ecma_object_t *outer_lexical_environment_p, /**< oute
 
   new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
 
-  ecma_set_pointer( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+  ECMA_SET_POINTER( new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
 
   ecma_property_t *provide_this_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_PROVIDE_THIS);
   provide_this_prop_p->u.internal_property.value = provide_this;
 
   ecma_property_t *binding_object_prop_p = ecma_create_internal_property( new_lexical_environment_p, ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
-  ecma_set_pointer( binding_object_prop_p->u.internal_property.value, binding_obj_p);
+  ECMA_SET_POINTER( binding_object_prop_p->u.internal_property.value, binding_obj_p);
 
   ecma_gc_update_may_ref_younger_object_flag_by_object( new_lexical_environment_p, binding_obj_p);
 
@@ -131,9 +131,9 @@ ecma_create_internal_property(ecma_object_t *object_p, /**< the object */
 
     new_property_p->type = ECMA_PROPERTY_INTERNAL;
 
-    ecma_property_t *list_head_p = ecma_get_pointer( object_p->properties_p);
-    ecma_set_pointer( new_property_p->next_property_p, list_head_p);
-    ecma_set_non_null_pointer( object_p->properties_p, new_property_p);
+    ecma_property_t *list_head_p = ECMA_GET_POINTER( object_p->properties_p);
+    ECMA_SET_POINTER( new_property_p->next_property_p, list_head_p);
+    ECMA_SET_NON_NULL_POINTER( object_p->properties_p, new_property_p);
 
     new_property_p->u.internal_property.type = property_id;
     new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
@@ -156,9 +156,9 @@ ecma_find_internal_property(ecma_object_t *object_p, /**< object descriptor */
     JERRY_ASSERT( property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
                   && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE );
 
-    for ( ecma_property_t *property_p = ecma_get_pointer( object_p->properties_p);
+    for ( ecma_property_t *property_p = ECMA_GET_POINTER( object_p->properties_p);
           property_p != NULL;
-          property_p = ecma_get_pointer( property_p->next_property_p) )
+          property_p = ECMA_GET_POINTER( property_p->next_property_p) )
     {
         if ( property_p->type == ECMA_PROPERTY_INTERNAL )
         {
@@ -210,7 +210,7 @@ ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
-  ecma_set_non_null_pointer( prop_p->u.named_data_property.name_p, ecma_new_ecma_string( name_p));
+  ECMA_SET_NON_NULL_POINTER( prop_p->u.named_data_property.name_p, ecma_new_ecma_string( name_p));
 
   prop_p->u.named_data_property.writable = writable;
   prop_p->u.named_data_property.enumerable = enumerable;
@@ -218,10 +218,10 @@ ecma_create_named_data_property(ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_data_property.value = ecma_make_simple_value( ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  ecma_property_t *list_head_p = ecma_get_pointer( obj_p->properties_p);
+  ecma_property_t *list_head_p = ECMA_GET_POINTER( obj_p->properties_p);
 
-  ecma_set_pointer( prop_p->next_property_p, list_head_p);
-  ecma_set_non_null_pointer( obj_p->properties_p, prop_p);
+  ECMA_SET_POINTER( prop_p->next_property_p, list_head_p);
+  ECMA_SET_NON_NULL_POINTER( obj_p->properties_p, prop_p);
 
   return prop_p;
 } /* ecma_create_named_data_property */
@@ -245,20 +245,20 @@ ecma_create_named_accessor_property(ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
-  ecma_set_non_null_pointer( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
+  ECMA_SET_NON_NULL_POINTER( prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string( name_p));
 
-  ecma_set_pointer( prop_p->u.named_accessor_property.get_p, get_p);
+  ECMA_SET_POINTER( prop_p->u.named_accessor_property.get_p, get_p);
   ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, get_p);
 
-  ecma_set_pointer( prop_p->u.named_accessor_property.set_p, set_p);
+  ECMA_SET_POINTER( prop_p->u.named_accessor_property.set_p, set_p);
   ecma_gc_update_may_ref_younger_object_flag_by_object( obj_p, set_p);
 
   prop_p->u.named_accessor_property.enumerable = enumerable;
   prop_p->u.named_accessor_property.configurable = configurable;
 
-  ecma_property_t *list_head_p = ecma_get_pointer( obj_p->properties_p);
-  ecma_set_pointer( prop_p->next_property_p, list_head_p);
-  ecma_set_non_null_pointer( obj_p->properties_p, prop_p);
+  ecma_property_t *list_head_p = ECMA_GET_POINTER( obj_p->properties_p);
+  ECMA_SET_POINTER( prop_p->next_property_p, list_head_p);
+  ECMA_SET_NON_NULL_POINTER( obj_p->properties_p, prop_p);
 
   return prop_p;
 } /* ecma_create_named_accessor_property */
@@ -276,18 +276,18 @@ ecma_find_named_property(ecma_object_t *obj_p, /**< object to find property in *
     JERRY_ASSERT( obj_p != NULL );
     JERRY_ASSERT( name_p != NULL );
 
-    for ( ecma_property_t *property_p = ecma_get_pointer( obj_p->properties_p);
+    for ( ecma_property_t *property_p = ECMA_GET_POINTER( obj_p->properties_p);
           property_p != NULL;
-          property_p = ecma_get_pointer( property_p->next_property_p) )
+          property_p = ECMA_GET_POINTER( property_p->next_property_p) )
     {
         ecma_array_first_chunk_t *property_name_p;
 
         if ( property_p->type == ECMA_PROPERTY_NAMEDDATA )
         {
-          property_name_p = ecma_get_pointer( property_p->u.named_data_property.name_p);
+          property_name_p = ECMA_GET_POINTER( property_p->u.named_data_property.name_p);
         } else if ( property_p->type == ECMA_PROPERTY_NAMEDACCESSOR )
         {
-          property_name_p = ecma_get_pointer( property_p->u.named_accessor_property.name_p);
+          property_name_p = ECMA_GET_POINTER( property_p->u.named_accessor_property.name_p);
         } else
         {
           continue;
@@ -358,7 +358,7 @@ ecma_free_named_data_property( ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT( property_p->type == ECMA_PROPERTY_NAMEDDATA );
 
-  ecma_free_array( ecma_get_pointer( property_p->u.named_data_property.name_p));
+  ecma_free_array( ECMA_GET_POINTER( property_p->u.named_data_property.name_p));
   ecma_free_value( property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property( property_p);
@@ -372,7 +372,7 @@ ecma_free_named_accessor_property( ecma_property_t *property_p) /**< the propert
 {
   JERRY_ASSERT( property_p->type == ECMA_PROPERTY_NAMEDACCESSOR );
 
-  ecma_free_array( ecma_get_pointer( property_p->u.named_accessor_property.name_p));
+  ecma_free_array( ECMA_GET_POINTER( property_p->u.named_accessor_property.name_p));
 
   ecma_dealloc_property( property_p);
 } /* ecma_free_named_accessor_property */
@@ -394,7 +394,7 @@ ecma_free_internal_property( ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
     case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* an array */
       {
-        ecma_free_array( ecma_get_pointer( property_value));
+        ecma_free_array( ECMA_GET_POINTER( property_value));
         break;
       }
 
@@ -453,11 +453,11 @@ void
 ecma_delete_property(ecma_object_t *obj_p, /**< object */
                     ecma_property_t *prop_p) /**< property */
 {
-  for ( ecma_property_t *cur_prop_p = ecma_get_pointer( obj_p->properties_p), *prev_prop_p = NULL, *next_prop_p;
+  for ( ecma_property_t *cur_prop_p = ECMA_GET_POINTER( obj_p->properties_p), *prev_prop_p = NULL, *next_prop_p;
         cur_prop_p != NULL;
         prev_prop_p = cur_prop_p, cur_prop_p = next_prop_p )
   {
-    next_prop_p = ecma_get_pointer( cur_prop_p->next_property_p);
+    next_prop_p = ECMA_GET_POINTER( cur_prop_p->next_property_p);
 
     if ( cur_prop_p == prop_p )
     {
@@ -465,10 +465,10 @@ ecma_delete_property(ecma_object_t *obj_p, /**< object */
 
       if ( prev_prop_p == NULL )
       {
-        ecma_set_pointer( obj_p->properties_p, next_prop_p);
+        ECMA_SET_POINTER( obj_p->properties_p, next_prop_p);
       } else
       {
-        ecma_set_pointer( prev_prop_p->next_property_p, next_prop_p);
+        ECMA_SET_POINTER( prev_prop_p->next_property_p, next_prop_p);
       }
 
       return;
@@ -524,7 +524,7 @@ ecma_new_ecma_string(const ecma_char_t *string_p) /**< zero-terminated string of
         chars_left -= chars_to_copy;
         copy_pointer += chars_to_copy * sizeof (ecma_char_t);
 
-        ecma_set_non_null_pointer( *next_chunk_compressed_pointer_p, string_non_first_chunk_p);
+        ECMA_SET_NON_NULL_POINTER( *next_chunk_compressed_pointer_p, string_non_first_chunk_p);
         next_chunk_compressed_pointer_p = &string_non_first_chunk_p->next_chunk_p;
     }
 
@@ -565,7 +565,7 @@ ecma_copy_ecma_string_chars_to_buffer(ecma_array_first_chunk_t *first_chunk_p, /
     dest_pointer += copy_chunk_chars * sizeof (ecma_char_t);
     chars_left -= copy_chunk_chars;
 
-    ecma_array_non_first_chunk_t *non_first_chunk_p = ecma_get_pointer( first_chunk_p->header.next_chunk_p);
+    ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER( first_chunk_p->header.next_chunk_p);
 
     while ( chars_left > 0 )
     {
@@ -577,7 +577,7 @@ ecma_copy_ecma_string_chars_to_buffer(ecma_array_first_chunk_t *first_chunk_p, /
         dest_pointer += copy_chunk_chars * sizeof (ecma_char_t);
         chars_left -= copy_chunk_chars;
 
-        non_first_chunk_p = ecma_get_pointer( non_first_chunk_p->next_chunk_p);
+        non_first_chunk_p = ECMA_GET_POINTER( non_first_chunk_p->next_chunk_p);
     }
 
     return (ssize_t) required_buffer_size;
@@ -597,18 +597,18 @@ ecma_duplicate_ecma_string( ecma_array_first_chunk_t *first_chunk_p) /**< first 
     __memcpy( first_chunk_copy_p, first_chunk_p, sizeof (ecma_array_first_chunk_t));
 
     ecma_array_non_first_chunk_t *non_first_chunk_p, *non_first_chunk_copy_p;
-    non_first_chunk_p = ecma_get_pointer( first_chunk_p->header.next_chunk_p);
+    non_first_chunk_p = ECMA_GET_POINTER( first_chunk_p->header.next_chunk_p);
     uint16_t *next_pointer_p = &first_chunk_copy_p->header.next_chunk_p;
 
     while ( non_first_chunk_p != NULL )
     {
         non_first_chunk_copy_p = ecma_alloc_array_non_first_chunk();
-        ecma_set_pointer( *next_pointer_p, non_first_chunk_copy_p);
+        ECMA_SET_POINTER( *next_pointer_p, non_first_chunk_copy_p);
         next_pointer_p = &non_first_chunk_copy_p->next_chunk_p;
 
         __memcpy( non_first_chunk_copy_p, non_first_chunk_p, sizeof (ecma_array_non_first_chunk_t));
 
-        non_first_chunk_p = ecma_get_pointer( non_first_chunk_p->next_chunk_p);
+        non_first_chunk_p = ECMA_GET_POINTER( non_first_chunk_p->next_chunk_p);
     }
 
     *next_pointer_p = ECMA_NULL_POINTER;
@@ -660,7 +660,7 @@ ecma_compare_zt_string_to_ecma_string(const ecma_char_t *string_p, /**< zero-ter
       if ( current_chunk_chars_cur == current_chunk_chars_end )
         {
           /* switching to next chunk */
-          ecma_array_non_first_chunk_t *next_chunk_p = ecma_get_pointer( *next_chunk_compressed_pointer_p);
+          ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER( *next_chunk_compressed_pointer_p);
 
           JERRY_ASSERT( next_chunk_p != NULL );
 
@@ -699,13 +699,13 @@ ecma_free_array( ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of th
 {
     JERRY_ASSERT( first_chunk_p != NULL );
 
-    ecma_array_non_first_chunk_t *non_first_chunk_p = ecma_get_pointer( first_chunk_p->header.next_chunk_p);
+    ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER( first_chunk_p->header.next_chunk_p);
 
     ecma_dealloc_array_first_chunk( first_chunk_p);
 
     while ( non_first_chunk_p != NULL )
     {
-        ecma_array_non_first_chunk_t *next_chunk_p = ecma_get_pointer( non_first_chunk_p->next_chunk_p);
+        ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER( non_first_chunk_p->next_chunk_p);
 
         ecma_dealloc_array_non_first_chunk( non_first_chunk_p);
 

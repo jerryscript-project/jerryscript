@@ -123,16 +123,16 @@ ecma_op_same_value( ecma_value_t x, /**< ecma-value */
     {
       TODO( Implement according to ECMA );
 
-      ecma_number_t *x_num_p = (ecma_number_t*)ecma_get_pointer( x.value);
-      ecma_number_t *y_num_p = (ecma_number_t*)ecma_get_pointer( y.value);
+      ecma_number_t *x_num_p = (ecma_number_t*)ECMA_GET_POINTER( x.value);
+      ecma_number_t *y_num_p = (ecma_number_t*)ECMA_GET_POINTER( y.value);
 
       return ( *x_num_p == *y_num_p );
     }
 
   if ( is_x_string )
     {
-      ecma_array_first_chunk_t* x_str_p = (ecma_array_first_chunk_t*)( ecma_get_pointer(x.value) );
-      ecma_array_first_chunk_t* y_str_p = (ecma_array_first_chunk_t*)( ecma_get_pointer(y.value) );
+      ecma_array_first_chunk_t* x_str_p = (ecma_array_first_chunk_t*)( ECMA_GET_POINTER(x.value) );
+      ecma_array_first_chunk_t* y_str_p = (ecma_array_first_chunk_t*)( ECMA_GET_POINTER(y.value) );
 
       return ecma_compare_ecma_string_to_ecma_string( x_str_p, y_str_p);
     }
@@ -144,7 +144,7 @@ ecma_op_same_value( ecma_value_t x, /**< ecma-value */
 
   JERRY_ASSERT( is_x_object );
 
-  return ( ecma_get_pointer( x.value) == ecma_get_pointer( y.value) );
+  return ( ECMA_GET_POINTER( x.value) == ECMA_GET_POINTER( y.value) );
 } /* ecma_op_same_value */
 
 /**
@@ -200,7 +200,7 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
   {
     case ECMA_TYPE_NUMBER:
       {
-        ecma_number_t *num_p = ecma_get_pointer( value.value);
+        ecma_number_t *num_p = ECMA_GET_POINTER( value.value);
 
         TODO( Implement according to ECMA );
 
@@ -227,7 +227,7 @@ ecma_op_to_boolean( ecma_value_t value) /**< ecma-value */
       }
     case ECMA_TYPE_STRING:
       {
-        ecma_array_first_chunk_t *str_p = ecma_get_pointer( value.value);
+        ecma_array_first_chunk_t *str_p = ECMA_GET_POINTER( value.value);
 
         return ecma_make_simple_completion_value( ( str_p->header.unit_number == 0 ) ? ECMA_SIMPLE_VALUE_FALSE
                                                                                      : ECMA_SIMPLE_VALUE_TRUE );

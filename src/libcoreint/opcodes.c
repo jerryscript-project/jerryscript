@@ -142,8 +142,8 @@ do_strict_eval_arguments_check( ecma_reference_t ref) /**< ECMA-reference */
           && ( __strcmp( (char*)ref.referenced_name_p, (char*)ecma_get_magic_string( ECMA_MAGIC_STRING_EVAL)) == 0
               || __strcmp( (char*)ref.referenced_name_p, (char*)ecma_get_magic_string( ECMA_MAGIC_STRING_ARGUMENTS)) == 0 )
           && ( ref.base.value_type == ECMA_TYPE_OBJECT )
-          && ( ecma_get_pointer( ref.base.value) != NULL )
-          && ( ( (ecma_object_t*) ecma_get_pointer( ref.base.value) )->is_lexical_environment ) );
+          && ( ECMA_GET_POINTER( ref.base.value) != NULL )
+          && ( ( (ecma_object_t*) ECMA_GET_POINTER( ref.base.value) )->is_lexical_environment ) );
 } /* do_strict_eval_arguments_check */
 
 /**
@@ -287,8 +287,8 @@ do_number_arithmetic(struct __int_data *int_data, /**< interpreter context */
   ECMA_TRY_CATCH(num_right_value, ecma_op_to_number( right_value), ret_value);
 
   ecma_number_t *left_p, *right_p, *res_p;
-  left_p = (ecma_number_t*)ecma_get_pointer( num_left_value.value.value);
-  right_p = (ecma_number_t*)ecma_get_pointer( num_right_value.value.value);
+  left_p = (ecma_number_t*)ECMA_GET_POINTER( num_left_value.value.value);
+  right_p = (ecma_number_t*)ECMA_GET_POINTER( num_right_value.value.value);
 
   res_p = ecma_alloc_number();
 
@@ -419,7 +419,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   {
     ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     led_toggle (int_num);
     ret_value = ecma_make_empty_completion_value ();
@@ -430,7 +430,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   {
     ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     led_on (int_num);
     ret_value = ecma_make_empty_completion_value ();
@@ -441,7 +441,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   {
     ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     led_off (int_num);
     ret_value = ecma_make_empty_completion_value ();
@@ -452,7 +452,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   {
     ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     led_blink_once (int_num);
     ret_value = ecma_make_empty_completion_value ();
@@ -463,7 +463,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   {
     ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
     JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-    ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+    ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
     uint32_t int_num = (uint32_t)*num_p;
     wait_ms (int_num);
     ret_value = ecma_make_empty_completion_value ();
@@ -474,7 +474,7 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
     {
       ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
       JERRY_ASSERT(cond_value.value.value_type == ECMA_TYPE_NUMBER );
-      ecma_number_t * num_p = (ecma_number_t*)ecma_get_pointer(cond_value.value.value);
+      ecma_number_t * num_p = (ecma_number_t*)ECMA_GET_POINTER(cond_value.value.value);
       opfunc_exitval (getop_exitval ((T_IDX)*num_p), int_data);
       ret_value = ecma_make_empty_completion_value ();
       ECMA_FINALIZE (cond_value);
@@ -920,7 +920,7 @@ opfunc_pre_incr(OPCODE opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number();
   
-  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*)ECMA_GET_POINTER( old_num_value.value.value);
   *new_num_p= ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value( new_num_p);
@@ -970,7 +970,7 @@ opfunc_pre_decr(OPCODE opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number();
   
-  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*)ECMA_GET_POINTER( old_num_value.value.value);
   *new_num_p= ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value( new_num_p);
@@ -1020,7 +1020,7 @@ opfunc_post_incr(OPCODE opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number();
   
-  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*)ECMA_GET_POINTER( old_num_value.value.value);
   *new_num_p= ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
@@ -1068,7 +1068,7 @@ opfunc_post_decr(OPCODE opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number();
   
-  ecma_number_t* old_num_p = (ecma_number_t*)ecma_get_pointer( old_num_value.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*)ECMA_GET_POINTER( old_num_value.value.value);
   *new_num_p= ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
@@ -1410,7 +1410,7 @@ opfunc_call_0( OPCODE opdata, /**< operation data */
     }
   else
     {
-      ecma_object_t *func_obj_p = ecma_get_pointer( func_value.value.value);
+      ecma_object_t *func_obj_p = ECMA_GET_POINTER( func_value.value.value);
 
       ECMA_TRY_CATCH( this_value, ecma_op_implicit_this_value( int_data->lex_env_p), ret_value);
 

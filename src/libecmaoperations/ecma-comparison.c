@@ -70,16 +70,16 @@ ecma_op_abstract_equality_compare(ecma_value_t x, /**< first operand */
       return true;
     } else if ( is_x_number )
     { // c.
-      ecma_number_t x_num = *(ecma_number_t*)( ecma_get_pointer(x.value) );
-      ecma_number_t y_num = *(ecma_number_t*)( ecma_get_pointer(y.value) );
+      ecma_number_t x_num = *(ecma_number_t*)( ECMA_GET_POINTER(x.value) );
+      ecma_number_t y_num = *(ecma_number_t*)( ECMA_GET_POINTER(y.value) );
 
       TODO( Implement according to ECMA );
 
       return (x_num == y_num);
     } else if ( is_x_string )
     { // d.
-      ecma_array_first_chunk_t* x_str = (ecma_array_first_chunk_t*)( ecma_get_pointer(x.value) );
-      ecma_array_first_chunk_t* y_str = (ecma_array_first_chunk_t*)( ecma_get_pointer(y.value) );
+      ecma_array_first_chunk_t* x_str = (ecma_array_first_chunk_t*)( ECMA_GET_POINTER(x.value) );
+      ecma_array_first_chunk_t* y_str = (ecma_array_first_chunk_t*)( ECMA_GET_POINTER(y.value) );
 
       return ecma_compare_ecma_string_to_ecma_string( x_str, y_str);
     } else if ( is_x_boolean )
@@ -137,8 +137,8 @@ ecma_op_abstract_relational_compare(ecma_value_t x, /**< first operand */
       // b.
       ECMA_TRY_CATCH( ny, ecma_op_to_number( py.value), ret_value);
 
-      ecma_number_t* num_x_p = (ecma_number_t*)ecma_get_pointer( nx.value.value);
-      ecma_number_t* num_y_p = (ecma_number_t*)ecma_get_pointer( ny.value.value);
+      ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER( nx.value.value);
+      ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER( ny.value.value);
 
       TODO( /* Implement according to ECMA */ );
 

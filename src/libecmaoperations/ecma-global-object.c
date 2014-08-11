@@ -62,8 +62,9 @@ ecma_op_create_global_object (void)
 
   ecma_object_t *glob_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
+  const ecma_char_t* undefined_identifier_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
   ecma_property_t *undefined_prop_p = ecma_create_named_data_property (glob_obj_p,
-                                                                       ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED),
+                                                                       undefined_identifier_p,
                                                                        ECMA_PROPERTY_NOT_WRITABLE,
                                                                        ECMA_PROPERTY_NOT_ENUMERABLE,
                                                                        ECMA_PROPERTY_NOT_CONFIGURABLE);

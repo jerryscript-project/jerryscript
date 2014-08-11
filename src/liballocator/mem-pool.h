@@ -40,14 +40,16 @@ typedef uint16_t mem_pool_chunk_index_t;
  * State of a memory pool
  */
 typedef struct mem_pool_state_t {
-    unsigned int chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< number of chunks (mem_pool_chunk_index_t) */
-    unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< number of free chunks (mem_pool_chunk_index_t) */
+    /** Number of chunks (mem_pool_chunk_index_t) */
+    unsigned int chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
+    /** Number of free chunks (mem_pool_chunk_index_t) */
+    unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
 
-    unsigned int first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG; /**< offset of first free chunk
-                                                                         from the beginning of the pool
-                                                                         (mem_pool_chunk_index_t) */
+    /** Offset of first free chunk from the beginning of the pool (mem_pool_chunk_index_t) */
+    unsigned int first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
 
-    unsigned int next_pool_cp : MEM_HEAP_OFFSET_LOG; /**< pointer to the next pool with same chunk size */
+    /** Pointer to the next pool with same chunk size */
+    unsigned int next_pool_cp : MEM_HEAP_OFFSET_LOG;
 } mem_pool_state_t;
 
 extern void mem_pool_init (mem_pool_state_t *pool_p, size_t pool_size);

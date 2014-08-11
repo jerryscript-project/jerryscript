@@ -407,7 +407,8 @@ ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion v
  */
 bool
 ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**< completion value */
-                                             ecma_simple_value_t simple_value) /**< simple value to check for equality with */
+                                              ecma_simple_value_t simple_value) /**< simple value to check
+                                                                                     for equality with */
 {
   return (value.type == ECMA_COMPLETION_TYPE_NORMAL
            && value.value.value_type == ECMA_TYPE_SIMPLE

@@ -123,7 +123,8 @@ mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
                     uint8_t *chunk_p)         /**< chunk pointer */
 {
     JERRY_ASSERT(pool_p->free_chunks_number < pool_p->chunks_number);
-    JERRY_ASSERT(chunk_p >= MEM_POOL_SPACE_START(pool_p) && chunk_p <= MEM_POOL_SPACE_START(pool_p) + pool_p->chunks_number * MEM_POOL_CHUNK_SIZE);
+    JERRY_ASSERT(chunk_p >= MEM_POOL_SPACE_START(pool_p)
+                 && chunk_p <= MEM_POOL_SPACE_START(pool_p) + pool_p->chunks_number * MEM_POOL_CHUNK_SIZE);
     JERRY_ASSERT(((uintptr_t) chunk_p - (uintptr_t) MEM_POOL_SPACE_START(pool_p)) % MEM_POOL_CHUNK_SIZE == 0);
 
     mem_check_pool (pool_p);

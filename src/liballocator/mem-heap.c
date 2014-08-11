@@ -86,10 +86,11 @@ typedef enum
  */
 typedef struct mem_block_header_t
 {
-  mem_magic_num_of_block_t magic_num;                              /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
-                                                                    and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
+  mem_magic_num_of_block_t magic_num; /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
+                                        and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
   struct mem_block_header_t *neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks */
-  size_t allocated_bytes;                                      /**< allocated area size - for allocated blocks; 0 - for free blocks */
+  size_t allocated_bytes;                                      /**< allocated area size - for allocated blocks;
+                                                                    0 - for free blocks */
 } mem_block_header_t;
 
 /**
@@ -509,7 +510,8 @@ size_t
 mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum allocation size */
 {
   size_t minimum_allocation_size_with_block_header = minimum_allocation_size + sizeof (mem_block_header_t);
-  size_t heap_chunk_aligned_allocation_size = JERRY_ALIGNUP(minimum_allocation_size_with_block_header, MEM_HEAP_CHUNK_SIZE);
+  size_t heap_chunk_aligned_allocation_size = JERRY_ALIGNUP(minimum_allocation_size_with_block_header,
+                                                            MEM_HEAP_CHUNK_SIZE);
 
   return heap_chunk_aligned_allocation_size - sizeof (mem_block_header_t);
 } /* mem_heap_recommend_allocation_size */

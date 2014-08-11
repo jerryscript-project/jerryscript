@@ -51,7 +51,7 @@ static opcode_counter_t opcode_counter = 0;
 static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
 static uint8_t nestings[MAX_NESTINGS], nestings_head = 0;
 
-static rewritable_opcode rewritable_opcodes[REWRITABLE_OPCODES_COUNT] = 
+static rewritable_opcode rewritable_opcodes[REWRITABLE_OPCODES_COUNT] =
 {
   [REWRITABLE_CONTINUE] = { .size = 0, .head = 0, .oc_stack = NULL },
   [REWRITABLE_BREAK] = { .size = 0, .head = 0, .oc_stack = NULL }
@@ -88,7 +88,9 @@ static void
 reset_temp_name (void)
 {
   if (max_temp_name < temp_name)
+  {
     max_temp_name = temp_name;
+  }
   temp_name = min_temp_name;
 }
 
@@ -115,20 +117,26 @@ must_be_inside_but_not_in (uint8_t inside[], uint8_t insides_count, uint8_t not_
   int8_t i;
 
   if (nestings_head == 0)
+  {
     parser_fatal (ERR_PARSER);
+  }
 
   for (i = (int8_t) (nestings_head - 1); i >= 0; i--)
+  {
+    int8_t j;
+    if (nestings[i] == not_in)
     {
-      int8_t j;
-      if (nestings[i] == not_in)
-        parser_fatal (ERR_PARSER);
-
-      for (j = 0; j < insides_count; j++)
-        {
-          if (nestings[i] == inside[j])
-            return;
-        }
+      parser_fatal (ERR_PARSER);
     }
+
+    for (j = 0; j < insides_count; j++)
+    {
+      if (nestings[i] == inside[j])
+      {
+        return;
+      }
+    }
+  }
 
   parser_fatal (ERR_PARSER);
 }
@@ -137,13 +145,13 @@ static void
 assert_keyword (keyword kw)
 {
   if (tok.type != TOK_KEYWORD || tok.data.kw != kw)
-    {
+  {
 #ifdef __TARGET_HOST_x64
-      __printf ("assert_keyword: %d\n", kw);
+    __printf ("assert_keyword: %d\n", kw);
 #endif
-      JERRY_UNREACHABLE ();
-    }
-} 
+    JERRY_UNREACHABLE ();
+  }
+}
 
 static bool
 is_keyword (keyword kw)
@@ -152,15 +160,15 @@ is_keyword (keyword kw)
 }
 
 static void
-current_token_must_be(token_type tt) 
+current_token_must_be(token_type tt)
 {
-  if (tok.type != tt) 
-    {
+  if (tok.type != tt)
+  {
 #ifdef __TARGET_HOST_x64
-      __printf ("current_token_must_be: %d\n", tt);
+    __printf ("current_token_must_be: %d\n", tt);
 #endif
-      parser_fatal (ERR_PARSER); 
-    }
+    parser_fatal (ERR_PARSER);
+  }
 }
 
 static void
@@ -168,7 +176,9 @@ skip_newlines (void)
 {
   tok = lexer_next_token ();
   while (tok.type == TOK_NEWLINE)
+  {
     tok = lexer_next_token ();
+  }
 }
 
 static void
@@ -176,12 +186,12 @@ next_token_must_be (token_type tt)
 {
   tok = lexer_next_token ();
   if (tok.type != tt)
-    {
+  {
 #ifdef __TARGET_HOST_x64
-      __printf ("next_token_must_be: %d\n", tt);
+    __printf ("next_token_must_be: %d\n", tt);
 #endif
-      parser_fatal (ERR_PARSER);
-    }
+    parser_fatal (ERR_PARSER);
+  }
 }
 
 static void
@@ -189,7 +199,9 @@ token_after_newlines_must_be (token_type tt)
 {
   skip_newlines ();
   if (tok.type != tt)
+  {
     parser_fatal (ERR_PARSER);
+  }
 }
 
 static inline void
@@ -197,7 +209,9 @@ token_after_newlines_must_be_keyword (keyword kw)
 {
   skip_newlines ();
   if (!is_keyword (kw))
+  {
     parser_fatal (ERR_PARSER);
+  }
 }
 
 #if 0
@@ -206,7 +220,9 @@ insert_semicolon (void)
 {
   tok = lexer_next_token ();
   if (tok.type != TOK_NEWLINE && tok.type != TOK_SEMICOLON)
+  {
     parser_fatal (ERR_PARSER);
+  }
 }
 #endif
 
@@ -292,24 +308,24 @@ add_to_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
 {
   rewritable_opcode op = rewritable_opcodes[type];
   if (op.oc_stack == NULL)
-    {
-      op.size = op.head = 1;
-      op.oc_stack = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t), MEM_HEAP_ALLOC_SHORT_TERM);
-      op.oc_stack[0] = oc;
-      return;
-    }
+  {
+    op.size = op.head = 1;
+    op.oc_stack = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t), MEM_HEAP_ALLOC_SHORT_TERM);
+    op.oc_stack[0] = oc;
+    return;
+  }
 
   if (op.head == op.size)
-    {
-      opcode_counter_t *temp = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t) * op.size * 2, 
-                                                                            MEM_HEAP_ALLOC_SHORT_TERM);
-      __memcpy (temp, op.oc_stack, op.size * sizeof (opcode_counter_t));
-      op.size = (uint8_t) (op.size * 2);
-      temp[op.head++] = oc;
-      mem_heap_free_block ((uint8_t *) op.oc_stack);
-      op.oc_stack = temp;
-      return;
-    }
+  {
+    opcode_counter_t *temp = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t) * op.size * 2,
+                             MEM_HEAP_ALLOC_SHORT_TERM);
+    __memcpy (temp, op.oc_stack, op.size * sizeof (opcode_counter_t));
+    op.size = (uint8_t) (op.size * 2);
+    temp[op.head++] = oc;
+    mem_heap_free_block ((uint8_t *) op.oc_stack);
+    op.oc_stack = temp;
+    return;
+  }
 
   op.oc_stack[op.head++] = oc;
 }
@@ -321,24 +337,24 @@ rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
   rewritable_opcode op = rewritable_opcodes[type];
 
   for (i = 0; i < op.head; i++)
+  {
+    switch (type)
     {
-      switch (type)
-      {
-        case REWRITABLE_CONTINUE:
-          REWRITE_OPCODE_1 (op.oc_stack[i], jmp_up, oc);
-          break;
-        case REWRITABLE_BREAK:
-          REWRITE_OPCODE_1 (op.oc_stack[i], jmp_down, oc);
-          break;
-        default:
-          JERRY_UNREACHABLE ();
-      }
+      case REWRITABLE_CONTINUE:
+        REWRITE_OPCODE_1 (op.oc_stack[i], jmp_up, oc);
+        break;
+      case REWRITABLE_BREAK:
+        REWRITE_OPCODE_1 (op.oc_stack[i], jmp_down, oc);
+        break;
+      default:
+        JERRY_UNREACHABLE ();
     }
+  }
 
   if (op.oc_stack)
-    {
-      mem_heap_free_block ((uint8_t *) op.oc_stack);
-    }
+  {
+    mem_heap_free_block ((uint8_t *) op.oc_stack);
+  }
   op.oc_stack = NULL;
   op.head = op.size = 0;
 }
@@ -347,9 +363,9 @@ static int8_t
 intrinsic_argument_count (const char *intrinsic)
 {
   if (!__strcmp (intrinsic, "assert"))
-    {
-      return 1;
-    }
+  {
+    return 1;
+  }
 
   return -1;
 }
@@ -362,10 +378,10 @@ is_intrinsic (T_IDX obj)
      it is identifier, check for intrinsics.  */
   uint8_t strings_count = lexer_get_strings (NULL);
   if (obj < strings_count)
-    {
-      const char *string = lexer_get_string_by_id (obj);
-      return intrinsic_argument_count (string) >= 0;
-    }
+  {
+    const char *string = lexer_get_string_by_id (obj);
+    return intrinsic_argument_count (string) >= 0;
+  }
 
   return false;
 }
@@ -375,19 +391,19 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
 {
   uint8_t strings_count = lexer_get_strings (NULL);
   if (obj < strings_count)
+  {
+    const char *string = lexer_get_string_by_id (obj);
+    if (!__strcmp (string, "assert"))
     {
-      const char *string = lexer_get_string_by_id (obj);
-      if (!__strcmp (string, "assert"))
-        {
-          /* Dump opcodes like
-             is_true_jmp arg, +2
-             exitval 1
-          */
-          DUMP_OPCODE_2 (is_true_jmp, args[0], opcode_counter + 2);
-          DUMP_OPCODE_1 (exitval, 1);
-          return;
-        }
+      /* Dump opcodes like
+         is_true_jmp arg, +2
+         exitval 1
+      */
+      DUMP_OPCODE_2 (is_true_jmp, args[0], opcode_counter + 2);
+      DUMP_OPCODE_1 (exitval, 1);
+      return;
     }
+  }
 
   JERRY_UNREACHABLE ();
 }
@@ -399,7 +415,7 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
   ; */
 static T_IDX
 parse_property_name (void)
-{ 
+{
   switch (tok.type)
   {
     case TOK_NAME:
@@ -433,7 +449,7 @@ parse_property_name_and_value (void)
 /* property_assignment
   : property_name_and_value
   | get LT!* property_name LT!* '(' LT!* ')' LT!* '{' LT!* function_body LT!* '}'
-  | set LT!* property_name LT!* '(' identifier ')' LT!* '{' LT!* function_body LT!* '}' 
+  | set LT!* property_name LT!* '(' identifier ')' LT!* '{' LT!* function_body LT!* '}'
   ; */
 static T_IDX
 parse_property_assignment (void)
@@ -445,55 +461,57 @@ parse_property_assignment (void)
   lhs = next_temp_name ();
 
   if (!__strcmp ("get", lexer_get_string_by_id (tok.data.uid)))
-    {
-      NEXT (name, property_name);
+  {
+    NEXT (name, property_name);
 
-      token_after_newlines_must_be (TOK_OPEN_PAREN);
-      token_after_newlines_must_be (TOK_CLOSE_PAREN);
-      token_after_newlines_must_be (TOK_OPEN_BRACE);
+    token_after_newlines_must_be (TOK_OPEN_PAREN);
+    token_after_newlines_must_be (TOK_CLOSE_PAREN);
+    token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-      DUMP_OPCODE_2 (prop_get_decl, lhs, name);
+    DUMP_OPCODE_2 (prop_get_decl, lhs, name);
 
-      skip_newlines ();
-      parse_source_element_list ();
+    skip_newlines ();
+    parse_source_element_list ();
 
-      token_after_newlines_must_be (TOK_CLOSE_BRACE);
-      DUMP_VOID_OPCODE (ret);
+    token_after_newlines_must_be (TOK_CLOSE_BRACE);
+    DUMP_VOID_OPCODE (ret);
 
-      return lhs;
-    }
+    return lhs;
+  }
   else if (!__strcmp ("set", lexer_get_string_by_id (tok.data.uid)))
-    {
-      NEXT (name, property_name);
+  {
+    NEXT (name, property_name);
 
-      token_after_newlines_must_be (TOK_OPEN_PAREN);
-      token_after_newlines_must_be (TOK_NAME);
-      arg = tok.data.uid;
-      token_after_newlines_must_be (TOK_CLOSE_PAREN);
-      token_after_newlines_must_be (TOK_OPEN_BRACE);
+    token_after_newlines_must_be (TOK_OPEN_PAREN);
+    token_after_newlines_must_be (TOK_NAME);
+    arg = tok.data.uid;
+    token_after_newlines_must_be (TOK_CLOSE_PAREN);
+    token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-      DUMP_OPCODE_3 (prop_set_decl, lhs, name, arg);
+    DUMP_OPCODE_3 (prop_set_decl, lhs, name, arg);
 
-      skip_newlines ();
-      parse_source_element_list ();
+    skip_newlines ();
+    parse_source_element_list ();
 
-      token_after_newlines_must_be (TOK_CLOSE_BRACE);
-      DUMP_VOID_OPCODE (ret);
+    token_after_newlines_must_be (TOK_CLOSE_BRACE);
+    DUMP_VOID_OPCODE (ret);
 
-      return lhs;
-    }
+    return lhs;
+  }
   else
+  {
     return parse_property_name_and_value ();
+  }
 }
 
 static void
 dump_varg_3 (T_IDX current_param, T_IDX params[3])
 {
   if (current_param == 3)
-    {
-      DUMP_OPCODE_3 (varg_3, params[0], params[1], params[2]);
-      current_param = 0;
-    }
+  {
+    DUMP_OPCODE_3 (varg_3, params[0], params[1], params[2]);
+    current_param = 0;
+  }
 }
 
 static void
@@ -504,11 +522,11 @@ dump_varg_end (T_IDX current_param, T_IDX params[3])
     case 0:
       DUMP_OPCODE_1 (varg_1_end, params[0]);
       break;
-              
+
     case 1:
       DUMP_OPCODE_2 (varg_2_end, params[0], params[1]);
       break;
-              
+
     case 2:
       DUMP_OPCODE_3 (varg_3_end, params[0], params[1], params[2]);
       break;
@@ -529,16 +547,16 @@ typedef enum
 }
 argument_list_type;
 
-/** Parse list of identifiers, assigment expressions or properties, splitted by comma. 
+/** Parse list of identifiers, assigment expressions or properties, splitted by comma.
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Returns temp var if expression has lhs, or 0 otherwise.  */
 static T_IDX
 parse_argument_list (argument_list_type alt, T_IDX obj)
 {
   token_type open_tt, close_tt;
-  T_IDX first_opcode_args_count, 
-        lhs = 0, 
-        args[3+1/* +1 for stack protector */], 
+  T_IDX first_opcode_args_count,
+        lhs = 0,
+        args[3+1/* +1 for stack protector */],
         current_arg = 0;
 
   switch (alt)
@@ -562,9 +580,9 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
       close_tt = TOK_CLOSE_PAREN;
       first_opcode_args_count = 1;
       if (is_intrinsic (obj))
-        {
-          break;
-        }
+      {
+        break;
+      }
       lhs = next_temp_name ();
       break;
 
@@ -590,197 +608,203 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 
   skip_newlines ();
   if (tok.type != close_tt)
+  {
+    bool is_first_opcode = true;
+    while (true)
     {
-      bool is_first_opcode = true;
-      while (true)
+      if (is_first_opcode)
+      {
+        if (current_arg == first_opcode_args_count)
         {
-          if (is_first_opcode)
-            { 
-              if (current_arg == first_opcode_args_count)
-                {
-                  switch (alt)
-                  {
-                    case AL_FUNC_DECL:
-                      DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
-                      break;
-
-                    case AL_FUNC_EXPR:
-                      DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
-                      break;
-
-                    case AL_ARRAY_LIT:
-                      DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
-                      break;
-
-                    case AL_OBJECT_LIT:
-                      DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
-                      break;
-
-                    case AL_CONSTRUCT_EXPR:
-                      DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
-                      break;
-
-                    case AL_CALL_EXPR:
-                      if (is_intrinsic (obj))
-                        {
-                          parser_fatal (ERR_PARSER);
-                        }
-                      DUMP_OPCODE_3 (call_n, lhs, obj, args[0]);
-                      break;
-                    
-                    default:
-                      JERRY_UNREACHABLE ();
-                  }
-                  current_arg = 0;
-                  is_first_opcode = false;
-                }
-            }
-          else
-            dump_varg_3 (current_arg, args);
-
           switch (alt)
           {
             case AL_FUNC_DECL:
-              current_token_must_be (TOK_NAME);
-              args[current_arg] = tok.data.uid;
+              DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
               break;
 
             case AL_FUNC_EXPR:
+              DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
+              break;
+
             case AL_ARRAY_LIT:
-            case AL_CONSTRUCT_EXPR:
-            case AL_CALL_EXPR:
-              args[current_arg] = parse_assignment_expression ();
+              DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
               break;
 
             case AL_OBJECT_LIT:
-              args[current_arg] = parse_property_assignment ();
+              DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
+              break;
+
+            case AL_CONSTRUCT_EXPR:
+              DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
+              break;
+
+            case AL_CALL_EXPR:
+              if (is_intrinsic (obj))
+              {
+                parser_fatal (ERR_PARSER);
+              }
+              DUMP_OPCODE_3 (call_n, lhs, obj, args[0]);
               break;
 
             default:
               JERRY_UNREACHABLE ();
           }
-
-          skip_newlines ();
-          if (tok.type != TOK_COMMA)
-            {
-              current_token_must_be (close_tt);
-              break;
-            }
-
-          skip_newlines ();
-          current_arg++;
+          current_arg = 0;
+          is_first_opcode = false;
         }
-
-      if (is_first_opcode)
-        {
-          if (current_arg == 0)
-            {
-              switch (alt)
-              {
-                case AL_FUNC_DECL:
-                  DUMP_OPCODE_2 (func_decl_1, obj, args[0]);
-                  break;
-
-                case AL_FUNC_EXPR:
-                  DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
-                  break;
-
-                case AL_ARRAY_LIT:
-                  DUMP_OPCODE_2 (array_1, lhs, args[0]);
-                  break;
-
-                case AL_OBJECT_LIT:
-                  DUMP_OPCODE_2 (obj_1, lhs, args[0]);
-                  break;
-
-                case AL_CONSTRUCT_EXPR:
-                  DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
-                  break;
-
-                case AL_CALL_EXPR:
-                  if (is_intrinsic (obj))
-                    {
-                      dump_intrinsic (obj, args);
-                    }
-                  else
-                    {
-                      DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
-                    }
-                  break;
-
-                default:
-                  JERRY_UNREACHABLE ();
-              }
-            }
-          else if (current_arg == 1)
-            {
-              switch (alt)
-              {
-                case AL_FUNC_DECL:
-                  DUMP_OPCODE_3 (func_decl_2, obj, args[0], args[1]);
-                  break;
-
-                case AL_ARRAY_LIT:
-                  DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
-                  break;
-
-                case AL_OBJECT_LIT:
-                  DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
-                  break;
-
-                default:
-                  JERRY_UNREACHABLE ();
-              }
-            }
-          else
-            JERRY_UNREACHABLE ();
-        }
+      }
       else
-        dump_varg_end (current_arg, args);
-    }
-  else
-    {
+      {
+        dump_varg_3 (current_arg, args);
+      }
+
       switch (alt)
       {
         case AL_FUNC_DECL:
-          DUMP_OPCODE_1 (func_decl_0, obj);
+          current_token_must_be (TOK_NAME);
+          args[current_arg] = tok.data.uid;
           break;
 
         case AL_FUNC_EXPR:
-          DUMP_OPCODE_2 (func_expr_0, lhs, obj);
-          break;
-
         case AL_ARRAY_LIT:
-          DUMP_OPCODE_1 (array_0, lhs);
+        case AL_CONSTRUCT_EXPR:
+        case AL_CALL_EXPR:
+          args[current_arg] = parse_assignment_expression ();
           break;
 
         case AL_OBJECT_LIT:
-          DUMP_OPCODE_1 (obj_0, lhs);
-          break;
-
-        case AL_CONSTRUCT_EXPR:
-          DUMP_OPCODE_2 (construct_0, lhs, obj);
-          break;
-
-        case AL_CALL_EXPR:
-          DUMP_OPCODE_2 (call_0, lhs, obj);
+          args[current_arg] = parse_property_assignment ();
           break;
 
         default:
           JERRY_UNREACHABLE ();
       }
+
+      skip_newlines ();
+      if (tok.type != TOK_COMMA)
+      {
+        current_token_must_be (close_tt);
+        break;
+      }
+
+      skip_newlines ();
+      current_arg++;
     }
+
+    if (is_first_opcode)
+    {
+      if (current_arg == 0)
+      {
+        switch (alt)
+        {
+          case AL_FUNC_DECL:
+            DUMP_OPCODE_2 (func_decl_1, obj, args[0]);
+            break;
+
+          case AL_FUNC_EXPR:
+            DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
+            break;
+
+          case AL_ARRAY_LIT:
+            DUMP_OPCODE_2 (array_1, lhs, args[0]);
+            break;
+
+          case AL_OBJECT_LIT:
+            DUMP_OPCODE_2 (obj_1, lhs, args[0]);
+            break;
+
+          case AL_CONSTRUCT_EXPR:
+            DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
+            break;
+
+          case AL_CALL_EXPR:
+            if (is_intrinsic (obj))
+            {
+              dump_intrinsic (obj, args);
+            }
+            else
+            {
+              DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
+            }
+            break;
+
+          default:
+            JERRY_UNREACHABLE ();
+        }
+      }
+      else if (current_arg == 1)
+      {
+        switch (alt)
+        {
+          case AL_FUNC_DECL:
+            DUMP_OPCODE_3 (func_decl_2, obj, args[0], args[1]);
+            break;
+
+          case AL_ARRAY_LIT:
+            DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
+            break;
+
+          case AL_OBJECT_LIT:
+            DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
+            break;
+
+          default:
+            JERRY_UNREACHABLE ();
+        }
+      }
+      else
+      {
+        JERRY_UNREACHABLE ();
+      }
+    }
+    else
+    {
+      dump_varg_end (current_arg, args);
+    }
+  }
+  else
+  {
+    switch (alt)
+    {
+      case AL_FUNC_DECL:
+        DUMP_OPCODE_1 (func_decl_0, obj);
+        break;
+
+      case AL_FUNC_EXPR:
+        DUMP_OPCODE_2 (func_expr_0, lhs, obj);
+        break;
+
+      case AL_ARRAY_LIT:
+        DUMP_OPCODE_1 (array_0, lhs);
+        break;
+
+      case AL_OBJECT_LIT:
+        DUMP_OPCODE_1 (obj_0, lhs);
+        break;
+
+      case AL_CONSTRUCT_EXPR:
+        DUMP_OPCODE_2 (construct_0, lhs, obj);
+        break;
+
+      case AL_CALL_EXPR:
+        DUMP_OPCODE_2 (call_0, lhs, obj);
+        break;
+
+      default:
+        JERRY_UNREACHABLE ();
+    }
+  }
 
   return lhs;
 }
 
 /* function_declaration
-	: 'function' LT!* Identifier LT!* 
-	  '(' (LT!* Identifier (LT!* ',' LT!* Identifier)* ) ? LT!* ')' LT!* function_body
-	;
+  : 'function' LT!* Identifier LT!*
+    '(' (LT!* Identifier (LT!* ',' LT!* Identifier)* ) ? LT!* ')' LT!* function_body
+  ;
 
    function_body
-	: '{' LT!* sourceElements LT!* '}' */
+  : '{' LT!* sourceElements LT!* '}' */
 static void
 parse_function_declaration (void)
 {
@@ -813,8 +837,8 @@ parse_function_declaration (void)
 }
 
 /* function_expression
-	: 'function' LT!* Identifier? LT!* '(' formal_parameter_list? LT!* ')' LT!* function_body
-	; */
+  : 'function' LT!* Identifier? LT!* '(' formal_parameter_list? LT!* ')' LT!* function_body
+  ; */
 static T_IDX
 parse_function_expression (void)
 {
@@ -825,15 +849,17 @@ parse_function_expression (void)
 
   skip_newlines ();
   if (tok.type == TOK_NAME)
+  {
     name = tok.data.uid;
+  }
   else
-    {
-      lexer_save_token (tok);
-      name = next_temp_name ();
-    }
+  {
+    lexer_save_token (tok);
+    name = next_temp_name ();
+  }
 
   skip_newlines ();
-  lhs = parse_argument_list (AL_FUNC_EXPR, name);  
+  lhs = parse_argument_list (AL_FUNC_EXPR, name);
 
   jmp_oc = opcode_counter;
   DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
@@ -854,7 +880,7 @@ parse_function_expression (void)
 }
 
 /* array_literal
-  : '[' LT!* assignment_expression? (LT!* ',' (LT!* assignment_expression)?)* LT!* ']' LT!* 
+  : '[' LT!* assignment_expression? (LT!* ',' (LT!* assignment_expression)?)* LT!* ']' LT!*
   ; */
 static T_IDX
 parse_array_literal (void)
@@ -865,7 +891,7 @@ parse_array_literal (void)
 /* object_literal
   : '{' LT!* property_assignment (LT!* ',' LT!* property_assignment)* LT!* '}'
   ; */
-static T_IDX 
+static T_IDX
 parse_object_literal (void)
 {
   return parse_argument_list (AL_OBJECT_LIT, 0);
@@ -885,8 +911,8 @@ parse_literal (void)
 
     case TOK_BOOL:
       lhs = next_temp_name ();
-      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, 
-                   tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE,
+                     tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
       return lhs;
 
     case TOK_INT:
@@ -918,37 +944,45 @@ parse_primary_expression (void)
   T_IDX lhs;
 
   if (is_keyword (KW_THIS))
+  {
+    lhs = next_temp_name ();
+    DUMP_OPCODE_1 (this, lhs);
+    return lhs;
+  }
+  else if (tok.type == TOK_NAME)
+  {
+    return tok.data.uid;
+  }
+  else if (tok.type == TOK_NULL || tok.type == TOK_BOOL
+           || tok.type == TOK_INT || tok.type == TOK_STRING)
+  {
+    return parse_literal ();
+  }
+  else if (tok.type == TOK_OPEN_SQUARE)
+  {
+    return parse_array_literal ();
+  }
+  else if (tok.type == TOK_OPEN_BRACE)
+  {
+    return parse_object_literal ();
+  }
+  else if (tok.type == TOK_OPEN_PAREN)
+  {
+    skip_newlines ();
+    if (tok.type != TOK_CLOSE_PAREN)
     {
-      lhs = next_temp_name ();
-      DUMP_OPCODE_1 (this, lhs);
+      lhs = parse_expression ();
+      token_after_newlines_must_be (TOK_CLOSE_PAREN);
       return lhs;
     }
-  else if (tok.type == TOK_NAME)
-    return tok.data.uid;
-  else if (tok.type == TOK_NULL || tok.type == TOK_BOOL 
-          || tok.type == TOK_INT || tok.type == TOK_STRING)
-    return parse_literal ();
-  else if (tok.type == TOK_OPEN_SQUARE)
-    return parse_array_literal ();
-  else if (tok.type == TOK_OPEN_BRACE)
-    return parse_object_literal ();
-  else if (tok.type == TOK_OPEN_PAREN)
-    {
-      skip_newlines ();
-      if (tok.type != TOK_CLOSE_PAREN)
-        {
-          lhs = parse_expression ();
-          token_after_newlines_must_be (TOK_CLOSE_PAREN);
-          return lhs;
-        }
-    }
+  }
   JERRY_UNREACHABLE ();
 }
 
 /* member_expression
-  : (primary_expression | function_expression | 'new' LT!* member_expression (LT!* '(' LT!* arguments? LT!* ')') 
+  : (primary_expression | function_expression | 'new' LT!* member_expression (LT!* '(' LT!* arguments? LT!* ')')
       (LT!* member_expression_suffix)*
-  ; 
+  ;
 
    arguments
   : assignment_expression (LT!* ',' LT!* assignment_expression)*)?
@@ -958,11 +992,11 @@ parse_primary_expression (void)
   : index_suffix
   | property_reference_suffix
   ;
-  
+
    index_suffix
   : '[' LT!* expression LT!* ']'
-  ; 
-  
+  ;
+
    property_reference_suffix
   : '.' LT!* Identifier
   ; */
@@ -971,46 +1005,50 @@ parse_member_expression (void)
 {
   T_IDX lhs, obj, prop;
   if (is_keyword (KW_FUNCTION))
-    {
-      obj = parse_function_expression ();
-    }
+  {
+    obj = parse_function_expression ();
+  }
   else if (is_keyword (KW_NEW))
-    {
-      T_IDX member;
+  {
+    T_IDX member;
 
-      NEXT (member, member_expression);
+    NEXT (member, member_expression);
 
-      obj = parse_argument_list (AL_CONSTRUCT_EXPR, member);
-    }
+    obj = parse_argument_list (AL_CONSTRUCT_EXPR, member);
+  }
   else
-    {
-      obj = parse_primary_expression ();
-    }
+  {
+    obj = parse_primary_expression ();
+  }
 
   skip_newlines ();
   while (tok.type == TOK_OPEN_SQUARE || tok.type == TOK_DOT)
+  {
+    lhs = next_temp_name ();
+
+    if (tok.type == TOK_OPEN_SQUARE)
     {
-      lhs = next_temp_name ();
-
-      if (tok.type == TOK_OPEN_SQUARE)
-        {
-          NEXT (prop, expression);
-          next_token_must_be (TOK_CLOSE_SQUARE);
-        }
-      else if (tok.type == TOK_DOT)
-        {
-          skip_newlines ();
-          if (tok.type != TOK_NAME)
-            parser_fatal (ERR_PARSER);
-          prop = tok.data.uid;
-        }
-      else 
-        JERRY_UNREACHABLE ();
-
-      DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
-      obj = lhs;
-      skip_newlines ();
+      NEXT (prop, expression);
+      next_token_must_be (TOK_CLOSE_SQUARE);
     }
+    else if (tok.type == TOK_DOT)
+    {
+      skip_newlines ();
+      if (tok.type != TOK_NAME)
+      {
+        parser_fatal (ERR_PARSER);
+      }
+      prop = tok.data.uid;
+    }
+    else
+    {
+      JERRY_UNREACHABLE ();
+    }
+
+    DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+    obj = lhs;
+    skip_newlines ();
+  }
 
   lexer_save_token (tok);
 
@@ -1025,7 +1063,7 @@ parse_member_expression (void)
   : arguments
   | index_suffix
   | property_reference_suffix
-  ; 
+  ;
 
    arguments
   : '(' LT!* assignment_expression LT!* ( ',' LT!* assignment_expression * LT!* )* ')'
@@ -1039,47 +1077,47 @@ parse_call_expression (void)
 
   skip_newlines ();
   if (tok.type != TOK_OPEN_PAREN)
-    {
-      lexer_save_token (tok);
-      return obj;
-    }
+  {
+    lexer_save_token (tok);
+    return obj;
+  }
 
   lhs = parse_argument_list (AL_CALL_EXPR, obj);
   obj = lhs;
 
   skip_newlines ();
-  while (tok.type == TOK_OPEN_PAREN || tok.type == TOK_OPEN_SQUARE 
+  while (tok.type == TOK_OPEN_PAREN || tok.type == TOK_OPEN_SQUARE
          || tok.type == TOK_DOT)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_OPEN_PAREN:
-          lhs = parse_argument_list (AL_CALL_EXPR, obj);
-          skip_newlines ();
-          break;
+      case TOK_OPEN_PAREN:
+        lhs = parse_argument_list (AL_CALL_EXPR, obj);
+        skip_newlines ();
+        break;
 
-        case TOK_OPEN_SQUARE:
-          NEXT (prop, expression);
-          next_token_must_be (TOK_CLOSE_SQUARE);
+      case TOK_OPEN_SQUARE:
+        NEXT (prop, expression);
+        next_token_must_be (TOK_CLOSE_SQUARE);
 
-          DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
-          obj = lhs;
-          skip_newlines ();
-          break;
+        DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+        obj = lhs;
+        skip_newlines ();
+        break;
 
-        case TOK_DOT:
-          token_after_newlines_must_be (TOK_NAME);
-          prop = tok.data.uid;
+      case TOK_DOT:
+        token_after_newlines_must_be (TOK_NAME);
+        prop = tok.data.uid;
 
-          DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
-          obj = lhs;
-          skip_newlines ();
-          break;
+        DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+        obj = lhs;
+        skip_newlines ();
+        break;
 
-        default:
-          JERRY_UNREACHABLE ();
-      }
+      default:
+        JERRY_UNREACHABLE ();
     }
+  }
   lexer_save_token (tok);
 
   return obj;
@@ -1105,17 +1143,19 @@ parse_postfix_expression (void)
 
   tok = lexer_next_token ();
   if (tok.type == TOK_DOUBLE_PLUS)
-    {
-      lhs = next_temp_name ();
-      DUMP_OPCODE_2 (post_incr, lhs, expr);
-    }
+  {
+    lhs = next_temp_name ();
+    DUMP_OPCODE_2 (post_incr, lhs, expr);
+  }
   else if (tok.type == TOK_DOUBLE_MINUS)
-    {
-      lhs = next_temp_name ();
-      DUMP_OPCODE_2 (post_decr, lhs, expr);
-    }
+  {
+    lhs = next_temp_name ();
+    DUMP_OPCODE_2 (post_decr, lhs, expr);
+  }
   else
+  {
     lexer_save_token (tok);
+  }
 
   return expr;
 }
@@ -1168,22 +1208,24 @@ parse_unary_expression (void)
       return lhs;
 
     case TOK_KEYWORD:
-      if (is_keyword (KW_DELETE)) 
-        { 
-          lhs = next_temp_name ();
-          NEXT (expr, unary_expression);
-          DUMP_OPCODE_2 (delete, lhs, expr);
-          return lhs;
-        }
-      if (is_keyword (KW_VOID)) 
+      if (is_keyword (KW_DELETE))
+      {
+        lhs = next_temp_name ();
+        NEXT (expr, unary_expression);
+        DUMP_OPCODE_2 (delete, lhs, expr);
+        return lhs;
+      }
+      if (is_keyword (KW_VOID))
+      {
         JERRY_UNIMPLEMENTED ();
+      }
       if (is_keyword (KW_TYPEOF))
-        { 
-          lhs = next_temp_name ();
-          NEXT (expr, unary_expression);
-          DUMP_OPCODE_2 (typeof, lhs, expr);
-          return lhs;
-        }
+      {
+        lhs = next_temp_name ();
+        NEXT (expr, unary_expression);
+        DUMP_OPCODE_2 (typeof, lhs, expr);
+        return lhs;
+      }
       /* FALLTHRU.  */
 
     default:
@@ -1210,26 +1252,29 @@ parse_multiplicative_expression (void)
 
   skip_newlines ();
   while (true)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_MULT: DUMP_OF (multiplication, unary_expression)
-        case TOK_DIV: DUMP_OF (division, unary_expression)
-        case TOK_MOD: DUMP_OF (remainder, unary_expression)
-        
-        default:
-          lexer_save_token (tok);
-          return expr1;
-      }
+      case TOK_MULT:
+        DUMP_OF (multiplication, unary_expression)
+      case TOK_DIV:
+        DUMP_OF (division, unary_expression)
+      case TOK_MOD:
+        DUMP_OF (remainder, unary_expression)
 
-      skip_newlines ();
+      default:
+        lexer_save_token (tok);
+        return expr1;
     }
+
+    skip_newlines ();
+  }
 }
 
 /* additive_expression
   : multiplicative_expression (LT!* ('+' | '-') LT!* multiplicative_expression)*
   ; */
-static T_IDX 
+static T_IDX
 parse_additive_expression (void)
 {
   T_IDX lhs, expr1, expr2;
@@ -1238,19 +1283,21 @@ parse_additive_expression (void)
 
   skip_newlines ();
   while (true)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_PLUS: DUMP_OF (addition, multiplicative_expression);
-        case TOK_MINUS: DUMP_OF (substraction, multiplicative_expression);
-        
-        default:
-          lexer_save_token (tok);
-          return expr1;
-      }
+      case TOK_PLUS:
+        DUMP_OF (addition, multiplicative_expression);
+      case TOK_MINUS:
+        DUMP_OF (substraction, multiplicative_expression);
 
-      skip_newlines ();
+      default:
+        lexer_save_token (tok);
+        return expr1;
     }
+
+    skip_newlines ();
+  }
 }
 
 /* shift_expression
@@ -1265,20 +1312,23 @@ parse_shift_expression (void)
 
   skip_newlines ();
   while (true)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_LSHIFT: DUMP_OF (b_shift_left, additive_expression)
-        case TOK_RSHIFT: DUMP_OF (b_shift_right, additive_expression)
-        case TOK_RSHIFT_EX: DUMP_OF (b_shift_uright, additive_expression)
-        
-        default:
-          lexer_save_token (tok);
-          return expr1;
-      }
+      case TOK_LSHIFT:
+        DUMP_OF (b_shift_left, additive_expression)
+      case TOK_RSHIFT:
+        DUMP_OF (b_shift_right, additive_expression)
+      case TOK_RSHIFT_EX:
+        DUMP_OF (b_shift_uright, additive_expression)
 
-      skip_newlines ();
+      default:
+        lexer_save_token (tok);
+        return expr1;
     }
+
+    skip_newlines ();
+  }
 }
 
 /* relational_expression
@@ -1293,31 +1343,35 @@ parse_relational_expression (void)
 
   skip_newlines ();
   while (true)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_LESS: DUMP_OF (less_than, shift_expression)
-        case TOK_GREATER: DUMP_OF (greater_than, shift_expression)
-        case TOK_LESS_EQ: DUMP_OF (less_or_equal_than, shift_expression)
-        case TOK_GREATER_EQ: DUMP_OF (greater_or_equal_than, shift_expression)
-        case TOK_KEYWORD:
-          if (is_keyword (KW_INSTANCEOF))
-            {
-              DUMP_OF (instanceof, shift_expression)
-            }
-          else if (is_keyword (KW_IN))
-            {
-              DUMP_OF (in, shift_expression)
-            }
-          // FALLTHRU
-        
-        default:
-          lexer_save_token (tok);
-          return expr1;
-      }
+      case TOK_LESS:
+        DUMP_OF (less_than, shift_expression)
+      case TOK_GREATER:
+        DUMP_OF (greater_than, shift_expression)
+      case TOK_LESS_EQ:
+        DUMP_OF (less_or_equal_than, shift_expression)
+      case TOK_GREATER_EQ:
+        DUMP_OF (greater_or_equal_than, shift_expression)
+      case TOK_KEYWORD:
+        if (is_keyword (KW_INSTANCEOF))
+        {
+          DUMP_OF (instanceof, shift_expression)
+        }
+        else if (is_keyword (KW_IN))
+        {
+          DUMP_OF (in, shift_expression)
+        }
+        // FALLTHRU
 
-      skip_newlines ();
+      default:
+        lexer_save_token (tok);
+        return expr1;
     }
+
+    skip_newlines ();
+  }
 }
 
 /* equality_expression
@@ -1332,21 +1386,25 @@ parse_equality_expression (void)
 
   skip_newlines ();
   while (true)
+  {
+    switch (tok.type)
     {
-      switch (tok.type)
-      {
-        case TOK_DOUBLE_EQ: DUMP_OF (equal_value, relational_expression)
-        case TOK_NOT_EQ: DUMP_OF (not_equal_value, relational_expression)
-        case TOK_TRIPLE_EQ: DUMP_OF (equal_value_type, relational_expression)
-        case TOK_NOT_DOUBLE_EQ: DUMP_OF (not_equal_value_type, relational_expression)
+      case TOK_DOUBLE_EQ:
+        DUMP_OF (equal_value, relational_expression)
+      case TOK_NOT_EQ:
+        DUMP_OF (not_equal_value, relational_expression)
+      case TOK_TRIPLE_EQ:
+        DUMP_OF (equal_value_type, relational_expression)
+      case TOK_NOT_DOUBLE_EQ:
+        DUMP_OF (not_equal_value_type, relational_expression)
 
-        default:
-          lexer_save_token (tok);
-          return expr1;
-      }
-
-      skip_newlines ();
+      default:
+        lexer_save_token (tok);
+        return expr1;
     }
+
+    skip_newlines ();
+  }
 }
 
 #define PARSE_OF(FUNC, EXPR, TOK_TYPE, GETOP) \
@@ -1400,40 +1458,40 @@ parse_conditional_expression (bool *was_conditional)
 
   skip_newlines ();
   if (tok.type == TOK_QUERY)
-    {
-      T_IDX lhs, res = next_temp_name ();
-      opcode_counter_t jmp_oc;
+  {
+    T_IDX lhs, res = next_temp_name ();
+    opcode_counter_t jmp_oc;
 
-      DUMP_OPCODE_2 (is_true_jmp, expr, opcode_counter + 2);
-      jmp_oc = opcode_counter;
-      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+    DUMP_OPCODE_2 (is_true_jmp, expr, opcode_counter + 2);
+    jmp_oc = opcode_counter;
+    DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
-      NEXT (lhs, assignment_expression);
-      DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
-      token_after_newlines_must_be (TOK_COLON);
+    NEXT (lhs, assignment_expression);
+    DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
+    token_after_newlines_must_be (TOK_COLON);
 
-      REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
-      jmp_oc = opcode_counter;
-      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+    REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
+    jmp_oc = opcode_counter;
+    DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
 
-      NEXT (lhs, assignment_expression);
-      DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
-      REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
+    NEXT (lhs, assignment_expression);
+    DUMP_OPCODE_3 (assignment, res, OPCODE_ARG_TYPE_VARIABLE, lhs);
+    REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
 
-      *was_conditional = true;
-      return res;
-    }
+    *was_conditional = true;
+    return res;
+  }
   else
-    {
-      lexer_save_token (tok);
-      return expr;
-    }
+  {
+    lexer_save_token (tok);
+    return expr;
+  }
 }
 
 /* assignment_expression
   : conditional_expression
   | left_hand_side_expression LT!* assignment_operator LT!* assignment_expression
-  ; */  
+  ; */
 static T_IDX
 parse_assignment_expression (void)
 {
@@ -1442,75 +1500,75 @@ parse_assignment_expression (void)
 
   lhs = parse_conditional_expression (&was_conditional);
   if (was_conditional)
-    {
-      return lhs;
-    }
+  {
+    return lhs;
+  }
 
   skip_newlines ();
   switch (tok.type)
-    {  
-      case TOK_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_VARIABLE, rhs);
-        break;
+  {
+    case TOK_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_VARIABLE, rhs);
+      break;
 
-      case TOK_MULT_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (multiplication, lhs, lhs, rhs);
-        break;
+    case TOK_MULT_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (multiplication, lhs, lhs, rhs);
+      break;
 
-      case TOK_DIV_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (division, lhs, lhs, rhs);
-        break;
-        
-      case TOK_MOD_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (remainder, lhs, lhs, rhs);
-        break;
-        
-      case TOK_PLUS_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (addition, lhs, lhs, rhs);
-        break;
-        
-      case TOK_MINUS_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (substraction, lhs, lhs, rhs);
-        break;
-        
-      case TOK_LSHIFT_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_shift_left, lhs, lhs, rhs);
-        break;
-        
-      case TOK_RSHIFT_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_shift_right, lhs, lhs, rhs);
-        break;
-        
-      case TOK_RSHIFT_EX_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_shift_uright, lhs, lhs, rhs);
-        break;
-        
-      case TOK_AND_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_and, lhs, lhs, rhs);
-        break;
-        
-      case TOK_XOR_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_xor, lhs, lhs, rhs);
-        break;
-        
-      case TOK_OR_EQ:
-        NEXT (rhs, assignment_expression);
-        DUMP_OPCODE_3 (b_or, lhs, lhs, rhs);
-        break;
-        
-      default:
-        lexer_save_token (tok);
+    case TOK_DIV_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (division, lhs, lhs, rhs);
+      break;
+
+    case TOK_MOD_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (remainder, lhs, lhs, rhs);
+      break;
+
+    case TOK_PLUS_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (addition, lhs, lhs, rhs);
+      break;
+
+    case TOK_MINUS_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (substraction, lhs, lhs, rhs);
+      break;
+
+    case TOK_LSHIFT_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_shift_left, lhs, lhs, rhs);
+      break;
+
+    case TOK_RSHIFT_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_shift_right, lhs, lhs, rhs);
+      break;
+
+    case TOK_RSHIFT_EX_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_shift_uright, lhs, lhs, rhs);
+      break;
+
+    case TOK_AND_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_and, lhs, lhs, rhs);
+      break;
+
+    case TOK_XOR_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_xor, lhs, lhs, rhs);
+      break;
+
+    case TOK_OR_EQ:
+      NEXT (rhs, assignment_expression);
+      DUMP_OPCODE_3 (b_or, lhs, lhs, rhs);
+      break;
+
+    default:
+      lexer_save_token (tok);
   }
 
   return lhs;
@@ -1526,24 +1584,26 @@ parse_expression (void)
   T_IDX expr = parse_assignment_expression ();
 
   while (true)
+  {
+    skip_newlines ();
+    if (tok.type == TOK_COMMA)
     {
-      skip_newlines ();
-      if (tok.type == TOK_COMMA)
-        NEXT (expr, assignment_expression);
-      else
-        {
-          lexer_save_token (tok);
-          return expr;
-        }
+      NEXT (expr, assignment_expression);
     }
+    else
+    {
+      lexer_save_token (tok);
+      return expr;
+    }
+  }
 }
 
 /* variable_declaration
-	: Identifier LT!* initialiser?
-	;
+  : Identifier LT!* initialiser?
+  ;
    initialiser
-	: '=' LT!* assignment_expression
-	; */
+  : '=' LT!* assignment_expression
+  ; */
 static void
 parse_variable_declaration (void)
 {
@@ -1555,42 +1615,46 @@ parse_variable_declaration (void)
 
   skip_newlines ();
   if (tok.type == TOK_EQ)
-    {
-      NEXT (expr, assignment_expression);
-      DUMP_OPCODE_3 (assignment, name, OPCODE_ARG_TYPE_VARIABLE, expr);
-    }
+  {
+    NEXT (expr, assignment_expression);
+    DUMP_OPCODE_3 (assignment, name, OPCODE_ARG_TYPE_VARIABLE, expr);
+  }
   else
+  {
     lexer_save_token (tok);
+  }
 }
 
 /* variable_declaration_list
-	: variable_declaration 
-	  (LT!* ',' LT!* variable_declaration)*
-	; */
+  : variable_declaration
+    (LT!* ',' LT!* variable_declaration)*
+  ; */
 static void
 parse_variable_declaration_list (bool *several_decls)
 {
   while (true)
+  {
+    parse_variable_declaration ();
+
+    skip_newlines ();
+    if (tok.type != TOK_COMMA)
     {
-      parse_variable_declaration ();
-
-      skip_newlines ();
-      if (tok.type != TOK_COMMA)
-        {
-          lexer_save_token (tok);
-          return;
-        }
-
-      skip_newlines ();
-      if (several_decls)
-        *several_decls = true;
+      lexer_save_token (tok);
+      return;
     }
+
+    skip_newlines ();
+    if (several_decls)
+    {
+      *several_decls = true;
+    }
+  }
 }
 
 /* for_statement
-	: 'for' LT!* '(' (LT!* for_statement_initialiser_part)? LT!* ';' 
-	  (LT!* expression)? LT!* ';' (LT!* expression)? LT!* ')' LT!* statement
-	;
+  : 'for' LT!* '(' (LT!* for_statement_initialiser_part)? LT!* ';'
+    (LT!* expression)? LT!* ';' (LT!* expression)? LT!* ')' LT!* statement
+  ;
 
    for_statement_initialiser_part
   : expression
@@ -1598,9 +1662,9 @@ parse_variable_declaration_list (bool *several_decls)
   ;
 
    for_in_statement
-	: 'for' LT!* '(' LT!* for_in_statement_initialiser_part LT!* 'in' 
-	  LT!* expression LT!* ')' LT!* statement
-	; 
+  : 'for' LT!* '(' LT!* for_in_statement_initialiser_part LT!* 'in'
+    LT!* expression LT!* ')' LT!* statement
+  ;
 
    for_in_statement_initialiser_part
   : left_hand_side_expression
@@ -1618,53 +1682,67 @@ parse_for_or_for_in_statement (void)
 
   skip_newlines ();
   if (tok.type == TOK_SEMICOLON)
+  {
     goto plain_for;
+  }
   /* Both for_statement_initialiser_part and for_in_statement_initialiser_part
      contains 'var'. Check it first.  */
   if (is_keyword (KW_VAR))
+  {
+    bool several_decls = false;
+    skip_newlines ();
+    parse_variable_declaration_list (&several_decls);
+    if (several_decls)
     {
-      bool several_decls = false;
-      skip_newlines ();
-      parse_variable_declaration_list (&several_decls);
-      if (several_decls)
-        {
-          token_after_newlines_must_be (TOK_SEMICOLON);
-          goto plain_for;
-        }
-      else
-        {
-          skip_newlines ();
-          if (tok.type == TOK_SEMICOLON)
-            goto plain_for;
-          else if (is_keyword (KW_IN))
-            goto for_in;
-          else
-            parser_fatal (ERR_PARSER);
-        }
+      token_after_newlines_must_be (TOK_SEMICOLON);
+      goto plain_for;
     }
+    else
+    {
+      skip_newlines ();
+      if (tok.type == TOK_SEMICOLON)
+      {
+        goto plain_for;
+      }
+      else if (is_keyword (KW_IN))
+      {
+        goto for_in;
+      }
+      else
+      {
+        parser_fatal (ERR_PARSER);
+      }
+    }
+  }
 
   /* expression contains left_hand_side_expression.  */
   parse_expression ();
 
   skip_newlines ();
   if (tok.type == TOK_SEMICOLON)
+  {
     goto plain_for;
+  }
   else if (is_keyword (KW_IN))
+  {
     goto for_in;
-  else 
+  }
+  else
+  {
     parser_fatal (ERR_PARSER);
+  }
 
   JERRY_UNREACHABLE ();
 
 plain_for:
-  /* Represent loop like 
+  /* Represent loop like
 
      for (i = 0; i < 10; i++) {
        body;
      }
 
      as
-      
+
   11   i = #0;
    cond_oc:
   12   tmp1 = #10;
@@ -1687,12 +1765,14 @@ plain_for:
   cond_oc = opcode_counter;
   skip_newlines ();
   if (tok.type != TOK_SEMICOLON)
-    {
-      stop = parse_assignment_expression ();
-      next_token_must_be (TOK_SEMICOLON);
-    }
+  {
+    stop = parse_assignment_expression ();
+    next_token_must_be (TOK_SEMICOLON);
+  }
   else
+  {
     stop = integer_one ();
+  }
 
   end_oc = opcode_counter;
   DUMP_OPCODE_2 (is_false_jmp, stop, INVALID_VALUE);
@@ -1703,10 +1783,10 @@ plain_for:
   step_oc = opcode_counter;
   skip_newlines ();
   if (tok.type != TOK_CLOSE_PAREN)
-    {
-      parse_assignment_expression ();
-      next_token_must_be (TOK_CLOSE_PAREN);
-    }
+  {
+    parse_assignment_expression ();
+    next_token_must_be (TOK_CLOSE_PAREN);
+  }
   DUMP_OPCODE_1 (jmp_up, opcode_counter - cond_oc);
   REWRITE_OPCODE_1 (body_oc, jmp_down, opcode_counter - body_oc);
 
@@ -1744,20 +1824,20 @@ static void
 parse_statement_list (void)
 {
   while (true)
-    {
-      parse_statement ();
+  {
+    parse_statement ();
 
+    skip_newlines ();
+    while (tok.type == TOK_SEMICOLON)
+    {
       skip_newlines ();
-      while (tok.type == TOK_SEMICOLON)
-        {
-          skip_newlines ();
-        }
-      if (tok.type == TOK_CLOSE_BRACE)
-        {
-          lexer_save_token (tok);
-          return;
-        }
     }
+    if (tok.type == TOK_CLOSE_BRACE)
+    {
+      lexer_save_token (tok);
+      return;
+    }
+  }
 }
 
 /* if_statement
@@ -1781,12 +1861,14 @@ parse_if_statement (void)
 
   skip_newlines ();
   if (is_keyword (KW_ELSE))
-    {
-      skip_newlines ();
-      parse_statement ();
-    }
+  {
+    skip_newlines ();
+    parse_statement ();
+  }
   else
+  {
     lexer_save_token (tok);
+  }
 }
 
 /* do_while_statement
@@ -1853,7 +1935,7 @@ parse_with_statement (void)
   assert_keyword (KW_WITH);
   expr = parse_expression_inside_parens ();
 
-  DUMP_OPCODE_1 (with, expr); 
+  DUMP_OPCODE_1 (with, expr);
 
   skip_newlines ();
   parse_statement ();
@@ -1877,7 +1959,7 @@ parse_switch_statement (void)
    catch_clause
   : 'catch' LT!* '(' LT!* Identifier LT!* ')' LT!* '{' LT!* statement_list LT!* '}'
   ;
-  
+
    finally_clause
   : 'finally' LT!* '{' LT!* statement_list LT!* '}'
   ;*/
@@ -1888,64 +1970,64 @@ parse_try_statement (void)
 }
 
 /* statement
-	: statement_block
-	| variable_statement
-	| empty_statement
-	| if_statement
-	| iteration_statement
-	| continue_statement
-	| break_statement
-	| return_statement
-	| with_statement
-	| labelled_statement
-	| switch_statement
-	| throw_statement
-	| try_statement
-	| expression_statement
-	;
+  : statement_block
+  | variable_statement
+  | empty_statement
+  | if_statement
+  | iteration_statement
+  | continue_statement
+  | break_statement
+  | return_statement
+  | with_statement
+  | labelled_statement
+  | switch_statement
+  | throw_statement
+  | try_statement
+  | expression_statement
+  ;
 
    statement_block
-	: '{' LT!* statement_list? LT!* '}'
-	;
+  : '{' LT!* statement_list? LT!* '}'
+  ;
 
    variable_statement
-	: 'var' LT!* variable_declaration_list (LT | ';')!
-	;
+  : 'var' LT!* variable_declaration_list (LT | ';')!
+  ;
 
    empty_statement
-	: ';'
-	;
+  : ';'
+  ;
 
    expression_statement
-	: expression (LT | ';')!
-	; 
+  : expression (LT | ';')!
+  ;
 
    iteration_statement
-	: do_while_statement
-	| while_statement
-	| for_statement
-	| for_in_statement
-	; 
+  : do_while_statement
+  | while_statement
+  | for_statement
+  | for_in_statement
+  ;
 
    continue_statement
-	: 'continue' Identifier? (LT | ';')!
-	;
+  : 'continue' Identifier? (LT | ';')!
+  ;
 
    break_statement
-	: 'break' Identifier? (LT | ';')!
-	;
+  : 'break' Identifier? (LT | ';')!
+  ;
 
    return_statement
-	: 'return' expression? (LT | ';')!
-	; 
+  : 'return' expression? (LT | ';')!
+  ;
 
    switchStatement
   : 'switch' LT!* '(' LT!* expression LT!* ')' LT!* caseBlock
-  ; 
+  ;
 
    throw_statement
   : 'throw' expression (LT | ';')!
-  ; 
+  ;
 
    try_statement
   : 'try' LT!* '{' LT!* statement_list LT!* '}' LT!* (finally_clause | catch_clause (LT!* finally_clause)?)
@@ -1956,120 +2038,128 @@ parse_statement (void)
   reset_temp_name ();
 
   if (tok.type == TOK_CLOSE_BRACE)
-    {
-      lexer_save_token (tok);
-      return;
-    }
+  {
+    lexer_save_token (tok);
+    return;
+  }
   if (tok.type == TOK_OPEN_BRACE)
+  {
+    skip_newlines ();
+    if (tok.type != TOK_CLOSE_BRACE)
     {
-      skip_newlines ();
-      if (tok.type != TOK_CLOSE_BRACE)
-        {
-          parse_statement_list ();
-          next_token_must_be (TOK_CLOSE_BRACE);
-        }
-      return;
+      parse_statement_list ();
+      next_token_must_be (TOK_CLOSE_BRACE);
     }
+    return;
+  }
   if (is_keyword (KW_VAR))
-    {
-      skip_newlines ();
-      parse_variable_declaration_list (NULL);
-      return;
-    }
+  {
+    skip_newlines ();
+    parse_variable_declaration_list (NULL);
+    return;
+  }
   if (tok.type == TOK_SEMICOLON)
-    {
-      return;
-    }
+  {
+    return;
+  }
   if (is_keyword (KW_IF))
-    {
-      parse_if_statement ();
-      return;
-    }
+  {
+    parse_if_statement ();
+    return;
+  }
   if (is_keyword (KW_DO))
-    {
-      parse_do_while_statement ();
-      return;
-    }
+  {
+    parse_do_while_statement ();
+    return;
+  }
   if (is_keyword (KW_WHILE))
-    {
-      parse_while_statement ();
-      return;
-    }
+  {
+    parse_while_statement ();
+    return;
+  }
   if (is_keyword (KW_FOR))
-    {
-      parse_for_or_for_in_statement ();
-      return;
-    }
+  {
+    parse_for_or_for_in_statement ();
+    return;
+  }
   if (is_keyword (KW_CONTINUE))
+  {
+    must_be_inside_but_not_in ((uint8_t[])
     {
-      must_be_inside_but_not_in ((uint8_t[]){NESTING_ITERATIONAL, NESTING_SWITCH}, 2, 
-                                 NESTING_FUNCTION);
-      add_to_rewritable_opcodes (REWRITABLE_CONTINUE, opcode_counter);
-      DUMP_OPCODE_1 (jmp_up, INVALID_VALUE);
-      return;
-    }
+      NESTING_ITERATIONAL, NESTING_SWITCH
+    }, 2,
+    NESTING_FUNCTION);
+    add_to_rewritable_opcodes (REWRITABLE_CONTINUE, opcode_counter);
+    DUMP_OPCODE_1 (jmp_up, INVALID_VALUE);
+    return;
+  }
   if (is_keyword (KW_BREAK))
+  {
+    must_be_inside_but_not_in ((uint8_t[])
     {
-      must_be_inside_but_not_in ((uint8_t[]){NESTING_ITERATIONAL, NESTING_SWITCH}, 2, 
-                                 NESTING_FUNCTION);
-      add_to_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
-      DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
-      return;
-    }
+      NESTING_ITERATIONAL, NESTING_SWITCH
+    }, 2,
+    NESTING_FUNCTION);
+    add_to_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
+    DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+    return;
+  }
   if (is_keyword (KW_RETURN))
+  {
+    T_IDX expr;
+    tok = lexer_next_token ();
+    if (tok.type != TOK_SEMICOLON)
     {
-      T_IDX expr;
-      tok = lexer_next_token ();
-      if (tok.type != TOK_SEMICOLON)
-        {
-          expr = parse_expression ();
-          DUMP_OPCODE_1 (retval, expr);
-        }
-      else
-        DUMP_VOID_OPCODE (ret);
-      return;
+      expr = parse_expression ();
+      DUMP_OPCODE_1 (retval, expr);
     }
+    else
+    {
+      DUMP_VOID_OPCODE (ret);
+    }
+    return;
+  }
   if (is_keyword (KW_WITH))
-    {
-      parse_with_statement ();
-      return;
-    }
+  {
+    parse_with_statement ();
+    return;
+  }
   if (is_keyword (KW_SWITCH))
-    {
-      parse_switch_statement ();
-      return;
-    }
+  {
+    parse_switch_statement ();
+    return;
+  }
   if (is_keyword (KW_THROW))
+  {
+    JERRY_UNIMPLEMENTED ();
+  }
+  if (is_keyword (KW_TRY))
+  {
+    parse_try_statement ();
+    return;
+  }
+  if (tok.type == TOK_NAME)
+  {
+    token saved = tok;
+    skip_newlines ();
+    if (tok.type == TOK_COLON)
     {
+      // STMT_LABELLED;
       JERRY_UNIMPLEMENTED ();
     }
-  if (is_keyword (KW_TRY))
+    else
     {
-      parse_try_statement ();
-      return;
-    }
-  if (tok.type == TOK_NAME)
-    {
-      token saved = tok;
-      skip_newlines ();
-      if (tok.type == TOK_COLON)
-        {
-          // STMT_LABELLED;
-          JERRY_UNIMPLEMENTED ();
-        }
-      else
-        {
-          lexer_save_token (tok);
-          tok = saved;
-          parse_expression ();
-          return;
-        }
-    }
-  else
-    {
+      lexer_save_token (tok);
+      tok = saved;
       parse_expression ();
       return;
     }
+  }
+  else
+  {
+    parse_expression ();
+    return;
+  }
 }
 
 /* source_element
@@ -2080,9 +2170,13 @@ static void
 parse_source_element (void)
 {
   if (is_keyword (KW_FUNCTION))
+  {
     parse_function_declaration ();
+  }
   else
+  {
     parse_statement ();
+  }
 }
 
 /* source_element_list
@@ -2098,17 +2192,23 @@ parse_source_element_list (void)
   DUMP_OPCODE_2 (reg_var_decl, min_temp_name, INVALID_VALUE);
 
   while (tok.type != TOK_EOF && tok.type != TOK_CLOSE_BRACE)
-    {
-      parse_source_element ();
-      skip_newlines ();
-    }
+  {
+    parse_source_element ();
+    skip_newlines ();
+  }
   lexer_save_token (tok);
   if (max_temp_name > min_temp_name)
+  {
     REWRITE_OPCODE_2 (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name - 1);
+  }
   else if (max_temp_name == min_temp_name)
+  {
     REWRITE_OPCODE_2 (reg_var_decl_loc, reg_var_decl, min_temp_name, max_temp_name);
+  }
   else
+  {
     JERRY_UNREACHABLE ();
+  }
   finish_scope ();
   optimizer_reorder_scope ((uint16_t) (reg_var_decl_loc + 1), opcode_counter);
 }

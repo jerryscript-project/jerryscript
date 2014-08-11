@@ -49,39 +49,39 @@ size_t mem_free_chunks_number;
  */
 mem_pools_stats_t mem_pools_stats;
 
-static void mem_pools_stat_init( void);
-static void mem_pools_stat_alloc_pool( void);
-static void mem_pools_stat_free_pool( void);
-static void mem_pools_stat_alloc_chunk(void );
-static void mem_pools_stat_free_chunk( void);
+static void mem_pools_stat_init (void);
+static void mem_pools_stat_alloc_pool (void);
+static void mem_pools_stat_free_pool (void);
+static void mem_pools_stat_alloc_chunk (void);
+static void mem_pools_stat_free_chunk (void);
 #else /* !MEM_STATS */
-#  define mem_pools_stat_init()
-#  define mem_pools_stat_alloc_pool()
-#  define mem_pools_stat_free_pool()
-#  define mem_pools_stat_alloc_chunk()
-#  define mem_pools_stat_free_chunk()
+#  define mem_pools_stat_init ()
+#  define mem_pools_stat_alloc_pool ()
+#  define mem_pools_stat_free_pool ()
+#  define mem_pools_stat_alloc_chunk ()
+#  define mem_pools_stat_free_chunk ()
 #endif /* !MEM_STATS */
 
 /**
  * Initialize pool manager
  */
 void
-mem_pools_init( void)
+mem_pools_init (void)
 {
   mem_pools = NULL;
   mem_free_chunks_number = 0;
 
-  mem_pools_stat_init();
+  mem_pools_stat_init ();
 } /* mem_pools_init */
 
 /**
  * Finalize pool manager
  */
 void
-mem_pools_finalize( void)
+mem_pools_finalize (void)
 {
-  JERRY_ASSERT( mem_pools == NULL );
-  JERRY_ASSERT( mem_free_chunks_number == 0 );
+  JERRY_ASSERT(mem_pools == NULL);
+  JERRY_ASSERT(mem_free_chunks_number == 0);
 } /* mem_pools_finalize */
 
 /**
@@ -91,23 +91,23 @@ mem_pools_finalize( void)
  *         or NULL - if not enough memory.
  */
 uint8_t*
-mem_pools_alloc( void)
+mem_pools_alloc (void)
 {
     /**
      * If there are no free chunks, allocate new pool.
      */
-    if ( mem_free_chunks_number == 0 )
+    if (mem_free_chunks_number == 0)
     {
         /**
          * Space, at least for header and eight chunks.
          *
          * TODO: Config.
          */
-        size_t pool_size = mem_heap_recommend_allocation_size( sizeof(mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE );
+        size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE);
 
-        mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block( pool_size, MEM_HEAP_ALLOC_LONG_TERM);
+        mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (pool_size, MEM_HEAP_ALLOC_LONG_TERM);
 
-        if ( pool_state == NULL )
+        if (pool_state == NULL)
         {
             /**
              * Not enough space for new pool.
@@ -115,15 +115,15 @@ mem_pools_alloc( void)
             return NULL;
         }
 
-        mem_pool_init( pool_state, pool_size);
+        mem_pool_init (pool_state, pool_size);
 
-        pool_state->next_pool_cp = ( mem_pools == NULL ) ? MEM_COMPRESSED_POINTER_NULL
-                                                         : (uint16_t) mem_compress_pointer( mem_pools);
+        pool_state->next_pool_cp = (mem_pools == NULL) ? MEM_COMPRESSED_POINTER_NULL
+                                                         : (uint16_t) mem_compress_pointer (mem_pools);
         mem_pools = pool_state;
 
         mem_free_chunks_number += pool_state->chunks_number;
 
-        mem_pools_stat_alloc_pool();
+        mem_pools_stat_alloc_pool ();
     }
 
     /**
@@ -133,11 +133,11 @@ mem_pools_alloc( void)
      */
     mem_pool_state_t *pool_state = mem_pools;
 
-    while ( pool_state->first_free_chunk == pool_state->chunks_number )
+    while (pool_state->first_free_chunk == pool_state->chunks_number)
     {
-        pool_state = mem_decompress_pointer( pool_state->next_pool_cp);
+        pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
 
-        JERRY_ASSERT( pool_state != NULL );
+        JERRY_ASSERT(pool_state != NULL);
     }
 
     /**
@@ -145,64 +145,64 @@ mem_pools_alloc( void)
      */
     mem_free_chunks_number--;
 
-    mem_pools_stat_alloc_chunk();
+    mem_pools_stat_alloc_chunk ();
 
-    return mem_pool_alloc_chunk( pool_state);
+    return mem_pool_alloc_chunk (pool_state);
 } /* mem_pools_alloc */
 
 /**
  * Free the chunk
  */
 void
-mem_pools_free( uint8_t *chunk_p) /**< pointer to the chunk */
+mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 {
     mem_pool_state_t *pool_state = mem_pools, *prev_pool_state = NULL;
 
     /**
      * Search for the pool containing specified chunk.
      */
-    while ( !( chunk_p >= MEM_POOL_SPACE_START( pool_state)
-               && chunk_p <= MEM_POOL_SPACE_START( pool_state) + pool_state->chunks_number * MEM_POOL_CHUNK_SIZE ) )
+    while (!(chunk_p >= MEM_POOL_SPACE_START(pool_state)
+               && chunk_p <= MEM_POOL_SPACE_START(pool_state) + pool_state->chunks_number * MEM_POOL_CHUNK_SIZE))
     {
         prev_pool_state = pool_state;
-        pool_state = mem_decompress_pointer( pool_state->next_pool_cp);
+        pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
 
-        JERRY_ASSERT( pool_state != NULL );
+        JERRY_ASSERT(pool_state != NULL);
     }
 
     /**
      * Free the chunk
      */
-    mem_pool_free_chunk( pool_state, chunk_p);
+    mem_pool_free_chunk (pool_state, chunk_p);
     mem_free_chunks_number++;
 
-    mem_pools_stat_free_chunk();
+    mem_pools_stat_free_chunk ();
 
     /**
      * If all chunks of the pool are free, free the pool itself.
      */
-    if ( pool_state->free_chunks_number == pool_state->chunks_number )
+    if (pool_state->free_chunks_number == pool_state->chunks_number)
     {
-        if ( prev_pool_state != NULL )
+        if (prev_pool_state != NULL)
         {
             prev_pool_state->next_pool_cp = pool_state->next_pool_cp;
         } else
         {
-            if ( pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL )
+            if (pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL)
               {
                 mem_pools = NULL;
               }
             else
               {
-                mem_pools = mem_decompress_pointer( pool_state->next_pool_cp);
+                mem_pools = mem_decompress_pointer (pool_state->next_pool_cp);
               }
         }
 
         mem_free_chunks_number -= pool_state->chunks_number;
 
-        mem_heap_free_block( (uint8_t*)pool_state);
+        mem_heap_free_block ((uint8_t*)pool_state);
 
-        mem_pools_stat_free_pool();
+        mem_pools_stat_free_pool ();
   }
 } /* mem_pools_free */
 
@@ -211,9 +211,9 @@ mem_pools_free( uint8_t *chunk_p) /**< pointer to the chunk */
  * Get pools memory usage statistics
  */
 void
-mem_pools_get_stats( mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stats */
+mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stats */
 {
-  JERRY_ASSERT( out_pools_stats_p != NULL );
+  JERRY_ASSERT(out_pools_stats_p != NULL);
 
   *out_pools_stats_p = mem_pools_stats;
 } /* mem_pools_get_stats */
@@ -222,21 +222,21 @@ mem_pools_get_stats( mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stat
  * Initalize pools' memory usage statistics account structure
  */
 static void
-mem_pools_stat_init( void)
+mem_pools_stat_init (void)
 {
-  __memset( &mem_pools_stats, 0, sizeof (mem_pools_stats));
+  __memset (&mem_pools_stats, 0, sizeof (mem_pools_stats));
 } /* mem_pools_stat_init */
 
 /**
  * Account allocation of a pool
  */
 static void
-mem_pools_stat_alloc_pool( void)
+mem_pools_stat_alloc_pool (void)
 {
   mem_pools_stats.pools_count++;
   mem_pools_stats.free_chunks = mem_free_chunks_number;
 
-  if ( mem_pools_stats.pools_count > mem_pools_stats.peak_pools_count )
+  if (mem_pools_stats.pools_count > mem_pools_stats.peak_pools_count)
   {
     mem_pools_stats.peak_pools_count = mem_pools_stats.pools_count;
   }
@@ -246,9 +246,9 @@ mem_pools_stat_alloc_pool( void)
  * Account freeing of a pool
  */
 static void
-mem_pools_stat_free_pool( void)
+mem_pools_stat_free_pool (void)
 {
-  JERRY_ASSERT( mem_pools_stats.pools_count > 0 );
+  JERRY_ASSERT(mem_pools_stats.pools_count > 0);
 
   mem_pools_stats.pools_count--;
   mem_pools_stats.free_chunks = mem_free_chunks_number;
@@ -258,14 +258,14 @@ mem_pools_stat_free_pool( void)
  * Account allocation of chunk in a pool
  */
 static void
-mem_pools_stat_alloc_chunk(void)
+mem_pools_stat_alloc_chunk (void)
 {
-  JERRY_ASSERT( mem_pools_stats.free_chunks > 0 );
+  JERRY_ASSERT(mem_pools_stats.free_chunks > 0);
 
   mem_pools_stats.allocated_chunks++;
   mem_pools_stats.free_chunks--;
 
-  if ( mem_pools_stats.allocated_chunks > mem_pools_stats.peak_allocated_chunks )
+  if (mem_pools_stats.allocated_chunks > mem_pools_stats.peak_allocated_chunks)
   {
     mem_pools_stats.peak_allocated_chunks = mem_pools_stats.allocated_chunks;
   }
@@ -275,9 +275,9 @@ mem_pools_stat_alloc_chunk(void)
  * Account freeing of chunk in a pool
  */
 static void
-mem_pools_stat_free_chunk(void)
+mem_pools_stat_free_chunk (void)
 {
-  JERRY_ASSERT( mem_pools_stats.allocated_chunks > 0 );
+  JERRY_ASSERT(mem_pools_stats.allocated_chunks > 0);
 
   mem_pools_stats.allocated_chunks--;
   mem_pools_stats.free_chunks++;

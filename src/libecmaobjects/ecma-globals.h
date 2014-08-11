@@ -21,7 +21,7 @@
  */
 
 #ifndef JERRY_ECMA_GLOBALS_H
-#define	JERRY_ECMA_GLOBALS_H
+#define  JERRY_ECMA_GLOBALS_H
 
 #include "globals.h"
 #include "mem-allocator.h"
@@ -372,8 +372,8 @@ typedef struct ecma_object_t {
     /** GC's information */
     ecma_gc_info_t gc_info;
 
-    FIXME( Remove aligned attribute after packing the struct )
-} __packed __attribute__((aligned(16))) ecma_object_t;
+    FIXME(Remove aligned attribute after packing the struct)
+} __packed __attribute__ ((aligned (16))) ecma_object_t;
 
 /**
  * Description of ECMA property descriptor
@@ -467,7 +467,7 @@ typedef struct {
     ecma_array_header_t header;
 
     /** Elements */
-    uint8_t data[ sizeof(uint64_t) - sizeof (ecma_array_header_t) ];
+    uint8_t data[ sizeof (uint64_t) - sizeof (ecma_array_header_t) ];
 } ecma_array_first_chunk_t;
 
 /**
@@ -478,7 +478,7 @@ typedef struct {
     uint16_t next_chunk_p;
 
     /** Characters */
-    uint8_t data[ sizeof(uint64_t) - sizeof (uint16_t) ];
+    uint8_t data[ sizeof (uint64_t) - sizeof (uint16_t) ];
 } ecma_array_non_first_chunk_t;
 
 /**
@@ -505,7 +505,7 @@ typedef struct
  * @}
  */
 
-#endif	/* JERRY_ECMA_GLOBALS_H */
+#endif  /* JERRY_ECMA_GLOBALS_H */
 
 /**
  * @}

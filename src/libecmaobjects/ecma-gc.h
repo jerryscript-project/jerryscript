@@ -36,13 +36,13 @@ typedef enum
   ECMA_GC_GEN_COUNT /**< generations' number */
 } ecma_gc_gen_t;
 
-extern void ecma_gc_init( void);
-extern void ecma_init_gc_info(ecma_object_t *object_p);
-extern void ecma_ref_object(ecma_object_t *object_p);
-extern void ecma_deref_object(ecma_object_t *object_p);
-extern void ecma_gc_update_may_ref_younger_object_flag_by_value( ecma_object_t *obj_p, ecma_value_t value);
-extern void ecma_gc_update_may_ref_younger_object_flag_by_object( ecma_object_t *obj_p, ecma_object_t *ref_obj_p);
-extern void ecma_gc_run( ecma_gc_gen_t max_gen_to_collect);
+extern void ecma_gc_init (void);
+extern void ecma_init_gc_info (ecma_object_t *object_p);
+extern void ecma_ref_object (ecma_object_t *object_p);
+extern void ecma_deref_object (ecma_object_t *object_p);
+extern void ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, ecma_value_t value);
+extern void ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, ecma_object_t *ref_obj_p);
+extern void ecma_gc_run (ecma_gc_gen_t max_gen_to_collect);
 
 #endif /* !ECMA_GC_H */
 

@@ -21,7 +21,7 @@
  */
 
 #ifndef JERRY_ECMA_ALLOC_H
-#define	JERRY_ECMA_ALLOC_H
+#define  JERRY_ECMA_ALLOC_H
 
 #include "ecma-globals.h"
 
@@ -30,60 +30,60 @@
  *
  * @return pointer to allocated memory
  */
-extern ecma_object_t *ecma_alloc_object(void);
+extern ecma_object_t *ecma_alloc_object (void);
 
 /**
  * Dealloc memory from an ecma-object
  */
-extern void ecma_dealloc_object( ecma_object_t *object_p);
+extern void ecma_dealloc_object (ecma_object_t *object_p);
 
 /**
  * Allocate memory for ecma-property
  *
  * @return pointer to allocated memory
  */
-extern ecma_property_t *ecma_alloc_property(void);
+extern ecma_property_t *ecma_alloc_property (void);
 
 /**
  * Dealloc memory from an ecma-property
  */
-extern void ecma_dealloc_property( ecma_property_t *property_p);
+extern void ecma_dealloc_property (ecma_property_t *property_p);
 
 /**
  * Allocate memory for ecma-number
  *
  * @return pointer to allocated memory
  */
-extern ecma_number_t *ecma_alloc_number(void);
+extern ecma_number_t *ecma_alloc_number (void);
 
 /**
  * Dealloc memory from an ecma-number
  */
-extern void ecma_dealloc_number( ecma_number_t *number_p);
+extern void ecma_dealloc_number (ecma_number_t *number_p);
 
 /**
  * Allocate memory for first chunk of an ecma-array
  *
  * @return pointer to allocated memory
  */
-extern ecma_array_first_chunk_t *ecma_alloc_array_first_chunk(void);
+extern ecma_array_first_chunk_t *ecma_alloc_array_first_chunk (void);
 
 /**
  * Dealloc memory from first chunk of an ecma-array
  */
-extern void ecma_dealloc_array_first_chunk( ecma_array_first_chunk_t *first_chunk_p);
+extern void ecma_dealloc_array_first_chunk (ecma_array_first_chunk_t *first_chunk_p);
 
 /**
  * Allocate memory for non-first chunk of an ecma-array
  *
  * @return pointer to allocated memory
  */
-extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk(void);
+extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk (void);
 
 /**
  * Dealloc memory from non-first chunk of an ecma-array
  */
-extern void ecma_dealloc_array_non_first_chunk( ecma_array_non_first_chunk_t *number_p);
+extern void ecma_dealloc_array_non_first_chunk (ecma_array_non_first_chunk_t *number_p);
 
 #endif /* JERRY_ECMA_ALLOC_H */
 

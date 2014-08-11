@@ -29,7 +29,7 @@
 /**
  * Get pool's space size
  */
-#define MEM_POOL_SPACE_START( pool_header_p) ( (uint8_t*) ( (mem_pool_state_t*) pool_header_p + 1 ) )
+#define MEM_POOL_SPACE_START(pool_header_p) ((uint8_t*) ((mem_pool_state_t*) pool_header_p + 1))
 
 /**
  * Index of chunk in a pool
@@ -50,9 +50,9 @@ typedef struct mem_pool_state_t {
     unsigned int next_pool_cp : MEM_HEAP_OFFSET_LOG; /**< pointer to the next pool with same chunk size */
 } mem_pool_state_t;
 
-extern void mem_pool_init(mem_pool_state_t *pool_p, size_t pool_size);
-extern uint8_t* mem_pool_alloc_chunk(mem_pool_state_t *pool_p);
-extern void mem_pool_free_chunk(mem_pool_state_t *pool_p, uint8_t *chunk_p);
+extern void mem_pool_init (mem_pool_state_t *pool_p, size_t pool_size);
+extern uint8_t* mem_pool_alloc_chunk (mem_pool_state_t *pool_p);
+extern void mem_pool_free_chunk (mem_pool_state_t *pool_p, uint8_t *chunk_p);
 
 /**
  * @}

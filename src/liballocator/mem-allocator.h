@@ -40,13 +40,13 @@
 /**
  * Width of compressed memory pointer
  */
-#define MEM_COMPRESSED_POINTER_WIDTH ( MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG )
+#define MEM_COMPRESSED_POINTER_WIDTH (MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG)
 
-extern void mem_init(void);
-extern void mem_finalize(bool is_show_mem_stats);
+extern void mem_init (void);
+extern void mem_finalize (bool is_show_mem_stats);
 
-extern uintptr_t mem_compress_pointer(void *pointer);
-extern void* mem_decompress_pointer(uintptr_t compressed_pointer);
+extern uintptr_t mem_compress_pointer (void *pointer);
+extern void* mem_decompress_pointer (uintptr_t compressed_pointer);
 
 #endif /* !JERRY_MEM_ALLOCATOR_H */
 

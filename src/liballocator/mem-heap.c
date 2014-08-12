@@ -56,8 +56,8 @@
  */
 typedef enum
 {
-  MEM_MAGIC_NUM_OF_FREE_BLOCK      = 0x31d7c809,
-  MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK = 0x59d75b46
+  MEM_MAGIC_NUM_OF_FREE_BLOCK      = 0xc809,
+  MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK = 0x5b46
 } mem_magic_num_of_block_t;
 
 /**
@@ -82,26 +82,39 @@ typedef enum
 } mem_direction_t;
 
 /**
+ * Offset in the heap
+ */
+typedef uint16_t mem_heap_offset_t;
+JERRY_STATIC_ASSERT (sizeof (mem_heap_offset_t) * JERRY_BITSINBYTE >= MEM_HEAP_OFFSET_LOG);
+
+/**
  * Description of heap memory block layout
  */
 typedef struct mem_block_header_t
 {
-  mem_magic_num_of_block_t magic_num; /**< magic number - MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
-                                           and MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
-  struct mem_block_header_t *neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks */
-  size_t allocated_bytes;                                       /**< allocated area size - for allocated blocks;
-                                                                     0 - for free blocks */
+  uint16_t magic_num; /**< magic number (mem_magic_num_of_block_t):
+                           MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
+                           or MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
+  mem_heap_offset_t allocated_bytes; /**< allocated area size - for allocated blocks;
+                                          0 - for free blocks */
+  mem_heap_offset_t neighbours[ MEM_DIRECTION_COUNT ]; /**< neighbour blocks' offsets;
+                                                            0 - if the block is last in specified direction */
 } mem_block_header_t;
+
+/**
+ * Check that block header's size is not more than 8 bytes
+ */
+JERRY_STATIC_ASSERT (sizeof (mem_block_header_t) <= sizeof (uint64_t));
 
 /**
  * Chunk should have enough space for block header
  */
-JERRY_STATIC_ASSERT(MEM_HEAP_CHUNK_SIZE >= sizeof (mem_block_header_t));
+JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE >= sizeof (mem_block_header_t));
 
 /**
  * Chunk size should satisfy the required alignment value
  */
-JERRY_STATIC_ASSERT(MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0);
+JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0);
 
 /**
  * Description of heap state
@@ -150,6 +163,105 @@ static void mem_heap_stat_free_block_merge (void);
 #endif /* !MEM_STATS */
 
 /**
+ * Measure distance between blocks.
+ *
+ * Warning:
+ *         another_block_p should be greater than block_p.
+ *
+ * @return size in bytes between beginning of two blocks
+ */
+static mem_heap_offset_t
+mem_get_blocks_distance (const mem_block_header_t* block_p, /**< block to measure offset from */
+                         const mem_block_header_t* another_block_p) /**< block offset is measured for */
+{
+  JERRY_ASSERT (another_block_p >= block_p);
+
+  ssize_t distance = ((uint8_t*) another_block_p - (uint8_t*)block_p);
+
+  JERRY_ASSERT (distance == (mem_heap_offset_t) distance);
+
+  return (mem_heap_offset_t) distance;
+} /* mem_get_blocks_distance */
+
+/**
+ * Get value for neighbour field.
+ *
+ * Note:
+ *      If second_block_p is next neighbour of first_block_p,
+ *         then first_block_p->neighbours[next] = ret_val
+ *              second_block_p->neighbours[prev] = ret_val
+ *
+ * @return offset value for neighbours field
+ */
+static mem_heap_offset_t
+mem_get_block_neighbour_field (const mem_block_header_t* first_block_p, /**< first of the blocks
+                                                                             in forward direction */
+                               const mem_block_header_t* second_block_p) /**< second of the blocks
+                                                                              in forward direction */
+{
+  JERRY_ASSERT (first_block_p != NULL
+                || second_block_p != NULL);
+
+  if (first_block_p == NULL
+      || second_block_p == NULL)
+  {
+    return 0;
+  }
+  else
+  {
+    JERRY_ASSERT (first_block_p < second_block_p);
+
+    return mem_get_blocks_distance (first_block_p, second_block_p);
+  }
+} /* mem_get_block_neighbour_field */
+
+/**
+ * Get block located at specified offset from specified block.
+ *
+ * @return pointer to block header, located offset bytes after specified block (if dir is next),
+ *         pointer to block header, located offset bytes before specified block (if dir is prev).
+ */
+static mem_block_header_t*
+mem_get_block_by_offset (const mem_block_header_t* block_p, /**< block */
+                         mem_heap_offset_t offset, /**< offset */
+                         mem_direction_t dir) /**< direction of offset */
+{
+  const uint8_t* uint8_block_p = (uint8_t*) block_p;
+
+  if (dir == MEM_DIRECTION_NEXT)
+  {
+    return (mem_block_header_t*) (uint8_block_p + offset);
+  }
+  else
+  {
+    return (mem_block_header_t*) (uint8_block_p - offset);
+  }
+} /* mem_get_block_by_offset */
+
+/**
+ * Get next block in specified direction.
+ *
+ * @return pointer to next block in direction specified by dir,
+ *         or NULL - if the block is last in specified direction.
+ */
+static mem_block_header_t*
+mem_get_next_block_by_direction (const mem_block_header_t* block_p, /**< block */
+                                 mem_direction_t dir) /**< direction */
+{
+  mem_heap_offset_t offset = block_p->neighbours[dir];
+  if (offset != 0)
+  {
+    return mem_get_block_by_offset (block_p,
+                                    offset,
+                                    dir);
+  }
+  else
+  {
+    return NULL;
+  }
+} /* mem_get_next_block_by_direction */
+
+/**
  * get chunk count, used by the block.
  *
  * @return chunks count
@@ -159,7 +271,7 @@ mem_get_block_chunks_count (const mem_block_header_t *block_header_p) /**< block
 {
   JERRY_ASSERT(block_header_p != NULL);
 
-  const mem_block_header_t *next_block_p = block_header_p->neighbours[ MEM_DIRECTION_NEXT ];
+  const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_header_p, MEM_DIRECTION_NEXT);
   size_t dist_till_block_end;
 
   if (next_block_p == NULL)
@@ -270,9 +382,11 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
     block_header_p->magic_num = MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK;
   }
 
-  block_header_p->neighbours[ MEM_DIRECTION_PREV ] = prev_block_p;
-  block_header_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
-  block_header_p->allocated_bytes = allocated_bytes;
+  block_header_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (prev_block_p, block_header_p);
+  block_header_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (block_header_p, next_block_p);
+
+  JERRY_ASSERT (allocated_bytes == (mem_heap_offset_t) allocated_bytes);
+  block_header_p->allocated_bytes = (mem_heap_offset_t) allocated_bytes;
 
   JERRY_ASSERT(allocated_bytes <= mem_get_block_data_space_size (block_header_p));
 
@@ -329,7 +443,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
       JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     }
 
-    mem_block_header_t *next_block_p = block_p->neighbours[ direction ];
+    mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, direction);
 
     VALGRIND_NOACCESS_STRUCT(block_p);
 
@@ -348,8 +462,8 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   JERRY_ASSERT(new_block_size_in_chunks <= found_block_size_in_chunks);
 
-  mem_block_header_t *prev_block_p = block_p->neighbours[ MEM_DIRECTION_PREV ];
-  mem_block_header_t *next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+  mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
+  mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
   if (new_block_size_in_chunks < found_block_size_in_chunks)
   {
@@ -372,7 +486,9 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
     {
       VALGRIND_DEFINED_STRUCT(next_block_p);
 
-      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = (mem_block_header_t*) new_free_block_first_chunk_p;
+      const mem_block_header_t* new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
+      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (new_free_block_p,
+                                                                                      next_block_p);
 
       VALGRIND_NOACCESS_STRUCT(next_block_p);
     }
@@ -421,8 +537,8 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
 
   VALGRIND_DEFINED_STRUCT(block_p);
 
-  mem_block_header_t *prev_block_p = block_p->neighbours[ MEM_DIRECTION_PREV ];
-  mem_block_header_t *next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+  mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
+  mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
   mem_heap_stat_free_block (block_p);
 
@@ -451,7 +567,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
       /* merge with the next block */
       mem_heap_stat_free_block_merge ();
 
-      mem_block_header_t *next_next_block_p = next_block_p->neighbours[ MEM_DIRECTION_NEXT ];
+      mem_block_header_t *next_next_block_p = mem_get_next_block_by_direction (next_block_p, MEM_DIRECTION_NEXT);
 
       VALGRIND_NOACCESS_STRUCT(next_block_p);
 
@@ -459,10 +575,10 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
 
       VALGRIND_DEFINED_STRUCT(next_block_p);
 
-      block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+      block_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (block_p, next_block_p);
       if (next_block_p != NULL)
       {
-        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p;
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (block_p, next_block_p);
       }
       else
       {
@@ -482,12 +598,13 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
       /* merge with the previous block */
       mem_heap_stat_free_block_merge ();
 
-      prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = next_block_p;
+      prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (prev_block_p, next_block_p);
       if (next_block_p != NULL)
       {
         VALGRIND_DEFINED_STRUCT(next_block_p);
 
-        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = block_p->neighbours[ MEM_DIRECTION_PREV ];
+        const mem_block_header_t* prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (prev_block_p, next_block_p);
 
         VALGRIND_NOACCESS_STRUCT(next_block_p);
       }
@@ -551,8 +668,8 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
                 (void*) block_p,
                 block_p->magic_num,
                 mem_get_block_chunks_count (block_p),
-                (void*) block_p->neighbours[ MEM_DIRECTION_PREV ],
-                (void*) block_p->neighbours[ MEM_DIRECTION_NEXT ]);
+                (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
+                (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
 
       if (dump_block_data)
       {
@@ -566,7 +683,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
         __printf ("\n");
       }
 
-      next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+      next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
       VALGRIND_NOACCESS_STRUCT(block_p);
     }
@@ -627,7 +744,7 @@ mem_check_heap (void)
                  || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
 
-    next_block_p = block_p->neighbours[ MEM_DIRECTION_NEXT ];
+    next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
     if (block_p == mem_heap.last_block_p)
     {
@@ -659,7 +776,7 @@ mem_check_heap (void)
                  || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
 
-    prev_block_p = block_p->neighbours[ MEM_DIRECTION_PREV ];
+    prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
 
     if (block_p == mem_heap.first_block_p)
     {

@@ -622,7 +622,7 @@ ecma_duplicate_ecma_string (ecma_array_first_chunk_t *first_chunk_p) /**< first 
 } /* ecma_duplicate_ecma_string */
 
 /**
- * Compare zero-terminated string to ecma-string
+ * Compare ecma-string to ecma-string
  *
  * @return true - if strings are equal;
  *         false - otherwise.
@@ -631,7 +631,51 @@ bool
 ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1_p, /* ecma-string */
                                          const ecma_array_first_chunk_t *string2_p) /* ecma-string */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(string1_p, string2_p);
+  JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
+
+  if (string1_p->header.unit_number != string2_p->header.unit_number)
+  {
+    return false;
+  }
+
+  ecma_length_t chars_left = string1_p->header.unit_number;
+
+  JERRY_STATIC_ASSERT (ECMA_POINTER_FIELD_WIDTH <= sizeof (uint16_t) * JERRY_BITSINBYTE);
+  const uint16_t *next_chunk_compressed_pointer_1_p = &string1_p->header.next_chunk_p;
+  const uint16_t *next_chunk_compressed_pointer_2_p = &string2_p->header.next_chunk_p;
+  const ecma_char_t *cur_char_array_1_p = string1_p->data;
+  const ecma_char_t *cur_char_array_1_end_p = string1_p->data + sizeof (string1_p->data);
+  const ecma_char_t *cur_char_array_2_p = string2_p->data;
+  const ecma_char_t *cur_char_array_2_end_p = string2_p->data + sizeof (string2_p->data);
+
+  while (chars_left > 0)
+  {
+    if (cur_char_array_1_p != cur_char_array_1_end_p)
+    {
+      JERRY_ASSERT (cur_char_array_2_p < cur_char_array_2_end_p);
+
+      if (*cur_char_array_1_p++ != *cur_char_array_2_p++)
+      {
+        return false;
+      }
+
+      chars_left--;
+    }
+    else
+    {
+      ecma_array_non_first_chunk_t *non_first_chunk_1_p = ECMA_GET_POINTER (*next_chunk_compressed_pointer_1_p);
+      ecma_array_non_first_chunk_t *non_first_chunk_2_p = ECMA_GET_POINTER (*next_chunk_compressed_pointer_2_p);
+
+      JERRY_ASSERT (non_first_chunk_1_p != NULL && non_first_chunk_2_p != NULL);
+
+      cur_char_array_1_p = non_first_chunk_1_p->data;
+      cur_char_array_1_end_p = non_first_chunk_1_p->data + sizeof (non_first_chunk_1_p->data);
+      cur_char_array_2_p = non_first_chunk_2_p->data;
+      cur_char_array_2_end_p = non_first_chunk_2_p->data + sizeof (non_first_chunk_2_p->data);
+    }
+  }
+
+  return true;
 } /* ecma_compare_ecma_string_to_ecma_string */
 
 /**

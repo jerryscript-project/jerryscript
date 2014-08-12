@@ -145,7 +145,7 @@ dump_variable (T_IDX id)
       __printf ("'%s'", deserialize_string_by_id (opcode.data.op.op2)); \
       __printf (": STRING"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_NUMBER) {\
-      __printf ("%d", deserialize_num_by_id (opcode.data.op.op2)); \
+      __printf ("%d", (int) deserialize_num_by_id (opcode.data.op.op2)); \
       __printf (": NUMBER"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SMALLINT) {\
       __printf ("%d", opcode.data.op.op2); \

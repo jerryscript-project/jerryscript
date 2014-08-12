@@ -46,7 +46,7 @@ main( int __unused argc,
   mem_init();
 
   const char *strings[] = { "a", "b", "c", "use strict" };
-  int nums [] = { 2 };
+  ecma_number_t nums [] = { 2 };
   serializer_init (true);
   uint16_t offset = serializer_dump_strings (strings, 4);
   serializer_dump_nums (nums, 1, offset, 4);

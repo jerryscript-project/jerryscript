@@ -40,7 +40,7 @@ main( int __unused argc,
 
   const char *strings[] = { "a",
                             "b" };
-  int nums [] = { 2 };
+  ecma_number_t nums [] = { 2.0 };
   uint16_t offset = serializer_dump_strings( strings, 2);
   serializer_dump_nums( nums, 1, offset, 2);
 

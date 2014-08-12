@@ -46,6 +46,9 @@ extern ecma_completion_value_t ecma_op_to_primitive (ecma_value_t value, ecma_pr
 extern ecma_completion_value_t ecma_op_to_boolean (ecma_value_t value);
 extern ecma_completion_value_t ecma_op_to_number (ecma_value_t value);
 extern ecma_completion_value_t ecma_op_to_object (ecma_value_t value);
+extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);
+extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
+extern ecma_number_t ecma_uint32_to_number (uint32_t value);
 
 /**
  * @}

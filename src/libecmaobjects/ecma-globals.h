@@ -463,6 +463,19 @@ typedef float ecma_number_t;
 #define ECMA_NUMBER_ONE  ((ecma_number_t) 1)
 
 /**
+ * Maximum number of characters in string representation of ecma-number
+ */
+#define ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER 512
+
+/**
+ * Maximum value of valid array index
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4
+ */
+#define ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX ((uint32_t) (-1))
+
+/**
  * Description of arrays'/strings' length
  */
 typedef uint16_t ecma_length_t;

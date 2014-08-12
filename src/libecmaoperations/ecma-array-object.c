@@ -1,0 +1,261 @@
+/* Copyright 2014 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "ecma-alloc.h"
+#include "ecma-array-object.h"
+#include "ecma-exceptions.h"
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+#include "ecma-magic-strings.h"
+#include "ecma-number-arithmetic.h"
+#include "ecma-objects.h"
+#include "ecma-objects-general.h"
+
+/** \addtogroup ecma ---TODO---
+ * @{
+ *
+ * \addtogroup ecmaarrayobject ECMA Array object related routines
+ * @{
+ */
+
+/**
+ * Reject sequence
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_completion_value_t
+ecma_reject (bool is_throw) /**< Throw flag */
+{
+  if (is_throw)
+  {
+    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+} /* ecma_reject */
+
+/**
+ * [[DefineOwnProperty]] ecma array object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *          ECMA-262 v5, 15.4.5.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the object */
+                                          const ecma_char_t *property_name_p, /**< property name */
+                                          ecma_property_descriptor_t property_desc, /**< property descriptor */
+                                          bool is_throw) /**< flag that controls failure handling */
+{
+  JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_ARRAY);
+
+  const ecma_char_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  // 1.
+  ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
+  JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  // 2.
+  ecma_value_t old_len_value = len_prop_p->u.named_data_property.value;
+
+  JERRY_ASSERT (old_len_value.value_type == ECMA_TYPE_NUMBER);
+
+  ecma_number_t *num_p = ECMA_GET_POINTER (old_len_value.value);
+  uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
+
+  // 3.
+  if (ecma_compare_zt_string_to_zt_string (property_name_p, magic_string_length_p) == 0)
+  {
+    // a.
+    if (!property_desc.is_value_defined)
+    {
+      // i.
+      return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc, is_throw);
+    }
+
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value();
+
+    // c.
+    ecma_completion_value_t completion = ecma_op_to_number (property_desc.value);
+    if (ecma_is_completion_value_throw (completion) )
+    {
+      ret_value = completion;
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_completion_value_normal (completion)
+                    && completion.value.value_type == ECMA_TYPE_NUMBER);
+
+      ecma_number_t *new_len_num_p = ECMA_GET_POINTER (completion.value.value);
+
+      uint32_t new_len_uint32 = ecma_number_to_uint32 (*new_len_num_p);
+
+      // d.
+      if (ecma_uint32_to_number (new_len_uint32) != *new_len_num_p)
+      {
+        ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+      }
+      else
+      {
+        // b., e.
+        ecma_property_descriptor_t new_len_property_desc = property_desc;
+        new_len_property_desc.value = ecma_make_number_value (new_len_num_p);
+
+        // f.
+        if ( new_len_uint32 >= old_len_uint32 )
+        {
+          // i.
+          ret_value = ecma_op_general_object_define_own_property (obj_p,
+                                                                  magic_string_length_p,
+                                                                  new_len_property_desc,
+                                                                  is_throw);
+        }
+        else
+        {
+          // g.
+          if (len_prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE)
+          {
+            ret_value = ecma_reject (is_throw);
+          }
+          else
+          {
+            // h.
+            bool new_writable;
+            if (!new_len_property_desc.is_writable_defined
+                || new_len_property_desc.writable == ECMA_PROPERTY_WRITABLE)
+            {
+              new_writable = true;
+            }
+            else
+            {
+              // ii.
+              new_writable = false;
+
+              // iii.
+              new_len_property_desc.is_writable_defined = true;
+              new_len_property_desc.writable = ECMA_PROPERTY_WRITABLE;
+            }
+
+            // j.
+            ecma_completion_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
+                                                                                            magic_string_length_p,
+                                                                                            new_len_property_desc,
+                                                                                            is_throw);
+
+            /* Handling normal false and throw values */
+            if (!ecma_is_completion_value_normal_true (succeeded))
+            {
+              // k.
+              ret_value = completion;
+            }
+
+            // l.
+            while (new_len_uint32 < old_len_uint32)
+            {
+              JERRY_UNIMPLEMENTED();
+            }
+
+            // m.
+            if (!new_writable)
+            {
+              ecma_property_descriptor_t prop_desc_not_writable = ecma_make_empty_property_descriptor();
+
+              prop_desc_not_writable.is_writable_defined = true;
+              prop_desc_not_writable.writable = ECMA_PROPERTY_NOT_WRITABLE;
+
+              ecma_completion_value_t completion_set_not_writable = ecma_op_general_object_define_own_property (obj_p,
+                                                                                                                magic_string_length_p,
+                                                                                                                prop_desc_not_writable,
+                                                                                                                false);
+              JERRY_ASSERT (ecma_is_completion_value_normal_true (completion_set_not_writable));
+            }
+
+            ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+          }
+        }
+      }
+
+      ecma_free_completion_value (completion);
+    }
+
+    return ret_value;
+  }
+  else
+  {
+    // 4.a.
+    ecma_number_t number = ecma_zt_string_to_number (property_name_p);
+    uint32_t index = ecma_number_to_uint32 (number);
+
+    if (index >= ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX
+        || ecma_uint32_to_number (index) != number)
+    {
+      // 5.
+      return ecma_op_general_object_define_own_property (obj_p,
+                                                         property_name_p,
+                                                         property_desc,
+                                                         false);
+    }
+
+    // 4.
+
+    // b.
+    if (index >= old_len_uint32
+        && len_prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE)
+    {
+      return ecma_reject(is_throw);
+    }
+
+    // c.
+    ecma_completion_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
+                                                                                    property_name_p,
+                                                                                    property_desc,
+                                                                                    false);
+    // d.
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (succeeded)
+                  || ecma_is_completion_value_normal_false (succeeded));
+
+    if (ecma_is_completion_value_normal_false (succeeded))
+    {
+      return ecma_reject (is_throw);
+    }
+
+    // e.
+    if (index >= old_len_uint32)
+    {
+      // i., ii.
+      ecma_number_t *num_p = ecma_alloc_number();
+      *num_p = ecma_op_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
+
+      ecma_free_value (len_prop_p->u.named_data_property.value, false);
+      len_prop_p->u.named_data_property.value = ecma_make_number_value (num_p);
+    }
+
+    // f.
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_op_array_object_define_own_property */
+
+/**
+ * @}
+ * @}
+ */

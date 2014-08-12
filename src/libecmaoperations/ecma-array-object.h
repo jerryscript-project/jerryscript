@@ -13,37 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_MAGIC_STRINGS_H
-#define ECMA_MAGIC_STRINGS_H
+#ifndef ECMA_ARRAY_OBJECT_H
+#define ECMA_ARRAY_OBJECT_H
 
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
  *
- * \addtogroup ecmamagicstrings Collection of magic string constants used in ECMA
+ * \addtogroup ecmaarrayobject ECMA Array object related routines
  * @{
  */
 
-/**
- * Identifiers of ECMA magic string constants
- */
-typedef enum
-{
-  ECMA_MAGIC_STRING_ARGUMENTS, /**< "arguments" */
-  ECMA_MAGIC_STRING_EVAL, /**< "eval" */
-  ECMA_MAGIC_STRING_PROTOTYPE, /**< "prototype" */
-  ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
-  ECMA_MAGIC_STRING_CALLER, /**< "caller" */
-  ECMA_MAGIC_STRING_UNDEFINED,/**< undefined */
-  ECMA_MAGIC_STRING_LENGTH /**< length */
-} ecma_magic_string_id_t;
-
-extern const ecma_char_t* ecma_get_magic_string (ecma_magic_string_id_t id);
+extern ecma_completion_value_t
+ecma_op_array_object_define_own_property (ecma_object_t *obj_p,
+                                          const ecma_char_t *property_name_p,
+                                          ecma_property_descriptor_t property_desc,
+                                          bool is_throw);
 
 /**
  * @}
  * @}
  */
 
-#endif /* ECMA_MAGIC_STRINGS_H */
+#endif /* !ECMA_ARRAY_OBJECT_H */

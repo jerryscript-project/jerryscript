@@ -47,7 +47,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
 } /* ecma_reject */
 
 /**
- * [[Get]] ecma object's operation
+ * [[Get]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -102,7 +102,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_get */
 
 /**
- * [[GetOwnProperty]] ecma object's operation
+ * [[GetOwnProperty]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -122,7 +122,7 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
 } /* ecma_op_general_object_get_own_property */
 
 /**
- * [[GetProperty]] ecma object's operation
+ * [[GetProperty]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -162,7 +162,7 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_get_property */
 
 /**
- * [[Put]] ecma object's operation
+ * [[Put]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -265,7 +265,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_put */
 
 /**
- * [[CanPut]] ecma object's operation
+ * [[CanPut]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -364,7 +364,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_can_put */
 
 /**
- * [[HasProperty]] ecma object's operation
+ * [[HasProperty]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -386,7 +386,7 @@ ecma_op_general_object_has_property (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_has_property */
 
 /**
- * [[Delete]] ecma object's operation
+ * [[Delete]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -448,7 +448,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_delete */
 
 /**
- * [[DefaultValue]] ecma object's operation
+ * [[DefaultValue]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -467,7 +467,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_default_value */
 
 /**
- * [[DefineOwnProperty]] ecma object's operation
+ * [[DefineOwnProperty]] ecma general object's operation
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8

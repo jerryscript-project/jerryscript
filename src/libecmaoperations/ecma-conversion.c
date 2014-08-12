@@ -315,6 +315,65 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
 } /* ecma_op_to_object */
 
 /**
+ * ECMA-defined conversion of string (zero-terminated) to Number.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.6
+ *
+ * @return ecma-number
+ */
+ecma_number_t
+ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string */
+{
+  FIXME (Implement according to ECMA);
+
+  ecma_number_t ret_value = 0;
+  while (*str_p != '\0')
+  {
+    if (*str_p >= '0' && *str_p <= '9')
+    {
+      ret_value *= 10;
+      ret_value += (ecma_number_t) (*str_p - '0');
+    }
+    else
+    {
+      JERRY_UNIMPLEMENTED();
+    }
+  }
+
+  return ret_value;
+} /* ecma_zt_string_to_number */
+
+/**
+ * ECMA-defined conversion of UInt32 value to Number value
+ *
+ * @return number - result of conversion.
+ */
+ecma_number_t
+ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
+{
+  TODO(Implement according to ECMA);
+
+  return (ecma_number_t) value;
+} /* ecma_uint32_to_number */
+
+/**
+ * ECMA-defined conversion of Number value to Uint32 value
+ *
+ * See also:
+ *          ECMA-262 v5, 9.6
+ *
+ * @return number - result of conversion.
+ */
+uint32_t
+ecma_number_to_uint32 (ecma_number_t value) /**< unsigned 32-bit integer value */
+{
+  TODO(Implement according to ECMA);
+
+  return (uint32_t) value;
+} /* ecma_number_to_uint32 */
+
+/**
  * @}
  * @}
  */

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_OBJECTS_PROPERTIES_H
-#define ECMA_OBJECTS_PROPERTIES_H
+#ifndef ECMA_OBJECTS_H
+#define ECMA_OBJECTS_H
 
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
@@ -49,4 +49,4 @@ extern ecma_completion_value_t ecma_op_object_define_own_property (ecma_object_t
  * @}
  */
 
-#endif /* !ECMA_OBJECTS_PROPERTIES_H */
+#endif /* !ECMA_OBJECTS_H */

@@ -91,19 +91,19 @@ typedef enum
   __SEEK_END /**< relative to end of file */
 } _whence_t;
 
-extern _FILE* __fopen(const char *, const char *);
-extern int __fclose(_FILE *);
-extern int __fseek(_FILE *, long offset, _whence_t);
-extern long __ftell(_FILE *);
-extern void __rewind(_FILE *);
-extern size_t __fread(void *, size_t, size_t, _FILE *);
-extern size_t __fwrite(const void *, size_t, size_t, _FILE *);
-extern int __fprintf(_FILE *, const char *, ...);
+extern _FILE* __fopen (const char *, const char *);
+extern int __fclose (_FILE *);
+extern int __fseek (_FILE *, long offset, _whence_t);
+extern long __ftell (_FILE *);
+extern void __rewind (_FILE *);
+extern size_t __fread (void *, size_t, size_t, _FILE *);
+extern size_t __fwrite (const void *, size_t, size_t, _FILE *);
+extern int __fprintf (_FILE *, const char *, ...);
 
-#define DBL_MANT_DIG    (  52)
-#define DBL_DIG         (  10)
+#define DBL_MANT_DIG    (52)
+#define DBL_DIG         (10)
 #define DBL_MIN_EXP     (-324)
-#define DBL_MAX_EXP     ( 308)
+#define DBL_MAX_EXP     (308)
 #define HUGE_VAL        (1e37f)
 
 #endif /* JERRY_LIBC_H */

@@ -20,9 +20,9 @@
  * Handle failed assertion
  */
 void __noreturn
-jerry_assert_fail(const char *assertion __unused, /**< assertion condition string */
+jerry_assert_fail (const char *assertion __unused, /**< assertion condition string */
                  const char *file __unused, /**< file name */
                  const uint32_t line __unused) /** line */
 {
-  __exit( -ERR_GENERAL);
+  __exit (-ERR_GENERAL);
 } /* jerry_assert_fail */

@@ -22,11 +22,11 @@
  * syscall
  * mov %rax -> ret
  */
-#define SYSCALL_1( syscall_no, arg1, ret) \
-    __asm volatile ( "syscall" \
-                     : "=a" ( ret ) \
-                     : "a" (syscall_no), "D" (arg1) \
-                     : "rcx", "r11" );
+#define SYSCALL_1(syscall_no, arg1, ret) \
+    __asm volatile ("syscall" \
+                   : "=a" (ret) \
+                   : "a" (syscall_no), "D" (arg1) \
+                   : "rcx", "r11");
 
 /*
  * mov syscall_no -> %rax
@@ -35,11 +35,11 @@
  * syscall
  * mov %rax -> ret
  */
-#define SYSCALL_2( syscall_no, arg1, arg2, ret) \
-    __asm volatile ( "syscall" \
-                     : "=a" ( ret ) \
-                     : "a" (syscall_no), "D" (arg1), "S" (arg2) \
-                     : "rcx", "r11" );
+#define SYSCALL_2(syscall_no, arg1, arg2, ret) \
+    __asm volatile ("syscall" \
+                   : "=a" (ret) \
+                   : "a" (syscall_no), "D" (arg1), "S" (arg2) \
+                   : "rcx", "r11");
 
 /*
  * mov syscall_no -> %rax
@@ -49,11 +49,11 @@
  * syscall
  * mov %rax -> ret
  */
-#define SYSCALL_3( syscall_no, arg1, arg2, arg3, ret) \
-    __asm volatile ( "syscall" \
-                     : "=a" ( ret ) \
-                     : "a" (syscall_no), "D" (arg1), "S" (arg2), "d" (arg3) \
-                     : "rcx", "r11" );
+#define SYSCALL_3(syscall_no, arg1, arg2, arg3, ret) \
+    __asm volatile ("syscall" \
+                   : "=a" (ret) \
+                   : "a" (syscall_no), "D" (arg1), "S" (arg2), "d" (arg3) \
+                   : "rcx", "r11");
 
 #define _START            \
    mov (%rsp), %rdi;      \

@@ -27,61 +27,87 @@
  * and call assertion fail handler.
  */
 void __noreturn
-jerry_exit( jerry_status_t code) /**< status code */
+jerry_exit (jerry_status_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  if ( code != ERR_OK )
+  if (code != ERR_OK)
   {
-    __printf("Error: ");
+    __printf ("Error: ");
 
-    switch ( code )
+    switch (code)
     {
       case ERR_OK:
+      {
         JERRY_UNREACHABLE();
         break;
+      }
       case ERR_IO:
-        __printf("ERR_IO\n");
+      {
+        __printf ("ERR_IO\n");
         break;
+      }
       case ERR_BUFFER_SIZE:
-        __printf("ERR_BUFFER_SIZE\n");
+      {
+        __printf ("ERR_BUFFER_SIZE\n");
         break;
+      }
       case ERR_SEVERAL_FILES:
-        __printf("ERR_SEVERAL_FILES\n");
+      {
+        __printf ("ERR_SEVERAL_FILES\n");
         break;
+      }
       case ERR_NO_FILES:
-        __printf("ERR_NO_FILES\n");
+      {
+        __printf ("ERR_NO_FILES\n");
         break;
+      }
       case ERR_NON_CHAR:
-        __printf("ERR_NON_CHAR\n");
+      {
+        __printf ("ERR_NON_CHAR\n");
         break;
+      }
       case ERR_UNCLOSED:
-        __printf("ERR_UNCLOSED\n");
+      {
+        __printf ("ERR_UNCLOSED\n");
         break;
+      }
       case ERR_INT_LITERAL:
-        __printf("ERR_INT_LITERAL\n");
+      {
+        __printf ("ERR_INT_LITERAL\n");
         break;
+      }
       case ERR_STRING:
-        __printf("ERR_STRING\n");
+      {
+        __printf ("ERR_STRING\n");
         break;
+      }
       case ERR_PARSER:
-        __printf("ERR_PARSER\n");
+      {
+        __printf ("ERR_PARSER\n");
         break;
+      }
       case ERR_MEMORY:
-        __printf("ERR_MEMORY\n");
+      {
+        __printf ("ERR_MEMORY\n");
         break;
+      }
       case ERR_SYSCALL:
+      {
         JERRY_UNREACHABLE();
         break;
+      }
       case ERR_GENERAL:
-        __printf("ERR_GENERAL\n");
+      {
+        __printf ("ERR_GENERAL\n");
         break;
+      }
     }
 
     /* The failed assertion is 'Return code is zero' */
-    jerry_assert_fail( "Return code is zero", __FILE__, __LINE__);
+    jerry_assert_fail ("Return code is zero", __FILE__, __LINE__);
   }
-#endif /* !JERRY_NDEBUG */  
+#endif /* !JERRY_NDEBUG */
 
-  __exit( -code );
+  __exit (-code);
 } /* jerry_exit */
 

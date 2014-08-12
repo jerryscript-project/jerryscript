@@ -26,11 +26,11 @@
 
 #ifdef __TARGET_HOST_x64
 # include "asm_x64.h"
-#elif defined(__TARGET_HOST_x86)
+#elif defined (__TARGET_HOST_x86)
 # include "asm_x86.h"
 #endif /* !__TARGET_HOST_x64 && TARGET_HOST_x86 */
 
-FIXME( Rename __unused )
+FIXME(Rename __unused)
 #undef __unused
 
 #include <unistd.h>
@@ -42,15 +42,15 @@ FIXME( Rename __unused )
 /**
  * Exit program with ERR_SYSCALL if syscall_ret_val is negative
  */
-#define LIBC_EXIT_ON_ERROR( syscall_ret_val) \
-  if ( unlikely( ( syscall_ret_val ) < 0 ) ) \
-    { \
-      __exit( -ERR_SYSCALL); \
-    }
+#define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
+  if (unlikely ((syscall_ret_val) < 0)) \
+{ \
+  __exit (-ERR_SYSCALL); \
+}
 
-static long int syscall_1( long int syscall_no, long int arg1);
-static long int syscall_2( long int syscall_no, long int arg1, long int arg2);
-static long int syscall_3( long int syscall_no, long int arg1, long int arg2, long int arg3);
+static long int syscall_1 (long int syscall_no, long int arg1);
+static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
+static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
 /**
  * System call with one argument.
@@ -58,15 +58,15 @@ static long int syscall_3( long int syscall_no, long int arg1, long int arg2, lo
  * @return syscall's return value
  */
 static long int
-syscall_1( long int syscall_no, /**< syscall number */
+syscall_1 (long int syscall_no, /**< syscall number */
            long int arg1) /**< argument */
 {
   long int ret;
 
-  SYSCALL_1( syscall_no, arg1, ret);
+  SYSCALL_1 (syscall_no, arg1, ret);
 
-  LIBC_EXIT_ON_ERROR( ret );
-  
+  LIBC_EXIT_ON_ERROR(ret);
+
   return ret;
 } /* syscall_1 */
 
@@ -76,16 +76,16 @@ syscall_1( long int syscall_no, /**< syscall number */
  * @return syscall's return value
  */
 static long int
-syscall_2( long int syscall_no, /**< syscall number */
+syscall_2 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2) /**< second argument */
 {
   long int ret;
 
-  SYSCALL_2( syscall_no, arg1, arg2, ret);
+  SYSCALL_2 (syscall_no, arg1, arg2, ret);
 
-  LIBC_EXIT_ON_ERROR( ret );
-  
+  LIBC_EXIT_ON_ERROR(ret);
+
   return ret;
 } /* syscall_2 */
 
@@ -95,17 +95,17 @@ syscall_2( long int syscall_no, /**< syscall number */
  * @return syscall's return value
  */
 static long int
-syscall_3( long int syscall_no, /**< syscall number */
+syscall_3 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2, /**< second argument */
            long int arg3) /**< third argument */
 {
   long int ret;
 
-  SYSCALL_3( syscall_no, arg1, arg2, arg3, ret);
+  SYSCALL_3 (syscall_no, arg1, arg2, arg3, ret);
 
-  LIBC_EXIT_ON_ERROR( ret );
-  
+  LIBC_EXIT_ON_ERROR(ret);
+
   return ret;
 } /* syscall_3 */
 
@@ -113,7 +113,7 @@ syscall_3( long int syscall_no, /**< syscall number */
 int
 __putchar (int c)
 {
-  __fwrite( &c, 1, sizeof(char), LIBC_STDOUT);
+  __fwrite (&c, 1, sizeof (char), LIBC_STDOUT);
 
   return c;
 } /* __putchar */
@@ -124,16 +124,16 @@ __putchar (int c)
 void __noreturn
 __exit (int status) /**< status code */
 {
-  syscall_1( __NR_close, (long int)LIBC_STDIN);
-  syscall_1( __NR_close, (long int)LIBC_STDOUT);
-  syscall_1( __NR_close, (long int)LIBC_STDERR);
+  syscall_1 (__NR_close, (long int)LIBC_STDIN);
+  syscall_1 (__NR_close, (long int)LIBC_STDOUT);
+  syscall_1 (__NR_close, (long int)LIBC_STDERR);
 
-  syscall_1( __NR_exit_group, status);
+  syscall_1 (__NR_exit_group, status);
 
-  while ( true )
-    {
-      /* unreachable */
-    }
+  while (true)
+  {
+    /* unreachable */
+  }
 } /* __exit */
 
 /**
@@ -143,88 +143,96 @@ __exit (int status) /**< status code */
  *         NULL - otherwise
  */
 _FILE*
-__fopen(const char *path, /**< file path */
-        const char *mode) /**< file open mode */
+__fopen (const char *path, /**< file path */
+         const char *mode) /**< file open mode */
 {
-  bool may_read = false,
-       may_write = false,
-       truncate = false,
-       create_if_not_exist = false,
-       position_at_end = false;
+  bool may_read = false;
+  bool may_write = false;
+  bool truncate = false;
+  bool create_if_not_exist = false;
+  bool position_at_end = false;
 
-  JERRY_ASSERT( path != NULL && mode != NULL );
-  JERRY_ASSERT( mode[1] == '+' || mode[1] == '\0' );
+  JERRY_ASSERT(path != NULL && mode != NULL);
+  JERRY_ASSERT(mode[1] == '+' || mode[1] == '\0');
 
-  switch( mode[0] )
-    {
+  switch (mode[0])
+  {
     case 'r':
+    {
       may_read = true;
       may_write = (mode[1] == '+');
       break;
+    }
     case 'w':
+    {
       may_write = true;
       truncate = true;
       create_if_not_exist = true;
       may_read = (mode[1] == '+');
       break;
+    }
     case 'a':
+    {
       may_write = true;
       position_at_end = true;
       create_if_not_exist = true;
-      if ( mode[1] == '+' )
-        {
-          JERRY_UNIMPLEMENTED();
-        }
+      if (mode[1] == '+')
+      {
+        JERRY_UNIMPLEMENTED();
+      }
       break;
+    }
     default:
+    {
       JERRY_UNREACHABLE();
     }
+  }
 
   int flags = 0;
   int access = S_IRUSR | S_IWUSR;
-  if ( may_read && !may_write )
-    {
-      flags = O_RDONLY;
-    }
-  else if ( !may_read && may_write )
-    {
-      flags = O_WRONLY;
-    }
+  if (may_read && !may_write)
+  {
+    flags = O_RDONLY;
+  }
+  else if (!may_read && may_write)
+  {
+    flags = O_WRONLY;
+  }
   else
-    {
-      JERRY_ASSERT( may_read && may_write );
+  {
+    JERRY_ASSERT(may_read && may_write);
 
-      flags = O_RDWR;
-    }
+    flags = O_RDWR;
+  }
 
-  if ( truncate )
-    {
-      flags |= O_TRUNC;
-    }
+  if (truncate)
+  {
+    flags |= O_TRUNC;
+  }
 
-  if ( create_if_not_exist )
-    {
-      flags |= O_CREAT;
-    }
+  if (create_if_not_exist)
+  {
+    flags |= O_CREAT;
+  }
 
-  if ( position_at_end )
-    {
-      flags |= O_APPEND;
-    }
+  if (position_at_end)
+  {
+    flags |= O_APPEND;
+  }
 
-  long int ret = syscall_3( __NR_open, (long int)path, flags, access);
+  long int ret = syscall_3 (__NR_open, (long int) path, flags, access);
 
-  return (void*)(uintptr_t)(ret);
+  return (void*) (uintptr_t) (ret);
 } /* __fopen */
 
 /**
- * The rewind() function sets the file position indicator
+ * The rewind () function sets the file position indicator
  * for the stream pointed to by STREAM to the beginning of the file.
  */
 void
 __rewind (_FILE *stream) /**< stream pointer */
 {
-  syscall_3( __NR_lseek, (long int)stream, 0, SEEK_SET);
+  syscall_3 (__NR_lseek, (long int) stream, 0, SEEK_SET);
 } /* __rewind */
 
 /**
@@ -234,9 +242,9 @@ __rewind (_FILE *stream) /**< stream pointer */
  *         non-zero value - otherwise.
  */
 int
-__fclose(_FILE *fp) /**< stream pointer */
+__fclose (_FILE *fp) /**< stream pointer */
 {
-  syscall_2( __NR_close, (long int)fp, 0);
+  syscall_2 (__NR_close, (long int)fp, 0);
 
   return 0;
 } /* __fclose */
@@ -245,26 +253,32 @@ __fclose(_FILE *fp) /**< stream pointer */
  * fseek
  */
 int
-__fseek(_FILE * fp, /**< stream pointer */
-        long offset, /**< offset */
-        _whence_t whence) /**< specifies position type
-                               to add offset to */
+__fseek (_FILE * fp, /**< stream pointer */
+         long offset, /**< offset */
+         _whence_t whence) /**< specifies position type
+                                to add offset to */
 {
   int whence_real = SEEK_CUR;
-  switch ( whence )
+  switch (whence)
   {
     case __SEEK_SET:
+    {
       whence_real = SEEK_SET;
       break;
+    }
     case __SEEK_CUR:
+    {
       whence_real = SEEK_CUR;
       break;
+    }
     case __SEEK_END:
+    {
       whence_real = SEEK_END;
       break;
+    }
   }
 
-  syscall_3( __NR_lseek, (long int)fp, offset, whence_real);
+  syscall_3 (__NR_lseek, (long int)fp, offset, whence_real);
 
   return 0;
 } /* __fseek */
@@ -273,9 +287,9 @@ __fseek(_FILE * fp, /**< stream pointer */
  * ftell
  */
 long
-__ftell(_FILE * fp) /**< stream pointer */
+__ftell (_FILE * fp) /**< stream pointer */
 {
-  long int ret = syscall_3( __NR_lseek, (long int)fp, 0, SEEK_CUR);
+  long int ret = syscall_3 (__NR_lseek, (long int)fp, 0, SEEK_CUR);
 
   return ret;
 } /* __ftell */
@@ -286,20 +300,24 @@ __ftell(_FILE * fp) /**< stream pointer */
  * @return number of bytes read
  */
 size_t
-__fread(void *ptr, /**< address of buffer to read to */
-        size_t size, /**< size of elements to read */
-        size_t nmemb, /**< number of elements to read */
-        _FILE *stream) /**< stream pointer */
+__fread (void *ptr, /**< address of buffer to read to */
+         size_t size, /**< size of elements to read */
+         size_t nmemb, /**< number of elements to read */
+         _FILE *stream) /**< stream pointer */
 {
   long int ret;
   size_t bytes_read = 0;
 
   do
-    {
-      ret = syscall_3( __NR_read, (long int)stream, (long int) ((uint8_t*)ptr + bytes_read), (long int) (size * nmemb - bytes_read));
+  {
+    ret = syscall_3 (__NR_read,
+                     (long int) stream,
+                     (long int) ((uint8_t*) ptr + bytes_read),
+                     (long int) (size * nmemb - bytes_read));
 
-      bytes_read += (size_t)ret;
-    } while (bytes_read != size * nmemb && ret != 0);
+    bytes_read += (size_t)ret;
+  }
+  while (bytes_read != size * nmemb && ret != 0);
 
   return bytes_read;
 } /* __fread */
@@ -310,24 +328,28 @@ __fread(void *ptr, /**< address of buffer to read to */
  * @return number of bytes written
  */
 size_t
-__fwrite(const void *ptr, /**< data to write */
-         size_t size, /**< size of elements to write */
-         size_t nmemb, /**< number of elements */
-         _FILE *stream) /**< stream pointer */
+__fwrite (const void *ptr, /**< data to write */
+          size_t size, /**< size of elements to write */
+          size_t nmemb, /**< number of elements */
+          _FILE *stream) /**< stream pointer */
 {
   size_t bytes_written = 0;
 
   do
-    {
-      long int ret = syscall_3( __NR_write, (long int)stream, (long int) ((uint8_t*)ptr + bytes_written), (long int) (size * nmemb - bytes_written));
+  {
+    long int ret = syscall_3 (__NR_write,
+                              (long int) stream,
+                              (long int) ((uint8_t*) ptr + bytes_written),
+                              (long int) (size * nmemb - bytes_written));
 
-      bytes_written += (size_t)ret;
-    } while (bytes_written != size * nmemb);
+    bytes_written += (size_t)ret;
+  }
+  while (bytes_written != size * nmemb);
 
   return bytes_written;
 } /* __fwrite */
 
-#elif defined(LIBC_MUSL)
+#elif defined (LIBC_MUSL)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -340,14 +362,14 @@ const _FILE **libc_stderr = (void*)&stderr;
 int
 __putchar (int c)
 {
-  return putchar( c);
+  return putchar (c);
 } /* __putchar */
 
 /** exit - cause normal process termination  */
 void __noreturn
 __exit (int status)
 {
-  exit( status);
+  exit (status);
 } /* __exit */
 
 /**
@@ -357,14 +379,14 @@ __exit (int status)
  *         NULL - otherwise
  */
 _FILE*
-__fopen(const char *path, /**< file path */
-        const char *mode) /**< file open mode */
+__fopen (const char *path, /**< file path */
+         const char *mode) /**< file open mode */
 {
-  return fopen( path, mode);
+  return fopen (path, mode);
 } /* __fopen */
 
-/** The rewind() function sets the file position 
-  indicator for the stream pointed to by STREAM to the beginning of the file.  */
+/** The rewind () function sets the file position
+     indicator for the stream pointed to by STREAM to the beginning of the file.  */
 void
 __rewind (_FILE *stream)
 {
@@ -378,44 +400,50 @@ __rewind (_FILE *stream)
  *         non-zero value - otherwise.
  */
 int
-__fclose(_FILE *fp) /**< stream pointer */
+__fclose (_FILE *fp) /**< stream pointer */
 {
-  return fclose( fp);
+  return fclose (fp);
 } /* __fclose */
 
 /**
  * fseek
  */
 int
-__fseek(_FILE * fp, /**< stream pointer */
-        long offset, /**< offset */
-        _whence_t whence) /**< specifies position type
-                               to add offset to */
+__fseek (_FILE * fp, /**< stream pointer */
+         long offset, /**< offset */
+         _whence_t whence) /**< specifies position type
+                                to add offset to */
 {
   int whence_real = SEEK_CUR;
-  switch ( whence )
+  switch (whence)
   {
     case __SEEK_SET:
+    {
       whence_real = SEEK_SET;
       break;
+    }
     case __SEEK_CUR:
+    {
       whence_real = SEEK_CUR;
       break;
+    }
     case __SEEK_END:
+    {
       whence_real = SEEK_END;
       break;
+    }
   }
 
-  return fseek( fp, offset, whence_real);
+  return fseek (fp, offset, whence_real);
 } /* __fseek */
 
 /**
  * ftell
  */
 long
-__ftell(_FILE * fp) /**< stream pointer */
+__ftell (_FILE * fp) /**< stream pointer */
 {
-  return ftell( fp);
+  return ftell (fp);
 } /* __ftell */
 
 /**
@@ -424,12 +452,12 @@ __ftell(_FILE * fp) /**< stream pointer */
  * @return number of bytes read
  */
 size_t
-__fread(void *ptr, /**< address of buffer to read to */
-        size_t size, /**< size of elements to read */
-        size_t nmemb, /**< number of elements to read */
-        _FILE *stream) /**< stream pointer */
+__fread (void *ptr, /**< address of buffer to read to */
+         size_t size, /**< size of elements to read */
+         size_t nmemb, /**< number of elements to read */
+         _FILE *stream) /**< stream pointer */
 {
-  return fread(ptr, size, nmemb, stream);
+  return fread (ptr, size, nmemb, stream);
 } /* __fread */
 
 /**
@@ -438,12 +466,12 @@ __fread(void *ptr, /**< address of buffer to read to */
  * @return number of bytes written
  */
 size_t
-__fwrite(const void *ptr, /**< data to write */
-         size_t size, /**< size of elements to write */
-         size_t nmemb, /**< number of elements */
-         _FILE *stream) /**< stream pointer */
+__fwrite (const void *ptr, /**< data to write */
+          size_t size, /**< size of elements to write */
+          size_t nmemb, /**< number of elements */
+          _FILE *stream) /**< stream pointer */
 {
-  return fwrite(ptr, size, nmemb, stream);
+  return fwrite (ptr, size, nmemb, stream);
 } /* __fwrite */
 
 #else /* !LIBC_RAW && !LIBC_MUSL */

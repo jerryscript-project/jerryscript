@@ -21,7 +21,7 @@
 
 #include <stdarg.h>
 
-extern void __noreturn exit(int status);
+extern void __noreturn exit (int status);
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
@@ -38,7 +38,7 @@ __exit (int status __unused)
    * TODO: Blink LEDs? status -> binary -> LEDs?
    */
 
-  while(true);
+  while (true);
 } /* __exit */
 
 /**
@@ -47,11 +47,11 @@ __exit (int status __unused)
  * @return number of bytes written
  */
 size_t
-__fwrite(const void *ptr, /**< data to write */
+__fwrite (const void *ptr, /**< data to write */
          size_t size, /**< size of elements to write */
          size_t nmemb, /**< number of elements */
          _FILE *stream) /**< stream pointer */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS( ptr, size, nmemb, stream);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(ptr, size, nmemb, stream);
 } /* __fwrite */
 

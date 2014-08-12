@@ -165,7 +165,8 @@ mem_get_block_chunks_count (const mem_block_header_t *block_header_p) /**< block
   if (next_block_p == NULL)
   {
     dist_till_block_end = (size_t) (mem_heap.heap_start + mem_heap.heap_size - (uint8_t*) block_header_p);
-  } else
+  }
+  else
   {
     dist_till_block_end = (size_t) ((uint8_t*) next_block_p - (uint8_t*) block_header_p);
   }
@@ -263,7 +264,8 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
     block_header_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
 
     JERRY_ASSERT(allocated_bytes == 0);
-  } else
+  }
+  else
   {
     block_header_p->magic_num = MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK;
   }
@@ -303,7 +305,8 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
   {
     block_p = mem_heap.first_block_p;
     direction = MEM_DIRECTION_NEXT;
-  } else
+  }
+  else
   {
     block_p = mem_heap.last_block_p;
     direction = MEM_DIRECTION_PREV;
@@ -320,7 +323,8 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
       {
         break;
       }
-    } else
+    }
+    else
     {
       JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     }
@@ -630,7 +634,8 @@ mem_check_heap (void)
       is_last_block_was_met = true;
 
       JERRY_ASSERT(next_block_p == NULL);
-    } else
+    }
+    else
     {
       JERRY_ASSERT(next_block_p != NULL);
     }
@@ -661,7 +666,8 @@ mem_check_heap (void)
       is_first_block_was_met = true;
 
       JERRY_ASSERT(prev_block_p == NULL);
-    } else
+    }
+    else
     {
       JERRY_ASSERT(prev_block_p != NULL);
     }

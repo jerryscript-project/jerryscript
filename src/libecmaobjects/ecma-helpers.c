@@ -287,10 +287,12 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
       property_name_p = ECMA_GET_POINTER(property_p->u.named_data_property.name_p);
-    } else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
       property_name_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.name_p);
-    } else
+    }
+    else
     {
       continue;
     }
@@ -468,7 +470,8 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
       if (prev_prop_p == NULL)
       {
         ECMA_SET_POINTER(obj_p->properties_p, next_prop_p);
-      } else
+      }
+      else
       {
         ECMA_SET_POINTER(prev_prop_p->next_property_p, next_prop_p);
       }

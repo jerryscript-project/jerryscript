@@ -58,7 +58,8 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
       return ecma_make_reference (ecma_make_object_value (lex_env_iter_p),
                                   name_p,
                                   is_strict);
-    } else
+    }
+    else
     {
       JERRY_ASSERT(ecma_is_completion_value_normal_false (completion_value));
     }

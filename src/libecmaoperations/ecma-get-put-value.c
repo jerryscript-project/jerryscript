@@ -69,7 +69,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       // GetValue_4.b case 1
       /* return [[Get]](base as this, ref.referenced_name_p) */
       JERRY_UNIMPLEMENTED();
-    } else
+    }
+    else
     { // GetValue_4.b case 2
       /*
            ecma_object_t *obj_p = ecma_ToObject (base);
@@ -80,7 +81,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
            return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
            ecma_copy_value (property->u.named_data_property.value),
            ECMA_TARGET_ID_RESERVED);
-           } else
+           }
+           else
            {
            JERRY_ASSERT(property->Type == ECMA_PROPERTY_NAMEDACCESSOR);
 
@@ -91,7 +93,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
            return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
            ECMA_TARGET_ID_RESERVED);
-           } else
+           }
+           else
            {
            return [[Call]](getter, base as this);
            }
@@ -99,7 +102,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
        */
       JERRY_UNIMPLEMENTED();
     }
-  } else
+  }
+  else
   {
     // GetValue_5
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
@@ -136,7 +140,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
     if (ref.is_strict) // PutValue_3.a
     {
       return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
-    } else // PutValue_3.b
+    }
+    else // PutValue_3.b
     {
       ecma_object_t *global_object_p = ecma_get_global_object ();
 
@@ -152,7 +157,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
 
       return ecma_make_empty_completion_value ();
     }
-  } else if (is_property_reference) // PutValue_4
+  }
+  else if (is_property_reference) // PutValue_4
   {
     if (!has_primitive_base) // PutValue_4.a
     {
@@ -160,7 +166,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
 
       /* return [[Put]](base as this, ref.referenced_name_p, value, ref.is_strict); */
       JERRY_UNIMPLEMENTED();
-    } else
+    }
+    else
     {
       // PutValue_4.b case 2
 
@@ -176,7 +183,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       if (ref.is_strict)
       {
       return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-      } else
+      }
+      else
       { // PutValue_sub_2.b
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
       ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
@@ -194,7 +202,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       if (ref.is_strict)
       {
       return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-      } else
+      }
+      else
       { // PutValue_sub_4.b
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
       ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
@@ -214,7 +223,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
 
       // PutValue_sub_6.b
       return [[Call]](setter, base as this, value);
-      } else // PutValue_sub_7
+      }
+      else // PutValue_sub_7
       {
       // PutValue_sub_7.a
       if (ref.is_strict)
@@ -231,7 +241,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
 
       JERRY_UNIMPLEMENTED();
     }
-  } else
+  }
+  else
   {
     // PutValue_7
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);

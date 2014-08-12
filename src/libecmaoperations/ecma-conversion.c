@@ -218,11 +218,13 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
       if (ecma_is_value_boolean (value))
       {
         return ecma_make_simple_completion_value (value.value);
-      } else if (ecma_is_value_undefined (value)
+      }
+      else if (ecma_is_value_undefined (value)
                  || ecma_is_value_null (value))
       {
         return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-      } else
+      }
+      else
       {
         JERRY_UNREACHABLE();
       }

@@ -193,7 +193,8 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
     if (prev_pool_state != NULL)
     {
       prev_pool_state->next_pool_cp = pool_state->next_pool_cp;
-    } else
+    }
+    else
     {
       if (pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL)
       {

@@ -264,13 +264,15 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
         return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                            ecma_copy_value (prop_value, true),
                                            ECMA_TARGET_ID_RESERVED);
-      } else if (ecma_is_value_empty (prop_value))
+      }
+      else if (ecma_is_value_empty (prop_value))
       {
         /* unitialized immutable binding */
         if (is_strict)
         {
           return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
-        } else
+        }
+        else
         {
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
         }
@@ -329,14 +331,16 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
       if (prop_p == NULL)
       {
         ret_val = ECMA_SIMPLE_VALUE_TRUE;
-      } else
+      }
+      else
       {
         JERRY_ASSERT(prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
         if (prop_p->u.named_data_property.configurable == ECMA_PROPERTY_NOT_CONFIGURABLE)
         {
           ret_val = ECMA_SIMPLE_VALUE_FALSE;
-        } else
+        }
+        else
         {
           ecma_delete_property (lex_env_p, prop_p);
 

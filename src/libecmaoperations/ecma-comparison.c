@@ -68,7 +68,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     {
       // a., b.
       return true;
-    } else if (is_x_number)
+    }
+    else if (is_x_number)
     { // c.
       ecma_number_t x_num = *(ecma_number_t*)(ECMA_GET_POINTER(x.value));
       ecma_number_t y_num = *(ecma_number_t*)(ECMA_GET_POINTER(y.value));
@@ -76,26 +77,31 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       TODO(Implement according to ECMA);
 
       return (x_num == y_num);
-    } else if (is_x_string)
+    }
+    else if (is_x_string)
     { // d.
       ecma_array_first_chunk_t* x_str = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(x.value));
       ecma_array_first_chunk_t* y_str = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(y.value));
 
       return ecma_compare_ecma_string_to_ecma_string (x_str, y_str);
-    } else if (is_x_boolean)
+    }
+    else if (is_x_boolean)
     { // e.
       return (x.value == y.value);
-    } else
+    }
+    else
     { // f.
       JERRY_ASSERT(is_x_object);
 
       return (x.value == y.value);
     }
-  } else if ((is_x_null && is_y_undefined)
+  }
+  else if ((is_x_null && is_y_undefined)
              || (is_x_undefined && is_y_null))
   { // 2., 3.
     return true;
-  } else
+  }
+  else
   {
     JERRY_UNIMPLEMENTED();
   }

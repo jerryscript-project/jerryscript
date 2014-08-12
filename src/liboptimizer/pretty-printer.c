@@ -68,11 +68,17 @@ static void
 dump_variable (T_IDX id)
 {
   if (id >= deserialize_min_temp ())
+  {
     __printf ("tmp%d", id);
+  }
   else if (deserialize_string_by_id (id))
+  {
     __printf ("%s", deserialize_string_by_id (id));
+  }
   else
-    __printf ("%d", deserialize_num_by_id (id));
+  {
+    __printf ("%d", (int) deserialize_num_by_id (id));
+  }
 }
 
 #define CASE_CONDITIONAL_JUMP(op, string1, field1, string2, field2) \

@@ -19,7 +19,7 @@
 #include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "ecma-objects-properties.h"
+#include "ecma-objects.h"
 #include "globals.h"
 
 /** \addtogroup ecma ---TODO---

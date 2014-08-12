@@ -18,7 +18,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-magic-strings.h"
-#include "ecma-objects-properties.h"
+#include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 

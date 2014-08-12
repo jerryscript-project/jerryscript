@@ -17,7 +17,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-objects-properties.h"
+#include "ecma-objects.h"
 
 /** \addtogroup ecma ---TODO---
  * @{

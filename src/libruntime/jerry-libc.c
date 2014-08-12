@@ -37,6 +37,19 @@ extern void *memset(void *s, int c, size_t n);
  */
 extern void *memmove(void *s1, const void*s2, size_t n);
 
+#ifdef __GNUC__
+/*
+ * Making GCC not to replace:
+ *   - __memcpy  -> call to memcpy;
+ *   - __memset  -> call to memset;
+ *   - __memmove -> call to memmove.
+ */
+CALL_PRAGMA(GCC diagnostic push)
+CALL_PRAGMA(GCC diagnostic ignored "-Wpragmas")
+CALL_PRAGMA(GCC push_options)
+CALL_PRAGMA(GCC optimize ("-fno-tree-loop-distribute-patterns"))
+#endif /* __GNUC__ */
+
 /**
  * memcpy alias to __memcpy (for compiler usage)
  */
@@ -66,6 +79,12 @@ void* memmove(void *s1, /**< destination*/
 {
   return __memmove(s1, s2, n);
 } /* memmove */
+
+#ifdef __GNUC__
+CALL_PRAGMA(GCC pop_options)
+CALL_PRAGMA(GCC diagnostic pop)
+#endif /* __GNUC__ */
+
 #endif /* LIBC_MUSL */
 
 /**

@@ -137,12 +137,13 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 static bool
 do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 {
-  FIXME (Replace strcmp with ecma_char_t[] comparator);
+  const ecma_char_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
+  const ecma_char_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
   return (ref.is_strict
-          && (__strcmp ((char*) ref.referenced_name_p,
-                        (char*) ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL)) == 0
-              || __strcmp ((char*) ref.referenced_name_p,
-                           (char*) ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS)) == 0)
+          && (ecma_compare_zt_string_to_zt_string (ref.referenced_name_p,
+                                                   magic_string_eval) == 0
+              || ecma_compare_zt_string_to_zt_string (ref.referenced_name_p,
+                                                      magic_string_arguments) == 0)
           && (ref.base.value_type == ECMA_TYPE_OBJECT)
           && (ECMA_GET_POINTER (ref.base.value) != NULL)
           && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment));

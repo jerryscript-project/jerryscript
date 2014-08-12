@@ -679,6 +679,22 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1
 } /* ecma_compare_ecma_string_to_ecma_string */
 
 /**
+ * Compare zero-terminated string to zero-terminated string
+ *
+ * @return  0 - if strings are equal;
+ *         -1 - if first string is lexicographically less than second;
+ *          1 - otherwise.
+ */
+int32_t
+ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-terminated string */
+                                     const ecma_char_t *string2_p) /**< zero-terminated string */
+{
+  TODO (Implement comparison that supports UTF-16);
+
+  return __strcmp ( (char*)string1_p, (char*)string2_p);
+} /* ecma_compare_zt_string_to_zt_string */
+
+/**
  * Compare zero-terminated string to ecma-string
  *
  * @return true - if strings are equal;

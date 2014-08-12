@@ -131,6 +131,7 @@ extern ssize_t ecma_copy_ecma_string_chars_to_buffer (ecma_array_first_chunk_t *
                                                       uint8_t *buffer_p,
                                                       size_t buffer_size);
 extern ecma_array_first_chunk_t* ecma_duplicate_ecma_string (ecma_array_first_chunk_t *first_chunk_p);
+extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p,
                                                    const ecma_array_first_chunk_t *ecma_string_p);
 extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1_p,

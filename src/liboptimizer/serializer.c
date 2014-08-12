@@ -72,14 +72,14 @@ serializer_dump_strings (const char *strings[], uint8_t size)
 }
 
 void 
-serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num)
+serializer_dump_nums (const ecma_number_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num)
 {
-  uint8_t i, *data;
+  uint8_t i, *data, type_size = sizeof (ecma_number_t);
 
   if (print_opcodes)
     pp_nums (nums, size, strings_num);
 
-  data = mem_heap_alloc_block ((size_t) (offset + size * 4 + 1), MEM_HEAP_ALLOC_LONG_TERM);
+  data = mem_heap_alloc_block ((size_t) (offset + size * type_size + 1), MEM_HEAP_ALLOC_LONG_TERM);
   if (!data)
     parser_fatal (ERR_MEMORY);
   
@@ -91,8 +91,8 @@ serializer_dump_nums (const int32_t nums[], uint8_t size, uint16_t offset, uint8
   data++;
   for (i = 0; i < size; i++)
     {
-      __memcpy (data, nums + i, 4);
-      data += 4;
+      __memcpy (data, nums + i, type_size);
+      data += type_size;
     }
 
 #ifndef JERRY_NDEBUG

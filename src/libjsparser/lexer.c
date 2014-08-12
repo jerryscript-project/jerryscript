@@ -14,19 +14,23 @@
  */
 
 #include "mem-allocator.h"
-#include "globals.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
 
 static token saved_token;
-static token empty_token = { .type = TOK_EMPTY, .data.uid = 0 };
+static token empty_token =
+{
+  .type =
+  TOK_EMPTY,
+  .data.uid = 0
+};
 static bool allow_dump_lines = false;
 static size_t buffer_size = 0;
 
 typedef struct
 {
-  int num;
+  ecma_number_t num;
   token tok;
 }
 num_and_token;
@@ -35,12 +39,8 @@ num_and_token;
 
 static uint8_t seen_names_count = 0;
 
-static num_and_token seen_nums[MAX_NUMS] =
-{
-  [0] = { .num = 0, .tok = { .type = TOK_INT, .data.uid = 0 } },
-  [1] = { .num = 1, .tok = { .type = TOK_INT, .data.uid = 1 } }
-};
-static uint8_t seen_nums_count = 2;
+static num_and_token seen_nums[MAX_NUMS];
+static uint8_t seen_nums_count = 0;
 
 static bool
 is_empty (token tok)
@@ -574,12 +574,13 @@ add_token_to_seen_names (token_type tt, const char *string)
 }
 
 static token
-convert_seen_num_to_token (int num)
+convert_seen_num_to_token (ecma_number_t num)
 {
   size_t i;
 
   for (i = 0; i < seen_nums_count; i++)
   {
+    // token must be exactly the same as seen
     if (seen_nums[i].num == num)
     {
       return seen_nums[i].tok;
@@ -636,7 +637,7 @@ lexer_get_string_by_id (uint8_t id)
 }
 
 uint8_t
-lexer_get_nums (int32_t *nums)
+lexer_get_nums (ecma_number_t *nums)
 {
   int i;
 
@@ -868,7 +869,16 @@ parse_number (void)
 
     token_start = NULL;
 
-    known_token = convert_seen_num_to_token (res);
+    if (res <= 255)
+    {
+      return (token)
+      {
+        .type = TOK_SMALL_INT,
+        .data.uid = (uint8_t) res
+      };
+    }
+
+    known_token = convert_seen_num_to_token ((ecma_number_t) res);
     if (!is_empty (known_token))
     {
       return known_token;
@@ -876,12 +886,16 @@ parse_number (void)
 
     known_token = (token)
     {
-      .type = TOK_INT, .data.uid = seen_nums_count
+      .type = TOK_NUMBER,
+      .data.uid = seen_nums_count
     };
-    add_num_to_seen_tokens ((num_and_token)
-    {
-      .num = res, .tok = known_token
-    });
+    add_num_to_seen_tokens (
+      (num_and_token)
+      {
+        .num = (ecma_number_t) res,
+        .tok = known_token
+      }
+    );
     return known_token;
   }
 
@@ -948,10 +962,28 @@ parse_number (void)
 
   if (is_fp || is_exp)
   {
-    float res = __strtof (token_start, NULL);
+    ecma_number_t res = __strtof (token_start, NULL);
     token_start = NULL;
-    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (res);
-    return empty_token;
+
+    known_token = convert_seen_num_to_token (res);
+    if (!is_empty (known_token))
+    {
+      return known_token;
+    }
+
+    known_token = (token)
+    {
+      .type = TOK_NUMBER,
+      .data.uid = seen_nums_count
+    };
+    add_num_to_seen_tokens (
+      (num_and_token)
+      {
+        .num = res,
+        .tok = known_token
+      }
+    );
+    return known_token;
   }
 
   tok_length = (size_t) (buffer - token_start);;
@@ -962,7 +994,16 @@ parse_number (void)
 
   token_start = NULL;
 
-  known_token = convert_seen_num_to_token (res);
+  if (res <= 255)
+  {
+    return (token)
+    {
+      .type = TOK_SMALL_INT,
+      .data.uid = (uint8_t) res
+    };
+  }
+
+  known_token = convert_seen_num_to_token ((ecma_number_t) res);
   if (!is_empty (known_token))
   {
     return known_token;
@@ -970,12 +1011,16 @@ parse_number (void)
 
   known_token = (token)
   {
-    .type = TOK_INT, .data.uid = seen_nums_count
+    .type = TOK_NUMBER,
+    .data.uid = seen_nums_count
   };
-  add_num_to_seen_tokens ((num_and_token)
-  {
-    .num = res, .tok = known_token
-  });
+  add_num_to_seen_tokens (
+    (num_and_token)
+    {
+      .num = (ecma_number_t) res,
+      .tok = known_token
+    }
+  );
   return known_token;
 }
 

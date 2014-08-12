@@ -52,14 +52,14 @@ pp_strings (const char *strings[], uint8_t size)
 }
 
 void 
-pp_nums (const int32_t nums[], uint8_t size, uint8_t strings_num)
+pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
 {
   uint8_t i;
 
   __printf ("NUMS %d:\n", size);
   for (i = 0; i < size; i++)
     {
-      __printf ("%3d %7d\n", i + strings_num, nums[i]);
+      __printf ("%3d %7d\n", i + strings_num, (int) nums[i]);
     }
   __printf ("\n");
 }

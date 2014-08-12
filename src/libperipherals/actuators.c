@@ -94,7 +94,7 @@ initialize_leds ()
   GPIO_Init (GPIOD, &gpioStructure);
 
   GPIO_WriteBit (GPIOD,
-                 GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;,
+                 GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15,
                  Bit_RESET);
 }
 #endif

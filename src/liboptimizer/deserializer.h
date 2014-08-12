@@ -20,7 +20,7 @@
 #include "ecma-globals.h"
 
 const ecma_char_t *deserialize_string_by_id (uint8_t);
-int deserialize_num_by_id (uint8_t);
+ecma_number_t deserialize_num_by_id (uint8_t);
 const void *deserialize_bytecode (void);
 uint8_t deserialize_min_temp (void);
 

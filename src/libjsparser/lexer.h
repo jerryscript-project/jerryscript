@@ -17,7 +17,7 @@
 #define LEXER_H
 
 #include "globals.h"
-
+#include "ecma-globals.h"
 
 /* Keywords.  */
 typedef uint8_t keyword;
@@ -65,8 +65,8 @@ typedef uint8_t token_type;
 #define TOK_EOF 0 // End of file
 #define TOK_NAME 1 // Identifier
 #define TOK_KEYWORD 2 // Keyword
-#define TOK_INT 3
-#define TOK_FLOAT 4
+#define TOK_SMALL_INT 3
+#define TOK_NUMBER 4
 
 #define TOK_NULL 5
 #define TOK_BOOL 6
@@ -144,7 +144,8 @@ typedef struct
     uint8_t uid;
   }
   data;
-} __packed
+}
+__packed
 token;
 
 void lexer_init (const char *, size_t, bool);
@@ -156,7 +157,7 @@ void lexer_dump_buffer_state (void);
 uint8_t lexer_get_strings (const char **);
 uint8_t lexer_get_reserved_ids_count (void);
 const char *lexer_get_string_by_id (uint8_t);
-uint8_t lexer_get_nums (int32_t *);
+uint8_t lexer_get_nums (ecma_number_t *);
 void lexer_adjust_num_ids (void);
 
 #endif

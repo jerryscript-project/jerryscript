@@ -38,7 +38,8 @@ typedef struct
   uint8_t size;
   uint8_t head;
   opcode_counter_t *oc_stack;
-} __packed
+}
+__packed
 rewritable_opcode;
 
 #define NESTING_ITERATIONAL 1
@@ -160,7 +161,7 @@ is_keyword (keyword kw)
 }
 
 static void
-current_token_must_be(token_type tt)
+current_token_must_be (token_type tt)
 {
   if (tok.type != tt)
   {
@@ -296,10 +297,10 @@ integer_zero (void)
 }
 
 static T_IDX
-integer_one (void)
+boolean_true (void)
 {
   T_IDX lhs = next_temp_name ();
-  DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 1);
+  DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE);
   return lhs;
 }
 
@@ -416,12 +417,19 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
 static T_IDX
 parse_property_name (void)
 {
+  T_IDX lhs;
+
   switch (tok.type)
   {
     case TOK_NAME:
     case TOK_STRING:
-    case TOK_INT:
+    case TOK_NUMBER:
       return tok.data.uid;
+
+    case TOK_SMALL_INT:
+      lhs = next_temp_name ();
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, tok.data.uid);
+      return lhs;
 
     default:
       JERRY_UNREACHABLE ();
@@ -845,7 +853,7 @@ parse_function_expression (void)
   T_IDX name, lhs;
   opcode_counter_t jmp_oc;
 
-  assert_keyword  (KW_FUNCTION);
+  assert_keyword (KW_FUNCTION);
 
   skip_newlines ();
   if (tok.type == TOK_NAME)
@@ -915,9 +923,14 @@ parse_literal (void)
                      tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
       return lhs;
 
-    case TOK_INT:
+    case TOK_NUMBER:
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, tok.data.uid);
+      return lhs;
+
+    case TOK_SMALL_INT:
+      lhs = next_temp_name ();
+      DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, tok.data.uid);
       return lhs;
 
     case TOK_STRING:
@@ -949,34 +962,38 @@ parse_primary_expression (void)
     DUMP_OPCODE_1 (this, lhs);
     return lhs;
   }
-  else if (tok.type == TOK_NAME)
+
+  switch (tok.type)
   {
-    return tok.data.uid;
+    case TOK_NAME:
+      return tok.data.uid;
+
+    case TOK_NULL:
+    case TOK_BOOL:
+    case TOK_SMALL_INT:
+    case TOK_NUMBER:
+    case TOK_STRING:
+      return parse_literal ();
+
+    case TOK_OPEN_SQUARE:
+      return parse_array_literal ();
+
+    case TOK_OPEN_BRACE:
+      return parse_object_literal ();
+
+    case TOK_OPEN_PAREN:
+      skip_newlines ();
+      if (tok.type != TOK_CLOSE_PAREN)
+      {
+        lhs = parse_expression ();
+        token_after_newlines_must_be (TOK_CLOSE_PAREN);
+        return lhs;
+      }
+      // FALLTHRU
+
+    default:
+      JERRY_UNREACHABLE ();
   }
-  else if (tok.type == TOK_NULL || tok.type == TOK_BOOL
-           || tok.type == TOK_INT || tok.type == TOK_STRING)
-  {
-    return parse_literal ();
-  }
-  else if (tok.type == TOK_OPEN_SQUARE)
-  {
-    return parse_array_literal ();
-  }
-  else if (tok.type == TOK_OPEN_BRACE)
-  {
-    return parse_object_literal ();
-  }
-  else if (tok.type == TOK_OPEN_PAREN)
-  {
-    skip_newlines ();
-    if (tok.type != TOK_CLOSE_PAREN)
-    {
-      lhs = parse_expression ();
-      token_after_newlines_must_be (TOK_CLOSE_PAREN);
-      return lhs;
-    }
-  }
-  JERRY_UNREACHABLE ();
 }
 
 /* member_expression
@@ -1677,7 +1694,7 @@ parse_for_or_for_in_statement (void)
   T_IDX stop;
   opcode_counter_t cond_oc, body_oc, step_oc, end_oc;
 
-  assert_keyword  (KW_FOR);
+  assert_keyword (KW_FOR);
   token_after_newlines_must_be (TOK_OPEN_PAREN);
 
   skip_newlines ();
@@ -1771,7 +1788,7 @@ plain_for:
   }
   else
   {
-    stop = integer_one ();
+    stop = boolean_true ();
   }
 
   end_oc = opcode_counter;
@@ -2239,5 +2256,5 @@ parser_fatal (jerry_status_t code)
   __printf ("FATAL: %d\n", code);
   lexer_dump_buffer_state ();
 
-  jerry_exit( code);
+  jerry_exit (code);
 }

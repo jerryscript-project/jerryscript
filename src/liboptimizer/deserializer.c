@@ -16,7 +16,7 @@
 #include "deserializer.h"
 #include "bytecode-data.h"
 
-int *num_data = NULL;
+ecma_number_t *num_data = NULL;
 uint8_t num_size = 0;
 
 const ecma_char_t *
@@ -42,7 +42,7 @@ deserialize_string_by_id (uint8_t id)
   return ((const ecma_char_t *) bytecode_data + offset);
 }
 
-int 
+ecma_number_t 
 deserialize_num_by_id (uint8_t id)
 {
   uint16_t str_size, str_offset;
@@ -65,7 +65,7 @@ deserialize_num_by_id (uint8_t id)
         data++;
   
       num_size = *(++data);
-      num_data = (int *) ++data;
+      num_data = (ecma_number_t *) ++data;
     }
 
   if (id >= num_size)

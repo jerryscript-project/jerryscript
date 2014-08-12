@@ -36,7 +36,7 @@ static const OPCODE *
 parser_run (const char *script_source, size_t script_source_size, bool is_show_opcodes)
 {
   const char *strings[MAX_STRINGS];
-  int32_t nums[MAX_NUMS];
+  ecma_number_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint16_t offset;
   const OPCODE *opcodes;

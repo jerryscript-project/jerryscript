@@ -24,7 +24,7 @@ void serializer_init (bool show_opcodes);
 
 uint16_t serializer_dump_strings (const char **, uint8_t);
 
-void serializer_dump_nums (const int32_t *, uint8_t, uint16_t, uint8_t);
+void serializer_dump_nums (const ecma_number_t *, uint8_t, uint16_t, uint8_t);
 
 void serializer_dump_opcode (OPCODE);
 

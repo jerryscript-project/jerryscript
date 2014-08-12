@@ -20,6 +20,6 @@
 
 void pp_opcode (opcode_counter_t, OPCODE, bool);
 void pp_strings (const char **, uint8_t);
-void pp_nums (const int32_t *, uint8_t, uint8_t);
+void pp_nums (const ecma_number_t *, uint8_t, uint8_t);
 
 #endif // PRETTY_PRINTER

@@ -93,14 +93,18 @@ done
 git checkout master >&/dev/null
 
 echo
-echo "Pre-commit testing passed successfully. Starting performance and memory benchmarking"
+echo "Pre-commit testing passed successfully"
 echo
 
-./tools/test_stability.sh $((`echo $commits_to_push | wc -w` + 1))
+# echo
+# echo "Pre-commit testing passed successfully. Starting performance and memory benchmarking"
+# echo
 
-echo
-echo "Performance and memory benchmarking completed"
-echo
+# ./tools/test_stability.sh $((`echo $commits_to_push | wc -w` + 1))
+
+# echo
+# echo "Performance and memory benchmarking completed"
+# echo
 
 if [ $ok_to_push -eq 1 ]
 then

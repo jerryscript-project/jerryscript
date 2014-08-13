@@ -38,7 +38,9 @@ __exit (int status __unused)
    * TODO: Blink LEDs? status -> binary -> LEDs?
    */
 
-  while (true);
+  while (true)
+  {
+  }
 } /* __exit */
 
 /**

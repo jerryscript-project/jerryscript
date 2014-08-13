@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash +x
+#!/bin/bash
 
 JERRY=$1
 TEST=$2
@@ -20,10 +20,10 @@ RAW_OUTPUT=$3
 SLEEP=0.3
 REPEATS=5
 
-RSS_OUTPUT=
-PSS_OUTPUT=
-SHARE_OUTPUT=
-RSS_SHARE_OUTPUT=
+RSS_OUTPUT="1"
+PSS_OUTPUT="1"
+SHARE_OUTPUT="1"
+RSS_SHARE_OUTPUT="1"
 
 function run_test()
 {
@@ -70,11 +70,22 @@ then
      echo -e $SHARE_OUTPUT;
 fi;
 
+if [ "$RSS_OUTPUT" == "1" ]
+then
+    echo ===================
+    echo "Test failed."
+    echo ===================
+    exit 1
+fi;
+
+TIME=$(echo "scale=3;$EXEC_TIME / 1.0" | bc )
+AVG_TIME=$(echo "scale=3;$EXEC_TIME / 5" | bc )
+
 echo ===================
 echo -e $RSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss average:\t\t%d Kb\tRss max: %d Kb\n", sum / n, max; }'
 echo -e $PSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Pss average:\t\t%d Kb\tPss max: %d Kb\n", sum / n, max; }'
 echo -e $SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Share average:\t\t%d Kb\tShare max: %d Kb\n", sum / n, max; }'
 echo -e $RSS_SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "(Rss - Share) average:\t%d Kb\t(Rss - Share) max: %d Kb\n", sum / n, max; }'
 echo -e "---"
-echo -e "Exec time:\t\t$EXEC_TIME secs"
+echo -e "Exec time / average:\t$TIME / $AVG_TIME secs"
 echo ===================

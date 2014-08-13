@@ -519,7 +519,12 @@ convert_seen_name_to_token (token_type tt, const char *string)
     if ((string == NULL && current_token_equals_to (current_string))
         || (string != NULL && !__strcmp (current_string, string)))
     {
-      ret_val = (token) { .type = tt, .data.uid = i };
+      ret_val = (token)
+      {
+        .type = tt,
+        .data.uid = i
+      };
+
       break;
     }
 
@@ -566,8 +571,12 @@ add_token_to_seen_names (token_type tt, const char *string)
     __memcpy (current_string, string, __strlen (string) + 1);
   }
 
-  ret_val = (token) { .type = tt, .data.uid = seen_names_count++ };
-  
+  ret_val = (token)
+  {
+    .type = tt,
+    .data.uid = seen_names_count++
+  };
+
   return ret_val;
 }
 
@@ -893,7 +902,7 @@ parse_number (void)
         .num = (ecma_number_t) res,
         .tok = known_token
       }
-    );
+);
     return known_token;
   }
 
@@ -980,7 +989,7 @@ parse_number (void)
         .num = res,
         .tok = known_token
       }
-    );
+);
     return known_token;
   }
 
@@ -1018,7 +1027,7 @@ parse_number (void)
       .num = (ecma_number_t) res,
       .tok = known_token
     }
-  );
+);
   return known_token;
 }
 
@@ -1190,6 +1199,7 @@ replace_comment_by_newline (void)
     {
       consume_char ();
       consume_char ();
+
       if (was_newlines)
       {
         return true;
@@ -1283,7 +1293,7 @@ lexer_next_token_private (void)
 
   if (c == '/' && LA (1) == '/')
   {
-    replace_comment_by_newline ();;
+    replace_comment_by_newline ();
     return lexer_next_token_private ();
   }
 
@@ -1313,28 +1323,33 @@ lexer_next_token_private (void)
     case '|': IF_LA_IS_OR ('|', TOK_DOUBLE_OR, '=', TOK_OR_EQ, TOK_OR);
 
     case '<':
+    {
       switch (LA (1))
       {
         case '<': IF_LA_N_IS ('=', TOK_LSHIFT_EQ, TOK_LSHIFT, 2);
         case '=': RETURN_PUNC_EX (TOK_LESS_EQ, 2);
         default: RETURN_PUNC (TOK_LESS);
       }
-
+    }
     case '>':
+    {
       switch (LA (1))
       {
         case '>':
+        {
           switch (LA (2))
           {
             case '>': IF_LA_N_IS ('=', TOK_RSHIFT_EX_EQ, TOK_RSHIFT_EX, 3);
             case '=': RETURN_PUNC_EX (TOK_RSHIFT_EQ, 3);
             default: RETURN_PUNC_EX (TOK_RSHIFT, 2);
           }
+        }
         case '=': RETURN_PUNC_EX (TOK_GREATER_EQ, 2);
         default: RETURN_PUNC (TOK_GREATER);
       }
-
+    }
     case '=':
+    {
       if (LA (1) == '=')
       {
         IF_LA_N_IS ('=', TOK_TRIPLE_EQ, TOK_DOUBLE_EQ, 2);
@@ -1343,8 +1358,9 @@ lexer_next_token_private (void)
       {
         RETURN_PUNC (TOK_EQ);
       }
-
+    }
     case '!':
+    {
       if (LA (1) == '=')
       {
         IF_LA_N_IS ('=', TOK_NOT_DOUBLE_EQ, TOK_NOT_EQ, 2);
@@ -1353,7 +1369,7 @@ lexer_next_token_private (void)
       {
         RETURN_PUNC (TOK_NOT);
       }
-
+    }
     default: JERRY_UNREACHABLE ();
   }
   parser_fatal (ERR_NON_CHAR);

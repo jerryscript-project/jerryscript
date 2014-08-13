@@ -216,6 +216,7 @@ token_after_newlines_must_be_keyword (keyword kw)
 }
 
 #if 0
+
 static void
 insert_semicolon (void)
 {
@@ -319,7 +320,7 @@ add_to_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
   if (op.head == op.size)
   {
     opcode_counter_t *temp = (opcode_counter_t *) mem_heap_alloc_block (sizeof (opcode_counter_t) * op.size * 2,
-                             MEM_HEAP_ALLOC_SHORT_TERM);
+                                                                        MEM_HEAP_ALLOC_SHORT_TERM);
     __memcpy (temp, op.oc_stack, op.size * sizeof (opcode_counter_t));
     op.size = (uint8_t) (op.size * 2);
     temp[op.head++] = oc;
@@ -342,13 +343,19 @@ rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
     switch (type)
     {
       case REWRITABLE_CONTINUE:
+      {
         REWRITE_OPCODE_1 (op.oc_stack[i], jmp_up, oc);
         break;
+      }
       case REWRITABLE_BREAK:
+      {
         REWRITE_OPCODE_1 (op.oc_stack[i], jmp_down, oc);
         break;
+      }
       default:
+      {
         JERRY_UNREACHABLE ();
+      }
     }
   }
 
@@ -399,7 +406,7 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
       /* Dump opcodes like
          is_true_jmp arg, +2
          exitval 1
-      */
+       */
       DUMP_OPCODE_2 (is_true_jmp, args[0], opcode_counter + 2);
       DUMP_OPCODE_1 (exitval, 1);
       return;
@@ -408,7 +415,6 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
 
   JERRY_UNREACHABLE ();
 }
-
 /* property_name
   : Identifier
   | StringLiteral
@@ -424,15 +430,19 @@ parse_property_name (void)
     case TOK_NAME:
     case TOK_STRING:
     case TOK_NUMBER:
+    {
       return tok.data.uid;
-
+    }
     case TOK_SMALL_INT:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, tok.data.uid);
       return lhs;
-
+    }
     default:
+    {
       JERRY_UNREACHABLE ();
+    }
   }
 }
 
@@ -528,19 +538,24 @@ dump_varg_end (T_IDX current_param, T_IDX params[3])
   switch (current_param)
   {
     case 0:
+    {
       DUMP_OPCODE_1 (varg_1_end, params[0]);
       break;
-
+    }
     case 1:
+    {
       DUMP_OPCODE_2 (varg_2_end, params[0], params[1]);
       break;
-
+    }
     case 2:
+    {
       DUMP_OPCODE_3 (varg_3_end, params[0], params[1], params[2]);
       break;
-
+    }
     default:
+    {
       JERRY_UNREACHABLE ();
+    }
   }
 }
 
@@ -562,28 +577,31 @@ static T_IDX
 parse_argument_list (argument_list_type alt, T_IDX obj)
 {
   token_type open_tt, close_tt;
-  T_IDX first_opcode_args_count,
-        lhs = 0,
-        args[3+1/* +1 for stack protector */],
-        current_arg = 0;
+  T_IDX first_opcode_args_count;
+  T_IDX lhs = 0;
+  T_IDX args[3 + 1/* +1 for stack protector */];
+  T_IDX current_arg = 0;
 
   switch (alt)
   {
     case AL_FUNC_DECL:
-      open_tt = TOK_OPEN_PAREN;     // Openning token
-      close_tt = TOK_CLOSE_PAREN;   // Ending token
-      first_opcode_args_count = 2;  // Maximum number of arguments in first opcode
+    {
+      open_tt = TOK_OPEN_PAREN; // Openning token
+      close_tt = TOK_CLOSE_PAREN; // Ending token
+      first_opcode_args_count = 2; // Maximum number of arguments in first opcode
       break;
-
+    }
     case AL_FUNC_EXPR:
     case AL_CONSTRUCT_EXPR:
+    {
       open_tt = TOK_OPEN_PAREN;
       close_tt = TOK_CLOSE_PAREN;
       first_opcode_args_count = 1;
       lhs = next_temp_name ();
       break;
-
+    }
     case AL_CALL_EXPR:
+    {
       open_tt = TOK_OPEN_PAREN;
       close_tt = TOK_CLOSE_PAREN;
       first_opcode_args_count = 1;
@@ -593,23 +611,27 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
       }
       lhs = next_temp_name ();
       break;
-
+    }
     case AL_ARRAY_LIT:
+    {
       open_tt = TOK_OPEN_SQUARE;
       close_tt = TOK_CLOSE_SQUARE;
       first_opcode_args_count = 2;
       lhs = next_temp_name ();
       break;
-
+    }
     case AL_OBJECT_LIT:
+    {
       open_tt = TOK_OPEN_BRACE;
       close_tt = TOK_CLOSE_BRACE;
       first_opcode_args_count = 2;
       lhs = next_temp_name ();
       break;
-
+    }
     default:
+    {
       JERRY_UNREACHABLE ();
+    }
   }
 
   current_token_must_be (open_tt);
@@ -627,35 +649,43 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
           switch (alt)
           {
             case AL_FUNC_DECL:
+            {
               DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
               break;
-
+            }
             case AL_FUNC_EXPR:
+            {
               DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
               break;
-
+            }
             case AL_ARRAY_LIT:
+            {
               DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
               break;
-
+            }
             case AL_OBJECT_LIT:
+            {
               DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
               break;
-
+            }
             case AL_CONSTRUCT_EXPR:
+            {
               DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
               break;
-
+            }
             case AL_CALL_EXPR:
+            {
               if (is_intrinsic (obj))
               {
                 parser_fatal (ERR_PARSER);
               }
               DUMP_OPCODE_3 (call_n, lhs, obj, args[0]);
               break;
-
+            }
             default:
+            {
               JERRY_UNREACHABLE ();
+            }
           }
           current_arg = 0;
           is_first_opcode = false;
@@ -669,23 +699,28 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
       switch (alt)
       {
         case AL_FUNC_DECL:
+        {
           current_token_must_be (TOK_NAME);
           args[current_arg] = tok.data.uid;
           break;
-
+        }
         case AL_FUNC_EXPR:
         case AL_ARRAY_LIT:
         case AL_CONSTRUCT_EXPR:
         case AL_CALL_EXPR:
+        {
           args[current_arg] = parse_assignment_expression ();
           break;
-
+        }
         case AL_OBJECT_LIT:
+        {
           args[current_arg] = parse_property_assignment ();
           break;
-
+        }
         default:
+        {
           JERRY_UNREACHABLE ();
+        }
       }
 
       skip_newlines ();
@@ -706,26 +741,32 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
         switch (alt)
         {
           case AL_FUNC_DECL:
+          {
             DUMP_OPCODE_2 (func_decl_1, obj, args[0]);
             break;
-
+          }
           case AL_FUNC_EXPR:
+          {
             DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
             break;
-
+          }
           case AL_ARRAY_LIT:
+          {
             DUMP_OPCODE_2 (array_1, lhs, args[0]);
             break;
-
+          }
           case AL_OBJECT_LIT:
+          {
             DUMP_OPCODE_2 (obj_1, lhs, args[0]);
             break;
-
+          }
           case AL_CONSTRUCT_EXPR:
+          {
             DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
             break;
-
+          }
           case AL_CALL_EXPR:
+          {
             if (is_intrinsic (obj))
             {
               dump_intrinsic (obj, args);
@@ -735,9 +776,11 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
               DUMP_OPCODE_3 (call_1, lhs, obj, args[0]);
             }
             break;
-
+          }
           default:
+          {
             JERRY_UNREACHABLE ();
+          }
         }
       }
       else if (current_arg == 1)
@@ -745,19 +788,24 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
         switch (alt)
         {
           case AL_FUNC_DECL:
+          {
             DUMP_OPCODE_3 (func_decl_2, obj, args[0], args[1]);
             break;
-
+          }
           case AL_ARRAY_LIT:
+          {
             DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
             break;
-
+          }
           case AL_OBJECT_LIT:
+          {
             DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
             break;
-
+          }
           default:
+          {
             JERRY_UNREACHABLE ();
+          }
         }
       }
       else
@@ -775,31 +823,39 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
     switch (alt)
     {
       case AL_FUNC_DECL:
+      {
         DUMP_OPCODE_1 (func_decl_0, obj);
         break;
-
+      }
       case AL_FUNC_EXPR:
+      {
         DUMP_OPCODE_2 (func_expr_0, lhs, obj);
         break;
-
+      }
       case AL_ARRAY_LIT:
+      {
         DUMP_OPCODE_1 (array_0, lhs);
         break;
-
+      }
       case AL_OBJECT_LIT:
+      {
         DUMP_OPCODE_1 (obj_0, lhs);
         break;
-
+      }
       case AL_CONSTRUCT_EXPR:
+      {
         DUMP_OPCODE_2 (construct_0, lhs, obj);
         break;
-
+      }
       case AL_CALL_EXPR:
+      {
         DUMP_OPCODE_2 (call_0, lhs, obj);
         break;
-
+      }
       default:
+      {
         JERRY_UNREACHABLE ();
+      }
     }
   }
 
@@ -808,7 +864,7 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 
 /* function_declaration
   : 'function' LT!* Identifier LT!*
-    '(' (LT!* Identifier (LT!* ',' LT!* Identifier)* ) ? LT!* ')' LT!* function_body
+    '(' (LT!* Identifier (LT!* ',' LT!* Identifier)*) ? LT!* ')' LT!* function_body
   ;
 
    function_body
@@ -913,33 +969,40 @@ parse_literal (void)
   switch (tok.type)
   {
     case TOK_NULL:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_NULL);
       return lhs;
-
+    }
     case TOK_BOOL:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE,
                      tok.data.uid ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
       return lhs;
-
+    }
     case TOK_NUMBER:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_NUMBER, tok.data.uid);
       return lhs;
-
+    }
     case TOK_SMALL_INT:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, tok.data.uid);
       return lhs;
-
+    }
     case TOK_STRING:
+    {
       lhs = next_temp_name ();
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_STRING, tok.data.uid);
       return lhs;
-
+    }
     default:
+    {
       JERRY_UNREACHABLE ();
+    }
   }
 }
 
@@ -966,22 +1029,27 @@ parse_primary_expression (void)
   switch (tok.type)
   {
     case TOK_NAME:
+    {
       return tok.data.uid;
-
+    }
     case TOK_NULL:
     case TOK_BOOL:
     case TOK_SMALL_INT:
     case TOK_NUMBER:
     case TOK_STRING:
+    {
       return parse_literal ();
-
+    }
     case TOK_OPEN_SQUARE:
+    {
       return parse_array_literal ();
-
+    }
     case TOK_OPEN_BRACE:
+    {
       return parse_object_literal ();
-
+    }
     case TOK_OPEN_PAREN:
+    {
       skip_newlines ();
       if (tok.type != TOK_CLOSE_PAREN)
       {
@@ -990,9 +1058,11 @@ parse_primary_expression (void)
         return lhs;
       }
       // FALLTHRU
-
+    }
     default:
+    {
       JERRY_UNREACHABLE ();
+    }
   }
 }
 
@@ -1083,7 +1153,7 @@ parse_member_expression (void)
   ;
 
    arguments
-  : '(' LT!* assignment_expression LT!* ( ',' LT!* assignment_expression * LT!* )* ')'
+  : '(' LT!* assignment_expression LT!* (',' LT!* assignment_expression * LT!*)* ')'
   ; */
 static T_IDX
 parse_call_expression (void)
@@ -1109,11 +1179,13 @@ parse_call_expression (void)
     switch (tok.type)
     {
       case TOK_OPEN_PAREN:
+      {
         lhs = parse_argument_list (AL_CALL_EXPR, obj);
         skip_newlines ();
         break;
-
+      }
       case TOK_OPEN_SQUARE:
+      {
         NEXT (prop, expression);
         next_token_must_be (TOK_CLOSE_SQUARE);
 
@@ -1121,8 +1193,9 @@ parse_call_expression (void)
         obj = lhs;
         skip_newlines ();
         break;
-
+      }
       case TOK_DOT:
+      {
         token_after_newlines_must_be (TOK_NAME);
         prop = tok.data.uid;
 
@@ -1130,9 +1203,11 @@ parse_call_expression (void)
         obj = lhs;
         skip_newlines ();
         break;
-
+      }
       default:
+      {
         JERRY_UNREACHABLE ();
+      }
     }
   }
   lexer_save_token (tok);
@@ -1189,42 +1264,49 @@ parse_unary_expression (void)
   switch (tok.type)
   {
     case TOK_DOUBLE_PLUS:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_2 (pre_incr, lhs, expr);
       return expr;
-
+    }
     case TOK_DOUBLE_MINUS:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_2 (pre_decr, lhs, expr);
       return expr;
-
+    }
     case TOK_PLUS:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_3 (addition, lhs, integer_zero (), expr);
       return lhs;
-
+    }
     case TOK_MINUS:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_3 (substraction, lhs, integer_zero (), expr);
       return lhs;
-
+    }
     case TOK_COMPL:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_2 (b_not, lhs, expr);
       return lhs;
-
+    }
     case TOK_NOT:
+    {
       lhs = next_temp_name ();
       NEXT (expr, unary_expression);
       DUMP_OPCODE_2 (logical_not, lhs, expr);
       return lhs;
-
+    }
     case TOK_KEYWORD:
+    {
       if (is_keyword (KW_DELETE))
       {
         lhs = next_temp_name ();
@@ -1244,9 +1326,11 @@ parse_unary_expression (void)
         return lhs;
       }
       /* FALLTHRU.  */
-
+    }
     default:
+    {
       return parse_postfix_expression ();
+    }
   }
 }
 
@@ -1273,15 +1357,22 @@ parse_multiplicative_expression (void)
     switch (tok.type)
     {
       case TOK_MULT:
+      {
         DUMP_OF (multiplication, unary_expression)
+      }
       case TOK_DIV:
+      {
         DUMP_OF (division, unary_expression)
+      }
       case TOK_MOD:
+      {
         DUMP_OF (remainder, unary_expression)
-
+      }
       default:
+      {
         lexer_save_token (tok);
         return expr1;
+      }
     }
 
     skip_newlines ();
@@ -1304,13 +1395,18 @@ parse_additive_expression (void)
     switch (tok.type)
     {
       case TOK_PLUS:
+      {
         DUMP_OF (addition, multiplicative_expression);
+      }
       case TOK_MINUS:
+      {
         DUMP_OF (substraction, multiplicative_expression);
-
+      }
       default:
+      {
         lexer_save_token (tok);
         return expr1;
+      }
     }
 
     skip_newlines ();
@@ -1333,15 +1429,22 @@ parse_shift_expression (void)
     switch (tok.type)
     {
       case TOK_LSHIFT:
+      {
         DUMP_OF (b_shift_left, additive_expression)
+      }
       case TOK_RSHIFT:
+      {
         DUMP_OF (b_shift_right, additive_expression)
+      }
       case TOK_RSHIFT_EX:
+      {
         DUMP_OF (b_shift_uright, additive_expression)
-
+      }
       default:
+      {
         lexer_save_token (tok);
         return expr1;
+      }
     }
 
     skip_newlines ();
@@ -1364,14 +1467,23 @@ parse_relational_expression (void)
     switch (tok.type)
     {
       case TOK_LESS:
+      {
         DUMP_OF (less_than, shift_expression)
+      }
       case TOK_GREATER:
+      {
         DUMP_OF (greater_than, shift_expression)
+      }
       case TOK_LESS_EQ:
+      {
         DUMP_OF (less_or_equal_than, shift_expression)
+      }
       case TOK_GREATER_EQ:
+      {
         DUMP_OF (greater_or_equal_than, shift_expression)
+      }
       case TOK_KEYWORD:
+      {
         if (is_keyword (KW_INSTANCEOF))
         {
           DUMP_OF (instanceof, shift_expression)
@@ -1380,11 +1492,13 @@ parse_relational_expression (void)
         {
           DUMP_OF (in, shift_expression)
         }
-        // FALLTHRU
-
+        /* FALLTHROUGH */
+      }
       default:
+      {
         lexer_save_token (tok);
         return expr1;
+      }
     }
 
     skip_newlines ();
@@ -1407,17 +1521,26 @@ parse_equality_expression (void)
     switch (tok.type)
     {
       case TOK_DOUBLE_EQ:
+      {
         DUMP_OF (equal_value, relational_expression)
+      }
       case TOK_NOT_EQ:
+      {
         DUMP_OF (not_equal_value, relational_expression)
+      }
       case TOK_TRIPLE_EQ:
+      {
         DUMP_OF (equal_value_type, relational_expression)
+      }
       case TOK_NOT_DOUBLE_EQ:
+      {
         DUMP_OF (not_equal_value_type, relational_expression)
-
+      }
       default:
+      {
         lexer_save_token (tok);
         return expr1;
+      }
     }
 
     skip_newlines ();
@@ -1525,67 +1648,81 @@ parse_assignment_expression (void)
   switch (tok.type)
   {
     case TOK_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_VARIABLE, rhs);
       break;
-
+    }
     case TOK_MULT_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (multiplication, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_DIV_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (division, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_MOD_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (remainder, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_PLUS_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (addition, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_MINUS_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (substraction, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_LSHIFT_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_shift_left, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_RSHIFT_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_shift_right, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_RSHIFT_EX_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_shift_uright, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_AND_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_and, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_XOR_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_xor, lhs, lhs, rhs);
       break;
-
+    }
     case TOK_OR_EQ:
+    {
       NEXT (rhs, assignment_expression);
       DUMP_OPCODE_3 (b_or, lhs, lhs, rhs);
       break;
-
+    }
     default:
+    {
       lexer_save_token (tok);
+    }
   }
 
   return lhs;
@@ -1594,7 +1731,7 @@ parse_assignment_expression (void)
 /* expression
   : assignment_expression (LT!* ',' LT!* assignment_expression)*
   ;
-  */
+ */
 static T_IDX
 parse_expression (void)
 {
@@ -1778,7 +1915,7 @@ plain_for:
 
   21   jmp_up 5; // step_oc;
   22   ...
-  */
+   */
   cond_oc = opcode_counter;
   skip_newlines ();
   if (tok.type != TOK_SEMICOLON)
@@ -1821,7 +1958,6 @@ plain_for:
 
 for_in:
   JERRY_UNIMPLEMENTED ();
-
 }
 
 static T_IDX
@@ -2101,22 +2237,24 @@ parse_statement (void)
   }
   if (is_keyword (KW_CONTINUE))
   {
+
     must_be_inside_but_not_in ((uint8_t[])
     {
-      NESTING_ITERATIONAL, NESTING_SWITCH
+                               NESTING_ITERATIONAL, NESTING_SWITCH
     }, 2,
-    NESTING_FUNCTION);
+                               NESTING_FUNCTION);
     add_to_rewritable_opcodes (REWRITABLE_CONTINUE, opcode_counter);
     DUMP_OPCODE_1 (jmp_up, INVALID_VALUE);
     return;
   }
   if (is_keyword (KW_BREAK))
   {
+
     must_be_inside_but_not_in ((uint8_t[])
     {
-      NESTING_ITERATIONAL, NESTING_SWITCH
+                               NESTING_ITERATIONAL, NESTING_SWITCH
     }, 2,
-    NESTING_FUNCTION);
+                               NESTING_FUNCTION);
     add_to_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
     DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
     return;

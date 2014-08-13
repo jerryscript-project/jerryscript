@@ -76,7 +76,7 @@ typedef uint8_t token_type;
 
 #define TOK_CLOSE_BRACE 10 // }
 #define TOK_OPEN_PAREN 11 // (
-#define TOK_CLOSE_PAREN 12 // )
+#define TOK_CLOSE_PAREN 12 //)
 #define TOK_OPEN_SQUARE 13 // [
 #define TOK_CLOSE_SQUARE 14 // [
 

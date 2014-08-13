@@ -20,6 +20,7 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
+#include "jerry-libc.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
@@ -343,6 +344,35 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
   return ret_value;
 } /* ecma_zt_string_to_number */
+
+/**
+ * ECMA-defined conversion of UInt32 to String (zero-terminated).
+ */
+void
+ecma_op_to_string_uint32 (uint32_t value, /**< value to convert */
+                          ecma_char_t *out_buffer_p, /**< buffer for zero-terminated string */
+                          size_t buffer_size) /**< size of buffer */
+{
+  FIXME (Implement according to ECMA);
+
+  ecma_char_t *p = (ecma_char_t*) ((uint8_t*) out_buffer_p + buffer_size) - 1;
+  *p-- = '\0';
+
+  do
+  {
+    JERRY_ASSERT (p != out_buffer_p);
+
+    *p-- = (ecma_char_t) ("0123456789"[value % 10]);
+    value /= 10;
+  }
+  while (value != 0);
+
+  if (likely (p != out_buffer_p))
+  {
+    ssize_t bytes_to_move = ((uint8_t*) out_buffer_p + buffer_size) - (uint8_t*) p;
+    __memmove (out_buffer_p, p, (size_t) bytes_to_move);
+  }
+} /* ecma_op_to_string_uint32 */
 
 /**
  * ECMA-defined conversion of UInt32 value to Number value

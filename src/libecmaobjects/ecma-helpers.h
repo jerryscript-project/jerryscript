@@ -63,7 +63,7 @@ extern bool ecma_is_value_true (ecma_value_t value);
 
 extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
 extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
-extern ecma_value_t ecma_make_string_value (ecma_array_first_chunk_t* ecma_string_p);
+extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);
 extern ecma_value_t ecma_make_object_value (ecma_object_t* object_p);
 extern ecma_value_t ecma_copy_value (const ecma_value_t value, bool do_ref_if_object);
 extern void ecma_free_value (const ecma_value_t value, bool do_deref_if_object);
@@ -84,6 +84,19 @@ extern bool ecma_is_completion_value_normal_simple_value (ecma_completion_value_
 extern bool ecma_is_completion_value_normal_true (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_normal_false (ecma_completion_value_t value);
 extern bool ecma_is_empty_completion_value (ecma_completion_value_t value);
+
+/* ecma-helpers-string.c */
+extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
+extern void ecma_free_string (ecma_string_t *string_p);
+extern ssize_t ecma_string_to_zt_string (ecma_string_t *string_desc_p,
+                                         ecma_char_t *buffer_p,
+                                         size_t buffer_size);
+extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
+extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
+extern bool ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p,
+                                                   const ecma_string_t *ecma_string_p);
+extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
+                                                     const ecma_string_t *string2_p);
 
 /* ecma-helpers.c */
 extern ecma_object_t* ecma_create_object (ecma_object_t *prototype_object_p,
@@ -126,16 +139,6 @@ extern void ecma_free_property (ecma_property_t *prop_p);
 
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 
-extern ecma_array_first_chunk_t* ecma_new_ecma_string (const ecma_char_t *string_p);
-extern ssize_t ecma_copy_ecma_string_chars_to_buffer (ecma_array_first_chunk_t *first_chunk_p,
-                                                      uint8_t *buffer_p,
-                                                      size_t buffer_size);
-extern ecma_array_first_chunk_t* ecma_duplicate_ecma_string (ecma_array_first_chunk_t *first_chunk_p);
-extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern bool ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p,
-                                                   const ecma_array_first_chunk_t *ecma_string_p);
-extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1_p,
-                                                     const ecma_array_first_chunk_t *string2_p);
 extern void ecma_free_array (ecma_array_first_chunk_t *first_chunk_p);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);

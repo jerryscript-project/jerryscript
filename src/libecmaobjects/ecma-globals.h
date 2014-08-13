@@ -491,7 +491,7 @@ typedef uint16_t ecma_length_t;
 typedef struct
 {
   /** Compressed pointer to next chunk */
-  uint16_t next_chunk_p;
+  uint16_t next_chunk_cp;
 
   /** Number of elements in the Array */
   ecma_length_t unit_number;
@@ -515,7 +515,7 @@ typedef struct
 typedef struct
 {
   /** Compressed pointer to next chunk */
-  uint16_t next_chunk_p;
+  uint16_t next_chunk_cp;
 
   /** Characters */
   uint8_t data[ sizeof (uint64_t) - sizeof (uint16_t) ];

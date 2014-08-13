@@ -662,7 +662,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
     case OPCODE_ARG_TYPE_STRING:
     {
       string_literal_copy str_value;
-      ecma_array_first_chunk_t *ecma_string_p;
+      ecma_string_t *ecma_string_p;
 
       init_string_literal_copy (src_val_descr, &str_value);
       ecma_string_p = ecma_new_ecma_string (str_value.str_p);

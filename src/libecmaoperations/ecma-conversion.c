@@ -134,8 +134,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_string)
   {
-    ecma_array_first_chunk_t* x_str_p = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(x.value));
-    ecma_array_first_chunk_t* y_str_p = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(y.value));
+    ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
+    ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
 
     return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
   }
@@ -234,9 +234,9 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_array_first_chunk_t *str_p = ECMA_GET_POINTER(value.value);
+      ecma_string_t *str_p = ECMA_GET_POINTER(value.value);
 
-      return ecma_make_simple_completion_value ((str_p->header.unit_number == 0) ? ECMA_SIMPLE_VALUE_FALSE
+      return ecma_make_simple_completion_value ((str_p->length == 0) ? ECMA_SIMPLE_VALUE_FALSE
                                                 : ECMA_SIMPLE_VALUE_TRUE);
 
       break;

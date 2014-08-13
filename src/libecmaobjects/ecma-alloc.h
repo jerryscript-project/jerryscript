@@ -83,7 +83,19 @@ extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk (void);
 /**
  * Dealloc memory from non-first chunk of an ecma-array
  */
-extern void ecma_dealloc_array_non_first_chunk (ecma_array_non_first_chunk_t *number_p);
+extern void ecma_dealloc_array_non_first_chunk (ecma_array_non_first_chunk_t *non_first_chunk_p);
+
+/**
+ * Allocate memory for ecma-string descriptor
+ *
+ * @return pointer to allocated memory
+ */
+extern ecma_string_t *ecma_alloc_string (void);
+
+/**
+ * Dealloc memory from ecma-string descriptor
+ */
+extern void ecma_dealloc_string (ecma_string_t *string_p);
 
 #endif /* JERRY_ECMA_ALLOC_H */
 

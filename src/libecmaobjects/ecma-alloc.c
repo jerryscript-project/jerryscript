@@ -13,25 +13,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
- * @{
- *
- * \addtogroup ecmaalloc Routines for allocation/freeing memory for ECMA data types
- * @{
- */
-
-/**
- * Implementation of routins for allocation/freeing memory for ECMA data types.
- *
- * All allocation routines from this module have the same structure:
- *  1. Try to allocate memory.
- *  2. If allocation was successful, return pointer to the allocated block.
- *  3. Run garbage collection.
- *  4. Try to allocate memory.
- *  5. If allocation was successful, return pointer to the allocated block;
- *     else - shutdown engine.
- */
-
 #include "globals.h"
 #include "ecma-alloc.h"
 #include "ecma-globals.h"
@@ -50,16 +31,32 @@ JERRY_STATIC_ASSERT(sizeof (ecma_array_non_first_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_string_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 
+/** \addtogroup ecma ---TODO---
+ * @{
+ *
+ * \addtogroup ecmaalloc Routines for allocation/freeing memory for ECMA data types
+ * @{
+ */
+
+/**
+ * Implementation of routines for allocation/freeing memory for ECMA data types.
+ *
+ * All allocation routines from this module have the same structure:
+ *  1. Try to allocate memory.
+ *  2. If allocation was successful, return pointer to the allocated block.
+ *  3. Run garbage collection.
+ *  4. Try to allocate memory.
+ *  5. If allocation was successful, return pointer to the allocated block;
+ *     else - shutdown engine.
+ */
+
 /**
  * Template of an allocation routine.
- *
- * FIXME: Run GC only if allocation failed.
  */
 #define ALLOC(ecma_type) ecma_ ## ecma_type ## _t * \
   ecma_alloc_ ## ecma_type (void) \
 { \
-  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-  mem_pools_alloc (); \
+  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) mem_pools_alloc (); \
   \
   if (likely (p ## ecma_type != NULL)) \
   { \
@@ -72,8 +69,7 @@ JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
   { \
     ecma_gc_run (gen_id); \
     \
-    p ## ecma_type = (ecma_ ## ecma_type ## _t *) \
-    mem_pools_alloc (); \
+    p ## ecma_type = (ecma_ ## ecma_type ## _t *) mem_pools_alloc (); \
     \
     if (likely (p ## ecma_type != NULL)) \
     { \
@@ -104,6 +100,7 @@ DECLARE_ROUTINES_FOR (property)
 DECLARE_ROUTINES_FOR (number)
 DECLARE_ROUTINES_FOR (array_first_chunk)
 DECLARE_ROUTINES_FOR (array_non_first_chunk)
+DECLARE_ROUTINES_FOR (string)
 
 /**
  * @}

@@ -80,10 +80,10 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_string)
     { // d.
-      ecma_array_first_chunk_t* x_str = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(x.value));
-      ecma_array_first_chunk_t* y_str = (ecma_array_first_chunk_t*)(ECMA_GET_POINTER(y.value));
+      ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
+      ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
 
-      return ecma_compare_ecma_string_to_ecma_string (x_str, y_str);
+      return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
     }
     else if (is_x_boolean)
     { // e.

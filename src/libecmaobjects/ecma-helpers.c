@@ -281,7 +281,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
        property_p != NULL;
        property_p = ECMA_GET_POINTER(property_p->next_property_p))
   {
-    ecma_array_first_chunk_t *property_name_p;
+    ecma_string_t *property_name_p;
 
     if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
@@ -361,7 +361,7 @@ ecma_free_named_data_property (ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-  ecma_free_array (ECMA_GET_POINTER(property_p->u.named_data_property.name_p));
+  ecma_free_string (ECMA_GET_POINTER (property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property (property_p);
@@ -375,7 +375,7 @@ ecma_free_named_accessor_property (ecma_property_t *property_p) /**< the propert
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  ecma_free_array (ECMA_GET_POINTER(property_p->u.named_accessor_property.name_p));
+  ecma_free_string (ECMA_GET_POINTER (property_p->u.named_accessor_property.name_p));
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */
@@ -490,13 +490,13 @@ ecma_free_array (ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of th
 {
   JERRY_ASSERT(first_chunk_p != NULL);
 
-  ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER(first_chunk_p->header.next_chunk_p);
+  ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER (first_chunk_p->header.next_chunk_cp);
 
   ecma_dealloc_array_first_chunk (first_chunk_p);
 
   while (non_first_chunk_p != NULL)
   {
-    ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER(non_first_chunk_p->next_chunk_p);
+    ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER (non_first_chunk_p->next_chunk_cp);
 
     ecma_dealloc_array_non_first_chunk (non_first_chunk_p);
 

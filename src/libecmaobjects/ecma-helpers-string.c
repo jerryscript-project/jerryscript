@@ -29,140 +29,196 @@
 /**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
- * @return Pointer to first chunk of an array, containing allocated string
+ * @return pointer to ecma-string descriptor
  */
-ecma_array_first_chunk_t*
-ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string of ecma-characters */
+ecma_string_t*
+ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string */
 {
-  ecma_length_t length = 0;
+  JERRY_ASSERT (string_p != NULL);
 
-  /*
-   * TODO: Do not precalculate length.
-   */
-  if (string_p != NULL)
+  ecma_length_t length = 0;
+  const ecma_char_t *iter_p = string_p;
+
+  while (*iter_p++)
   {
-    const ecma_char_t *iter_p = string_p;
-    while (*iter_p++)
-    {
-      length++;
-    }
+    length++;
   }
 
-  ecma_array_first_chunk_t *string_first_chunk_p = ecma_alloc_array_first_chunk ();
+  const size_t bytes_needed_for_current_string = sizeof (ecma_char_t) * length;
+  const size_t bytes_for_chars_in_string_descriptor = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_string_t, u.chars);
+  JERRY_STATIC_ASSERT (bytes_for_chars_in_string_descriptor % sizeof (ecma_char_t) == 0);
 
-  string_first_chunk_p->header.unit_number = length;
-  uint8_t *copy_pointer = (uint8_t*) string_p;
-  size_t chars_left = length;
-  size_t chars_to_copy = JERRY_MIN(length, sizeof (string_first_chunk_p->data) / sizeof (ecma_char_t));
-  __memcpy (string_first_chunk_p->data, copy_pointer, chars_to_copy * sizeof (ecma_char_t));
-  chars_left -= chars_to_copy;
-  copy_pointer += chars_to_copy * sizeof (ecma_char_t);
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+  string_desc_p->length = length;
 
-  ecma_array_non_first_chunk_t *string_non_first_chunk_p;
+  if (bytes_needed_for_current_string <= bytes_for_chars_in_string_descriptor)
+  {
+    string_desc_p->container = ECMA_STRING_CONTAINER_IN_DESCRIPTOR;
+    __memcpy (string_desc_p->u.chars, string_p, bytes_needed_for_current_string);
 
-  JERRY_STATIC_ASSERT(ECMA_POINTER_FIELD_WIDTH <= sizeof (uint16_t) * JERRY_BITSINBYTE);
-  uint16_t *next_chunk_compressed_pointer_p = &string_first_chunk_p->header.next_chunk_p;
+    return string_desc_p;
+  }
 
+  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP;
+
+  const ecma_char_t* src_p = string_p;
+
+  ecma_length_t chars_left = length;
+  JERRY_ASSERT (chars_left > 0);
+
+  ecma_array_non_first_chunk_t *string_chunk_p = ecma_alloc_array_non_first_chunk ();
+
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.chunk_cp, string_chunk_p);
+
+  const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
   while (chars_left > 0)
   {
-    string_non_first_chunk_p = ecma_alloc_array_non_first_chunk ();
+    ecma_length_t chars_to_copy = JERRY_MIN(chars_left, max_chars_in_chunk);
 
-    size_t chars_to_copy = JERRY_MIN(chars_left, sizeof (string_non_first_chunk_p->data) / sizeof (ecma_char_t));
-    __memcpy (string_non_first_chunk_p->data, copy_pointer, chars_to_copy * sizeof (ecma_char_t));
-    chars_left -= chars_to_copy;
-    copy_pointer += chars_to_copy * sizeof (ecma_char_t);
+    __memcpy (string_chunk_p->data, src_p, chars_to_copy * sizeof (ecma_char_t));
+    chars_left = (ecma_length_t) (chars_left - chars_to_copy);
+    src_p += chars_to_copy;
 
-    ECMA_SET_NON_NULL_POINTER(*next_chunk_compressed_pointer_p, string_non_first_chunk_p);
-    next_chunk_compressed_pointer_p = &string_non_first_chunk_p->next_chunk_p;
+    ecma_array_non_first_chunk_t* next_string_chunk_p = ecma_alloc_array_non_first_chunk ();
+    ECMA_SET_NON_NULL_POINTER (string_chunk_p->next_chunk_cp, next_string_chunk_p);
+    string_chunk_p = next_string_chunk_p;
   }
 
-  *next_chunk_compressed_pointer_p = ECMA_NULL_POINTER;
+  string_chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
 
-  return string_first_chunk_p;
+  return string_desc_p;
 } /* ecma_new_ecma_string */
+
+/**
+ * Decrease reference counter and deallocate ecma-string if
+ * after that the counter the counter becomes zero.
+ */
+void
+ecma_free_string (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string_p != NULL);
+  JERRY_ASSERT (string_p->refs != 0);
+
+  string_p->refs--;
+
+  if (string_p->refs != 0)
+  {
+    return;
+  }
+
+  if (string_p->container == ECMA_STRING_CONTAINER_HEAP)
+  {
+    ecma_array_non_first_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
+
+    JERRY_ASSERT (chunk_p != NULL);
+
+    while (chunk_p != NULL)
+    {
+      ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+
+      ecma_dealloc_array_non_first_chunk (chunk_p);
+
+      chunk_p = next_chunk_p;
+    }
+  }
+  else
+  {
+    JERRY_ASSERT (string_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR
+                  || string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE);
+
+    /* only the string descriptor itself should be freed */
+  }
+
+  ecma_dealloc_string (string_p);
+} /* ecma_free_string */
 
 /**
  * Copy ecma-string's contents to a buffer.
  *
  * Buffer will contain length of string, in characters, followed by string's characters.
  *
- * @return number of bytes, actually copied to the buffer, if string's content was copied successfully;
- *         negative number, which is calculated as negation of buffer size, that is required
- *         to hold the string's content (in case size of buffer is insuficcient).
+ * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
+ *         otherwise (in case size of buffer is insuficcient) - negative number, which is calculated
+ *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
-ecma_copy_ecma_string_chars_to_buffer (ecma_array_first_chunk_t *first_chunk_p, /**< first chunk of ecma-string */
-                                       uint8_t *buffer_p, /**< destination buffer */
-                                       size_t buffer_size) /**< size of buffer */
+ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                          ecma_char_t *buffer_p, /**< destination buffer */
+                          size_t buffer_size) /**< size of buffer */
 {
-  ecma_length_t string_length = first_chunk_p->header.unit_number;
-  size_t required_buffer_size = sizeof (ecma_length_t) + sizeof (ecma_char_t) * string_length;
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs > 0);
+  JERRY_ASSERT (buffer_p != NULL);
+  JERRY_ASSERT (buffer_size > 0);
+
+  const ecma_length_t string_length = string_desc_p->length;
+  size_t required_buffer_size = sizeof (ecma_char_t) * string_length + 1 /* for zero char */;
 
   if (required_buffer_size > buffer_size)
   {
     return - (ssize_t) required_buffer_size;
   }
 
-  *(ecma_length_t*) buffer_p = string_length;
+  ecma_char_t *dest_p = buffer_p;
 
-  size_t chars_left = string_length;
-  uint8_t *dest_pointer = buffer_p + sizeof (ecma_length_t);
-  size_t copy_chunk_chars = JERRY_MIN(sizeof (first_chunk_p->data) / sizeof (ecma_char_t),
-                                      chars_left);
-  __memcpy (dest_pointer, first_chunk_p->data, copy_chunk_chars * sizeof (ecma_char_t));
-  dest_pointer += copy_chunk_chars * sizeof (ecma_char_t);
-  chars_left -= copy_chunk_chars;
-
-  ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER(first_chunk_p->header.next_chunk_p);
-
-  while (chars_left > 0)
+  switch ((ecma_string_container_t)string_desc_p->container)
   {
-    JERRY_ASSERT(chars_left < string_length);
+    case ECMA_STRING_CONTAINER_IN_DESCRIPTOR:
+    {
+      __memcpy (dest_p, string_desc_p->u.chars, string_length * sizeof (ecma_char_t));
+      dest_p += string_length;
 
-    copy_chunk_chars = JERRY_MIN(sizeof (non_first_chunk_p->data) / sizeof (ecma_char_t),
-                                 chars_left);
-    __memcpy (dest_pointer, non_first_chunk_p->data, copy_chunk_chars * sizeof (ecma_char_t));
-    dest_pointer += copy_chunk_chars * sizeof (ecma_char_t);
-    chars_left -= copy_chunk_chars;
+      break;
+    }
+    case ECMA_STRING_CONTAINER_HEAP:
+    {
+      ecma_array_non_first_chunk_t *string_chunk_p = ECMA_GET_POINTER(string_desc_p->u.chunk_cp);
 
-    non_first_chunk_p = ECMA_GET_POINTER(non_first_chunk_p->next_chunk_p);
+      const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
+
+      ecma_length_t chars_left = string_length;
+      while (chars_left > 0)
+      {
+        JERRY_ASSERT(chars_left < string_length);
+
+        ecma_length_t chars_to_copy = JERRY_MIN(max_chars_in_chunk, chars_left);
+
+        __memcpy (dest_p, string_chunk_p->data, chars_to_copy * sizeof (ecma_char_t));
+        dest_p += chars_to_copy;
+        chars_left = (ecma_length_t) (chars_left - chars_to_copy);
+
+        string_chunk_p = ECMA_GET_POINTER(string_chunk_p->next_chunk_cp);
+      }
+      break;
+    }
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    {
+      JERRY_UNIMPLEMENTED();
+    }
   }
+
+  *dest_p = '\0';
 
   return (ssize_t) required_buffer_size;
-} /* ecma_copy_ecma_string_chars_to_buffer */
+} /* ecma_string_to_zt_string */
 
 /**
- * Duplicate an ecma-string.
+ * Increase reference counter of ecma-string.
  *
- * @return pointer to new ecma-string's first chunk
+ * @return pointer to same ecma-string descriptor with increased reference counter
  */
-ecma_array_first_chunk_t*
-ecma_duplicate_ecma_string (ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of string to duplicate */
+void
+ecma_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 {
-  JERRY_ASSERT(first_chunk_p != NULL);
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs > 0);
 
-  ecma_array_first_chunk_t *first_chunk_copy_p = ecma_alloc_array_first_chunk ();
-  __memcpy (first_chunk_copy_p, first_chunk_p, sizeof (ecma_array_first_chunk_t));
+  string_desc_p->refs++;
 
-  ecma_array_non_first_chunk_t *non_first_chunk_p, *non_first_chunk_copy_p;
-  non_first_chunk_p = ECMA_GET_POINTER(first_chunk_p->header.next_chunk_p);
-  uint16_t *next_pointer_p = &first_chunk_copy_p->header.next_chunk_p;
-
-  while (non_first_chunk_p != NULL)
-  {
-    non_first_chunk_copy_p = ecma_alloc_array_non_first_chunk ();
-    ECMA_SET_POINTER(*next_pointer_p, non_first_chunk_copy_p);
-    next_pointer_p = &non_first_chunk_copy_p->next_chunk_p;
-
-    __memcpy (non_first_chunk_copy_p, non_first_chunk_p, sizeof (ecma_array_non_first_chunk_t));
-
-    non_first_chunk_p = ECMA_GET_POINTER(non_first_chunk_p->next_chunk_p);
-  }
-
-  *next_pointer_p = ECMA_NULL_POINTER;
-
-  return first_chunk_copy_p;
-} /* ecma_duplicate_ecma_string */
+  /* Check for overflow */
+  JERRY_ASSERT (string_desc_p->refs > 0);
+} /* ecma_ref_ecma_string */
 
 /**
  * Compare ecma-string to ecma-string
@@ -171,29 +227,78 @@ ecma_duplicate_ecma_string (ecma_array_first_chunk_t *first_chunk_p) /**< first 
  *         false - otherwise.
  */
 bool
-ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1_p, /* ecma-string */
-                                         const ecma_array_first_chunk_t *string2_p) /* ecma-string */
+ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma-string */
+                                         const ecma_string_t *string2_p) /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
-  if (string1_p->header.unit_number != string2_p->header.unit_number)
+  if (string1_p == string2_p)
+  {
+    return true;
+  }
+
+  if (string1_p->length != string2_p->length)
   {
     return false;
   }
 
-  ecma_length_t chars_left = string1_p->header.unit_number;
+  ecma_length_t chars_left = string1_p->length;
 
-  JERRY_STATIC_ASSERT (ECMA_POINTER_FIELD_WIDTH <= sizeof (uint16_t) * JERRY_BITSINBYTE);
-  const uint16_t *next_chunk_compressed_pointer_1_p = &string1_p->header.next_chunk_p;
-  const uint16_t *next_chunk_compressed_pointer_2_p = &string2_p->header.next_chunk_p;
-  const ecma_char_t *cur_char_array_1_p = string1_p->data;
-  const ecma_char_t *cur_char_array_1_end_p = string1_p->data + sizeof (string1_p->data);
-  const ecma_char_t *cur_char_array_2_p = string2_p->data;
-  const ecma_char_t *cur_char_array_2_end_p = string2_p->data + sizeof (string2_p->data);
+  if (string1_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR
+      && string2_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
+  {
+    return __memcmp (string1_p->u.chars, string2_p->u.chars, chars_left * sizeof (ecma_char_t));
+  }
+
+  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
+      || string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    JERRY_UNIMPLEMENTED();
+  }
+
+  if (string1_p->container == ECMA_STRING_CONTAINER_HEAP
+      && string2_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
+  {
+    const ecma_string_t *tmp_string_p = string1_p;
+    string1_p = string2_p;
+    string2_p = tmp_string_p;
+  }
+  JERRY_ASSERT (string2_p->container == ECMA_STRING_CONTAINER_HEAP);
+
+  ecma_array_non_first_chunk_t *string1_chunk_p, *string2_chunk_p;
+  const ecma_char_t *cur_char_array_1_p, *cur_char_array_2_p;
+  const ecma_char_t *cur_char_array_1_end_p, *cur_char_array_2_end_p;
+  if (string1_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
+  {
+    string1_chunk_p = NULL;
+    cur_char_array_1_p = string1_p->u.chars;
+    cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_p->u.chars) / sizeof (ecma_char_t);
+  }
+  else
+  {
+    string1_chunk_p = ECMA_GET_POINTER (string1_p->u.chunk_cp);
+    cur_char_array_1_p = string1_chunk_p->data;
+    cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
+  }
+
+  string2_chunk_p = ECMA_GET_POINTER (string2_p->u.chunk_cp);
+  cur_char_array_2_p = string2_chunk_p->data;
+  cur_char_array_2_end_p = cur_char_array_2_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
+
+  /*
+   * The assertion check allows to combine update of cur_char_array_1_p and cur_char_array_2_p pointers,
+   * because:
+   *         - if we reached end of string in descriptor then we reached end of string => chars_left is zero;
+   *         - if we reached end of string chunk in heap then we reached end of other string's chunk too
+   *           (they're lengths are equal) => both pointer should be updated.
+   */
+  JERRY_STATIC_ASSERT (sizeof (string1_p->u.chars) / sizeof (ecma_char_t)
+                       < sizeof (string1_chunk_p->data) / sizeof (ecma_char_t));
 
   while (chars_left > 0)
   {
-    if (cur_char_array_1_p != cur_char_array_1_end_p)
+    if (cur_char_array_1_p != cur_char_array_1_end_p
+        && cur_char_array_2_p != cur_char_array_2_end_p)
     {
       JERRY_ASSERT (cur_char_array_2_p < cur_char_array_2_end_p);
 
@@ -203,18 +308,25 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_array_first_chunk_t *string1
       }
 
       chars_left--;
+
+      continue;
     }
-    else
+    
+    if (cur_char_array_1_p == cur_char_array_1_end_p)
     {
-      ecma_array_non_first_chunk_t *non_first_chunk_1_p = ECMA_GET_POINTER (*next_chunk_compressed_pointer_1_p);
-      ecma_array_non_first_chunk_t *non_first_chunk_2_p = ECMA_GET_POINTER (*next_chunk_compressed_pointer_2_p);
+      JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP
+                    && string2_p->container == ECMA_STRING_CONTAINER_HEAP);
+      JERRY_ASSERT (cur_char_array_2_p == cur_char_array_2_end_p);
 
-      JERRY_ASSERT (non_first_chunk_1_p != NULL && non_first_chunk_2_p != NULL);
+      string1_chunk_p = ECMA_GET_POINTER (string1_chunk_p->next_chunk_cp);
+      JERRY_ASSERT (string1_chunk_p != NULL);
+      cur_char_array_1_p = string1_chunk_p->data;
+      cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
 
-      cur_char_array_1_p = non_first_chunk_1_p->data;
-      cur_char_array_1_end_p = non_first_chunk_1_p->data + sizeof (non_first_chunk_1_p->data);
-      cur_char_array_2_p = non_first_chunk_2_p->data;
-      cur_char_array_2_end_p = non_first_chunk_2_p->data + sizeof (non_first_chunk_2_p->data);
+      string2_chunk_p = ECMA_GET_POINTER (string2_chunk_p->next_chunk_cp);
+      JERRY_ASSERT (string2_chunk_p != NULL);
+      cur_char_array_2_p = string2_chunk_p->data;
+      cur_char_array_2_end_p = cur_char_array_2_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
     }
   }
 
@@ -245,19 +357,34 @@ ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-ter
  */
 bool
 ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-terminated string */
-                                       const ecma_array_first_chunk_t *ecma_string_p) /* ecma-string */
+                                       const ecma_string_t *ecma_string_p) /* ecma-string */
 {
   JERRY_ASSERT(string_p != NULL);
   JERRY_ASSERT(ecma_string_p != NULL);
 
   const ecma_char_t *str_iter_p = string_p;
-  ecma_length_t ecma_str_len = ecma_string_p->header.unit_number;
-  const ecma_char_t *current_chunk_chars_cur = (const ecma_char_t*) ecma_string_p->data;
-  const ecma_char_t *current_chunk_chars_end = (const ecma_char_t*) (ecma_string_p->data +
-                                                                     sizeof (ecma_string_p->data));
+  ecma_length_t ecma_str_len = ecma_string_p->length;
+  const ecma_char_t *current_chunk_chars_cur;
+  const ecma_char_t *current_chunk_chars_end;
+  ecma_array_non_first_chunk_t *string_chunk_p = NULL;
 
-  JERRY_STATIC_ASSERT(ECMA_POINTER_FIELD_WIDTH <= sizeof (uint16_t) * JERRY_BITSINBYTE);
-  const uint16_t *next_chunk_compressed_pointer_p = &ecma_string_p->header.next_chunk_p;
+  if (ecma_string_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
+  {
+    current_chunk_chars_cur = ecma_string_p->u.chars;
+    current_chunk_chars_end = current_chunk_chars_cur + sizeof (ecma_string_p->u.chars) / sizeof (ecma_char_t);
+  }
+  else if (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP)
+  {
+    string_chunk_p = ECMA_GET_POINTER (ecma_string_p->u.chunk_cp);
+    current_chunk_chars_cur = string_chunk_p->data;
+    current_chunk_chars_end = current_chunk_chars_cur + sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE);
+
+    JERRY_UNIMPLEMENTED();
+  }
 
   for (ecma_length_t str_index = 0;
        str_index < ecma_str_len;
@@ -267,15 +394,15 @@ ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-te
 
     if (current_chunk_chars_cur == current_chunk_chars_end)
     {
+      JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP);
+
       /* switching to next chunk */
-      ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER(*next_chunk_compressed_pointer_p);
+      string_chunk_p = ECMA_GET_POINTER (string_chunk_p->next_chunk_cp);
 
-      JERRY_ASSERT(next_chunk_p != NULL);
+      JERRY_ASSERT(string_chunk_p != NULL);
 
-      current_chunk_chars_cur = (const ecma_char_t*) next_chunk_p->data;
-      current_chunk_chars_end = (const ecma_char_t*) (next_chunk_p->data + sizeof (next_chunk_p->data));
-
-      next_chunk_compressed_pointer_p = &next_chunk_p->next_chunk_p;
+      current_chunk_chars_cur = string_chunk_p->data;
+      current_chunk_chars_end = current_chunk_chars_cur + sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
     }
 
     if (*str_iter_p != *current_chunk_chars_cur)
@@ -296,7 +423,7 @@ ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-te
    * If we have also reached end of zero-terminated string, than strings are equal.
    * Otherwise zero-terminated string is longer.
    */
-  return (*str_iter_p == 0);
+  return (*str_iter_p == '\0');
 } /* ecma_compare_zt_string_to_ecma_string */
 
 /**

@@ -127,7 +127,7 @@ ecma_make_number_value (ecma_number_t* num_p) /**< number to reference in value 
  * String value constructor
  */
 ecma_value_t
-ecma_make_string_value (ecma_array_first_chunk_t* ecma_string_p) /**< string to reference in value */
+ecma_make_string_value (ecma_string_t* ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT(ecma_string_p != NULL);
 
@@ -209,16 +209,16 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
+      ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
       JERRY_ASSERT(string_p != NULL);
 
-      ecma_array_first_chunk_t *string_copy_p = ecma_duplicate_ecma_string (string_p);
+      ecma_ref_ecma_string (string_p);
 
       value_copy = (ecma_value_t)
       {
         .value_type = ECMA_TYPE_STRING
       };
-      ECMA_SET_POINTER(value_copy.value, string_copy_p);
+      ECMA_SET_POINTER(value_copy.value, string_p);
 
       break;
     }
@@ -270,8 +270,8 @@ ecma_free_value (ecma_value_t value, /**< value description */
 
     case ECMA_TYPE_STRING:
     {
-      ecma_array_first_chunk_t *string_p = ECMA_GET_POINTER(value.value);
-      ecma_free_array (string_p);
+      ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
+      ecma_free_string (string_p);
       break;
     }
 

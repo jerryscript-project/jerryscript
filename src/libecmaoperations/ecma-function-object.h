@@ -29,8 +29,8 @@
 extern bool ecma_op_is_callable (ecma_value_t value);
 
 extern ecma_object_t*
-ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[],
-                                uint32_t formal_parameters_number,
+ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
+                                ecma_length_t formal_parameters_number,
                                 ecma_object_t *scope_p,
                                 bool is_strict,
                                 opcode_counter_t first_opcode_idx);

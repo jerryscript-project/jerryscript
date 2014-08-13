@@ -395,12 +395,20 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
   {
     case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
-    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection */
     {
       TODO (/* Free collection's elements */);
       JERRY_UNIMPLEMENTED();
 
       ecma_free_collection (ECMA_GET_POINTER(property_value));
+      break;
+    }
+
+    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a strings' collection */
+    {
+      if (property_value != ECMA_NULL_POINTER)
+      {
+        ecma_free_strings_collection (ECMA_GET_POINTER(property_value));
+      }
       break;
     }
 

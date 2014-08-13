@@ -108,8 +108,8 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
  * @return pointer to newly created Function object
  */
 ecma_object_t*
-ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[], /**< formal parameters list */
-                                uint32_t formal_parameters_number, /**< formal parameters list's length */
+ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< formal parameters list */
+                                ecma_length_t formal_parameters_number, /**< formal parameters list's length */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
                                 opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
@@ -137,9 +137,17 @@ ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[], /*
   ecma_gc_update_may_ref_younger_object_flag_by_object (f, scope_p);
 
   // 10., 11.
+  ecma_property_t *formal_parameters_prop_p = ecma_create_internal_property (f,
+                                                                             ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
   if (formal_parameters_number != 0)
   {
-    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(formal_parameter_list_p);
+    ecma_collection_header_t *formal_parameters_collection_p = ecma_new_strings_collection (formal_parameter_list_p,
+                                                                                            formal_parameters_number);
+    ECMA_SET_POINTER (formal_parameters_prop_p->u.internal_property.value, formal_parameters_collection_p);
+  }
+  else
+  {
+    JERRY_ASSERT (formal_parameters_prop_p->u.internal_property.value == ECMA_NULL_POINTER);
   }
 
   // 12.

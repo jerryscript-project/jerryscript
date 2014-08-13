@@ -358,7 +358,6 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
         || current_opcode->op_idx == NAME_TO_ID (func_decl_2)
         || current_opcode->op_idx == NAME_TO_ID (func_decl_n))
     {
-      __printf ("%p\n", processed_opcode);
       OPCODE *fun_opcode;
       int16_t value, jmp_offset = 0;
       for (fun_opcode = current_opcode + 1; fun_opcode != last_opcode; fun_opcode++)

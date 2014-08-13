@@ -27,12 +27,14 @@
 #define OPCODE_SIZE(op) \
   sizeof (struct __op_##op) + 1,
 
-static char* opcode_names[] = {
+static char* opcode_names[] =
+{
   OP_LIST (OPCODE_STR)
   ""
 };
 
-static uint8_t opcode_sizes[] = {
+static uint8_t opcode_sizes[] =
+{
   OP_LIST (OPCODE_SIZE)
   0
 };
@@ -45,22 +47,22 @@ pp_strings (const char *strings[], uint8_t size)
 
   __printf ("STRINGS %d:\n", size);
   for (i = 0; i < size; i++)
-    {
-      __printf ("%3d %5d %20s\n", i, offset, strings[i]);
-      offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
-    }
+  {
+    __printf ("%3d %5d %20s\n", i, offset, strings[i]);
+    offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
+  }
 }
 
-void 
+void
 pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
 {
   uint8_t i;
 
   __printf ("NUMS %d:\n", size);
   for (i = 0; i < size; i++)
-    {
-      __printf ("%3d %7d\n", i + strings_num, (int) nums[i]);
-    }
+  {
+    __printf ("%3d %7d\n", i + strings_num, (int) nums[i]);
+  }
   __printf ("\n");
 }
 
@@ -167,7 +169,7 @@ dump_variable (T_IDX id)
     __printf (" " equals " " new " "); \
     dump_variable (opcode.data.op.name); \
     __printf (start end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_1_NAME_LHS(op, lhs, equals, new, name, start, arg, end) \
   case NAME_TO_ID (op): \
@@ -177,7 +179,7 @@ dump_variable (T_IDX id)
     __printf (start); \
     dump_variable (opcode.data.op.arg); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_N_NAME_LHS(op, lhs, equals, new, name, start, arg, end) \
   case NAME_TO_ID (op): \
@@ -188,14 +190,14 @@ dump_variable (T_IDX id)
     dump_variable (opcode.data.op.arg); \
     __printf (" ..."); \
     varg_end = end; \
-    break;     
+    break;
 
 #define CASE_VARG_0_NAME(op, new, name, start, end) \
   case NAME_TO_ID (op): \
      __printf (new " "); \
      dump_variable (opcode.data.op.name); \
      __printf (start end ";"); \
-     break;     
+     break;
 
 #define CASE_VARG_1_NAME(op, new, name, start, arg1, end) \
   case NAME_TO_ID (op): \
@@ -204,7 +206,7 @@ dump_variable (T_IDX id)
     __printf (start); \
     dump_variable (opcode.data.op.arg1); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_2_NAME(op, new, name, start, arg1, arg2, end) \
   case NAME_TO_ID (op): \
@@ -215,7 +217,7 @@ dump_variable (T_IDX id)
     __printf (", "); \
     dump_variable (opcode.data.op.arg2); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_N_NAME(op, new, name, start, arg1, arg2, end) \
   case NAME_TO_ID (op): \
@@ -227,14 +229,14 @@ dump_variable (T_IDX id)
     dump_variable (opcode.data.op.arg2); \
     __printf (" ..."); \
     varg_end = end; \
-    break;     
+    break;
 
 #define CASE_VARG_0_LHS(op, lhs, equals, start, end) \
   case NAME_TO_ID (op): \
     dump_variable (opcode.data.op.lhs); \
     __printf (" " equals " " start); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_1_LHS(op, lhs, equals, start, arg1, end) \
   case NAME_TO_ID (op): \
@@ -242,7 +244,7 @@ dump_variable (T_IDX id)
     __printf (" " equals " " start); \
     dump_variable (opcode.data.op.arg1); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_2_LHS(op, lhs, equals, start, arg1, arg2, end) \
   case NAME_TO_ID (op): \
@@ -252,7 +254,7 @@ dump_variable (T_IDX id)
     __printf (", "); \
     dump_variable (opcode.data.op.arg2); \
     __printf (end ";"); \
-    break;     
+    break;
 
 #define CASE_VARG_N_LHS(op, lhs, equals, start, arg1, arg2, end) \
   case NAME_TO_ID (op): \
@@ -263,14 +265,14 @@ dump_variable (T_IDX id)
     dump_variable (opcode.data.op.arg2); \
     __printf (" ..."); \
     varg_end = end; \
-    break;     
+    break;
 
 #define CASE_VARG_1_END(op, arg1) \
   case NAME_TO_ID (op): \
     __printf ("... "); \
     dump_variable (opcode.data.op.arg1); \
     __printf ("%s;", varg_end); \
-    break;     
+    break;
 
 #define CASE_VARG_2_END(op, arg1, arg2) \
   case NAME_TO_ID (op): \
@@ -279,7 +281,7 @@ dump_variable (T_IDX id)
     __printf (", "); \
     dump_variable (opcode.data.op.arg2); \
     __printf ("%s;", varg_end); \
-    break;     
+    break;
 
 #define CASE_VARG_3_END(op, arg1, arg2, arg3) \
   case NAME_TO_ID (op): \
@@ -290,7 +292,7 @@ dump_variable (T_IDX id)
     __printf (", "); \
     dump_variable (opcode.data.op.arg3); \
     __printf ("%s;", varg_end); \
-    break;     
+    break;
 
 #define CASE_VARG_3(op, arg1, arg2, arg3) \
   case NAME_TO_ID (op): \
@@ -301,20 +303,20 @@ dump_variable (T_IDX id)
     __printf (", "); \
     dump_variable (opcode.data.op.arg3); \
     __printf (" ..."); \
-    break;    
+    break;
 
 #define CASE_EXIT(op, name, field) \
   case NAME_TO_ID (op): \
     __printf (name " "); \
     __printf ("%d;", opcode.data.op.field); \
-    break;     
+    break;
 
 #define CASE_SINGLE_ADDRESS(op, name, field) \
   case NAME_TO_ID (op): \
     __printf (name " "); \
     dump_variable (opcode.data.op.field); \
     __printf (";"); \
-    break;     
+    break;
 
 #define CASE_ZERO_ADDRESS(op, name) \
   case NAME_TO_ID (op): \
@@ -353,15 +355,19 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
   uint8_t opcode_num = opcode.op_idx;
 
   __printf ("%03d: %20s ", oc, opcode_names[opcode_num]);
-  if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret) 
+  if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret)
       && opcode_num != NAME_TO_ID (end_with))
+  {
+    for (i = 1; i < opcode_sizes[opcode_num]; i++)
     {
-      for (i = 1; i < opcode_sizes[opcode_num]; i++)
-        __printf ("%4d ", ((uint8_t*)&opcode)[i]);
+      __printf ("%4d ", ((uint8_t*) & opcode)[i]);
     }
+  }
 
   for (; i < 4; i++)
+  {
     __printf ("     ");
+  }
 
   __printf ("    // ");
 
@@ -447,7 +453,9 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
   }
 
   if (is_rewrite)
+  {
     __printf (" // REWRITE");
+  }
 
   __printf ("\n");
 }

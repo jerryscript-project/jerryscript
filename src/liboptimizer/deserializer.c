@@ -26,12 +26,16 @@ deserialize_string_by_id (uint8_t id)
   uint16_t offset;
 
   if (bytecode_data == NULL)
+  {
     return NULL;
-  
+  }
+
   size = *bytecode_data;
 
   if (id >= size)
+  {
     return NULL;
+  }
 
   data = bytecode_data;
 
@@ -42,34 +46,38 @@ deserialize_string_by_id (uint8_t id)
   return ((const ecma_char_t *) bytecode_data + offset);
 }
 
-ecma_number_t 
+ecma_number_t
 deserialize_num_by_id (uint8_t id)
 {
   uint16_t str_size, str_offset;
 
   str_size = *bytecode_data;
   if (id < str_size)
-    {
-      return 0;
-    }
+  {
+    return 0;
+  }
   id = (uint8_t) (id - str_size);
-  
-  if (num_data == NULL)
-    {
-      // Go to last string's offset
-      uint8_t *data = (uint8_t *) (bytecode_data + str_size * 2 - 1);
-      str_offset = *((uint16_t *) data);
-      data = bytecode_data + str_offset;
 
-      while (*data)
-        data++;
-  
-      num_size = *(++data);
-      num_data = (ecma_number_t *) ++data;
+  if (num_data == NULL)
+  {
+    // Go to last string's offset
+    uint8_t *data = (uint8_t *) (bytecode_data + str_size * 2 - 1);
+    str_offset = *((uint16_t *) data);
+    data = bytecode_data + str_offset;
+
+    while (*data)
+    {
+      data++;
     }
+
+    num_size = *(++data);
+    num_data = (ecma_number_t *) ++data;
+  }
 
   if (id >= num_size)
+  {
     return 0;
+  }
 
   return num_data[id];
 }
@@ -80,15 +88,15 @@ deserialize_bytecode (void)
   return bytecode_opcodes;
 }
 
-uint8_t 
+uint8_t
 deserialize_min_temp (void)
 {
   uint8_t str_size = *bytecode_data;
-  
+
   if (num_size == 0)
-    {
-      deserialize_num_by_id (str_size); // Init num_data and num_size
-    }
+  {
+    deserialize_num_by_id (str_size); // Init num_data and num_size
+  }
 
   return (uint8_t) (str_size + num_size);
 }

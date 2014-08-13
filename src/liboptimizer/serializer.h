@@ -14,7 +14,7 @@
  */
 
 #ifndef SERIALIZER_H
-#define SERIALIZER_H 
+#define SERIALIZER_H
 
 #include "globals.h"
 #include "opcodes.h"
@@ -32,6 +32,6 @@ void serializer_rewrite_opcode (const opcode_counter_t, OPCODE);
 
 void serializer_print_opcodes (void);
 
-void serializer_free(void);
+void serializer_free (void);
 
 #endif // SERIALIZER_H

@@ -250,11 +250,21 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         switch (property_id)
         {
-          case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array */
-          case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
-          case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* an array */
-          case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
-          case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
+          case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array of ecma-values */
+          case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array of ecma-values */
+          {
+            JERRY_UNIMPLEMENTED();
+          }
+
+          case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
+                                                    (see above in the routine) */
+          case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
+                                                     (see above in the routine) */
+          {
+            JERRY_UNREACHABLE();
+          }
+
+          case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* an array of strings */
           case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
           case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
           case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */

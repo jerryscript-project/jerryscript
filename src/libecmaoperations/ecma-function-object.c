@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -108,7 +109,7 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
  */
 ecma_object_t*
 ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[], /**< formal parameters list */
-                                size_t formal_parameters_number, /**< formal parameters list's length */
+                                uint32_t formal_parameters_number, /**< formal parameters list's length */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
                                 opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
@@ -135,7 +136,7 @@ ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[], /*
 
   ecma_gc_update_may_ref_younger_object_flag_by_object (f, scope_p);
 
-  // 10., 11., 14., 15.
+  // 10., 11.
   if (formal_parameters_number != 0)
   {
     JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(formal_parameter_list_p);
@@ -145,6 +146,32 @@ ecma_op_create_function_object (const ecma_char_t* formal_parameter_list_p[], /*
   ecma_property_t *code_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE);
   code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
                                                                                    first_opcode_idx);
+
+  // 14.
+  ecma_number_t* len_p = ecma_alloc_number ();
+  *len_p = ecma_uint32_to_number (formal_parameters_number);
+
+  // 15.
+  ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
+  length_prop_desc.is_value_defined = true;
+  length_prop_desc.value = ecma_make_number_value (len_p);
+  length_prop_desc.is_writable_defined = false;
+  length_prop_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
+  length_prop_desc.is_enumerable_defined = false;
+  length_prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+  length_prop_desc.is_configurable_defined = false;
+  length_prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+
+  const ecma_char_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
+                                                                           magic_string_length_p,
+                                                                           length_prop_desc,
+                                                                           false);
+  JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                || ecma_is_completion_value_normal_false (completion));
+
+  ecma_dealloc_number (len_p);
+  len_p = NULL;
 
   // 16.
   FIXME(Use 'new Object ()' instead);

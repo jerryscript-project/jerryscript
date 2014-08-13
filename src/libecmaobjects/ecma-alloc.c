@@ -47,6 +47,7 @@ JERRY_STATIC_ASSERT(sizeof (ecma_object_t) <= 2 * sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_array_header_t) <= sizeof (uint32_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_array_first_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_array_non_first_chunk_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT(sizeof (ecma_string_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 
 /**

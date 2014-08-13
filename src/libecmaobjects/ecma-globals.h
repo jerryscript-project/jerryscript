@@ -522,6 +522,53 @@ typedef struct
 } ecma_array_non_first_chunk_t;
 
 /**
+ * Identifier for ecma-string's actual data container
+ */
+typedef enum
+{
+  ECMA_STRING_CONTAINER_HEAP, /**< actual data is on the heap
+                                   in ecma_array_non_first_chunk_t */
+  ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
+  ECMA_STRING_CONTAINER_IN_DESCRIPTOR /**< actual data is locally in the string's descriptor */
+} ecma_string_container_t;
+
+FIXME (Move to library that should define the type (libserializer /* ? */))
+/**
+ * Index in literal table
+ */
+typedef uint32_t literal_index_t;
+
+/**
+ * ECMA string-value descriptor
+ */
+typedef struct
+{
+  /** Reference counter for the string */
+  unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
+
+  /** Where the string's data is placed (ecma_string_container_t) */
+  unsigned int container : 2;
+
+  /** String's length */
+  ecma_length_t length;
+
+  /**
+   * Actual data or identifier of it's place in container (depending on 'container' field)
+   */
+  union
+  {
+    /** Index of string in literal table */
+    literal_index_t lit_index;
+
+    /** Compressed pointer to array_non_first_chunk_t */
+    unsigned int chunk_cp : ECMA_POINTER_FIELD_WIDTH;
+
+    /** Actual data if placed locally in the descriptor */
+    ecma_char_t chars[ sizeof (uint64_t) - sizeof (uint32_t) ];
+  } u;
+} ecma_string_t;
+
+/**
  * \addtogroup reference ECMA-reference
  * @{
  */

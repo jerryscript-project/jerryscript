@@ -25,9 +25,8 @@ JERRY_STATIC_ASSERT(sizeof (ecma_property_t) <= sizeof (uint64_t));
 FIXME(Pack ecma_object_t)
 JERRY_STATIC_ASSERT(sizeof (ecma_object_t) <= 2 * sizeof (uint64_t));
 
-JERRY_STATIC_ASSERT(sizeof (ecma_array_header_t) <= sizeof (uint32_t));
-JERRY_STATIC_ASSERT(sizeof (ecma_array_first_chunk_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT(sizeof (ecma_array_non_first_chunk_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT(sizeof (ecma_collection_header_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT(sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_string_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 
@@ -98,8 +97,8 @@ JERRY_STATIC_ASSERT(sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 DECLARE_ROUTINES_FOR (object)
 DECLARE_ROUTINES_FOR (property)
 DECLARE_ROUTINES_FOR (number)
-DECLARE_ROUTINES_FOR (array_first_chunk)
-DECLARE_ROUTINES_FOR (array_non_first_chunk)
+DECLARE_ROUTINES_FOR (collection_header)
+DECLARE_ROUTINES_FOR (collection_chunk)
 DECLARE_ROUTINES_FOR (string)
 
 /**

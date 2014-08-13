@@ -62,28 +62,28 @@ extern ecma_number_t *ecma_alloc_number (void);
 extern void ecma_dealloc_number (ecma_number_t *number_p);
 
 /**
- * Allocate memory for first chunk of an ecma-array
+ * Allocate memory for header of a collection
  *
  * @return pointer to allocated memory
  */
-extern ecma_array_first_chunk_t *ecma_alloc_array_first_chunk (void);
+extern ecma_collection_header_t *ecma_alloc_collection_header (void);
 
 /**
- * Dealloc memory from first chunk of an ecma-array
+ * Dealloc memory from the collection's header
  */
-extern void ecma_dealloc_array_first_chunk (ecma_array_first_chunk_t *first_chunk_p);
+extern void ecma_dealloc_collection_header (ecma_collection_header_t *collection_header_p);
 
 /**
- * Allocate memory for non-first chunk of an ecma-array
+ * Allocate memory for non-first chunk of a collection
  *
  * @return pointer to allocated memory
  */
-extern ecma_array_non_first_chunk_t *ecma_alloc_array_non_first_chunk (void);
+extern ecma_collection_chunk_t* ecma_alloc_collection_chunk (void);
 
 /**
- * Dealloc memory from non-first chunk of an ecma-array
+ * Dealloc memory from non-first chunk of a collection
  */
-extern void ecma_dealloc_array_non_first_chunk (ecma_array_non_first_chunk_t *non_first_chunk_p);
+extern void ecma_dealloc_collection_chunk (ecma_collection_chunk_t *non_first_chunk_p);
 
 /**
  * Allocate memory for ecma-string descriptor

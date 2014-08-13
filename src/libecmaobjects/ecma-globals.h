@@ -76,8 +76,8 @@ typedef enum
   ECMA_SIMPLE_VALUE_NULL, /**< null value */
   ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-  ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exists,
-                                         but is stored directly in the array's property list
+  ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exist,
+                                         but are stored directly in the array's property list
                                          (used for array elements with non-default attribute values) */
   ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
 } ecma_simple_value_t;
@@ -481,36 +481,27 @@ typedef float ecma_number_t;
 #define ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX ((uint32_t) (-1))
 
 /**
- * Description of arrays'/strings' length
+ * Description of a collection's/string's length
  */
 typedef uint16_t ecma_length_t;
 
 /**
- * Description of an Array's header
+ * Description of a collection's header.
  */
 typedef struct
 {
-  /** Compressed pointer to next chunk */
+  /** Compressed pointer to next chunk with collection's data */
   uint16_t next_chunk_cp;
 
-  /** Number of elements in the Array */
+  /** Number of elements in the collection */
   ecma_length_t unit_number;
-} ecma_array_header_t;
+
+  /** Place for the collection's data */
+  uint8_t data[ sizeof (uint64_t) - sizeof (uint32_t) ];
+} ecma_collection_header_t;
 
 /**
- * Description of first chunk in a chain of chunks that contains an Array.
- */
-typedef struct
-{
-  /** Array's header */
-  ecma_array_header_t header;
-
-  /** Elements */
-  uint8_t data[ sizeof (uint64_t) - sizeof (ecma_array_header_t) ];
-} ecma_array_first_chunk_t;
-
-/**
- * Description of non-first chunk in a chain of chunks that contains an Array
+ * Description of non-first chunk in a collection's chain of chunks
  */
 typedef struct
 {
@@ -519,7 +510,7 @@ typedef struct
 
   /** Characters */
   uint8_t data[ sizeof (uint64_t) - sizeof (uint16_t) ];
-} ecma_array_non_first_chunk_t;
+} ecma_collection_chunk_t;
 
 /**
  * Identifier for ecma-string's actual data container
@@ -527,7 +518,7 @@ typedef struct
 typedef enum
 {
   ECMA_STRING_CONTAINER_HEAP, /**< actual data is on the heap
-                                   in ecma_array_non_first_chunk_t */
+                                   in a ecma_collection_chunk_t chain */
   ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
   ECMA_STRING_CONTAINER_IN_DESCRIPTOR /**< actual data is locally in the string's descriptor */
 } ecma_string_container_t;
@@ -560,7 +551,7 @@ typedef struct
     /** Index of string in literal table */
     literal_index_t lit_index;
 
-    /** Compressed pointer to array_non_first_chunk_t */
+    /** Compressed pointer to an ecma_collection_chunk_t */
     unsigned int chunk_cp : ECMA_POINTER_FIELD_WIDTH;
 
     /** Actual data if placed locally in the descriptor */

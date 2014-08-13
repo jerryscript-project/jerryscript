@@ -393,11 +393,14 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
   switch (property_id)
   {
-    case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* an array */
-    case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* an array */
-    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* an array */
+    case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
+    case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
+    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection */
     {
-      ecma_free_array (ECMA_GET_POINTER(property_value));
+      TODO (/* Free collection's elements */);
+      JERRY_UNIMPLEMENTED();
+
+      ecma_free_collection (ECMA_GET_POINTER(property_value));
       break;
     }
 
@@ -483,26 +486,26 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 } /* ecma_delete_property */
 
 /**
- * Free all chunks of an array
+ * Free all chunks of a collection
  */
 void
-ecma_free_array (ecma_array_first_chunk_t *first_chunk_p) /**< first chunk of the array */
+ecma_free_collection (ecma_collection_header_t *collection_header_p) /**< header of collection */
 {
-  JERRY_ASSERT(first_chunk_p != NULL);
+  JERRY_ASSERT(collection_header_p != NULL);
 
-  ecma_array_non_first_chunk_t *non_first_chunk_p = ECMA_GET_POINTER (first_chunk_p->header.next_chunk_cp);
+  ecma_collection_chunk_t *non_first_chunk_p = ECMA_GET_POINTER (collection_header_p->next_chunk_cp);
 
-  ecma_dealloc_array_first_chunk (first_chunk_p);
+  ecma_dealloc_collection_header (collection_header_p);
 
   while (non_first_chunk_p != NULL)
   {
-    ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER (non_first_chunk_p->next_chunk_cp);
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (non_first_chunk_p->next_chunk_cp);
 
-    ecma_dealloc_array_non_first_chunk (non_first_chunk_p);
+    ecma_dealloc_collection_chunk (non_first_chunk_p);
 
     non_first_chunk_p = next_chunk_p;
   }
-} /* ecma_free_array */
+} /* ecma_free_collection */
 
 /**
  * Construct empty property descriptor.

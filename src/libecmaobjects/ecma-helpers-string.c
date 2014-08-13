@@ -67,7 +67,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
   ecma_length_t chars_left = length;
   JERRY_ASSERT (chars_left > 0);
 
-  ecma_array_non_first_chunk_t *string_chunk_p = ecma_alloc_array_non_first_chunk ();
+  ecma_collection_chunk_t *string_chunk_p = ecma_alloc_collection_chunk ();
 
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.chunk_cp, string_chunk_p);
 
@@ -80,7 +80,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
     chars_left = (ecma_length_t) (chars_left - chars_to_copy);
     src_p += chars_to_copy;
 
-    ecma_array_non_first_chunk_t* next_string_chunk_p = ecma_alloc_array_non_first_chunk ();
+    ecma_collection_chunk_t* next_string_chunk_p = ecma_alloc_collection_chunk ();
     ECMA_SET_NON_NULL_POINTER (string_chunk_p->next_chunk_cp, next_string_chunk_p);
     string_chunk_p = next_string_chunk_p;
   }
@@ -109,15 +109,15 @@ ecma_free_string (ecma_string_t *string_p) /**< ecma-string */
 
   if (string_p->container == ECMA_STRING_CONTAINER_HEAP)
   {
-    ecma_array_non_first_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
+    ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
 
     JERRY_ASSERT (chunk_p != NULL);
 
     while (chunk_p != NULL)
     {
-      ecma_array_non_first_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+      ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
 
-      ecma_dealloc_array_non_first_chunk (chunk_p);
+      ecma_dealloc_collection_chunk (chunk_p);
 
       chunk_p = next_chunk_p;
     }
@@ -173,7 +173,7 @@ ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descrip
     }
     case ECMA_STRING_CONTAINER_HEAP:
     {
-      ecma_array_non_first_chunk_t *string_chunk_p = ECMA_GET_POINTER(string_desc_p->u.chunk_cp);
+      ecma_collection_chunk_t *string_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
 
       const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
 
@@ -265,28 +265,28 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
   }
   JERRY_ASSERT (string2_p->container == ECMA_STRING_CONTAINER_HEAP);
 
-  ecma_array_non_first_chunk_t *string1_chunk_p, *string2_chunk_p;
-  const ecma_char_t *cur_char_array_1_p, *cur_char_array_2_p;
-  const ecma_char_t *cur_char_array_1_end_p, *cur_char_array_2_end_p;
+  ecma_collection_chunk_t *string1_chunk_p, *string2_chunk_p;
+  const ecma_char_t *cur_char_buffer_1_iter_p, *cur_char_buffer_2_iter_p;
+  const ecma_char_t *cur_char_buffer_1_end_p, *cur_char_buffer_2_end_p;
   if (string1_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
   {
     string1_chunk_p = NULL;
-    cur_char_array_1_p = string1_p->u.chars;
-    cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_p->u.chars) / sizeof (ecma_char_t);
+    cur_char_buffer_1_iter_p = string1_p->u.chars;
+    cur_char_buffer_1_end_p = cur_char_buffer_1_iter_p + sizeof (string1_p->u.chars) / sizeof (ecma_char_t);
   }
   else
   {
     string1_chunk_p = ECMA_GET_POINTER (string1_p->u.chunk_cp);
-    cur_char_array_1_p = string1_chunk_p->data;
-    cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
+    cur_char_buffer_1_iter_p = string1_chunk_p->data;
+    cur_char_buffer_1_end_p = cur_char_buffer_1_iter_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
   }
 
   string2_chunk_p = ECMA_GET_POINTER (string2_p->u.chunk_cp);
-  cur_char_array_2_p = string2_chunk_p->data;
-  cur_char_array_2_end_p = cur_char_array_2_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
+  cur_char_buffer_2_iter_p = string2_chunk_p->data;
+  cur_char_buffer_2_end_p = cur_char_buffer_2_iter_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
 
   /*
-   * The assertion check allows to combine update of cur_char_array_1_p and cur_char_array_2_p pointers,
+   * The assertion check allows to combine update of cur_char_buffer_1_iter_p and cur_char_buffer_2_iter_p pointers,
    * because:
    *         - if we reached end of string in descriptor then we reached end of string => chars_left is zero;
    *         - if we reached end of string chunk in heap then we reached end of other string's chunk too
@@ -297,12 +297,12 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
 
   while (chars_left > 0)
   {
-    if (cur_char_array_1_p != cur_char_array_1_end_p
-        && cur_char_array_2_p != cur_char_array_2_end_p)
+    if (cur_char_buffer_1_iter_p != cur_char_buffer_1_end_p
+        && cur_char_buffer_2_iter_p != cur_char_buffer_2_end_p)
     {
-      JERRY_ASSERT (cur_char_array_2_p < cur_char_array_2_end_p);
+      JERRY_ASSERT (cur_char_buffer_2_iter_p < cur_char_buffer_2_end_p);
 
-      if (*cur_char_array_1_p++ != *cur_char_array_2_p++)
+      if (*cur_char_buffer_1_iter_p++ != *cur_char_buffer_2_iter_p++)
       {
         return false;
       }
@@ -312,21 +312,21 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
       continue;
     }
     
-    if (cur_char_array_1_p == cur_char_array_1_end_p)
+    if (cur_char_buffer_1_iter_p == cur_char_buffer_1_end_p)
     {
       JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP
                     && string2_p->container == ECMA_STRING_CONTAINER_HEAP);
-      JERRY_ASSERT (cur_char_array_2_p == cur_char_array_2_end_p);
+      JERRY_ASSERT (cur_char_buffer_2_iter_p == cur_char_buffer_2_end_p);
 
       string1_chunk_p = ECMA_GET_POINTER (string1_chunk_p->next_chunk_cp);
       JERRY_ASSERT (string1_chunk_p != NULL);
-      cur_char_array_1_p = string1_chunk_p->data;
-      cur_char_array_1_end_p = cur_char_array_1_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
+      cur_char_buffer_1_iter_p = string1_chunk_p->data;
+      cur_char_buffer_1_end_p = cur_char_buffer_1_iter_p + sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
 
       string2_chunk_p = ECMA_GET_POINTER (string2_chunk_p->next_chunk_cp);
       JERRY_ASSERT (string2_chunk_p != NULL);
-      cur_char_array_2_p = string2_chunk_p->data;
-      cur_char_array_2_end_p = cur_char_array_2_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
+      cur_char_buffer_2_iter_p = string2_chunk_p->data;
+      cur_char_buffer_2_end_p = cur_char_buffer_2_iter_p + sizeof (string2_chunk_p->data) / sizeof (ecma_char_t);
     }
   }
 
@@ -366,7 +366,7 @@ ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-te
   ecma_length_t ecma_str_len = ecma_string_p->length;
   const ecma_char_t *current_chunk_chars_cur;
   const ecma_char_t *current_chunk_chars_end;
-  ecma_array_non_first_chunk_t *string_chunk_p = NULL;
+  ecma_collection_chunk_t *string_chunk_p = NULL;
 
   if (ecma_string_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
   {

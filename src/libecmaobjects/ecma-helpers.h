@@ -139,7 +139,7 @@ extern void ecma_free_property (ecma_property_t *prop_p);
 
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 
-extern void ecma_free_array (ecma_array_first_chunk_t *first_chunk_p);
+extern void ecma_free_collection (ecma_collection_header_t *collection_header_p);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 

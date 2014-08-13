@@ -25,6 +25,7 @@ static token empty_token =
   TOK_EMPTY,
   .data.uid = 0
 };
+
 static bool allow_dump_lines = false;
 static size_t buffer_size = 0;
 
@@ -511,23 +512,21 @@ convert_seen_name_to_token (token_type tt, const char *string)
   uint8_t i;
   char *current_string = strings_cache;
   JERRY_ASSERT (strings_cache);
+  token ret_val = empty_token;
 
   for (i = 0; i < seen_names_count; i++)
   {
     if ((string == NULL && current_token_equals_to (current_string))
         || (string != NULL && !__strcmp (current_string, string)))
     {
-      return (token)
-      {
-        .type = tt,
-        .data.uid = i
-      };
+      ret_val = (token) { .type = tt, .data.uid = i };
+      break;
     }
 
     current_string += __strlen (current_string) + 1;
   }
 
-  return empty_token;
+  return ret_val;
 }
 
 static token
@@ -537,6 +536,7 @@ add_token_to_seen_names (token_type tt, const char *string)
   char *current_string = strings_cache;
   size_t required_size;
   size_t len = (string == NULL ? (size_t) (buffer - token_start) : __strlen (string));
+  token ret_val = empty_token;
 
   // Go to unused memory of cache
   for (i = 0; i < seen_names_count; i++)
@@ -566,11 +566,9 @@ add_token_to_seen_names (token_type tt, const char *string)
     __memcpy (current_string, string, __strlen (string) + 1);
   }
 
-  return (token)
-  {
-    .type = tt,
-    .data.uid = seen_names_count++
-  };
+  ret_val = (token) { .type = tt, .data.uid = seen_names_count++ };
+  
+  return ret_val;
 }
 
 static token

@@ -22,14 +22,6 @@ VERA_INFO="Vera++ "`vera++ --version`
 GCC_INFO=`gcc --version | head -n 1`
 BUILD_INFO=`echo -e "$CPPCHECK_INFO\n$VERA_INFO\n$GCC_INFO"`
 
-trap ctrl_c INT
-
-function ctrl_c() {
-    git checkout master >&/dev/null
-
-    exit 1
-}
-
 clear
 
 if [ "`git status --porcelain 2>&1 | wc -l`" != "0" ]
@@ -52,13 +44,27 @@ fi
 
 commits_to_push=`git log origin/master..master | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = ""; } { s = $2" "s; } END { print s; }'`
 
-echo $commits_to_push | grep "[^ ]" >& /dev/null
+echo $commits_to_push | grep "[^ ]" >&/dev/null
 status_code=$?
 if [ $status_code -ne 0 ]
 then
   echo "Nothing to push"
   exit 0
 fi
+
+trap ctrl_c INT
+
+function ctrl_c() {
+    git checkout master >&/dev/null
+
+    for commit_hash in $commits_to_push
+    do
+      git notes --ref=test_build_env remove $commit_hash
+      git notes --ref=perf remove $commit_hash
+      git notes --ref=mem remove $commit_hash
+    done
+    exit 1
+}
 
 echo
 echo "===== Starting pre-push commit testing series ====="
@@ -131,8 +137,24 @@ then
     echo
 
     git push && echo -e "\n\e[0;32m     Pushed successfully\e[0m\n" || echo -e "\n\e[1;33m     Push failed\e[0m"
-    git push origin refs/notes/* || echo -e "\n\e[1;33m     Notes push failed\e[0m"
-    exit 0
+    status_code=$?
+
+    if [ $status_code -eq 0 ]
+    then
+      git push origin refs/notes/* || echo -e "\n\e[1;33m     Notes push failed\e[0m"
+      status_code=$?
+    fi
+
+    if [ $status_code -ne 0 ]
+    then
+      for commit_hash in $commits_to_push
+      do
+        git notes --ref=test_build_env remove $commit_hash
+        git notes --ref=perf remove $commit_hash
+        git notes --ref=mem remove $commit_hash
+      done
+    fi
+    exit $status_code
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"
 

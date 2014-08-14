@@ -119,32 +119,53 @@ bool
 ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
                                  ecma_value_t y) /**< second operand */
 {
+  const bool is_x_undefined = ecma_is_value_undefined (x);
+  const bool is_x_null = ecma_is_value_null (x);
+  const bool is_x_boolean = ecma_is_value_boolean (x);
+  const bool is_x_number = (x.value_type == ECMA_TYPE_NUMBER);
+  const bool is_x_string = (x.value_type == ECMA_TYPE_STRING);
+  const bool is_x_object = (x.value_type == ECMA_TYPE_OBJECT);
+
+  const bool is_y_undefined = ecma_is_value_undefined (y);
+  const bool is_y_null = ecma_is_value_null (y);
+  const bool is_y_boolean = ecma_is_value_boolean (y);
+  const bool is_y_number = (y.value_type == ECMA_TYPE_NUMBER);
+  const bool is_y_string = (y.value_type == ECMA_TYPE_STRING);
+  const bool is_y_object = (y.value_type == ECMA_TYPE_OBJECT);
+
+  const bool is_types_equal = ((is_x_undefined && is_y_undefined)
+                               || (is_x_null && is_y_null)
+                               || (is_x_boolean && is_y_boolean)
+                               || (is_x_number && is_y_number)
+                               || (is_x_string && is_y_string)
+                               || (is_x_object && is_y_object));
+
   // 1. If Type (x) is different from Type (y), return false.
-  if (x.value_type != y.value_type)
+  if (!is_types_equal)
   {
     return false;
   }
 
   // 2. If Type (x) is Undefined, return true.
-  if (ecma_is_value_undefined (x))
+  if (is_x_undefined)
   {
     return true;
   }
 
   // 3. If Type (x) is Null, return true.
-  if (ecma_is_value_null (x))
+  if (is_x_null)
   {
     return true;
   }
 
   // 4. If Type (x) is Number, then
-  if (x.value_type == ECMA_TYPE_NUMBER)
+  if (is_x_number)
   {
     //a. If x is NaN, return false.
     //b. If y is NaN, return false.
     //c. If x is the same Number value as y, return true.
-    //d. If x is +0 and y is 0, return true.
-    //e. If x is 0 and y is +0, return true.
+    //d. If x is +0 and y is -0, return true.
+    //e. If x is -0 and y is +0, return true.
 
     ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_POINTER (x.value));
     ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_POINTER (y.value));
@@ -152,14 +173,11 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     TODO (Implement according to ECMA);
 
     return (x_num == y_num);
-
-    //f. Return false.
-    return false;
   }
 
   // 5. If Type (x) is String, then return true if x and y are exactly the same sequence of characters
   // (same length and same characters in corresponding positions); otherwise, return false.
-  if (x.value_type == ECMA_TYPE_STRING)
+  if (is_x_string)
   {
     ecma_string_t* x_str_p = ECMA_GET_POINTER (x.value);
     ecma_string_t* y_str_p = ECMA_GET_POINTER (y.value);
@@ -168,19 +186,15 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   }
 
   // 6. If Type (x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
-  if (ecma_is_value_boolean (x))
+  if (is_x_boolean)
   {
     return (x.value == y.value);
   }
 
-  // 7. Return true if x and y refer to the same object.
-  if (x.value_type == ECMA_TYPE_OBJECT)
-  {
-    return (ECMA_GET_POINTER (x.value) == ECMA_GET_POINTER (y.value));
-  }
+  // 7. Return true if x and y refer to the same object. Otherwise, return false.
+  JERRY_ASSERT (is_x_object);
 
-  // Otherwise, return false.
-  return false;
+  return (ECMA_GET_POINTER (x.value) == ECMA_GET_POINTER (y.value));
 } /* ecma_op_strict_equality_compare */
 
 /**

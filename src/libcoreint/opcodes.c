@@ -1359,11 +1359,11 @@ opfunc_not_equal_value (OPCODE opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_equal_value_type (OPCODE opdata, /**< operation data */
-                    struct __int_data *int_data) /**< interpreter context */
+                         struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.equal_value.dst;
-  const T_IDX left_var_idx = opdata.data.equal_value.var_left;
-  const T_IDX right_var_idx = opdata.data.equal_value.var_right;
+  const T_IDX dst_var_idx = opdata.data.equal_value_type.dst;
+  const T_IDX left_var_idx = opdata.data.equal_value_type.var_left;
+  const T_IDX right_var_idx = opdata.data.equal_value_type.var_right;
 
   int_data->pos++;
 
@@ -1393,11 +1393,11 @@ opfunc_equal_value_type (OPCODE opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_not_equal_value_type (OPCODE opdata, /**< operation data */
-                        struct __int_data *int_data) /**< interpreter context */
+                             struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.not_equal_value.dst;
-  const T_IDX left_var_idx = opdata.data.not_equal_value.var_left;
-  const T_IDX right_var_idx = opdata.data.not_equal_value.var_right;
+  const T_IDX dst_var_idx = opdata.data.not_equal_value_type.dst;
+  const T_IDX left_var_idx = opdata.data.not_equal_value_type.var_left;
+  const T_IDX right_var_idx = opdata.data.not_equal_value_type.var_right;
 
   int_data->pos++;
 

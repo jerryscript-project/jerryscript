@@ -179,7 +179,7 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
 ecma_value_t
 ecma_copy_value (const ecma_value_t value, /**< ecma-value */
                  bool do_ref_if_object) /**< if the value is object value,
-                                             increment reference counter of object */
+                                             increment reference counter of the object */
 {
   ecma_value_t value_copy;
 
@@ -251,7 +251,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
 void
 ecma_free_value (ecma_value_t value, /**< value description */
                  bool do_deref_if_object) /**< if the value is object value,
-                                               decrement reference counter of object */
+                                               decrement reference counter of the object */
 {
   switch ((ecma_type_t) value.value_type)
   {

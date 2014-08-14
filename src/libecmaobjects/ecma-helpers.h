@@ -98,11 +98,14 @@ extern bool ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p,
 extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
                                                      const ecma_string_t *string2_p);
 
-/* ecma-helpers-strings-collection.c */
+/* ecma-helpers-values-collection.c */
+
+extern ecma_collection_header_t *ecma_new_values_collection (ecma_value_t values_buffer[],
+                                                             ecma_length_t values_number,
+                                                             bool do_ref_if_object);
+extern void ecma_free_values_collection (ecma_collection_header_t* header_p, bool do_deref_if_object);
 extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t* string_ptrs_buffer[],
                                                               ecma_length_t strings_number);
-extern void ecma_free_strings_collection (ecma_collection_header_t* header_p);
-
 /* ecma-helpers.c */
 extern ecma_object_t* ecma_create_object (ecma_object_t *prototype_object_p,
                                           bool is_extensible,

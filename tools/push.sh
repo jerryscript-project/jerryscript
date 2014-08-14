@@ -17,6 +17,11 @@
 GIT_STATUS_NOT_CLEAN_MSG="Git status of current directory is not clean"
 GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files, locally commiting all changes and running $0 again"
 
+CPPCHECK_INFO=`cppcheck --version`
+VERA_INFO="Vera++ "`vera++ --version`
+GCC_INFO=`gcc --version | head -n 1`
+BUILD_INFO=`echo -e "$CPPCHECK_INFO\n$VERA_INFO\n$GCC_INFO"`
+
 trap ctrl_c INT
 
 function ctrl_c() {
@@ -66,6 +71,10 @@ do
   git checkout $commit_hash >&/dev/null
   status_code=$?
 
+  git notes --ref=test_build_env remove $commit_hash >&/dev/null
+  git notes --ref=perf remove $commit_hash >&/dev/null
+  git notes --ref=mem remove $commit_hash >&/dev/null
+
   if [ $status_code -ne 0 ]
   then
     echo "git checkout $commit_hash failed"
@@ -82,12 +91,30 @@ do
   status_code=$?
   if [ $status_code -ne 0 ]
   then
-    echo "Pre-commit testing for '$commit_hash' failed"
+    echo "Pre-commit quality testing for '$commit_hash' failed"
     echo
 
     ok_to_push=0
     break
   fi
+
+  echo "Pre-commit quality testing for '$commit_hash' passed successfully"
+  echo
+  echo "Starting pre-commit performance measurement for '$commit_hash'"
+  echo
+
+  BENCH_ENGINE="./out/release.linux/jerry"
+  BENCH_SCRIPT="./benchmarks/jerry/loop_arithmetics_1kk.js"
+  PERF_ITERS="5"
+  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
+  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss_measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
+
+  echo "Pre-commit performance measurement for '$commit_hash' completed"
+  echo
+
+  git notes --ref=test_build_env add -m "$BUILD_INFO" $commit_hash
+  git notes --ref=perf add -m "$PERF_INFO" $commit_hash
+  git notes --ref=mem add -m "$MEM_INFO" $commit_hash
 done
 
 git checkout master >&/dev/null
@@ -96,16 +123,6 @@ echo
 echo "Pre-commit testing passed successfully"
 echo
 
-# echo
-# echo "Pre-commit testing passed successfully. Starting performance and memory benchmarking"
-# echo
-
-# ./tools/test_stability.sh $((`echo $commits_to_push | wc -w` + 1))
-
-# echo
-# echo "Performance and memory benchmarking completed"
-# echo
-
 if [ $ok_to_push -eq 1 ]
 then
   if [ "`git status --porcelain 2>&1 | wc -l`" == "0" ]
@@ -113,7 +130,8 @@ then
     echo "Pushing..."
     echo
 
-    git push && echo -e "\n\e[0;32m     Pushed successfully\e[0m\n" || echo -e "\n\e[1;33m     Push failed\e[0m"
+    git push && echo -e "\n\e[0;32m     Pushed successfully\e[0m\n" || echo -e "\n\e[1;33m     Push failed\e[0m" && exit 1
+    git push origin refs/notes/* || echo -e "\n\e[1;33m     Notes push failed\e[0m" && exit 1
     exit 0
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"

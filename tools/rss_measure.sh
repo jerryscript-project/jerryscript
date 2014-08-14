@@ -63,6 +63,8 @@ done
 FINISH=$(date +%s.%N)
 EXEC_TIME=$(echo "$FINISH - $START" | bc)
 
+echo
+
 if [ "$RAW_OUTPUT" != "" ];
 then
      echo -e $RSS_OUTPUT;

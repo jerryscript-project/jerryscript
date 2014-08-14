@@ -94,6 +94,9 @@ PRECOMMIT_CHECK_TARGETS_LIST= debug.linux.check \
 push: ./tools/push.sh
 	@ ./tools/push.sh
 
+pull: ./tools/pull.sh
+	@ ./tools/pull.sh
+
 precommit: clean
 	@ echo -e "\nBuilding...\n\n"
 	@ $(MAKE) build

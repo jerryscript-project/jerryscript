@@ -14,7 +14,12 @@
 
 assert((5 == 5) == true);
 assert((7 != 2) == true);
+
 assert((7 < 4) == false);
 assert((7 > 4) == true);
-//assert((7 <= 11) == true);
-//assert((7 >= 11) == false);
+
+assert((7 <= 11) == true);
+assert((11 <= 11) == true);
+
+assert((7 >= 11) == false);
+assert((7 >= 7) == true);

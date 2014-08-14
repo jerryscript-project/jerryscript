@@ -1,0 +1,9 @@
+./benchmarks/jerry/loop_arithmetics_1kk.js:
+===================
+Rss average:		120 Kb	Rss max: 124 Kb
+Pss average:		120 Kb	Pss max: 124 Kb
+Share average:		0 Kb	Share max: 1 Kb
+(Rss - Share) average:	120 Kb	(Rss - Share) max: 124 Kb
+---
+Exec time / average:	15.260 / 3.052 secs
+===================

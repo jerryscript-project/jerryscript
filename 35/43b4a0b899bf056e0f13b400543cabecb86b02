@@ -1,0 +1,11 @@
+./benchmarks/jerry/loop_arithmetics_1kk.js:
+===================
+                        AVERAGE                            MAX
+                Rss:     117 Kb                Rss:     120 Kb
+                Pss:     117 Kb                Pss:     120 Kb
+      Private_Dirty:      29 Kb      Private_Dirty:      32 Kb
+      Private_Clean:      88 Kb      Private_Clean:      88 Kb
+               Size:    1332 Kb               Size:    1332 Kb
+---
+Exec time / average:	14.056 / 2.811 secs
+===================

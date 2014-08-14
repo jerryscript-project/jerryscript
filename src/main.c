@@ -170,6 +170,9 @@ main (int argc __unused,
   int i;
   size_t files_counter = 0;
 
+  jrt_set_mem_limits (MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE,
+                      CONFIG_MEM_STACK_LIMIT);
+
   for (i = 1; i < argc; i++)
     {
       if (!__strcmp ("-v", argv[i]))

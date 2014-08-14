@@ -22,6 +22,8 @@
 
 #include <stdarg.h>
 
+#include <sys/resource.h>
+
 #ifdef LIBC_RAW
 
 #ifdef __TARGET_HOST_x64
@@ -349,6 +351,25 @@ __fwrite (const void *ptr, /**< data to write */
   return bytes_written;
 } /* __fwrite */
 
+/**
+ * Setup new memory limits
+ */
+void
+jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
+                    size_t stack_size) /**< limit for stack */
+{
+  struct rlimit data_limit = { data_size, data_size };
+  struct rlimit stack_limit = { stack_size, stack_size };
+
+  int ret;
+
+  SYSCALL_2 (__NR_setrlimit, RLIMIT_DATA, &data_limit, ret);
+  JERRY_ASSERT (ret == 0);
+
+  SYSCALL_2 (__NR_setrlimit, RLIMIT_STACK, &stack_limit, ret);
+  JERRY_ASSERT (ret == 0);
+} /* jrt_set_mem_limits */
+
 #elif defined (LIBC_MUSL)
 
 #include <stdio.h>
@@ -473,6 +494,25 @@ __fwrite (const void *ptr, /**< data to write */
 {
   return fwrite (ptr, size, nmemb, stream);
 } /* __fwrite */
+
+/**
+ * Setup new memory limits
+ */
+void
+jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
+                    size_t stack_size) /**< limit for stack */
+{
+  struct rlimit data_limit = { data_size, data_size };
+  struct rlimit stack_limit = { stack_size, stack_size };
+
+  int ret;
+
+  ret = setrlimit (RLIMIT_DATA, &data_limit);
+  JERRY_ASSERT (ret == 0);
+
+  ret = setrlimit (RLIMIT_STACK, &stack_limit);
+  JERRY_ASSERT (ret == 0);
+} /* jrt_set_mem_limits */
 
 #else /* !LIBC_RAW && !LIBC_MUSL */
 # error "!LIBC_RAW && !LIBC_MUSL"

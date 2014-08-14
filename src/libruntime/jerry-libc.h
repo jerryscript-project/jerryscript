@@ -100,6 +100,8 @@ extern size_t __fread (void *, size_t, size_t, _FILE *);
 extern size_t __fwrite (const void *, size_t, size_t, _FILE *);
 extern int __fprintf (_FILE *, const char *, ...);
 
+extern void jrt_set_mem_limits (size_t data_size, size_t stack_size);
+
 #define DBL_MANT_DIG    (52)
 #define DBL_DIG         (10)
 #define DBL_MIN_EXP     (-324)

@@ -41,7 +41,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   uint16_t offset;
   const OPCODE *opcodes;
 
-  lexer_init ( script_source, script_source_size, is_show_opcodes);
+  lexer_init (script_source, script_source_size, is_show_opcodes);
 
   lexer_run_first_pass ();
 
@@ -51,7 +51,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
 
   offset = serializer_dump_strings (strings, strings_num);
   serializer_dump_nums (nums, nums_count, offset, strings_num);
-  
+
   parser_init ();
   parser_parse_program ();
 
@@ -74,24 +74,24 @@ jerry_run (const char *script_source, size_t script_source_size,
 {
   const OPCODE *opcodes;
 
-  mem_init();
+  mem_init ();
 
   serializer_init (is_show_opcodes);
 
   opcodes = parser_run (script_source, script_source_size, is_show_opcodes);
 
   if (is_parse_only)
-    {
-      return true;
-    }
+  {
+    return true;
+  }
 
   init_int (opcodes);
-  
+
   bool is_success = run_int ();
 
-  serializer_free();
+  serializer_free ();
 
-  mem_finalize( is_show_mem_stats);
+  mem_finalize (is_show_mem_stats);
 
   return is_success;
 } /* jerry_run */
@@ -108,52 +108,52 @@ read_sources (const char *script_file_names[],
   uint8_t *source_buffer_tail = source_buffer;
 
   for (i = 0; i < files_count; i++)
+  {
+    const char *script_file_name = script_file_names[i];
+
+    _FILE *file = __fopen (script_file_name, "r");
+
+    if (file == NULL)
     {
-      const char *script_file_name = script_file_names[i];
-
-      _FILE *file = __fopen (script_file_name, "r");
-
-      if (file == NULL)
-        {
-          jerry_exit (ERR_IO);
-        }
-
-      int fseek_status = __fseek( file, 0, __SEEK_END);
-
-      if ( fseek_status != 0 )
-        {
-          jerry_exit (ERR_IO);
-        }
-
-      long script_len = __ftell( file);
-
-      if ( script_len < 0 )
-        {
-          jerry_exit (ERR_IO);
-        }
-
-      __rewind( file);
-
-      const size_t current_source_size = (size_t)script_len;
-     
-      if ( source_buffer_tail + current_source_size >= source_buffer + sizeof(source_buffer) )
-        {
-          jerry_exit (ERR_MEMORY);
-        }
-
-      size_t bytes_read = __fread( source_buffer, 1, current_source_size, file);
-      if ( bytes_read < current_source_size )
-        {
-          jerry_exit (ERR_IO);
-        }
-
-      __fclose( file);
-
-      source_buffer_tail += current_source_size;
+      jerry_exit (ERR_IO);
     }
 
+    int fseek_status = __fseek (file, 0, __SEEK_END);
+
+    if (fseek_status != 0)
+    {
+      jerry_exit (ERR_IO);
+    }
+
+    long script_len = __ftell (file);
+
+    if (script_len < 0)
+    {
+      jerry_exit (ERR_IO);
+    }
+
+    __rewind (file);
+
+    const size_t current_source_size = (size_t)script_len;
+
+    if (source_buffer_tail + current_source_size >= source_buffer + sizeof (source_buffer))
+    {
+      jerry_exit (ERR_MEMORY);
+    }
+
+    size_t bytes_read = __fread (source_buffer, 1, current_source_size, file);
+    if (bytes_read < current_source_size)
+    {
+      jerry_exit (ERR_IO);
+    }
+
+    __fclose (file);
+
+    source_buffer_tail += current_source_size;
+  }
+
   const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
-  JERRY_ASSERT( source_size < sizeof(source_buffer));
+  JERRY_ASSERT(source_size < sizeof (source_buffer));
 
   *out_source_size_p = source_size;
 
@@ -174,37 +174,37 @@ main (int argc __unused,
                       CONFIG_MEM_STACK_LIMIT);
 
   for (i = 1; i < argc; i++)
+  {
+    if (!__strcmp ("-v", argv[i]))
     {
-      if (!__strcmp ("-v", argv[i]))
-        {
-          __printf ("Build date: \t%s\n", JERRY_BUILD_DATE);
-          __printf ("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
-          __printf ("Branch name:\t%s\n", JERRY_BRANCH_NAME);
-          __printf ("\n");
-        }
-      if (!__strcmp ("--mem-stats", argv[i]))
-        {
-          print_mem_stats = true;
-        }
-      else if (!__strcmp ("--parse-only", argv[i]))
-        {
-          parse_only = true;
-        }
-      else if (!__strcmp ("--show-opcodes", argv[i]))
-        {
-          show_opcodes = true;
-        }
-      else
-        {
-          file_names[files_counter++] = argv[i];
-        }
+      __printf ("Build date: \t%s\n", JERRY_BUILD_DATE);
+      __printf ("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
+      __printf ("Branch name:\t%s\n", JERRY_BRANCH_NAME);
+      __printf ("\n");
     }
+    if (!__strcmp ("--mem-stats", argv[i]))
+    {
+      print_mem_stats = true;
+    }
+    else if (!__strcmp ("--parse-only", argv[i]))
+    {
+      parse_only = true;
+    }
+    else if (!__strcmp ("--show-opcodes", argv[i]))
+    {
+      show_opcodes = true;
+    }
+    else
+    {
+      file_names[files_counter++] = argv[i];
+    }
+  }
 
   if (files_counter == 0)
-    {
-      jerry_exit (ERR_NO_FILES);
-    }
- 
+  {
+    jerry_exit (ERR_NO_FILES);
+  }
+
   size_t source_size;
   const char *source_p = read_sources (file_names, files_counter, &source_size);
 

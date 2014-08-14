@@ -404,6 +404,22 @@ ecma_number_to_uint32 (ecma_number_t value) /**< unsigned 32-bit integer value *
 } /* ecma_number_to_uint32 */
 
 /**
+ * ECMA-defined conversion of Number value to Int32 value
+ *
+ * See also:
+ *          ECMA-262 v5, 9.5
+ *
+ * @return number - result of conversion.
+ */
+int32_t
+ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
+{
+  TODO(Implement according to ECMA);
+
+  return (int32_t) value;
+} /* ecma_number_to_int32 */
+
+/**
  * @}
  * @}
  */

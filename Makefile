@@ -97,6 +97,10 @@ push: ./tools/push.sh
 pull: ./tools/pull.sh
 	@ ./tools/pull.sh
 
+log: ./tools/log.sh
+	@ ./tools/log.sh
+
+
 precommit: clean
 	@ echo -e "\nBuilding...\n\n"
 	@ $(MAKE) build

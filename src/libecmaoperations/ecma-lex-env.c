@@ -439,6 +439,8 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
 
       prop_p->u.named_data_property.value.value_type = ECMA_TYPE_SIMPLE;
       prop_p->u.named_data_property.value.value = ECMA_SIMPLE_VALUE_EMPTY;
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -476,6 +478,8 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
       prop_p->u.named_data_property.value = ecma_copy_value (value, false);
 
       ecma_gc_update_may_ref_younger_object_flag_by_value (lex_env_p, value);
+
+      break;
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {

@@ -1530,9 +1530,9 @@ ecma_completion_value_t
 opfunc_less_or_equal_than (OPCODE opdata, /**< operation data */
                            struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.less_than.dst;
-  const T_IDX left_var_idx = opdata.data.less_than.var_left;
-  const T_IDX right_var_idx = opdata.data.less_than.var_right;
+  const T_IDX dst_var_idx = opdata.data.less_or_equal_than.dst;
+  const T_IDX left_var_idx = opdata.data.less_or_equal_than.var_left;
+  const T_IDX right_var_idx = opdata.data.less_or_equal_than.var_right;
 
   int_data->pos++;
 
@@ -1587,9 +1587,9 @@ ecma_completion_value_t
 opfunc_greater_or_equal_than (OPCODE opdata, /**< operation data */
                               struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.less_than.dst;
-  const T_IDX left_var_idx = opdata.data.less_than.var_left;
-  const T_IDX right_var_idx = opdata.data.less_than.var_right;
+  const T_IDX dst_var_idx = opdata.data.greater_or_equal_than.dst;
+  const T_IDX left_var_idx = opdata.data.greater_or_equal_than.var_left;
+  const T_IDX right_var_idx = opdata.data.greater_or_equal_than.var_right;
 
   int_data->pos++;
 

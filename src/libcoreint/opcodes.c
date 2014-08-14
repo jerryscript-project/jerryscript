@@ -354,8 +354,6 @@ do_number_arithmetic (struct __int_data *int_data, /**< interpreter context */
     op (b_xor)                           \
     op (logical_and)                     \
     op (logical_or)                      \
-    op (equal_value_type)                \
-    op (not_equal_value_type)            \
     op (construct_0)                     \
     op (construct_1)                     \
     op (construct_n)                     \
@@ -1172,6 +1170,75 @@ opfunc_not_equal_value (OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_not_equal_value */
+
+/**
+ * 'Strict Equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_equal_value_type (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_strict_equality_compare (left_value.value, right_value.value);
+
+  ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
+                                                                                 : ECMA_SIMPLE_VALUE_FALSE));
+
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
+
+  return ret_value;
+} /* opfunc_equal_value_type */
+
+/**
+ * 'Strict Does-not-equals' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.9.5
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_not_equal_value_type (OPCODE opdata, /**< operation data */
+                        struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.not_equal_value.dst;
+  const T_IDX left_var_idx = opdata.data.not_equal_value.var_left;
+  const T_IDX right_var_idx = opdata.data.not_equal_value.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  bool is_equal = ecma_op_strict_equality_compare (left_value.value, right_value.value);
+
+  ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                                                                 : ECMA_SIMPLE_VALUE_TRUE));
+
+
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
+
+  return ret_value;
+} /* opfunc_not_equal_value_type */
 
 /**
  * 'Less-than' opcode handler.

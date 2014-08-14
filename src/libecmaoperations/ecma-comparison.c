@@ -108,6 +108,82 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 } /* ecma_op_abstract_equality_compare */
 
 /**
+ * ECMA strict equality comparison routine.
+ *
+ * See also: ECMA-262 v5, 11.9.6
+ *
+ * @return true - if values are strict equal,
+ *         false - otherwise.
+ */
+bool
+ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
+                                 ecma_value_t y) /**< second operand */
+{
+  // 1. If Type (x) is different from Type (y), return false.
+  if (x.value_type != y.value_type)
+  {
+    return false;
+  }
+
+  // 2. If Type (x) is Undefined, return true.
+  if (ecma_is_value_undefined (x))
+  {
+    return true;
+  }
+
+  // 3. If Type (x) is Null, return true.
+  if (ecma_is_value_null (x))
+  {
+    return true;
+  }
+
+  // 4. If Type (x) is Number, then
+  if (x.value_type == ECMA_TYPE_NUMBER)
+  {
+    //a. If x is NaN, return false.
+    //b. If y is NaN, return false.
+    //c. If x is the same Number value as y, return true.
+    //d. If x is +0 and y is 0, return true.
+    //e. If x is 0 and y is +0, return true.
+
+    ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_POINTER (x.value));
+    ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_POINTER (y.value));
+
+    TODO (Implement according to ECMA);
+
+    return (x_num == y_num);
+
+    //f. Return false.
+    return false;
+  }
+
+  // 5. If Type (x) is String, then return true if x and y are exactly the same sequence of characters
+  // (same length and same characters in corresponding positions); otherwise, return false.
+  if (x.value_type == ECMA_TYPE_STRING)
+  {
+    ecma_string_t* x_str_p = ECMA_GET_POINTER (x.value);
+    ecma_string_t* y_str_p = ECMA_GET_POINTER (y.value);
+
+    return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+  }
+
+  // 6. If Type (x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
+  if (ecma_is_value_boolean (x))
+  {
+    return (x.value == y.value);
+  }
+
+  // 7. Return true if x and y refer to the same object.
+  if (x.value_type == ECMA_TYPE_OBJECT)
+  {
+    return (ECMA_GET_POINTER (x.value) == ECMA_GET_POINTER (y.value));
+  }
+
+  // Otherwise, return false.
+  return false;
+} /* ecma_op_strict_equality_compare */
+
+/**
  * ECMA abstract relational comparison routine.
  *
  * See also: ECMA-262 v5, 11.8.5

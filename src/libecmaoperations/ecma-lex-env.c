@@ -510,6 +510,34 @@ ecma_op_create_global_environment (void)
 } /* ecma_op_create_global_environment */
 
 /**
+ * Figure out whether the lexical environment is global.
+ *
+ * @return true - if lexical environment is object-bound and corresponding object is global object,
+ *         false - otherwise.
+ */
+bool
+ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
+{
+  JERRY_ASSERT (lex_env_p != NULL && lex_env_p->is_lexical_environment);
+
+  ecma_lexical_environment_type_t type = lex_env_p->u.lexical_environment.type;
+
+  bool ret_value = false;
+
+  if (type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
+  {
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+    ecma_object_t *glob_obj_p = ecma_get_global_object ();
+
+    ret_value = (binding_obj_p == glob_obj_p);
+
+    ecma_deref_object (glob_obj_p);
+  }
+
+  return ret_value;
+} /* ecma_is_lexical_environment_global */
+
+/**
  * @}
  * @}
  */

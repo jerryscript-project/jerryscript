@@ -75,7 +75,7 @@ static void
 start_new_scope (void)
 {
   JERRY_ASSERT (temp_name_stack_head < MAX_OPCODES);
-  temp_name_stack[temp_name_stack_head++] = temp_name;
+  temp_name_stack[temp_name_stack_head++] = max_temp_name;
   max_temp_name = min_temp_name;
 }
 
@@ -83,6 +83,7 @@ static void
 finish_scope (void)
 {
   temp_name = temp_name_stack[--temp_name_stack_head];
+  max_temp_name = temp_name;
 }
 
 static void

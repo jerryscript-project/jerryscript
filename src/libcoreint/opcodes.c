@@ -481,88 +481,127 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
   ecma_completion_value_t ret_value;
   ret_value = ecma_make_empty_completion_value ();
 
-#ifdef __TARGET_HOST_x64
-  __printf ("%d::op_call_1:idx:%d:%d\t",
-            int_data->pos,
-            opdata.data.call_1.name_lit_idx,
-            opdata.data.call_1.arg1_lit_idx);
-#endif
-
   int_data->pos++;
 
-  string_literal_copy str_value;
-  init_string_literal_copy (opdata.data.call_1.name_lit_idx, &str_value);
+  ECMA_TRY_CATCH (arg_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
 
-#ifdef __TARGET_HOST_x64
-  __printf ("%s\n", str_value.str_p);
-#endif
 
-  if (!__strcmp ((const char*) str_value.str_p, "LEDToggle"))
+  /**********************************************************/
+
+  FIXME (/* Native call, i.e. opfunc_native_call */);
+  bool is_native_call = true;
+
+  string_literal_copy function_name;
+  init_string_literal_copy (opdata.data.call_1.name_lit_idx, &function_name);
+
+  if (!__strcmp ((const char*) function_name.str_p, "LEDToggle"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
     uint32_t int_num = (uint32_t) * num_p;
     led_toggle (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
   }
-
-  if (!__strcmp ((const char*) str_value.str_p, "LEDOn"))
+  else if (!__strcmp ((const char*) function_name.str_p, "LEDOn"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
     uint32_t int_num = (uint32_t) * num_p;
     led_on (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
   }
-
-  if (!__strcmp ((const char*) str_value.str_p, "LEDOff"))
+  else if (!__strcmp ((const char*) function_name.str_p, "LEDOff"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
     uint32_t int_num = (uint32_t) * num_p;
     led_off (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
   }
-
-  if (!__strcmp ((const char*) str_value.str_p, "LEDOnce"))
+  else if (!__strcmp ((const char*) function_name.str_p, "LEDOnce"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
     uint32_t int_num = (uint32_t) * num_p;
     led_blink_once (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
   }
-
-  if (!__strcmp ((const char*) str_value.str_p, "wait"))
+  else if (!__strcmp ((const char*) function_name.str_p, "wait"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
     uint32_t int_num = (uint32_t) * num_p;
     wait_ms (int_num);
     ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
   }
-
-  if (!__strcmp ((const char *) str_value.str_p, "exit"))
+  else if (!__strcmp ((const char *) function_name.str_p, "exit"))
   {
-    ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-    JERRY_ASSERT (cond_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (cond_value.value.value);
-    opfunc_exitval (getop_exitval ((T_IDX) * num_p), int_data);
-    ret_value = ecma_make_empty_completion_value ();
-    ECMA_FINALIZE (cond_value);
+    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
+    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
+    uint32_t int_num = (uint32_t) * num_p;
+    ecma_value_t exit_status = ecma_make_simple_value (int_num == 0 ? ECMA_SIMPLE_VALUE_TRUE
+                                                       : ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
+                                            exit_status,
+                                            ECMA_TARGET_ID_RESERVED);
+  }
+  else
+  {
+    is_native_call = false;
   }
 
-  free_string_literal_copy (&str_value);
+  if (is_native_call)
+  {
+#ifdef __TARGET_HOST_x64
+    __printf ("%d::op_call_1:idx:%d:%d\t",
+              int_data->pos,
+              opdata.data.call_1.name_lit_idx,
+              opdata.data.call_1.arg1_lit_idx);
+
+    __printf ("%s\n", function_name.str_p);
+#endif
+  }
+
+  free_string_literal_copy (&function_name);
+
+  /**********************************************************/
+
+
+  if (!is_native_call)
+  {
+    const T_IDX func_name_lit_idx = opdata.data.call_1.name_lit_idx;
+    const T_IDX lhs_var_idx = opdata.data.call_1.lhs;
+
+    ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
+
+    if (!ecma_op_is_callable (func_value.value))
+    {
+      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    else
+    {
+      ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.value.value);
+
+      ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
+
+      ret_value = ecma_op_function_call (func_obj_p, this_value.value, &arg_value.value, 1);
+
+      if (ret_value.type == ECMA_COMPLETION_TYPE_RETURN)
+      {
+        ecma_value_t returned_value = ret_value.value;
+
+        ret_value = set_variable_value (int_data, lhs_var_idx, returned_value);
+
+        ecma_free_value (returned_value, true);
+      }
+
+      ECMA_FINALIZE (this_value);
+    }
+
+    ECMA_FINALIZE (func_value);
+  }
+
+  ECMA_FINALIZE (arg_value);
 
   return ret_value;
 }

@@ -35,12 +35,21 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 bool is_strict,
                                 opcode_counter_t first_opcode_idx);
 
-extern ecma_object_t* ecma_op_get_throw_type_error (void);
-
 extern ecma_completion_value_t ecma_op_function_call (ecma_object_t *func_obj_p,
                                                       ecma_value_t this_arg_value,
                                                       ecma_value_t* arguments_list_p,
-                                                      size_t arguments_list_len);
+                                                      ecma_length_t arguments_list_len);
+
+extern ecma_completion_value_t
+ecma_op_function_declaration (ecma_object_t *lex_env_p,
+                              ecma_char_t *function_name_p,
+                              opcode_counter_t function_code_opcode_idx,
+                              ecma_string_t* formal_parameter_list_p[],
+                              ecma_length_t formal_parameter_list_length,
+                              bool is_strict,
+                              bool is_configurable_bindings);
+
+extern ecma_object_t* ecma_op_get_throw_type_error (void);
 
 /**
  * @}

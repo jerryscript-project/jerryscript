@@ -71,7 +71,7 @@ typedef struct
 /**
  * Initialize string literal copy.
  */
-static void __unused
+static void
 init_string_literal_copy (T_IDX idx, /**< literal identifier */
                           string_literal_copy *str_lit_descr_p) /**< pointer to string literal copy descriptor */
 {
@@ -104,7 +104,7 @@ init_string_literal_copy (T_IDX idx, /**< literal identifier */
 /**
  * Free string literal copy.
  */
-static void __unused
+static void
 free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string literal copy descriptor */
 {
   JERRY_ASSERT (str_lit_descr_p != NULL);
@@ -414,8 +414,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
 
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (call_n)                          \
-    op (func_decl_1)                     \
-    op (func_decl_2)                     \
     op (func_decl_n)                     \
     op (varg_1_end)                      \
     op (varg_2_end)                      \
@@ -1688,28 +1686,21 @@ opfunc_var_decl (OPCODE opdata, /**< operation data */
 } /* opfunc_var_decl */
 
 /**
- * 'Function declaration with no parameters' opcode handler.
- *
- * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 5).
+ * Function declaration helper
  *
  * @return completion value
  *         returned value must be freed with ecma_free_completion_value.
  */
-ecma_completion_value_t
-opfunc_func_decl_0 (OPCODE opdata, /**< operation data */
-                    struct __int_data *int_data) /**< interpreter context */
+static ecma_completion_value_t
+function_declaration (struct __int_data *int_data, /**< interpreter context */
+                      T_IDX function_name_lit_idx, /**< identifier of literal with function name */
+                      ecma_string_t* args_names[], /**< names of arguments */
+                      ecma_length_t args_number) /**< number of arguments */
 {
-  string_literal_copy function_name;
-  init_string_literal_copy (opdata.data.func_decl_0.name_lit_idx, &function_name);
-
   TODO ("Check if code of function itself is strict");
 
   const bool is_strict = int_data->is_strict;
-
-  const opcode_counter_t varg_first_opcode_idx = (opcode_counter_t) (int_data->pos + 1);
-  int_data->pos = varg_first_opcode_idx;
-
-  TODO (Iterate vargs);
+  const bool is_configurable_bindings = int_data->is_eval_code;
 
   const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
   OPCODE jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
@@ -1718,45 +1709,100 @@ opfunc_func_decl_0 (OPCODE opdata, /**< operation data */
 
   const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
 
-  // a.
-  const ecma_char_t *fn = function_name.str_p;
+  string_literal_copy function_name;
+  init_string_literal_copy (function_name_lit_idx, &function_name);
 
-  // b.
-  TODO (Pass formal parameter list);
-  ecma_object_t *fo = ecma_op_create_function_object (NULL,
-                                                      0,
-                                                      int_data->lex_env_p,
-                                                      is_strict,
-                                                      function_code_opcode_idx);
-  ecma_value_t fo_value = ecma_make_object_value (fo);
-
-  // c.
-  bool func_already_declared = ecma_is_completion_value_normal_true (ecma_op_has_binding (int_data->lex_env_p, fn));
-
-  // d.
-  if (!func_already_declared)
-  {
-    FIXME ("Pass configurableBindings that is true if and only if current code is eval code");
-
-    ecma_completion_value_t completion = ecma_op_create_mutable_binding (int_data->lex_env_p,
-                                                                         fn,
-                                                                         false);
-
-    JERRY_ASSERT (ecma_is_empty_completion_value (completion));
-  }
-
-  // e.
-  TODO ("Check if current lexical environment is global environment and implement the case");
-
-  // f.
-  ecma_completion_value_t ret_value = ecma_op_set_mutable_binding (int_data->lex_env_p, fn, fo_value, is_strict);
-
-  ecma_free_value (fo_value, true);
+  ecma_completion_value_t ret_value = ecma_op_function_declaration (int_data->lex_env_p,
+                                                                    function_name.str_p,
+                                                                    function_code_opcode_idx,
+                                                                    args_names,
+                                                                    args_number,
+                                                                    is_strict,
+                                                                    is_configurable_bindings);
 
   free_string_literal_copy (&function_name);
 
   return ret_value;
+} /* function_declaration */
+
+/**
+ * 'Function declaration with no parameters' opcode handler.
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_func_decl_0 (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos++;
+
+  return function_declaration (int_data,
+                               opdata.data.func_decl_0.name_lit_idx,
+                               NULL,
+                               0);
 } /* opfunc_func_decl_0 */
+
+/**
+ * 'Function declaration with one parameter' opcode handler.
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos++;
+
+  string_literal_copy argument_name;
+  init_string_literal_copy (opdata.data.func_decl_1.arg1_lit_idx, &argument_name);
+  ecma_string_t *arg_name_string_p = ecma_new_ecma_string (argument_name.str_p);
+  free_string_literal_copy (&argument_name);
+  
+  ecma_completion_value_t ret_value = function_declaration (int_data,
+                                                            opdata.data.func_decl_1.name_lit_idx,
+                                                            &arg_name_string_p,
+                                                            1);
+
+  ecma_free_string (arg_name_string_p);
+
+  return ret_value;
+} /* opfunc_func_decl_1 */
+
+/**
+ * 'Function declaration with two parameters' opcode handler.
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  int_data->pos++;
+
+  string_literal_copy argument1_name, argument2_name;
+  init_string_literal_copy (opdata.data.func_decl_2.arg1_lit_idx, &argument1_name);
+  init_string_literal_copy (opdata.data.func_decl_2.arg2_lit_idx, &argument2_name);
+  ecma_string_t* arg_names_strings[2] =
+  {
+    ecma_new_ecma_string (argument1_name.str_p),
+    ecma_new_ecma_string (argument2_name.str_p)
+  };
+  free_string_literal_copy (&argument2_name);
+  free_string_literal_copy (&argument1_name);
+  
+  ecma_completion_value_t ret_value = function_declaration (int_data,
+                                                            opdata.data.func_decl_1.name_lit_idx,
+                                                            arg_names_strings,
+                                                            2);
+
+  ecma_free_string (arg_names_strings[0]);
+  ecma_free_string (arg_names_strings[1]);
+
+  return ret_value;
+} /* opfunc_func_decl_2 */
 
 /**
  * Function call with no arguments' opcode handler.

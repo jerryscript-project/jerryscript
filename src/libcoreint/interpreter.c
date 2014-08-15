@@ -59,7 +59,8 @@ run_int (void)
   ecma_completion_value_t completion = run_int_from_pos (start_pos,
                                                          this_binding_value,
                                                          lex_env_p,
-                                                         is_strict);
+                                                         is_strict,
+                                                         false);
 
   switch ((ecma_completion_type_t) completion.type)
   {
@@ -98,7 +99,8 @@ ecma_completion_value_t
 run_int_from_pos (opcode_counter_t start_pos,
                   ecma_value_t this_binding_value,
                   ecma_object_t *lex_env_p,
-                  bool is_strict)
+                  bool is_strict,
+                  bool is_eval_code)
 {
   ecma_completion_value_t completion;
 
@@ -122,6 +124,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.this_binding = this_binding_value;
   int_data.lex_env_p = lex_env_p;
   int_data.is_strict = is_strict;
+  int_data.is_eval_code = is_eval_code;
   int_data.min_reg_num = min_reg_num;
   int_data.max_reg_num = max_reg_num;
   int_data.regs_p = regs;

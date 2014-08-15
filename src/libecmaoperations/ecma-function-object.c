@@ -415,7 +415,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
                                                            this_binding,
                                                            local_env_p,
-                                                           is_strict);
+                                                           is_strict,
+                                                           false);
     if (ecma_is_completion_value_normal (completion))
     {
       JERRY_ASSERT(ecma_is_empty_completion_value (completion));

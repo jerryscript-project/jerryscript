@@ -148,6 +148,66 @@ ecma_new_strings_collection (ecma_string_t* string_ptrs_buffer[], /**< pointers 
 } /* ecma_new_strings_collection */
 
 /**
+ * Initialize new collection iterator for the collection
+ */
+void
+ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< context of iterator */
+                               ecma_collection_header_t *collection_p) /**< header of collection */
+{
+  iterator_p->header_p = collection_p;
+  iterator_p->next_chunk_cp = collection_p->next_chunk_cp;
+  iterator_p->current_index = 0;
+  iterator_p->current_value_p = NULL;
+  iterator_p->current_chunk_end_p = ((ecma_value_t*) iterator_p->header_p->data
+                                     + sizeof (iterator_p->header_p->data) / sizeof (ecma_value_t));
+} /* ecma_collection_iterator_init */
+
+/**
+ * Move collection iterator to next element if there is any.
+ *
+ * @return true - if iterator moved,
+ *         false - otherwise (current element is last element in the collection)
+ */
+bool
+ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< context of iterator */
+{
+  if (unlikely (iterator_p->header_p->unit_number == 0
+                || iterator_p->current_index + 1 == iterator_p->header_p->unit_number))
+  {
+    return false;
+  }
+
+  JERRY_ASSERT (iterator_p->current_index + 1 < iterator_p->header_p->unit_number);
+
+  if (iterator_p->current_value_p == NULL)
+  {
+    JERRY_ASSERT (iterator_p->current_index == 0);
+    iterator_p->current_value_p = (ecma_value_t*) iterator_p->header_p->data;
+
+    return true;
+  }
+
+  iterator_p->current_index++;
+  iterator_p->current_value_p++;
+
+  if (iterator_p->current_value_p == iterator_p->current_chunk_end_p)
+  {
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (iterator_p->next_chunk_cp);
+    JERRY_ASSERT (next_chunk_p != NULL);
+
+    iterator_p->next_chunk_cp = next_chunk_p->next_chunk_cp;
+    iterator_p->current_value_p = (ecma_value_t*) &next_chunk_p->data;
+    iterator_p->current_chunk_end_p = iterator_p->current_value_p + sizeof (next_chunk_p->data) / sizeof (ecma_value_t);
+  }
+  else
+  {
+    JERRY_ASSERT (iterator_p->current_value_p < iterator_p->current_chunk_end_p);
+  }
+
+  return true;
+} /* ecma_collection_iterator_next */
+
+/**
  * @}
  * @}
  */

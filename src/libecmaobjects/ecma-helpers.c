@@ -492,28 +492,6 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 } /* ecma_delete_property */
 
 /**
- * Free all chunks of a collection
- */
-void
-ecma_free_collection (ecma_collection_header_t *collection_header_p) /**< header of collection */
-{
-  JERRY_ASSERT(collection_header_p != NULL);
-
-  ecma_collection_chunk_t *non_first_chunk_p = ECMA_GET_POINTER (collection_header_p->next_chunk_cp);
-
-  ecma_dealloc_collection_header (collection_header_p);
-
-  while (non_first_chunk_p != NULL)
-  {
-    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (non_first_chunk_p->next_chunk_cp);
-
-    ecma_dealloc_collection_chunk (non_first_chunk_p);
-
-    non_first_chunk_p = next_chunk_p;
-  }
-} /* ecma_free_collection */
-
-/**
  * Construct empty property descriptor.
  *
  * @return property descriptor with all *_defined properties set to false,

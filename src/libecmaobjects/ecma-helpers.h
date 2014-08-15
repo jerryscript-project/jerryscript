@@ -106,6 +106,26 @@ extern ecma_collection_header_t *ecma_new_values_collection (ecma_value_t values
 extern void ecma_free_values_collection (ecma_collection_header_t* header_p, bool do_deref_if_object);
 extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t* string_ptrs_buffer[],
                                                               ecma_length_t strings_number);
+
+/**
+ * Context of ecma-values' collection iterator
+ */
+typedef struct
+{
+  ecma_collection_header_t *header_p; /**< collection header */
+  uint16_t next_chunk_cp; /**< compressed pointer to next chunk */
+  ecma_length_t current_index; /**< index of current element */
+  ecma_value_t *current_value_p; /**< pointer to current element */
+  ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */
+  ecma_value_t *current_chunk_end_p; /**< pointer to place right after the end of current chunk's data */
+} ecma_collection_iterator_t;
+
+extern void
+ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p,
+                               ecma_collection_header_t *collection_p);
+extern bool
+ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p);
+
 /* ecma-helpers.c */
 extern ecma_object_t* ecma_create_object (ecma_object_t *prototype_object_p,
                                           bool is_extensible,
@@ -146,8 +166,6 @@ extern void ecma_free_named_accessor_property (ecma_property_t *prop_p);
 extern void ecma_free_property (ecma_property_t *prop_p);
 
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
-
-extern void ecma_free_collection (ecma_collection_header_t *collection_header_p);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 

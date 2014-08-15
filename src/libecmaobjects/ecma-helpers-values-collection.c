@@ -63,9 +63,10 @@ ecma_new_values_collection (ecma_value_t values_buffer[], /**< ecma-values */
 
     JERRY_ASSERT (cur_value_buf_iter_p + 1 <= cur_value_buf_end_p);
 
-    *cur_value_buf_iter_p = ecma_copy_value (values_buffer[value_index], do_ref_if_object);
-    cur_value_buf_iter_p++;
+    *cur_value_buf_iter_p++ = ecma_copy_value (values_buffer[value_index], do_ref_if_object);
   }
+
+  *next_chunk_cp_p = ECMA_NULL_POINTER;
 
   return header_p;
 } /* ecma_new_values_collection */
@@ -171,13 +172,10 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< cont
 bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< context of iterator */
 {
-  if (unlikely (iterator_p->header_p->unit_number == 0
-                || iterator_p->current_index + 1 == iterator_p->header_p->unit_number))
+  if (unlikely (iterator_p->header_p->unit_number == 0))
   {
     return false;
   }
-
-  JERRY_ASSERT (iterator_p->current_index + 1 < iterator_p->header_p->unit_number);
 
   if (iterator_p->current_value_p == NULL)
   {
@@ -186,6 +184,13 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
 
     return true;
   }
+
+  if (iterator_p->current_index + 1 == iterator_p->header_p->unit_number)
+  {
+    return false;
+  }
+
+  JERRY_ASSERT (iterator_p->current_index + 1 < iterator_p->header_p->unit_number);
 
   iterator_p->current_index++;
   iterator_p->current_value_p++;

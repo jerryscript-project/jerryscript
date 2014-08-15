@@ -492,10 +492,50 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 } /* ecma_delete_property */
 
 /**
- * Construct empty property descriptor.
+ * Get property's 'Enumerable' attribute value
  *
- * @return property descriptor with all *_defined properties set to false,
- *         and rest properties set to default values (ECMA-262 v5, Table 7).
+ * @return true - property is enumerable,
+ *         false - otherwise.
+ */
+bool
+ecma_is_property_enumerable (ecma_property_t* prop_p) /**< property */
+{
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    return (prop_p->u.named_data_property.enumerable == ECMA_PROPERTY_ENUMERABLE);
+  }
+  else
+  {
+    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+    return (prop_p->u.named_accessor_property.enumerable == ECMA_PROPERTY_ENUMERABLE);
+  }
+} /* ecma_is_property_enumerable */
+
+/**
+ * Get property's 'Configurable' attribute value
+ *
+ * @return true - property is configurable,
+ *         false - otherwise.
+ */
+bool
+ecma_is_property_configurable (ecma_property_t* prop_p) /**< property */
+{
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    return (prop_p->u.named_data_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
+  }
+  else
+  {
+    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+    return (prop_p->u.named_accessor_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
+  }
+} /* ecma_is_property_configurable */
+
+/**
+ * Construct empty property descriptor, i.e.:
+ *  property descriptor with all is_defined flags set to false and the rest - to default value.
  */
 ecma_property_descriptor_t
 ecma_make_empty_property_descriptor (void)

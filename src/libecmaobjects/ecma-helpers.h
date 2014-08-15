@@ -167,6 +167,9 @@ extern void ecma_free_property (ecma_property_t *prop_p);
 
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 
+extern bool ecma_is_property_enumerable (ecma_property_t* prop_p);
+extern bool ecma_is_property_configurable (ecma_property_t* prop_p);
+
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 
 #endif /* !JERRY_ECMA_HELPERS_H */

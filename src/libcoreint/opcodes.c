@@ -1804,7 +1804,7 @@ opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
                                                             &arg_name_string_p,
                                                             1);
 
-  ecma_free_string (arg_name_string_p);
+  ecma_deref_ecma_string (arg_name_string_p);
 
   return ret_value;
 } /* opfunc_func_decl_1 */
@@ -1837,8 +1837,8 @@ opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
                                                             arg_names_strings,
                                                             2);
 
-  ecma_free_string (arg_names_strings[0]);
-  ecma_free_string (arg_names_strings[1]);
+  ecma_deref_ecma_string (arg_names_strings[0]);
+  ecma_deref_ecma_string (arg_names_strings[1]);
 
   return ret_value;
 } /* opfunc_func_decl_2 */

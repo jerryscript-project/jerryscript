@@ -271,7 +271,7 @@ ecma_free_value (ecma_value_t value, /**< value description */
     case ECMA_TYPE_STRING:
     {
       ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
-      ecma_free_string (string_p);
+      ecma_deref_ecma_string (string_p);
       break;
     }
 

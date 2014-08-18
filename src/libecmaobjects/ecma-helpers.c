@@ -361,7 +361,7 @@ ecma_free_named_data_property (ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-  ecma_free_string (ECMA_GET_POINTER (property_p->u.named_data_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_POINTER (property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property (property_p);
@@ -375,7 +375,7 @@ ecma_free_named_accessor_property (ecma_property_t *property_p) /**< the propert
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  ecma_free_string (ECMA_GET_POINTER (property_p->u.named_accessor_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_POINTER (property_p->u.named_accessor_property.name_p));
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */

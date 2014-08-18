@@ -51,6 +51,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->length = length;
+  string_desc_p->is_length_valid = true;
 
   if (bytes_needed_for_current_string <= bytes_for_chars_in_string_descriptor)
   {
@@ -60,7 +61,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
     return string_desc_p;
   }
 
-  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP;
+  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
 
   const ecma_char_t* src_p = string_p;
 
@@ -91,11 +92,28 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
 } /* ecma_new_ecma_string */
 
 /**
+ * Increase reference counter of ecma-string.
+ *
+ * @return pointer to same ecma-string descriptor with increased reference counter
+ */
+void
+ecma_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
+{
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs > 0);
+
+  string_desc_p->refs++;
+
+  /* Check for overflow */
+  JERRY_ASSERT (string_desc_p->refs > 0);
+} /* ecma_ref_ecma_string */
+
+/**
  * Decrease reference counter and deallocate ecma-string if
  * after that the counter the counter becomes zero.
  */
 void
-ecma_free_string (ecma_string_t *string_p) /**< ecma-string */
+ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 {
   JERRY_ASSERT (string_p != NULL);
   JERRY_ASSERT (string_p->refs != 0);
@@ -107,7 +125,7 @@ ecma_free_string (ecma_string_t *string_p) /**< ecma-string */
     return;
   }
 
-  if (string_p->container == ECMA_STRING_CONTAINER_HEAP)
+  if (string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
     ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
 
@@ -131,7 +149,43 @@ ecma_free_string (ecma_string_t *string_p) /**< ecma-string */
   }
 
   ecma_dealloc_string (string_p);
-} /* ecma_free_string */
+} /* ecma_deref_ecma_string */
+
+/**
+ * Get length of the ecma-string
+ *
+ * @return length
+ */
+ecma_length_t
+ecma_get_ecma_string_length (ecma_string_t *string_desc_p) /**< ecma-string descriptor */
+{
+  switch ((ecma_string_container_t)string_desc_p->container)
+  {
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    case ECMA_STRING_CONTAINER_IN_DESCRIPTOR:
+    {
+      JERRY_ASSERT (string_desc_p->is_length_valid);
+
+      return string_desc_p->length;
+    }
+
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      if (string_desc_p->is_length_valid)
+      {
+        return string_desc_p->length;
+      }
+      else
+      {
+        /* calculate length */
+        JERRY_UNIMPLEMENTED();
+      }
+    }
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_get_ecma_string_length */
 
 /**
  * Copy ecma-string's contents to a buffer.
@@ -171,7 +225,7 @@ ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descrip
 
       break;
     }
-    case ECMA_STRING_CONTAINER_HEAP:
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
       ecma_collection_chunk_t *string_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
 
@@ -193,6 +247,7 @@ ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descrip
       break;
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
       JERRY_UNIMPLEMENTED();
     }
@@ -202,23 +257,6 @@ ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descrip
 
   return (ssize_t) required_buffer_size;
 } /* ecma_string_to_zt_string */
-
-/**
- * Increase reference counter of ecma-string.
- *
- * @return pointer to same ecma-string descriptor with increased reference counter
- */
-void
-ecma_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
-{
-  JERRY_ASSERT (string_desc_p != NULL);
-  JERRY_ASSERT (string_desc_p->refs > 0);
-
-  string_desc_p->refs++;
-
-  /* Check for overflow */
-  JERRY_ASSERT (string_desc_p->refs > 0);
-} /* ecma_ref_ecma_string */
 
 /**
  * Compare ecma-string to ecma-string
@@ -256,14 +294,14 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     JERRY_UNIMPLEMENTED();
   }
 
-  if (string1_p->container == ECMA_STRING_CONTAINER_HEAP
+  if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS
       && string2_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
   {
     const ecma_string_t *tmp_string_p = string1_p;
     string1_p = string2_p;
     string2_p = tmp_string_p;
   }
-  JERRY_ASSERT (string2_p->container == ECMA_STRING_CONTAINER_HEAP);
+  JERRY_ASSERT (string2_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
 
   ecma_collection_chunk_t *string1_chunk_p, *string2_chunk_p;
   const ecma_char_t *cur_char_buffer_1_iter_p, *cur_char_buffer_2_iter_p;
@@ -314,8 +352,8 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     
     if (cur_char_buffer_1_iter_p == cur_char_buffer_1_end_p)
     {
-      JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP
-                    && string2_p->container == ECMA_STRING_CONTAINER_HEAP);
+      JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS
+                    && string2_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
       JERRY_ASSERT (cur_char_buffer_2_iter_p == cur_char_buffer_2_end_p);
 
       string1_chunk_p = ECMA_GET_POINTER (string1_chunk_p->next_chunk_cp);
@@ -373,7 +411,7 @@ ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-te
     current_chunk_chars_cur = ecma_string_p->u.chars;
     current_chunk_chars_end = current_chunk_chars_cur + sizeof (ecma_string_p->u.chars) / sizeof (ecma_char_t);
   }
-  else if (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP)
+  else if (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
     string_chunk_p = ECMA_GET_POINTER (ecma_string_p->u.chunk_cp);
     current_chunk_chars_cur = string_chunk_p->data;
@@ -394,7 +432,7 @@ ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-te
 
     if (current_chunk_chars_cur == current_chunk_chars_end)
     {
-      JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP);
+      JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
 
       /* switching to next chunk */
       string_chunk_p = ECMA_GET_POINTER (string_chunk_p->next_chunk_cp);

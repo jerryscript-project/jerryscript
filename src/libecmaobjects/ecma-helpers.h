@@ -87,11 +87,12 @@ extern bool ecma_is_empty_completion_value (ecma_completion_value_t value);
 
 /* ecma-helpers-string.c */
 extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
-extern void ecma_free_string (ecma_string_t *string_p);
+extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
+extern void ecma_deref_ecma_string (ecma_string_t *string_p);
+extern ecma_length_t ecma_get_ecma_string_length (ecma_string_t *string_desc_p);
 extern ssize_t ecma_string_to_zt_string (ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
                                          size_t buffer_size);
-extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
 extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p,
                                                    const ecma_string_t *ecma_string_p);

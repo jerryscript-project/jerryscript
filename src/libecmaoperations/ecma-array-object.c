@@ -78,7 +78,7 @@ ecma_array_object_reduce_length (ecma_object_t *obj_p, /**< the array object */
 
     // ii.
     ecma_char_t uint32_str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-    ecma_op_to_string_uint32 (old_length, uint32_str_buf, sizeof (uint32_str_buf));
+    ecma_uint32_to_string (old_length, uint32_str_buf, sizeof (uint32_str_buf));
 
     ecma_completion_value_t delete_succeeded = ecma_op_object_delete (obj_p,
                                                                       uint32_str_buf,

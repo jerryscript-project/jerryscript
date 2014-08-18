@@ -173,6 +173,13 @@ extern bool ecma_is_property_configurable (ecma_property_t* prop_p);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 
+/* ecma-helpers-conversion.c */
+extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);
+extern void ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, size_t buffer_size);
+extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
+extern int32_t ecma_number_to_int32 (ecma_number_t value);
+extern ecma_number_t ecma_uint32_to_number (uint32_t value);
+
 #endif /* !JERRY_ECMA_HELPERS_H */
 
 /**

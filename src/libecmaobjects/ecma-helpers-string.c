@@ -92,6 +92,27 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
 } /* ecma_new_ecma_string */
 
 /**
+ * Allocate new ecma-string and fill it with ecma-number
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
+{
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+  string_desc_p->length = 0;
+  string_desc_p->is_length_valid = false;
+  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+  *num_p = num;
+  ECMA_SET_POINTER (string_desc_p->u.number_cp, num_p);
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_number */
+
+/**
  * Increase reference counter of ecma-string.
  *
  * @return pointer to same ecma-string descriptor with increased reference counter
@@ -188,6 +209,35 @@ ecma_get_ecma_string_length (ecma_string_t *string_desc_p) /**< ecma-string desc
 } /* ecma_get_ecma_string_length */
 
 /**
+ * Convert ecma-string to number
+ */
+ecma_number_t
+ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
+{
+  JERRY_ASSERT (str_p != NULL);
+
+  if (str_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
+  {
+    ecma_number_t *num_p = ECMA_GET_POINTER (str_p->u.number_cp);
+
+    return *num_p;
+  }
+  else
+  {
+    JERRY_ASSERT (str_p->is_length_valid);
+
+    ecma_char_t zt_string_buffer [str_p->length + 1];
+
+    ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
+                                                     zt_string_buffer,
+                                                     sizeof (zt_string_buffer));
+    JERRY_ASSERT (bytes_copied > 0);
+    
+    return ecma_zt_string_to_number (zt_string_buffer);
+  }
+} /* ecma_string_to_number */
+
+/**
  * Copy ecma-string's contents to a buffer.
  *
  * Buffer will contain length of string, in characters, followed by string's characters.
@@ -197,7 +247,7 @@ ecma_get_ecma_string_length (ecma_string_t *string_desc_p) /**< ecma-string desc
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
-ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                           ecma_char_t *buffer_p, /**< destination buffer */
                           size_t buffer_size) /**< size of buffer */
 {
@@ -275,6 +325,12 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     return true;
   }
 
+  if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER
+      || string2_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
+  {
+    JERRY_UNIMPLEMENTED ();
+  }
+
   if (string1_p->length != string2_p->length)
   {
     return false;
@@ -285,13 +341,18 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
   if (string1_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR
       && string2_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
   {
-    return __memcmp (string1_p->u.chars, string2_p->u.chars, chars_left * sizeof (ecma_char_t));
+    return (__memcmp (string1_p->u.chars, string2_p->u.chars, chars_left * sizeof (ecma_char_t)) == 0);
   }
 
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
-      || string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+      && string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    JERRY_UNIMPLEMENTED();
+    return (string1_p->u.lit_index == string2_p->u.lit_index);
+  }
+  else if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
+           || string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    JERRY_UNIMPLEMENTED ();
   }
 
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS
@@ -386,83 +447,6 @@ ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-ter
 
   return __strcmp ( (char*)string1_p, (char*)string2_p);
 } /* ecma_compare_zt_string_to_zt_string */
-
-/**
- * Compare zero-terminated string to ecma-string
- *
- * @return true - if strings are equal;
- *         false - otherwise.
- */
-bool
-ecma_compare_zt_string_to_ecma_string (const ecma_char_t *string_p, /**< zero-terminated string */
-                                       const ecma_string_t *ecma_string_p) /* ecma-string */
-{
-  JERRY_ASSERT(string_p != NULL);
-  JERRY_ASSERT(ecma_string_p != NULL);
-
-  const ecma_char_t *str_iter_p = string_p;
-  ecma_length_t ecma_str_len = ecma_string_p->length;
-  const ecma_char_t *current_chunk_chars_cur;
-  const ecma_char_t *current_chunk_chars_end;
-  ecma_collection_chunk_t *string_chunk_p = NULL;
-
-  if (ecma_string_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
-  {
-    current_chunk_chars_cur = ecma_string_p->u.chars;
-    current_chunk_chars_end = current_chunk_chars_cur + sizeof (ecma_string_p->u.chars) / sizeof (ecma_char_t);
-  }
-  else if (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
-  {
-    string_chunk_p = ECMA_GET_POINTER (ecma_string_p->u.chunk_cp);
-    current_chunk_chars_cur = string_chunk_p->data;
-    current_chunk_chars_end = current_chunk_chars_cur + sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
-  }
-  else
-  {
-    JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE);
-
-    JERRY_UNIMPLEMENTED();
-  }
-
-  for (ecma_length_t str_index = 0;
-       str_index < ecma_str_len;
-       str_index++, str_iter_p++, current_chunk_chars_cur++)
-  {
-    JERRY_ASSERT(current_chunk_chars_cur <= current_chunk_chars_end);
-
-    if (current_chunk_chars_cur == current_chunk_chars_end)
-    {
-      JERRY_ASSERT (ecma_string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-
-      /* switching to next chunk */
-      string_chunk_p = ECMA_GET_POINTER (string_chunk_p->next_chunk_cp);
-
-      JERRY_ASSERT(string_chunk_p != NULL);
-
-      current_chunk_chars_cur = string_chunk_p->data;
-      current_chunk_chars_end = current_chunk_chars_cur + sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
-    }
-
-    if (*str_iter_p != *current_chunk_chars_cur)
-    {
-      /*
-       * Either *str_iter_p is 0 (zero-terminated string is shorter),
-       * or the character is just different.
-       *
-       * In both cases strings are not equal.
-       */
-      return false;
-    }
-  }
-
-  /*
-   * Now, we have reached end of ecma-string.
-   *
-   * If we have also reached end of zero-terminated string, than strings are equal.
-   * Otherwise zero-terminated string is longer.
-   */
-  return (*str_iter_p == '\0');
-} /* ecma_compare_zt_string_to_ecma_string */
 
 /**
  * @}

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
 #include "ecma-magic-strings.h"
 
 /** \addtogroup ecma ---TODO---
@@ -27,20 +29,20 @@
  *
  * @return pointer to magic string contant
  */
-const ecma_char_t*
+ecma_string_t*
 ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
   TODO(Support UTF-16);
 
   switch (id)
   {
-    case ECMA_MAGIC_STRING_ARGUMENTS: return (ecma_char_t*) "arguments";
-    case ECMA_MAGIC_STRING_EVAL: return (ecma_char_t*) "eval";
-    case ECMA_MAGIC_STRING_PROTOTYPE: return (ecma_char_t*) "prototype";
-    case ECMA_MAGIC_STRING_CONSTRUCTOR: return (ecma_char_t*) "constructor";
-    case ECMA_MAGIC_STRING_CALLER: return (ecma_char_t*) "caller";
-    case ECMA_MAGIC_STRING_UNDEFINED: return (ecma_char_t*) "undefined";
-    case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
+    case ECMA_MAGIC_STRING_ARGUMENTS: return ecma_new_ecma_string ((ecma_char_t*) "arguments");
+    case ECMA_MAGIC_STRING_EVAL: return ecma_new_ecma_string ((ecma_char_t*) "eval");
+    case ECMA_MAGIC_STRING_PROTOTYPE: return ecma_new_ecma_string ((ecma_char_t*) "prototype");
+    case ECMA_MAGIC_STRING_CONSTRUCTOR: return ecma_new_ecma_string ((ecma_char_t*) "constructor");
+    case ECMA_MAGIC_STRING_CALLER: return ecma_new_ecma_string ((ecma_char_t*) "caller");
+    case ECMA_MAGIC_STRING_UNDEFINED: return ecma_new_ecma_string ((ecma_char_t*) "undefined");
+    case ECMA_MAGIC_STRING_LENGTH: return ecma_new_ecma_string ((ecma_char_t*) "length");
   }
 
   JERRY_UNREACHABLE();

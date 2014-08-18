@@ -58,7 +58,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
  */
 ecma_completion_value_t
 ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
-                            const ecma_char_t *property_name_p) /**< property name */
+                            ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
   JERRY_ASSERT(property_name_p != NULL);
@@ -113,7 +113,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
  */
 ecma_property_t*
 ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
-                                         const ecma_char_t *property_name_p) /**< property name */
+                                         ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
   JERRY_ASSERT(property_name_p != NULL);
@@ -133,7 +133,7 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
  */
 ecma_property_t*
 ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
-                                     const ecma_char_t *property_name_p) /**< property name */
+                                     ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
   JERRY_ASSERT(property_name_p != NULL);
@@ -173,7 +173,7 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
  */
 ecma_completion_value_t
 ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
-                            const ecma_char_t *property_name_p, /**< property name */
+                            ecma_string_t *property_name_p, /**< property name */
                             ecma_value_t value, /**< ecma-value */
                             bool is_throw) /**< flag that controls failure handling */
 {
@@ -276,7 +276,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
  */
 bool
 ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
-                                const ecma_char_t *property_name_p) /**< property name */
+                                ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
   JERRY_ASSERT(property_name_p != NULL);
@@ -375,7 +375,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
  */
 bool
 ecma_op_general_object_has_property (ecma_object_t *obj_p, /**< the object */
-                                     const ecma_char_t *property_name_p) /**< property name */
+                                     ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
   JERRY_ASSERT(property_name_p != NULL);
@@ -397,7 +397,7 @@ ecma_op_general_object_has_property (ecma_object_t *obj_p, /**< the object */
  */
 ecma_completion_value_t
 ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
-                               const ecma_char_t *property_name_p, /**< property name */
+                               ecma_string_t *property_name_p, /**< property name */
                                bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
@@ -478,7 +478,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
  */
 ecma_completion_value_t
 ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the object */
-                                            const ecma_char_t *property_name_p, /**< property name */
+                                            ecma_string_t *property_name_p, /**< property name */
                                             ecma_property_descriptor_t property_desc, /**< property descriptor */
                                             bool is_throw) /**< flag that controls failure handling */
 {

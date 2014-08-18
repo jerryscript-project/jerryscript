@@ -137,16 +137,22 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 static bool
 do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 {
-  const ecma_char_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
-  const ecma_char_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
-  return (ref.is_strict
-          && (ecma_compare_zt_string_to_zt_string (ref.referenced_name_p,
-                                                   magic_string_eval) == 0
-              || ecma_compare_zt_string_to_zt_string (ref.referenced_name_p,
-                                                      magic_string_arguments) == 0)
-          && (ref.base.value_type == ECMA_TYPE_OBJECT)
-          && (ECMA_GET_POINTER (ref.base.value) != NULL)
-          && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment));
+  ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
+  ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+
+  bool ret = (ref.is_strict
+              && (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                           magic_string_eval) == 0
+                  || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                              magic_string_arguments) == 0)
+              && (ref.base.value_type == ECMA_TYPE_OBJECT)
+              && (ECMA_GET_POINTER (ref.base.value) != NULL)
+              && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment));
+
+  ecma_deref_ecma_string (magic_string_eval);
+  ecma_deref_ecma_string (magic_string_arguments);
+
+  return ret;
 } /* do_strict_eval_arguments_check */
 
 /**
@@ -180,8 +186,11 @@ get_variable_value (struct __int_data *int_data, /**< interpreter context */
     ecma_reference_t ref;
 
     init_string_literal_copy (var_idx, &var_name);
+    ecma_string_t *var_name_string_p = ecma_new_ecma_string (var_name.str_p);
+    free_string_literal_copy (&var_name);
+
     ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                            var_name.str_p,
+                                            var_name_string_p,
                                             int_data->is_strict);
 
     if (unlikely (do_eval_or_arguments_check
@@ -194,8 +203,8 @@ get_variable_value (struct __int_data *int_data, /**< interpreter context */
       ret_value = ecma_op_get_value (ref);
     }
 
+    ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);
-    free_string_literal_copy (&var_name);
   }
 
   return ret_value;
@@ -234,8 +243,11 @@ set_variable_value (struct __int_data *int_data, /**< interpreter context */
     ecma_reference_t ref;
 
     init_string_literal_copy (var_idx, &var_name);
+    ecma_string_t *var_name_string_p = ecma_new_ecma_string (var_name.str_p);
+    free_string_literal_copy (&var_name);
+
     ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                            var_name.str_p,
+                                            var_name_string_p,
                                             int_data->is_strict);
 
     if (unlikely (do_strict_eval_arguments_check (ref)))
@@ -247,8 +259,8 @@ set_variable_value (struct __int_data *int_data, /**< interpreter context */
       ret_value = ecma_op_put_value (ref, value);
     }
 
+    ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);
-    free_string_literal_copy (&var_name);
   }
 
   return ret_value;
@@ -1696,14 +1708,16 @@ opfunc_var_decl (OPCODE opdata, /**< operation data */
 {
   string_literal_copy variable_name;
   init_string_literal_copy (opdata.data.var_decl.variable_name, &variable_name);
+  ecma_string_t *var_name_string_p = ecma_new_ecma_string (variable_name.str_p);
+  free_string_literal_copy (&variable_name);
 
   if (ecma_is_completion_value_normal_false (ecma_op_has_binding (int_data->lex_env_p,
-                                                                  variable_name.str_p)))
+                                                                  var_name_string_p)))
   {
     FIXME ("Pass configurableBindings that is true if and only if current code is eval code");
 
     ecma_completion_value_t completion = ecma_op_create_mutable_binding (int_data->lex_env_p,
-                                                                         variable_name.str_p,
+                                                                         var_name_string_p,
                                                                          false);
 
     JERRY_ASSERT (ecma_is_empty_completion_value (completion));
@@ -1712,12 +1726,12 @@ opfunc_var_decl (OPCODE opdata, /**< operation data */
      * any binding with specified name in current lexical environment
      * and CreateMutableBinding sets the created binding's value to undefined */
     JERRY_ASSERT (ecma_is_completion_value_normal_simple_value (ecma_op_get_binding_value (int_data->lex_env_p,
-                                                                                           variable_name.str_p,
+                                                                                           var_name_string_p,
                                                                                            true),
                                                                 ECMA_SIMPLE_VALUE_UNDEFINED));
   }
 
-  free_string_literal_copy (&variable_name);
+  ecma_deref_ecma_string (var_name_string_p);
 
   int_data->pos++;
 
@@ -1750,16 +1764,17 @@ function_declaration (struct __int_data *int_data, /**< interpreter context */
 
   string_literal_copy function_name;
   init_string_literal_copy (function_name_lit_idx, &function_name);
+  ecma_string_t *function_name_string_p = ecma_new_ecma_string (function_name.str_p);
+  free_string_literal_copy (&function_name);
 
   ecma_completion_value_t ret_value = ecma_op_function_declaration (int_data->lex_env_p,
-                                                                    function_name.str_p,
+                                                                    function_name_string_p,
                                                                     function_code_opcode_idx,
                                                                     args_names,
                                                                     args_number,
                                                                     is_strict,
                                                                     is_configurable_bindings);
-
-  free_string_literal_copy (&function_name);
+  ecma_deref_ecma_string (function_name_string_p);
 
   return ret_value;
 } /* function_declaration */

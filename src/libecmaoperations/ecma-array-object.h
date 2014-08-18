@@ -27,7 +27,7 @@
 
 extern ecma_completion_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *obj_p,
-                                          const ecma_char_t *property_name_p,
+                                          ecma_string_t *property_name_p,
                                           ecma_property_descriptor_t property_desc,
                                           bool is_throw);
 

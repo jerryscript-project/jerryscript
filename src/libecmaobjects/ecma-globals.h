@@ -579,8 +579,8 @@ typedef struct
   /** base value */
   ecma_value_t base;
 
-  /** referenced name value pointer */
-  const ecma_char_t *referenced_name_p;
+  /** referenced name */
+  ecma_string_t *referenced_name_p;
 
   /** strict reference flag */
   bool is_strict;

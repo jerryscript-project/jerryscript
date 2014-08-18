@@ -77,12 +77,11 @@ ecma_array_object_reduce_length (ecma_object_t *obj_p, /**< the array object */
     old_length--;
 
     // ii.
-    ecma_char_t uint32_str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-    ecma_uint32_to_string (old_length, uint32_str_buf, sizeof (uint32_str_buf));
-
+    ecma_string_t *old_length_string_p = ecma_new_ecma_string_from_number (ecma_uint32_to_number (old_length));
     ecma_completion_value_t delete_succeeded = ecma_op_object_delete (obj_p,
-                                                                      uint32_str_buf,
+                                                                      old_length_string_p,
                                                                       false);
+    ecma_deref_ecma_string (old_length_string_p);
 
     // iii.
     if (ecma_is_completion_value_normal_false (delete_succeeded))
@@ -99,11 +98,13 @@ ecma_array_object_reduce_length (ecma_object_t *obj_p, /**< the array object */
                     && new_len_desc.writable == ECMA_PROPERTY_NOT_WRITABLE);
 
       // 3.
-      const ecma_char_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+      ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
       ecma_completion_value_t completion = ecma_op_general_object_define_own_property (obj_p,
                                                                                        magic_string_length_p,
                                                                                        new_len_desc,
                                                                                        false);
+      ecma_deref_ecma_string (magic_string_length_p);
+
       JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
                     || ecma_is_completion_value_normal_false (completion));
 
@@ -130,15 +131,15 @@ ecma_array_object_reduce_length (ecma_object_t *obj_p, /**< the array object */
  */
 ecma_completion_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array object */
-                                          const ecma_char_t *property_name_p, /**< property name */
+                                          ecma_string_t *property_name_p, /**< property name */
                                           ecma_property_descriptor_t property_desc, /**< property descriptor */
                                           bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_ARRAY);
 
-  const ecma_char_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
 
   // 1.
+  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
   JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
@@ -151,7 +152,12 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
 
   // 3.
-  if (ecma_compare_zt_string_to_zt_string (property_name_p, magic_string_length_p) == 0)
+  bool is_property_name_equal_length = (ecma_compare_ecma_string_to_ecma_string (property_name_p,
+                                                                                 magic_string_length_p) == 0);
+
+  ecma_deref_ecma_string (magic_string_length_p);
+
+  if (is_property_name_equal_length)
   {
     // a.
     if (!property_desc.is_value_defined)
@@ -198,10 +204,12 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       if (new_len_uint32 >= old_len_uint32)
       {
         // i.
+        magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
         ret_value = ecma_op_general_object_define_own_property (obj_p,
                                                                 magic_string_length_p,
                                                                 new_len_property_desc,
                                                                 is_throw);
+        ecma_deref_ecma_string (magic_string_length_p);
       }
       else
       {
@@ -230,10 +238,12 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
           }
 
           // j.
+          magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
           ecma_completion_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
                                                                                           magic_string_length_p,
                                                                                           new_len_property_desc,
                                                                                           is_throw);
+          ecma_deref_ecma_string (magic_string_length_p);
 
           /* Handling normal false and throw values */
           if (!ecma_is_completion_value_normal_true (succeeded))
@@ -272,10 +282,12 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 prop_desc_not_writable.writable = ECMA_PROPERTY_NOT_WRITABLE;
 
                 ecma_completion_value_t completion_set_not_writable;
+                magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
                 completion_set_not_writable = ecma_op_general_object_define_own_property (obj_p,
                                                                                           magic_string_length_p,
                                                                                           prop_desc_not_writable,
                                                                                           false);
+                ecma_deref_ecma_string (magic_string_length_p);
                 JERRY_ASSERT (ecma_is_completion_value_normal_true (completion_set_not_writable));
               }
 
@@ -295,7 +307,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   else
   {
     // 4.a.
-    ecma_number_t number = ecma_zt_string_to_number (property_name_p);
+    ecma_number_t number = ecma_string_to_number (property_name_p);
     uint32_t index = ecma_number_to_uint32 (number);
 
     TODO (Check if array index recognition is done according to ECMA);

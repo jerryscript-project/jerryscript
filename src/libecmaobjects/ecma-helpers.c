@@ -200,7 +200,7 @@ ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
  */
 ecma_property_t*
 ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
-                                 const ecma_char_t *name_p, /**< property name */
+                                 ecma_string_t *name_p, /**< property name */
                                  ecma_property_writable_value_t writable, /**< 'writable' attribute */
                                  ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
                                  ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
@@ -211,7 +211,8 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
-  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_data_property.name_p, ecma_new_ecma_string (name_p));
+  ecma_ref_ecma_string (name_p);
+  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_data_property.name_p, name_p);
 
   prop_p->u.named_data_property.writable = writable;
   prop_p->u.named_data_property.enumerable = enumerable;
@@ -234,7 +235,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
-                                     const ecma_char_t *name_p, /**< property name */
+                                     ecma_string_t *name_p, /**< property name */
                                      ecma_object_t *get_p, /**< getter */
                                      ecma_object_t *set_p, /**< setter */
                                      ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
@@ -246,7 +247,8 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
-  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_accessor_property.name_p, ecma_new_ecma_string (name_p));
+  ecma_ref_ecma_string (name_p);
+  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_accessor_property.name_p, name_p);
 
   ECMA_SET_POINTER(prop_p->u.named_accessor_property.get_p, get_p);
   ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_p);
@@ -272,7 +274,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                          const ecma_char_t *name_p) /**< property's name */
+                          ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
@@ -298,7 +300,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     JERRY_ASSERT(property_name_p != NULL);
 
-    if (ecma_compare_zt_string_to_ecma_string (name_p, property_name_p))
+    if (ecma_compare_ecma_string_to_ecma_string (name_p, property_name_p))
     {
       return property_p;
     }
@@ -318,7 +320,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
  */
 ecma_property_t*
 ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                         const ecma_char_t *name_p) /**< property's name */
+                         ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
@@ -341,7 +343,7 @@ ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in *
  */
 ecma_property_t*
 ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property in */
-                              const ecma_char_t *name_p) /**< property's name */
+                              ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);

@@ -42,7 +42,7 @@ extern ecma_completion_value_t ecma_op_function_call (ecma_object_t *func_obj_p,
 
 extern ecma_completion_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p,
-                              ecma_char_t *function_name_p,
+                              ecma_string_t *function_name_p,
                               opcode_counter_t function_code_opcode_idx,
                               ecma_string_t* formal_parameter_list_p[],
                               ecma_length_t formal_parameter_list_length,

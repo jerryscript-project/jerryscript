@@ -32,16 +32,12 @@
 /**
  * Resolve syntactic reference to ECMA-reference.
  *
- * Warning: string pointed by name_p
- *          must not be freed or reused
- *          until the reference is freed.
- *
  * @return ECMA-reference
  *         Returned value must be freed through ecma_free_reference.
  */
 ecma_reference_t
 ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environment */
-                                  const ecma_char_t *name_p, /**< identifier's name */
+                                  ecma_string_t *name_p, /**< identifier's name */
                                   bool is_strict) /**< strict reference flag */
 {
   JERRY_ASSERT(lex_env_p != NULL);
@@ -75,18 +71,16 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
 /**
  * ECMA-reference constructor.
  *
- * Warning: string pointed by name_p
- *          must not be freed or reused
- *          until the reference is freed.
- *
  * @return ECMA-reference
  *         Returned value must be freed through ecma_free_reference.
  */
 ecma_reference_t
 ecma_make_reference (ecma_value_t base, /**< base value */
-                     const ecma_char_t *name_p, /**< referenced name */
+                     ecma_string_t *name_p, /**< referenced name */
                      bool is_strict) /**< strict reference flag */
 {
+  ecma_ref_ecma_string (name_p);
+
   ecma_reference_t ref = (ecma_reference_t)
   {
     .base = ecma_copy_value (base, true),
@@ -107,6 +101,7 @@ void
 ecma_free_reference (const ecma_reference_t ref) /**< reference */
 {
   ecma_free_value (ref.base, true);
+  ecma_deref_ecma_string (ref.referenced_name_p);
 } /* ecma_free_reference */
 
 /**

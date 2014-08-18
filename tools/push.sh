@@ -136,13 +136,22 @@ then
     echo "Pushing..."
     echo
 
-    git push && echo -e "\n\e[0;32m     Pushed successfully\e[0m\n" || echo -e "\n\e[1;33m     Push failed\e[0m"
+    git push
     status_code=$?
 
     if [ $status_code -eq 0 ]
     then
-      git push origin refs/notes/* || echo -e "\n\e[1;33m     Notes push failed\e[0m"
+      echo -e "\n\e[0;32m     Pushed successfully\e[0m\n"
+
+      git push origin refs/notes/*
       status_code=$?
+
+      if [ $status_code -ne 0 ]
+      then
+        echo -e "\n\e[1;33m     Notes push failed\e[0m"
+      fi
+    else
+      echo -e "\n\e[1;33m     Push failed\e[0m"
     fi
 
     if [ $status_code -ne 0 ]

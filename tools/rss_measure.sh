@@ -24,6 +24,8 @@ RSS_OUTPUT="1"
 PSS_OUTPUT="1"
 SHARE_OUTPUT="1"
 RSS_SHARE_OUTPUT="1"
+PRIVCLEAN_OUTPUT="1"
+PRIVDIRTY_OUTPUT="1"
 
 function run_test()
 {
@@ -41,6 +43,12 @@ function run_test()
     SHARE_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Share | awk '{sum += $2;} END {print sum;}'`
       [ "$SHARE_SUM" != "" ] || break;
 
+    PRIVCLEAN_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Private_Clean | awk '{sum += $2;} END {print sum;}'`
+      [ "$PRIVCLEAN_SUM" != "" ] || break;
+
+    PRIVDIRTY_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Private_Dirty | awk '{sum += $2;} END {print sum;}'`
+      [ "$PRIVDIRTY_SUM" != "" ] || break;
+
     RSS_SHARE_SUM=$(($RSS_SUM - $SHARE_SUM))
 
     sleep $SLEEP
@@ -49,6 +57,8 @@ function run_test()
     PSS_OUTPUT="$PSS_OUTPUT $PSS_SUM\n"
     SHARE_OUTPUT="$SHARE_OUTPUT $SHARE_SUM\n"
     RSS_SHARE_OUTPUT="$RSS_SHARE_OUTPUT $RSS_SHARE_SUM\n"
+    PRIVCLEAN_OUTPUT="$PRIVCLEAN_OUTPUT $PRIVCLEAN_SUM\n"
+    PRIVDIRTY_OUTPUT="$PRIVDIRTY_OUTPUT $PRIVDIRTY_SUM\n"
 
     done
 }
@@ -87,7 +97,9 @@ echo ===================
 echo -e $RSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss average:\t\t%d Kb\tRss max: %d Kb\n", sum / n, max; }'
 echo -e $PSS_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Pss average:\t\t%d Kb\tPss max: %d Kb\n", sum / n, max; }'
 echo -e $SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Share average:\t\t%d Kb\tShare max: %d Kb\n", sum / n, max; }'
-echo -e $RSS_SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "(Rss - Share) average:\t%d Kb\t(Rss - Share) max: %d Kb\n", sum / n, max; }'
+echo -e $RSS_SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss - Share average:\t%d Kb\tRss - Share max: %d Kb\n", sum / n, max; }'
+echo -e $PRIVCLEAN_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Private_Clean average:\t%d Kb\tPrivate_Clean max: %d Kb\n", sum / n, max; }'
+echo -e $PRIVDIRTY_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Private_Dirty average:\t%d Kb\tPrivate_Dirty max: %d Kb\n", sum / n, max; }'
 echo -e "---"
 echo -e "Exec time / average:\t$TIME / $AVG_TIME secs"
 echo ===================

@@ -192,6 +192,8 @@ try_get_string_by_idx (T_IDX idx, /**< literal id */
 
   FIXME (ecma_char_t strncpy);
 
+  JERRY_ASSERT (buffer_p != NULL);
+
   __strncpy ((char*)buffer_p, (const char*)str_p, (size_t)req_length);
 
   return req_length;

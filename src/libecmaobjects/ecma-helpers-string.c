@@ -26,6 +26,8 @@
 #include "globals.h"
 #include "jerry-libc.h"
 
+#include "interpreter.h"
+
 /**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
@@ -111,6 +113,32 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_number */
+
+/**
+ * Allocate new ecma-string and fill it with reference string literal
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number */
+{
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+
+  FIXME (/* Interface for getting literal's length */);
+  TODO (/* Lazy calculate literal's length */);
+
+  ssize_t size_required = try_get_string_by_idx ((uint8_t) lit_index, NULL, 0);
+  JERRY_ASSERT (size_required < 0);
+
+  string_desc_p->length = (ecma_length_t) ((size_t)-size_required / sizeof (ecma_char_t) - 1);
+  string_desc_p->is_length_valid = true;
+  string_desc_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
+
+  string_desc_p->u.lit_index = lit_index;
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_lit_index */
 
 /**
  * Increase reference counter of ecma-string.
@@ -256,6 +284,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
   JERRY_ASSERT (buffer_p != NULL);
   JERRY_ASSERT (buffer_size > 0);
 
+  JERRY_ASSERT (string_desc_p->is_length_valid);
+
   const ecma_length_t string_length = string_desc_p->length;
   size_t required_buffer_size = sizeof (ecma_char_t) * string_length + 1 /* for zero char */;
 
@@ -325,15 +355,30 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     return true;
   }
 
+  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
+      && string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    return (string1_p->u.lit_index == string2_p->u.lit_index);
+  }
+
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER
       || string2_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
   {
     JERRY_UNIMPLEMENTED ();
   }
 
+  JERRY_ASSERT (string1_p->is_length_valid);
+  JERRY_ASSERT (string2_p->is_length_valid);
+
   if (string1_p->length != string2_p->length)
   {
     return false;
+  }
+
+  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
+           || string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    JERRY_UNIMPLEMENTED ();
   }
 
   ecma_length_t chars_left = string1_p->length;
@@ -342,17 +387,6 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
       && string2_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR)
   {
     return (__memcmp (string1_p->u.chars, string2_p->u.chars, chars_left * sizeof (ecma_char_t)) == 0);
-  }
-
-  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
-      && string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    return (string1_p->u.lit_index == string2_p->u.lit_index);
-  }
-  else if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
-           || string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    JERRY_UNIMPLEMENTED ();
   }
 
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS

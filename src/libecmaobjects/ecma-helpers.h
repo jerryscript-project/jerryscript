@@ -88,6 +88,7 @@ extern bool ecma_is_empty_completion_value (ecma_completion_value_t value);
 /* ecma-helpers-string.c */
 extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
+extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_index);
 extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
 extern ecma_length_t ecma_get_ecma_string_length (ecma_string_t *string_desc_p);

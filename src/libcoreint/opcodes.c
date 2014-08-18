@@ -137,20 +137,28 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 static bool
 do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 {
-  ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
-  ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+  bool ret;
 
-  bool ret = (ref.is_strict
-              && (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                           magic_string_eval) == 0
-                  || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                              magic_string_arguments) == 0)
-              && (ref.base.value_type == ECMA_TYPE_OBJECT)
-              && (ECMA_GET_POINTER (ref.base.value) != NULL)
-              && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment));
+  if (ref.is_strict
+      && (ref.base.value_type == ECMA_TYPE_OBJECT)
+      && (ECMA_GET_POINTER (ref.base.value) != NULL)
+      && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment))
+  {
+    ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
+    ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
 
-  ecma_deref_ecma_string (magic_string_eval);
-  ecma_deref_ecma_string (magic_string_arguments);
+    ret = (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                    magic_string_eval) == 0
+           || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                       magic_string_arguments) == 0);
+
+    ecma_deref_ecma_string (magic_string_eval);
+    ecma_deref_ecma_string (magic_string_arguments);
+  }
+  else
+  {
+    ret = false;
+  }
 
   return ret;
 } /* do_strict_eval_arguments_check */
@@ -182,12 +190,9 @@ get_variable_value (struct __int_data *int_data, /**< interpreter context */
   }
   else
   {
-    string_literal_copy var_name;
     ecma_reference_t ref;
 
-    init_string_literal_copy (var_idx, &var_name);
-    ecma_string_t *var_name_string_p = ecma_new_ecma_string (var_name.str_p);
-    free_string_literal_copy (&var_name);
+    ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
 
     ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
                                             var_name_string_p,
@@ -239,12 +244,9 @@ set_variable_value (struct __int_data *int_data, /**< interpreter context */
   }
   else
   {
-    string_literal_copy var_name;
     ecma_reference_t ref;
 
-    init_string_literal_copy (var_idx, &var_name);
-    ecma_string_t *var_name_string_p = ecma_new_ecma_string (var_name.str_p);
-    free_string_literal_copy (&var_name);
+    ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
 
     ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
                                             var_name_string_p,
@@ -779,12 +781,7 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
     }
     case OPCODE_ARG_TYPE_STRING:
     {
-      string_literal_copy str_value;
-      ecma_string_t *ecma_string_p;
-
-      init_string_literal_copy (src_val_descr, &str_value);
-      ecma_string_p = ecma_new_ecma_string (str_value.str_p);
-      free_string_literal_copy (&str_value);
+      ecma_string_t *ecma_string_p = ecma_new_ecma_string_from_lit_index (src_val_descr);
 
       get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                                          ecma_make_string_value (ecma_string_p),
@@ -1706,10 +1703,7 @@ ecma_completion_value_t
 opfunc_var_decl (OPCODE opdata, /**< operation data */
                  struct __int_data *int_data) /**< interpreter context */
 {
-  string_literal_copy variable_name;
-  init_string_literal_copy (opdata.data.var_decl.variable_name, &variable_name);
-  ecma_string_t *var_name_string_p = ecma_new_ecma_string (variable_name.str_p);
-  free_string_literal_copy (&variable_name);
+  ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.var_decl.variable_name);
 
   if (ecma_is_completion_value_normal_false (ecma_op_has_binding (int_data->lex_env_p,
                                                                   var_name_string_p)))
@@ -1762,10 +1756,7 @@ function_declaration (struct __int_data *int_data, /**< interpreter context */
 
   const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
 
-  string_literal_copy function_name;
-  init_string_literal_copy (function_name_lit_idx, &function_name);
-  ecma_string_t *function_name_string_p = ecma_new_ecma_string (function_name.str_p);
-  free_string_literal_copy (&function_name);
+  ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_idx);
 
   ecma_completion_value_t ret_value = ecma_op_function_declaration (int_data->lex_env_p,
                                                                     function_name_string_p,
@@ -1809,10 +1800,7 @@ opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
 {
   int_data->pos++;
 
-  string_literal_copy argument_name;
-  init_string_literal_copy (opdata.data.func_decl_1.arg1_lit_idx, &argument_name);
-  ecma_string_t *arg_name_string_p = ecma_new_ecma_string (argument_name.str_p);
-  free_string_literal_copy (&argument_name);
+  ecma_string_t *arg_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_1.arg1_lit_idx);
   
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             opdata.data.func_decl_1.name_lit_idx,
@@ -1836,16 +1824,11 @@ opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
 {
   int_data->pos++;
 
-  string_literal_copy argument1_name, argument2_name;
-  init_string_literal_copy (opdata.data.func_decl_2.arg1_lit_idx, &argument1_name);
-  init_string_literal_copy (opdata.data.func_decl_2.arg2_lit_idx, &argument2_name);
   ecma_string_t* arg_names_strings[2] =
   {
-    ecma_new_ecma_string (argument1_name.str_p),
-    ecma_new_ecma_string (argument2_name.str_p)
+    ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg1_lit_idx),
+    ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg2_lit_idx)
   };
-  free_string_literal_copy (&argument2_name);
-  free_string_literal_copy (&argument1_name);
   
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             opdata.data.func_decl_1.name_lit_idx,

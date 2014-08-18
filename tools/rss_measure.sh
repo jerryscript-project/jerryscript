@@ -23,6 +23,8 @@ REPEATS=5
 RSS_OUTPUT="1"
 PSS_OUTPUT="1"
 SHARE_OUTPUT="1"
+SHARECLN_OUTPUT="1"
+SHAREDRT_OUTPUT="1"
 RSS_SHARE_OUTPUT="1"
 PRIVCLEAN_OUTPUT="1"
 PRIVDIRTY_OUTPUT="1"
@@ -48,6 +50,12 @@ function run_test()
 
     PRIVDIRTY_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Private_Dirty | awk '{sum += $2;} END {print sum;}'`
       [ "$PRIVDIRTY_SUM" != "" ] || break;
+      
+    SHARECLN_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Shared_Clean | awk '{sum += $2;} END {print sum;}'`
+      [ "$SHARECLN_SUM" != "" ] || break;
+
+    SHAREDRT_SUM=`cat /proc/$PID/smaps 2>/dev/null | grep Shared_Dirty | awk '{sum += $2;} END {print sum;}'`
+      [ "$SHAREDRT_SUM" != "" ] || break;
 
     RSS_SHARE_SUM=$(($RSS_SUM - $SHARE_SUM))
 
@@ -59,6 +67,8 @@ function run_test()
     RSS_SHARE_OUTPUT="$RSS_SHARE_OUTPUT $RSS_SHARE_SUM\n"
     PRIVCLEAN_OUTPUT="$PRIVCLEAN_OUTPUT $PRIVCLEAN_SUM\n"
     PRIVDIRTY_OUTPUT="$PRIVDIRTY_OUTPUT $PRIVDIRTY_SUM\n"
+    SHARECLN_OUTPUT="$SHARECLN_OUTPUT $SHARECLN_SUM\n"
+    SHAREDRT_OUTPUT="$SHAREDRT_OUTPUT $SHAREDRT_SUM\n"
 
     done
 }
@@ -100,6 +110,8 @@ echo -e $SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) 
 echo -e $RSS_SHARE_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Rss - Share average:\t%d Kb\tRss - Share max: %d Kb\n", sum / n, max; }'
 echo -e $PRIVCLEAN_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Private_Clean average:\t%d Kb\tPrivate_Clean max: %d Kb\n", sum / n, max; }'
 echo -e $PRIVDIRTY_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Private_Dirty average:\t%d Kb\tPrivate_Dirty max: %d Kb\n", sum / n, max; }'
+echo -e $SHARECLN_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Shared_Clean average:\t%d Kb\tShared_Clean max: %d Kb\n", sum / n, max; }'
+echo -e $SHAREDRT_OUTPUT | awk '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { printf "Shared_Dirty average:\t%d Kb\tShared_Dirty max: %d Kb\n", sum / n, max; }'
 echo -e "---"
 echo -e "Exec time / average:\t$TIME / $AVG_TIME secs"
 echo ===================

@@ -816,8 +816,6 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
                                                          ECMA_TARGET_ID_RESERVED);
       break;
     }
-
-    JERRY_UNIMPLEMENTED ();
   }
 
   if (unlikely (ecma_is_completion_value_throw (get_value_completion)))

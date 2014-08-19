@@ -383,13 +383,17 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
-    ecma_free_value (completion_value.value, true);
-    break;
+    {
+      ecma_free_value (completion_value.value, true);
+      break;
+    }
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
     case ECMA_COMPLETION_TYPE_EXIT:
-    JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
-    break;
+    {
+      JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
+      break;
+    }
   }
 } /* ecma_free_completion_value */
 

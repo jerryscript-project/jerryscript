@@ -71,6 +71,7 @@ export echo
 export todo
 export fixme
 export color
+export dbgsyms
 
 build: clean $(JERRY_TARGETS)
 

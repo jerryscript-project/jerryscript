@@ -57,6 +57,13 @@ else
 	OPTION_MCU = disable
 endif
 
+# Override debug symbols settings
+ifeq ($(dbgsyms),1)
+  OPTION_OVERRIDE_ENABLE_DBGSYMS := enable
+else
+  OPTION_OVERRIDE_ENABLE_DBGSYMS := disable
+endif
+
 # DWARF version
 ifeq ($(dwarf4),1)
     OPTION_DWARF4 := enable
@@ -98,8 +105,13 @@ endif
 # JERRY_NDEBUG, debug symbols
 ifeq ($(TARGET_MODE),release)
  OPTION_NDEBUG = enable
- OPTION_DEBUG_SYMS = disable
- OPTION_STRIP = enable
+ ifeq ($(OPTION_OVERRIDE_ENABLE_DBGSYMS),enable)
+   OPTION_DEBUG_SYMS = enable
+   OPTION_STRIP = disable
+ else
+   OPTION_DEBUG_SYMS = disable
+   OPTION_STRIP = enable
+ endif
 else
  OPTION_NDEBUG = disable
  OPTION_DEBUG_SYMS = enable

@@ -66,22 +66,24 @@ typedef enum
  *         __LINE__ may be the same for asserts in a header
  *         and in an implementation file.
  */
-#define JERRY_STATIC_ASSERT_GLUE_( a, b ) a ## b
-#define JERRY_STATIC_ASSERT_GLUE( a, b ) JERRY_STATIC_ASSERT_GLUE_( a, b )
-#define JERRY_STATIC_ASSERT( x ) typedef char JERRY_STATIC_ASSERT_GLUE( static_assertion_failed_, __LINE__) [ ( x ) ? 1 : -1 ] __unused
+#define JERRY_STATIC_ASSERT_GLUE_(a, b) a ## b
+#define JERRY_STATIC_ASSERT_GLUE(a, b) JERRY_STATIC_ASSERT_GLUE_ (a, b)
+#define JERRY_STATIC_ASSERT(x) \
+  typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__) \
+  [ (x) ? 1 : -1 ] __unused
 
 #define CALL_PRAGMA(x) _Pragma (#x)
 
 #ifdef JERRY_PRINT_TODO
-# define TODO(x) CALL_PRAGMA(message ("TODO - " #x))
+#define TODO(x) CALL_PRAGMA (message ("TODO - " #x))
 #else /* !JERRY_PRINT_TODO */
-# define TODO(X)
+#define TODO(X)
 #endif /* !JERRY_PRINT_TODO */
 
 #ifdef JERRY_PRINT_FIXME
-# define FIXME(x) CALL_PRAGMA(message ("FIXME - " #x))
+#define FIXME(x) CALL_PRAGMA (message ("FIXME - " #x))
 #else /* !JERRY_PRINT_FIXME */
-# define FIXME(X)
+#define FIXME(X)
 #endif /* !JERRY_PRINT_FIXME */
 
 /**
@@ -91,37 +93,50 @@ typedef enum
  */
 extern uint32_t jerry_unreferenced_expression;
 
-extern void __noreturn jerry_assert_fail( const char *assertion, const char *file, const uint32_t line);
+extern void __noreturn jerry_assert_fail (const char *assertion, const char *file, const uint32_t line);
 
 #ifndef JERRY_NDEBUG
-#define JERRY_ASSERT( x ) do { if ( __builtin_expect( !( x ), 0 ) ) { jerry_assert_fail( #x, __FILE__, __LINE__); } } while(0)
+#define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { jerry_assert_fail (#x, __FILE__, __LINE__); } } while (0)
 #else /* !JERRY_NDEBUG */
-#define JERRY_ASSERT( x ) (void) (x)
+#define JERRY_ASSERT(x) (void) (x)
 #endif /* !JERRY_NDEBUG */
 
 /**
  * Mark for unreachable points and unimplemented cases
  */
-extern void jerry_ref_unused_variables(int unused_variables_follow, ...);
-#define JERRY_UNREACHABLE() do { JERRY_ASSERT( false); jerry_exit( ERR_GENERAL); } while (0)
-#define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE()
-#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) do { JERRY_UNIMPLEMENTED(); if ( false ) { jerry_ref_unused_variables( 0, __VA_ARGS__); } } while (0)
+extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
+#define JERRY_UNREACHABLE() \
+  do \
+  { \
+    JERRY_ASSERT (false); \
+    jerry_exit (ERR_GENERAL); \
+  } while (0)
+#define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE ()
+#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) \
+  do \
+  { \
+    JERRY_UNIMPLEMENTED (); \
+    if (false) \
+    { \
+      jerry_ref_unused_variables (0, __VA_ARGS__); \
+    } \
+  } while (0)
 
 /**
  * Conditions' likeliness, unlikeliness.
  */
-#define likely( x ) ( __builtin_expect( !!( x ), 1 ) )
-#define unlikely( x ) ( __builtin_expect( !!( x ), 0 ) )
+#define likely(x) __builtin_expect (!!(x), 1)
+#define unlikely(x) __builtin_expect (!!(x) , 0)
 
 /**
  * Exit
  */
-extern void __noreturn jerry_exit( jerry_status_t code);
+extern void __noreturn jerry_exit (jerry_status_t code);
 
 /**
  * sizeof, offsetof, ...
  */
-#define JERRY_SIZE_OF_STRUCT_MEMBER( struct_name, member_name) sizeof(((struct_name*)NULL)->member_name)
+#define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name*)NULL)->member_name)
 
 /**
  * Alignment
@@ -132,28 +147,28 @@ extern void __noreturn jerry_exit( jerry_status_t code);
  *
  * Returns maximum positive value, that divides @alignment and is less than or equal to @value
  */
-#define JERRY_ALIGNDOWN( value, alignment) ( (alignment) * ( (value) / (alignment) ) )
+#define JERRY_ALIGNDOWN(value, alignment) ((alignment) * ((value) / (alignment)))
 
 /**
  * Aligns @value to @alignment.
  *
  * Returns minimum positive value, that divides @alignment and is more than or equal to @value
  */
-#define JERRY_ALIGNUP( value, alignment)   ( (alignment) * ( ((value) + (alignment) - 1) / (alignment) ) )
+#define JERRY_ALIGNUP(value, alignment) ((alignment) * (((value) + (alignment) - 1) / (alignment)))
 
 /**
  * min, max
  */
-#define JERRY_MIN( v1, v2) ( ( v1 < v2 ) ? v1 : v2 )
-#define JERRY_MAX( v1, v2) ( ( v1 < v2 ) ? v2 : v1 )
+#define JERRY_MIN(v1, v2) ((v1 < v2) ? v1 : v2)
+#define JERRY_MAX(v1, v2) ((v1 < v2) ? v2 : v1)
 
 /**
  * Bit-fields
  */
-inline uint32_t jerry_extract_bit_field(uint32_t value, uint32_t lsb,
-                                      uint32_t width);
-inline uint32_t jerry_set_bit_field_value(uint32_t value, uint32_t bit_field_value,
-                                       uint32_t lsb, uint32_t width);
+inline uint32_t jerry_extract_bit_field (uint32_t value, uint32_t lsb,
+                                         uint32_t width);
+inline uint32_t jerry_set_bit_field_value (uint32_t value, uint32_t bit_field_value,
+                                           uint32_t lsb, uint32_t width);
 
 /**
  * Extract a bit-field from the integer.
@@ -161,19 +176,19 @@ inline uint32_t jerry_set_bit_field_value(uint32_t value, uint32_t bit_field_val
  * @return bit-field's value
  */
 inline uint32_t
-jerry_extract_bit_field(uint32_t
-                      container, /**< container to extract bit-field from */
-                      uint32_t lsb, /**< least significant bit of the value
+jerry_extract_bit_field (uint32_t
+                         container, /**< container to extract bit-field from */
+                         uint32_t lsb, /**< least significant bit of the value
                                      *   to be extracted */
-                      uint32_t width) /**< width of the bit-field to be extracted */
+                         uint32_t width) /**< width of the bit-field to be extracted */
 {
-    JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
-    JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
+  JERRY_ASSERT (lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
+  JERRY_ASSERT ((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
 
-    uint32_t shifted_value = container >> lsb;
-    uint32_t bit_field_mask = (1u << width) - 1;
+  uint32_t shifted_value = container >> lsb;
+  uint32_t bit_field_mask = (1u << width) - 1;
 
-    return ( shifted_value & bit_field_mask);
+  return (shifted_value & bit_field_mask);
 } /* jerry_extract_bit_field */
 
 /**
@@ -182,22 +197,22 @@ jerry_extract_bit_field(uint32_t
  * @return bit-field's value
  */
 inline uint32_t
-jerry_set_bit_field_value(uint32_t
-                       container, /**< container to insert bit-field to */
-                       uint32_t new_bit_field_value, /**< value of bit-field to insert */
-                       uint32_t lsb, /**< least significant bit of the value
-                                      *   to be extracted */
-                       uint32_t width) /**< width of the bit-field to be extracted */
+jerry_set_bit_field_value (uint32_t
+                           container, /**< container to insert bit-field to */
+                           uint32_t new_bit_field_value, /**< value of bit-field to insert */
+                           uint32_t lsb, /**< least significant bit of the value
+                                          *   to be extracted */
+                           uint32_t width) /**< width of the bit-field to be extracted */
 {
-    JERRY_ASSERT(lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
-    JERRY_ASSERT((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
-    JERRY_ASSERT(new_bit_field_value <= (1u << width));
+  JERRY_ASSERT (lsb < JERRY_BITSINBYTE * sizeof (uint32_t));
+  JERRY_ASSERT ((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint32_t));
+  JERRY_ASSERT (new_bit_field_value <= (1u << width));
 
-    uint32_t bit_field_mask = (1u << width) - 1;
-    uint32_t shifted_bit_field_mask = bit_field_mask << lsb;
-    uint32_t shifted_new_bit_field_value = new_bit_field_value << lsb;
+  uint32_t bit_field_mask = (1u << width) - 1;
+  uint32_t shifted_bit_field_mask = bit_field_mask << lsb;
+  uint32_t shifted_new_bit_field_value = new_bit_field_value << lsb;
 
-    return ( container & ~shifted_bit_field_mask) | shifted_new_bit_field_value;
+  return (container & ~shifted_bit_field_mask) | shifted_new_bit_field_value;
 } /* jerry_set_bit_field_value */
 
 #endif /* !JERRY_GLOBALS_H */

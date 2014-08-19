@@ -249,10 +249,11 @@ SOURCES_JERRY_C = \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) \
  $(wildcard ./src/liboptimizer/*.c) ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c)
+ $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.c)
 
 SOURCES_JERRY_H = \
  $(sort \
+ $(wildcard ./src/*.h) \
  $(wildcard ./src/libruntime/*.h) \
  $(wildcard ./src/libperipherals/*.h) \
  $(wildcard ./src/libjsparser/*.h) \
@@ -261,7 +262,7 @@ SOURCES_JERRY_H = \
  $(wildcard ./src/liballocator/*.h) \
  $(wildcard ./src/libcoreint/*.h) \
  $(wildcard ./src/liboptimizer/*.h) ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.h)
+ $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.h)
 
 SOURCES_JERRY_ASM = \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.S)

@@ -14,6 +14,7 @@
  */
 
 #include "ecma-globals.h"
+#include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 
@@ -53,6 +54,10 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_get (obj_p, property_name_p);
+    }
+
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_HOST:
     {
@@ -92,6 +97,10 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
+    }
+
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_HOST:
     {
@@ -291,6 +300,10 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_delete (obj_p, property_name_p, is_throw);
+    }
+
     case ECMA_OBJECT_TYPE_HOST:
     {
       JERRY_UNIMPLEMENTED();
@@ -369,6 +382,10 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_define_own_property (obj_p, property_name_p, property_desc, is_throw);
+    }
+
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_HOST:
     {

@@ -35,6 +35,7 @@ typedef enum
   ECMA_MAGIC_STRING_PROTOTYPE, /**< "prototype" */
   ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
   ECMA_MAGIC_STRING_CALLER, /**< "caller" */
+  ECMA_MAGIC_STRING_CALLEE, /**< "callee" */
   ECMA_MAGIC_STRING_UNDEFINED,/**< undefined */
   ECMA_MAGIC_STRING_LENGTH /**< length */
 } ecma_magic_string_id_t;

@@ -413,6 +413,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     }
 
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
+    case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
     case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */

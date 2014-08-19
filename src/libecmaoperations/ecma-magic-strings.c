@@ -41,6 +41,7 @@ ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_PROTOTYPE: return ecma_new_ecma_string ((ecma_char_t*) "prototype");
     case ECMA_MAGIC_STRING_CONSTRUCTOR: return ecma_new_ecma_string ((ecma_char_t*) "constructor");
     case ECMA_MAGIC_STRING_CALLER: return ecma_new_ecma_string ((ecma_char_t*) "caller");
+    case ECMA_MAGIC_STRING_CALLEE: return ecma_new_ecma_string ((ecma_char_t*) "callee");
     case ECMA_MAGIC_STRING_UNDEFINED: return ecma_new_ecma_string ((ecma_char_t*) "undefined");
     case ECMA_MAGIC_STRING_LENGTH: return ecma_new_ecma_string ((ecma_char_t*) "length");
   }

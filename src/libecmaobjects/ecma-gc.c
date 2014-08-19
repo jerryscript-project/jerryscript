@@ -273,6 +273,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           }
 
           case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
+          case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
           case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
           {
             ecma_object_t *obj_p = ECMA_GET_POINTER(property_value);

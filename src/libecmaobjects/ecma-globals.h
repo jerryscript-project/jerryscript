@@ -154,6 +154,7 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_PROTOTYPE, /**< [[Prototype]] */
   ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
+  ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
   ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
   ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
 

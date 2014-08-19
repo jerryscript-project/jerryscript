@@ -1058,7 +1058,7 @@ parse_primary_expression (void)
         token_after_newlines_must_be (TOK_CLOSE_PAREN);
         return lhs;
       }
-      // FALLTHRU
+      /* FALLTHRU */
     }
     default:
     {
@@ -1339,8 +1339,7 @@ parse_unary_expression (void)
     lhs = next_temp_name (); \
     NEXT (expr2, EXPR);\
     DUMP_OPCODE_3 (GETOP, lhs, expr1, expr2); \
-    expr1 = lhs; \
-    break;
+    expr1 = lhs
 
 /* multiplicative_expression
   : unary_expression (LT!* ('*' | '/' | '%') LT!* unary_expression)*
@@ -1357,18 +1356,9 @@ parse_multiplicative_expression (void)
   {
     switch (tok.type)
     {
-      case TOK_MULT:
-      {
-        DUMP_OF (multiplication, unary_expression)
-      }
-      case TOK_DIV:
-      {
-        DUMP_OF (division, unary_expression)
-      }
-      case TOK_MOD:
-      {
-        DUMP_OF (remainder, unary_expression)
-      }
+      case TOK_MULT: DUMP_OF (multiplication, unary_expression); break;
+      case TOK_DIV: DUMP_OF (division, unary_expression); break;
+      case TOK_MOD: DUMP_OF (remainder, unary_expression); break;
       default:
       {
         lexer_save_token (tok);
@@ -1395,14 +1385,8 @@ parse_additive_expression (void)
   {
     switch (tok.type)
     {
-      case TOK_PLUS:
-      {
-        DUMP_OF (addition, multiplicative_expression);
-      }
-      case TOK_MINUS:
-      {
-        DUMP_OF (substraction, multiplicative_expression);
-      }
+      case TOK_PLUS: DUMP_OF (addition, multiplicative_expression); break;
+      case TOK_MINUS: DUMP_OF (substraction, multiplicative_expression); break;
       default:
       {
         lexer_save_token (tok);
@@ -1429,18 +1413,9 @@ parse_shift_expression (void)
   {
     switch (tok.type)
     {
-      case TOK_LSHIFT:
-      {
-        DUMP_OF (b_shift_left, additive_expression)
-      }
-      case TOK_RSHIFT:
-      {
-        DUMP_OF (b_shift_right, additive_expression)
-      }
-      case TOK_RSHIFT_EX:
-      {
-        DUMP_OF (b_shift_uright, additive_expression)
-      }
+      case TOK_LSHIFT: DUMP_OF (b_shift_left, additive_expression); break;
+      case TOK_RSHIFT: DUMP_OF (b_shift_right, additive_expression); break;
+      case TOK_RSHIFT_EX: DUMP_OF (b_shift_uright, additive_expression); break;
       default:
       {
         lexer_save_token (tok);
@@ -1467,31 +1442,21 @@ parse_relational_expression (void)
   {
     switch (tok.type)
     {
-      case TOK_LESS:
-      {
-        DUMP_OF (less_than, shift_expression)
-      }
-      case TOK_GREATER:
-      {
-        DUMP_OF (greater_than, shift_expression)
-      }
-      case TOK_LESS_EQ:
-      {
-        DUMP_OF (less_or_equal_than, shift_expression)
-      }
-      case TOK_GREATER_EQ:
-      {
-        DUMP_OF (greater_or_equal_than, shift_expression)
-      }
+      case TOK_LESS: DUMP_OF (less_than, shift_expression); break;
+      case TOK_GREATER: DUMP_OF (greater_than, shift_expression); break;
+      case TOK_LESS_EQ: DUMP_OF (less_or_equal_than, shift_expression); break;
+      case TOK_GREATER_EQ: DUMP_OF (greater_or_equal_than, shift_expression); break;
       case TOK_KEYWORD:
       {
         if (is_keyword (KW_INSTANCEOF))
         {
-          DUMP_OF (instanceof, shift_expression)
+          DUMP_OF (instanceof, shift_expression);
+          break;
         }
         else if (is_keyword (KW_IN))
         {
-          DUMP_OF (in, shift_expression)
+          DUMP_OF (in, shift_expression);
+          break;
         }
         /* FALLTHROUGH */
       }
@@ -1521,22 +1486,10 @@ parse_equality_expression (void)
   {
     switch (tok.type)
     {
-      case TOK_DOUBLE_EQ:
-      {
-        DUMP_OF (equal_value, relational_expression)
-      }
-      case TOK_NOT_EQ:
-      {
-        DUMP_OF (not_equal_value, relational_expression)
-      }
-      case TOK_TRIPLE_EQ:
-      {
-        DUMP_OF (equal_value_type, relational_expression)
-      }
-      case TOK_NOT_DOUBLE_EQ:
-      {
-        DUMP_OF (not_equal_value_type, relational_expression)
-      }
+      case TOK_DOUBLE_EQ: DUMP_OF (equal_value, relational_expression); break;
+      case TOK_NOT_EQ: DUMP_OF (not_equal_value, relational_expression); break;
+      case TOK_TRIPLE_EQ: DUMP_OF (equal_value_type, relational_expression); break;
+      case TOK_NOT_DOUBLE_EQ: DUMP_OF (not_equal_value_type, relational_expression); break;
       default:
       {
         lexer_save_token (tok);
@@ -1557,7 +1510,7 @@ static T_IDX parse_##FUNC (void) { \
   { \
     switch (tok.type) \
     { \
-      case TOK_##TOK_TYPE: DUMP_OF (GETOP, EXPR) \
+      case TOK_##TOK_TYPE: DUMP_OF (GETOP, EXPR); break; \
       default: lexer_save_token (tok); return expr1; \
     } \
     skip_newlines (); \

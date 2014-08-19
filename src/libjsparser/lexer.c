@@ -1299,37 +1299,38 @@ lexer_next_token_private (void)
 
   switch (c)
   {
-    case '{': RETURN_PUNC (TOK_OPEN_BRACE);
-    case '}': RETURN_PUNC (TOK_CLOSE_BRACE);
-    case '(': RETURN_PUNC (TOK_OPEN_PAREN);
-    case ')': RETURN_PUNC (TOK_CLOSE_PAREN);
-    case '[': RETURN_PUNC (TOK_OPEN_SQUARE);
-    case ']': RETURN_PUNC (TOK_CLOSE_SQUARE);
-    case '.': RETURN_PUNC (TOK_DOT);
-    case ';': RETURN_PUNC (TOK_SEMICOLON);
-    case ',': RETURN_PUNC (TOK_COMMA);
-    case '~': RETURN_PUNC (TOK_COMPL);
-    case ':': RETURN_PUNC (TOK_COLON);
-    case '?': RETURN_PUNC (TOK_QUERY);
+    case '{': RETURN_PUNC (TOK_OPEN_BRACE); break;
+    case '}': RETURN_PUNC (TOK_CLOSE_BRACE); break;
+    case '(': RETURN_PUNC (TOK_OPEN_PAREN); break;
+    case ')': RETURN_PUNC (TOK_CLOSE_PAREN); break;
+    case '[': RETURN_PUNC (TOK_OPEN_SQUARE); break;
+    case ']': RETURN_PUNC (TOK_CLOSE_SQUARE); break;
+    case '.': RETURN_PUNC (TOK_DOT); break;
+    case ';': RETURN_PUNC (TOK_SEMICOLON); break;
+    case ',': RETURN_PUNC (TOK_COMMA); break;
+    case '~': RETURN_PUNC (TOK_COMPL); break;
+    case ':': RETURN_PUNC (TOK_COLON); break;
+    case '?': RETURN_PUNC (TOK_QUERY); break;
 
-    case '*': IF_LA_IS ('=', TOK_MULT_EQ, TOK_MULT);
-    case '/': IF_LA_IS ('=', TOK_DIV_EQ, TOK_DIV);
-    case '^': IF_LA_IS ('=', TOK_XOR_EQ, TOK_XOR);
-    case '%': IF_LA_IS ('=', TOK_MOD_EQ, TOK_MOD);
+    case '*': IF_LA_IS ('=', TOK_MULT_EQ, TOK_MULT); break;
+    case '/': IF_LA_IS ('=', TOK_DIV_EQ, TOK_DIV); break;
+    case '^': IF_LA_IS ('=', TOK_XOR_EQ, TOK_XOR); break;
+    case '%': IF_LA_IS ('=', TOK_MOD_EQ, TOK_MOD); break;
 
-    case '+': IF_LA_IS_OR ('+', TOK_DOUBLE_PLUS, '=', TOK_PLUS_EQ, TOK_PLUS);
-    case '-': IF_LA_IS_OR ('-', TOK_DOUBLE_MINUS, '=', TOK_MINUS_EQ, TOK_MINUS);
-    case '&': IF_LA_IS_OR ('&', TOK_DOUBLE_AND, '=', TOK_AND_EQ, TOK_AND);
-    case '|': IF_LA_IS_OR ('|', TOK_DOUBLE_OR, '=', TOK_OR_EQ, TOK_OR);
+    case '+': IF_LA_IS_OR ('+', TOK_DOUBLE_PLUS, '=', TOK_PLUS_EQ, TOK_PLUS); break;
+    case '-': IF_LA_IS_OR ('-', TOK_DOUBLE_MINUS, '=', TOK_MINUS_EQ, TOK_MINUS); break;
+    case '&': IF_LA_IS_OR ('&', TOK_DOUBLE_AND, '=', TOK_AND_EQ, TOK_AND); break;
+    case '|': IF_LA_IS_OR ('|', TOK_DOUBLE_OR, '=', TOK_OR_EQ, TOK_OR); break;
 
     case '<':
     {
       switch (LA (1))
       {
-        case '<': IF_LA_N_IS ('=', TOK_LSHIFT_EQ, TOK_LSHIFT, 2);
-        case '=': RETURN_PUNC_EX (TOK_LESS_EQ, 2);
+        case '<': IF_LA_N_IS ('=', TOK_LSHIFT_EQ, TOK_LSHIFT, 2); break;
+        case '=': RETURN_PUNC_EX (TOK_LESS_EQ, 2); break;
         default: RETURN_PUNC (TOK_LESS);
       }
+      break;
     }
     case '>':
     {
@@ -1339,14 +1340,16 @@ lexer_next_token_private (void)
         {
           switch (LA (2))
           {
-            case '>': IF_LA_N_IS ('=', TOK_RSHIFT_EX_EQ, TOK_RSHIFT_EX, 3);
-            case '=': RETURN_PUNC_EX (TOK_RSHIFT_EQ, 3);
+            case '>': IF_LA_N_IS ('=', TOK_RSHIFT_EX_EQ, TOK_RSHIFT_EX, 3); break;
+            case '=': RETURN_PUNC_EX (TOK_RSHIFT_EQ, 3); break;
             default: RETURN_PUNC_EX (TOK_RSHIFT, 2);
           }
+          break;
         }
-        case '=': RETURN_PUNC_EX (TOK_GREATER_EQ, 2);
+        case '=': RETURN_PUNC_EX (TOK_GREATER_EQ, 2); break;
         default: RETURN_PUNC (TOK_GREATER);
       }
+      break;
     }
     case '=':
     {
@@ -1358,6 +1361,7 @@ lexer_next_token_private (void)
       {
         RETURN_PUNC (TOK_EQ);
       }
+      break;
     }
     case '!':
     {
@@ -1369,6 +1373,7 @@ lexer_next_token_private (void)
       {
         RETURN_PUNC (TOK_NOT);
       }
+      break;
     }
     default: JERRY_UNREACHABLE ();
   }

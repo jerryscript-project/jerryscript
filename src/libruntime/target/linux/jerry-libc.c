@@ -35,10 +35,9 @@
 FIXME(Rename __unused)
 #undef __unused
 
-#include <unistd.h>
+#include <linux/fs.h>
 #include <syscall.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <fcntl.h>
 
 /**

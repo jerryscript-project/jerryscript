@@ -1133,7 +1133,7 @@ parse_member_expression (void)
       JERRY_UNREACHABLE ();
     }
 
-    DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+    DUMP_OPCODE_3 (prop_getter, lhs, obj, prop);
     obj = lhs;
     skip_newlines ();
   }
@@ -1190,7 +1190,7 @@ parse_call_expression (void)
         NEXT (prop, expression);
         next_token_must_be (TOK_CLOSE_SQUARE);
 
-        DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+        DUMP_OPCODE_3 (prop_getter, lhs, obj, prop);
         obj = lhs;
         skip_newlines ();
         break;
@@ -1200,7 +1200,7 @@ parse_call_expression (void)
         token_after_newlines_must_be (TOK_NAME);
         prop = tok.data.uid;
 
-        DUMP_OPCODE_3 (prop_access, lhs, obj, prop);
+        DUMP_OPCODE_3 (prop_getter, lhs, obj, prop);
         obj = lhs;
         skip_newlines ();
         break;

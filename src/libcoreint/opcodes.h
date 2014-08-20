@@ -64,7 +64,8 @@ ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
     op (array_2)                         \
     op (array_n)                         \
     op (prop)                            \
-    op (prop_access)                     \
+    op (prop_getter)                     \
+    op (prop_setter)                     \
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
     op (obj_0)                           \

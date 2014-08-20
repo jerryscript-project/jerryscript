@@ -371,6 +371,8 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
 
   __printf ("    // ");
 
+  TODO (Pretty print for prop_setter);
+
   switch (opcode_num)
   {
     CASE_CONDITIONAL_JUMP (is_true_jmp, "if (", value, ") goto", opcode)
@@ -441,7 +443,7 @@ pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
     CASE_VARG_2_LHS (obj_2, lhs, "=", "{", arg1, arg2, "}")
     CASE_VARG_N_LHS (obj_n, lhs, "=", "{", arg1, arg2, "}")
     CASE_TRIPLE_ADDRESS (prop, lhs, "=", name, ":", value)
-    CASE_VARG_1_NAME_LHS (prop_access, lhs, "=", "", obj, "[", prop, "]")
+    CASE_VARG_1_NAME_LHS (prop_getter, lhs, "=", "", obj, "[", prop, "]")
     CASE_VARG_0_NAME_LHS (prop_get_decl, lhs, "=", "get", prop, "[", "]")
     CASE_VARG_1_NAME_LHS (prop_set_decl, lhs, "=", "set", prop, "[", arg, "]")
     CASE_THIS (this, lhs, "=", "this")

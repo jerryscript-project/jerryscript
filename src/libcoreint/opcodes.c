@@ -450,7 +450,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (array_2)                         \
     op (array_n)                         \
     op (prop)                            \
-    op (prop_access)                     \
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
     op (obj_0)                           \
@@ -1908,6 +1907,82 @@ opfunc_ret (OPCODE opdata __unused, /**< operation data */
 } /* opfunc_ret */
 
 /**
+ * 'Property getter' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.2.1
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
+                    struct __int_data *int_data __unused) /**< interpreter context */
+{
+  const T_IDX lhs_var_idx = opdata.data.prop_getter.lhs;
+  const T_IDX base_var_idx = opdata.data.prop_getter.obj;
+  const T_IDX prop_lit_idx = opdata.data.prop_getter.prop;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (base_value, get_variable_value (int_data, base_var_idx, false), ret_value);
+
+  ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_lit_idx);
+  ecma_reference_t ref = ecma_make_reference (base_value.value,
+                                              prop_name_string_p,
+                                              int_data->is_strict);
+  ecma_deref_ecma_string (prop_name_string_p);
+
+  ECMA_TRY_CATCH (prop_value, ecma_op_get_value (ref), ret_value);
+
+  ret_value = set_variable_value (int_data, lhs_var_idx, prop_value.value);
+
+  ECMA_FINALIZE (prop_value);
+
+  ecma_free_reference (ref);
+
+  ECMA_FINALIZE (base_value);
+
+  return ret_value;
+} /* opfunc_prop_getter */
+
+/**
+ * 'Property setter' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.2.1
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_prop_setter (OPCODE opdata __unused, /**< operation data */
+                    struct __int_data *int_data __unused) /**< interpreter context */
+{
+  const T_IDX base_var_idx = opdata.data.prop_setter.obj;
+  const T_IDX prop_lit_idx = opdata.data.prop_setter.prop;
+  const T_IDX rhs_var_idx = opdata.data.prop_setter.rhs;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (base_value, get_variable_value (int_data, base_var_idx, false), ret_value);
+
+  ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_lit_idx);
+  ecma_reference_t ref = ecma_make_reference (base_value.value,
+                                              prop_name_string_p,
+                                              int_data->is_strict);
+  ecma_deref_ecma_string (prop_name_string_p);
+
+  ret_value = ecma_op_put_value (ref, rhs_value.value);
+
+  ecma_free_reference (ref);
+
+  ECMA_FINALIZE (base_value);
+  ECMA_FINALIZE (rhs_value);
+
+  return ret_value;
+} /* opfunc_prop_setter */
+
+/**
  * Exit from script with specified status code:
  *   0 - for successful completion
  *   1 - to indicate failure.
@@ -1998,7 +2073,8 @@ GETOP_IMPL_2 (array_1, lhs, elem1)
 GETOP_IMPL_3 (array_2, lhs, elem1, elem2)
 GETOP_IMPL_3 (array_n, lhs, elem1, elem2)
 GETOP_IMPL_3 (prop, lhs, name, value)
-GETOP_IMPL_3 (prop_access, lhs, obj, prop)
+GETOP_IMPL_3 (prop_getter, lhs, obj, prop)
+GETOP_IMPL_3 (prop_setter, obj, prop, rhs)
 GETOP_IMPL_2 (prop_get_decl, lhs, prop)
 GETOP_IMPL_3 (prop_set_decl, lhs, prop, arg)
 GETOP_IMPL_1 (obj_0, lhs)

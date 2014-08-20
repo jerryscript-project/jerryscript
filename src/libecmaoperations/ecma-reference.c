@@ -98,7 +98,7 @@ ecma_make_reference (ecma_value_t base, /**< base value */
  *         freeing invalidates all copies of the reference.
  */
 void
-ecma_free_reference (const ecma_reference_t ref) /**< reference */
+ecma_free_reference (ecma_reference_t ref) /**< reference */
 {
   ecma_free_value (ref.base, true);
   ecma_deref_ecma_string (ref.referenced_name_p);

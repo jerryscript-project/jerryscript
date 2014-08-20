@@ -422,10 +422,16 @@ OP_CODE_DECL (prop, T_IDX_IDX_IDX,
               value)
 
 /** a = b.c OR a = b[c]  */
-OP_CODE_DECL (prop_access, T_IDX_IDX_IDX,
+OP_CODE_DECL (prop_getter, T_IDX_IDX_IDX,
               lhs,
               obj,
               prop)
+
+/** a.b = c OR a[b] = c  */
+OP_CODE_DECL (prop_setter, T_IDX_IDX_IDX,
+              obj,
+              prop,
+              rhs)
 
 /** a = get prop ()  */
 OP_CODE_DECL (prop_get_decl, T_IDX_IDX,

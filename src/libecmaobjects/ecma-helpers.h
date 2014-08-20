@@ -100,6 +100,13 @@ extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p
 extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
                                                      const ecma_string_t *string2_p);
 
+/* ecma-helpers-number.c */
+extern bool ecma_number_is_nan (ecma_number_t num);
+extern bool ecma_number_is_negative (ecma_number_t num);
+extern bool ecma_number_is_zero (ecma_number_t num);
+extern bool ecma_number_is_infinity (ecma_number_t num);
+extern uint64_t ecma_number_get_fraction_and_exponent (ecma_number_t num, int32_t *out_exponent_p);
+
 /* ecma-helpers-values-collection.c */
 
 extern ecma_collection_header_t *ecma_new_values_collection (ecma_value_t values_buffer[],

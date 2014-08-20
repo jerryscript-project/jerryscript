@@ -189,6 +189,12 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       chunk_p = next_chunk_p;
     }
   }
+  else if (string_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
+  {
+    ecma_number_t *num_p = ECMA_GET_POINTER (string_p->u.number_cp);
+
+    ecma_dealloc_number (num_p);
+  }
   else
   {
     JERRY_ASSERT (string_p->container == ECMA_STRING_CONTAINER_IN_DESCRIPTOR
@@ -364,7 +370,19 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER
       || string2_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
   {
-    JERRY_UNIMPLEMENTED ();
+    if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER
+        && string2_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
+    {
+      ecma_number_t *num1_p, *num2_p;
+      num1_p = ECMA_GET_POINTER (string1_p->u.number_cp);
+      num2_p = ECMA_GET_POINTER (string2_p->u.number_cp);
+
+      return (*num1_p == *num2_p);
+    }
+    else
+    {
+      JERRY_UNIMPLEMENTED ();
+    }
   }
 
   JERRY_ASSERT (string1_p->is_length_valid);

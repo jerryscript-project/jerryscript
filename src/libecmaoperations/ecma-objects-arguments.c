@@ -84,6 +84,8 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
                                                                            false);
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
+  ecma_dealloc_number (len_p);
+
   // 11.a, 11.b
   for (ecma_length_t indx = 0;
        indx < arguments_list_length;
@@ -162,9 +164,15 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       {
         ecma_string_t *indx_string_p = ecma_new_ecma_string_from_number (ecma_uint32_to_number ((uint32_t) indx));
 
+        prop_desc = ecma_make_empty_property_descriptor ();
+        {
+          prop_desc.is_value_defined = true;
+          prop_desc.value = ecma_make_string_value (name_p);
+        }
+
         completion = ecma_op_object_define_own_property (map_p,
                                                          indx_string_p,
-                                                         ecma_make_empty_property_descriptor (),
+                                                         prop_desc,
                                                          false);
         JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
@@ -182,6 +190,8 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     ecma_property_t *scope_prop_p = ecma_create_internal_property (map_p,
                                                                    ECMA_INTERNAL_PROPERTY_SCOPE);
     ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, lex_env_p);
+
+    ecma_deref_object (map_p);
   }
 
   // 13.
@@ -250,6 +260,35 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
 } /* ecma_create_arguments_object */
 
 /**
+ * Get value of function's argument mapped to index of Arguments object.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_completion_value_t
+ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]] object */
+                                     ecma_property_t *arg_name_prop_p) /**< property of [[ParametersMap]]
+                                                                            corresponding to index and value
+                                                                            equal to mapped argument's name */
+{
+  ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+  ecma_object_t *lex_env_p = ECMA_GET_POINTER (scope_prop_p->u.internal_property.value);
+  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+
+  ecma_value_t arg_name_prop_value = arg_name_prop_p->u.named_data_property.value;
+
+  JERRY_ASSERT (arg_name_prop_value.value_type == ECMA_TYPE_STRING);
+  ecma_string_t *arg_name_p = ECMA_GET_POINTER (arg_name_prop_value.value);
+
+  ecma_completion_value_t completion = ecma_op_get_binding_value (lex_env_p,
+                                                                  arg_name_p,
+                                                                  true);
+  JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+
+  return completion;
+} /* ecma_arguments_get_mapped_arg_value */
+
+/**
  * [[Get]] ecma Arguments object's operation
  *
  * See also:
@@ -281,7 +320,7 @@ ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 4.
-    JERRY_UNIMPLEMENTED ();
+    return ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
   }
 } /* ecma_op_arguments_object_get */
 
@@ -319,15 +358,7 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
   if (mapped_prop_p != NULL)
   {
     // a.
-    ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-    ecma_object_t *lex_env_p = ECMA_GET_POINTER(scope_prop_p->u.internal_property.value);
-
-    JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
-
-    ecma_completion_value_t completion = ecma_op_get_binding_value (lex_env_p,
-                                                                    property_name_p,
-                                                                    true);
-    JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+    ecma_completion_value_t completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
 
     ecma_free_value (desc_p->u.named_data_property.value, false);
     desc_p->u.named_data_property.value = ecma_copy_value (completion.value, false);

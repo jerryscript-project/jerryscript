@@ -419,5 +419,10 @@ OP_CODE_DECL (reg_var_decl, T_IDX_IDX,
               min,
               max)
 
+/** meta */
+OP_CODE_DECL (meta, T_IDX_IDX_IDX,
+              type,
+              data_1,
+              data_2)
 
 #endif /* OPCODE_STRUCTURES_H */

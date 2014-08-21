@@ -451,6 +451,7 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (b_shift_uright)                  \
     op (instanceof)                      \
     op (in)                              \
+    op (meta)                            \
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
@@ -2059,3 +2060,4 @@ GETOP_IMPL_2 (typeof, lhs, obj)
 GETOP_IMPL_1 (with, expr)
 GETOP_IMPL_0 (end_with)
 GETOP_IMPL_2 (reg_var_decl, min, max)
+GETOP_IMPL_3 (meta, type, data_1, data_2)

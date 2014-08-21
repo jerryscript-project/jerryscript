@@ -131,7 +131,8 @@ ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
   OP_UNCONDITIONAL_JUMPS (op)            \
   OP_UNARY_OPS (op)                      \
   op (var_decl)                          \
-  op (reg_var_decl)
+  op (reg_var_decl)\
+  op (meta)
 
 #include "opcode-structures.h"
 

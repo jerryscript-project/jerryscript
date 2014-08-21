@@ -66,6 +66,13 @@ else
   OPTION_OVERRIDE_ENABLE_DBGSYMS := disable
 endif
 
+# Override optimization settings
+ifeq ($(noopt),1)
+  OPTION_OVERRIDE_DISABLE_OPTIMIZE := enable
+else
+  OPTION_OVERRIDE_DISABLE_OPTIMIZE := disable
+endif
+
 # DWARF version
 ifeq ($(dwarf4),1)
     OPTION_DWARF4 := enable
@@ -107,13 +114,8 @@ endif
 # JERRY_NDEBUG, debug symbols
 ifeq ($(TARGET_MODE),release)
  OPTION_NDEBUG = enable
- ifeq ($(OPTION_OVERRIDE_ENABLE_DBGSYMS),enable)
-   OPTION_DEBUG_SYMS = enable
-   OPTION_STRIP = disable
- else
-   OPTION_DEBUG_SYMS = disable
-   OPTION_STRIP = enable
- endif
+ OPTION_DEBUG_SYMS = disable
+ OPTION_STRIP = enable
 else
  OPTION_NDEBUG = disable
  OPTION_DEBUG_SYMS = enable
@@ -125,6 +127,16 @@ ifeq ($(filter-out debug_release release $(TESTS_TARGET),$(TARGET_MODE)),)
  OPTION_OPTIMIZE = enable
 else
  OPTION_OPTIMIZE = disable
+endif
+
+# Applying override options
+ifeq ($(OPTION_OVERRIDE_ENABLE_DBGSYMS),enable)
+ OPTION_DEBUG_SYMS = enable
+ OPTION_STRIP = disable
+endif
+
+ifeq ($(OPTION_OVERRIDE_DISABLE_OPTIMIZE),enable)
+  OPTION_OPTIMIZE = disable
 endif
 
 ifeq ($(filter musl,$(TARGET_MODS)), musl)

@@ -72,6 +72,7 @@ export todo
 export fixme
 export color
 export dbgsyms
+export noopt
 
 build: clean $(JERRY_TARGETS)
 

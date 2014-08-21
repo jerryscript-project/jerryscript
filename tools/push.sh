@@ -57,13 +57,13 @@ trap ctrl_c INT
 function ctrl_c() {
     git checkout master >&/dev/null
 
-    for commit_hash in $commits_to_push
-    do
-      git notes --ref=test_build_env remove $commit_hash
-      git notes --ref=perf remove $commit_hash
-      git notes --ref=mem remove $commit_hash
-    done
-    exit 1
+#    for commit_hash in $commits_to_push
+#    do
+#      git notes --ref=test_build_env remove $commit_hash
+#      git notes --ref=perf remove $commit_hash
+#      git notes --ref=mem remove $commit_hash
+#    done
+#    exit 1
 }
 
 echo
@@ -77,9 +77,9 @@ do
   git checkout $commit_hash >&/dev/null
   status_code=$?
 
-  git notes --ref=test_build_env remove $commit_hash >&/dev/null
-  git notes --ref=perf remove $commit_hash >&/dev/null
-  git notes --ref=mem remove $commit_hash >&/dev/null
+#  git notes --ref=test_build_env remove $commit_hash >&/dev/null
+#  git notes --ref=perf remove $commit_hash >&/dev/null
+#  git notes --ref=mem remove $commit_hash >&/dev/null
 
   if [ $status_code -ne 0 ]
   then
@@ -118,9 +118,9 @@ do
   echo "Pre-commit performance measurement for '$commit_hash' completed"
   echo
 
-  git notes --ref=test_build_env add -m "$BUILD_INFO" $commit_hash
-  git notes --ref=perf add -m "$PERF_INFO" $commit_hash
-  git notes --ref=mem add -m "$MEM_INFO" $commit_hash
+#  git notes --ref=test_build_env add -m "$BUILD_INFO" $commit_hash
+#  git notes --ref=perf add -m "$PERF_INFO" $commit_hash
+#  git notes --ref=mem add -m "$MEM_INFO" $commit_hash
 done
 
 git checkout master >&/dev/null
@@ -145,7 +145,7 @@ then
     echo "Pushing..."
     echo
 
-    git push origin master refs/notes/*
+    git push origin master # refs/notes/*
     status_code=$?
 
     if [ $status_code -eq 0 ]
@@ -154,12 +154,12 @@ then
     else
       echo -e "\n\e[1;33m     Push failed\e[0m"
 
-      for commit_hash in $commits_to_push
-      do
-        git notes --ref=test_build_env remove $commit_hash
-        git notes --ref=perf remove $commit_hash
-        git notes --ref=mem remove $commit_hash
-      done
+#      for commit_hash in $commits_to_push
+#      do
+#        git notes --ref=test_build_env remove $commit_hash
+#        git notes --ref=perf remove $commit_hash
+#        git notes --ref=mem remove $commit_hash
+#      done
     fi
     exit $status_code
   else

@@ -133,29 +133,27 @@ if [ $ok_to_push -eq 1 ]
 then
   if [ "`git status --porcelain 2>&1 | wc -l`" == "0" ]
   then
+    echo "Pulling..."
+    make pull
+    status_code=$?
+    if [ $status_code -ne 0 ]
+    then
+      echo "Pull failed"
+      exit 1
+    fi
+
     echo "Pushing..."
     echo
 
-    git push
+    git push origin master refs/notes/*
     status_code=$?
 
     if [ $status_code -eq 0 ]
     then
       echo -e "\n\e[0;32m     Pushed successfully\e[0m\n"
-
-      git push origin refs/notes/*
-      status_code=$?
-
-      if [ $status_code -ne 0 ]
-      then
-        echo -e "\n\e[1;33m     Notes push failed\e[0m"
-      fi
     else
       echo -e "\n\e[1;33m     Push failed\e[0m"
-    fi
 
-    if [ $status_code -ne 0 ]
-    then
       for commit_hash in $commits_to_push
       do
         git notes --ref=test_build_env remove $commit_hash

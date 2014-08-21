@@ -14,5 +14,28 @@
 
 #!/bin/bash
 
+trap ctrl_c INT
+
+function ctrl_c() {
+    git checkout master >&/dev/null
+
+    exit 1
+}
+
 git pull --rebase
-git fetch origin refs/notes/*:refs/notes/*
+status_code=$?
+
+if [ $status_code -ne 0 ]
+then
+  echo "Pulling master failed"
+
+  exit 1
+fi
+
+for notes_ref in perf mem test_build_env
+do
+  git checkout refs/notes/$notes_ref
+  git pull --rebase origin refs/notes/$notes_ref
+done
+
+git checkout master >&/dev/null

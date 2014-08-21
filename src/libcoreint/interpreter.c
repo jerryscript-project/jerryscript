@@ -182,7 +182,7 @@ try_get_string_by_idx (T_IDX idx, /**< literal id */
   JERRY_ASSERT (str_p != NULL);
 
   FIXME (ecma_char_t strlen);
-  
+
   ssize_t req_length = (ssize_t)__strlen ((const char*)str_p) + 1;
 
   if (buffer_size < req_length)

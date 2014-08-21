@@ -431,7 +431,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (native_call)                     \
     op (func_decl_n)                     \
     op (varg_list)                       \
-    op (retval)                          \
     op (construct_decl)                  \
     op (array_decl)                      \
     op (prop)                            \
@@ -1893,6 +1892,31 @@ opfunc_ret (OPCODE opdata __unused, /**< operation data */
                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                                      ECMA_TARGET_ID_RESERVED);
 } /* opfunc_ret */
+
+/**
+ * 'Return with expression' opcode handler.
+ *
+ * See also: ECMA-262 v5, 12.9
+ *
+ * @return completion value
+ *         Returned value is simple and so need not be freed.
+ *         However, ecma_free_completion_value may be called for it, but it is a no-op.
+ */
+ecma_completion_value_t
+opfunc_retval (OPCODE opdata __unused, /**< operation data */
+               struct __int_data *int_data __unused) /**< interpreter context */
+{
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (expr_val, get_variable_value (int_data, opdata.data.retval.ret_value, false), ret_value);
+
+  ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
+                                          expr_val.value,
+                                          ECMA_TARGET_ID_RESERVED);
+
+  ECMA_FINALIZE (expr_val);
+  return ret_value;
+} /* opfunc_retval */
 
 /**
  * 'Property getter' opcode handler.

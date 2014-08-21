@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(9 << 2 === 36);
-assert(14 << 2 === 56);
+assert((9 << 2) === 36);
+assert((14 << 2) === 56);
 
-assert(9 >> 2 === 2);
-assert(-14 >> 2 === -4);
+assert((9 >> 2) === 2);
+assert((-14 >> 2) === -4);
 
-assert(9 >>> 2 === 9 >> 2);
+assert((9 >>> 2) === (9 >> 2));

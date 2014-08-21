@@ -291,6 +291,7 @@ typedef enum
   number_bitwise_shift_left, /**< bitwise LEFT SHIFT calculation */
   number_bitwise_shift_right, /**< bitwise RIGHT_SHIFT calculation */
   number_bitwise_shift_uright, /**< bitwise UNSIGNED RIGHT SHIFT calculation */
+  number_bitwise_not, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
 /**
@@ -430,6 +431,11 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
       *res_p = ecma_uint32_to_number (left_uint32 >> (right_uint32 & 0x1F));
       break;
     }
+    case number_bitwise_not:
+    {
+      *res_p = ecma_int32_to_number (~right_int32);
+      break;
+    }
   }
 
   ret_value = set_variable_value (int_data,
@@ -463,7 +469,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (logical_not)                     \
     op (logical_and)                     \
     op (logical_or)                      \
-    op (b_not)                           \
     op (instanceof)                      \
     op (in)                              \
     op (meta)                            \
@@ -1176,9 +1181,9 @@ ecma_completion_value_t
 opfunc_b_shift_right (OPCODE opdata, /**< operation data */
                       struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_shift_left.dst;
-  const T_IDX left_var_idx = opdata.data.b_shift_left.var_left;
-  const T_IDX right_var_idx = opdata.data.b_shift_left.var_right;
+  const T_IDX dst_var_idx = opdata.data.b_shift_right.dst;
+  const T_IDX left_var_idx = opdata.data.b_shift_right.var_left;
+  const T_IDX right_var_idx = opdata.data.b_shift_right.var_right;
 
   int_data->pos++;
 
@@ -1211,9 +1216,9 @@ ecma_completion_value_t
 opfunc_b_shift_uright (OPCODE opdata, /**< operation data */
                       struct __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_shift_left.dst;
-  const T_IDX left_var_idx = opdata.data.b_shift_left.var_left;
-  const T_IDX right_var_idx = opdata.data.b_shift_left.var_right;
+  const T_IDX dst_var_idx = opdata.data.b_shift_uright.dst;
+  const T_IDX left_var_idx = opdata.data.b_shift_uright.var_left;
+  const T_IDX right_var_idx = opdata.data.b_shift_uright.var_right;
 
   int_data->pos++;
 
@@ -1233,6 +1238,39 @@ opfunc_b_shift_uright (OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_b_shift_uright */
+
+/**
+ * 'Bitwise NOT Operator' opcode handler.
+ *
+ * See also: ECMA-262 v5, 10.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_b_not (OPCODE opdata, /**< operation data */
+              struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.b_not.dst;
+  const T_IDX right_var_idx = opdata.data.b_not.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_bitwise_logic (int_data,
+                                       dst_var_idx,
+                                       number_bitwise_not,
+                                       right_value.value,
+                                       right_value.value);
+
+  ECMA_FINALIZE (right_value);
+
+  return ret_value;
+} /* opfunc_b_not */
+
 
 /**
  * 'Pre increment' opcode handler.

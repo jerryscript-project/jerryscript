@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert((5 & 2) == 0);
-assert((2 & 2) == 2);
-assert((5 | 2) == 7);
-assert((5 | 5) == 5);
-assert((5 ^ 2) == 7);
-assert((5 ^ 5) == 0);
+assert((5 & 2) === 0);
+assert((2 & 2) === 2);
+assert((5 | 2) === 7);
+assert((5 | 5) === 5);
+assert((5 ^ 2) === 7);
+assert((5 ^ 5) === 0);
+assert((~5) == -6);

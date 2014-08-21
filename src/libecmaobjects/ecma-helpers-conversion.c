@@ -98,6 +98,19 @@ ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
 } /* ecma_uint32_to_number */
 
 /**
+ * ECMA-defined conversion of Int32 value to Number value
+ *
+ * @return number - result of conversion.
+ */
+ecma_number_t
+ecma_int32_to_number (int32_t value) /**< signed 32-bit integer value */
+{
+  TODO(Implement according to ECMA);
+
+  return (ecma_number_t) value;
+} /* ecma_int32_to_number */
+
+/**
  * ECMA-defined conversion of Number value to Uint32 value
  *
  * See also:

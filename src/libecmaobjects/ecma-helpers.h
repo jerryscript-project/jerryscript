@@ -92,10 +92,10 @@ extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_i
 extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
 extern ecma_length_t ecma_get_ecma_string_length (ecma_string_t *string_desc_p);
-extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
-extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
+extern ecma_number_t ecma_string_to_number (ecma_string_t *str_p);
+extern ssize_t ecma_string_to_zt_string (ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
-                                         size_t buffer_size);
+                                         ssize_t buffer_size);
 extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
                                                      const ecma_string_t *string2_p);
@@ -190,7 +190,7 @@ extern void ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, si
 extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
 extern int32_t ecma_number_to_int32 (ecma_number_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
-extern void ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, size_t buffer_size);
+extern ecma_length_t ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, ssize_t buffer_size);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

@@ -246,7 +246,7 @@ ecma_get_ecma_string_length (ecma_string_t *string_desc_p) /**< ecma-string desc
  * Convert ecma-string to number
  */
 ecma_number_t
-ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
+ecma_string_to_number (ecma_string_t *str_p) /**< ecma-string */
 {
   JERRY_ASSERT (str_p != NULL);
 
@@ -264,12 +264,45 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 
     ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
                                                      zt_string_buffer,
-                                                     sizeof (zt_string_buffer));
+                                                     (ssize_t) sizeof (zt_string_buffer));
     JERRY_ASSERT (bytes_copied > 0);
-    
+
     return ecma_zt_string_to_number (zt_string_buffer);
   }
 } /* ecma_string_to_number */
+
+/**
+ * Get size of buffer required to store the ecma-string in zt-form.
+ */
+static ssize_t
+ecma_string_get_required_buffer_size_for_zt_form (const ecma_string_t *string_desc_p) /**< ecma-string */
+{
+  ecma_length_t string_length = 0;
+
+  switch ((ecma_string_container_t)string_desc_p->container)
+  {
+    case ECMA_STRING_CONTAINER_IN_DESCRIPTOR:
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    {
+      JERRY_ASSERT (string_desc_p->is_length_valid);
+
+      string_length = string_desc_p->length;
+
+      break;
+    }
+
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      string_length = (string_desc_p->is_length_valid ?
+                       string_desc_p->length : ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+
+      break;
+    }
+  }
+
+  return (ssize_t) ((ssize_t) sizeof (ecma_char_t) * (string_length + 1));
+} /* ecma_string_get_required_buffer_size_for_zt_form */
 
 /**
  * Copy ecma-string's contents to a buffer.
@@ -281,23 +314,21 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
-ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                           ecma_char_t *buffer_p, /**< destination buffer */
-                          size_t buffer_size) /**< size of buffer */
+                          ssize_t buffer_size) /**< size of buffer */
 {
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs > 0);
   JERRY_ASSERT (buffer_p != NULL);
   JERRY_ASSERT (buffer_size > 0);
 
-  JERRY_ASSERT (string_desc_p->is_length_valid);
-
-  const ecma_length_t string_length = string_desc_p->length;
-  size_t required_buffer_size = sizeof (ecma_char_t) * string_length + 1 /* for zero char */;
+  ssize_t required_buffer_size = ecma_string_get_required_buffer_size_for_zt_form (string_desc_p);
+  ssize_t bytes_copied = 0;
 
   if (required_buffer_size > buffer_size)
   {
-    return - (ssize_t) required_buffer_size;
+    return -required_buffer_size;
   }
 
   ecma_char_t *dest_p = buffer_p;
@@ -306,13 +337,21 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
   {
     case ECMA_STRING_CONTAINER_IN_DESCRIPTOR:
     {
+      JERRY_ASSERT (string_desc_p->is_length_valid);
+      ecma_length_t string_length = string_desc_p->length;
+
       __memcpy (dest_p, string_desc_p->u.chars, string_length * sizeof (ecma_char_t));
       dest_p += string_length;
+      *dest_p++ = '\0';
+      bytes_copied = (dest_p - buffer_p) * ((ssize_t) sizeof (ecma_char_t));
 
       break;
     }
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
+      JERRY_ASSERT (string_desc_p->is_length_valid);
+      ecma_length_t string_length = string_desc_p->length;
+
       ecma_collection_chunk_t *string_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
 
       const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
@@ -330,18 +369,47 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
 
         string_chunk_p = ECMA_GET_POINTER(string_chunk_p->next_chunk_cp);
       }
+      *dest_p++ = '\0';
+      bytes_copied = (dest_p - buffer_p) * ((ssize_t) sizeof (ecma_char_t));
+
       break;
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
+    {
+      bytes_copied = try_get_string_by_idx ((uint8_t) string_desc_p->u.lit_index,
+                                            buffer_p,
+                                            buffer_size);
+
+      break;
+    }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      JERRY_UNIMPLEMENTED();
+      const ssize_t buffer_size_required = (ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1) * sizeof (ecma_char_t);
+      if (buffer_size_required < buffer_size)
+      {
+        return -(ssize_t) buffer_size_required;
+      }
+
+      ecma_number_t *num_p = ECMA_GET_POINTER (string_desc_p->u.number_cp);
+
+      ecma_length_t length = ecma_number_to_zt_string (*num_p, buffer_p, buffer_size);
+
+      if (!string_desc_p->is_length_valid)
+      {
+        string_desc_p->length = length;
+        string_desc_p->is_length_valid = true;
+      }
+
+      JERRY_ASSERT (string_desc_p->is_length_valid
+                    && string_desc_p->length == length);
+
+      bytes_copied = (length + 1) * ((ssize_t) sizeof (ecma_char_t));
     }
   }
 
-  *dest_p = '\0';
+  JERRY_ASSERT (bytes_copied > 0 && bytes_copied <= required_buffer_size);
 
-  return (ssize_t) required_buffer_size;
+  return bytes_copied;
 } /* ecma_string_to_zt_string */
 
 /**

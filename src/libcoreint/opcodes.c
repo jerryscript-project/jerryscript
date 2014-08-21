@@ -467,9 +467,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (typeof)                          \
     op (with)                            \
     op (end_with)                        \
-    op (logical_not)                     \
-    op (logical_and)                     \
-    op (logical_or)                      \
     op (meta)                            \
     static char __unused unimplemented_list_end
 
@@ -2282,6 +2279,131 @@ opfunc_in (OPCODE opdata __unused, /**< operation data */
   return ret_value;
 } /* opfunc_in */
 
+/**
+ * 'Logical NOT Operator' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.9
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_logical_not (OPCODE opdata, /**< operation data */
+                    struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.logical_not.dst;
+  const T_IDX right_var_idx = opdata.data.logical_not.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ecma_simple_value_t old_value = ECMA_SIMPLE_VALUE_TRUE;
+  ecma_completion_value_t to_bool_value = ecma_op_to_boolean (right_value.value);
+
+  if (ecma_is_value_true (to_bool_value.value))
+  {
+    old_value = ECMA_SIMPLE_VALUE_FALSE;
+  }
+
+  ret_value = set_variable_value (int_data,
+                                  dst_var_idx,
+                                  ecma_make_simple_value (old_value));
+
+  ECMA_FINALIZE (right_value);
+
+  return ret_value;
+} /* opfunc_logical_not */
+
+/**
+ * 'Logical OR Operator' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.11
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_logical_or (OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.logical_or.dst;
+  const T_IDX left_var_idx = opdata.data.logical_or.var_left;
+  const T_IDX right_var_idx = opdata.data.logical_or.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_value = ecma_op_to_boolean (left_value.value);
+
+  if (ecma_is_value_true (to_bool_value.value))
+  {
+    ret_value = set_variable_value (int_data,
+                                    dst_var_idx,
+                                    left_value.value);
+  }
+  else
+  {
+    ret_value = set_variable_value (int_data,
+                                    dst_var_idx,
+                                    right_value.value);
+  }
+
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
+
+  return ret_value;
+} /* opfunc_logical_or */
+
+/**
+ * 'Logical AND Operator' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.11
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_logical_and (OPCODE opdata, /**< operation data */
+                   struct __int_data *int_data) /**< interpreter context */
+{
+  const T_IDX dst_var_idx = opdata.data.logical_and.dst;
+  const T_IDX left_var_idx = opdata.data.logical_and.var_left;
+  const T_IDX right_var_idx = opdata.data.logical_and.var_right;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_value = ecma_op_to_boolean (left_value.value);
+
+  if (ecma_is_value_true (to_bool_value.value) == false)
+  {
+    ret_value = set_variable_value (int_data,
+                                    dst_var_idx,
+                                    left_value.value);
+  }
+  else
+  {
+    ret_value = set_variable_value (int_data,
+                                    dst_var_idx,
+                                    right_value.value);
+  }
+
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
+
+  return ret_value;
+} /* opfunc_logical_and */
 
 /** Opcode generators.  */
 GETOP_IMPL_2 (is_true_jmp, value, opcode)

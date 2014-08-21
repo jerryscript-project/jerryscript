@@ -524,33 +524,37 @@ parse_property_assignment (void)
 }
 
 static void
-dump_varg_3 (T_IDX current_param, T_IDX params[3])
+dump_varg_3 (T_IDX current_param, T_IDX params[3] __unused)
 {
   if (current_param == 3)
   {
-    DUMP_OPCODE_3 (varg_3, params[0], params[1], params[2]);
+    TODO(Refine to match new opcodes)
+    //DUMP_OPCODE_3 (varg_3, params[0], params[1], params[2]);
     current_param = 0;
   }
 }
 
 static void
-dump_varg_end (T_IDX current_param, T_IDX params[3])
+dump_varg_end (T_IDX current_param, T_IDX params[3] __unused)
 {
   switch (current_param)
   {
     case 0:
     {
-      DUMP_OPCODE_1 (varg_1_end, params[0]);
+      TODO(Refine to match new opcodes)
+      //DUMP_OPCODE_1 (varg_1_end, params[0]);
       break;
     }
     case 1:
     {
-      DUMP_OPCODE_2 (varg_2_end, params[0], params[1]);
+      TODO(Refine to match new opcodes)
+      //DUMP_OPCODE_2 (varg_2_end, params[0], params[1]);
       break;
     }
     case 2:
     {
-      DUMP_OPCODE_3 (varg_3_end, params[0], params[1], params[2]);
+      TODO(Refine to match new opcodes)
+      //DUMP_OPCODE_3 (varg_3_end, params[0], params[1], params[2]);
       break;
     }
     default:
@@ -656,22 +660,26 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
             }
             case AL_FUNC_EXPR:
             {
-              DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
+              TODO(Refine to match new opcodes)
+              //DUMP_OPCODE_3 (func_expr_n, lhs, obj, args[0]);
               break;
             }
             case AL_ARRAY_LIT:
             {
-              DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
+              TODO(Refine to match new opcodes)
+              //DUMP_OPCODE_3 (array_n, lhs, args[0], args[1]);
               break;
             }
             case AL_OBJECT_LIT:
             {
-              DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
+              TODO(Refine to match new opcodes)
+              //DUMP_OPCODE_3 (obj_n, lhs, args[0], args[1]);
               break;
             }
             case AL_CONSTRUCT_EXPR:
             {
-              DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
+              TODO(Refine to match new opcodes)
+              //DUMP_OPCODE_3 (construct_n, lhs, obj, args[0]);
               break;
             }
             case AL_CALL_EXPR:
@@ -748,22 +756,26 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
           }
           case AL_FUNC_EXPR:
           {
-            DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
+            TODO(Refine to match new opcodes)
+            //DUMP_OPCODE_3 (func_expr_1, lhs, obj, args[0]);
             break;
           }
           case AL_ARRAY_LIT:
           {
-            DUMP_OPCODE_2 (array_1, lhs, args[0]);
+            TODO(Refine to match new opcodes)
+            //DUMP_OPCODE_2 (array_1, lhs, args[0]);
             break;
           }
           case AL_OBJECT_LIT:
           {
-            DUMP_OPCODE_2 (obj_1, lhs, args[0]);
+            TODO (Refine to match new opcodes)
+            //DUMP_OPCODE_2 (obj_1, lhs, args[0]);
             break;
           }
           case AL_CONSTRUCT_EXPR:
           {
-            DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
+            TODO(Refine to match new opcodes)
+            //DUMP_OPCODE_3 (construct_1, lhs, obj, args[0]);
             break;
           }
           case AL_CALL_EXPR:
@@ -795,12 +807,14 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
           }
           case AL_ARRAY_LIT:
           {
-            DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
+            TODO(Refine to match new opcodes)
+            //DUMP_OPCODE_3 (array_2, lhs, args[0], args[1]);
             break;
           }
           case AL_OBJECT_LIT:
           {
-            DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
+            TODO (Refine to match new opcodes)
+            //DUMP_OPCODE_3 (obj_2, lhs, args[0], args[1]);
             break;
           }
           default:
@@ -830,22 +844,26 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
       }
       case AL_FUNC_EXPR:
       {
-        DUMP_OPCODE_2 (func_expr_0, lhs, obj);
+        TODO(Refine to match new opcodes)
+        //DUMP_OPCODE_2 (func_expr_0, lhs, obj);
         break;
       }
       case AL_ARRAY_LIT:
       {
-        DUMP_OPCODE_1 (array_0, lhs);
+        TODO(Refine to match new opcodes)
+        //DUMP_OPCODE_1 (array_0, lhs);
         break;
       }
       case AL_OBJECT_LIT:
       {
-        DUMP_OPCODE_1 (obj_0, lhs);
+        TODO (Refine to match new opcodes)
+        //DUMP_OPCODE_1 (obj_0, lhs);
         break;
       }
       case AL_CONSTRUCT_EXPR:
       {
-        DUMP_OPCODE_2 (construct_0, lhs, obj);
+        TODO(Refine to match new opcodes)
+        //DUMP_OPCODE_2 (construct_0, lhs, obj);
         break;
       }
       case AL_CALL_EXPR:

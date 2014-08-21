@@ -40,38 +40,24 @@ ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
     op (call_0)                          \
     op (call_1)                          \
     op (call_n)                          \
-    op (construct_0)                     \
-    op (construct_1)                     \
-    op (construct_n)                     \
+    op (construct_decl)                  \
     op (func_decl_0)                     \
     op (func_decl_1)                     \
     op (func_decl_2)                     \
     op (func_decl_n)                     \
-    op (func_expr_0)                     \
-    op (func_expr_1)                     \
-    op (func_expr_n)                     \
-    op (varg_1_end)                      \
-    op (varg_2_end)                      \
-    op (varg_3)                          \
-    op (varg_3_end)                      \
+    op (varg_list)                       \
     op (exitval)                         \
     op (retval)                          \
     op (ret)
 
 #define OP_INITS(op)                     \
-    op (array_0)                         \
-    op (array_1)                         \
-    op (array_2)                         \
-    op (array_n)                         \
+    op (array_decl)                      \
     op (prop)                            \
     op (prop_getter)                     \
     op (prop_setter)                     \
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
-    op (obj_0)                           \
-    op (obj_1)                           \
-    op (obj_2)                           \
-    op (obj_n)                           \
+    op (obj_decl)                        \
     op (this)                            \
     op (delete)                          \
     op (typeof)                          \

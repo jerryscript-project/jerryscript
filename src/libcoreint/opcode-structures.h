@@ -307,22 +307,11 @@ OP_CODE_DECL (call_n, T_IDX_IDX_IDX,
               name_lit_idx,
               arg1_lit_idx)
 
-/** a = new name (); */
-OP_CODE_DECL (construct_0, T_IDX_IDX,
-              lhs,
-              name_lit_idx)
-
-/** a = new name (arg1); */
-OP_CODE_DECL (construct_1, T_IDX_IDX_IDX,
+/** a = new name (arg_list */
+OP_CODE_DECL (construct_decl, T_IDX_IDX_IDX,
               lhs,
               name_lit_idx,
-              arg1_lit_idx)
-
-/** a = new name (arg1, ... */
-OP_CODE_DECL (construct_n, T_IDX_IDX_IDX,
-              lhs,
-              name_lit_idx,
-              arg1_lit_idx)
+              arg_list)
 
 /** name (); */
 OP_CODE_DECL (func_decl_0, T_IDX,
@@ -345,40 +334,8 @@ OP_CODE_DECL (func_decl_n, T_IDX_IDX_IDX,
               arg1_lit_idx,
               arg2_lit_idx)
 
-/** a = name (); */
-OP_CODE_DECL (func_expr_0, T_IDX_IDX,
-              lhs,
-              name_lit_idx)
-
-/** a = name (arg1); */
-OP_CODE_DECL (func_expr_1, T_IDX_IDX_IDX,
-              lhs,
-              name_lit_idx,
-              arg1_lit_idx)
-
-/** a = name (arg1,  ... */
-OP_CODE_DECL (func_expr_n, T_IDX_IDX_IDX,
-              lhs,
-              name_lit_idx,
-              arg1_lit_idx)
-
-/** ..., arg1); */
-OP_CODE_DECL (varg_1_end, T_IDX,
-              arg1_lit_idx)
-
-/** ..., arg1, arg2); */
-OP_CODE_DECL (varg_2_end, T_IDX_IDX,
-              arg1_lit_idx,
-              arg2_lit_idx)
-
-/** arg1, arg2, arg3, ... */
-OP_CODE_DECL (varg_3, T_IDX_IDX_IDX,
-              arg1_lit_idx,
-              arg2_lit_idx,
-              arg3_lit_idx)
-
-/** arg1, arg2, arg3); */
-OP_CODE_DECL (varg_3_end, T_IDX_IDX_IDX,
+/** arg1, arg2, arg3 */
+OP_CODE_DECL (varg_list, T_IDX_IDX_IDX,
               arg1_lit_idx,
               arg2_lit_idx,
               arg3_lit_idx)
@@ -394,26 +351,10 @@ OP_CODE_DECL_VOID (ret)
 
 OP_CODE_DECL_VOID (nop)
 
-/** a = []  */
-OP_CODE_DECL (array_0, T_IDX,
-              lhs)
-
-/** a = [b]  */
-OP_CODE_DECL (array_1, T_IDX_IDX,
+/** a = [list]  */
+OP_CODE_DECL (array_decl, T_IDX_IDX,
               lhs,
-              elem1)
-
-/** a = [b, c]  */
-OP_CODE_DECL (array_2, T_IDX_IDX_IDX,
-              lhs,
-              elem1,
-              elem2)
-
-/** a = [b, c ...  */
-OP_CODE_DECL (array_n, T_IDX_IDX_IDX,
-              lhs,
-              elem1,
-              elem2)
+              list)
 
 /** a = b : c  */
 OP_CODE_DECL (prop, T_IDX_IDX_IDX,
@@ -445,25 +386,9 @@ OP_CODE_DECL (prop_set_decl, T_IDX_IDX_IDX,
               arg)
 
 /** a = { }  */
-OP_CODE_DECL (obj_0, T_IDX,
-              lhs)
-
-/** a = { b }  */
-OP_CODE_DECL (obj_1, T_IDX_IDX,
+OP_CODE_DECL (obj_decl, T_IDX_IDX,
               lhs,
-              arg1)
-
-/** a = { b, c }  */
-OP_CODE_DECL (obj_2, T_IDX_IDX_IDX,
-              lhs,
-              arg1,
-              arg2)
-
-/** a = { b, c ...  */
-OP_CODE_DECL (obj_n, T_IDX_IDX_IDX,
-              lhs,
-              arg1,
-              arg2)
+              list)
 
 /** a = this  */
 OP_CODE_DECL (this, T_IDX,

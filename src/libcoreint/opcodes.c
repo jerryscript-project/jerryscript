@@ -429,40 +429,26 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (call_n)                          \
     op (func_decl_n)                     \
-    op (varg_1_end)                      \
-    op (varg_2_end)                      \
-    op (varg_3)                          \
-    op (varg_3_end)                      \
+    op (varg_list)                       \
     op (retval)                          \
-    op (b_shift_left)                    \
-    op (b_shift_right)                   \
-    op (b_shift_uright)                  \
-    op (logical_and)                     \
-    op (logical_or)                      \
-    op (construct_0)                     \
-    op (construct_1)                     \
-    op (construct_n)                     \
-    op (func_expr_0)                     \
-    op (func_expr_1)                     \
-    op (func_expr_n)                     \
-    op (array_0)                         \
-    op (array_1)                         \
-    op (array_2)                         \
-    op (array_n)                         \
+    op (construct_decl)                  \
+    op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
-    op (obj_0)                           \
-    op (obj_1)                           \
-    op (obj_2)                           \
-    op (obj_n)                           \
+    op (obj_decl)                        \
     op (this)                            \
     op (delete)                          \
     op (typeof)                          \
     op (with)                            \
     op (end_with)                        \
     op (logical_not)                     \
+    op (logical_and)                     \
+    op (logical_or)                      \
     op (b_not)                           \
+    op (b_shift_left)                    \
+    op (b_shift_right)                   \
+    op (b_shift_uright)                  \
     op (instanceof)                      \
     op (in)                              \
     static char __unused unimplemented_list_end
@@ -1798,7 +1784,7 @@ opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
   int_data->pos++;
 
   ecma_string_t *arg_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_1.arg1_lit_idx);
-  
+
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             opdata.data.func_decl_1.name_lit_idx,
                                                             &arg_name_string_p,
@@ -1826,7 +1812,7 @@ opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
     ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg1_lit_idx),
     ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg2_lit_idx)
   };
-  
+
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             opdata.data.func_decl_1.name_lit_idx,
                                                             arg_names_strings,
@@ -2048,10 +2034,7 @@ GETOP_IMPL_3 (call_n, lhs, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_2 (func_decl_1, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_1 (varg_1_end, arg1_lit_idx)
-GETOP_IMPL_2 (varg_2_end, arg1_lit_idx, arg2_lit_idx)
-GETOP_IMPL_3 (varg_3, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
-GETOP_IMPL_3 (varg_3_end, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
+GETOP_IMPL_3 (varg_list, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)
 GETOP_IMPL_1 (exitval, status_code)
 GETOP_IMPL_1 (retval, ret_value)
 GETOP_IMPL_0 (ret)
@@ -2061,26 +2044,15 @@ GETOP_IMPL_2 (b_not, dst, var_right)
 GETOP_IMPL_2 (logical_not, dst, var_right)
 GETOP_IMPL_3 (instanceof, dst, var_left, var_right)
 GETOP_IMPL_3 (in, dst, var_left, var_right)
-GETOP_IMPL_2 (construct_0, lhs, name_lit_idx)
-GETOP_IMPL_3 (construct_1, lhs, name_lit_idx, arg1_lit_idx)
-GETOP_IMPL_3 (construct_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (construct_decl, lhs, name_lit_idx, arg_list)
 GETOP_IMPL_1 (func_decl_0, name_lit_idx)
-GETOP_IMPL_2 (func_expr_0, lhs, name_lit_idx)
-GETOP_IMPL_3 (func_expr_1, lhs, name_lit_idx, arg1_lit_idx)
-GETOP_IMPL_3 (func_expr_n, lhs, name_lit_idx, arg1_lit_idx)
-GETOP_IMPL_1 (array_0, lhs)
-GETOP_IMPL_2 (array_1, lhs, elem1)
-GETOP_IMPL_3 (array_2, lhs, elem1, elem2)
-GETOP_IMPL_3 (array_n, lhs, elem1, elem2)
+GETOP_IMPL_2 (array_decl, lhs, list)
 GETOP_IMPL_3 (prop, lhs, name, value)
 GETOP_IMPL_3 (prop_getter, lhs, obj, prop)
 GETOP_IMPL_3 (prop_setter, obj, prop, rhs)
 GETOP_IMPL_2 (prop_get_decl, lhs, prop)
 GETOP_IMPL_3 (prop_set_decl, lhs, prop, arg)
-GETOP_IMPL_1 (obj_0, lhs)
-GETOP_IMPL_2 (obj_1, lhs, arg1)
-GETOP_IMPL_3 (obj_2, lhs, arg1, arg2)
-GETOP_IMPL_3 (obj_n, lhs, arg1, arg2)
+GETOP_IMPL_2 (obj_decl, lhs, list)
 GETOP_IMPL_1 (this, lhs)
 GETOP_IMPL_2 (delete, lhs, obj)
 GETOP_IMPL_2 (typeof, lhs, obj)

@@ -470,7 +470,6 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
     op (logical_not)                     \
     op (logical_and)                     \
     op (logical_or)                      \
-    op (instanceof)                      \
     op (meta)                            \
     static char __unused unimplemented_list_end
 
@@ -2179,10 +2178,63 @@ opfunc_exitval (OPCODE opdata, /**< operation data */
                                      exit_status,
                                      ECMA_TARGET_ID_RESERVED);
 } /* opfunc_exitval */
+
+/**
+ * 'instanceof' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.8.6
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_instanceof (OPCODE opdata __unused, /**< operation data */
+                   struct __int_data *int_data __unused) /**< interpreter context */
+{
+  const T_IDX dst_idx = opdata.data.instanceof.dst;
+  const T_IDX left_var_idx = opdata.data.instanceof.var_left;
+  const T_IDX right_var_idx = opdata.data.instanceof.var_right;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  if ((right_value.value.value_type != ECMA_TYPE_OBJECT)
+       || (true /* TODO (check if rval has no [[HasInstance]] property) */))
+  {
+    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
+    ecma_string_t *to_string_lval = ecma_new_ecma_string_from_lit_index (left_var_idx);
+    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.value.value);
+
+    if (ecma_op_object_has_property (right_value_obj_p, to_string_lval))
+    {
+      is_in = ECMA_SIMPLE_VALUE_TRUE;
+    }
+    else
+    {
+      is_in = ECMA_SIMPLE_VALUE_FALSE;
+    }
+
+    ecma_deref_ecma_string (to_string_lval);
+
+    ret_value = set_variable_value (int_data,
+                                    dst_idx,
+                                    ecma_make_simple_value (is_in));
+  }
+
+  ECMA_FINALIZE (right_value);
+
+  return ret_value;
+} /* opfunc_instanceof */
+
 /**
  * 'in' opcode handler.
  *
- * See also: ECMA-262 v5, 11.8.6
+ * See also: ECMA-262 v5, 11.8.7
  *
  * @return completion value
  *         returned value must be freed with ecma_free_completion_value.

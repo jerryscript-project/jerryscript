@@ -307,6 +307,12 @@ OP_CODE_DECL (call_n, T_IDX_IDX_IDX,
               name_lit_idx,
               arg1_lit_idx)
 
+/** lhs = name (arg_list) */
+OP_CODE_DECL (native_call, T_IDX_IDX_IDX,
+              lhs,
+              name,
+              arg_list)
+
 /** a = new name (arg_list */
 OP_CODE_DECL (construct_decl, T_IDX_IDX_IDX,
               lhs,

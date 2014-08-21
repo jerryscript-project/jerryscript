@@ -40,6 +40,7 @@ ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
     op (call_0)                          \
     op (call_1)                          \
     op (call_n)                          \
+    op (native_call)                     \
     op (construct_decl)                  \
     op (func_decl_0)                     \
     op (func_decl_1)                     \

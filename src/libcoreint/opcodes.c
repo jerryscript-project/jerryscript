@@ -428,6 +428,7 @@ do_number_bitwise_logic (struct __int_data *int_data, /**< interpreter context *
 
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (call_n)                          \
+    op (native_call)                     \
     op (func_decl_n)                     \
     op (varg_list)                       \
     op (retval)                          \
@@ -2032,6 +2033,7 @@ GETOP_IMPL_3 (assignment, var_left, type_value_right, value_right)
 GETOP_IMPL_2 (call_0, lhs, name_lit_idx)
 GETOP_IMPL_3 (call_1, lhs, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (call_n, lhs, name_lit_idx, arg1_lit_idx)
+GETOP_IMPL_3 (native_call, lhs, name, arg_list)
 GETOP_IMPL_2 (func_decl_1, name_lit_idx, arg1_lit_idx)
 GETOP_IMPL_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)
 GETOP_IMPL_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)

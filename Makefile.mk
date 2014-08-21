@@ -1,3 +1,5 @@
+export SHELL=/bin/bash
+
 ifeq ($(TARGET),)
   $(error TARGET not set)
 endif
@@ -379,8 +381,8 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@cppcheck $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
+	@cppcheck -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
 	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) -e --no-duplicate 1>$(TARGET_DIR)/vera.log
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
@@ -412,26 +414,43 @@ $(TESTS_TARGET):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
-	@cppcheck $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction 1>/dev/null
+	@cppcheck -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY); \
         do \
                 cmd="$(CC) -c $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
                 $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $$jerry_src -o $(TARGET_DIR)/obj/$$(basename $$jerry_src).$$source_index.o"; \
-                if [ "$(option_echo)" = "enable" ]; then echo $$cmd; echo; fi; \
-                $$cmd; \
-		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
+                if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
+                $$cmd & \
+                ids[$$source_index]=$$!; \
+                cmds[$$source_index]="$$cmd"; \
 		source_index=$$(($$source_index+1)); \
+        done; \
+        for i in `seq 1 $$source_index`; \
+        do \
+          wait $${ids[$$i]}; \
+          status_code=$$?; \
+          if [ $$status_code -ne 0 ]; then echo Failed "'"$${cmds[$$i]}"'"; exit 1; fi; \
         done
-	@for unit_test in $(SOURCES_UNITTESTS); \
+	@unit_test_index=0; \
+        for unit_test in $(SOURCES_UNITTESTS); \
 	do \
 		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
 		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -lc -o $(TARGET_DIR)/$$unit_test"; \
                 if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
-		$$cmd; \
+		$$cmd & \
+                ids[$$unit_test_index]=$$!; \
+                cmds[$$unit_test_index]="$$cmd"; \
+		unit_test_index=$$(($$unit_test_index+1)); \
 		if [ $$? -ne 0 ]; then echo Failed "'$$cmd'"; exit 1; fi; \
-	done
+	done; \
+        for i in `seq 1 $$unit_test_index`; \
+        do \
+          wait $${ids[$$i]}; \
+          status_code=$$?; \
+          if [ $$status_code -ne 0 ]; then echo Failed "'"$${cmds[$$i]}"'"; exit 1; fi; \
+        done
 	@ rm -rf $(TARGET_DIR)/obj
 	@ VALGRIND=$(VALGRIND_CMD) ./tools/jerry_unittest.sh $(TARGET_DIR) $(TESTS_OPTS)
 

@@ -105,7 +105,10 @@ extern bool ecma_number_is_nan (ecma_number_t num);
 extern bool ecma_number_is_negative (ecma_number_t num);
 extern bool ecma_number_is_zero (ecma_number_t num);
 extern bool ecma_number_is_infinity (ecma_number_t num);
-extern uint64_t ecma_number_get_fraction_and_exponent (ecma_number_t num, int32_t *out_exponent_p);
+extern int32_t ecma_number_get_fraction_and_exponent (ecma_number_t num,
+                                                      uint64_t *out_fraction_p,
+                                                      int32_t *out_exponent_p);
+extern ecma_number_t ecma_number_negate (ecma_number_t num);
 
 /* ecma-helpers-values-collection.c */
 
@@ -187,6 +190,7 @@ extern void ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, si
 extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
 extern int32_t ecma_number_to_int32 (ecma_number_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
+extern void ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, size_t buffer_size);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

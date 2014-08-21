@@ -22,6 +22,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-magic-strings.h"
 #include "jerry-libc.h"
 
 /**
@@ -127,6 +128,183 @@ ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
 
   return (int32_t) value;
 } /* ecma_number_to_int32 */
+
+/**
+ * Convert ecma-number to zero-terminated string
+ *
+ * See also:
+ *          ECMA-262 v5, 9.8.1
+ */
+void
+ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
+                          ecma_char_t *buffer_p, /**< buffer for zt-string */
+                          size_t buffer_size) /**< size of buffer */
+{
+  TODO (Support UTF-16);
+
+  ecma_char_t digits_chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  ecma_char_t plus_char = '+';
+  ecma_char_t minus_char = '-';
+  ecma_char_t dot_char = '.';
+  ecma_char_t e_char = 'e';
+  ecma_char_t null_char = '\0';
+
+  // 1.
+  if (ecma_number_is_nan (num))
+  {
+    FIXME (/* Assert that buffer's size is enough */);
+    __strncpy ((char*) buffer_p, (char*) ecma_get_magic_string_zt (ECMA_MAGIC_STRING_NAN), buffer_size);
+
+    return;
+  }
+
+  ecma_char_t *dst_p = buffer_p;
+
+  // 2.
+  if (ecma_number_is_zero (num))
+  {
+    *dst_p++ = digits_chars[0];
+    *dst_p++ = null_char;
+
+    JERRY_ASSERT ((uint8_t*)dst_p - (uint8_t*)buffer_p <= (ssize_t) buffer_size);
+
+    return;
+  }
+
+  // 3.
+  if (ecma_number_is_negative (num))
+  {
+    *dst_p++ = minus_char;
+    size_t new_buffer_size = (size_t) ((ssize_t) buffer_size - ((uint8_t*)dst_p - (uint8_t*)buffer_p));
+    ecma_number_to_zt_string (ecma_number_negate (num), dst_p, new_buffer_size);
+
+    return;
+  }
+
+  // 4.
+  if (ecma_number_is_infinity (num))
+  {
+    FIXME (/* Assert that buffer's size is enough */);
+    __strncpy ((char*) buffer_p, (char*) ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY), buffer_size);
+
+    return;
+  }
+
+  // 5.
+  uint64_t fraction;
+  int32_t exponent;
+  int32_t dot_shift;
+  dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction, &exponent);
+
+  FIXME (Decimal representation);
+
+  uint64_t s = fraction;
+  int32_t n = exponent + 1;
+  int32_t k = dot_shift;
+
+  JERRY_ASSERT (s != 0);
+  while (!(s & 1))
+  {
+    s >>= 1;
+    k--;
+  }
+
+  // 6.
+  if (k <= n && n <= 21)
+  {
+    for (int32_t i = 0; i < k; i++)
+    {
+      uint64_t bit_mask = 1ul << (k - i - 1);
+      *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+    }
+
+    for (int32_t i = 0; i < n - k; i++)
+    {
+      *dst_p++ = digits_chars[0];
+    }
+  }
+  else if (0 < n && n <= 21)
+  {
+    // 7.
+    for (int32_t i = 0; i < n; i++)
+    {
+      uint64_t bit_mask = 1ul << (k - i - 1);
+      *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+    }
+
+    *dst_p++ = dot_char;
+
+    for (int32_t i = n; i < k; i++)
+    {
+      uint64_t bit_mask = 1ul << (k - i - 1);
+      *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+    }
+  }
+  else if (-6 <= n && n <= 0)
+  {
+    // 8.
+    *dst_p++ = digits_chars[0];
+    *dst_p++ = '.';
+
+    for (int32_t i = 0; i < k; i++)
+    {
+      uint64_t bit_mask = 1ul << (k - i - 1);
+      *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+    }
+  }
+  else
+  {
+    if (k == 1)
+    {
+      // 9.
+      *dst_p++ = digits_chars [s ? 1 : 0];
+    }
+    else
+    {
+      // 10.
+      uint64_t bit_mask = 1ul << (k - 1);
+      *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+      *dst_p++ = dot_char;
+      for (int32_t i = 1; i < k; i++)
+      {
+        bit_mask = 1ul << (k - i - 1);
+        *dst_p++ = digits_chars [(s & bit_mask) ? 1 : 0];
+      }
+    }
+
+    // 9., 10.
+    *dst_p++ = e_char;
+    *dst_p++ = (n >= 1) ? plus_char : minus_char;
+    int32_t t = (n >= 1) ? (n - 1) : -(n - 1);
+
+    if (t == 0)
+    {
+      *dst_p++ = digits_chars[0];
+    }
+    else
+    {
+      uint32_t t_bit = (1u << 31);
+
+      while ((t & (int32_t) t_bit) == 0)
+      {
+        t_bit >>= 1;
+
+        JERRY_ASSERT (t_bit != 0);
+      }
+
+      while (t_bit != 0)
+      {
+        *dst_p++ = digits_chars [(t & (int32_t) t_bit) ? 1 : 0];
+
+        t_bit >>= 1;
+      }
+    }
+  }
+
+  *dst_p++ = null_char;
+
+  JERRY_ASSERT ((uint8_t*)dst_p - (uint8_t*)buffer_p <= (ssize_t) buffer_size);
+} /* ecma_number_to_zt_string */
 
 /**
  * @}

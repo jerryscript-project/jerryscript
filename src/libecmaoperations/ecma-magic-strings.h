@@ -36,10 +36,13 @@ typedef enum
   ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
   ECMA_MAGIC_STRING_CALLER, /**< "caller" */
   ECMA_MAGIC_STRING_CALLEE, /**< "callee" */
-  ECMA_MAGIC_STRING_UNDEFINED,/**< undefined */
-  ECMA_MAGIC_STRING_LENGTH /**< length */
+  ECMA_MAGIC_STRING_UNDEFINED,/**< "undefined" */
+  ECMA_MAGIC_STRING_LENGTH, /**< "length" */
+  ECMA_MAGIC_STRING_NAN, /**< "NaN" */
+  ECMA_MAGIC_STRING_INFINITY /**< "Infinity" */
 } ecma_magic_string_id_t;
 
+extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
 
 /**

@@ -32,6 +32,7 @@ typedef signed long ssize_t;
 #define __unused __attribute__((unused))
 #define __packed __attribute__((packed))
 #define __noreturn __attribute__((noreturn))
+#define __noinline __attribute__((noinline))
 
 /**
  * Constants

@@ -97,8 +97,8 @@ extern ssize_t ecma_string_to_zt_string (ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
                                          ssize_t buffer_size);
 extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
-                                                     const ecma_string_t *string2_p);
+extern bool ecma_compare_ecma_string_to_ecma_string (ecma_string_t *string1_p,
+                                                     ecma_string_t *string2_p);
 
 /* ecma-helpers-number.c */
 extern bool ecma_number_is_nan (ecma_number_t num);

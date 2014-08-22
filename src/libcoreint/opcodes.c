@@ -599,18 +599,13 @@ opfunc_call_1 (OPCODE opdata __unused, struct __int_data *int_data)
       ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.value.value);
 
       ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
+      ECMA_FUNCTION_CALL (call_completion,
+                          ecma_op_function_call (func_obj_p, this_value.value, &arg_value.value, 1),
+                          ret_value);
 
-      ret_value = ecma_op_function_call (func_obj_p, this_value.value, &arg_value.value, 1);
+      ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.value);
 
-      if (ret_value.type == ECMA_COMPLETION_TYPE_RETURN)
-      {
-        ecma_value_t returned_value = ret_value.value;
-
-        ret_value = set_variable_value (int_data, lhs_var_idx, returned_value);
-
-        ecma_free_value (returned_value, true);
-      }
-
+      ECMA_FINALIZE (call_completion);
       ECMA_FINALIZE (this_value);
     }
 
@@ -2009,18 +2004,13 @@ opfunc_call_0 (OPCODE opdata, /**< operation data */
     ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.value.value);
 
     ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
+    ECMA_FUNCTION_CALL (call_completion,
+                        ecma_op_function_call (func_obj_p, this_value.value, NULL, 0),
+                        ret_value);
 
-    ret_value = ecma_op_function_call (func_obj_p, this_value.value, NULL, 0);
+    ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.value);
 
-    if (ret_value.type == ECMA_COMPLETION_TYPE_RETURN)
-    {
-      ecma_value_t returned_value = ret_value.value;
-
-      ret_value = set_variable_value (int_data, lhs_var_idx, returned_value);
-
-      ecma_free_value (returned_value, true);
-    }
-
+    ECMA_FINALIZE (call_completion);
     ECMA_FINALIZE (this_value);
   }
 

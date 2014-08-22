@@ -79,6 +79,7 @@ extern void ecma_free_completion_value (ecma_completion_value_t completion_value
 
 extern bool ecma_is_completion_value_normal (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_throw (ecma_completion_value_t value);
+extern bool ecma_is_completion_value_return (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value,
                                                           ecma_simple_value_t simple_value);
 extern bool ecma_is_completion_value_normal_true (ecma_completion_value_t value);

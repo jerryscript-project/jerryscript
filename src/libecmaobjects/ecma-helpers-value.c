@@ -409,6 +409,18 @@ ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion v
 } /* ecma_is_completion_value_throw */
 
 /**
+ * Check if the completion value is return value.
+ *
+ * @return true - if the completion type is return,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion value */
+{
+  return (value.type == ECMA_COMPLETION_TYPE_RETURN);
+} /* ecma_is_completion_value_return */
+
+/**
  * Check if the completion value is specified normal simple value.
  *
  * @return true - if the completion type is normal and

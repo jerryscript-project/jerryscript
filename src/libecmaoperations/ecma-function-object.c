@@ -424,7 +424,9 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     {
       JERRY_ASSERT(ecma_is_empty_completion_value (completion));
 
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                              ECMA_TARGET_ID_RESERVED);
     }
     else
     {

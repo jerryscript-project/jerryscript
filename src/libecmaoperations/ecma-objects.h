@@ -43,7 +43,8 @@ extern ecma_completion_value_t ecma_op_object_define_own_property (ecma_object_t
                                                                    ecma_string_t *property_name_p,
                                                                    ecma_property_descriptor_t property_desc,
                                                                    bool is_throw);
-
+extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *obj_p,
+                                                            ecma_value_t value);
 /**
  * @}
  * @}

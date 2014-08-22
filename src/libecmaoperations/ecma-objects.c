@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
@@ -395,6 +396,45 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   JERRY_UNREACHABLE();
 } /* ecma_op_object_define_own_property */
+
+/**
+ * [[HasInstance]] ecma object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 9
+ */
+ecma_completion_value_t
+ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
+                             ecma_value_t value) /**< argument 'V' */
+{
+  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+
+  const ecma_object_type_t type = obj_p->u.object.type;
+
+  switch (type)
+  {
+    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
+      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (obj_p, value);
+    }
+
+    case ECMA_OBJECT_TYPE_HOST:
+    {
+      JERRY_UNIMPLEMENTED();
+    }
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_op_object_has_instance */
 
 /**
  * @}

@@ -502,29 +502,27 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ecma_deref_object (prototype_p);
 
     // 8.
-    ECMA_TRY_CATCH (call_completion,
-                    ecma_op_function_call (func_obj_p,
-                                           ecma_make_object_value (obj_p),
-                                           arguments_list_p,
-                                           arguments_list_len),
-                    ret_value);
+    ECMA_FUNCTION_CALL (call_completion,
+                        ecma_op_function_call (func_obj_p,
+                                               ecma_make_object_value (obj_p),
+                                               arguments_list_p,
+                                               arguments_list_len),
+                        ret_value);
 
     // 9.
-    if (call_completion.type != ECMA_COMPLETION_TYPE_NORMAL
-        || call_completion.value.value_type == ECMA_TYPE_OBJECT)
+    if (call_completion.value.value_type == ECMA_TYPE_OBJECT)
     {
       ecma_deref_object (obj_p);
 
-      ret_value = call_completion;
+      ret_value = ecma_copy_completion_value (call_completion);
     }
     else
     {
       // 10.
-      ecma_free_completion_value (call_completion);
-
       ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                               ecma_make_object_value (obj_p),
                                               ECMA_TARGET_ID_RESERVED);
+
     }
 
     ECMA_FINALIZE (call_completion);

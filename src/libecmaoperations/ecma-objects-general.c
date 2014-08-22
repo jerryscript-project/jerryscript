@@ -14,11 +14,13 @@
  */
 
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
@@ -151,19 +153,31 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 4.
-    ecma_object_t *getter = ECMA_GET_POINTER(prop_p->u.named_accessor_property.get_p);
+    ecma_object_t *getter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.get_p);
 
     // 5.
-    if (getter == NULL)
+    if (getter_p == NULL)
     {
       return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
-      /*
-       * Return result of O.[[Call]];
-       */
-      JERRY_UNIMPLEMENTED();
+      ecma_completion_value_t ret_value;
+
+      ECMA_FUNCTION_CALL (call_completion,
+                          ecma_op_function_call (getter_p,
+                                                 ecma_make_object_value (obj_p),
+                                                 NULL,
+                                                 0),
+                          ret_value);
+
+      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                              ecma_copy_value (call_completion.value, true),
+                                              ECMA_TARGET_ID_RESERVED);
+
+      ECMA_FINALIZE (call_completion);
+
+      return ret_value;
     }
   }
 
@@ -294,14 +308,22 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
   {
     // a.
     ecma_object_t *setter_p = ECMA_GET_POINTER(desc_p->u.named_accessor_property.set_p);
-
     JERRY_ASSERT(setter_p != NULL);
 
-    // b.
-    /*
-     * setter_p->[[Call]](obj_p, value);
-     */
-    JERRY_UNIMPLEMENTED();
+    ecma_completion_value_t ret_value;
+
+    ECMA_FUNCTION_CALL (call_completion,
+                        ecma_op_function_call (setter_p,
+                                               ecma_make_object_value (obj_p),
+                                               &value,
+                                               1),
+                        ret_value);
+
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+
+    ECMA_FINALIZE (call_completion);
+
+    return ret_value;
   }
   else
   {

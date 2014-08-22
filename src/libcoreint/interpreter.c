@@ -119,7 +119,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   __memset (regs, 0, sizeof (regs));
   JERRY_ASSERT (ecma_is_value_empty (regs[0]));
 
-  __int_data int_data;
+  int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
   int_data.this_binding = this_binding_value;
   int_data.lex_env_p = lex_env_p;

@@ -42,7 +42,7 @@ typedef enum
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-do_number_bitwise_logic (__int_data *int_data, /**< interpreter context */
+do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
                          idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
                          ecma_value_t left_value, /**< left value */
@@ -126,7 +126,7 @@ do_number_bitwise_logic (__int_data *int_data, /**< interpreter context */
  */
 ecma_completion_value_t
 opfunc_b_and (opcode_t opdata, /**< operation data */
-              __int_data *int_data) /**< interpreter context */
+              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_and.dst;
   const idx_t left_var_idx = opdata.data.b_and.var_left;
@@ -161,7 +161,7 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_or (opcode_t opdata, /**< operation data */
-             __int_data *int_data) /**< interpreter context */
+             int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_or.dst;
   const idx_t left_var_idx = opdata.data.b_or.var_left;
@@ -196,7 +196,7 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_xor (opcode_t opdata, /**< operation data */
-              __int_data *int_data) /**< interpreter context */
+              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_xor.dst;
   const idx_t left_var_idx = opdata.data.b_xor.var_left;
@@ -231,7 +231,7 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_left (opcode_t opdata, /**< operation data */
-                     __int_data *int_data) /**< interpreter context */
+                     int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_left.dst;
   const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
@@ -266,7 +266,7 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_right (opcode_t opdata, /**< operation data */
-                      __int_data *int_data) /**< interpreter context */
+                      int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_right.dst;
   const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
@@ -301,7 +301,7 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
-                      __int_data *int_data) /**< interpreter context */
+                      int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_uright.dst;
   const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
@@ -336,7 +336,7 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_not (opcode_t opdata, /**< operation data */
-              __int_data *int_data) /**< interpreter context */
+              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_not.dst;
   const idx_t right_var_idx = opdata.data.b_not.var_right;

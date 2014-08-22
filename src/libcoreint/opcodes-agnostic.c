@@ -25,7 +25,7 @@
  */
 ecma_completion_value_t
 opfunc_is_true_jmp (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_true_jmp.value;
   const idx_t dst_opcode_idx = opdata.data.is_true_jmp.opcode;
@@ -62,7 +62,7 @@ opfunc_is_true_jmp (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_is_false_jmp (opcode_t opdata, /**< operation data */
-                     __int_data *int_data) /**< interpreter context */
+                     int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_false_jmp.value;
   const idx_t dst_opcode_idx = opdata.data.is_false_jmp.opcode;
@@ -98,7 +98,7 @@ opfunc_is_false_jmp (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp (opcode_t opdata, /**< operation data */
-            __int_data *int_data) /**< interpreter context */
+            int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos = opdata.data.jmp.opcode_idx;
 
@@ -113,7 +113,7 @@ opfunc_jmp (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp_down (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   JERRY_ASSERT (int_data->pos <= int_data->pos + opdata.data.jmp_up.opcode_count);
 
@@ -130,7 +130,7 @@ opfunc_jmp_down (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp_up (opcode_t opdata, /**< operation data */
-               __int_data *int_data) /**< interpreter context */
+               int_data_t *int_data) /**< interpreter context */
 {
   JERRY_ASSERT (int_data->pos >= opdata.data.jmp_up.opcode_count);
 

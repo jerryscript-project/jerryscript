@@ -26,7 +26,7 @@
  */
 ecma_completion_value_t
 opfunc_equal_value (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.equal_value.dst;
   const idx_t left_var_idx = opdata.data.equal_value.var_left;
@@ -60,7 +60,7 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_not_equal_value (opcode_t opdata, /**< operation data */
-                        __int_data *int_data) /**< interpreter context */
+                        int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.not_equal_value.dst;
   const idx_t left_var_idx = opdata.data.not_equal_value.var_left;
@@ -95,7 +95,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_equal_value_type (opcode_t opdata, /**< operation data */
-                         __int_data *int_data) /**< interpreter context */
+                         int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.equal_value_type.dst;
   const idx_t left_var_idx = opdata.data.equal_value_type.var_left;
@@ -129,7 +129,7 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
-                             __int_data *int_data) /**< interpreter context */
+                             int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.not_equal_value_type.dst;
   const idx_t left_var_idx = opdata.data.not_equal_value_type.var_left;

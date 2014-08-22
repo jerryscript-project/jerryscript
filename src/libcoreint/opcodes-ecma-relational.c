@@ -26,7 +26,7 @@
  */
 ecma_completion_value_t
 opfunc_less_than (opcode_t opdata, /**< operation data */
-                  __int_data *int_data) /**< interpreter context */
+                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.less_than.dst;
   const idx_t left_var_idx = opdata.data.less_than.var_left;
@@ -76,7 +76,7 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_greater_than (opcode_t opdata, /**< operation data */
-                     __int_data *int_data) /**< interpreter context */
+                     int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.greater_than.dst;
   const idx_t left_var_idx = opdata.data.greater_than.var_left;
@@ -126,7 +126,7 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
-                           __int_data *int_data) /**< interpreter context */
+                           int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.less_or_equal_than.dst;
   const idx_t left_var_idx = opdata.data.less_or_equal_than.var_left;
@@ -183,7 +183,7 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
-                              __int_data *int_data) /**< interpreter context */
+                              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.greater_or_equal_than.dst;
   const idx_t left_var_idx = opdata.data.greater_or_equal_than.var_left;
@@ -240,7 +240,7 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
-                   __int_data *int_data __unused) /**< interpreter context */
+                   int_data_t *int_data __unused) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.instanceof.dst;
   const idx_t left_var_idx = opdata.data.instanceof.var_left;
@@ -285,7 +285,7 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_in (opcode_t opdata __unused, /**< operation data */
-           __int_data *int_data __unused) /**< interpreter context */
+           int_data_t *int_data __unused) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.in.dst;
   const idx_t left_var_idx = opdata.data.in.var_left;

@@ -136,7 +136,7 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
-  ecma_completion_value_t opfunc_ ## op (opcode_t opdata, __int_data *int_data) \
+  ecma_completion_value_t opfunc_ ## op (opcode_t opdata, int_data_t *int_data) \
   { \
     JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (opdata, int_data); \
   }
@@ -149,7 +149,7 @@ OP_UNIMPLEMENTED_LIST (DEFINE_UNIMPLEMENTED_OP);
  */
 ecma_completion_value_t
 opfunc_nop (opcode_t opdata __unused, /**< operation data */
-            __int_data *int_data) /**< interpreter context */
+            int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos++;
 
@@ -157,7 +157,7 @@ opfunc_nop (opcode_t opdata __unused, /**< operation data */
 } /* opfunc_nop */
 
 ecma_completion_value_t
-opfunc_call_1 (opcode_t opdata __unused, __int_data *int_data)
+opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
 {
   ecma_completion_value_t ret_value;
   ret_value = ecma_make_empty_completion_value ();
@@ -299,7 +299,7 @@ opfunc_call_1 (opcode_t opdata __unused, __int_data *int_data)
  */
 ecma_completion_value_t
 opfunc_assignment (opcode_t opdata, /**< operation data */
-                   __int_data *int_data) /**< interpreter context */
+                   int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.assignment.var_left;
   const opcode_arg_type_operand type_value_right = opdata.data.assignment.type_value_right;
@@ -385,7 +385,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_pre_incr (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.pre_incr.dst;
   const idx_t incr_var_idx = opdata.data.pre_incr.var_right;
@@ -435,7 +435,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_pre_decr (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.pre_decr.dst;
   const idx_t decr_var_idx = opdata.data.pre_decr.var_right;
@@ -485,7 +485,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_post_incr (opcode_t opdata, /**< operation data */
-                  __int_data *int_data) /**< interpreter context */
+                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.post_incr.dst;
   const idx_t incr_var_idx = opdata.data.post_incr.var_right;
@@ -533,7 +533,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_post_decr (opcode_t opdata, /**< operation data */
-                  __int_data *int_data) /**< interpreter context */
+                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.post_decr.dst;
   const idx_t decr_var_idx = opdata.data.post_decr.var_right;
@@ -578,7 +578,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_reg_var_decl (opcode_t opdata __unused, /**< operation data */
-                     __int_data *int_data __unused) /**< interpreter context */
+                     int_data_t *int_data __unused) /**< interpreter context */
 {
   JERRY_UNREACHABLE ();
 } /* opfunc_reg_var_decl */
@@ -594,7 +594,7 @@ opfunc_reg_var_decl (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_var_decl (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.var_decl.variable_name);
 
@@ -632,7 +632,7 @@ opfunc_var_decl (opcode_t opdata, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-function_declaration (__int_data *int_data, /**< interpreter context */
+function_declaration (int_data_t *int_data, /**< interpreter context */
                       idx_t function_name_lit_idx, /**< identifier of literal with function name */
                       ecma_string_t* args_names[], /**< names of arguments */
                       ecma_length_t args_number) /**< number of arguments */
@@ -671,7 +671,7 @@ function_declaration (__int_data *int_data, /**< interpreter context */
  */
 ecma_completion_value_t
 opfunc_func_decl_0 (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos++;
 
@@ -689,7 +689,7 @@ opfunc_func_decl_0 (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_func_decl_1 (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos++;
 
@@ -713,7 +713,7 @@ opfunc_func_decl_1 (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_func_decl_2 (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos++;
 
@@ -744,7 +744,7 @@ opfunc_func_decl_2 (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_call_0 (opcode_t opdata, /**< operation data */
-               __int_data *int_data) /**< interpreter context */
+               int_data_t *int_data) /**< interpreter context */
 {
   const idx_t func_name_lit_idx = opdata.data.call_0.name_lit_idx;
   const idx_t lhs_var_idx = opdata.data.call_0.lhs;
@@ -790,7 +790,7 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_ret (opcode_t opdata __unused, /**< operation data */
-            __int_data *int_data __unused) /**< interpreter context */
+            int_data_t *int_data __unused) /**< interpreter context */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
@@ -808,7 +808,7 @@ opfunc_ret (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_retval (opcode_t opdata __unused, /**< operation data */
-               __int_data *int_data __unused) /**< interpreter context */
+               int_data_t *int_data __unused) /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
 
@@ -834,7 +834,7 @@ opfunc_retval (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
-                    __int_data *int_data __unused) /**< interpreter context */
+                    int_data_t *int_data __unused) /**< interpreter context */
 {
   const idx_t lhs_var_idx = opdata.data.prop_getter.lhs;
   const idx_t base_var_idx = opdata.data.prop_getter.obj;
@@ -881,7 +881,7 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
-                    __int_data *int_data __unused) /**< interpreter context */
+                    int_data_t *int_data __unused) /**< interpreter context */
 {
   const idx_t base_var_idx = opdata.data.prop_setter.obj;
   const idx_t prop_name_var_idx = opdata.data.prop_setter.prop;
@@ -930,7 +930,7 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_exitval (opcode_t opdata, /**< operation data */
-                __int_data *int_data __unused) /**< interpreter context */
+                int_data_t *int_data __unused) /**< interpreter context */
 {
   JERRY_ASSERT (opdata.data.exitval.status_code == 0
                 || opdata.data.exitval.status_code == 1);
@@ -952,7 +952,7 @@ opfunc_exitval (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_logical_not (opcode_t opdata, /**< operation data */
-                    __int_data *int_data) /**< interpreter context */
+                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.logical_not.dst;
   const idx_t right_var_idx = opdata.data.logical_not.var_right;
@@ -990,7 +990,7 @@ opfunc_logical_not (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_logical_or (opcode_t opdata, /**< operation data */
-                   __int_data *int_data) /**< interpreter context */
+                   int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.logical_or.dst;
   const idx_t left_var_idx = opdata.data.logical_or.var_left;
@@ -1034,7 +1034,7 @@ opfunc_logical_or (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_logical_and (opcode_t opdata, /**< operation data */
-                   __int_data *int_data) /**< interpreter context */
+                   int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.logical_and.dst;
   const idx_t left_var_idx = opdata.data.logical_and.var_left;
@@ -1070,7 +1070,7 @@ opfunc_logical_and (opcode_t opdata, /**< operation data */
 
 
 #define GETOP_DEF_1(a, name, field1) \
-        opcode_t getop_##name (idx_t arg1) \
+        inline opcode_t getop_##name (idx_t arg1) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \
@@ -1079,7 +1079,7 @@ opfunc_logical_and (opcode_t opdata, /**< operation data */
         }
 
 #define GETOP_DEF_2(a, name, field1, field2) \
-        opcode_t getop_##name (idx_t arg1, idx_t arg2) \
+        inline opcode_t getop_##name (idx_t arg1, idx_t arg2) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \
@@ -1089,7 +1089,7 @@ opfunc_logical_and (opcode_t opdata, /**< operation data */
         }
 
 #define GETOP_DEF_3(a, name, field1, field2, field3) \
-        opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
+        inline opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \

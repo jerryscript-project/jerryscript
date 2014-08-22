@@ -16,6 +16,7 @@
 #include "opcodes.h"
 #include "opcodes-ecma-support.h"
 #include "ecma-number-arithmetic.h"
+#include "jerry-libc.h"
 
 /**
  * Number arithmetic operations.
@@ -41,7 +42,7 @@ typedef enum
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-do_number_arithmetic (__int_data *int_data, /**< interpreter context */
+do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
                       idx_t dst_var_idx, /**< destination variable identifier */
                       number_arithmetic_op op, /**< number arithmetic operation */
                       ecma_value_t left_value, /**< left value */
@@ -109,7 +110,7 @@ do_number_arithmetic (__int_data *int_data, /**< interpreter context */
  */
 ecma_completion_value_t
 opfunc_addition (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.addition.dst;
   const idx_t left_var_idx = opdata.data.addition.var_left;
@@ -156,7 +157,7 @@ opfunc_addition (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_substraction (opcode_t opdata, /**< operation data */
-                     __int_data *int_data) /**< interpreter context */
+                     int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.substraction.dst;
   const idx_t left_var_idx = opdata.data.substraction.var_left;
@@ -191,7 +192,7 @@ opfunc_substraction (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_multiplication (opcode_t opdata, /**< operation data */
-                       __int_data *int_data) /**< interpreter context */
+                       int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.multiplication.dst;
   const idx_t left_var_idx = opdata.data.multiplication.var_left;
@@ -226,7 +227,7 @@ opfunc_multiplication (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_division (opcode_t opdata, /**< operation data */
-                 __int_data *int_data) /**< interpreter context */
+                 int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.division.dst;
   const idx_t left_var_idx = opdata.data.division.var_left;
@@ -261,7 +262,7 @@ opfunc_division (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_remainder (opcode_t opdata, /**< operation data */
-                  __int_data *int_data) /**< interpreter context */
+                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t left_var_idx = opdata.data.remainder.var_left;

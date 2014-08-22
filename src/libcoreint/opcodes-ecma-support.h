@@ -32,8 +32,8 @@
 #include "opcodes.h"
 
 static bool do_strict_eval_arguments_check (ecma_reference_t) __unused;
-static ecma_completion_value_t get_variable_value (__int_data *, idx_t, bool) __unused;
-static ecma_completion_value_t set_variable_value (__int_data *, idx_t, ecma_value_t) __unused;
+static ecma_completion_value_t get_variable_value (int_data_t *, idx_t, bool) __unused;
+static ecma_completion_value_t set_variable_value (int_data_t *, idx_t, ecma_value_t) __unused;
 
 /**
  * Perform so-called 'strict eval or arguments reference' check
@@ -81,7 +81,7 @@ do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-get_variable_value (__int_data *int_data, /**< interpreter context */
+get_variable_value (int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                         See also: do_strict_eval_arguments_check */
@@ -133,7 +133,7 @@ get_variable_value (__int_data *int_data, /**< interpreter context */
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-set_variable_value (__int_data *int_data, /**< interpreter context */
+set_variable_value (int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     ecma_value_t value) /**< value to set */
 {

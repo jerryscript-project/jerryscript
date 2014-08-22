@@ -23,12 +23,12 @@
 #include "interpreter.h"
 #include "jerry-libc.h"
 
-#define INIT_OP_FUNC(name) [ __op__idx_##name ] = opfunc_##name,
+#define __INIT_OP_FUNC(name, arg1, arg2, arg3) [ __op__idx_##name ] = opfunc_##name,
 static const opfunc __opfuncs[LAST_OP] =
 {
   OP_LIST (INIT_OP_FUNC)
 };
-#undef INIT_OP_FUNC
+#undef __INIT_OP_FUNC
 
 JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
 

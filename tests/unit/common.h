@@ -18,8 +18,8 @@
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
-#define OPCODE_SIZE(op) \
-  sizeof (__op_##op) + 1,
+#define __OPCODE_SIZE(name, arg1, arg2, arg3) \
+  sizeof (__op_##name) + 1,
 
 static uint8_t opcode_sizes[] = {
   OP_LIST (OPCODE_SIZE)

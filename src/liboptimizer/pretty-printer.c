@@ -21,11 +21,11 @@
 
 #define FIELD(op, field) (opcode.data.op.field)
 
-#define OPCODE_STR(op) \
-  #op,
+#define __OPCODE_STR(name, arg1, arg2, arg3) \
+  #name,
 
-#define OPCODE_SIZE(op) \
-  sizeof (__op_##op) + 1,
+#define __OPCODE_SIZE(name, arg1, arg2, arg3) \
+  sizeof (__op_##name) + 1,
 
 static char* opcode_names[] =
 {

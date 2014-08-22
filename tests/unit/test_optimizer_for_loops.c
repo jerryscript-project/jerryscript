@@ -22,7 +22,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "mem-allocator.h"
-#include "opcodes-support.h"
+#include "opcodes.h"
 
 #define MAX_STRINGS 100
 #define MAX_NUMS 25

@@ -1067,3 +1067,5 @@ opfunc_logical_and (OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_logical_and */
+
+OP_ARGS_LIST (GETOP_DEF)

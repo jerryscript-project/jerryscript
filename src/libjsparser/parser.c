@@ -17,7 +17,7 @@
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
-#include "opcodes-support.h"
+#include "opcodes.h"
 #include "serializer.h"
 #include "interpreter.h"
 

@@ -2262,6 +2262,7 @@ opfunc_in (OPCODE opdata __unused, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   if (right_value.value.value_type != ECMA_TYPE_OBJECT)
@@ -2270,11 +2271,13 @@ opfunc_in (OPCODE opdata __unused, /**< operation data */
   }
   else
   {
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value.value), ret_value);
+
     ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
-    ecma_string_t *to_string_lval = ecma_new_ecma_string_from_lit_index (left_var_idx);
+    ecma_string_t *left_value_prop_name_p = ECMA_GET_POINTER (str_left_value.value.value);
     ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.value.value);
 
-    if (ecma_op_object_has_property (right_value_obj_p, to_string_lval))
+    if (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p))
     {
       is_in = ECMA_SIMPLE_VALUE_TRUE;
     }
@@ -2283,14 +2286,15 @@ opfunc_in (OPCODE opdata __unused, /**< operation data */
       is_in = ECMA_SIMPLE_VALUE_FALSE;
     }
 
-    ecma_deref_ecma_string (to_string_lval);
-
     ret_value = set_variable_value (int_data,
                                     dst_idx,
                                     ecma_make_simple_value (is_in));
+
+    ECMA_FINALIZE (str_left_value);
   }
 
   ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   return ret_value;
 } /* opfunc_in */

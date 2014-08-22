@@ -47,6 +47,79 @@ ecma_reject (bool is_throw) /**< Throw flag */
 } /* ecma_reject */
 
 /**
+ * 'Object' object creation operation with no arguments.
+ *
+ * See also: ECMA-262 v5, 15.2.2.1
+ *
+ * @return pointer to newly created 'Object' object
+ */
+ecma_object_t*
+ecma_op_create_object_object_noarg (void)
+{
+  FIXME (/* Set to built-in Object prototype (15.2.4) */);
+
+  // 3., 4., 6., 7.
+  ecma_object_t *obj_p = ecma_create_object (NULL, false, ECMA_OBJECT_TYPE_GENERAL);
+
+  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_OBJECT;
+
+  return obj_p;
+} /* ecma_op_create_object_object_noarg */
+
+/**
+ * 'Object' object creation operation with one argument.
+ *
+ * See also: ECMA-262 v5, 15.2.2.1
+ *
+ * @return pointer to newly created 'Object' object
+ */
+ecma_completion_value_t
+ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of constructor */
+{
+  switch ((ecma_type_t)value.value_type)
+  {
+    case ECMA_TYPE_OBJECT:
+    {
+      // 1.a
+      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                         ecma_copy_value (value, true),
+                                         ECMA_TARGET_ID_RESERVED);
+    }
+    case ECMA_TYPE_NUMBER:
+    case ECMA_TYPE_STRING:
+    {
+      // 1.b, 1.d
+      return ecma_op_to_object (value);
+    }
+    case ECMA_TYPE_SIMPLE:
+    {
+      // 1.c
+      if (ecma_is_value_boolean (value))
+      {
+        return ecma_op_to_object (value);
+      }
+
+      // 2.
+      JERRY_ASSERT (ecma_is_value_undefined (value)
+                    || ecma_is_value_null (value));
+
+      ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+
+      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                         ecma_make_object_value (obj_p),
+                                         ECMA_TARGET_ID_RESERVED);
+    }
+    case ECMA_TYPE__COUNT:
+    {
+      JERRY_UNREACHABLE();
+    }
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_op_create_object_object_arg */
+
+/**
  * [[Get]] ecma general object's operation
  *
  * See also:

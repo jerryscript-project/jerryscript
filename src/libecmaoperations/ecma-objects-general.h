@@ -26,6 +26,9 @@
  * @{
  */
 
+extern ecma_object_t* ecma_op_create_object_object_noarg (void);
+extern ecma_completion_value_t ecma_op_create_object_object_arg (ecma_value_t value);
+
 extern ecma_completion_value_t ecma_op_general_object_get (ecma_object_t *obj_p,
                                                            ecma_string_t *property_name_p);
 extern ecma_property_t *ecma_op_general_object_get_own_property (ecma_object_t *obj_p,

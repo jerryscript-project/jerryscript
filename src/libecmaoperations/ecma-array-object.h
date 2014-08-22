@@ -25,6 +25,10 @@
  * @{
  */
 
+extern ecma_object_t*
+ecma_op_create_array_object (ecma_value_t *arguments_list_p,
+                             ecma_length_t arguments_list_len);
+
 extern ecma_completion_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *obj_p,
                                           ecma_string_t *property_name_p,

@@ -50,6 +50,25 @@ ecma_reject (bool is_throw) /**< Throw flag */
 } /* ecma_reject */
 
 /**
+ * Array object creation operation.
+ *
+ * See also: ECMA-262 v5, 15.4.2.1
+ *           ECMA-262 v5, 15.4.2.2
+ *
+ * @return pointer to newly created Array object
+ */
+ecma_object_t*
+ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of arguments that
+                                                                  are passed to Array constructor */
+                             ecma_length_t arguments_list_len) /**< length of the arguments' list */
+{
+  JERRY_ASSERT (arguments_list_len == 0
+                || arguments_list_p != NULL);
+
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p, arguments_list_len);
+} /* ecma_op_create_array_object */
+
+/**
  * Reduce length of Array to specified value.
  *
  * Warning:

@@ -23,7 +23,10 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
+#include "ecma-function-object.h"
+#include "ecma-objects-general.h"
 #include "ecma-operations.h"
+#include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ---TODO---
  * @{
@@ -52,67 +55,72 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
                                 && !((ecma_object_t*)ECMA_GET_POINTER(base.value))->is_lexical_environment);
   const bool is_property_reference = has_primitive_base || has_object_base;
 
-  // GetValue_3
+  // 3.
   if (is_unresolvable_reference)
   {
     return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
   }
 
-  // GetValue_4
+  // 4.
   if (is_property_reference)
   {
-    if (!has_primitive_base) // GetValue_4.a
+    // 4.a
+    if (!has_primitive_base)
     {
+      // 4.b case 1
+
       ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
       JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
 
-      // GetValue_4.b case 1
-      /* return [[Get]](base as this, ref.referenced_name_p) */
-      JERRY_UNIMPLEMENTED();
+      return ecma_op_object_get (obj_p, ref.referenced_name_p);
     }
     else
-    { // GetValue_4.b case 2
-      /*
-           ecma_object_t *obj_p = ecma_ToObject (base);
-           JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
-           ecma_property_t *property = obj_p->[[GetProperty]](ref.referenced_name_p);
-           if (property->Type == ECMA_PROPERTY_NAMEDDATA)
-           {
-           return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-           ecma_copy_value (property->u.named_data_property.value),
-           ECMA_TARGET_ID_RESERVED);
-           }
-           else
-           {
-           JERRY_ASSERT(property->Type == ECMA_PROPERTY_NAMEDACCESSOR);
+    {
+      // 4.b case 2
+      ecma_completion_value_t ret_value;
 
-           ecma_object_t *getter = ECMA_GET_POINTER(property->u.named_accessor_property.get_p);
+      ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-           if (getter == NULL)
-           {
-           return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-           ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-           ECMA_TARGET_ID_RESERVED);
-           }
-           else
-           {
-           return [[Call]](getter, base as this);
-           }
-           }
-       */
-      JERRY_UNIMPLEMENTED();
+      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.value.value);
+      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
+      JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
+
+      ret_value = ecma_op_general_object_get (obj_p, ref.referenced_name_p);
+
+      ECMA_FINALIZE (obj_base);
+
+      return ret_value;
     }
   }
   else
   {
-    // GetValue_5
+    // 5
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
-
     JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
 
+    // 5.a
     return ecma_op_get_binding_value (lex_env_p, ref.referenced_name_p, ref.is_strict);
   }
 } /* ecma_op_get_value */
+
+/**
+ * Reject sequence for PutValue
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_completion_value_t
+ecma_reject_put (bool is_throw) /**< Throw flag */
+{
+  if (is_throw)
+  {
+    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_EMPTY);
+  }
+} /* ecma_reject_put */
 
 /**
  * PutValue operation.
@@ -135,14 +143,17 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
                                 && !((ecma_object_t*)ECMA_GET_POINTER(base.value))->is_lexical_environment);
   const bool is_property_reference = has_primitive_base || has_object_base;
 
-  if (is_unresolvable_reference) // PutValue_3
+  // 3.
+  if (is_unresolvable_reference)
   {
-    if (ref.is_strict) // PutValue_3.a
+    // 3.a.
+    if (ref.is_strict)
     {
       return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
     }
-    else // PutValue_3.b
+    else
     {
+      // 3.b.
       ecma_object_t *global_object_p = ecma_get_global_object ();
 
       ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
@@ -158,97 +169,79 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       return ecma_make_empty_completion_value ();
     }
   }
-  else if (is_property_reference) // PutValue_4
+  else if (is_property_reference)
   {
-    if (!has_primitive_base) // PutValue_4.a
+    // 4.
+    if (!has_primitive_base)
     {
-      // PutValue_4.b case 1
+      // 4.b case 1
 
-      /* return [[Put]](base as this, ref.referenced_name_p, value, ref.is_strict); */
-      JERRY_UNIMPLEMENTED();
+      ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
+      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
+      
+      return ecma_op_object_put (obj_p, ref.referenced_name_p, value, ref.is_strict);
     }
     else
     {
-      // PutValue_4.b case 2
+      // 4.b case 2
+      ecma_completion_value_t ret_value;
 
-      /*
-      // PutValue_sub_1
-      ecma_object_t *obj_p = ecma_ToObject (base);
-      JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+      // sub_1.
+      ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-      // PutValue_sub_2
-      if (!obj_p->[[CanPut]](ref.referenced_name_p))
+      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.value.value);
+      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
+      JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
+
+      // sub_2.
+      if (!ecma_op_general_object_can_put (obj_p, ref.referenced_name_p))
       {
-      // PutValue_sub_2.a
-      if (ref.is_strict)
-      {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        ret_value = ecma_reject_put (ref.is_strict);
       }
       else
-      { // PutValue_sub_2.b
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
-      ECMA_TARGET_ID_RESERVED);
-      }
-      }
-
-      // PutValue_sub_3
-      ecma_property_t *own_prop = obj_p->[[GetOwnProperty]](ref.referenced_name_p);
-
-      // PutValue_sub_4
-      if (ecma_OpIsDataDescriptor (own_prop))
       {
-      // PutValue_sub_4.a
-      if (ref.is_strict)
-      {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-      }
-      else
-      { // PutValue_sub_4.b
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
-      ECMA_TARGET_ID_RESERVED);
-      }
+        // sub_3.
+        ecma_property_t *own_prop_p = ecma_op_general_object_get_own_property (obj_p, ref.referenced_name_p);
+
+        // sub_5.
+        ecma_property_t *prop_p = ecma_op_general_object_get_property (obj_p, ref.referenced_name_p);
+
+        // sub_4., sub_7
+        if ((own_prop_p != NULL
+             && own_prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+            || (prop_p == NULL)
+            || (prop_p->type != ECMA_PROPERTY_NAMEDACCESSOR))
+        {
+          ret_value = ecma_reject_put (ref.is_strict);
+        }
+
+        // sub_6.
+        JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+        ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
+        JERRY_ASSERT (setter_p != NULL);
+
+        ECMA_FUNCTION_CALL (call_completion,
+                            ecma_op_function_call (setter_p, base, &value, 1),
+                            ret_value);
+
+        ret_value = ecma_make_empty_completion_value ();
+
+        ECMA_FINALIZE (call_completion);
       }
 
-      // PutValue_sub_5
-      ecma_property_t *prop = obj_p->[[GetProperty]](ref.referenced_name_p);
+      ECMA_FINALIZE (obj_base);
 
-      // PutValue_sub_6
-      if (ecma_OpIsAccessorDescriptor (prop))
-      {
-      // PutValue_sub_6.a
-      ecma_object_t *setter = ECMA_GET_POINTER(property->u.named_accessor_property.set_p);
-      JERRY_ASSERT(setter != NULL);
-
-      // PutValue_sub_6.b
-      return [[Call]](setter, base as this, value);
-      }
-      else // PutValue_sub_7
-      {
-      // PutValue_sub_7.a
-      if (ref.is_strict)
-      {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-      }
-      }
-
-      // PutValue_sub_8
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
-      ECMA_TARGET_ID_RESERVED);
-       */
-
-      JERRY_UNIMPLEMENTED();
+      return ret_value;
     }
   }
   else
   {
-    // PutValue_7
+    // 5.
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
-
     JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
 
+    // 5.a.
     return ecma_op_set_mutable_binding (lex_env_p, ref.referenced_name_p, value, ref.is_strict);
   }
 } /* ecma_op_put_value */

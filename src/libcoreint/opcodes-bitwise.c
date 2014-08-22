@@ -43,7 +43,7 @@ typedef enum
  */
 static ecma_completion_value_t
 do_number_bitwise_logic (__int_data *int_data, /**< interpreter context */
-                         T_IDX dst_var_idx, /**< destination variable identifier */
+                         idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
                          ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /** right value */
@@ -125,12 +125,12 @@ do_number_bitwise_logic (__int_data *int_data, /**< interpreter context */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_and (OPCODE opdata, /**< operation data */
+opfunc_b_and (opcode_t opdata, /**< operation data */
               __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_and.dst;
-  const T_IDX left_var_idx = opdata.data.b_and.var_left;
-  const T_IDX right_var_idx = opdata.data.b_and.var_right;
+  const idx_t dst_var_idx = opdata.data.b_and.dst;
+  const idx_t left_var_idx = opdata.data.b_and.var_left;
+  const idx_t right_var_idx = opdata.data.b_and.var_right;
 
   int_data->pos++;
 
@@ -160,12 +160,12 @@ opfunc_b_and (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_or (OPCODE opdata, /**< operation data */
+opfunc_b_or (opcode_t opdata, /**< operation data */
              __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_or.dst;
-  const T_IDX left_var_idx = opdata.data.b_or.var_left;
-  const T_IDX right_var_idx = opdata.data.b_or.var_right;
+  const idx_t dst_var_idx = opdata.data.b_or.dst;
+  const idx_t left_var_idx = opdata.data.b_or.var_left;
+  const idx_t right_var_idx = opdata.data.b_or.var_right;
 
   int_data->pos++;
 
@@ -195,12 +195,12 @@ opfunc_b_or (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_xor (OPCODE opdata, /**< operation data */
+opfunc_b_xor (opcode_t opdata, /**< operation data */
               __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_xor.dst;
-  const T_IDX left_var_idx = opdata.data.b_xor.var_left;
-  const T_IDX right_var_idx = opdata.data.b_xor.var_right;
+  const idx_t dst_var_idx = opdata.data.b_xor.dst;
+  const idx_t left_var_idx = opdata.data.b_xor.var_left;
+  const idx_t right_var_idx = opdata.data.b_xor.var_right;
 
   int_data->pos++;
 
@@ -230,12 +230,12 @@ opfunc_b_xor (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_shift_left (OPCODE opdata, /**< operation data */
+opfunc_b_shift_left (opcode_t opdata, /**< operation data */
                      __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_shift_left.dst;
-  const T_IDX left_var_idx = opdata.data.b_shift_left.var_left;
-  const T_IDX right_var_idx = opdata.data.b_shift_left.var_right;
+  const idx_t dst_var_idx = opdata.data.b_shift_left.dst;
+  const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
+  const idx_t right_var_idx = opdata.data.b_shift_left.var_right;
 
   int_data->pos++;
 
@@ -265,12 +265,12 @@ opfunc_b_shift_left (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_shift_right (OPCODE opdata, /**< operation data */
+opfunc_b_shift_right (opcode_t opdata, /**< operation data */
                       __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_shift_right.dst;
-  const T_IDX left_var_idx = opdata.data.b_shift_right.var_left;
-  const T_IDX right_var_idx = opdata.data.b_shift_right.var_right;
+  const idx_t dst_var_idx = opdata.data.b_shift_right.dst;
+  const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
+  const idx_t right_var_idx = opdata.data.b_shift_right.var_right;
 
   int_data->pos++;
 
@@ -300,12 +300,12 @@ opfunc_b_shift_right (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_shift_uright (OPCODE opdata, /**< operation data */
+opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
                       __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_shift_uright.dst;
-  const T_IDX left_var_idx = opdata.data.b_shift_uright.var_left;
-  const T_IDX right_var_idx = opdata.data.b_shift_uright.var_right;
+  const idx_t dst_var_idx = opdata.data.b_shift_uright.dst;
+  const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
+  const idx_t right_var_idx = opdata.data.b_shift_uright.var_right;
 
   int_data->pos++;
 
@@ -335,11 +335,11 @@ opfunc_b_shift_uright (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_b_not (OPCODE opdata, /**< operation data */
+opfunc_b_not (opcode_t opdata, /**< operation data */
               __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.b_not.dst;
-  const T_IDX right_var_idx = opdata.data.b_not.var_right;
+  const idx_t dst_var_idx = opdata.data.b_not.dst;
+  const idx_t right_var_idx = opdata.data.b_not.var_right;
 
   int_data->pos++;
 

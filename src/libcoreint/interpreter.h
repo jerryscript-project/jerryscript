@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "opcodes.h"
 
-void init_int (const __opcode* program_p);
+void init_int (const opcode_t* program_p);
 bool run_int (void);
 ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
                                           ecma_value_t this_binding_value,
@@ -28,10 +28,10 @@ ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
                                           bool is_strict,
                                           bool is_eval_code);
 
-ssize_t try_get_string_by_idx (T_IDX idx, ecma_char_t *buffer_p, ssize_t buffer_size);
-ecma_number_t get_number_by_idx (T_IDX idx);
+ssize_t try_get_string_by_idx (idx_t idx, ecma_char_t *buffer_p, ssize_t buffer_size);
+ecma_number_t get_number_by_idx (idx_t idx);
 
-__opcode read_opcode (opcode_counter_t counter);
+opcode_t read_opcode (opcode_counter_t counter);
 
 #endif /* INTERPRETER_H */
 

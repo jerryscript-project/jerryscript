@@ -42,7 +42,7 @@ typedef enum
  */
 static ecma_completion_value_t
 do_number_arithmetic (__int_data *int_data, /**< interpreter context */
-                      T_IDX dst_var_idx, /**< destination variable identifier */
+                      idx_t dst_var_idx, /**< destination variable identifier */
                       number_arithmetic_op op, /**< number arithmetic operation */
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /** right value */
@@ -108,12 +108,12 @@ do_number_arithmetic (__int_data *int_data, /**< interpreter context */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_addition (OPCODE opdata, /**< operation data */
+opfunc_addition (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.addition.dst;
-  const T_IDX left_var_idx = opdata.data.addition.var_left;
-  const T_IDX right_var_idx = opdata.data.addition.var_right;
+  const idx_t dst_var_idx = opdata.data.addition.dst;
+  const idx_t left_var_idx = opdata.data.addition.var_left;
+  const idx_t right_var_idx = opdata.data.addition.var_right;
 
   int_data->pos++;
 
@@ -155,12 +155,12 @@ opfunc_addition (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_substraction (OPCODE opdata, /**< operation data */
+opfunc_substraction (opcode_t opdata, /**< operation data */
                      __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.substraction.dst;
-  const T_IDX left_var_idx = opdata.data.substraction.var_left;
-  const T_IDX right_var_idx = opdata.data.substraction.var_right;
+  const idx_t dst_var_idx = opdata.data.substraction.dst;
+  const idx_t left_var_idx = opdata.data.substraction.var_left;
+  const idx_t right_var_idx = opdata.data.substraction.var_right;
 
   int_data->pos++;
 
@@ -190,12 +190,12 @@ opfunc_substraction (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_multiplication (OPCODE opdata, /**< operation data */
+opfunc_multiplication (opcode_t opdata, /**< operation data */
                        __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.multiplication.dst;
-  const T_IDX left_var_idx = opdata.data.multiplication.var_left;
-  const T_IDX right_var_idx = opdata.data.multiplication.var_right;
+  const idx_t dst_var_idx = opdata.data.multiplication.dst;
+  const idx_t left_var_idx = opdata.data.multiplication.var_left;
+  const idx_t right_var_idx = opdata.data.multiplication.var_right;
 
   int_data->pos++;
 
@@ -225,12 +225,12 @@ opfunc_multiplication (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_division (OPCODE opdata, /**< operation data */
+opfunc_division (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.division.dst;
-  const T_IDX left_var_idx = opdata.data.division.var_left;
-  const T_IDX right_var_idx = opdata.data.division.var_right;
+  const idx_t dst_var_idx = opdata.data.division.dst;
+  const idx_t left_var_idx = opdata.data.division.var_left;
+  const idx_t right_var_idx = opdata.data.division.var_right;
 
   int_data->pos++;
 
@@ -260,12 +260,12 @@ opfunc_division (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_remainder (OPCODE opdata, /**< operation data */
+opfunc_remainder (opcode_t opdata, /**< operation data */
                   __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.remainder.dst;
-  const T_IDX left_var_idx = opdata.data.remainder.var_left;
-  const T_IDX right_var_idx = opdata.data.remainder.var_right;
+  const idx_t dst_var_idx = opdata.data.remainder.dst;
+  const idx_t left_var_idx = opdata.data.remainder.var_left;
+  const idx_t right_var_idx = opdata.data.remainder.var_right;
 
   int_data->pos++;
 

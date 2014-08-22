@@ -64,7 +64,7 @@ typedef struct
  * Initialize string literal copy.
  */
 static void
-init_string_literal_copy (T_IDX idx, /**< literal identifier */
+init_string_literal_copy (idx_t idx, /**< literal identifier */
                           string_literal_copy *str_lit_descr_p) /**< pointer to string literal copy descriptor */
 {
   JERRY_ASSERT (str_lit_descr_p != NULL);
@@ -136,7 +136,7 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
-  ecma_completion_value_t opfunc_ ## op (OPCODE opdata, __int_data *int_data) \
+  ecma_completion_value_t opfunc_ ## op (opcode_t opdata, __int_data *int_data) \
   { \
     JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (opdata, int_data); \
   }
@@ -148,7 +148,7 @@ OP_UNIMPLEMENTED_LIST (DEFINE_UNIMPLEMENTED_OP);
  * 'Nop' opcode handler.
  */
 ecma_completion_value_t
-opfunc_nop (OPCODE opdata __unused, /**< operation data */
+opfunc_nop (opcode_t opdata __unused, /**< operation data */
             __int_data *int_data) /**< interpreter context */
 {
   int_data->pos++;
@@ -157,7 +157,7 @@ opfunc_nop (OPCODE opdata __unused, /**< operation data */
 } /* opfunc_nop */
 
 ecma_completion_value_t
-opfunc_call_1 (OPCODE opdata __unused, __int_data *int_data)
+opfunc_call_1 (opcode_t opdata __unused, __int_data *int_data)
 {
   ecma_completion_value_t ret_value;
   ret_value = ecma_make_empty_completion_value ();
@@ -250,8 +250,8 @@ opfunc_call_1 (OPCODE opdata __unused, __int_data *int_data)
 
   if (!is_native_call)
   {
-    const T_IDX func_name_lit_idx = opdata.data.call_1.name_lit_idx;
-    const T_IDX lhs_var_idx = opdata.data.call_1.lhs;
+    const idx_t func_name_lit_idx = opdata.data.call_1.name_lit_idx;
+    const idx_t lhs_var_idx = opdata.data.call_1.lhs;
 
     ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
 
@@ -298,12 +298,12 @@ opfunc_call_1 (OPCODE opdata __unused, __int_data *int_data)
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_assignment (OPCODE opdata, /**< operation data */
+opfunc_assignment (opcode_t opdata, /**< operation data */
                    __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.assignment.var_left;
+  const idx_t dst_var_idx = opdata.data.assignment.var_left;
   const opcode_arg_type_operand type_value_right = opdata.data.assignment.type_value_right;
-  const T_IDX src_val_descr = opdata.data.assignment.value_right;
+  const idx_t src_val_descr = opdata.data.assignment.value_right;
 
   int_data->pos++;
 
@@ -384,11 +384,11 @@ opfunc_assignment (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_pre_incr (OPCODE opdata, /**< operation data */
+opfunc_pre_incr (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.pre_incr.dst;
-  const T_IDX incr_var_idx = opdata.data.pre_incr.var_right;
+  const idx_t dst_var_idx = opdata.data.pre_incr.dst;
+  const idx_t incr_var_idx = opdata.data.pre_incr.var_right;
 
   int_data->pos++;
 
@@ -434,11 +434,11 @@ opfunc_pre_incr (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_pre_decr (OPCODE opdata, /**< operation data */
+opfunc_pre_decr (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.pre_decr.dst;
-  const T_IDX decr_var_idx = opdata.data.pre_decr.var_right;
+  const idx_t dst_var_idx = opdata.data.pre_decr.dst;
+  const idx_t decr_var_idx = opdata.data.pre_decr.var_right;
 
   int_data->pos++;
 
@@ -484,11 +484,11 @@ opfunc_pre_decr (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_post_incr (OPCODE opdata, /**< operation data */
+opfunc_post_incr (opcode_t opdata, /**< operation data */
                   __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.post_incr.dst;
-  const T_IDX incr_var_idx = opdata.data.post_incr.var_right;
+  const idx_t dst_var_idx = opdata.data.post_incr.dst;
+  const idx_t incr_var_idx = opdata.data.post_incr.var_right;
 
   int_data->pos++;
 
@@ -532,11 +532,11 @@ opfunc_post_incr (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_post_decr (OPCODE opdata, /**< operation data */
+opfunc_post_decr (opcode_t opdata, /**< operation data */
                   __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.post_decr.dst;
-  const T_IDX decr_var_idx = opdata.data.post_decr.var_right;
+  const idx_t dst_var_idx = opdata.data.post_decr.dst;
+  const idx_t decr_var_idx = opdata.data.post_decr.var_right;
 
   int_data->pos++;
 
@@ -577,7 +577,7 @@ opfunc_post_decr (OPCODE opdata, /**< operation data */
  * The opcode is meta-opcode that is not supposed to be executed.
  */
 ecma_completion_value_t
-opfunc_reg_var_decl (OPCODE opdata __unused, /**< operation data */
+opfunc_reg_var_decl (opcode_t opdata __unused, /**< operation data */
                      __int_data *int_data __unused) /**< interpreter context */
 {
   JERRY_UNREACHABLE ();
@@ -593,7 +593,7 @@ opfunc_reg_var_decl (OPCODE opdata __unused, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_var_decl (OPCODE opdata, /**< operation data */
+opfunc_var_decl (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.var_decl.variable_name);
@@ -633,7 +633,7 @@ opfunc_var_decl (OPCODE opdata, /**< operation data */
  */
 static ecma_completion_value_t
 function_declaration (__int_data *int_data, /**< interpreter context */
-                      T_IDX function_name_lit_idx, /**< identifier of literal with function name */
+                      idx_t function_name_lit_idx, /**< identifier of literal with function name */
                       ecma_string_t* args_names[], /**< names of arguments */
                       ecma_length_t args_number) /**< number of arguments */
 {
@@ -643,7 +643,7 @@ function_declaration (__int_data *int_data, /**< interpreter context */
   const bool is_configurable_bindings = int_data->is_eval_code;
 
   const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
-  OPCODE jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
+  opcode_t jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
   JERRY_ASSERT (jmp_down_opcode.op_idx == __op__idx_jmp_down);
   int_data->pos = (opcode_counter_t) (jmp_down_opcode_idx + jmp_down_opcode.data.jmp_down.opcode_count);
 
@@ -670,7 +670,7 @@ function_declaration (__int_data *int_data, /**< interpreter context */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_func_decl_0 (OPCODE opdata, /**< operation data */
+opfunc_func_decl_0 (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
   int_data->pos++;
@@ -688,7 +688,7 @@ opfunc_func_decl_0 (OPCODE opdata, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
+opfunc_func_decl_1 (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
   int_data->pos++;
@@ -712,7 +712,7 @@ opfunc_func_decl_1 (OPCODE opdata, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
+opfunc_func_decl_2 (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
   int_data->pos++;
@@ -743,11 +743,11 @@ opfunc_func_decl_2 (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_call_0 (OPCODE opdata, /**< operation data */
+opfunc_call_0 (opcode_t opdata, /**< operation data */
                __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX func_name_lit_idx = opdata.data.call_0.name_lit_idx;
-  const T_IDX lhs_var_idx = opdata.data.call_0.lhs;
+  const idx_t func_name_lit_idx = opdata.data.call_0.name_lit_idx;
+  const idx_t lhs_var_idx = opdata.data.call_0.lhs;
 
   int_data->pos++;
 
@@ -789,7 +789,7 @@ opfunc_call_0 (OPCODE opdata, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_ret (OPCODE opdata __unused, /**< operation data */
+opfunc_ret (opcode_t opdata __unused, /**< operation data */
             __int_data *int_data __unused) /**< interpreter context */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
@@ -807,7 +807,7 @@ opfunc_ret (OPCODE opdata __unused, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_retval (OPCODE opdata __unused, /**< operation data */
+opfunc_retval (opcode_t opdata __unused, /**< operation data */
                __int_data *int_data __unused) /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
@@ -833,12 +833,12 @@ opfunc_retval (OPCODE opdata __unused, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
+opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
                     __int_data *int_data __unused) /**< interpreter context */
 {
-  const T_IDX lhs_var_idx = opdata.data.prop_getter.lhs;
-  const T_IDX base_var_idx = opdata.data.prop_getter.obj;
-  const T_IDX prop_name_var_idx = opdata.data.prop_getter.prop;
+  const idx_t lhs_var_idx = opdata.data.prop_getter.lhs;
+  const idx_t base_var_idx = opdata.data.prop_getter.obj;
+  const idx_t prop_name_var_idx = opdata.data.prop_getter.prop;
 
   int_data->pos++;
 
@@ -880,12 +880,12 @@ opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_prop_setter (OPCODE opdata __unused, /**< operation data */
+opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
                     __int_data *int_data __unused) /**< interpreter context */
 {
-  const T_IDX base_var_idx = opdata.data.prop_setter.obj;
-  const T_IDX prop_name_var_idx = opdata.data.prop_setter.prop;
-  const T_IDX rhs_var_idx = opdata.data.prop_setter.rhs;
+  const idx_t base_var_idx = opdata.data.prop_setter.obj;
+  const idx_t prop_name_var_idx = opdata.data.prop_setter.prop;
+  const idx_t rhs_var_idx = opdata.data.prop_setter.rhs;
 
   int_data->pos++;
 
@@ -929,7 +929,7 @@ opfunc_prop_setter (OPCODE opdata __unused, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_exitval (OPCODE opdata, /**< operation data */
+opfunc_exitval (opcode_t opdata, /**< operation data */
                 __int_data *int_data __unused) /**< interpreter context */
 {
   JERRY_ASSERT (opdata.data.exitval.status_code == 0
@@ -951,11 +951,11 @@ opfunc_exitval (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_logical_not (OPCODE opdata, /**< operation data */
+opfunc_logical_not (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.logical_not.dst;
-  const T_IDX right_var_idx = opdata.data.logical_not.var_right;
+  const idx_t dst_var_idx = opdata.data.logical_not.dst;
+  const idx_t right_var_idx = opdata.data.logical_not.var_right;
 
   int_data->pos++;
 
@@ -989,12 +989,12 @@ opfunc_logical_not (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_logical_or (OPCODE opdata, /**< operation data */
+opfunc_logical_or (opcode_t opdata, /**< operation data */
                    __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.logical_or.dst;
-  const T_IDX left_var_idx = opdata.data.logical_or.var_left;
-  const T_IDX right_var_idx = opdata.data.logical_or.var_right;
+  const idx_t dst_var_idx = opdata.data.logical_or.dst;
+  const idx_t left_var_idx = opdata.data.logical_or.var_left;
+  const idx_t right_var_idx = opdata.data.logical_or.var_right;
 
   int_data->pos++;
 
@@ -1033,12 +1033,12 @@ opfunc_logical_or (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_logical_and (OPCODE opdata, /**< operation data */
+opfunc_logical_and (opcode_t opdata, /**< operation data */
                    __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.logical_and.dst;
-  const T_IDX left_var_idx = opdata.data.logical_and.var_left;
-  const T_IDX right_var_idx = opdata.data.logical_and.var_right;
+  const idx_t dst_var_idx = opdata.data.logical_and.dst;
+  const idx_t left_var_idx = opdata.data.logical_and.var_left;
+  const idx_t right_var_idx = opdata.data.logical_and.var_right;
 
   int_data->pos++;
 
@@ -1067,5 +1067,36 @@ opfunc_logical_and (OPCODE opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_logical_and */
+
+
+#define GETOP_DEF_1(a, name, field1) \
+        opcode_t getop_##name (idx_t arg1) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = __op__idx_##name; \
+          opdata.data.name.field1 = arg1; \
+          return opdata; \
+        }
+
+#define GETOP_DEF_2(a, name, field1, field2) \
+        opcode_t getop_##name (idx_t arg1, idx_t arg2) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = __op__idx_##name; \
+          opdata.data.name.field1 = arg1; \
+          opdata.data.name.field2 = arg2; \
+          return opdata; \
+        }
+
+#define GETOP_DEF_3(a, name, field1, field2, field3) \
+        opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = __op__idx_##name; \
+          opdata.data.name.field1 = arg1; \
+          opdata.data.name.field2 = arg2; \
+          opdata.data.name.field3 = arg3; \
+          return opdata; \
+        }
 
 OP_ARGS_LIST (GETOP_DEF)

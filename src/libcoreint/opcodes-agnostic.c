@@ -24,11 +24,11 @@
  *      if argument evaluates to true.
  */
 ecma_completion_value_t
-opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
+opfunc_is_true_jmp (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX cond_var_idx = opdata.data.is_true_jmp.value;
-  const T_IDX dst_opcode_idx = opdata.data.is_true_jmp.opcode;
+  const idx_t cond_var_idx = opdata.data.is_true_jmp.value;
+  const idx_t dst_opcode_idx = opdata.data.is_true_jmp.opcode;
 
   ecma_completion_value_t ret_value;
 
@@ -61,11 +61,11 @@ opfunc_is_true_jmp (OPCODE opdata, /**< operation data */
  *      if argument evaluates to false.
  */
 ecma_completion_value_t
-opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
+opfunc_is_false_jmp (opcode_t opdata, /**< operation data */
                      __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX cond_var_idx = opdata.data.is_false_jmp.value;
-  const T_IDX dst_opcode_idx = opdata.data.is_false_jmp.opcode;
+  const idx_t cond_var_idx = opdata.data.is_false_jmp.value;
+  const idx_t dst_opcode_idx = opdata.data.is_false_jmp.opcode;
 
   ecma_completion_value_t ret_value;
 
@@ -97,7 +97,7 @@ opfunc_is_false_jmp (OPCODE opdata, /**< operation data */
  *      the opcode changes current opcode position to specified opcode index
  */
 ecma_completion_value_t
-opfunc_jmp (OPCODE opdata, /**< operation data */
+opfunc_jmp (opcode_t opdata, /**< operation data */
             __int_data *int_data) /**< interpreter context */
 {
   int_data->pos = opdata.data.jmp.opcode_idx;
@@ -112,7 +112,7 @@ opfunc_jmp (OPCODE opdata, /**< operation data */
  *      the opcode changes adds specified value to current opcode position
  */
 ecma_completion_value_t
-opfunc_jmp_down (OPCODE opdata, /**< operation data */
+opfunc_jmp_down (opcode_t opdata, /**< operation data */
                  __int_data *int_data) /**< interpreter context */
 {
   JERRY_ASSERT (int_data->pos <= int_data->pos + opdata.data.jmp_up.opcode_count);
@@ -129,7 +129,7 @@ opfunc_jmp_down (OPCODE opdata, /**< operation data */
  *      the opcode changes substracts specified value from current opcode position
  */
 ecma_completion_value_t
-opfunc_jmp_up (OPCODE opdata, /**< operation data */
+opfunc_jmp_up (opcode_t opdata, /**< operation data */
                __int_data *int_data) /**< interpreter context */
 {
   JERRY_ASSERT (int_data->pos >= opdata.data.jmp_up.opcode_count);

@@ -25,12 +25,12 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_equal_value (OPCODE opdata, /**< operation data */
+opfunc_equal_value (opcode_t opdata, /**< operation data */
                     __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.equal_value.dst;
-  const T_IDX left_var_idx = opdata.data.equal_value.var_left;
-  const T_IDX right_var_idx = opdata.data.equal_value.var_right;
+  const idx_t dst_var_idx = opdata.data.equal_value.dst;
+  const idx_t left_var_idx = opdata.data.equal_value.var_left;
+  const idx_t right_var_idx = opdata.data.equal_value.var_right;
 
   int_data->pos++;
 
@@ -59,12 +59,12 @@ opfunc_equal_value (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_not_equal_value (OPCODE opdata, /**< operation data */
+opfunc_not_equal_value (opcode_t opdata, /**< operation data */
                         __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.not_equal_value.dst;
-  const T_IDX left_var_idx = opdata.data.not_equal_value.var_left;
-  const T_IDX right_var_idx = opdata.data.not_equal_value.var_right;
+  const idx_t dst_var_idx = opdata.data.not_equal_value.dst;
+  const idx_t left_var_idx = opdata.data.not_equal_value.var_left;
+  const idx_t right_var_idx = opdata.data.not_equal_value.var_right;
 
   int_data->pos++;
 
@@ -94,12 +94,12 @@ opfunc_not_equal_value (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_equal_value_type (OPCODE opdata, /**< operation data */
+opfunc_equal_value_type (opcode_t opdata, /**< operation data */
                          __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.equal_value_type.dst;
-  const T_IDX left_var_idx = opdata.data.equal_value_type.var_left;
-  const T_IDX right_var_idx = opdata.data.equal_value_type.var_right;
+  const idx_t dst_var_idx = opdata.data.equal_value_type.dst;
+  const idx_t left_var_idx = opdata.data.equal_value_type.var_left;
+  const idx_t right_var_idx = opdata.data.equal_value_type.var_right;
 
   int_data->pos++;
 
@@ -128,12 +128,12 @@ opfunc_equal_value_type (OPCODE opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_not_equal_value_type (OPCODE opdata, /**< operation data */
+opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
                              __int_data *int_data) /**< interpreter context */
 {
-  const T_IDX dst_var_idx = opdata.data.not_equal_value_type.dst;
-  const T_IDX left_var_idx = opdata.data.not_equal_value_type.var_left;
-  const T_IDX right_var_idx = opdata.data.not_equal_value_type.var_right;
+  const idx_t dst_var_idx = opdata.data.not_equal_value_type.dst;
+  const idx_t left_var_idx = opdata.data.not_equal_value_type.var_left;
+  const idx_t right_var_idx = opdata.data.not_equal_value_type.var_right;
 
   int_data->pos++;
 

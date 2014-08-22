@@ -30,7 +30,7 @@ int
 main( int __unused argc,
       char __unused **argv)
 {
-  OPCODE test_program[] = {
+  opcode_t test_program[] = {
     [0] = getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
     [1] = getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
     [2] = getop_is_false_jmp (0, 10),
@@ -56,10 +56,10 @@ main( int __unused argc,
   for (int i = 0; i < 11; i++)
     serializer_dump_opcode (test_program[i]);
 
-  OPCODE * opcodes = (OPCODE *) deserialize_bytecode ();
+  opcode_t * opcodes = (opcode_t *) deserialize_bytecode ();
 
   optimizer_move_opcodes (opcodes + 9, opcodes + 2, 1);
-  if (!opcodes_equal (opcodes, (OPCODE[]) {
+  if (!opcodes_equal (opcodes, (opcode_t[]) {
     [0] = getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
     [1] = getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
     [2] = getop_assignment (0, OPCODE_ARG_TYPE_SMALLINT, 253),
@@ -75,7 +75,7 @@ main( int __unused argc,
     return 1;
 
   optimizer_adjust_jumps (opcodes + 3, opcodes + 10, 1);
-  if (!opcodes_equal (opcodes, (OPCODE[]) {
+  if (!opcodes_equal (opcodes, (opcode_t[]) {
     [0] = getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
     [1] = getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
     [2] = getop_assignment (0, OPCODE_ARG_TYPE_SMALLINT, 253),

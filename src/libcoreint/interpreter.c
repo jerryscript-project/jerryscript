@@ -30,15 +30,15 @@ static const opfunc __opfuncs[LAST_OP] =
 };
 #undef __INIT_OP_FUNC
 
-JERRY_STATIC_ASSERT (sizeof (OPCODE) <= 4);
+JERRY_STATIC_ASSERT (sizeof (opcode_t) <= 4);
 
-const OPCODE *__program = NULL;
+const opcode_t *__program = NULL;
 
 /**
  * Initialize interpreter.
  */
 void
-init_int (const OPCODE *program_p) /**< pointer to byte-code program */
+init_int (const opcode_t *program_p) /**< pointer to byte-code program */
 {
   JERRY_ASSERT (__program == NULL);
 
@@ -104,11 +104,11 @@ run_int_from_pos (opcode_counter_t start_pos,
 {
   ecma_completion_value_t completion;
 
-  const OPCODE *curr = &__program[start_pos];
+  const opcode_t *curr = &__program[start_pos];
   JERRY_ASSERT (curr->op_idx == __op__idx_reg_var_decl);
 
-  const T_IDX min_reg_num = curr->data.reg_var_decl.min;
-  const T_IDX max_reg_num = curr->data.reg_var_decl.max;
+  const idx_t min_reg_num = curr->data.reg_var_decl.min;
+  const idx_t max_reg_num = curr->data.reg_var_decl.max;
   JERRY_ASSERT (max_reg_num >= min_reg_num);
 
   const uint32_t regs_num = (uint32_t) (max_reg_num - min_reg_num + 1);
@@ -133,7 +133,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   {
     do
     {
-      const OPCODE *curr = &__program[int_data.pos];
+      const opcode_t *curr = &__program[int_data.pos];
       completion = __opfuncs[curr->op_idx] (*curr, &int_data);
 
       JERRY_ASSERT (!ecma_is_completion_value_normal (completion)
@@ -172,7 +172,7 @@ run_int_from_pos (opcode_counter_t start_pos,
  *         otherwise (buffer size is not enough) - negated minimum required buffer size.
  */
 ssize_t
-try_get_string_by_idx (T_IDX idx, /**< literal id */
+try_get_string_by_idx (idx_t idx, /**< literal id */
                        ecma_char_t *buffer_p, /**< buffer */
                        ssize_t buffer_size) /**< buffer size */
 {
@@ -205,7 +205,7 @@ try_get_string_by_idx (T_IDX idx, /**< literal id */
  * @return value of number literal, corresponding to specified literal id
  */
 ecma_number_t
-get_number_by_idx (T_IDX idx) /**< literal id */
+get_number_by_idx (idx_t idx) /**< literal id */
 {
   TODO (Actual number literal retrievement);
 
@@ -218,7 +218,7 @@ get_number_by_idx (T_IDX idx) /**< literal id */
 /**
  * Get specified opcode from the program.
  */
-OPCODE
+opcode_t
 read_opcode (opcode_counter_t counter) /**< opcode counter */
 {
   return __program[ counter ];

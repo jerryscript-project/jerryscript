@@ -88,7 +88,7 @@ serializer_dump_nums (const ecma_number_t nums[], uint8_t size, uint16_t offset,
   {
     parser_fatal (ERR_MEMORY);
   }
-  
+
   __memcpy (data, bytecode_data, offset);
   mem_heap_free_block (bytecode_data);
   bytecode_data = data;
@@ -114,7 +114,7 @@ serializer_dump_nums (const ecma_number_t nums[], uint8_t size, uint16_t offset,
 static opcode_counter_t opcode_counter = 0;
 
 void
-serializer_dump_opcode (OPCODE opcode)
+serializer_dump_opcode (opcode_t opcode)
 {
   if (print_opcodes)
   {
@@ -126,7 +126,7 @@ serializer_dump_opcode (OPCODE opcode)
 }
 
 void
-serializer_rewrite_opcode (const opcode_counter_t loc, OPCODE opcode)
+serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
   JERRY_ASSERT (loc < MAX_OPCODES);
   bytecode_opcodes[loc] = opcode;

@@ -31,7 +31,7 @@ main( int __unused argc,
       char __unused **argv)
 {
   // Honestly, after RETVAL there must be RET
-  OPCODE test_program[] = {
+  opcode_t test_program[] = {
     [0] = getop_reg_var_decl (5, 5), // tmp6
     [1] = getop_assignment (0, OPCODE_ARG_TYPE_STRING, 1), // a = "b"
     [2] = getop_var_decl (1), // var b
@@ -54,10 +54,10 @@ main( int __unused argc,
   for (int i = 0; i < 9; i++)
     serializer_dump_opcode (test_program[i]);
 
-  OPCODE * opcodes = (OPCODE *) deserialize_bytecode ();
+  opcode_t * opcodes = (opcode_t *) deserialize_bytecode ();
 
   optimizer_reorder_scope (1, 8);
-  if (!opcodes_equal (opcodes, (OPCODE[]) {
+  if (!opcodes_equal (opcodes, (opcode_t[]) {
     [0] = getop_reg_var_decl (5, 5), // tmp6
     [1] = getop_assignment (5, OPCODE_ARG_TYPE_STRING, 3), // "use strict"
     [2] = getop_func_decl_0 (2), // function c()

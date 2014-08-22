@@ -67,7 +67,7 @@ pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
 }
 
 static void
-dump_variable (T_IDX id)
+dump_variable (idx_t id)
 {
   if (id >= deserialize_min_temp ())
   {
@@ -349,7 +349,7 @@ dump_variable (T_IDX id)
 static char *varg_end;
 
 void
-pp_opcode (opcode_counter_t oc, OPCODE opcode, bool is_rewrite)
+pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 {
   uint8_t i = 1;
   uint8_t opcode_num = opcode.op_idx;

@@ -26,9 +26,9 @@ uint16_t serializer_dump_strings (const char **, uint8_t);
 
 void serializer_dump_nums (const ecma_number_t *, uint8_t, uint16_t, uint8_t);
 
-void serializer_dump_opcode (OPCODE);
+void serializer_dump_opcode (opcode_t);
 
-void serializer_rewrite_opcode (const opcode_counter_t, OPCODE);
+void serializer_rewrite_opcode (const opcode_counter_t, opcode_t);
 
 void serializer_print_opcodes (void);
 

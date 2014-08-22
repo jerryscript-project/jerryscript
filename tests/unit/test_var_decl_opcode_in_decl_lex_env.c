@@ -26,7 +26,7 @@ int
 main( int __unused argc,
       char __unused **argv)
 {
-  const OPCODE test_program[] = {
+  const opcode_t test_program[] = {
     /*  0: */ getop_reg_var_decl( 255, 255),
     /*  1: */ getop_var_decl( 0),
     /*  2: */ getop_is_true_jmp( 0, 4),

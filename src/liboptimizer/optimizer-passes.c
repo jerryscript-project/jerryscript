@@ -34,9 +34,9 @@
    var_?_end
  */
 static void
-optimize_calls (OPCODE *opcodes)
+optimize_calls (opcode_t *opcodes)
 {
-  OPCODE *current_opcode;
+  opcode_t *current_opcode;
 
   for (current_opcode = opcodes;
        current_opcode->op_idx != NAME_TO_ID (exitval);
@@ -45,7 +45,7 @@ optimize_calls (OPCODE *opcodes)
     if (current_opcode->op_idx == NAME_TO_ID (call_n)
         && (current_opcode + 1)->op_idx == NAME_TO_ID (assignment))
     {
-      OPCODE temp = *current_opcode;
+      opcode_t temp = *current_opcode;
       *current_opcode = *(current_opcode + 1);
       *(current_opcode + 1) = temp;
     }
@@ -54,9 +54,9 @@ optimize_calls (OPCODE *opcodes)
 
 /* Move NUMBER opcodes from FROM to TO and adjust opcodes beetwen FROM and TO.  */
 void
-optimizer_move_opcodes (OPCODE *from, OPCODE *to, uint16_t number)
+optimizer_move_opcodes (opcode_t *from, opcode_t *to, uint16_t number)
 {
-  OPCODE temp[number], *current_opcode;
+  opcode_t temp[number], *current_opcode;
   uint16_t i;
 
   if (to == from)
@@ -107,16 +107,16 @@ optimizer_move_opcodes (OPCODE *from, OPCODE *to, uint16_t number)
 }
 
 static uint16_t
-opcode_to_counter (OPCODE *opcode)
+opcode_to_counter (opcode_t *opcode)
 {
-  JERRY_ASSERT (opcode > (OPCODE *) deserialize_bytecode ());
-  return (uint16_t) (opcode - (OPCODE *) deserialize_bytecode ());
+  JERRY_ASSERT (opcode > (opcode_t *) deserialize_bytecode ());
+  return (uint16_t) (opcode - (opcode_t *) deserialize_bytecode ());
 }
 
 void
-optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value)
+optimizer_adjust_jumps (opcode_t *first_opcode, opcode_t *last_opcode, int16_t value)
 {
-  OPCODE *current_opcode;
+  opcode_t *current_opcode;
 
   JERRY_ASSERT (first_opcode <= last_opcode);
 
@@ -151,7 +151,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
       if (current_opcode->data.is_true_jmp.opcode >= opcode_to_counter (first_opcode)
           && current_opcode->data.is_true_jmp.opcode <= opcode_to_counter (last_opcode) - value)
       {
-        current_opcode->data.is_true_jmp.opcode = (T_IDX) (current_opcode->data.is_true_jmp.opcode + value);
+        current_opcode->data.is_true_jmp.opcode = (idx_t) (current_opcode->data.is_true_jmp.opcode + value);
         continue;
       }
 
@@ -169,7 +169,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
        */
       if (current_opcode->data.is_true_jmp.opcode < opcode_to_counter (last_opcode))
       {
-        current_opcode->data.is_true_jmp.opcode = (T_IDX) opcode_to_counter (last_opcode);
+        current_opcode->data.is_true_jmp.opcode = (idx_t) opcode_to_counter (last_opcode);
         continue;
       }
 
@@ -205,7 +205,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
       if (current_opcode->data.is_false_jmp.opcode >= opcode_to_counter (first_opcode)
           && current_opcode->data.is_false_jmp.opcode <= opcode_to_counter (last_opcode) - value)
       {
-        current_opcode->data.is_false_jmp.opcode = (T_IDX) (current_opcode->data.is_false_jmp.opcode + value);
+        current_opcode->data.is_false_jmp.opcode = (idx_t) (current_opcode->data.is_false_jmp.opcode + value);
         continue;
       }
 
@@ -223,7 +223,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
        */
       if (current_opcode->data.is_false_jmp.opcode < opcode_to_counter (last_opcode))
       {
-        current_opcode->data.is_false_jmp.opcode = (T_IDX) opcode_to_counter (last_opcode);
+        current_opcode->data.is_false_jmp.opcode = (idx_t) opcode_to_counter (last_opcode);
         continue;
       }
 
@@ -259,7 +259,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
        */
       if (current_opcode->data.jmp_down.opcode_count >= last_opcode - current_opcode + value)
       {
-        current_opcode->data.jmp_down.opcode_count = (T_IDX) (current_opcode->data.jmp_down.opcode_count - value);
+        current_opcode->data.jmp_down.opcode_count = (idx_t) (current_opcode->data.jmp_down.opcode_count - value);
         continue;
       }
 
@@ -278,7 +278,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
       if (current_opcode->data.jmp_down.opcode_count >= last_opcode - current_opcode
           && current_opcode->data.jmp_down.opcode_count < last_opcode - current_opcode + value)
       {
-        current_opcode->data.jmp_down.opcode_count = (T_IDX) (last_opcode - current_opcode);
+        current_opcode->data.jmp_down.opcode_count = (idx_t) (last_opcode - current_opcode);
         continue;
       }
 
@@ -314,7 +314,7 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
        */
       if (current_opcode->data.jmp_up.opcode_count >= current_opcode - first_opcode)
       {
-        current_opcode->data.jmp_up.opcode_count = (T_IDX) (current_opcode->data.jmp_up.opcode_count + value);
+        current_opcode->data.jmp_up.opcode_count = (idx_t) (current_opcode->data.jmp_up.opcode_count + value);
         continue;
       }
 
@@ -332,11 +332,11 @@ optimizer_adjust_jumps (OPCODE *first_opcode, OPCODE *last_opcode, int16_t value
 void
 optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
 {
-  OPCODE *opcodes = (OPCODE *) deserialize_bytecode ();
-  OPCODE *first_opcode = opcodes + scope_start;
-  OPCODE *last_opcode = opcodes + scope_end;
-  OPCODE *current_opcode, *processed_opcode = first_opcode;
-  OPCODE *var_decls_start;
+  opcode_t *opcodes = (opcode_t *) deserialize_bytecode ();
+  opcode_t *first_opcode = opcodes + scope_start;
+  opcode_t *last_opcode = opcodes + scope_end;
+  opcode_t *current_opcode, *processed_opcode = first_opcode;
+  opcode_t *var_decls_start;
 
   for (current_opcode = processed_opcode; current_opcode != last_opcode; current_opcode++)
   {
@@ -358,7 +358,7 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
         || current_opcode->op_idx == NAME_TO_ID (func_decl_2)
         || current_opcode->op_idx == NAME_TO_ID (func_decl_n))
     {
-      OPCODE *fun_opcode;
+      opcode_t *fun_opcode;
       int16_t value, jmp_offset = 0;
       for (fun_opcode = current_opcode + 1; fun_opcode != last_opcode; fun_opcode++)
       {
@@ -399,7 +399,7 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
       bool was_decl = false;
       if (var_decls_start->op_idx == NAME_TO_ID (var_decl) && var_decls_start != current_opcode)
       {
-        OPCODE *var_decls_iterator;
+        opcode_t *var_decls_iterator;
         for (var_decls_iterator = var_decls_start;
              var_decls_iterator != processed_opcode;
              var_decls_iterator++)
@@ -429,7 +429,7 @@ optimizer_reorder_scope (uint16_t scope_start, uint16_t scope_end)
 }
 
 void
-optimizer_run_passes (OPCODE* opcodes)
+optimizer_run_passes (opcode_t *opcodes)
 {
   optimize_calls (opcodes);
 }

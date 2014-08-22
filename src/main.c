@@ -32,14 +32,14 @@
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
 
-static const OPCODE *
+static const opcode_t *
 parser_run (const char *script_source, size_t script_source_size, bool is_show_opcodes)
 {
   const char *strings[MAX_STRINGS];
   ecma_number_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint16_t offset;
-  const OPCODE *opcodes;
+  const opcode_t *opcodes;
 
   lexer_init (script_source, script_source_size, is_show_opcodes);
 
@@ -59,7 +59,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
 
   opcodes = deserialize_bytecode ();
 
-  optimizer_run_passes ((OPCODE *) opcodes);
+  optimizer_run_passes ((opcode_t *) opcodes);
 
 #ifdef __TARGET_HOST_x64
   serializer_print_opcodes ();
@@ -72,7 +72,7 @@ static bool
 jerry_run (const char *script_source, size_t script_source_size,
            bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
 {
-  const OPCODE *opcodes;
+  const opcode_t *opcodes;
 
   mem_init ();
 

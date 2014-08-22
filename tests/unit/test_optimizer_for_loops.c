@@ -37,7 +37,7 @@ main( int __unused argc,
   ecma_number_t nums[MAX_NUMS];
   uint8_t strings_num, nums_count;
   uint16_t offset;
-  const OPCODE *opcodes;
+  const opcode_t *opcodes;
   const char *source = "for (var i = 0; i < 10; i++) {\n"
                        "  var j = 10;\n"
                        "}\n"
@@ -62,7 +62,7 @@ main( int __unused argc,
 
   opcodes = deserialize_bytecode ();
   serializer_print_opcodes ();
-  if (!opcodes_equal (opcodes, (OPCODE[]) {
+  if (!opcodes_equal (opcodes, (opcode_t[]) {
     [0]  = getop_reg_var_decl (2, 5),  // var tmp2 .. tmp5;
     [1]  = getop_var_decl (0),         // var i;
     [2]  = getop_var_decl (1),         // var j;

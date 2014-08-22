@@ -27,7 +27,7 @@ static uint8_t opcode_sizes[] = {
 };
 
 static bool
-opcodes_equal (const OPCODE *opcodes1, OPCODE *opcodes2, uint16_t size)
+opcodes_equal (const opcode_t *opcodes1, opcode_t *opcodes2, uint16_t size)
 {
   uint16_t i;
   for (i = 0; i < size; i++)

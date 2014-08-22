@@ -19,9 +19,9 @@
 #include "globals.h"
 #include "opcodes.h"
 
-void optimizer_move_opcodes (OPCODE *, OPCODE *, uint16_t);
-void optimizer_adjust_jumps (OPCODE *, OPCODE *, int16_t);
+void optimizer_move_opcodes (opcode_t *, opcode_t *, uint16_t);
+void optimizer_adjust_jumps (opcode_t *, opcode_t *, int16_t);
 void optimizer_reorder_scope (uint16_t, uint16_t);
-void optimizer_run_passes (OPCODE *);
+void optimizer_run_passes (opcode_t *);
 
 #endif // OPTIMIZER_PASSES_H

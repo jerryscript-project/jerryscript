@@ -32,6 +32,6 @@
       U32 nums[nums_count];
    } */
 extern uint8_t *bytecode_data;
-OPCODE bytecode_opcodes[MAX_OPCODES];
+opcode_t bytecode_opcodes[MAX_OPCODES];
 
 #endif // BYTECODE_LINUX_H

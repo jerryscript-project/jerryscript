@@ -47,9 +47,9 @@ rewritable_opcode;
 #define NESTING_FUNCTION    3
 
 static token tok;
-static OPCODE opcode;
+static opcode_t opcode;
 static opcode_counter_t opcode_counter = 0;
-static T_IDX temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
+static idx_t temp_name_stack[MAX_OPCODES], temp_name_stack_head = 0, max_temp_name;
 static uint8_t nestings[MAX_NESTINGS], nestings_head = 0;
 
 static rewritable_opcode rewritable_opcodes[REWRITABLE_OPCODES_COUNT] =
@@ -58,14 +58,14 @@ static rewritable_opcode rewritable_opcodes[REWRITABLE_OPCODES_COUNT] =
   [REWRITABLE_BREAK] = { .size = 0, .head = 0, .oc_stack = NULL }
 };
 
-static T_IDX parse_expression (void);
+static idx_t parse_expression (void);
 static void parse_statement (void);
-static T_IDX parse_assignment_expression (void);
+static idx_t parse_assignment_expression (void);
 static void parse_source_element_list (void);
 
-static T_IDX temp_name, min_temp_name;
+static idx_t temp_name, min_temp_name;
 
-static T_IDX
+static idx_t
 next_temp_name (void)
 {
   return temp_name++;
@@ -242,7 +242,7 @@ insert_semicolon (void)
 #define DUMP_OPCODE_1(GETOP, OP1) \
   do { \
     JERRY_ASSERT (0+OP1 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1)); \
+    opcode=getop_##GETOP ((idx_t) (OP1)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
   } while (0)
@@ -251,7 +251,7 @@ insert_semicolon (void)
   do { \
     JERRY_ASSERT (0+OP1 <= 255); \
     JERRY_ASSERT (0+OP2 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
+    opcode=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
   } while (0)
@@ -261,7 +261,7 @@ insert_semicolon (void)
     JERRY_ASSERT (0+OP1 <= 255); \
     JERRY_ASSERT (0+OP2 <= 255); \
     JERRY_ASSERT (0+OP3 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
+    opcode=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
     serializer_dump_opcode (opcode); \
     opcode_counter++; \
   } while (0)
@@ -269,7 +269,7 @@ insert_semicolon (void)
 #define REWRITE_OPCODE_1(OC, GETOP, OP1) \
   do { \
     JERRY_ASSERT (0+OP1 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1)); \
+    opcode=getop_##GETOP ((idx_t) (OP1)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)
 
@@ -277,7 +277,7 @@ insert_semicolon (void)
   do { \
     JERRY_ASSERT (0+OP1 <= 255); \
     JERRY_ASSERT (0+OP2 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2)); \
+    opcode=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)
 
@@ -286,22 +286,22 @@ insert_semicolon (void)
     JERRY_ASSERT (0+OP1 <= 255); \
     JERRY_ASSERT (0+OP2 <= 255); \
     JERRY_ASSERT (0+OP3 <= 255); \
-    opcode=getop_##GETOP ((T_IDX) (OP1), (T_IDX) (OP2), (T_IDX) (OP3)); \
+    opcode=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
     serializer_rewrite_opcode (OC, opcode); \
   } while (0)
 
-static T_IDX
+static idx_t
 integer_zero (void)
 {
-  T_IDX lhs = next_temp_name ();
+  idx_t lhs = next_temp_name ();
   DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SMALLINT, 0);
   return lhs;
 }
 
-static T_IDX
+static idx_t
 boolean_true (void)
 {
-  T_IDX lhs = next_temp_name ();
+  idx_t lhs = next_temp_name ();
   DUMP_OPCODE_3 (assignment, lhs, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE);
   return lhs;
 }
@@ -380,7 +380,7 @@ intrinsic_argument_count (const char *intrinsic)
 }
 
 static bool
-is_intrinsic (T_IDX obj)
+is_intrinsic (idx_t obj)
 {
   /* Every literal is represented by assignment to tmp.
      so if result of parse_primary_expression less then strings count,
@@ -396,7 +396,7 @@ is_intrinsic (T_IDX obj)
 }
 
 static void
-dump_intrinsic (T_IDX obj, T_IDX args[3])
+dump_intrinsic (idx_t obj, idx_t args[3])
 {
   uint8_t strings_count = lexer_get_strings (NULL);
   if (obj < strings_count)
@@ -421,10 +421,10 @@ dump_intrinsic (T_IDX obj, T_IDX args[3])
   | StringLiteral
   | NumericLiteral
   ; */
-static T_IDX
+static idx_t
 parse_property_name (void)
 {
-  T_IDX lhs;
+  idx_t lhs;
 
   switch (tok.type)
   {
@@ -450,10 +450,10 @@ parse_property_name (void)
 /* property_name_and_value
   : property_name LT!* ':' LT!* assignment_expression
   ; */
-static T_IDX
+static idx_t
 parse_property_name_and_value (void)
 {
-  T_IDX lhs, name, value;
+  idx_t lhs, name, value;
 
   lhs = next_temp_name ();
   name = parse_property_name ();
@@ -470,10 +470,10 @@ parse_property_name_and_value (void)
   | get LT!* property_name LT!* '(' LT!* ')' LT!* '{' LT!* function_body LT!* '}'
   | set LT!* property_name LT!* '(' identifier ')' LT!* '{' LT!* function_body LT!* '}'
   ; */
-static T_IDX
+static idx_t
 parse_property_assignment (void)
 {
-  T_IDX lhs, name, arg;
+  idx_t lhs, name, arg;
 
   current_token_must_be (TOK_NAME);
 
@@ -524,7 +524,7 @@ parse_property_assignment (void)
 }
 
 static void
-dump_varg_3 (T_IDX current_param, T_IDX params[3] __unused)
+dump_varg_3 (idx_t current_param, idx_t params[3] __unused)
 {
   if (current_param == 3)
   {
@@ -535,7 +535,7 @@ dump_varg_3 (T_IDX current_param, T_IDX params[3] __unused)
 }
 
 static void
-dump_varg_end (T_IDX current_param, T_IDX params[3] __unused)
+dump_varg_end (idx_t current_param, idx_t params[3] __unused)
 {
   switch (current_param)
   {
@@ -578,14 +578,14 @@ argument_list_type;
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Returns temp var if expression has lhs, or 0 otherwise.  */
-static T_IDX
-parse_argument_list (argument_list_type alt, T_IDX obj)
+static idx_t
+parse_argument_list (argument_list_type alt, idx_t obj)
 {
   token_type open_tt, close_tt;
-  T_IDX first_opcode_args_count;
-  T_IDX lhs = 0;
-  T_IDX args[3 + 1/* +1 for stack protector */];
-  T_IDX current_arg = 0;
+  idx_t first_opcode_args_count;
+  idx_t lhs = 0;
+  idx_t args[3 + 1/* +1 for stack protector */];
+  idx_t current_arg = 0;
 
   switch (alt)
   {
@@ -891,7 +891,7 @@ parse_argument_list (argument_list_type alt, T_IDX obj)
 static void
 parse_function_declaration (void)
 {
-  T_IDX name;
+  idx_t name;
   opcode_counter_t jmp_oc;
 
   assert_keyword (KW_FUNCTION);
@@ -922,10 +922,10 @@ parse_function_declaration (void)
 /* function_expression
   : 'function' LT!* Identifier? LT!* '(' formal_parameter_list? LT!* ')' LT!* function_body
   ; */
-static T_IDX
+static idx_t
 parse_function_expression (void)
 {
-  T_IDX name, lhs;
+  idx_t name, lhs;
   opcode_counter_t jmp_oc;
 
   assert_keyword (KW_FUNCTION);
@@ -965,7 +965,7 @@ parse_function_expression (void)
 /* array_literal
   : '[' LT!* assignment_expression? (LT!* ',' (LT!* assignment_expression)?)* LT!* ']' LT!*
   ; */
-static T_IDX
+static idx_t
 parse_array_literal (void)
 {
   return parse_argument_list (AL_ARRAY_LIT, 0);
@@ -974,16 +974,16 @@ parse_array_literal (void)
 /* object_literal
   : '{' LT!* property_assignment (LT!* ',' LT!* property_assignment)* LT!* '}'
   ; */
-static T_IDX
+static idx_t
 parse_object_literal (void)
 {
   return parse_argument_list (AL_OBJECT_LIT, 0);
 }
 
-static T_IDX
+static idx_t
 parse_literal (void)
 {
-  T_IDX lhs;
+  idx_t lhs;
 
   switch (tok.type)
   {
@@ -1033,10 +1033,10 @@ parse_literal (void)
   | '{' LT!* object_literal LT!* '}'
   | '(' LT!* expression LT!* ')'
   ; */
-static T_IDX
+static idx_t
 parse_primary_expression (void)
 {
-  T_IDX lhs;
+  idx_t lhs;
 
   if (is_keyword (KW_THIS))
   {
@@ -1106,17 +1106,17 @@ parse_primary_expression (void)
    property_reference_suffix
   : '.' LT!* Identifier
   ; */
-static T_IDX
+static idx_t
 parse_member_expression (void)
 {
-  T_IDX lhs, obj, prop;
+  idx_t lhs, obj, prop;
   if (is_keyword (KW_FUNCTION))
   {
     obj = parse_function_expression ();
   }
   else if (is_keyword (KW_NEW))
   {
-    T_IDX member;
+    idx_t member;
 
     NEXT (member, member_expression);
 
@@ -1174,10 +1174,10 @@ parse_member_expression (void)
    arguments
   : '(' LT!* assignment_expression LT!* (',' LT!* assignment_expression * LT!*)* ')'
   ; */
-static T_IDX
+static idx_t
 parse_call_expression (void)
 {
-  T_IDX lhs, obj, prop;
+  idx_t lhs, obj, prop;
 
   obj = parse_member_expression ();
 
@@ -1238,7 +1238,7 @@ parse_call_expression (void)
   : call_expression
   | new_expression
   ; */
-static T_IDX
+static idx_t
 parse_left_hand_side_expression (void)
 {
   return parse_call_expression ();
@@ -1247,10 +1247,10 @@ parse_left_hand_side_expression (void)
 /* postfix_expression
   : left_hand_side_expression ('++' | '--')?
   ; */
-static T_IDX
+static idx_t
 parse_postfix_expression (void)
 {
-  T_IDX expr = parse_left_hand_side_expression (), lhs;
+  idx_t expr = parse_left_hand_side_expression (), lhs;
 
   tok = lexer_next_token ();
   if (tok.type == TOK_DOUBLE_PLUS)
@@ -1275,10 +1275,10 @@ parse_postfix_expression (void)
   : postfix_expression
   | ('delete' | 'void' | 'typeof' | '++' | '--' | '+' | '-' | '~' | '!') unary_expression
   ; */
-static T_IDX
+static idx_t
 parse_unary_expression (void)
 {
-  T_IDX expr, lhs;
+  idx_t expr, lhs;
 
   switch (tok.type)
   {
@@ -1362,10 +1362,10 @@ parse_unary_expression (void)
 /* multiplicative_expression
   : unary_expression (LT!* ('*' | '/' | '%') LT!* unary_expression)*
   ; */
-static T_IDX
+static idx_t
 parse_multiplicative_expression (void)
 {
-  T_IDX lhs, expr1, expr2;
+  idx_t lhs, expr1, expr2;
 
   expr1 = parse_unary_expression ();
 
@@ -1391,10 +1391,10 @@ parse_multiplicative_expression (void)
 /* additive_expression
   : multiplicative_expression (LT!* ('+' | '-') LT!* multiplicative_expression)*
   ; */
-static T_IDX
+static idx_t
 parse_additive_expression (void)
 {
-  T_IDX lhs, expr1, expr2;
+  idx_t lhs, expr1, expr2;
 
   expr1 = parse_multiplicative_expression ();
 
@@ -1419,10 +1419,10 @@ parse_additive_expression (void)
 /* shift_expression
   : additive_expression (LT!* ('<<' | '>>' | '>>>') LT!* additive_expression)*
   ; */
-static T_IDX
+static idx_t
 parse_shift_expression (void)
 {
-  T_IDX lhs, expr1, expr2;
+  idx_t lhs, expr1, expr2;
 
   expr1 = parse_additive_expression ();
 
@@ -1448,10 +1448,10 @@ parse_shift_expression (void)
 /* relational_expression
   : shift_expression (LT!* ('<' | '>' | '<=' | '>=' | 'instanceof' | 'in') LT!* shift_expression)*
   ; */
-static T_IDX
+static idx_t
 parse_relational_expression (void)
 {
-  T_IDX lhs, expr1, expr2;
+  idx_t lhs, expr1, expr2;
 
   expr1 = parse_shift_expression ();
 
@@ -1492,10 +1492,10 @@ parse_relational_expression (void)
 /* equality_expression
   : relational_expression (LT!* ('==' | '!=' | '===' | '!==') LT!* relational_expression)*
   ; */
-static T_IDX
+static idx_t
 parse_equality_expression (void)
 {
-  T_IDX lhs, expr1, expr2;
+  idx_t lhs, expr1, expr2;
 
   expr1 = parse_relational_expression ();
 
@@ -1520,8 +1520,8 @@ parse_equality_expression (void)
 }
 
 #define PARSE_OF(FUNC, EXPR, TOK_TYPE, GETOP) \
-static T_IDX parse_##FUNC (void) { \
-  T_IDX lhs, expr1, expr2; \
+static idx_t parse_##FUNC (void) { \
+  idx_t lhs, expr1, expr2; \
   expr1 = parse_##EXPR (); \
   skip_newlines (); \
   while (true) \
@@ -1563,15 +1563,15 @@ PARSE_OF (logical_or_expression, logical_and_expression, DOUBLE_OR, logical_or)
 /* conditional_expression
   : logical_or_expression (LT!* '?' LT!* assignment_expression LT!* ':' LT!* assignment_expression)?
   ; */
-static T_IDX
+static idx_t
 parse_conditional_expression (bool *was_conditional)
 {
-  T_IDX expr = parse_logical_or_expression ();
+  idx_t expr = parse_logical_or_expression ();
 
   skip_newlines ();
   if (tok.type == TOK_QUERY)
   {
-    T_IDX lhs, res = next_temp_name ();
+    idx_t lhs, res = next_temp_name ();
     opcode_counter_t jmp_oc;
 
     DUMP_OPCODE_2 (is_true_jmp, expr, opcode_counter + 2);
@@ -1604,10 +1604,10 @@ parse_conditional_expression (bool *was_conditional)
   : conditional_expression
   | left_hand_side_expression LT!* assignment_operator LT!* assignment_expression
   ; */
-static T_IDX
+static idx_t
 parse_assignment_expression (void)
 {
-  T_IDX lhs, rhs;
+  idx_t lhs, rhs;
   bool was_conditional = false;
 
   lhs = parse_conditional_expression (&was_conditional);
@@ -1704,10 +1704,10 @@ parse_assignment_expression (void)
   : assignment_expression (LT!* ',' LT!* assignment_expression)*
   ;
  */
-static T_IDX
+static idx_t
 parse_expression (void)
 {
-  T_IDX expr = parse_assignment_expression ();
+  idx_t expr = parse_assignment_expression ();
 
   while (true)
   {
@@ -1733,7 +1733,7 @@ parse_expression (void)
 static void
 parse_variable_declaration (void)
 {
-  T_IDX name, expr;
+  idx_t name, expr;
 
   current_token_must_be (TOK_NAME);
   name = tok.data.uid;
@@ -1800,7 +1800,7 @@ parse_variable_declaration_list (bool *several_decls)
 static void
 parse_for_or_for_in_statement (void)
 {
-  T_IDX stop;
+  idx_t stop;
   opcode_counter_t cond_oc, body_oc, step_oc, end_oc;
 
   assert_keyword (KW_FOR);
@@ -1932,10 +1932,10 @@ for_in:
   JERRY_UNIMPLEMENTED ();
 }
 
-static T_IDX
+static idx_t
 parse_expression_inside_parens (void)
 {
-  T_IDX expr;
+  idx_t expr;
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   NEXT (expr, expression);
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
@@ -1971,7 +1971,7 @@ parse_statement_list (void)
 static void
 parse_if_statement (void)
 {
-  T_IDX cond;
+  idx_t cond;
   opcode_counter_t cond_oc;
   assert_keyword (KW_IF);
 
@@ -2002,7 +2002,7 @@ parse_if_statement (void)
 static void
 parse_do_while_statement (void)
 {
-  T_IDX cond;
+  idx_t cond;
   opcode_counter_t loop_oc;
 
   assert_keyword (KW_DO);
@@ -2028,7 +2028,7 @@ parse_do_while_statement (void)
 static void
 parse_while_statement (void)
 {
-  T_IDX cond;
+  idx_t cond;
   opcode_counter_t cond_oc, jmp_oc;
 
   assert_keyword (KW_WHILE);
@@ -2056,7 +2056,7 @@ parse_while_statement (void)
 static void
 parse_with_statement (void)
 {
-  T_IDX expr;
+  idx_t expr;
   assert_keyword (KW_WITH);
   expr = parse_expression_inside_parens ();
 
@@ -2233,7 +2233,7 @@ parse_statement (void)
   }
   if (is_keyword (KW_RETURN))
   {
-    T_IDX expr;
+    idx_t expr;
     tok = lexer_next_token ();
     if (tok.type != TOK_SEMICOLON)
     {

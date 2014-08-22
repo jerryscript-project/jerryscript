@@ -19,9 +19,6 @@
 #include "ecma-globals.h"
 #include "globals.h"
 
-#define T_IDX uint8_t /** index values */
-#define OPCODE __opcode
-
 #define OP_0(action, name) \
         __##action (name, void, void, void)
 
@@ -34,11 +31,8 @@
 #define OP_3(action, name, field1, field2, field3) \
         __##action (name, field1, field2, field3)
 
-#define __OP_STRUCT_FIELD(name, arg1, arg2, arg3) __op_##name name;
-#define __OP_ENUM_FIELD(name, arg1, arg2, arg3) __op__idx_##name ,
-#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (__opcode, __int_data*);
-
-typedef uint16_t opcode_counter_t;
+typedef uint16_t opcode_counter_t; /** opcode counters */
+typedef uint8_t idx_t; /** index values */
 
 /**
  * Descriptor of assignment's second argument
@@ -60,8 +54,8 @@ typedef struct
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   bool is_eval_code; /**< is current code executed with eval */
-  T_IDX min_reg_num; /**< minimum idx used for register identification */
-  T_IDX max_reg_num; /**< maximum idx used for register identification */
+  idx_t min_reg_num; /**< minimum idx used for register identification */
+  idx_t max_reg_num; /**< maximum idx used for register identification */
   ecma_value_t *regs_p; /**< register variables */
 } __int_data;
 
@@ -167,101 +161,82 @@ typedef struct
 #define OP_DATA_0(action, name) \
         typedef struct \
         { \
-          T_IDX __do_not_use; \
+          idx_t __do_not_use; \
         } __op_##name;
 
 #define OP_DATA_1(action, name, arg1) \
         typedef struct \
         { \
-          T_IDX arg1; \
+          idx_t arg1; \
         } __op_##name;
 
 #define OP_DATA_2(action, name, arg1, arg2) \
         typedef struct \
         { \
-          T_IDX arg1; \
-          T_IDX arg2; \
+          idx_t arg1; \
+          idx_t arg2; \
         } __op_##name;
 
 #define OP_DATA_3(action, name, arg1, arg2, arg3) \
         typedef struct \
         { \
-          T_IDX arg1; \
-          T_IDX arg2; \
-          T_IDX arg3; \
+          idx_t arg1; \
+          idx_t arg2; \
+          idx_t arg3; \
         } __op_##name;
 
 OP_ARGS_LIST (OP_DATA)
 
+#define __OP_STRUCT_FIELD(name, arg1, arg2, arg3) __op_##name name;
 typedef struct
 {
-  T_IDX op_idx;
+  idx_t op_idx;
   union
   {
     OP_LIST (OP_STRUCT_FIELD)
   } data;
-} __opcode;
+} opcode_t;
+#undef __OP_STRUCT_FIELD
 
+#define __OP_ENUM_FIELD(name, arg1, arg2, arg3) __op__idx_##name ,
 enum __opcode_idx
 {
   OP_LIST (OP_ENUM_FIELD)
   LAST_OP
 };
+#undef __OP_ENUM_FIELD
 
+#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (opcode_t, __int_data*);
 OP_LIST (OP_FUNC_DECL)
+#undef __OP_FUNC_DECL
 
-typedef ecma_completion_value_t (*opfunc) (__opcode, __int_data *);
+typedef ecma_completion_value_t (*opfunc) (opcode_t, __int_data *);
 
 #define GETOP_DECL_0(a, name) \
-        __opcode getop_##name (void);
+        opcode_t getop_##name (void);
 
 #define GETOP_DECL_1(a, name, arg1) \
-        __opcode getop_##name (T_IDX);
+        opcode_t getop_##name (idx_t);
 
 #define GETOP_DECL_2(a, name, arg1, arg2) \
-        __opcode getop_##name (T_IDX, T_IDX);
+        opcode_t getop_##name (idx_t, idx_t);
 
 #define GETOP_DECL_3(a, name, arg1, arg2, arg3) \
-        __opcode getop_##name (T_IDX, T_IDX, T_IDX);
+        opcode_t getop_##name (idx_t, idx_t, idx_t);
 
 #define GETOP_DEF_0(a, name) \
-        __opcode getop_##name (void) \
+        opcode_t getop_##name (void) \
         { \
-          __opcode opdata; \
+          opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \
-          return opdata; \
-        }
-
-#define GETOP_DEF_1(a, name, field1) \
-        __opcode getop_##name (T_IDX arg1) \
-        { \
-          __opcode opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
-          return opdata; \
-        }
-
-#define GETOP_DEF_2(a, name, field1, field2) \
-        __opcode getop_##name (T_IDX arg1, T_IDX arg2) \
-        { \
-          __opcode opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
-          opdata.data.name.field2 = arg2; \
-          return opdata; \
-        }
-
-#define GETOP_DEF_3(a, name, field1, field2, field3) \
-        __opcode getop_##name (T_IDX arg1, T_IDX arg2, T_IDX arg3) \
-        { \
-          __opcode opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
-          opdata.data.name.field2 = arg2; \
-          opdata.data.name.field3 = arg3; \
           return opdata; \
         }
 
 OP_ARGS_LIST (GETOP_DECL)
+#undef GETOP_DECL_0
+#undef GETOP_DECL_1
+#undef GETOP_DECL_2
+#undef GETOP_DECL_3
+
 
 #endif /* OPCODES_H */

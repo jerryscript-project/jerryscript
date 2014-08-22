@@ -447,6 +447,97 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_call */
 
 /**
+ * [[Construct]] implementation for Function objects,
+ * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
+ * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
+                            ecma_value_t* arguments_list_p, /**< arguments list */
+                            ecma_length_t arguments_list_len) /**< length of arguments list */
+{
+  JERRY_ASSERT(func_obj_p != NULL && !func_obj_p->is_lexical_environment);
+  JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
+  JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
+
+  if (func_obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    ecma_completion_value_t ret_value;
+
+    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+
+    // 5.
+    ECMA_TRY_CATCH (func_obj_prototype_prop_value,
+                    ecma_op_object_get (func_obj_p,
+                                        prototype_magic_string_p),
+                    ret_value);
+
+    //  6.
+    ecma_object_t *prototype_p;
+    if (func_obj_prototype_prop_value.value.value_type == ECMA_TYPE_OBJECT)
+    {
+      prototype_p = ECMA_GET_POINTER (func_obj_prototype_prop_value.value.value);
+      ecma_ref_object (prototype_p);
+    }
+    else
+    {
+      // 7.
+      FIXME (/* Set to built-in Object prototype (15.2.4) */);
+
+      prototype_p = ecma_create_object (NULL, false, ECMA_OBJECT_TYPE_GENERAL);
+    }
+
+    // 1., 2., 4.
+    ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+    // 3.
+    ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+    class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_FUNCTION;
+
+    ecma_deref_object (prototype_p);
+
+    // 8.
+    ECMA_TRY_CATCH (call_completion,
+                    ecma_op_function_call (func_obj_p,
+                                           ecma_make_object_value (obj_p),
+                                           arguments_list_p,
+                                           arguments_list_len),
+                    ret_value);
+
+    // 9.
+    if (call_completion.type != ECMA_COMPLETION_TYPE_NORMAL
+        || call_completion.value.value_type == ECMA_TYPE_OBJECT)
+    {
+      ecma_deref_object (obj_p);
+
+      ret_value = call_completion;
+    }
+    else
+    {
+      // 10.
+      ecma_free_completion_value (call_completion);
+
+      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                              ecma_make_object_value (obj_p),
+                                              ECMA_TARGET_ID_RESERVED);
+    }
+
+    ECMA_FINALIZE (call_completion);
+    ECMA_FINALIZE (func_obj_prototype_prop_value);
+
+    return ret_value;
+  }
+  else
+  {
+    JERRY_ASSERT(func_obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+    JERRY_UNIMPLEMENTED();
+  }
+} /* ecma_op_function_construct */
+/**
  * Function declaration.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 5).

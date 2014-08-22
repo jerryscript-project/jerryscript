@@ -43,6 +43,9 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_CALLER: return (ecma_char_t*) "caller";
     case ECMA_MAGIC_STRING_CALLEE: return (ecma_char_t*) "callee";
     case ECMA_MAGIC_STRING_UNDEFINED: return (ecma_char_t*) "undefined";
+    case ECMA_MAGIC_STRING_NULL: return (ecma_char_t*) "null";
+    case ECMA_MAGIC_STRING_FALSE: return (ecma_char_t*) "false";
+    case ECMA_MAGIC_STRING_TRUE: return (ecma_char_t*) "true";
     case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
     case ECMA_MAGIC_STRING_NAN: return (ecma_char_t*) "NaN";
     case ECMA_MAGIC_STRING_INFINITY: return (ecma_char_t*) "Infinity";

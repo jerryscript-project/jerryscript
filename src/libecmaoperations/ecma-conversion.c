@@ -20,6 +20,8 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
+#include "ecma-magic-strings.h"
+#include "ecma-try-catch-macro.h"
 #include "jerry-libc.h"
 
 /** \addtogroup ecma ---TODO---
@@ -299,6 +301,101 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
 
   JERRY_UNREACHABLE();
 } /* ecma_op_to_number */
+
+/**
+ * ToString operation.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.8
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+ecma_op_to_string (ecma_value_t value) /**< ecma-value */
+{
+  if (unlikely (value.value_type == ECMA_TYPE_OBJECT))
+  {
+    ecma_completion_value_t ret_value;
+
+    ECMA_TRY_CATCH (prim_value,
+                    ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING),
+                    ret_value);
+
+    ret_value = ecma_op_to_string (prim_value.value);
+
+    ECMA_FINALIZE (prim_value);
+
+    return ret_value;
+  }
+
+  ecma_string_t *res_p = NULL;
+
+  switch ((ecma_type_t) value.value_type)
+  {
+    case ECMA_TYPE_SIMPLE:
+    {
+      switch ((ecma_simple_value_t) value.value)
+      {
+        case ECMA_SIMPLE_VALUE_UNDEFINED:
+        {
+          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_NULL:
+        {
+          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_FALSE:
+        {
+          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_TRUE:
+        {
+          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
+          break;
+        }
+
+        case ECMA_SIMPLE_VALUE_EMPTY:
+        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
+        case ECMA_SIMPLE_VALUE__COUNT:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+
+      break;
+    }
+
+    case ECMA_TYPE_NUMBER:
+    {
+      ecma_number_t *num_p = ECMA_GET_POINTER (value.value);
+      res_p = ecma_new_ecma_string_from_number (*num_p);
+
+      break;
+    }
+
+    case ECMA_TYPE_STRING:
+    {
+      res_p = ECMA_GET_POINTER (value.value);
+      ecma_ref_ecma_string (res_p);
+
+      break;
+    }
+
+    case ECMA_TYPE_OBJECT:
+    case ECMA_TYPE__COUNT:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                     ecma_make_string_value (res_p),
+                                     ECMA_TARGET_ID_RESERVED);
+} /* ecma_op_to_string */
 
 /**
  * ToObject operation.

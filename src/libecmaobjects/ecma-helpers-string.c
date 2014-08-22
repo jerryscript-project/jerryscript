@@ -695,7 +695,7 @@ ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-ter
 {
   TODO (Implement comparison that supports UTF-16);
 
-  return __strcmp ( (char*)string1_p, (char*)string2_p);
+  return (__strcmp ( (char*)string1_p, (char*)string2_p) == 0);
 } /* ecma_compare_zt_string_to_zt_string */
 
 /**

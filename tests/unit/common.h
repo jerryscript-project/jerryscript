@@ -19,7 +19,7 @@
 #define NAME_TO_ID(op) (__op__idx_##op)
 
 #define OPCODE_SIZE(op) \
-  sizeof (struct __op_##op) + 1,
+  sizeof (__op_##op) + 1,
 
 static uint8_t opcode_sizes[] = {
   OP_LIST (OPCODE_SIZE)
@@ -28,7 +28,7 @@ static uint8_t opcode_sizes[] = {
 
 static bool
 opcodes_equal (const OPCODE *opcodes1, OPCODE *opcodes2, uint16_t size)
-{  
+{
   uint16_t i;
   for (i = 0; i < size; i++)
     {
@@ -37,11 +37,11 @@ opcodes_equal (const OPCODE *opcodes1, OPCODE *opcodes2, uint16_t size)
 
       if (opcode_num1 != opcode_num2)
         return false;
-      
+
       if (opcode_num1 == NAME_TO_ID (nop) || opcode_num1 == NAME_TO_ID (ret)
           || opcode_num1 == NAME_TO_ID (end_with))
         return true;
-      
+
       for (j = 1; j < opcode_sizes[opcode_num1]; j++)
         if (((uint8_t*)&opcodes1[i])[j] != ((uint8_t*)&opcodes2[i])[j])
           return false;

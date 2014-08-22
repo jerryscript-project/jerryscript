@@ -16,7 +16,7 @@
 #include "globals.h"
 #include "interpreter.h"
 #include "mem-allocator.h"
-#include "opcodes.h"
+#include "opcodes-support.h"
 #include "serializer.h"
 #include "optimizer-passes.h"
 #include "jerry-libc.h"
@@ -35,12 +35,12 @@ main( int __unused argc,
     [0] = getop_reg_var_decl (5, 5), // tmp6
     [1] = getop_assignment (0, OPCODE_ARG_TYPE_STRING, 1), // a = "b"
     [2] = getop_var_decl (1), // var b
-    [3] = getop_func_decl_0 (2), // function c() 
+    [3] = getop_func_decl_0 (2), // function c()
     [4] = getop_jmp_down (3), // {
     [5] = getop_var_decl (1), // var b
     [6] = getop_retval (1),  // return b; }
     [7] = getop_assignment (5, OPCODE_ARG_TYPE_STRING, 3), // "use strict"
-    [8] = getop_exitval (0) 
+    [8] = getop_exitval (0)
   };
 
   mem_init();
@@ -60,16 +60,16 @@ main( int __unused argc,
   if (!opcodes_equal (opcodes, (OPCODE[]) {
     [0] = getop_reg_var_decl (5, 5), // tmp6
     [1] = getop_assignment (5, OPCODE_ARG_TYPE_STRING, 3), // "use strict"
-    [2] = getop_func_decl_0 (2), // function c() 
+    [2] = getop_func_decl_0 (2), // function c()
     [3] = getop_jmp_down (3), // {
     [4] = getop_var_decl (1), // var b
     [5] = getop_retval (1),  // return b; }
     [6] = getop_var_decl (1), // var b
     [7] = getop_assignment (0, OPCODE_ARG_TYPE_STRING, 1), // a = "b"
-    [8] = getop_exitval (0) 
+    [8] = getop_exitval (0)
   }, 9))
     return 1;
 
 
   return 0;
-} 
+}

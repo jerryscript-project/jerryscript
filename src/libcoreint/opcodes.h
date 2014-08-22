@@ -19,22 +19,26 @@
 #include "ecma-globals.h"
 #include "globals.h"
 
-#define OPCODE struct __opcode
-struct __int_data;
-
-#define OP_STRUCT_FIELD(name) struct __op_##name name;
-#define OP_ENUM_FIELD(name) __op__idx_##name ,
-#define OP_FUNC_DECL(name) ecma_completion_value_t opfunc_##name (OPCODE, struct __int_data *);
-
-/** A single bytecode instruction is 32bit wide and has an 8bit opcode field
- and several operand of 8 of 16 bit.*/
-
-// OPCODE FIELD TYPES
 #define T_IDX uint8_t /** index values */
+#define OPCODE __opcode
 
-OPCODE;
-typedef
-ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
+#define OP_STRUCT_FIELD(name) __op_##name name;
+#define OP_ENUM_FIELD(name) __op__idx_##name ,
+#define OP_FUNC_DECL(name) ecma_completion_value_t opfunc_##name (__opcode, __int_data*);
+
+typedef uint16_t opcode_counter_t;
+
+typedef struct
+{
+  opcode_counter_t pos; /**< current opcode to execute */
+  ecma_value_t this_binding; /**< this binding for current context */
+  ecma_object_t *lex_env_p; /**< current lexical environment */
+  bool is_strict; /**< is current code execution mode strict? */
+  bool is_eval_code; /**< is current code executed with eval */
+  T_IDX min_reg_num; /**< minimum idx used for register identification */
+  T_IDX max_reg_num; /**< maximum idx used for register identification */
+  ecma_value_t *regs_p; /**< register variables */
+} __int_data;
 
 #define OP_CALLS_AND_ARGS(op)            \
     op (call_0)                          \
@@ -135,7 +139,108 @@ ecma_completion_value_t (*opfunc) (OPCODE, struct __int_data *);
   op (reg_var_decl)\
   op (meta)
 
-#include "opcode-structures.h"
+#define OP_DATA (name, list) typedef struct { list ; } __op_##name;
+
+#define OP_DATA_0(name) \
+        typedef struct \
+        { \
+          T_IDX __do_not_use; \
+        } __op_##name
+
+#define OP_DATA_1(name, arg1) \
+        typedef struct \
+        { \
+          T_IDX arg1; \
+        } __op_##name
+
+#define OP_DATA_2(name, arg1, arg2) \
+        typedef struct \
+        { \
+          T_IDX arg1; \
+          T_IDX arg2; \
+        } __op_##name
+
+#define OP_DATA_3(name, arg1, arg2, arg3) \
+        typedef struct \
+        { \
+          T_IDX arg1; \
+          T_IDX arg2; \
+          T_IDX arg3; \
+        } __op_##name
+
+OP_DATA_2 (is_true_jmp, value, opcode);
+OP_DATA_2 (is_false_jmp, value, opcode);
+OP_DATA_1 (jmp, opcode_idx);
+OP_DATA_1 (jmp_up, opcode_count);
+OP_DATA_1 (jmp_down, opcode_count);
+OP_DATA_3 (addition, dst, var_left, var_right);
+OP_DATA_2 (post_incr, dst, var_right);
+OP_DATA_2 (post_decr, dst, var_right);
+OP_DATA_2 (pre_incr, dst, var_right);
+OP_DATA_2 (pre_decr, dst, var_right);
+OP_DATA_3 (substraction, dst, var_left, var_right);
+OP_DATA_3 (division, dst, var_left, var_right);
+OP_DATA_3 (multiplication, dst, var_left, var_right);
+OP_DATA_3 (remainder, dst, var_left, var_right);
+OP_DATA_3 (b_shift_left, dst, var_left, var_right);
+OP_DATA_3 (b_shift_right, dst, var_left, var_right);
+OP_DATA_3 (b_shift_uright, dst, var_left, var_right);
+OP_DATA_3 (b_and, dst, var_left, var_right);
+OP_DATA_3 (b_or, dst, var_left, var_right);
+OP_DATA_3 (b_xor, dst, var_left, var_right);
+OP_DATA_3 (logical_and, dst, var_left, var_right);
+OP_DATA_3 (logical_or, dst, var_left, var_right);
+OP_DATA_3 (equal_value, dst, var_left, var_right);
+OP_DATA_3 (not_equal_value, dst, var_left, var_right);
+OP_DATA_3 (equal_value_type, dst, var_left, var_right);
+OP_DATA_3 (not_equal_value_type, dst, var_left, var_right);
+OP_DATA_3 (less_than, dst, var_left, var_right);
+OP_DATA_3 (greater_than, dst, var_left, var_right);
+OP_DATA_3 (less_or_equal_than, dst, var_left, var_right);
+OP_DATA_3 (greater_or_equal_than, dst, var_left, var_right);
+OP_DATA_3 (assignment, var_left, type_value_right, value_right);
+OP_DATA_2 (call_0, lhs, name_lit_idx);
+OP_DATA_3 (call_1, lhs, name_lit_idx, arg1_lit_idx);
+OP_DATA_3 (call_n, lhs, name_lit_idx, arg1_lit_idx);
+OP_DATA_3 (native_call, lhs, name, arg_list);
+OP_DATA_2 (func_decl_1, name_lit_idx, arg1_lit_idx);
+OP_DATA_3 (func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx);
+OP_DATA_3 (func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx);
+OP_DATA_3 (varg_list, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx);
+OP_DATA_1 (exitval, status_code);
+OP_DATA_1 (retval, ret_value);
+OP_DATA_0 (ret);
+OP_DATA_0 (nop);
+OP_DATA_1 (var_decl, variable_name);
+OP_DATA_2 (b_not, dst, var_right);
+OP_DATA_2 (logical_not, dst, var_right);
+OP_DATA_3 (instanceof, dst, var_left, var_right);
+OP_DATA_3 (in, dst, var_left, var_right);
+OP_DATA_3 (construct_decl, lhs, name_lit_idx, arg_list);
+OP_DATA_1 (func_decl_0, name_lit_idx);
+OP_DATA_2 (array_decl, lhs, list);
+OP_DATA_3 (prop, lhs, name, value);
+OP_DATA_3 (prop_getter, lhs, obj, prop);
+OP_DATA_3 (prop_setter, obj, prop, rhs);
+OP_DATA_2 (prop_get_decl, lhs, prop);
+OP_DATA_3 (prop_set_decl, lhs, prop, arg);
+OP_DATA_2 (obj_decl, lhs, list);
+OP_DATA_1 (this, lhs);
+OP_DATA_2 (delete, lhs, obj);
+OP_DATA_2 (typeof, lhs, obj);
+OP_DATA_1 (with, expr);
+OP_DATA_0 (end_with);
+OP_DATA_2 (reg_var_decl, min, max);
+OP_DATA_3 (meta, type, data_1, data_2);
+
+typedef struct
+{
+  T_IDX op_idx;
+  union
+  {
+    OP_LIST (OP_STRUCT_FIELD)
+  } data;
+} __opcode;
 
 enum __opcode_idx
 {
@@ -143,19 +248,10 @@ enum __opcode_idx
   LAST_OP
 };
 
-union __opdata
-{
-  OP_LIST (OP_STRUCT_FIELD)
-};
-
 OP_LIST (OP_FUNC_DECL)
 
-OPCODE
-{
-  T_IDX op_idx;
-  union __opdata data;
-}
-__packed;
+
+typedef ecma_completion_value_t (*opfunc) (__opcode, __int_data *);
 
 /**
  * Descriptor of assignment's second argument

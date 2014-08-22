@@ -16,7 +16,7 @@
 #include "globals.h"
 #include "interpreter.h"
 #include "mem-allocator.h"
-#include "opcodes.h"
+#include "opcodes-support.h"
 #include "serializer.h"
 
 /**

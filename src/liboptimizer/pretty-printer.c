@@ -25,7 +25,7 @@
   #op,
 
 #define OPCODE_SIZE(op) \
-  sizeof (struct __op_##op) + 1,
+  sizeof (__op_##op) + 1,
 
 static char* opcode_names[] =
 {

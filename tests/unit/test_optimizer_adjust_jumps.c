@@ -16,7 +16,7 @@
 #include "globals.h"
 #include "interpreter.h"
 #include "mem-allocator.h"
-#include "opcodes.h"
+#include "opcodes-support.h"
 #include "serializer.h"
 #include "optimizer-passes.h"
 #include "jerry-libc.h"
@@ -91,4 +91,4 @@ main( int __unused argc,
     return 1;
 
   return 0;
-} 
+}

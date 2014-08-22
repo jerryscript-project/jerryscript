@@ -20,21 +20,7 @@
 #include "globals.h"
 #include "opcodes.h"
 
-typedef uint16_t opcode_counter_t;
-
-struct __int_data
-{
-  opcode_counter_t pos; /**< current opcode to execute */
-  ecma_value_t this_binding; /**< this binding for current context */
-  ecma_object_t *lex_env_p; /**< current lexical environment */
-  bool is_strict; /**< is current code execution mode strict? */
-  bool is_eval_code; /**< is current code executed with eval */
-  T_IDX min_reg_num; /**< minimum idx used for register identification */
-  T_IDX max_reg_num; /**< maximum idx used for register identification */
-  ecma_value_t *regs_p; /**< register variables */
-};
-
-void init_int (const OPCODE* program_p);
+void init_int (const __opcode* program_p);
 bool run_int (void);
 ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
                                           ecma_value_t this_binding_value,
@@ -45,7 +31,7 @@ ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
 ssize_t try_get_string_by_idx (T_IDX idx, ecma_char_t *buffer_p, ssize_t buffer_size);
 ecma_number_t get_number_by_idx (T_IDX idx);
 
-OPCODE read_opcode (opcode_counter_t counter);
+__opcode read_opcode (opcode_counter_t counter);
 
 #endif /* INTERPRETER_H */
 

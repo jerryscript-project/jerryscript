@@ -2210,36 +2210,29 @@ opfunc_instanceof (OPCODE opdata __unused, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  if ((right_value.value.value_type != ECMA_TYPE_OBJECT)
-       || (true /* TODO (check if rval has no [[HasInstance]] property) */))
+  if (right_value.value.value_type != ECMA_TYPE_OBJECT)
   {
     ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
-    ecma_string_t *to_string_lval = ecma_new_ecma_string_from_lit_index (left_var_idx);
     ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.value.value);
 
-    if (ecma_op_object_has_property (right_value_obj_p, to_string_lval))
-    {
-      is_in = ECMA_SIMPLE_VALUE_TRUE;
-    }
-    else
-    {
-      is_in = ECMA_SIMPLE_VALUE_FALSE;
-    }
+    ECMA_TRY_CATCH (is_instance_of,
+                    ecma_op_object_has_instance (right_value_obj_p,
+                                                 left_value.value),
+                    ret_value);
 
-    ecma_deref_ecma_string (to_string_lval);
+    ret_value = set_variable_value (int_data, dst_idx, is_instance_of.value);
 
-    ret_value = set_variable_value (int_data,
-                                    dst_idx,
-                                    ecma_make_simple_value (is_in));
+    ECMA_FINALIZE (is_instance_of);
   }
 
   ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   return ret_value;
 } /* opfunc_instanceof */

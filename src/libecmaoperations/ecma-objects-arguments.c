@@ -83,6 +83,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
                                                                            prop_desc,
                                                                            false);
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+  ecma_deref_ecma_string (length_magic_string_p);
 
   ecma_dealloc_number (len_p);
 

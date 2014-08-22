@@ -56,8 +56,7 @@ typedef enum
   ECMA_TYPE_SIMPLE, /**< simple value */
   ECMA_TYPE_NUMBER, /**< 64-bit integer */
   ECMA_TYPE_STRING, /**< pointer to description of a string */
-  ECMA_TYPE_OBJECT, /**< pointer to description of an object */
-  ECMA_TYPE__COUNT /**< count of types */
+  ECMA_TYPE_OBJECT /**< pointer to description of an object */
 } ecma_type_t;
 
 /**

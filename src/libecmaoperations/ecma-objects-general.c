@@ -110,10 +110,6 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
                                          ecma_make_object_value (obj_p),
                                          ECMA_TARGET_ID_RESERVED);
     }
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
-    }
   }
 
   JERRY_UNREACHABLE();

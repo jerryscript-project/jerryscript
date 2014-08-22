@@ -163,16 +163,16 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
  *   switch (valuetype)
  *    case simple:
  *      simply return the value as it was passed;
- *    case number/string:
- *      copy the number/string
+ *    case number:
+ *      copy the number
  *      and return new ecma-value
- *      pointing to copy of the number/string;
+ *      pointing to copy of the number;
+ *    case string:
+ *      increase reference counter of the string
+ *      and return the value as it was passed.
  *    case object;
  *      increase reference counter of the object if do_ref_if_object is true
  *      and return the value as it was passed.
- *
- * TODO:
- *      reference counter in strings
  *
  * @return See note.
  */
@@ -214,11 +214,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
 
       ecma_ref_ecma_string (string_p);
 
-      value_copy = (ecma_value_t)
-      {
-        .value_type = ECMA_TYPE_STRING
-      };
-      ECMA_SET_POINTER(value_copy.value, string_p);
+      value_copy = value;
 
       break;
     }
@@ -235,10 +231,6 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
       value_copy = value;
 
       break;
-    }
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
     }
   }
 
@@ -282,11 +274,6 @@ ecma_free_value (ecma_value_t value, /**< value description */
         ecma_deref_object (ECMA_GET_POINTER(value.value));
       }
       break;
-    }
-
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
     }
   }
 } /* ecma_free_value */

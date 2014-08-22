@@ -69,11 +69,6 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
     {
       break;
     }
-
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
-    }
   }
 
   return ecma_make_empty_completion_value ();
@@ -180,11 +175,6 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(preferred_type);
     }
-
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
-    }
   }
 
   JERRY_UNREACHABLE();
@@ -249,10 +239,6 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
 
       break;
     }
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
-    }
   }
 
   JERRY_UNREACHABLE();
@@ -292,10 +278,6 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
       ecma_free_completion_value (completion_to_primitive);
 
       return completion_to_number;
-    }
-    case ECMA_TYPE__COUNT:
-    {
-      JERRY_UNREACHABLE();
     }
   }
 
@@ -386,7 +368,6 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
     }
 
     case ECMA_TYPE_OBJECT:
-    case ECMA_TYPE__COUNT:
     {
       JERRY_UNREACHABLE ();
     }

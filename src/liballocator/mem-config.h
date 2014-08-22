@@ -16,20 +16,32 @@
 #ifndef MEM_CONFIG_H
 #define MEM_CONFIG_H
 
+#include "config.h"
+
 /**
  * Log2 of maximum possible offset in the heap
  */
-#define MEM_HEAP_OFFSET_LOG 16
+#define MEM_HEAP_OFFSET_LOG (CONFIG_MEM_HEAP_OFFSET_LOG)
 
 /**
- * Size of one pool chunk
+ * Size of heap
  */
-#define MEM_POOL_CHUNK_SIZE 16
+#define MEM_HEAP_AREA_SIZE (CONFIG_MEM_HEAP_AREA_SIZE)
+
+/**
+ * Size of heap chunk
+ */
+#define MEM_HEAP_CHUNK_SIZE (CONFIG_MEM_HEAP_CHUNK_SIZE)
+
+/**
+ * Size of pool chunk
+ */
+#define MEM_POOL_CHUNK_SIZE (CONFIG_MEM_POOL_CHUNK_SIZE)
 
 /**
  * Log2 of maximum number of chunks in a pool
  */
-#define MEM_POOL_MAX_CHUNKS_NUMBER_LOG 16
+#define MEM_POOL_MAX_CHUNKS_NUMBER_LOG (CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG)
 
 /**
  * Logarithm of required alignment for allocated units/blocks

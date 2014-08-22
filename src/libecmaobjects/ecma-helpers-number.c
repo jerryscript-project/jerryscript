@@ -284,7 +284,7 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
     /* IEEE-754 2008, 3.4, d */
     exponent = 1 - ecma_number_exponent_bias;
 
-    while (!(fraction & (1u << ECMA_NUMBER_FRACTION_WIDTH)))
+    while (!(fraction & (1ul << ECMA_NUMBER_FRACTION_WIDTH)))
     {
       JERRY_ASSERT (fraction != 0);
 
@@ -298,8 +298,8 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
     exponent = (int32_t) biased_exp - ecma_number_exponent_bias;
 
     JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
-    JERRY_ASSERT ((fraction & (1u << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
-    fraction |= 1u << ECMA_NUMBER_FRACTION_WIDTH;
+    JERRY_ASSERT ((fraction & (1ul << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
+    fraction |= 1ul << ECMA_NUMBER_FRACTION_WIDTH;
   }
 
   *out_fraction_p = fraction;

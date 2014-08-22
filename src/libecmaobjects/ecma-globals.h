@@ -21,8 +21,9 @@
  */
 
 #ifndef JERRY_ECMA_GLOBALS_H
-#define  JERRY_ECMA_GLOBALS_H
+#define JERRY_ECMA_GLOBALS_H
 
+#include "config.h"
 #include "globals.h"
 #include "mem-allocator.h"
 
@@ -442,15 +443,33 @@ typedef struct
   ecma_property_configurable_value_t configurable;
 } ecma_property_descriptor_t;
 
+#ifdef CONFIG_ECMA_CHAR_ASCII
 /**
  * Description of an ecma-character
  */
 typedef uint8_t ecma_char_t;
+#elif defined (CONFIG_ECMA_CHAR_UTF16)
+/**
+ * Description of an ecma-character
+ */
+typedef uint16_t ecma_char_t;
+#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
+#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
 
+#ifdef CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
+#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+/**
+ * Description of an ecma-number
+ */
+typedef double ecma_number_t;
+#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+#error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
+#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
  * Value '0' of ecma_number_t

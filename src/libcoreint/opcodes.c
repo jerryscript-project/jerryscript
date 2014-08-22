@@ -2077,6 +2077,7 @@ opfunc_retval (OPCODE opdata __unused, /**< operation data */
  * 'Property getter' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.1
+ *           ECMA-262 v5, 11.13.1
  *
  * @return completion value
  *         returned value must be freed with ecma_free_completion_value.
@@ -2087,17 +2088,21 @@ opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
 {
   const T_IDX lhs_var_idx = opdata.data.prop_getter.lhs;
   const T_IDX base_var_idx = opdata.data.prop_getter.obj;
-  const T_IDX prop_lit_idx = opdata.data.prop_getter.prop;
+  const T_IDX prop_name_var_idx = opdata.data.prop_getter.prop;
+
+  int_data->pos++;
 
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (base_value, get_variable_value (int_data, base_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (prop_name_value, get_variable_value (int_data, prop_name_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.value), ret_value);
+  ECMA_TRY_CATCH (prop_name_str_value, ecma_op_to_string (prop_name_value.value), ret_value);
 
-  ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_lit_idx);
+  ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.value.value);
   ecma_reference_t ref = ecma_make_reference (base_value.value,
                                               prop_name_string_p,
                                               int_data->is_strict);
-  ecma_deref_ecma_string (prop_name_string_p);
 
   ECMA_TRY_CATCH (prop_value, ecma_op_get_value (ref), ret_value);
 
@@ -2107,6 +2112,9 @@ opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
 
   ecma_free_reference (ref);
 
+  ECMA_FINALIZE (prop_name_str_value);
+  ECMA_FINALIZE (check_coercible_ret);
+  ECMA_FINALIZE (prop_name_value);
   ECMA_FINALIZE (base_value);
 
   return ret_value;
@@ -2116,6 +2124,7 @@ opfunc_prop_getter (OPCODE opdata __unused, /**< operation data */
  * 'Property setter' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.1
+ *           ECMA-262 v5, 11.13.1
  *
  * @return completion value
  *         returned value must be freed with ecma_free_completion_value.
@@ -2125,26 +2134,33 @@ opfunc_prop_setter (OPCODE opdata __unused, /**< operation data */
                     struct __int_data *int_data __unused) /**< interpreter context */
 {
   const T_IDX base_var_idx = opdata.data.prop_setter.obj;
-  const T_IDX prop_lit_idx = opdata.data.prop_setter.prop;
+  const T_IDX prop_name_var_idx = opdata.data.prop_setter.prop;
   const T_IDX rhs_var_idx = opdata.data.prop_setter.rhs;
+
+  int_data->pos++;
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
   ECMA_TRY_CATCH (base_value, get_variable_value (int_data, base_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (prop_name_value, get_variable_value (int_data, prop_name_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.value), ret_value);
+  ECMA_TRY_CATCH (prop_name_str_value, ecma_op_to_string (prop_name_value.value), ret_value);
 
-  ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_lit_idx);
+  ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.value.value);
   ecma_reference_t ref = ecma_make_reference (base_value.value,
                                               prop_name_string_p,
                                               int_data->is_strict);
-  ecma_deref_ecma_string (prop_name_string_p);
 
+  ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
   ret_value = ecma_op_put_value (ref, rhs_value.value);
+  ECMA_FINALIZE (rhs_value);
 
   ecma_free_reference (ref);
 
+  ECMA_FINALIZE (prop_name_str_value);
+  ECMA_FINALIZE (check_coercible_ret);
+  ECMA_FINALIZE (prop_name_value);
   ECMA_FINALIZE (base_value);
-  ECMA_FINALIZE (rhs_value);
 
   return ret_value;
 } /* opfunc_prop_setter */

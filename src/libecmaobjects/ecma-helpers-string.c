@@ -174,7 +174,6 @@ ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number
   string_desc_p->refs = 1;
 
   FIXME (/* Interface for getting literal's length */);
-  TODO (/* Lazy calculate literal's length */);
 
   ssize_t size_required = try_get_string_by_idx ((uint8_t) lit_index, NULL, 0);
   JERRY_ASSERT (size_required < 0);
@@ -221,33 +220,39 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     return;
   }
 
-  if (string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
+  switch ((ecma_string_container_t)string_p->container)
   {
-    ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
-
-    JERRY_ASSERT (chunk_p != NULL);
-
-    while (chunk_p != NULL)
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+      ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
 
-      ecma_dealloc_collection_chunk (chunk_p);
+      JERRY_ASSERT (chunk_p != NULL);
 
-      chunk_p = next_chunk_p;
+      while (chunk_p != NULL)
+      {
+        ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+
+        ecma_dealloc_collection_chunk (chunk_p);
+
+        chunk_p = next_chunk_p;
+      }
+
+      break;
     }
-  }
-  else if (string_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
-  {
-    ecma_number_t *num_p = ECMA_GET_POINTER (string_p->u.number_cp);
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      ecma_number_t *num_p = ECMA_GET_POINTER (string_p->u.number_cp);
 
-    ecma_dealloc_number (num_p);
-  }
-  else
-  {
-    JERRY_ASSERT (string_p->container == ECMA_STRING_CONTAINER_CHARS_IN_DESC
-                  || string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE);
+      ecma_dealloc_number (num_p);
 
-    /* only the string descriptor itself should be freed */
+      break;
+    }
+    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      /* only the string descriptor itself should be freed */
+    }
   }
 
   ecma_dealloc_string (string_p);
@@ -261,29 +266,38 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 {
   JERRY_ASSERT (str_p != NULL);
 
-  if (str_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  switch ((ecma_string_container_t)str_p->container)
   {
-    uint32_t uint32_number = str_p->u.uint32_number;
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      uint32_t uint32_number = str_p->u.uint32_number;
 
-    return ecma_uint32_to_number (uint32_number);
+      return ecma_uint32_to_number (uint32_number);
+    }
+
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      ecma_number_t *num_p = ECMA_GET_POINTER (str_p->u.number_cp);
+
+      return *num_p;
+    }
+
+    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+    {
+      ecma_char_t zt_string_buffer [str_p->length + 1];
+
+      ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
+                                                       zt_string_buffer,
+                                                       (ssize_t) sizeof (zt_string_buffer));
+      JERRY_ASSERT (bytes_copied > 0);
+
+      return ecma_zt_string_to_number (zt_string_buffer);
+    }
   }
-  else if (str_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
-  {
-    ecma_number_t *num_p = ECMA_GET_POINTER (str_p->u.number_cp);
 
-    return *num_p;
-  }
-  else
-  {
-    ecma_char_t zt_string_buffer [str_p->length + 1];
-
-    ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
-                                                     zt_string_buffer,
-                                                     (ssize_t) sizeof (zt_string_buffer));
-    JERRY_ASSERT (bytes_copied > 0);
-
-    return ecma_zt_string_to_number (zt_string_buffer);
-  }
+  JERRY_UNREACHABLE ();
 } /* ecma_string_to_number */
 
 /**
@@ -387,6 +401,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       JERRY_ASSERT (string_desc_p->length == length);
 
       bytes_copied = (length + 1) * ((ssize_t) sizeof (ecma_char_t));
+
+      break;
     }
   }
 
@@ -623,33 +639,41 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     {
       return (string1_p->u.lit_index == string2_p->u.lit_index);
     }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
-    {
-      ecma_number_t *num1_p, *num2_p;
-      num1_p = ECMA_GET_POINTER (string1_p->u.number_cp);
-      num2_p = ECMA_GET_POINTER (string2_p->u.number_cp);
 
-      if (ecma_number_is_nan (*num1_p)
-          && ecma_number_is_nan (*num2_p))
+    switch ((ecma_string_container_t) string1_p->container)
+    {
+      case ECMA_STRING_CONTAINER_HEAP_NUMBER:
       {
-        return true;
+        ecma_number_t *num1_p, *num2_p;
+        num1_p = ECMA_GET_POINTER (string1_p->u.number_cp);
+        num2_p = ECMA_GET_POINTER (string2_p->u.number_cp);
+
+        if (ecma_number_is_nan (*num1_p)
+            && ecma_number_is_nan (*num2_p))
+        {
+          return true;
+        }
+
+        return (*num1_p == *num2_p);
       }
+      case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
+      {
+        JERRY_ASSERT (string1_p->length == string2_p->length);
 
-      return (*num1_p == *num2_p);
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_CHARS_IN_DESC)
-    {
-      JERRY_ASSERT (string1_p->length == string2_p->length);
-
-      return (__memcmp (string1_p->u.chars, string2_p->u.chars, string1_p->length * sizeof (ecma_char_t)) == 0);
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
-    {
-      return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
-    }
-    else
-    {
-      JERRY_UNREACHABLE ();
+        return (__memcmp (string1_p->u.chars, string2_p->u.chars, string1_p->length * sizeof (ecma_char_t)) == 0);
+      }
+      case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+      {
+        return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
+      }
+      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+      {
+        return (string1_p->u.uint32_number == string2_p->u.uint32_number);
+      }
+      case ECMA_STRING_CONTAINER_LIT_TABLE:
+      {
+        JERRY_UNREACHABLE ();
+      }
     }
   }
 

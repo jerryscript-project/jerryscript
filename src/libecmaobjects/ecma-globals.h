@@ -563,9 +563,6 @@ typedef struct
   /** Where the string's data is placed (ecma_string_container_t) */
   unsigned int container : 3;
 
-  /** Flag indicating whether the length field is valid */
-  unsigned int is_length_valid : 1;
-
   /** String's length */
   ecma_length_t length;
 

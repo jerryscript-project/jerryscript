@@ -536,11 +536,14 @@ typedef struct
  */
 typedef enum
 {
+  ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
   ECMA_STRING_CONTAINER_HEAP_CHUNKS, /**< actual data is on the heap
                                           in a ecma_collection_chunk_t chain */
-  ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
-  ECMA_STRING_CONTAINER_IN_DESCRIPTOR, /**< actual data is locally in the string's descriptor */
-  ECMA_STRING_CONTAINER_HEAP_NUMBER /**< actual data is on the heap as a ecma_number_t */
+  ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
+  ECMA_STRING_CONTAINER_CHARS_IN_DESC, /**< actual data are several characters
+                                            stored locally in the string's descriptor */
+  ECMA_STRING_CONTAINER_UINT32_IN_DESC /**< actual data is UInt32-represeneted Number
+                                             stored locally in the string's descriptor */
 } ecma_string_container_t;
 
 FIXME (Move to library that should define the type (libserializer /* ? */))
@@ -558,7 +561,7 @@ typedef struct
   unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
 
   /** Where the string's data is placed (ecma_string_container_t) */
-  unsigned int container : 2;
+  unsigned int container : 3;
 
   /** Flag indicating whether the length field is valid */
   unsigned int is_length_valid : 1;
@@ -580,8 +583,11 @@ typedef struct
     /** Compressed pointer to an ecma_number_t */
     unsigned int number_cp : ECMA_POINTER_FIELD_WIDTH;
     
-    /** Actual data if placed locally in the descriptor */
-    ecma_char_t chars[ sizeof (uint64_t) - sizeof (uint32_t) ];
+    /** Actual data placed locally in the descriptor */
+    ecma_char_t chars[ sizeof (uint32_t) ];
+
+    /** UInt32-represented number placed locally in the descriptor */
+    uint32_t uint32_number;
   } u;
 } ecma_string_t;
 

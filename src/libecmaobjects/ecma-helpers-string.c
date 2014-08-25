@@ -257,7 +257,7 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
  * Convert ecma-string to number
  */
 ecma_number_t
-ecma_string_to_number (ecma_string_t *str_p) /**< ecma-string */
+ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 {
   JERRY_ASSERT (str_p != NULL);
 
@@ -305,7 +305,7 @@ ecma_string_get_required_buffer_size_for_zt_form (const ecma_string_t *string_de
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
-ecma_string_to_zt_string (ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                           ecma_char_t *buffer_p, /**< destination buffer */
                           ssize_t buffer_size) /**< size of buffer */
 {
@@ -492,12 +492,12 @@ ecma_compare_ecma_string_to_zt_string (const ecma_string_t *string_p, /**< ecma-
  *         false - otherwise.
  */
 static bool __noinline
-ecma_compare_ecma_string_to_ecma_string_longpath (ecma_string_t *string1_p, /* ecma-string */
-                                                  ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p, /* ecma-string */
+                                                  const ecma_string_t *string2_p) /* ecma-string */
 {
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
-    ecma_string_t *tmp_string_p = string1_p;
+    const ecma_string_t *tmp_string_p = string1_p;
     string1_p = string2_p;
     string2_p = tmp_string_p;
   }
@@ -602,8 +602,8 @@ ecma_compare_ecma_string_to_ecma_string_longpath (ecma_string_t *string1_p, /* e
  *         false - otherwise.
  */
 bool
-ecma_compare_ecma_string_to_ecma_string (ecma_string_t *string1_p, /* ecma-string */
-                                         ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma-string */
+                                         const ecma_string_t *string2_p) /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 

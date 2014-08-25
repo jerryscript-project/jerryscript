@@ -93,13 +93,13 @@ extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
 extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_index);
 extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
-extern ecma_number_t ecma_string_to_number (ecma_string_t *str_p);
-extern ssize_t ecma_string_to_zt_string (ecma_string_t *string_desc_p,
+extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
+extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
                                          ssize_t buffer_size);
 extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern bool ecma_compare_ecma_string_to_ecma_string (ecma_string_t *string1_p,
-                                                     ecma_string_t *string2_p);
+extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
+                                                     const ecma_string_t *string2_p);
 
 /* ecma-helpers-number.c */
 extern bool ecma_number_is_nan (ecma_number_t num);
@@ -167,11 +167,11 @@ extern ecma_property_t *ecma_create_named_accessor_property (ecma_object_t *obj_
                                                              ecma_property_enumerable_value_t enumerable,
                                                              ecma_property_configurable_value_t configurable);
 extern ecma_property_t *ecma_find_named_property (ecma_object_t *obj_p,
-                                                  ecma_string_t *name_p);
+                                                  const ecma_string_t *name_p);
 extern ecma_property_t *ecma_get_named_property (ecma_object_t *obj_p,
-                                                 ecma_string_t *name_p);
+                                                 const ecma_string_t *name_p);
 extern ecma_property_t *ecma_get_named_data_property (ecma_object_t *obj_p,
-                                                      ecma_string_t *name_p);
+                                                      const ecma_string_t *name_p);
 
 extern void ecma_free_internal_property (ecma_property_t *prop_p);
 extern void ecma_free_named_data_property (ecma_property_t *prop_p);

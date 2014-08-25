@@ -274,7 +274,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                          ecma_string_t *name_p) /**< property's name */
+                          const ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
@@ -320,7 +320,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
  */
 ecma_property_t*
 ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                         ecma_string_t *name_p) /**< property's name */
+                         const ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
@@ -343,7 +343,7 @@ ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in *
  */
 ecma_property_t*
 ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property in */
-                              ecma_string_t *name_p) /**< property's name */
+                              const ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);

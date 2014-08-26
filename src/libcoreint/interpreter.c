@@ -100,6 +100,40 @@ run_int (void)
 }
 
 ecma_completion_value_t
+run_int_loop (int_data_t *int_data)
+{
+  while (true)
+  {
+    ecma_completion_value_t completion;
+
+    do
+    {
+      const opcode_t *curr = &__program[int_data->pos];
+      completion = __opfuncs[curr->op_idx] (*curr, int_data);
+
+      JERRY_ASSERT (!ecma_is_completion_value_normal (completion)
+                    || ecma_is_empty_completion_value (completion));
+    }
+    while (completion.type == ECMA_COMPLETION_TYPE_NORMAL);
+
+    if (completion.type == ECMA_COMPLETION_TYPE_BREAK)
+    {
+      JERRY_UNIMPLEMENTED ();
+
+      continue;
+    }
+    else if (completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
+    {
+      JERRY_UNIMPLEMENTED ();
+
+      continue;
+    }
+
+    return completion;
+  }
+}
+
+ecma_completion_value_t
 run_int_from_pos (opcode_counter_t start_pos,
                   ecma_value_t this_binding_value,
                   ecma_object_t *lex_env_p,
@@ -133,40 +167,16 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.max_reg_num = max_reg_num;
   int_data.regs_p = regs;
 
-  while (true)
+  completion = run_int_loop (&int_data);
+
+  for (uint32_t reg_index = 0;
+       reg_index < regs_num;
+       reg_index++)
   {
-    do
-    {
-      const opcode_t *curr = &__program[int_data.pos];
-      completion = __opfuncs[curr->op_idx] (*curr, &int_data);
-
-      JERRY_ASSERT (!ecma_is_completion_value_normal (completion)
-                    || ecma_is_empty_completion_value (completion));
-    }
-    while (completion.type == ECMA_COMPLETION_TYPE_NORMAL);
-
-    if (completion.type == ECMA_COMPLETION_TYPE_BREAK)
-    {
-      JERRY_UNIMPLEMENTED ();
-
-      continue;
-    }
-    else if (completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
-    {
-      JERRY_UNIMPLEMENTED ();
-
-      continue;
-    }
-
-    for (uint32_t reg_index = 0;
-         reg_index < regs_num;
-         reg_index++)
-    {
-      ecma_free_value (regs[ reg_index ], true);
-    }
-
-    return completion;
+    ecma_free_value (regs[ reg_index ], true);
   }
+
+  return completion;
 }
 
 /**

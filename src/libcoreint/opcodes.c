@@ -119,7 +119,7 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (native_call)                     \
     op (func_expr_n)                     \
-    op (varg_list)                       \
+    op (varg)                            \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
@@ -749,21 +749,10 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
 
   ecma_length_t arg_index = 0;
   opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg_list)
+  while (next_opcode.op_idx == __op__idx_varg)
   {
-    const idx_t arg1_lit_idx = next_opcode.data.varg_list.arg1_lit_idx;
-    const idx_t arg2_lit_idx = next_opcode.data.varg_list.arg2_lit_idx;
-    const idx_t arg3_lit_idx = next_opcode.data.varg_list.arg3_lit_idx;
-
-    arg_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg1_lit_idx);
-    if (arg_index < args_number)
-    {
-      arg_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg2_lit_idx);
-    }
-    if (arg_index < args_number)
-    {
-      arg_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg3_lit_idx);
-    }
+    const idx_t arg_lit_idx = next_opcode.data.varg.arg_lit_idx;
+    arg_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
 
     JERRY_ASSERT (arg_index <= args_number);
 
@@ -860,32 +849,20 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   ecma_length_t arg_index = 0;
   opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg_list
+  while (next_opcode.op_idx == __op__idx_varg
          && ecma_is_completion_value_normal (get_arg_completion))
   {
-    const idx_t arg_lits[3] =
+    const idx_t arg = next_opcode.data.varg.arg_lit_idx;
+
+    get_arg_completion = get_variable_value (int_data, arg, false);
+    if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
     {
-      next_opcode.data.varg_list.arg1_lit_idx,
-      next_opcode.data.varg_list.arg2_lit_idx,
-      next_opcode.data.varg_list.arg3_lit_idx
-    };
-
-    ecma_length_t local_arg_index = 0;
-
-    while (local_arg_index < 3
-           && arg_index < args_number)
+      break;
+    }
+    else
     {
-      get_arg_completion = get_variable_value (int_data, arg_lits[local_arg_index++], false);
-
-      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
-      {
-        break;
-      }
-      else
-      {
-        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-        arg_values[arg_index++] = get_arg_completion.value;
-      }
+      JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
+      arg_values[arg_index++] = get_arg_completion.value;
     }
 
     JERRY_ASSERT (arg_index <= args_number);
@@ -976,32 +953,21 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   ecma_length_t arg_index = 0;
   opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg_list
+  while (next_opcode.op_idx == __op__idx_varg
          && ecma_is_completion_value_normal (get_arg_completion))
   {
-    const idx_t arg_lits[3] =
+    const idx_t arg = next_opcode.data.varg.arg_lit_idx;
+
+    get_arg_completion = get_variable_value (int_data, arg, false);
+
+    if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
     {
-      next_opcode.data.varg_list.arg1_lit_idx,
-      next_opcode.data.varg_list.arg2_lit_idx,
-      next_opcode.data.varg_list.arg3_lit_idx
-    };
-
-    ecma_length_t local_arg_index = 0;
-
-    while (local_arg_index < 3
-           && arg_index < args_number)
+      break;
+    }
+    else
     {
-      get_arg_completion = get_variable_value (int_data, arg_lits[local_arg_index++], false);
-
-      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
-      {
-        break;
-      }
-      else
-      {
-        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-        arg_values[arg_index++] = get_arg_completion.value;
-      }
+      JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
+      arg_values[arg_index++] = get_arg_completion.value;
     }
 
     JERRY_ASSERT (arg_index <= args_number);

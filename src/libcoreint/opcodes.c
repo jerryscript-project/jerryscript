@@ -127,7 +127,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
     op (obj_decl)                        \
-    op (this)                            \
     op (delete)                          \
     op (typeof)                          \
     op (with)                            \
@@ -1068,6 +1067,30 @@ opfunc_logical_and (opcode_t opdata, /**< operation data */
   return ret_value;
 } /* opfunc_logical_and */
 
+/**
+ * 'This' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.1.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_this (opcode_t opdata, /**< operation data */
+             int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.this.lhs;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ret_value = set_variable_value (int_data,
+                                  dst_var_idx,
+                                  int_data->this_binding);
+
+  return ret_value;
+} /* opfunc_this */
 
 #define GETOP_DEF_1(a, name, field1) \
         inline opcode_t getop_##name (idx_t arg1) \

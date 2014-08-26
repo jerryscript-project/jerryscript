@@ -55,6 +55,19 @@ do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 } /* do_strict_eval_arguments_check */
 
 /**
+ * Check if the variable is register variable.
+ *
+ * @return true - if var_idx is register variable in current interpreter context,
+ *         false - otherwise.
+ */
+bool
+is_reg_variable (int_data_t *int_data, /**< interpreter context */
+                 idx_t var_idx) /**< variable identifier */
+{
+  return (var_idx >= int_data->min_reg_num && var_idx <= int_data->max_reg_num);
+} /* is_reg_variable */
+
+/**
  * Get variable's value.
  *
  * @return completion value
@@ -68,8 +81,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
 
-  if (var_idx >= int_data->min_reg_num
-      && var_idx <= int_data->max_reg_num)
+  if (is_reg_variable (int_data, var_idx))
   {
     ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
 
@@ -119,8 +131,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
 
-  if (var_idx >= int_data->min_reg_num
-      && var_idx <= int_data->max_reg_num)
+  if (is_reg_variable (int_data, var_idx))
   {
     ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
 

@@ -29,6 +29,7 @@
 #include "ecma-try-catch-macro.h"
 #include "ecma-objects.h"
 
+bool is_reg_variable (int_data_t *int_data, idx_t var_idx);
 ecma_completion_value_t get_variable_value (int_data_t *, idx_t, bool);
 ecma_completion_value_t set_variable_value (int_data_t *, idx_t, ecma_value_t);
 

@@ -36,10 +36,14 @@ typedef enum
   ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
   ECMA_MAGIC_STRING_CALLER, /**< "caller" */
   ECMA_MAGIC_STRING_CALLEE, /**< "callee" */
-  ECMA_MAGIC_STRING_UNDEFINED,/**< "undefined" */
-  ECMA_MAGIC_STRING_NULL,/**< "null" */
-  ECMA_MAGIC_STRING_FALSE,/**< "false" */
-  ECMA_MAGIC_STRING_TRUE,/**< "true" */
+  ECMA_MAGIC_STRING_UNDEFINED, /**< "undefined" */
+  ECMA_MAGIC_STRING_NULL, /**< "null" */
+  ECMA_MAGIC_STRING_FALSE, /**< "false" */
+  ECMA_MAGIC_STRING_TRUE, /**< "true" */
+  ECMA_MAGIC_STRING_NUMBER, /**< "number" */
+  ECMA_MAGIC_STRING_STRING, /**< "string" */
+  ECMA_MAGIC_STRING_OBJECT, /**< "object" */
+  ECMA_MAGIC_STRING_FUNCTION, /**< "function" */
   ECMA_MAGIC_STRING_LENGTH, /**< "length" */
   ECMA_MAGIC_STRING_NAN, /**< "NaN" */
   ECMA_MAGIC_STRING_INFINITY /**< "Infinity" */

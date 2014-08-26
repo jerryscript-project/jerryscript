@@ -128,7 +128,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (prop_set_decl)                   \
     op (obj_decl)                        \
     op (delete)                          \
-    op (typeof)                          \
     op (with)                            \
     op (end_with)                        \
     op (meta)                            \
@@ -1091,6 +1090,153 @@ opfunc_this (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_this */
+
+/**
+ * Evaluate argument of typeof.
+ *
+ * See also: ECMA-262 v5, 11.4.3
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_completion_value_t
+evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
+                         idx_t var_idx) /**< arg variable identifier */
+{
+  ecma_completion_value_t ret_value;
+
+  if (is_reg_variable (int_data, var_idx))
+  {
+    // 2.b
+    ret_value = get_variable_value (int_data,
+                                    var_idx,
+                                    false);
+    JERRY_ASSERT (ecma_is_completion_value_normal (ret_value));
+  }
+  else
+  {
+    ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
+
+    ecma_reference_t ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
+                                                             var_name_string_p,
+                                                             int_data->is_strict);
+
+    ecma_deref_ecma_string (var_name_string_p);
+
+    const bool is_unresolvable_reference = ecma_is_value_undefined (ref.base);
+
+    if (is_unresolvable_reference)
+    {
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else
+    {
+      ret_value = ecma_op_get_value (ref);
+    }
+
+    ecma_free_reference (ref);
+  }
+
+  return ret_value;
+} /* evaluate_arg_for_typeof */
+
+/**
+ * 'typeof' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.3
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_typeof (opcode_t opdata, /**< operation data */
+               int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.typeof.lhs;
+  const idx_t obj_var_idx = opdata.data.typeof.obj;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (typeof_evaluate_arg_completion,
+                  evaluate_arg_for_typeof (int_data,
+                                           obj_var_idx),
+                  ret_value);
+
+  ecma_value_t typeof_arg = typeof_evaluate_arg_completion.value;
+
+  ecma_string_t *type_str_p = NULL;
+
+  switch ((ecma_type_t)typeof_arg.value_type)
+  {
+    case ECMA_TYPE_SIMPLE:
+    {
+      switch ((ecma_simple_value_t)typeof_arg.value)
+      {
+        case ECMA_SIMPLE_VALUE_UNDEFINED:
+        {
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_NULL:
+        {
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_FALSE:
+        {
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_TRUE:
+        {
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_EMPTY:
+        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
+        case ECMA_SIMPLE_VALUE__COUNT:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+      break;
+    }
+    case ECMA_TYPE_NUMBER:
+    {
+      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NUMBER);
+      break;
+    }
+    case ECMA_TYPE_STRING:
+    {
+      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_STRING);
+      break;
+    }
+    case ECMA_TYPE_OBJECT:
+    {
+      if (ecma_op_is_callable (typeof_arg))
+      {
+        type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FUNCTION);
+      }
+      else
+      {
+        type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
+      }
+      break;
+    }
+  }
+
+  ret_value = set_variable_value (int_data,
+                                  dst_var_idx,
+                                  ecma_make_string_value (type_str_p));
+
+  ecma_deref_ecma_string (type_str_p);
+
+  ECMA_FINALIZE (typeof_evaluate_arg_completion);
+
+  return ret_value;
+} /* opfunc_typeof */
 
 #define GETOP_DEF_1(a, name, field1) \
         inline opcode_t getop_##name (idx_t arg1) \

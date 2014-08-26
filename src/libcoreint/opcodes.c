@@ -119,7 +119,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (native_call)                     \
     op (func_expr_n)                     \
-    op (varg)                            \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
@@ -822,6 +821,72 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
 } /* opfunc_call_0 */
 
 /**
+ * Fill arguments' list
+ *
+ * @return empty completion value if argument list was filled successfully,
+ *         otherwise - not normal completion value indicating completion type
+ *         of last expression evaluated
+ */
+static ecma_completion_value_t
+fill_varg_list (int_data_t *int_data, /**< interpreter context */
+                ecma_length_t args_number, /**< number of arguments */
+                ecma_value_t arg_values[], /**< out: arguments' values */
+                ecma_length_t *out_arg_number_p) /**< out: number of arguments
+                                                      successfully read */
+{
+  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
+
+  ecma_length_t arg_index;
+  for (arg_index = 0;
+       arg_index < args_number;
+       arg_index++)
+  {
+    opcode_t next_opcode = read_opcode (int_data->pos);
+    if (next_opcode.op_idx == __op__idx_varg)
+    {
+      get_arg_completion = get_variable_value (int_data, next_opcode.data.varg.arg_lit_idx, false);
+      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
+      {
+        break;
+      }
+      else
+      {
+        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
+        arg_values[arg_index] = get_arg_completion.value;
+      }
+    }
+    else
+    {
+      get_arg_completion = run_int_loop (int_data);
+
+      if (get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
+      {
+        arg_values[arg_index] = get_arg_completion.value;
+      }
+      else
+      {
+        break;
+      }
+    }
+
+    int_data->pos++;
+  }
+
+  *out_arg_number_p = arg_index;
+
+  if (get_arg_completion.type == ECMA_COMPLETION_TYPE_NORMAL
+      || get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
+  {
+    /* values are copied to arg_values */
+    return ecma_make_empty_completion_value ();
+  }
+  else
+  {
+    return get_arg_completion;
+  }
+} /* fill_varg_list */
+
+/**
  * 'Function call' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.3
@@ -843,54 +908,33 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
 
-  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
-
   ecma_value_t arg_values[args_number + 1];
 
-  ecma_length_t arg_index = 0;
-  opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg
-         && ecma_is_completion_value_normal (get_arg_completion))
-  {
-    const idx_t arg = next_opcode.data.varg.arg_lit_idx;
+  ecma_length_t args_read;
+  ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
+                                                               args_number,
+                                                               arg_values,
+                                                               &args_read);
 
-    get_arg_completion = get_variable_value (int_data, arg, false);
-    if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
+  if (ecma_is_empty_completion_value (get_arg_completion))
+  {
+    ecma_completion_value_t this_value;
+
+    opcode_t next_opcode = read_opcode (int_data->pos);
+    if (next_opcode.op_idx == __op__idx_meta
+        && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
     {
-      break;
+      const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
+
+      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+      this_value = get_variable_value (int_data, this_arg_var_idx, false);
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-      arg_values[arg_index++] = get_arg_completion.value;
+      this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
+      JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
     }
 
-    JERRY_ASSERT (arg_index <= args_number);
-
-    int_data->pos++;
-    next_opcode = read_opcode (int_data->pos);
-  }
-
-  JERRY_ASSERT (arg_index == args_number);
-
-  ecma_completion_value_t this_value;
-
-  if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
-  {
-    const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
-
-    JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
-    this_value = get_variable_value (int_data, this_arg_var_idx, false);
-  }
-  else
-  {
-    this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
-  }
-
-  if (ecma_is_completion_value_normal (get_arg_completion))
-  {
     if (!ecma_op_is_callable (func_value.value))
     {
       ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -907,16 +951,19 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
       ECMA_FINALIZE (call_completion);
 
-      ecma_free_completion_value (this_value);
     }
+
+    ecma_free_completion_value (this_value);
   }
   else
   {
+    JERRY_ASSERT (!ecma_is_completion_value_normal (get_arg_completion));
+
     ret_value = get_arg_completion;
   }
 
   for (ecma_length_t arg_index = 0;
-       arg_index < args_number;
+       arg_index < args_read;
        arg_index++)
   {
     ecma_free_value (arg_values[arg_index], true);
@@ -948,54 +995,33 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
   ecma_completion_value_t ret_value;
   ECMA_TRY_CATCH (constructor_value, get_variable_value (int_data, constructor_name_lit_idx, false), ret_value);
 
-  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
-  ecma_value_t arg_values[args_number + 1];
+  ecma_value_t arg_values[args_number + 1 /* length of array should be zero */];
 
-  ecma_length_t arg_index = 0;
-  opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg
-         && ecma_is_completion_value_normal (get_arg_completion))
+  ecma_length_t args_read;
+  ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
+                                                               args_number,
+                                                               arg_values,
+                                                               &args_read);
+
+  if (ecma_is_empty_completion_value (get_arg_completion))
   {
-    const idx_t arg = next_opcode.data.varg.arg_lit_idx;
+    ecma_completion_value_t this_value;
 
-    get_arg_completion = get_variable_value (int_data, arg, false);
-
-    if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
+    opcode_t next_opcode = read_opcode (int_data->pos);
+    if (next_opcode.op_idx == __op__idx_meta
+        && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
     {
-      break;
+      const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
+
+      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+      this_value = get_variable_value (int_data, this_arg_var_idx, false);
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-      arg_values[arg_index++] = get_arg_completion.value;
+      this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
+      JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
     }
 
-    JERRY_ASSERT (arg_index <= args_number);
-
-    int_data->pos++;
-    next_opcode = read_opcode (int_data->pos);
-  }
-
-  JERRY_ASSERT (arg_index == args_number);
-
-  ecma_completion_value_t this_value;
-
-  if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
-  {
-    const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
-
-    JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
-    this_value = get_variable_value (int_data, this_arg_var_idx, false);
-  }
-  else
-  {
-    this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
-  }
-
-  if (ecma_is_completion_value_normal (get_arg_completion))
-  {
     if (!ecma_is_constructor (constructor_value.value))
     {
       ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -1019,11 +1045,13 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
   }
   else
   {
+    JERRY_ASSERT (!ecma_is_completion_value_normal (get_arg_completion));
+
     ret_value = get_arg_completion;
   }
 
   for (ecma_length_t arg_index = 0;
-       arg_index < args_number;
+       arg_index < args_read;
        arg_index++)
   {
     ecma_free_value (arg_values[arg_index], true);
@@ -1033,6 +1061,30 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_construct_n */
+
+/**
+ * 'varg' opcode handler
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_varg (opcode_t opdata, /**< operation data */
+             int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t arg_lit_idx = opdata.data.varg.arg_lit_idx;
+
+  ecma_completion_value_t completion = get_variable_value (int_data,
+                                                           arg_lit_idx,
+                                                           false);
+
+  if (ecma_is_completion_value_normal (completion))
+  {
+    completion.type = ECMA_COMPLETION_TYPE_VARG;
+  }
+
+  return completion;
+} /* opfunc_varg */
 
 /**
  * 'Return with no expression' opcode handler.

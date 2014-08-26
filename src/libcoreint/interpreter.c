@@ -68,6 +68,7 @@ run_int (void)
   switch ((ecma_completion_type_t) completion.type)
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
+    case ECMA_COMPLETION_TYPE_VARG:
     {
       JERRY_UNREACHABLE ();
     }
@@ -168,6 +169,8 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.regs_p = regs;
 
   completion = run_int_loop (&int_data);
+
+  JERRY_ASSERT (completion.type != ECMA_COMPLETION_TYPE_VARG);
 
   for (uint32_t reg_index = 0;
        reg_index < regs_num;

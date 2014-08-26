@@ -370,6 +370,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
+    case ECMA_COMPLETION_TYPE_VARG:
     {
       ecma_free_value (completion_value.value, true);
       break;

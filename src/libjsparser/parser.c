@@ -655,7 +655,8 @@ parse_argument_list (argument_list_type alt, idx_t obj)
           {
             case AL_FUNC_DECL:
             {
-              DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
+              TODO(Refine to match new opcodes)
+              // DUMP_OPCODE_3 (func_decl_n, obj, args[0], args[1]);
               break;
             }
             case AL_FUNC_EXPR:

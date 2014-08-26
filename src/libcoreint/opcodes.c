@@ -120,6 +120,7 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (call_n)                          \
     op (native_call)                     \
     op (func_decl_n)                     \
+    op (func_expr_n)                     \
     op (varg_list)                       \
     op (construct_n)                     \
     op (array_decl)                      \

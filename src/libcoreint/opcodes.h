@@ -62,13 +62,14 @@ typedef struct
 #define OP_CALLS_AND_ARGS(p, a)                                              \
         p##_2 (a, call_0, lhs, name_lit_idx)                                 \
         p##_3 (a, call_1, lhs, name_lit_idx, arg1_lit_idx)                   \
-        p##_3 (a, call_n, lhs, name_lit_idx, arg1_lit_idx)                   \
+        p##_3 (a, call_n, lhs, name_lit_idx, arg_list)                       \
         p##_3 (a, native_call, lhs, name, arg_list)                          \
         p##_3 (a, construct_n, lhs, name_lit_idx, arg_list)                  \
         p##_1 (a, func_decl_0, name_lit_idx)                                 \
         p##_2 (a, func_decl_1, name_lit_idx, arg1_lit_idx)                   \
         p##_3 (a, func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)     \
-        p##_3 (a, func_decl_n, name_lit_idx, arg1_lit_idx, arg2_lit_idx)     \
+        p##_2 (a, func_decl_n, name_lit_idx, arg_list)                       \
+        p##_3 (a, func_expr_n, lhs, name_lit_idx, arg_list)                  \
         p##_3 (a, varg_list, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx)       \
         p##_1 (a, exitval, status_code)                                      \
         p##_1 (a, retval, ret_value)                                         \

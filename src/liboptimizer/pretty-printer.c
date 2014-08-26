@@ -67,6 +67,14 @@ pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
 }
 
 static void
+dump_arg_list (idx_t id)
+{
+  FIXME (/* Dump arg list instead of args' number */);
+
+  __printf (" (%d args)", id);
+}
+
+static void
 dump_variable (idx_t id)
 {
   if (id >= deserialize_min_temp ())
@@ -181,15 +189,12 @@ dump_variable (idx_t id)
     __printf (end ";"); \
     break;
 
-#define CASE_VARG_N_NAME_LHS(op, lhs, equals, new, name, start, arg, end) \
+#define CASE_VARG_N_NAME_LHS(op, lhs, equals, new, name, arg_list) \
   case NAME_TO_ID (op): \
     dump_variable (opcode.data.op.lhs); \
     __printf (" " equals " " new " "); \
     dump_variable (opcode.data.op.name); \
-    __printf (start); \
-    dump_variable (opcode.data.op.arg); \
-    __printf (" ..."); \
-    varg_end = end; \
+    dump_arg_list (opcode.data.op.arg_list); \
     break;
 
 #define CASE_VARG_0_NAME(op, new, name, start, end) \
@@ -219,16 +224,11 @@ dump_variable (idx_t id)
     __printf (end ";"); \
     break;
 
-#define CASE_VARG_N_NAME(op, new, name, start, arg1, arg2, end) \
+#define CASE_VARG_N_NAME(op, new, name, arg_list) \
   case NAME_TO_ID (op): \
     __printf (new " "); \
     dump_variable (opcode.data.op.name); \
-    __printf (start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf (" ..."); \
-    varg_end = end; \
+    dump_arg_list (opcode.data.op.arg_list); \
     break;
 
 #define CASE_VARG_0_LHS(op, lhs, equals, start, end) \
@@ -346,8 +346,6 @@ dump_variable (idx_t id)
     __printf (";"); \
     break;
 
-static char *varg_end;
-
 void
 pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 {
@@ -414,12 +412,12 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_ASSIGNMENT (assignment, var_left, "=", value_right)
     CASE_VARG_0_NAME_LHS (call_0, lhs, "=", "", name_lit_idx, "(", ")")
     CASE_VARG_1_NAME_LHS (call_1, lhs, "=", "", name_lit_idx, "(", arg1_lit_idx, ")")
-    CASE_VARG_N_NAME_LHS (call_n, lhs, "=", "", name_lit_idx, "(", arg1_lit_idx, ")")
-    CASE_VARG_N_NAME_LHS (construct_n, lhs, "=", "new", name_lit_idx, "(", arg_list, ")")
+    CASE_VARG_N_NAME_LHS (call_n, lhs, "=", "", name_lit_idx, arg_list)
+    CASE_VARG_N_NAME_LHS (construct_n, lhs, "=", "new", name_lit_idx, arg_list)
     CASE_VARG_0_NAME (func_decl_0, "function", name_lit_idx, "(", ")")
     CASE_VARG_1_NAME (func_decl_1, "function", name_lit_idx, "(", arg1_lit_idx, ")")
     CASE_VARG_2_NAME (func_decl_2, "function", name_lit_idx, "(", arg1_lit_idx, arg2_lit_idx, ")")
-    CASE_VARG_N_NAME (func_decl_n, "function", name_lit_idx, "(", arg1_lit_idx, arg2_lit_idx, ")")
+    CASE_VARG_N_NAME (func_decl_n, "function", name_lit_idx, arg_list)
     CASE_VARG_3 (varg_list, arg1_lit_idx, arg2_lit_idx, arg3_lit_idx);
     CASE_EXIT (exitval, "exit", status_code)
     CASE_SINGLE_ADDRESS (retval, "return", ret_value)

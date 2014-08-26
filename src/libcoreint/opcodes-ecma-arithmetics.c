@@ -128,7 +128,20 @@ opfunc_addition (opcode_t opdata, /**< operation data */
   if (prim_left_value.value.value_type == ECMA_TYPE_STRING
       || prim_right_value.value.value_type == ECMA_TYPE_STRING)
   {
-    JERRY_UNIMPLEMENTED ();
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value.value), ret_value);
+    ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value.value), ret_value);
+
+    ecma_string_t *string1_p = ECMA_GET_POINTER (str_left_value.value.value);
+    ecma_string_t *string2_p = ECMA_GET_POINTER (str_right_value.value.value);
+
+    ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
+
+    ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_string_value (concat_str_p));
+
+    ecma_deref_ecma_string (concat_str_p);
+
+    ECMA_FINALIZE (str_right_value);
+    ECMA_FINALIZE (str_left_value);
   }
   else
   {

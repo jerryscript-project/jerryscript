@@ -120,7 +120,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (native_call)                     \
     op (func_expr_n)                     \
     op (varg_list)                       \
-    op (construct_n)                     \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
@@ -834,7 +833,7 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
 } /* opfunc_call_0 */
 
 /**
- * Function call' opcode handler.
+ * 'Function call' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.3
  *
@@ -852,6 +851,9 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   int_data->pos++;
 
   ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
+
   ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
 
   ecma_value_t arg_values[args_number + 1];
@@ -912,8 +914,6 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_normal (get_arg_completion))
   {
-    ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
-
     if (!ecma_op_is_callable (func_value.value))
     {
       ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -932,8 +932,6 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
       ecma_free_completion_value (this_value);
     }
-
-    ECMA_FINALIZE (func_value);
   }
   else
   {
@@ -947,8 +945,128 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     ecma_free_value (arg_values[arg_index], true);
   }
 
+  ECMA_FINALIZE (func_value);
+
   return ret_value;
 } /* opfunc_call_n */
+
+/**
+ * 'Constructor call' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.2.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_construct_n (opcode_t opdata, /**< operation data */
+                    int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t lhs_var_idx = opdata.data.construct_n.lhs;
+  const idx_t constructor_name_lit_idx = opdata.data.construct_n.name_lit_idx;
+  const idx_t args_number = opdata.data.construct_n.arg_list;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (constructor_value, get_variable_value (int_data, constructor_name_lit_idx, false), ret_value);
+
+  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
+  ecma_value_t arg_values[args_number + 1];
+
+  ecma_length_t arg_index = 0;
+  opcode_t next_opcode = read_opcode (int_data->pos);
+  while (next_opcode.op_idx == __op__idx_varg_list
+         && ecma_is_completion_value_normal (get_arg_completion))
+  {
+    const idx_t arg_lits[3] =
+    {
+      next_opcode.data.varg_list.arg1_lit_idx,
+      next_opcode.data.varg_list.arg2_lit_idx,
+      next_opcode.data.varg_list.arg3_lit_idx
+    };
+
+    ecma_length_t local_arg_index = 0;
+
+    while (local_arg_index < 3
+           && arg_index < args_number)
+    {
+      get_arg_completion = get_variable_value (int_data, arg_lits[local_arg_index++], false);
+
+      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
+      {
+        break;
+      }
+      else
+      {
+        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
+        arg_values[arg_index++] = get_arg_completion.value;
+      }
+    }
+
+    JERRY_ASSERT (arg_index <= args_number);
+
+    int_data->pos++;
+    next_opcode = read_opcode (int_data->pos);
+  }
+
+  JERRY_ASSERT (arg_index == args_number);
+
+  ecma_completion_value_t this_value;
+
+  if (next_opcode.op_idx == __op__idx_meta
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
+  {
+    const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
+
+    JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+    this_value = get_variable_value (int_data, this_arg_var_idx, false);
+  }
+  else
+  {
+    this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
+    JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
+  }
+
+  if (ecma_is_completion_value_normal (get_arg_completion))
+  {
+    if (!ecma_is_constructor (constructor_value.value))
+    {
+      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    else
+    {
+      ecma_object_t *constructor_obj_p = ECMA_GET_POINTER (constructor_value.value.value);
+
+      ECMA_TRY_CATCH (construction_completion,
+                      ecma_op_function_construct (constructor_obj_p,
+                                                  arg_values,
+                                                  args_number),
+                      ret_value);
+
+      ret_value = set_variable_value (int_data, lhs_var_idx, construction_completion.value);
+
+      ECMA_FINALIZE (construction_completion);
+
+      ecma_free_completion_value (this_value);
+    }
+  }
+  else
+  {
+    ret_value = get_arg_completion;
+  }
+
+  for (ecma_length_t arg_index = 0;
+       arg_index < args_number;
+       arg_index++)
+  {
+    ecma_free_value (arg_values[arg_index], true);
+  }
+
+  ECMA_FINALIZE (constructor_value);
+
+  return ret_value;
+} /* opfunc_construct_n */
 
 /**
  * 'Return with no expression' opcode handler.

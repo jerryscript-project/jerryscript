@@ -104,6 +104,29 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
 } /* ecma_op_is_callable */
 
 /**
+ * Check whether the value is Object that implements [[Construct]].
+ *
+ * @return true, if value is constructor object;
+ *         false - otherwise.
+ */
+bool
+ecma_is_constructor (ecma_value_t value) /**< ecma-value */
+{
+  if (value.value_type != ECMA_TYPE_OBJECT)
+  {
+    return false;
+  }
+
+  ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
+
+  JERRY_ASSERT(obj_p != NULL);
+  JERRY_ASSERT(!obj_p->is_lexical_environment);
+
+  return (obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION
+          || obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+} /* ecma_is_constructor */
+
+/**
  * Function object creation operation.
  *
  * See also: ECMA-262 v5, 13.2

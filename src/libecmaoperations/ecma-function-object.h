@@ -27,6 +27,7 @@
  */
 
 extern bool ecma_op_is_callable (ecma_value_t value);
+extern bool ecma_is_constructor (ecma_value_t value);
 
 extern ecma_object_t*
 ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],

@@ -118,7 +118,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
 
 #define OP_UNIMPLEMENTED_LIST(op) \
     op (native_call)                     \
-    op (func_expr_n)                     \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
@@ -744,14 +743,14 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
   const idx_t function_name_idx = opdata.data.func_decl_n.name_lit_idx;
   const ecma_length_t args_number = opdata.data.func_decl_n.arg_list;
 
-  ecma_string_t *arg_names[args_number + 1];
+  ecma_string_t *args_names[args_number + 1 /* length of array should not be zero */];
 
   ecma_length_t arg_index = 0;
   opcode_t next_opcode = read_opcode (int_data->pos);
   while (next_opcode.op_idx == __op__idx_varg)
   {
     const idx_t arg_lit_idx = next_opcode.data.varg.arg_lit_idx;
-    arg_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
+    args_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
 
     JERRY_ASSERT (arg_index <= args_number);
 
@@ -762,18 +761,109 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             function_name_idx,
-                                                            arg_names,
+                                                            args_names,
                                                             args_number);
 
   for (arg_index = 0;
        arg_index < args_number;
        arg_index++)
   {
-    ecma_deref_ecma_string (arg_names[arg_index]);
+    ecma_deref_ecma_string (args_names[arg_index]);
   }
 
   return ret_value;
 } /* opfunc_func_decl_n */
+
+/**
+ * 'Function expression' opcode handler.
+ *
+ * @return completion value
+ *         returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_func_expr_n (opcode_t opdata, /**< operation data */
+                    int_data_t *int_data) /**< interpreter context */
+{
+  int_data->pos++;
+
+  const idx_t dst_var_idx = opdata.data.func_expr_n.lhs;
+  const idx_t function_name_lit_idx = opdata.data.func_expr_n.name_lit_idx;
+  const ecma_length_t args_number = opdata.data.func_expr_n.arg_list;
+
+  const bool is_named_func_expr = (!is_reg_variable (int_data, function_name_lit_idx));
+
+  TODO ("Check if code of function itself is strict");
+
+  const bool is_strict = int_data->is_strict;
+
+  ecma_string_t *args_names[args_number + 1 /* length of array should not be zero */];
+
+  ecma_length_t arg_index = 0;
+  opcode_t next_opcode = read_opcode (int_data->pos);
+  while (next_opcode.op_idx == __op__idx_varg)
+  {
+    const idx_t arg_lit_idx = next_opcode.data.varg.arg_lit_idx;
+    args_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
+
+    JERRY_ASSERT (arg_index <= args_number);
+
+    int_data->pos++;
+    next_opcode = read_opcode (int_data->pos);
+  }
+  JERRY_ASSERT (arg_index == args_number);
+
+  const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
+  opcode_t jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
+  JERRY_ASSERT (jmp_down_opcode.op_idx == __op__idx_jmp_down);
+  int_data->pos = (opcode_counter_t) (jmp_down_opcode_idx + jmp_down_opcode.data.jmp_down.opcode_count);
+
+  const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
+
+  ecma_object_t *scope_p;
+  ecma_string_t *function_name_string_p = NULL;
+  if (is_named_func_expr)
+  {
+    scope_p = ecma_create_decl_lex_env (int_data->lex_env_p);
+    function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_idx);
+    ecma_op_create_immutable_binding (scope_p,
+                                      function_name_string_p);
+  }
+  else
+  {
+    scope_p = int_data->lex_env_p;
+    ecma_ref_object (scope_p);
+  }
+
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (args_names,
+                                                              args_number,
+                                                              scope_p,
+                                                              is_strict,
+                                                              function_code_opcode_idx);
+
+  ecma_completion_value_t ret_value = set_variable_value (int_data,
+                                                          dst_var_idx,
+                                                          ecma_make_object_value (func_obj_p));
+
+  if (is_named_func_expr)
+  {
+    ecma_op_initialize_immutable_binding (scope_p,
+                                          function_name_string_p,
+                                          ecma_make_object_value (func_obj_p));
+    ecma_deref_ecma_string (function_name_string_p);
+  }
+
+  ecma_deref_object (func_obj_p);
+  ecma_deref_object (scope_p);
+
+  for (arg_index = 0;
+       arg_index < args_number;
+       arg_index++)
+  {
+    ecma_deref_ecma_string (args_names[arg_index]);
+  }
+
+  return ret_value;
+} /* opfunc_func_expr_n */
 
 /**
  * Function call with no arguments' opcode handler.
@@ -908,7 +998,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
 
-  ecma_value_t arg_values[args_number + 1];
+  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
@@ -995,7 +1085,7 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
   ecma_completion_value_t ret_value;
   ECMA_TRY_CATCH (constructor_value, get_variable_value (int_data, constructor_name_lit_idx, false), ret_value);
 
-  ecma_value_t arg_values[args_number + 1 /* length of array should be zero */];
+  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,

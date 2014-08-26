@@ -542,8 +542,9 @@ typedef enum
   ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
   ECMA_STRING_CONTAINER_CHARS_IN_DESC, /**< actual data are several characters
                                             stored locally in the string's descriptor */
-  ECMA_STRING_CONTAINER_UINT32_IN_DESC /**< actual data is UInt32-represeneted Number
+  ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
+  ECMA_STRING_CONTAINER_CONCATENATION /**< the ecma-string is concatenation of two specified ecma-strings */
 } ecma_string_container_t;
 
 FIXME (Move to library that should define the type (libserializer /* ? */))
@@ -585,6 +586,13 @@ typedef struct
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;
+
+    /** Representation of concatenation */
+    struct
+    {
+      unsigned int string1_cp : ECMA_POINTER_FIELD_WIDTH;
+      unsigned int string2_cp : ECMA_POINTER_FIELD_WIDTH;
+    } concatenation;
   } u;
 } ecma_string_t;
 

@@ -187,6 +187,39 @@ ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number
 } /* ecma_new_ecma_string_from_lit_index */
 
 /**
+ * Concatenate ecma-strings
+ *
+ * @return concatenation of two ecma-strings
+ */
+ecma_string_t*
+ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
+                          ecma_string_t *string2_p) /**< second ecma-string */
+{
+  JERRY_ASSERT (string1_p != NULL
+                && string2_p != NULL);
+
+  uint32_t length = (uint32_t) string1_p->length + (uint32_t) string2_p->length;
+  if (length != (uint32_t) (string1_p->length + string2_p->length))
+  {
+    FIXME (/* Support length greater than 64K */);
+    JERRY_UNIMPLEMENTED();
+  }
+
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+  string_desc_p->length = (ecma_length_t) length;
+  string_desc_p->container = ECMA_STRING_CONTAINER_CONCATENATION;
+
+  ecma_ref_ecma_string (string1_p);
+  ecma_ref_ecma_string (string2_p);
+
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
+
+  return string_desc_p;
+} /* ecma_concat_ecma_strings */
+
+/**
  * Increase reference counter of ecma-string.
  *
  * @return pointer to same ecma-string descriptor with increased reference counter
@@ -247,6 +280,18 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
       break;
     }
+    case ECMA_STRING_CONTAINER_CONCATENATION:
+    {
+      ecma_string_t *string1_p, *string2_p;
+
+      string1_p = ECMA_GET_POINTER (string_p->u.concatenation.string1_cp);
+      string2_p = ECMA_GET_POINTER (string_p->u.concatenation.string2_cp);
+
+      ecma_deref_ecma_string (string1_p);
+      ecma_deref_ecma_string (string2_p);
+
+      break;
+    }
     case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
@@ -285,6 +330,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+    case ECMA_STRING_CONTAINER_CONCATENATION:
     {
       ecma_char_t zt_string_buffer [str_p->length + 1];
 
@@ -401,6 +447,29 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       JERRY_ASSERT (string_desc_p->length == length);
 
       bytes_copied = (length + 1) * ((ssize_t) sizeof (ecma_char_t));
+
+      break;
+    }
+    case ECMA_STRING_CONTAINER_CONCATENATION:
+    {
+      const ecma_string_t *string1_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string1_cp);
+      const ecma_string_t *string2_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string2_cp);
+
+      ecma_char_t *dest_p = buffer_p;
+
+      ssize_t bytes_copied1, bytes_copied2;
+
+      bytes_copied1 = ecma_string_to_zt_string (string1_p, dest_p, buffer_size);
+
+      /* one character, which is the null character at end of string, will be overwritten */
+      bytes_copied1 -= (ssize_t) sizeof (ecma_char_t);
+      dest_p += string1_p->length;
+
+      bytes_copied2 = ecma_string_to_zt_string (string2_p,
+                                                dest_p,
+                                                buffer_size - bytes_copied1);
+
+      bytes_copied = bytes_copied1 + bytes_copied2;
 
       break;
     }
@@ -669,6 +738,12 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
       case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
       {
         return (string1_p->u.uint32_number == string2_p->u.uint32_number);
+      }
+      case ECMA_STRING_CONTAINER_CONCATENATION:
+      {
+        TODO (/* Implement comparison of string's concatenation
+                (with concatenations and ecma-string with another container types) */);
+        JERRY_UNIMPLEMENTED ();
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
       {

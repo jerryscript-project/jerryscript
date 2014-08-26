@@ -64,7 +64,7 @@ typedef struct
         p##_3 (a, call_1, lhs, name_lit_idx, arg1_lit_idx)                   \
         p##_3 (a, call_n, lhs, name_lit_idx, arg1_lit_idx)                   \
         p##_3 (a, native_call, lhs, name, arg_list)                          \
-        p##_3 (a, construct_decl, lhs, name_lit_idx, arg_list)               \
+        p##_3 (a, construct_n, lhs, name_lit_idx, arg_list)                  \
         p##_1 (a, func_decl_0, name_lit_idx)                                 \
         p##_2 (a, func_decl_1, name_lit_idx, arg1_lit_idx)                   \
         p##_3 (a, func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)     \

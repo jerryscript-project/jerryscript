@@ -121,7 +121,7 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (native_call)                     \
     op (func_decl_n)                     \
     op (varg_list)                       \
-    op (construct_decl)                  \
+    op (construct_n)                     \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \

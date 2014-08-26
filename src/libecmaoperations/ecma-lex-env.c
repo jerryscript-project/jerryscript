@@ -498,13 +498,9 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
  * @return pointer to created lexical environment
  */
 ecma_object_t*
-ecma_op_create_global_environment (void)
+ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global object */
 {
-  ecma_object_t *glob_obj_p = ecma_op_create_global_object ();
-
   ecma_object_t *glob_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
-
-  ecma_deref_object (glob_obj_p);
 
   return glob_env_p;
 } /* ecma_op_create_global_environment */

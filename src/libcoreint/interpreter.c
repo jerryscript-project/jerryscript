@@ -16,6 +16,7 @@
 #include "deserializer.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
+#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-operations.h"
@@ -50,11 +51,13 @@ run_int (void)
 {
   JERRY_ASSERT (__program != NULL);
 
-  const opcode_counter_t start_pos = 0;
-  ecma_value_t this_binding_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  ecma_object_t *lex_env_p = ecma_op_create_global_environment ();
   FIXME (Strict mode);
   const bool is_strict = false;
+
+  const opcode_counter_t start_pos = 0;
+  ecma_object_t *glob_obj_p = ecma_op_create_global_object ();
+  ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
+  ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);
 
   ecma_completion_value_t completion = run_int_from_pos (start_pos,
                                                          this_binding_value,
@@ -70,6 +73,7 @@ run_int (void)
     }
     case ECMA_COMPLETION_TYPE_EXIT:
     {
+      ecma_deref_object (glob_obj_p);
       ecma_deref_object (lex_env_p);
       ecma_finalize ();
       ecma_gc_run (ECMA_GC_GEN_COUNT - 1);

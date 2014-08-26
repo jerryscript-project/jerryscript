@@ -52,7 +52,7 @@ extern void ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p,
                                                   ecma_string_t *name_p,
                                                   ecma_value_t value);
 
-extern ecma_object_t* ecma_op_create_global_environment (void);
+extern ecma_object_t* ecma_op_create_global_environment (ecma_object_t *glob_obj_p);
 extern bool ecma_is_lexical_environment_global (ecma_object_t *lex_env_p);
 
 /**

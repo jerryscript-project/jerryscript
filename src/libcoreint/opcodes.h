@@ -47,6 +47,14 @@ typedef enum
   OPCODE_ARG_TYPE_VARIABLE /**< index of variable name */
 } opcode_arg_type_operand;
 
+/**
+ * Types of data in 'meta' opcode.
+ */
+typedef enum
+{
+  OPCODE_META_TYPE_THIS_ARG /**< value of this used during call */
+} opcode_meta_type;
+
 typedef struct
 {
   opcode_counter_t pos; /**< current opcode to execute */

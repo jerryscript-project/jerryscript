@@ -47,7 +47,8 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
   {
     case ECMA_TYPE_SIMPLE:
     {
-      if (ecma_is_value_undefined (value))
+      if (ecma_is_value_undefined (value)
+          || ecma_is_value_null (value))
       {
         return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
       }

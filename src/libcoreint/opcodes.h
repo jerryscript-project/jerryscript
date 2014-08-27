@@ -92,7 +92,8 @@ typedef struct
         p##_3 (a, prop_set_decl, lhs, prop, arg)                             \
         p##_2 (a, obj_decl, lhs, list)                                       \
         p##_1 (a, this, lhs)                                                 \
-        p##_2 (a, delete, lhs, obj)                                          \
+        p##_2 (a, delete_var, lhs, name)                                     \
+        p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
         p##_1 (a, with, expr)                                                \
         p##_0 (a, end_with)

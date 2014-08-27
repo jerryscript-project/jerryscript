@@ -1331,7 +1331,12 @@ parse_unary_expression (void)
       {
         lhs = next_temp_name ();
         NEXT (expr, unary_expression);
-        DUMP_OPCODE_2 (delete, lhs, expr);
+        TODO (/* lhs = delete_var for delete, applied to expression, that is evaluating to Identifier;
+                 lhs = delete_prop for 'delete expr[expr]';
+                 lhs = true - otherwise; */);
+                 
+        // DUMP_OPCODE_2 (delete, lhs, expr);
+        JERRY_UNIMPLEMENTED ();
         return lhs;
       }
       if (is_keyword (KW_VOID))

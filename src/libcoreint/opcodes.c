@@ -50,7 +50,6 @@
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
     op (obj_decl)                        \
-    op (delete)                          \
     op (with)                            \
     op (end_with)                        \
     static char __unused unimplemented_list_end
@@ -1366,6 +1365,125 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_typeof */
+
+/**
+ * 'delete' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_delete_var (opcode_t opdata, /**< operation data */
+                   int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.delete_var.lhs;
+  const idx_t name_var_idx = opdata.data.delete_var.name;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (name_value, get_variable_value (int_data, name_var_idx, false), ret_value);
+  JERRY_ASSERT (name_value.value.value_type == ECMA_TYPE_STRING);
+  ecma_string_t *name_string_p = ECMA_GET_POINTER (name_value.value.value);
+
+  ecma_reference_t ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
+                                                           name_string_p,
+                                                           int_data->is_strict);
+
+  if (ref.is_strict)
+  {
+    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+  }
+  else if (ecma_is_value_undefined (ref.base))
+  {
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
+  else
+  {
+    JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
+    ecma_object_t *bindings_p = ECMA_GET_POINTER (ref.base.value);
+    JERRY_ASSERT (bindings_p->is_lexical_environment);
+
+    ecma_completion_value_t completion = ecma_op_delete_binding (bindings_p, ref.referenced_name_p);
+
+    ret_value = set_variable_value (int_data, dst_var_idx, completion.value);
+  }
+
+  ecma_free_reference (ref);
+
+  ECMA_FINALIZE (name_value);
+
+  return ret_value;
+} /* opfunc_delete_var */
+
+
+/**
+ * 'delete' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_delete_prop (opcode_t opdata, /**< operation data */
+                    int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.delete_prop.lhs;
+  const idx_t base_var_idx = opdata.data.delete_prop.base;
+  const idx_t name_var_idx = opdata.data.delete_prop.name;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (base_value, get_variable_value (int_data, base_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (name_value, get_variable_value (int_data, name_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.value), ret_value);
+  ECMA_TRY_CATCH (str_name_value, ecma_op_to_string (name_value.value), ret_value);
+
+  JERRY_ASSERT (name_value.value.value_type == ECMA_TYPE_STRING);
+  ecma_string_t *name_string_p = ECMA_GET_POINTER (name_value.value.value);
+
+  if (ecma_is_value_undefined (base_value.value))
+  {
+    if (int_data->is_strict)
+    {
+      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+    }
+    else
+    {
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+  }
+  else
+  {
+    ECMA_TRY_CATCH (obj_value, ecma_op_to_object (base_value.value), ret_value);
+
+    JERRY_ASSERT (obj_value.value.value_type == ECMA_TYPE_OBJECT);
+    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_value.value.value);
+    JERRY_ASSERT (!obj_p->is_lexical_environment);
+
+    ECMA_TRY_CATCH (delete_op_completion,
+                    ecma_op_object_delete (obj_p, name_string_p, int_data->is_strict),
+                    ret_value);
+
+    ret_value = set_variable_value (int_data, dst_var_idx, delete_op_completion.value);
+
+    ECMA_FINALIZE (delete_op_completion);
+    ECMA_FINALIZE (obj_value);
+  }
+
+  ECMA_FINALIZE (str_name_value);
+  ECMA_FINALIZE (check_coercible_ret);
+  ECMA_FINALIZE (name_value);
+  ECMA_FINALIZE (base_value);
+
+  return ret_value;
+} /* opfunc_delete_prop */
 
 /**
  * 'meta' opcode handler.

@@ -33,39 +33,42 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
                 ecma_length_t *out_arg_number_p) /**< out: number of arguments
                                                       successfully read */
 {
-  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ecma_length_t arg_index;
   for (arg_index = 0;
        arg_index < args_number;
        arg_index++)
   {
-    opcode_t next_opcode = read_opcode (int_data->pos);
-    if (next_opcode.op_idx == __op__idx_varg)
+    ecma_completion_value_t evaluate_arg_completion = run_int_loop (int_data);
+
+    if (evaluate_arg_completion.type == ECMA_COMPLETION_TYPE_META)
     {
-      get_arg_completion = get_variable_value (int_data, next_opcode.data.varg.arg_lit_idx, false);
-      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
+      opcode_t next_opcode = read_opcode (int_data->pos);
+      JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+      JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
+
+      const idx_t varg_var_idx = next_opcode.data.meta.data_1;
+
+      ecma_completion_value_t get_arg_completion = get_variable_value (int_data, varg_var_idx, false);
+
+      if (ecma_is_completion_value_normal (get_arg_completion))
       {
-        break;
+        arg_values[arg_index] = get_arg_completion.value;
       }
       else
       {
-        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-        arg_values[arg_index] = get_arg_completion.value;
+        ret_value = get_arg_completion;
       }
     }
     else
     {
-      get_arg_completion = run_int_loop (int_data);
+      ret_value = evaluate_arg_completion;
+    }
 
-      if (get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
-      {
-        arg_values[arg_index] = get_arg_completion.value;
-      }
-      else
-      {
-        break;
-      }
+    if (!ecma_is_empty_completion_value (ret_value))
+    {
+      break;
     }
 
     int_data->pos++;
@@ -73,38 +76,32 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
   *out_arg_number_p = arg_index;
 
-  if (get_arg_completion.type == ECMA_COMPLETION_TYPE_NORMAL
-      || get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
-  {
-    /* values are copied to arg_values */
-    return ecma_make_empty_completion_value ();
-  }
-  else
-  {
-    return get_arg_completion;
-  }
+  return ret_value;
 } /* fill_varg_list */
 
 /**
- * 'varg' opcode handler
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * Fill parameters' list
  */
-ecma_completion_value_t
-opfunc_varg (opcode_t opdata, /**< operation data */
-             int_data_t *int_data) /**< interpreter context */
+void
+fill_params_list (int_data_t *int_data, /**< interpreter context */
+                  ecma_length_t params_number, /**< number of parameters */
+                  ecma_string_t* params_names[]) /**< out: parameters' names */
 {
-  const idx_t arg_lit_idx = opdata.data.varg.arg_lit_idx;
-
-  ecma_completion_value_t completion = get_variable_value (int_data,
-                                                           arg_lit_idx,
-                                                           false);
-
-  if (ecma_is_completion_value_normal (completion))
+  uint32_t param_index;
+  for (param_index = 0;
+       param_index < params_number;
+       param_index++)
   {
-    completion.type = ECMA_COMPLETION_TYPE_VARG;
+    opcode_t next_opcode = read_opcode (int_data->pos);
+    JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+    JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
+
+    const idx_t param_name_lit_idx = next_opcode.data.meta.data_1;
+
+    params_names [param_index] = ecma_new_ecma_string_from_lit_index (param_name_lit_idx);
+
+    int_data->pos++;
   }
 
-  return completion;
-} /* opfunc_varg */
+  JERRY_ASSERT (param_index == params_number);
+} /* fill_params_list */

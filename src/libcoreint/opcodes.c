@@ -578,34 +578,21 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
   int_data->pos++;
 
   const idx_t function_name_idx = opdata.data.func_decl_n.name_lit_idx;
-  const ecma_length_t args_number = opdata.data.func_decl_n.arg_list;
+  const ecma_length_t params_number = opdata.data.func_decl_n.arg_list;
 
-  ecma_string_t *args_names[args_number + 1 /* length of array should not be zero */];
-
-  ecma_length_t arg_index = 0;
-  opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg)
-  {
-    const idx_t arg_lit_idx = next_opcode.data.varg.arg_lit_idx;
-    args_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
-
-    JERRY_ASSERT (arg_index <= args_number);
-
-    int_data->pos++;
-    next_opcode = read_opcode (int_data->pos);
-  }
-  JERRY_ASSERT (arg_index == args_number);
+  ecma_string_t *params_names[params_number + 1 /* length of array should not be zero */];
+  fill_params_list (int_data, params_number, params_names);
 
   ecma_completion_value_t ret_value = function_declaration (int_data,
                                                             function_name_idx,
-                                                            args_names,
-                                                            args_number);
+                                                            params_names,
+                                                            params_number);
 
-  for (arg_index = 0;
-       arg_index < args_number;
-       arg_index++)
+  for (uint32_t param_index = 0;
+       param_index < params_number;
+       param_index++)
   {
-    ecma_deref_ecma_string (args_names[arg_index]);
+    ecma_deref_ecma_string (params_names[param_index]);
   }
 
   return ret_value;
@@ -625,7 +612,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   const idx_t dst_var_idx = opdata.data.func_expr_n.lhs;
   const idx_t function_name_lit_idx = opdata.data.func_expr_n.name_lit_idx;
-  const ecma_length_t args_number = opdata.data.func_expr_n.arg_list;
+  const ecma_length_t params_number = opdata.data.func_expr_n.arg_list;
 
   const bool is_named_func_expr = (!is_reg_variable (int_data, function_name_lit_idx));
 
@@ -633,21 +620,9 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   const bool is_strict = int_data->is_strict;
 
-  ecma_string_t *args_names[args_number + 1 /* length of array should not be zero */];
+  ecma_string_t *params_names[params_number + 1 /* length of array should not be zero */];
 
-  ecma_length_t arg_index = 0;
-  opcode_t next_opcode = read_opcode (int_data->pos);
-  while (next_opcode.op_idx == __op__idx_varg)
-  {
-    const idx_t arg_lit_idx = next_opcode.data.varg.arg_lit_idx;
-    args_names[arg_index++] = ecma_new_ecma_string_from_lit_index (arg_lit_idx);
-
-    JERRY_ASSERT (arg_index <= args_number);
-
-    int_data->pos++;
-    next_opcode = read_opcode (int_data->pos);
-  }
-  JERRY_ASSERT (arg_index == args_number);
+  fill_params_list (int_data, params_number, params_names);
 
   const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
   opcode_t jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
@@ -671,8 +646,8 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
     ecma_ref_object (scope_p);
   }
 
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (args_names,
-                                                              args_number,
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (params_names,
+                                                              params_number,
                                                               scope_p,
                                                               is_strict,
                                                               function_code_opcode_idx);
@@ -692,11 +667,11 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   ecma_deref_object (func_obj_p);
   ecma_deref_object (scope_p);
 
-  for (arg_index = 0;
-       arg_index < args_number;
-       arg_index++)
+  for (uint32_t param_index = 0;
+       param_index < params_number;
+       param_index++)
   {
-    ecma_deref_ecma_string (args_names[arg_index]);
+    ecma_deref_ecma_string (params_names[param_index]);
   }
 
   return ret_value;
@@ -1549,12 +1524,28 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
 /**
  * 'meta' opcode handler.
  *
- * The opcode is meta-opcode that is not supposed to be executed.
+ * @return implementation-defined meta completion value
  */
 ecma_completion_value_t
-opfunc_meta (opcode_t opdata __unused, /**< operation data */
+opfunc_meta (opcode_t opdata, /**< operation data */
              int_data_t *int_data __unused) /**< interpreter context */
 {
+  const opcode_meta_type type = opdata.data.meta.type;
+
+  switch (type)
+  {
+    case OPCODE_META_TYPE_VARG:
+    {
+      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
+                                         ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
+                                         ECMA_TARGET_ID_RESERVED);
+    }
+    case OPCODE_META_TYPE_THIS_ARG:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
   JERRY_UNREACHABLE ();
 } /* opfunc_meta */
 

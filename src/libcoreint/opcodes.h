@@ -52,7 +52,8 @@ typedef enum
  */
 typedef enum
 {
-  OPCODE_META_TYPE_THIS_ARG /**< value of this used during call */
+  OPCODE_META_TYPE_THIS_ARG, /**< value of this used during call */
+  OPCODE_META_TYPE_VARG /**< element of arguments' list */
 } opcode_meta_type;
 
 typedef struct
@@ -78,7 +79,6 @@ typedef struct
         p##_3 (a, func_decl_2, name_lit_idx, arg1_lit_idx, arg2_lit_idx)     \
         p##_2 (a, func_decl_n, name_lit_idx, arg_list)                       \
         p##_3 (a, func_expr_n, lhs, name_lit_idx, arg_list)                  \
-        p##_1 (a, varg, arg_lit_idx)                                         \
         p##_1 (a, exitval, status_code)                                      \
         p##_1 (a, retval, ret_value)                                         \
         p##_0 (a, ret)

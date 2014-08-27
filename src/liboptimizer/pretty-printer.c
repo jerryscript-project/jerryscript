@@ -412,7 +412,6 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_VARG_1_NAME (func_decl_1, "function", name_lit_idx, "(", arg1_lit_idx, ")")
     CASE_VARG_2_NAME (func_decl_2, "function", name_lit_idx, "(", arg1_lit_idx, arg2_lit_idx, ")")
     CASE_VARG_N_NAME (func_decl_n, "function", name_lit_idx, arg_list)
-    CASE_VARG_1 (varg, arg_lit_idx);
     CASE_EXIT (exitval, "exit", status_code)
     CASE_SINGLE_ADDRESS (retval, "return", ret_value)
     CASE_ZERO_ADDRESS (ret, "return")

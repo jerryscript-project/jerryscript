@@ -365,12 +365,11 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
 void
 ecma_free_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
-  switch (completion_value.type)
+  switch ((ecma_completion_type_t)completion_value.type)
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
-    case ECMA_COMPLETION_TYPE_VARG:
     {
       ecma_free_value (completion_value.value, true);
       break;
@@ -381,6 +380,10 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     {
       JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
       break;
+    }
+    case ECMA_COMPLETION_TYPE_META:
+    {
+      JERRY_UNREACHABLE ();
     }
   }
 } /* ecma_free_completion_value */

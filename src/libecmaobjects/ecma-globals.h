@@ -106,8 +106,8 @@ typedef enum
   ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
   ECMA_COMPLETION_TYPE_EXIT, /**< implementation-defined completion type
                                   for finishing script execution */
-  ECMA_COMPLETION_TYPE_VARG /**< implementation-defined completion type
-                                 for varg (argument value specifier opcode) */
+  ECMA_COMPLETION_TYPE_META /**< implementation-defined completion type
+                                 for meta opcode */
 } ecma_completion_type_t;
 
 /**

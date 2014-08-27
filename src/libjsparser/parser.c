@@ -460,7 +460,11 @@ parse_property_name_and_value (void)
   token_after_newlines_must_be (TOK_COLON);
   NEXT (value, assignment_expression);
 
-  DUMP_OPCODE_3 (prop, lhs, name, value);
+  TODO (Change to dumping meta opcode);
+  // DUMP_OPCODE_3 (prop, lhs, name, value);
+  //  to
+  // DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_DATA, name, value);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (name, value);
 
   return lhs;
 }
@@ -487,7 +491,11 @@ parse_property_assignment (void)
     token_after_newlines_must_be (TOK_CLOSE_PAREN);
     token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-    DUMP_OPCODE_2 (prop_get_decl, lhs, name);
+    TODO (Change to dumping meta opcode);
+    // DUMP_OPCODE_2 (prop_get_decl, lhs, name);
+    //  to
+    // DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_GETTER, name, result_of_func_expression);
+    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (name);
 
     skip_newlines ();
     parse_source_element_list ();
@@ -507,7 +515,11 @@ parse_property_assignment (void)
     token_after_newlines_must_be (TOK_CLOSE_PAREN);
     token_after_newlines_must_be (TOK_OPEN_BRACE);
 
-    DUMP_OPCODE_3 (prop_set_decl, lhs, name, arg);
+    TODO (Change to dumping meta opcode);
+    // DUMP_OPCODE_3 (prop_set_decl, lhs, name, arg);
+    //  to
+    // DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_SETTER, name, result_of_func_expression);
+    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (name, arg);
 
     skip_newlines ();
     parse_source_element_list ();

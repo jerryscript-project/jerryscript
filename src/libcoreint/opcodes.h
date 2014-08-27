@@ -52,8 +52,11 @@ typedef enum
  */
 typedef enum
 {
-  OPCODE_META_TYPE_THIS_ARG, /**< value of this used during call */
-  OPCODE_META_TYPE_VARG /**< element of arguments' list */
+  OPCODE_META_TYPE_THIS_ARG, /**< value (var_idx) of this used during call */
+  OPCODE_META_TYPE_VARG, /**< element (var_idx) of arguments' list */
+  OPCODE_META_TYPE_VARG_PROP_DATA, /**< name (lit_idx) and value (var_idx) for a data property descriptor */
+  OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
+  OPCODE_META_TYPE_VARG_PROP_SETTER /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
 } opcode_meta_type;
 
 typedef struct
@@ -85,11 +88,8 @@ typedef struct
 
 #define OP_INITS(p, a)                                                       \
         p##_2 (a, array_decl, lhs, list)                                     \
-        p##_3 (a, prop, lhs, name, value)                                    \
         p##_3 (a, prop_getter, lhs, obj, prop)                               \
         p##_3 (a, prop_setter, obj, prop, rhs)                               \
-        p##_2 (a, prop_get_decl, lhs, prop)                                  \
-        p##_3 (a, prop_set_decl, lhs, prop, arg)                             \
         p##_2 (a, obj_decl, lhs, list)                                       \
         p##_1 (a, this, lhs)                                                 \
         p##_2 (a, delete_var, lhs, name)                                     \

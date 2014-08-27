@@ -45,10 +45,6 @@
  */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op (prop)                            \
-    op (prop_get_decl)                   \
-    op (prop_set_decl)                   \
-    op (obj_decl)                        \
     op (with)                            \
     op (end_with)                        \
     static char __unused unimplemented_list_end
@@ -942,6 +938,157 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
 } /* opfunc_array_decl */
 
 /**
+ * 'Object initializer' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.1.5
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_obj_decl (opcode_t opdata, /**< operation data */
+                 int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t lhs_var_idx = opdata.data.obj_decl.lhs;
+  const idx_t args_number = opdata.data.obj_decl.list;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ecma_completion_value_t completion = ecma_make_empty_completion_value ();
+  ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+
+  for (uint32_t prop_index = 0;
+       prop_index < args_number;
+       prop_index++)
+  {
+    ecma_completion_value_t evaluate_prop_completion = run_int_loop (int_data);
+
+    if (evaluate_prop_completion.type == ECMA_COMPLETION_TYPE_META)
+    {
+      opcode_t next_opcode = read_opcode (int_data->pos);
+      JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+
+      const opcode_meta_type type = next_opcode.data.meta.type;
+      JERRY_ASSERT (type == OPCODE_META_TYPE_VARG_PROP_DATA
+                    || type == OPCODE_META_TYPE_VARG_PROP_GETTER
+                    || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
+
+      const idx_t prop_name_lit_idx = next_opcode.data.meta.data_1;
+      const idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
+
+      ecma_completion_value_t value_for_prop_desc = get_variable_value (int_data,
+                                                                        value_for_prop_desc_var_idx,
+                                                                        false);
+
+      if (ecma_is_completion_value_normal (value_for_prop_desc))
+      {
+        bool is_throw_syntax_error = false;
+
+        ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_name_lit_idx);
+        ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
+
+        const bool is_previous_data_desc = (previous_p->type == ECMA_PROPERTY_NAMEDDATA);
+        const bool is_previous_accessor_desc = (previous_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+        JERRY_ASSERT (is_previous_data_desc || is_previous_accessor_desc);
+
+        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+        {
+          prop_desc.is_enumerable_defined = true;
+          prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+
+          prop_desc.is_configurable_defined = true;
+          prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+        }
+
+        if (type == OPCODE_META_TYPE_VARG_PROP_DATA)
+        {
+          prop_desc.is_value_defined = true;
+          prop_desc.value = value_for_prop_desc.value;
+          
+          prop_desc.is_writable_defined = true;
+          prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+
+          if ((is_previous_data_desc
+              && int_data->is_strict)
+              || is_previous_accessor_desc)
+          {
+            is_throw_syntax_error = true;
+          }
+        }
+        else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
+        {
+          JERRY_ASSERT (value_for_prop_desc.value.value_type == ECMA_TYPE_OBJECT);
+
+          prop_desc.is_get_defined = true;
+          prop_desc.get_p = ECMA_GET_POINTER (value_for_prop_desc.value.value);
+
+          if (is_previous_data_desc)
+          {
+            is_throw_syntax_error = true;
+          }
+        }
+        else
+        {
+          JERRY_ASSERT (value_for_prop_desc.value.value_type == ECMA_TYPE_OBJECT);
+
+          prop_desc.is_set_defined = true;
+          prop_desc.set_p = ECMA_GET_POINTER (value_for_prop_desc.value.value);
+
+          if (is_previous_data_desc)
+          {
+            is_throw_syntax_error = true;
+          }
+        }
+
+        /* The SyntaxError should be treated as an early error  */
+        JERRY_ASSERT (!is_throw_syntax_error);
+
+        ecma_completion_value_t define_prop_completion = ecma_op_object_define_own_property (obj_p,
+                                                                                             prop_name_string_p,
+                                                                                             prop_desc,
+                                                                                             false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
+                      || ecma_is_completion_value_normal_false (define_prop_completion));
+
+        ecma_deref_ecma_string (prop_name_string_p);
+
+        ecma_free_completion_value (value_for_prop_desc);
+      }
+      else
+      {
+        completion = value_for_prop_desc;
+
+        break;
+      }
+
+      int_data->pos++;
+    }
+    else
+    {
+      JERRY_ASSERT (!ecma_is_completion_value_normal (evaluate_prop_completion));
+
+      completion = evaluate_prop_completion;
+
+      break;
+    }
+  }
+
+  if (ecma_is_empty_completion_value (completion))
+  {
+    ret_value = set_variable_value (int_data, lhs_var_idx, ecma_make_object_value (obj_p));
+  }
+  else
+  {
+    ret_value = completion;
+  }
+
+  ecma_deref_object (obj_p);
+
+  return ret_value;
+} /* opfunc_obj_decl */
+/**
  * 'Return with no expression' opcode handler.
  *
  * See also: ECMA-262 v5, 12.9
@@ -1541,6 +1688,9 @@ opfunc_meta (opcode_t opdata, /**< operation data */
                                          ECMA_TARGET_ID_RESERVED);
     }
     case OPCODE_META_TYPE_THIS_ARG:
+    case OPCODE_META_TYPE_VARG_PROP_DATA:
+    case OPCODE_META_TYPE_VARG_PROP_GETTER:
+    case OPCODE_META_TYPE_VARG_PROP_SETTER:
     {
       JERRY_UNREACHABLE ();
     }

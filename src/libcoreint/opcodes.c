@@ -126,7 +126,6 @@ free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string lite
     op (delete)                          \
     op (with)                            \
     op (end_with)                        \
-    op (meta)                            \
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
@@ -1636,6 +1635,18 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_typeof */
+
+/**
+ * 'meta' opcode handler.
+ *
+ * The opcode is meta-opcode that is not supposed to be executed.
+ */
+ecma_completion_value_t
+opfunc_meta (opcode_t opdata __unused, /**< operation data */
+             int_data_t *int_data __unused) /**< interpreter context */
+{
+  JERRY_UNREACHABLE ();
+} /* opfunc_meta */
 
 #define GETOP_DEF_1(a, name, field1) \
         inline opcode_t getop_##name (idx_t arg1) \

@@ -21,11 +21,6 @@
 #include "mem-heap.h"
 #include "opcodes.h"
 
-#include "actuators.h"
-#include "common-io.h"
-#include "sensors.h"
-#include "ecma-objects.h"
-
 /**
  * Note:
  *      The note describes exception handling in opcode handlers that perform operations,
@@ -49,75 +44,7 @@
  *      5. No other operations with opcode handler's 'return value' variable should be performed.
  */
 
-/**
- * String literal copy descriptor.
- */
-typedef struct
-{
-  ecma_char_t *str_p; /**< pointer to copied string literal */
-  ecma_char_t literal_copy[32]; /**< buffer with string literal,
-                                     if it is stored locally
-                                     (i.e. not in the heap) */
-} string_literal_copy;
-
-/**
- * Initialize string literal copy.
- */
-static void
-init_string_literal_copy (idx_t idx, /**< literal identifier */
-                          string_literal_copy *str_lit_descr_p) /**< pointer to string literal copy descriptor */
-{
-  JERRY_ASSERT (str_lit_descr_p != NULL);
-
-  ssize_t sz = try_get_string_by_idx (idx,
-                                      str_lit_descr_p->literal_copy,
-                                      sizeof (str_lit_descr_p->literal_copy));
-  if (sz > 0)
-  {
-    str_lit_descr_p->str_p = str_lit_descr_p->literal_copy;
-  }
-  else
-  {
-    JERRY_ASSERT (sz < 0);
-
-    ssize_t req_sz = -sz;
-
-    str_lit_descr_p->str_p = mem_heap_alloc_block ((size_t) req_sz,
-                                                   MEM_HEAP_ALLOC_SHORT_TERM);
-
-    sz = try_get_string_by_idx (idx,
-                                str_lit_descr_p->str_p,
-                                req_sz);
-
-    JERRY_ASSERT (sz > 0);
-  }
-} /* init_string_literal */
-
-/**
- * Free string literal copy.
- */
-static void
-free_string_literal_copy (string_literal_copy *str_lit_descr_p) /**< string literal copy descriptor */
-{
-  JERRY_ASSERT (str_lit_descr_p != NULL);
-  JERRY_ASSERT (str_lit_descr_p->str_p != NULL);
-
-  if (str_lit_descr_p->str_p == str_lit_descr_p->literal_copy)
-  {
-    /* copy is inside descriptor */
-  }
-  else
-  {
-    mem_heap_free_block (str_lit_descr_p->str_p);
-  }
-
-  str_lit_descr_p->str_p = NULL;
-
-  return;
-} /* free_string_literal */
-
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op (native_call)                     \
     op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
@@ -152,125 +79,38 @@ opfunc_nop (opcode_t opdata __unused, /**< operation data */
 ecma_completion_value_t
 opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
 {
-  ecma_completion_value_t ret_value;
-  ret_value = ecma_make_empty_completion_value ();
+  const idx_t func_name_lit_idx = opdata.data.call_1.name_lit_idx;
+  const idx_t lhs_var_idx = opdata.data.call_1.lhs;
 
   int_data->pos++;
 
+  ecma_completion_value_t ret_value;
+  ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
   ECMA_TRY_CATCH (arg_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
 
-
-  /**********************************************************/
-
-  FIXME (/* Native call, i.e. opfunc_native_call */);
-  bool is_native_call = true;
-
-  string_literal_copy function_name;
-  init_string_literal_copy (opdata.data.call_1.name_lit_idx, &function_name);
-
-  if (!__strcmp ((const char*) function_name.str_p, "LEDToggle"))
+  if (!ecma_op_is_callable (func_value.value))
   {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    led_toggle (int_num);
-    ret_value = ecma_make_empty_completion_value ();
-  }
-  else if (!__strcmp ((const char*) function_name.str_p, "LEDOn"))
-  {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    led_on (int_num);
-    ret_value = ecma_make_empty_completion_value ();
-  }
-  else if (!__strcmp ((const char*) function_name.str_p, "LEDOff"))
-  {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    led_off (int_num);
-    ret_value = ecma_make_empty_completion_value ();
-  }
-  else if (!__strcmp ((const char*) function_name.str_p, "LEDOnce"))
-  {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    led_blink_once (int_num);
-    ret_value = ecma_make_empty_completion_value ();
-  }
-  else if (!__strcmp ((const char*) function_name.str_p, "wait"))
-  {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    wait_ms (int_num);
-    ret_value = ecma_make_empty_completion_value ();
-  }
-  else if (!__strcmp ((const char *) function_name.str_p, "exit"))
-  {
-    JERRY_ASSERT (arg_value.value.value_type == ECMA_TYPE_NUMBER);
-    ecma_number_t * num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_value.value.value);
-    uint32_t int_num = (uint32_t) * num_p;
-    ecma_value_t exit_status = ecma_make_simple_value (int_num == 0 ? ECMA_SIMPLE_VALUE_TRUE
-                                                       : ECMA_SIMPLE_VALUE_FALSE);
-    ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
-                                            exit_status,
-                                            ECMA_TARGET_ID_RESERVED);
+    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    is_native_call = false;
-  }
+    ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.value.value);
 
-  if (is_native_call)
-  {
-#ifdef __TARGET_HOST_x64
-    __printf ("%d::op_call_1:idx:%d:%d\t",
-              int_data->pos,
-              opdata.data.call_1.name_lit_idx,
-              opdata.data.call_1.arg1_lit_idx);
+    ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
+    ECMA_FUNCTION_CALL (call_completion,
+                        ecma_op_function_call (func_obj_p, this_value.value, &arg_value.value, 1),
+                        ret_value);
 
-    __printf ("%s\n", function_name.str_p);
-#endif
-  }
+    ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.value);
 
-  free_string_literal_copy (&function_name);
-
-  /**********************************************************/
-
-
-  if (!is_native_call)
-  {
-    const idx_t func_name_lit_idx = opdata.data.call_1.name_lit_idx;
-    const idx_t lhs_var_idx = opdata.data.call_1.lhs;
-
-    ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
-
-    if (!ecma_op_is_callable (func_value.value))
-    {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-    }
-    else
-    {
-      ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.value.value);
-
-      ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
-      ECMA_FUNCTION_CALL (call_completion,
-                          ecma_op_function_call (func_obj_p, this_value.value, &arg_value.value, 1),
-                          ret_value);
-
-      ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.value);
-
-      ECMA_FINALIZE (call_completion);
-      ECMA_FINALIZE (this_value);
-    }
-
-    ECMA_FINALIZE (func_value);
+    ECMA_FINALIZE (call_completion);
+    ECMA_FINALIZE (this_value);
   }
 
   ECMA_FINALIZE (arg_value);
+  ECMA_FINALIZE (func_value);
 
   return ret_value;
 }
@@ -910,72 +750,6 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
 } /* opfunc_call_0 */
 
 /**
- * Fill arguments' list
- *
- * @return empty completion value if argument list was filled successfully,
- *         otherwise - not normal completion value indicating completion type
- *         of last expression evaluated
- */
-static ecma_completion_value_t
-fill_varg_list (int_data_t *int_data, /**< interpreter context */
-                ecma_length_t args_number, /**< number of arguments */
-                ecma_value_t arg_values[], /**< out: arguments' values */
-                ecma_length_t *out_arg_number_p) /**< out: number of arguments
-                                                      successfully read */
-{
-  ecma_completion_value_t get_arg_completion = ecma_make_empty_completion_value ();
-
-  ecma_length_t arg_index;
-  for (arg_index = 0;
-       arg_index < args_number;
-       arg_index++)
-  {
-    opcode_t next_opcode = read_opcode (int_data->pos);
-    if (next_opcode.op_idx == __op__idx_varg)
-    {
-      get_arg_completion = get_variable_value (int_data, next_opcode.data.varg.arg_lit_idx, false);
-      if (unlikely (ecma_is_completion_value_throw (get_arg_completion)))
-      {
-        break;
-      }
-      else
-      {
-        JERRY_ASSERT (ecma_is_completion_value_normal (get_arg_completion));
-        arg_values[arg_index] = get_arg_completion.value;
-      }
-    }
-    else
-    {
-      get_arg_completion = run_int_loop (int_data);
-
-      if (get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
-      {
-        arg_values[arg_index] = get_arg_completion.value;
-      }
-      else
-      {
-        break;
-      }
-    }
-
-    int_data->pos++;
-  }
-
-  *out_arg_number_p = arg_index;
-
-  if (get_arg_completion.type == ECMA_COMPLETION_TYPE_NORMAL
-      || get_arg_completion.type == ECMA_COMPLETION_TYPE_VARG)
-  {
-    /* values are copied to arg_values */
-    return ecma_make_empty_completion_value ();
-  }
-  else
-  {
-    return get_arg_completion;
-  }
-} /* fill_varg_list */
-
-/**
  * 'Function call' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.3
@@ -1021,8 +795,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     else
     {
       this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
-      JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
     }
+    JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
 
     if (!ecma_op_is_callable (func_value.value))
     {
@@ -1094,23 +868,6 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   if (ecma_is_empty_completion_value (get_arg_completion))
   {
-    ecma_completion_value_t this_value;
-
-    opcode_t next_opcode = read_opcode (int_data->pos);
-    if (next_opcode.op_idx == __op__idx_meta
-        && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
-    {
-      const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
-
-      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
-      this_value = get_variable_value (int_data, this_arg_var_idx, false);
-    }
-    else
-    {
-      this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
-      JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
-    }
-
     if (!ecma_is_constructor (constructor_value.value))
     {
       ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -1128,8 +885,6 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
       ret_value = set_variable_value (int_data, lhs_var_idx, construction_completion.value);
 
       ECMA_FINALIZE (construction_completion);
-
-      ecma_free_completion_value (this_value);
     }
   }
   else
@@ -1150,30 +905,6 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_construct_n */
-
-/**
- * 'varg' opcode handler
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-opfunc_varg (opcode_t opdata, /**< operation data */
-             int_data_t *int_data) /**< interpreter context */
-{
-  const idx_t arg_lit_idx = opdata.data.varg.arg_lit_idx;
-
-  ecma_completion_value_t completion = get_variable_value (int_data,
-                                                           arg_lit_idx,
-                                                           false);
-
-  if (ecma_is_completion_value_normal (completion))
-  {
-    completion.type = ECMA_COMPLETION_TYPE_VARG;
-  }
-
-  return completion;
-} /* opfunc_varg */
 
 /**
  * 'Return with no expression' opcode handler.

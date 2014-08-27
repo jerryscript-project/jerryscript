@@ -17,6 +17,7 @@
 #define OPCODES_ECMA_SUPPORT_H
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"

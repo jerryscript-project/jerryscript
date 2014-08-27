@@ -45,7 +45,6 @@
  */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op (array_decl)                      \
     op (prop)                            \
     op (prop_get_decl)                   \
     op (prop_set_decl)                   \
@@ -780,6 +779,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   if (ecma_is_empty_completion_value (get_arg_completion))
   {
+    JERRY_ASSERT (args_read == args_number);
+
     ecma_completion_value_t this_value;
 
     opcode_t next_opcode = read_opcode (int_data->pos);
@@ -867,6 +868,8 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   if (ecma_is_empty_completion_value (get_arg_completion))
   {
+    JERRY_ASSERT (args_read == args_number);
+
     if (!ecma_is_constructor (constructor_value.value))
     {
       ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -904,6 +907,64 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_construct_n */
+
+/**
+ * 'Array initializer' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.1.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+opfunc_array_decl (opcode_t opdata, /**< operation data */
+                   int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t lhs_var_idx = opdata.data.array_decl.lhs;
+  const idx_t args_number = opdata.data.array_decl.list;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
+
+  ecma_length_t args_read;
+  ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
+                                                               args_number,
+                                                               arg_values,
+                                                               &args_read);
+
+  if (ecma_is_empty_completion_value (get_arg_completion))
+  {
+    JERRY_ASSERT (args_read == args_number);
+
+    ecma_object_t *array_obj_p = ecma_op_create_array_object (arg_values,
+                                                              args_number,
+                                                              false);
+
+    ret_value = set_variable_value (int_data,
+                                    lhs_var_idx,
+                                    ecma_make_object_value (array_obj_p));
+
+    ecma_deref_object (array_obj_p);
+  }
+  else
+  {
+    JERRY_ASSERT (!ecma_is_completion_value_normal (get_arg_completion));
+
+    ret_value = get_arg_completion;
+  }
+
+  for (ecma_length_t arg_index = 0;
+       arg_index < args_read;
+       arg_index++)
+  {
+    ecma_free_value (arg_values[arg_index], true);
+  }
+
+  return ret_value;
+} /* opfunc_array_decl */
 
 /**
  * 'Return with no expression' opcode handler.

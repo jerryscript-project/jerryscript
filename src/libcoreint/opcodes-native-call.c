@@ -50,6 +50,8 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
   if (ecma_is_empty_completion_value (get_arg_completion))
   {
+    JERRY_ASSERT (args_read == args_number);
+
     switch ((opcode_native_call_t)native_call_id_idx)
     {
       case OPCODE_NATIVE_CALL_LED_TOGGLE:

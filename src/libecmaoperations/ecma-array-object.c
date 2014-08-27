@@ -60,12 +60,18 @@ ecma_reject (bool is_throw) /**< Throw flag */
 ecma_object_t*
 ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                   are passed to Array constructor */
-                             ecma_length_t arguments_list_len) /**< length of the arguments' list */
+                             ecma_length_t arguments_list_len, /**< length of the arguments' list */
+                             bool is_treat_single_arg_as_length) /**< if the value is true,
+                                                                      arguments_list_len is 1
+                                                                      and single argument is Number,
+                                                                      then treat the single argument
+                                                                      as new Array's length rather
+                                                                      than as single item of the Array */
 {
   JERRY_ASSERT (arguments_list_len == 0
                 || arguments_list_p != NULL);
 
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p, arguments_list_len);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p, arguments_list_len, is_treat_single_arg_as_length);
 } /* ecma_op_create_array_object */
 
 /**

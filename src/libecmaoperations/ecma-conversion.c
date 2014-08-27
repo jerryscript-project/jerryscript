@@ -391,7 +391,24 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_object (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(value);
+  switch ((ecma_type_t)value.value_type)
+  {
+    case ECMA_TYPE_SIMPLE:
+    case ECMA_TYPE_NUMBER:
+    case ECMA_TYPE_STRING:
+    {
+      JERRY_UNIMPLEMENTED ();
+    }
+
+    case ECMA_TYPE_OBJECT:
+    {
+      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
+                                         ecma_copy_value (value, true),
+                                         ECMA_TARGET_ID_RESERVED);
+    }
+  }
+
+  JERRY_UNREACHABLE ();
 } /* ecma_op_to_object */
 
 /**

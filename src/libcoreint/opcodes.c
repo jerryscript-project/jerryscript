@@ -45,8 +45,6 @@
  */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    op (with)                            \
-    op (end_with)                        \
     static char __unused unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
@@ -1403,6 +1401,68 @@ opfunc_this (opcode_t opdata, /**< operation data */
 } /* opfunc_this */
 
 /**
+ * 'With' opcode handler.
+ *
+ * See also: ECMA-262 v5, 12.10
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_with (opcode_t opdata, /**< operation data */
+             int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t expr_var_idx = opdata.data.with.expr;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (expr_value,
+                  get_variable_value (int_data,
+                                      expr_var_idx,
+                                      false),
+                  ret_value);
+  ECMA_TRY_CATCH (obj_expr_value,
+                  ecma_op_to_object (expr_value.value),
+                  ret_value);
+
+  ecma_object_t *obj_p = ECMA_GET_POINTER (obj_expr_value.value.value);
+
+  ecma_object_t *old_env_p = int_data->lex_env_p;
+  ecma_object_t *new_env_p = ecma_create_object_lex_env (old_env_p,
+                                                         obj_p,
+                                                         true);
+  int_data->lex_env_p = new_env_p;
+
+  ecma_completion_value_t evaluation_completion = run_int_loop (int_data);
+
+  if (evaluation_completion.type == ECMA_COMPLETION_TYPE_META)
+  {
+    opcode_t meta_opcode = read_opcode (int_data->pos);
+    JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
+    JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
+
+    int_data->pos++;
+
+    ret_value = ecma_make_empty_completion_value ();
+  }
+  else
+  {
+    ret_value = evaluation_completion;
+  }
+
+  int_data->lex_env_p = old_env_p;
+
+  ecma_deref_object (new_env_p);
+
+  ECMA_FINALIZE (obj_expr_value);
+  ECMA_FINALIZE (expr_value);
+
+  return ret_value;
+} /* opfunc_with */
+
+/**
  * Evaluate argument of typeof.
  *
  * See also: ECMA-262 v5, 11.4.3
@@ -1682,6 +1742,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
   switch (type)
   {
     case OPCODE_META_TYPE_VARG:
+    case OPCODE_META_TYPE_END_WITH:
     {
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),

@@ -2083,7 +2083,7 @@ parse_with_statement (void)
   skip_newlines ();
   parse_statement ();
 
-  DUMP_VOID_OPCODE (end_with);
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_END_WITH, INVALID_VALUE, INVALID_VALUE);
 }
 
 /* switch_statement

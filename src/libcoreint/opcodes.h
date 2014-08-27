@@ -56,7 +56,8 @@ typedef enum
   OPCODE_META_TYPE_VARG, /**< element (var_idx) of arguments' list */
   OPCODE_META_TYPE_VARG_PROP_DATA, /**< name (lit_idx) and value (var_idx) for a data property descriptor */
   OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
-  OPCODE_META_TYPE_VARG_PROP_SETTER /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
+  OPCODE_META_TYPE_VARG_PROP_SETTER, /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
+  OPCODE_META_TYPE_END_WITH /**< end of with statement */
 } opcode_meta_type;
 
 typedef struct
@@ -95,8 +96,7 @@ typedef struct
         p##_2 (a, delete_var, lhs, name)                                     \
         p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
-        p##_1 (a, with, expr)                                                \
-        p##_0 (a, end_with)
+        p##_1 (a, with, expr)
 
 #define OP_ASSIGNMENTS(p, a)                                                 \
         p##_3 (a, assignment, var_left, type_value_right, value_right)

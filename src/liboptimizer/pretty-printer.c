@@ -347,8 +347,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
   uint8_t opcode_num = opcode.op_idx;
 
   __printf ("%3d: %20s ", oc, opcode_names[opcode_num]);
-  if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret)
-      && opcode_num != NAME_TO_ID (end_with))
+  if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret))
   {
     for (i = 1; i < opcode_sizes[opcode_num]; i++)
     {
@@ -415,7 +414,6 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_EXIT (exitval, "exit", status_code)
     CASE_SINGLE_ADDRESS (retval, "return", ret_value)
     CASE_ZERO_ADDRESS (ret, "return")
-    CASE_ZERO_ADDRESS (end_with, "")
     CASE_ZERO_ADDRESS (nop, "")
     TODO (Refine to match new opcodes)
     CASE_VARG_1_LHS (array_decl, lhs, "=", "[", list, "]")

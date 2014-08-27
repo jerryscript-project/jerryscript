@@ -38,8 +38,7 @@ opcodes_equal (const opcode_t *opcodes1, opcode_t *opcodes2, uint16_t size)
       if (opcode_num1 != opcode_num2)
         return false;
 
-      if (opcode_num1 == NAME_TO_ID (nop) || opcode_num1 == NAME_TO_ID (ret)
-          || opcode_num1 == NAME_TO_ID (end_with))
+      if (opcode_num1 == NAME_TO_ID (nop) || opcode_num1 == NAME_TO_ID (ret))
         return true;
 
       for (j = 1; j < opcode_sizes[opcode_num1]; j++)

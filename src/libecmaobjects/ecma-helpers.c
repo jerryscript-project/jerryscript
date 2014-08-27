@@ -93,7 +93,8 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                             ecma_object_t *binding_obj_p, /**< binding object */
                             bool provide_this) /**< provideThis flag */
 {
-  JERRY_ASSERT(binding_obj_p != NULL);
+  JERRY_ASSERT(binding_obj_p != NULL
+               && !binding_obj_p->is_lexical_environment);
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
   ecma_init_gc_info (new_lexical_environment_p);

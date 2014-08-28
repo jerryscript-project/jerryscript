@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "deserializer.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-global-object.h"
@@ -189,51 +188,6 @@ run_int_from_pos (opcode_counter_t start_pos,
 
   return completion;
 }
-
-/**
- * Copy zero-terminated string literal value to specified buffer.
- *
- * @return upon success - number of bytes actually copied,
- *         otherwise (buffer size is not enough) - negated minimum required buffer size.
- */
-ssize_t
-try_get_string_by_idx (idx_t idx, /**< literal id */
-                       ecma_char_t *buffer_p, /**< buffer */
-                       ssize_t buffer_size) /**< buffer size */
-{
-  const ecma_char_t *str_p = deserialize_string_by_id (idx);
-  JERRY_ASSERT (str_p != NULL);
-
-  FIXME (ecma_char_t strlen);
-
-  ssize_t req_length = (ssize_t)__strlen ((const char*)str_p) + 1;
-
-  if (buffer_size < req_length)
-  {
-    return -req_length;
-  }
-
-  FIXME (ecma_char_t strncpy);
-
-  JERRY_ASSERT (buffer_p != NULL);
-
-  __strncpy ((char*)buffer_p, (const char*)str_p, (size_t)req_length);
-
-  return req_length;
-} /* try_get_string_by_idx */
-
-/**
- * Get number literal value.
- *
- * @return value of number literal, corresponding to specified literal id
- */
-ecma_number_t
-get_number_by_idx (idx_t idx) /**< literal id */
-{
-  ecma_number_t num = deserialize_num_by_id (idx);
-
-  return num;
-} /* get_number_by_idx */
 
 /**
  * Get specified opcode from the program.

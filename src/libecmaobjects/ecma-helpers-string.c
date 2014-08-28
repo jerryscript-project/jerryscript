@@ -173,12 +173,12 @@ ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
 
-  FIXME (/* Interface for getting literal's length */);
+  FIXME (/* Interface for getting literal's length without string's characters iteration */);
+  const ecma_char_t *str_p = deserialize_string_by_id ((idx_t) lit_index);
+  JERRY_ASSERT (str_p != NULL);
+  ecma_length_t length = (ecma_length_t) __strlen ((const char*)str_p);
 
-  ssize_t size_required = try_get_string_by_idx ((uint8_t) lit_index, NULL, 0);
-  JERRY_ASSERT (size_required < 0);
-
-  string_desc_p->length = (ecma_length_t) ((size_t)-size_required / sizeof (ecma_char_t) - 1);
+  string_desc_p->length = length;
   string_desc_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
 
   string_desc_p->u.lit_index = lit_index;
@@ -425,10 +425,12 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      bytes_copied = try_get_string_by_idx ((uint8_t) string_desc_p->u.lit_index,
-                                            buffer_p,
-                                            buffer_size);
+      const ecma_char_t *str_p = deserialize_string_by_id ((idx_t) string_desc_p->u.lit_index);
+      JERRY_ASSERT (str_p != NULL);
+      __strncpy ((char*)buffer_p, (const char*)str_p, string_desc_p->length + 1u);
+      JERRY_ASSERT (__strlen ((char*)buffer_p) == string_desc_p->length);
 
+      bytes_copied = (ssize_t) ((string_desc_p->length + 1u) * sizeof (ecma_char_t));
       break;
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
@@ -758,11 +760,10 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
 /**
  * Compare zero-terminated string to zero-terminated string
  *
- * @return  0 - if strings are equal;
- *         -1 - if first string is lexicographically less than second;
- *          1 - otherwise.
+ * @return  true - if strings are equal;
+ *          false - otherwise.
  */
-int32_t
+bool
 ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-terminated string */
                                      const ecma_char_t *string2_p) /**< zero-terminated string */
 {

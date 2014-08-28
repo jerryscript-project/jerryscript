@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "opcodes-ecma-support.h"
-
+#include "deserializer.h"
 #include "globals.h"
 #include "interpreter.h"
 #include "opcodes.h"
+#include "opcodes-ecma-support.h"
 
 /**
  * Note:
@@ -159,7 +159,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     case OPCODE_ARG_TYPE_NUMBER:
     {
       ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = get_number_by_idx (src_val_descr);
+      *num_p = deserialize_num_by_id (src_val_descr);
 
       get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                                          ecma_make_number_value (num_p),

@@ -98,7 +98,7 @@ extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
                                          ssize_t buffer_size);
-extern int32_t ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
+extern bool ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p,
                                                      const ecma_string_t *string2_p);
 

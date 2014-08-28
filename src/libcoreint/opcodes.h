@@ -59,7 +59,11 @@ typedef enum
   OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_VARG_PROP_SETTER, /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_END_WITH, /**< end of with statement */
-  OPCODE_META_TYPE_FUNCTION_END /**< opcode counter */
+  OPCODE_META_TYPE_FUNCTION_END, /**< opcode counter */
+  OPCODE_META_TYPE_CATCH, /**< mark of beginning of catch block containing pointer to end of catch block */
+  OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
+  OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */
+  OPCODE_META_TYPE_END_TRY_CATCH_FINALLY /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
 } opcode_meta_type;
 
 typedef struct
@@ -74,7 +78,7 @@ typedef struct
   ecma_value_t *regs_p; /**< register variables */
 } int_data_t;
 
-opcode_counter_t calc_meta_opcode_counter_from_meta_data (const idx_t data_1, const idx_t data_2);
+opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
 opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_data_t *int_data);
 
 #define OP_CALLS_AND_ARGS(p, a)                                              \
@@ -101,7 +105,9 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_2 (a, delete_var, lhs, name)                                     \
         p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
-        p##_1 (a, with, expr)
+        p##_1 (a, with, expr)                                                \
+        p##_2 (a, try, oc_idx_1, oc_idx_2)                                   \
+        p##_1 (a, throw, var)
 
 #define OP_ASSIGNMENTS(p, a)                                                 \
         p##_3 (a, assignment, var_left, type_value_right, value_right)

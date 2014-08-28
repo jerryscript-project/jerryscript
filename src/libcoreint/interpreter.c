@@ -130,6 +130,12 @@ run_int_loop (int_data_t *int_data)
       continue;
     }
 
+    if (completion.type == ECMA_COMPLETION_TYPE_META)
+    {
+      completion.type = ECMA_COMPLETION_TYPE_NORMAL;
+      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+    }
+
     return completion;
   }
 }

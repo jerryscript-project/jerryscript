@@ -901,12 +901,12 @@ rewrite_meta_opcode_counter (opcode_meta_type type,
 {
   JERRY_STATIC_ASSERT (sizeof (idx_t) == 1);
 
-  const idx_t data_1 = (idx_t) (new_value >> JERRY_BITSINBYTE);
-  const idx_t data_2 = (idx_t) (new_value & ((1 << JERRY_BITSINBYTE) - 1));
+  const idx_t oc_idx_1 = (idx_t) (new_value >> JERRY_BITSINBYTE);
+  const idx_t oc_idx_2 = (idx_t) (new_value & ((1 << JERRY_BITSINBYTE) - 1));
 
-  JERRY_ASSERT (new_value == calc_meta_opcode_counter_from_meta_data (data_1, data_2));
+  JERRY_ASSERT (new_value == calc_opcode_counter_from_idx_idx (oc_idx_1, oc_idx_2));
 
-  REWRITE_OPCODE_3 (meta_oc, meta, type, data_1, data_2);
+  REWRITE_OPCODE_3 (meta_oc, meta, type, oc_idx_1, oc_idx_2);
 }
 
 /* function_declaration

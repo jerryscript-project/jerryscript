@@ -17,8 +17,6 @@
 
 #include "globals.h"
 #include "interpreter.h"
-#include "jerry-libc.h"
-#include "mem-heap.h"
 #include "opcodes.h"
 
 /**
@@ -1457,6 +1455,39 @@ opfunc_with (opcode_t opdata, /**< operation data */
 } /* opfunc_with */
 
 /**
+ * 'Throw' opcode handler.
+ *
+ * See also: ECMA-262 v5, 12.13
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_throw (opcode_t opdata, /**< operation data */
+              int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t var_idx = opdata.data.throw.var;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (var_value,
+                  get_variable_value (int_data,
+                                      var_idx,
+                                      false),
+                  ret_value);
+
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW,
+                                     ecma_copy_value (var_value.value, true),
+                                     ECMA_TARGET_ID_RESERVED);
+
+  ECMA_FINALIZE (var_value);
+
+  return ret_value;
+} /* opfunc_throw */
+
+/**
  * Evaluate argument of typeof.
  *
  * See also: ECMA-262 v5, 11.4.3
@@ -1737,6 +1768,9 @@ opfunc_meta (opcode_t opdata, /**< operation data */
   {
     case OPCODE_META_TYPE_VARG:
     case OPCODE_META_TYPE_END_WITH:
+    case OPCODE_META_TYPE_CATCH:
+    case OPCODE_META_TYPE_FINALLY:
+    case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
     {
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
@@ -1748,6 +1782,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     case OPCODE_META_TYPE_VARG_PROP_GETTER:
     case OPCODE_META_TYPE_VARG_PROP_SETTER:
     case OPCODE_META_TYPE_FUNCTION_END:
+    case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
     {
       JERRY_UNREACHABLE ();
     }
@@ -1762,14 +1797,14 @@ opfunc_meta (opcode_t opdata, /**< operation data */
  * @return opcode counter
  */
 opcode_counter_t
-calc_meta_opcode_counter_from_meta_data (const idx_t data_1, /**< first data argument */
-                                         const idx_t data_2) /**< second data argument */
+calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, /**< first idx */
+                                  const idx_t oc_idx_2) /**< second idx */
 {
   opcode_counter_t counter;
 
-  counter = data_1;
-  counter = (opcode_counter_t) (counter << (sizeof (data_2) * JERRY_BITSINBYTE));
-  counter = (opcode_counter_t) (counter | data_2);
+  counter = oc_idx_1;
+  counter = (opcode_counter_t) (counter << (sizeof (idx_t) * JERRY_BITSINBYTE));
+  counter = (opcode_counter_t) (counter | oc_idx_2);
   
   return counter;
 } /* calc_meta_opcode_counter_from_meta_data */
@@ -1788,7 +1823,7 @@ read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of 
   const idx_t data_1 = meta_opcode.data.meta.data_1;
   const idx_t data_2 = meta_opcode.data.meta.data_2;
 
-  return calc_meta_opcode_counter_from_meta_data (data_1, data_2);
+  return calc_opcode_counter_from_idx_idx (data_1, data_2);
 } /* read_meta_opcode_counter */
 
 #define GETOP_DEF_1(a, name, field1) \

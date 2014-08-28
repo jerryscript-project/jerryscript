@@ -150,8 +150,8 @@ typedef struct
       */
     struct
     {
-      /** Levels left */
-      uint8_t level;
+      /** Levels to label left */
+      uint8_t depth;
 
       /** Target's offset */
       uint16_t offset;

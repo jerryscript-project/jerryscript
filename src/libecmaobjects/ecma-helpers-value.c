@@ -279,7 +279,7 @@ ecma_free_value (ecma_value_t value, /**< value description */
 } /* ecma_free_value */
 
 /**
- * Completion value constructor
+ * Normal, throw, return, exit and meta completion values constructor
  *
  * @return completion value
  */
@@ -302,6 +302,29 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
 
   return ret_value;
 } /* ecma_make_completion_value */
+
+/**
+ * Break and continue completion values constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
+                                  uint8_t depth_level, /**< depth level (in try constructions,
+                                                            with blocks, etc.) */
+                                  uint16_t offset) /**< offset to label from end of last block */
+{
+  JERRY_ASSERT (type == ECMA_COMPLETION_TYPE_BREAK
+                || type == ECMA_COMPLETION_TYPE_CONTINUE);
+
+  ecma_completion_value_t ret_value;
+
+  ret_value.type = type;
+  ret_value.u.target.depth = depth_level;
+  ret_value.u.target.offset = offset;
+
+  return ret_value;
+} /* ecma_make_label_completion_value */
 
 /**
  * Simple normal completion value constructor

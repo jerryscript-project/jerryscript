@@ -51,10 +51,17 @@ run_int (void)
 {
   JERRY_ASSERT (__program != NULL);
 
-  FIXME (Strict mode);
-  const bool is_strict = false;
+  bool is_strict = false;
+  opcode_counter_t start_pos = 0;
 
-  const opcode_counter_t start_pos = 0;
+  opcode_t first_opcode = read_opcode (start_pos);
+  if (first_opcode.op_idx == __op__idx_meta
+      && first_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  {
+    is_strict = true;
+    start_pos++;
+  }
+
   ecma_object_t *glob_obj_p = ecma_op_create_global_object ();
   ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
   ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);

@@ -422,11 +422,11 @@ opfunc_var_decl (opcode_t opdata, /**< operation data */
   if (ecma_is_completion_value_normal_false (ecma_op_has_binding (int_data->lex_env_p,
                                                                   var_name_string_p)))
   {
-    FIXME ("Pass configurableBindings that is true if and only if current code is eval code");
+    const bool is_configurable_bindings = int_data->is_eval_code;
 
     ecma_completion_value_t completion = ecma_op_create_mutable_binding (int_data->lex_env_p,
                                                                          var_name_string_p,
-                                                                         false);
+                                                                         is_configurable_bindings);
 
     JERRY_ASSERT (ecma_is_empty_completion_value (completion));
 

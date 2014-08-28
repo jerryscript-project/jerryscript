@@ -96,6 +96,11 @@ jerry_exit (jerry_status_t code) /**< status code */
         JERRY_UNREACHABLE();
         break;
       }
+      case ERR_UNHANDLED_EXCEPTION:
+      {
+        __printf ("ERR_UNHANDLED_EXCEPTION\n");
+        break;
+      }
       case ERR_GENERAL:
       {
         __printf ("ERR_GENERAL\n");

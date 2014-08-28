@@ -85,15 +85,12 @@ run_int (void)
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_RETURN:
     {
-      TODO (Throw SyntaxError);
-
-      JERRY_UNIMPLEMENTED ();
+      /* SyntaxError should be treated as an early error */
+      JERRY_UNREACHABLE ();
     }
     case ECMA_COMPLETION_TYPE_THROW:
     {
-      TODO (Handle unhandled exception);
-
-      JERRY_UNIMPLEMENTED ();
+      jerry_exit (ERR_UNHANDLED_EXCEPTION);
     }
   }
 
@@ -197,8 +194,6 @@ try_get_string_by_idx (idx_t idx, /**< literal id */
                        ecma_char_t *buffer_p, /**< buffer */
                        ssize_t buffer_size) /**< buffer size */
 {
-  TODO (Actual string literal retrievement);
-
   const ecma_char_t *str_p = deserialize_string_by_id (idx);
   JERRY_ASSERT (str_p != NULL);
 
@@ -228,10 +223,7 @@ try_get_string_by_idx (idx_t idx, /**< literal id */
 ecma_number_t
 get_number_by_idx (idx_t idx) /**< literal id */
 {
-  TODO (Actual number literal retrievement);
-
-  FIXME (/* conversion of value returned from deserialize_num_by_id to ecma_number_t */);
-  ecma_number_t num = (ecma_number_t) deserialize_num_by_id (idx);
+  ecma_number_t num = deserialize_num_by_id (idx);
 
   return num;
 } /* get_number_by_idx */

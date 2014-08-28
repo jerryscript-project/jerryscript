@@ -63,7 +63,8 @@ typedef enum
   OPCODE_META_TYPE_CATCH, /**< mark of beginning of catch block containing pointer to end of catch block */
   OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
   OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */
-  OPCODE_META_TYPE_END_TRY_CATCH_FINALLY /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
+  OPCODE_META_TYPE_END_TRY_CATCH_FINALLY, /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
+  OPCODE_META_TYPE_STRICT_CODE /**< mark of beginning of strict code */
 } opcode_meta_type;
 
 typedef struct

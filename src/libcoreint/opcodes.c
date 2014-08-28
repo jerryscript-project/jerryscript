@@ -113,8 +113,6 @@ opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
  *      value to a variable. Assignment to an object's property is not implemented
  *      by this opcode.
  *
- *      FIXME: Add cross link with 'property accessor assignment` opcode.
- *
  * See also: ECMA-262 v5, 11.13.1
  *
  * @return completion value
@@ -460,25 +458,33 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
                       ecma_string_t* args_names[], /**< names of arguments */
                       ecma_length_t args_number) /**< number of arguments */
 {
-  TODO ("Check if code of function itself is strict");
-
-  const bool is_strict = int_data->is_strict;
+  bool is_strict = int_data->is_strict;
   const bool is_configurable_bindings = int_data->is_eval_code;
 
-  const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
+  const opcode_counter_t function_code_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  int_data->pos++;
 
-  int_data->pos = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  opcode_t next_opcode = read_opcode (int_data->pos);
+  if (next_opcode.op_idx == __op__idx_meta
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  {
+    is_strict = true;
+
+    int_data->pos++;
+  }
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_idx);
 
   ecma_completion_value_t ret_value = ecma_op_function_declaration (int_data->lex_env_p,
                                                                     function_name_string_p,
-                                                                    function_code_begin_oc,
+                                                                    int_data->pos,
                                                                     args_names,
                                                                     args_number,
                                                                     is_strict,
                                                                     is_configurable_bindings);
   ecma_deref_ecma_string (function_name_string_p);
+
+  int_data->pos = function_code_end_oc;
 
   return ret_value;
 } /* function_declaration */
@@ -597,25 +603,27 @@ ecma_completion_value_t
 opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                     int_data_t *int_data) /**< interpreter context */
 {
-  int_data->pos++;
-
   const idx_t dst_var_idx = opdata.data.func_expr_n.lhs;
   const idx_t function_name_lit_idx = opdata.data.func_expr_n.name_lit_idx;
   const ecma_length_t params_number = opdata.data.func_expr_n.arg_list;
-
   const bool is_named_func_expr = (!is_reg_variable (int_data, function_name_lit_idx));
 
-  TODO ("Check if code of function itself is strict");
-
-  const bool is_strict = int_data->is_strict;
-
   ecma_string_t *params_names[params_number + 1 /* length of array should not be zero */];
-
   fill_params_list (int_data, params_number, params_names);
 
-  const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
+  bool is_strict = int_data->is_strict;
 
-  int_data->pos = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  const opcode_counter_t function_code_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  int_data->pos++;
+
+  opcode_t next_opcode = read_opcode (int_data->pos);
+  if (next_opcode.op_idx == __op__idx_meta
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  {
+    is_strict = true;
+
+    int_data->pos++;
+  }
 
   ecma_object_t *scope_p;
   ecma_string_t *function_name_string_p = NULL;
@@ -636,7 +644,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                               params_number,
                                                               scope_p,
                                                               is_strict,
-                                                              function_code_begin_oc);
+                                                              int_data->pos);
 
   ecma_completion_value_t ret_value = set_variable_value (int_data,
                                                           dst_var_idx,
@@ -659,6 +667,8 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   {
     ecma_deref_ecma_string (params_names[param_index]);
   }
+
+  int_data->pos = function_code_end_oc;
 
   return ret_value;
 } /* opfunc_func_expr_n */
@@ -1783,6 +1793,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     case OPCODE_META_TYPE_VARG_PROP_SETTER:
     case OPCODE_META_TYPE_FUNCTION_END:
     case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
+    case OPCODE_META_TYPE_STRICT_CODE:
     {
       JERRY_UNREACHABLE ();
     }

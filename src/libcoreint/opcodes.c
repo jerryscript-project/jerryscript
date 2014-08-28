@@ -469,7 +469,7 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
 
   const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
 
-  int_data->pos = read_meta_opcode_counter (int_data);
+  int_data->pos = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_idx);
 
@@ -617,7 +617,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
 
-  int_data->pos = read_meta_opcode_counter (int_data);
+  int_data->pos = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
 
   ecma_object_t *scope_p;
   ecma_string_t *function_name_string_p = NULL;
@@ -1742,11 +1742,12 @@ opfunc_meta (opcode_t opdata, /**< operation data */
                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
                                          ECMA_TARGET_ID_RESERVED);
     }
+    case OPCODE_META_TYPE_UNDEFINED:
     case OPCODE_META_TYPE_THIS_ARG:
     case OPCODE_META_TYPE_VARG_PROP_DATA:
     case OPCODE_META_TYPE_VARG_PROP_GETTER:
     case OPCODE_META_TYPE_VARG_PROP_SETTER:
-    case OPCODE_META_TYPE_OPCODE_COUNTER:
+    case OPCODE_META_TYPE_FUNCTION_END:
     {
       JERRY_UNREACHABLE ();
     }
@@ -1778,10 +1779,11 @@ calc_meta_opcode_counter_from_meta_data (const idx_t data_1, /**< first data arg
  * that should be 'meta' opcode of type 'opcode counter'.
  */
 opcode_counter_t
-read_meta_opcode_counter (int_data_t *int_data) /**< interpreter context */
+read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of meta opcode */
+                          int_data_t *int_data) /**< interpreter context */
 {
   opcode_t meta_opcode = read_opcode (int_data->pos);
-  JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_OPCODE_COUNTER);
+  JERRY_ASSERT (meta_opcode.data.meta.type == expected_type);
 
   const idx_t data_1 = meta_opcode.data.meta.data_1;
   const idx_t data_2 = meta_opcode.data.meta.data_2;

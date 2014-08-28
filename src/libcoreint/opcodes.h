@@ -52,13 +52,14 @@ typedef enum
  */
 typedef enum
 {
+  OPCODE_META_TYPE_UNDEFINED, /**< undefined meta (should be rewritten) */
   OPCODE_META_TYPE_THIS_ARG, /**< value (var_idx) of this used during call */
   OPCODE_META_TYPE_VARG, /**< element (var_idx) of arguments' list */
   OPCODE_META_TYPE_VARG_PROP_DATA, /**< name (lit_idx) and value (var_idx) for a data property descriptor */
   OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_VARG_PROP_SETTER, /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_END_WITH, /**< end of with statement */
-  OPCODE_META_TYPE_OPCODE_COUNTER /**< opcode counter */
+  OPCODE_META_TYPE_FUNCTION_END /**< opcode counter */
 } opcode_meta_type;
 
 typedef struct
@@ -74,7 +75,7 @@ typedef struct
 } int_data_t;
 
 opcode_counter_t calc_meta_opcode_counter_from_meta_data (const idx_t data_1, const idx_t data_2);
-opcode_counter_t read_meta_opcode_counter (int_data_t *int_data);
+opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_data_t *int_data);
 
 #define OP_CALLS_AND_ARGS(p, a)                                              \
         p##_2 (a, call_0, lhs, name_lit_idx)                                 \

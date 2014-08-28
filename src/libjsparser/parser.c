@@ -895,7 +895,8 @@ parse_argument_list (argument_list_type alt, idx_t obj)
 }
 
 static void
-rewrite_meta_opcode_counter (opcode_counter_t meta_oc,
+rewrite_meta_opcode_counter (opcode_meta_type type,
+                             opcode_counter_t meta_oc,
                              opcode_counter_t new_value)
 {
   JERRY_STATIC_ASSERT (sizeof (idx_t) == 1);
@@ -905,7 +906,7 @@ rewrite_meta_opcode_counter (opcode_counter_t meta_oc,
 
   JERRY_ASSERT (new_value == calc_meta_opcode_counter_from_meta_data (data_1, data_2));
 
-  REWRITE_OPCODE_3 (meta_oc, meta, OPCODE_META_TYPE_OPCODE_COUNTER, data_1, data_2);
+  REWRITE_OPCODE_3 (meta_oc, meta, type, data_1, data_2);
 }
 
 /* function_declaration
@@ -931,7 +932,7 @@ parse_function_declaration (void)
   parse_argument_list (AL_FUNC_DECL, name);
 
   meta_oc = opcode_counter;
-  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_OPCODE_COUNTER, INVALID_VALUE, INVALID_VALUE);
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
@@ -944,7 +945,7 @@ parse_function_declaration (void)
 
   DUMP_VOID_OPCODE (ret);
 
-  rewrite_meta_opcode_counter (meta_oc, opcode_counter);
+  rewrite_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, meta_oc, opcode_counter);
 }
 
 /* function_expression
@@ -973,7 +974,7 @@ parse_function_expression (void)
   lhs = parse_argument_list (AL_FUNC_EXPR, name);
 
   meta_oc = opcode_counter;
-  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_OPCODE_COUNTER, INVALID_VALUE, INVALID_VALUE);
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
@@ -985,7 +986,7 @@ parse_function_expression (void)
   token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
-  rewrite_meta_opcode_counter (meta_oc, opcode_counter);
+  rewrite_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, meta_oc, opcode_counter);
 
   return lhs;
 }

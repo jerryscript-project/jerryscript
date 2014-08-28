@@ -30,16 +30,17 @@ function f1(x)
   assert(t === false);
 }
 
+var i;
 var t = true;
 
-for(var i = 1; i <= 10; i++)
+for(i = 1; i <= 10; i++)
 {
   f1(i);
 }
 
 t = false;
 
-for(var i = 11; i <= 20; i++)
+for(i = 11; i <= 20; i++)
 {
   f1(i);
 }

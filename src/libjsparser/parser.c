@@ -894,6 +894,20 @@ parse_argument_list (argument_list_type alt, idx_t obj)
   return lhs;
 }
 
+static void
+rewrite_meta_opcode_counter (opcode_counter_t meta_oc,
+                             opcode_counter_t new_value)
+{
+  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1);
+
+  const idx_t data_1 = (idx_t) (new_value >> JERRY_BITSINBYTE);
+  const idx_t data_2 = (idx_t) (new_value & ((1 << JERRY_BITSINBYTE) - 1));
+
+  JERRY_ASSERT (new_value == calc_meta_opcode_counter_from_meta_data (data_1, data_2));
+
+  REWRITE_OPCODE_3 (meta_oc, meta, OPCODE_META_TYPE_OPCODE_COUNTER, data_1, data_2);
+}
+
 /* function_declaration
   : 'function' LT!* Identifier LT!*
     '(' (LT!* Identifier (LT!* ',' LT!* Identifier)*) ? LT!* ')' LT!* function_body
@@ -905,7 +919,7 @@ static void
 parse_function_declaration (void)
 {
   idx_t name;
-  opcode_counter_t jmp_oc;
+  opcode_counter_t meta_oc;
 
   assert_keyword (KW_FUNCTION);
 
@@ -916,8 +930,8 @@ parse_function_declaration (void)
   skip_newlines ();
   parse_argument_list (AL_FUNC_DECL, name);
 
-  jmp_oc = opcode_counter;
-  DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+  meta_oc = opcode_counter;
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_OPCODE_COUNTER, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
@@ -929,7 +943,8 @@ parse_function_declaration (void)
   next_token_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
-  REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
+
+  rewrite_meta_opcode_counter (meta_oc, opcode_counter);
 }
 
 /* function_expression
@@ -939,7 +954,7 @@ static idx_t
 parse_function_expression (void)
 {
   idx_t name, lhs;
-  opcode_counter_t jmp_oc;
+  opcode_counter_t meta_oc;
 
   assert_keyword (KW_FUNCTION);
 
@@ -957,8 +972,8 @@ parse_function_expression (void)
   skip_newlines ();
   lhs = parse_argument_list (AL_FUNC_EXPR, name);
 
-  jmp_oc = opcode_counter;
-  DUMP_OPCODE_1 (jmp_down, INVALID_VALUE);
+  meta_oc = opcode_counter;
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_OPCODE_COUNTER, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
@@ -970,7 +985,7 @@ parse_function_expression (void)
   token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
-  REWRITE_OPCODE_1 (jmp_oc, jmp_down, opcode_counter - jmp_oc);
+  rewrite_meta_opcode_counter (meta_oc, opcode_counter);
 
   return lhs;
 }

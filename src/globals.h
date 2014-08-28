@@ -37,7 +37,7 @@ typedef signed long ssize_t;
 /**
  * Constants
  */
-#define JERRY_BITSINBYTE 8
+#define JERRY_BITSINBYTE 8u
 
 /**
  * Error codes

@@ -467,18 +467,15 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
   const bool is_strict = int_data->is_strict;
   const bool is_configurable_bindings = int_data->is_eval_code;
 
-  const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
-  opcode_t jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
-  JERRY_ASSERT (jmp_down_opcode.op_idx == __op__idx_jmp_down);
-  int_data->pos = (opcode_counter_t) (jmp_down_opcode_idx + jmp_down_opcode.data.jmp_down.opcode_count);
+  const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
 
-  const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
+  int_data->pos = read_meta_opcode_counter (int_data);
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_idx);
 
   ecma_completion_value_t ret_value = ecma_op_function_declaration (int_data->lex_env_p,
                                                                     function_name_string_p,
-                                                                    function_code_opcode_idx,
+                                                                    function_code_begin_oc,
                                                                     args_names,
                                                                     args_number,
                                                                     is_strict,
@@ -618,12 +615,9 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   fill_params_list (int_data, params_number, params_names);
 
-  const opcode_counter_t jmp_down_opcode_idx = (opcode_counter_t) (int_data->pos);
-  opcode_t jmp_down_opcode = read_opcode (jmp_down_opcode_idx);
-  JERRY_ASSERT (jmp_down_opcode.op_idx == __op__idx_jmp_down);
-  int_data->pos = (opcode_counter_t) (jmp_down_opcode_idx + jmp_down_opcode.data.jmp_down.opcode_count);
+  const opcode_counter_t function_code_begin_oc = (opcode_counter_t) (int_data->pos + 1);
 
-  const opcode_counter_t function_code_opcode_idx = (opcode_counter_t) (jmp_down_opcode_idx + 1);
+  int_data->pos = read_meta_opcode_counter (int_data);
 
   ecma_object_t *scope_p;
   ecma_string_t *function_name_string_p = NULL;
@@ -644,7 +638,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                               params_number,
                                                               scope_p,
                                                               is_strict,
-                                                              function_code_opcode_idx);
+                                                              function_code_begin_oc);
 
   ecma_completion_value_t ret_value = set_variable_value (int_data,
                                                           dst_var_idx,
@@ -1752,6 +1746,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     case OPCODE_META_TYPE_VARG_PROP_DATA:
     case OPCODE_META_TYPE_VARG_PROP_GETTER:
     case OPCODE_META_TYPE_VARG_PROP_SETTER:
+    case OPCODE_META_TYPE_OPCODE_COUNTER:
     {
       JERRY_UNREACHABLE ();
     }
@@ -1759,6 +1754,40 @@ opfunc_meta (opcode_t opdata, /**< operation data */
 
   JERRY_UNREACHABLE ();
 } /* opfunc_meta */
+
+/**
+ * Calculate opcode counter from 'meta' opcode's data arguments.
+ *
+ * @return opcode counter
+ */
+opcode_counter_t
+calc_meta_opcode_counter_from_meta_data (const idx_t data_1, /**< first data argument */
+                                         const idx_t data_2) /**< second data argument */
+{
+  opcode_counter_t counter;
+
+  counter = data_1;
+  counter = (opcode_counter_t) (counter << (sizeof (data_2) * JERRY_BITSINBYTE));
+  counter = (opcode_counter_t) (counter | data_2);
+  
+  return counter;
+} /* calc_meta_opcode_counter_from_meta_data */
+
+/**
+ * Read opcode counter from current opcode,
+ * that should be 'meta' opcode of type 'opcode counter'.
+ */
+opcode_counter_t
+read_meta_opcode_counter (int_data_t *int_data) /**< interpreter context */
+{
+  opcode_t meta_opcode = read_opcode (int_data->pos);
+  JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_OPCODE_COUNTER);
+
+  const idx_t data_1 = meta_opcode.data.meta.data_1;
+  const idx_t data_2 = meta_opcode.data.meta.data_2;
+
+  return calc_meta_opcode_counter_from_meta_data (data_1, data_2);
+} /* read_meta_opcode_counter */
 
 #define GETOP_DEF_1(a, name, field1) \
         inline opcode_t getop_##name (idx_t arg1) \

@@ -69,8 +69,7 @@ extern ecma_value_t ecma_copy_value (const ecma_value_t value, bool do_ref_if_ob
 extern void ecma_free_value (const ecma_value_t value, bool do_deref_if_object);
 
 extern ecma_completion_value_t ecma_make_completion_value (ecma_completion_type_t type,
-                                                           ecma_value_t value,
-                                                           uint8_t target);
+                                                           ecma_value_t value);
 extern ecma_completion_value_t ecma_make_simple_completion_value (ecma_simple_value_t simple_value);
 extern ecma_completion_value_t ecma_make_throw_value (ecma_object_t *exception_p);
 extern ecma_completion_value_t ecma_make_empty_completion_value (void);

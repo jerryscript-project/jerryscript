@@ -226,33 +226,31 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   px = left_first ? prim_first_converted_value : prim_second_converted_value;
   py = left_first ? prim_second_converted_value : prim_first_converted_value;
 
-  const bool is_px_string = (px.value.value_type == ECMA_TYPE_STRING);
-  const bool is_py_string = (py.value.value_type == ECMA_TYPE_STRING);
+  const bool is_px_string = (px.u.value.value_type == ECMA_TYPE_STRING);
+  const bool is_py_string = (py.u.value.value_type == ECMA_TYPE_STRING);
 
   if (!(is_px_string && is_py_string))
   { // 3.
     // a.
-    ECMA_TRY_CATCH(nx, ecma_op_to_number (px.value), ret_value);
+    ECMA_TRY_CATCH(nx, ecma_op_to_number (px.u.value), ret_value);
 
     // b.
-    ECMA_TRY_CATCH(ny, ecma_op_to_number (py.value), ret_value);
+    ECMA_TRY_CATCH(ny, ecma_op_to_number (py.u.value), ret_value);
 
-    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.value.value);
-    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.value.value);
+    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.u.value.value);
+    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.u.value.value);
 
     TODO(/* Implement according to ECMA */);
 
     if (*num_x_p >= *num_y_p)
     {
       ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE),
-                                              ECMA_TARGET_ID_RESERVED);
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
     }
     else
     {
       ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE),
-                                              ECMA_TARGET_ID_RESERVED);
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE));
     }
 
     ECMA_FINALIZE(ny);

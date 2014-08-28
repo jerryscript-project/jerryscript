@@ -34,10 +34,10 @@ opfunc_is_true_jmp (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (ecma_is_value_true (to_bool_completion.value))
+  if (ecma_is_value_true (to_bool_completion.u.value))
   {
     int_data->pos = dst_opcode_idx;
   }
@@ -71,10 +71,10 @@ opfunc_is_false_jmp (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (!ecma_is_value_true (to_bool_completion.value))
+  if (!ecma_is_value_true (to_bool_completion.u.value))
   {
     int_data->pos = dst_opcode_idx;
   }

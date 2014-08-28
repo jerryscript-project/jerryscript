@@ -95,8 +95,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   }
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_simple_value (has_binding),
-                                     ECMA_TARGET_ID_RESERVED);
+                                     ecma_make_simple_value (has_binding));
 } /* ecma_op_has_binding */
 
 /**
@@ -262,8 +261,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
       if (property_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE)
       {
         return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                           ecma_copy_value (prop_value, true),
-                                           ECMA_TARGET_ID_RESERVED);
+                                           ecma_copy_value (prop_value, true));
       }
       else if (ecma_is_value_empty (prop_value))
       {
@@ -349,8 +347,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
       }
 
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_make_simple_value (ret_val),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_make_simple_value (ret_val));
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
@@ -395,8 +392,7 @@ ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment 
         ecma_ref_object (binding_obj_p);
 
         return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                           ecma_make_object_value (binding_obj_p),
-                                           ECMA_TARGET_ID_RESERVED);
+                                           ecma_make_object_value (binding_obj_p));
       }
       else
       {

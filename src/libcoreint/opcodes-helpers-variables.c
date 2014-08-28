@@ -88,8 +88,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
     ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                            ecma_copy_value (reg_value, true),
-                                            ECMA_TARGET_ID_RESERVED);
+                                            ecma_copy_value (reg_value, true));
   }
   else
   {

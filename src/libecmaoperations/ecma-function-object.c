@@ -423,7 +423,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
       JERRY_ASSERT (ecma_is_completion_value_normal (completion));
 
-      this_binding = completion.value;
+      this_binding = completion.u.value;
     }
 
     // 5.
@@ -448,8 +448,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       JERRY_ASSERT(ecma_is_empty_completion_value (completion));
 
       ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
-                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                              ECMA_TARGET_ID_RESERVED);
+                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
     }
     else
     {
@@ -502,9 +501,9 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     //  6.
     ecma_object_t *prototype_p;
-    if (func_obj_prototype_prop_value.value.value_type == ECMA_TYPE_OBJECT)
+    if (func_obj_prototype_prop_value.u.value.value_type == ECMA_TYPE_OBJECT)
     {
-      prototype_p = ECMA_GET_POINTER (func_obj_prototype_prop_value.value.value);
+      prototype_p = ECMA_GET_POINTER (func_obj_prototype_prop_value.u.value.value);
       ecma_ref_object (prototype_p);
     }
     else
@@ -535,11 +534,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ecma_value_t obj_value;
 
     // 9.
-    if (call_completion.value.value_type == ECMA_TYPE_OBJECT)
+    if (call_completion.u.value.value_type == ECMA_TYPE_OBJECT)
     {
       ecma_deref_object (obj_p);
 
-      obj_value = ecma_copy_value (call_completion.value, true);
+      obj_value = ecma_copy_value (call_completion.u.value, true);
     }
     else
     {
@@ -548,8 +547,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     }
 
     ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                            obj_value,
-                                            ECMA_TARGET_ID_RESERVED);
+                                            obj_value);
 
     ECMA_FINALIZE (call_completion);
     ECMA_FINALIZE (func_obj_prototype_prop_value);

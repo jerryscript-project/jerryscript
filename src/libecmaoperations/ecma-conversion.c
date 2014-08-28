@@ -168,8 +168,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
     case ECMA_TYPE_STRING:
     {
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_copy_value (value, true));
     }
 
     case ECMA_TYPE_OBJECT:
@@ -262,8 +261,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
     case ECMA_TYPE_NUMBER:
     {
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_copy_value (value, true));
     }
     case ECMA_TYPE_SIMPLE:
     case ECMA_TYPE_STRING:
@@ -275,7 +273,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
       ecma_completion_value_t completion_to_primitive = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER);
       JERRY_ASSERT(ecma_is_completion_value_normal (completion_to_primitive));
 
-      ecma_completion_value_t completion_to_number = ecma_op_to_number (completion_to_primitive.value);
+      ecma_completion_value_t completion_to_number = ecma_op_to_number (completion_to_primitive.u.value);
       ecma_free_completion_value (completion_to_primitive);
 
       return completion_to_number;
@@ -305,7 +303,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
                     ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING),
                     ret_value);
 
-    ret_value = ecma_op_to_string (prim_value.value);
+    ret_value = ecma_op_to_string (prim_value.u.value);
 
     ECMA_FINALIZE (prim_value);
 
@@ -375,8 +373,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
   }
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_string_value (res_p),
-                                     ECMA_TARGET_ID_RESERVED);
+                                     ecma_make_string_value (res_p));
 } /* ecma_op_to_string */
 
 /**
@@ -403,8 +400,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
     case ECMA_TYPE_OBJECT:
     {
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_copy_value (value, true));
     }
   }
 

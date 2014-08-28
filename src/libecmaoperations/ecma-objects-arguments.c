@@ -362,7 +362,7 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
     ecma_completion_value_t completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
 
     ecma_free_value (desc_p->u.named_data_property.value, false);
-    desc_p->u.named_data_property.value = ecma_copy_value (completion.value, false);
+    desc_p->u.named_data_property.value = ecma_copy_value (completion.u.value, false);
 
     ecma_free_completion_value (completion);
   }

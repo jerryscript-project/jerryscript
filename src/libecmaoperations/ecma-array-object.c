@@ -201,9 +201,9 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     }
 
     JERRY_ASSERT (ecma_is_completion_value_normal (completion)
-                  && completion.value.value_type == ECMA_TYPE_NUMBER);
+                  && completion.u.value.value_type == ECMA_TYPE_NUMBER);
 
-    new_len_num = *(ecma_number_t*) ECMA_GET_POINTER (completion.value.value);
+    new_len_num = *(ecma_number_t*) ECMA_GET_POINTER (completion.u.value.value);
 
     ecma_free_completion_value (completion);
 

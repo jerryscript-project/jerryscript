@@ -132,13 +132,31 @@ typedef struct
 typedef struct
 {
   /** Type (ecma_completion_type_t) */
-  unsigned int type : 3;
+  unsigned int type : 8;
 
-  /** Value */
-  ecma_value_t value;
+  union
+  {
+    /**
+      * Value
+      *
+      * Used for normal, return, throw and exit completion types.
+      */
+    ecma_value_t value;
 
-  /** Target */
-  unsigned int target : 8;
+    /**
+      * Label
+      *
+      * Used for break and continue completion types.
+      */
+    struct
+    {
+      /** Levels left */
+      uint8_t level;
+
+      /** Target's offset */
+      uint16_t offset;
+    } __packed target;
+  } __packed u;
 } __packed ecma_completion_value_t;
 
 /**

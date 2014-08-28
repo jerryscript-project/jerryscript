@@ -85,8 +85,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
     {
       // 1.a
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_copy_value (value, true));
     }
     case ECMA_TYPE_NUMBER:
     case ECMA_TYPE_STRING:
@@ -109,8 +108,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
       ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
       return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_make_object_value (obj_p),
-                                         ECMA_TARGET_ID_RESERVED);
+                                         ecma_make_object_value (obj_p));
     }
   }
 
@@ -147,8 +145,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
     return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                       ecma_copy_value (prop_p->u.named_data_property.value, true),
-                                       ECMA_TARGET_ID_RESERVED);
+                                       ecma_copy_value (prop_p->u.named_data_property.value, true));
   }
   else
   {
@@ -172,8 +169,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
                           ret_value);
 
       ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_copy_value (call_completion.value, true),
-                                              ECMA_TARGET_ID_RESERVED);
+                                              ecma_copy_value (call_completion.u.value, true));
 
       ECMA_FINALIZE (call_completion);
 

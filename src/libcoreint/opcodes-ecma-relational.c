@@ -39,22 +39,22 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (left_value.value,
-                                                       right_value.value,
+                  ecma_op_abstract_relational_compare (left_value.u.value,
+                                                       right_value.u.value,
                                                        true),
                   ret_value);
 
   ecma_simple_value_t res;
 
-  if (ecma_is_value_undefined (compare_result.value))
+  if (ecma_is_value_undefined (compare_result.u.value))
   {
     res = ECMA_SIMPLE_VALUE_FALSE;
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result.value));
+    JERRY_ASSERT (ecma_is_value_boolean (compare_result.u.value));
 
-    res = compare_result.value.value;
+    res = compare_result.u.value.value;
   }
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (res));
@@ -89,22 +89,22 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (right_value.value,
-                                                       left_value.value,
+                  ecma_op_abstract_relational_compare (right_value.u.value,
+                                                       left_value.u.value,
                                                        false),
                   ret_value);
 
   ecma_simple_value_t res;
 
-  if (ecma_is_value_undefined (compare_result.value))
+  if (ecma_is_value_undefined (compare_result.u.value))
   {
     res = ECMA_SIMPLE_VALUE_FALSE;
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result.value));
+    JERRY_ASSERT (ecma_is_value_boolean (compare_result.u.value));
 
-    res = compare_result.value.value;
+    res = compare_result.u.value.value;
   }
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (res));
@@ -139,22 +139,22 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (right_value.value,
-                                                       left_value.value,
+                  ecma_op_abstract_relational_compare (right_value.u.value,
+                                                       left_value.u.value,
                                                        false),
                   ret_value);
 
   ecma_simple_value_t res;
 
-  if (ecma_is_value_undefined (compare_result.value))
+  if (ecma_is_value_undefined (compare_result.u.value))
   {
     res = ECMA_SIMPLE_VALUE_FALSE;
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result.value));
+    JERRY_ASSERT (ecma_is_value_boolean (compare_result.u.value));
 
-    if (compare_result.value.value == ECMA_SIMPLE_VALUE_TRUE)
+    if (compare_result.u.value.value == ECMA_SIMPLE_VALUE_TRUE)
     {
       res = ECMA_SIMPLE_VALUE_FALSE;
     }
@@ -196,22 +196,22 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (left_value.value,
-                                                       right_value.value,
+                  ecma_op_abstract_relational_compare (left_value.u.value,
+                                                       right_value.u.value,
                                                        true),
                   ret_value);
 
   ecma_simple_value_t res;
 
-  if (ecma_is_value_undefined (compare_result.value))
+  if (ecma_is_value_undefined (compare_result.u.value))
   {
     res = ECMA_SIMPLE_VALUE_FALSE;
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result.value));
+    JERRY_ASSERT (ecma_is_value_boolean (compare_result.u.value));
 
-    if (compare_result.value.value == ECMA_SIMPLE_VALUE_TRUE)
+    if (compare_result.u.value.value == ECMA_SIMPLE_VALUE_TRUE)
     {
       res = ECMA_SIMPLE_VALUE_FALSE;
     }
@@ -251,20 +251,20 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  if (right_value.value.value_type != ECMA_TYPE_OBJECT)
+  if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
   {
     ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.value.value);
+    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.u.value.value);
 
     ECMA_TRY_CATCH (is_instance_of,
                     ecma_op_object_has_instance (right_value_obj_p,
-                                                 left_value.value),
+                                                 left_value.u.value),
                     ret_value);
 
-    ret_value = set_variable_value (int_data, dst_idx, is_instance_of.value);
+    ret_value = set_variable_value (int_data, dst_idx, is_instance_of.u.value);
 
     ECMA_FINALIZE (is_instance_of);
   }
@@ -296,17 +296,17 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  if (right_value.value.value_type != ECMA_TYPE_OBJECT)
+  if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
   {
     ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value.value), ret_value);
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value.u.value), ret_value);
 
     ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
-    ecma_string_t *left_value_prop_name_p = ECMA_GET_POINTER (str_left_value.value.value);
-    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.value.value);
+    ecma_string_t *left_value_prop_name_p = ECMA_GET_POINTER (str_left_value.u.value.value);
+    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.u.value.value);
 
     if (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p))
     {

@@ -39,7 +39,7 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_abstract_equality_compare (left_value.value, right_value.value);
+  bool is_equal = ecma_op_abstract_equality_compare (left_value.u.value, right_value.u.value);
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
                                                                                  : ECMA_SIMPLE_VALUE_FALSE));
@@ -73,7 +73,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_abstract_equality_compare (left_value.value, right_value.value);
+  bool is_equal = ecma_op_abstract_equality_compare (left_value.u.value, right_value.u.value);
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
                                                                                  : ECMA_SIMPLE_VALUE_TRUE));
@@ -108,7 +108,7 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (left_value.value, right_value.value);
+  bool is_equal = ecma_op_strict_equality_compare (left_value.u.value, right_value.u.value);
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
                                                                                  : ECMA_SIMPLE_VALUE_FALSE));
@@ -142,7 +142,7 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (left_value.value, right_value.value);
+  bool is_equal = ecma_op_strict_equality_compare (left_value.u.value, right_value.u.value);
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
                                                                                  : ECMA_SIMPLE_VALUE_TRUE));

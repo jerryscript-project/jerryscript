@@ -81,7 +81,7 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
 
       ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.value.value);
+      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
       JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
       JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
 
@@ -189,7 +189,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       // sub_1.
       ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.value.value);
+      ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
       JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
       JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
 

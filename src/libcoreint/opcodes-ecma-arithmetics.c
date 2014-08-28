@@ -54,8 +54,8 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
   ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
 
   ecma_number_t *left_p, *right_p, *res_p;
-  left_p = (ecma_number_t*) ECMA_GET_POINTER (num_left_value.value.value);
-  right_p = (ecma_number_t*) ECMA_GET_POINTER (num_right_value.value.value);
+  left_p = (ecma_number_t*) ECMA_GET_POINTER (num_left_value.u.value.value);
+  right_p = (ecma_number_t*) ECMA_GET_POINTER (num_right_value.u.value.value);
 
   res_p = ecma_alloc_number ();
 
@@ -122,17 +122,17 @@ opfunc_addition (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (prim_left_value, ecma_op_to_primitive (left_value.value, ECMA_PREFERRED_TYPE_NO), ret_value);
-  ECMA_TRY_CATCH (prim_right_value, ecma_op_to_primitive (right_value.value, ECMA_PREFERRED_TYPE_NO), ret_value);
+  ECMA_TRY_CATCH (prim_left_value, ecma_op_to_primitive (left_value.u.value, ECMA_PREFERRED_TYPE_NO), ret_value);
+  ECMA_TRY_CATCH (prim_right_value, ecma_op_to_primitive (right_value.u.value, ECMA_PREFERRED_TYPE_NO), ret_value);
 
-  if (prim_left_value.value.value_type == ECMA_TYPE_STRING
-      || prim_right_value.value.value_type == ECMA_TYPE_STRING)
+  if (prim_left_value.u.value.value_type == ECMA_TYPE_STRING
+      || prim_right_value.u.value.value_type == ECMA_TYPE_STRING)
   {
-    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value.value), ret_value);
-    ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value.value), ret_value);
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value.u.value), ret_value);
+    ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value.u.value), ret_value);
 
-    ecma_string_t *string1_p = ECMA_GET_POINTER (str_left_value.value.value);
-    ecma_string_t *string2_p = ECMA_GET_POINTER (str_right_value.value.value);
+    ecma_string_t *string1_p = ECMA_GET_POINTER (str_left_value.u.value.value);
+    ecma_string_t *string2_p = ECMA_GET_POINTER (str_right_value.u.value.value);
 
     ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
 
@@ -148,8 +148,8 @@ opfunc_addition (opcode_t opdata, /**< operation data */
     ret_value = do_number_arithmetic (int_data,
                                       dst_var_idx,
                                       number_arithmetic_addition,
-                                      prim_left_value.value,
-                                      prim_right_value.value);
+                                      prim_left_value.u.value,
+                                      prim_right_value.u.value);
   }
 
   ECMA_FINALIZE (prim_right_value);
@@ -186,8 +186,8 @@ opfunc_substraction (opcode_t opdata, /**< operation data */
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_substraction,
-                                    left_value.value,
-                                    right_value.value);
+                                    left_value.u.value,
+                                    right_value.u.value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -221,8 +221,8 @@ opfunc_multiplication (opcode_t opdata, /**< operation data */
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_multiplication,
-                                    left_value.value,
-                                    right_value.value);
+                                    left_value.u.value,
+                                    right_value.u.value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -256,8 +256,8 @@ opfunc_division (opcode_t opdata, /**< operation data */
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_division,
-                                    left_value.value,
-                                    right_value.value);
+                                    left_value.u.value,
+                                    right_value.u.value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -291,8 +291,8 @@ opfunc_remainder (opcode_t opdata, /**< operation data */
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_remainder,
-                                    left_value.value,
-                                    right_value.value);
+                                    left_value.u.value,
+                                    right_value.u.value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);

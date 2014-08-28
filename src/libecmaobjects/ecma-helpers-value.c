@@ -285,14 +285,19 @@ ecma_free_value (ecma_value_t value, /**< value description */
  */
 ecma_completion_value_t
 ecma_make_completion_value (ecma_completion_type_t type, /**< type */
-                            ecma_value_t value, /**< value */
-                            uint8_t target) /**< target */
+                            ecma_value_t value) /**< value */
 {
+  JERRY_ASSERT (type == ECMA_COMPLETION_TYPE_NORMAL
+                || type == ECMA_COMPLETION_TYPE_THROW
+                || type == ECMA_COMPLETION_TYPE_RETURN
+                || type == ECMA_COMPLETION_TYPE_EXIT
+                || (type == ECMA_COMPLETION_TYPE_META
+                    && ecma_is_value_empty (value)));
+
   ecma_completion_value_t ret_value = (ecma_completion_value_t)
   {
     .type = type,
-    .value = value,
-    .target = target
+    .u.value = value,
   };
 
   return ret_value;
@@ -312,8 +317,7 @@ ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple
                || simple_value == ECMA_SIMPLE_VALUE_TRUE);
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_simple_value (simple_value),
-                                     ECMA_TARGET_ID_RESERVED);
+                                     ecma_make_simple_value (simple_value));
 } /* ecma_make_simple_completion_value */
 
 /**
@@ -329,8 +333,7 @@ ecma_make_throw_value (ecma_object_t *exception_p) /**< an object */
   ecma_value_t exception = ecma_make_object_value (exception_p);
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW,
-                                     exception,
-                                     ECMA_TARGET_ID_RESERVED);
+                                     exception);
 } /* ecma_make_throw_value */
 
 /**
@@ -342,8 +345,7 @@ ecma_completion_value_t
 ecma_make_empty_completion_value (void)
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY),
-                                     ECMA_TARGET_ID_RESERVED);
+                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_make_empty_completion_value */
 
 /**
@@ -354,9 +356,13 @@ ecma_make_empty_completion_value (void)
 ecma_completion_value_t
 ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value */
 {
+  JERRY_ASSERT (value.type == ECMA_COMPLETION_TYPE_NORMAL
+                || value.type == ECMA_COMPLETION_TYPE_THROW
+                || value.type == ECMA_COMPLETION_TYPE_RETURN
+                || value.type == ECMA_COMPLETION_TYPE_EXIT);
+
   return ecma_make_completion_value (value.type,
-                                     ecma_copy_value (value.value, true),
-                                     value.target);
+                                     ecma_copy_value (value.u.value, true));
 } /* ecma_copy_completion_value */
 
 /**
@@ -371,16 +377,16 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_THROW:
     case ECMA_COMPLETION_TYPE_RETURN:
     {
-      ecma_free_value (completion_value.value, true);
+      ecma_free_value (completion_value.u.value, true);
+      break;
+    }
+    case ECMA_COMPLETION_TYPE_EXIT:
+    {
+      JERRY_ASSERT(completion_value.u.value.value_type == ECMA_TYPE_SIMPLE);
       break;
     }
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
-    case ECMA_COMPLETION_TYPE_EXIT:
-    {
-      JERRY_ASSERT(completion_value.value.value_type == ECMA_TYPE_SIMPLE);
-      break;
-    }
     case ECMA_COMPLETION_TYPE_META:
     {
       JERRY_UNREACHABLE ();
@@ -437,8 +443,8 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
                                                                                      for equality with */
 {
   return (value.type == ECMA_COMPLETION_TYPE_NORMAL
-          && value.value.value_type == ECMA_TYPE_SIMPLE
-          && value.value.value == simple_value);
+          && value.u.value.value_type == ECMA_TYPE_SIMPLE
+          && value.u.value.value == simple_value);
 } /* ecma_is_completion_value_normal_simple_value */
 
 /**
@@ -478,7 +484,7 @@ bool
 ecma_is_empty_completion_value (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_is_completion_value_normal (value)
-          && ecma_is_value_empty (value.value));
+          && ecma_is_value_empty (value.u.value));
 } /* ecma_is_empty_completion_value */
 
 /**

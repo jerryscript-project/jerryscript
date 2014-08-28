@@ -85,7 +85,7 @@ run_int (void)
       ecma_finalize ();
       ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
-      return ecma_is_value_true (completion.value);
+      return ecma_is_value_true (completion.u.value);
     }
     case ECMA_COMPLETION_TYPE_BREAK:
     case ECMA_COMPLETION_TYPE_CONTINUE:
@@ -120,13 +120,8 @@ run_int_loop (int_data_t *int_data)
     }
     while (completion.type == ECMA_COMPLETION_TYPE_NORMAL);
 
-    if (completion.type == ECMA_COMPLETION_TYPE_BREAK)
-    {
-      JERRY_UNIMPLEMENTED ();
-
-      continue;
-    }
-    else if (completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
+    if (completion.type == ECMA_COMPLETION_TYPE_BREAK
+        || completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
     {
       JERRY_UNIMPLEMENTED ();
 
@@ -136,7 +131,7 @@ run_int_loop (int_data_t *int_data)
     if (completion.type == ECMA_COMPLETION_TYPE_META)
     {
       completion.type = ECMA_COMPLETION_TYPE_NORMAL;
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+      JERRY_ASSERT (ecma_is_empty_completion_value (completion));
     }
 
     return completion;

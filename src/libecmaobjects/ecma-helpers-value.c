@@ -373,7 +373,8 @@ ecma_make_throw_completion_value (ecma_value_t value) /**< value */
 ecma_completion_value_t
 ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object */
 {
-  JERRY_ASSERT(exception_p != NULL && !exception_p->is_lexical_environment);
+  JERRY_ASSERT(exception_p != NULL
+               && !ecma_is_lexical_environment (exception_p));
 
   ecma_value_t exception = ecma_make_object_value (exception_p);
 

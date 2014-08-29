@@ -302,7 +302,7 @@ typedef struct
   /**
    * Compressed pointer to next object in the global list of objects with same generation.
    */
-  unsigned int next : ECMA_POINTER_FIELD_WIDTH;
+  unsigned int next_cp : ECMA_POINTER_FIELD_WIDTH;
 
   /**
    * Marker that is set if the object was visited during graph traverse.
@@ -366,7 +366,7 @@ typedef enum
 typedef struct ecma_object_t
 {
   /** Compressed pointer to property list */
-  unsigned int properties_p : ECMA_POINTER_FIELD_WIDTH;
+  unsigned int properties_cp : ECMA_POINTER_FIELD_WIDTH;
 
   /** Flag indicating whether it is a general object (false)
        or a lexical environment (true) */
@@ -390,7 +390,7 @@ typedef struct ecma_object_t
       unsigned int type : 3;
 
       /** Compressed pointer to prototype object (ecma_object_t) */
-      unsigned int prototype_object_p : ECMA_POINTER_FIELD_WIDTH;
+      unsigned int prototype_object_cp : ECMA_POINTER_FIELD_WIDTH;
     } __packed object;
 
     /**
@@ -404,7 +404,7 @@ typedef struct ecma_object_t
       unsigned int type : 1;
 
       /** Compressed pointer to outer lexical environment */
-      unsigned int outer_reference_p : ECMA_POINTER_FIELD_WIDTH;
+      unsigned int outer_reference_cp : ECMA_POINTER_FIELD_WIDTH;
     } __packed lexical_environment;
 
   } __packed u;

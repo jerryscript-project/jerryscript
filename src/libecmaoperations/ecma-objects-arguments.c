@@ -182,7 +182,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     }
 
     // 12.
-    obj_p->u.object.type = ECMA_OBJECT_TYPE_ARGUMENTS;
+    ecma_set_object_type (obj_p, ECMA_OBJECT_TYPE_ARGUMENTS);
 
     ecma_property_t *parameters_map_prop_p = ecma_create_internal_property (obj_p,
                                                                             ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
@@ -274,7 +274,8 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
 {
   ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
   ecma_object_t *lex_env_p = ECMA_GET_POINTER (scope_prop_p->u.internal_property.value);
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
   ecma_value_t arg_name_prop_value = arg_name_prop_p->u.named_data_property.value;
 

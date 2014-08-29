@@ -1665,7 +1665,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
     ecma_object_t *bindings_p = ECMA_GET_POINTER (ref.base.value);
-    JERRY_ASSERT (bindings_p->is_lexical_environment);
+    JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
     ecma_completion_value_t completion = ecma_op_delete_binding (bindings_p, ref.referenced_name_p);
 
@@ -1725,7 +1725,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
 
     JERRY_ASSERT (obj_value.u.value.value_type == ECMA_TYPE_OBJECT);
     ecma_object_t *obj_p = ECMA_GET_POINTER (obj_value.u.value.value);
-    JERRY_ASSERT (!obj_p->is_lexical_environment);
+    JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
     ECMA_TRY_CATCH (delete_op_completion,
                     ecma_op_object_delete (obj_p, name_string_p, int_data->is_strict),

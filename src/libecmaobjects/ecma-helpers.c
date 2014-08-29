@@ -42,11 +42,11 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
   ecma_object_t *object_p = ecma_alloc_object ();
   ecma_init_gc_info (object_p);
 
-  object_p->properties_p = ECMA_NULL_POINTER;
+  object_p->properties_cp = ECMA_NULL_POINTER;
   object_p->is_lexical_environment = false;
 
   object_p->u.object.extensible = is_extensible;
-  ECMA_SET_POINTER(object_p->u.object.prototype_object_p, prototype_object_p);
+  ECMA_SET_POINTER(object_p->u.object.prototype_object_cp, prototype_object_p);
   object_p->u.object.type = type;
 
   return object_p;
@@ -71,9 +71,9 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
   new_lexical_environment_p->is_lexical_environment = true;
   new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
 
-  new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
+  new_lexical_environment_p->properties_cp = ECMA_NULL_POINTER;
 
-  ECMA_SET_POINTER(new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+  ECMA_SET_POINTER(new_lexical_environment_p->u.lexical_environment.outer_reference_cp, outer_lexical_environment_p);
 
   return new_lexical_environment_p;
 } /* ecma_create_decl_lex_env */
@@ -94,7 +94,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                             bool provide_this) /**< provideThis flag */
 {
   JERRY_ASSERT(binding_obj_p != NULL
-               && !binding_obj_p->is_lexical_environment);
+               && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
   ecma_init_gc_info (new_lexical_environment_p);
@@ -102,9 +102,9 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
   new_lexical_environment_p->is_lexical_environment = true;
   new_lexical_environment_p->u.lexical_environment.type = ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND;
 
-  new_lexical_environment_p->properties_p = ECMA_NULL_POINTER;
+  new_lexical_environment_p->properties_cp = ECMA_NULL_POINTER;
 
-  ECMA_SET_POINTER(new_lexical_environment_p->u.lexical_environment.outer_reference_p, outer_lexical_environment_p);
+  ECMA_SET_POINTER(new_lexical_environment_p->u.lexical_environment.outer_reference_cp, outer_lexical_environment_p);
 
   ecma_property_t *provide_this_prop_p = ecma_create_internal_property (new_lexical_environment_p,
                                                                         ECMA_INTERNAL_PROPERTY_PROVIDE_THIS);
@@ -120,6 +120,114 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 } /* ecma_create_object_lex_env */
 
 /**
+ * Check if the object is lexical environment.
+ */
+bool
+ecma_is_lexical_environment (ecma_object_t *object_p) /**< object or lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+
+  return object_p->is_lexical_environment;
+} /* ecma_is_lexical_environment */
+
+/**
+ * Get value of [[Extensible]] object's internal property.
+ */
+bool
+ecma_get_object_extensible (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  return object_p->u.object.extensible;
+} /* ecma_get_object_extensible */
+
+/**
+ * Set value of [[Extensible]] object's internal property.
+ */
+void
+ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
+                            bool is_extensible) /**< value of [[Extensible]] */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  object_p->u.object.extensible = is_extensible;
+} /* ecma_set_object_extensible */
+
+/**
+ * Get object's internal implementation-defined type.
+ */
+ecma_object_type_t
+ecma_get_object_type (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  return object_p->u.object.type;
+} /* ecma_get_object_type */
+
+/**
+ * Set object's internal implementation-defined type.
+ */
+void
+ecma_set_object_type (ecma_object_t *object_p, /**< object */
+                      ecma_object_type_t type) /**< type */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  object_p->u.object.type = type;
+} /* ecma_set_object_type */
+
+/**
+ * Get object's prototype.
+ */
+ecma_object_t*
+ecma_get_object_prototype (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  return (ecma_object_t*) ECMA_GET_POINTER (object_p->u.object.prototype_object_cp);
+} /* ecma_get_object_prototype */
+
+/**
+ * Get type of lexical environment.
+ */
+ecma_lexical_environment_type_t
+ecma_get_lex_env_type (ecma_object_t *object_p) /**< lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p));
+
+  return (ecma_lexical_environment_type_t) object_p->u.lexical_environment.type;
+} /* ecma_get_lex_env_type */
+
+/**
+ * Get outer reference of lexical environment.
+ */
+ecma_object_t*
+ecma_get_lex_env_outer_reference (ecma_object_t *object_p) /**< lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p));
+
+  return (ecma_object_t*) ECMA_GET_POINTER (object_p->u.lexical_environment.outer_reference_cp);
+} /* ecma_get_lex_env_outer_reference */
+
+/**
+ * Get object's/lexical environment's property list.
+ */
+ecma_property_t*
+ecma_get_property_list (ecma_object_t *object_p) /**< object or lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+
+  return (ecma_property_t*) ECMA_GET_POINTER (object_p->properties_cp);
+} /* ecma_get_property_list */
+
+/**
  * Create internal property in an object and link it into
  * the object's properties' linked-list (at start of the list).
  *
@@ -133,9 +241,9 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
 
   new_property_p->type = ECMA_PROPERTY_INTERNAL;
 
-  ecma_property_t *list_head_p = ECMA_GET_POINTER(object_p->properties_p);
+  ecma_property_t *list_head_p = ECMA_GET_POINTER(object_p->properties_cp);
   ECMA_SET_POINTER(new_property_p->next_property_p, list_head_p);
-  ECMA_SET_NON_NULL_POINTER(object_p->properties_p, new_property_p);
+  ECMA_SET_NON_NULL_POINTER(object_p->properties_cp, new_property_p);
 
   new_property_p->u.internal_property.type = property_id;
   new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
@@ -158,7 +266,7 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
   JERRY_ASSERT(property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
                && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE);
 
-  for (ecma_property_t *property_p = ECMA_GET_POINTER(object_p->properties_p);
+  for (ecma_property_t *property_p = ecma_get_property_list (object_p);
        property_p != NULL;
        property_p = ECMA_GET_POINTER(property_p->next_property_p))
   {
@@ -221,10 +329,10 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_data_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  ecma_property_t *list_head_p = ECMA_GET_POINTER(obj_p->properties_p);
+  ecma_property_t *list_head_p = ECMA_GET_POINTER(obj_p->properties_cp);
 
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
-  ECMA_SET_NON_NULL_POINTER(obj_p->properties_p, prop_p);
+  ECMA_SET_NON_NULL_POINTER(obj_p->properties_cp, prop_p);
 
   return prop_p;
 } /* ecma_create_named_data_property */
@@ -260,9 +368,9 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   prop_p->u.named_accessor_property.enumerable = enumerable;
   prop_p->u.named_accessor_property.configurable = configurable;
 
-  ecma_property_t *list_head_p = ECMA_GET_POINTER(obj_p->properties_p);
+  ecma_property_t *list_head_p = ECMA_GET_POINTER(obj_p->properties_cp);
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
-  ECMA_SET_NON_NULL_POINTER(obj_p->properties_p, prop_p);
+  ECMA_SET_NON_NULL_POINTER(obj_p->properties_cp, prop_p);
 
   return prop_p;
 } /* ecma_create_named_accessor_property */
@@ -280,7 +388,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
 
-  for (ecma_property_t *property_p = ECMA_GET_POINTER(obj_p->properties_p);
+  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
        property_p != NULL;
        property_p = ECMA_GET_POINTER(property_p->next_property_p))
   {
@@ -469,7 +577,7 @@ void
 ecma_delete_property (ecma_object_t *obj_p, /**< object */
                       ecma_property_t *prop_p) /**< property */
 {
-  for (ecma_property_t *cur_prop_p = ECMA_GET_POINTER(obj_p->properties_p), *prev_prop_p = NULL, *next_prop_p;
+  for (ecma_property_t *cur_prop_p = ECMA_GET_POINTER(obj_p->properties_cp), *prev_prop_p = NULL, *next_prop_p;
        cur_prop_p != NULL;
        prev_prop_p = cur_prop_p, cur_prop_p = next_prop_p)
   {
@@ -481,7 +589,7 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 
       if (prev_prop_p == NULL)
       {
-        ECMA_SET_POINTER(obj_p->properties_p, next_prop_p);
+        ECMA_SET_POINTER(obj_p->properties_cp, next_prop_p);
       }
       else
       {

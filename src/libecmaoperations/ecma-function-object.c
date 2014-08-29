@@ -97,10 +97,10 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
   ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
 
   JERRY_ASSERT(obj_p != NULL);
-  JERRY_ASSERT(!obj_p->is_lexical_environment);
+  JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
-  return (obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION
-          || obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 } /* ecma_op_is_callable */
 
 /**
@@ -120,10 +120,10 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
   ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
 
   JERRY_ASSERT(obj_p != NULL);
-  JERRY_ASSERT(!obj_p->is_lexical_environment);
+  JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
-  return (obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION
-          || obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 } /* ecma_is_constructor */
 
 /**
@@ -385,11 +385,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        ecma_value_t* arguments_list_p, /**< arguments list */
                        ecma_length_t arguments_list_len) /**< length of arguments list */
 {
-  JERRY_ASSERT(func_obj_p != NULL && !func_obj_p->is_lexical_environment);
+  JERRY_ASSERT(func_obj_p != NULL
+               && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
-  if (func_obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     ecma_completion_value_t ret_value;
 
@@ -463,7 +464,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
   else
   {
-    JERRY_ASSERT(func_obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+    JERRY_ASSERT(ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     JERRY_UNIMPLEMENTED();
   }
@@ -482,11 +483,12 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                             ecma_value_t* arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of arguments list */
 {
-  JERRY_ASSERT(func_obj_p != NULL && !func_obj_p->is_lexical_environment);
+  JERRY_ASSERT(func_obj_p != NULL
+               && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
-  if (func_obj_p->u.object.type == ECMA_OBJECT_TYPE_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     ecma_completion_value_t ret_value;
 
@@ -554,7 +556,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   }
   else
   {
-    JERRY_ASSERT(func_obj_p->u.object.type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+    JERRY_ASSERT(ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     JERRY_UNIMPLEMENTED();
   }

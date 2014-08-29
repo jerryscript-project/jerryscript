@@ -160,7 +160,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                                           ecma_property_descriptor_t property_desc, /**< property descriptor */
                                           bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
 
   // 1.

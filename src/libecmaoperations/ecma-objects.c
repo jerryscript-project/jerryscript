@@ -39,10 +39,11 @@ ecma_completion_value_t
 ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -82,10 +83,11 @@ ecma_property_t*
 ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                                  ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -125,10 +127,11 @@ ecma_property_t*
 ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -166,10 +169,11 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
                     ecma_value_t value, /**< ecma-value */
                     bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -205,10 +209,11 @@ bool
 ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
                         ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -244,10 +249,11 @@ bool
 ecma_op_object_has_property (ecma_object_t *obj_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -284,10 +290,11 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
                        ecma_string_t *property_name_p, /**< property name */
                        bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -327,9 +334,10 @@ ecma_completion_value_t
 ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
                               ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -367,10 +375,11 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                     ecma_property_descriptor_t property_desc, /**< property descriptor */
                                     bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {
@@ -407,9 +416,10 @@ ecma_completion_value_t
 ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
                              ecma_value_t value) /**< argument 'V' */
 {
-  JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
 
-  const ecma_object_type_t type = obj_p->u.object.type;
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
   switch (type)
   {

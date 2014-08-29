@@ -28,27 +28,29 @@
 static bool
 do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 {
-  bool ret;
+  bool ret = false;
 
-  if (ref.is_strict
-      && (ref.base.value_type == ECMA_TYPE_OBJECT)
-      && (ECMA_GET_POINTER (ref.base.value) != NULL)
-      && (((ecma_object_t*) ECMA_GET_POINTER (ref.base.value))->is_lexical_environment))
+  if (ref.is_strict)
   {
-    ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
-    ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+    if (ref.base.value_type == ECMA_TYPE_OBJECT)
+    {
+      ecma_object_t *obj_p = ECMA_GET_POINTER (ref.base.value);
 
-    ret = (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                    magic_string_eval) == 0
-           || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                       magic_string_arguments) == 0);
+      if (obj_p != NULL
+          && ecma_is_lexical_environment (obj_p))
+      {
+        ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
+        ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
 
-    ecma_deref_ecma_string (magic_string_eval);
-    ecma_deref_ecma_string (magic_string_arguments);
-  }
-  else
-  {
-    ret = false;
+        ret = (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                        magic_string_eval) == 0
+               || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
+                                                           magic_string_arguments) == 0);
+
+        ecma_deref_ecma_string (magic_string_eval);
+        ecma_deref_ecma_string (magic_string_arguments);
+      }
+    }
   }
 
   return ret;

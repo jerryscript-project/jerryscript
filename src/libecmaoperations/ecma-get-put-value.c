@@ -52,7 +52,7 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
                                    || base.value_type == ECMA_TYPE_NUMBER
                                    || base.value_type == ECMA_TYPE_STRING);
   const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
-                                && !((ecma_object_t*)ECMA_GET_POINTER(base.value))->is_lexical_environment);
+                                && !(ecma_is_lexical_environment ((ecma_object_t*)ECMA_GET_POINTER(base.value))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   // 3.
@@ -70,7 +70,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       // 4.b case 1
 
       ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
-      JERRY_ASSERT(obj_p != NULL && !obj_p->is_lexical_environment);
+      JERRY_ASSERT(obj_p != NULL
+                   && !ecma_is_lexical_environment (obj_p));
 
       return ecma_op_object_get (obj_p, ref.referenced_name_p);
     }
@@ -82,8 +83,9 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
       ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
-      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
-      JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
+      JERRY_ASSERT (obj_p != NULL
+                    && !ecma_is_lexical_environment (obj_p));
+      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL);
 
       ret_value = ecma_op_general_object_get (obj_p, ref.referenced_name_p);
 
@@ -96,7 +98,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
   {
     // 5
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
-    JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+    JERRY_ASSERT(lex_env_p != NULL
+                 && ecma_is_lexical_environment (lex_env_p));
 
     // 5.a
     return ecma_op_get_binding_value (lex_env_p, ref.referenced_name_p, ref.is_strict);
@@ -140,7 +143,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
                                    || base.value_type == ECMA_TYPE_NUMBER
                                    || base.value_type == ECMA_TYPE_STRING);
   const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
-                                && !((ecma_object_t*)ECMA_GET_POINTER(base.value))->is_lexical_environment);
+                                && !ecma_is_lexical_environment ((ecma_object_t*)ECMA_GET_POINTER(base.value)));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   // 3.
@@ -177,8 +180,9 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       // 4.b case 1
 
       ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
-      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
-      
+      JERRY_ASSERT (obj_p != NULL
+                    && !ecma_is_lexical_environment (obj_p));
+
       return ecma_op_object_put (obj_p, ref.referenced_name_p, value, ref.is_strict);
     }
     else
@@ -190,8 +194,9 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
       ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
-      JERRY_ASSERT (obj_p != NULL && !obj_p->is_lexical_environment);
-      JERRY_ASSERT (obj_p->u.object.type == ECMA_OBJECT_TYPE_GENERAL);
+      JERRY_ASSERT (obj_p != NULL
+                    && !ecma_is_lexical_environment (obj_p));
+      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL);
 
       // sub_2.
       if (!ecma_op_general_object_can_put (obj_p, ref.referenced_name_p))
@@ -239,7 +244,8 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
   {
     // 5.
     ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
-    JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+    JERRY_ASSERT(lex_env_p != NULL
+                 && ecma_is_lexical_environment (lex_env_p));
 
     // 5.a.
     return ecma_op_set_mutable_binding (lex_env_p, ref.referenced_name_p, value, ref.is_strict);

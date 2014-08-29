@@ -40,10 +40,10 @@ static ecma_object_t*
 ecma_get_lex_env_binding_object (ecma_object_t* obj_lex_env_p) /**< object lexical environment */
 {
   JERRY_ASSERT(obj_lex_env_p != NULL
-               && obj_lex_env_p->is_lexical_environment
-               && obj_lex_env_p->u.lexical_environment.type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
+               && ecma_is_lexical_environment (obj_lex_env_p)
+               && ecma_get_lex_env_type (obj_lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-  ecma_property_t *binding_obj_prop_p = ECMA_GET_POINTER(obj_lex_env_p->properties_p);
+  ecma_property_t *binding_obj_prop_p = ecma_get_property_list (obj_lex_env_p);
   JERRY_ASSERT(binding_obj_prop_p != NULL
                && binding_obj_prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
 
@@ -63,11 +63,12 @@ ecma_completion_value_t
 ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                      ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
   ecma_simple_value_t has_binding = ECMA_SIMPLE_VALUE_UNDEFINED;
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -110,10 +111,11 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
                                 ecma_string_t *name_p, /**< argument N */
                                 bool is_deletable) /**< argument D */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -182,12 +184,13 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
                              ecma_value_t value, /**< argument V */
                              bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
   JERRY_ASSERT(ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p, name_p)));
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -243,12 +246,13 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
                            ecma_string_t *name_p, /**< argument N */
                            bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
   JERRY_ASSERT(ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p, name_p)));
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -314,10 +318,11 @@ ecma_completion_value_t
 ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                         ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -368,9 +373,10 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 ecma_completion_value_t
 ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -409,9 +415,10 @@ void
 ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                   ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -453,9 +460,10 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
                                       ecma_string_t *name_p, /**< argument N */
                                       ecma_value_t value) /**< argument V */
 {
-  JERRY_ASSERT(lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
-  switch ((ecma_lexical_environment_type_t) lex_env_p->u.lexical_environment.type)
+  switch (ecma_get_lex_env_type (lex_env_p))
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
@@ -506,7 +514,8 @@ ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global ob
 bool
 ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT (lex_env_p != NULL && lex_env_p->is_lexical_environment);
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
 
   ecma_lexical_environment_type_t type = lex_env_p->u.lexical_environment.type;
 

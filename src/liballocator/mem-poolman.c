@@ -100,10 +100,9 @@ mem_pools_alloc (void)
   {
     /**
      * Space, at least for header and eight chunks.
-     *
-     * TODO: Config.
      */
-    size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + 8 * MEM_POOL_CHUNK_SIZE);
+    size_t pool_chunks_area_size = CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL * MEM_POOL_CHUNK_SIZE;
+    size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + pool_chunks_area_size);
 
     mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (pool_size, MEM_HEAP_ALLOC_LONG_TERM);
 

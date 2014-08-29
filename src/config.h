@@ -36,7 +36,12 @@
  *
  * Should not be less than size of any of ECMA Object Model's data types.
  */
-#define CONFIG_MEM_POOL_CHUNK_SIZE 16
+#define CONFIG_MEM_POOL_CHUNK_SIZE 8
+
+/**
+ * Minimum number of chunks in a pool allocated by pools' manager.
+ */
+#define CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL 32
 
 /**
  * Size of heap chunk

@@ -187,10 +187,12 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     ecma_property_t *parameters_map_prop_p = ecma_create_internal_property (obj_p,
                                                                             ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
     ECMA_SET_POINTER(parameters_map_prop_p->u.internal_property.value, map_p);
+    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, map_p);
 
     ecma_property_t *scope_prop_p = ecma_create_internal_property (map_p,
                                                                    ECMA_INTERNAL_PROPERTY_SCOPE);
     ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, lex_env_p);
+    ecma_gc_update_may_ref_younger_object_flag_by_object (map_p, lex_env_p);
 
     ecma_deref_object (map_p);
   }
@@ -364,6 +366,7 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
 
     ecma_free_value (desc_p->u.named_data_property.value, false);
     desc_p->u.named_data_property.value = ecma_copy_value (completion.u.value, false);
+    ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p, desc_p->u.named_data_property.value);
 
     ecma_free_completion_value (completion);
   }

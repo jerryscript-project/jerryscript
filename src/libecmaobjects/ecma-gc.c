@@ -514,6 +514,14 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
       {
         ecma_gc_mark (obj_iter_p, max_gen_to_collect);
       }
+#ifndef JERRY_NDEBUG
+      else
+      {
+        ecma_gc_set_object_may_ref_younger_objects (obj_iter_p, true);
+        ecma_gc_mark (obj_iter_p, max_gen_to_collect);
+        JERRY_ASSERT (!ecma_gc_is_object_may_ref_younger_objects (obj_iter_p));
+      }
+#endif /* !JERRY_NDEBUG */
     }
   }
 

@@ -200,8 +200,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
       {
         ecma_free_value (property_p->u.named_data_property.value, false);
         property_p->u.named_data_property.value = ecma_copy_value (value, false);
-
-        ecma_gc_update_may_ref_younger_object_flag_by_value (lex_env_p, value);
+        ecma_gc_update_may_ref_younger_object_flag_by_value (lex_env_p, property_p->u.named_data_property.value);
       }
       else if (is_strict)
       {
@@ -476,8 +475,7 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
                    && ecma_is_value_empty (prop_p->u.named_data_property.value));
 
       prop_p->u.named_data_property.value = ecma_copy_value (value, false);
-
-      ecma_gc_update_may_ref_younger_object_flag_by_value (lex_env_p, value);
+      ecma_gc_update_may_ref_younger_object_flag_by_value (lex_env_p, prop_p->u.named_data_property.value);
 
       return;
     }

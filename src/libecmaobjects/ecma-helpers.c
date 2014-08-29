@@ -160,7 +160,6 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
   ecma_property_t *binding_object_prop_p = ecma_create_internal_property (new_lexical_environment_p,
                                                                           ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
   ECMA_SET_POINTER(binding_object_prop_p->u.internal_property.value, binding_obj_p);
-
   ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_p, binding_obj_p);
 
   return new_lexical_environment_p;

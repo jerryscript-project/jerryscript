@@ -159,7 +159,6 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
   ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, scope_p);
-
   ecma_gc_update_may_ref_younger_object_flag_by_object (f, scope_p);
 
   // 10., 11.

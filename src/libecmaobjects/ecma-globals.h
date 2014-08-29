@@ -283,39 +283,6 @@ typedef struct ecma_property_t
 } ecma_property_t;
 
 /**
- * Description of GC's information layout
- */
-typedef struct
-{
-  /**
-   * Reference counter of the object.
-   *
-   *  Number of references to the object from stack variables.
-   */
-  unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
-
-  /**
-   * Identifier of GC generation.
-   */
-  unsigned int generation : 2;
-
-  /**
-   * Compressed pointer to next object in the global list of objects with same generation.
-   */
-  unsigned int next_cp : ECMA_POINTER_FIELD_WIDTH;
-
-  /**
-   * Marker that is set if the object was visited during graph traverse.
-   */
-  unsigned int visited : 1;
-
-  /**
-   * Flag indicating that the object may reference objects of younger generations in its properties.
-   */
-  unsigned int may_ref_younger_objects : 1;
-} __packed ecma_gc_info_t;
-
-/**
  * Types of lexical environments
  */
 typedef enum
@@ -363,57 +330,116 @@ typedef enum
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
-typedef struct ecma_object_t
+typedef struct
 {
-  /** Compressed pointer to property list */
-  unsigned int properties_cp : ECMA_POINTER_FIELD_WIDTH;
+/* Common part for objects and lexical environments */
 
-  /** Flag indicating whether it is a general object (false)
-       or a lexical environment (true) */
-  unsigned int is_lexical_environment : 1;
+/**
+ * Compressed pointer to property list
+ */
+#define ECMA_OBJECT_PROPERTIES_CP_POS   (0)
+#define ECMA_OBJECT_PROPERTIES_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
-  /**
-   * Attributes of either general object or lexical environment
-   * (depending on is_lexical_environment)
-   */
-  union
-  {
-    /**
-     * A general object's attributes (if !is_lexical_environment)
-     */
-    struct
-    {
-      /** Attribute 'Extensible' */
-      unsigned int extensible : 1;
+/**
+ * Flag indicating whether it is a general object (false)
+ * or a lexical environment (true)
+ */
+#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS (ECMA_OBJECT_PROPERTIES_CP_POS + \
+                                                ECMA_OBJECT_PROPERTIES_CP_WIDTH)
+#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH (1)
 
-      /** Implementation internal object type (ecma_object_type_t) */
-      unsigned int type : 3;
+/**
+ * Reference counter of the object, i.e. number of references
+ * to the object from stack variables.
+ */
+#define ECMA_OBJECT_GC_REFS_POS (ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS + \
+                                 ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH)
+#define ECMA_OBJECT_GC_REFS_WIDTH (CONFIG_ECMA_REFERENCE_COUNTER_WIDTH)
 
-      /** Compressed pointer to prototype object (ecma_object_t) */
-      unsigned int prototype_object_cp : ECMA_POINTER_FIELD_WIDTH;
-    } __packed object;
+/**
+ * Identifier of GC generation.
+ */
+#define ECMA_OBJECT_GC_GENERATION_POS (ECMA_OBJECT_GC_REFS_POS + \
+                                       ECMA_OBJECT_GC_REFS_WIDTH)
+#define ECMA_OBJECT_GC_GENERATION_WIDTH (2)
 
-    /**
-     * A lexical environment's attribute (if is_lexical_environment)
-     */
-    struct
-    {
-      /**
-       * Type of lexical environment (ecma_lexical_environment_type_t).
-       */
-      unsigned int type : 1;
+/**
+ * Compressed pointer to next object in the global list of objects with same generation.
+ */
+#define ECMA_OBJECT_GC_NEXT_CP_POS (ECMA_OBJECT_GC_GENERATION_POS + \
+                                    ECMA_OBJECT_GC_GENERATION_WIDTH)
+#define ECMA_OBJECT_GC_NEXT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
-      /** Compressed pointer to outer lexical environment */
-      unsigned int outer_reference_cp : ECMA_POINTER_FIELD_WIDTH;
-    } __packed lexical_environment;
+/**
+ * Marker that is set if the object was visited during graph traverse.
+ */
+#define ECMA_OBJECT_GC_VISITED_POS (ECMA_OBJECT_GC_NEXT_CP_POS + \
+                                    ECMA_OBJECT_GC_NEXT_CP_WIDTH)
+#define ECMA_OBJECT_GC_VISITED_WIDTH (1)
 
-  } __packed u;
+/**
+ * Flag indicating that the object may reference objects of younger generations in its properties.
+ */
+#define ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS (ECMA_OBJECT_GC_VISITED_POS + \
+                                                    ECMA_OBJECT_GC_VISITED_WIDTH)
+#define ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH (1)
 
-  /** GC's information */
-  ecma_gc_info_t gc_info;
 
-  FIXME(Remove aligned attribute after packing the struct)
-} __packed __attribute__ ((aligned (16))) ecma_object_t;
+/* Objects' only part */
+
+/**
+ * Attribute 'Extensible'
+ */
+#define ECMA_OBJECT_OBJ_EXTENSIBLE_POS (ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS + \
+                                        ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH)
+#define ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH (1)
+
+/**
+ * Implementation internal object type (ecma_object_type_t)
+ */
+#define ECMA_OBJECT_OBJ_TYPE_POS (ECMA_OBJECT_OBJ_EXTENSIBLE_POS + \
+                                  ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH)
+#define ECMA_OBJECT_OBJ_TYPE_WIDTH (3)
+
+/**
+ * Compressed pointer to prototype object (ecma_object_t)
+ */
+#define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS (ECMA_OBJECT_OBJ_TYPE_POS + \
+                                                 ECMA_OBJECT_OBJ_TYPE_WIDTH)
+#define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+
+/**
+ * Size of structure for objects
+ */
+#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
+                                   ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
+
+
+/* Lexical environments' only part */
+
+/**
+ * Type of lexical environment (ecma_lexical_environment_type_t).
+ */
+#define ECMA_OBJECT_LEX_ENV_TYPE_POS (ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS + \
+                                      ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH)
+#define ECMA_OBJECT_LEX_ENV_TYPE_WIDTH (1)
+
+/**
+ * Compressed pointer to outer lexical environment
+ */
+#define ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS (ECMA_OBJECT_LEX_ENV_TYPE_POS + \
+                                                    ECMA_OBJECT_LEX_ENV_TYPE_WIDTH)
+#define ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+
+/**
+ * Size of structure for lexical environments
+ */
+#define ECMA_OBJECT_LEX_ENV_TYPE_SIZE (ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS + \
+                                       ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH)
+
+  uint64_t container; /**< container for fields described above */
+} ecma_object_t;
+
 
 /**
  * Description of ECMA property descriptor

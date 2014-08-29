@@ -30,6 +30,7 @@
 #include "ecma-helpers.h"
 #include "globals.h"
 #include "jerry-libc.h"
+#include "jrt-bit-fields.h"
 
 /**
  * Global lists of objects sorted by generation identifier.
@@ -47,7 +48,9 @@ ecma_gc_get_object_refs (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return object_p->gc_info.refs;
+  return (uint32_t) jrt_extract_bit_field (object_p->container,
+                                           ECMA_OBJECT_GC_REFS_POS,
+                                           ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_get_object_refs */
 
 /**
@@ -59,9 +62,10 @@ ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  object_p->gc_info.refs = refs & ((1u << CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1);
-
-  JERRY_ASSERT (object_p->gc_info.refs == refs);
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 refs,
+                                                 ECMA_OBJECT_GC_REFS_POS,
+                                                 ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_set_object_refs */
 
 /**
@@ -72,7 +76,13 @@ ecma_gc_get_object_generation (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return object_p->gc_info.generation;
+  ecma_gc_gen_t ret = (ecma_gc_gen_t) jrt_extract_bit_field (object_p->container,
+                                                             ECMA_OBJECT_GC_GENERATION_POS,
+                                                             ECMA_OBJECT_GC_GENERATION_WIDTH);
+
+  JERRY_ASSERT (ret < ECMA_GC_GEN_COUNT);
+
+  return ret;
 } /* ecma_gc_get_object_generation */
 
 /**
@@ -85,7 +95,10 @@ ecma_gc_set_object_generation (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (generation < ECMA_GC_GEN_COUNT);
 
-  object_p->gc_info.generation = generation;
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 generation,
+                                                 ECMA_OBJECT_GC_GENERATION_POS,
+                                                 ECMA_OBJECT_GC_GENERATION_WIDTH);
 } /* ecma_gc_set_object_generation */
 
 /**
@@ -96,7 +109,12 @@ ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return ECMA_GET_POINTER (object_p->gc_info.next_cp);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  uintptr_t next_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+                                                         ECMA_OBJECT_GC_NEXT_CP_POS,
+                                                         ECMA_OBJECT_GC_NEXT_CP_WIDTH);
+
+  return ECMA_GET_POINTER (next_cp);
 } /* ecma_gc_get_object_next */
 
 /**
@@ -108,7 +126,14 @@ ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  ECMA_SET_POINTER (object_p->gc_info.next_cp, next_object_p);
+  uintptr_t next_cp;
+  ECMA_SET_POINTER (next_cp, next_object_p);
+
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 next_cp,
+                                                 ECMA_OBJECT_GC_NEXT_CP_POS,
+                                                 ECMA_OBJECT_GC_NEXT_CP_WIDTH);
 } /* ecma_gc_set_object_next */
 
 /**
@@ -119,7 +144,9 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return object_p->gc_info.visited;
+  return jrt_extract_bit_field (object_p->container,
+                                ECMA_OBJECT_GC_VISITED_POS,
+                                ECMA_OBJECT_GC_VISITED_WIDTH);
 } /* ecma_gc_is_object_visited */
 
 /**
@@ -131,7 +158,10 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  object_p->gc_info.visited = is_visited;
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 is_visited,
+                                                 ECMA_OBJECT_GC_VISITED_POS,
+                                                 ECMA_OBJECT_GC_VISITED_WIDTH);
 } /* ecma_gc_set_object_visited */
 
 /**
@@ -142,7 +172,9 @@ ecma_gc_is_object_may_ref_younger_objects (ecma_object_t *object_p) /**< object 
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return object_p->gc_info.may_ref_younger_objects;
+  return jrt_extract_bit_field (object_p->container,
+                                ECMA_OBJECT_GC_REFS_POS,
+                                ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_is_object_may_ref_younger_objects */
 
 /**
@@ -154,7 +186,10 @@ ecma_gc_set_object_may_ref_younger_objects (ecma_object_t *object_p, /**< object
 {
   JERRY_ASSERT (object_p != NULL);
 
-  object_p->gc_info.may_ref_younger_objects = is_may_ref_younger_objects;
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 is_may_ref_younger_objects,
+                                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
+                                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH);
 } /* ecma_gc_set_object_may_ref_younger_objects */
 
 /**
@@ -362,9 +397,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           }
 
           case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
-                                                    (see above in the routine) */
+                                                      (see above in the routine) */
           case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
-                                                     (see above in the routine) */
+                                                       (see above in the routine) */
           {
             JERRY_UNREACHABLE();
           }

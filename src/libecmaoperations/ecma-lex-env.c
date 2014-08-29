@@ -517,7 +517,7 @@ ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical envir
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
-  ecma_lexical_environment_type_t type = lex_env_p->u.lexical_environment.type;
+  ecma_lexical_environment_type_t type = ecma_get_lex_env_type (lex_env_p);
 
   bool ret_value = false;
 

@@ -203,9 +203,52 @@ ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 
    /* IEEE-754 2008, 3.4, a */
 
-  return ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+  return ((biased_exp == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
           && (fraction != 0));
 } /* ecma_number_is_nan */
+
+/**
+ * Make a NaN.
+ *
+ * @return NaN value
+ */
+ecma_number_t
+ecma_number_make_nan (void)
+{
+  union
+  {
+    ecma_number_fields_t fields;
+    ecma_number_t value;
+  } u;
+
+  u.fields.biased_exp = (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1;
+  u.fields.fraction = 1;
+  u.fields.sign = 0;
+
+  return u.value;
+} /* ecma_number_make_nan */
+
+/**
+ * Make an Infinity.
+ *
+ * @return if !sign - +Infinity value,
+ *         else - -Infinity value.
+ */
+ecma_number_t
+ecma_number_make_infinity (bool sign)
+{
+  union
+  {
+    ecma_number_fields_t fields;
+    ecma_number_t value;
+  } u;
+
+  u.fields.biased_exp = (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1;
+  u.fields.fraction = 0;
+  u.fields.sign = sign;
+
+  return u.value;
+} /* ecma_number_make_infinity */
 
 /**
  * Check if ecma-number is negative

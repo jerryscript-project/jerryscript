@@ -112,6 +112,8 @@ extern bool ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string
                                                      const ecma_string_t *string2_p);
 
 /* ecma-helpers-number.c */
+extern ecma_number_t ecma_number_make_nan (void);
+extern ecma_number_t ecma_number_make_infinity (bool sign);
 extern bool ecma_number_is_nan (ecma_number_t num);
 extern bool ecma_number_is_negative (ecma_number_t num);
 extern bool ecma_number_is_zero (ecma_number_t num);
@@ -206,7 +208,7 @@ extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 
 /* ecma-helpers-conversion.c */
 extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);
-extern ecma_length_t ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, ssize_t buffer_size);
+extern ssize_t ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, ssize_t buffer_size);
 extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
 extern int32_t ecma_number_to_int32 (ecma_number_t value);
 extern ecma_number_t ecma_int32_to_number (int32_t value);

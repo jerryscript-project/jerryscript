@@ -344,20 +344,41 @@ ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple
 } /* ecma_make_simple_completion_value */
 
 /**
+ * Normal completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_normal_completion_value (ecma_value_t value) /**< value */
+{
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, value);
+} /* ecma_make_normal_completion_value */
+
+/**
+ * Throw completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_throw_completion_value (ecma_value_t value) /**< value */
+{
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW, value);
+} /* ecma_make_throw_completion_value */
+
+/**
  * Throw completion value constructor.
  *
  * @return 'throw' completion value
  */
 ecma_completion_value_t
-ecma_make_throw_value (ecma_object_t *exception_p) /**< an object */
+ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object */
 {
   JERRY_ASSERT(exception_p != NULL && !exception_p->is_lexical_environment);
 
   ecma_value_t exception = ecma_make_object_value (exception_p);
 
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW,
-                                     exception);
-} /* ecma_make_throw_value */
+  return ecma_make_throw_completion_value (exception);
+} /* ecma_make_throw_obj_completion_value */
 
 /**
  * Empty completion value constructor.
@@ -370,6 +391,44 @@ ecma_make_empty_completion_value (void)
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_make_empty_completion_value */
+
+/**
+ * Return completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_return_completion_value (ecma_value_t value) /**< value */
+{
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN, value);
+} /* ecma_make_return_completion_value */
+
+/**
+ * Exit completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_exit_completion_value (bool is_successful) /**< does completion value indicate
+                                                          successfulness completion
+                                                          of script execution (true) or not (false) */
+{
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
+                                     ecma_make_simple_value (is_successful ? ECMA_SIMPLE_VALUE_TRUE
+                                                                           : ECMA_SIMPLE_VALUE_FALSE));
+} /* ecma_make_exit_completion_value */
+
+/**
+ * Meta completion value constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_make_meta_completion_value (void)
+{
+  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
+                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
+} /* ecma_make_meta_completion_value */
 
 /**
  * Copy ecma-completion value.
@@ -454,6 +513,48 @@ ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion 
 } /* ecma_is_completion_value_return */
 
 /**
+ * Check if the completion value is exit value.
+ *
+ * @return true - if the completion type is exit,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion value */
+{
+  if (value.type == ECMA_COMPLETION_TYPE_EXIT)
+  {
+    JERRY_ASSERT (ecma_is_value_boolean (value.u.value));
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+} /* ecma_is_completion_value_exit */
+
+/**
+ * Check if the completion value is meta value.
+ *
+ * @return true - if the completion type is meta,
+ *         false - otherwise.
+ */
+bool
+ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion value */
+{
+  if (value.type == ECMA_COMPLETION_TYPE_META)
+  {
+    JERRY_ASSERT (ecma_is_value_empty (value.u.value));
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+} /* ecma_is_completion_value_meta */
+
+/**
  * Check if the completion value is specified normal simple value.
  *
  * @return true - if the completion type is normal and
@@ -465,7 +566,7 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
                                               ecma_simple_value_t simple_value) /**< simple value to check
                                                                                      for equality with */
 {
-  return (value.type == ECMA_COMPLETION_TYPE_NORMAL
+  return (ecma_is_completion_value_normal (value)
           && value.u.value.value_type == ECMA_TYPE_SIMPLE
           && value.u.value.value == simple_value);
 } /* ecma_is_completion_value_normal_simple_value */
@@ -504,11 +605,11 @@ ecma_is_completion_value_normal_false (ecma_completion_value_t value) /**< compl
  *         false - otherwise.
  */
 bool
-ecma_is_empty_completion_value (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_empty (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_is_completion_value_normal (value)
           && ecma_is_value_empty (value.u.value));
-} /* ecma_is_empty_completion_value */
+} /* ecma_is_completion_value_empty */
 
 /**
  * @}

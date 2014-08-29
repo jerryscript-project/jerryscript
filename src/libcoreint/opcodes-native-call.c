@@ -48,7 +48,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
                                                                arg_values,
                                                                &args_read);
 
-  if (ecma_is_empty_completion_value (get_arg_completion))
+  if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number);
 

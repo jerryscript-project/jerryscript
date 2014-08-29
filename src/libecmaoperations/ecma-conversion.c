@@ -50,7 +50,7 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
       if (ecma_is_value_undefined (value)
           || ecma_is_value_null (value))
       {
-        return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
       }
       else if (ecma_is_value_boolean (value))
       {
@@ -167,8 +167,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
     case ECMA_TYPE_NUMBER:
     case ECMA_TYPE_STRING:
     {
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true));
+      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
     }
 
     case ECMA_TYPE_OBJECT:
@@ -260,8 +259,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
   {
     case ECMA_TYPE_NUMBER:
     {
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true));
+      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
     }
     case ECMA_TYPE_SIMPLE:
     case ECMA_TYPE_STRING:
@@ -372,8 +370,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
     }
   }
 
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_make_string_value (res_p));
+  return ecma_make_normal_completion_value (ecma_make_string_value (res_p));
 } /* ecma_op_to_string */
 
 /**
@@ -399,8 +396,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
 
     case ECMA_TYPE_OBJECT:
     {
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true));
+      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
     }
   }
 

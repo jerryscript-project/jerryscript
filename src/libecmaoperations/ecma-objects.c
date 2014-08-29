@@ -418,7 +418,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:

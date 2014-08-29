@@ -41,7 +41,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -212,7 +212,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     // d.
     if (ecma_uint32_to_number (new_len_uint32) != new_len_num)
     {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
     }
     else
     {

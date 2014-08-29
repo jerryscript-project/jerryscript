@@ -82,7 +82,7 @@ opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
 
   if (!ecma_op_is_callable (func_value.u.value))
   {
-    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -134,16 +134,14 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   {
     case OPCODE_ARG_TYPE_SIMPLE:
     {
-      get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                         ecma_make_simple_value (src_val_descr));
+      get_value_completion = ecma_make_simple_completion_value (src_val_descr);
       break;
     }
     case OPCODE_ARG_TYPE_STRING:
     {
       ecma_string_t *ecma_string_p = ecma_new_ecma_string_from_lit_index (src_val_descr);
 
-      get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                         ecma_make_string_value (ecma_string_p));
+      get_value_completion = ecma_make_normal_completion_value (ecma_make_string_value (ecma_string_p));
       break;
     }
     case OPCODE_ARG_TYPE_VARIABLE:
@@ -159,8 +157,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = deserialize_num_by_id (src_val_descr);
 
-      get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                         ecma_make_number_value (num_p));
+      get_value_completion = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
       break;
     }
     case OPCODE_ARG_TYPE_SMALLINT:
@@ -168,8 +165,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = src_val_descr;
 
-      get_value_completion = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                                         ecma_make_number_value (num_p));
+      get_value_completion = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
       break;
     }
   }
@@ -232,7 +228,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    new_num_value);
-  JERRY_ASSERT (ecma_is_empty_completion_value (reg_assignment_res));
+  JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ecma_dealloc_number (new_num_p);
 
@@ -282,7 +278,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    new_num_value);
-  JERRY_ASSERT (ecma_is_empty_completion_value (reg_assignment_res));
+  JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ecma_dealloc_number (new_num_p);
 
@@ -332,7 +328,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    old_value.u.value);
-  JERRY_ASSERT (ecma_is_empty_completion_value (reg_assignment_res));
+  JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_FINALIZE (old_num_value);
   ECMA_FINALIZE (old_value);
@@ -380,7 +376,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
                                                                    old_value.u.value);
-  JERRY_ASSERT (ecma_is_empty_completion_value (reg_assignment_res));
+  JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_FINALIZE (old_num_value);
   ECMA_FINALIZE (old_value);
@@ -424,7 +420,7 @@ opfunc_var_decl (opcode_t opdata, /**< operation data */
                                                                          var_name_string_p,
                                                                          is_configurable_bindings);
 
-    JERRY_ASSERT (ecma_is_empty_completion_value (completion));
+    JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 
     /* Skipping SetMutableBinding as we have already checked that there were not
      * any binding with specified name in current lexical environment
@@ -692,7 +688,7 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
 
   if (!ecma_op_is_callable (func_value.u.value))
   {
-    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -744,7 +740,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
                                                                arg_values,
                                                                &args_read);
 
-  if (ecma_is_empty_completion_value (get_arg_completion))
+  if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number);
 
@@ -767,7 +763,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
     if (!ecma_op_is_callable (func_value.u.value))
     {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
@@ -833,13 +829,13 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
                                                                arg_values,
                                                                &args_read);
 
-  if (ecma_is_empty_completion_value (get_arg_completion))
+  if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number);
 
     if (!ecma_is_constructor (constructor_value.u.value))
     {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
@@ -902,7 +898,7 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
                                                                arg_values,
                                                                &args_read);
 
-  if (ecma_is_empty_completion_value (get_arg_completion))
+  if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number);
 
@@ -961,7 +957,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
   {
     ecma_completion_value_t evaluate_prop_completion = run_int_loop (int_data);
 
-    if (evaluate_prop_completion.type == ECMA_COMPLETION_TYPE_META)
+    if (ecma_is_completion_value_meta (evaluate_prop_completion))
     {
       opcode_t next_opcode = read_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
@@ -1071,7 +1067,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
     }
   }
 
-  if (ecma_is_empty_completion_value (completion))
+  if (ecma_is_completion_value_empty (completion))
   {
     ret_value = set_variable_value (int_data, lhs_var_idx, ecma_make_object_value (obj_p));
   }
@@ -1097,8 +1093,7 @@ ecma_completion_value_t
 opfunc_ret (opcode_t opdata __unused, /**< operation data */
             int_data_t *int_data __unused) /**< interpreter context */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
-                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  return ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 } /* opfunc_ret */
 
 /**
@@ -1118,8 +1113,7 @@ opfunc_retval (opcode_t opdata __unused, /**< operation data */
 
   ECMA_TRY_CATCH (expr_val, get_variable_value (int_data, opdata.data.retval.ret_value, false), ret_value);
 
-  ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN,
-                                          ecma_copy_value (expr_val.u.value, true));
+  ret_value = ecma_make_return_completion_value (ecma_copy_value (expr_val.u.value, true));
 
   ECMA_FINALIZE (expr_val);
 
@@ -1238,10 +1232,7 @@ opfunc_exitval (opcode_t opdata, /**< operation data */
   JERRY_ASSERT (opdata.data.exitval.status_code == 0
                 || opdata.data.exitval.status_code == 1);
 
-  ecma_value_t exit_status = ecma_make_simple_value (opdata.data.exitval.status_code == 0 ? ECMA_SIMPLE_VALUE_TRUE
-                                                     : ECMA_SIMPLE_VALUE_FALSE);
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
-                                     exit_status);
+  return ecma_make_exit_completion_value (opdata.data.exitval.status_code == 0);
 } /* opfunc_exitval */
 
 /**
@@ -1432,7 +1423,7 @@ opfunc_with (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t evaluation_completion = run_int_loop (int_data);
 
-  if (evaluation_completion.type == ECMA_COMPLETION_TYPE_META)
+  if (ecma_is_completion_value_meta (evaluation_completion))
   {
     opcode_t meta_opcode = read_opcode (int_data->pos);
     JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
@@ -1481,8 +1472,7 @@ opfunc_throw (opcode_t opdata, /**< operation data */
                                       false),
                   ret_value);
 
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW,
-                                     ecma_copy_value (var_value.u.value, true));
+  return ecma_make_throw_completion_value (ecma_copy_value (var_value.u.value, true));
 
   ECMA_FINALIZE (var_value);
 
@@ -1665,7 +1655,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   if (ref.is_strict)
   {
-    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
   }
   else if (ecma_is_value_undefined (ref.base))
   {
@@ -1722,7 +1712,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   {
     if (int_data->is_strict)
     {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
     }
     else
     {
@@ -1774,8 +1764,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     case OPCODE_META_TYPE_FINALLY:
     case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
     {
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
-                                         ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
+      return ecma_make_meta_completion_value ();
     }
     case OPCODE_META_TYPE_UNDEFINED:
     case OPCODE_META_TYPE_THIS_ARG:

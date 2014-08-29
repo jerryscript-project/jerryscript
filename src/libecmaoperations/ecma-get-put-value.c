@@ -58,7 +58,7 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
   // 3.
   if (is_unresolvable_reference)
   {
-    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
   }
 
   // 4.
@@ -114,7 +114,7 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -149,7 +149,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
     // 3.a.
     if (ref.is_strict)
     {
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
     }
     else
     {

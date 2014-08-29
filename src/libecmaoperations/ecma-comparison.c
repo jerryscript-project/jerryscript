@@ -244,13 +244,11 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 
     if (*num_x_p >= *num_y_p)
     {
-      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
     }
     else
     {
-      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE));
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
     }
 
     ECMA_FINALIZE(ny);

@@ -87,8 +87,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
-    ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                            ecma_copy_value (reg_value, true));
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (reg_value, true));
   }
   else
   {
@@ -103,7 +102,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
     if (unlikely (do_eval_or_arguments_check
                   && do_strict_eval_arguments_check (ref)))
     {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
     }
     else
     {
@@ -155,7 +154,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
 
     if (unlikely (do_strict_eval_arguments_check (ref)))
     {
-      ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
     }
     else
     {

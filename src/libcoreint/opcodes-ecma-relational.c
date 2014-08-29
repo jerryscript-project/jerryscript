@@ -253,7 +253,7 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
 
   if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
   {
-    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -298,7 +298,7 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
 
   if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
   {
-    ret_value = ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {

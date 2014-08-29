@@ -40,7 +40,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
@@ -84,8 +84,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
     case ECMA_TYPE_OBJECT:
     {
       // 1.a
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_copy_value (value, true));
+      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
     }
     case ECMA_TYPE_NUMBER:
     case ECMA_TYPE_STRING:
@@ -107,8 +106,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
 
       ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-      return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                         ecma_make_object_value (obj_p));
+      return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
     }
   }
 
@@ -144,8 +142,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   // 3.
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
-    return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                       ecma_copy_value (prop_p->u.named_data_property.value, true));
+    return ecma_make_normal_completion_value (ecma_copy_value (prop_p->u.named_data_property.value, true));
   }
   else
   {
@@ -168,8 +165,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
                                                  0),
                           ret_value);
 
-      ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                              ecma_copy_value (call_completion.u.value, true));
+      ret_value = ecma_make_normal_completion_value (ecma_copy_value (call_completion.u.value, true));
 
       ECMA_FINALIZE (call_completion);
 
@@ -265,7 +261,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     if (is_throw)
     {
       // a.
-      return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
@@ -523,7 +519,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   else if (is_throw)
   {
     // 4.
-    return ecma_make_throw_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {

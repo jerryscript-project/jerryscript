@@ -116,9 +116,9 @@ run_int_loop (int_data_t *int_data)
       completion = __opfuncs[curr->op_idx] (*curr, int_data);
 
       JERRY_ASSERT (!ecma_is_completion_value_normal (completion)
-                    || ecma_is_empty_completion_value (completion));
+                    || ecma_is_completion_value_empty (completion));
     }
-    while (completion.type == ECMA_COMPLETION_TYPE_NORMAL);
+    while (ecma_is_completion_value_normal (completion));
 
     if (completion.type == ECMA_COMPLETION_TYPE_BREAK
         || completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
@@ -128,10 +128,9 @@ run_int_loop (int_data_t *int_data)
       continue;
     }
 
-    if (completion.type == ECMA_COMPLETION_TYPE_META)
+    if (ecma_is_completion_value_meta (completion))
     {
-      completion.type = ECMA_COMPLETION_TYPE_NORMAL;
-      JERRY_ASSERT (ecma_is_empty_completion_value (completion));
+      completion = ecma_make_empty_completion_value ();
     }
 
     return completion;

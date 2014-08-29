@@ -19,7 +19,7 @@
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaobjectsinternalops ECMA objects' operations

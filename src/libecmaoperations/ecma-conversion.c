@@ -24,7 +24,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jerry-libc.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaconversion ECMA conversion routines

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaalloc Routines for allocation/freeing memory for ECMA data types

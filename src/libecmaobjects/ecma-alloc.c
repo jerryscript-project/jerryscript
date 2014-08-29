@@ -31,7 +31,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaalloc Routines for allocation/freeing memory for ECMA data types

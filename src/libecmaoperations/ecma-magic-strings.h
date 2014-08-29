@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmamagicstrings Collection of magic string constants used in ECMA

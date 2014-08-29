@@ -22,7 +22,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmageneralobjectsinternalops General ECMA objects' operations

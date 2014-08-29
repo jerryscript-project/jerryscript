@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaarrayobject ECMA Array object related routines

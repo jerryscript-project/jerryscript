@@ -16,7 +16,7 @@
 #ifndef ECMA_REFERENCE_H
 #define ECMA_REFERENCE_H
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  */
 

@@ -28,7 +28,7 @@
 #include "ecma-operations.h"
 #include "ecma-try-catch-macro.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaoperations ECMA-defined operations

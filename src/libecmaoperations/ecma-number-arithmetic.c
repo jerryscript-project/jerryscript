@@ -16,7 +16,7 @@
 #include "ecma-globals.h"
 #include "ecma-number-arithmetic.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  */
 

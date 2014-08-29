@@ -22,7 +22,7 @@
 #include "ecma-objects.h"
 #include "globals.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  */
 

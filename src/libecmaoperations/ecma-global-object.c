@@ -20,7 +20,7 @@
 #include "ecma-helpers.h"
 #include "ecma-magic-strings.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaglobalobject ECMA Global object related routines

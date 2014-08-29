@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "interpreter.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmafunctionobject ECMA Function object related routines

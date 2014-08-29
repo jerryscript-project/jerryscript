@@ -26,7 +26,7 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmafunctionobject ECMA Function object related routines

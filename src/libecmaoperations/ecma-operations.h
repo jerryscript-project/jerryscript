@@ -20,7 +20,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-reference.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaoperations ECMA-defined operations

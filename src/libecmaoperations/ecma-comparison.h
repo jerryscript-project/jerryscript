@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 
-/** \addtogroup ecma ---TODO---
+/** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmacomparison ECMA comparison

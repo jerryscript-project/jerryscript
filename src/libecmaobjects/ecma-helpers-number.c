@@ -347,7 +347,7 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
 
   *out_fraction_p = fraction;
   *out_exponent_p = exponent;
-  return ECMA_NUMBER_FRACTION_WIDTH + 1;
+  return ECMA_NUMBER_FRACTION_WIDTH;
 } /* ecma_number_get_fraction_and_exponent */
 
 /**

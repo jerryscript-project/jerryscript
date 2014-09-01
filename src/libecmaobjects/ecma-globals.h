@@ -528,6 +528,11 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_ONE  ((ecma_number_t) 1)
 
 /**
+ * Null character (zt-string end marker)
+ */
+#define ECMA_CHAR_NULL  ((ecma_char_t) '\0')
+
+/**
  * Maximum number of characters in string representation of ecma-number
  */
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER 64

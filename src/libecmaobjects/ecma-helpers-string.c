@@ -427,7 +427,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     {
       const ecma_char_t *str_p = deserialize_string_by_id ((idx_t) string_desc_p->u.lit_index);
       JERRY_ASSERT (str_p != NULL);
-      __strncpy ((char*)buffer_p, (const char*)str_p, string_desc_p->length + 1u);
+
+      ecma_copy_zt_string_to_buffer (str_p, buffer_p, required_buffer_size);
       JERRY_ASSERT (__strlen ((char*)buffer_p) == string_desc_p->length);
 
       bytes_copied = (ssize_t) ((string_desc_p->length + 1u) * sizeof (ecma_char_t));
@@ -767,12 +768,78 @@ bool
 ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-terminated string */
                                      const ecma_char_t *string2_p) /**< zero-terminated string */
 {
-  TODO (Implement comparison that supports UTF-16);
+  const ecma_char_t *iter_1_p = string1_p;
+  const ecma_char_t *iter_2_p = string2_p;
 
-  return (__strcmp ( (char*)string1_p, (char*)string2_p) == 0);
+  while (*iter_1_p != ECMA_CHAR_NULL)
+  {
+    if (*iter_1_p++ != *iter_2_p++)
+    {
+      return false;
+    }
+  }
+
+  return (*iter_2_p == ECMA_CHAR_NULL);
 } /* ecma_compare_zt_string_to_zt_string */
 
 /**
+ * Copy zero-terminated string to buffer
+ *
+ * Warning:
+ *         the routine requires that buffer size is enough
+ *
+ * @return number of bytes copied
+ */
+ssize_t
+ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, /**< zero-terminated string */
+                               ecma_char_t *buffer_p, /**< destination buffer */
+                               ssize_t buffer_size) /**< size of buffer */
+{
+  const ecma_char_t *str_iter_p = string_p;
+  ecma_char_t *buf_iter_p = buffer_p;
+  ssize_t bytes_copied = 0;
+
+  do
+  {
+    bytes_copied += (ssize_t) sizeof (ecma_char_t);
+    JERRY_ASSERT (bytes_copied <= buffer_size);
+
+    *buf_iter_p++ = *str_iter_p++;
+  }
+  while (*str_iter_p != ECMA_CHAR_NULL);
+
+  bytes_copied += (ssize_t) sizeof (ecma_char_t);
+  JERRY_ASSERT (bytes_copied <= buffer_size);
+
+  *buf_iter_p = ECMA_CHAR_NULL;
+
+  return bytes_copied;
+} /* ecma_copy_zt_string_to_buffer */
+
+/**
+ * Calculate zero-terminated string's length
+ *
+ * @return length of string
+ */
+ecma_length_t
+ecma_zt_string_length (const ecma_char_t *string_p) /**< zero-terminated string */
+{
+  const ecma_char_t *str_iter_p = string_p;
+
+  ecma_length_t length = 0;
+
+  while (*str_iter_p++)
+  {
+    length++;
+
+    /* checking overflow */
+    JERRY_ASSERT (length != 0);
+  }
+
+  return length;
+} /* ecma_zt_string_length */
+
+ /**
  * @}
  * @}
  */

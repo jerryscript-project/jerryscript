@@ -227,7 +227,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
     {
       ecma_string_t *str_p = ECMA_GET_POINTER(value.value);
 
-      return ecma_make_simple_completion_value ((str_p->length == 0) ? ECMA_SIMPLE_VALUE_FALSE
+      return ecma_make_simple_completion_value ((ecma_string_get_length (str_p) == 0) ? ECMA_SIMPLE_VALUE_FALSE
                                                 : ECMA_SIMPLE_VALUE_TRUE);
 
       break;

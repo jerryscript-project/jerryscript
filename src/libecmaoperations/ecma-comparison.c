@@ -34,10 +34,12 @@
  * @return true - if values are equal,
  *         false - otherwise.
  */
-bool
+ecma_completion_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                    ecma_value_t y) /**< second operand */
 {
+  ecma_completion_value_t ret_value;
+
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
   const bool is_x_boolean = ecma_is_value_boolean (x);
@@ -67,7 +69,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
         || is_x_null)
     {
       // a., b.
-      return true;
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
     }
     else if (is_x_number)
     { // c.
@@ -76,35 +78,45 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
       TODO(Implement according to ECMA);
 
-      return (x_num == y_num);
+      bool is_equal = (x_num == y_num);
+
+      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else if (is_x_string)
     { // d.
       ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
       ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
 
-      return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+      bool is_equal = ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+
+      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else if (is_x_boolean)
     { // e.
-      return (x.value == y.value);
+      bool is_equal = (x.value == y.value);
+
+      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else
     { // f.
       JERRY_ASSERT(is_x_object);
 
-      return (x.value == y.value);
+      bool is_equal = (x.value == y.value);
+
+      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
   }
   else if ((is_x_null && is_y_undefined)
-             || (is_x_undefined && is_y_null))
+           || (is_x_undefined && is_y_null))
   { // 2., 3.
-    return true;
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
   else
   {
     JERRY_UNIMPLEMENTED();
   }
+
+  return ret_value;
 } /* ecma_op_abstract_equality_compare */
 
 /**

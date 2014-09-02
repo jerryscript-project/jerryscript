@@ -17,10 +17,12 @@
  * Implementation of ECMA-defined conversion routines
  */
 
+#include "ecma-alloc.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-magic-strings.h"
+#include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jerry-libc.h"
 
@@ -122,10 +124,20 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_number)
   {
-    TODO(Implement according to ECMA);
-
     ecma_number_t *x_num_p = (ecma_number_t*)ECMA_GET_POINTER(x.value);
     ecma_number_t *y_num_p = (ecma_number_t*)ECMA_GET_POINTER(y.value);
+
+    if (ecma_number_is_nan (*x_num_p)
+        && ecma_number_is_nan (*y_num_p))
+    {
+      return true;
+    }
+    else if (ecma_number_is_zero (*x_num_p)
+             && ecma_number_is_zero (*y_num_p)
+             && ecma_number_is_negative (*x_num_p) != ecma_number_is_negative (*y_num_p))
+    {
+      return false;
+    }
 
     return (*x_num_p == *y_num_p);
   }
@@ -172,7 +184,9 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
 
     case ECMA_TYPE_OBJECT:
     {
-      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(preferred_type);
+      ecma_object_t *obj_p = ECMA_GET_POINTER (value.value);
+
+      return ecma_op_object_default_value (obj_p, preferred_type);
     }
   }
 
@@ -198,10 +212,15 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
     {
       ecma_number_t *num_p = ECMA_GET_POINTER(value.value);
 
-      TODO(Implement according to ECMA);
-
-      return ecma_make_simple_completion_value ((*num_p == 0) ? ECMA_SIMPLE_VALUE_FALSE
-                                                : ECMA_SIMPLE_VALUE_TRUE);
+      if (ecma_number_is_nan (*num_p)
+          || ecma_number_is_zero (*num_p))
+      {
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+      }
+      else
+      {
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+      }
 
       break;
     }
@@ -262,9 +281,48 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
       return ecma_make_normal_completion_value (ecma_copy_value (value, true));
     }
     case ECMA_TYPE_SIMPLE:
+    {
+      ecma_number_t *num_p = ecma_alloc_number ();
+
+      switch ((ecma_simple_value_t)value.value)
+      {
+        case ECMA_SIMPLE_VALUE_UNDEFINED:
+        {
+          *num_p = ecma_number_make_nan ();
+
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_NULL:
+        case ECMA_SIMPLE_VALUE_FALSE:
+        {
+          *num_p = ECMA_NUMBER_ZERO;
+
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_TRUE:
+        {
+          *num_p = ECMA_NUMBER_ONE;
+
+          break;
+        }
+        case ECMA_SIMPLE_VALUE_EMPTY:
+        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
+        case ECMA_SIMPLE_VALUE__COUNT:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+
+      return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    }
     case ECMA_TYPE_STRING:
     {
-      JERRY_UNIMPLEMENTED();
+      ecma_string_t *str_p = ECMA_GET_POINTER (value.value);
+
+      ecma_number_t *num_p = ecma_alloc_number ();
+      *num_p = ecma_string_to_number (str_p);
+
+      return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
     }
     case ECMA_TYPE_OBJECT:
     {
@@ -388,12 +446,41 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
   switch ((ecma_type_t)value.value_type)
   {
     case ECMA_TYPE_SIMPLE:
-    case ECMA_TYPE_NUMBER:
-    case ECMA_TYPE_STRING:
     {
+      switch ((ecma_simple_value_t)value.value)
+      {
+        case ECMA_SIMPLE_VALUE_UNDEFINED:
+        case ECMA_SIMPLE_VALUE_NULL:
+        {
+          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        }
+
+        case ECMA_SIMPLE_VALUE_FALSE:
+        case ECMA_SIMPLE_VALUE_TRUE:
+        {
+          /* return Boolean object with [[PrimitiveValue]] set to the value */
+          JERRY_UNIMPLEMENTED ();
+        }
+        case ECMA_SIMPLE_VALUE_EMPTY:
+        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
+        case ECMA_SIMPLE_VALUE__COUNT:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+
+      JERRY_UNREACHABLE ();
+    }
+    case ECMA_TYPE_NUMBER:
+    {
+      /* return Number object with [[PrimitiveValue]] set to the value */
       JERRY_UNIMPLEMENTED ();
     }
-
+    case ECMA_TYPE_STRING:
+    {
+      /* return String object with [[PrimitiveValue]] set to the value */
+      JERRY_UNIMPLEMENTED ();
+    }
     case ECMA_TYPE_OBJECT:
     {
       return ecma_make_normal_completion_value (ecma_copy_value (value, true));

@@ -15,6 +15,7 @@
 
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
+#include "ecma-function-object.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
@@ -49,7 +50,6 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
   {
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_ARRAY:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_get (obj_p, property_name_p);
@@ -60,7 +60,12 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
       return ecma_op_arguments_object_get (obj_p, property_name_p);
     }
 
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      return ecma_op_function_object_get (obj_p, property_name_p);
+    }
+
     case ECMA_OBJECT_TYPE_HOST:
     {
       JERRY_UNIMPLEMENTED();

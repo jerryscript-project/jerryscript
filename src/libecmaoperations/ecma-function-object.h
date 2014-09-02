@@ -36,14 +36,19 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 bool is_strict,
                                 opcode_counter_t first_opcode_idx);
 
-extern ecma_completion_value_t ecma_op_function_call (ecma_object_t *func_obj_p,
-                                                      ecma_value_t this_arg_value,
-                                                      ecma_value_t* arguments_list_p,
-                                                      ecma_length_t arguments_list_len);
+extern ecma_completion_value_t
+ecma_op_function_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p);
 
-extern ecma_completion_value_t ecma_op_function_construct (ecma_object_t *func_obj_p,
-                                                           ecma_value_t* arguments_list_p,
-                                                           ecma_length_t arguments_list_len);
+extern ecma_completion_value_t
+ecma_op_function_call (ecma_object_t *func_obj_p,
+                       ecma_value_t this_arg_value,
+                       ecma_value_t* arguments_list_p,
+                       ecma_length_t arguments_list_len);
+
+extern ecma_completion_value_t
+ecma_op_function_construct (ecma_object_t *func_obj_p,
+                            ecma_value_t* arguments_list_p,
+                            ecma_length_t arguments_list_len);
 
 extern ecma_completion_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p,

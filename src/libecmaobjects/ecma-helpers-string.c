@@ -35,6 +35,17 @@
 #define ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED ((ecma_length_t)-1)
 
 /**
+ * Maximum length of strings' concatenation
+ */
+#define ECMA_STRING_MAX_CONCATENATION_LENGTH (CONFIG_ECMA_STRING_MAX_CONCATENATION_LENGTH)
+
+/**
+ * The length should be representable with int32_t.
+ */
+JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH) ==
+                     ECMA_STRING_MAX_CONCATENATION_LENGTH);
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
  * @return pointer to ecma-string descriptor
@@ -210,10 +221,9 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   string_desc_p->refs = 1;
   string_desc_p->container = ECMA_STRING_CONTAINER_CONCATENATION;
 
-  if ((int64_t) ((int32_t) length) != length)
+  if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
   {
-    /* concatenated strings with length more than 2^32 are not supported */
-    JERRY_UNREACHABLE ();
+    jerry_exit (ERR_MEMORY);
   }
 
   if ((int64_t) ((ecma_length_t) length) != length)
@@ -347,14 +357,35 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     case ECMA_STRING_CONTAINER_CONCATENATION:
     {
-      ecma_char_t zt_string_buffer [ecma_string_get_length (str_p) + 1];
+      ecma_char_t zt_string_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
       ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
                                                        zt_string_buffer,
                                                        (ssize_t) sizeof (zt_string_buffer));
-      JERRY_ASSERT (bytes_copied > 0);
+      if (bytes_copied < 0)
+      {
+        ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -bytes_copied, MEM_HEAP_ALLOC_SHORT_TERM);
+        if (heap_buffer_p == NULL)
+        {
+          jerry_exit (ERR_MEMORY);
+        }
 
-      return ecma_zt_string_to_number (zt_string_buffer);
+        bytes_copied = ecma_string_to_zt_string (str_p,
+                                                 heap_buffer_p,
+                                                 -bytes_copied);
+
+        JERRY_ASSERT (bytes_copied > 0);
+
+        ecma_number_t num = ecma_zt_string_to_number (heap_buffer_p);
+
+        mem_heap_free_block (heap_buffer_p);
+
+        return num;
+      }
+      else
+      {
+        return ecma_zt_string_to_number (zt_string_buffer);
+      }
     }
   }
 
@@ -469,6 +500,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       ssize_t bytes_copied1, bytes_copied2;
 
       bytes_copied1 = ecma_string_to_zt_string (string1_p, dest_p, buffer_size);
+      JERRY_ASSERT (bytes_copied1 > 0);
 
       /* one character, which is the null character at end of string, will be overwritten */
       bytes_copied1 -= (ssize_t) sizeof (ecma_char_t);
@@ -477,6 +509,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       bytes_copied2 = ecma_string_to_zt_string (string2_p,
                                                 dest_p,
                                                 buffer_size - bytes_copied1);
+      JERRY_ASSERT (bytes_copied2 > 0);
 
       bytes_copied = bytes_copied1 + bytes_copied2;
 
@@ -599,7 +632,7 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
 
   const ecma_char_t *zt_string1_p;
   bool is_zt_string1_on_heap = false;
-  ecma_char_t zt_string1_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+  ecma_char_t zt_string1_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
@@ -615,6 +648,10 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
     if (req_size < 0)
     {
       ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      if (heap_buffer_p == NULL)
+      {
+        jerry_exit (ERR_MEMORY);
+      }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
                                                        heap_buffer_p,
@@ -641,7 +678,7 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
   {
     const ecma_char_t *zt_string2_p;
     bool is_zt_string2_on_heap = false;
-    ecma_char_t zt_string2_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+    ecma_char_t zt_string2_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
     if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
     {
@@ -657,6 +694,10 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
       if (req_size < 0)
       {
         ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+        if (heap_buffer_p == NULL)
+        {
+          jerry_exit (ERR_MEMORY);
+        }
 
         ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
                                                          heap_buffer_p,
@@ -752,9 +793,8 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
       }
       case ECMA_STRING_CONTAINER_CONCATENATION:
       {
-        TODO (/* Implement comparison of string's concatenation
-                (with concatenations and ecma-string with another container types) */);
-        JERRY_UNIMPLEMENTED ();
+        /* long path */
+        break;
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
       {

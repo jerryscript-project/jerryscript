@@ -499,7 +499,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     JERRY_ASSERT(property_name_p != NULL);
 
-    if (ecma_compare_ecma_string_to_ecma_string (name_p, property_name_p))
+    if (ecma_compare_ecma_strings (name_p, property_name_p))
     {
       return property_p;
     }

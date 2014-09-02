@@ -147,7 +147,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
     ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
     ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
 
-    return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+    return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
   if (is_x_boolean)

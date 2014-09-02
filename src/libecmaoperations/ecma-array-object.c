@@ -177,8 +177,8 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
 
   // 3.
-  bool is_property_name_equal_length = (ecma_compare_ecma_string_to_ecma_string (property_name_p,
-                                                                                 magic_string_length_p) == 0);
+  bool is_property_name_equal_length = (ecma_compare_ecma_strings (property_name_p,
+                                                                   magic_string_length_p) == 0);
 
   ecma_deref_ecma_string (magic_string_length_p);
 

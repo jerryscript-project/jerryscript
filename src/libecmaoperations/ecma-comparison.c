@@ -101,7 +101,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
       ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
 
-      bool is_equal = ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+      bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
       ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
@@ -272,7 +272,7 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     ecma_string_t* x_str_p = ECMA_GET_POINTER (x.value);
     ecma_string_t* y_str_p = ECMA_GET_POINTER (y.value);
 
-    return ecma_compare_ecma_string_to_ecma_string (x_str_p, y_str_p);
+    return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
   // 6. If Type (x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
@@ -351,7 +351,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ecma_string_t *str_x_p = ECMA_GET_POINTER (px.u.value.value);
     ecma_string_t *str_y_p = ECMA_GET_POINTER (py.u.value.value);
 
-    bool is_px_less = ecma_compare_ecma_string_to_ecma_string_relational (str_x_p, str_y_p);
+    bool is_px_less = ecma_compare_ecma_strings_relational (str_x_p, str_y_p);
 
     ret_value = ecma_make_simple_completion_value (is_px_less ? ECMA_SIMPLE_VALUE_TRUE
                                                               : ECMA_SIMPLE_VALUE_FALSE);

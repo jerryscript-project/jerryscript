@@ -42,10 +42,10 @@ do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
         ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
         ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
 
-        ret = (ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                        magic_string_eval) == 0
-               || ecma_compare_ecma_string_to_ecma_string (ref.referenced_name_p,
-                                                           magic_string_arguments) == 0);
+        ret = (ecma_compare_ecma_strings (ref.referenced_name_p,
+                                          magic_string_eval) == 0
+               || ecma_compare_ecma_strings (ref.referenced_name_p,
+                                             magic_string_arguments) == 0);
 
         ecma_deref_ecma_string (magic_string_eval);
         ecma_deref_ecma_string (magic_string_arguments);

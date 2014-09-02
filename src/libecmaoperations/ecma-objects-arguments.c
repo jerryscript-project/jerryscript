@@ -155,7 +155,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
            indx2 < formal_params_number;
            indx2++)
       {
-        if (ecma_compare_ecma_string_to_ecma_string (name_p, formal_params[indx2]))
+        if (ecma_compare_ecma_strings (name_p, formal_params[indx2]))
         {
           is_first_occurence = false;
         }

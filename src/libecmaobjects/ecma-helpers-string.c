@@ -613,14 +613,14 @@ ecma_compare_ecma_string_to_zt_string (const ecma_string_t *string_p, /**< ecma-
  * Long path part of ecma-string to ecma-string comparison routine
  *
  * See also:
- *          ecma_compare_ecma_string_to_ecma_string
+ *          ecma_compare_ecma_strings
  *
  * @return true - if strings are equal;
  *         false - otherwise.
  */
 static bool __noinline
-ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p, /* ecma-string */
-                                                  const ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
+                                    const ecma_string_t *string2_p) /* ecma-string */
 {
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
@@ -728,7 +728,7 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
   }
 
   return is_equal;
-} /* ecma_compare_ecma_string_to_ecma_string_longpath */
+} /* ecma_compare_ecma_strings_longpath */
 
 /**
  * Compare ecma-string to ecma-string
@@ -737,8 +737,8 @@ ecma_compare_ecma_string_to_ecma_string_longpath (const ecma_string_t *string1_p
  *         false - otherwise.
  */
 bool
-ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma-string */
-                                         const ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
+                           const ecma_string_t *string2_p) /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
@@ -803,8 +803,8 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
     }
   }
 
-  return ecma_compare_ecma_string_to_ecma_string_longpath (string1_p, string2_p);
-} /* ecma_compare_ecma_string_to_ecma_string */
+  return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
+} /* ecma_compare_ecma_strings */
 
 /**
  * Relational compare of ecma-strings.
@@ -817,11 +817,11 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
  *         false - otherwise.
  */
 bool
-ecma_compare_ecma_string_to_ecma_string_relational (const ecma_string_t *string1_p, /**< ecma-string */
-                                                    const ecma_string_t *string2_p) /**< ecma-string */
+ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-string */
+                                      const ecma_string_t *string2_p) /**< ecma-string */
 {
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (string1_p, string2_p);
-} /* ecma_compare_ecma_string_to_ecma_string_relational */
+} /* ecma_compare_ecma_strings_relational */
 
 /**
  * Get length of ecma-string

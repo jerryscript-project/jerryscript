@@ -38,8 +38,6 @@ ecma_completion_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                    ecma_value_t y) /**< second operand */
 {
-  ecma_completion_value_t ret_value;
-
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
   const bool is_x_boolean = ecma_is_value_boolean (x);
@@ -61,6 +59,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                || (is_x_string && is_y_string)
                                || (is_x_object && is_y_object));
 
+  ecma_completion_value_t ret_value;
+
   if (is_types_equal)
   {
     // 1.
@@ -76,9 +76,23 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       ecma_number_t x_num = *(ecma_number_t*)(ECMA_GET_POINTER(x.value));
       ecma_number_t y_num = *(ecma_number_t*)(ECMA_GET_POINTER(y.value));
 
-      TODO(Implement according to ECMA);
+      bool is_equal;
 
-      bool is_equal = (x_num == y_num);
+      if (ecma_number_is_nan (x_num)
+          || ecma_number_is_nan (y_num))
+      {
+        is_equal = false;
+      }
+      else if (x_num == y_num
+               || (ecma_number_is_zero (x_num)
+                   && ecma_number_is_zero (y_num)))
+      {
+        is_equal = true;
+      }
+      else
+      {
+        is_equal = false;
+      }
 
       ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
@@ -111,9 +125,61 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   { // 2., 3.
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
+  else if (is_x_boolean
+           || (is_x_number && is_y_string))
+  {
+    // 4., 6.
+    ECMA_TRY_CATCH (y_num_value,
+                    ecma_op_to_number (y),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x,
+                                                   y_num_value.u.value);
+
+    ECMA_FINALIZE (y_num_value);
+  }
+  else if (is_y_boolean
+           || (is_x_string && is_y_number))
+  {
+    // 5., 7.
+    ECMA_TRY_CATCH (x_num_value,
+                    ecma_op_to_number (x),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x_num_value.u.value,
+                                                   y);
+
+    ECMA_FINALIZE (x_num_value);
+  }
+  else if (is_y_object
+           && (is_x_number || is_x_string))
+  {
+    // 8.
+    ECMA_TRY_CATCH (y_prim_value,
+                    ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NO),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x,
+                                                   y_prim_value.u.value);
+
+    ECMA_FINALIZE (y_prim_value);
+  }
+  else if (is_x_object
+           && (is_y_number || is_y_string))
+  {
+    // 9.
+    ECMA_TRY_CATCH (x_prim_value,
+                    ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x_prim_value.u.value,
+                                                   y);
+
+    ECMA_FINALIZE (x_prim_value);
+  }
   else
   {
-    JERRY_UNIMPLEMENTED();
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   return ret_value;
@@ -173,18 +239,30 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // 4. If Type (x) is Number, then
   if (is_x_number)
   {
-    //a. If x is NaN, return false.
-    //b. If y is NaN, return false.
-    //c. If x is the same Number value as y, return true.
-    //d. If x is +0 and y is -0, return true.
-    //e. If x is -0 and y is +0, return true.
+    // a. If x is NaN, return false.
+    // b. If y is NaN, return false.
+    // c. If x is the same Number value as y, return true.
+    // d. If x is +0 and y is -0, return true.
+    // e. If x is -0 and y is +0, return true.
 
     ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_POINTER (x.value));
     ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_POINTER (y.value));
 
-    TODO (Implement according to ECMA);
-
-    return (x_num == y_num);
+    if (ecma_number_is_nan (x_num)
+        || ecma_number_is_nan (y_num))
+    {
+      return false;
+    }
+    else if (x_num == y_num
+             || (ecma_number_is_zero (x_num)
+                 && ecma_number_is_zero (y_num)))
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 
   // 5. If Type (x) is String, then return true if x and y are exactly the same sequence of characters
@@ -268,7 +346,15 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   }
   else
   { // 4.
-    JERRY_UNIMPLEMENTED();
+    JERRY_ASSERT (is_px_string && is_py_string);
+
+    ecma_string_t *str_x_p = ECMA_GET_POINTER (px.u.value.value);
+    ecma_string_t *str_y_p = ECMA_GET_POINTER (py.u.value.value);
+
+    bool is_px_less = ecma_compare_ecma_string_to_ecma_string_relational (str_x_p, str_y_p);
+
+    ret_value = ecma_make_simple_completion_value (is_px_less ? ECMA_SIMPLE_VALUE_TRUE
+                                                              : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   ECMA_FINALIZE(prim_second_converted_value);

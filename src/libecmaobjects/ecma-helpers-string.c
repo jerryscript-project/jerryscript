@@ -807,6 +807,23 @@ ecma_compare_ecma_string_to_ecma_string (const ecma_string_t *string1_p, /* ecma
 } /* ecma_compare_ecma_string_to_ecma_string */
 
 /**
+ * Relational compare of ecma-strings.
+ *
+ * First string is less than second string if:
+ *  - strings are not equal;
+ *  - first string is prefix of second or is lexicographically less than second.
+ *
+ * @return true - if first string is less than second string,
+ *         false - otherwise.
+ */
+bool
+ecma_compare_ecma_string_to_ecma_string_relational (const ecma_string_t *string1_p, /**< ecma-string */
+                                                    const ecma_string_t *string2_p) /**< ecma-string */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (string1_p, string2_p);
+} /* ecma_compare_ecma_string_to_ecma_string_relational */
+
+/**
  * Get length of ecma-string
  *
  * @return number of characters in the string

@@ -344,7 +344,7 @@ ecma_uint32_to_string (uint32_t value, /**< value to convert */
 
   do
   {
-    JERRY_ASSERT (p != out_buffer_p);
+    JERRY_ASSERT (p >= out_buffer_p);
 
     *p-- = digits[value % 10];
     value /= 10;
@@ -352,6 +352,10 @@ ecma_uint32_to_string (uint32_t value, /**< value to convert */
     bytes_copied += sizeof (ecma_char_t);
   }
   while (value != 0);
+
+  p++;
+
+  JERRY_ASSERT (p >= out_buffer_p);
 
   if (likely (p != out_buffer_p))
   {

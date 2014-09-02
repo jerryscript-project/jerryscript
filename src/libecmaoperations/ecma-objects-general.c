@@ -715,7 +715,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
 
   // 7.
-  if (current_p->u.named_accessor_property.configurable == ECMA_PROPERTY_NOT_CONFIGURABLE)
+  if (current_configurable == ECMA_PROPERTY_NOT_CONFIGURABLE)
   {
     if (property_desc.configurable == ECMA_PROPERTY_CONFIGURABLE
         || (property_desc.is_enumerable_defined

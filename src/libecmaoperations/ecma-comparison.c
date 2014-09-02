@@ -320,7 +320,9 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   const bool is_py_string = (py.u.value.value_type == ECMA_TYPE_STRING);
 
   if (!(is_px_string && is_py_string))
-  { // 3.
+  {
+    // 3.
+
     // a.
     ECMA_TRY_CATCH(nx, ecma_op_to_number (px.u.value), ret_value);
 
@@ -330,15 +332,61 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.u.value.value);
     ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.u.value.value);
 
-    TODO(/* Implement according to ECMA */);
-
-    if (*num_x_p >= *num_y_p)
+    if (ecma_number_is_nan (*num_x_p)
+        || ecma_number_is_nan (*num_y_p))
     {
+      // c., d.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else if (*num_x_p == *num_y_p
+             || (ecma_number_is_zero (*num_x_p)
+                 && ecma_number_is_zero (*num_y_p)))
+    {
+      // e., f., g.
       ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
+    else if (ecma_number_is_infinity (*num_x_p)
+             && !ecma_number_is_negative (*num_x_p))
+    {
+      // h.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
+    else if (ecma_number_is_infinity (*num_y_p)
+             && !ecma_number_is_negative (*num_y_p))
+    {
+      // i.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    else if (ecma_number_is_infinity (*num_y_p)
+             && ecma_number_is_negative (*num_y_p))
+    {
+      // j.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
+    else if (ecma_number_is_infinity (*num_x_p)
+             && ecma_number_is_negative (*num_x_p))
+    {
+      // k.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
     }
     else
     {
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+      // l.
+      JERRY_ASSERT (!ecma_number_is_nan (*num_x_p)
+                    && !ecma_number_is_infinity (*num_x_p));
+      JERRY_ASSERT (!ecma_number_is_nan (*num_y_p)
+                    && !ecma_number_is_infinity (*num_y_p));
+      JERRY_ASSERT (!(ecma_number_is_zero (*num_x_p)
+                      && ecma_number_is_zero (*num_y_p)));
+
+      if (*num_x_p < *num_y_p)
+      {
+        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+      }
+      else
+      {
+        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+      }
     }
 
     ECMA_FINALIZE(ny);

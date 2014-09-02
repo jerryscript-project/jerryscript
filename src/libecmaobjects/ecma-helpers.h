@@ -124,6 +124,8 @@ extern bool ecma_number_is_infinity (ecma_number_t num);
 extern int32_t ecma_number_get_fraction_and_exponent (ecma_number_t num,
                                                       uint64_t *out_fraction_p,
                                                       int32_t *out_exponent_p);
+extern ecma_number_t ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction,
+                                                                                  int32_t exponent);
 extern ecma_number_t ecma_number_negate (ecma_number_t num);
 
 /* ecma-helpers-values-collection.c */

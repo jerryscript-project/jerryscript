@@ -351,6 +351,31 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
 } /* ecma_number_get_fraction_and_exponent */
 
 /**
+ * Make normalised positive Number from given fraction and exponent
+ *
+ * @return ecma-number
+ */
+ecma_number_t
+ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, /**< fraction */
+                                                             int32_t exponent) /**< exponent */
+{
+  union
+  {
+    ecma_number_fields_t fields;
+    ecma_number_t value;
+  } u;
+
+  uint32_t biased_exp = (uint32_t) (exponent + ecma_number_exponent_bias);
+  JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+
+  u.fields.biased_exp = biased_exp & ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  u.fields.fraction = fraction & ((1u << ECMA_NUMBER_FRACTION_WIDTH) - 1);
+  u.fields.sign = 0;
+
+  return u.value;
+} /* ecma_number_make_normal_positive_from_fraction_and_exponent */
+
+/**
  * Negate ecma-number
  *
  * @return negated number

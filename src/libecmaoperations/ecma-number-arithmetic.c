@@ -14,6 +14,7 @@
  */
 
 #include "ecma-globals.h"
+#include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 
 /** \addtogroup ecma ECMA
@@ -37,8 +38,6 @@ ecma_number_t
 ecma_op_number_add (ecma_number_t left_num, /**< left operand */
                     ecma_number_t right_num) /**< right operand */
 {
-  TODO(Implement according to ECMA);
-
   return left_num + right_num;
 } /* ecma_op_number_add */
 
@@ -69,8 +68,6 @@ ecma_number_t
 ecma_op_number_multiply (ecma_number_t left_num, /**< left operand */
                          ecma_number_t right_num) /**< right operand */
 {
-  TODO(Implement according to ECMA);
-
   return left_num * right_num;
 } /* ecma_op_number_multiply */
 
@@ -86,8 +83,6 @@ ecma_number_t
 ecma_op_number_divide (ecma_number_t left_num, /**< left operand */
                        ecma_number_t right_num) /**< right operand */
 {
-  TODO(Implement according to ECMA);
-
   return left_num / right_num;
 } /* ecma_op_number_divide */
 
@@ -103,11 +98,54 @@ ecma_number_t
 ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                           ecma_number_t right_num) /**< right operand */
 {
-  TODO(Implement according to ECMA);
+  TODO (Check precision);
 
   ecma_number_t n = left_num, d = right_num;
 
-  return (n - d * (ecma_number_t) ((int32_t) (n / d)));
+  if (ecma_number_is_nan (n)
+      || ecma_number_is_nan (d)
+      || ecma_number_is_infinity (n)
+      || ecma_number_is_zero (d))
+  {
+    return ecma_number_make_nan ();
+  }
+  else if (ecma_number_is_infinity (d)
+           || (ecma_number_is_zero (n)
+               && !ecma_number_is_zero (d)))
+  {
+    return n;
+  }
+
+  JERRY_ASSERT (!ecma_number_is_nan (n)
+                && !ecma_number_is_zero (n)
+                && !ecma_number_is_infinity (n));
+  JERRY_ASSERT (!ecma_number_is_nan (d)
+                && !ecma_number_is_zero (d)
+                && !ecma_number_is_infinity (d));
+
+  ecma_number_t q = n / d;
+
+  uint64_t fraction;
+  int32_t exponent;
+  int32_t dot_shift = ecma_number_get_fraction_and_exponent (q, &fraction, &exponent);
+  
+  if (exponent < 0)
+  {
+    return n;
+  }
+  else if (exponent >= dot_shift)
+  {
+    return n - d * q;
+  }
+  else
+  {
+    fraction &= ~((1ull << (dot_shift - exponent)) - 1);
+
+    q = ecma_number_make_normal_positive_from_fraction_and_exponent (fraction,
+                                                                     exponent);
+
+    return n - d * q;
+  }
 } /* ecma_op_number_remainder */
 
 /**
@@ -121,8 +159,6 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
 ecma_number_t
 ecma_op_number_negate (ecma_number_t num) /**< operand */
 {
-  TODO(Implement according to ECMA);
-
   return -num;
 } /* ecma_op_number_negate */
 

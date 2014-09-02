@@ -714,7 +714,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       }
     }
 
-    is_equal = ecma_compare_zt_string_to_zt_string (zt_string1_p, zt_string2_p);
+    is_equal = ecma_compare_zt_strings (zt_string1_p, zt_string2_p);
 
     if (is_zt_string2_on_heap)
     {
@@ -820,8 +820,101 @@ bool
 ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-string */
                                       const ecma_string_t *string2_p) /**< ecma-string */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (string1_p, string2_p);
-} /* ecma_compare_ecma_strings_relational */
+  if (ecma_compare_ecma_strings (string1_p,
+                                 string2_p))
+  {
+    return false;
+  }
+
+  const ecma_char_t *zt_string1_p, *zt_string2_p;
+  bool is_zt_string1_on_heap = false, is_zt_string2_on_heap = false;
+  ecma_char_t zt_string1_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  ecma_char_t zt_string2_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+
+  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    FIXME (uint8_t -> literal_index_t);
+    zt_string1_p = deserialize_string_by_id ((uint8_t) string1_p->u.lit_index);
+  }
+  else
+  {
+    ssize_t req_size = ecma_string_to_zt_string (string1_p,
+                                                 zt_string1_buffer,
+                                                 sizeof (zt_string1_buffer));
+
+    if (req_size < 0)
+    {
+      ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      if (heap_buffer_p == NULL)
+      {
+        jerry_exit (ERR_MEMORY);
+      }
+
+      ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
+                                                       heap_buffer_p,
+                                                       -req_size);
+
+      JERRY_ASSERT (bytes_copied > 0);
+
+      zt_string1_p = heap_buffer_p;
+      is_zt_string1_on_heap = true;
+    }
+    else
+    {
+      zt_string1_p = zt_string1_buffer;
+    }
+  }
+
+  if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    FIXME (uint8_t -> literal_index_t);
+    zt_string2_p = deserialize_string_by_id ((uint8_t) string2_p->u.lit_index);
+  }
+  else
+  {
+    ssize_t req_size = ecma_string_to_zt_string (string2_p,
+                                                 zt_string2_buffer,
+                                                 sizeof (zt_string2_buffer));
+
+    if (req_size < 0)
+    {
+      ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      if (heap_buffer_p == NULL)
+      {
+        jerry_exit (ERR_MEMORY);
+      }
+
+      ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
+                                                       heap_buffer_p,
+                                                       -req_size);
+
+      JERRY_ASSERT (bytes_copied > 0);
+
+      zt_string2_p = heap_buffer_p;
+      is_zt_string2_on_heap = true;
+    }
+    else
+    {
+      zt_string2_p = zt_string2_buffer;
+    }
+  }
+
+  bool is_first_less_than_second = ecma_compare_zt_strings_relational (zt_string1_p,
+                                                                       zt_string2_p);
+
+  if (is_zt_string1_on_heap)
+  {
+    mem_heap_free_block ((void*) zt_string1_p);
+  }
+
+  if (is_zt_string2_on_heap)
+  {
+    mem_heap_free_block ((void*) zt_string2_p);
+  }
+
+  return is_first_less_than_second;
+}
+/* ecma_compare_ecma_strings_relational */
 
 /**
  * Get length of ecma-string
@@ -857,8 +950,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
  *          false - otherwise.
  */
 bool
-ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-terminated string */
-                                     const ecma_char_t *string2_p) /**< zero-terminated string */
+ecma_compare_zt_strings (const ecma_char_t *string1_p, /**< zero-terminated string */
+                         const ecma_char_t *string2_p) /**< zero-terminated string */
 {
   const ecma_char_t *iter_1_p = string1_p;
   const ecma_char_t *iter_2_p = string2_p;
@@ -872,7 +965,124 @@ ecma_compare_zt_string_to_zt_string (const ecma_char_t *string1_p, /**< zero-ter
   }
 
   return (*iter_2_p == ECMA_CHAR_NULL);
-} /* ecma_compare_zt_string_to_zt_string */
+} /* ecma_compare_zt_strings */
+
+/**
+ * Relational compare of zero-terminated strings
+ *
+ * First string is less than second string if:
+ *  - strings are not equal;
+ *  - first string is prefix of second or is lexicographically less than second.
+ *
+ * @return true - if first string is less than second string,
+ *         false - otherwise.
+ */
+bool
+ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, /**< zero-terminated string */
+                                    const ecma_char_t *string2_p) /**< zero-terminated string */
+{
+  const ecma_char_t *iter_1_p = string1_p;
+  const ecma_char_t *iter_2_p = string2_p;
+
+  while (*iter_1_p != ECMA_CHAR_NULL
+         && *iter_2_p != ECMA_CHAR_NULL)
+  {
+#ifdef CONFIG_ECMA_CHAR_ASCII
+    const ecma_char_t chr_1 = *iter_1_p++;
+    const ecma_char_t chr_2 = *iter_2_p++;
+
+    if (chr_1 < chr_2)
+    {
+      return true;
+    }
+    else if (chr_1 > chr_2)
+    {
+      return false;
+    }
+#elif defined (CONFIG_ECMA_CHAR_UTF16)
+    const ecma_char_t first_in_pair_range_begin = 0xD800;
+    const ecma_char_t first_in_pair_range_end = 0xDBFF;
+    const ecma_char_t second_in_pair_range_begin = 0xDC00;
+    const ecma_char_t second_in_pair_range_end = 0xDFFF;
+
+    const bool iter_1_at_first_in_pair = (*iter_1_p >= first_in_pair_range_begin
+                                          && *iter_1_p <= first_in_pair_range_end);
+    const bool iter_2_at_first_in_pair = (*iter_2_p >= first_in_pair_range_begin
+                                          && *iter_2_p <= first_in_pair_range_end);
+    const bool iter_1_at_second_in_pair = (*iter_1_p >= second_in_pair_range_begin
+                                           && *iter_1_p <= second_in_pair_range_end);
+    const bool iter_2_at_second_in_pair = (*iter_2_p >= second_in_pair_range_begin
+                                           && *iter_2_p <= second_in_pair_range_end);
+
+    JERRY_ASSERT (!iter_1_at_second_in_pair
+                  && !iter_2_at_second_in_pair);
+
+    /* Pairs encode range U+010000 to U+10FFFF,
+       while single chars encode U+0000 to U+7DFF and U+E000 to U+FFFF */
+    if (iter_1_at_first_in_pair
+        && !iter_2_at_first_in_pair)
+    {
+      return false;
+    }
+    else if (!iter_1_at_first_in_pair
+             && iter_2_at_first_in_pair)
+    {
+      return true;
+    }
+    else if (!iter_1_at_first_in_pair
+             && !iter_2_at_first_in_pair)
+    {
+      const ecma_char_t chr_1 = *iter_1_p;
+      const ecma_char_t chr_2 = *iter_2_p;
+
+      if (chr_1 < chr_2)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+
+      iter_1_p++;
+      iter_2_p++;
+    }
+    else
+    {
+      JERRY_ASSERT (iter_1_at_first_in_pair
+                    && iter_2_at_first_in_pair);
+
+      uint32_t chr1, chr2;
+
+      chr1 = *iter_1_p++ - first_in_pair_range_begin;
+      chr1 <<= 10;
+      JERRY_ASSERT (*iter_1_p >= second_in_pair_range_begin
+                    && *iter_1_p <= second_in_pair_range_end);
+      chr1 += *iter_1_p++ - second_in_pair_range_begin;
+
+      chr2 = *iter_2_p++ - first_in_pair_range_begin;
+      chr2 <<= 10;
+      JERRY_ASSERT (*iter_2_p >= second_in_pair_range_begin
+                    && *iter_2_p <= second_in_pair_range_end);
+      chr2 += *iter_2_p++ - second_in_pair_range_begin;
+
+      if (chr1 < chr2)
+      {
+        return true;
+      }
+      else if (chr1 > chr2)
+      {
+        return false;
+      }
+    }
+#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
+#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+  }
+
+  return (*iter_1_p == ECMA_CHAR_NULL
+          && *iter_2_p != ECMA_CHAR_NULL);
+} /* ecma_compare_zt_strings_relational */
 
 /**
  * Copy zero-terminated string to buffer

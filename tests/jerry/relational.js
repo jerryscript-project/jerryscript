@@ -20,3 +20,12 @@ assert((11 <= 11) == true);
 
 assert((7 >= 11) == false);
 assert((7 >= 7) == true);
+
+assert('a' > '');
+assert(!('' < ''));
+assert(!('' > ''));
+assert('abcd' > 'abc');
+assert('abc' < 'abcd');
+assert('abcd' <= 'abcd');
+assert('abcd' >= 'abcd');
+assert(!('abcd' > 'abcd'));

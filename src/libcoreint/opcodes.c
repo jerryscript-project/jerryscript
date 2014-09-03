@@ -902,15 +902,17 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (args_read == args_number);
 
-    ecma_object_t *array_obj_p = ecma_op_create_array_object (arg_values,
-                                                              args_number,
-                                                              false);
+    ECMA_TRY_CATCH (array_obj_value,
+                    ecma_op_create_array_object (arg_values,
+                                                 args_number,
+                                                 false),
+                    ret_value);
 
     ret_value = set_variable_value (int_data,
                                     lhs_var_idx,
-                                    ecma_make_object_value (array_obj_p));
+                                    array_obj_value.u.value);
 
-    ecma_deref_object (array_obj_p);
+    ECMA_FINALIZE (array_obj_value);
   }
   else
   {
@@ -957,8 +959,10 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
   {
     ecma_completion_value_t evaluate_prop_completion = run_int_loop (int_data);
 
-    if (ecma_is_completion_value_meta (evaluate_prop_completion))
+    if (ecma_is_completion_value_normal (evaluate_prop_completion))
     {
+      JERRY_ASSERT (ecma_is_completion_value_empty (evaluate_prop_completion));
+
       opcode_t next_opcode = read_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
@@ -1423,8 +1427,10 @@ opfunc_with (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t evaluation_completion = run_int_loop (int_data);
 
-  if (ecma_is_completion_value_meta (evaluation_completion))
+  if (ecma_is_completion_value_normal (evaluation_completion))
   {
+    JERRY_ASSERT (ecma_is_completion_value_empty (evaluation_completion));
+
     opcode_t meta_opcode = read_opcode (int_data->pos);
     JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
     JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);

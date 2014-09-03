@@ -183,7 +183,20 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       JERRY_ASSERT (obj_p != NULL
                     && !ecma_is_lexical_environment (obj_p));
 
-      return ecma_op_object_put (obj_p, ref.referenced_name_p, value, ref.is_strict);
+      ecma_completion_value_t ret_value;
+
+      ECMA_TRY_CATCH (put_completion,
+                      ecma_op_object_put (obj_p,
+                                          ref.referenced_name_p,
+                                          value,
+                                          ref.is_strict),
+                      ret_value);
+
+      ret_value = ecma_make_empty_completion_value ();
+
+      ECMA_FINALIZE (put_completion);
+
+      return ret_value;
     }
     else
     {

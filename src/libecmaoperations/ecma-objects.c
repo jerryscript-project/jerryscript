@@ -15,6 +15,7 @@
 
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
+#include "ecma-array-object.h"
 #include "ecma-function-object.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
@@ -402,6 +403,10 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_ARRAY:
+    {
+      return ecma_op_array_object_define_own_property (obj_p, property_name_p, property_desc, is_throw);
+    }
+
     case ECMA_OBJECT_TYPE_HOST:
     {
       JERRY_UNIMPLEMENTED();

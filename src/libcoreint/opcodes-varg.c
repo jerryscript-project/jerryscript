@@ -42,7 +42,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
   {
     ecma_completion_value_t evaluate_arg_completion = run_int_loop (int_data);
 
-    if (ecma_is_completion_value_meta (evaluate_arg_completion))
+    if (ecma_is_completion_value_normal (evaluate_arg_completion))
     {
       opcode_t next_opcode = read_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);

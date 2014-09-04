@@ -97,6 +97,18 @@ extern ecma_string_t *ecma_alloc_string (void);
  */
 extern void ecma_dealloc_string (ecma_string_t *string_p);
 
+/**
+ * Allocate memory for label descriptor
+ *
+ * @return pointer to allocated memory
+ */
+extern ecma_label_descriptor_t *ecma_alloc_label_descriptor (void);
+
+/**
+ * Dealloc memory from label descriptor
+ */
+extern void ecma_dealloc_label_descriptor (ecma_label_descriptor_t *label_desc_p);
+
 #endif /* JERRY_ECMA_ALLOC_H */
 
 /**

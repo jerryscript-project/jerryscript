@@ -132,7 +132,10 @@ typedef struct
 typedef struct
 {
   /** Type (ecma_completion_type_t) */
-  unsigned int type : 8;
+  uint8_t type;
+
+  /** Just padding for the structure */
+  uint8_t padding;
 
   union
   {
@@ -148,16 +151,23 @@ typedef struct
       *
       * Used for break and continue completion types.
       */
-    struct
-    {
-      /** Levels to label left */
-      uint8_t depth;
+    uint16_t label_desc_cp;
+  } u;
+} ecma_completion_value_t;
 
-      /** Target's offset */
-      uint16_t offset;
-    } __packed target;
-  } __packed u;
-} __packed ecma_completion_value_t;
+/**
+ * Label
+ *
+ * Used for break and continue completion types.
+ */
+typedef struct
+{
+  /** Target's offset */
+  uint32_t offset;
+
+  /** Levels to label left */
+  uint32_t depth;
+} ecma_label_descriptor_t;
 
 /**
  * Target value indicating that target field

@@ -319,9 +319,15 @@ ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
 
   ecma_completion_value_t ret_value;
 
+  ecma_label_descriptor_t *label_desc_p = ecma_alloc_label_descriptor ();
+  *label_desc_p = (ecma_label_descriptor_t)
+  {
+    .offset = offset,
+    .depth = depth_level
+  };
+
   ret_value.type = type;
-  ret_value.u.target.depth = depth_level;
-  ret_value.u.target.offset = offset;
+  ECMA_SET_POINTER (ret_value.u.label_desc_cp, label_desc_p);
 
   return ret_value;
 } /* ecma_make_label_completion_value */
@@ -470,6 +476,10 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     }
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
+    {
+      ecma_dealloc_label_descriptor (ECMA_GET_POINTER (completion_value.u.label_desc_cp));
+      break;
+    }
     case ECMA_COMPLETION_TYPE_META:
     {
       JERRY_UNREACHABLE ();

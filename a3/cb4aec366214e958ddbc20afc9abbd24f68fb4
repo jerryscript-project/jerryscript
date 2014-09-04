@@ -1,0 +1,7 @@
+./benchmarks/jerry/loop_arithmetics_1kk.js: 8.16s (1 GHz)
+./benchmarks/jerry/sunspider/math-partial-sums.js: 1.115s (1 GHz)
+./benchmarks/jerry/sunspider/math-cordic.js: 4.008s (1 GHz)
+./benchmarks/jerry/sunspider/math-spectral-norm.js: 0.645s (1 GHz)
+./benchmarks/jerry/sunspider/bitops-bitwise-and.js: 1.921s (1 GHz)
+./benchmarks/jerry/sunspider/bitops-3bit-bits-in-byte.js: 2.317s (1 GHz)
+./benchmarks/jerry/sunspider/bitops-bits-in-byte.js: 3.036s (1 GHz)

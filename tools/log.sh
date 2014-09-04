@@ -14,5 +14,5 @@
 
 #!/bin/bash
 
-git log --show-notes=perf --show-notes=mem --show-notes=test_build_env
+git log --show-notes=perf --show-notes=arm-linux-perf --show-notes=mem --show-notes=test_build_env
 exit 0

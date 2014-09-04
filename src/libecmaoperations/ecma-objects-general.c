@@ -61,7 +61,7 @@ ecma_op_create_object_object_noarg (void)
   FIXME (/* Set to built-in Object prototype (15.2.4) */);
 
   // 3., 4., 6., 7.
-  ecma_object_t *obj_p = ecma_create_object (NULL, false, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_OBJECT;

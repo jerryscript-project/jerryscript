@@ -595,6 +595,8 @@ ecma_completion_value_t
 opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                     int_data_t *int_data) /**< interpreter context */
 {
+  int_data->pos++;
+
   const idx_t dst_var_idx = opdata.data.func_expr_n.lhs;
   const idx_t function_name_lit_idx = opdata.data.func_expr_n.name_lit_idx;
   const ecma_length_t params_number = opdata.data.func_expr_n.arg_list;
@@ -985,9 +987,12 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_name_lit_idx);
         ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
 
-        const bool is_previous_data_desc = (previous_p->type == ECMA_PROPERTY_NAMEDDATA);
-        const bool is_previous_accessor_desc = (previous_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-        JERRY_ASSERT (is_previous_data_desc || is_previous_accessor_desc);
+        const bool is_previous_undefined = (previous_p == NULL);
+        const bool is_previous_data_desc = (!is_previous_undefined
+                                            && previous_p->type == ECMA_PROPERTY_NAMEDDATA);
+        const bool is_previous_accessor_desc = (!is_previous_undefined
+                                                && previous_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+        JERRY_ASSERT (is_previous_undefined || is_previous_data_desc || is_previous_accessor_desc);
 
         ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
         {
@@ -1006,9 +1011,10 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           prop_desc.is_writable_defined = true;
           prop_desc.writable = ECMA_PROPERTY_WRITABLE;
 
-          if ((is_previous_data_desc
-              && int_data->is_strict)
-              || is_previous_accessor_desc)
+          if (!is_previous_undefined
+              && ((is_previous_data_desc
+                   && int_data->is_strict)
+                  || is_previous_accessor_desc))
           {
             is_throw_syntax_error = true;
           }
@@ -1020,7 +1026,8 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           prop_desc.is_get_defined = true;
           prop_desc.get_p = ECMA_GET_POINTER (value_for_prop_desc.u.value.value);
 
-          if (is_previous_data_desc)
+          if (!is_previous_undefined
+              && is_previous_data_desc)
           {
             is_throw_syntax_error = true;
           }
@@ -1032,7 +1039,8 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           prop_desc.is_set_defined = true;
           prop_desc.set_p = ECMA_GET_POINTER (value_for_prop_desc.u.value.value);
 
-          if (is_previous_data_desc)
+          if (!is_previous_undefined
+              && is_previous_data_desc)
           {
             is_throw_syntax_error = true;
           }
@@ -1765,6 +1773,9 @@ opfunc_meta (opcode_t opdata, /**< operation data */
   switch (type)
   {
     case OPCODE_META_TYPE_VARG:
+    case OPCODE_META_TYPE_VARG_PROP_DATA:
+    case OPCODE_META_TYPE_VARG_PROP_GETTER:
+    case OPCODE_META_TYPE_VARG_PROP_SETTER:
     case OPCODE_META_TYPE_END_WITH:
     case OPCODE_META_TYPE_CATCH:
     case OPCODE_META_TYPE_FINALLY:
@@ -1774,9 +1785,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     }
     case OPCODE_META_TYPE_UNDEFINED:
     case OPCODE_META_TYPE_THIS_ARG:
-    case OPCODE_META_TYPE_VARG_PROP_DATA:
-    case OPCODE_META_TYPE_VARG_PROP_GETTER:
-    case OPCODE_META_TYPE_VARG_PROP_SETTER:
+
     case OPCODE_META_TYPE_FUNCTION_END:
     case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
     case OPCODE_META_TYPE_STRICT_CODE:

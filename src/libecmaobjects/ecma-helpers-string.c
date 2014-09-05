@@ -924,11 +924,11 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 int32_t
 ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
-  if (string_p->container != ECMA_STRING_CONTAINER_CONCATENATION)
+  if (likely (string_p->length != ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED))
   {
     return string_p->length;
   }
-  else if (string_p->length != ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED)
+  else if (string_p->container != ECMA_STRING_CONTAINER_CONCATENATION)
   {
     return string_p->length;
   }

@@ -60,6 +60,10 @@ main( int __unused argc,
 
   init_int( test_program);
 
-  return run_int() ? 0
-                   : 1;
+  bool is_ok = run_int();
+ 
+  serializer_free ();
+  mem_finalize (false);
+
+  return (is_ok ? 0 : 1);
 } /* main */

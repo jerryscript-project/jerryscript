@@ -1486,7 +1486,7 @@ opfunc_throw (opcode_t opdata, /**< operation data */
                                       false),
                   ret_value);
 
-  return ecma_make_throw_completion_value (ecma_copy_value (var_value.u.value, true));
+  ret_value = ecma_make_throw_completion_value (ecma_copy_value (var_value.u.value, true));
 
   ECMA_FINALIZE (var_value);
 

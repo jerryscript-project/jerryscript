@@ -99,4 +99,9 @@
 #define CONFIG_ECMA_CHAR_ASCII
 // #define CONFIG_ECMA_CHAR_UTF16
 
+/**
+ * Enable ecma-exception support
+ */
+#define CONFIG_ECMA_EXCEPTION_SUPPORT
+
 #endif /* !CONFIG_H */

@@ -94,10 +94,12 @@ run_int (void)
       /* SyntaxError should be treated as an early error */
       JERRY_UNREACHABLE ();
     }
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
     case ECMA_COMPLETION_TYPE_THROW:
     {
       jerry_exit (ERR_UNHANDLED_EXCEPTION);
     }
+#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
   }
 
   JERRY_UNREACHABLE ();

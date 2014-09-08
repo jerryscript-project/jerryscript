@@ -287,12 +287,16 @@ ecma_completion_value_t
 ecma_make_completion_value (ecma_completion_type_t type, /**< type */
                             ecma_value_t value) /**< value */
 {
-  JERRY_ASSERT (type == ECMA_COMPLETION_TYPE_NORMAL
-                || type == ECMA_COMPLETION_TYPE_THROW
-                || type == ECMA_COMPLETION_TYPE_RETURN
-                || type == ECMA_COMPLETION_TYPE_EXIT
-                || (type == ECMA_COMPLETION_TYPE_META
-                    && ecma_is_value_empty (value)));
+  const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
+                     || type == ECMA_COMPLETION_TYPE_THROW
+#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+                     || type == ECMA_COMPLETION_TYPE_RETURN
+                     || type == ECMA_COMPLETION_TYPE_EXIT
+                     || (type == ECMA_COMPLETION_TYPE_META
+                         && ecma_is_value_empty (value)));
+
+  JERRY_ASSERT (is_type_ok);
 
   ecma_completion_value_t ret_value = (ecma_completion_value_t)
   {
@@ -368,7 +372,13 @@ ecma_make_normal_completion_value (ecma_value_t value) /**< value */
 ecma_completion_value_t
 ecma_make_throw_completion_value (ecma_value_t value) /**< value */
 {
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW, value);
+#else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+  (void) value;
+
+  jerry_exit (ERR_UNHANDLED_EXCEPTION);
+#endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_make_throw_completion_value */
 
 /**
@@ -445,10 +455,14 @@ ecma_make_meta_completion_value (void)
 ecma_completion_value_t
 ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value */
 {
-  JERRY_ASSERT (value.type == ECMA_COMPLETION_TYPE_NORMAL
-                || value.type == ECMA_COMPLETION_TYPE_THROW
-                || value.type == ECMA_COMPLETION_TYPE_RETURN
-                || value.type == ECMA_COMPLETION_TYPE_EXIT);
+  const bool is_type_ok = (value.type == ECMA_COMPLETION_TYPE_NORMAL
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
+                           || value.type == ECMA_COMPLETION_TYPE_THROW
+#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+                           || value.type == ECMA_COMPLETION_TYPE_RETURN
+                           || value.type == ECMA_COMPLETION_TYPE_EXIT);
+
+  JERRY_ASSERT (is_type_ok);
 
   return ecma_make_completion_value (value.type,
                                      ecma_copy_value (value.u.value, true));
@@ -463,7 +477,9 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
   switch ((ecma_completion_type_t)completion_value.type)
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
     case ECMA_COMPLETION_TYPE_THROW:
+#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
     case ECMA_COMPLETION_TYPE_RETURN:
     {
       ecma_free_value (completion_value.u.value, true);
@@ -508,7 +524,13 @@ ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion 
 bool
 ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion value */
 {
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   return (value.type == ECMA_COMPLETION_TYPE_THROW);
+#else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+  (void) value;
+
+  return false;
+#endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_is_completion_value_throw */
 
 /**

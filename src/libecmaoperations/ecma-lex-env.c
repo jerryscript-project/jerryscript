@@ -498,7 +498,12 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
 ecma_object_t*
 ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global object */
 {
+#ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
+  (void) glob_obj_p;
+  ecma_object_t *glob_env_p = ecma_create_decl_lex_env (NULL);
+#else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
   ecma_object_t *glob_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
+#endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
 
   return glob_env_p;
 } /* ecma_op_create_global_environment */

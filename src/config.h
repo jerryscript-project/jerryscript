@@ -104,4 +104,10 @@
  */
 #define CONFIG_ECMA_EXCEPTION_SUPPORT
 
+/**
+ * Link Global Environment to an empty declarative lexical environment
+ * instead of lexical environment bound to Global Object.
+ */
+// #define CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
+
 #endif /* !CONFIG_H */

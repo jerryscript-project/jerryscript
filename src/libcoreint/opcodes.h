@@ -19,6 +19,9 @@
 #include "ecma-globals.h"
 #include "globals.h"
 
+/* Maximum opcodes number in bytecode.  */
+#define MAX_OPCODES (256*256 - 1)
+
 #define OP_0(action, name) \
         __##action (name, void, void, void)
 

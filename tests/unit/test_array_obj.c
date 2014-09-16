@@ -186,7 +186,6 @@ main( int __unused argc,
   bool status = run_int();
 
   serializer_free ();
-  mem_heap_print (true, false, true);
   mem_finalize (false);
 
   return (status ? 0 : 1);

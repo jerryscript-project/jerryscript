@@ -17,7 +17,7 @@
 #include "opcodes-ecma-support.h"
 
 /**
- * 'Jump if true' opcode handler.
+ * 'Jump down if true' opcode handler.
  *
  * Note:
  *      current opcode's position changes by adding specified offset
@@ -40,7 +40,7 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   if (ecma_is_value_true (to_bool_completion.u.value))
   {
-    JERRY_ASSERT (offset != 0);
+    JERRY_ASSERT (offset != 0 && (int_data->pos + offset < MAX_OPCODES));
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
   }
   else
@@ -89,7 +89,7 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 }
 
 /**
- * 'Jump if false' opcode handler.
+ * 'Jump down if false' opcode handler.
  *
  * Note:
  *      current opcode's position changes by adding specified offset
@@ -112,7 +112,7 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   if (!ecma_is_value_true (to_bool_completion.u.value))
   {
-    JERRY_ASSERT (offset != 0);
+    JERRY_ASSERT (offset != 0 && (int_data->pos + offset < MAX_OPCODES));
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
   }
   else
@@ -173,7 +173,7 @@ opfunc_jmp_down (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
                                                                     opdata.data.jmp_down.opcode_2);
 
-  JERRY_ASSERT (offset != 0);
+  JERRY_ASSERT (offset != 0 && (int_data->pos + offset < MAX_OPCODES));
 
   int_data->pos = (opcode_counter_t) (int_data->pos + offset);
 

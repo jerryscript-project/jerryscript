@@ -20,8 +20,6 @@
 #include "stack.h"
 #include "jerry-libc.h"
 
-#define MAX_OPCODES (256*256 - 1)
-
 #ifndef OPCODE_T_STACK_DEFINED
 DEFINE_STACK_TYPE (opcode_counter_t, opcode_t)
 #define OPCODE_T_STACK_DEFINED

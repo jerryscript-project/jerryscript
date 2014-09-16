@@ -274,22 +274,17 @@ libc_printf_write_d_i (_FILE *stream, /**< stream pointer */
   }
 
   char str_buffer[ 32 ];
-  const char *string_p = libc_printf_uint_to_string (value,
-                                                     str_buffer,
-                                                     sizeof (str_buffer),
-                                                     "0123456789",
-                                                     10);
+  char *string_p = libc_printf_uint_to_string (value,
+                                               str_buffer,
+                                               sizeof (str_buffer),
+                                               "0123456789",
+                                               10);
 
   if (!sign
       || (flags & LIBC_PRINTF_ARG_FLAG_PRINT_SIGN))
   {
-    /* printing sign */
-
-    libc_printf_putchar (stream, sign ? '+' : '-');
-    if (width > 0)
-    {
-      width--;
-    }
+    JERRY_ASSERT (string_p > str_buffer);
+    *--string_p = (sign ? '+' : '-');
   }
   else if (flags & LIBC_PRINTF_ARG_FLAG_SPACE)
   {

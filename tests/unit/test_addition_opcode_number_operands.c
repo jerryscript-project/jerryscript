@@ -37,6 +37,7 @@ main( int __unused argc,
   };
 
   mem_init();
+  serializer_init (false);
 
   const char *strings[] = { "a",
                             "b" };

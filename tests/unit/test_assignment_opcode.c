@@ -27,18 +27,18 @@ main( int __unused argc,
       char __unused **argv)
 {
   const opcode_t test_program[] = {
-    /*  0: */ getop_reg_var_decl( 255, 255),
-    /*  1: */ getop_var_decl( 0),
-    /*  2: */ getop_var_decl( 1),
-    /*  3: */ getop_assignment( 0, OPCODE_ARG_TYPE_STRING, 1),
-    /*  4: */ getop_assignment( 1, OPCODE_ARG_TYPE_VARIABLE, 0),
-    /*  5: */ getop_is_true_jmp( 1, 7),
-    /*  6: */ getop_jmp_down( 5),
-    /*  7: */ getop_assignment( 0, OPCODE_ARG_TYPE_SMALLINT, 253),
-    /*  8: */ getop_assignment( 1, OPCODE_ARG_TYPE_NUMBER, 2),
-    /*  9: */ getop_is_false_jmp( 1, 11),
-    /* 10: */ getop_exitval( 0),
-    /* 11: */ getop_exitval( 1)
+    [ 0] = getop_reg_var_decl (255, 255),
+    [ 1] = getop_var_decl (0),
+    [ 2] = getop_var_decl (1),
+    [ 3] = getop_assignment (0, OPCODE_ARG_TYPE_STRING, 1),
+    [ 4] = getop_assignment (1, OPCODE_ARG_TYPE_VARIABLE, 0),
+    [ 5] = getop_is_true_jmp_down (1, 0, 2),
+    [ 6] = getop_jmp_down (0, 5),
+    [ 7] = getop_assignment (0, OPCODE_ARG_TYPE_SMALLINT, 253),
+    [ 8] = getop_assignment (1, OPCODE_ARG_TYPE_NUMBER, 2),
+    [ 9] = getop_is_false_jmp_down (1, 0, 2),
+    [10] = getop_exitval (0),
+    [11] = getop_exitval (1)
   };
 
   mem_init();

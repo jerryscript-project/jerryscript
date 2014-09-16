@@ -28,7 +28,7 @@ main( int __unused argc,
 {
   const opcode_t test_program[] = {
     [ 0] = getop_reg_var_decl (240, 255),
-    [ 1] = getop_jmp_down (2),
+    [ 1] = getop_jmp_down (0, 2),
     [ 2] = getop_exitval (1),
 
     /* var a, b; */
@@ -82,14 +82,14 @@ main( int __unused argc,
     [36] = getop_prop_getter (240, 0, 240),
     [37] = getop_assignment (241, OPCODE_ARG_TYPE_STRING, 5),
     [38] = getop_equal_value_type (240, 240, 241),
-    [39] = getop_is_false_jmp (240, 2),
+    [39] = getop_is_false_jmp_up (240, 0, 37),
 
     /* assert (a.property2 === 1); */
     [40] = getop_assignment (240, OPCODE_ARG_TYPE_STRING, 3),
     [41] = getop_prop_getter (240, 0, 240),
     [42] = getop_assignment (241, OPCODE_ARG_TYPE_SMALLINT, 1),
     [43] = getop_equal_value_type (240, 240, 241),
-    [44] = getop_is_false_jmp (240, 2),
+    [44] = getop_is_false_jmp_up (240, 0, 42),
 
     /* a.property3 = 'value2'; */
     [45] = getop_assignment (240, OPCODE_ARG_TYPE_STRING, 4),
@@ -101,7 +101,7 @@ main( int __unused argc,
     [49] = getop_prop_getter (240, 0, 240),
     [50] = getop_assignment (241, OPCODE_ARG_TYPE_STRING, 6),
     [51] = getop_equal_value_type (240, 240, 241),
-    [52] = getop_is_false_jmp (240, 2),
+    [52] = getop_is_false_jmp_up (240, 0, 50),
 
     /* a.property2 = 2.5; */
     [53] = getop_assignment (240, OPCODE_ARG_TYPE_STRING, 3),
@@ -113,7 +113,7 @@ main( int __unused argc,
     [57] = getop_prop_getter (240, 0, 240),
     [58] = getop_assignment (241, OPCODE_ARG_TYPE_SMALLINT, 25),
     [59] = getop_equal_value_type (240, 240, 241),
-    [60] = getop_is_false_jmp (240, 2),
+    [60] = getop_is_false_jmp_up (240, 0, 58),
 
     /* b = delete a[b]; */
     [61] = getop_delete_prop (1, 0, 1),
@@ -121,14 +121,14 @@ main( int __unused argc,
     /* assert (b === true); */
     [62] = getop_assignment (240, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE),
     [63] = getop_equal_value_type (240, 240, 1),
-    [64] = getop_is_false_jmp (240, 2),
+    [64] = getop_is_false_jmp_up (240, 0, 62),
 
     /* assert (a.property1 === undefined); */
     [65] = getop_assignment (240, OPCODE_ARG_TYPE_STRING, 2),
     [66] = getop_prop_getter (240, 0, 240),
     [67] = getop_assignment (241, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED),
     [68] = getop_equal_value_type (240, 240, 241),
-    [69] = getop_is_false_jmp (240, 2),
+    [69] = getop_is_false_jmp_up (240, 0, 67),
 
     [70] = getop_exitval (0)
   };

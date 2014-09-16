@@ -23,7 +23,7 @@ static token empty_token =
 {
   .type =
   TOK_EMPTY,
-  .data.uid = 0
+  .uid = 0
 };
 
 static bool allow_dump_lines = false;
@@ -148,7 +148,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_BREAK
+      .uid = KW_BREAK
     };
   }
   if (current_token_equals_to ("case"))
@@ -156,7 +156,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_CASE
+      .uid = KW_CASE
     };
   }
   if (current_token_equals_to ("catch"))
@@ -164,7 +164,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_CATCH
+      .uid = KW_CATCH
     };
   }
   if (current_token_equals_to ("class"))
@@ -172,7 +172,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("const"))
@@ -180,7 +180,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("continue"))
@@ -188,7 +188,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_CONTINUE
+      .uid = KW_CONTINUE
     };
   }
   if (current_token_equals_to ("debugger"))
@@ -196,7 +196,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_DEBUGGER
+      .uid = KW_DEBUGGER
     };
   }
   if (current_token_equals_to ("default"))
@@ -204,7 +204,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_DEFAULT
+      .uid = KW_DEFAULT
     };
   }
   if (current_token_equals_to ("delete"))
@@ -212,7 +212,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_DELETE
+      .uid = KW_DELETE
     };
   }
   if (current_token_equals_to ("do"))
@@ -220,7 +220,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_DO
+      .uid = KW_DO
     };
   }
   if (current_token_equals_to ("else"))
@@ -228,7 +228,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_ELSE
+      .uid = KW_ELSE
     };
   }
   if (current_token_equals_to ("enum"))
@@ -236,7 +236,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("export"))
@@ -244,7 +244,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("extends"))
@@ -252,7 +252,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("false"))
@@ -260,7 +260,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_BOOL,
-      .data.uid = false
+      .uid = false
     };
   }
   if (current_token_equals_to ("finally"))
@@ -268,7 +268,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_FINALLY
+      .uid = KW_FINALLY
     };
   }
   if (current_token_equals_to ("for"))
@@ -276,7 +276,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_FOR
+      .uid = KW_FOR
     };
   }
   if (current_token_equals_to ("function"))
@@ -284,7 +284,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_FUNCTION
+      .uid = KW_FUNCTION
     };
   }
   if (current_token_equals_to ("if"))
@@ -292,7 +292,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_IF
+      .uid = KW_IF
     };
   }
   if (current_token_equals_to ("instanceof"))
@@ -300,7 +300,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_INSTANCEOF
+      .uid = KW_INSTANCEOF
     };
   }
   if (current_token_equals_to ("interface"))
@@ -308,7 +308,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("in"))
@@ -316,7 +316,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_IN
+      .uid = KW_IN
     };
   }
   if (current_token_equals_to ("import"))
@@ -324,7 +324,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("implements"))
@@ -332,7 +332,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("let"))
@@ -340,7 +340,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("new"))
@@ -348,7 +348,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_NEW
+      .uid = KW_NEW
     };
   }
   if (current_token_equals_to ("null"))
@@ -356,7 +356,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_NULL,
-      .data.uid = 0
+      .uid = 0
     };
   }
   if (current_token_equals_to ("package"))
@@ -364,7 +364,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("private"))
@@ -372,7 +372,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("protected"))
@@ -380,7 +380,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("public"))
@@ -388,7 +388,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("return"))
@@ -396,7 +396,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RETURN
+      .uid = KW_RETURN
     };
   }
   if (current_token_equals_to ("static"))
@@ -404,7 +404,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("super"))
@@ -412,7 +412,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   if (current_token_equals_to ("switch"))
@@ -420,7 +420,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_SWITCH
+      .uid = KW_SWITCH
     };
   }
   if (current_token_equals_to ("this"))
@@ -428,7 +428,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_THIS
+      .uid = KW_THIS
     };
   }
   if (current_token_equals_to ("throw"))
@@ -436,7 +436,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_THROW
+      .uid = KW_THROW
     };
   }
   if (current_token_equals_to ("true"))
@@ -444,7 +444,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_BOOL,
-      .data.uid = true
+      .uid = true
     };
   }
   if (current_token_equals_to ("try"))
@@ -452,7 +452,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_TRY
+      .uid = KW_TRY
     };
   }
   if (current_token_equals_to ("typeof"))
@@ -460,7 +460,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_TYPEOF
+      .uid = KW_TYPEOF
     };
   }
   if (current_token_equals_to ("var"))
@@ -468,7 +468,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_VAR
+      .uid = KW_VAR
     };
   }
   if (current_token_equals_to ("void"))
@@ -476,7 +476,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_VOID
+      .uid = KW_VOID
     };
   }
   if (current_token_equals_to ("while"))
@@ -484,7 +484,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_WHILE
+      .uid = KW_WHILE
     };
   }
   if (current_token_equals_to ("with"))
@@ -492,7 +492,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_WITH
+      .uid = KW_WITH
     };
   }
   if (current_token_equals_to ("yield"))
@@ -500,7 +500,7 @@ decode_keyword (void)
     return (token)
     {
       .type = TOK_KEYWORD,
-      .data.kw = KW_RESERVED
+      .uid = KW_RESERVED
     };
   }
   return empty_token;
@@ -522,7 +522,7 @@ convert_seen_name_to_token (token_type tt, const char *string)
       ret_val = (token)
       {
         .type = tt,
-        .data.uid = i
+        .uid = i
       };
 
       break;
@@ -574,7 +574,7 @@ add_token_to_seen_names (token_type tt, const char *string)
   ret_val = (token)
   {
     .type = tt,
-    .data.uid = seen_names_count++
+    .uid = seen_names_count++
   };
 
   return ret_val;
@@ -668,7 +668,7 @@ lexer_adjust_num_ids (void)
 
   for (i = 0; i < seen_nums_count; i++)
   {
-    seen_nums[i].tok.data.uid = (uint8_t) (seen_nums[i].tok.data.uid + seen_names_count);
+    seen_nums[i].tok.uid = (uint8_t) (seen_nums[i].tok.uid + seen_names_count);
   }
 }
 
@@ -693,7 +693,7 @@ consume_char (void)
     return (token) \
     { \
       .type = TOK, \
-      .data.uid = 0 \
+      .uid = 0 \
     }; \
   } \
   while (0)
@@ -881,7 +881,7 @@ parse_number (void)
       return (token)
       {
         .type = TOK_SMALL_INT,
-        .data.uid = (uint8_t) res
+        .uid = (uint8_t) res
       };
     }
 
@@ -894,7 +894,7 @@ parse_number (void)
     known_token = (token)
     {
       .type = TOK_NUMBER,
-      .data.uid = seen_nums_count
+      .uid = seen_nums_count
     };
     add_num_to_seen_tokens (
       (num_and_token)
@@ -981,7 +981,7 @@ parse_number (void)
     known_token = (token)
     {
       .type = TOK_NUMBER,
-      .data.uid = seen_nums_count
+      .uid = seen_nums_count
     };
     add_num_to_seen_tokens (
       (num_and_token)
@@ -1006,7 +1006,7 @@ parse_number (void)
     return (token)
     {
       .type = TOK_SMALL_INT,
-      .data.uid = (uint8_t) res
+      .uid = (uint8_t) res
     };
   }
 
@@ -1019,7 +1019,7 @@ parse_number (void)
   known_token = (token)
   {
     .type = TOK_NUMBER,
-    .data.uid = seen_nums_count
+    .uid = seen_nums_count
   };
   add_num_to_seen_tokens (
     (num_and_token)
@@ -1251,7 +1251,7 @@ lexer_next_token_private (void)
     return (token)
     {
       .type = TOK_NEWLINE,
-      .data.uid = 0
+      .uid = 0
     };
   }
 
@@ -1260,7 +1260,7 @@ lexer_next_token_private (void)
     return (token)
     {
       .type = TOK_EOF,
-      .data.uid = 0
+      .uid = 0
     };
   }
 
@@ -1282,7 +1282,7 @@ lexer_next_token_private (void)
       return (token)
       {
         .type = TOK_NEWLINE,
-        .data.uid = 0
+        .uid = 0
       };
     }
     else

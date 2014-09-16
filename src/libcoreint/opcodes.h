@@ -165,12 +165,13 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_3 (a, remainder, dst, var_left, var_right)
 
 #define OP_JUMPS(p, a)                                                       \
-        p##_1 (a, jmp, opcode_idx)                                           \
-        p##_1 (a, jmp_up, opcode_count)                                      \
-        p##_1 (a, jmp_down, opcode_count)                                    \
+        p##_2 (a, jmp_up, opcode_1, opcode_2)                                \
+        p##_2 (a, jmp_down, opcode_1, opcode_2)                              \
         p##_0 (a, nop)                                                       \
-        p##_2 (a, is_true_jmp, value, opcode)                                \
-        p##_2 (a, is_false_jmp, value, opcode)
+        p##_3 (a, is_true_jmp_up, value, opcode_1, opcode_2)                 \
+        p##_3 (a, is_true_jmp_down, value, opcode_1, opcode_2)               \
+        p##_3 (a, is_false_jmp_up, value, opcode_1, opcode_2)                \
+        p##_3 (a, is_false_jmp_down, value, opcode_1, opcode_2)
 
 #define OP_LIST_FULL(p, a)                                                   \
         OP_CALLS_AND_ARGS (p, a)                                             \

@@ -85,7 +85,8 @@ deserialize_num_by_id (uint8_t id)
 const void *
 deserialize_bytecode (void)
 {
-  return bytecode_opcodes;
+  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) > 0);
+  return bytecode_opcodes.data;
 }
 
 uint8_t

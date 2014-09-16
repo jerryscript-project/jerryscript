@@ -20,6 +20,7 @@
 
 void parser_init (void);
 void parser_parse_program (void);
+void parser_free (void);
 
 void parser_fatal (jerry_status_t code);
 

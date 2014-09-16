@@ -27,11 +27,11 @@ main( int __unused argc,
       char __unused **argv)
 {
   const opcode_t test_program[] = {
-    /*  0: */ getop_reg_var_decl( 255, 255),
-    /*  1: */ getop_var_decl( 0),
-    /*  2: */ getop_is_true_jmp( 0, 4),
-    /*  3: */ getop_exitval( 0),
-    /*  4: */ getop_exitval( 1)
+    [0] = getop_reg_var_decl( 255, 255),
+    [1] = getop_var_decl( 0),
+    [2] = getop_is_true_jmp_down( 0, 0, 2),
+    [3] = getop_exitval( 0),
+    [4] = getop_exitval( 1)
   };
 
   mem_init();

@@ -13,12 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef BYTECODE_LINUX_H
-#define BYTECODE_LINUX_H
+#ifndef BYTECODE_DATA_H
+#define BYTECODE_DATA_H
 
 #include "opcodes.h"
+#include "stack.h"
+#include "jerry-libc.h"
 
-#define MAX_OPCODES 255
+#define MAX_OPCODES (256*256 - 1)
+
+#ifndef OPCODE_T_STACK_DEFINED
+DEFINE_STACK_TYPE (opcode_counter_t, opcode_t)
+#define OPCODE_T_STACK_DEFINED
+#endif
 
 /* bytecode_data contains identifiers, string and num literals.
    Memory map if the following.
@@ -32,6 +39,11 @@
       U32 nums[nums_count];
    } */
 extern uint8_t *bytecode_data;
-opcode_t bytecode_opcodes[MAX_OPCODES];
 
-#endif // BYTECODE_LINUX_H
+enum
+{
+  bytecode_opcodes_global_size
+};
+STACK (opcode_t, bytecode_opcodes)
+
+#endif // BYTECODE_DATA_H

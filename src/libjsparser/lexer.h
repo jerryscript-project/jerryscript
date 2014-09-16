@@ -138,12 +138,7 @@ typedef struct
 {
   token_type type;
 
-  union
-  {
-    keyword kw;
-    uint8_t uid;
-  }
-  data;
+  uint8_t uid;
 }
 __packed
 token;

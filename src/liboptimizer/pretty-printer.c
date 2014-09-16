@@ -91,18 +91,20 @@ dump_variable (idx_t id)
   }
 }
 
-#define CASE_CONDITIONAL_JUMP(op, string1, field1, string2, field2) \
+#define CASE_CONDITIONAL_JUMP(op, string1, field1, string2, oc, sign, field2, field3) \
   case NAME_TO_ID (op): \
     __printf (string1); \
     dump_variable (opcode.data.op.field1); \
     __printf (string2); \
-    __printf (" %d;", opcode.data.op.field2); \
+    __printf (" %d;", oc sign ((opcode.data.op.field2 << JERRY_BITSINBYTE) \
+                               + opcode.data.op.field3)); \
     break;
 
-#define CASE_UNCONDITIONAL_JUMP(op, string, oc, oper, field) \
+#define CASE_UNCONDITIONAL_JUMP(op, string, oc, sign, field2, field3) \
   case NAME_TO_ID (op): \
     __printf (string); \
-    __printf (" %d;", oc oper opcode.data.op.field); \
+    __printf (" %d;", oc sign ((opcode.data.op.field2 << JERRY_BITSINBYTE) \
+                               + opcode.data.op.field3)); \
     break;
 
 #define CASE_TRIPLE_ADDRESS(op, lhs, equals, op1, oper, op2) \
@@ -366,12 +368,13 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 
   switch (opcode_num)
   {
-    CASE_CONDITIONAL_JUMP (is_true_jmp, "if (", value, ") goto", opcode)
-    CASE_CONDITIONAL_JUMP (is_false_jmp, "if (", value, " == false) goto", opcode)
+    CASE_CONDITIONAL_JUMP (is_true_jmp_up, "if (", value, ") goto", oc, -, opcode_1, opcode_2)
+    CASE_CONDITIONAL_JUMP (is_false_jmp_up, "if (", value, " == false) goto", oc, -, opcode_1, opcode_2)
+    CASE_CONDITIONAL_JUMP (is_true_jmp_down, "if (", value, ") goto", oc, +, opcode_1, opcode_2)
+    CASE_CONDITIONAL_JUMP (is_false_jmp_down, "if (", value, " == false) goto", oc, +, opcode_1, opcode_2)
 
-    CASE_UNCONDITIONAL_JUMP (jmp, "goto", 0, +, opcode_idx)
-    CASE_UNCONDITIONAL_JUMP (jmp_up, "goto", oc, -, opcode_count)
-    CASE_UNCONDITIONAL_JUMP (jmp_down, "goto", oc, +, opcode_count)
+    CASE_UNCONDITIONAL_JUMP (jmp_up, "goto", oc, -, opcode_1, opcode_2)
+    CASE_UNCONDITIONAL_JUMP (jmp_down, "goto", oc, +, opcode_1, opcode_2)
 
     CASE_TRIPLE_ADDRESS (addition, dst, "=", var_left, "+", var_right)
     CASE_TRIPLE_ADDRESS (substraction, dst, "=", var_left, "-", var_right)

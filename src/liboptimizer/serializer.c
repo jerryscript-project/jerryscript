@@ -28,6 +28,7 @@ void
 serializer_init (bool show_opcodes)
 {
   print_opcodes = show_opcodes;
+  INIT_STACK (opcode_t, bytecode_opcodes);
 }
 
 uint16_t
@@ -111,25 +112,24 @@ serializer_dump_nums (const ecma_number_t nums[], uint8_t size, uint16_t offset,
 #endif
 }
 
-static opcode_counter_t opcode_counter = 0;
-
 void
 serializer_dump_opcode (opcode_t opcode)
 {
+  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) < MAX_OPCODES);
+
   if (print_opcodes)
   {
-    pp_opcode (opcode_counter, opcode, false);
+    pp_opcode (STACK_SIZE (bytecode_opcodes), opcode, false);
   }
 
-  JERRY_ASSERT (opcode_counter < MAX_OPCODES);
-  bytecode_opcodes[opcode_counter++] = opcode;
+  PUSH (bytecode_opcodes, opcode)
 }
 
 void
 serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
-  JERRY_ASSERT (loc < MAX_OPCODES);
-  bytecode_opcodes[loc] = opcode;
+  JERRY_ASSERT (loc < STACK_SIZE (bytecode_opcodes));
+  bytecode_opcodes.data[loc] = opcode;
 
   if (print_opcodes)
   {
@@ -149,9 +149,9 @@ serializer_print_opcodes (void)
 
   __printf ("AFTER OPTIMIZER:\n");
 
-  for (loc = 0; (*(uint32_t *) (bytecode_opcodes + loc) != 0x0); loc++)
+  for (loc = 0; loc < STACK_SIZE (bytecode_opcodes); loc++)
   {
-    pp_opcode (loc, bytecode_opcodes[loc], false);
+    pp_opcode (loc, bytecode_opcodes.data[loc], false);
   }
 }
 
@@ -160,4 +160,9 @@ serializer_free (void)
 {
   mem_heap_free_block (bytecode_data);
   bytecode_data = NULL;
+
+  if (bytecode_opcodes.data)
+  {
+    FREE_STACK (bytecode_opcodes);
+  }
 }

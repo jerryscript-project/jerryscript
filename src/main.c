@@ -56,6 +56,7 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   parser_parse_program ();
 
   lexer_free ();
+  parser_free ();
 
   opcodes = deserialize_bytecode ();
 

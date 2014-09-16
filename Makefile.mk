@@ -285,8 +285,9 @@ SOURCES_JERRY_H = \
  $(wildcard ./src/libecmaoperations/*.h) \
  $(wildcard ./src/liballocator/*.h) \
  $(wildcard ./src/libcoreint/*.h) \
- $(wildcard ./src/liboptimizer/*.h) ) \
- $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.h)
+ $(wildcard ./src/liboptimizer/*.h) \
+ $(wildcard ./src/libintstructs/*.h) \
+ $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.h) )
 
 SOURCES_JERRY_ASM = \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.S)
@@ -302,7 +303,8 @@ INCLUDES_JERRY = \
  -I src/libecmaoperations \
  -I src/liballocator \
  -I src/liboptimizer \
- -I src/libcoreint
+ -I src/libcoreint \
+ -I src/libintstructs
 
 # libc
 ifeq ($(OPTION_LIBC),musl)

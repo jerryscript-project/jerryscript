@@ -27,6 +27,7 @@ core
 vgcore.*
 **.orig
 **.directory
+**.patch
 
 # ctags and ID database
 tags

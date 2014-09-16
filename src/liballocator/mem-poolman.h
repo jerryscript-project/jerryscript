@@ -46,17 +46,24 @@ typedef struct
   /** peak pools' count */
   size_t peak_pools_count;
 
+  /** non-resettable peak pools' count */
+  size_t global_peak_pools_count;
+
   /** allocated chunks count */
   size_t allocated_chunks;
 
   /** peak allocated chunks count */
   size_t peak_allocated_chunks;
 
+  /** non-resettable peak allocated chunks count */
+  size_t global_peak_allocated_chunks;
+
   /** free chunks count */
   size_t free_chunks;
 } mem_pools_stats_t;
 
 extern void mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p);
+extern void mem_pools_stats_reset_peak (void);
 #endif /* MEM_STATS */
 
 #endif /* JERRY_MEM_POOLMAN_H */

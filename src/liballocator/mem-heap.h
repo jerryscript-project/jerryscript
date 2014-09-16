@@ -57,19 +57,24 @@ typedef struct
 
   size_t allocated_chunks; /**< currently allocated chunks */
   size_t peak_allocated_chunks; /**< peak allocated chunks */
+  size_t global_peak_allocated_chunks; /**< non-resettable peak allocated chunks */
 
   size_t allocated_blocks; /**< currently allocated blocks */
   size_t peak_allocated_blocks; /**< peak allocated blocks */
+  size_t global_peak_allocated_blocks; /**< non-resettable peak allocated blocks */
 
   size_t allocated_bytes; /**< currently allocated bytes */
   size_t peak_allocated_bytes; /**< peak allocated bytes */
+  size_t global_peak_allocated_bytes; /**< non-resettable peak allocated bytes */
 
   size_t waste_bytes; /**< bytes waste due to blocks filled partially
                            and due to block headers */
   size_t peak_waste_bytes; /**< peak bytes waste */
+  size_t global_peak_waste_bytes; /**< non-resettable peak bytes waste */
 } mem_heap_stats_t;
 
 extern void mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p);
+extern void mem_heap_stats_reset_peak (void);
 #endif /* MEM_STATS */
 
 /**

@@ -58,7 +58,7 @@ main( int __unused argc,
   uint16_t offset = serializer_dump_strings( strings, 3);
   serializer_dump_nums( nums, 1, offset, 3);
 
-  init_int( test_program);
+  init_int( test_program, false);
 
   bool is_ok = run_int();
  

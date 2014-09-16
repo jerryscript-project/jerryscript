@@ -26,6 +26,7 @@
 #include "globals.h"
 #include "mem-config.h"
 #include "mem-heap.h"
+#include "mem-poolman.h"
 
 /**
  * Representation of NULL value for compressed pointers

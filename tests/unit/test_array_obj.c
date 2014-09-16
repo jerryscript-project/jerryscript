@@ -181,7 +181,7 @@ main( int __unused argc,
   uint16_t offset = serializer_dump_strings( strings, 4);
   serializer_dump_nums( nums, 3, offset, 4);
 
-  init_int( test_program);
+  init_int( test_program, false);
 
   bool status = run_int();
 

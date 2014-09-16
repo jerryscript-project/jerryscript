@@ -226,6 +226,16 @@ mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stat
 } /* mem_pools_get_stats */
 
 /**
+ * Reset peak values in memory usage statistics
+ */
+void
+mem_pools_stats_reset_peak (void)
+{
+  mem_pools_stats.peak_pools_count = mem_pools_stats.pools_count;
+  mem_pools_stats.peak_allocated_chunks = mem_pools_stats.allocated_chunks;
+} /* mem_pools_stats_reset_peak */
+
+/**
  * Initalize pools' memory usage statistics account structure
  */
 static void
@@ -246,6 +256,10 @@ mem_pools_stat_alloc_pool (void)
   if (mem_pools_stats.pools_count > mem_pools_stats.peak_pools_count)
   {
     mem_pools_stats.peak_pools_count = mem_pools_stats.pools_count;
+  }
+  if (mem_pools_stats.pools_count > mem_pools_stats.global_peak_pools_count)
+  {
+    mem_pools_stats.global_peak_pools_count = mem_pools_stats.pools_count;
   }
 } /* mem_pools_stat_alloc_pool */
 
@@ -275,6 +289,10 @@ mem_pools_stat_alloc_chunk (void)
   if (mem_pools_stats.allocated_chunks > mem_pools_stats.peak_allocated_chunks)
   {
     mem_pools_stats.peak_allocated_chunks = mem_pools_stats.allocated_chunks;
+  }
+  if (mem_pools_stats.allocated_chunks > mem_pools_stats.global_peak_allocated_chunks)
+  {
+    mem_pools_stats.global_peak_allocated_chunks = mem_pools_stats.allocated_chunks;
   }
 } /* mem_pools_stat_alloc_chunk */
 

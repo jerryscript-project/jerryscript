@@ -77,6 +77,16 @@ typedef struct
   idx_t min_reg_num; /**< minimum idx used for register identification */
   idx_t max_reg_num; /**< maximum idx used for register identification */
   ecma_value_t *regs_p; /**< register variables */
+
+#ifdef MEM_STATS
+  size_t context_peak_allocated_heap_bytes;
+  size_t context_peak_waste_heap_bytes;
+  size_t context_peak_pools_count;
+  size_t context_peak_allocated_pool_chunks;
+
+  mem_heap_stats_t heap_stats_context_enter;
+  mem_pools_stats_t pools_stats_context_enter;
+#endif /* MEM_STATS */
 } int_data_t;
 
 opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);

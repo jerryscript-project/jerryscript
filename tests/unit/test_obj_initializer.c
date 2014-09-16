@@ -147,7 +147,7 @@ main( int __unused argc,
   uint16_t offset = serializer_dump_strings( strings, 7);
   serializer_dump_nums( nums, 1, offset, 7);
 
-  init_int( test_program);
+  init_int( test_program, false);
 
   bool status = run_int();
 

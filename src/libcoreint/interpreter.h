@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "opcodes.h"
 
-void init_int (const opcode_t* program_p);
+void init_int (const opcode_t* program_p, bool dump_mem_stats);
 bool run_int (void);
 ecma_completion_value_t run_int_loop (int_data_t *int_data);
 ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,

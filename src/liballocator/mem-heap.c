@@ -808,6 +808,18 @@ mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p) /**< out: heap stats */
 } /* mem_heap_get_stats */
 
 /**
+ * Reset peak values in memory usage statistics
+ */
+void
+mem_heap_stats_reset_peak (void)
+{
+  mem_heap_stats.peak_allocated_chunks = mem_heap_stats.allocated_chunks;
+  mem_heap_stats.peak_allocated_blocks = mem_heap_stats.allocated_blocks;
+  mem_heap_stats.peak_allocated_bytes = mem_heap_stats.allocated_bytes;
+  mem_heap_stats.peak_waste_bytes = mem_heap_stats.waste_bytes;
+} /* mem_heap_stats_reset_peak */
+
+/**
  * Initalize heap memory usage statistics account structure
  */
 static void
@@ -840,20 +852,36 @@ mem_heap_stat_alloc_block (mem_block_header_t *block_header_p) /**< allocated bl
   {
     mem_heap_stats.peak_allocated_blocks = mem_heap_stats.allocated_blocks;
   }
+  if (mem_heap_stats.allocated_blocks > mem_heap_stats.global_peak_allocated_blocks)
+  {
+    mem_heap_stats.global_peak_allocated_blocks = mem_heap_stats.allocated_blocks;
+  }
 
   if (mem_heap_stats.allocated_chunks > mem_heap_stats.peak_allocated_chunks)
   {
     mem_heap_stats.peak_allocated_chunks = mem_heap_stats.allocated_chunks;
+  }
+  if (mem_heap_stats.allocated_chunks > mem_heap_stats.global_peak_allocated_chunks)
+  {
+    mem_heap_stats.global_peak_allocated_chunks = mem_heap_stats.allocated_chunks;
   }
 
   if (mem_heap_stats.allocated_bytes > mem_heap_stats.peak_allocated_bytes)
   {
     mem_heap_stats.peak_allocated_bytes = mem_heap_stats.allocated_bytes;
   }
+  if (mem_heap_stats.allocated_bytes > mem_heap_stats.global_peak_allocated_bytes)
+  {
+    mem_heap_stats.global_peak_allocated_bytes = mem_heap_stats.allocated_bytes;
+  }
 
   if (mem_heap_stats.waste_bytes > mem_heap_stats.peak_waste_bytes)
   {
     mem_heap_stats.peak_waste_bytes = mem_heap_stats.waste_bytes;
+  }
+  if (mem_heap_stats.waste_bytes > mem_heap_stats.global_peak_waste_bytes)
+  {
+    mem_heap_stats.global_peak_waste_bytes = mem_heap_stats.waste_bytes;
   }
 
   JERRY_ASSERT(mem_heap_stats.allocated_blocks <= mem_heap_stats.blocks);

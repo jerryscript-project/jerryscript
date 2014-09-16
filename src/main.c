@@ -85,7 +85,7 @@ jerry_run (const char *script_source, size_t script_source_size,
     return true;
   }
 
-  init_int (opcodes);
+  init_int (opcodes, is_show_mem_stats);
 
   bool is_success = run_int ();
 
@@ -184,7 +184,13 @@ main (int argc __unused,
     }
     if (!__strcmp ("--mem-stats", argv[i]))
     {
+#ifdef MEM_STATS
       print_mem_stats = true;
+#else /* MEM_STATS */
+      __printf ("Ignoring --mem-stats because of '!MEM_STATS' build configuration.\n");
+
+      print_mem_stats = false;
+#endif /* !MEM_STATS */
     }
     else if (!__strcmp ("--parse-only", argv[i]))
     {

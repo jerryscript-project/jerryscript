@@ -116,18 +116,18 @@ do
   fi
 
   echo "Pre-commit quality testing for '$commit_hash' passed successfully"
-  echo
-  echo "Starting pre-commit performance measurement for '$commit_hash'"
-  echo
+#  echo
+#  echo "Starting pre-commit performance measurement for '$commit_hash'"
+#  echo
 
-  BENCH_ENGINE="./out/release.linux/jerry"
-  BENCH_SCRIPT="./benchmarks/jerry/loop_arithmetics_1kk.js"
-  PERF_ITERS="5"
-  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
-  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss_measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
+#  BENCH_ENGINE="./out/release.linux/jerry"
+#  BENCH_SCRIPT="./benchmarks/jerry/loop_arithmetics_1kk.js"
+#  PERF_ITERS="5"
+#  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
+#  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss_measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
 
-  echo "Pre-commit performance measurement for '$commit_hash' completed"
-  echo
+#  echo "Pre-commit performance measurement for '$commit_hash' completed"
+#  echo
 
 #  git notes --ref=test_build_env add -m "$BUILD_INFO" $commit_hash
 #  git notes --ref=perf add -m "$PERF_INFO" $commit_hash

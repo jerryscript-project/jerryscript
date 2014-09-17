@@ -80,17 +80,16 @@ all: precommit
 
 PRECOMMIT_CHECK_TARGETS_LIST= debug.linux.check \
                               release.linux.check \
-                              debug_release.linux.check
+                              debug_release.linux.check \
+                              debug.linux-valgrind.check \
+                              release.linux-musl-valgrind.check
 
-                              #debug.linux-valgrind.check \
-                              debug.linux-musl-valgrind.check \
+                              # debug.linux-musl-valgrind.check \
                               debug_release.linux-valgrind.check \
                               debug_release.linux-musl.check \
-                              release.linux-musl-valgrind.check \
                               release.linux-valgrind.check \
-                              release.linux.check
-
-                              #debug.linux-sanitize.check \
+                              release.linux.check \
+                              debug.linux-sanitize.check \
                               release.linux-sanitize.check \
                               debug_release.linux-sanitize.check
 push: ./tools/push.sh

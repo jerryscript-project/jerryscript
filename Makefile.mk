@@ -347,9 +347,11 @@ endif
 
 ifeq ($(OPTION_VALGRIND),enable)
  VALGRIND_CMD := "valgrind --error-exitcode=254 --track-origins=yes"
+ VALGRIND_TIMEOUT := 60
 else
  VALGRIND_CMD :=
  DEFINES_JERRY += -DJERRY_NVALGRIND
+ VALGRIND_TIMEOUT :=
 endif
 
 #
@@ -474,7 +476,7 @@ $(CHECK_TARGETS):
           then \
             ADD_OPTS="--output-to-log"; \
           fi; \
-          VALGRIND=$(VALGRIND_CMD) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
+          VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
           status_code=$$?; \
           if [ $$status_code -ne 0 ]; \
           then \

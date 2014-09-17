@@ -53,6 +53,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
     case ECMA_MAGIC_STRING_NAN: return (ecma_char_t*) "NaN";
     case ECMA_MAGIC_STRING_INFINITY: return (ecma_char_t*) "Infinity";
+    case ECMA_MAGIC_STRING__COUNT: break;
   }
 
   JERRY_UNREACHABLE();
@@ -68,6 +69,37 @@ ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
   return ecma_new_ecma_string (ecma_get_magic_string_zt (id));
 } /* ecma_get_magic_string */
+
+/**
+ * Check if passed string equals to one of magic strings
+ * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ *
+ * @return true - if magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+bool
+ecma_is_magic_string (ecma_char_t *zt_string_p, /**< zero-terminated string */
+                      ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
+{
+  TODO (Improve performance of search);
+
+
+  for (ecma_magic_string_id_t id = 0;
+       id < ECMA_MAGIC_STRING__COUNT;
+       id++)
+  {
+    if (ecma_compare_zt_strings (zt_string_p, ecma_get_magic_string_zt (id)))
+    {
+      *out_id_p = id;
+      
+      return true;
+    }
+  }
+
+  *out_id_p = ECMA_MAGIC_STRING__COUNT;
+
+  return false;
+} /* ecma_is_magic_string */
 
 /**
  * @}

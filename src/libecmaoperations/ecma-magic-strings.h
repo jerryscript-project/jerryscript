@@ -46,11 +46,13 @@ typedef enum
   ECMA_MAGIC_STRING_FUNCTION, /**< "function" */
   ECMA_MAGIC_STRING_LENGTH, /**< "length" */
   ECMA_MAGIC_STRING_NAN, /**< "NaN" */
-  ECMA_MAGIC_STRING_INFINITY /**< "Infinity" */
+  ECMA_MAGIC_STRING_INFINITY, /**< "Infinity" */
+  ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 
 extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
+extern bool ecma_is_magic_string (ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
 
 /**
  * @}

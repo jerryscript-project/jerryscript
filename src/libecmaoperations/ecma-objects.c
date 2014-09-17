@@ -63,6 +63,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       return ecma_op_function_object_get (obj_p, property_name_p);
     }
@@ -101,6 +102,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       return ecma_op_general_object_get_own_property (obj_p, property_name_p);
     }
@@ -146,6 +148,7 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_get_property (obj_p, property_name_p);
@@ -188,6 +191,7 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_put (obj_p, property_name_p, value, is_throw);
@@ -228,6 +232,7 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_can_put (obj_p, property_name_p);
@@ -268,6 +273,7 @@ ecma_op_object_has_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_has_property (obj_p, property_name_p);
@@ -308,6 +314,7 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_delete (obj_p, property_name_p, is_throw);
@@ -352,6 +359,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_default_value (obj_p, hint);
@@ -392,6 +400,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc, is_throw);
@@ -443,6 +452,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (obj_p, value);
     }

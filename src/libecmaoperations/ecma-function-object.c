@@ -101,7 +101,8 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 } /* ecma_op_is_callable */
 
 /**
@@ -124,7 +125,8 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 } /* ecma_is_constructor */
 
 /**
@@ -517,6 +519,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
     return ret_value;
   }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    JERRY_UNIMPLEMENTED ();
+  }
   else
   {
     JERRY_ASSERT(ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
@@ -543,7 +549,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+      || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
     ecma_completion_value_t ret_value;
 

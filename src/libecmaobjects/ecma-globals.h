@@ -314,6 +314,8 @@ typedef enum
   ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
   ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION, /** One of built-in functions described in section 15
+                                          of ECMA-262 v5 specification */
   ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
   ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_HOST /**< Host object */
@@ -421,10 +423,17 @@ typedef struct
 #define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
+ * Flag indicating whether the object has non-instantiated built-in properties
+ */
+#define ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
+                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
+#define ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH (1)
+
+/**
  * Size of structure for objects
  */
-#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
-                                   ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
+#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS + \
+                                   ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH)
 
 
 /* Lexical environments' only part */

@@ -31,6 +31,17 @@ then
   echo -e "\n\n  $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"
 fi
 
+echo "Pulling..."
+
+make pull
+status_code=$?
+
+if [ $status_code -ne 0 ]
+then
+  echo "Pull failed"
+  exit 1
+fi
+
 ok_to_push=1
 
 current_branch=`git branch | grep "^* " | cut -d ' ' -f 2`
@@ -133,15 +144,6 @@ if [ $ok_to_push -eq 1 ]
 then
   if [ "`git status --porcelain 2>&1 | wc -l`" == "0" ]
   then
-    echo "Pulling..."
-    make pull
-    status_code=$?
-    if [ $status_code -ne 0 ]
-    then
-      echo "Pull failed"
-      exit 1
-    fi
-
     echo "Pushing..."
     echo
 

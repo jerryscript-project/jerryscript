@@ -270,6 +270,7 @@ SOURCES_JERRY_C = \
  $(wildcard ./src/libjsparser/*.c) \
  $(wildcard ./src/libecmaobjects/*.c) \
  $(wildcard ./src/libecmaoperations/*.c) \
+ $(wildcard ./src/libecmabuiltins/*.c) \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) \
  $(wildcard ./src/liboptimizer/*.c) ) \
@@ -283,6 +284,7 @@ SOURCES_JERRY_H = \
  $(wildcard ./src/libjsparser/*.h) \
  $(wildcard ./src/libecmaobjects/*.h) \
  $(wildcard ./src/libecmaoperations/*.h) \
+ $(wildcard ./src/libecmabuiltins/*.h) \
  $(wildcard ./src/liballocator/*.h) \
  $(wildcard ./src/libcoreint/*.h) \
  $(wildcard ./src/liboptimizer/*.h) \
@@ -301,6 +303,7 @@ INCLUDES_JERRY = \
  -I src/libjsparser \
  -I src/libecmaobjects \
  -I src/libecmaoperations \
+ -I src/libecmabuiltins \
  -I src/liballocator \
  -I src/liboptimizer \
  -I src/libcoreint \

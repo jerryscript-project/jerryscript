@@ -68,6 +68,8 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
 
+  ecma_set_object_has_non_instantiated_builtins (object_p, false);
+
   return object_p;
 } /* ecma_create_object */
 
@@ -253,6 +255,48 @@ ecma_get_object_prototype (ecma_object_t *object_p) /**< object */
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
   return ECMA_GET_POINTER (prototype_object_cp);
 } /* ecma_get_object_prototype */
+
+/**
+ * Get object's has-non-instantiated-built-ins flag.
+ *
+ * @return flag's value
+ */
+bool
+ecma_get_object_has_non_instantiated_builtins (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  const uint32_t offset = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS;
+  const uint32_t width = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH;
+
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= width);
+
+  uintptr_t flag_value = (uintptr_t) jrt_extract_bit_field (object_p->container,
+                                                            offset,
+                                                            width);
+
+  return (bool) flag_value;
+} /* ecma_get_object_has_non_instantiated_builtins */
+
+/**
+ * Set object's has-non-instantiated-built-ins flag's value.
+ */
+void
+ecma_set_object_has_non_instantiated_builtins (ecma_object_t *object_p, /**< object */
+                                               bool is_has_non_inst_builtins) /**< value of flag */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  const uint32_t offset = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS;
+  const uint32_t width = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH;
+
+  object_p->container = jrt_set_bit_field_value (object_p->container,
+                                                 (uintptr_t) is_has_non_inst_builtins,
+                                                 offset,
+                                                 width);
+} /* ecma_set_object_has_non_instantiated_builtins */
 
 /**
  * Get type of lexical environment.

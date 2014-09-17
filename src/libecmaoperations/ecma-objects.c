@@ -17,6 +17,7 @@
 #include "ecma-globals.h"
 #include "ecma-array-object.h"
 #include "ecma-function-object.h"
+#include "ecma-non-instantiated-builtins.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
@@ -96,6 +97,8 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
+  ecma_property_t *prop_p = NULL;
+
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
@@ -104,12 +107,16 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
-      return ecma_op_general_object_get_own_property (obj_p, property_name_p);
+      prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
+
+      break;
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
+      prop_p = ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
+
+      break;
     }
 
     case ECMA_OBJECT_TYPE_STRING:
@@ -119,7 +126,15 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     }
   }
 
-  JERRY_UNREACHABLE();
+  if (unlikely (prop_p == NULL))
+  {
+    if (ecma_get_object_has_non_instantiated_builtins (obj_p))
+    {
+      prop_p = ecma_object_try_to_get_non_instantiated_property (obj_p, property_name_p);
+    }
+  }
+
+  return prop_p;
 } /* ecma_op_object_get_own_property */
 
 /**

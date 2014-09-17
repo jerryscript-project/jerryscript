@@ -173,6 +173,9 @@ extern void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensi
 extern ecma_object_type_t ecma_get_object_type (ecma_object_t *object_p);
 extern void ecma_set_object_type (ecma_object_t *object_p, ecma_object_type_t type);
 extern ecma_object_t* ecma_get_object_prototype (ecma_object_t *object_p);
+extern bool ecma_get_object_has_non_instantiated_builtins (ecma_object_t *object_p);
+extern void ecma_set_object_has_non_instantiated_builtins (ecma_object_t *object_p,
+                                                           bool is_has_non_inst_builtins);
 extern ecma_lexical_environment_type_t ecma_get_lex_env_type (ecma_object_t *object_p);
 extern ecma_object_t *ecma_get_lex_env_outer_reference (ecma_object_t *object_p);
 extern ecma_property_t *ecma_get_property_list (ecma_object_t *object_p);

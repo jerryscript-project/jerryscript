@@ -232,20 +232,22 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
         {
           ret_value = ecma_reject_put (ref.is_strict);
         }
+        else
+        {
+          // sub_6.
+          JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-        // sub_6.
-        JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+          ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
+          JERRY_ASSERT (setter_p != NULL);
 
-        ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
-        JERRY_ASSERT (setter_p != NULL);
+          ECMA_FUNCTION_CALL (call_completion,
+                              ecma_op_function_call (setter_p, base, &value, 1),
+                              ret_value);
 
-        ECMA_FUNCTION_CALL (call_completion,
-                            ecma_op_function_call (setter_p, base, &value, 1),
-                            ret_value);
+          ret_value = ecma_make_empty_completion_value ();
 
-        ret_value = ecma_make_empty_completion_value ();
-
-        ECMA_FINALIZE (call_completion);
+          ECMA_FINALIZE (call_completion);
+        }
       }
 
       ECMA_FINALIZE (obj_base);

@@ -49,7 +49,7 @@ deserialize_string_by_id (uint8_t id)
 ecma_number_t
 deserialize_num_by_id (uint8_t id)
 {
-  uint16_t str_size, str_offset;
+  uint16_t str_size;
 
   str_size = *bytecode_data;
   if (id < str_size)
@@ -62,7 +62,7 @@ deserialize_num_by_id (uint8_t id)
   {
     // Go to last string's offset
     uint8_t *data = (uint8_t *) (bytecode_data + str_size * 2 - 1);
-    str_offset = *((uint16_t *) data);
+    uint16_t str_offset = *((uint16_t *) data);
     data = bytecode_data + str_offset;
 
     while (*data)

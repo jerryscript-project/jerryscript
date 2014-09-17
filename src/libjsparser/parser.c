@@ -2145,16 +2145,24 @@ parse_if_statement (void)
   skip_newlines ();
   parse_statement ();
 
-  REWRITE_COND_JMP (HEAD (U16, 1), is_false_jmp_down, OPCODE_COUNTER () - HEAD (U16, 1));
-
   skip_newlines ();
   if (is_keyword (KW_ELSE))
   {
+    PUSH (U16, OPCODE_COUNTER ());
+    DUMP_OPCODE_2 (jmp_down, INVALID_VALUE, INVALID_VALUE);
+
+    REWRITE_COND_JMP (HEAD (U16, 2), is_false_jmp_down, OPCODE_COUNTER () - HEAD (U16, 2));
+
     skip_newlines ();
     parse_statement ();
+
+    REWRITE_JMP (HEAD (U16, 1), jmp_down, OPCODE_COUNTER () - HEAD (U16, 1));
+
+    DROP (U16, 1);
   }
   else
   {
+    REWRITE_COND_JMP (HEAD (U16, 1), is_false_jmp_down, OPCODE_COUNTER () - HEAD (U16, 1));
     lexer_save_token (TOK ());
   }
 

@@ -427,6 +427,20 @@ token_after_newlines_must_be_keyword (keyword kw)
     CHECK_USAGE (IDX) \
   } while (0)
 
+#define REWRITE_TRY(OC) \
+  do { \
+    DECLARE_USAGE (IDX) \
+    JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
+    PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) >> JERRY_BITSINBYTE)); \
+    PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) & ((1 << JERRY_BITSINBYTE) - 1))); \
+    JERRY_ASSERT ((OPCODE_COUNTER ()) \
+                  == calc_opcode_counter_from_idx_idx (HEAD (IDX, 2), HEAD (IDX, 1))); \
+    OPCODE()=getop_try (HEAD (IDX, 2), HEAD (IDX, 1)); \
+    serializer_rewrite_opcode ((OC), OPCODE()); \
+    DROP (IDX, 2); \
+    CHECK_USAGE (IDX) \
+  } while (0)
+
 static void
 integer_zero (void)
 {
@@ -1111,17 +1125,17 @@ parse_primary_expression (void)
     case TOK_STRING:
     {
       parse_literal ();
-      goto cleanup;
+      break;
     }
     case TOK_OPEN_SQUARE:
     {
       parse_array_literal ();
-      goto cleanup;
+      break;
     }
     case TOK_OPEN_BRACE:
     {
       parse_object_literal ();
-      goto cleanup;
+      break;
     }
     case TOK_OPEN_PAREN:
     {
@@ -1130,7 +1144,7 @@ parse_primary_expression (void)
       {
         parse_expression ();
         token_after_newlines_must_be (TOK_CLOSE_PAREN);
-        goto cleanup;
+        break;
       }
       /* FALLTHRU */
     }
@@ -2104,7 +2118,7 @@ parse_statement_list (void)
     if (token_is (TOK_CLOSE_BRACE))
     {
       lexer_save_token (TOK ());
-      return;
+      break;
     }
   }
 
@@ -2295,6 +2309,7 @@ parse_catch_clause (void)
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, HEAD (IDX, 1), INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
+  skip_newlines ();
   parse_statement_list ();
   next_token_must_be (TOK_CLOSE_BRACE);
 
@@ -2322,6 +2337,7 @@ parse_finally_clause (void)
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FINALLY, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
+  skip_newlines ();
   parse_statement_list ();
   next_token_must_be (TOK_CLOSE_BRACE);
 
@@ -2344,13 +2360,14 @@ parse_try_statement (void)
   assert_keyword (KW_TRY);
 
   PUSH (U16, OPCODE_COUNTER ())
-  DUMP_OPCODE_2 (try, HEAD (U16, 1) + 1, INVALID_VALUE);
+  DUMP_OPCODE_2 (try, INVALID_VALUE, INVALID_VALUE);
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
+  skip_newlines ();
   parse_statement_list ();
   next_token_must_be (TOK_CLOSE_BRACE);
 
-  REWRITE_OPCODE_2 (HEAD (U16, 1), try, HEAD (U16, 1) + 1, opcode_counter);
+  REWRITE_TRY (HEAD (U16, 1));
 
   token_after_newlines_must_be (TOK_KEYWORD);
   if (is_keyword (KW_CATCH))
@@ -2561,6 +2578,7 @@ parse_statement (void)
     insert_semicolon ();
 
     DUMP_OPCODE_1 (throw, HEAD (IDX, 1));
+    DROP (IDX, 1);
     goto cleanup;
   }
   if (is_keyword (KW_TRY))

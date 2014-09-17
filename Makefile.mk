@@ -394,7 +394,7 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@cppcheck -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
 	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) -e --no-duplicate 1>$(TARGET_DIR)/vera.log
 	@mkdir -p $(TARGET_DIR)/obj
@@ -427,7 +427,7 @@ $(TESTS_TARGET):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
-	@cppcheck -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@./tools/cppcheck.sh -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY); \

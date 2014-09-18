@@ -101,15 +101,22 @@ jerry_exit (jerry_status_t code) /**< status code */
         __printf ("ERR_UNHANDLED_EXCEPTION\n");
         break;
       }
-      case ERR_GENERAL:
+      case ERR_UNIMPLEMENTED_CASE:
       {
-        __printf ("ERR_GENERAL\n");
+        __printf ("ERR_UNIMPLEMENTED_CASE\n");
+        break;
+      }
+      case ERR_FAILED_ASSERTION_IN_SCRIPT:
+      {
+        __printf ("ERR_FAILED_ASSERTION_IN_SCRIPT\n");
+        break;
+      }
+      case ERR_FAILED_INTERNAL_ASSERTION:
+      {
+        __printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
         break;
       }
     }
-
-    /* The failed assertion is 'Return code is zero' */
-    jerry_assert_fail ("Return code is zero", __FILE__, __LINE__);
   }
 #endif /* !JERRY_NDEBUG */
 

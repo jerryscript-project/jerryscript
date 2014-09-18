@@ -57,7 +57,9 @@ typedef enum
   ERR_MEMORY = -10,
   ERR_SYSCALL = -11,
   ERR_UNHANDLED_EXCEPTION = -12,
-  ERR_GENERAL = -255
+  ERR_UNIMPLEMENTED_CASE = -118,
+  ERR_FAILED_ASSERTION_IN_SCRIPT = -119,
+  ERR_FAILED_INTERNAL_ASSERTION = -120,
 } jerry_status_t;
 
 /**
@@ -111,9 +113,16 @@ extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
   do \
   { \
     JERRY_ASSERT (false); \
-    jerry_exit (ERR_GENERAL); \
+    jerry_exit (ERR_FAILED_INTERNAL_ASSERTION); \
   } while (0)
-#define JERRY_UNIMPLEMENTED() JERRY_UNREACHABLE ()
+
+#define JERRY_UNIMPLEMENTED() \
+  do \
+  { \
+    JERRY_ASSERT (false); \
+    jerry_exit (ERR_UNIMPLEMENTED_CASE); \
+  } while (0)
+
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) \
   do \
   { \

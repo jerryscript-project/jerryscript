@@ -27,6 +27,6 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
   __printf ("Assertion '%s' failed at %s:%u\n",
             assertion, file, line);
 
-  __exit (-ERR_GENERAL);
+  __exit (-ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
 

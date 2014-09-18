@@ -217,7 +217,7 @@ main (int argc __unused,
 
   bool is_success = jerry_run (source_p, source_size, parse_only, show_opcodes, print_mem_stats);
 
-  return is_success ? 0 : 1;
+  jerry_exit (is_success ? ERR_OK : ERR_FAILED_ASSERTION_IN_SCRIPT);
 }
 #endif
 

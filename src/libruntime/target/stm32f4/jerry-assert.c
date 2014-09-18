@@ -24,5 +24,5 @@ jerry_assert_fail (const char *assertion __unused, /**< assertion condition stri
                  const char *file __unused, /**< file name */
                  const uint32_t line __unused) /** line */
 {
-  __exit (-ERR_GENERAL);
+  __exit (-ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */

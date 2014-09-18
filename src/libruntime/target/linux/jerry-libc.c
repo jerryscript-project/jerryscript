@@ -385,11 +385,18 @@ __putchar (int c)
   return putchar (c);
 } /* __putchar */
 
-/** exit - cause normal process termination  */
+/**
+ * Exit - cause normal process termination with specified status code
+ */
 void __noreturn
-__exit (int status)
+__exit (int status) /**< status code */
 {
   exit (status);
+
+  while (true)
+  {
+    /* unreachable */
+  }
 } /* __exit */
 
 /**

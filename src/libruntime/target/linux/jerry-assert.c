@@ -24,9 +24,46 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *file, /**< file name */
                    const uint32_t line) /** line */
 {
-  __printf ("Assertion '%s' failed at %s:%u\n",
+  __printf ("Assertion '%s' failed at %s:%u.\n",
             assertion, file, line);
 
   __exit (-ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
 
+/**
+ * Handle execution of control path that should be unreachable
+ */
+void __noreturn
+jerry_unreachable (const char *comment, /**< comment to unreachable mark if exists,
+                                             NULL - otherwise */
+                   const char *file, /**< file name */
+                   const uint32_t line) /**< line */
+{
+  __printf ("Unreachable control path at %s:%u was executed", file, line);
+  if (comment != NULL)
+  {
+    __printf ("(%s)", comment);
+  }
+  __printf (".\n");
+
+  __exit (-ERR_FAILED_INTERNAL_ASSERTION);
+} /* jerry_unreachable */
+
+/**
+ * Handle unimplemented case execution
+ */
+void __noreturn
+jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if exists,
+                                               NULL - otherwise */
+                     const char *file, /**< file name */
+                     const uint32_t line) /**< line */
+{
+  __printf ("Unimplemented case at %s:%u was executed", file, line);
+  if (comment != NULL)
+  {
+    __printf ("(%s)", comment);
+  }
+  __printf (".\n");
+
+  __exit (-ERR_UNIMPLEMENTED_CASE);
+} /* jerry_unimplemented */

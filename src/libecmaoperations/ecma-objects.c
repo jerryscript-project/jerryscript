@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-array-object.h"
 #include "ecma-function-object.h"
-#include "ecma-non-instantiated-builtins.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"

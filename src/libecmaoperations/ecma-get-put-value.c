@@ -17,9 +17,9 @@
  * Implementation of ECMA GetValue and PutValue
  */
 
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
-#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
@@ -157,7 +157,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
     else
     {
       // 3.b.
-      ecma_object_t *global_object_p = ecma_get_global_object ();
+      ecma_object_t *global_object_p = ecma_builtin_get_global_object ();
 
       ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
                                                                ref.referenced_name_p,

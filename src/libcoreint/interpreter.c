@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include "ecma-builtins.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
-#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-operations.h"
@@ -348,7 +348,10 @@ run_int (void)
     start_pos++;
   }
 
-  ecma_object_t *glob_obj_p = ecma_op_create_global_object ();
+  ecma_init_builtins ();
+
+  ecma_object_t *glob_obj_p = ecma_builtin_get_global_object ();
+
   ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
   ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);
 
@@ -369,7 +372,7 @@ run_int (void)
     {
       ecma_deref_object (glob_obj_p);
       ecma_deref_object (lex_env_p);
-      ecma_finalize ();
+      ecma_finalize_builtins ();
       ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
       return ecma_is_value_true (completion.u.value);

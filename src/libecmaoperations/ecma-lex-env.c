@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
-#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
@@ -522,19 +522,16 @@ ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical envir
 
   ecma_lexical_environment_type_t type = ecma_get_lex_env_type (lex_env_p);
 
-  bool ret_value = false;
-
   if (type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
   {
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-    ecma_object_t *glob_obj_p = ecma_get_global_object ();
 
-    ret_value = (binding_obj_p == glob_obj_p);
-
-    ecma_deref_object (glob_obj_p);
+    return ecma_builtin_is_global_object (binding_obj_p);
   }
-
-  return ret_value;
+  else
+  {
+    return false;
+  }
 } /* ecma_is_lexical_environment_global */
 
 /**

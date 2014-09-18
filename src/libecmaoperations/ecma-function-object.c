@@ -14,11 +14,11 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
-#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-magic-strings.h"
@@ -473,7 +473,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
              || ecma_is_value_null (this_arg_value))
     {
       // 2.
-      this_binding = ecma_make_object_value (ecma_get_global_object ());
+      this_binding = ecma_make_object_value (ecma_builtin_get_global_object ());
     }
     else
     {
@@ -667,7 +667,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
   else if (ecma_is_lexical_environment_global (lex_env_p))
   {
     // e.
-    ecma_object_t *glob_obj_p = ecma_get_global_object ();
+    ecma_object_t *glob_obj_p = ecma_builtin_get_global_object ();
 
     ecma_property_t *existing_prop_p = ecma_op_object_get_property (glob_obj_p, function_name_p);
 

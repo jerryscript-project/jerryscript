@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+#include "ecma-builtins.h"
 #include "ecma-globals.h"
-#include "ecma-non-instantiated-builtins.h"
+
+#define ECMA_BUILTINS_INTERNAL
+#include "ecma-builtins-internal.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -22,6 +25,24 @@
  * \addtogroup ecmabuiltins
  * @{
  */
+
+/**
+ * Initialize ECMA built-in objects
+ */
+void
+ecma_init_builtins (void)
+{
+  ecma_builtin_init_global_object ();
+} /* ecma_init_builtins */
+
+/**
+ * Finalize ECMA built-in objects
+ */
+void
+ecma_finalize_builtins (void)
+{
+  ecma_builtin_finalize_global_object ();
+} /* ecma_finalize_builtins */
 
 /**
  * If the property's name is one of built-in properties of the object

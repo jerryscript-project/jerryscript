@@ -14,16 +14,22 @@
  */
 
 #include "globals.h"
+#include "ecma-builtins.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
-#include "ecma-global-object.h"
 #include "ecma-helpers.h"
 #include "ecma-magic-strings.h"
+
+#define ECMA_BUILTINS_INTERNAL
+#include "ecma-builtins-internal.h"
 
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmaglobalobject ECMA Global object related routines
+ * \addtogroup ecmabuiltins
+ * @{
+ *
+ * \addtogroup global ECMA Global object built-in
  * @{
  */
 
@@ -39,24 +45,35 @@ static ecma_object_t* ecma_global_object_p = NULL;
  *         caller should free the reference by calling ecma_deref_object
  */
 ecma_object_t*
-ecma_get_global_object (void)
+ecma_builtin_get_global_object (void)
 {
   JERRY_ASSERT(ecma_global_object_p != NULL);
 
   ecma_ref_object (ecma_global_object_p);
 
   return ecma_global_object_p;
-} /* ecma_get_global_object */
+} /* ecma_builtin_get_global_object */
 
 /**
- * The Global Object construction routine.
+ * Check if passed object is the Global object.
  *
- * See also: ECMA-262 v5, 15.1
- *
- * @return pointer to the constructed object
+ * @return true - if passed pointer points to the Global object,
+ *         false - otherwise.
  */
-ecma_object_t*
-ecma_op_create_global_object (void)
+bool
+ecma_builtin_is_global_object (ecma_object_t *object_p) /**< an object */
+{
+  return (object_p == ecma_global_object_p);
+} /* ecma_builtin_is_global_object */
+
+/**
+ * Initialize Global object.
+ *
+ * Warning:
+ *         the routine should be called only from ecma_init_builtins
+ */
+void
+ecma_builtin_init_global_object (void)
 {
   JERRY_ASSERT(ecma_global_object_p == NULL);
 
@@ -73,26 +90,26 @@ ecma_op_create_global_object (void)
 
   TODO(/* Define NaN, Infinity, eval, parseInt, parseFloat, isNaN, isFinite properties */);
 
-  ecma_ref_object (glob_obj_p);
   ecma_global_object_p = glob_obj_p;
-
-  return glob_obj_p;
-} /* ecma_op_create_global_object */
+} /* ecma_builtin_init_global_object */
 
 /**
- * Remove global reference to the global object.
+ * Remove global reference to the Global object.
  *
  * Warning:
- *         the routine should be called only from ecma_finalize
+ *         the routine should be called only from ecma_finalize_builtins
  */
 void
-ecma_finalize_global_object (void)
+ecma_builtin_finalize_global_object (void)
 {
+  JERRY_ASSERT (ecma_global_object_p != NULL);
+
   ecma_deref_object (ecma_global_object_p);
   ecma_global_object_p = NULL;
-} /* ecma_free_global_object */
+} /* ecma_builtin_finalize_global_object */
 
 /**
+ * @}
  * @}
  * @}
  */

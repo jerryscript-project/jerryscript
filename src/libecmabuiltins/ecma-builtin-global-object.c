@@ -245,33 +245,67 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t uri_component) /**
 } /* ecma_builtin_global_object_encode_uri_component */
 
 /**
+ * Get number of routine's parameters
+ *
+ * @return number of parameters
+ */
+ecma_length_t
+ecma_builtin_global_get_routine_parameters_number (ecma_builtin_global_detail_id_t builtin_routine_id) /**< routine's
+                                                                                                            id */
+{
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_EVAL:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_FLOAT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_NAN:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_FINITE:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI_COMPONENT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI_COMPONENT:
+    {
+      return 1;
+    }
+
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_INT:
+    {
+      return 2;
+    }
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_global_get_routine_parameters_number */
+
+/**
  * Dispatcher of the Global object's built-in routines
  *
  * @return completion-value
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_builtin_global_dispatch_routine (ecma_builtin_global_property_id_t builtin_routine_id, /**< identifier of
-                                                                                                 the Global object's
-                                                                                                 initial property that
-                                                                                                 corresponds to
-                                                                                                 routine to be called */
+ecma_builtin_global_dispatch_routine (ecma_builtin_global_detail_id_t builtin_routine_id, /**< identifier of
+                                                                                               the Global object's
+                                                                                               initial property that
+                                                                                               corresponds to
+                                                                                               routine to be called */
                                       ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                       ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   const ecma_value_t value_undefined = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
   switch (builtin_routine_id)
   {
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_EVAL:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_EVAL:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_eval (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_PARSE_INT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_INT:
     {
       ecma_value_t arg1 = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
       ecma_value_t arg2 = (arguments_number >= 2 ? arguments_list[1] : value_undefined);
@@ -279,49 +313,49 @@ ecma_builtin_global_dispatch_routine (ecma_builtin_global_property_id_t builtin_
       return ecma_builtin_global_object_parse_int (arg1, arg2);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_PARSE_FLOAT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_FLOAT:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_parse_float (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_IS_NAN:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_NAN:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_is_nan (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_IS_FINITE:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_FINITE:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_is_finite (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_DECODE_URI:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_decode_uri (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_DECODE_URI_COMPONENT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI_COMPONENT:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_decode_uri_component (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_ENCODE_URI:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
       return ecma_builtin_global_object_encode_uri (arg);
     }
 
-    case ECMA_BUILTIN_GLOBAL_PROPERTY_ID_ENCODE_URI_COMPONENT:
+    case ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI_COMPONENT:
     {
       ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
 
@@ -333,8 +367,6 @@ ecma_builtin_global_dispatch_routine (ecma_builtin_global_property_id_t builtin_
       JERRY_UNREACHABLE ();
     }
   }
-
-  JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
 } /* ecma_builtin_global_dispatch_routine */
 
 /**

@@ -549,8 +549,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-      || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     ecma_completion_value_t ret_value;
 
@@ -615,6 +614,10 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ECMA_FINALIZE (func_obj_prototype_prop_value);
 
     return ret_value;
+  }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    JERRY_UNIMPLEMENTED ();
   }
   else
   {

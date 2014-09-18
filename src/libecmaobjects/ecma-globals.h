@@ -172,12 +172,6 @@ typedef struct
 } ecma_label_descriptor_t;
 
 /**
- * Target value indicating that target field
- * of ecma_completion_value_t defines no target.
- */
-#define ECMA_TARGET_ID_RESERVED 255
-
-/**
  * Internal properties' identifiers.
  */
 typedef enum
@@ -200,7 +194,12 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES,
 
   /** Part of an array, that is indexed by strings */
-  ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES
+  ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES,
+
+  /** Implementation-defined identifier of built-in routine
+      that corresponds to a built-in function object
+      ([[Built-in routine ID]]) */
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID
 } ecma_internal_property_id_t;
 
 /**

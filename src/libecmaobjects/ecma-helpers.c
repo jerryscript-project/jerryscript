@@ -663,6 +663,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
     case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
+    case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
     {
       break;
     }

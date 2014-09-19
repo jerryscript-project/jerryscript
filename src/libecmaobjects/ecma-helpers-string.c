@@ -477,7 +477,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       ecma_length_t chars_left = string_length;
       while (chars_left > 0)
       {
-        JERRY_ASSERT(chars_left < string_length);
+        JERRY_ASSERT(chars_left <= string_length);
 
         ecma_length_t chars_to_copy = JERRY_MIN(max_chars_in_chunk, chars_left);
 
@@ -1150,14 +1150,13 @@ ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, /**< zero-terminated
   ecma_char_t *buf_iter_p = buffer_p;
   ssize_t bytes_copied = 0;
 
-  do
+  while (*str_iter_p != ECMA_CHAR_NULL)
   {
     bytes_copied += (ssize_t) sizeof (ecma_char_t);
     JERRY_ASSERT (bytes_copied <= buffer_size);
 
     *buf_iter_p++ = *str_iter_p++;
   }
-  while (*str_iter_p != ECMA_CHAR_NULL);
 
   bytes_copied += (ssize_t) sizeof (ecma_char_t);
   JERRY_ASSERT (bytes_copied <= buffer_size);

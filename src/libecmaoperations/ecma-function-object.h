@@ -51,6 +51,10 @@ ecma_op_function_construct (ecma_object_t *func_obj_p,
                             ecma_length_t arguments_list_len);
 
 extern ecma_completion_value_t
+ecma_op_function_has_instance (ecma_object_t *func_obj_p,
+                               ecma_value_t value);
+
+extern ecma_completion_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p,
                               ecma_string_t *function_name_p,
                               opcode_counter_t function_code_opcode_idx,

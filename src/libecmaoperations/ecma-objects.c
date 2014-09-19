@@ -471,7 +471,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
-      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (obj_p, value);
+      return ecma_op_function_has_instance (obj_p, value);
     }
 
     case ECMA_OBJECT_TYPE_HOST:

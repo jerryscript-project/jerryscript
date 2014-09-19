@@ -429,7 +429,90 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
 /**
  * [[Call]] implementation for Function objects,
  * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
- * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
+ * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
+ * and for built-in Function objects
+ * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object */
+                               ecma_value_t value) /**< argument 'V' */
+{
+  JERRY_ASSERT(func_obj_p != NULL
+               && !ecma_is_lexical_environment (func_obj_p));
+
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    if (value.value_type != ECMA_TYPE_OBJECT)
+    {
+      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
+
+    ecma_object_t* v_obj_p = ECMA_GET_POINTER (value.value);
+    JERRY_ASSERT (v_obj_p != NULL);
+
+    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+
+    ecma_completion_value_t ret_value;
+
+    ECMA_TRY_CATCH (prototype_obj_value,
+                    ecma_op_object_get (func_obj_p, prototype_magic_string_p),
+                    ret_value);
+
+    if (prototype_obj_value.u.value.value_type != ECMA_TYPE_OBJECT)
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    else
+    {
+      ecma_object_t *prototype_obj_p = ECMA_GET_POINTER (prototype_obj_value.u.value.value);
+      JERRY_ASSERT (prototype_obj_p != NULL);
+
+      do
+      {
+        v_obj_p = ecma_get_object_prototype (v_obj_p);
+
+        if (v_obj_p == NULL)
+        {
+          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+
+          break;
+        }
+        else if (v_obj_p == prototype_obj_p)
+        {
+          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+
+          break;
+        }
+      } while (true);
+    }
+
+    ECMA_FINALIZE (prototype_obj_value);
+
+    ecma_deref_ecma_string (prototype_magic_string_p);
+
+    return ret_value;
+  }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+    JERRY_UNIMPLEMENTED ();
+  }
+} /* ecma_op_function_has_instance */
+
+/**
+ * [[Call]] implementation for Function objects,
+ * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
+ * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
+ * and for built-in Function objects
+ * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value

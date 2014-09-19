@@ -235,7 +235,8 @@ ecma_number_make_nan (void)
  *         else - -Infinity value.
  */
 ecma_number_t
-ecma_number_make_infinity (bool sign)
+ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
+                                           false - for positive Infinity */
 {
   union
   {

@@ -1238,7 +1238,32 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_FUNCTION: return (ecma_char_t*) "function";
     case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
     case ECMA_MAGIC_STRING_NAN: return (ecma_char_t*) "NaN";
-    case ECMA_MAGIC_STRING_INFINITY: return (ecma_char_t*) "Infinity";
+    case ECMA_MAGIC_STRING_INFINITY_UL: return (ecma_char_t*) "Infinity";
+    case ECMA_MAGIC_STRING_OBJECT_UL: return (ecma_char_t*) "Object";
+    case ECMA_MAGIC_STRING_FUNCTION_UL: return (ecma_char_t*) "Function";
+    case ECMA_MAGIC_STRING_ARRAY_UL: return (ecma_char_t*) "Array";
+    case ECMA_MAGIC_STRING_STRING_UL: return (ecma_char_t*) "String";
+    case ECMA_MAGIC_STRING_BOOLEAN_UL: return (ecma_char_t*) "Boolean";
+    case ECMA_MAGIC_STRING_NUMBER_UL: return (ecma_char_t*) "Number";
+    case ECMA_MAGIC_STRING_DATE_UL: return (ecma_char_t*) "Date";
+    case ECMA_MAGIC_STRING_REG_EXP_UL: return (ecma_char_t*) "RegExp";
+    case ECMA_MAGIC_STRING_ERROR_UL: return (ecma_char_t*) "Error";
+    case ECMA_MAGIC_STRING_EVAL_ERROR_UL: return (ecma_char_t*) "EvalError";
+    case ECMA_MAGIC_STRING_RANGE_ERROR_UL: return (ecma_char_t*) "RangeError";
+    case ECMA_MAGIC_STRING_REFERENCE_ERROR_UL: return (ecma_char_t*) "ReferenceError";
+    case ECMA_MAGIC_STRING_SYNTAX_ERROR_UL: return (ecma_char_t*) "SyntaxError";
+    case ECMA_MAGIC_STRING_TYPE_ERROR_UL: return (ecma_char_t*) "TypeError";
+    case ECMA_MAGIC_STRING_URI_ERROR_UL: return (ecma_char_t*) "URIError";
+    case ECMA_MAGIC_STRING_MATH_UL: return (ecma_char_t*) "Math";
+    case ECMA_MAGIC_STRING_JSON_U: return (ecma_char_t*) "JSON";
+    case ECMA_MAGIC_STRING_PARSE_INT: return (ecma_char_t*) "parseInt";
+    case ECMA_MAGIC_STRING_PARSE_FLOAT: return (ecma_char_t*) "parseFloat";
+    case ECMA_MAGIC_STRING_IS_NAN: return (ecma_char_t*) "isNaN";
+    case ECMA_MAGIC_STRING_IS_FINITE: return (ecma_char_t*) "isFinite";
+    case ECMA_MAGIC_STRING_DECODE_URI: return (ecma_char_t*) "decodeURI";
+    case ECMA_MAGIC_STRING_DECODE_URI_COMPONENT: return (ecma_char_t*) "decodeURIComponent";
+    case ECMA_MAGIC_STRING_ENCODE_URI: return (ecma_char_t*) "encodeURI";
+    case ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT: return (ecma_char_t*) "encodeURIComponent";
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 

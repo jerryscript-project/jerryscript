@@ -149,7 +149,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     return ecma_number_make_nan ();
   }
 
-  const ecma_char_t *infinity_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY);
+  const ecma_char_t *infinity_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY_UL);
 
   for (const ecma_char_t *iter_p = begin_p, *iter_infinity_p = infinity_zt_str_p;
        ;
@@ -489,7 +489,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
     else if (ecma_number_is_infinity (num))
     {
       // 4.
-      ecma_copy_zt_string_to_buffer (ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY),
+      ecma_copy_zt_string_to_buffer (ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY_UL),
                                      buffer_p,
                                      buffer_size);
     }

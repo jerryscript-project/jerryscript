@@ -646,7 +646,32 @@ typedef enum
   ECMA_MAGIC_STRING_FUNCTION, /**< "function" */
   ECMA_MAGIC_STRING_LENGTH, /**< "length" */
   ECMA_MAGIC_STRING_NAN, /**< "NaN" */
-  ECMA_MAGIC_STRING_INFINITY, /**< "Infinity" */
+  ECMA_MAGIC_STRING_INFINITY_UL, /**< "Infinity" */
+  ECMA_MAGIC_STRING_OBJECT_UL, /**< "Object" */
+  ECMA_MAGIC_STRING_FUNCTION_UL, /**< "Function" */
+  ECMA_MAGIC_STRING_ARRAY_UL, /**< "Array" */
+  ECMA_MAGIC_STRING_STRING_UL, /**< "String" */
+  ECMA_MAGIC_STRING_BOOLEAN_UL, /**< "Boolean" */
+  ECMA_MAGIC_STRING_NUMBER_UL, /**< "Number" */
+  ECMA_MAGIC_STRING_DATE_UL, /**< "Date" */
+  ECMA_MAGIC_STRING_REG_EXP_UL, /**< "RegExp" */
+  ECMA_MAGIC_STRING_ERROR_UL, /**< "Error" */
+  ECMA_MAGIC_STRING_EVAL_ERROR_UL, /**< "EvalError" */
+  ECMA_MAGIC_STRING_RANGE_ERROR_UL, /**< "RangeError" */
+  ECMA_MAGIC_STRING_REFERENCE_ERROR_UL, /**< "ReferenceError" */
+  ECMA_MAGIC_STRING_SYNTAX_ERROR_UL, /**< "SyntaxError" */
+  ECMA_MAGIC_STRING_TYPE_ERROR_UL, /**< "TypeError" */
+  ECMA_MAGIC_STRING_URI_ERROR_UL, /**< "URIError" */
+  ECMA_MAGIC_STRING_MATH_UL, /**< "Math" */
+  ECMA_MAGIC_STRING_JSON_U, /**< "JSON" */
+  ECMA_MAGIC_STRING_PARSE_INT, /**< "parseInt" */
+  ECMA_MAGIC_STRING_PARSE_FLOAT, /**< "parseFloat" */
+  ECMA_MAGIC_STRING_IS_NAN, /**< "isNaN" */
+  ECMA_MAGIC_STRING_IS_FINITE, /**< "isFinite" */
+  ECMA_MAGIC_STRING_DECODE_URI, /**< "decodeURI" */
+  ECMA_MAGIC_STRING_DECODE_URI_COMPONENT, /**< "decodeURIComponent" */
+  ECMA_MAGIC_STRING_ENCODE_URI, /**< "encodeURI" */
+  ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT, /**< "encodeURIComponent" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 

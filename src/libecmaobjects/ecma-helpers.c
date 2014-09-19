@@ -68,7 +68,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
 
-  ecma_set_object_has_non_instantiated_builtins (object_p, false);
+  ecma_set_object_is_builtin (object_p, false);
 
   return object_p;
 } /* ecma_create_object */
@@ -257,18 +257,18 @@ ecma_get_object_prototype (ecma_object_t *object_p) /**< object */
 } /* ecma_get_object_prototype */
 
 /**
- * Get object's has-non-instantiated-built-ins flag.
+ * Check if the object is a built-in object
  *
- * @return flag's value
+ * @return true / false
  */
 bool
-ecma_get_object_has_non_instantiated_builtins (ecma_object_t *object_p) /**< object */
+ecma_get_object_is_builtin (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  const uint32_t offset = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS;
-  const uint32_t width = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH;
+  const uint32_t offset = ECMA_OBJECT_OBJ_IS_BUILTIN_POS;
+  const uint32_t width = ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH;
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= width);
 
@@ -277,26 +277,26 @@ ecma_get_object_has_non_instantiated_builtins (ecma_object_t *object_p) /**< obj
                                                             width);
 
   return (bool) flag_value;
-} /* ecma_get_object_has_non_instantiated_builtins */
+} /* ecma_get_object_is_builtin */
 
 /**
- * Set object's has-non-instantiated-built-ins flag's value.
+ * Set flag indicating whether the object is a built-in object
  */
 void
-ecma_set_object_has_non_instantiated_builtins (ecma_object_t *object_p, /**< object */
-                                               bool is_has_non_inst_builtins) /**< value of flag */
+ecma_set_object_is_builtin (ecma_object_t *object_p, /**< object */
+                            bool is_builtin) /**< value of flag */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  const uint32_t offset = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS;
-  const uint32_t width = ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH;
+  const uint32_t offset = ECMA_OBJECT_OBJ_IS_BUILTIN_POS;
+  const uint32_t width = ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH;
 
   object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 (uintptr_t) is_has_non_inst_builtins,
+                                                 (uintptr_t) is_builtin,
                                                  offset,
                                                  width);
-} /* ecma_set_object_has_non_instantiated_builtins */
+} /* ecma_set_object_is_builtin */
 
 /**
  * Get type of lexical environment.

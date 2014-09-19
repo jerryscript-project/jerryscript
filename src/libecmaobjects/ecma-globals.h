@@ -422,17 +422,17 @@ typedef struct
 #define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
- * Flag indicating whether the object has non-instantiated built-in properties
+ * Flag indicating whether the object is a built-in object
  */
-#define ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
-                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
-#define ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH (1)
+#define ECMA_OBJECT_OBJ_IS_BUILTIN_POS (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
+                                        ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
+#define ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH (1)
 
 /**
  * Size of structure for objects
  */
-#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_POS + \
-                                   ECMA_OBJECT_OBJ_HAS_NON_INSTANTIATED_BUILT_IN_PROPERTIES_WIDTH)
+#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_IS_BUILTIN_POS + \
+                                   ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH)
 
 
 /* Lexical environments' only part */

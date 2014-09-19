@@ -96,6 +96,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT(property_name_p != NULL);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
+  const bool is_builtin = ecma_get_object_is_builtin (obj_p);
 
   ecma_property_t *prop_p = NULL;
 
@@ -128,7 +129,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
 
   if (unlikely (prop_p == NULL))
   {
-    if (ecma_get_object_has_non_instantiated_builtins (obj_p))
+    if (is_builtin)
     {
       prop_p = ecma_object_try_to_get_non_instantiated_property (obj_p, property_name_p);
     }

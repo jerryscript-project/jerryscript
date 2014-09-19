@@ -53,6 +53,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       return ecma_op_general_object_get (obj_p, property_name_p);
     }
@@ -64,7 +65,6 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       return ecma_op_function_object_get (obj_p, property_name_p);
     }
@@ -129,9 +129,10 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
 
   if (unlikely (prop_p == NULL))
   {
-    if (is_builtin)
+    if (is_builtin
+        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
     {
-      prop_p = ecma_object_try_to_get_non_instantiated_property (obj_p, property_name_p);
+      prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
     }
   }
 

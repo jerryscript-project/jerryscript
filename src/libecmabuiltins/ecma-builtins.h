@@ -22,9 +22,17 @@
 extern void ecma_init_builtins (void);
 extern void ecma_finalize_builtins (void);
 
+extern ecma_completion_value_t
+ecma_builtin_dispatch_call (ecma_object_t *obj_p,
+                            ecma_value_t *arguments_list_p,
+                            ecma_length_t arguments_list_len);
+extern ecma_completion_value_t
+ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
+                                 ecma_value_t *arguments_list_p,
+                                 ecma_length_t arguments_list_len);
 extern ecma_property_t*
-ecma_object_try_to_get_non_instantiated_property (ecma_object_t *object_p,
-                                                  ecma_string_t *string_p);
+ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p,
+                                          ecma_string_t *string_p);
 
 /* ecma-builtin-global.c */
 extern ecma_object_t* ecma_builtin_get_global_object (void);

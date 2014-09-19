@@ -124,8 +124,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 } /* ecma_is_constructor */
 
 /**
@@ -448,6 +447,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
+    if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
+    {
+      return ecma_builtin_dispatch_call (func_obj_p, arguments_list_p, arguments_list_len);
+    }
+
     ecma_completion_value_t ret_value;
 
     /* Entering Function Code (ECMA-262 v5, 10.4.3) */
@@ -520,7 +524,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
-    JERRY_UNIMPLEMENTED ();
+    return ecma_builtin_dispatch_call (func_obj_p, arguments_list_p, arguments_list_len);
   }
   else
   {
@@ -545,11 +549,16 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT(func_obj_p != NULL
                && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
+  JERRY_ASSERT(ecma_is_constructor (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
+    if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
+    {
+      return ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
+    }
+
     ecma_completion_value_t ret_value;
 
     ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
@@ -613,10 +622,6 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ECMA_FINALIZE (func_obj_prototype_prop_value);
 
     return ret_value;
-  }
-  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
-  {
-    JERRY_UNIMPLEMENTED ();
   }
   else
   {

@@ -30,6 +30,15 @@
  * @{
  */
 
+static ecma_length_t
+ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id,
+                                            ecma_magic_string_id_t routine_id);
+static ecma_completion_value_t
+ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
+                               ecma_magic_string_id_t builtin_routine_id,
+                               ecma_value_t arguments_list [],
+                               ecma_length_t arguments_number);
+
 /**
  * Initialize ECMA built-in objects
  */
@@ -57,11 +66,60 @@ ecma_finalize_builtins (void)
  *         NULL - otherwise.
  */
 ecma_property_t*
-ecma_object_try_to_get_non_instantiated_property (ecma_object_t *object_p, /**< object */
-                                                  ecma_string_t *string_p) /**< property's name */
+ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
+                                          ecma_string_t *string_p) /**< property's name */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (object_p, string_p);
-} /* ecma_object_try_to_get_non_instantiated_property */
+  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
+
+  ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (object_p,
+                                                                    ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+  ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+  switch (builtin_id)
+  {
+    case ECMA_BUILTIN_ID_GLOBAL:
+    {
+      JERRY_ASSERT (ecma_builtin_is_global_object (object_p));
+      return ecma_builtin_global_try_to_instantiate_property (object_p, string_p);
+    }
+
+    case ECMA_BUILTIN_ID_OBJECT:
+    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+    case ECMA_BUILTIN_ID_FUNCTION:
+    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ARRAY:
+    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+    case ECMA_BUILTIN_ID_STRING:
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    case ECMA_BUILTIN_ID_BOOLEAN:
+    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+    case ECMA_BUILTIN_ID_NUMBER:
+    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+    case ECMA_BUILTIN_ID_DATE:
+    case ECMA_BUILTIN_ID_REGEXP:
+    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ERROR:
+    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
+    case ECMA_BUILTIN_ID_EVAL_ERROR:
+    case ECMA_BUILTIN_ID_RANGE_ERROR:
+    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
+    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
+    case ECMA_BUILTIN_ID_TYPE_ERROR:
+    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
+    case ECMA_BUILTIN_ID_MATH:
+    case ECMA_BUILTIN_ID_JSON:
+    {
+      JERRY_UNIMPLEMENTED ();
+    }
+
+    case ECMA_BUILTIN_ID__COUNT:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  JERRY_UNREACHABLE ();
+} /* ecma_builtin_try_to_instantiate_property */
 
 /**
  * Construct a Function object for specified built-in routine
@@ -74,13 +132,13 @@ ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
                                                                                   that initially contains property
                                                                                   with the routine */
-                                               uint32_t routine_id) /**< identifier of the built-in object's
-                                                                         routine property
-                                                                         (one of ecma_builtin_{*}_property_id_t) */
+                                               ecma_magic_string_id_t routine_id) /**< name of the built-in
+                                                                                       object's routine property */
 {
   FIXME(Setup prototype of Function object to built-in Function prototype object (15.3.3.1));
 
   ecma_object_t *func_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+  ecma_set_object_is_builtin (func_obj_p, true);
 
   uint64_t packed_value = jrt_set_bit_field_value (0,
                                                    builtin_id,
@@ -96,55 +154,103 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   JERRY_ASSERT ((uint32_t) packed_value == packed_value);
   routine_id_prop_p->u.internal_property.value = (uint32_t) packed_value;
 
+  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_property_t *len_prop_p = ecma_create_named_data_property (func_obj_p,
+                                                                 magic_string_length_p,
+                                                                 ECMA_PROPERTY_NOT_WRITABLE,
+                                                                 ECMA_PROPERTY_NOT_ENUMERABLE,
+                                                                 ECMA_PROPERTY_NOT_CONFIGURABLE);
+
+  ecma_deref_ecma_string (magic_string_length_p);
+
   ecma_number_t* len_p = ecma_alloc_number ();
   *len_p = ecma_uint32_to_number (ecma_builtin_get_routine_parameters_number (builtin_id, routine_id));
 
-  ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
-  length_prop_desc.is_value_defined = true;
-  length_prop_desc.value = ecma_make_number_value (len_p);
-  length_prop_desc.is_writable_defined = false;
-  length_prop_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
-  length_prop_desc.is_enumerable_defined = false;
-  length_prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
-  length_prop_desc.is_configurable_defined = false;
-  length_prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
-
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
-  ecma_completion_value_t completion = ecma_op_object_define_own_property (func_obj_p,
-                                                                           magic_string_length_p,
-                                                                           length_prop_desc,
-                                                                           false);
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
-                || ecma_is_completion_value_normal_false (completion));
-
-  ecma_dealloc_number (len_p);
-  len_p = NULL;
+  len_prop_p->u.named_data_property.value = ecma_make_number_value (len_p);
 
   return func_obj_p;
 } /* ecma_builtin_make_function_object_for_routine */
+
+/**
+ * Handle calling [[Call]] of built-in object
+ *
+ * @return completion-value
+ */
+ecma_completion_value_t
+ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
+                            ecma_value_t *arguments_list_p, /**< arguments list */
+                            ecma_length_t arguments_list_len) /**< length of the arguments list */
+{
+  JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    ecma_property_t *id_prop_p = ecma_get_internal_property (obj_p,
+                                                             ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID);
+    uint64_t packed_built_in_and_routine_id = id_prop_p->u.internal_property.value;
+
+    uint64_t built_in_id_field = jrt_extract_bit_field (packed_built_in_and_routine_id,
+                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS,
+                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH);
+    JERRY_ASSERT (built_in_id_field < ECMA_BUILTIN_ID__COUNT);
+
+    uint64_t routine_id_field = jrt_extract_bit_field (packed_built_in_and_routine_id,
+                                                       ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
+                                                       ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
+    JERRY_ASSERT (routine_id_field < ECMA_MAGIC_STRING__COUNT);
+
+    ecma_builtin_id_t built_in_id = (ecma_builtin_id_t) built_in_id_field;
+    ecma_magic_string_id_t routine_id = (ecma_magic_string_id_t) routine_id_field;
+
+    return ecma_builtin_dispatch_routine (built_in_id,
+                                          routine_id,
+                                          arguments_list_p,
+                                          arguments_list_len);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+
+    JERRY_UNIMPLEMENTED ();
+  }
+} /* ecma_builtin_dispatch_call */
+
+/**
+ * Handle calling [[Construct]] of built-in object
+ *
+ * @return completion-value
+ */
+ecma_completion_value_t
+ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
+                                 ecma_value_t *arguments_list_p, /**< arguments list */
+                                 ecma_length_t arguments_list_len) /**< length of the arguments list */
+{
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+
+  JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (obj_p, arguments_list_p, arguments_list_len);
+} /* ecma_builtin_dispatch_construct */
 
 /**
  * Get parameters number of the built-in routine
  *
  * @return number of parameters of the routine according to ECMA-262 v5 specification
  */
-ecma_length_t
+static ecma_length_t
 ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
                                                                                that initially contains property
                                                                                with the routine */
-                                            uint32_t routine_id) /**< identifier of the built-in object's
-                                                                      routine property
-                                                                      (one of ecma_builtin_{*}_property_id_t) */
+                                            ecma_magic_string_id_t routine_id) /**< name of the built-in object's
+                                                                                    routine property */
 {
   switch (builtin_id)
   {
     case ECMA_BUILTIN_ID_GLOBAL:
     {
-      JERRY_ASSERT (routine_id < ECMA_BUILTIN_GLOBAL_DETAIL_ID__COUNT);
-
-      return ecma_builtin_global_get_routine_parameters_number ((ecma_builtin_global_detail_id_t) routine_id);
+      return ecma_builtin_global_get_routine_parameters_number (routine_id);
     }
     case ECMA_BUILTIN_ID_OBJECT:
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
@@ -174,6 +280,11 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (routine_id);
     }
+
+    case ECMA_BUILTIN_ID__COUNT:
+    {
+      JERRY_UNREACHABLE ();
+    }
   }
 
   JERRY_UNREACHABLE ();
@@ -185,10 +296,10 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
  * @return completion-value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-ecma_completion_value_t
+static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
-                               uint32_t builtin_routine_id, /**< identifier of the built-in object's routine
-                                                                 property (one of ecma_builtin_{*}_property_id_t) */
+                               ecma_magic_string_id_t builtin_routine_id, /**< name of the built-in object's
+                                                                               routine property */
                                ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
 {
@@ -196,9 +307,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
   {
     case ECMA_BUILTIN_ID_GLOBAL:
     {
-      JERRY_ASSERT (builtin_routine_id < ECMA_BUILTIN_GLOBAL_DETAIL_ID__COUNT);
-
-      return ecma_builtin_global_dispatch_routine ((ecma_builtin_global_detail_id_t) builtin_routine_id,
+      return ecma_builtin_global_dispatch_routine (builtin_routine_id,
                                                    arguments_list,
                                                    arguments_number);
     }
@@ -232,10 +341,66 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                            arguments_list,
                                            arguments_number);
     }
+
+    case ECMA_BUILTIN_ID__COUNT:
+    {
+      JERRY_UNREACHABLE ();
+    }
   }
 
   JERRY_UNREACHABLE ();
 } /* ecma_builtin_dispatch_routine */
+
+/**
+ * Binary search for magic string identifier in array.
+ *
+ * Warning:
+ *         array should be sorted in ascending order
+ *
+ * @return index of identifier, if it is contained in array,
+ *         -1 - otherwise.
+ */
+int32_t
+ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[], /**< array to search in */
+                                                      ecma_length_t array_length, /**< number of elements
+                                                                                       in the array */
+                                                      ecma_magic_string_id_t key) /**< value to search for */
+{
+#ifndef JERRY_NDEBUG
+  /* For binary search the values should be sorted */
+  for (ecma_length_t id_index = 1;
+       id_index < array_length;
+       id_index++)
+  {
+    JERRY_ASSERT (ids [id_index - 1] < ids [id_index]);
+  }
+#endif /* !JERRY_NDEBUG */
+
+  int32_t min = 0;
+  int32_t max = array_length - 1;
+  
+  while (min <= max)
+  {
+    int32_t mid = (min + max) / 2;
+
+    if (ids[mid] == key)
+    {
+      return mid;
+    }
+    else if (ids[mid] > key)
+    {
+      max = mid - 1;
+    }
+    else
+    {
+      JERRY_ASSERT (ids[mid] < key);
+
+      min = mid + 1;
+    }
+  }
+
+  return -1;
+} /* ecma_builtin_bin_search_for_magic_string_id_in_array */
 
 /**
  * @}

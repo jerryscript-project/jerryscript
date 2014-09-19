@@ -408,7 +408,10 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
           case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
           case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
+          case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
           case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
+          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
+          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
           {
             break;
           }

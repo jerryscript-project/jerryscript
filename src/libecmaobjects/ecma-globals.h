@@ -196,10 +196,23 @@ typedef enum
   /** Part of an array, that is indexed by strings */
   ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES,
 
+  /** Implementation-defined identifier of built-in object */
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ID,
+
   /** Implementation-defined identifier of built-in routine
       that corresponds to a built-in function object
       ([[Built-in routine ID]]) */
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID,
+
+  /**
+   * Bit-mask of non-instantiated built-in's properties (bits 0-31)
+   */
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31,
+
+  /**
+   * Bit-mask of non-instantiated built-in's properties (bits 32-63)
+   */
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63,
 } ecma_internal_property_id_t;
 
 /**

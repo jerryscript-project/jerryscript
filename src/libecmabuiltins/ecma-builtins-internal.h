@@ -52,78 +52,9 @@ typedef enum
   ECMA_BUILTIN_ID_TYPE_ERROR, /**< the SyntaxError object (15.11.6.5) */
   ECMA_BUILTIN_ID_SYNTAX_URI_ERROR, /**< the URIError object (15.11.6.6) */
   ECMA_BUILTIN_ID_MATH, /**< the Math object (15.8) */
-  ECMA_BUILTIN_ID_JSON /**< the JSON object (15.12) */
+  ECMA_BUILTIN_ID_JSON, /**< the JSON object (15.12) */
+  ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
-
-/**
- * Identifier of Global object's detail
- */
-typedef enum
-{
-  /* Non-object value properties */
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_NAN,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_INFINITY,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_UNDEFINED,
-
-  /* Object value properties */
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_OBJECT,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_FUNCTION,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_ARRAY,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_STRING,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_BOOLEAN,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_NUMBER,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_DATE,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_REGEXP,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_ERROR,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_RANGE_ERROR,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_REFERENCE_ERROR,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_SYNTAX_ERROR,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_SYNTAX_URI_ERROR,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_MATH,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_JSON,
-
-  /* Routine properties */
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_EVAL,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_INT,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_PARSE_FLOAT,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_NAN,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_IS_FINITE,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_DECODE_URI_COMPONENT,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI,
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID_ENCODE_URI_COMPONENT,
-
-  /* Details number */
-  ECMA_BUILTIN_GLOBAL_DETAIL_ID__COUNT
-} ecma_builtin_global_detail_id_t;
-
-/**
- * Identifier of Object object's detail
- */
-typedef enum
-{
-  /* Value subbuilt-ins */
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_PROTOTYPE,
-
-  /* Routine subbuilt-ins */
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_CALL, /**< [[Call]] of the Object built-in */
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_CONSTRUCT, /**< [[Construct]] of the Object built-in */
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_GET_PROTOTYPE_OF,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_GET_OWN_PROPERTY_DESCRIPTOR,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_GET_OWN_PROPERTY_NAMES,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_CREATE,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_DEFINE_PROPERTY,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_DEFINE_PROPERTIES,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_SEAL,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_FREEZE,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_IS_SEALED,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_IS_FROZEN,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_IS_EXTENSIBLE,
-  ECMA_BUILTIN_OBJECT_DETAIL_ID_KEYS,
-
-  /* Details number */
-  ECMA_BUILTIN_OBJECT_DETAIL_ID__COUNT
-} ecma_builtin_object_detail_id_t;
 
 /**
  * Position of built-in object's id field in [[Built-in routine ID]] internal property
@@ -145,43 +76,57 @@ typedef enum
 /**
  * Width of built-in routine's id field in [[Built-in routine ID]] internal property
  */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH (16)/* ecma-builtins.c */
+#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH (16)
 
+/* ecma-builtins.c */
 extern ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
-                                               uint32_t routine_id);
-extern ecma_length_t
-ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id,
-                                            uint32_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
-                               uint32_t builtin_routine_id,
-                               ecma_value_t arguments_list[],
-                               ecma_length_t arguments_number);
+                                               ecma_magic_string_id_t routine_id);
 
 /* ecma-builtin-global-object.c */
 extern void ecma_builtin_init_global_object (void);
 extern void ecma_builtin_finalize_global_object (void);
 
 extern ecma_length_t
-ecma_builtin_global_get_routine_parameters_number (ecma_builtin_global_detail_id_t routine_id);
+ecma_builtin_global_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
 extern ecma_completion_value_t
-ecma_builtin_global_dispatch_routine (ecma_builtin_global_detail_id_t builtin_routine_id,
+ecma_builtin_global_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
                                       ecma_value_t arguments_list [],
                                       ecma_length_t arguments_number);
+extern ecma_property_t*
+ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p,
+                                                 ecma_string_t *prop_name_p);
 
 /* ecma-builtin-object-object.c */
 extern void ecma_builtin_init_object_object (void);
 extern void ecma_builtin_finalize_object_object (void);
 
+extern ecma_property_t*
+ecma_builtin_object_try_to_instantiate_property (ecma_object_t *obj_p,
+                                                 ecma_string_t *prop_name_p);
+
 extern void ecma_builtin_init_object_prototype_object (void);
 extern void ecma_builtin_finalize_object_prototype_object (void);
+extern ecma_property_t*
+ecma_builtin_object_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
+                                                           ecma_string_t *prop_name_p);
 
 /* ecma-builtin-array-object.c */
 extern void ecma_builtin_init_array_object (void);
 extern void ecma_builtin_finalize_array_object (void);
+extern ecma_property_t*
+ecma_builtin_array_try_to_instantiate_property (ecma_object_t *obj_p,
+                                                ecma_string_t *prop_name_p);
+
 
 extern void ecma_builtin_init_array_prototype_object (void);
 extern void ecma_builtin_finalize_array_prototype_object (void);
+extern ecma_property_t*
+ecma_builtin_array_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
+                                                          ecma_string_t *prop_name_p);
 
+extern int32_t
+ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
+                                                      ecma_length_t array_length,
+                                                      ecma_magic_string_id_t key);
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

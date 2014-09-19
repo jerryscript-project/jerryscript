@@ -13,22 +13,37 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+#include "ecma-builtins.h"
+#include "ecma-helpers.h"
+#include "ecma-operations.h"
 
 /** \addtogroup ecma ECMA
  * @{
- */
-
-/**
- * \addtogroup reference ECMA-reference
+ *
+ * \addtogroup ecmainitfinalize Initialization and finalization of ECMA components
  * @{
  */
 
+/**
+ * Initialize ECMA components
+ */
+void
+ecma_init (void)
+{
+  ecma_strings_init ();
+  ecma_init_builtins ();
+} /* ecma_init */
+
+/**
+ * Finalize ECMA components
+ */
+void
+ecma_finalize (void)
+{
+  ecma_finalize_builtins ();
+} /* ecma_finalize */
 
 /**
  * @}
  * @}
  */
-
-#endif /* !ECMA_REFERENCE_H */

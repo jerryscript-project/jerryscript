@@ -348,7 +348,7 @@ run_int (void)
     start_pos++;
   }
 
-  ecma_init_builtins ();
+  ecma_init ();
 
   ecma_object_t *glob_obj_p = ecma_builtin_get_global_object ();
 
@@ -372,7 +372,7 @@ run_int (void)
     {
       ecma_deref_object (glob_obj_p);
       ecma_deref_object (lex_env_p);
-      ecma_finalize_builtins ();
+      ecma_finalize ();
       ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
       return ecma_is_value_true (completion.u.value);

@@ -28,6 +28,11 @@
  * @{
  */
 
+/* ECMA-262 v5, 8.7.1 and 8.7.2 */
+extern ecma_completion_value_t ecma_op_get_value (ecma_reference_t ref);
+extern ecma_completion_value_t ecma_op_put_value (ecma_reference_t ref,
+                                                  ecma_value_t value);
+
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
 extern ecma_completion_value_t ecma_op_has_binding (ecma_object_t *lex_env_p,
                                                     ecma_string_t *name_p);

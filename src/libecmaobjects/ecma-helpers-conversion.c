@@ -22,7 +22,6 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-magic-strings.h"
 #include "jerry-libc.h"
 
 /**

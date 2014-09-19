@@ -21,7 +21,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "ecma-magic-strings.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"

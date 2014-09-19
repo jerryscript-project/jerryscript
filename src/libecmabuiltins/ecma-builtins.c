@@ -17,7 +17,6 @@
 #include "ecma-builtins.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-magic-strings.h"
 #include "ecma-objects.h"
 #include "jrt-bit-fields.h"
 

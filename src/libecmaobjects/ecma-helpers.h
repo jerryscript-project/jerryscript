@@ -100,6 +100,7 @@ extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
 extern ecma_string_t* ecma_new_ecma_string_from_uint32 (uint32_t uint_number);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
 extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_index);
+extern ecma_string_t* ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 extern void ecma_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
@@ -116,6 +117,12 @@ extern bool ecma_compare_zt_strings (const ecma_char_t *string1_p, const ecma_ch
 extern bool ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern ssize_t ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, ecma_char_t *buffer_p, ssize_t buffer_size);
 extern ecma_length_t ecma_zt_string_length (const ecma_char_t *string_p);
+
+extern void ecma_strings_init (void);
+extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
+extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
+extern bool ecma_is_string_magic (ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_is_zt_string_magic (ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
 
 /* ecma-helpers-number.c */
 extern ecma_number_t ecma_number_make_nan (void);

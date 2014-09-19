@@ -16,20 +16,19 @@
 #ifndef JERRY_ECMA_OPERATIONS_H
 #define JERRY_ECMA_OPERATIONS_H
 
-#include "ecma-globals.h"
-#include "ecma-lex-env.h"
-#include "ecma-reference.h"
+#include "globals.h"
 
 /** \addtogroup ecma ECMA
  * @{
- *
- * \addtogroup ecmaoperations ECMA-defined operations
+ */
+
+/**
+ * \addtogroup ecmainitfinalize Initialization and finalization of ECMA components
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_get_value (ecma_reference_t ref);
-extern ecma_completion_value_t ecma_op_put_value (ecma_reference_t ref,
-                                                  ecma_value_t value);
+extern void ecma_init (void);
+extern void ecma_finalize (void);
 
 /**
  * @}

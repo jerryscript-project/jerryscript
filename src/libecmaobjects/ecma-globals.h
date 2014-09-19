@@ -615,7 +615,8 @@ typedef enum
                                             stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
-  ECMA_STRING_CONTAINER_CONCATENATION /**< the ecma-string is concatenation of two specified ecma-strings */
+  ECMA_STRING_CONTAINER_CONCATENATION, /**< the ecma-string is concatenation of two specified ecma-strings */
+  ECMA_STRING_CONTAINER_MAGIC_STRING /**< the ecma-string is equal to one of ECMA magic strings */
 } ecma_string_container_t;
 
 FIXME (Move to library that should define the type (libserializer /* ? */))
@@ -623,6 +624,31 @@ FIXME (Move to library that should define the type (libserializer /* ? */))
  * Index in literal table
  */
 typedef uint32_t literal_index_t;
+
+/**
+ * Identifiers of ECMA magic string constants
+ */
+typedef enum
+{
+  ECMA_MAGIC_STRING_ARGUMENTS, /**< "arguments" */
+  ECMA_MAGIC_STRING_EVAL, /**< "eval" */
+  ECMA_MAGIC_STRING_PROTOTYPE, /**< "prototype" */
+  ECMA_MAGIC_STRING_CONSTRUCTOR, /**< "constructor" */
+  ECMA_MAGIC_STRING_CALLER, /**< "caller" */
+  ECMA_MAGIC_STRING_CALLEE, /**< "callee" */
+  ECMA_MAGIC_STRING_UNDEFINED, /**< "undefined" */
+  ECMA_MAGIC_STRING_NULL, /**< "null" */
+  ECMA_MAGIC_STRING_FALSE, /**< "false" */
+  ECMA_MAGIC_STRING_TRUE, /**< "true" */
+  ECMA_MAGIC_STRING_NUMBER, /**< "number" */
+  ECMA_MAGIC_STRING_STRING, /**< "string" */
+  ECMA_MAGIC_STRING_OBJECT, /**< "object" */
+  ECMA_MAGIC_STRING_FUNCTION, /**< "function" */
+  ECMA_MAGIC_STRING_LENGTH, /**< "length" */
+  ECMA_MAGIC_STRING_NAN, /**< "NaN" */
+  ECMA_MAGIC_STRING_INFINITY, /**< "Infinity" */
+  ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
+} ecma_magic_string_id_t;
 
 /**
  * ECMA string-value descriptor
@@ -664,6 +690,9 @@ typedef struct
       unsigned int string1_cp : ECMA_POINTER_FIELD_WIDTH;
       unsigned int string2_cp : ECMA_POINTER_FIELD_WIDTH;
     } concatenation;
+
+    /** Identifier of magic string */
+    ecma_magic_string_id_t magic_string_id;
   } u;
 } ecma_string_t;
 

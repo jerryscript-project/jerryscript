@@ -24,12 +24,13 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
-#include "ecma-magic-strings.h"
+#include "ecma-lex-env.h"
 #include "ecma-number-arithmetic.h"
-#include "ecma-operations.h"
-#include "ecma-try-catch-macro.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-operations.h"
+#include "ecma-reference.h"
+#include "ecma-try-catch-macro.h"
 
 bool is_reg_variable (int_data_t *int_data, idx_t var_idx);
 ecma_completion_value_t get_variable_value (int_data_t *, idx_t, bool);

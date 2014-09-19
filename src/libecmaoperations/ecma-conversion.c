@@ -21,7 +21,7 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
-#include "ecma-magic-strings.h"
+#include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jerry-libc.h"

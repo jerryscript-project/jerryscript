@@ -46,6 +46,36 @@ JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH)
                      ECMA_STRING_MAX_CONCATENATION_LENGTH);
 
 /**
+ * Lengths of magic strings
+ */
+static ecma_length_t ecma_magic_string_lengths [ECMA_MAGIC_STRING__COUNT];
+
+/**
+ * Maximum length among lengths of magic strings
+ */
+static ecma_length_t ecma_magic_string_max_length;
+
+/**
+ * Initialize data for string helpers
+ */
+void
+ecma_strings_init (void)
+{
+  /* Initializing magic strings information */
+
+  ecma_magic_string_max_length = 0;
+
+  for (ecma_magic_string_id_t id = 0;
+       id < ECMA_MAGIC_STRING__COUNT;
+       id++)
+  {
+    ecma_magic_string_lengths [id] = ecma_zt_string_length (ecma_get_magic_string_zt (id));
+
+    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_lengths [id]);
+  }
+} /* ecma_strings_init */
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
  * @return pointer to ecma-string descriptor
@@ -180,7 +210,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 } /* ecma_new_ecma_string_from_number */
 
 /**
- * Allocate new ecma-string and fill it with reference string literal
+ * Allocate new ecma-string and fill it with reference to string literal
  *
  * @return pointer to ecma-string descriptor
  */
@@ -320,6 +350,7 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       /* only the string descriptor itself should be freed */
     }
@@ -356,6 +387,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     case ECMA_STRING_CONTAINER_CONCATENATION:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       ecma_char_t zt_string_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
@@ -514,6 +546,19 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       bytes_copied = bytes_copied1 + bytes_copied2;
 
       break;
+    }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      const ecma_magic_string_id_t id = string_desc_p->u.magic_string_id;
+      const size_t length = ecma_magic_string_lengths [id];
+
+      JERRY_ASSERT (length == (size_t) ecma_string_get_length (string_desc_p));
+
+      size_t bytes_to_copy = (length + 1) * sizeof (ecma_char_t);
+
+      __memcpy (buffer_p, ecma_get_magic_string_zt (id), bytes_to_copy);
+
+      bytes_copied = (ssize_t) bytes_to_copy;
     }
   }
 
@@ -790,6 +835,10 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
       case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
       {
         return (string1_p->u.uint32_number == string2_p->u.uint32_number);
+      }
+      case ECMA_STRING_CONTAINER_MAGIC_STRING:
+      {
+        return (string1_p->u.magic_string_id == string2_p->u.magic_string_id);
       }
       case ECMA_STRING_CONTAINER_CONCATENATION:
       {
@@ -1140,6 +1189,137 @@ ecma_zt_string_length (const ecma_char_t *string_p) /**< zero-terminated string 
 
   return length;
 } /* ecma_zt_string_length */
+
+/**
+ * Allocate new ecma-string and fill it with reference to ECMA magic string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id) /**< identifier of magic string */
+{
+  JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
+
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+
+  string_desc_p->length = ecma_magic_string_lengths [id];
+  string_desc_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
+
+  string_desc_p->u.magic_string_id = id;
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_magic_string_id */
+
+/**
+ * Get specified magic string as zero-terminated string
+ *
+ * @return pointer to zero-terminated magic string
+ */
+const ecma_char_t*
+ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
+{
+  TODO(Support UTF-16);
+
+  switch (id)
+  {
+    case ECMA_MAGIC_STRING_ARGUMENTS: return (ecma_char_t*) "arguments";
+    case ECMA_MAGIC_STRING_EVAL: return (ecma_char_t*) "eval";
+    case ECMA_MAGIC_STRING_PROTOTYPE: return (ecma_char_t*) "prototype";
+    case ECMA_MAGIC_STRING_CONSTRUCTOR: return (ecma_char_t*) "constructor";
+    case ECMA_MAGIC_STRING_CALLER: return (ecma_char_t*) "caller";
+    case ECMA_MAGIC_STRING_CALLEE: return (ecma_char_t*) "callee";
+    case ECMA_MAGIC_STRING_UNDEFINED: return (ecma_char_t*) "undefined";
+    case ECMA_MAGIC_STRING_NULL: return (ecma_char_t*) "null";
+    case ECMA_MAGIC_STRING_FALSE: return (ecma_char_t*) "false";
+    case ECMA_MAGIC_STRING_TRUE: return (ecma_char_t*) "true";
+    case ECMA_MAGIC_STRING_NUMBER: return (ecma_char_t*) "number";
+    case ECMA_MAGIC_STRING_STRING: return (ecma_char_t*) "string";
+    case ECMA_MAGIC_STRING_OBJECT: return (ecma_char_t*) "object";
+    case ECMA_MAGIC_STRING_FUNCTION: return (ecma_char_t*) "function";
+    case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
+    case ECMA_MAGIC_STRING_NAN: return (ecma_char_t*) "NaN";
+    case ECMA_MAGIC_STRING_INFINITY: return (ecma_char_t*) "Infinity";
+    case ECMA_MAGIC_STRING__COUNT: break;
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_get_magic_string_zt */
+
+/**
+ * Get specified magic string
+ *
+ * @return ecma-string containing specified magic string
+ */
+ecma_string_t*
+ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
+{
+  return ecma_new_ecma_string (ecma_get_magic_string_zt (id));
+} /* ecma_get_magic_string */
+
+/**
+ * Check if passed zt-string equals to one of magic strings
+ * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ *
+ * @return true - if magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+bool
+ecma_is_zt_string_magic (ecma_char_t *zt_string_p, /**< zero-terminated string */
+                         ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
+{
+  TODO (Improve performance of search);
+
+  for (ecma_magic_string_id_t id = 0;
+       id < ECMA_MAGIC_STRING__COUNT;
+       id++)
+  {
+    if (ecma_compare_zt_strings (zt_string_p, ecma_get_magic_string_zt (id)))
+    {
+      *out_id_p = id;
+      
+      return true;
+    }
+  }
+
+  *out_id_p = ECMA_MAGIC_STRING__COUNT;
+
+  return false;
+} /* ecma_is_zt_string_magic */
+
+/**
+ * Check if passed string equals to one of magic strings
+ * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ *
+ * @return true - if magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+bool
+ecma_is_string_magic (ecma_string_t *string_p, /**< ecma-string */
+                      ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
+{
+  if (string_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
+  {
+    JERRY_ASSERT (string_p->u.magic_string_id < ECMA_MAGIC_STRING__COUNT);
+
+    *out_id_p = (ecma_magic_string_id_t) string_p->u.magic_string_id;
+
+    return true;
+  }
+  else if (ecma_string_get_length (string_p) > ecma_magic_string_max_length)
+  {
+    return false;
+  }
+  else
+  {
+    ecma_char_t zt_string_buffer [ecma_magic_string_max_length + 1];
+
+    ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
+    JERRY_ASSERT (copied > 0);
+
+    return ecma_is_zt_string_magic (zt_string_buffer, out_id_p);
+  }
+} /* ecma_is_string_magic */
 
  /**
  * @}

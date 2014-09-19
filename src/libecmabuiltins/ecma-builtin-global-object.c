@@ -18,7 +18,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-magic-strings.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"

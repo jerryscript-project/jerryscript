@@ -18,7 +18,6 @@
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-magic-strings.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"

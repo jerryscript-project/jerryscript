@@ -1283,6 +1283,32 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_VALUE: return (ecma_char_t*) "value";
     case ECMA_MAGIC_STRING_GET: return (ecma_char_t*) "get";
     case ECMA_MAGIC_STRING_SET: return (ecma_char_t*) "set";
+    case ECMA_MAGIC_STRING_E_U: return (ecma_char_t*) "E";
+    case ECMA_MAGIC_STRING_LN10_U: return (ecma_char_t*) "LN10";
+    case ECMA_MAGIC_STRING_LN2_U: return (ecma_char_t*) "LN2";
+    case ECMA_MAGIC_STRING_LOG2E_U: return (ecma_char_t*) "LOG2E";
+    case ECMA_MAGIC_STRING_LOG10E_U: return (ecma_char_t*) "LOG10E";
+    case ECMA_MAGIC_STRING_PI_U: return (ecma_char_t*) "PI";
+    case ECMA_MAGIC_STRING_SQRT1_2_U: return (ecma_char_t*) "SQRT1_2";
+    case ECMA_MAGIC_STRING_SQRT2_U: return (ecma_char_t*) "SQRT2";
+    case ECMA_MAGIC_STRING_ABS: return (ecma_char_t*) "abs";
+    case ECMA_MAGIC_STRING_ACOS: return (ecma_char_t*) "acos";
+    case ECMA_MAGIC_STRING_ASIN: return (ecma_char_t*) "asin";
+    case ECMA_MAGIC_STRING_ATAN: return (ecma_char_t*) "atan";
+    case ECMA_MAGIC_STRING_ATAN2: return (ecma_char_t*) "atan2";
+    case ECMA_MAGIC_STRING_CEIL: return (ecma_char_t*) "ceil";
+    case ECMA_MAGIC_STRING_COS: return (ecma_char_t*) "cos";
+    case ECMA_MAGIC_STRING_EXP: return (ecma_char_t*) "exp";
+    case ECMA_MAGIC_STRING_FLOOR: return (ecma_char_t*) "floor";
+    case ECMA_MAGIC_STRING_LOG: return (ecma_char_t*) "log";
+    case ECMA_MAGIC_STRING_MAX: return (ecma_char_t*) "max";
+    case ECMA_MAGIC_STRING_MIN: return (ecma_char_t*) "min";
+    case ECMA_MAGIC_STRING_POW: return (ecma_char_t*) "pow";
+    case ECMA_MAGIC_STRING_RANDOM: return (ecma_char_t*) "random";
+    case ECMA_MAGIC_STRING_ROUND: return (ecma_char_t*) "round";
+    case ECMA_MAGIC_STRING_SIN: return (ecma_char_t*) "sin";
+    case ECMA_MAGIC_STRING_SQRT: return (ecma_char_t*) "sqrt";
+    case ECMA_MAGIC_STRING_TAN: return (ecma_char_t*) "tan";
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 

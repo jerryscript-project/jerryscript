@@ -704,6 +704,32 @@ typedef enum
   ECMA_MAGIC_STRING_VALUE, /**< "value" */
   ECMA_MAGIC_STRING_GET, /**< "get" */
   ECMA_MAGIC_STRING_SET, /**< "set" */
+  ECMA_MAGIC_STRING_E_U, /**< "E" */
+  ECMA_MAGIC_STRING_LN10_U, /**< "LN10" */
+  ECMA_MAGIC_STRING_LN2_U, /**< "LN2" */
+  ECMA_MAGIC_STRING_LOG2E_U, /**< "LOG2E" */
+  ECMA_MAGIC_STRING_LOG10E_U, /**< "LOG10E" */
+  ECMA_MAGIC_STRING_PI_U, /**< "PI" */
+  ECMA_MAGIC_STRING_SQRT1_2_U, /**< "SQRT1_2" */
+  ECMA_MAGIC_STRING_SQRT2_U, /**< "SQRT2" */
+  ECMA_MAGIC_STRING_ABS, /**< "abs" */
+  ECMA_MAGIC_STRING_ACOS, /**< "acos" */
+  ECMA_MAGIC_STRING_ASIN, /**< "asin" */
+  ECMA_MAGIC_STRING_ATAN, /**< "atan" */
+  ECMA_MAGIC_STRING_ATAN2, /**< "atan2" */
+  ECMA_MAGIC_STRING_CEIL, /**< "ceil" */
+  ECMA_MAGIC_STRING_COS, /**< "cos" */
+  ECMA_MAGIC_STRING_EXP, /** "exp" */
+  ECMA_MAGIC_STRING_FLOOR, /**< "floor" */
+  ECMA_MAGIC_STRING_LOG, /**< "log" */
+  ECMA_MAGIC_STRING_MAX, /**< "max" */
+  ECMA_MAGIC_STRING_MIN, /**< "min" */
+  ECMA_MAGIC_STRING_POW, /**< "pow" */
+  ECMA_MAGIC_STRING_RANDOM, /**< "random" */
+  ECMA_MAGIC_STRING_ROUND, /**< "round" */
+  ECMA_MAGIC_STRING_SIN, /**< "sin" */
+  ECMA_MAGIC_STRING_SQRT, /**< "sqrt" */
+  ECMA_MAGIC_STRING_TAN, /**< "tan" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 

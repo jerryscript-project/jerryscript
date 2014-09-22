@@ -34,18 +34,18 @@ extern ecma_property_t*
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p,
                                           ecma_string_t *string_p);
 
-/* ecma-builtin-global.c */
+/* ecma-builtin-global-object.c */
 extern ecma_object_t* ecma_builtin_get_global_object (void);
 extern bool ecma_builtin_is_global_object (ecma_object_t *object_p);
 
-/* ecma-builtin-object.c */
+/* ecma-builtin-object-object.c */
 extern ecma_object_t* ecma_builtin_get_object_object (void);
 extern bool ecma_builtin_is_object_object (ecma_object_t *object_p);
 
 extern ecma_object_t* ecma_builtin_get_object_prototype_object (void);
 extern bool ecma_builtin_is_object_prototype_object (ecma_object_t *object_p);
 
-/* ecma-builtin-array.c */
+/* ecma-builtin-array-object.c */
 extern ecma_object_t* ecma_builtin_get_array_object (void);
 extern bool ecma_builtin_is_array_object (ecma_object_t *object_p);
 

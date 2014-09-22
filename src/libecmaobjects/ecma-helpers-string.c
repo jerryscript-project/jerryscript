@@ -1264,6 +1264,19 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_DECODE_URI_COMPONENT: return (ecma_char_t*) "decodeURIComponent";
     case ECMA_MAGIC_STRING_ENCODE_URI: return (ecma_char_t*) "encodeURI";
     case ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT: return (ecma_char_t*) "encodeURIComponent";
+    case ECMA_MAGIC_STRING_GET_PROTOTYPE_OF_UL: return (ecma_char_t*) "getPrototypeOf";
+    case ECMA_MAGIC_STRING_GET_OWN_PROPERTY_DESCRIPTOR_UL: return (ecma_char_t*) "getOwnPropertyDescriptor";
+    case ECMA_MAGIC_STRING_GET_OWN_PROPERTY_NAMES_UL: return (ecma_char_t*) "getOwnPropertyNames";
+    case ECMA_MAGIC_STRING_CREATE: return (ecma_char_t*) "create";
+    case ECMA_MAGIC_STRING_DEFINE_PROPERTY_UL: return (ecma_char_t*) "defineProperty";
+    case ECMA_MAGIC_STRING_DEFINE_PROPERTIES_UL: return (ecma_char_t*) "defineProperties";
+    case ECMA_MAGIC_STRING_SEAL: return (ecma_char_t*) "seal";
+    case ECMA_MAGIC_STRING_FREEZE: return (ecma_char_t*) "freeze";
+    case ECMA_MAGIC_STRING_PREVENT_EXTENSIONS_UL: return (ecma_char_t*) "preventExtensions";
+    case ECMA_MAGIC_STRING_IS_SEALED_UL: return (ecma_char_t*) "isSealed";
+    case ECMA_MAGIC_STRING_IS_FROZEN_UL: return (ecma_char_t*) "isFrozen";
+    case ECMA_MAGIC_STRING_IS_EXTENSIBLE: return (ecma_char_t*) "isExtensible";
+    case ECMA_MAGIC_STRING_KEYS: return (ecma_char_t*) "keys";
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 

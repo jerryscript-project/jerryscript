@@ -45,6 +45,8 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
 void
 ecma_init_builtins (void)
 {
+  ecma_builtin_init_object_object ();
+
   ecma_builtin_init_global_object ();
 } /* ecma_init_builtins */
 
@@ -55,6 +57,8 @@ void
 ecma_finalize_builtins (void)
 {
   ecma_builtin_finalize_global_object ();
+
+  ecma_builtin_finalize_object_object ();
 } /* ecma_finalize_builtins */
 
 /**
@@ -80,10 +84,17 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     case ECMA_BUILTIN_ID_GLOBAL:
     {
       JERRY_ASSERT (ecma_builtin_is_global_object (object_p));
+
       return ecma_builtin_global_try_to_instantiate_property (object_p, string_p);
     }
 
     case ECMA_BUILTIN_ID_OBJECT:
+    {
+      JERRY_ASSERT (ecma_builtin_is_object_object (object_p));
+
+      return ecma_builtin_object_try_to_instantiate_property (object_p, string_p);
+    }
+
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
@@ -253,6 +264,9 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
       return ecma_builtin_global_get_routine_parameters_number (routine_id);
     }
     case ECMA_BUILTIN_ID_OBJECT:
+    {
+      return ecma_builtin_object_get_routine_parameters_number (routine_id);
+    }
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
@@ -312,6 +326,11 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                                    arguments_number);
     }
     case ECMA_BUILTIN_ID_OBJECT:
+    {
+      return ecma_builtin_object_dispatch_routine (builtin_routine_id,
+                                                   arguments_list,
+                                                   arguments_number);
+    }
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:

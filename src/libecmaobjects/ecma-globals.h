@@ -685,6 +685,19 @@ typedef enum
   ECMA_MAGIC_STRING_DECODE_URI_COMPONENT, /**< "decodeURIComponent" */
   ECMA_MAGIC_STRING_ENCODE_URI, /**< "encodeURI" */
   ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT, /**< "encodeURIComponent" */
+  ECMA_MAGIC_STRING_GET_PROTOTYPE_OF_UL, /**< "getPrototypeOf" */
+  ECMA_MAGIC_STRING_GET_OWN_PROPERTY_DESCRIPTOR_UL, /**< "getOwnPropertyDescriptor" */
+  ECMA_MAGIC_STRING_GET_OWN_PROPERTY_NAMES_UL, /**< "getOwnPropertyNames" */
+  ECMA_MAGIC_STRING_CREATE, /**< "create" */
+  ECMA_MAGIC_STRING_DEFINE_PROPERTY_UL, /**< "defineProperty" */
+  ECMA_MAGIC_STRING_DEFINE_PROPERTIES_UL, /**< "defineProperties" */
+  ECMA_MAGIC_STRING_SEAL, /**< "seal" */
+  ECMA_MAGIC_STRING_FREEZE, /**< "freeze" */
+  ECMA_MAGIC_STRING_PREVENT_EXTENSIONS_UL, /**< "preventExtensions" */
+  ECMA_MAGIC_STRING_IS_SEALED_UL, /**< "isSealed" */
+  ECMA_MAGIC_STRING_IS_FROZEN_UL, /**< "isFrozen" */
+  ECMA_MAGIC_STRING_IS_EXTENSIBLE, /**< "isExtensible" */
+  ECMA_MAGIC_STRING_KEYS, /**< "keys" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 

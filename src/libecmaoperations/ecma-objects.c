@@ -53,6 +53,8 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       return ecma_op_general_object_get (obj_p, property_name_p);
@@ -61,12 +63,6 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
       return ecma_op_arguments_object_get (obj_p, property_name_p);
-    }
-
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    case ECMA_OBJECT_TYPE_FUNCTION:
-    {
-      return ecma_op_function_object_get (obj_p, property_name_p);
     }
 
     case ECMA_OBJECT_TYPE_HOST:

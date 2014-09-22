@@ -289,61 +289,6 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 } /* ecma_op_create_function_object */
 
 /**
- * [[Get]] function object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 15.3.5.4
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
- */
-ecma_completion_value_t
-ecma_op_function_object_get (ecma_object_t *obj_p, /**< the function object */
-                             ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
-
-  ecma_completion_value_t ret_value;
-
-  ecma_property_t *code_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CODE);
-  uint32_t code_prop_value = code_prop_p->u.internal_property.value;
-  bool is_strict;
-  ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
-
-  if (!is_strict)
-  {
-    ret_value = ecma_op_general_object_get (obj_p, property_name_p);
-  }
-  else
-  {
-    ECMA_TRY_CATCH (general_get_completion,
-                    ecma_op_general_object_get (obj_p,
-                                                property_name_p),
-                    ret_value);
-
-    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER);
-
-    if (ecma_compare_ecma_strings (property_name_p, caller_magic_string_p))
-    {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-    }
-    else
-    {
-      ret_value = ecma_copy_completion_value (general_get_completion);
-    }
-
-    ecma_deref_ecma_string (caller_magic_string_p);
-
-    ECMA_FINALIZE (general_get_completion);
-  }
-
-  return ret_value;
-} /* ecma_op_function_object_get */
-
-/**
  * Setup variables for arguments listed in formal parameter list.
  *
  * See also:

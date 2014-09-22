@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
@@ -40,14 +41,56 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                ecma_length_t arguments_number);
 
 /**
+ * Pointer to instances of built-in objects
+ */
+static ecma_object_t* ecma_builtin_objects [ECMA_BUILTIN_ID__COUNT];
+
+/**
+ * Check if passed object is the instance of specified built-in.
+ */
+bool
+ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
+                 ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
+{
+  JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
+  JERRY_ASSERT (ecma_builtin_objects [builtin_id] != NULL);
+
+  return (obj_p == ecma_builtin_objects [builtin_id]);
+} /* ecma_builtin_is */
+
+/**
+ * Get reference to specified built-in object
+ *
+ * @return pointer to the object's instance
+ */
+ecma_object_t*
+ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
+{
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
+  JERRY_ASSERT (ecma_builtin_objects [builtin_id] != NULL);
+
+  ecma_ref_object (ecma_builtin_objects [builtin_id]);
+
+  return ecma_builtin_objects [builtin_id];
+} /* ecma_builtin_get */
+
+/**
  * Initialize ECMA built-in objects
  */
 void
 ecma_init_builtins (void)
 {
-  ecma_builtin_init_object_object ();
+  for (ecma_builtin_id_t id = 0;
+       id < ECMA_BUILTIN_ID__COUNT;
+       id++)
+  {
+    ecma_builtin_objects [id] = NULL;
+  }
 
-  ecma_builtin_init_global_object ();
+  ecma_builtin_objects [ECMA_BUILTIN_ID_OBJECT] = ecma_builtin_init_object_object ();
+
+  ecma_builtin_objects [ECMA_BUILTIN_ID_GLOBAL] = ecma_builtin_init_global_object ();
 } /* ecma_init_builtins */
 
 /**
@@ -56,9 +99,17 @@ ecma_init_builtins (void)
 void
 ecma_finalize_builtins (void)
 {
-  ecma_builtin_finalize_global_object ();
+  for (ecma_builtin_id_t id = 0;
+       id < ECMA_BUILTIN_ID__COUNT;
+       id++)
+  {
+    if (ecma_builtin_objects [id] != NULL)
+    {
+      ecma_deref_object (ecma_builtin_objects [id]);
 
-  ecma_builtin_finalize_object_object ();
+      ecma_builtin_objects [id] = NULL;
+    }
+  }
 } /* ecma_finalize_builtins */
 
 /**
@@ -79,19 +130,17 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                                                     ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
   ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
 
+  JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
+
   switch (builtin_id)
   {
     case ECMA_BUILTIN_ID_GLOBAL:
     {
-      JERRY_ASSERT (ecma_builtin_is_global_object (object_p));
-
       return ecma_builtin_global_try_to_instantiate_property (object_p, string_p);
     }
 
     case ECMA_BUILTIN_ID_OBJECT:
     {
-      JERRY_ASSERT (ecma_builtin_is_object_object (object_p));
-
       return ecma_builtin_object_try_to_instantiate_property (object_p, string_p);
     }
 
@@ -227,12 +276,12 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                                                                       ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
     ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
 
+    JERRY_ASSERT (ecma_builtin_is (obj_p, builtin_id));
+
     switch (builtin_id)
     {
       case ECMA_BUILTIN_ID_OBJECT:
       {
-        JERRY_ASSERT (ecma_builtin_is_object_object (obj_p));
-
         return ecma_builtin_object_dispatch_call (arguments_list_p, arguments_list_len);
       }
 
@@ -298,12 +347,12 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                                                                     ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
   ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
 
+  JERRY_ASSERT (ecma_builtin_is (obj_p, builtin_id));
+
   switch (builtin_id)
   {
     case ECMA_BUILTIN_ID_OBJECT:
     {
-      JERRY_ASSERT (ecma_builtin_is_object_object (obj_p));
-
       return ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
     }
 

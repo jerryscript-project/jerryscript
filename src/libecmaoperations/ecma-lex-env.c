@@ -526,7 +526,7 @@ ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical envir
   {
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    return ecma_builtin_is_global_object (binding_obj_p);
+    return ecma_builtin_is (binding_obj_p, ECMA_BUILTIN_ID_GLOBAL);
   }
   else
   {

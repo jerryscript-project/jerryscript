@@ -83,49 +83,16 @@ static const ecma_length_t ecma_builtin_global_property_number = (sizeof (ecma_b
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_global_property_names) > sizeof (void*));
 
 /**
- * Global object
- */
-static ecma_object_t* ecma_global_object_p = NULL;
-
-/**
- * Get Global object
- *
- * @return pointer to the Global object
- *         caller should free the reference by calling ecma_deref_object
- */
-ecma_object_t*
-ecma_builtin_get_global_object (void)
-{
-  JERRY_ASSERT(ecma_global_object_p != NULL);
-
-  ecma_ref_object (ecma_global_object_p);
-
-  return ecma_global_object_p;
-} /* ecma_builtin_get_global_object */
-
-/**
- * Check if passed object is the Global object.
- *
- * @return true - if passed pointer points to the Global object,
- *         false - otherwise.
- */
-bool
-ecma_builtin_is_global_object (ecma_object_t *object_p) /**< an object */
-{
-  return (object_p == ecma_global_object_p);
-} /* ecma_builtin_is_global_object */
-
-/**
  * Initialize Global object.
  *
  * Warning:
  *         the routine should be called only from ecma_init_builtins
+ *
+ * @return pointer to the object
  */
-void
+ecma_object_t*
 ecma_builtin_init_global_object (void)
 {
-  JERRY_ASSERT(ecma_global_object_p == NULL);
-
   ecma_object_t *glob_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (glob_obj_p,
@@ -146,23 +113,8 @@ ecma_builtin_init_global_object (void)
 
   ecma_set_object_is_builtin (glob_obj_p, true);
 
-  ecma_global_object_p = glob_obj_p;
+  return glob_obj_p;
 } /* ecma_builtin_init_global_object */
-
-/**
- * Remove global reference to the Global object.
- *
- * Warning:
- *         the routine should be called only from ecma_finalize_builtins
- */
-void
-ecma_builtin_finalize_global_object (void)
-{
-  JERRY_ASSERT (ecma_global_object_p != NULL);
-
-  ecma_deref_object (ecma_global_object_p);
-  ecma_global_object_p = NULL;
-} /* ecma_builtin_finalize_global_object */
 
 /**
  * The Global object's 'eval' routine
@@ -461,7 +413,7 @@ ecma_property_t*
 ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< object */
                                                  ecma_string_t *prop_name_p) /**< property's name */
 {
-  JERRY_ASSERT (ecma_builtin_is_global_object (obj_p));
+  JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL));
   JERRY_ASSERT (ecma_find_named_property (obj_p, prop_name_p) == NULL);
 
   ecma_magic_string_id_t id;
@@ -560,7 +512,7 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
     }
     case ECMA_MAGIC_STRING_OBJECT_UL:
     {
-      ecma_object_t *object_obj_p = ecma_builtin_get_object_object ();
+      ecma_object_t *object_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT);
 
       value = ecma_make_object_value (object_obj_p);
 

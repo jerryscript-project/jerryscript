@@ -520,10 +520,6 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
       value = ecma_make_object_value (func_obj_p);
 
-      writable = ECMA_PROPERTY_NOT_WRITABLE;
-      enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
-      configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
-
       break;
     }
     case ECMA_MAGIC_STRING_UNDEFINED:

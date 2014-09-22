@@ -223,8 +223,60 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
   {
     JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
 
-    JERRY_UNIMPLEMENTED ();
+    ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
+                                                                      ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+    ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+    switch (builtin_id)
+    {
+      case ECMA_BUILTIN_ID_OBJECT:
+      {
+        JERRY_ASSERT (ecma_builtin_is_object_object (obj_p));
+
+        return ecma_builtin_object_dispatch_call (arguments_list_p, arguments_list_len);
+      }
+
+      case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+      case ECMA_BUILTIN_ID_FUNCTION:
+      case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
+      case ECMA_BUILTIN_ID_ARRAY:
+      case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+      case ECMA_BUILTIN_ID_STRING:
+      case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+      case ECMA_BUILTIN_ID_BOOLEAN:
+      case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+      case ECMA_BUILTIN_ID_NUMBER:
+      case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+      case ECMA_BUILTIN_ID_DATE:
+      case ECMA_BUILTIN_ID_REGEXP:
+      case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+      case ECMA_BUILTIN_ID_ERROR:
+      case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
+      case ECMA_BUILTIN_ID_EVAL_ERROR:
+      case ECMA_BUILTIN_ID_RANGE_ERROR:
+      case ECMA_BUILTIN_ID_REFERENCE_ERROR:
+      case ECMA_BUILTIN_ID_SYNTAX_ERROR:
+      case ECMA_BUILTIN_ID_TYPE_ERROR:
+      case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
+      {
+        JERRY_UNIMPLEMENTED ();
+      }
+
+      case ECMA_BUILTIN_ID_GLOBAL:
+      case ECMA_BUILTIN_ID_MATH:
+      case ECMA_BUILTIN_ID_JSON:
+      {
+        JERRY_UNREACHABLE ();
+      }
+
+      case ECMA_BUILTIN_ID__COUNT:
+      {
+        JERRY_UNREACHABLE ();
+      }
+    }
   }
+
+  JERRY_UNREACHABLE ();
 } /* ecma_builtin_dispatch_call */
 
 /**
@@ -242,7 +294,59 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (obj_p, arguments_list_p, arguments_list_len);
+  ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
+                                                                    ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+  ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+  switch (builtin_id)
+  {
+    case ECMA_BUILTIN_ID_OBJECT:
+    {
+      JERRY_ASSERT (ecma_builtin_is_object_object (obj_p));
+
+      return ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
+    }
+
+    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+    case ECMA_BUILTIN_ID_FUNCTION:
+    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ARRAY:
+    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+    case ECMA_BUILTIN_ID_STRING:
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    case ECMA_BUILTIN_ID_BOOLEAN:
+    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+    case ECMA_BUILTIN_ID_NUMBER:
+    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+    case ECMA_BUILTIN_ID_DATE:
+    case ECMA_BUILTIN_ID_REGEXP:
+    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ERROR:
+    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
+    case ECMA_BUILTIN_ID_EVAL_ERROR:
+    case ECMA_BUILTIN_ID_RANGE_ERROR:
+    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
+    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
+    case ECMA_BUILTIN_ID_TYPE_ERROR:
+    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
+    {
+      JERRY_UNIMPLEMENTED ();
+    }
+
+    case ECMA_BUILTIN_ID_GLOBAL:
+    case ECMA_BUILTIN_ID_MATH:
+    case ECMA_BUILTIN_ID_JSON:
+    {
+      JERRY_UNREACHABLE ();
+    }
+
+    case ECMA_BUILTIN_ID__COUNT:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  JERRY_UNREACHABLE ();
 } /* ecma_builtin_dispatch_construct */
 
 /**

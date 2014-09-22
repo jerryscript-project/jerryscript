@@ -110,6 +110,12 @@ ecma_builtin_object_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
 extern ecma_property_t*
 ecma_builtin_object_try_to_instantiate_property (ecma_object_t *obj_p,
                                                  ecma_string_t *prop_name_p);
+extern ecma_completion_value_t
+ecma_builtin_object_dispatch_call (ecma_value_t *arguments_list_p,
+                                   ecma_length_t arguments_list_len);
+extern ecma_completion_value_t
+ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p,
+                                        ecma_length_t arguments_list_len);
 
 extern void ecma_builtin_init_object_prototype_object (void);
 extern void ecma_builtin_finalize_object_prototype_object (void);

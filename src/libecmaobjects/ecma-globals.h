@@ -698,6 +698,12 @@ typedef enum
   ECMA_MAGIC_STRING_IS_FROZEN_UL, /**< "isFrozen" */
   ECMA_MAGIC_STRING_IS_EXTENSIBLE, /**< "isExtensible" */
   ECMA_MAGIC_STRING_KEYS, /**< "keys" */
+  ECMA_MAGIC_STRING_WRITABLE, /**< "writable" */
+  ECMA_MAGIC_STRING_ENUMERABLE, /**< "enumerable" */
+  ECMA_MAGIC_STRING_CONFIGURABLE, /**< "configurable" */
+  ECMA_MAGIC_STRING_VALUE, /**< "value" */
+  ECMA_MAGIC_STRING_GET, /**< "get" */
+  ECMA_MAGIC_STRING_SET, /**< "set" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 

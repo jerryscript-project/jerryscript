@@ -48,6 +48,10 @@ extern ecma_completion_value_t ecma_op_to_number (ecma_value_t value);
 extern ecma_completion_value_t ecma_op_to_string (ecma_value_t value);
 extern ecma_completion_value_t ecma_op_to_object (ecma_value_t value);
 
+extern ecma_object_t* ecma_op_from_property_descriptor (const ecma_property_descriptor_t src_prop_desc);
+extern ecma_completion_value_t ecma_op_to_property_descriptor (ecma_value_t obj_value,
+                                                               ecma_property_descriptor_t *out_prop_desc_p);
+
 /**
  * @}
  * @}

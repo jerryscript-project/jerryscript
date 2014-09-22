@@ -1277,6 +1277,12 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_IS_FROZEN_UL: return (ecma_char_t*) "isFrozen";
     case ECMA_MAGIC_STRING_IS_EXTENSIBLE: return (ecma_char_t*) "isExtensible";
     case ECMA_MAGIC_STRING_KEYS: return (ecma_char_t*) "keys";
+    case ECMA_MAGIC_STRING_WRITABLE: return (ecma_char_t*) "writable";
+    case ECMA_MAGIC_STRING_ENUMERABLE: return (ecma_char_t*) "enumerable";
+    case ECMA_MAGIC_STRING_CONFIGURABLE: return (ecma_char_t*) "configurable";
+    case ECMA_MAGIC_STRING_VALUE: return (ecma_char_t*) "value";
+    case ECMA_MAGIC_STRING_GET: return (ecma_char_t*) "get";
+    case ECMA_MAGIC_STRING_SET: return (ecma_char_t*) "set";
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 

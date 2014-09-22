@@ -16,9 +16,11 @@
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
@@ -455,7 +457,43 @@ ecma_builtin_object_object_define_property (ecma_value_t arg1, /**< routine's fi
                                             ecma_value_t arg2, /**< routine's second argument */
                                             ecma_value_t arg3) /**< routine's third argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2, arg3);
+  ecma_completion_value_t ret_value;
+
+  if (arg1.value_type != ECMA_TYPE_OBJECT)
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ECMA_GET_POINTER (arg1.value);
+
+    ECMA_TRY_CATCH (name_str_value,
+                    ecma_op_to_string (arg2),
+                    ret_value);
+
+    ecma_string_t *name_str_p = ECMA_GET_POINTER (name_str_value.u.value.value);
+
+    ecma_property_descriptor_t prop_desc;
+
+    ECMA_TRY_CATCH (conv_result,
+                    ecma_op_to_property_descriptor (arg3, &prop_desc),
+                    ret_value);
+
+    ECMA_TRY_CATCH (define_own_prop_ret,
+                    ecma_op_object_define_own_property (obj_p,
+                                                        name_str_p,
+                                                        prop_desc,
+                                                        true),
+                    ret_value);
+
+    ret_value = ecma_make_return_completion_value (ecma_copy_value (arg1, true));
+
+    ECMA_FINALIZE (define_own_prop_ret);
+    ECMA_FINALIZE (conv_result);
+    ECMA_FINALIZE (name_str_value);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_define_property */
 
 /**

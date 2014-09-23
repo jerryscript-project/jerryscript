@@ -15,7 +15,7 @@
 
 #include "pretty-printer.h"
 #include "jerry-libc.h"
-#include "deserializer.h"
+#include "lexer.h"
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
@@ -39,17 +39,24 @@ static uint8_t opcode_sizes[] =
   0
 };
 
-void
-pp_strings (const char *strings[], uint8_t size)
+static void
+dump_lp (lp_string lp)
 {
-  uint8_t i;
-  uint16_t offset = (uint16_t) (size * 2 + 1);
-
-  __printf ("STRINGS %d:\n", size);
-  for (i = 0; i < size; i++)
+  for (ecma_length_t i = 0; i < lp.length; i++)
   {
-    __printf ("%3d %5d %20s\n", i, offset, strings[i]);
-    offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
+    __putchar (lp.str[i]);
+  }
+}
+
+void
+pp_strings (const lp_string strings[], uint8_t size)
+{
+  __printf ("STRINGS %d:\n", size);
+  for (uint8_t i = 0; i < size; i++)
+  {
+    __printf ("%3d ", i);
+    dump_lp (strings[i]);
+    __putchar ('\n');
   }
 }
 
@@ -77,17 +84,17 @@ dump_arg_list (idx_t id)
 static void
 dump_variable (idx_t id)
 {
-  if (id >= deserialize_min_temp ())
+  if (id >= lexer_get_reserved_ids_count ())
   {
     __printf ("tmp%d", id);
   }
-  else if (deserialize_string_by_id (id))
+  else if (id < lexer_get_strings_count ())
   {
-    __printf ("%s", deserialize_string_by_id (id));
+    dump_lp (lexer_get_string_by_id (id));
   }
   else
   {
-    __printf ("%d", (int) deserialize_num_by_id (id));
+    __printf ("%d", (int) lexer_get_num_by_id (id));
   }
 }
 
@@ -154,14 +161,14 @@ dump_variable (idx_t id)
       } \
       __printf (": SIMPLE"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_STRING) { \
-      __printf ("'%s'", deserialize_string_by_id (opcode.data.op.op2)); \
+      dump_lp (lexer_get_string_by_id (opcode.data.op.op2)); \
       __printf (": STRING"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_NUMBER) {\
-      __printf ("%d", (int) deserialize_num_by_id (opcode.data.op.op2)); \
+      __printf ("%d", (int) lexer_get_num_by_id (opcode.data.op.op2)); \
       __printf (": NUMBER"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SMALLINT) {\
       __printf ("%d", opcode.data.op.op2); \
-      __printf (": NUMBER"); \
+      __printf (": SMALLINT"); \
     } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_VARIABLE) {\
       dump_variable (opcode.data.op.op2); \
       __printf (": TYPEOF("); \

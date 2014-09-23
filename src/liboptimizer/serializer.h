@@ -19,18 +19,20 @@
 #include "globals.h"
 #include "opcodes.h"
 #include "interpreter.h"
+#include "lp-string.h"
 
 void serializer_init (bool show_opcodes);
 
-uint16_t serializer_dump_strings (const char **, uint8_t);
-
-void serializer_dump_nums (const ecma_number_t *, uint8_t, uint16_t, uint8_t);
+void serializer_dump_strings_and_nums (const lp_string *, uint8_t,
+                                       const ecma_number_t *, uint8_t);
 
 void serializer_dump_opcode (opcode_t);
 
 void serializer_rewrite_opcode (const opcode_counter_t, opcode_t);
 
 void serializer_print_opcodes (void);
+
+void serializer_adjust_strings (void);
 
 void serializer_free (void);
 

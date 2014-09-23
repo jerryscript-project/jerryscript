@@ -22,94 +22,19 @@
 
 static bool print_opcodes;
 
-uint8_t *bytecode_data = NULL;
-
 void
-serializer_init (bool show_opcodes)
+serializer_dump_strings_and_nums (const lp_string strings[], uint8_t strs_count,
+                                  const ecma_number_t nums[], uint8_t nums_count)
 {
-  print_opcodes = show_opcodes;
-  INIT_STACK (opcode_t, bytecode_opcodes);
-}
-
-uint16_t
-serializer_dump_strings (const char *strings[], uint8_t size)
-{
-  uint8_t i;
-  uint16_t offset = (uint16_t) (size * 2 + 1), res;
-
   if (print_opcodes)
   {
-    pp_strings (strings, size);
+    pp_strings (strings, strs_count);
   }
 
-  for (i = 0; i < size; i++)
-  {
-    offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
-  }
-
-  bytecode_data = mem_heap_alloc_block (offset, MEM_HEAP_ALLOC_SHORT_TERM);
-  res = offset;
-
-  bytecode_data[0] = size;
-  offset = (uint16_t) (size * 2 + 1);
-  for (i = 0; i < size; i++)
-  {
-    *((uint16_t *) (bytecode_data + i * 2 + 1)) = offset;
-    offset = (uint16_t) (offset + __strlen (strings[i]) + 1);
-  }
-
-  for (i = 0; i < size; i++)
-  {
-    offset = *((uint16_t *) (bytecode_data + i * 2 + 1));
-    __strncpy ((char *) (bytecode_data + offset), strings[i], __strlen (strings[i]) + 1);
-  }
-
-#ifndef JERRY_NDEBUG
-  for (i = 0; i < size; i++)
-  {
-    JERRY_ASSERT (!__strcmp (strings[i], (const char *) deserialize_string_by_id (i)));
-  }
-#endif
-
-  return res;
-}
-
-void
-serializer_dump_nums (const ecma_number_t nums[], uint8_t size, uint16_t offset, uint8_t strings_num)
-{
-  uint8_t i, *data, type_size = sizeof (ecma_number_t);
-
-  if (print_opcodes)
-  {
-    pp_nums (nums, size, strings_num);
-  }
-
-  data = mem_heap_alloc_block ((size_t) (offset + size * type_size + 1), MEM_HEAP_ALLOC_LONG_TERM);
-  if (!data)
-  {
-    parser_fatal (ERR_MEMORY);
-  }
-
-  __memcpy (data, bytecode_data, offset);
-  mem_heap_free_block (bytecode_data);
-  bytecode_data = data;
-  data += offset;
-  data[0] = size;
-  data++;
-  for (i = 0; i < size; i++)
-  {
-    __memcpy (data, nums + i, type_size);
-    data += type_size;
-  }
-
-#ifndef JERRY_NDEBUG
-  for (i = 0; i < size; i++)
-  {
-    JERRY_ASSERT (nums[i] == deserialize_num_by_id ((uint8_t) (i + strings_num)));
-  }
-
-  JERRY_ASSERT (deserialize_min_temp () == (uint8_t) (size + strings_num));
-#endif
+  bytecode_data.strs_count = strs_count;
+  bytecode_data.nums_count = nums_count;
+  bytecode_data.strings = strings;
+  bytecode_data.nums = nums;
 }
 
 void
@@ -122,14 +47,14 @@ serializer_dump_opcode (opcode_t opcode)
     pp_opcode (STACK_SIZE (bytecode_opcodes), opcode, false);
   }
 
-  PUSH (bytecode_opcodes, opcode)
+  STACK_PUSH (bytecode_opcodes, opcode);
 }
 
 void
 serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
   JERRY_ASSERT (loc < STACK_SIZE (bytecode_opcodes));
-  bytecode_opcodes.data[loc] = opcode;
+  STACK_ELEMENT (bytecode_opcodes, loc) = opcode;
 
   if (print_opcodes)
   {
@@ -151,18 +76,30 @@ serializer_print_opcodes (void)
 
   for (loc = 0; loc < STACK_SIZE (bytecode_opcodes); loc++)
   {
-    pp_opcode (loc, bytecode_opcodes.data[loc], false);
+    pp_opcode (loc, STACK_ELEMENT (bytecode_opcodes, loc), false);
   }
+}
+
+/* Make lp_strings also zero-terminated.  */
+void
+serializer_adjust_strings (void)
+{
+  for (uint8_t i = 0; i < bytecode_data.strs_count; i++)
+  {
+    const ecma_length_t len = bytecode_data.strings[i].length;
+    ((ecma_char_t *) (bytecode_data.strings[i]).str)[len] = '\0';
+  }
+}
+
+void
+serializer_init (bool show_opcodes)
+{
+  print_opcodes = show_opcodes;
+  STACK_INIT (opcode_t, bytecode_opcodes);
 }
 
 void
 serializer_free (void)
 {
-  mem_heap_free_block (bytecode_data);
-  bytecode_data = NULL;
-
-  if (bytecode_opcodes.data)
-  {
-    FREE_STACK (bytecode_opcodes);
-  }
+  STACK_FREE (bytecode_opcodes);
 }

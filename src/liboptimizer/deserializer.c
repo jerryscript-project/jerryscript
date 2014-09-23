@@ -16,70 +16,34 @@
 #include "deserializer.h"
 #include "bytecode-data.h"
 
-ecma_number_t *num_data = NULL;
-uint8_t num_size = 0;
-
 const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
-  uint8_t size, *data;
-  uint16_t offset;
+  JERRY_ASSERT (bytecode_data.strings[id].str[bytecode_data.strings[id].length] == '\0');
 
-  if (bytecode_data == NULL)
+  if (id >= bytecode_data.strs_count)
   {
     return NULL;
   }
-
-  size = *bytecode_data;
-
-  if (id >= size)
-  {
-    return NULL;
-  }
-
-  data = bytecode_data;
-
-  data += id * 2 + 1;
-
-  offset = *((uint16_t *) data);
-
-  return ((const ecma_char_t *) bytecode_data + offset);
+  return ((const ecma_char_t *) bytecode_data.strings[id].str);
 }
 
 ecma_number_t
 deserialize_num_by_id (uint8_t id)
 {
-  uint16_t str_size;
-
-  str_size = *bytecode_data;
-  if (id < str_size)
-  {
-    return 0;
-  }
-  id = (uint8_t) (id - str_size);
-
-  if (num_data == NULL)
-  {
-    // Go to last string's offset
-    uint8_t *data = (uint8_t *) (bytecode_data + str_size * 2 - 1);
-    uint16_t str_offset = *((uint16_t *) data);
-    data = bytecode_data + str_offset;
-
-    while (*data)
-    {
-      data++;
-    }
-
-    num_size = *(++data);
-    num_data = (ecma_number_t *) ++data;
-  }
-
-  if (id >= num_size)
+  if (id < bytecode_data.strs_count)
   {
     return 0;
   }
 
-  return num_data[id];
+  id = (uint8_t) (id - bytecode_data.strs_count);
+
+  if (id >= bytecode_data.nums_count)
+  {
+    return 0;
+  }
+
+  return bytecode_data.nums[id];
 }
 
 const void *
@@ -92,12 +56,5 @@ deserialize_bytecode (void)
 uint8_t
 deserialize_min_temp (void)
 {
-  uint8_t str_size = *bytecode_data;
-
-  if (num_size == 0)
-  {
-    deserialize_num_by_id (str_size); // Init num_data and num_size
-  }
-
-  return (uint8_t) (str_size + num_size);
+  return (uint8_t) (bytecode_data.strs_count + bytecode_data.nums_count);
 }

@@ -16,15 +16,21 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "jerry-libc.h"
+
 #define NAME_TO_ID(op) (__op__idx_##op)
 
 #define __OPCODE_SIZE(name, arg1, arg2, arg3) \
   sizeof (__op_##name) + 1,
 
+#define LP(s) (lp_string) { .length = (uint8_t) __strlen(s), .str = (ecma_char_t *) s }
+
 static uint8_t opcode_sizes[] = {
   OP_LIST (OPCODE_SIZE)
   0
 };
+
+static bool opcodes_equal (const opcode_t *, opcode_t *, uint16_t) __unused;
 
 static bool
 opcodes_equal (const opcode_t *opcodes1, opcode_t *opcodes2, uint16_t size)

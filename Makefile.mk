@@ -273,8 +273,9 @@ SOURCES_JERRY_C = \
  $(wildcard ./src/libecmabuiltins/*.c) \
  $(wildcard ./src/liballocator/*.c) \
  $(wildcard ./src/libcoreint/*.c) \
- $(wildcard ./src/liboptimizer/*.c) ) \
- $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.c)
+ $(wildcard ./src/libintstructs/*.c) \
+ $(wildcard ./src/liboptimizer/*.c ) \
+ $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.c) )
 
 SOURCES_JERRY_H = \
  $(sort \

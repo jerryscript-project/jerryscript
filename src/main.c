@@ -32,31 +32,16 @@
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
 
-static const opcode_t *
-parser_run (const char *script_source, size_t script_source_size, bool is_show_opcodes)
+static bool
+jerry_run (const char *script_source, size_t script_source_size,
+           bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
 {
-  const char *strings[MAX_STRINGS];
-  ecma_number_t nums[MAX_NUMS];
-  uint8_t strings_num, nums_count;
-  uint16_t offset;
   const opcode_t *opcodes;
 
-  lexer_init (script_source, script_source_size, is_show_opcodes);
+  mem_init ();
 
-  lexer_run_first_pass ();
-
-  strings_num = lexer_get_strings (strings);
-  nums_count = lexer_get_nums (nums);
-  lexer_adjust_num_ids ();
-
-  offset = serializer_dump_strings (strings, strings_num);
-  serializer_dump_nums (nums, nums_count, offset, strings_num);
-
-  parser_init ();
+  parser_init (script_source, script_source_size, is_show_opcodes);
   parser_parse_program ();
-
-  lexer_free ();
-  parser_free ();
 
   opcodes = deserialize_bytecode ();
 
@@ -66,23 +51,10 @@ parser_run (const char *script_source, size_t script_source_size, bool is_show_o
   serializer_print_opcodes ();
 #endif
 
-  return opcodes;
-}
-
-static bool
-jerry_run (const char *script_source, size_t script_source_size,
-           bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
-{
-  const opcode_t *opcodes;
-
-  mem_init ();
-
-  serializer_init (is_show_opcodes);
-
-  opcodes = parser_run (script_source, script_source_size, is_show_opcodes);
-
   if (is_parse_only)
   {
+    parser_free ();
+    mem_finalize (is_show_mem_stats);
     return true;
   }
 
@@ -90,7 +62,7 @@ jerry_run (const char *script_source, size_t script_source_size,
 
   bool is_success = run_int ();
 
-  serializer_free ();
+  parser_free ();
 
   mem_finalize (is_show_mem_stats);
 

@@ -15,21 +15,15 @@
 
 /**
   This file contains macros to define and use stacks.
-  Do define stack type use macro DEFINE_STACK_TYPE.
-  After definition of type use macro STACK to create stack variable and define all necessaty routines.
+  Use macro STACK or STATIC_STACK to create stack variable and define all necessaty routines.
   Also, define variable with name NAME##_global_size. If the variable more than 0,
-  first NAME##_global_size element will remain untouched during PUSH and POP operations.
-  Before using the stack, init it by calling INIT_STACK macro.
-  Use macros PUSH, POP, DROP, CLEAN and HEAD to manipulate the stack.
-  DO NOT FORGET to free stack memory by calling FREE_STACK macro.
-  For check usage of stack during a function, use DECLARE_USAGE and CHECK_USAGE macros.
+  first NAME##_global_size element will remain untouched during STACK_PUSH and STACK_POP operations.
+  Before using the stack, init it by calling STACK_INIT macro.
+  Use macros STACK_PUSH, STACK_POP, STACK_DROP, STACK_CLEAN and STACK_HEAD to manipulate the stack.
+  DO NOT FORGET to free stack memory by calling STACK_FREE macro.
+  For check usage of stack during a function, use STACK_DECLARE_USAGE and STACK_CHECK_USAGE macros.
 
   Example (parser.c):
-
-  #ifndef UINT8_T_STACK_DEFINED
-  #define UINT8_T_STACK_DEFINED
-  DEFINE_STACK_TYPE (uint8_t)
-  #endif
 
   enum
   {
@@ -38,7 +32,7 @@
     max_temp_name,
     temp_names_global_size
   };
-  STACK(uint8_t, temp_names)
+  STACK(temp_names, uint8_t, uint8_t)
 
   #define GLOBAL(NAME, VAR) \
   NAME.data[VAR]
@@ -55,19 +49,19 @@
   void
   parser_init (void)
   {
-    INIT_STACK(uint8_t, temp_names)
+    STACK_INIT(uint8_t, temp_names)
   }
 
   void
   parser_free (void)
   {
-    FREE_STACK(temp_names)
+    STACK_FREE(temp_names)
   }
 */
 #ifndef STACK_H
 #define STACK_H
 
-#define DEFINE_STACK_TYPE(DATA_TYPE, TYPE) \
+#define DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
 typedef struct \
 { \
   DATA_TYPE length; \
@@ -75,20 +69,20 @@ typedef struct \
   TYPE *data; \
 } \
 __packed \
-TYPE##_stack;
+NAME##_stack;
 
-#define INIT_STACK(TYPE, NAME) \
+#define STACK_INIT(TYPE, NAME) \
 do { \
-size_t NAME##_size = mem_heap_recommend_allocation_size (sizeof (TYPE) * NAME##_global_size); \
-NAME.data = (TYPE *) mem_heap_alloc_block (NAME##_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-NAME.current = NAME##_global_size; \
-NAME.length = (__typeof__ (NAME.length)) (NAME##_size / sizeof (TYPE)); \
+  size_t stack_size = mem_heap_recommend_allocation_size (sizeof (TYPE) * NAME##_global_size); \
+  NAME.data = (TYPE *) mem_heap_alloc_block (stack_size, MEM_HEAP_ALLOC_SHORT_TERM); \
+  NAME.current = NAME##_global_size; \
+  NAME.length = (__typeof__ (NAME.length)) (stack_size / sizeof (TYPE)); \
 } while (0)
 
-#define FREE_STACK(NAME) \
+#define STACK_FREE(NAME) \
 do { \
-mem_heap_free_block ((uint8_t *) NAME.data); \
-NAME.length = NAME.current = 0; \
+  mem_heap_free_block ((uint8_t *) NAME.data); \
+  NAME.length = NAME.current = 0; \
 } while (0)
 
 /* In most cases (for example, in parser) default size of stack is enough.
@@ -100,7 +94,7 @@ NAME.length = NAME.current = 0; \
     4) Allocate new memory. (It must point to the memory before increasing).
     5) Copy data back.
     6) Free temp buffer.  */
-#define DEFINE_INCREASE_STACK_SIZE(TYPE, NAME) \
+#define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
 static void increase_##NAME##_stack_size (__typeof__ (NAME.length)) __unused; \
 static void \
 increase_##NAME##_stack_size (__typeof__ (NAME.length) elements_count) { \
@@ -122,6 +116,12 @@ increase_##NAME##_stack_size (__typeof__ (NAME.length) elements_count) { \
     mem_heap_free_block ((uint8_t *) NAME.data); \
     mem_heap_free_block ((uint8_t *) temp1); \
     NAME.data = (TYPE *) mem_heap_alloc_block (new_size, MEM_HEAP_ALLOC_SHORT_TERM); \
+    if (NAME.data == NULL) \
+    { \
+      __printf ("old_size: %d\ntemp1_size: %d\nnew_size: %d\n", old_size, temp1_size, new_size); \
+      mem_heap_print (true, false, true); \
+      JERRY_UNREACHABLE (); \
+    } \
     __memcpy (NAME.data, temp2, old_size); \
     mem_heap_free_block ((uint8_t *) temp2); \
     NAME.length = (__typeof__ (NAME.length)) (new_size / sizeof (TYPE)); \
@@ -137,44 +137,58 @@ decrease_##NAME##_stack_size (uint8_t elements_count) { \
   NAME.current = (__typeof__ (NAME.current)) (NAME.current - elements_count); \
 }
 
-#define PUSH(NAME, VALUE) \
-increase_##NAME##_stack_size (1); \
-NAME.data[NAME.current - 1] = VALUE;
+#define STACK_PUSH(NAME, VALUE) \
+do { \
+  increase_##NAME##_stack_size (1); \
+  NAME.data[NAME.current - 1] = VALUE; \
+} while (0)
 
-#define POP(VALUE, NAME) \
-decrease_##NAME##_stack_size (1); \
-VALUE = NAME.data[NAME.current];
+#define STACK_POP(NAME, VALUE) \
+do { \
+  decrease_##NAME##_stack_size (1); \
+  VALUE = NAME.data[NAME.current]; \
+} while (0)
 
-#define DROP(NAME, I) \
-decrease_##NAME##_stack_size (I);
+#define STACK_DROP(NAME, I) \
+do { decrease_##NAME##_stack_size (I); } while (0)
 
-#define CLEAN(NAME) \
-DROP (NAME, NAME.current - NAME##_global_size);
+#define STACK_CLEAN(NAME) \
+STACK_DROP (NAME, NAME.current - NAME##_global_size);
 
-#define HEAD(NAME, I) \
+#define STACK_HEAD(NAME, I) \
 NAME.data[NAME.current - I]
 
 #define STACK_SIZE(NAME) \
 NAME.current
 
-#define STACK(TYPE, NAME) \
-TYPE##_stack NAME; \
-DEFINE_DECREASE_STACE_SIZE (NAME) \
-DEFINE_INCREASE_STACK_SIZE (TYPE, NAME)
+#define STACK_ELEMENT(NAME, I) \
+NAME.data[I]
 
-#define STATIC_STACK(TYPE, NAME) \
-static TYPE##_stack NAME; \
+#define STACK_RAW_DATA(NAME) \
+NAME.data
+
+#define STACK(NAME, DATA_TYPE, TYPE) \
+DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
+NAME##_stack NAME; \
 DEFINE_DECREASE_STACE_SIZE (NAME) \
-DEFINE_INCREASE_STACK_SIZE (TYPE, NAME)
+DEFINE_INCREASE_STACK_SIZE (NAME, TYPE)
+
+#define STATIC_STACK(NAME, DATA_TYPE, TYPE) \
+DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
+static NAME##_stack NAME; \
+DEFINE_DECREASE_STACE_SIZE (NAME) \
+DEFINE_INCREASE_STACK_SIZE (NAME, TYPE)
 
 #ifndef JERRY_NDEBUG
-#define DECLARE_USAGE(NAME) \
-uint8_t NAME##_current = NAME.current;
-#define CHECK_USAGE(NAME) \
-JERRY_ASSERT (NAME.current == NAME##_current);
+#define STACK_DECLARE_USAGE(NAME) \
+__typeof__(NAME.current) NAME##_current = NAME.current;
+#define STACK_CHECK_USAGE(NAME) \
+do { \
+  JERRY_ASSERT (NAME.current == NAME##_current); \
+} while (0);
 #else
-#define DECLARE_USAGE(NAME) ;
-#define CHECK_USAGE(NAME) ;
+#define STACK_DECLARE_USAGE(NAME) ;
+#define STACK_CHECK_USAGE(NAME) ;
 #endif /* JERRY_NDEBUG */
 
 #endif /* STACK_H */

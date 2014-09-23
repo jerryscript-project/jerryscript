@@ -18,6 +18,7 @@
 #include "mem-allocator.h"
 #include "opcodes.h"
 #include "serializer.h"
+#include "common.h"
 
 /**
  * Unit test's main function.
@@ -50,13 +51,13 @@ main( int __unused argc,
   };
 
   mem_init();
+  serializer_init (false);
 
-  const char *strings[] = { "a",
-                            "b",
-                            "c" };
+  const lp_string strings[] = { LP("a"), 
+                                LP("b"),
+                                LP("c") };
   ecma_number_t nums [] = { 2.0 };
-  uint16_t offset = serializer_dump_strings( strings, 3);
-  serializer_dump_nums( nums, 1, offset, 3);
+  serializer_dump_strings_and_nums (strings, 3, nums, 1);
 
   init_int( test_program, false);
 

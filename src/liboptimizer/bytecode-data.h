@@ -19,11 +19,7 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "jerry-libc.h"
-
-#ifndef OPCODE_T_STACK_DEFINED
-DEFINE_STACK_TYPE (opcode_counter_t, opcode_t)
-#define OPCODE_T_STACK_DEFINED
-#endif
+#include "lp-string.h"
 
 /* bytecode_data contains identifiers, string and num literals.
    Memory map if the following.
@@ -36,12 +32,21 @@ DEFINE_STACK_TYPE (opcode_counter_t, opcode_t)
       U8 nums_count;
       U32 nums[nums_count];
    } */
-extern uint8_t *bytecode_data;
+struct
+{
+  uint8_t strs_count;
+  uint8_t nums_count;
+
+  const lp_string *strings;
+  const ecma_number_t *nums;
+}
+__packed
+bytecode_data;
 
 enum
 {
   bytecode_opcodes_global_size
 };
-STACK (opcode_t, bytecode_opcodes)
+STACK (bytecode_opcodes, opcode_counter_t, opcode_t)
 
 #endif // BYTECODE_DATA_H

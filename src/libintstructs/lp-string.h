@@ -13,15 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef LP_STRING
+#define LP_STRING
 
-#include "globals.h"
+#include "ecma-globals.h"
 
-void parser_init (const char *, size_t, bool);
-void parser_parse_program (void);
-void parser_free (void);
+/* Length-prefixed or "pascal" string.  */
+typedef struct
+{
+  ecma_length_t length;
+  const ecma_char_t *str;
+}
+__packed
+lp_string;
 
-void parser_fatal (jerry_status_t code);
+bool lp_string_equal (lp_string, lp_string);
+bool lp_string_equal_s (lp_string, const char *);
 
-#endif
+#endif /* LP_STRING */

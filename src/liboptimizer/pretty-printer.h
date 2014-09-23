@@ -17,9 +17,10 @@
 #define PRETTY_PRINTER
 
 #include "interpreter.h"
+#include "lp-string.h"
 
 void pp_opcode (opcode_counter_t, opcode_t, bool);
-void pp_strings (const char **, uint8_t);
+void pp_strings (const lp_string *, uint8_t);
 void pp_nums (const ecma_number_t *, uint8_t, uint8_t);
 
 #endif // PRETTY_PRINTER

@@ -17,42 +17,49 @@
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"
+#include "stack.h"
+#include "opcodes.h"
 
 static token saved_token;
 static token empty_token =
 {
-  .type =
-  TOK_EMPTY,
+  .type = TOK_EMPTY,
   .uid = 0
 };
 
 static bool allow_dump_lines = false;
 static size_t buffer_size = 0;
 
-typedef struct
+/* Represents the contents of a script.  */
+static const char *buffer_start = NULL;
+static const char *buffer = NULL;
+static const char *token_start;
+
+#define LA(I)       (get_char (I))
+
+enum
 {
-  ecma_number_t num;
-  token tok;
-}
-num_and_token;
+  strings_global_size
+};
+STATIC_STACK (strings, uint8_t, lp_string)
 
-#define MAX_NUMS 25
+enum
+{
+  numbers_global_size
+};
+STATIC_STACK (numbers, uint8_t, ecma_number_t)
 
-static uint8_t seen_names_count = 0;
-
-static num_and_token seen_nums[MAX_NUMS];
-static uint8_t seen_nums_count = 0;
+enum
+{
+  num_ids_global_size
+};
+STATIC_STACK (num_ids, uint8_t, idx_t)
 
 static bool
 is_empty (token tok)
 {
   return tok.type == TOK_EMPTY;
 }
-
-/* Represents the contents of a script.  */
-static const char *buffer_start = NULL;
-static const char *buffer = NULL;
-static const char *token_start;
 
 static char
 get_char (size_t i)
@@ -62,44 +69,6 @@ get_char (size_t i)
     return '\0';
   }
   return *(buffer + i);
-}
-
-#define LA(I)       (get_char (I))
-
-/* Continuous array of NULL-terminated strings.  */
-static char *strings_cache = NULL;
-static size_t strings_cache_size = 0;
-
-static void
-increase_strings_cache (void)
-{
-  char *new_cache;
-  size_t new_cache_size;
-
-  // if strings_cache_size == 0, allocator recommends minimum size that is more than 0
-  new_cache_size = mem_heap_recommend_allocation_size (strings_cache_size * 2);
-  new_cache = (char *) mem_heap_alloc_block (new_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
-
-  if (!new_cache)
-  {
-    // Allocator alligns recommended memory size
-    new_cache_size = mem_heap_recommend_allocation_size (strings_cache_size + 1);
-    new_cache = (char *) mem_heap_alloc_block (new_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
-
-    if (!new_cache)
-    {
-      parser_fatal (ERR_MEMORY);
-    }
-  }
-
-  if (strings_cache)
-  {
-    __memcpy (new_cache, strings_cache, strings_cache_size);
-    mem_heap_free_block ((uint8_t *) strings_cache);
-  }
-
-  strings_cache = new_cache;
-  strings_cache_size = new_cache_size;
 }
 
 #ifdef __TARGET_HOST_x64
@@ -131,6 +100,20 @@ current_token_equals_to (const char *str)
     return false;
   }
   if (!__strncmp (str, token_start, (size_t) (buffer - token_start)))
+  {
+    return true;
+  }
+  return false;
+}
+
+static bool
+current_token_equals_to_lp (lp_string str)
+{
+  if (str.length != (ecma_length_t) (buffer - token_start))
+  {
+    return false;
+  }
+  if (!__strncmp ((const char *) str.str, token_start, str.length))
   {
     return true;
   }
@@ -507,169 +490,119 @@ decode_keyword (void)
 }
 
 static token
-convert_seen_name_to_token (token_type tt, const char *string)
+convert_current_token_to_token (token_type tt)
 {
-  uint8_t i;
-  char *current_string = strings_cache;
-  JERRY_ASSERT (strings_cache);
-  token ret_val = empty_token;
+  JERRY_ASSERT (token_start);
 
-  for (i = 0; i < seen_names_count; i++)
+  for (uint8_t i = 0; i < STACK_SIZE (strings); i++)
   {
-    if ((string == NULL && current_token_equals_to (current_string))
-        || (string != NULL && !__strcmp (current_string, string)))
+    if (current_token_equals_to_lp (strings.data[i]))
     {
-      ret_val = (token)
+      return (token)
       {
         .type = tt,
         .uid = i
       };
-
-      break;
     }
-
-    current_string += __strlen (current_string) + 1;
   }
 
-  return ret_val;
-}
-
-static token
-add_token_to_seen_names (token_type tt, const char *string)
-{
-  size_t i;
-  char *current_string = strings_cache;
-  size_t required_size;
-  size_t len = (string == NULL ? (size_t) (buffer - token_start) : __strlen (string));
-  token ret_val = empty_token;
-
-  // Go to unused memory of cache
-  for (i = 0; i < seen_names_count; i++)
+  const lp_string str = (lp_string)
   {
-    current_string += __strlen (current_string) + 1;
-  }
-
-  required_size = (size_t) (current_string - strings_cache) + len + 1;
-  if (required_size > strings_cache_size)
-  {
-    size_t offset = (size_t) (current_string - strings_cache);
-    increase_strings_cache ();
-
-    // Now our pointer are invalid, adjust it
-    current_string = strings_cache + offset;
-  }
-
-  if (string == NULL)
-  {
-    // Copy current token with terminating NULL
-    __strncpy (current_string, token_start, (size_t) (buffer - token_start));
-    current_string += buffer - token_start;
-    *current_string = '\0';
-  }
-  else
-  {
-    __memcpy (current_string, string, __strlen (string) + 1);
-  }
-
-  ret_val = (token)
-  {
-    .type = tt,
-    .uid = seen_names_count++
+    .length = (uint8_t) (buffer - token_start),
+    .str = (const ecma_char_t *) token_start
   };
 
-  return ret_val;
+  STACK_PUSH (strings, str);
+
+  return (token)
+  {
+    .type = tt,
+    .uid = (idx_t) (STACK_SIZE (strings) - 1)
+  };
 }
 
 static token
 convert_seen_num_to_token (ecma_number_t num)
 {
-  size_t i;
+  uint8_t num_id;
 
-  for (i = 0; i < seen_nums_count; i++)
+  JERRY_ASSERT (STACK_SIZE (num_ids) == STACK_SIZE (numbers));
+  for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
   {
-    // token must be exactly the same as seen
-    if (seen_nums[i].num == num)
+    if (numbers.data[i] == num)
     {
-      return seen_nums[i].tok;
+      return (token)
+      {
+        .type = TOK_NUMBER,
+        .uid = num_ids.data[i]
+      };
     }
   }
 
-  return empty_token;
+  num_id = STACK_SIZE (num_ids);
+  STACK_PUSH (num_ids, num_id);
+  STACK_PUSH (numbers, num);
+
+  return (token)
+  {
+    .type = TOK_NUMBER,
+    .uid = num_id
+  };
 }
 
-static void
-add_num_to_seen_tokens (num_and_token nat)
+const lp_string *
+lexer_get_strings (void)
 {
-  JERRY_ASSERT (seen_nums_count < MAX_NUMS);
-
-  seen_nums[seen_nums_count++] = nat;
+  return STACK_RAW_DATA (strings);
 }
 
 uint8_t
-lexer_get_strings (const char **strings)
+lexer_get_strings_count (void)
 {
-  if (strings)
-  {
-    char *current_string = strings_cache;
-    int i;
-    for (i = 0; i < seen_names_count; i++)
-    {
-      strings[i] = current_string;
-      current_string += __strlen (current_string) + 1;
-    }
-  }
-
-  return seen_names_count;
+  return STACK_SIZE (strings);
 }
 
 uint8_t
 lexer_get_reserved_ids_count (void)
 {
-  return (uint8_t) (seen_names_count + seen_nums_count);
+  return (uint8_t) (STACK_SIZE (strings) + STACK_SIZE (numbers));
 }
 
-const char *
+lp_string
 lexer_get_string_by_id (uint8_t id)
 {
-  int i;
-  char *current_string = strings_cache;
-  JERRY_ASSERT (id < seen_names_count);
+  JERRY_ASSERT (id < STACK_SIZE (strings));
+  return STACK_ELEMENT (strings, id);
+}
 
-  for (i = 0 ; i < id; i++)
-  {
-    current_string += __strlen (current_string) + 1;
-  }
-
-  return current_string;
+const ecma_number_t *
+lexer_get_nums (void)
+{
+  return STACK_RAW_DATA (numbers);
 }
 
 uint8_t
-lexer_get_nums (ecma_number_t *nums)
+lexer_get_nums_count (void)
 {
-  int i;
-
-  if (!nums)
-  {
-    return seen_nums_count;
-  }
-
-  for (i = 0; i < seen_nums_count; i++)
-  {
-    nums[i] = seen_nums[i].num;
-  }
-
-  return seen_nums_count;
+  return STACK_SIZE (numbers);
 }
 
 void
 lexer_adjust_num_ids (void)
 {
-  size_t i;
-
-  for (i = 0; i < seen_nums_count; i++)
+  JERRY_ASSERT (STACK_SIZE (numbers) == STACK_SIZE (num_ids));
+  for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
   {
-    seen_nums[i].tok.uid = (uint8_t) (seen_nums[i].tok.uid + seen_names_count);
+    STACK_ELEMENT (num_ids, i) = (uint8_t) (STACK_ELEMENT (num_ids, i) + STACK_SIZE (strings));
   }
+}
+
+ecma_number_t
+lexer_get_num_by_id (uint8_t id)
+{
+  JERRY_ASSERT (id >= lexer_get_strings_count () && id < lexer_get_reserved_ids_count ());
+  JERRY_ASSERT (STACK_ELEMENT (num_ids, id - lexer_get_strings_count ()) == id);
+  return STACK_ELEMENT (numbers, id - lexer_get_strings_count ());
 }
 
 static void
@@ -773,20 +706,14 @@ parse_name (void)
     }
   }
 
-  known_token = convert_seen_name_to_token (TOK_NAME, NULL);
-  if (!is_empty (known_token))
-  {
-    goto end;
-  }
-
-  known_token = add_token_to_seen_names (TOK_NAME, NULL);
+  known_token = convert_current_token_to_token (TOK_NAME);
 
 end:
   token_start = NULL;
   return known_token;
 }
 
-static int32_t
+static uint32_t
 hex_to_int (char hex)
 {
   switch (hex)
@@ -827,7 +754,7 @@ parse_number (void)
   bool is_fp = false;
   bool is_exp = false;
   size_t tok_length = 0, i;
-  int32_t res = 0;
+  uint32_t res = 0;
   token known_token;
 
   JERRY_ASSERT (__isdigit (c) || c == '.');
@@ -868,10 +795,17 @@ parse_number (void)
     }
 
     tok_length = (size_t) (buffer - token_start);
-    // OK, I know that integer overflow can occur here
+
     for (i = 0; i < tok_length; i++)
     {
+#ifndef JERRY_NDEBUG
+      uint32_t old_res = res;
+#endif
       res = (res << 4) + hex_to_int (token_start[i]);
+      FIXME (Replace with conversion to ecma_number_t)
+#ifndef JERRY_NDEBUG
+      JERRY_ASSERT (old_res <= res);
+#endif
     }
 
     token_start = NULL;
@@ -886,23 +820,8 @@ parse_number (void)
     }
 
     known_token = convert_seen_num_to_token ((ecma_number_t) res);
-    if (!is_empty (known_token))
-    {
-      return known_token;
-    }
+    JERRY_ASSERT (!is_empty (known_token));
 
-    known_token = (token)
-    {
-      .type = TOK_NUMBER,
-      .uid = seen_nums_count
-    };
-    add_num_to_seen_tokens (
-      (num_and_token)
-      {
-        .num = (ecma_number_t) res,
-        .tok = known_token
-      }
-);
     return known_token;
   }
 
@@ -973,23 +892,7 @@ parse_number (void)
     token_start = NULL;
 
     known_token = convert_seen_num_to_token (res);
-    if (!is_empty (known_token))
-    {
-      return known_token;
-    }
 
-    known_token = (token)
-    {
-      .type = TOK_NUMBER,
-      .uid = seen_nums_count
-    };
-    add_num_to_seen_tokens (
-      (num_and_token)
-      {
-        .num = res,
-        .tok = known_token
-      }
-);
     return known_token;
   }
 
@@ -1011,42 +914,7 @@ parse_number (void)
   }
 
   known_token = convert_seen_num_to_token ((ecma_number_t) res);
-  if (!is_empty (known_token))
-  {
-    return known_token;
-  }
-
-  known_token = (token)
-  {
-    .type = TOK_NUMBER,
-    .uid = seen_nums_count
-  };
-  add_num_to_seen_tokens (
-    (num_and_token)
-    {
-      .num = (ecma_number_t) res,
-      .tok = known_token
-    }
-);
   return known_token;
-}
-
-static char
-escape_char (char c)
-{
-  switch (c)
-  {
-    case 'b': return '\b';
-    case 'f': return '\f';
-    case 'n': return '\n';
-    case 'r': return '\r';
-    case 't': return '\t';
-    case 'v': return '\v';
-    case '\'':
-    case '"':
-    case '\\':
-    default: return c;
-  }
 }
 
 static token
@@ -1054,11 +922,7 @@ parse_string (void)
 {
   char c = LA (0);
   bool is_double_quoted;
-  char *tok = NULL;
-  char *index = NULL;
-  const char *i;
-  size_t length;
-  token known_token = empty_token;
+  token result;
 
   JERRY_ASSERT (c == '\'' || c == '"');
 
@@ -1104,46 +968,13 @@ parse_string (void)
     consume_char ();
   }
 
-  length = (size_t) (buffer - token_start);
-  tok = (char *) mem_heap_alloc_block (length + 1, MEM_HEAP_ALLOC_SHORT_TERM);
-  __memset (tok, '\0', length + 1);
-  index = tok;
-
-  // Copy current token to TOK and replace escape sequences by there meanings
-  for (i = token_start; i < buffer; i++)
-  {
-    if (*i == '\\')
-    {
-      if (*(i+1) == '\n')
-      {
-        i++;
-        continue;
-      }
-      *index = escape_char (*(i+1));
-      index++;
-      i++;
-      continue;
-    }
-
-    *index = *i;
-    index++;
-  }
-
   // Eat up '"'
+  result = convert_current_token_to_token (TOK_STRING);
+
   consume_char ();
-
-  known_token = convert_seen_name_to_token (TOK_STRING, tok);
-  if (!is_empty (known_token))
-  {
-    goto end;
-  }
-
-  known_token = add_token_to_seen_names (TOK_STRING, tok);
-
-end:
-  mem_heap_free_block ((uint8_t *) tok);
   token_start = NULL;
-  return known_token;
+
+  return result;
 }
 
 static void
@@ -1421,7 +1252,10 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   allow_dump_lines = show_opcodes;
   buffer_size = source_size;
   lexer_set_source (source);
-  increase_strings_cache ();
+
+  STACK_INIT (lp_string, strings);
+  STACK_INIT (ecma_number_t, numbers);
+  STACK_INIT (idx_t, num_ids);
 }
 
 void
@@ -1439,7 +1273,7 @@ lexer_run_first_pass (void)
 void
 lexer_free (void)
 {
-  mem_heap_free_block ((uint8_t *) strings_cache);
-  strings_cache = NULL;
-  strings_cache_size = 0;
+  STACK_FREE (strings);
+  STACK_FREE (numbers);
+  STACK_FREE (num_ids);
 }

@@ -18,6 +18,7 @@
 
 #include "globals.h"
 #include "ecma-globals.h"
+#include "lp-string.h"
 
 /* Keywords.  */
 typedef uint8_t keyword;
@@ -145,14 +146,24 @@ token;
 
 void lexer_init (const char *, size_t, bool);
 void lexer_free (void);
+
 void lexer_run_first_pass (void);
+
 token lexer_next_token (void);
 void lexer_save_token (token);
+
 void lexer_dump_buffer_state (void);
-uint8_t lexer_get_strings (const char **);
+
 uint8_t lexer_get_reserved_ids_count (void);
-const char *lexer_get_string_by_id (uint8_t);
-uint8_t lexer_get_nums (ecma_number_t *);
+
+const lp_string *lexer_get_strings (void);
+uint8_t lexer_get_strings_count (void);
+lp_string lexer_get_string_by_id (uint8_t);
+
+const ecma_number_t *lexer_get_nums (void);
+ecma_number_t lexer_get_num_by_id (uint8_t);
+uint8_t lexer_get_nums_count (void);
+
 void lexer_adjust_num_ids (void);
 
 #endif

@@ -13,15 +13,44 @@
  * limitations under the License.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#include "lp-string.h"
 
-#include "globals.h"
+bool
+lp_string_equal (lp_string s1, lp_string s2)
+{
+  if (s1.length != s2.length)
+  {
+    return false;
+  }
 
-void parser_init (const char *, size_t, bool);
-void parser_parse_program (void);
-void parser_free (void);
+  for (ecma_length_t i = 0; i < s1.length; i++)
+  {
+    JERRY_ASSERT (s1.str[i] != '\0' && s1.str[i] != '\0');
+    if (s1.str[i] != s2.str[i])
+    {
+      return false;
+    }
+  }
 
-void parser_fatal (jerry_status_t code);
+  return true;
+}
 
-#endif
+bool
+lp_string_equal_s (lp_string lp, const char *s)
+{
+  for (ecma_length_t i = 0; i < lp.length; i++)
+  {
+    JERRY_ASSERT (lp.str[i] != '\0');
+    if (lp.str[i] != s[i])
+    {
+      return false;
+    }
+  }
+
+  if (s[lp.length] != '\0')
+  {
+    return false;
+  }
+
+  return true;
+}

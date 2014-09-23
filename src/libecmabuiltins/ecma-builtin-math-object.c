@@ -533,7 +533,33 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
 static ecma_completion_value_t
 ecma_builtin_math_object_random (void)
 {
-  JERRY_UNIMPLEMENTED ();
+  /* Implementation of George Marsaglia's XorShift random number generator */
+  TODO (/* Check for license issues */);
+
+  static uint32_t word1 = 1455997910;
+  static uint32_t word2 = 1999515274;
+  static uint32_t word3 = 1234451287;
+  static uint32_t word4 = 1949149569;
+
+  uint32_t intermediate = word1 ^ (word1 << 11);
+  intermediate ^= intermediate >> 8;
+
+  word1 = word2;
+  word2 = word3;
+  word3 = word4;
+
+  word4 ^= word4 >> 19;
+  word4 ^= intermediate;
+
+  const uint32_t max_uint32 = (uint32_t) -1;
+  ecma_number_t rand = (ecma_number_t) word4;
+  rand /= (ecma_number_t) max_uint32;
+  rand *= (ecma_number_t) (max_uint32 - 1) / (ecma_number_t) max_uint32;
+
+  ecma_number_t *rand_p = ecma_alloc_number ();
+  *rand_p = rand;
+
+  return ecma_make_return_completion_value (ecma_make_number_value (rand_p));
 } /* ecma_builtin_math_object_random */
 
 /**

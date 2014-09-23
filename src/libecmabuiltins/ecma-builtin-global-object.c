@@ -480,6 +480,14 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
       break;
     }
+    case ECMA_MAGIC_STRING_MATH_UL:
+    {
+      ecma_object_t *object_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_MATH);
+
+      value = ecma_make_object_value (object_obj_p);
+
+      break;
+    }
 
     case ECMA_MAGIC_STRING_FUNCTION_UL:
     case ECMA_MAGIC_STRING_ARRAY_UL:
@@ -495,7 +503,6 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
     case ECMA_MAGIC_STRING_SYNTAX_ERROR_UL:
     case ECMA_MAGIC_STRING_TYPE_ERROR_UL:
     case ECMA_MAGIC_STRING_URI_ERROR_UL:
-    case ECMA_MAGIC_STRING_MATH_UL:
     case ECMA_MAGIC_STRING_JSON_U:
     {
       JERRY_UNIMPLEMENTED ();

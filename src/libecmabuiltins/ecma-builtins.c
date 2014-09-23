@@ -138,6 +138,11 @@ ecma_init_builtins (void)
                                                                             ECMA_OBJECT_CLASS_OBJECT,
                                                                             ecma_builtin_object_property_number);
 
+  ecma_builtin_objects [ECMA_BUILTIN_ID_MATH] = ecma_builtin_init_object (ECMA_BUILTIN_ID_MATH,
+                                                                          ECMA_OBJECT_TYPE_GENERAL,
+                                                                          ECMA_OBJECT_CLASS_MATH,
+                                                                          ecma_builtin_math_property_number);
+
   ecma_builtin_objects [ECMA_BUILTIN_ID_GLOBAL] = ecma_builtin_init_object (ECMA_BUILTIN_ID_GLOBAL,
                                                                             ECMA_OBJECT_TYPE_GENERAL,
                                                                             ECMA_OBJECT_CLASS_OBJECT,
@@ -195,6 +200,11 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       return ecma_builtin_object_try_to_instantiate_property (object_p, string_p);
     }
 
+    case ECMA_BUILTIN_ID_MATH:
+    {
+      return ecma_builtin_math_try_to_instantiate_property (object_p, string_p);
+    }
+
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
@@ -217,7 +227,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     case ECMA_BUILTIN_ID_SYNTAX_ERROR:
     case ECMA_BUILTIN_ID_TYPE_ERROR:
     case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_MATH:
     case ECMA_BUILTIN_ID_JSON:
     {
       JERRY_UNIMPLEMENTED ();

@@ -88,6 +88,11 @@ extern ecma_property_t*
 ecma_builtin_object_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
                                                            ecma_string_t *prop_name_p);
 
+/* ecma-builtin-math-object.c */
+extern const ecma_length_t ecma_builtin_math_property_number;
+extern ecma_property_t*
+ecma_builtin_math_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
+
 /* ecma-builtin-array-object.c */
 extern void ecma_builtin_init_array_object (void);
 extern void ecma_builtin_finalize_array_object (void);

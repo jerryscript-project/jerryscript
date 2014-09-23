@@ -127,7 +127,8 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
 
   uint64_t fraction;
   int32_t exponent;
-  int32_t dot_shift = ecma_number_get_fraction_and_exponent (q, &fraction, &exponent);
+  const int32_t dot_shift = ecma_number_get_fraction_and_exponent (q, &fraction, &exponent);
+  const bool sign = ecma_number_is_negative (q);
   
   if (exponent < 0)
   {
@@ -143,6 +144,10 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
 
     q = ecma_number_make_normal_positive_from_fraction_and_exponent (fraction,
                                                                      exponent);
+    if (sign)
+    {
+      q = ecma_number_negate (q);
+    }
 
     return n - d * q;
   }

@@ -747,16 +747,15 @@ parse_property_name_and_value (void)
   // IDX lhs, name, expr
   STACK_DECLARE_USAGE (IDX)
 
-  STACK_PUSH (IDX, next_temp_name ());
   parse_property_name (); // push name
 
   token_after_newlines_must_be (TOK_COLON);
   NEXT (assignment_expression); // push expr
 
-  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_DATA, STACK_HEAD(IDX, 1), STACK_HEAD(IDX, 2));
+  DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_DATA, STACK_HEAD(IDX, 2), STACK_HEAD(IDX, 1));
 
   STACK_DROP (IDX, 2);
-  STACK_CHECK_USAGE_LHS ();
+  STACK_CHECK_USAGE (IDX);
 }
 
 static void
@@ -812,8 +811,7 @@ parse_property_assignment (void)
     rewrite_meta_opcode_counter (STACK_HEAD (U16, 1), OPCODE_META_TYPE_FUNCTION_END);
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_GETTER, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
 
-    STACK_HEAD (IDX, 2) = STACK_HEAD (IDX, 1);
-    STACK_DROP (IDX, 1);
+    STACK_DROP (IDX, 2);
     STACK_DROP (U16, 1);
   }
   else if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "set"))
@@ -836,8 +834,7 @@ parse_property_assignment (void)
     rewrite_meta_opcode_counter (STACK_HEAD (U16, 1), OPCODE_META_TYPE_FUNCTION_END);
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_SETTER, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
 
-    STACK_HEAD (IDX, 2) = STACK_HEAD (IDX, 1);
-    STACK_DROP (IDX, 1);
+    STACK_DROP (IDX, 2);
     STACK_DROP (U16, 1);
   }
   else
@@ -846,7 +843,7 @@ parse_property_assignment (void)
   }
 
   STACK_CHECK_USAGE (U16);
-  STACK_CHECK_USAGE_LHS ();
+  STACK_CHECK_USAGE (IDX);
 }
 
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
@@ -943,6 +940,10 @@ parse_argument_list (argument_list_type alt, idx_t obj)
       case AL_FUNC_EXPR:
       case AL_ARRAY_DECL:
       case AL_CONSTRUCT_EXPR:
+      {
+        parse_assignment_expression ();
+        break;
+      }
       case AL_CALL_EXPR:
       {
         parse_assignment_expression ();
@@ -964,10 +965,12 @@ parse_argument_list (argument_list_type alt, idx_t obj)
       }
     }
 
-    DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG, STACK_HEAD (IDX, 1), INVALID_VALUE);
+    if (alt != AL_OBJ_DECL)
+    {
+      DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG, STACK_HEAD (IDX, 1), INVALID_VALUE);
+      STACK_DROP (IDX, 1);
+    }
     STACK_HEAD(U8, 1)++;
-
-    STACK_DROP (IDX, 1);
 
 next:
     skip_newlines ();
@@ -1321,6 +1324,7 @@ parse_member_expression (void)
   {
     NEXT (member_expression); // push member
 
+    skip_newlines ();
     parse_argument_list (AL_CONSTRUCT_EXPR, STACK_HEAD (IDX, 1)); // push obj
 
     STACK_HEAD (IDX, 2) = STACK_HEAD (IDX, 1);
@@ -1348,7 +1352,8 @@ parse_member_expression (void)
       {
         parser_fatal (ERR_PARSER);
       }
-      STACK_PUSH (IDX, token_data ());
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (assignment, STACK_HEAD (IDX, 1), OPCODE_ARG_TYPE_STRING, token_data ());
     }
     else
     {

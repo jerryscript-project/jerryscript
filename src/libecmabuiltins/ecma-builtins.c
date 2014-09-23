@@ -480,6 +480,10 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
     {
       return ecma_builtin_object_get_routine_parameters_number (routine_id);
     }
+    case ECMA_BUILTIN_ID_MATH:
+    {
+      return ecma_builtin_math_get_routine_parameters_number (routine_id);
+    }
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
@@ -502,7 +506,6 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
     case ECMA_BUILTIN_ID_SYNTAX_ERROR:
     case ECMA_BUILTIN_ID_TYPE_ERROR:
     case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_MATH:
     case ECMA_BUILTIN_ID_JSON:
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (routine_id);
@@ -544,6 +547,12 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                                    arguments_list,
                                                    arguments_number);
     }
+    case ECMA_BUILTIN_ID_MATH:
+    {
+      return ecma_builtin_math_dispatch_routine (builtin_routine_id,
+                                                 arguments_list,
+                                                 arguments_number);
+    }
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
@@ -566,7 +575,6 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
     case ECMA_BUILTIN_ID_SYNTAX_ERROR:
     case ECMA_BUILTIN_ID_TYPE_ERROR:
     case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_MATH:
     case ECMA_BUILTIN_ID_JSON:
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (builtin_routine_id,

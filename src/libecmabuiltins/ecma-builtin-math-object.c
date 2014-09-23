@@ -52,27 +52,82 @@
   macro (ECMA_MAGIC_STRING_SQRT2_U,   1.4142135623730951)
 
 /**
- * List of the Math object built-in routine properties in format 'macro (name, length value of the routine)'.
+ * List of the Math object built-in routine properties in format
+ * 'macro (name, C function name, arguments number of the routine, length value of the routine)'.
  */
 #define ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST(macro) \
-  macro (ECMA_MAGIC_STRING_ABS, 1) \
-  macro (ECMA_MAGIC_STRING_ACOS, 1) \
-  macro (ECMA_MAGIC_STRING_ASIN, 1) \
-  macro (ECMA_MAGIC_STRING_ATAN, 1) \
-  macro (ECMA_MAGIC_STRING_ATAN2, 2) \
-  macro (ECMA_MAGIC_STRING_CEIL, 1) \
-  macro (ECMA_MAGIC_STRING_COS, 1) \
-  macro (ECMA_MAGIC_STRING_EXP, 1) \
-  macro (ECMA_MAGIC_STRING_FLOOR, 1) \
-  macro (ECMA_MAGIC_STRING_LOG, 1) \
-  macro (ECMA_MAGIC_STRING_MAX, 2) \
-  macro (ECMA_MAGIC_STRING_MIN, 2) \
-  macro (ECMA_MAGIC_STRING_POW, 2) \
-  macro (ECMA_MAGIC_STRING_RANDOM, 0) \
-  macro (ECMA_MAGIC_STRING_ROUND, 1) \
-  macro (ECMA_MAGIC_STRING_SIN, 1) \
-  macro (ECMA_MAGIC_STRING_SQRT, 1) \
-  macro (ECMA_MAGIC_STRING_TAN, 1)
+  macro (ECMA_MAGIC_STRING_ABS, \
+         ecma_builtin_math_object_abs, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ACOS, \
+         ecma_builtin_math_object_acos, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ASIN, \
+         ecma_builtin_math_object_asin, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ATAN, \
+         ecma_builtin_math_object_atan, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ATAN2, \
+         ecma_builtin_math_object_atan2, \
+         2, \
+         2) \
+  macro (ECMA_MAGIC_STRING_CEIL, \
+         ecma_builtin_math_object_ceil, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_COS, \
+         ecma_builtin_math_object_cos, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_EXP, \
+         ecma_builtin_math_object_exp, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_FLOOR, \
+         ecma_builtin_math_object_floor, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_LOG, \
+         ecma_builtin_math_object_log, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_MAX, \
+         ecma_builtin_math_object_max, \
+         NON_FIXED, \
+         2) \
+  macro (ECMA_MAGIC_STRING_MIN, \
+         ecma_builtin_math_object_min, \
+         NON_FIXED, \
+         2) \
+  macro (ECMA_MAGIC_STRING_POW, \
+         ecma_builtin_math_object_pow, \
+         2, \
+         2) \
+  macro (ECMA_MAGIC_STRING_RANDOM, \
+         ecma_builtin_math_object_random, \
+         0, \
+         0) \
+  macro (ECMA_MAGIC_STRING_ROUND, \
+         ecma_builtin_math_object_round, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_SIN, \
+         ecma_builtin_math_object_sin, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_SQRT, \
+         ecma_builtin_math_object_sqrt, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_TAN, \
+         ecma_builtin_math_object_tan, \
+         1, \
+         1)
 
 /**
  * List of the Math object's built-in property names
@@ -80,7 +135,7 @@
 static const ecma_magic_string_id_t ecma_builtin_math_property_names[] =
 {
 #define VALUE_PROP_LIST(name, value) name,
-#define ROUTINE_PROP_LIST(name, length) name,
+#define ROUTINE_PROP_LIST(name, c_function_name, args_number, length) name,
   ECMA_BUILTIN_MATH_OBJECT_VALUES_PROPERTY_LIST (VALUE_PROP_LIST)
   ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST (ROUTINE_PROP_LIST)
 #undef VALUE_PROP_LIST
@@ -93,6 +148,280 @@ static const ecma_magic_string_id_t ecma_builtin_math_property_names[] =
 const ecma_length_t ecma_builtin_math_property_number = (sizeof (ecma_builtin_math_property_names) /
                                                          sizeof (ecma_magic_string_id_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_math_property_names) > sizeof (void*));
+
+/**
+ * The Math object's 'abs' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_abs */
+
+/**
+ * The Math object's 'acos' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_acos (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_acos */
+
+/**
+ * The Math object's 'asin' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_asin (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_asin */
+
+/**
+ * The Math object's 'atan' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_atan (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_atan */
+
+/**
+ * The Math object's 'atan2' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_atan2 (ecma_value_t arg1, /**< first routine's argument */
+                                ecma_value_t arg2) /**< second routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+} /* ecma_builtin_math_object_atan2 */
+
+/**
+ * The Math object's 'ceil' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_ceil (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_ceil */
+
+/**
+ * The Math object's 'cos' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_cos (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_cos */
+
+/**
+ * The Math object's 'exp' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_exp (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_exp */
+
+/**
+ * The Math object's 'floor' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_floor (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_floor */
+
+/**
+ * The Math object's 'log' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_log (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_log */
+
+/**
+ * The Math object's 'max' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_max (ecma_value_t args[], /**< arguments list */
+                              ecma_length_t args_number) /**< number of arguments */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (args, args_number);
+} /* ecma_builtin_math_object_max */
+
+/**
+ * The Math object's 'min' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_min (ecma_value_t args[], /**< arguments list */
+                              ecma_length_t args_number) /**< number of arguments */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (args, args_number);
+} /* ecma_builtin_math_object_min */
+
+/**
+ * The Math object's 'pow' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument */
+                              ecma_value_t arg2) /**< second routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+} /* ecma_builtin_math_object_pow */
+
+/**
+ * The Math object's 'random' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_random (void)
+{
+  JERRY_UNIMPLEMENTED ();
+} /* ecma_builtin_math_object_random */
+
+/**
+ * The Math object's 'round' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_round (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_round */
+
+/**
+ * The Math object's 'sin' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_sin (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_sin */
+
+/**
+ * The Math object's 'sqrt' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_sqrt */
+
+/**
+ * The Math object's 'tan' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_math_object_tan (ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+} /* ecma_builtin_math_object_tan */
 
 /**
  * If the property's name is one of built-in properties of the Math object
@@ -160,7 +489,7 @@ ecma_builtin_math_try_to_instantiate_property (ecma_object_t *obj_p, /**< object
 
   switch (id)
   {
-#define CASE_ROUTINE_PROP_LIST(name, length) case name:
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name:
     ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
 #undef CASE_ROUTINE_PROP_LIST
     {
@@ -215,6 +544,70 @@ ecma_builtin_math_try_to_instantiate_property (ecma_object_t *obj_p, /**< object
 
   return prop_p;
 } /* ecma_builtin_math_try_to_instantiate_property */
+
+/**
+ * Dispatcher of the Math object's built-in routines
+ *
+ * @return completion-value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_builtin_math_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /**< Object object's
+                                                                                    built-in routine's name */
+                                    ecma_value_t arguments_list [], /**< list of arguments passed to routine */
+                                    ecma_length_t arguments_number) /**< length of arguments' list */
+{
+  const ecma_value_t value_undefined = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  switch (builtin_routine_id)
+  {
+#define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] : value_undefined)
+#define ROUTINE_ARG_LIST_0
+#define ROUTINE_ARG_LIST_1 ROUTINE_ARG(1)
+#define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)
+#define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2, ROUTINE_ARG(3)
+#define ROUTINE_ARG_LIST_NON_FIXED arguments_list, arguments_number
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) \
+       case name: \
+       { \
+         return c_function_name (ROUTINE_ARG_LIST_ ## args_number); \
+       }
+    ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
+#undef CASE_ROUTINE_PROP_LIST
+#undef ROUTINE_ARG_LIST_0
+#undef ROUTINE_ARG_LIST_1
+#undef ROUTINE_ARG_LIST_2
+#undef ROUTINE_ARG_LIST_3
+#undef ROUTINE_ARG
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_math_dispatch_routine */
+
+/**
+ * Get number of routine's parameters
+ *
+ * @return number of parameters
+ */
+ecma_length_t
+ecma_builtin_math_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id) /**< built-in routine's
+                                                                                                 name */
+{
+  switch (builtin_routine_id)
+  {
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name: return length;
+    ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
+#undef CASE_ROUTINE_PROP_LIST
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_math_get_routine_parameters_number */
 
 /**
  * @}

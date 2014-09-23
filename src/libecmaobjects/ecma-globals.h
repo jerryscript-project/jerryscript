@@ -561,6 +561,11 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_ONE  ((ecma_number_t) 1)
 
 /**
+ * Value '0.5' of ecma_number_t
+ */
+#define ECMA_NUMBER_HALF ((ecma_number_t) 0.5f)
+
+/**
  * Null character (zt-string end marker)
  */
 #define ECMA_CHAR_NULL  ((ecma_char_t) '\0')

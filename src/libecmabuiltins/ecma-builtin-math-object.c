@@ -39,6 +39,14 @@
  * @{
  */
 
+#if defined (CONFIG_ECMA_NUMBER_FLOAT32)
+const ecma_number_t ecma_builtin_math_object_relative_eps = 1.0e-10f;
+#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+const ecma_number_t ecma_builtin_math_object_relative_eps = 1.0e-16f;
+#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
+#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+
 /**
  * List of the Math object built-in value properties in format 'macro (name, value)'.
  */
@@ -646,7 +654,64 @@ ecma_builtin_math_object_sin (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  ecma_number_t ret_num;
+
+  if (ecma_number_is_nan (arg_num)
+      || (!ecma_number_is_zero (arg_num)
+          && ecma_number_is_negative (arg_num)))
+  {
+    ret_num = ecma_number_make_nan ();
+  }
+  else if (ecma_number_is_zero (arg_num))
+  {
+    ret_num = arg_num;
+  }
+  else if (ecma_number_is_infinity (arg_num))
+  {
+    JERRY_ASSERT (!ecma_number_is_negative (arg_num));
+
+    ret_num = arg_num;
+  }
+  else
+  {
+    /* Newton's method */
+
+    ecma_number_t x = ECMA_NUMBER_ONE;
+    ecma_number_t diff = ecma_number_make_infinity (false);
+
+    while (ecma_op_number_divide (diff, x) > ecma_builtin_math_object_relative_eps)
+    {
+      ecma_number_t x_next = ecma_op_number_multiply (ECMA_NUMBER_HALF,
+                                                      (ecma_op_number_add (x,
+                                                                           ecma_op_number_divide (arg_num, x))));
+
+      diff = ecma_op_number_substract (x, x_next);
+      if (diff < 0)
+      {
+        diff = ecma_number_negate (diff);
+      }
+
+      x = x_next;
+    }
+
+    ret_num = x;
+  }
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+  *num_p = ret_num;
+
+  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_sqrt */
 
 /**

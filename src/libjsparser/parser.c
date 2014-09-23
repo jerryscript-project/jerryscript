@@ -1475,11 +1475,17 @@ parse_postfix_expression (void)
   skip_token ();
   if (token_is (TOK_DOUBLE_PLUS))
   {
-    DUMP_OPCODE_2 (post_incr, next_temp_name (), STACK_HEAD (IDX, 1));
+    STACK_PUSH (IDX, next_temp_name ());
+    DUMP_OPCODE_2 (post_incr, STACK_HEAD (IDX, 1), STACK_HEAD (IDX, 2));
+    STACK_HEAD (IDX, 2) = STACK_HEAD (IDX, 1);
+    STACK_DROP (IDX, 1);
   }
   else if (token_is (TOK_DOUBLE_MINUS))
   {
-    DUMP_OPCODE_2 (post_decr, next_temp_name (), STACK_HEAD (IDX, 1));
+    STACK_PUSH (IDX, next_temp_name ());
+    DUMP_OPCODE_2 (post_decr, STACK_HEAD (IDX, 1), STACK_HEAD (IDX, 2));
+    STACK_HEAD (IDX, 2) = STACK_HEAD (IDX, 1);
+    STACK_DROP (IDX, 1);
   }
   else
   {

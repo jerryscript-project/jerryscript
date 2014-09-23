@@ -20,6 +20,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
@@ -153,7 +154,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_builtin_math_property_names) > sizeof (void*))
  * The Math object's 'abs' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.1
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -161,14 +162,38 @@ JERRY_STATIC_ASSERT (sizeof (ecma_builtin_math_property_names) > sizeof (void*))
 static ecma_completion_value_t
 ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  
+  if (ecma_number_is_nan (arg_num)
+      || !ecma_number_is_negative (arg_num))
+  {
+    *num_p = arg_num;
+  }
+  else
+  {
+    *num_p = ecma_number_negate (arg_num);
+  }
+
+  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_abs */
 
 /**
  * The Math object's 'acos' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.2
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -183,7 +208,7 @@ ecma_builtin_math_object_acos (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'asin' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.3
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -198,7 +223,7 @@ ecma_builtin_math_object_asin (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'atan' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.4
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -213,7 +238,7 @@ ecma_builtin_math_object_atan (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'atan2' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.5
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -229,7 +254,7 @@ ecma_builtin_math_object_atan2 (ecma_value_t arg1, /**< first routine's argument
  * The Math object's 'ceil' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.6
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -244,7 +269,7 @@ ecma_builtin_math_object_ceil (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'cos' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.7
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -259,7 +284,7 @@ ecma_builtin_math_object_cos (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'exp' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.8
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -274,7 +299,7 @@ ecma_builtin_math_object_exp (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'floor' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.9
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -289,7 +314,7 @@ ecma_builtin_math_object_floor (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'log' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.10
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -304,7 +329,7 @@ ecma_builtin_math_object_log (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'max' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.11
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -320,7 +345,7 @@ ecma_builtin_math_object_max (ecma_value_t args[], /**< arguments list */
  * The Math object's 'min' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.12
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -336,7 +361,7 @@ ecma_builtin_math_object_min (ecma_value_t args[], /**< arguments list */
  * The Math object's 'pow' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.13
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -352,7 +377,7 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
  * The Math object's 'random' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.14
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -367,7 +392,7 @@ ecma_builtin_math_object_random (void)
  * The Math object's 'round' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.15
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -375,14 +400,56 @@ ecma_builtin_math_object_random (void)
 static ecma_completion_value_t
 ecma_builtin_math_object_round (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  
+  if (ecma_number_is_nan (arg_num)
+      || ecma_number_is_zero (arg_num)
+      || ecma_number_is_infinity (arg_num))
+  {
+    *num_p = arg_num;
+  }
+  else if (ecma_number_is_negative (arg_num)
+           && arg_num >= -0.5f)
+  {
+    *num_p = ecma_number_negate (0.0f);
+  }
+  else
+  {
+    const ecma_number_t up_half = arg_num + 0.5f;
+    const ecma_number_t down_half = arg_num - 0.5f;
+    const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, 1);
+    const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, 1);
+
+    if (up_rounded - arg_num <= arg_num - down_rounded)
+    {
+      *num_p = up_rounded;
+    }
+    else
+    {
+      *num_p = down_rounded;
+    }
+  }
+
+  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_round */
 
 /**
  * The Math object's 'sin' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.16
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -397,7 +464,7 @@ ecma_builtin_math_object_sin (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'sqrt' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.17
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
@@ -412,7 +479,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
  * The Math object's 'tan' routine
  *
  * See also:
- *          ECMA-262 v5, 15.
+ *          ECMA-262 v5, 15.8.2.18
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.

@@ -51,8 +51,6 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
                                                ecma_magic_string_id_t routine_id);
 
 /* ecma-builtin-global-object.c */
-extern ecma_object_t* ecma_builtin_init_global_object (void);
-
 extern ecma_length_t
 ecma_builtin_global_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
 extern ecma_completion_value_t
@@ -63,9 +61,9 @@ extern ecma_property_t*
 ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p,
                                                  ecma_string_t *prop_name_p);
 
-/* ecma-builtin-object-object.c */
-extern ecma_object_t* ecma_builtin_init_object_object (void);
+extern const ecma_length_t ecma_builtin_global_property_number;
 
+/* ecma-builtin-object-object.c */
 extern ecma_length_t
 ecma_builtin_object_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
 extern ecma_completion_value_t
@@ -81,6 +79,8 @@ ecma_builtin_object_dispatch_call (ecma_value_t *arguments_list_p,
 extern ecma_completion_value_t
 ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p,
                                         ecma_length_t arguments_list_len);
+
+extern const ecma_length_t ecma_builtin_object_property_number;
 
 extern void ecma_builtin_init_object_prototype_object (void);
 extern void ecma_builtin_finalize_object_prototype_object (void);

@@ -76,6 +76,51 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 } /* ecma_builtin_get */
 
 /**
+ * Initialize specified built-in object.
+ *
+ * Warning:
+ *         the routine should be called only from ecma_init_builtins
+ *
+ * @return pointer to the object
+ */
+static ecma_object_t*
+ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
+                          ecma_object_type_t obj_type, /**< object's type */
+                          ecma_object_class_t obj_class, /**< object's class */
+                          ecma_length_t property_number) /**< number of the object's properties */
+{
+  ecma_object_t *object_obj_p = ecma_create_object (NULL, true, obj_type);
+
+  ecma_property_t *class_prop_p = ecma_create_internal_property (object_obj_p,
+                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
+  class_prop_p->u.internal_property.value = obj_class;
+
+  ecma_property_t *built_in_id_prop_p = ecma_create_internal_property (object_obj_p,
+                                                                       ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+  built_in_id_prop_p->u.internal_property.value = obj_builtin_id;
+
+  JERRY_STATIC_ASSERT (property_number < sizeof (uint64_t) * JERRY_BITSINBYTE);
+  uint64_t builtin_mask = ((uint32_t) 1u << property_number) - 1;
+
+  ecma_property_t *mask_0_31_prop_p;
+  mask_0_31_prop_p = ecma_create_internal_property (object_obj_p,
+                                                    ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31);
+  mask_0_31_prop_p->u.internal_property.value = (uint32_t) builtin_mask;
+
+  if (jrt_extract_bit_field (builtin_mask, 32, 32) != 0)
+  {
+    ecma_property_t *mask_32_63_prop_p;
+    mask_32_63_prop_p = ecma_create_internal_property (object_obj_p,
+                                                       ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63);
+    mask_32_63_prop_p->u.internal_property.value = (uint32_t) jrt_extract_bit_field (builtin_mask, 32, 32);
+  }
+
+  ecma_set_object_is_builtin (object_obj_p, true);
+
+  return object_obj_p;
+} /* ecma_builtin_init_object */
+
+/**
  * Initialize ECMA built-in objects
  */
 void
@@ -88,9 +133,15 @@ ecma_init_builtins (void)
     ecma_builtin_objects [id] = NULL;
   }
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_OBJECT] = ecma_builtin_init_object_object ();
+  ecma_builtin_objects [ECMA_BUILTIN_ID_OBJECT] = ecma_builtin_init_object (ECMA_BUILTIN_ID_OBJECT,
+                                                                            ECMA_OBJECT_TYPE_FUNCTION,
+                                                                            ECMA_OBJECT_CLASS_OBJECT,
+                                                                            ecma_builtin_object_property_number);
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_GLOBAL] = ecma_builtin_init_global_object ();
+  ecma_builtin_objects [ECMA_BUILTIN_ID_GLOBAL] = ecma_builtin_init_object (ECMA_BUILTIN_ID_GLOBAL,
+                                                                            ECMA_OBJECT_TYPE_GENERAL,
+                                                                            ECMA_OBJECT_CLASS_OBJECT,
+                                                                            ecma_builtin_global_property_number);
 } /* ecma_init_builtins */
 
 /**

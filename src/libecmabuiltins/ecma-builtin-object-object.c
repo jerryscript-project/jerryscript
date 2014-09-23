@@ -40,10 +40,6 @@
 
 /**
  * List of the Object object's built-in property names
- *
- * Warning:
- *         values in the array should be sorted in ascending order
- *         that is checked in the ecma_builtin_init_global_object.
  */
 static const ecma_magic_string_id_t ecma_builtin_object_property_names[] =
 {
@@ -67,43 +63,9 @@ static const ecma_magic_string_id_t ecma_builtin_object_property_names[] =
 /**
  * Number of the Object object's built-in properties
  */
-static const ecma_length_t ecma_builtin_object_property_number = (sizeof (ecma_builtin_object_property_names) /
-                                                                  sizeof (ecma_magic_string_id_t));
+const ecma_length_t ecma_builtin_object_property_number = (sizeof (ecma_builtin_object_property_names) /
+                                                           sizeof (ecma_magic_string_id_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_object_property_names) > sizeof (void*));
-
-/**
- * Initialize Object object.
- *
- * Warning:
- *         the routine should be called only from ecma_init_builtins
- *
- * @return pointer to the object
- */
-ecma_object_t*
-ecma_builtin_init_object_object (void)
-{
-  ecma_object_t *object_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_FUNCTION);
-
-  ecma_property_t *class_prop_p = ecma_create_internal_property (object_obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_OBJECT;
-
-  ecma_property_t *built_in_id_prop_p = ecma_create_internal_property (object_obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
-  built_in_id_prop_p->u.internal_property.value = ECMA_BUILTIN_ID_OBJECT;
-
-  ecma_property_t *mask_0_31_prop_p;
-  mask_0_31_prop_p = ecma_create_internal_property (object_obj_p,
-                                                    ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31);
-
-  JERRY_STATIC_ASSERT (ecma_builtin_object_property_number < sizeof (uint32_t) * JERRY_BITSINBYTE);
-  uint32_t builtin_mask = ((uint32_t) 1u << ecma_builtin_object_property_number) - 1;
-  mask_0_31_prop_p->u.internal_property.value = builtin_mask;
-
-  ecma_set_object_is_builtin (object_obj_p, true);
-
-  return object_obj_p;
-} /* ecma_builtin_init_object_object */
 
 /**
  * Get number of routine's parameters

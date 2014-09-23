@@ -290,7 +290,12 @@ lp_string_hash (lp_string str)
 static idx_t
 next_temp_name (void)
 {
-  return TEMP_NAME()++;
+  TEMP_NAME ()++;
+  if (MAX_TEMP_NAME () < TEMP_NAME ())
+  {
+    MAX_TEMP_NAME () = TEMP_NAME ();
+  }
+  return TEMP_NAME ();
 }
 
 static void
@@ -310,10 +315,6 @@ finish_scope (void)
 static void
 reset_temp_name (void)
 {
-  if (MAX_TEMP_NAME() < TEMP_NAME())
-  {
-    MAX_TEMP_NAME() = TEMP_NAME();
-  }
   TEMP_NAME() = MIN_TEMP_NAME();
 }
 
@@ -2795,18 +2796,7 @@ parse_source_element_list (void)
     skip_newlines ();
   }
   lexer_save_token (TOK ());
-  if (MAX_TEMP_NAME () > MIN_TEMP_NAME ())
-  {
-    REWRITE_OPCODE_2 (STACK_HEAD (U16, 1), reg_var_decl, MIN_TEMP_NAME (), MAX_TEMP_NAME () - 1);
-  }
-  else if (MAX_TEMP_NAME () == MIN_TEMP_NAME ())
-  {
-    REWRITE_OPCODE_2 (STACK_HEAD (U16, 1), reg_var_decl, MIN_TEMP_NAME (), MAX_TEMP_NAME ());
-  }
-  else
-  {
-    JERRY_UNREACHABLE ();
-  }
+  REWRITE_OPCODE_2 (STACK_HEAD (U16, 1), reg_var_decl, MIN_TEMP_NAME (), MAX_TEMP_NAME ());
   finish_scope ();
 
   STACK_DROP (U16, 1);

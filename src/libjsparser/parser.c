@@ -2024,6 +2024,10 @@ parse_assignment_expression (void)
     }
     default:
     {
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_DROP (U16, 1);
+      }
       lexer_save_token (TOK ());
       goto cleanup;
     }

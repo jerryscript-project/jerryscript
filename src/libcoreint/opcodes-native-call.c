@@ -24,6 +24,7 @@
 #include "actuators.h"
 #include "common-io.h"
 #include "sensors.h"
+#include "jerry-libc.h"
 
 /**
  * 'Native call' opcode handler.
@@ -107,6 +108,46 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         wait_ms (int_num);
 
         ret_value = ecma_make_empty_completion_value ();
+        break;
+      }
+
+      case OPCODE_NATIVE_CALL_PRINT:
+      {
+        JERRY_ASSERT (args_number == 1);
+
+        ECMA_TRY_CATCH (str_value,
+                        ecma_op_to_string (arg_values[0]),
+                        ret_value);
+
+        ecma_string_t *str_p = ECMA_GET_POINTER (str_value.u.value.value);
+
+        int32_t chars = ecma_string_get_length (str_p);
+        JERRY_ASSERT (chars >= 0);
+
+        ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+        ecma_char_t *zt_str_p = mem_heap_alloc_block ((size_t) zt_str_size,
+                                                      MEM_HEAP_ALLOC_SHORT_TERM);
+        if (zt_str_p == NULL)
+        {
+          jerry_exit (ERR_MEMORY);
+        }
+
+        ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
+
+#if defined (CONFIG_ECMA_CHAR_ASCII)
+        __printf ("%s\n", (char*) str_p);
+#elif defined (CONFIG_ECMA_CHAR_UTF16)
+        JERRY_UNIMPLEMENTED ();
+#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
+#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+
+        mem_heap_free_block (zt_str_p);
+
+        ret_value = ecma_make_empty_completion_value ();
+
+        ECMA_FINALIZE (str_value);
+
         break;
       }
 

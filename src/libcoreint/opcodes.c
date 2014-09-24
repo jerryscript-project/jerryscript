@@ -66,45 +66,6 @@ opfunc_nop (opcode_t opdata __unused, /**< operation data */
   return ecma_make_empty_completion_value ();
 } /* opfunc_nop */
 
-ecma_completion_value_t
-opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
-{
-  const idx_t func_name_lit_idx = opdata.data.call_1.name_lit_idx;
-  const idx_t lhs_var_idx = opdata.data.call_1.lhs;
-
-  int_data->pos++;
-
-  ecma_completion_value_t ret_value;
-  ret_value = ecma_make_empty_completion_value ();
-
-  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
-  ECMA_TRY_CATCH (arg_value, get_variable_value (int_data, opdata.data.call_1.arg1_lit_idx, false), ret_value);
-
-  if (!ecma_op_is_callable (func_value.u.value))
-  {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-  }
-  else
-  {
-    ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
-
-    ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
-    ECMA_TRY_CATCH (call_completion,
-                    ecma_op_function_call (func_obj_p, this_value.u.value, &arg_value.u.value, 1),
-                    ret_value);
-
-    ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.u.value);
-
-    ECMA_FINALIZE (call_completion);
-    ECMA_FINALIZE (this_value);
-  }
-
-  ECMA_FINALIZE (arg_value);
-  ECMA_FINALIZE (func_value);
-
-  return ret_value;
-}
-
 /**
  * 'Assignment' opcode handler.
  *
@@ -482,77 +443,6 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
 } /* function_declaration */
 
 /**
- * 'Function declaration with no parameters' opcode handler.
- *
- * @return completion value
- *         returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-opfunc_func_decl_0 (opcode_t opdata, /**< operation data */
-                    int_data_t *int_data) /**< interpreter context */
-{
-  int_data->pos++;
-
-  return function_declaration (int_data,
-                               opdata.data.func_decl_0.name_lit_idx,
-                               NULL,
-                               0);
-} /* opfunc_func_decl_0 */
-
-/**
- * 'Function declaration with one parameter' opcode handler.
- *
- * @return completion value
- *         returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-opfunc_func_decl_1 (opcode_t opdata, /**< operation data */
-                    int_data_t *int_data) /**< interpreter context */
-{
-  int_data->pos++;
-
-  ecma_string_t *arg_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_1.arg1_lit_idx);
-
-  ecma_completion_value_t ret_value = function_declaration (int_data,
-                                                            opdata.data.func_decl_1.name_lit_idx,
-                                                            &arg_name_string_p,
-                                                            1);
-
-  ecma_deref_ecma_string (arg_name_string_p);
-
-  return ret_value;
-} /* opfunc_func_decl_1 */
-
-/**
- * 'Function declaration with two parameters' opcode handler.
- *
- * @return completion value
- *         returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-opfunc_func_decl_2 (opcode_t opdata, /**< operation data */
-                    int_data_t *int_data) /**< interpreter context */
-{
-  int_data->pos++;
-
-  ecma_string_t* arg_names_strings[2] =
-  {
-    ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg1_lit_idx),
-    ecma_new_ecma_string_from_lit_index (opdata.data.func_decl_2.arg2_lit_idx)
-  };
-
-  ecma_completion_value_t ret_value = function_declaration (int_data,
-                                                            opdata.data.func_decl_1.name_lit_idx,
-                                                            arg_names_strings,
-                                                            2);
-
-  ecma_deref_ecma_string (arg_names_strings[0]);
-  ecma_deref_ecma_string (arg_names_strings[1]);
-
-  return ret_value;
-} /* opfunc_func_decl_2 */
-
-/**
  * 'Function declaration' opcode handler.
  *
  * @return completion value
@@ -666,51 +556,6 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_func_expr_n */
-
-/**
- * Function call with no arguments' opcode handler.
- *
- * See also: ECMA-262 v5, 11.2.3
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-opfunc_call_0 (opcode_t opdata, /**< operation data */
-               int_data_t *int_data) /**< interpreter context */
-{
-  const idx_t func_name_lit_idx = opdata.data.call_0.name_lit_idx;
-  const idx_t lhs_var_idx = opdata.data.call_0.lhs;
-
-  int_data->pos++;
-
-  ecma_completion_value_t ret_value;
-
-  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
-
-  if (!ecma_op_is_callable (func_value.u.value))
-  {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-  }
-  else
-  {
-    ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
-
-    ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
-    ECMA_TRY_CATCH (call_completion,
-                    ecma_op_function_call (func_obj_p, this_value.u.value, NULL, 0),
-                    ret_value);
-
-    ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.u.value);
-
-    ECMA_FINALIZE (call_completion);
-    ECMA_FINALIZE (this_value);
-  }
-
-  ECMA_FINALIZE (func_value);
-
-  return ret_value;
-} /* opfunc_call_0 */
 
 /**
  * 'Function call' opcode handler.

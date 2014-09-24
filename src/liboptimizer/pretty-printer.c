@@ -371,8 +371,6 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 
   __printf ("    // ");
 
-  TODO (Pretty print for prop_setter);
-
   switch (opcode_num)
   {
     CASE_CONDITIONAL_JUMP (is_true_jmp_up, "if (", value, ") goto", oc, -, opcode_1, opcode_2)
@@ -413,13 +411,8 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_DOUBLE_ADDRESS (pre_incr, dst, "=", "++", var_right)
     CASE_DOUBLE_ADDRESS (pre_decr, dst, "=", "--", var_right)
     CASE_ASSIGNMENT (assignment, var_left, "=", value_right)
-    CASE_VARG_0_NAME_LHS (call_0, lhs, "=", "", name_lit_idx, "(", ")")
-    CASE_VARG_1_NAME_LHS (call_1, lhs, "=", "", name_lit_idx, "(", arg1_lit_idx, ")")
     CASE_VARG_N_NAME_LHS (call_n, lhs, "=", "", name_lit_idx, arg_list)
     CASE_VARG_N_NAME_LHS (construct_n, lhs, "=", "new", name_lit_idx, arg_list)
-    CASE_VARG_0_NAME (func_decl_0, "function", name_lit_idx, "(", ")")
-    CASE_VARG_1_NAME (func_decl_1, "function", name_lit_idx, "(", arg1_lit_idx, ")")
-    CASE_VARG_2_NAME (func_decl_2, "function", name_lit_idx, "(", arg1_lit_idx, arg2_lit_idx, ")")
     CASE_VARG_N_NAME (func_decl_n, "function", name_lit_idx, arg_list)
     CASE_EXIT (exitval, "exit", status_code)
     CASE_SINGLE_ADDRESS (retval, "return", ret_value)

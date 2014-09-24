@@ -21,6 +21,8 @@
 #include "serializer.h"
 #include "interpreter.h"
 #include "stack.h"
+#include "hash-table.h"
+#include "deserializer.h"
 
 #define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
@@ -135,9 +137,124 @@ JERRY_ASSERT (IDX.current == IDX_current + 1);
 #define STACK_CHECK_USAGE_LHS() ;
 #endif
 
+static uint8_t lp_string_hash (lp_string);
+STATIC_HASH_TABLE (intrinsics, lp_string, intrinsic_dumper)
+
+#define LAST_OPCODE_IS(OP) (deserialize_opcode((opcode_counter_t)(OPCODE_COUNTER()-1)).op_idx == __op__idx_##OP)
+
 JERRY_STATIC_ASSERT (sizeof (idx_t) == sizeof (uint8_t));
 
 JERRY_STATIC_ASSERT (sizeof (opcode_counter_t) == sizeof (uint16_t));
+
+static void skip_newlines (void);
+#define NEXT(TYPE) \
+do { skip_newlines (); parse_##TYPE (); } while (0)
+
+#define DUMP_VOID_OPCODE(GETOP) \
+do { \
+  OPCODE()=getop_##GETOP (); \
+  serializer_dump_opcode (OPCODE()); \
+  OPCODE_COUNTER()++; \
+} while (0)
+
+#define DUMP_OPCODE_1(GETOP, OP1) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1)); \
+  serializer_dump_opcode (OPCODE()); \
+  OPCODE_COUNTER()++; \
+} while (0)
+
+#define DUMP_OPCODE_2(GETOP, OP1, OP2) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  JERRY_ASSERT (0+OP2 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
+  serializer_dump_opcode (OPCODE()); \
+  OPCODE_COUNTER()++; \
+} while (0)
+
+#define DUMP_OPCODE_3(GETOP, OP1, OP2, OP3) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  JERRY_ASSERT (0+OP2 <= 255); \
+  JERRY_ASSERT (0+OP3 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
+  serializer_dump_opcode (OPCODE()); \
+  OPCODE_COUNTER()++; \
+} while (0)
+
+#define REWRITE_VOID_OPCODE(OC, GETOP) \
+do { \
+  OPCODE()=getop_##GETOP (); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+} while (0)
+
+#define REWRITE_OPCODE_1(OC, GETOP, OP1) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1)); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+} while (0)
+
+#define REWRITE_OPCODE_2(OC, GETOP, OP1, OP2) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  JERRY_ASSERT (0+OP2 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+} while (0)
+
+#define REWRITE_OPCODE_3(OC, GETOP, OP1, OP2, OP3) \
+do { \
+  JERRY_ASSERT (0+OP1 <= 255); \
+  JERRY_ASSERT (0+OP2 <= 255); \
+  JERRY_ASSERT (0+OP3 <= 255); \
+  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+} while (0)
+
+#define REWRITE_COND_JMP(OC, GETOP, DIFF) \
+do { \
+  JERRY_ASSERT (0+DIFF <= 256*256 - 1); \
+  STACK_DECLARE_USAGE (IDX); \
+  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
+  STACK_PUSH (IDX, (idx_t) ((DIFF) >> JERRY_BITSINBYTE)); \
+  STACK_PUSH (IDX, (idx_t) ((DIFF) & ((1 << JERRY_BITSINBYTE) - 1))); \
+  JERRY_ASSERT ((DIFF) == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
+  OPCODE()=getop_##GETOP (STACK_HEAD (IDX, 3), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+  STACK_DROP (IDX, 2); \
+  STACK_CHECK_USAGE (IDX); \
+} while (0)
+
+#define REWRITE_JMP(OC, GETOP, DIFF) \
+do { \
+  JERRY_ASSERT (0+DIFF <= 256*256 - 1); \
+  STACK_DECLARE_USAGE (IDX) \
+  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
+  STACK_PUSH (IDX, (idx_t) ((DIFF) >> JERRY_BITSINBYTE)); \
+  STACK_PUSH (IDX, (idx_t) ((DIFF) & ((1 << JERRY_BITSINBYTE) - 1))); \
+  JERRY_ASSERT ((DIFF) == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
+  OPCODE()=getop_##GETOP (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
+  serializer_rewrite_opcode (OC, OPCODE()); \
+  STACK_DROP (IDX, 2); \
+  STACK_CHECK_USAGE (IDX); \
+} while (0)
+
+#define REWRITE_TRY(OC) \
+do { \
+  STACK_DECLARE_USAGE (IDX) \
+  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
+  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) >> JERRY_BITSINBYTE)); \
+  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) & ((1 << JERRY_BITSINBYTE) - 1))); \
+  JERRY_ASSERT ((OPCODE_COUNTER ()) \
+                == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
+  OPCODE()=getop_try (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
+  serializer_rewrite_opcode ((OC), OPCODE()); \
+  STACK_DROP (IDX, 2); \
+  STACK_CHECK_USAGE (IDX); \
+} while (0)
 
 typedef enum
 {
@@ -149,131 +266,6 @@ typedef enum
   AL_CALL_EXPR
 }
 argument_list_type;
-
-#define DEFINE_BACKET_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
-typedef struct \
-{ \
-  KEY_TYPE key; \
-  VALUE_TYPE value; \
-} \
-__packed \
-NAME##_backet;
-
-#define DEFINE_HASH_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
-typedef struct \
-{ \
-  uint8_t size; \
-  NAME##_backet_stack *backets; \
-} \
-__packed \
-NAME##_hash_table;
-
-#define HASH_INIT(NAME, SIZE) \
-do { \
-  NAME.size = SIZE; \
-  size_t size = mem_heap_recommend_allocation_size (SIZE * sizeof (NAME##_backet_stack)); \
-  NAME.backets = (NAME##_backet_stack *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  __memset (NAME.backets, 0, size); \
-} while (0);
-
-#define HASH_FREE(NAME) \
-do { \
-  for (uint8_t i = 0; i < NAME.size; i++) { \
-    if (NAME.backets[i].length != 0) { \
-      mem_heap_free_block ((uint8_t *) NAME.backets[i].data); \
-    } \
-  } \
-  mem_heap_free_block ((uint8_t *) NAME.backets); \
-} while (0)
-
-#define DEFINE_HASH_INSERT(NAME, KEY_TYPE, VALUE_TYPE) \
-static void hash_insert_##NAME (KEY_TYPE key, VALUE_TYPE value) __unused; \
-static void hash_insert_##NAME (KEY_TYPE key, VALUE_TYPE value) { \
-  NAME##_backet backet = (NAME##_backet) { .key = key, .value = value }; \
-  uint8_t hash = KEY_TYPE##_hash (key); \
-  JERRY_ASSERT (hash < NAME.size); \
-  JERRY_ASSERT (NAME.backets != NULL); \
-  if (NAME.backets[hash].length == 0) \
-  { \
-    size_t stack_size = mem_heap_recommend_allocation_size (0); \
-    NAME.backets[hash].data = (NAME##_backet *) mem_heap_alloc_block \
-                      (stack_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    NAME.backets[hash].current = 0; \
-    NAME.backets[hash].length = (__typeof__ (NAME.backets[hash].length)) \
-                                (stack_size / sizeof (NAME##_backet)); \
-  } \
-  else if (NAME.backets[hash].current == NAME.backets[hash].length) \
-  { \
-    size_t old_size = NAME.backets[hash].length * sizeof (NAME##_backet); \
-    size_t temp1_size = mem_heap_recommend_allocation_size ( \
-                        (size_t) (sizeof (NAME##_backet))); \
-    size_t new_size = mem_heap_recommend_allocation_size ( \
-                      (size_t) (temp1_size + old_size)); \
-    NAME##_backet *temp1 = (NAME##_backet *) mem_heap_alloc_block \
-                           (temp1_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    NAME##_backet *temp2 = (NAME##_backet *) mem_heap_alloc_block \
-                           (old_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    if (temp2 == NULL) \
-    { \
-      mem_heap_print (true, false, true); \
-      JERRY_UNREACHABLE (); \
-    } \
-    __memcpy (temp2, NAME.backets[hash].data, old_size); \
-    mem_heap_free_block ((uint8_t *) NAME.backets[hash].data); \
-    mem_heap_free_block ((uint8_t *) temp1); \
-    NAME.backets[hash].data = (NAME##_backet *) mem_heap_alloc_block \
-                              (new_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    __memcpy (NAME.backets[hash].data, temp2, old_size); \
-    mem_heap_free_block ((uint8_t *) temp2); \
-    NAME.backets[hash].length = (__typeof__ (NAME.backets[hash].length)) \
-                                (new_size / sizeof (NAME##_backet)); \
-  } \
-  NAME.backets[hash].data[NAME.backets[hash].current++] = backet; \
-}
-
-#define HASH_INSERT(NAME, KEY, VALUE) \
-do { \
-  hash_insert_##NAME (KEY, VALUE); \
-} while (0)
-
-#define DEFINE_HASH_LOOKUP(NAME, KEY_TYPE, VALUE_TYPE) \
-static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) __unused; \
-static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) { \
-  uint8_t hash = KEY_TYPE##_hash (key); \
-  JERRY_ASSERT (hash < NAME.size); \
-  if (NAME.backets[hash].length == 0) { \
-    return NULL; \
-  } \
-  for (size_t i = 0; i < NAME.backets[hash].current; i++) { \
-    if (KEY_TYPE##_equal (NAME.backets[hash].data[i].key, key)) { \
-      return &NAME.backets[hash].data[i].value; \
-    } \
-  } \
-  return NULL; \
-}
-
-#define HASH_LOOKUP(NAME, KEY) \
-lookup_##NAME (KEY)
-
-#define HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_STACK_TYPE (NAME##_backet, uint8_t, NAME##_backet) \
-DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-NAME##_hash_table NAME; \
-DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_LOOKUP (NAME, KEY_TYPE, VALUE_TYPE)
-
-#define STATIC_HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_STACK_TYPE (NAME##_backet, uint8_t, NAME##_backet) \
-DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-static NAME##_hash_table NAME; \
-DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_LOOKUP (NAME, KEY_TYPE, VALUE_TYPE)
-
-static uint8_t lp_string_hash (lp_string);
-
-STATIC_HASH_TABLE (intrinsics, lp_string, intrinsic_dumper)
 
 static void parse_expression (void);
 static void parse_statement (void);
@@ -460,109 +452,6 @@ token_after_newlines_must_be_keyword (keyword kw)
     parser_fatal (ERR_PARSER);
   }
 }
-
-#define NEXT(TYPE) \
-do { skip_newlines (); parse_##TYPE (); } while (0)
-
-#define DUMP_VOID_OPCODE(GETOP) \
-do { \
-  OPCODE()=getop_##GETOP (); \
-  serializer_dump_opcode (OPCODE()); \
-  OPCODE_COUNTER()++; \
-} while (0)
-
-#define DUMP_OPCODE_1(GETOP, OP1) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1)); \
-  serializer_dump_opcode (OPCODE()); \
-  OPCODE_COUNTER()++; \
-} while (0)
-
-#define DUMP_OPCODE_2(GETOP, OP1, OP2) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  JERRY_ASSERT (0+OP2 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
-  serializer_dump_opcode (OPCODE()); \
-  OPCODE_COUNTER()++; \
-} while (0)
-
-#define DUMP_OPCODE_3(GETOP, OP1, OP2, OP3) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  JERRY_ASSERT (0+OP2 <= 255); \
-  JERRY_ASSERT (0+OP3 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
-  serializer_dump_opcode (OPCODE()); \
-  OPCODE_COUNTER()++; \
-} while (0)
-
-#define REWRITE_OPCODE_1(OC, GETOP, OP1) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1)); \
-  serializer_rewrite_opcode (OC, OPCODE()); \
-} while (0)
-
-#define REWRITE_OPCODE_2(OC, GETOP, OP1, OP2) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  JERRY_ASSERT (0+OP2 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2)); \
-  serializer_rewrite_opcode (OC, OPCODE()); \
-} while (0)
-
-#define REWRITE_OPCODE_3(OC, GETOP, OP1, OP2, OP3) \
-do { \
-  JERRY_ASSERT (0+OP1 <= 255); \
-  JERRY_ASSERT (0+OP2 <= 255); \
-  JERRY_ASSERT (0+OP3 <= 255); \
-  OPCODE()=getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3)); \
-  serializer_rewrite_opcode (OC, OPCODE()); \
-} while (0)
-
-#define REWRITE_COND_JMP(OC, GETOP, DIFF) \
-do { \
-  JERRY_ASSERT (0+DIFF <= 256*256 - 1); \
-  STACK_DECLARE_USAGE (IDX); \
-  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
-  STACK_PUSH (IDX, (idx_t) ((DIFF) >> JERRY_BITSINBYTE)); \
-  STACK_PUSH (IDX, (idx_t) ((DIFF) & ((1 << JERRY_BITSINBYTE) - 1))); \
-  JERRY_ASSERT ((DIFF) == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
-  OPCODE()=getop_##GETOP (STACK_HEAD (IDX, 3), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
-  serializer_rewrite_opcode (OC, OPCODE()); \
-  STACK_DROP (IDX, 2); \
-  STACK_CHECK_USAGE (IDX); \
-} while (0)
-
-#define REWRITE_JMP(OC, GETOP, DIFF) \
-do { \
-  JERRY_ASSERT (0+DIFF <= 256*256 - 1); \
-  STACK_DECLARE_USAGE (IDX) \
-  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
-  STACK_PUSH (IDX, (idx_t) ((DIFF) >> JERRY_BITSINBYTE)); \
-  STACK_PUSH (IDX, (idx_t) ((DIFF) & ((1 << JERRY_BITSINBYTE) - 1))); \
-  JERRY_ASSERT ((DIFF) == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
-  OPCODE()=getop_##GETOP (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
-  serializer_rewrite_opcode (OC, OPCODE()); \
-  STACK_DROP (IDX, 2); \
-  STACK_CHECK_USAGE (IDX); \
-} while (0)
-
-#define REWRITE_TRY(OC) \
-do { \
-  STACK_DECLARE_USAGE (IDX) \
-  JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
-  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) >> JERRY_BITSINBYTE)); \
-  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) & ((1 << JERRY_BITSINBYTE) - 1))); \
-  JERRY_ASSERT ((OPCODE_COUNTER ()) \
-                == calc_opcode_counter_from_idx_idx (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1))); \
-  OPCODE()=getop_try (STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1)); \
-  serializer_rewrite_opcode ((OC), OPCODE()); \
-  STACK_DROP (IDX, 2); \
-  STACK_CHECK_USAGE (IDX); \
-} while (0)
 
 static void
 integer_zero (void)
@@ -1815,11 +1704,12 @@ PARSE_OF (logical_or_expression, logical_and_expression, DOUBLE_OR, logical_or)
   : logical_or_expression (LT!* '?' LT!* assignment_expression LT!* ':' LT!* assignment_expression)?
   ; */
 static void
-parse_conditional_expression (bool *was_conditional)
+parse_conditional_expression (void)
 {
   // IDX expr, res, lhs
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (U8)
 
   parse_logical_or_expression ();
 
@@ -1844,7 +1734,7 @@ parse_conditional_expression (bool *was_conditional)
     DUMP_OPCODE_3 (assignment, STACK_HEAD (IDX, 2), OPCODE_ARG_TYPE_VARIABLE, STACK_HEAD (IDX, 1));
     REWRITE_JMP (STACK_HEAD (U16, 1), jmp_down, OPCODE_COUNTER () - STACK_HEAD (U16, 1));
 
-    *was_conditional = true;
+    STACK_HEAD (U8, 1) = 1;
     STACK_HEAD (IDX, 3) = STACK_HEAD (IDX, 2);
     STACK_DROP (IDX, 2);
   }
@@ -1854,6 +1744,7 @@ parse_conditional_expression (bool *was_conditional)
   }
 
   STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE_LHS ();
 }
 
@@ -1866,12 +1757,25 @@ parse_assignment_expression (void)
 {
   // IDX lhs, rhs;
   STACK_DECLARE_USAGE (IDX)
-  bool was_conditional = false;
+  STACK_DECLARE_USAGE (U16);
+  STACK_DECLARE_USAGE (U8);
+  STACK_DECLARE_USAGE (ops);
 
-  parse_conditional_expression (&was_conditional);
-  if (was_conditional)
+  STACK_PUSH (U8, 0);
+
+  parse_conditional_expression ();
+  if (STACK_HEAD (U8, 1))
   {
+    STACK_DROP (U8, 1);
     goto cleanup;
+  }
+
+  /* Rewrite prop_getter with nop and generate prop_setter in constructions like:
+    a.b = c; */
+  if (LAST_OPCODE_IS (prop_getter))
+  {
+    STACK_PUSH (U16, (opcode_counter_t) (OPCODE_COUNTER () - 1));
+    STACK_HEAD (U8, 1) = 1;
   }
 
   skip_newlines ();
@@ -1879,74 +1783,243 @@ parse_assignment_expression (void)
   {
     case TOK_EQ:
     {
-      NEXT (assignment_expression);
-      DUMP_OPCODE_3 (assignment, STACK_HEAD (IDX, 2), OPCODE_ARG_TYPE_VARIABLE, STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 1)));
+        JERRY_ASSERT (STACK_HEAD (ops, 1).op_idx == __op__idx_prop_getter);
+        serializer_set_writing_position (--OPCODE_COUNTER ());
+        NEXT (assignment_expression);
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 1));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        NEXT (assignment_expression);
+        DUMP_OPCODE_3 (assignment, STACK_HEAD (IDX, 2), OPCODE_ARG_TYPE_VARIABLE,
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_MULT_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (multiplication, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (multiplication, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (multiplication, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_DIV_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (division, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (division, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (division, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_MOD_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (remainder, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (remainder, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (remainder, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_PLUS_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (addition, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (addition, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (addition, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_MINUS_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (substraction, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (substraction, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (substraction, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_LSHIFT_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_shift_left, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_shift_left, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_shift_left, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_RSHIFT_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_shift_right, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_shift_right, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_shift_right, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_RSHIFT_EX_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_shift_uright, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_shift_uright, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_shift_uright, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_AND_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_and, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_and, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_and, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_XOR_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_xor, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_xor, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_xor, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     case TOK_OR_EQ:
     {
       NEXT (assignment_expression);
-      DUMP_OPCODE_3 (b_or, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 1));
+      if (STACK_HEAD (U8, 1))
+      {
+        STACK_PUSH (ops, deserialize_opcode (STACK_HEAD (U16, 0)));
+        DUMP_OPCODE_3 (b_or, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+        DUMP_OPCODE_3 (prop_setter, STACK_HEAD (ops, 1).data.prop_getter.obj,
+                       STACK_HEAD (ops, 1).data.prop_getter.prop, STACK_HEAD (IDX, 2));
+        STACK_DROP (ops, 1);
+        STACK_DROP (U16, 1);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (b_or, STACK_HEAD (IDX, 2), STACK_HEAD (IDX, 2),
+                       STACK_HEAD (IDX, 1));
+      }
       break;
     }
     default:
@@ -1959,6 +2032,11 @@ parse_assignment_expression (void)
   STACK_DROP (IDX, 1);
 
 cleanup:
+  STACK_DROP (U8, 1);
+
+  STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (U8);
+  STACK_CHECK_USAGE (ops);
   STACK_CHECK_USAGE_LHS ();
 }
 

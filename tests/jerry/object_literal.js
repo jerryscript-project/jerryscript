@@ -28,19 +28,18 @@ assert (person["age"] === 50);
 assert (person.eyeColor === "blue");
 assert (person["eyeColor"] === "blue");
 
-// FIXME Uncomment when prop_set generation will be ready
-// var x = person;
-// x.age = 40;
-// assert (x.age === 40);
-// assert (person.age === 40);
+var x = person;
+x.age = 40;
+assert (x.age === 40);
+assert (person.age === 40);
 
-// var john = new Object();
-// john.firstName = "John";
-// john.lastName = "Doe";
-// john.age = 40;
-// john.eyeColor = "blue";
+var john = new Object();
+john.firstName = "John";
+john.lastName = "Doe";
+john.age = 40;
+john.eyeColor = "blue";
 
-// assert (person.firstName === john.firstName);
-// assert (person.lastName === john.lastName);
-// assert (person.age === john.age);
-// assert (person.eyeColor === john.eyeColor);
+assert (person.firstName === john.firstName);
+assert (person.lastName === john.lastName);
+assert (person.age === john.age);
+assert (person.eyeColor === john.eyeColor);

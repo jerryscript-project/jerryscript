@@ -130,9 +130,9 @@ increase_##NAME##_stack_size (__typeof__ (NAME.length) elements_count) { \
 }
 
 #define DEFINE_DECREASE_STACE_SIZE(NAME) \
-static void decrease_##NAME##_stack_size (uint8_t) __unused; \
+static void decrease_##NAME##_stack_size (__typeof__ (NAME.length)) __unused; \
 static void \
-decrease_##NAME##_stack_size (uint8_t elements_count) { \
+decrease_##NAME##_stack_size (__typeof__ (NAME.length) elements_count) { \
   JERRY_ASSERT (NAME.current - elements_count >= NAME##_global_size); \
   NAME.current = (__typeof__ (NAME.current)) (NAME.current - elements_count); \
 }
@@ -150,7 +150,7 @@ do { \
 } while (0)
 
 #define STACK_DROP(NAME, I) \
-do { decrease_##NAME##_stack_size (I); } while (0)
+do { decrease_##NAME##_stack_size ((__typeof__(NAME.current))(I)); } while (0)
 
 #define STACK_CLEAN(NAME) \
 STACK_DROP (NAME, NAME.current - NAME##_global_size);

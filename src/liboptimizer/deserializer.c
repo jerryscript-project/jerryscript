@@ -41,7 +41,15 @@ const void *
 deserialize_bytecode (void)
 {
   JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) > 0);
-  return bytecode_opcodes.data;
+  return STACK_RAW_DATA (bytecode_opcodes);
+}
+
+opcode_t
+deserialize_opcode (opcode_counter_t oc)
+{
+  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) > 0);
+  JERRY_ASSERT (oc < STACK_SIZE (bytecode_opcodes));
+  return STACK_ELEMENT (bytecode_opcodes, oc);
 }
 
 uint8_t

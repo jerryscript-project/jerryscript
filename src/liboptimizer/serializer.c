@@ -51,6 +51,13 @@ serializer_dump_opcode (opcode_t opcode)
 }
 
 void
+serializer_set_writing_position (opcode_counter_t oc)
+{
+  JERRY_ASSERT (oc < STACK_SIZE (bytecode_opcodes));
+  STACK_DROP (bytecode_opcodes, STACK_SIZE (bytecode_opcodes) - oc);
+}
+
+void
 serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
   JERRY_ASSERT (loc < STACK_SIZE (bytecode_opcodes));

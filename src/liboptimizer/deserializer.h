@@ -18,10 +18,12 @@
 
 #include "globals.h"
 #include "ecma-globals.h"
+#include "opcodes.h"
 
 const ecma_char_t *deserialize_string_by_id (uint8_t);
 ecma_number_t deserialize_num_by_id (uint8_t);
 const void *deserialize_bytecode (void);
+opcode_t deserialize_opcode (opcode_counter_t);
 uint8_t deserialize_min_temp (void);
 
 #endif //DESERIALIZER_H

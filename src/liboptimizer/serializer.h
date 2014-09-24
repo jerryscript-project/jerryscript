@@ -22,18 +22,13 @@
 #include "lp-string.h"
 
 void serializer_init (bool show_opcodes);
-
 void serializer_dump_strings_and_nums (const lp_string *, uint8_t,
                                        const ecma_number_t *, uint8_t);
-
 void serializer_dump_opcode (opcode_t);
-
+void serializer_set_writing_position (opcode_counter_t);
 void serializer_rewrite_opcode (const opcode_counter_t, opcode_t);
-
 void serializer_print_opcodes (void);
-
 void serializer_adjust_strings (void);
-
 void serializer_free (void);
 
 #endif // SERIALIZER_H

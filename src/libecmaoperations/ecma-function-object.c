@@ -477,7 +477,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   {
     if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
     {
-      return ecma_builtin_dispatch_call (func_obj_p, arguments_list_p, arguments_list_len);
+      return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
     }
 
     ecma_completion_value_t ret_value;
@@ -550,7 +550,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
-    return ecma_builtin_dispatch_call (func_obj_p, arguments_list_p, arguments_list_len);
+    return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
   }
   else
   {

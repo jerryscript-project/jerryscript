@@ -285,6 +285,7 @@ ecma_builtin_global_get_routine_parameters_number (ecma_magic_string_id_t builti
 ecma_completion_value_t
 ecma_builtin_global_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /**< Global object's
                                                                                       built-in routine's name */
+                                      ecma_value_t this_arg_value __unused, /**< 'this' argument value */
                                       ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                       ecma_length_t arguments_number) /**< length of arguments' list */
 {

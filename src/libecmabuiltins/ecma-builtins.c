@@ -37,6 +37,7 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id,
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                ecma_magic_string_id_t builtin_routine_id,
+                               ecma_value_t this_arg_value,
                                ecma_value_t arguments_list [],
                                ecma_length_t arguments_number);
 
@@ -307,6 +308,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
+                            ecma_value_t this_arg_value, /**< 'this' argument value */
                             ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of the arguments list */
 {
@@ -334,6 +336,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 
     return ecma_builtin_dispatch_routine (built_in_id,
                                           routine_id,
+                                          this_arg_value,
                                           arguments_list_p,
                                           arguments_list_len);
   }
@@ -550,6 +553,7 @@ static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
                                ecma_magic_string_id_t builtin_routine_id, /**< name of the built-in object's
                                                                                routine property */
+                               ecma_value_t this_arg_value, /**< 'this' argument value */
                                ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
 {
@@ -558,24 +562,28 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
     case ECMA_BUILTIN_ID_GLOBAL:
     {
       return ecma_builtin_global_dispatch_routine (builtin_routine_id,
+                                                   this_arg_value,
                                                    arguments_list,
                                                    arguments_number);
     }
     case ECMA_BUILTIN_ID_OBJECT:
     {
       return ecma_builtin_object_dispatch_routine (builtin_routine_id,
+                                                   this_arg_value,
                                                    arguments_list,
                                                    arguments_number);
     }
     case ECMA_BUILTIN_ID_STRING:
     {
       return ecma_builtin_string_dispatch_routine (builtin_routine_id,
+                                                   this_arg_value,
                                                    arguments_list,
                                                    arguments_number);
     }
     case ECMA_BUILTIN_ID_MATH:
     {
       return ecma_builtin_math_dispatch_routine (builtin_routine_id,
+                                                 this_arg_value,
                                                  arguments_list,
                                                  arguments_number);
     }
@@ -603,6 +611,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
     case ECMA_BUILTIN_ID_JSON:
     {
       JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (builtin_routine_id,
+                                           this_arg_value,
                                            arguments_list,
                                            arguments_number);
     }

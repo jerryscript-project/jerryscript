@@ -414,6 +414,7 @@ ecma_builtin_object_object_define_property (ecma_value_t arg1, /**< routine's fi
 ecma_completion_value_t
 ecma_builtin_object_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /**< Object object's
                                                                                       built-in routine's name */
+                                      ecma_value_t this_arg_value __unused, /**< 'this' argument value */
                                       ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                       ecma_length_t arguments_number) /**< length of arguments' list */
 {

@@ -1310,6 +1310,7 @@ ecma_builtin_math_try_to_instantiate_property (ecma_object_t *obj_p, /**< object
 ecma_completion_value_t
 ecma_builtin_math_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /**< Object object's
                                                                                     built-in routine's name */
+                                    ecma_value_t this_arg_value __unused, /**< 'this' argument value */
                                     ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                     ecma_length_t arguments_number) /**< length of arguments' list */
 {

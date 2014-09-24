@@ -159,6 +159,63 @@ const ecma_length_t ecma_builtin_math_property_number = (sizeof (ecma_builtin_ma
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_math_property_names) > sizeof (void*));
 
 /**
+ * Helper for calculating absolute value
+ *
+ * Warning:
+ *         argument should be valid finite number
+ *
+ * @return square root of specified number
+ */
+static ecma_number_t
+ecma_builtin_math_object_helper_abs (ecma_number_t num) /**< valid finite number */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+
+  if (num < 0)
+  {
+    return ecma_number_negate (num);
+  }
+  else
+  {
+    return num;
+  }
+} /* ecma_builtin_math_object_helper_abs */
+
+/**
+ * Helper for calculating square root using Newton's method.
+ *
+ * @return square root of specified number
+ */
+static ecma_number_t
+ecma_builtin_math_object_helper_sqrt (ecma_number_t num) /**< valid finite
+                                                              positive number */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+  JERRY_ASSERT (!ecma_number_is_infinity (num));
+  JERRY_ASSERT (!ecma_number_is_negative (num));
+
+  ecma_number_t x = ECMA_NUMBER_ONE;
+  ecma_number_t diff = ecma_number_make_infinity (false);
+
+  while (ecma_op_number_divide (diff, x) > ecma_builtin_math_object_relative_eps)
+  {
+    ecma_number_t x_next = ecma_op_number_multiply (ECMA_NUMBER_HALF,
+                                                    (ecma_op_number_add (x,
+                                                                         ecma_op_number_divide (num, x))));
+
+    diff = ecma_op_number_substract (x, x_next);
+    if (diff < 0)
+    {
+      diff = ecma_number_negate (diff);
+    }
+
+    x = x_next;
+  }
+
+  return x;
+} /* ecma_builtin_math_object_helper_sqrt */
+
+/**
  * The Math object's 'abs' routine
  *
  * See also:
@@ -180,14 +237,13 @@ ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
 
   const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
   
-  if (ecma_number_is_nan (arg_num)
-      || !ecma_number_is_negative (arg_num))
+  if (ecma_number_is_nan (arg_num))
   {
     *num_p = arg_num;
   }
   else
   {
-    *num_p = ecma_number_negate (arg_num);
+    *num_p = ecma_builtin_math_object_helper_abs (arg_num);
   }
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
@@ -411,7 +467,85 @@ ecma_builtin_math_object_floor (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_log (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  
+  if (ecma_number_is_nan (arg_num))
+  {
+    *num_p = arg_num;
+  }
+  else if (ecma_number_is_zero (arg_num))
+  {
+    *num_p = ecma_number_make_infinity (true);
+  }
+  else if (ecma_number_is_negative (arg_num))
+  {
+    *num_p = ecma_number_make_nan ();
+  }
+  else if (ecma_number_is_infinity (arg_num))
+  {
+    *num_p = arg_num;
+  }
+  else if (arg_num == ECMA_NUMBER_ONE)
+  {
+    *num_p = ECMA_NUMBER_ZERO;
+  }
+  else
+  {
+    /* Taylor series of ln (1 + x) around x = 0 is x - x^2/2 + x^3/3 - x^4/4 + ... */
+
+    ecma_number_t x = arg_num;
+    ecma_number_t multiplier = ECMA_NUMBER_ONE;
+
+    while (ecma_builtin_math_object_helper_abs (ecma_op_number_substract (x,
+                                                                          ECMA_NUMBER_ONE)) > ECMA_NUMBER_HALF)
+    {
+      x = ecma_builtin_math_object_helper_sqrt (x);
+      multiplier = ecma_op_number_multiply (multiplier, ECMA_NUMBER_TWO);
+    }
+
+    x = ecma_op_number_substract (x, ECMA_NUMBER_ONE);
+
+    ecma_number_t sum = ECMA_NUMBER_ZERO;
+    ecma_number_t next_power = x;
+    ecma_number_t next_divisor = ECMA_NUMBER_ONE;
+
+    ecma_number_t diff;
+
+    do
+    {
+      ecma_number_t next_sum = ecma_op_number_add (sum,
+                                                   ecma_op_number_divide (next_power,
+                                                                          next_divisor));
+
+      next_divisor = ecma_op_number_add (next_divisor, ECMA_NUMBER_ONE);
+      next_power = ecma_op_number_multiply (next_power, x);
+      next_power = ecma_number_negate (next_power);
+
+      diff = ecma_builtin_math_object_helper_abs (ecma_op_number_substract (sum, next_sum));
+
+      sum = next_sum;
+    }
+    while (ecma_builtin_math_object_helper_abs (ecma_op_number_divide (diff,
+                                                                       sum)) > ecma_builtin_math_object_relative_eps);
+
+    sum = ecma_op_number_multiply (sum, multiplier);
+
+    *num_p = sum;
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_log */
 
 /**
@@ -762,27 +896,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
   }
   else
   {
-    /* Newton's method */
-
-    ecma_number_t x = ECMA_NUMBER_ONE;
-    ecma_number_t diff = ecma_number_make_infinity (false);
-
-    while (ecma_op_number_divide (diff, x) > ecma_builtin_math_object_relative_eps)
-    {
-      ecma_number_t x_next = ecma_op_number_multiply (ECMA_NUMBER_HALF,
-                                                      (ecma_op_number_add (x,
-                                                                           ecma_op_number_divide (arg_num, x))));
-
-      diff = ecma_op_number_substract (x, x_next);
-      if (diff < 0)
-      {
-        diff = ecma_number_negate (diff);
-      }
-
-      x = x_next;
-    }
-
-    ret_num = x;
+    ret_num = ecma_builtin_math_object_helper_sqrt (arg_num);
   }
 
   ecma_number_t *num_p = ecma_alloc_number ();

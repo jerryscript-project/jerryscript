@@ -18,6 +18,7 @@
 #include "ecma-globals.h"
 #include "ecma-array-object.h"
 #include "ecma-function-object.h"
+#include "ecma-string-object.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
@@ -117,6 +118,12 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_STRING:
+    {
+      prop_p = ecma_op_string_object_get_own_property (obj_p, property_name_p);
+
+      break;
+    }
+
     case ECMA_OBJECT_TYPE_HOST:
     {
       JERRY_UNIMPLEMENTED();

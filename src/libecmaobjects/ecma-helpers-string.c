@@ -993,6 +993,36 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 } /* ecma_string_get_length */
 
 /**
+ * Get character from specified position in the ecma-string.
+ *
+ * @return character value
+ */
+ecma_char_t
+ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
+                             uint32_t index) /**< index of character */
+{
+  uint32_t length = (uint32_t) ecma_string_get_length (string_p);
+  JERRY_ASSERT (index < (uint32_t) length);
+
+  size_t buffer_size = sizeof (ecma_char_t) * (length + 1);
+  ecma_char_t *zt_str_p = mem_heap_alloc_block (buffer_size,
+                                                MEM_HEAP_ALLOC_SHORT_TERM);
+
+  if (zt_str_p == NULL)
+  {
+    jerry_exit (ERR_MEMORY);
+  }
+
+  ecma_string_to_zt_string (string_p, zt_str_p, (ssize_t) buffer_size);
+
+  ecma_char_t ch = zt_str_p [index];
+
+  mem_heap_free_block (zt_str_p);
+
+  return ch;
+} /* ecma_string_get_char_at_pos */
+
+/**
  * Compare zero-terminated string to zero-terminated string
  *
  * @return  true - if strings are equal;
@@ -1309,6 +1339,8 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_SIN: return (ecma_char_t*) "sin";
     case ECMA_MAGIC_STRING_SQRT: return (ecma_char_t*) "sqrt";
     case ECMA_MAGIC_STRING_TAN: return (ecma_char_t*) "tan";
+    case ECMA_MAGIC_STRING_FROM_CHAR_CODE_UL: return (ecma_char_t*) "fromCharCode";
+    case ECMA_MAGIC_STRING__EMPTY: return (ecma_char_t*) "";
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 

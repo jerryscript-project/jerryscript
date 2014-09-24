@@ -183,6 +183,9 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
   ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
   ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
+  ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE, /**< [[Primitive value]] for String objects */
+  ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE, /**< [[Primitive value]] for Number objects */
+  ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE, /**< [[Primitive value]] for Boolean objects */
 
   /** provideThis property of lexical environment */
   ECMA_INTERNAL_PROPERTY_PROVIDE_THIS,
@@ -212,7 +215,7 @@ typedef enum
   /**
    * Bit-mask of non-instantiated built-in's properties (bits 32-63)
    */
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63,
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63
 } ecma_internal_property_id_t;
 
 /**
@@ -298,7 +301,7 @@ typedef struct ecma_property_t
     struct __packed ecma_internal_property_t
     {
       /** Internal property's type */
-      unsigned int type : 4;
+      unsigned int type : 5;
 
       /** Value (may be a compressed pointer) */
       uint32_t value;
@@ -740,6 +743,8 @@ typedef enum
   ECMA_MAGIC_STRING_SIN, /**< "sin" */
   ECMA_MAGIC_STRING_SQRT, /**< "sqrt" */
   ECMA_MAGIC_STRING_TAN, /**< "tan" */
+  ECMA_MAGIC_STRING_FROM_CHAR_CODE_UL, /**< "fromCharCode" */
+  ECMA_MAGIC_STRING__EMPTY, /**< "" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
 

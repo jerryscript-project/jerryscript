@@ -488,10 +488,17 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
       break;
     }
+    case ECMA_MAGIC_STRING_STRING_UL:
+    {
+      ecma_object_t *string_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_STRING);
+
+      value = ecma_make_object_value (string_obj_p);
+
+      break;
+    }
 
     case ECMA_MAGIC_STRING_FUNCTION_UL:
     case ECMA_MAGIC_STRING_ARRAY_UL:
-    case ECMA_MAGIC_STRING_STRING_UL:
     case ECMA_MAGIC_STRING_BOOLEAN_UL:
     case ECMA_MAGIC_STRING_NUMBER_UL:
     case ECMA_MAGIC_STRING_DATE_UL:

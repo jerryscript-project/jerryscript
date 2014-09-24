@@ -1334,6 +1334,7 @@ ecma_builtin_math_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /
 #undef ROUTINE_ARG_LIST_1
 #undef ROUTINE_ARG_LIST_2
 #undef ROUTINE_ARG_LIST_3
+#undef ROUTINE_ARG_LIST_NON_FIXED
 #undef ROUTINE_ARG
 
     default:

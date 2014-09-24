@@ -159,12 +159,12 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
     {
       ecma_completion_value_t ret_value;
 
-      ECMA_FUNCTION_CALL (call_completion,
-                          ecma_op_function_call (getter_p,
-                                                 ecma_make_object_value (obj_p),
-                                                 NULL,
-                                                 0),
-                          ret_value);
+      ECMA_TRY_CATCH (call_completion,
+                      ecma_op_function_call (getter_p,
+                                             ecma_make_object_value (obj_p),
+                                             NULL,
+                                             0),
+                      ret_value);
 
       ret_value = ecma_make_normal_completion_value (ecma_copy_value (call_completion.u.value, true));
 
@@ -308,12 +308,12 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
 
     ecma_completion_value_t ret_value;
 
-    ECMA_FUNCTION_CALL (call_completion,
-                        ecma_op_function_call (setter_p,
-                                               ecma_make_object_value (obj_p),
-                                               &value,
-                                               1),
-                        ret_value);
+    ECMA_TRY_CATCH (call_completion,
+                    ecma_op_function_call (setter_p,
+                                           ecma_make_object_value (obj_p),
+                                           &value,
+                                           1),
+                    ret_value);
 
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
 

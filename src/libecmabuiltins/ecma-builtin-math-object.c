@@ -190,7 +190,7 @@ ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
     *num_p = ecma_number_negate (arg_num);
   }
 
-  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
   ECMA_FINALIZE (arg_num_value);
 
@@ -420,7 +420,7 @@ ecma_builtin_math_object_max (ecma_value_t args[], /**< arguments list */
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_return_completion_value (ecma_make_number_value (num_p));
+  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 } /* ecma_builtin_math_object_max */
 
 /**
@@ -510,7 +510,7 @@ ecma_builtin_math_object_min (ecma_value_t args[], /**< arguments list */
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_return_completion_value (ecma_make_number_value (num_p));
+  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 } /* ecma_builtin_math_object_min */
 
 /**
@@ -567,7 +567,7 @@ ecma_builtin_math_object_random (void)
   ecma_number_t *rand_p = ecma_alloc_number ();
   *rand_p = rand;
 
-  return ecma_make_return_completion_value (ecma_make_number_value (rand_p));
+  return ecma_make_normal_completion_value (ecma_make_number_value (rand_p));
 } /* ecma_builtin_math_object_random */
 
 /**
@@ -620,7 +620,7 @@ ecma_builtin_math_object_round (ecma_value_t arg) /**< routine's argument */
     }
   }
 
-  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
   ECMA_FINALIZE (arg_num_value);
 
@@ -707,7 +707,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  ret_value = ecma_make_return_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
   ECMA_FINALIZE (arg_num_value);
 

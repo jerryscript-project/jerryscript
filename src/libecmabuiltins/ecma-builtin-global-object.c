@@ -144,8 +144,8 @@ ecma_builtin_global_object_is_nan (ecma_value_t arg) /**< routine's first argume
 
   bool is_nan = ecma_number_is_nan (*num_p);
 
-  ret_value = ecma_make_return_completion_value (ecma_make_simple_value (is_nan ? ECMA_SIMPLE_VALUE_TRUE
-                                                                                : ECMA_SIMPLE_VALUE_FALSE));
+  ret_value = ecma_make_simple_completion_value (is_nan ? ECMA_SIMPLE_VALUE_TRUE
+                                                        : ECMA_SIMPLE_VALUE_FALSE);
 
   ECMA_FINALIZE (num_value);
 
@@ -173,8 +173,8 @@ ecma_builtin_global_object_is_finite (ecma_value_t arg) /**< routine's first arg
   bool is_finite = !(ecma_number_is_nan (*num_p)
                      || ecma_number_is_infinity (*num_p));
 
-  ret_value = ecma_make_return_completion_value (ecma_make_simple_value (is_finite ? ECMA_SIMPLE_VALUE_TRUE
-                                                                                   : ECMA_SIMPLE_VALUE_FALSE));
+  ret_value = ecma_make_simple_completion_value (is_finite ? ECMA_SIMPLE_VALUE_TRUE
+                                                           : ECMA_SIMPLE_VALUE_FALSE);
 
   ECMA_FINALIZE (num_value);
 

@@ -89,9 +89,9 @@ opfunc_call_1 (opcode_t opdata __unused, int_data_t *int_data)
     ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
 
     ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
-    ECMA_FUNCTION_CALL (call_completion,
-                        ecma_op_function_call (func_obj_p, this_value.u.value, &arg_value.u.value, 1),
-                        ret_value);
+    ECMA_TRY_CATCH (call_completion,
+                    ecma_op_function_call (func_obj_p, this_value.u.value, &arg_value.u.value, 1),
+                    ret_value);
 
     ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.u.value);
 
@@ -697,9 +697,9 @@ opfunc_call_0 (opcode_t opdata, /**< operation data */
     ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
 
     ECMA_TRY_CATCH (this_value, ecma_op_implicit_this_value (int_data->lex_env_p), ret_value);
-    ECMA_FUNCTION_CALL (call_completion,
-                        ecma_op_function_call (func_obj_p, this_value.u.value, NULL, 0),
-                        ret_value);
+    ECMA_TRY_CATCH (call_completion,
+                    ecma_op_function_call (func_obj_p, this_value.u.value, NULL, 0),
+                    ret_value);
 
     ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.u.value);
 
@@ -771,9 +771,9 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     {
       ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
 
-      ECMA_FUNCTION_CALL (call_completion,
-                          ecma_op_function_call (func_obj_p, this_value.u.value, arg_values, args_number),
-                          ret_value);
+      ECMA_TRY_CATCH (call_completion,
+                      ecma_op_function_call (func_obj_p, this_value.u.value, arg_values, args_number),
+                      ret_value);
 
       ret_value = set_variable_value (int_data, lhs_var_idx, call_completion.u.value);
 

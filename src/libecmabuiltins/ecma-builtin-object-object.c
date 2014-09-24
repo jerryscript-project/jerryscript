@@ -121,25 +121,20 @@ ecma_builtin_object_dispatch_call (ecma_value_t *arguments_list_p, /**< argument
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
+  ecma_completion_value_t ret_value;
+
   if (arguments_list_len == 0
       || ecma_is_value_undefined (arguments_list_p[0])
       || ecma_is_value_null (arguments_list_p [0]))
   {
-    return ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
+    ret_value = ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
   }
   else
   {
-    ecma_completion_value_t new_obj_value = ecma_op_to_object (arguments_list_p [0]);
-
-    if (!ecma_is_completion_value_normal (new_obj_value))
-    {
-      return new_obj_value;
-    }
-    else
-    {
-      return ecma_make_return_completion_value (new_obj_value.u.value);
-    }
+    ret_value = ecma_op_to_object (arguments_list_p [0]);
   }
+
+  return ret_value;
 } /* ecma_builtin_object_dispatch_call */
 
 /**
@@ -157,7 +152,7 @@ ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p, /**< arg
   {
     ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-    return ecma_make_return_completion_value (ecma_make_object_value (obj_p));
+    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
   }
   else
   {
@@ -169,7 +164,7 @@ ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p, /**< arg
     }
     else
     {
-      return ecma_make_return_completion_value (new_obj_value.u.value);
+      return ecma_make_normal_completion_value (new_obj_value.u.value);
     }
   }
 } /* ecma_builtin_object_dispatch_construct */

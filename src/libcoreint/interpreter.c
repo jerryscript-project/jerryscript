@@ -493,6 +493,11 @@ run_int_from_pos (opcode_counter_t start_pos,
 
   completion = run_int_loop (&int_data);
 
+  JERRY_ASSERT (ecma_is_completion_value_normal (completion)
+                || ecma_is_completion_value_throw (completion)
+                || ecma_is_completion_value_return (completion)
+                || ecma_is_completion_value_exit (completion));
+
   for (uint32_t reg_index = 0;
        reg_index < regs_num;
        reg_index++)

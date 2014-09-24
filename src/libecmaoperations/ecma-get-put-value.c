@@ -240,9 +240,9 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
           ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
           JERRY_ASSERT (setter_p != NULL);
 
-          ECMA_FUNCTION_CALL (call_completion,
-                              ecma_op_function_call (setter_p, base, &value, 1),
-                              ret_value);
+          ECMA_TRY_CATCH (call_completion,
+                          ecma_op_function_call (setter_p, base, &value, 1),
+                          ret_value);
 
           ret_value = ecma_make_empty_completion_value ();
 

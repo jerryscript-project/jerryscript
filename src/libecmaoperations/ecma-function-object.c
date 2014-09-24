@@ -532,11 +532,9 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                            local_env_p,
                                                            is_strict,
                                                            false);
-    if (ecma_is_completion_value_normal (completion))
+    if (ecma_is_completion_value_return (completion))
     {
-      JERRY_ASSERT(ecma_is_completion_value_empty (completion));
-
-      ret_value = ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+      ret_value = ecma_make_normal_completion_value (completion.u.value);
     }
     else
     {
@@ -622,12 +620,12 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ecma_deref_object (prototype_p);
 
     // 8.
-    ECMA_FUNCTION_CALL (call_completion,
-                        ecma_op_function_call (func_obj_p,
-                                               ecma_make_object_value (obj_p),
-                                               arguments_list_p,
-                                               arguments_list_len),
-                        ret_value);
+    ECMA_TRY_CATCH (call_completion,
+                    ecma_op_function_call (func_obj_p,
+                                           ecma_make_object_value (obj_p),
+                                           arguments_list_p,
+                                           arguments_list_len),
+                    ret_value);
 
     ecma_value_t obj_value;
 

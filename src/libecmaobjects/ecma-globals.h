@@ -745,6 +745,8 @@ typedef enum
   ECMA_MAGIC_STRING_TAN, /**< "tan" */
   ECMA_MAGIC_STRING_FROM_CHAR_CODE_UL, /**< "fromCharCode" */
   ECMA_MAGIC_STRING_IS_ARRAY_UL, /**< "isArray" */
+  ECMA_MAGIC_STRING_TO_STRING_UL, /**< "toString" */
+  ECMA_MAGIC_STRING_VALUE_OF_UL, /**< "valueOf" */
   ECMA_MAGIC_STRING__EMPTY, /**< "" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;

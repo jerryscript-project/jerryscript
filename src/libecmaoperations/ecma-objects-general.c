@@ -554,7 +554,79 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT(obj_p != NULL
                && !ecma_is_lexical_environment (obj_p));
 
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(obj_p, hint);
+  if (hint == ECMA_PREFERRED_TYPE_NO)
+  {
+    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
+                                                                ECMA_INTERNAL_PROPERTY_CLASS);
+    ecma_object_class_t obj_class = (ecma_object_class_t) class_prop_p->u.internal_property.value;
+
+    if (obj_class == ECMA_OBJECT_CLASS_DATE)
+    {
+      hint = ECMA_PREFERRED_TYPE_STRING;
+    }
+    else
+    {
+      hint = ECMA_PREFERRED_TYPE_NUMBER;
+    }
+  }
+
+  const uint32_t tries_num = 2;
+  ecma_magic_string_id_t function_names [tries_num];
+
+  if (hint == ECMA_PREFERRED_TYPE_STRING)
+  {
+    function_names[0] = ECMA_MAGIC_STRING_TO_STRING_UL;
+    function_names[1] = ECMA_MAGIC_STRING_VALUE_OF_UL;
+  }
+  else
+  {
+    JERRY_ASSERT (hint == ECMA_PREFERRED_TYPE_NUMBER);
+
+    function_names[0] = ECMA_MAGIC_STRING_VALUE_OF_UL;
+    function_names[1] = ECMA_MAGIC_STRING_TO_STRING_UL;
+  }
+
+  for (uint32_t i = 0; i < tries_num; i++)
+  {
+    ecma_string_t *function_name_p = ecma_get_magic_string (function_names [i]);
+
+    ecma_completion_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
+
+    ecma_deref_ecma_string (function_name_p);
+
+    if (!ecma_is_completion_value_normal (function_value_get_completion))
+    {
+      return function_value_get_completion;
+    }
+
+    ecma_completion_value_t call_completion = ecma_make_empty_completion_value ();
+
+    if (ecma_op_is_callable (function_value_get_completion.u.value))
+    {
+      ecma_object_t *func_obj_p = ECMA_GET_POINTER (function_value_get_completion.u.value.value);
+
+      call_completion = ecma_op_function_call (func_obj_p,
+                                               ecma_make_object_value (obj_p),
+                                               NULL, 0);
+    }
+
+    ecma_free_completion_value (function_value_get_completion);
+
+    if (!ecma_is_completion_value_normal (call_completion))
+    {
+      return call_completion;
+    }
+
+    if (!ecma_is_completion_value_empty (call_completion)
+        && call_completion.u.value.value_type != ECMA_TYPE_OBJECT)
+    {
+      return call_completion;
+    }
+
+    ecma_free_completion_value (call_completion);
+  }
+
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_op_general_object_default_value */
 
 /**

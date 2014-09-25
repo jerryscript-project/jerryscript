@@ -395,9 +395,10 @@ ecma_builtin_object_object_define_property (ecma_value_t arg1, /**< routine's fi
                                                         true),
                     ret_value);
 
-    ret_value = ecma_make_return_completion_value (ecma_copy_value (arg1, true));
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg1, true));
 
     ECMA_FINALIZE (define_own_prop_ret);
+    ecma_free_property_descriptor (&prop_desc);
     ECMA_FINALIZE (conv_result);
     ECMA_FINALIZE (name_str_value);
   }

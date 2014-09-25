@@ -139,7 +139,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
 
 #if defined (CONFIG_ECMA_CHAR_ASCII)
-        __printf ("%s\n", (char*) str_p);
+        __printf ("%s\n", (char*) zt_str_p);
 #elif defined (CONFIG_ECMA_CHAR_UTF16)
         JERRY_UNIMPLEMENTED ();
 #else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */

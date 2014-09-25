@@ -224,6 +224,7 @@ extern bool ecma_is_property_enumerable (ecma_property_t* prop_p);
 extern bool ecma_is_property_configurable (ecma_property_t* prop_p);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
+extern void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
 /* ecma-helpers-conversion.c */
 extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);

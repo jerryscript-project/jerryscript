@@ -878,30 +878,13 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     if (!ecma_is_completion_value_throw (ret_value))
     {
       JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
-
-      *out_prop_desc_p = prop_desc;
     }
     else
     {
-      *out_prop_desc_p = ecma_make_empty_property_descriptor ();
-
-      if (prop_desc.is_value_defined)
-      {
-        ecma_free_value (prop_desc.value, true);
-      }
-
-      if (prop_desc.is_get_defined
-          && prop_desc.get_p != NULL)
-      {
-        ecma_deref_object (prop_desc.get_p);
-      }
-
-      if (prop_desc.is_set_defined
-          && prop_desc.set_p != NULL)
-      {
-        ecma_deref_object (prop_desc.set_p);
-      }
+      ecma_free_property_descriptor (&prop_desc);
     }
+
+    *out_prop_desc_p = prop_desc;
   }
 
   return ret_value;

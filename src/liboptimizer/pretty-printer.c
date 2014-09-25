@@ -431,6 +431,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_WITH (with, expr)
     CASE_VARG_0_NAME (var_decl, "var", variable_name, "", "")
     CASE_REG_VAR_DECL (reg_var_decl, min, max)
+    CASE_VARG_N_NAME_LHS (native_call, lhs, "=", "", name, arg_list)
   }
 
   if (is_rewrite)

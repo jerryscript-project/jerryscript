@@ -37,6 +37,10 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
   const idx_t native_call_id_idx = opdata.data.native_call.name;
   const idx_t args_number = opdata.data.native_call.arg_list;
 
+  JERRY_ASSERT (native_call_id_idx < OPCODE_NATIVE_CALL__COUNT);
+
+  int_data->pos++;
+
   JERRY_STATIC_ASSERT (OPCODE_NATIVE_CALL__COUNT < (1u << (sizeof (native_call_id_idx) * JERRY_BITSINBYTE)));
 
   ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];

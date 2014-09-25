@@ -23,6 +23,7 @@
 #include "stack.h"
 #include "hash-table.h"
 #include "deserializer.h"
+#include "opcodes-native-call.h"
 
 #define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
@@ -60,6 +61,7 @@ STATIC_STACK (U8, uint8_t, uint8_t)
 
 enum
 {
+  native_calls = OPCODE_NATIVE_CALL__COUNT,
   IDX_global_size
 };
 STATIC_STACK (IDX, uint8_t, uint8_t)
@@ -593,6 +595,40 @@ dump_intrinsic (idx_t obj, idx_t arg)
   JERRY_UNREACHABLE ();
 }
 
+static bool
+is_native_call (idx_t obj)
+{
+  if (obj >= lexer_get_strings_count ())
+  {
+    return false;
+  }
+
+  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
+  {
+    if (STACK_ELEMENT (IDX, i) == obj)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+static idx_t
+name_to_native_call_id (idx_t obj)
+{
+  JERRY_ASSERT (obj < lexer_get_strings_count ());
+
+  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
+  {
+    if (STACK_ELEMENT (IDX, i) == obj)
+    {
+      return i;
+    }
+  }
+
+  JERRY_UNREACHABLE ();
+}
+
 /* property_name
   : Identifier
   | StringLiteral
@@ -782,6 +818,12 @@ parse_argument_list (argument_list_type alt, idx_t obj)
       {
         break;
       }
+      else if (is_native_call (obj))
+      {
+        STACK_PUSH (IDX, next_temp_name ());
+        DUMP_OPCODE_3 (native_call, STACK_HEAD (IDX, 1),
+                       name_to_native_call_id (obj), INVALID_VALUE);
+      }
       else
       {
         STACK_PUSH (IDX, next_temp_name ());
@@ -895,9 +937,15 @@ next:
       {
         break;
       }
+      else if (is_native_call (obj))
+      {
+        REWRITE_OPCODE_3 (STACK_HEAD (U16, 1), native_call, STACK_HEAD (IDX, 1),
+                          name_to_native_call_id (obj), STACK_HEAD (U8, 1));
+      }
       else
       {
-        REWRITE_OPCODE_3 (STACK_HEAD (U16, 1), call_n, STACK_HEAD (IDX, 1), obj, STACK_HEAD (U8, 1));
+        REWRITE_OPCODE_3 (STACK_HEAD (U16, 1), call_n, STACK_HEAD (IDX, 1), obj,
+                          STACK_HEAD (U8, 1));
       }
       break;
     }
@@ -2929,7 +2977,9 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
 
   lexer_adjust_num_ids ();
 
-  serializer_dump_strings_and_nums (lexer_get_strings (), lexer_get_strings_count (),
+  const lp_string *identifiers = lexer_get_strings ();
+
+  serializer_dump_strings_and_nums (identifiers, lexer_get_strings_count (),
                                     lexer_get_nums (), lexer_get_nums_count ());
 
   STACK_INIT (uint8_t, U8);
@@ -2948,6 +2998,40 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
 
   MAX_TEMP_NAME () = TEMP_NAME () = MIN_TEMP_NAME () = lexer_get_reserved_ids_count ();
   OPCODE_COUNTER () = 0;
+
+  TODO (/* Rewrite using hash when number of natives reaches 20 */)
+  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
+  {
+    STACK_ELEMENT (IDX, i) = INVALID_VALUE;
+  }
+
+  for (uint8_t i = 0, strs_count = lexer_get_strings_count (); i < strs_count; i++)
+  {
+    if (lp_string_equal_s (identifiers[i], "LEDToggle"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_TOGGLE) = i;
+    }
+    else if (lp_string_equal_s (identifiers[i], "LEDOn"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_ON) = i;
+    }
+    else if (lp_string_equal_s (identifiers[i], "LEDOff"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_OFF) = i;
+    }
+    else if (lp_string_equal_s (identifiers[i], "LEDOnce"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_ONCE) = i;
+    }
+    else if (lp_string_equal_s (identifiers[i], "wait"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_WAIT) = i;
+    }
+    else if (lp_string_equal_s (identifiers[i], "print"))
+    {
+      STACK_ELEMENT (IDX, OPCODE_NATIVE_CALL_PRINT) = i;
+    }
+  }
 }
 
 void

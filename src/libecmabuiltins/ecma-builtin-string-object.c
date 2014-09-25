@@ -34,7 +34,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup object ECMA Object object built-in
+ * \addtogroup string ECMA String object built-in
  * @{
  */
 

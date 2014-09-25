@@ -124,6 +124,18 @@ extern ecma_completion_value_t
 ecma_builtin_string_dispatch_construct (ecma_value_t *arguments_list_p,
                                         ecma_length_t arguments_list_len);
 
+/* ecma-builtin-string-prototype-object.c */
+extern const ecma_length_t ecma_builtin_string_prototype_property_number;
+extern ecma_length_t
+ecma_builtin_string_prototype_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
+extern ecma_completion_value_t
+ecma_builtin_string_prototype_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
+                                                ecma_value_t this_arg_value,
+                                                ecma_value_t arguments_list [],
+                                                ecma_length_t arguments_number);
+extern ecma_property_t*
+ecma_builtin_string_prototype_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
+
 /* ecma-builtin-array-object.c */
 extern const ecma_length_t ecma_builtin_array_property_number;
 extern ecma_length_t

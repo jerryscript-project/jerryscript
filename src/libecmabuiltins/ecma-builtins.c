@@ -86,11 +86,12 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
  */
 static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
+                          ecma_object_t* prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
                           ecma_object_class_t obj_class, /**< object's class */
                           ecma_length_t property_number) /**< number of the object's properties */
 {
-  ecma_object_t *object_obj_p = ecma_create_object (NULL, true, obj_type);
+  ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, true, obj_type);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (object_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_CLASS);
@@ -134,30 +135,47 @@ ecma_init_builtins (void)
     ecma_builtin_objects [id] = NULL;
   }
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_OBJECT] = ecma_builtin_init_object (ECMA_BUILTIN_ID_OBJECT,
-                                                                            ECMA_OBJECT_TYPE_FUNCTION,
-                                                                            ECMA_OBJECT_CLASS_OBJECT,
-                                                                            ecma_builtin_object_property_number);
+  ecma_builtin_id_t id = ECMA_BUILTIN_ID_OBJECT;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        NULL, /* FIXME */
+                                                        ECMA_OBJECT_TYPE_FUNCTION,
+                                                        ECMA_OBJECT_CLASS_OBJECT,
+                                                        ecma_builtin_object_property_number);
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_STRING] = ecma_builtin_init_object (ECMA_BUILTIN_ID_STRING,
-                                                                            ECMA_OBJECT_TYPE_FUNCTION,
-                                                                            ECMA_OBJECT_CLASS_STRING,
-                                                                            ecma_builtin_string_property_number);
+  id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        NULL,
+                                                        ECMA_OBJECT_TYPE_GENERAL,
+                                                        ECMA_OBJECT_CLASS_STRING,
+                                                        ecma_builtin_string_prototype_property_number);
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_ARRAY] = ecma_builtin_init_object (ECMA_BUILTIN_ID_ARRAY,
-                                                                           ECMA_OBJECT_TYPE_FUNCTION,
-                                                                           ECMA_OBJECT_CLASS_ARRAY,
-                                                                           ecma_builtin_array_property_number);
+  id = ECMA_BUILTIN_ID_STRING;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        ecma_builtin_objects [ECMA_BUILTIN_ID_STRING_PROTOTYPE],
+                                                        ECMA_OBJECT_TYPE_FUNCTION,
+                                                        ECMA_OBJECT_CLASS_STRING,
+                                                        ecma_builtin_string_property_number);
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_MATH] = ecma_builtin_init_object (ECMA_BUILTIN_ID_MATH,
-                                                                          ECMA_OBJECT_TYPE_GENERAL,
-                                                                          ECMA_OBJECT_CLASS_MATH,
-                                                                          ecma_builtin_math_property_number);
+  id = ECMA_BUILTIN_ID_ARRAY;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        NULL, /* FIXME */
+                                                        ECMA_OBJECT_TYPE_FUNCTION,
+                                                        ECMA_OBJECT_CLASS_ARRAY,
+                                                        ecma_builtin_array_property_number);
 
-  ecma_builtin_objects [ECMA_BUILTIN_ID_GLOBAL] = ecma_builtin_init_object (ECMA_BUILTIN_ID_GLOBAL,
-                                                                            ECMA_OBJECT_TYPE_GENERAL,
-                                                                            ECMA_OBJECT_CLASS_OBJECT,
-                                                                            ecma_builtin_global_property_number);
+  id = ECMA_BUILTIN_ID_MATH;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        NULL, /* FIXME */
+                                                        ECMA_OBJECT_TYPE_GENERAL,
+                                                        ECMA_OBJECT_CLASS_MATH,
+                                                        ecma_builtin_math_property_number);
+
+  id = ECMA_BUILTIN_ID_GLOBAL;
+  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
+                                                        NULL, /* FIXME */
+                                                        ECMA_OBJECT_TYPE_GENERAL,
+                                                        ECMA_OBJECT_CLASS_OBJECT,
+                                                        ecma_builtin_global_property_number);
 } /* ecma_init_builtins */
 
 /**
@@ -226,11 +244,15 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       return ecma_builtin_array_try_to_instantiate_property (object_p, string_p);
     }
 
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    {
+      return ecma_builtin_string_prototype_try_to_instantiate_property (object_p, string_p);
+    }
+
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     case ECMA_BUILTIN_ID_BOOLEAN:
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     case ECMA_BUILTIN_ID_NUMBER:
@@ -376,20 +398,12 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
         return ecma_builtin_array_dispatch_call (arguments_list_p, arguments_list_len);
       }
 
-      case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
       case ECMA_BUILTIN_ID_FUNCTION:
-      case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-      case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-      case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
       case ECMA_BUILTIN_ID_BOOLEAN:
-      case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
       case ECMA_BUILTIN_ID_NUMBER:
-      case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
       case ECMA_BUILTIN_ID_DATE:
       case ECMA_BUILTIN_ID_REGEXP:
-      case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
       case ECMA_BUILTIN_ID_ERROR:
-      case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
       case ECMA_BUILTIN_ID_EVAL_ERROR:
       case ECMA_BUILTIN_ID_RANGE_ERROR:
       case ECMA_BUILTIN_ID_REFERENCE_ERROR:
@@ -403,6 +417,14 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
       case ECMA_BUILTIN_ID_GLOBAL:
       case ECMA_BUILTIN_ID_MATH:
       case ECMA_BUILTIN_ID_JSON:
+      case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+      case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
+      case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+      case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+      case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+      case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+      case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+      case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
       {
         JERRY_UNREACHABLE ();
       }
@@ -455,20 +477,12 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
       return ecma_builtin_array_dispatch_construct (arguments_list_p, arguments_list_len);
     }
 
-    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
-    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     case ECMA_BUILTIN_ID_BOOLEAN:
-    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     case ECMA_BUILTIN_ID_NUMBER:
-    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
     case ECMA_BUILTIN_ID_DATE:
     case ECMA_BUILTIN_ID_REGEXP:
-    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
     case ECMA_BUILTIN_ID_ERROR:
-    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
     case ECMA_BUILTIN_ID_EVAL_ERROR:
     case ECMA_BUILTIN_ID_RANGE_ERROR:
     case ECMA_BUILTIN_ID_REFERENCE_ERROR:
@@ -482,6 +496,14 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
     case ECMA_BUILTIN_ID_GLOBAL:
     case ECMA_BUILTIN_ID_MATH:
     case ECMA_BUILTIN_ID_JSON:
+    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
     {
       JERRY_UNREACHABLE ();
     }
@@ -529,12 +551,15 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
     {
       return ecma_builtin_array_get_routine_parameters_number (routine_id);
     }
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    {
+      return ecma_builtin_string_prototype_get_routine_parameters_number (routine_id);
+    }
 
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     case ECMA_BUILTIN_ID_BOOLEAN:
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     case ECMA_BUILTIN_ID_NUMBER:
@@ -615,12 +640,18 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                                   arguments_list,
                                                   arguments_number);
     }
+    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+    {
+      return ecma_builtin_string_prototype_dispatch_routine (builtin_routine_id,
+                                                             this_arg_value,
+                                                             arguments_list,
+                                                             arguments_number);
+    }
 
     case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
     case ECMA_BUILTIN_ID_FUNCTION:
     case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     case ECMA_BUILTIN_ID_BOOLEAN:
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     case ECMA_BUILTIN_ID_NUMBER:

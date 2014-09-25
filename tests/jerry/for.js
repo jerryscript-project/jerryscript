@@ -21,7 +21,6 @@ for (var j = 0; j < 100; j++) {
 }
 assert(j == 100);
 
-/*
 for (i = 0; ; ) {
   if (i == 100) {
     break;
@@ -30,7 +29,6 @@ for (i = 0; ; ) {
   i++;
 }
 assert(i == 100);
-*/
 
 for (i = 0; i < 10; i++) {
   for (j = 0; j < 10; j++) {

@@ -2818,7 +2818,7 @@ parse_statement (void)
     temp[0] = NESTING_ITERATIONAL;
     temp[1] = NESTING_SWITCH;
     must_be_inside_but_not_in (temp, 2, NESTING_FUNCTION);
-    add_to_rewritable_opcodes (REWRITABLE_BREAK, opcode_counter);
+    add_to_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
     mem_heap_free_block (temp);
     DUMP_OPCODE_2 (jmp_down, INVALID_VALUE, INVALID_VALUE);
     goto cleanup;

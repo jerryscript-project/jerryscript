@@ -57,18 +57,14 @@
          ecma_builtin_string_prototype_object_value_of, \
          0, \
          0) \
-  macro (ECMA_MAGIC_STRING_CHAR_AT_UL, \
-         ecma_builtin_string_prototype_object_char_at, \
-         1, \
-         1) \
-  macro (ECMA_MAGIC_STRING_CHAR_CODE_AT_UL, \
-         ecma_builtin_string_prototype_object_char_code_at, \
-         1, \
-         1) \
   macro (ECMA_MAGIC_STRING_CONCAT, \
          ecma_builtin_string_prototype_object_concat, \
          NON_FIXED, \
          1) \
+  macro (ECMA_MAGIC_STRING_SLICE, \
+         ecma_builtin_string_prototype_object_slice, \
+         2, \
+         2) \
   macro (ECMA_MAGIC_STRING_INDEX_OF_UL, \
          ecma_builtin_string_prototype_object_index_of, \
          2, \
@@ -76,6 +72,14 @@
   macro (ECMA_MAGIC_STRING_LAST_INDEX_OF_UL, \
          ecma_builtin_string_prototype_object_last_index_of, \
          2, \
+         1) \
+  macro (ECMA_MAGIC_STRING_CHAR_AT_UL, \
+         ecma_builtin_string_prototype_object_char_at, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_CHAR_CODE_AT_UL, \
+         ecma_builtin_string_prototype_object_char_code_at, \
+         1, \
          1) \
   macro (ECMA_MAGIC_STRING_LOCALE_COMPARE_UL, \
          ecma_builtin_string_prototype_object_locale_compare, \
@@ -93,10 +97,6 @@
          ecma_builtin_string_prototype_object_search, \
          1, \
          1) \
-  macro (ECMA_MAGIC_STRING_SLICE, \
-         ecma_builtin_string_prototype_object_slice, \
-         2, \
-         2) \
   macro (ECMA_MAGIC_STRING_SPLIT, \
          ecma_builtin_string_prototype_object_split, \
          2, \
@@ -157,7 +157,30 @@ const ecma_length_t ecma_builtin_string_prototype_property_number = (sizeof (ecm
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  if (this.value_type == ECMA_TYPE_STRING)
+  {
+    return ecma_make_normal_completion_value (ecma_copy_value (this, true));
+  }
+  else if (this.value_type == ECMA_TYPE_OBJECT)
+  {
+    ecma_object_t *obj_p = ECMA_GET_POINTER (this.value);
+
+    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+
+    if (class_prop_p->u.internal_property.value == ECMA_OBJECT_CLASS_STRING)
+    {
+      ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
+
+      ecma_string_t *prim_value_str_p = ECMA_GET_POINTER (prim_value_prop_p->u.internal_property.value);
+
+      ecma_ref_ecma_string (prim_value_str_p);
+
+      return ecma_make_normal_completion_value (ecma_make_string_value (prim_value_str_p));
+    }
+  }
+
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_string_prototype_object_to_string */
 
 /**
@@ -172,7 +195,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_value_of (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  return ecma_builtin_string_prototype_object_to_string (this);
 } /* ecma_builtin_string_prototype_object_value_of */
 
 /**
@@ -519,7 +542,8 @@ ecma_builtin_string_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
     ECMA_BUILTIN_STRING_PROTOTYPE_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
 #undef CASE_ROUTINE_PROP_LIST
     {
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_STRING, id);
+      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
+                                                                                 id);
 
       value = ecma_make_object_value (func_obj_p);
 

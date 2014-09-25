@@ -1340,6 +1340,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_SQRT: return (ecma_char_t*) "sqrt";
     case ECMA_MAGIC_STRING_TAN: return (ecma_char_t*) "tan";
     case ECMA_MAGIC_STRING_FROM_CHAR_CODE_UL: return (ecma_char_t*) "fromCharCode";
+    case ECMA_MAGIC_STRING_IS_ARRAY_UL: return (ecma_char_t*) "isArray";
     case ECMA_MAGIC_STRING__EMPTY: return (ecma_char_t*) "";
     case ECMA_MAGIC_STRING__COUNT: break;
   }

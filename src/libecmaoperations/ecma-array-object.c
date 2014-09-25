@@ -151,76 +151,6 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
 } /* ecma_op_create_array_object */
 
 /**
- * Reduce length of Array to specified value.
- *
- * Warning:
- *         the routine may change value of number, stored in passed property descriptor template.
- *
- * See also:
- *          ECMA-262 v5, 15.4.5.1, Block 3.l
- *
- * @return true - length was reduced successfully,
- *         false - reduce routine stopped at some length > new_length
- *                 because element with index (length - 1) cannot be deleted.
- */
-static bool
-ecma_array_object_reduce_length (ecma_object_t *obj_p, /**< the array object */
-                                 uint32_t new_length, /**< length to reduce to */
-                                 uint32_t old_length, /**< current length of array */
-                                 ecma_property_descriptor_t new_len_desc) /**< property descriptor template
-                                                                               for length property */
-{
-  JERRY_ASSERT (new_length < old_length);
-
-  while (new_length < old_length)
-  {
-    // i.
-    old_length--;
-
-    // ii.
-    ecma_string_t *old_length_string_p = ecma_new_ecma_string_from_number (ecma_uint32_to_number (old_length));
-    ecma_completion_value_t delete_succeeded = ecma_op_object_delete (obj_p,
-                                                                      old_length_string_p,
-                                                                      false);
-    ecma_deref_ecma_string (old_length_string_p);
-
-    // iii.
-    if (ecma_is_completion_value_normal_false (delete_succeeded))
-    {
-      JERRY_ASSERT (new_len_desc.value.value_type == ECMA_TYPE_NUMBER);
-
-      ecma_number_t *new_len_num_p = ECMA_GET_POINTER (new_len_desc.value.value);
-
-      // 1.
-      *new_len_num_p = ecma_uint32_to_number (old_length + 1);
-
-      // 2.
-      JERRY_ASSERT (new_len_desc.is_writable_defined
-                    && new_len_desc.writable == ECMA_PROPERTY_NOT_WRITABLE);
-
-      // 3.
-      ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
-      ecma_completion_value_t completion = ecma_op_general_object_define_own_property (obj_p,
-                                                                                       magic_string_length_p,
-                                                                                       new_len_desc,
-                                                                                       false);
-      ecma_deref_ecma_string (magic_string_length_p);
-
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
-                    || ecma_is_completion_value_normal_false (completion));
-
-      return false;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (delete_succeeded));
-    }
-  }
-
-  return true;
-} /* ecma_array_object_reduce_length */
-
-/**
  * [[DefineOwnProperty]] ecma array object's operation
  *
  * See also:
@@ -349,25 +279,65 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
           /* Handling normal false and throw values */
           if (!ecma_is_completion_value_normal_true (succeeded))
           {
+            JERRY_ASSERT (ecma_is_completion_value_normal_false (succeeded)
+                          || ecma_is_completion_value_throw (succeeded));
+
             // k.
             ret_value = succeeded;
           }
           else
           {
             // l
-            
-            // iii.2
-            if (!new_writable)
+            JERRY_ASSERT (new_len_uint32 < old_len_uint32);
+
+            bool reduce_succeeded = true;
+
+            while (new_len_uint32 < old_len_uint32)
             {
-              new_len_property_desc.is_writable_defined = true;
-              new_len_property_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
+              // i
+              old_len_uint32--;
+
+              // ii
+              ecma_string_t *old_length_string_p = ecma_new_ecma_string_from_uint32 (old_len_uint32);
+              ecma_completion_value_t delete_succeeded = ecma_op_object_delete (obj_p,
+                                                                                old_length_string_p,
+                                                                                false);
+              ecma_deref_ecma_string (old_length_string_p);
+
+              // iii
+              if (ecma_is_completion_value_normal_false (delete_succeeded))
+              {
+                JERRY_ASSERT (new_len_property_desc.value.value_type == ECMA_TYPE_NUMBER);
+
+                ecma_number_t *new_len_num_p = ECMA_GET_POINTER (new_len_property_desc.value.value);
+
+                // 1.
+                *new_len_num_p = ecma_uint32_to_number (old_len_uint32 + 1);
+
+                // 2.
+                if (!new_writable)
+                {
+                  new_len_property_desc.is_writable_defined = true;
+                  new_len_property_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
+                }
+
+                // 3.
+                ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+                ecma_completion_value_t completion = ecma_op_general_object_define_own_property (obj_p,
+                                                                                                 magic_string_length_p,
+                                                                                                 new_len_property_desc,
+                                                                                                 false);
+                ecma_deref_ecma_string (magic_string_length_p);
+
+                JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                              || ecma_is_completion_value_normal_false (completion));
+
+                reduce_succeeded = false;
+
+                break;
+              }
             }
-
-            bool reduce_succeeded = ecma_array_object_reduce_length (obj_p,
-                                                                     new_len_uint32,
-                                                                     old_len_uint32,
-                                                                     new_len_property_desc);
-
+            
             if (!reduce_succeeded)
             {
               ret_value = ecma_reject (is_throw);

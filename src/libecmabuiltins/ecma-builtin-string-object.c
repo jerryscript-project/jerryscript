@@ -276,7 +276,6 @@ ecma_builtin_string_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
 {
   switch (builtin_routine_id)
   {
-#define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] : value_undefined)
 #define ROUTINE_ARG_LIST_NON_FIXED arguments_list, arguments_number
 #define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) \
        case name: \
@@ -286,7 +285,6 @@ ecma_builtin_string_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
     ECMA_BUILTIN_STRING_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
 #undef CASE_ROUTINE_PROP_LIST
 #undef ROUTINE_ARG_LIST_NON_FIXED
-#undef ROUTINE_ARG
 
     default:
     {

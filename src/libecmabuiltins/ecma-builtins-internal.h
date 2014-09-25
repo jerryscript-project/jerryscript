@@ -49,6 +49,10 @@
 extern ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
                                                ecma_magic_string_id_t routine_id);
+extern int32_t
+ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
+                                                      ecma_length_t array_length,
+                                                      ecma_magic_string_id_t key);
 
 /* ecma-builtin-global-object.c */
 extern ecma_length_t
@@ -121,21 +125,20 @@ ecma_builtin_string_dispatch_construct (ecma_value_t *arguments_list_p,
                                         ecma_length_t arguments_list_len);
 
 /* ecma-builtin-array-object.c */
-extern void ecma_builtin_init_array_object (void);
-extern void ecma_builtin_finalize_array_object (void);
+extern const ecma_length_t ecma_builtin_array_property_number;
+extern ecma_length_t
+ecma_builtin_array_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
+extern ecma_completion_value_t
+ecma_builtin_array_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
+                                     ecma_value_t this_arg_value,
+                                     ecma_value_t arguments_list [],
+                                     ecma_length_t arguments_number);
 extern ecma_property_t*
-ecma_builtin_array_try_to_instantiate_property (ecma_object_t *obj_p,
-                                                ecma_string_t *prop_name_p);
-
-
-extern void ecma_builtin_init_array_prototype_object (void);
-extern void ecma_builtin_finalize_array_prototype_object (void);
-extern ecma_property_t*
-ecma_builtin_array_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
-                                                          ecma_string_t *prop_name_p);
-
-extern int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
-                                                      ecma_length_t array_length,
-                                                      ecma_magic_string_id_t key);
+ecma_builtin_array_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
+extern ecma_completion_value_t
+ecma_builtin_array_dispatch_call (ecma_value_t *arguments_list_p,
+                                  ecma_length_t arguments_list_len);
+extern ecma_completion_value_t
+ecma_builtin_array_dispatch_construct (ecma_value_t *arguments_list_p,
+                                       ecma_length_t arguments_list_len);
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

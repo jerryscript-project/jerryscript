@@ -18,8 +18,50 @@ assert (cars[0] === "Saab");
 assert (cars[1] === "Volvo");
 assert (cars[2] === "BMW");
 
-// FIXME Uncomment when 'new Array' will be ready
-// var cars1 = new Array("Saab", "Volvo", "BMW");
-// assert (cars[0] === cars1[0] === "Saab");
-// assert (cars[1] === cars1[1] === "Volvo");
-// assert (cars[2] === cars1[2] === "BMW");
+var cars1 = new Array("Saab", "Volvo", "BMW");
+assert (cars[0] === cars1[0]);
+assert (cars[1] === cars1[1]);
+assert (cars[2] === cars1[2]);
+
+var a = new Array();
+assert (typeof (a) === "object");
+assert (Array.isArray (a));
+assert (Array.isArray ([1, 2, 3]));
+
+var b = new Array (30000);
+assert(b.length === 30000);
+assert (b[20000] === undefined);
+b[20000] = 1;
+assert (b[20000] === 1);
+b[20000] = 10;
+assert (b[20000] === 10);
+
+assert(b.length === 30000);
+assert(b[10000] === undefined);
+Object.defineProperty (b, '10000', {value : 25, writable : false});
+assert(b[10000] === 25);
+b[10000] = 30;
+assert(b[10000] === 25);
+
+assert(b.length === 30000);
+assert(b[50000] === undefined);
+assert(b.length === 30000);
+b[50000] = 5;
+assert(b.length === 50001);
+assert(b[50000] === 5);
+b[50000] = 10;
+assert(b[50000] === 10);
+Object.defineProperty (b, '50000', {writable : false});
+assert(b[50000] === 10);
+b[50000] = 20;
+assert(b[50000] === 10);
+
+Object.defineProperty (b, '50000', {writable : true});
+assert(b[50000] === 10);
+b[50000] = 30;
+assert(b[50000] === 30);
+
+b.length = 5;
+assert(b[50000] === undefined);
+
+assert(([1, 2, 3]).length === 3);

@@ -135,47 +135,34 @@ ecma_init_builtins (void)
     ecma_builtin_objects [id] = NULL;
   }
 
-  ecma_builtin_id_t id = ECMA_BUILTIN_ID_OBJECT;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        NULL, /* FIXME */
-                                                        ECMA_OBJECT_TYPE_FUNCTION,
-                                                        ECMA_OBJECT_CLASS_OBJECT,
-                                                        ecma_builtin_object_property_number);
+#define INIT_BUILTIN(builtin_id, \
+                     object_type, \
+                     object_class, \
+                     object_prototype_builtin_id, \
+                     lowercase_name) \
+  { \
+    ecma_object_t *prototype_obj_p; \
+    if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
+    { \
+      prototype_obj_p = NULL; \
+    } \
+    else \
+    { \
+      prototype_obj_p = ecma_builtin_objects [object_prototype_builtin_id]; \
+      JERRY_ASSERT (prototype_obj_p != NULL); \
+    } \
+    \
+    ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
+                                                              prototype_obj_p, \
+                                                              ECMA_OBJECT_ ## object_type, \
+                                                              ECMA_OBJECT_ ## object_class, \
+                                                              ecma_builtin_ ## lowercase_name ## _property_number); \
+    ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
+  }
 
-  id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        NULL,
-                                                        ECMA_OBJECT_TYPE_GENERAL,
-                                                        ECMA_OBJECT_CLASS_STRING,
-                                                        ecma_builtin_string_prototype_property_number);
+  ECMA_BUILTIN_LIST (INIT_BUILTIN);
 
-  id = ECMA_BUILTIN_ID_STRING;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        ecma_builtin_objects [ECMA_BUILTIN_ID_STRING_PROTOTYPE],
-                                                        ECMA_OBJECT_TYPE_FUNCTION,
-                                                        ECMA_OBJECT_CLASS_STRING,
-                                                        ecma_builtin_string_property_number);
-
-  id = ECMA_BUILTIN_ID_ARRAY;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        NULL, /* FIXME */
-                                                        ECMA_OBJECT_TYPE_FUNCTION,
-                                                        ECMA_OBJECT_CLASS_ARRAY,
-                                                        ecma_builtin_array_property_number);
-
-  id = ECMA_BUILTIN_ID_MATH;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        NULL, /* FIXME */
-                                                        ECMA_OBJECT_TYPE_GENERAL,
-                                                        ECMA_OBJECT_CLASS_MATH,
-                                                        ecma_builtin_math_property_number);
-
-  id = ECMA_BUILTIN_ID_GLOBAL;
-  ecma_builtin_objects [id] = ecma_builtin_init_object (id,
-                                                        NULL, /* FIXME */
-                                                        ECMA_OBJECT_TYPE_GENERAL,
-                                                        ECMA_OBJECT_CLASS_OBJECT,
-                                                        ecma_builtin_global_property_number);
+#undef INIT_BUILTIN
 } /* ecma_init_builtins */
 
 /**
@@ -219,63 +206,29 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   switch (builtin_id)
   {
-    case ECMA_BUILTIN_ID_GLOBAL:
-    {
-      return ecma_builtin_global_try_to_instantiate_property (object_p, string_p);
+#define TRY_TO_INSTANTIATE_PROPERTY(builtin_id, \
+                                    object_type, \
+                                    object_class, \
+                                    object_prototype_builtin_id, \
+                                    lowercase_name) \
+    case ECMA_BUILTIN_ID_ ## builtin_id: \
+    { \
+      return ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (object_p, \
+                                                                              string_p); \
     }
 
-    case ECMA_BUILTIN_ID_OBJECT:
-    {
-      return ecma_builtin_object_try_to_instantiate_property (object_p, string_p);
-    }
+    ECMA_BUILTIN_LIST (TRY_TO_INSTANTIATE_PROPERTY)
 
-    case ECMA_BUILTIN_ID_MATH:
-    {
-      return ecma_builtin_math_try_to_instantiate_property (object_p, string_p);
-    }
-
-    case ECMA_BUILTIN_ID_STRING:
-    {
-      return ecma_builtin_string_try_to_instantiate_property (object_p, string_p);
-    }
-
-    case ECMA_BUILTIN_ID_ARRAY:
-    {
-      return ecma_builtin_array_try_to_instantiate_property (object_p, string_p);
-    }
-
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-    {
-      return ecma_builtin_string_prototype_try_to_instantiate_property (object_p, string_p);
-    }
-
-    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-    case ECMA_BUILTIN_ID_FUNCTION:
-    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_BOOLEAN:
-    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-    case ECMA_BUILTIN_ID_NUMBER:
-    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-    case ECMA_BUILTIN_ID_DATE:
-    case ECMA_BUILTIN_ID_REGEXP:
-    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ERROR:
-    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
-    case ECMA_BUILTIN_ID_EVAL_ERROR:
-    case ECMA_BUILTIN_ID_RANGE_ERROR:
-    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
-    case ECMA_BUILTIN_ID_TYPE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_JSON:
-    {
-      JERRY_UNIMPLEMENTED ();
-    }
+#undef TRY_TO_INSTANTIATE_PROPERTY
 
     case ECMA_BUILTIN_ID__COUNT:
     {
       JERRY_UNREACHABLE ();
+    }
+
+    default:
+    {
+      JERRY_UNIMPLEMENTED ();
     }
   }
 
@@ -383,55 +336,36 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 
     switch (builtin_id)
     {
-      case ECMA_BUILTIN_ID_OBJECT:
-      {
-        return ecma_builtin_object_dispatch_call (arguments_list_p, arguments_list_len);
+#define DISPATCH_CALL(builtin_id, \
+                      object_type, \
+                      object_class, \
+                      object_prototype_builtin_id, \
+                      lowercase_name) \
+      case ECMA_BUILTIN_ID_ ## builtin_id: \
+      { \
+        if (ECMA_OBJECT_ ## object_type == ECMA_OBJECT_TYPE_FUNCTION) \
+        { \
+          return ecma_builtin_ ## lowercase_name ## _dispatch_call (arguments_list_p, \
+                                                                    arguments_list_len); \
+        } \
+        else \
+        { \
+          JERRY_UNREACHABLE (); \
+        } \
       }
 
-      case ECMA_BUILTIN_ID_STRING:
-      {
-        return ecma_builtin_string_dispatch_call (arguments_list_p, arguments_list_len);
-      }
+      ECMA_BUILTIN_LIST (DISPATCH_CALL)
 
-      case ECMA_BUILTIN_ID_ARRAY:
-      {
-        return ecma_builtin_array_dispatch_call (arguments_list_p, arguments_list_len);
-      }
-
-      case ECMA_BUILTIN_ID_FUNCTION:
-      case ECMA_BUILTIN_ID_BOOLEAN:
-      case ECMA_BUILTIN_ID_NUMBER:
-      case ECMA_BUILTIN_ID_DATE:
-      case ECMA_BUILTIN_ID_REGEXP:
-      case ECMA_BUILTIN_ID_ERROR:
-      case ECMA_BUILTIN_ID_EVAL_ERROR:
-      case ECMA_BUILTIN_ID_RANGE_ERROR:
-      case ECMA_BUILTIN_ID_REFERENCE_ERROR:
-      case ECMA_BUILTIN_ID_SYNTAX_ERROR:
-      case ECMA_BUILTIN_ID_TYPE_ERROR:
-      case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-      {
-        JERRY_UNIMPLEMENTED ();
-      }
-
-      case ECMA_BUILTIN_ID_GLOBAL:
-      case ECMA_BUILTIN_ID_MATH:
-      case ECMA_BUILTIN_ID_JSON:
-      case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-      case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-      case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-      case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-      case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-      case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-      case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-      case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
-      {
-        JERRY_UNREACHABLE ();
-      }
+#undef DISPATCH_CALL
 
       case ECMA_BUILTIN_ID__COUNT:
       {
         JERRY_UNREACHABLE ();
+      }
+
+      default:
+      {
+        JERRY_UNIMPLEMENTED ();
       }
     }
   }
@@ -462,55 +396,36 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 
   switch (builtin_id)
   {
-    case ECMA_BUILTIN_ID_OBJECT:
-    {
-      return ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
-    }
+#define DISPATCH_CONSTRUCT(builtin_id, \
+                           object_type, \
+                           object_class, \
+                           object_prototype_builtin_id, \
+                           lowercase_name) \
+    case ECMA_BUILTIN_ID_ ## builtin_id: \
+      { \
+        if (ECMA_OBJECT_ ## object_type == ECMA_OBJECT_TYPE_FUNCTION) \
+        { \
+          return ecma_builtin_ ## lowercase_name ## _dispatch_construct (arguments_list_p, \
+                                                                         arguments_list_len); \
+        } \
+        else \
+        { \
+          JERRY_UNREACHABLE (); \
+        } \
+      }
 
-    case ECMA_BUILTIN_ID_STRING:
-    {
-      return ecma_builtin_string_dispatch_construct (arguments_list_p, arguments_list_len);
-    }
+    ECMA_BUILTIN_LIST (DISPATCH_CONSTRUCT)
 
-    case ECMA_BUILTIN_ID_ARRAY:
-    {
-      return ecma_builtin_array_dispatch_construct (arguments_list_p, arguments_list_len);
-    }
-
-    case ECMA_BUILTIN_ID_FUNCTION:
-    case ECMA_BUILTIN_ID_BOOLEAN:
-    case ECMA_BUILTIN_ID_NUMBER:
-    case ECMA_BUILTIN_ID_DATE:
-    case ECMA_BUILTIN_ID_REGEXP:
-    case ECMA_BUILTIN_ID_ERROR:
-    case ECMA_BUILTIN_ID_EVAL_ERROR:
-    case ECMA_BUILTIN_ID_RANGE_ERROR:
-    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
-    case ECMA_BUILTIN_ID_TYPE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    {
-      JERRY_UNIMPLEMENTED ();
-    }
-
-    case ECMA_BUILTIN_ID_GLOBAL:
-    case ECMA_BUILTIN_ID_MATH:
-    case ECMA_BUILTIN_ID_JSON:
-    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
-    {
-      JERRY_UNREACHABLE ();
-    }
+#undef DISPATCH_CONSTRUCT
 
     case ECMA_BUILTIN_ID__COUNT:
     {
       JERRY_UNREACHABLE ();
+    }
+
+    default:
+    {
+      JERRY_UNIMPLEMENTED ();
     }
   }
 
@@ -531,58 +446,28 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
 {
   switch (builtin_id)
   {
-    case ECMA_BUILTIN_ID_GLOBAL:
-    {
-      return ecma_builtin_global_get_routine_parameters_number (routine_id);
-    }
-    case ECMA_BUILTIN_ID_OBJECT:
-    {
-      return ecma_builtin_object_get_routine_parameters_number (routine_id);
-    }
-    case ECMA_BUILTIN_ID_STRING:
-    {
-      return ecma_builtin_string_get_routine_parameters_number (routine_id);
-    }
-    case ECMA_BUILTIN_ID_MATH:
-    {
-      return ecma_builtin_math_get_routine_parameters_number (routine_id);
-    }
-    case ECMA_BUILTIN_ID_ARRAY:
-    {
-      return ecma_builtin_array_get_routine_parameters_number (routine_id);
-    }
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-    {
-      return ecma_builtin_string_prototype_get_routine_parameters_number (routine_id);
-    }
+#define DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER(builtin_id, \
+                                               object_type, \
+                                               object_class, \
+                                               object_prototype_builtin_id, \
+                                               lowercase_name) \
+    case ECMA_BUILTIN_ID_ ## builtin_id: \
+      { \
+        return ecma_builtin_ ## lowercase_name ## _get_routine_parameters_number (routine_id); \
+      }
 
-    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-    case ECMA_BUILTIN_ID_FUNCTION:
-    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_BOOLEAN:
-    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-    case ECMA_BUILTIN_ID_NUMBER:
-    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-    case ECMA_BUILTIN_ID_DATE:
-    case ECMA_BUILTIN_ID_REGEXP:
-    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ERROR:
-    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
-    case ECMA_BUILTIN_ID_EVAL_ERROR:
-    case ECMA_BUILTIN_ID_RANGE_ERROR:
-    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
-    case ECMA_BUILTIN_ID_TYPE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_JSON:
-    {
-      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (routine_id);
-    }
+    ECMA_BUILTIN_LIST (DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER)
+
+#undef DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER
 
     case ECMA_BUILTIN_ID__COUNT:
     {
       JERRY_UNREACHABLE ();
+    }
+
+    default:
+    {
+      JERRY_UNIMPLEMENTED ();
     }
   }
 
@@ -605,79 +490,31 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
 {
   switch (builtin_object_id)
   {
-    case ECMA_BUILTIN_ID_GLOBAL:
-    {
-      return ecma_builtin_global_dispatch_routine (builtin_routine_id,
-                                                   this_arg_value,
-                                                   arguments_list,
-                                                   arguments_number);
-    }
-    case ECMA_BUILTIN_ID_OBJECT:
-    {
-      return ecma_builtin_object_dispatch_routine (builtin_routine_id,
-                                                   this_arg_value,
-                                                   arguments_list,
-                                                   arguments_number);
-    }
-    case ECMA_BUILTIN_ID_STRING:
-    {
-      return ecma_builtin_string_dispatch_routine (builtin_routine_id,
-                                                   this_arg_value,
-                                                   arguments_list,
-                                                   arguments_number);
-    }
-    case ECMA_BUILTIN_ID_MATH:
-    {
-      return ecma_builtin_math_dispatch_routine (builtin_routine_id,
-                                                 this_arg_value,
-                                                 arguments_list,
-                                                 arguments_number);
-    }
-    case ECMA_BUILTIN_ID_ARRAY:
-    {
-      return ecma_builtin_array_dispatch_routine (builtin_routine_id,
-                                                  this_arg_value,
-                                                  arguments_list,
-                                                  arguments_number);
-    }
-    case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-    {
-      return ecma_builtin_string_prototype_dispatch_routine (builtin_routine_id,
-                                                             this_arg_value,
-                                                             arguments_list,
-                                                             arguments_number);
-    }
+#define DISPATCH_ROUTINE(builtin_id, \
+                         object_type, \
+                         object_class, \
+                         object_prototype_builtin_id, \
+                         lowercase_name) \
+    case ECMA_BUILTIN_ID_ ## builtin_id: \
+      { \
+        return ecma_builtin_ ## lowercase_name ## _dispatch_routine (builtin_routine_id, \
+                                                                     this_arg_value, \
+                                                                     arguments_list, \
+                                                                     arguments_number); \
+      }
 
-    case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-    case ECMA_BUILTIN_ID_FUNCTION:
-    case ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
-    case ECMA_BUILTIN_ID_BOOLEAN:
-    case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-    case ECMA_BUILTIN_ID_NUMBER:
-    case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-    case ECMA_BUILTIN_ID_DATE:
-    case ECMA_BUILTIN_ID_REGEXP:
-    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-    case ECMA_BUILTIN_ID_ERROR:
-    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
-    case ECMA_BUILTIN_ID_EVAL_ERROR:
-    case ECMA_BUILTIN_ID_RANGE_ERROR:
-    case ECMA_BUILTIN_ID_REFERENCE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_ERROR:
-    case ECMA_BUILTIN_ID_TYPE_ERROR:
-    case ECMA_BUILTIN_ID_SYNTAX_URI_ERROR:
-    case ECMA_BUILTIN_ID_JSON:
-    {
-      JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (builtin_routine_id,
-                                           this_arg_value,
-                                           arguments_list,
-                                           arguments_number);
-    }
+    ECMA_BUILTIN_LIST (DISPATCH_ROUTINE)
+
+#undef DISPATCH_ROUTINE
 
     case ECMA_BUILTIN_ID__COUNT:
     {
       JERRY_UNREACHABLE ();
+    }
+
+    default:
+    {
+      JERRY_UNIMPLEMENTED ();
     }
   }
 

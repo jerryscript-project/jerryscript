@@ -54,103 +54,74 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
                                                       ecma_length_t array_length,
                                                       ecma_magic_string_id_t key);
 
-/* ecma-builtin-global-object.c */
-extern ecma_length_t
-ecma_builtin_global_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_global_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                      ecma_value_t this_arg_value,
-                                      ecma_value_t arguments_list [],
-                                      ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p,
-                                                 ecma_string_t *prop_name_p);
+/**
+ * List of built-in objects in format
+ * 'macro (builtin_id, object_type, object_class, object_prototype_builtin_id, lowercase_name)'
+ */
+#define ECMA_BUILTIN_LIST(macro) \
+  macro (STRING_PROTOTYPE, \
+         TYPE_GENERAL, \
+         CLASS_STRING, \
+         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         string_prototype) \
+  macro (OBJECT, \
+         TYPE_FUNCTION, \
+         CLASS_OBJECT, \
+         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         object) \
+  macro (MATH, \
+         TYPE_GENERAL, \
+         CLASS_MATH, \
+         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         math) \
+  macro (ARRAY, \
+         TYPE_FUNCTION, \
+         CLASS_ARRAY, \
+         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_ARRAY_PROTOTYPE */, \
+         array) \
+  macro (STRING, \
+         TYPE_FUNCTION, \
+         CLASS_STRING, \
+         ECMA_BUILTIN_ID_STRING_PROTOTYPE, \
+         string) \
+  macro (GLOBAL, \
+         TYPE_GENERAL, \
+         CLASS_OBJECT, \
+         ECMA_BUILTIN_ID__COUNT /* no prototype */, \
+         global)
 
-extern const ecma_length_t ecma_builtin_global_property_number;
+#define DECLARE_DISPATCH_ROUTINES(builtin_id, \
+                                  object_type, \
+                                  object_class, \
+                                  object_prototype_builtin_id, \
+                                  lowercase_name) \
+extern ecma_completion_value_t \
+ecma_builtin_ ## lowercase_name ## _dispatch_call (ecma_value_t *arguments_list_p, \
+                                                   ecma_length_t arguments_list_len); \
+extern ecma_completion_value_t \
+ecma_builtin_ ## lowercase_name ## _dispatch_construct (ecma_value_t *arguments_list_p, \
+                                                        ecma_length_t arguments_list_len); \
+extern ecma_length_t \
+ecma_builtin_ ## lowercase_name ## _get_routine_parameters_number (ecma_magic_string_id_t routine_id); \
+extern ecma_completion_value_t \
+ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t builtin_routine_id, \
+                                                      ecma_value_t this_arg_value, \
+                                                      ecma_value_t arguments_list [], \
+                                                      ecma_length_t arguments_number); \
+extern ecma_property_t* \
+ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \
+                                                                 ecma_string_t *prop_name_p);
+#define DECLARE_PROPERTY_NUMBER_VARIABLES(builtin_id, \
+                                          object_type, \
+                                          object_class, \
+                                          object_prototype_builtin_id, \
+                                          lowercase_name) \
+extern const ecma_length_t ecma_builtin_ ## lowercase_name ## _property_number;
 
-/* ecma-builtin-object-object.c */
-extern ecma_length_t
-ecma_builtin_object_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_object_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                      ecma_value_t this_arg_value,
-                                      ecma_value_t arguments_list [],
-                                      ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_object_try_to_instantiate_property (ecma_object_t *obj_p,
-                                                 ecma_string_t *prop_name_p);
-extern ecma_completion_value_t
-ecma_builtin_object_dispatch_call (ecma_value_t *arguments_list_p,
-                                   ecma_length_t arguments_list_len);
-extern ecma_completion_value_t
-ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p,
-                                        ecma_length_t arguments_list_len);
+ECMA_BUILTIN_LIST (DECLARE_PROPERTY_NUMBER_VARIABLES)
+ECMA_BUILTIN_LIST (DECLARE_DISPATCH_ROUTINES)
 
-extern const ecma_length_t ecma_builtin_object_property_number;
+#undef DECLARE_PROPERTY_NUMBER_VARIABLES
+#undef DECLARE_DISPATCH_ROUTINES
 
-extern void ecma_builtin_init_object_prototype_object (void);
-extern void ecma_builtin_finalize_object_prototype_object (void);
-extern ecma_property_t*
-ecma_builtin_object_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
-                                                           ecma_string_t *prop_name_p);
-
-/* ecma-builtin-math-object.c */
-extern const ecma_length_t ecma_builtin_math_property_number;
-extern ecma_length_t
-ecma_builtin_math_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_math_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                    ecma_value_t this_arg_value,
-                                    ecma_value_t arguments_list [],
-                                    ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_math_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
-
-/* ecma-builtin-string-object.c */
-extern const ecma_length_t ecma_builtin_string_property_number;
-extern ecma_length_t
-ecma_builtin_string_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_string_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                      ecma_value_t this_arg_value,
-                                      ecma_value_t arguments_list [],
-                                      ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_string_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
-extern ecma_completion_value_t
-ecma_builtin_string_dispatch_call (ecma_value_t *arguments_list_p,
-                                   ecma_length_t arguments_list_len);
-extern ecma_completion_value_t
-ecma_builtin_string_dispatch_construct (ecma_value_t *arguments_list_p,
-                                        ecma_length_t arguments_list_len);
-
-/* ecma-builtin-string-prototype-object.c */
-extern const ecma_length_t ecma_builtin_string_prototype_property_number;
-extern ecma_length_t
-ecma_builtin_string_prototype_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_string_prototype_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                                ecma_value_t this_arg_value,
-                                                ecma_value_t arguments_list [],
-                                                ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_string_prototype_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
-
-/* ecma-builtin-array-object.c */
-extern const ecma_length_t ecma_builtin_array_property_number;
-extern ecma_length_t
-ecma_builtin_array_get_routine_parameters_number (ecma_magic_string_id_t routine_id);
-extern ecma_completion_value_t
-ecma_builtin_array_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
-                                     ecma_value_t this_arg_value,
-                                     ecma_value_t arguments_list [],
-                                     ecma_length_t arguments_number);
-extern ecma_property_t*
-ecma_builtin_array_try_to_instantiate_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
-extern ecma_completion_value_t
-ecma_builtin_array_dispatch_call (ecma_value_t *arguments_list_p,
-                                  ecma_length_t arguments_list_len);
-extern ecma_completion_value_t
-ecma_builtin_array_dispatch_construct (ecma_value_t *arguments_list_p,
-                                       ecma_length_t arguments_list_len);
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

@@ -64,6 +64,11 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          OBJECT_UL, \
          ECMA_BUILTIN_ID__COUNT /* no prototype */, \
          object_prototype) \
+  macro (FUNCTION_PROTOTYPE, \
+         TYPE_FUNCTION, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
+         function_prototype) \
   macro (STRING_PROTOTYPE, \
          TYPE_GENERAL, \
          STRING_UL, \
@@ -89,6 +94,11 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          STRING_UL, \
          ECMA_BUILTIN_ID_STRING_PROTOTYPE, \
          string) \
+  macro (FUNCTION, \
+         TYPE_FUNCTION, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
+         function) \
   macro (GLOBAL, \
          TYPE_GENERAL, \
          OBJECT_UL, \

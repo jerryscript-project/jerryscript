@@ -1425,6 +1425,9 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_TO_UTC_STRING_UL: return (ecma_char_t*) "toUTCString";
     case ECMA_MAGIC_STRING_TO_ISO_STRING_UL: return (ecma_char_t*) "toISOString";
     case ECMA_MAGIC_STRING_TO_JSON_UL: return (ecma_char_t*) "toJSON";
+    case ECMA_MAGIC_STRING_APPLY: return (ecma_char_t*) "apply";
+    case ECMA_MAGIC_STRING_CALL: return (ecma_char_t*) "call";
+    case ECMA_MAGIC_STRING_BIND: return (ecma_char_t*) "bind";
     case ECMA_MAGIC_STRING_EXEC: return (ecma_char_t*) "exec";
     case ECMA_MAGIC_STRING_TEST: return (ecma_char_t*) "test";
     case ECMA_MAGIC_STRING_NAME: return (ecma_char_t*) "name";

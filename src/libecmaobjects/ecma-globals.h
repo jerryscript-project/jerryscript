@@ -810,6 +810,9 @@ typedef enum
   ECMA_MAGIC_STRING_TO_UTC_STRING_UL, /**< "toUTCString" */
   ECMA_MAGIC_STRING_TO_ISO_STRING_UL, /**< "toISOString" */
   ECMA_MAGIC_STRING_TO_JSON_UL, /**< "toJSON" */
+  ECMA_MAGIC_STRING_APPLY, /**< "apply" */
+  ECMA_MAGIC_STRING_CALL, /**< "call" */
+  ECMA_MAGIC_STRING_BIND, /**< "bind" */
   ECMA_MAGIC_STRING_EXEC, /**< "exec" */
   ECMA_MAGIC_STRING_TEST, /**< "test" */
   ECMA_MAGIC_STRING_NAME, /**< "name" */

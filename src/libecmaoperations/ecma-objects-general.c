@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -58,10 +59,12 @@ ecma_reject (bool is_throw) /**< Throw flag */
 ecma_object_t*
 ecma_op_create_object_object_noarg (void)
 {
-  FIXME (/* Set to built-in Object prototype (15.2.4) */);
+  ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
   // 3., 4., 6., 7.
-  ecma_object_t *obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  ecma_deref_object (object_prototype_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_OBJECT_UL;

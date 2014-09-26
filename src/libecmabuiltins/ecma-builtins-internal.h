@@ -67,17 +67,17 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
   macro (STRING_PROTOTYPE, \
          TYPE_GENERAL, \
          STRING_UL, \
-         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
          string_prototype) \
   macro (OBJECT, \
          TYPE_FUNCTION, \
          OBJECT_UL, \
-         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
          object) \
   macro (MATH, \
          TYPE_GENERAL, \
          MATH_UL, \
-         ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
          math) \
   macro (ARRAY, \
          TYPE_FUNCTION, \

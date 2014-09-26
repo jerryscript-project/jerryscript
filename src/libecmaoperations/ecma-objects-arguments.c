@@ -21,6 +21,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtins.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -54,8 +55,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
   *len_p = ecma_uint32_to_number (arguments_list_length);
 
   // 2., 3., 6.
-  FIXME (/* Set prototype to built-in Object prototype object (15.2.4) */);
-  ecma_object_t *obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
@@ -123,8 +123,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       && formal_params_number > 0)
   {
     // 8.
-    FIXME (Use built-in Object constructor);
-    ecma_object_t *map_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+    ecma_object_t *map_p = ecma_op_create_object_object_noarg ();
 
     // 11.c
     ecma_string_t *formal_params[formal_params_number];

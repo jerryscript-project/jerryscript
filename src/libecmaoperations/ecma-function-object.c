@@ -210,8 +210,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   len_p = NULL;
 
   // 16.
-  FIXME(Use 'new Object ()' instead);
-  ecma_object_t *proto_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *proto_p = ecma_op_create_object_object_noarg ();
 
   // 17.
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
@@ -605,9 +604,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       // 7.
-      FIXME (/* Set to built-in Object prototype (15.2.4) */);
-
-      prototype_p = ecma_create_object (NULL, false, ECMA_OBJECT_TYPE_GENERAL);
+      prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
     }
 
     // 1., 2., 4.

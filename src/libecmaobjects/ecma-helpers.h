@@ -116,7 +116,10 @@ extern int32_t ecma_string_get_length (const ecma_string_t *string_p);
 extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, uint32_t index);
 extern bool ecma_compare_zt_strings (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern ssize_t ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, ecma_char_t *buffer_p, ssize_t buffer_size);
+extern ecma_char_t*
+ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p,
+                               ecma_char_t *buffer_p,
+                               ssize_t buffer_size);
 extern ecma_length_t ecma_zt_string_length (const ecma_char_t *string_p);
 
 extern void ecma_strings_init (void);

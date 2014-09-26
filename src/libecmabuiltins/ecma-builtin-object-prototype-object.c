@@ -44,17 +44,6 @@
 #define ECMA_BUILTIN_OBJECT_PROTOTYPE_OBJECT_OBJECT_VALUES_PROPERTY_LIST(macro) \
   macro (ECMA_MAGIC_STRING_CONSTRUCTOR, ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT))
 
-/*
-Object.prototype.constructor
-
-Object.prototype.toString
-Object.prototype.toLocaleString
-Object.prototype.valueOf
-Object.prototype.hasOwnProperty
-Object.prototype.isPrototypeOf
-Object.prototype.propertyIsEnumerable
-*/
-
 /**
  * List of the Object.prototype object built-in routine properties in format
  * 'macro (name, C function name, arguments number of the routine, length value of the routine)'.
@@ -116,7 +105,76 @@ const ecma_length_t ecma_builtin_object_prototype_property_number = (sizeof (ecm
 static ecma_completion_value_t
 ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ecma_magic_string_id_t type_string;
+
+  if (ecma_is_value_undefined (this))
+  {
+    type_string = ECMA_MAGIC_STRING_UNDEFINED_UL;
+  }
+  else if (ecma_is_value_null (this))
+  {
+    type_string = ECMA_MAGIC_STRING_NULL_UL;
+  }
+  else
+  {
+    ecma_completion_value_t obj_this = ecma_op_to_object (this);
+
+    if (!ecma_is_completion_value_normal (obj_this))
+    {
+      return obj_this;
+    }
+
+    JERRY_ASSERT (obj_this.u.value.value_type == ECMA_TYPE_OBJECT);
+
+    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_this.u.value.value);
+
+    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
+                                                                ECMA_INTERNAL_PROPERTY_CLASS);
+    type_string = (ecma_magic_string_id_t) class_prop_p->u.internal_property.value;
+
+    ecma_free_completion_value (obj_this);
+  }
+
+  /* Building string "[object #type#]" where type is 'Undefined',
+     'Null' or one of possible object's classes.
+     The string with null character is maximum 19 characters long. */
+  const ssize_t buffer_size = 19;
+  ecma_char_t str_buffer[buffer_size];
+
+  const ecma_char_t *left_square_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_LEFT_SQUARE_CHAR);
+  const ecma_char_t *object_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_OBJECT);
+  const ecma_char_t *space_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_SPACE_CHAR);
+  const ecma_char_t *type_name_zt_str_p = ecma_get_magic_string_zt (type_string);
+  const ecma_char_t *right_square_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_RIGHT_SQUARE_CHAR);
+
+  ecma_char_t *buffer_ptr = str_buffer;
+  ssize_t buffer_size_left = buffer_size;
+  buffer_ptr = ecma_copy_zt_string_to_buffer (left_square_zt_str_p,
+                                              buffer_ptr,
+                                              buffer_size_left);
+  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+  buffer_ptr = ecma_copy_zt_string_to_buffer (object_zt_str_p,
+                                              buffer_ptr,
+                                              buffer_size_left);
+  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+  buffer_ptr = ecma_copy_zt_string_to_buffer (space_zt_str_p,
+                                              buffer_ptr,
+                                              buffer_size_left);
+  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+  buffer_ptr = ecma_copy_zt_string_to_buffer (type_name_zt_str_p,
+                                              buffer_ptr,
+                                              buffer_size_left);
+  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+  buffer_ptr = ecma_copy_zt_string_to_buffer (right_square_zt_str_p,
+                                              buffer_ptr,
+                                              buffer_size_left);
+  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+
+  JERRY_ASSERT (buffer_size_left >= 0);
+
+  ecma_string_t *ret_string_p = ecma_new_ecma_string (str_buffer);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (ret_string_p));
 } /* ecma_builtin_object_prototype_object_to_string */
 
 /**
@@ -131,7 +189,7 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
 static ecma_completion_value_t
 ecma_builtin_object_prototype_object_value_of (ecma_value_t this) /**< this argument */
 {
-  return ecma_builtin_object_prototype_object_to_string (this);
+  return ecma_op_to_object (this);
 } /* ecma_builtin_object_prototype_object_value_of */
 
 /**

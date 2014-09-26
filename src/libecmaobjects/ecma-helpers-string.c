@@ -1169,9 +1169,9 @@ ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, /**< zero-term
  * Warning:
  *         the routine requires that buffer size is enough
  *
- * @return number of bytes copied
+ * @return pointer to null character of copied string in destination buffer
  */
-ssize_t
+ecma_char_t*
 ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, /**< zero-terminated string */
                                ecma_char_t *buffer_p, /**< destination buffer */
                                ssize_t buffer_size) /**< size of buffer */
@@ -1193,7 +1193,7 @@ ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p, /**< zero-terminated
 
   *buf_iter_p = ECMA_CHAR_NULL;
 
-  return bytes_copied;
+  return buf_iter_p;
 } /* ecma_copy_zt_string_to_buffer */
 
 /**
@@ -1269,6 +1269,8 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_LENGTH: return (ecma_char_t*) "length";
     case ECMA_MAGIC_STRING_NAN: return (ecma_char_t*) "NaN";
     case ECMA_MAGIC_STRING_INFINITY_UL: return (ecma_char_t*) "Infinity";
+    case ECMA_MAGIC_STRING_UNDEFINED_UL: return (ecma_char_t*) "Undefined";
+    case ECMA_MAGIC_STRING_NULL_UL: return (ecma_char_t*) "Null";
     case ECMA_MAGIC_STRING_OBJECT_UL: return (ecma_char_t*) "Object";
     case ECMA_MAGIC_STRING_FUNCTION_UL: return (ecma_char_t*) "Function";
     case ECMA_MAGIC_STRING_ARRAY_UL: return (ecma_char_t*) "Array";
@@ -1427,6 +1429,9 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_TEST: return (ecma_char_t*) "test";
     case ECMA_MAGIC_STRING_NAME: return (ecma_char_t*) "name";
     case ECMA_MAGIC_STRING_MESSAGE: return (ecma_char_t*) "message";
+    case ECMA_MAGIC_STRING_LEFT_SQUARE_CHAR: return (ecma_char_t*) "[";
+    case ECMA_MAGIC_STRING_RIGHT_SQUARE_CHAR: return (ecma_char_t*) "]";
+    case ECMA_MAGIC_STRING_SPACE_CHAR: return (ecma_char_t*) " ";
     case ECMA_MAGIC_STRING__EMPTY: return (ecma_char_t*) "";
     case ECMA_MAGIC_STRING__COUNT: break;
   }

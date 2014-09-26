@@ -654,6 +654,8 @@ typedef enum
   ECMA_MAGIC_STRING_LENGTH, /**< "length" */
   ECMA_MAGIC_STRING_NAN, /**< "NaN" */
   ECMA_MAGIC_STRING_INFINITY_UL, /**< "Infinity" */
+  ECMA_MAGIC_STRING_UNDEFINED_UL, /**< "Undefined" */
+  ECMA_MAGIC_STRING_NULL_UL, /**< "Null" */
   ECMA_MAGIC_STRING_OBJECT_UL, /**< "Object" */
   ECMA_MAGIC_STRING_FUNCTION_UL, /**< "Function" */
   ECMA_MAGIC_STRING_ARRAY_UL, /**< "Array" */
@@ -812,6 +814,9 @@ typedef enum
   ECMA_MAGIC_STRING_TEST, /**< "test" */
   ECMA_MAGIC_STRING_NAME, /**< "name" */
   ECMA_MAGIC_STRING_MESSAGE, /**< "message" */
+  ECMA_MAGIC_STRING_LEFT_SQUARE_CHAR, /**< "[" */
+  ECMA_MAGIC_STRING_RIGHT_SQUARE_CHAR, /**< "]" */
+  ECMA_MAGIC_STRING_SPACE_CHAR, /**< " " */
   ECMA_MAGIC_STRING__EMPTY, /**< "" */
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;

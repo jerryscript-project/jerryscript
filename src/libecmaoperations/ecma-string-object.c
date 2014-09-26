@@ -76,7 +76,7 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
   ecma_deref_object (prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_STRING;
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_STRING_UL;
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);

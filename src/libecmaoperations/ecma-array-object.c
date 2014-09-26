@@ -103,7 +103,7 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
   ecma_object_t *obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_ARRAY);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_ARRAY;
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ARRAY_UL;
 
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_number_t *length_num_p = ecma_alloc_number ();

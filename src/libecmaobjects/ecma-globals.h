@@ -337,25 +337,6 @@ typedef enum
 } ecma_object_type_t;
 
 /**
- * ECMA-defined object classes
- */
-typedef enum
-{
-  ECMA_OBJECT_CLASS_OBJECT, /**< "Object" */
-  ECMA_OBJECT_CLASS_FUNCTION, /**< "Function" */
-  ECMA_OBJECT_CLASS_ARGUMENTS, /**< "Arguments" */
-  ECMA_OBJECT_CLASS_ARRAY, /**< "Array" */
-  ECMA_OBJECT_CLASS_BOOLEAN, /**< "Boolean" */
-  ECMA_OBJECT_CLASS_DATE, /**< "Date" */
-  ECMA_OBJECT_CLASS_ERROR, /**< "Error" */
-  ECMA_OBJECT_CLASS_JSON, /**< "JSON" */
-  ECMA_OBJECT_CLASS_MATH, /**< "Math" */
-  ECMA_OBJECT_CLASS_NUMBER, /**< "Number" */
-  ECMA_OBJECT_CLASS_REGEXP, /**< "RegExp" */
-  ECMA_OBJECT_CLASS_STRING /**< "String" */
-} ecma_object_class_t;
-
-/**
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
@@ -676,6 +657,7 @@ typedef enum
   ECMA_MAGIC_STRING_OBJECT_UL, /**< "Object" */
   ECMA_MAGIC_STRING_FUNCTION_UL, /**< "Function" */
   ECMA_MAGIC_STRING_ARRAY_UL, /**< "Array" */
+  ECMA_MAGIC_STRING_ARGUMENTS_UL, /**< "Arguments" */
   ECMA_MAGIC_STRING_STRING_UL, /**< "String" */
   ECMA_MAGIC_STRING_BOOLEAN_UL, /**< "Boolean" */
   ECMA_MAGIC_STRING_NUMBER_UL, /**< "Number" */

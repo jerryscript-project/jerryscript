@@ -59,7 +59,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_ARGUMENTS;
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ARGUMENTS_UL;
 
   // 7.
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();

@@ -94,7 +94,7 @@ ecma_builtin_array_object_is_array (ecma_value_t arg) /**< first argument */
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
 
-    if (class_prop_p->u.internal_property.value == ECMA_OBJECT_CLASS_ARRAY)
+    if (class_prop_p->u.internal_property.value == ECMA_MAGIC_STRING_ARRAY_UL)
     {
       is_array = ECMA_SIMPLE_VALUE_TRUE;
     }

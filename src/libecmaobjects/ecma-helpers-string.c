@@ -1272,6 +1272,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_OBJECT_UL: return (ecma_char_t*) "Object";
     case ECMA_MAGIC_STRING_FUNCTION_UL: return (ecma_char_t*) "Function";
     case ECMA_MAGIC_STRING_ARRAY_UL: return (ecma_char_t*) "Array";
+    case ECMA_MAGIC_STRING_ARGUMENTS_UL: return (ecma_char_t*) "Arguments";
     case ECMA_MAGIC_STRING_STRING_UL: return (ecma_char_t*) "String";
     case ECMA_MAGIC_STRING_BOOLEAN_UL: return (ecma_char_t*) "Boolean";
     case ECMA_MAGIC_STRING_NUMBER_UL: return (ecma_char_t*) "Number";

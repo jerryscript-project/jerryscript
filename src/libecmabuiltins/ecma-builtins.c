@@ -88,7 +88,7 @@ static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_t* prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
-                          ecma_object_class_t obj_class, /**< object's class */
+                          ecma_magic_string_id_t obj_class, /**< object's class */
                           ecma_length_t property_number) /**< number of the object's properties */
 {
   ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, true, obj_type);
@@ -155,7 +155,7 @@ ecma_init_builtins (void)
     ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
                                                               prototype_obj_p, \
                                                               ECMA_OBJECT_ ## object_type, \
-                                                              ECMA_OBJECT_ ## object_class, \
+                                                              ECMA_MAGIC_STRING_ ## object_class, \
                                                               ecma_builtin_ ## lowercase_name ## _property_number); \
     ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
   }

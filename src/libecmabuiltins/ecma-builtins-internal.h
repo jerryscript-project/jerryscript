@@ -61,37 +61,37 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
 #define ECMA_BUILTIN_LIST(macro) \
   macro (OBJECT_PROTOTYPE, \
          TYPE_GENERAL, \
-         CLASS_OBJECT, \
+         OBJECT_UL, \
          ECMA_BUILTIN_ID__COUNT /* no prototype */, \
          object_prototype) \
   macro (STRING_PROTOTYPE, \
          TYPE_GENERAL, \
-         CLASS_STRING, \
+         STRING_UL, \
          ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
          string_prototype) \
   macro (OBJECT, \
          TYPE_FUNCTION, \
-         CLASS_OBJECT, \
+         OBJECT_UL, \
          ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
          object) \
   macro (MATH, \
          TYPE_GENERAL, \
-         CLASS_MATH, \
+         MATH_UL, \
          ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_OBJECT_PROTOTYPE */, \
          math) \
   macro (ARRAY, \
          TYPE_FUNCTION, \
-         CLASS_ARRAY, \
+         ARRAY_UL, \
          ECMA_BUILTIN_ID__COUNT /* FIXME: ECMA_BUILTIN_ID_ARRAY_PROTOTYPE */, \
          array) \
   macro (STRING, \
          TYPE_FUNCTION, \
-         CLASS_STRING, \
+         STRING_UL, \
          ECMA_BUILTIN_ID_STRING_PROTOTYPE, \
          string) \
   macro (GLOBAL, \
          TYPE_GENERAL, \
-         CLASS_OBJECT, \
+         OBJECT_UL, \
          ECMA_BUILTIN_ID__COUNT /* no prototype */, \
          global)
 

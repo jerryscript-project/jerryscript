@@ -155,7 +155,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   // 3.
   ecma_property_t *class_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_FUNCTION;
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
 
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
@@ -615,7 +615,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     // 3.
     ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-    class_prop_p->u.internal_property.value = ECMA_OBJECT_CLASS_FUNCTION;
+    class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
 
     ecma_deref_object (prototype_p);
 

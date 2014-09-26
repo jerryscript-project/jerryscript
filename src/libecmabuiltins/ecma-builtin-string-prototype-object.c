@@ -167,7 +167,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
-    if (class_prop_p->u.internal_property.value == ECMA_OBJECT_CLASS_STRING)
+    if (class_prop_p->u.internal_property.value == ECMA_MAGIC_STRING_STRING_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);

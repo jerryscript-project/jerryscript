@@ -571,13 +571,34 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 {
   const idx_t lhs_var_idx = opdata.data.call_n.lhs;
   const idx_t func_name_lit_idx = opdata.data.call_n.name_lit_idx;
-  const idx_t args_number = opdata.data.call_n.arg_list;
+  const idx_t args_number_idx = opdata.data.call_n.arg_list;
 
   int_data->pos++;
 
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
+
+  bool this_arg_var_idx_set = false;
+  idx_t this_arg_var_idx;
+  idx_t args_number;
+
+  opcode_t next_opcode = read_opcode (int_data->pos);
+  if (next_opcode.op_idx == __op__idx_meta
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
+  {
+    this_arg_var_idx = next_opcode.data.meta.data_1;
+    JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+
+    this_arg_var_idx_set = true;
+
+    JERRY_ASSERT (args_number_idx > 0);
+    args_number = (idx_t) (args_number_idx - 1);
+  }
+  else
+  {
+    args_number = args_number_idx;
+  }
 
   ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
 
@@ -593,13 +614,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
     ecma_completion_value_t this_value;
 
-    opcode_t next_opcode = read_opcode (int_data->pos);
-    if (next_opcode.op_idx == __op__idx_meta
-        && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
+    if (this_arg_var_idx_set)
     {
-      const idx_t this_arg_var_idx = next_opcode.data.meta.data_1;
-
-      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
       this_value = get_variable_value (int_data, this_arg_var_idx, false);
     }
     else

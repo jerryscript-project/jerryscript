@@ -65,3 +65,9 @@ b.length = 5;
 assert(b[50000] === undefined);
 
 assert(([1, 2, 3]).length === 3);
+
+assert(Array.prototype.constructor === Array);
+assert(Array.prototype.length === 0);
+Array.prototype[0] = 'string value';
+assert(Array.prototype.length === 1);
+assert(Array.prototype[0] === 'string value');

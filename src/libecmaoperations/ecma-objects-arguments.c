@@ -55,7 +55,11 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
   *len_p = ecma_uint32_to_number (arguments_list_length);
 
   // 2., 3., 6.
-  ecma_object_t *obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+
+  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  ecma_deref_object (prototype_p);
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);

@@ -59,6 +59,11 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
  * 'macro (builtin_id, object_type, object_class, object_prototype_builtin_id, lowercase_name)'
  */
 #define ECMA_BUILTIN_LIST(macro) \
+  macro (OBJECT_PROTOTYPE, \
+         TYPE_GENERAL, \
+         CLASS_OBJECT, \
+         ECMA_BUILTIN_ID__COUNT /* no prototype */, \
+         object_prototype) \
   macro (STRING_PROTOTYPE, \
          TYPE_GENERAL, \
          CLASS_STRING, \

@@ -249,9 +249,12 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
                                                ecma_magic_string_id_t routine_id) /**< name of the built-in
                                                                                        object's routine property */
 {
-  FIXME(Setup prototype of Function object to built-in Function prototype object (15.3.3.1));
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *func_obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+  ecma_object_t *func_obj_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+
+  ecma_deref_object (prototype_obj_p);
+
   ecma_set_object_is_builtin (func_obj_p, true);
 
   uint64_t packed_value = jrt_set_bit_field_value (0,

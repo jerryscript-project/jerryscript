@@ -142,9 +142,11 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
                                 opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
 {
   // 1., 4., 13.
-  FIXME(Setup prototype of Function object to built-in Function prototype object (15.3.3.1));
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *f = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_FUNCTION);
+  ecma_object_t *f = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_FUNCTION);
+
+  ecma_deref_object (prototype_obj_p);
 
   // 2., 6., 7., 8.
   /*

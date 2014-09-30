@@ -156,6 +156,9 @@ dump_variable (idx_t id)
         case ECMA_SIMPLE_VALUE_TRUE: \
           __printf ("true"); \
           break; \
+        case ECMA_SIMPLE_VALUE_UNDEFINED: \
+          __printf ("undefined"); \
+          break; \
         default: \
           JERRY_UNREACHABLE (); \
       } \

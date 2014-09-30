@@ -890,8 +890,21 @@ parse_argument_list (argument_list_type alt, idx_t obj)
         STACK_PUSH (IDX, token_data ());
         break;
       }
-      case AL_FUNC_EXPR:
       case AL_ARRAY_DECL:
+      {
+        if (token_is (TOK_COMMA))
+        {
+          STACK_PUSH (IDX, next_temp_name ());
+          DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED);
+          DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG, ID(1), INVALID_VALUE);
+          STACK_INCR_HEAD(U8, 1);
+          STACK_DROP (IDX, 1);
+          skip_newlines ();
+          continue;
+        }
+        /* FALLTHRU  */
+      }
+      case AL_FUNC_EXPR:
       case AL_CONSTRUCT_EXPR:
       {
         parse_assignment_expression ();

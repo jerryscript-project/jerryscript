@@ -71,3 +71,9 @@ assert(Array.prototype.length === 0);
 Array.prototype[0] = 'string value';
 assert(Array.prototype.length === 1);
 assert(Array.prototype[0] === 'string value');
+
+var c = [0,,,'3'];
+assert (c[0] === 0);
+assert (c[1] === undefined);
+assert (c[2] === undefined);
+assert (c[3] === '3');

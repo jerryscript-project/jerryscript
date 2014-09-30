@@ -61,7 +61,7 @@ void
 serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
   JERRY_ASSERT (loc < STACK_SIZE (bytecode_opcodes));
-  STACK_ELEMENT (bytecode_opcodes, loc) = opcode;
+  STACK_SET_ELEMENT (bytecode_opcodes, loc, opcode);
 
   if (print_opcodes)
   {
@@ -102,11 +102,9 @@ void
 serializer_init (bool show_opcodes)
 {
   print_opcodes = show_opcodes;
-  STACK_INIT (opcode_t, bytecode_opcodes);
 }
 
 void
 serializer_free (void)
 {
-  STACK_FREE (bytecode_opcodes);
 }

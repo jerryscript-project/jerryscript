@@ -496,7 +496,7 @@ convert_current_token_to_token (token_type tt)
 
   for (uint8_t i = 0; i < STACK_SIZE (strings); i++)
   {
-    if (current_token_equals_to_lp (strings.data[i]))
+    if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
     {
       return (token)
       {
@@ -529,12 +529,12 @@ convert_seen_num_to_token (ecma_number_t num)
   JERRY_ASSERT (STACK_SIZE (num_ids) == STACK_SIZE (numbers));
   for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
   {
-    if (numbers.data[i] == num)
+    if (STACK_ELEMENT (numbers, i) == num)
     {
       return (token)
       {
         .type = TOK_NUMBER,
-        .uid = num_ids.data[i]
+        .uid = STACK_ELEMENT (num_ids, i)
       };
     }
   }
@@ -553,7 +553,9 @@ convert_seen_num_to_token (ecma_number_t num)
 const lp_string *
 lexer_get_strings (void)
 {
-  return STACK_RAW_DATA (strings);
+  lp_string *data = NULL;
+  STACK_CONVERT_TO_RAW_DATA (strings, data);
+  return data;
 }
 
 uint8_t
@@ -578,7 +580,9 @@ lexer_get_string_by_id (uint8_t id)
 const ecma_number_t *
 lexer_get_nums (void)
 {
-  return STACK_RAW_DATA (numbers);
+  ecma_number_t *data = NULL;
+  STACK_CONVERT_TO_RAW_DATA (numbers, data);
+  return data;
 }
 
 uint8_t
@@ -593,7 +597,7 @@ lexer_adjust_num_ids (void)
   JERRY_ASSERT (STACK_SIZE (numbers) == STACK_SIZE (num_ids));
   for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
   {
-    STACK_ELEMENT (num_ids, i) = (uint8_t) (STACK_ELEMENT (num_ids, i) + STACK_SIZE (strings));
+    STACK_SET_ELEMENT (num_ids, i, (uint8_t) (STACK_ELEMENT (num_ids, i) + STACK_SIZE (strings)));
   }
 }
 

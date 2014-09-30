@@ -4,6 +4,8 @@ out/
 
 # IDE related files
 nbproject
+**.sublime-project
+**.sublime-workspace
 
 # Compiled Object files
 *.slo

@@ -26,6 +26,8 @@
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
+#include "linked-list.h"
+
 #define DEFINE_BACKET_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
 typedef struct \
 { \
@@ -35,11 +37,14 @@ typedef struct \
 __packed \
 NAME##_backet;
 
+TODO (/*Rewrite to NAME##_backet **backets when neccesary*/)
 #define DEFINE_HASH_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
 typedef struct \
 { \
   uint8_t size; \
-  NAME##_backet_stack *backets; \
+  uint8_t max_lens; \
+  uint8_t *lens; \
+  NAME##_backet *backets; \
 } \
 __packed \
 NAME##_hash_table;
@@ -47,19 +52,19 @@ NAME##_hash_table;
 #define HASH_INIT(NAME, SIZE) \
 do { \
   NAME.size = SIZE; \
-  size_t size = mem_heap_recommend_allocation_size (SIZE * sizeof (NAME##_backet_stack)); \
-  NAME.backets = (NAME##_backet_stack *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  __memset (NAME.backets, 0, size); \
+  size_t backets_size = mem_heap_recommend_allocation_size (SIZE * sizeof (NAME##_backet)); \
+  size_t lens_size = mem_heap_recommend_allocation_size (SIZE); \
+  NAME.backets = (NAME##_backet *) mem_heap_alloc_block (backets_size, MEM_HEAP_ALLOC_SHORT_TERM); \
+  NAME.lens = mem_heap_alloc_block (lens_size, MEM_HEAP_ALLOC_SHORT_TERM); \
+  __memset (NAME.backets, 0, SIZE); \
+  __memset (NAME.lens, 0, SIZE); \
+  NAME.max_lens = 1; \
 } while (0);
 
 #define HASH_FREE(NAME) \
 do { \
-  for (uint8_t i = 0; i < NAME.size; i++) { \
-    if (NAME.backets[i].length != 0) { \
-      mem_heap_free_block ((uint8_t *) NAME.backets[i].data); \
-    } \
-  } \
   mem_heap_free_block ((uint8_t *) NAME.backets); \
+  mem_heap_free_block (NAME.lens); \
 } while (0)
 
 #define DEFINE_HASH_INSERT(NAME, KEY_TYPE, VALUE_TYPE) \
@@ -69,42 +74,9 @@ static void hash_insert_##NAME (KEY_TYPE key, VALUE_TYPE value) { \
   uint8_t hash = KEY_TYPE##_hash (key); \
   JERRY_ASSERT (hash < NAME.size); \
   JERRY_ASSERT (NAME.backets != NULL); \
-  if (NAME.backets[hash].length == 0) \
-  { \
-    size_t stack_size = mem_heap_recommend_allocation_size (0); \
-    NAME.backets[hash].data = (NAME##_backet *) mem_heap_alloc_block \
-                      (stack_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    NAME.backets[hash].current = 0; \
-    NAME.backets[hash].length = (__typeof__ (NAME.backets[hash].length)) \
-                                (stack_size / sizeof (NAME##_backet)); \
-  } \
-  else if (NAME.backets[hash].current == NAME.backets[hash].length) \
-  { \
-    size_t old_size = NAME.backets[hash].length * sizeof (NAME##_backet); \
-    size_t temp1_size = mem_heap_recommend_allocation_size ( \
-                        (size_t) (sizeof (NAME##_backet))); \
-    size_t new_size = mem_heap_recommend_allocation_size ( \
-                      (size_t) (temp1_size + old_size)); \
-    NAME##_backet *temp1 = (NAME##_backet *) mem_heap_alloc_block \
-                           (temp1_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    NAME##_backet *temp2 = (NAME##_backet *) mem_heap_alloc_block \
-                           (old_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    if (temp2 == NULL) \
-    { \
-      mem_heap_print (true, false, true); \
-      JERRY_UNREACHABLE (); \
-    } \
-    __memcpy (temp2, NAME.backets[hash].data, old_size); \
-    mem_heap_free_block ((uint8_t *) NAME.backets[hash].data); \
-    mem_heap_free_block ((uint8_t *) temp1); \
-    NAME.backets[hash].data = (NAME##_backet *) mem_heap_alloc_block \
-                              (new_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    __memcpy (NAME.backets[hash].data, temp2, old_size); \
-    mem_heap_free_block ((uint8_t *) temp2); \
-    NAME.backets[hash].length = (__typeof__ (NAME.backets[hash].length)) \
-                                (new_size / sizeof (NAME##_backet)); \
-  } \
-  NAME.backets[hash].data[NAME.backets[hash].current++] = backet; \
+  JERRY_ASSERT (NAME.lens[hash] == 0); \
+  NAME.backets[hash] = backet; \
+  NAME.lens[hash] = 1; \
 }
 
 #define HASH_INSERT(NAME, KEY, VALUE) \
@@ -114,16 +86,17 @@ do { \
 
 #define DEFINE_HASH_LOOKUP(NAME, KEY_TYPE, VALUE_TYPE) \
 static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) __unused; \
-static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) { \
+static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) \
+{ \
   uint8_t hash = KEY_TYPE##_hash (key); \
   JERRY_ASSERT (hash < NAME.size); \
-  if (NAME.backets[hash].length == 0) { \
+  if (NAME.lens[hash] == 0) \
+  { \
     return NULL; \
   } \
-  for (size_t i = 0; i < NAME.backets[hash].current; i++) { \
-    if (KEY_TYPE##_equal (NAME.backets[hash].data[i].key, key)) { \
-      return &NAME.backets[hash].data[i].value; \
-    } \
+  if (KEY_TYPE##_equal (NAME.backets[hash].key, key)) \
+  { \
+    return &NAME.backets[hash].value; \
   } \
   return NULL; \
 }
@@ -133,7 +106,6 @@ lookup_##NAME (KEY)
 
 #define HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
 DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_STACK_TYPE (NAME##_backet, uint8_t, NAME##_backet) \
 DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
 NAME##_hash_table NAME; \
 DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \
@@ -141,7 +113,6 @@ DEFINE_HASH_LOOKUP (NAME, KEY_TYPE, VALUE_TYPE)
 
 #define STATIC_HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
 DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_STACK_TYPE (NAME##_backet, uint8_t, NAME##_backet) \
 DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
 static NAME##_hash_table NAME; \
 DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \

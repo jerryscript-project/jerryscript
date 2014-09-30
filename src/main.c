@@ -39,6 +39,7 @@ jerry_run (const char *script_source, size_t script_source_size,
   const opcode_t *opcodes;
 
   mem_init ();
+  deserializer_init ();
 
   parser_init (script_source, script_source_size, is_show_opcodes);
   parser_parse_program ();
@@ -50,10 +51,11 @@ jerry_run (const char *script_source, size_t script_source_size,
 #ifdef __TARGET_HOST_x64
   serializer_print_opcodes ();
 #endif
+  parser_free ();
 
   if (is_parse_only)
   {
-    parser_free ();
+    deserializer_free ();
     mem_finalize (is_show_mem_stats);
     return true;
   }
@@ -62,8 +64,7 @@ jerry_run (const char *script_source, size_t script_source_size,
 
   bool is_success = run_int ();
 
-  parser_free ();
-
+  deserializer_free ();
   mem_finalize (is_show_mem_stats);
 
   return is_success;

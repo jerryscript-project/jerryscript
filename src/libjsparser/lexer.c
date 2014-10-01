@@ -486,6 +486,14 @@ decode_keyword (void)
       .uid = KW_RESERVED
     };
   }
+  if (current_token_equals_to ("undefined"))
+  {
+    return (token)
+    {
+      .type = TOK_UNDEFINED,
+      .uid = 0
+    };
+  }
   return empty_token;
 }
 

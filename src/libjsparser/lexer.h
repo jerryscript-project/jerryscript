@@ -131,7 +131,8 @@ typedef uint8_t token_type;
 
 #define TOK_DIV 55 // /
 #define TOK_DIV_EQ 56 // /=
-#define TOK_EMPTY 57
+#define TOK_UNDEFINED 57 // undefined
+#define TOK_EMPTY 58
 
 
 /* Represents the contents of a token.  */

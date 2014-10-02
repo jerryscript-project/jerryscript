@@ -25,6 +25,8 @@ nbproject
 *.swp
 *~
 js.files
+jerry.error
+jerry.passed
 core
 vgcore.*
 **.orig

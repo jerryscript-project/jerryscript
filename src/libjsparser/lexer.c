@@ -20,7 +20,7 @@
 #include "stack.h"
 #include "opcodes.h"
 
-static token saved_token;
+static token saved_token, prev_token, sent_token;
 static token empty_token =
 {
   .type = TOK_EMPTY,
@@ -1233,16 +1233,17 @@ lexer_next_token (void)
   }
 #endif /* __TARGET_HOST_x64 */
 
-  token tok = lexer_next_token_private ();
+  prev_token = sent_token;
+  sent_token = lexer_next_token_private ();
 
 #ifdef __TARGET_HOST_x64
-  if (tok.type == TOK_NEWLINE)
+  if (sent_token.type == TOK_NEWLINE)
   {
     dump_current_line ();
-    return tok;
+    return sent_token;
   }
 #endif /* __TARGET_HOST_x64 */
-  return tok;
+  return sent_token;
 }
 
 void
@@ -1251,23 +1252,16 @@ lexer_save_token (token tok)
   saved_token = tok;
 }
 
+token
+lexer_prev_token (void)
+{
+  return prev_token;
+}
+
 void
 lexer_dump_buffer_state (void)
 {
   __printf ("%s\n", buffer);
-}
-
-void
-lexer_init (const char *source, size_t source_size, bool show_opcodes)
-{
-  saved_token = empty_token;
-  allow_dump_lines = show_opcodes;
-  buffer_size = source_size;
-  lexer_set_source (source);
-
-  STACK_INIT (lp_string, strings);
-  STACK_INIT (ecma_number_t, numbers);
-  STACK_INIT (idx_t, num_ids);
 }
 
 void
@@ -1280,6 +1274,19 @@ lexer_run_first_pass (void)
   }
 
   lexer_rewind ();
+}
+
+void
+lexer_init (const char *source, size_t source_size, bool show_opcodes)
+{
+  saved_token = prev_token = sent_token = empty_token;
+  allow_dump_lines = show_opcodes;
+  buffer_size = source_size;
+  lexer_set_source (source);
+
+  STACK_INIT (lp_string, strings);
+  STACK_INIT (ecma_number_t, numbers);
+  STACK_INIT (idx_t, num_ids);
 }
 
 void

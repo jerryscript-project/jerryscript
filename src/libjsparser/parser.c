@@ -2764,9 +2764,16 @@ parse_try_statement (void)
 static void
 insert_semicolon (void)
 {
-  TODO (/*Uncomment when skip_newlines will be fixed.  */)
-  // skip_token ();
-  // JERRY_ASSERT (token_is (TOK_SEMICOLON) || token_is (TOK_NEWLINE));
+  // We cannot use TOK (), since we may use lexer_save_token
+  skip_token ();
+  if (lexer_prev_token ().type == TOK_NEWLINE)
+  {
+    return;
+  }
+  if (!token_is (TOK_SEMICOLON))
+  {
+    parser_fatal (ERR_PARSER);
+  }
 }
 
 /* statement

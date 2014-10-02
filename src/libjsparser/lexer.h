@@ -152,6 +152,7 @@ void lexer_run_first_pass (void);
 
 token lexer_next_token (void);
 void lexer_save_token (token);
+token lexer_prev_token (void);
 
 void lexer_dump_buffer_state (void);
 

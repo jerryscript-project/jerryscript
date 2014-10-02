@@ -1828,6 +1828,7 @@ parse_conditional_expression (void)
     REWRITE_JMP (STACK_TOP (U16), jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
 
     STACK_DROP (U8, 1);
+    STACK_DROP (U16, 1);
     STACK_PUSH (U8, 1);
     STACK_DROP (IDX, 1);
     STACK_SWAP (IDX);
@@ -1861,7 +1862,6 @@ parse_assignment_expression (void)
   parse_conditional_expression ();
   if (STACK_TOP (U8))
   {
-    STACK_DROP (U8, 1);
     goto cleanup;
   }
 

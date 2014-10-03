@@ -97,12 +97,16 @@ typedef enum
  */
 extern uint32_t jerry_unreferenced_expression;
 
-extern void __noreturn jerry_assert_fail (const char *assertion, const char *file, const uint32_t line);
-extern void __noreturn jerry_unreachable (const char *comment, const char *file, const uint32_t line);
-extern void __noreturn jerry_unimplemented (const char *comment, const char *file, const uint32_t line);
+extern void __noreturn jerry_assert_fail (const char *assertion, const char *file, const char *function,
+                                          const uint32_t line);
+extern void __noreturn jerry_unreachable (const char *comment, const char *file, const char *function,
+                                          const uint32_t line);
+extern void __noreturn jerry_unimplemented (const char *comment, const char *file, const char *function,
+                                            const uint32_t line);
 
 #ifndef JERRY_NDEBUG
-#define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { jerry_assert_fail (#x, __FILE__, __LINE__); } } while (0)
+#define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
+    jerry_assert_fail (#x, __FILE__, __FUNCTION__, __LINE__); } } while (0)
 #else /* !JERRY_NDEBUG */
 #define JERRY_ASSERT(x) (void) (x)
 #endif /* !JERRY_NDEBUG */
@@ -114,19 +118,19 @@ extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
 #define JERRY_UNREACHABLE() \
   do \
   { \
-    jerry_unreachable (NULL, __FILE__, __LINE__); \
+    jerry_unreachable (NULL, __FILE__, __FUNCTION__, __LINE__); \
   } while (0)
 
 #define JERRY_UNIMPLEMENTED() \
   do \
   { \
-    jerry_unimplemented (NULL, __FILE__, __LINE__); \
+    jerry_unimplemented (NULL, __FILE__, __FUNCTION__, __LINE__); \
   } while (0)
 
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) \
   do \
   { \
-    jerry_unimplemented (NULL, __FILE__, __LINE__); \
+    jerry_unimplemented (NULL, __FILE__, __FUNCTION__, __LINE__); \
     if (false) \
     { \
       jerry_ref_unused_variables (0, __VA_ARGS__); \

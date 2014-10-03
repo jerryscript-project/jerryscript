@@ -22,6 +22,4 @@ void parser_init (const char *, size_t, bool);
 void parser_parse_program (void);
 void parser_free (void);
 
-void parser_fatal (jerry_status_t code);
-
 #endif

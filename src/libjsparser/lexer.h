@@ -139,8 +139,8 @@ typedef uint8_t token_type;
 typedef struct
 {
   token_type type;
-
   uint8_t uid;
+  size_t locus;
 }
 __packed
 token;
@@ -154,8 +154,6 @@ token lexer_next_token (void);
 void lexer_save_token (token);
 token lexer_prev_token (void);
 
-void lexer_dump_buffer_state (void);
-
 uint8_t lexer_get_reserved_ids_count (void);
 
 const lp_string *lexer_get_strings (void);
@@ -167,5 +165,10 @@ ecma_number_t lexer_get_num_by_id (uint8_t);
 uint8_t lexer_get_nums_count (void);
 
 void lexer_adjust_num_ids (void);
+
+void lexer_locus_to_line_and_column (size_t, size_t *, size_t *);
+void lexer_dump_line (size_t);
+const char *lexer_keyword_to_string (keyword);
+const char *lexer_token_type_to_string (token_type);
 
 #endif

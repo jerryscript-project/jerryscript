@@ -19,12 +19,14 @@
 #include "parser.h"
 #include "stack.h"
 #include "opcodes.h"
+#include "parse-error.h"
 
 static token saved_token, prev_token, sent_token;
 static token empty_token =
 {
   .type = TOK_EMPTY,
-  .uid = 0
+  .uid = 0,
+  .locus = 0
 };
 
 static bool allow_dump_lines = false;
@@ -71,7 +73,6 @@ get_char (size_t i)
   return *(buffer + i);
 }
 
-#ifdef __TARGET_HOST_x64
 static void
 dump_current_line (void)
 {
@@ -90,7 +91,29 @@ dump_current_line (void)
   }
   __putchar ('\n');
 }
-#endif
+
+static token
+create_token (token_type type, size_t loc __unused, uint8_t uid)
+{
+  return (token)
+  {
+    .type = type,
+    .locus = loc,
+    .uid = uid
+  };
+}
+
+static token
+create_token_from_current_token (token_type type, uint8_t uid)
+{
+  return create_token (type, (size_t) (token_start - buffer_start), uid);
+}
+
+static token
+create_token_from_buffer_state (token_type type, uint8_t uid)
+{
+  return create_token (type, (size_t) (buffer - buffer_start), uid);
+}
 
 static bool
 current_token_equals_to (const char *str)
@@ -128,371 +151,187 @@ decode_keyword (void)
 {
   if (current_token_equals_to ("break"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_BREAK
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_BREAK);
   }
   if (current_token_equals_to ("case"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_CASE
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_CASE);
   }
   if (current_token_equals_to ("catch"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_CATCH
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_CATCH);
   }
   if (current_token_equals_to ("class"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("const"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("continue"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_CONTINUE
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_CONTINUE);
   }
   if (current_token_equals_to ("debugger"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_DEBUGGER
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_DEBUGGER);
   }
   if (current_token_equals_to ("default"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_DEFAULT
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_DEFAULT);
   }
   if (current_token_equals_to ("delete"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_DELETE
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_DELETE);
   }
   if (current_token_equals_to ("do"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_DO
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_DO);
   }
   if (current_token_equals_to ("else"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_ELSE
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_ELSE);
   }
   if (current_token_equals_to ("enum"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("export"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("extends"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("false"))
   {
-    return (token)
-    {
-      .type = TOK_BOOL,
-      .uid = false
-    };
+    return create_token_from_current_token (TOK_BOOL, false);
   }
   if (current_token_equals_to ("finally"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_FINALLY
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_FINALLY);
   }
   if (current_token_equals_to ("for"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_FOR
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_FOR);
   }
   if (current_token_equals_to ("function"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_FUNCTION
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_FUNCTION);
   }
   if (current_token_equals_to ("if"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_IF
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_IF);
   }
   if (current_token_equals_to ("instanceof"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_INSTANCEOF
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_INSTANCEOF);
   }
   if (current_token_equals_to ("interface"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("in"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_IN
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_IN);
   }
   if (current_token_equals_to ("import"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("implements"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("let"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("new"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_NEW
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_NEW);
   }
   if (current_token_equals_to ("null"))
   {
-    return (token)
-    {
-      .type = TOK_NULL,
-      .uid = 0
-    };
+    return create_token_from_current_token (TOK_NULL, 0);
   }
   if (current_token_equals_to ("package"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("private"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("protected"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("public"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("return"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RETURN
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RETURN);
   }
   if (current_token_equals_to ("static"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("super"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("switch"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_SWITCH
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_SWITCH);
   }
   if (current_token_equals_to ("this"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_THIS
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_THIS);
   }
   if (current_token_equals_to ("throw"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_THROW
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_THROW);
   }
   if (current_token_equals_to ("true"))
   {
-    return (token)
-    {
-      .type = TOK_BOOL,
-      .uid = true
-    };
+    return create_token_from_current_token (TOK_BOOL, true);
   }
   if (current_token_equals_to ("try"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_TRY
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_TRY);
   }
   if (current_token_equals_to ("typeof"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_TYPEOF
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_TYPEOF);
   }
   if (current_token_equals_to ("var"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_VAR
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_VAR);
   }
   if (current_token_equals_to ("void"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_VOID
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_VOID);
   }
   if (current_token_equals_to ("while"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_WHILE
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_WHILE);
   }
   if (current_token_equals_to ("with"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_WITH
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_WITH);
   }
   if (current_token_equals_to ("yield"))
   {
-    return (token)
-    {
-      .type = TOK_KEYWORD,
-      .uid = KW_RESERVED
-    };
+    return create_token_from_current_token (TOK_KEYWORD, KW_RESERVED);
   }
   if (current_token_equals_to ("undefined"))
   {
-    return (token)
-    {
-      .type = TOK_UNDEFINED,
-      .uid = 0
-    };
+    return create_token_from_current_token (TOK_UNDEFINED, 0);
   }
   return empty_token;
 }
@@ -506,11 +345,7 @@ convert_current_token_to_token (token_type tt)
   {
     if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
     {
-      return (token)
-      {
-        .type = tt,
-        .uid = i
-      };
+      return create_token_from_current_token (tt, i);
     }
   }
 
@@ -522,11 +357,7 @@ convert_current_token_to_token (token_type tt)
 
   STACK_PUSH (strings, str);
 
-  return (token)
-  {
-    .type = tt,
-    .uid = (idx_t) (STACK_SIZE (strings) - 1)
-  };
+  return create_token_from_current_token (tt, (idx_t) (STACK_SIZE (strings) - 1));
 }
 
 static token
@@ -539,11 +370,7 @@ convert_seen_num_to_token (ecma_number_t num)
   {
     if (STACK_ELEMENT (numbers, i) == num)
     {
-      return (token)
-      {
-        .type = TOK_NUMBER,
-        .uid = STACK_ELEMENT (num_ids, i)
-      };
+      return create_token_from_current_token (TOK_NUMBER, STACK_ELEMENT (num_ids, i));
     }
   }
 
@@ -551,11 +378,7 @@ convert_seen_num_to_token (ecma_number_t num)
   STACK_PUSH (num_ids, num_id);
   STACK_PUSH (numbers, num);
 
-  return (token)
-  {
-    .type = TOK_NUMBER,
-    .uid = num_id
-  };
+  return create_token_from_current_token (TOK_NUMBER, num_id);
 }
 
 const lp_string *
@@ -635,11 +458,7 @@ consume_char (void)
   do \
   { \
     buffer += NUM; \
-    return (token) \
-    { \
-      .type = TOK, \
-      .uid = 0 \
-    }; \
+    return create_token_from_buffer_state (TOK, 0); \
   } \
   while (0)
 
@@ -803,7 +622,7 @@ parse_number (void)
 
     if (__isalpha (c) || c == '_' || c == '$')
     {
-      parser_fatal (ERR_INT_LITERAL);
+      PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
     }
 
     tok_length = (size_t) (buffer - token_start);
@@ -820,19 +639,17 @@ parse_number (void)
 #endif
     }
 
-    token_start = NULL;
-
     if (res <= 255)
     {
-      return (token)
-      {
-        .type = TOK_SMALL_INT,
-        .uid = (uint8_t) res
-      };
+      known_token = create_token_from_current_token (TOK_SMALL_INT, (uint8_t) res);
+      token_start = NULL;
+      return known_token;
     }
 
     known_token = convert_seen_num_to_token ((ecma_number_t) res);
     JERRY_ASSERT (!is_empty (known_token));
+
+    token_start = NULL;
 
     return known_token;
   }
@@ -852,18 +669,20 @@ parse_number (void)
     c = LA (0);
     if (is_fp && c == '.')
     {
-      parser_fatal (ERR_INT_LITERAL);
+      PARSE_ERROR ("Integer literal shall not contain more than one dot character", buffer - buffer_start);
     }
     if (is_exp && (c == 'e' || c == 'E'))
     {
-      parser_fatal (ERR_INT_LITERAL);
+      PARSE_ERROR ("Integer literal shall not contain more than exponential marker ('e' or 'E')",
+                   buffer - buffer_start);
     }
 
     if (c == '.')
     {
       if (__isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
       {
-        parser_fatal (ERR_INT_LITERAL);
+        PARSE_ERROR ("Integer literal shall not contain non-digit character after got character",
+                     buffer - buffer_start);
       }
       is_fp = true;
       consume_char ();
@@ -878,7 +697,8 @@ parse_number (void)
       }
       if (!__isdigit (LA (1)))
       {
-        parser_fatal (ERR_INT_LITERAL);
+        PARSE_ERROR ("Integer literal shall not contain non-digit character after exponential marker ('e' or 'E')",
+                     buffer - buffer_start);
       }
       is_exp = true;
       consume_char ();
@@ -887,7 +707,7 @@ parse_number (void)
 
     if (__isalpha (c) || c == '_' || c == '$')
     {
-      parser_fatal (ERR_INT_LITERAL);
+      PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
     }
 
     if (!__isdigit (c))
@@ -901,10 +721,9 @@ parse_number (void)
   if (is_fp || is_exp)
   {
     ecma_number_t res = __strtof (token_start, NULL);
-    token_start = NULL;
 
     known_token = convert_seen_num_to_token (res);
-
+    token_start = NULL;
     return known_token;
   }
 
@@ -914,18 +733,15 @@ parse_number (void)
     res = res * 10 + hex_to_int (token_start[i]);
   }
 
-  token_start = NULL;
-
   if (res <= 255)
   {
-    return (token)
-    {
-      .type = TOK_SMALL_INT,
-      .uid = (uint8_t) res
-    };
+    known_token = create_token_from_current_token (TOK_SMALL_INT, (uint8_t) res);
+    token_start = NULL;
+    return known_token;
   }
 
   known_token = convert_seen_num_to_token ((ecma_number_t) res);
+  token_start = NULL;
   return known_token;
 }
 
@@ -949,18 +765,18 @@ parse_string (void)
     c = LA (0);
     if (c == '\0')
     {
-      parser_fatal (ERR_UNCLOSED);
+      PARSE_ERROR ("Unclosed string", token_start - buffer_start);
     }
     if (c == '\n')
     {
-      parser_fatal (ERR_STRING);
+      PARSE_ERROR ("String literal shall not contain newline character", token_start - buffer_start);
     }
     if (c == '\\')
     {
       /* Only single escape character is allowed.  */
       if (LA (1) == 'x' || LA (1) == 'u' || __isdigit (LA (1)))
       {
-        parser_fatal (ERR_STRING);
+        PARSE_SORRY ("Escape sequences are not supported yet", token_start - buffer_start);
       }
       if ((LA (1) == '\'' && !is_double_quoted)
           || (LA (1) == '"' && is_double_quoted)
@@ -980,9 +796,9 @@ parse_string (void)
     consume_char ();
   }
 
-  // Eat up '"'
   result = convert_current_token_to_token (TOK_STRING);
 
+  // Eat up '"'
   consume_char ();
   token_start = NULL;
 
@@ -1058,7 +874,7 @@ replace_comment_by_newline (void)
     }
     if (multiline && c == '\0')
     {
-      parser_fatal (ERR_UNCLOSED);
+      PARSE_ERROR ("Unclosed multiline comment", buffer - buffer_start);
     }
     consume_char ();
   }
@@ -1091,20 +907,12 @@ lexer_next_token_private (void)
   if (c == '\n')
   {
     consume_char ();
-    return (token)
-    {
-      .type = TOK_NEWLINE,
-      .uid = 0
-    };
+    return create_token_from_buffer_state (TOK_NEWLINE, 0);
   }
 
   if (c == '\0')
   {
-    return (token)
-    {
-      .type = TOK_EOF,
-      .uid = 0
-    };
+    return create_token_from_buffer_state (TOK_EOF, 0);
   }
 
   if (c == '\'' || c == '"')
@@ -1218,31 +1026,27 @@ lexer_next_token_private (void)
       }
       break;
     }
-    default: JERRY_UNREACHABLE ();
+    default: PARSE_SORRY ("Unknown character", buffer - buffer_start);
   }
-  parser_fatal (ERR_NON_CHAR);
+  PARSE_SORRY ("Unknown character", buffer - buffer_start);
 }
 
 token
 lexer_next_token (void)
 {
-#ifdef __TARGET_HOST_x64
   if (buffer == buffer_start)
   {
     dump_current_line ();
   }
-#endif /* __TARGET_HOST_x64 */
 
   prev_token = sent_token;
   sent_token = lexer_next_token_private ();
 
-#ifdef __TARGET_HOST_x64
   if (sent_token.type == TOK_NEWLINE)
   {
     dump_current_line ();
     return sent_token;
   }
-#endif /* __TARGET_HOST_x64 */
   return sent_token;
 }
 
@@ -1259,12 +1063,6 @@ lexer_prev_token (void)
 }
 
 void
-lexer_dump_buffer_state (void)
-{
-  __printf ("%s\n", buffer);
-}
-
-void
 lexer_run_first_pass (void)
 {
   token tok = lexer_next_token ();
@@ -1274,6 +1072,172 @@ lexer_run_first_pass (void)
   }
 
   lexer_rewind ();
+}
+
+void
+lexer_locus_to_line_and_column (size_t locus, size_t *line, size_t *column)
+{
+  JERRY_ASSERT (locus < buffer_size);
+  const char *buf;
+  size_t l = 0, c = 0;
+  for (buf = buffer_start; (size_t) (buf - buffer_start) < locus; buf++)
+  {
+    if (*buf == '\n')
+    {
+      c = 0;
+      l++;
+      continue;
+    }
+    c++;
+  }
+
+  if (line)
+  {
+    *line = l;
+  }
+  if (column)
+  {
+    *column = c;
+  }
+}
+
+void
+lexer_dump_line (size_t line)
+{
+  size_t l = 0;
+  for (const char *buf = buffer_start; *buf != '\0'; buf++)
+  {
+    if (l == line)
+    {
+      for (; *buf != '\n' && *buf != '\0'; buf++)
+      {
+        __putchar (*buf);
+      }
+      return;
+    }
+    if (*buf == '\n')
+    {
+      l++;
+    }
+  }
+}
+
+const char *
+lexer_keyword_to_string (keyword kw)
+{
+  switch (kw)
+  {
+    case KW_BREAK: return "break";
+    case KW_CASE: return "case";
+    case KW_CATCH: return "catch";
+
+    case KW_CONTINUE: return "continue";
+    case KW_DEBUGGER: return "debugger";
+    case KW_DEFAULT: return "default";
+    case KW_DELETE: return "delete";
+    case KW_DO: return "do";
+
+    case KW_ELSE: return "else";
+    case KW_FINALLY: return "finally";
+    case KW_FOR: return "for";
+    case KW_FUNCTION: return "function";
+    case KW_IF: return "if";
+
+    case KW_IN: return "in";
+    case KW_INSTANCEOF: return "instanceof";
+    case KW_NEW: return "new";
+    case KW_RETURN: return "return";
+    case KW_SWITCH: return "switch";
+
+    case KW_THIS: return "this";
+    case KW_THROW: return "throw";
+    case KW_TRY: return "try";
+    case KW_TYPEOF: return "typeof";
+    case KW_VAR: return "var";
+
+    case KW_VOID: return "void";
+    case KW_WHILE: return "while";
+    case KW_WITH: return "with";
+    default: JERRY_UNREACHABLE ();
+  }
+}
+
+const char *
+lexer_token_type_to_string (token_type tt)
+{
+  switch (tt)
+  {
+    case TOK_EOF: return "End of file";
+    case TOK_NAME: return "Identifier";
+    case TOK_KEYWORD: return "Keyword";
+    case TOK_SMALL_INT: /* FALLTHRU */
+    case TOK_NUMBER: return "Number";
+
+    case TOK_NULL: return "null";
+    case TOK_BOOL: return "bool";
+    case TOK_NEWLINE: return "newline";
+    case TOK_STRING: return "string";
+    case TOK_OPEN_BRACE: return "{";
+
+    case TOK_CLOSE_BRACE: return "}";
+    case TOK_OPEN_PAREN: return "(";
+    case TOK_CLOSE_PAREN: return ")";
+    case TOK_OPEN_SQUARE: return "[";
+    case TOK_CLOSE_SQUARE: return "]";
+
+    case TOK_DOT: return ".";
+    case TOK_SEMICOLON: return ";";
+    case TOK_COMMA: return ",";
+    case TOK_LESS: return "<";
+    case TOK_GREATER: return ">";
+
+    case TOK_LESS_EQ: return "<=";
+    case TOK_GREATER_EQ: return "<=";
+    case TOK_DOUBLE_EQ: return "==";
+    case TOK_NOT_EQ: return "!=";
+    case TOK_TRIPLE_EQ: return "===";
+
+    case TOK_NOT_DOUBLE_EQ: return "!==";
+    case TOK_PLUS: return "+";
+    case TOK_MINUS: return "-";
+    case TOK_MULT: return "*";
+    case TOK_MOD: return "%%";
+
+    case TOK_DOUBLE_PLUS: return "++";
+    case TOK_DOUBLE_MINUS: return "--";
+    case TOK_LSHIFT: return "<<";
+    case TOK_RSHIFT: return ">>";
+    case TOK_RSHIFT_EX: return ">>>";
+
+    case TOK_AND: return "&";
+    case TOK_OR: return "|";
+    case TOK_XOR: return "^";
+    case TOK_NOT: return "!";
+    case TOK_COMPL: return "~";
+
+    case TOK_DOUBLE_AND: return "&&";
+    case TOK_DOUBLE_OR: return "||";
+    case TOK_QUERY: return "?";
+    case TOK_COLON: return ":";
+    case TOK_EQ: return "=";
+
+    case TOK_PLUS_EQ: return "+=";
+    case TOK_MINUS_EQ: return "-=";
+    case TOK_MULT_EQ: return "*=";
+    case TOK_MOD_EQ: return "%%=";
+    case TOK_LSHIFT_EQ: return "<<=";
+
+    case TOK_RSHIFT_EQ: return ">>=";
+    case TOK_RSHIFT_EX_EQ: return ">>>=";
+    case TOK_AND_EQ: return "&=";
+    case TOK_OR_EQ: return "|=";
+    case TOK_XOR_EQ: return "^=";
+
+    case TOK_DIV: return "/";
+    case TOK_DIV_EQ: return "/=";
+    case TOK_UNDEFINED: return "undefined";
+    default: JERRY_UNREACHABLE ();
+  }
 }
 
 void

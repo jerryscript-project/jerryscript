@@ -22,6 +22,7 @@
 void __noreturn
 jerry_assert_fail (const char *assertion __unused, /**< assertion condition string */
                    const char *file __unused, /**< file name */
+                   const char *function __unused, /**< function name */
                    const uint32_t line __unused) /** line */
 {
   __exit (-ERR_FAILED_INTERNAL_ASSERTION);
@@ -34,6 +35,7 @@ void __noreturn
 jerry_unreachable (const char *comment __unused, /**< comment to unreachable mark if exists,
                                                       NULL - otherwise */
                    const char *file __unused, /**< file name */
+                   const char *function __unused, /**< function name */
                    const uint32_t line __unused) /**< line */
 {
   __exit (-ERR_FAILED_INTERNAL_ASSERTION);
@@ -46,6 +48,7 @@ void __noreturn
 jerry_unimplemented (const char *comment __unused, /**< comment to unimplemented mark if exists,
                                                         NULL - otherwise */
                      const char *file __unused, /**< file name */
+                     const char *function __unused, /**< function name */
                      const uint32_t line __unused) /**< line */
 {
   __exit (-ERR_UNIMPLEMENTED_CASE);

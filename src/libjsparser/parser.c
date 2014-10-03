@@ -24,6 +24,7 @@
 #include "hash-table.h"
 #include "deserializer.h"
 #include "opcodes-native-call.h"
+#include "parse-error.h"
 
 #define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
@@ -266,6 +267,17 @@ do { \
   STACK_CHECK_USAGE (IDX); \
 } while (0)
 
+#define EMIT_ERROR(MESSAGE) PARSE_ERROR(MESSAGE, TOK().locus)
+#define EMIT_SORRY(MESSAGE) PARSE_SORRY(MESSAGE, TOK().locus)
+#define EMIT_ERROR_VARG(MESSAGE, ...) PARSE_ERROR_VARG(MESSAGE, TOK().locus, __VA_ARGS__)
+
+#define NESTING_TO_STRING(I) (I == NESTING_FUNCTION \
+                                ? "function" \
+                                : I == NESTING_ITERATIONAL \
+                                  ? "iterational" \
+                                  : I == NESTING_SWITCH \
+                                    ? "switch" : "unknown")
+
 typedef enum
 {
   AL_FUNC_DECL,
@@ -348,7 +360,7 @@ must_be_inside_but_not_in (uint8_t *inside, uint8_t insides_count, uint8_t not_i
 
   if (STACK_SIZE(nestings) == 0)
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR ("Shall be inside a nesting");
   }
 
   SET_I(STACK_SIZE(nestings));
@@ -356,7 +368,7 @@ must_be_inside_but_not_in (uint8_t *inside, uint8_t insides_count, uint8_t not_i
   {
     if (STACK_ELEMENT (nestings, I() - 1) == not_in)
     {
-      parser_fatal (ERR_PARSER);
+      EMIT_ERROR_VARG ("Shall not be inside a '%s' nesting", NESTING_TO_STRING(not_in));
     }
 
     SET_J(0);
@@ -371,7 +383,13 @@ must_be_inside_but_not_in (uint8_t *inside, uint8_t insides_count, uint8_t not_i
     SET_I(I()-1);
   }
 
-  parser_fatal (ERR_PARSER);
+  switch (insides_count)
+  {
+    case 1: EMIT_ERROR_VARG ("Shall be inside a '%s' nesting", NESTING_TO_STRING(inside[0])); break;
+    case 2: EMIT_ERROR_VARG ("Shall be inside '%s' or '%s' nestings",
+                             NESTING_TO_STRING(inside[0]), NESTING_TO_STRING(inside[1])); break;
+    default: JERRY_UNREACHABLE ();
+  }
 
 cleanup:
   STACK_DROP (U8, 2);
@@ -405,9 +423,7 @@ assert_keyword (keyword kw)
 {
   if (!token_is (TOK_KEYWORD) || token_data () != kw)
   {
-#ifdef __TARGET_HOST_x64
-    __printf ("assert_keyword: %d\n", kw);
-#endif
+    EMIT_ERROR_VARG ("Expected keyword '%s'", lexer_keyword_to_string (kw));
     JERRY_UNREACHABLE ();
   }
 }
@@ -423,10 +439,7 @@ current_token_must_be (token_type tt)
 {
   if (!token_is (tt))
   {
-#ifdef __TARGET_HOST_x64
-    __printf ("current_token_must_be: %d\n", tt);
-#endif
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -446,10 +459,7 @@ next_token_must_be (token_type tt)
   skip_token ();
   if (!token_is (tt))
   {
-#ifdef __TARGET_HOST_x64
-    __printf ("next_token_must_be: %d\n", tt);
-#endif
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -459,7 +469,7 @@ token_after_newlines_must_be (token_type tt)
   skip_newlines ();
   if (!token_is (tt))
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -469,7 +479,7 @@ token_after_newlines_must_be_keyword (keyword kw)
   skip_newlines ();
   if (!is_keyword (kw))
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR_VARG ("Expected keyword '%s'", lexer_keyword_to_string (kw));
   }
 }
 
@@ -1348,7 +1358,7 @@ parse_member_expression (idx_t *this_arg)
       skip_newlines ();
       if (!token_is (TOK_NAME))
       {
-        parser_fatal (ERR_PARSER);
+        EMIT_ERROR ("Expected identifier");
       }
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
@@ -1579,11 +1589,11 @@ parse_unary_expression (void)
                  lhs = delete_prop for 'delete expr[expr]';
                  lhs = true - otherwise; */);
         // DUMP_OPCODE_2 (delete, lhs, expr);
-        JERRY_UNIMPLEMENTED ();
+        EMIT_SORRY ("Operation 'delete' is not supported yet");
       }
       if (is_keyword (KW_VOID))
       {
-        JERRY_UNIMPLEMENTED ();
+        EMIT_SORRY ("Operation 'void' is not supported yet");
       }
       if (is_keyword (KW_TYPEOF))
       {
@@ -2331,7 +2341,7 @@ parse_for_or_for_in_statement (void)
       }
       else
       {
-        parser_fatal (ERR_PARSER);
+        EMIT_ERROR ("Expected either ':' or 'in' token");
       }
     }
   }
@@ -2351,7 +2361,7 @@ parse_for_or_for_in_statement (void)
   }
   else
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR ("Expected either ':' or 'in' token");
   }
 
   JERRY_UNREACHABLE ();
@@ -2430,7 +2440,7 @@ plain_for:
   goto cleanup;
 
 for_in:
-  JERRY_UNIMPLEMENTED ();
+  EMIT_SORRY ("'for in' loops are not supported yet");
 
 cleanup:
   STACK_CHECK_USAGE (IDX);
@@ -2644,7 +2654,7 @@ parse_with_statement (void)
 static void
 parse_switch_statement (void)
 {
-  JERRY_UNIMPLEMENTED ();
+  EMIT_SORRY ("'switch' is not supported yet");
 }
 
 /* catch_clause
@@ -2751,7 +2761,7 @@ parse_try_statement (void)
   }
   else
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR ("Expected either 'catch' or 'finally' token");
   }
 
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_END_TRY_CATCH_FINALLY, INVALID_VALUE, INVALID_VALUE);
@@ -2772,7 +2782,7 @@ insert_semicolon (void)
   }
   if (!token_is (TOK_SEMICOLON))
   {
-    parser_fatal (ERR_PARSER);
+    EMIT_ERROR ("Expected either ';' or newline token");
   }
 }
 
@@ -2962,7 +2972,7 @@ parse_statement (void)
     if (token_is (TOK_COLON))
     {
       // STMT_LABELLED;
-      JERRY_UNIMPLEMENTED ();
+      EMIT_SORRY ("Labelled statements are not supported yet");
     }
     else
     {
@@ -3144,13 +3154,4 @@ parser_free (void)
 
   serializer_free ();
   lexer_free ();
-}
-
-void
-parser_fatal (jerry_status_t code)
-{
-  __printf ("FATAL: %d\n", code);
-  lexer_dump_buffer_state ();
-
-  jerry_exit (code);
 }

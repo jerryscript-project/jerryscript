@@ -1276,7 +1276,7 @@ parse_primary_expression (void)
     }
     default:
     {
-      JERRY_UNREACHABLE ();
+      EMIT_ERROR_VARG ("Unknown token %s", lexer_token_type_to_string (TOK ().type));
     }
   }
 
@@ -2483,6 +2483,11 @@ parse_statement_list (void)
       lexer_save_token (TOK ());
       break;
     }
+    if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+    {
+      lexer_save_token (TOK ());
+      break;
+    }
   }
 
   STACK_CHECK_USAGE (IDX);
@@ -2638,23 +2643,97 @@ parse_with_statement (void)
   STACK_CHECK_USAGE (IDX);
 }
 
-/* case_block
-  : '{' LT!* case_clause* LT!* '}'
-  | '{' LT!* case_clause* LT!* default_clause LT!* case_clause* LT!* '}'
-  ;
-   case_clause
+/* case_clause
   : 'case' LT!* expression LT!* ':' LT!* statement*
   ;
    default_clause
   : 'default' LT!* ':' LT!* statement*
   ; */
+static void
+parse_case_clause (void)
+{
+  STACK_DECLARE_USAGE (IDX)
+
+  assert_keyword (KW_CASE);
+
+  skip_newlines ();
+  parse_expression ();
+  token_after_newlines_must_be (TOK_COLON);
+
+  STACK_PUSH (IDX, next_temp_name ());
+  DUMP_OPCODE_3 (equal_value_type, ID (1), ID (2), ID (3));
+  STACK_PUSH (U16, OPCODE_COUNTER ());
+  DUMP_OPCODE_3 (is_false_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
+  STACK_SWAP (IDX);
+  STACK_DROP (IDX, 1);
+
+  skip_newlines ();
+  if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+  {
+    lexer_save_token (TOK ());
+    goto cleanup;
+  }
+  else
+  {
+    parse_statement_list ();
+  }
+
+cleanup:
+  STACK_CHECK_USAGE_LHS ();
+}
+
 /* switch_statement
   : 'switch' LT!* '(' LT!* expression LT!* ')' LT!* '{' LT!* case_block LT!* '}'
-  ; */
+  ;
+   case_block
+  : '{' LT!* case_clause* LT!* '}'
+  | '{' LT!* case_clause* LT!* default_clause LT!* case_clause* LT!* '}'
+  ;*/
 static void
 parse_switch_statement (void)
 {
-  EMIT_SORRY ("'switch' is not supported yet");
+  STACK_DECLARE_USAGE (rewritable_break)
+  STACK_DECLARE_USAGE (IDX)
+  STACK_DECLARE_USAGE (U16)
+
+  assert_keyword (KW_SWITCH);
+
+  parse_expression_inside_parens ();
+  token_after_newlines_must_be (TOK_OPEN_BRACE);
+  push_nesting (NESTING_SWITCH);
+  skip_newlines ();
+  while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+  {
+    if (is_keyword (KW_CASE))
+    {
+      parse_case_clause ();
+    }
+    else if (is_keyword (KW_DEFAULT))
+    {
+      EMIT_SORRY ("'default' clause is not supported yet");
+    }
+    else
+    {
+      JERRY_UNREACHABLE ();
+    }
+    REWRITE_COND_JMP (STACK_TOP (U16), is_false_jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
+    STACK_DROP (IDX, 1);
+    STACK_DROP (U16, 1);
+    skip_newlines ();
+  }
+
+  if (!token_is (TOK_CLOSE_BRACE))
+  {
+    EMIT_ERROR ("Expected '}' token");
+  }
+  pop_nesting (NESTING_SWITCH);
+  STACK_DROP (IDX, 1);
+
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
+
+  STACK_CHECK_USAGE (IDX);
+  STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (rewritable_break);
 }
 
 /* catch_clause
@@ -2879,6 +2958,10 @@ parse_statement (void)
     goto cleanup;
   }
   if (token_is (TOK_SEMICOLON))
+  {
+    goto cleanup;
+  }
+  if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
   {
     goto cleanup;
   }

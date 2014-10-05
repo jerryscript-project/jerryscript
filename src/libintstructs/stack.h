@@ -101,6 +101,30 @@ do { \
   NAME.length = NAME.current = 0; \
 } while (0)
 
+#ifdef JERRY_NDEBUG
+#define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
+static void increase_##NAME##_stack_size (void) __unused; \
+static void \
+increase_##NAME##_stack_size (void) { \
+  if (NAME.current == NAME.length && ((NAME##_linked_list *) NAME.last)->next == NULL) \
+  { \
+    size_t temp_size = mem_heap_recommend_allocation_size ((size_t) (sizeof (NAME##_linked_list))); \
+    JERRY_ASSERT ((temp_size-sizeof (NAME##_linked_list)) / sizeof (TYPE) == NAME.block_len); \
+    NAME##_linked_list *temp = (NAME##_linked_list *) mem_heap_alloc_block ( \
+      temp_size, MEM_HEAP_ALLOC_SHORT_TERM); \
+    if (temp == NULL) \
+    { \
+      jerry_exit (ERR_MEMORY); \
+    } \
+    __memset (temp, 0, temp_size); \
+    ((NAME##_linked_list *) NAME.last)->next = temp; \
+    temp->prev = (NAME##_linked_list *) NAME.last; \
+    NAME.last = (uint8_t *) temp; \
+    NAME.length = (NAME##_stack_data_type) (NAME.length + NAME.block_len); \
+  } \
+  NAME.current = (NAME##_stack_data_type) (NAME.current + 1); \
+}
+#else
 #define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
 static void increase_##NAME##_stack_size (void) __unused; \
 static void \
@@ -124,6 +148,7 @@ increase_##NAME##_stack_size (void) { \
   } \
   NAME.current = (NAME##_stack_data_type) (NAME.current + 1); \
 }
+#endif
 
 #define DEFINE_DECREASE_STACE_SIZE(NAME, TYPE) \
 static void decrease_##NAME##_stack_size (void) __unused; \

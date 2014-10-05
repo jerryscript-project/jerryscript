@@ -16,6 +16,7 @@
 #include "pretty-printer.h"
 #include "jerry-libc.h"
 #include "lexer.h"
+#include "opcodes-native-call.h"
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
@@ -206,6 +207,23 @@ dump_variable (idx_t id)
     dump_variable (opcode.data.op.lhs); \
     __printf (" " equals " " new " "); \
     dump_variable (opcode.data.op.name); \
+    dump_arg_list (opcode.data.op.arg_list); \
+    break;
+
+#define CASE_NATIVE_CALL(op, lhs, equals, new, name, arg_list) \
+  case NAME_TO_ID (op): \
+    dump_variable (opcode.data.op.lhs); \
+    __printf (" " equals " " new " "); \
+    switch (opcode.data.op.name) \
+    { \
+      case OPCODE_NATIVE_CALL_LED_TOGGLE: __printf ("LEDToggle"); break; \
+      case OPCODE_NATIVE_CALL_LED_ON: __printf ("LEDOn"); break; \
+      case OPCODE_NATIVE_CALL_LED_OFF: __printf ("LEDOff"); break; \
+      case OPCODE_NATIVE_CALL_LED_ONCE: __printf ("LEDOnce"); break; \
+      case OPCODE_NATIVE_CALL_WAIT: __printf ("wait"); break; \
+      case OPCODE_NATIVE_CALL_PRINT: __printf ("print"); break; \
+      default: JERRY_UNREACHABLE (); \
+    } \
     dump_arg_list (opcode.data.op.arg_list); \
     break;
 
@@ -434,7 +452,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_WITH (with, expr)
     CASE_VARG_0_NAME (var_decl, "var", variable_name, "", "")
     CASE_REG_VAR_DECL (reg_var_decl, min, max)
-    CASE_VARG_N_NAME_LHS (native_call, lhs, "=", "", name, arg_list)
+    CASE_NATIVE_CALL (native_call, lhs, "=", "", name, arg_list)
   }
 
   if (is_rewrite)

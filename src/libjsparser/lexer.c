@@ -776,7 +776,10 @@ parse_string (void)
       /* Only single escape character is allowed.  */
       if (LA (1) == 'x' || LA (1) == 'u' || __isdigit (LA (1)))
       {
-        PARSE_SORRY ("Escape sequences are not supported yet", token_start - buffer_start);
+        PARSE_WARN ("Escape sequences are ignored yet", token_start - buffer_start);
+        consume_char ();
+        consume_char ();
+        continue;
       }
       if ((LA (1) == '\'' && !is_double_quoted)
           || (LA (1) == '"' && is_double_quoted)

@@ -28,6 +28,11 @@
   __printf ("ERROR: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
   __exit (-1); \
 } while (0)
+#define PARSE_WARN(MESSAGE, LOCUS) do { \
+  size_t line, column; \
+  lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
+  __printf ("WARNING: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+} while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
@@ -36,7 +41,7 @@
   for (size_t i = 0; i < column; i++) { \
     __putchar (' '); \
   } \
-  __printf ("\n^\n"); \
+  __printf ("^\n"); \
   __printf ("ERROR: Ln %d, Col %d: ", line + 1, column + 1); \
   __printf (MESSAGE, __VA_ARGS__); \
   __printf ("\n"); \

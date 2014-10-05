@@ -245,7 +245,7 @@ do { \
 #define STACK_DROP(NAME, I) \
 do { \
   JERRY_ASSERT ((I) >= 0); \
-  for (size_t i = 0; i < (size_t) (I); i++) { \
+  for (size_t i = 0, till = (size_t) (I); i < till; i++) { \
     decrease_##NAME##_stack_size (); } } while (0)
 
 #define STACK_CLEAN(NAME) \

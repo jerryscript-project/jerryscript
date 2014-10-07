@@ -12,22 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-<test file="12.02.01-001.js">
-    <author>s.ryabkova</author>
-    <checks>
-        Check that in non strict mode variable with name "eval" could be created
-    </checks>
-    <keywords>
-        var, eval, if
-    </keywords>
-</test>
-*/
-function main()
-{
-    var eval = 1
-    if (eval === 1 && typeof(eval) === "number")
-        return 1;
-    else
-        return 0;
-}
+var eval = 1;
+assert(eval === 1 && typeof (eval) === "number");

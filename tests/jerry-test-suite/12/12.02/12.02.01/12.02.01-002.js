@@ -12,23 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-<test file="12.02.01-003.js">
-    <author>s.ryabkova</author>
-    <checks>
-        Check that in non strict mode variable with name "arguments"
-	could be created
-    </checks>
-    <keywords>
-        var, arguments, if
-    </keywords>
-</test>
-*/
-function main()
-{
-    var arguments=2;
-    if (arguments === 2 && typeof(arguments) === "number")
-        return 1;
-    else
-        return 0;
-}
+var arguments = 2;
+assert(arguments === 2 && typeof (arguments) === "number");
+

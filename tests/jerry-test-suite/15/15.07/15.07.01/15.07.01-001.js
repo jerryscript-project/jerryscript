@@ -12,18 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-<test file="15.07.01-001.js">
-    <author>s.ryabkova</author>
-    <checks>
-        Check Number Constructor called as a function performs a type conversion and returns a number value (not a Number Object) computed by ToNumber() function
-    </checks>
-    <keywords>
-        built-in, Number
-    </keywords>
-</test>
-*/
-function main()
-{
-  return (Number("123456") === 123456)
-}
+assert(Number("123456") === 123456);

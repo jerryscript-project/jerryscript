@@ -260,6 +260,9 @@ do { set_##NAME##_stack_head ((NAME##_stack_data_type) (I), VALUE); } while (0)
 #define STACK_INCR_HEAD(NAME, I) \
 do { STACK_SET_HEAD (NAME, I, (NAME##_stack_value_type) (STACK_HEAD (NAME, I) + 1)); } while (0)
 
+#define STACK_DECR_HEAD(NAME, I) \
+do { STACK_SET_HEAD (NAME, I, (NAME##_stack_value_type) (STACK_HEAD (NAME, I) - 1)); } while (0)
+
 #define STACK_TOP(NAME) \
 STACK_HEAD (NAME, 1)
 

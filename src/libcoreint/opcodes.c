@@ -1694,7 +1694,7 @@ read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of 
 } /* read_meta_opcode_counter */
 
 #define GETOP_DEF_1(a, name, field1) \
-        inline opcode_t getop_##name (idx_t arg1) \
+        opcode_t getop_##name (idx_t arg1) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \
@@ -1703,7 +1703,7 @@ read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of 
         }
 
 #define GETOP_DEF_2(a, name, field1, field2) \
-        inline opcode_t getop_##name (idx_t arg1, idx_t arg2) \
+        opcode_t getop_##name (idx_t arg1, idx_t arg2) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \
@@ -1713,7 +1713,7 @@ read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of 
         }
 
 #define GETOP_DEF_3(a, name, field1, field2, field3) \
-        inline opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
+        opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
         { \
           opcode_t opdata; \
           opdata.op_idx = __op__idx_##name; \

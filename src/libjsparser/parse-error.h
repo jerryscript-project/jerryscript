@@ -18,7 +18,7 @@
 
 #define PARSE_ERROR(MESSAGE, LOCUS) do { \
   size_t line, column; \
-  lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
+  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
   __printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
@@ -30,12 +30,12 @@
 } while (0)
 #define PARSE_WARN(MESSAGE, LOCUS) do { \
   size_t line, column; \
-  lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
+  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   __printf ("WARNING: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
   size_t line, column; \
-  lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
+  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
   __printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
@@ -49,7 +49,7 @@
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
   size_t line, column; \
-  lexer_locus_to_line_and_column ((size_t) (LOCUS), &line, &column); \
+  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
   __printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \

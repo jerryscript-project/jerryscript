@@ -123,6 +123,12 @@ STATIC_STACK (ops, uint8_t, opcode_t)
 
 enum
 {
+  locs_global_size
+};
+STATIC_STACK (locs, uint8_t, locus)
+
+enum
+{
   opcode_counter = 0,
   U16_global_size
 };
@@ -267,9 +273,9 @@ do { \
   STACK_CHECK_USAGE (IDX); \
 } while (0)
 
-#define EMIT_ERROR(MESSAGE) PARSE_ERROR(MESSAGE, TOK().locus)
-#define EMIT_SORRY(MESSAGE) PARSE_SORRY(MESSAGE, TOK().locus)
-#define EMIT_ERROR_VARG(MESSAGE, ...) PARSE_ERROR_VARG(MESSAGE, TOK().locus, __VA_ARGS__)
+#define EMIT_ERROR(MESSAGE) PARSE_ERROR(MESSAGE, TOK().loc)
+#define EMIT_SORRY(MESSAGE) PARSE_SORRY(MESSAGE, TOK().loc)
+#define EMIT_ERROR_VARG(MESSAGE, ...) PARSE_ERROR_VARG(MESSAGE, TOK().loc, __VA_ARGS__)
 
 #define NESTING_TO_STRING(I) (I == NESTING_FUNCTION \
                                 ? "function" \
@@ -292,7 +298,7 @@ argument_list_type;
 static void parse_expression (void);
 static void parse_statement (void);
 static void parse_assignment_expression (void);
-static void parse_source_element_list (void);
+static void parse_source_element_list (bool);
 static void parse_argument_list (argument_list_type, idx_t, idx_t);
 
 static uint8_t
@@ -473,7 +479,7 @@ token_after_newlines_must_be (token_type tt)
   }
 }
 
-static inline void
+static void
 token_after_newlines_must_be_keyword (keyword kw)
 {
   skip_newlines ();
@@ -570,7 +576,7 @@ fill_intrinsics (void)
   lp_string str = (lp_string)
   {
     .length = 6,
-    .str = (const ecma_char_t *) "assert"
+    .str = (ecma_char_t *) "assert"
   };
   intrinsic_dumper dumper = (intrinsic_dumper)
   {
@@ -761,7 +767,7 @@ parse_property_assignment (void)
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
     skip_newlines ();
-    parse_source_element_list ();
+    parse_source_element_list (false);
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     DUMP_VOID_OPCODE (ret);
@@ -784,7 +790,7 @@ parse_property_assignment (void)
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
     skip_newlines ();
-    parse_source_element_list ();
+    parse_source_element_list (false);
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     DUMP_VOID_OPCODE (ret);
@@ -1066,7 +1072,7 @@ parse_function_declaration (void)
 
   skip_newlines ();
   push_nesting (NESTING_FUNCTION);
-  parse_source_element_list ();
+  parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
 
   next_token_must_be (TOK_CLOSE_BRACE);
@@ -1118,7 +1124,7 @@ parse_function_expression (void)
 
   skip_newlines ();
   push_nesting (NESTING_FUNCTION);
-  parse_source_element_list ();
+  parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
 
   token_after_newlines_must_be (TOK_CLOSE_BRACE);
@@ -2312,7 +2318,6 @@ parse_variable_declaration (void)
 
   current_token_must_be (TOK_NAME);
   STACK_PUSH (IDX, token_data ());
-  DUMP_OPCODE_1 (var_decl, ID(1));
 
   skip_newlines ();
   if (token_is (TOK_EQ))
@@ -3182,11 +3187,201 @@ parse_source_element (void)
   STACK_CHECK_USAGE (IDX);
 }
 
+static void
+skip_optional_name_and_braces (void)
+{
+  if (token_is (TOK_NAME))
+  {
+    token_after_newlines_must_be (TOK_OPEN_PAREN);
+  }
+  else
+  {
+    current_token_must_be (TOK_OPEN_PAREN);
+  }
+
+  while (!token_is (TOK_CLOSE_BRACE))
+  {
+    skip_newlines ();
+  }
+}
+
+static void
+skip_braces (void)
+{
+  STACK_DECLARE_USAGE (U8)
+
+  current_token_must_be (TOK_OPEN_BRACE);
+
+  STACK_PUSH (U8, 1);
+
+  while (STACK_TOP (U8) > 0)
+  {
+    skip_newlines ();
+    if (token_is (TOK_OPEN_BRACE))
+    {
+      STACK_INCR_HEAD (U8, 1);
+    }
+    else if (token_is (TOK_CLOSE_BRACE))
+    {
+      STACK_DECR_HEAD (U8, 1);
+    }
+  }
+
+  STACK_DROP (U8,1);
+  STACK_CHECK_USAGE (U8);
+}
+
+static void
+skip_function (void)
+{
+  skip_newlines ();
+  skip_optional_name_and_braces ();
+  skip_newlines ();
+  skip_braces ();
+}
+
+static void
+skip_squares (void)
+{
+  STACK_DECLARE_USAGE (U8);
+
+  current_token_must_be (TOK_OPEN_SQUARE);
+
+  STACK_PUSH (U8, 1);
+
+  while (STACK_TOP (U8) > 0)
+  {
+    skip_newlines ();
+    if (token_is (TOK_OPEN_SQUARE))
+    {
+      STACK_INCR_HEAD (U8, 1);
+    }
+    else if (token_is (TOK_CLOSE_SQUARE))
+    {
+      STACK_DECR_HEAD (U8, 1);
+    }
+  }
+
+  STACK_DROP (U8,1);
+  STACK_CHECK_USAGE (U8);
+}
+
+static void
+skip_parens (void)
+{
+  STACK_DECLARE_USAGE (U8);
+
+  current_token_must_be (TOK_OPEN_PAREN);
+
+  STACK_PUSH (U8, 1);
+
+  while (STACK_TOP (U8) > 0)
+  {
+    skip_newlines ();
+    if (token_is (TOK_OPEN_PAREN))
+    {
+      STACK_INCR_HEAD (U8, 1);
+    }
+    else if (token_is (TOK_CLOSE_PAREN))
+    {
+      STACK_DECR_HEAD (U8, 1);
+    }
+  }
+  
+  STACK_DROP (U8,1);
+  STACK_CHECK_USAGE (U8);
+}
+
+static void
+preparse_var_decls (void)
+{
+  assert_keyword (KW_VAR);
+
+  skip_newlines ();
+  while (!token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON))
+  {
+    if (token_is (TOK_NAME))
+    {
+      DUMP_OPCODE_1 (var_decl, token_data ());
+      skip_token ();
+      continue;
+    }
+    else if (token_is (TOK_EQ))
+    {
+      while (!token_is (TOK_COMMA) && !token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON))
+      {
+        if (is_keyword (KW_FUNCTION))
+        {
+          skip_function ();
+        }
+        else if (token_is (TOK_OPEN_BRACE))
+        {
+          skip_braces ();
+        }
+        else if (token_is (TOK_OPEN_SQUARE))
+        {
+          skip_squares ();
+        }
+        else if (token_is (TOK_OPEN_PAREN))
+        {
+          skip_parens ();
+        }
+        skip_token ();
+      }
+    }
+    else if (!token_is (TOK_COMMA))
+    {
+      EMIT_ERROR ("Expected ','");
+    }
+    else
+    {
+      skip_token ();
+      continue;
+    }
+  }
+}
+
+static void
+preparse_scope (bool is_global)
+{
+  STACK_DECLARE_USAGE (locs);
+  STACK_DECLARE_USAGE (U8)
+  STACK_DECLARE_USAGE (U16)
+
+  STACK_PUSH (locs, TOK ().loc);
+  STACK_PUSH (U8, is_global ? TOK_EOF : TOK_CLOSE_BRACE);
+
+  STACK_PUSH (U16, OPCODE_COUNTER ());
+  DUMP_VOID_OPCODE (nop); /* use strict.  */
+
+  while (!token_is (STACK_TOP (U8)))
+  {
+    if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
+    {
+      REWRITE_OPCODE_3 (STACK_TOP (U16), meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
+    }
+    else if (is_keyword (KW_VAR))
+    {
+      preparse_var_decls ();
+    }
+    skip_newlines ();
+  }
+
+  lexer_seek (STACK_TOP (locs));
+  STACK_DROP (locs, 1);
+  STACK_DROP (U8, 1);
+  STACK_DROP (U16, 1);
+
+  STACK_CHECK_USAGE (U8);
+  STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (locs);
+}
+
 /* source_element_list
   : source_element (LT!* source_element)*
   ; */
 static void
-parse_source_element_list (void)
+parse_source_element_list (bool is_global)
 {
   // U16 reg_var_decl_loc;
   STACK_DECLARE_USAGE (U16)
@@ -3197,6 +3392,9 @@ parse_source_element_list (void)
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_2 (reg_var_decl, MIN_TEMP_NAME (), INVALID_VALUE);
 
+  preparse_scope (is_global);
+
+  skip_newlines ();
   while (!token_is (TOK_EOF) && !token_is (TOK_CLOSE_BRACE))
   {
     parse_source_element ();
@@ -3222,7 +3420,7 @@ parser_parse_program (void)
   STACK_DECLARE_USAGE (IDX)
 
   skip_newlines ();
-  parse_source_element_list ();
+  parse_source_element_list (true);
 
   skip_newlines ();
   JERRY_ASSERT (token_is (TOK_EOF));
@@ -3257,6 +3455,7 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   STACK_INIT (uint16_t, U16);
   STACK_INIT (opcode_counter_t, rewritable_continue);
   STACK_INIT (opcode_counter_t, rewritable_break);
+  STACK_INIT (locus, locs);
 
   HASH_INIT (intrinsics, 1);
 
@@ -3314,6 +3513,7 @@ parser_free (void)
   STACK_FREE (U16);
   STACK_FREE (rewritable_continue);
   STACK_FREE (rewritable_break);
+  STACK_FREE (locs);
 
   HASH_FREE (intrinsics);
 

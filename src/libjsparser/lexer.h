@@ -134,13 +134,14 @@ typedef uint8_t token_type;
 #define TOK_UNDEFINED 57 // undefined
 #define TOK_EMPTY 58
 
+typedef size_t locus;
 
 /* Represents the contents of a token.  */
 typedef struct
 {
   token_type type;
   uint8_t uid;
-  size_t locus;
+  locus loc;
 }
 __packed
 token;
@@ -166,7 +167,8 @@ uint8_t lexer_get_nums_count (void);
 
 void lexer_adjust_num_ids (void);
 
-void lexer_locus_to_line_and_column (size_t, size_t *, size_t *);
+void lexer_seek (locus);
+void lexer_locus_to_line_and_column (locus, size_t *, size_t *);
 void lexer_dump_line (size_t);
 const char *lexer_keyword_to_string (keyword);
 const char *lexer_token_type_to_string (token_type);

@@ -91,10 +91,11 @@ serializer_print_opcodes (void)
 void
 serializer_adjust_strings (void)
 {
-  for (uint8_t i = 0; i < bytecode_data.strs_count; i++)
+  for (uint8_t i = 0; i < bytecode_data.strs_count; ++i)
   {
-    const ecma_length_t len = bytecode_data.strings[i].length;
-    ((ecma_char_t *) (bytecode_data.strings[i]).str)[len] = '\0';
+    ecma_length_t len = bytecode_data.strings[i].length;
+    ecma_char_t *str = bytecode_data.strings[i].str;
+    str[len] = '\0';
   }
 }
 

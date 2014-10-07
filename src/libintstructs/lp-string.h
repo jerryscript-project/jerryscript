@@ -22,7 +22,7 @@
 typedef struct
 {
   ecma_length_t length;
-  const ecma_char_t *str;
+  ecma_char_t *str;
 }
 __packed
 lp_string;

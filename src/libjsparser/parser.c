@@ -752,7 +752,11 @@ parse_property_assignment (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
 
-  current_token_must_be (TOK_NAME);
+  if (!token_is (TOK_NAME))
+  {
+    parse_property_name_and_value ();
+    goto cleanup;
+  }
 
   if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "get"))
   {
@@ -805,6 +809,7 @@ parse_property_assignment (void)
     parse_property_name_and_value ();
   }
 
+cleanup:
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (IDX);
 }

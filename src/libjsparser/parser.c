@@ -1327,13 +1327,30 @@ parse_member_expression (idx_t *this_arg)
     parse_member_expression (this_arg);
 
     skip_newlines ();
-    if (this_arg)
+    if (token_is (TOK_OPEN_PAREN))
     {
-      parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), *this_arg); // push obj
+      if (this_arg)
+      {
+        parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), *this_arg); // push obj
+      }
+      else
+      {
+        parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), INVALID_VALUE); // push obj
+      }
     }
     else
     {
-      parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), INVALID_VALUE); // push obj
+      lexer_save_token (TOK ());
+      STACK_PUSH (IDX, next_temp_name ());
+      if (this_arg)
+      {
+        DUMP_OPCODE_3 (construct_n, ID (1), ID (2), 1);
+        DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, *this_arg, INVALID_VALUE);
+      }
+      else
+      {
+        DUMP_OPCODE_3 (construct_n, ID (1), ID (2), 0);
+      }
     }
 
     STACK_SWAP (IDX);
@@ -1631,9 +1648,9 @@ parse_unary_expression (void)
       else if (is_keyword (KW_VOID))
       {
         STACK_PUSH (IDX, next_temp_name ());
-        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, ID (2));
-        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED);
-        STACK_SWAP (IDX);
+        NEXT (unary_expression);
+        DUMP_OPCODE_3 (assignment, ID(2), OPCODE_ARG_TYPE_VARIABLE, ID (1));
+        DUMP_OPCODE_3 (assignment, ID(2), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED);
         STACK_DROP (IDX, 1);
         break;
       }
@@ -3225,7 +3242,7 @@ parse_source_element (void)
 }
 
 static void
-skip_optional_name_and_braces (void)
+skip_optional_name_and_parens (void)
 {
   if (token_is (TOK_NAME))
   {
@@ -3236,7 +3253,7 @@ skip_optional_name_and_braces (void)
     current_token_must_be (TOK_OPEN_PAREN);
   }
 
-  while (!token_is (TOK_CLOSE_BRACE))
+  while (!token_is (TOK_CLOSE_PAREN))
   {
     skip_newlines ();
   }
@@ -3272,7 +3289,7 @@ static void
 skip_function (void)
 {
   skip_newlines ();
-  skip_optional_name_and_braces ();
+  skip_optional_name_and_parens ();
   skip_newlines ();
   skip_braces ();
 }

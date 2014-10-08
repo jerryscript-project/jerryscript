@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert("x\0a" < "x\0b") && ("x\0b" < "x\0c"));
+assert(("x\0a" < "x\0b") && ("x\0b" < "x\0c"));

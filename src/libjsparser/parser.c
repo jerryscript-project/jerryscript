@@ -216,14 +216,14 @@ do { \
 #define REWRITE_OPCODE_1(OC, GETOP, OP1) \
 do { \
   JERRY_ASSERT (0+OP1 <= 255); \
-  serializer_rewrite_opcode (OC, getop_##GETOP ((idx_t) (OP1))); \
+  serializer_rewrite_opcode ((opcode_counter_t) (OC), getop_##GETOP ((idx_t) (OP1))); \
 } while (0)
 
 #define REWRITE_OPCODE_2(OC, GETOP, OP1, OP2) \
 do { \
   JERRY_ASSERT (0+OP1 <= 255); \
   JERRY_ASSERT (0+OP2 <= 255); \
-  serializer_rewrite_opcode (OC, getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2))); \
+  serializer_rewrite_opcode ((opcode_counter_t) (OC), getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2))); \
 } while (0)
 
 #define REWRITE_OPCODE_3(OC, GETOP, OP1, OP2, OP3) \
@@ -231,7 +231,7 @@ do { \
   JERRY_ASSERT (0+OP1 <= 255); \
   JERRY_ASSERT (0+OP2 <= 255); \
   JERRY_ASSERT (0+OP3 <= 255); \
-  serializer_rewrite_opcode (OC, getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3))); \
+  serializer_rewrite_opcode ((opcode_counter_t) (OC), getop_##GETOP ((idx_t) (OP1), (idx_t) (OP2), (idx_t) (OP3))); \
 } while (0)
 
 #define REWRITE_COND_JMP(OC, GETOP, DIFF) \
@@ -1538,6 +1538,7 @@ parse_unary_expression (void)
 {
   // IDX expr, lhs;
   STACK_DECLARE_USAGE (IDX)
+  STACK_DECLARE_USAGE (ops)
 
   switch (TOK ().type)
   {
@@ -1591,17 +1592,52 @@ parse_unary_expression (void)
     {
       if (is_keyword (KW_DELETE))
       {
-        TODO (/* lhs = delete_var for delete, applied to expression, that is evaluating to Identifier;
-                 lhs = delete_prop for 'delete expr[expr]';
-                 lhs = true - otherwise; */);
-        // DUMP_OPCODE_2 (delete, lhs, expr);
-        EMIT_SORRY ("Operation 'delete' is not supported yet");
+        NEXT (unary_expression);
+        if (ID (1) < lexer_get_strings_count ())
+        {
+          STACK_PUSH (IDX, next_temp_name ());
+          DUMP_OPCODE_2 (delete_var, ID (1), ID (2));
+          STACK_SWAP (IDX);
+          STACK_DROP (IDX, 1);
+          break;
+        }
+        STACK_PUSH (ops, deserialize_opcode ((opcode_counter_t) (OPCODE_COUNTER () - 1)));
+        if (LAST_OPCODE_IS (assignment)
+            && STACK_TOP (ops).data.assignment.type_value_right == OPCODE_ARG_TYPE_VARIABLE)
+        {
+          STACK_PUSH (IDX, next_temp_name ());
+          REWRITE_OPCODE_2 (OPCODE_COUNTER () - 1, delete_var, ID (1), STACK_TOP (ops).data.assignment.value_right);
+          STACK_SWAP (IDX);
+          STACK_DROP (IDX, 1);
+        }
+        else if (LAST_OPCODE_IS (prop_getter))
+        {
+          STACK_PUSH (IDX, next_temp_name ());
+          REWRITE_OPCODE_3 (OPCODE_COUNTER () - 1, delete_prop, ID (1),
+                            STACK_TOP (ops).data.prop_getter.obj, STACK_TOP (ops).data.prop_getter.prop);
+          STACK_SWAP (IDX);
+          STACK_DROP (IDX, 1);
+        }
+        else
+        {
+          STACK_PUSH (IDX, next_temp_name ());
+          DUMP_OPCODE_3 (assignment, ID (1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE);
+          STACK_SWAP (IDX);
+          STACK_DROP (IDX, 1);
+        }
+        STACK_DROP (ops, 1);
+        break;
       }
-      if (is_keyword (KW_VOID))
+      else if (is_keyword (KW_VOID))
       {
-        EMIT_SORRY ("Operation 'void' is not supported yet");
+        STACK_PUSH (IDX, next_temp_name ());
+        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, ID (2));
+        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED);
+        STACK_SWAP (IDX);
+        STACK_DROP (IDX, 1);
+        break;
       }
-      if (is_keyword (KW_TYPEOF))
+      else if (is_keyword (KW_TYPEOF))
       {
         STACK_PUSH (IDX, next_temp_name ());
         NEXT (unary_expression);
@@ -1618,6 +1654,7 @@ parse_unary_expression (void)
   }
 
   STACK_CHECK_USAGE_LHS ();
+  STACK_CHECK_USAGE (ops);
 }
 
 #define DUMP_OF(GETOP, EXPR) \

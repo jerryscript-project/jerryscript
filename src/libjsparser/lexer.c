@@ -889,13 +889,6 @@ lexer_next_token_private (void)
 {
   char c = LA (0);
 
-  if (!is_empty (saved_token))
-  {
-    token res = saved_token;
-    saved_token = empty_token;
-    return res;
-  }
-
   JERRY_ASSERT (token_start == NULL);
 
   if (__isalpha (c) || c == '$' || c == '_')
@@ -1043,20 +1036,29 @@ lexer_next_token (void)
     dump_current_line ();
   }
 
+  if (!is_empty (saved_token))
+  {
+    sent_token = saved_token;
+    saved_token = empty_token;
+    goto end;
+  }
+
   prev_token = sent_token;
   sent_token = lexer_next_token_private ();
 
   if (sent_token.type == TOK_NEWLINE)
   {
     dump_current_line ();
-    return sent_token;
   }
+
+end:
   return sent_token;
 }
 
 void
 lexer_save_token (token tok)
 {
+  JERRY_ASSERT (is_empty (saved_token));
   saved_token = tok;
 }
 

@@ -1132,7 +1132,7 @@ parse_function_expression (void)
   parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
 
-  token_after_newlines_must_be (TOK_CLOSE_BRACE);
+  next_token_must_be (TOK_CLOSE_BRACE);
 
   DUMP_VOID_OPCODE (ret);
   rewrite_meta_opcode_counter (STACK_TOP (U16), OPCODE_META_TYPE_FUNCTION_END);
@@ -3001,8 +3001,9 @@ insert_semicolon (void)
 {
   // We cannot use TOK (), since we may use lexer_save_token
   skip_token ();
-  if (lexer_prev_token ().type == TOK_NEWLINE)
+  if (token_is (TOK_NEWLINE) || lexer_prev_token ().type == TOK_NEWLINE)
   {
+    lexer_save_token (TOK ());
     return;
   }
   if (!token_is (TOK_SEMICOLON))

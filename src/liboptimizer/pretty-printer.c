@@ -439,9 +439,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_SINGLE_ADDRESS (retval, "return", ret_value)
     CASE_ZERO_ADDRESS (ret, "return")
     CASE_ZERO_ADDRESS (nop, "")
-    TODO (Refine to match new opcodes)
     CASE_VARG_1_LHS (array_decl, lhs, "=", "[", list, "]")
-    TODO (Refine to match new opcodes)
     CASE_VARG_0_LHS (obj_decl, lhs, "=", "{", "}")
     CASE_VARG_1_NAME_LHS (prop_getter, lhs, "=", "", obj, "[", prop, "]")
     CASE_VARG_1_NAME_LHS (prop_setter, obj, "", "[", prop, " ] = ", rhs, "")
@@ -453,6 +451,14 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     CASE_VARG_0_NAME (var_decl, "var", variable_name, "", "")
     CASE_REG_VAR_DECL (reg_var_decl, min, max)
     CASE_NATIVE_CALL (native_call, lhs, "=", "", name, arg_list)
+    case NAME_TO_ID (func_expr_n):
+    {
+      dump_variable (opcode.data.func_expr_n.lhs);
+      __printf (" = function ");
+      dump_variable (opcode.data.func_expr_n.name_lit_idx);
+      __printf (" (%d args);", opcode.data.func_expr_n.arg_list);
+      break;
+    }
   }
 
   if (is_rewrite)

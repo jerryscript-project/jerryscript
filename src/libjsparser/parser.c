@@ -533,11 +533,19 @@ rewrite_breaks (opcode_counter_t break_oc, opcode_counter_t dest_oc)
 static void
 rewrite_continues (opcode_counter_t cont_oc, opcode_counter_t dest_oc)
 {
-  REWRITE_JMP (cont_oc, jmp_up, cont_oc - dest_oc);
+  if (cont_oc > dest_oc)
+  {
+    REWRITE_JMP (cont_oc, jmp_up, cont_oc - dest_oc);
+  }
+  else
+  {
+    // in case of do-while loop we must jump to condition
+    REWRITE_JMP (cont_oc, jmp_up, dest_oc - cont_oc);
+  }
 }
 
 static void
-rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
+rewrite_rewritable_opcodes (rewritable_opcode_type type, uint8_t from, opcode_counter_t oc)
 {
   STACK_DECLARE_USAGE (U8)
 
@@ -547,13 +555,13 @@ rewrite_rewritable_opcodes (rewritable_opcode_type type, opcode_counter_t oc)
   {
     case REWRITABLE_BREAK:
     {
-      STACK_ITERATE_VARG (rewritable_break, rewrite_breaks, oc);
+      STACK_ITERATE_VARG (rewritable_break, rewrite_breaks, from, oc);
       STACK_CLEAN (rewritable_break);
       break;
     }
     case REWRITABLE_CONTINUE:
     {
-      STACK_ITERATE_VARG (rewritable_continue, rewrite_continues, oc);
+      STACK_ITERATE_VARG (rewritable_continue, rewrite_continues, from, oc);
       STACK_CLEAN (rewritable_continue);
       break;
     }
@@ -2461,6 +2469,7 @@ parse_for_or_for_in_statement (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (nestings)
+  STACK_DECLARE_USAGE (U8)
 
   assert_keyword (KW_FOR);
   token_after_newlines_must_be (TOK_OPEN_PAREN);
@@ -2548,6 +2557,9 @@ plain_for:
   21   jmp_up 5; // step_oc;
   22   ...
    */
+  STACK_PUSH (U8, STACK_SIZE (rewritable_continue));
+  STACK_PUSH (U8, STACK_SIZE (rewritable_break));
+
   STACK_PUSH (U16, OPCODE_COUNTER ()); // cond_oc;
   skip_newlines ();
   if (!token_is (TOK_SEMICOLON))
@@ -2585,9 +2597,10 @@ plain_for:
   DUMP_OPCODE_2 (jmp_up, 0, OPCODE_COUNTER () - STACK_TOP (U16));
   REWRITE_COND_JMP (STACK_HEAD (U16, 3), is_false_jmp_down, OPCODE_COUNTER () - STACK_HEAD (U16, 3));
 
-  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_TOP (U16));
-  rewrite_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_HEAD (U8, 2), STACK_TOP (U16));
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
+  STACK_DROP (U8, 2);
   STACK_DROP (IDX, 1);
   STACK_DROP (U16, 4);
 
@@ -2599,6 +2612,7 @@ for_in:
 cleanup:
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (nestings);
 }
 
@@ -2705,29 +2719,33 @@ parse_do_while_statement (void)
   // U16 loop_oc;
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (U8)
   STACK_DECLARE_USAGE (nestings)
 
   assert_keyword (KW_DO);
 
-  STACK_PUSH (U16, OPCODE_COUNTER ());
+  STACK_PUSH (U8, STACK_SIZE (rewritable_continue));
+  STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
   skip_newlines ();
   push_nesting (NESTING_ITERATIONAL);
   parse_statement ();
   pop_nesting (NESTING_ITERATIONAL);
 
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_HEAD (U8, 2), OPCODE_COUNTER ());
   token_after_newlines_must_be_keyword (KW_WHILE);
   parse_expression_inside_parens ();
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (is_true_jmp_up, INVALID_VALUE, INVALID_VALUE, INVALID_VALUE);
   REWRITE_COND_JMP (STACK_HEAD(U16, 1), is_true_jmp_up, OPCODE_COUNTER () - STACK_HEAD (U16, 2));
 
-  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_HEAD (U16, 2));
-  rewrite_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
   STACK_DROP (IDX, 1);
-  STACK_DROP (U16, 2);
+  STACK_DROP (U16, 1);
+  STACK_DROP (U8, 2);
 
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (nestings);
@@ -2743,9 +2761,13 @@ parse_while_statement (void)
   // U16 cond_oc, jmp_oc;
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (U8)
   STACK_DECLARE_USAGE (nestings)
 
   assert_keyword (KW_WHILE);
+
+  STACK_PUSH (U8, STACK_SIZE (rewritable_continue));
+  STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
   STACK_PUSH (U16, OPCODE_COUNTER ()); // cond_oc;
   parse_expression_inside_parens ();
@@ -2762,12 +2784,14 @@ parse_while_statement (void)
   REWRITE_JMP (STACK_TOP (U16), jmp_up, OPCODE_COUNTER () - STACK_HEAD (U16, 3));
   REWRITE_COND_JMP (STACK_HEAD (U16, 2), is_false_jmp_down, OPCODE_COUNTER () - STACK_HEAD (U16, 2));
 
-  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_HEAD (U16, 3));
-  rewrite_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
+  rewrite_rewritable_opcodes (REWRITABLE_CONTINUE, STACK_HEAD (U8, 2), STACK_HEAD (U16, 3));
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
   STACK_DROP (IDX, 1);
   STACK_DROP (U16, 3);
+  STACK_DROP (U8, 2);
 
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (nestings);
@@ -2849,8 +2873,11 @@ parse_switch_statement (void)
   STACK_DECLARE_USAGE (rewritable_break)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (U8)
 
   assert_keyword (KW_SWITCH);
+
+  STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
   parse_expression_inside_parens ();
   token_after_newlines_must_be (TOK_OPEN_BRACE);
@@ -2881,12 +2908,14 @@ parse_switch_statement (void)
     EMIT_ERROR ("Expected '}' token");
   }
   pop_nesting (NESTING_SWITCH);
-  STACK_DROP (IDX, 1);
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
-  rewrite_rewritable_opcodes (REWRITABLE_BREAK, OPCODE_COUNTER ());
+  STACK_DROP (IDX, 1);
+  STACK_DROP (U8, 1);
 
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (rewritable_break);
 }
 

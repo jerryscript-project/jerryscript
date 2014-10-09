@@ -828,6 +828,7 @@ parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
   STACK_DECLARE_USAGE (U8)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (IDX)
+  STACK_DECLARE_USAGE (temp_names)
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   switch (alt)
@@ -908,9 +909,12 @@ parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
     STACK_INCR_HEAD (U8, 1);
   }
 
+  STACK_PUSH (temp_names, TEMP_NAME ());
+
   skip_newlines ();
   while (!token_is (STACK_HEAD (U8, 2)))
   {
+    STACK_SET_ELEMENT (temp_names, temp_name, STACK_TOP (temp_names));
     switch (alt)
     {
       case AL_FUNC_DECL:
@@ -977,6 +981,7 @@ next:
 
     skip_newlines ();
   }
+  STACK_DROP (temp_names, 1);
 
   switch (alt)
   {
@@ -1034,6 +1039,7 @@ next:
 
   STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (temp_names);
 
 #ifndef JERRY_NDEBUG
   if (alt == AL_FUNC_DECL)

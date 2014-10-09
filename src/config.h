@@ -55,7 +55,7 @@
 /**
  * Size of heap
  */
-#define CONFIG_MEM_HEAP_AREA_SIZE (16 * 1024)
+#define CONFIG_MEM_HEAP_AREA_SIZE (64 * 1024)
 
 /**
  * Log2 of maximum possible offset in the heap

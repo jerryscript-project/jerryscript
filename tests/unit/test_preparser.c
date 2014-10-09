@@ -33,7 +33,7 @@ main( int __unused argc,
 
   mem_init();
   deserializer_init ();
-  parser_init (program, __strlen (program), true);
+  parser_init (program, __strlen (program), false);
   parser_parse_program ();
   parser_free ();
 

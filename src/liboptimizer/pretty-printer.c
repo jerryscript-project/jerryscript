@@ -16,7 +16,9 @@
 #include "pretty-printer.h"
 #include "jerry-libc.h"
 #include "lexer.h"
+#include "deserializer.h"
 #include "opcodes-native-call.h"
+#include <stdarg.h>
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
@@ -74,312 +76,124 @@ pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
   __printf ("\n");
 }
 
-static void
-dump_arg_list (idx_t id)
-{
-  FIXME (/* Dump arg list instead of args' number */);
-
-  __printf (" (%d args)", id);
-}
-
-static void
-dump_variable (idx_t id)
+static const char *
+var_id_to_string (char *res, idx_t id)
 {
   if (id >= lexer_get_reserved_ids_count ())
   {
-    __printf ("tmp%d", id);
+    __strncpy (res, "tmp", 3);
+    if (id / 100 != 0)
+    {
+      res[3] = (char) (id / 100 + '0');
+      res[4] = (char) ((id % 100) / 10 + '0');
+      res[5] = (char) (id % 10 + '0');
+      return res;
+    }
+    else if (id / 10 != 0)
+    {
+      res[3] = (char) (id / 10 + '0');
+      res[4] = (char) (id % 10 + '0');
+      return res;
+    }
+    else
+    {
+      res[3] = (char) (id + '0');
+      return res;
+    }
   }
   else if (id < lexer_get_strings_count ())
   {
-    dump_lp (lexer_get_string_by_id (id));
+    lp_string str = lexer_get_string_by_id (id);
+    __strncpy (res, (char *) str.str, str.length);
+    return res;
   }
   else
   {
-    __printf ("%d", (int) lexer_get_num_by_id (id));
+    int i = 0;
+    int num = (int) lexer_get_num_by_id (id);
+    int temp = num;
+    for (; temp != 0; i++)
+    {
+      temp /= 10;
+    }
+    do
+    {
+      res[i--] = (char) (num % 10 + '0');
+      num /= 10;
+    }
+    while (i >= 0);
+    return res;
   }
 }
 
-#define CASE_CONDITIONAL_JUMP(op, string1, field1, string2, oc, sign, field2, field3) \
-  case NAME_TO_ID (op): \
-    __printf (string1); \
-    dump_variable (opcode.data.op.field1); \
-    __printf (string2); \
-    __printf (" %d;", oc sign ((opcode.data.op.field2 << JERRY_BITSINBYTE) \
-                               + opcode.data.op.field3)); \
-    break;
+static void
+pp_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  while (*format)
+  {
+    if (*format != '%')
+    {
+      __putchar (*format);
+      format++;
+      continue;
+    }
 
-#define CASE_UNCONDITIONAL_JUMP(op, string, oc, sign, field2, field3) \
-  case NAME_TO_ID (op): \
-    __printf (string); \
-    __printf (" %d;", oc sign ((opcode.data.op.field2 << JERRY_BITSINBYTE) \
-                               + opcode.data.op.field3)); \
-    break;
+    format++;
+    switch (*format)
+    {
+      case 'd':
+      {
+        __printf ("%d", va_arg (args, int));
+        break;
+      }
+      case 's':
+      {
+        char res[32] = {'\0'};
+        __printf ("%s", var_id_to_string (res, (idx_t) va_arg (args, int)));
+        break;
+      }
+      case '%':
+      {
+        __printf ("%%");
+        break;
+      }
+      default:
+      {
+        JERRY_UNREACHABLE ();
+      }
+    }
+    format++;
+  }
+  va_end (args);
+}
 
-#define CASE_TRIPLE_ADDRESS(op, lhs, equals, op1, oper, op2) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " "); \
-    dump_variable (opcode.data.op.op1); \
-    __printf (" " oper " "); \
-    dump_variable (opcode.data.op.op2); \
-    __printf (";"); \
-    break;
+#define PP_OP_0(op, format) \
+  case NAME_TO_ID(op): pp_printf (format); break;
 
-#define CASE_DOUBLE_ADDRESS(op, lhs, equals, oper, op2) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " "); \
-    __printf (oper " "); \
-    dump_variable (opcode.data.op.op2); \
-    __printf (";"); \
-    break;
+#define PP_OP_1(op, format, field1) \
+  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1); break;
 
-#define CASE_DOUBLE_ADDRESS_POST(op, lhs, equals, op2, oper) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " "); \
-    dump_variable (opcode.data.op.op2); \
-    __printf (" " oper ";"); \
-    break;
+#define PP_OP_2(op, format, field1, field2) \
+  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1, opcode.data.op.field2); break;
 
-#define CASE_ASSIGNMENT(op, lhs, equals, op2) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " "); \
-    if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SIMPLE) { \
-      switch (opcode.data.op.op2) { \
-        case ECMA_SIMPLE_VALUE_NULL: \
-          __printf ("null"); \
-          break; \
-        case ECMA_SIMPLE_VALUE_FALSE: \
-          __printf ("false"); \
-          break; \
-        case ECMA_SIMPLE_VALUE_TRUE: \
-          __printf ("true"); \
-          break; \
-        case ECMA_SIMPLE_VALUE_UNDEFINED: \
-          __printf ("undefined"); \
-          break; \
-        default: \
-          JERRY_UNREACHABLE (); \
-      } \
-      __printf (": SIMPLE"); \
-    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_STRING) { \
-      dump_lp (lexer_get_string_by_id (opcode.data.op.op2)); \
-      __printf (": STRING"); \
-    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_NUMBER) {\
-      __printf ("%d", (int) lexer_get_num_by_id (opcode.data.op.op2)); \
-      __printf (": NUMBER"); \
-    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_SMALLINT) {\
-      __printf ("%d", opcode.data.op.op2); \
-      __printf (": SMALLINT"); \
-    } else if (opcode.data.op.type_value_right == OPCODE_ARG_TYPE_VARIABLE) {\
-      dump_variable (opcode.data.op.op2); \
-      __printf (": TYPEOF("); \
-      dump_variable (opcode.data.op.op2); \
-      __printf (")"); \
-    } else { \
-      JERRY_UNREACHABLE (); \
-    } \
-    __printf (";"); \
-    break;
+#define PP_OP_3(op, format, field1, field2, field3) \
+  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1, opcode.data.op.field2, opcode.data.op.field3); break;
 
-#define CASE_VARG_0_NAME_LHS(op, lhs, equals, new, name, start, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " new " "); \
-    dump_variable (opcode.data.op.name); \
-    __printf (start end ";"); \
-    break;
-
-#define CASE_VARG_1_NAME_LHS(op, lhs, equals, new, name, start, arg, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " new " "); \
-    dump_variable (opcode.data.op.name); \
-    __printf (start); \
-    dump_variable (opcode.data.op.arg); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_N_NAME_LHS(op, lhs, equals, new, name, arg_list) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " new " "); \
-    dump_variable (opcode.data.op.name); \
-    dump_arg_list (opcode.data.op.arg_list); \
-    break;
-
-#define CASE_NATIVE_CALL(op, lhs, equals, new, name, arg_list) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " new " "); \
-    switch (opcode.data.op.name) \
-    { \
-      case OPCODE_NATIVE_CALL_LED_TOGGLE: __printf ("LEDToggle"); break; \
-      case OPCODE_NATIVE_CALL_LED_ON: __printf ("LEDOn"); break; \
-      case OPCODE_NATIVE_CALL_LED_OFF: __printf ("LEDOff"); break; \
-      case OPCODE_NATIVE_CALL_LED_ONCE: __printf ("LEDOnce"); break; \
-      case OPCODE_NATIVE_CALL_WAIT: __printf ("wait"); break; \
-      case OPCODE_NATIVE_CALL_PRINT: __printf ("print"); break; \
-      default: JERRY_UNREACHABLE (); \
-    } \
-    dump_arg_list (opcode.data.op.arg_list); \
-    break;
-
-#define CASE_VARG_0_NAME(op, new, name, start, end) \
-  case NAME_TO_ID (op): \
-     __printf (new " "); \
-     dump_variable (opcode.data.op.name); \
-     __printf (start end ";"); \
-     break;
-
-#define CASE_VARG_1_NAME(op, new, name, start, arg1, end) \
-  case NAME_TO_ID (op): \
-    __printf (new " "); \
-    dump_variable (opcode.data.op.name); \
-    __printf (start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_2_NAME(op, new, name, start, arg1, arg2, end) \
-  case NAME_TO_ID (op): \
-    __printf (new " "); \
-    dump_variable (opcode.data.op.name); \
-    __printf (start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_N_NAME(op, new, name, arg_list) \
-  case NAME_TO_ID (op): \
-    __printf (new " "); \
-    dump_variable (opcode.data.op.name); \
-    dump_arg_list (opcode.data.op.arg_list); \
-    break;
-
-#define CASE_VARG_0_LHS(op, lhs, equals, start, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " start); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_1_LHS(op, lhs, equals, start, arg1, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_2_LHS(op, lhs, equals, start, arg1, arg2, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf (end ";"); \
-    break;
-
-#define CASE_VARG_N_LHS(op, lhs, equals, start, arg1, arg2, end) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " " start); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf (" ..."); \
-    varg_end = end; \
-    break;
-
-#define CASE_VARG_1_END(op, arg1) \
-  case NAME_TO_ID (op): \
-    __printf ("... "); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf ("%s;", varg_end); \
-    break;
-
-#define CASE_VARG_2_END(op, arg1, arg2) \
-  case NAME_TO_ID (op): \
-    __printf ("... "); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf ("%s;", varg_end); \
-    break;
-
-#define CASE_VARG_3_END(op, arg1, arg2, arg3) \
-  case NAME_TO_ID (op): \
-    __printf ("... "); \
-    dump_variable (opcode.data.op.arg1); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg2); \
-    __printf (", "); \
-    dump_variable (opcode.data.op.arg3); \
-    __printf ("%s;", varg_end); \
-    break;
-
-#define CASE_VARG_1(op, arg) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.arg); \
-    break;
-
-#define CASE_EXIT(op, name, field) \
-  case NAME_TO_ID (op): \
-    __printf (name " "); \
-    __printf ("%d;", opcode.data.op.field); \
-    break;
-
-#define CASE_SINGLE_ADDRESS(op, name, field) \
-  case NAME_TO_ID (op): \
-    __printf (name " "); \
-    dump_variable (opcode.data.op.field); \
-    __printf (";"); \
-    break;
-
-#define CASE_ZERO_ADDRESS(op, name) \
-  case NAME_TO_ID (op): \
-    __printf (name ";"); \
-    break;
-
-#define CASE_THIS(op, lhs, equals, this) \
-  case NAME_TO_ID (op): \
-    dump_variable (opcode.data.op.lhs); \
-    __printf (" " equals " "); \
-    __printf (this ";"); \
-    break;
-
-#define CASE_WITH(op, expr) \
-  case NAME_TO_ID (op): \
-    __printf ("with ("); \
-    dump_variable (opcode.data.op.expr); \
-    __printf (")"); \
-    break;
-
-#define CASE_REG_VAR_DECL(op, min, max) \
-  case NAME_TO_ID (op): \
-    __printf ("var "); \
-    dump_variable (opcode.data.op.min); \
-    __printf (" .. "); \
-    dump_variable (opcode.data.op.max); \
-    __printf (";"); \
-    break;
+static int vargs_num = 0;
+static int seen_vargs = 0;
 
 void
 pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 {
   uint8_t i = 1;
-  uint8_t opcode_num = opcode.op_idx;
+  uint8_t opcode_id = opcode.op_idx;
 
-  __printf ("%3d: %20s ", oc, opcode_names[opcode_num]);
-  if (opcode_num != NAME_TO_ID (nop) && opcode_num != NAME_TO_ID (ret))
+  __printf ("%3d: %20s ", oc, opcode_names[opcode_id]);
+  if (opcode_id != NAME_TO_ID (nop) && opcode_id != NAME_TO_ID (ret))
   {
-    for (i = 1; i < opcode_sizes[opcode_num]; i++)
+    for (i = 1; i < opcode_sizes[opcode_id]; i++)
     {
       __printf ("%4d ", ((uint8_t*) & opcode)[i]);
     }
@@ -392,72 +206,436 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 
   __printf ("    // ");
 
-  switch (opcode_num)
+  switch (opcode_id)
   {
-    CASE_CONDITIONAL_JUMP (is_true_jmp_up, "if (", value, ") goto", oc, -, opcode_1, opcode_2)
-    CASE_CONDITIONAL_JUMP (is_false_jmp_up, "if (", value, " == false) goto", oc, -, opcode_1, opcode_2)
-    CASE_CONDITIONAL_JUMP (is_true_jmp_down, "if (", value, ") goto", oc, +, opcode_1, opcode_2)
-    CASE_CONDITIONAL_JUMP (is_false_jmp_down, "if (", value, " == false) goto", oc, +, opcode_1, opcode_2)
-
-    CASE_UNCONDITIONAL_JUMP (jmp_up, "goto", oc, -, opcode_1, opcode_2)
-    CASE_UNCONDITIONAL_JUMP (jmp_down, "goto", oc, +, opcode_1, opcode_2)
-
-    CASE_TRIPLE_ADDRESS (addition, dst, "=", var_left, "+", var_right)
-    CASE_TRIPLE_ADDRESS (substraction, dst, "=", var_left, "-", var_right)
-    CASE_TRIPLE_ADDRESS (division, dst, "=", var_left, "/", var_right)
-    CASE_TRIPLE_ADDRESS (multiplication, dst, "=", var_left, "*", var_right)
-    CASE_TRIPLE_ADDRESS (remainder, dst, "=", var_left, "%%", var_right)
-    CASE_TRIPLE_ADDRESS (b_shift_left, dst, "=", var_left, "<<", var_right)
-    CASE_TRIPLE_ADDRESS (b_shift_right, dst, "=", var_left, ">>", var_right)
-    CASE_TRIPLE_ADDRESS (b_shift_uright, dst, "=", var_left, ">>>", var_right)
-    CASE_TRIPLE_ADDRESS (b_and, dst, "=", var_left, "&", var_right)
-    CASE_TRIPLE_ADDRESS (b_or, dst, "=", var_left, "|", var_right)
-    CASE_TRIPLE_ADDRESS (b_xor, dst, "=", var_left, "^", var_right)
-    CASE_DOUBLE_ADDRESS (b_not, dst, "=", "~", var_right)
-    CASE_TRIPLE_ADDRESS (logical_and, dst, "=", var_left, "&&", var_right)
-    CASE_TRIPLE_ADDRESS (logical_or, dst, "=", var_left, "||", var_right)
-    CASE_DOUBLE_ADDRESS (logical_not, dst, "=", "!", var_right)
-    CASE_TRIPLE_ADDRESS (equal_value, dst, "=", var_left, "==", var_right)
-    CASE_TRIPLE_ADDRESS (not_equal_value, dst, "=", var_left, "!=", var_right)
-    CASE_TRIPLE_ADDRESS (equal_value_type, dst, "=", var_left, "===", var_right)
-    CASE_TRIPLE_ADDRESS (not_equal_value_type, dst, "=", var_left, "!==", var_right)
-    CASE_TRIPLE_ADDRESS (less_than, dst, "=", var_left, "<", var_right)
-    CASE_TRIPLE_ADDRESS (greater_than, dst, "=", var_left, ">", var_right)
-    CASE_TRIPLE_ADDRESS (less_or_equal_than, dst, "=", var_left, "<=", var_right)
-    CASE_TRIPLE_ADDRESS (greater_or_equal_than, dst, "=", var_left, ">=", var_right)
-    CASE_TRIPLE_ADDRESS (instanceof, dst, "=", var_left, "instanceof", var_right)
-    CASE_TRIPLE_ADDRESS (in, dst, "=", var_left, "in", var_right)
-    CASE_DOUBLE_ADDRESS_POST (post_incr, dst, "=", var_right, "++")
-    CASE_DOUBLE_ADDRESS_POST (post_decr, dst, "=", var_right, "--")
-    CASE_DOUBLE_ADDRESS (pre_incr, dst, "=", "++", var_right)
-    CASE_DOUBLE_ADDRESS (pre_decr, dst, "=", "--", var_right)
-    CASE_ASSIGNMENT (assignment, var_left, "=", value_right)
-    CASE_VARG_N_NAME_LHS (call_n, lhs, "=", "", name_lit_idx, arg_list)
-    CASE_VARG_N_NAME_LHS (construct_n, lhs, "=", "new", name_lit_idx, arg_list)
-    CASE_VARG_N_NAME (func_decl_n, "function", name_lit_idx, arg_list)
-    CASE_EXIT (exitval, "exit", status_code)
-    CASE_SINGLE_ADDRESS (retval, "return", ret_value)
-    CASE_ZERO_ADDRESS (ret, "return")
-    CASE_ZERO_ADDRESS (nop, "")
-    CASE_VARG_1_LHS (array_decl, lhs, "=", "[", list, "]")
-    CASE_VARG_0_LHS (obj_decl, lhs, "=", "{", "}")
-    CASE_VARG_1_NAME_LHS (prop_getter, lhs, "=", "", obj, "[", prop, "]")
-    CASE_VARG_1_NAME_LHS (prop_setter, obj, "", "[", prop, " ] = ", rhs, "")
-    CASE_THIS (this, lhs, "=", "this")
-    CASE_DOUBLE_ADDRESS (delete_var, lhs, "=", "delete", name)
-    CASE_TRIPLE_ADDRESS (delete_prop, lhs, "= delete", base, ".", name)
-    CASE_DOUBLE_ADDRESS (typeof, lhs, "=", "typeof", obj)
-    CASE_WITH (with, expr)
-    CASE_VARG_0_NAME (var_decl, "var", variable_name, "", "")
-    CASE_REG_VAR_DECL (reg_var_decl, min, max)
-    CASE_NATIVE_CALL (native_call, lhs, "=", "", name, arg_list)
+    PP_OP_3 (addition, "%s = %s + %s;", dst, var_left, var_right);
+    PP_OP_3 (substraction, "%s = %s - %s;", dst, var_left, var_right);
+    PP_OP_3 (division, "%s = %s - %s;", dst, var_left, var_right);
+    PP_OP_3 (multiplication, "%s = %s * %s;", dst, var_left, var_right);
+    PP_OP_3 (remainder, "%s = %s %% %s;", dst, var_left, var_right);
+    PP_OP_3 (b_shift_left, "%s = %s << %s;", dst, var_left, var_right);
+    PP_OP_3 (b_shift_right, "%s = %s >> %s;", dst, var_left, var_right);
+    PP_OP_3 (b_shift_uright, "%s = %s >>> %s;", dst, var_left, var_right);
+    PP_OP_3 (b_and, "%s = %s & %s;", dst, var_left, var_right);
+    PP_OP_3 (b_or, "%s = %s | %s;", dst, var_left, var_right);
+    PP_OP_3 (b_xor, "%s = %s ^ %s;", dst, var_left, var_right);
+    PP_OP_2 (b_not, "%s = ~ %s;", dst, var_right);
+    PP_OP_3 (logical_and, "%s = %s && %s;", dst, var_left, var_right);
+    PP_OP_3 (logical_or, "%s = %s || %s;", dst, var_left, var_right);
+    PP_OP_2 (logical_not, "%s = ! %s;", dst, var_right);
+    PP_OP_3 (equal_value, "%s = %s == %s;", dst, var_left, var_right);
+    PP_OP_3 (not_equal_value, "%s = %s != %s;", dst, var_left, var_right);
+    PP_OP_3 (equal_value_type, "%s = %s === %s;", dst, var_left, var_right);
+    PP_OP_3 (not_equal_value_type, "%s = %s !== %s;", dst, var_left, var_right);
+    PP_OP_3 (less_than, "%s = %s < %s;", dst, var_left, var_right);
+    PP_OP_3 (greater_than, "%s = %s > %s;", dst, var_left, var_right);
+    PP_OP_3 (less_or_equal_than, "%s = %s <= %s;", dst, var_left, var_right);
+    PP_OP_3 (greater_or_equal_than, "%s = %s >= %s;", dst, var_left, var_right);
+    PP_OP_3 (instanceof, "%s = %s instanceof %s;", dst, var_left, var_right);
+    PP_OP_3 (in, "%s = %s in %s;", dst, var_left, var_right);
+    PP_OP_2 (post_incr, "%s = %s++;", dst, var_right);
+    PP_OP_2 (post_decr, "%s = %s--;", dst, var_right);
+    PP_OP_2 (pre_incr, "%s = ++%s;", dst, var_right);
+    PP_OP_2 (pre_decr, "%s = --%s;", dst, var_right);
+    PP_OP_1 (throw, "throw %s;", var);
+    PP_OP_2 (reg_var_decl, "var %s .. %s;", min, max);
+    PP_OP_1 (var_decl, "var %s;", variable_name);
+    PP_OP_0 (nop, ";");
+    PP_OP_1 (exitval, "exit %d;", status_code);
+    PP_OP_1 (retval, "return %d;", ret_value);
+    PP_OP_0 (ret, "ret;");
+    PP_OP_3 (prop_getter, "%s = %s[\"%s\"];", lhs, obj, prop);
+    PP_OP_3 (prop_setter, "%s[\"%s\"] = %s;", obj, prop, rhs);
+    PP_OP_1 (this, "%s = this;", lhs);
+    PP_OP_2 (delete_var, "%s = delete %s;", lhs, name);
+    PP_OP_3 (delete_prop, "%s = delete %s[\"%s\"];", lhs, base, name);
+    PP_OP_2 (typeof, "%s = typeof %s;", lhs, obj);
+    PP_OP_1 (with, "with (%s);", expr);
+    case NAME_TO_ID (is_true_jmp_up):
+    {
+      pp_printf ("if (%s) goto %d;", opcode.data.is_true_jmp_up.value,
+                 oc - calc_opcode_counter_from_idx_idx (opcode.data.is_true_jmp_up.opcode_1,
+                                                        opcode.data.is_true_jmp_up.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (is_false_jmp_up):
+    {
+      pp_printf ("if (%s) goto %d;", opcode.data.is_false_jmp_up.value,
+                 oc - calc_opcode_counter_from_idx_idx (opcode.data.is_false_jmp_up.opcode_1,
+                                                        opcode.data.is_false_jmp_up.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (is_true_jmp_down):
+    {
+      pp_printf ("if (%s) goto %d;", opcode.data.is_true_jmp_down.value,
+                 oc + calc_opcode_counter_from_idx_idx (opcode.data.is_true_jmp_down.opcode_1,
+                                                        opcode.data.is_true_jmp_down.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (is_false_jmp_down):
+    {
+      pp_printf ("if (%s) goto %d;", opcode.data.is_false_jmp_down.value,
+                 oc + calc_opcode_counter_from_idx_idx (opcode.data.is_false_jmp_down.opcode_1,
+                                                        opcode.data.is_false_jmp_down.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (jmp_up):
+    {
+      pp_printf ("goto %d;",
+                 oc - calc_opcode_counter_from_idx_idx (opcode.data.jmp_up.opcode_1,
+                                                        opcode.data.jmp_up.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (jmp_down):
+    {
+      pp_printf ("goto %d;",
+                 oc + calc_opcode_counter_from_idx_idx (opcode.data.jmp_down.opcode_1,
+                                                        opcode.data.jmp_down.opcode_2));
+      break;
+    }
+    case NAME_TO_ID (try):
+    {
+      pp_printf ("try (end: %d);", calc_opcode_counter_from_idx_idx (opcode.data.try.oc_idx_1,
+                                                                     opcode.data.try.oc_idx_2));
+      break;
+    }
+    case NAME_TO_ID (assignment):
+    {
+      pp_printf ("%s = ", opcode.data.assignment.var_left);
+      switch (opcode.data.assignment.type_value_right)
+      {
+        case OPCODE_ARG_TYPE_SIMPLE:
+        {
+          switch (opcode.data.assignment.value_right)
+          {
+            case ECMA_SIMPLE_VALUE_NULL: pp_printf ("null"); break;
+            case ECMA_SIMPLE_VALUE_FALSE: pp_printf ("false"); break;
+            case ECMA_SIMPLE_VALUE_TRUE: pp_printf ("true"); break;
+            case ECMA_SIMPLE_VALUE_UNDEFINED: pp_printf ("undefined"); break;
+            default: JERRY_UNREACHABLE ();
+          }
+          pp_printf (": SIMPLE;");
+          break;
+        }
+        case OPCODE_ARG_TYPE_STRING:
+        {
+          pp_printf ("%s: STRING;", opcode.data.assignment.value_right);
+          break;
+        }
+        case OPCODE_ARG_TYPE_NUMBER:
+        {
+          pp_printf ("%s: NUMBER;", opcode.data.assignment.value_right);
+          break;
+        }
+        case OPCODE_ARG_TYPE_SMALLINT:
+        {
+          pp_printf ("%d: SMALLINT;", opcode.data.assignment.value_right);
+          break;
+        }
+        case OPCODE_ARG_TYPE_VARIABLE:
+        {
+          pp_printf ("%s : TYPEOF(%s);", opcode.data.assignment.value_right, opcode.data.assignment.value_right);
+          break;
+        }
+        default:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+      break;
+    }
+    case NAME_TO_ID (call_n):
+    {
+      if (opcode.data.call_n.arg_list == 0)
+      {
+        pp_printf ("%s = %s ();", opcode.data.call_n.lhs, opcode.data.call_n.name_lit_idx);
+      }
+      else
+      {
+        vargs_num = opcode.data.call_n.arg_list;
+        seen_vargs = 0;
+      }
+      break;
+    }
+    case NAME_TO_ID (native_call):
+    {
+      if (opcode.data.native_call.arg_list == 0)
+      {
+        pp_printf ("%s = ", opcode.data.native_call.lhs);
+        switch (opcode.data.native_call.name)
+        {
+          case OPCODE_NATIVE_CALL_LED_TOGGLE: pp_printf ("LEDToggle ();"); break;
+          case OPCODE_NATIVE_CALL_LED_ON: pp_printf ("LEDOn ();"); break;
+          case OPCODE_NATIVE_CALL_LED_OFF: pp_printf ("LEDOff ();"); break;
+          case OPCODE_NATIVE_CALL_LED_ONCE: pp_printf ("LEDOnce ();"); break;
+          case OPCODE_NATIVE_CALL_WAIT: pp_printf ("wait ();"); break;
+          case OPCODE_NATIVE_CALL_PRINT: pp_printf ("print ();"); break;
+          default: JERRY_UNREACHABLE ();
+        }
+      }
+      else
+      {
+        vargs_num = opcode.data.native_call.arg_list;
+        seen_vargs = 0;
+      }
+      break;
+    }
+    case NAME_TO_ID (construct_n):
+    {
+      if (opcode.data.construct_n.arg_list == 0)
+      {
+        pp_printf ("%s = new %s;", opcode.data.construct_n.lhs, opcode.data.construct_n.name_lit_idx);
+      }
+      else
+      {
+        vargs_num = opcode.data.construct_n.arg_list;
+        seen_vargs = 0;
+      }
+      break;
+    }
+    case NAME_TO_ID (func_decl_n):
+    {
+      if (opcode.data.func_decl_n.arg_list == 0)
+      {
+        pp_printf ("function %s ();", opcode.data.func_decl_n.name_lit_idx);
+      }
+      else
+      {
+        vargs_num = opcode.data.func_decl_n.arg_list;
+        seen_vargs = 0;
+      }
+      break;
+    }
     case NAME_TO_ID (func_expr_n):
     {
-      dump_variable (opcode.data.func_expr_n.lhs);
-      __printf (" = function ");
-      dump_variable (opcode.data.func_expr_n.name_lit_idx);
-      __printf (" (%d args);", opcode.data.func_expr_n.arg_list);
+      if (opcode.data.func_expr_n.arg_list == 0)
+      {
+        pp_printf ("%s = function %s ();", opcode.data.func_expr_n.lhs, opcode.data.func_expr_n.name_lit_idx);
+      }
+      else
+      {
+        vargs_num = opcode.data.func_expr_n.arg_list;
+        seen_vargs = 0;
+      }
       break;
+    }
+    case NAME_TO_ID (array_decl):
+    {
+      if (opcode.data.array_decl.list == 0)
+      {
+        pp_printf ("%s = [];", opcode.data.array_decl.lhs);
+      }
+      else
+      {
+        vargs_num = opcode.data.array_decl.list;
+        seen_vargs = 0;
+      }
+      break;
+    }
+    case NAME_TO_ID (obj_decl):
+    {
+      if (opcode.data.obj_decl.list == 0)
+      {
+        pp_printf ("%s = {};", opcode.data.obj_decl.lhs);
+      }
+      else
+      {
+        vargs_num = opcode.data.obj_decl.list;
+        seen_vargs = 0;
+      }
+      break;
+    }
+    case NAME_TO_ID (meta):
+    {
+      switch (opcode.data.meta.type)
+      {
+        case OPCODE_META_TYPE_UNDEFINED:
+        {
+          pp_printf ("unknown meta;");
+          break;
+        }
+        case OPCODE_META_TYPE_THIS_ARG:
+        case OPCODE_META_TYPE_VARG:
+        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        case OPCODE_META_TYPE_VARG_PROP_GETTER:
+        case OPCODE_META_TYPE_VARG_PROP_SETTER:
+        {
+          seen_vargs++;
+          if (seen_vargs == vargs_num)
+          {
+            bool found = false;
+            opcode_counter_t start = oc;
+            while ((int16_t) start >= 0 && !found)
+            {
+              start--;
+              switch (deserialize_opcode (start).op_idx)
+              {
+                case NAME_TO_ID (call_n):
+                case NAME_TO_ID (native_call):
+                case NAME_TO_ID (construct_n):
+                case NAME_TO_ID (func_decl_n):
+                case NAME_TO_ID (func_expr_n):
+                case NAME_TO_ID (array_decl):
+                case NAME_TO_ID (obj_decl):
+                {
+                  found = true;
+                  break;
+                }
+              }
+            }
+            opcode_t start_op = deserialize_opcode (start);
+            switch (start_op.op_idx)
+            {
+              case NAME_TO_ID (call_n):
+              {
+                pp_printf ("%s = %s (", start_op.data.call_n.lhs, start_op.data.call_n.name_lit_idx);
+                break;
+              }
+              case NAME_TO_ID (native_call):
+              {
+                pp_printf ("%s = ", start_op.data.native_call.lhs);
+                switch (start_op.data.native_call.name)
+                {
+                  case OPCODE_NATIVE_CALL_LED_TOGGLE: pp_printf ("LEDToggle ("); break;
+                  case OPCODE_NATIVE_CALL_LED_ON: pp_printf ("LEDOn ("); break;
+                  case OPCODE_NATIVE_CALL_LED_OFF: pp_printf ("LEDOff ("); break;
+                  case OPCODE_NATIVE_CALL_LED_ONCE: pp_printf ("LEDOnce ("); break;
+                  case OPCODE_NATIVE_CALL_WAIT: pp_printf ("wait ("); break;
+                  case OPCODE_NATIVE_CALL_PRINT: pp_printf ("print ("); break;
+                  default: JERRY_UNREACHABLE ();
+                }
+                break;
+              }
+              case NAME_TO_ID (construct_n):
+              {
+                pp_printf ("%s = new %s (", start_op.data.construct_n.lhs, start_op.data.construct_n.name_lit_idx);
+                break;
+              }
+              case NAME_TO_ID (func_decl_n):
+              {
+                pp_printf ("function %s (", start_op.data.func_decl_n.name_lit_idx);
+                break;
+              }
+              case NAME_TO_ID (func_expr_n):
+              {
+                pp_printf ("%s = function %s (", start_op.data.func_expr_n.lhs,
+                           start_op.data.func_expr_n.name_lit_idx);
+                break;
+              }
+              case NAME_TO_ID (array_decl):
+              {
+                pp_printf ("%s = [", start_op.data.array_decl.lhs);
+                break;
+              }
+              case NAME_TO_ID (obj_decl):
+              {
+                pp_printf ("%s = {", start_op.data.obj_decl.lhs);
+                break;
+              }
+              default:
+              {
+                JERRY_UNREACHABLE ();
+              }
+            }
+            for (opcode_counter_t counter = start; counter <= oc; counter++)
+            {
+              opcode_t meta_op = deserialize_opcode (counter);
+              switch (meta_op.op_idx)
+              {
+                case NAME_TO_ID (meta):
+                {
+                  switch (opcode.data.meta.type)
+                  {
+                    case OPCODE_META_TYPE_THIS_ARG:
+                    {
+                      pp_printf ("this_arg = %s", meta_op.data.meta.data_1);
+                      break;
+                    }
+                    case OPCODE_META_TYPE_VARG:
+                    {
+                      pp_printf ("%s", meta_op.data.meta.data_1);
+                      break;
+                    }
+                    case OPCODE_META_TYPE_VARG_PROP_DATA:
+                    {
+                      pp_printf ("%s:%s", meta_op.data.meta.data_1, meta_op.data.meta.data_2);
+                      break;
+                    }
+                    case OPCODE_META_TYPE_VARG_PROP_GETTER:
+                    {
+                      pp_printf ("%s = get ();", meta_op.data.meta.data_1);
+                      break;
+                    }
+                    case OPCODE_META_TYPE_VARG_PROP_SETTER:
+                    {
+                      pp_printf ("%s = set (%s);", meta_op.data.meta.data_1, meta_op.data.meta.data_2);
+                      break;
+                    }
+                    default:
+                    {
+                      JERRY_UNREACHABLE ();
+                    }
+                  }
+                  if (counter != oc)
+                  {
+                    pp_printf (", ");
+                  }
+                  break;
+                }
+              }
+            }
+            pp_printf (");");
+          }
+          break;
+        }
+        case OPCODE_META_TYPE_END_WITH:
+        {
+          pp_printf ("end with;");
+          break;
+        }
+        case OPCODE_META_TYPE_FUNCTION_END:
+        {
+          pp_printf ("function end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                            opcode.data.meta.data_2));
+          break;
+        }
+        case OPCODE_META_TYPE_CATCH:
+        {
+          pp_printf ("catch end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                         opcode.data.meta.data_2));
+          break;
+        }
+        case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
+        {
+          pp_printf ("catch (%s);", opcode.data.meta.data_1);
+          break;
+        }
+        case OPCODE_META_TYPE_FINALLY:
+        {
+          pp_printf ("finally end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                           opcode.data.meta.data_2));
+          break;
+        }
+        case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+        {
+          pp_printf ("end try");
+          break;
+        }
+        case OPCODE_META_TYPE_STRICT_CODE:
+        {
+          pp_printf ("use strict;");
+          break;
+        }
+        default:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
     }
   }
 

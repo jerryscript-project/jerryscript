@@ -284,6 +284,8 @@ do { \
                                   : I == NESTING_SWITCH \
                                     ? "switch" : "unknown")
 
+#define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
+
 typedef enum
 {
   AL_FUNC_DECL,
@@ -2072,7 +2074,7 @@ parse_assignment_expression (void)
       if (STACK_TOP (U8))
       {
         STACK_PUSH (ops, deserialize_opcode (STACK_TOP (U16)));
-        JERRY_ASSERT (STACK_TOP (ops).op_idx == __op__idx_prop_getter);
+        JERRY_ASSERT (OPCODE_IS (STACK_TOP (ops), prop_getter));
         DECR_OPCODE_COUNTER ();
         serializer_set_writing_position (OPCODE_COUNTER ());
         NEXT (assignment_expression);
@@ -3352,6 +3354,37 @@ skip_parens (void)
   STACK_CHECK_USAGE (U8);
 }
 
+static bool
+var_declared (idx_t var_id)
+{
+  STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (ops)
+  bool result = false;
+
+  STACK_PUSH (U16, (opcode_counter_t) (OPCODE_COUNTER () - 1));
+  STACK_PUSH (ops, deserialize_opcode (STACK_TOP (U16)));
+
+  while (OPCODE_IS (STACK_TOP (ops), var_decl))
+  {
+    if (STACK_TOP (ops).data.var_decl.variable_name == var_id)
+    {
+      result = true;
+      goto cleanup;
+    }
+    STACK_DECR_HEAD (U16, 1);
+    STACK_SET_HEAD (ops, 1, deserialize_opcode (STACK_TOP (U16)));
+  }
+
+cleanup:
+  STACK_DROP (U16, 1);
+  STACK_DROP (ops, 1);
+
+  STACK_CHECK_USAGE (U16);
+  STACK_CHECK_USAGE (ops);
+
+  return result;
+}
+
 static void
 preparse_var_decls (void)
 {
@@ -3362,7 +3395,10 @@ preparse_var_decls (void)
   {
     if (token_is (TOK_NAME))
     {
-      DUMP_OPCODE_1 (var_decl, token_data ());
+      if (!var_declared (token_data ()))
+      {
+        DUMP_OPCODE_1 (var_decl, token_data ());
+      }
       skip_token ();
       continue;
     }

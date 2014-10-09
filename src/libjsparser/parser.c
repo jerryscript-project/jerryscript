@@ -2552,7 +2552,7 @@ plain_for:
   skip_newlines ();
   if (!token_is (TOK_SEMICOLON))
   {
-    parse_assignment_expression ();
+    parse_expression ();
     next_token_must_be (TOK_SEMICOLON);
   }
   else
@@ -2570,7 +2570,7 @@ plain_for:
   skip_newlines ();
   if (!token_is (TOK_CLOSE_PAREN))
   {
-    parse_assignment_expression ();
+    parse_expression ();
     STACK_DROP (IDX, 1);
     next_token_must_be (TOK_CLOSE_PAREN);
   }

@@ -226,6 +226,11 @@ static TYPE *convert_##NAME##_to_raw_data (void) { \
   size_t size = mem_heap_recommend_allocation_size ( \
       ((size_t) (NAME.current + 1) * sizeof (NAME##_stack_value_type))); \
   TYPE *DATA = (TYPE *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM); \
+  if (DATA == NULL) \
+  { \
+    __printf ("Out of memory\n"); \
+    JERRY_UNREACHABLE (); \
+  } \
   __memset (DATA, 0, size); \
   for (NAME##_stack_data_type i = 0; i < NAME.current; i++) { \
     DATA[i] = STACK_ELEMENT (NAME, i); \

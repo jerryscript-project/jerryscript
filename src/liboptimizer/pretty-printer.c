@@ -244,8 +244,8 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     PP_OP_1 (exitval, "exit %d;", status_code);
     PP_OP_1 (retval, "return %d;", ret_value);
     PP_OP_0 (ret, "ret;");
-    PP_OP_3 (prop_getter, "%s = %s[\"%s\"];", lhs, obj, prop);
-    PP_OP_3 (prop_setter, "%s[\"%s\"] = %s;", obj, prop, rhs);
+    PP_OP_3 (prop_getter, "%s = %s.%s;", lhs, obj, prop);
+    PP_OP_3 (prop_setter, "%s.%s = %s;", obj, prop, rhs);
     PP_OP_1 (this, "%s = this;", lhs);
     PP_OP_2 (delete_var, "%s = delete %s;", lhs, name);
     PP_OP_3 (delete_prop, "%s = delete %s[\"%s\"];", lhs, base, name);
@@ -537,7 +537,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
                 JERRY_UNREACHABLE ();
               }
             }
-            for (opcode_counter_t counter = start; counter <= oc; counter++)
+            for (opcode_counter_t counter = start; counter < oc; counter++)
             {
               opcode_t meta_op = deserialize_opcode (counter);
               switch (meta_op.op_idx)

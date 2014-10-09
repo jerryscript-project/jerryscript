@@ -3219,6 +3219,11 @@ parse_statement (void)
       STACK_DROP (toks, 1);
       parse_expression ();
       STACK_DROP (IDX, 1);
+      skip_newlines ();
+      if (!token_is (TOK_SEMICOLON))
+      {
+        lexer_save_token (TOK ());
+      }
       goto cleanup;
     }
   }

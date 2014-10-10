@@ -56,6 +56,7 @@ intrinsic_dumper;
 
 enum
 {
+  no_in,
   U8_global_size
 };
 STATIC_STACK (U8, uint8_t, uint8_t)
@@ -1799,6 +1800,7 @@ parse_relational_expression (void)
 {
   // IDX expr1, lhs, expr2;
   STACK_DECLARE_USAGE (IDX)
+  STACK_DECLARE_USAGE (U8)
 
   parse_shift_expression ();
 
@@ -1820,8 +1822,11 @@ parse_relational_expression (void)
         }
         else if (is_keyword (KW_IN))
         {
-          DUMP_OF (in, shift_expression);
-          break;
+          if (STACK_ELEMENT (U8, no_in) == 0)
+          {
+            DUMP_OF (in, shift_expression);
+            break;
+          }
         }
         /* FALLTHROUGH */
       }
@@ -1836,6 +1841,7 @@ parse_relational_expression (void)
   }
 
 cleanup:
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE_LHS ();
 }
 
@@ -2504,13 +2510,15 @@ parse_for_or_for_in_statement (void)
       }
       else
       {
-        EMIT_ERROR ("Expected either ':' or 'in' token");
+        EMIT_ERROR ("Expected either ';' or 'in' token");
       }
     }
   }
 
   /* expression contains left_hand_side_expression.  */
+  STACK_SET_ELEMENT (U8, no_in, 1);
   parse_expression ();
+  STACK_SET_ELEMENT (U8, no_in, 0);
   STACK_DROP (IDX, 1);
 
   skip_newlines ();
@@ -2524,7 +2532,7 @@ parse_for_or_for_in_statement (void)
   }
   else
   {
-    EMIT_ERROR ("Expected either ':' or 'in' token");
+    EMIT_ERROR ("Expected either ';' or 'in' token");
   }
 
   JERRY_UNREACHABLE ();
@@ -3431,7 +3439,7 @@ preparse_var_decls (void)
   assert_keyword (KW_VAR);
 
   skip_newlines ();
-  while (!token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON))
+  while (!token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON) && !is_keyword (KW_IN))
   {
     if (token_is (TOK_NAME))
     {
@@ -3601,6 +3609,7 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   SET_TEMP_NAME (lexer_get_reserved_ids_count ());
   SET_MIN_TEMP_NAME (lexer_get_reserved_ids_count ());
   SET_OPCODE_COUNTER (0);
+  STACK_SET_ELEMENT (U8, no_in, 0);
 
   TODO (/* Rewrite using hash when number of natives reaches 20 */)
   for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)

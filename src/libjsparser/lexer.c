@@ -346,7 +346,20 @@ convert_current_token_to_token (token_type tt)
   {
     if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
     {
-      return create_token (tt, i);
+      if (tt == TOK_STRING)
+      {
+        // locus must point to the first '"'
+        return (token)
+        {
+          .type = tt,
+          .loc = current_locus () - 1,
+          .uid = i
+        };
+      }
+      else
+      {
+        return create_token (tt, i);
+      }
     }
   }
 

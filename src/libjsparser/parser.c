@@ -762,6 +762,7 @@ parse_property_assignment (void)
 {
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
+  STACK_DECLARE_USAGE (toks)
 
   if (!token_is (TOK_NAME))
   {
@@ -771,8 +772,18 @@ parse_property_assignment (void)
 
   if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "get"))
   {
+    STACK_PUSH (toks, TOK ());
+    skip_newlines ();
+    if (token_is (TOK_COLON))
+    {
+      lexer_save_token (TOK ());
+      SET_TOK (STACK_TOP (toks));
+      STACK_DROP (toks, 1);
+      goto simple_prop;
+    }
+    STACK_DROP (toks, 1);
     // name, lhs
-    NEXT (property_name); // push name
+    parse_property_name (); // push name
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
@@ -791,11 +802,23 @@ parse_property_assignment (void)
 
     STACK_DROP (IDX, 2);
     STACK_DROP (U16, 1);
+
+    goto cleanup;
   }
   else if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "set"))
   {
+    STACK_PUSH (toks, TOK ());
+    skip_newlines ();
+    if (token_is (TOK_COLON))
+    {
+      lexer_save_token (TOK ());
+      SET_TOK (STACK_TOP (toks));
+      STACK_DROP (toks, 1);
+      goto simple_prop;
+    }
+    STACK_DROP (toks, 1);
     // name, lhs
-    NEXT (property_name); // push name
+    parse_property_name (); // push name
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
@@ -814,13 +837,15 @@ parse_property_assignment (void)
 
     STACK_DROP (IDX, 2);
     STACK_DROP (U16, 1);
-  }
-  else
-  {
-    parse_property_name_and_value ();
+    
+    goto cleanup;
   }
 
+simple_prop:
+  parse_property_name_and_value ();
+
 cleanup:
+  STACK_CHECK_USAGE (toks)
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (IDX);
 }

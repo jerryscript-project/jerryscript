@@ -3076,7 +3076,12 @@ insert_semicolon (void)
     lexer_save_token (TOK ());
     return;
   }
-  if (!token_is (TOK_SEMICOLON))
+  if (token_is (TOK_CLOSE_BRACE))
+  {
+    lexer_save_token (TOK ());
+    return;
+  }
+  else if (!token_is (TOK_SEMICOLON))
   {
     EMIT_ERROR ("Expected either ';' or newline token");
   }

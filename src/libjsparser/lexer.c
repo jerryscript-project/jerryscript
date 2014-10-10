@@ -598,6 +598,8 @@ parse_number (void)
   bool is_hex = false;
   bool is_fp = false;
   bool is_exp = false;
+  bool is_overflow = false;
+  ecma_number_t fp_res = .0;
   size_t tok_length = 0, i;
   uint32_t res = 0;
   token known_token;
@@ -643,29 +645,35 @@ parse_number (void)
 
     for (i = 0; i < tok_length; i++)
     {
-#ifndef JERRY_NDEBUG
-      uint32_t old_res = res;
-#endif
-      res = (res << 4) + hex_to_int (token_start[i]);
-      FIXME (Replace with conversion to ecma_number_t)
-#ifndef JERRY_NDEBUG
-      JERRY_ASSERT (old_res <= res);
-#endif
+      if (!is_overflow)
+      {
+        res = (res << 4) + hex_to_int (token_start[i]);
+      }
+      else
+      {
+        fp_res = fp_res * 16 + (ecma_number_t) hex_to_int (token_start[i]);
+      }
+
+      if (res > 255)
+      {
+        fp_res = (ecma_number_t) res;
+        is_overflow = true;
+        res = 0;
+      }
     }
 
-    if (res <= 255)
+    if (is_overflow)
+    {
+      known_token = convert_seen_num_to_token (fp_res);
+      token_start = NULL;
+      return known_token;
+    }
+    else
     {
       known_token = create_token (TOK_SMALL_INT, (uint8_t) res);
       token_start = NULL;
       return known_token;
     }
-
-    known_token = convert_seen_num_to_token ((ecma_number_t) res);
-    JERRY_ASSERT (!is_empty (known_token));
-
-    token_start = NULL;
-
-    return known_token;
   }
 
   JERRY_ASSERT (!is_hex && !is_exp);
@@ -744,19 +752,35 @@ parse_number (void)
   tok_length = (size_t) (buffer - token_start);;
   for (i = 0; i < tok_length; i++)
   {
-    res = res * 10 + hex_to_int (token_start[i]);
+    if (!is_overflow)
+    {
+      res = res * 10 + hex_to_int (token_start[i]);
+    }
+    else
+    {
+      fp_res = fp_res * 10 + (ecma_number_t) hex_to_int (token_start[i]);
+    }
+
+    if (res > 255)
+    {
+      fp_res = (ecma_number_t) res;
+      is_overflow = true;
+      res = 0;
+    }
   }
 
-  if (res <= 255)
+  if (is_overflow)
+  {
+    known_token = convert_seen_num_to_token (fp_res);
+    token_start = NULL;
+    return known_token;
+  }
+  else
   {
     known_token = create_token (TOK_SMALL_INT, (uint8_t) res);
     token_start = NULL;
     return known_token;
   }
-
-  known_token = convert_seen_num_to_token ((ecma_number_t) res);
-  token_start = NULL;
-  return known_token;
 }
 
 static token

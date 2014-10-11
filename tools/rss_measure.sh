@@ -36,8 +36,8 @@ function collect_entry()
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
 
-  SUM=$(grep "$1" < /proc/"$PID"/smaps | awk '{sum += $2;} END { if (sum != 0) { print sum; }; }');
-  
+  SUM=$(cat /proc/"$PID"/smaps 2>/dev/null | grep "$1" | awk '{sum += $2;} END { if (sum != 0) { print sum; }; }');
+
   if [ "$SUM" != "" ];
   then
     eval "$OUT=\"\$$OUT $SUM\\n\"";
@@ -48,7 +48,7 @@ function print_entry()
 {
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
-  
+
   eval "echo -e \"\$$OUT\"" | awk -v entry="$1" '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { if (n == 0) { exit; }; printf "%19s:%8d Kb%19s:%8d Kb\n", entry, sum / n, entry, max; }';
 }
 
@@ -68,7 +68,7 @@ function run_test()
     collect_entry Share
     collect_entry Size
     collect_entry Swap
-    
+
     sleep $SLEEP
 
   done

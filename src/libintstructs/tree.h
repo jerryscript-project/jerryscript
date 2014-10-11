@@ -13,29 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef LINKED_LIST_H
-#define LINKED_LIST_H
+#ifndef TREE_H
+#define TREE_H
 
-#include "globals.h"
+#include "linked-list.h"
 
-#define LINKED_LIST_MAGIC 0x42
+#define TREE_MAGIC 0x43
 
-typedef struct linked_list_header
+typedef struct tree_header
 {
   uint8_t magic;
-  uint8_t block_size;
-  uint8_t used_size;
-  struct linked_list_header *next;
-  struct linked_list_header *prev;
+  struct tree_header *parent;
+  linked_list children;
 }
 __packed
-linked_list_header;
+tree_header;
 
-typedef uint8_t* linked_list;
-
-linked_list linked_list_init (size_t);
-void linked_list_free (linked_list);
-void *linked_list_element (linked_list, size_t, size_t);
-void linked_list_set_element (linked_list, size_t, size_t, void *);
-
-#endif /* LINKED_LIST_H */
+#endif /* TREE_H */

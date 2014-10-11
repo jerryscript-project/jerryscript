@@ -69,10 +69,6 @@
 #include "linked-list.h"
 
 #define DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
-DEFINE_LINKED_LIST_TYPE (NAME, TYPE) \
-DEFINE_LIST_FREE (NAME) \
-DEFINE_LIST_ELEMENT (NAME, TYPE) \
-DEFINE_SET_LIST_ELEMENT (NAME, TYPE) \
 typedef TYPE      NAME##_stack_value_type; \
 typedef DATA_TYPE NAME##_stack_data_type; \
 typedef struct \
@@ -80,81 +76,42 @@ typedef struct \
   DATA_TYPE length; \
   DATA_TYPE current; \
   DATA_TYPE block_len; \
-  uint8_t *blocks; \
-  uint8_t *last; \
+  linked_list blocks; \
 } \
 __packed \
 NAME##_stack;
 
 #define STACK_INIT(TYPE, NAME) \
 do { \
-  size_t stack_size = mem_heap_recommend_allocation_size (sizeof (TYPE) * NAME##_global_size); \
-  NAME.blocks = NAME.last = mem_heap_alloc_block (stack_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  __memset (NAME.blocks, 0, stack_size); \
+  NAME.blocks = linked_list_init (sizeof (TYPE)); \
   NAME.current = NAME##_global_size; \
-  NAME.length = NAME.block_len = (NAME##_stack_data_type) ((stack_size-sizeof (NAME##_linked_list)) / sizeof (TYPE)); \
+  NAME.length = NAME.block_len = ((linked_list_header *) NAME.blocks)->block_size / sizeof (TYPE); \
 } while (0)
 
 #define STACK_FREE(NAME) \
 do { \
-  free_##NAME##_linked_list (NAME.blocks); \
+  linked_list_free (NAME.blocks); \
   NAME.length = NAME.current = 0; \
+  NAME.blocks = NULL; \
 } while (0)
 
-#ifdef JERRY_NDEBUG
 #define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
 static void increase_##NAME##_stack_size (void) __unused; \
 static void \
 increase_##NAME##_stack_size (void) { \
-  if (NAME.current == NAME.length && ((NAME##_linked_list *) NAME.last)->next == NULL) \
+  linked_list_set_element (NAME.blocks, sizeof (TYPE), NAME.current, NULL); \
+  if (NAME.current >= NAME.length) \
   { \
-    size_t temp_size = mem_heap_recommend_allocation_size ((size_t) (sizeof (NAME##_linked_list))); \
-    JERRY_ASSERT ((temp_size-sizeof (NAME##_linked_list)) / sizeof (TYPE) == NAME.block_len); \
-    NAME##_linked_list *temp = (NAME##_linked_list *) mem_heap_alloc_block ( \
-      temp_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    if (temp == NULL) \
-    { \
-      jerry_exit (ERR_MEMORY); \
-    } \
-    __memset (temp, 0, temp_size); \
-    ((NAME##_linked_list *) NAME.last)->next = temp; \
-    temp->prev = (NAME##_linked_list *) NAME.last; \
-    NAME.last = (uint8_t *) temp; \
     NAME.length = (NAME##_stack_data_type) (NAME.length + NAME.block_len); \
   } \
   NAME.current = (NAME##_stack_data_type) (NAME.current + 1); \
 }
-#else
-#define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
-static void increase_##NAME##_stack_size (void) __unused; \
-static void \
-increase_##NAME##_stack_size (void) { \
-  if (NAME.current == NAME.length && ((NAME##_linked_list *) NAME.last)->next == NULL) \
-  { \
-    size_t temp_size = mem_heap_recommend_allocation_size ((size_t) (sizeof (NAME##_linked_list))); \
-    JERRY_ASSERT ((temp_size-sizeof (NAME##_linked_list)) / sizeof (TYPE) == NAME.block_len); \
-    NAME##_linked_list *temp = (NAME##_linked_list *) mem_heap_alloc_block ( \
-      temp_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-    if (temp == NULL) \
-    { \
-      mem_heap_print (true, false, true); \
-      JERRY_UNREACHABLE (); \
-    } \
-    __memset (temp, 0, temp_size); \
-    ((NAME##_linked_list *) NAME.last)->next = temp; \
-    temp->prev = (NAME##_linked_list *) NAME.last; \
-    NAME.last = (uint8_t *) temp; \
-    NAME.length = (NAME##_stack_data_type) (NAME.length + NAME.block_len); \
-  } \
-  NAME.current = (NAME##_stack_data_type) (NAME.current + 1); \
-}
-#endif
 
 #define DEFINE_DECREASE_STACE_SIZE(NAME, TYPE) \
 static void decrease_##NAME##_stack_size (void) __unused; \
 static void \
 decrease_##NAME##_stack_size (void) { \
-  JERRY_ASSERT (NAME.current - 1 >= NAME##_global_size); \
+  JERRY_ASSERT (NAME.current > NAME##_global_size); \
   NAME.current = (NAME##_stack_data_type) (NAME.current - 1); \
 }
 
@@ -162,62 +119,35 @@ decrease_##NAME##_stack_size (void) { \
 static TYPE NAME##_stack_element (NAME##_stack_data_type) __unused; \
 static TYPE NAME##_stack_element (NAME##_stack_data_type elem) { \
   JERRY_ASSERT (elem < NAME.current); \
-  NAME##_linked_list *block = (NAME##_linked_list *) NAME.blocks; \
-  for (NAME##_stack_data_type i = 0; i < elem / NAME.block_len; i++) { \
-    JERRY_ASSERT (block->next); \
-    block = block->next; \
-  } \
-  return NAME##_list_element ((uint8_t *) block, (uint8_t) ((elem)%NAME.block_len)); \
+  return *((TYPE *) linked_list_element (NAME.blocks, sizeof (TYPE), elem)); \
 }
 
 #define DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
 static void set_##NAME##_stack_element (NAME##_stack_data_type, TYPE) __unused; \
 static void set_##NAME##_stack_element (NAME##_stack_data_type elem, TYPE value) { \
   JERRY_ASSERT (elem < NAME.current); \
-  NAME##_linked_list *block = (NAME##_linked_list *) NAME.blocks; \
-  for (NAME##_stack_data_type i = 0; i < elem / NAME.block_len; i++) { \
-    JERRY_ASSERT (block->next); \
-    block = block->next; \
-  } \
-  set_##NAME##_list_element ((uint8_t *) block, (uint8_t) ((elem)%NAME.block_len), value); \
+  linked_list_set_element (NAME.blocks, sizeof (TYPE), elem, &value); \
 }
 
 #define DEFINE_STACK_HEAD(NAME, TYPE) \
 static TYPE NAME##_stack_head (NAME##_stack_data_type) __unused; \
 static TYPE NAME##_stack_head (NAME##_stack_data_type elem) { \
   JERRY_ASSERT (elem <= NAME.current); \
-  JERRY_ASSERT (elem <= NAME.block_len); \
-  if ((NAME.current % NAME.block_len) < elem) { \
-    return NAME##_list_element ((uint8_t *) ((NAME##_linked_list *) NAME.last)->prev, \
-                                (uint8_t) ((NAME.current % NAME.block_len) - elem + NAME.block_len)); \
-  } else { \
-    return NAME##_list_element (NAME.last, (uint8_t) ((NAME.current % NAME.block_len) - elem)); \
-  } \
+  return *((TYPE *) linked_list_element (NAME.blocks, sizeof (TYPE), (size_t) (NAME.current - elem))); \
 }
 
 #define DEFINE_SET_STACK_HEAD(NAME, DATA_TYPE, TYPE) \
 static void set_##NAME##_stack_head (DATA_TYPE, TYPE) __unused; \
 static void set_##NAME##_stack_head (DATA_TYPE elem, TYPE value) { \
   JERRY_ASSERT (elem <= NAME.current); \
-  JERRY_ASSERT (elem <= NAME.block_len); \
-  if ((NAME.current % NAME.block_len) < elem) { \
-    set_##NAME##_list_element ((uint8_t *) ((NAME##_linked_list *) NAME.last)->prev, \
-                               (uint8_t) ((NAME.current % NAME.block_len) - elem + NAME.block_len), value); \
-  } else { \
-    set_##NAME##_list_element (NAME.last, (uint8_t) ((NAME.current % NAME.block_len) - elem), value); \
-  } \
+  linked_list_set_element (NAME.blocks, sizeof (TYPE), (size_t) (NAME.current - elem), &value); \
 }
 
 #define DEFINE_STACK_PUSH(NAME, TYPE) \
 static void NAME##_stack_push (TYPE) __unused; \
 static void NAME##_stack_push (TYPE value) { \
-  if (NAME.current % NAME.block_len == 0 && NAME.current != 0) { \
-    increase_##NAME##_stack_size (); \
-    set_##NAME##_list_element (NAME.last, (uint8_t) ((NAME.current - 1) % NAME.block_len), value); \
-  } else { \
-    set_##NAME##_list_element (NAME.last, (uint8_t) ((NAME.current) % NAME.block_len), value); \
-    increase_##NAME##_stack_size (); \
-  } \
+  linked_list_set_element (NAME.blocks, sizeof (TYPE), NAME.current, &value); \
+  increase_##NAME##_stack_size (); \
 }
 
 #define DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
@@ -241,15 +171,8 @@ static TYPE *convert_##NAME##_to_raw_data (void) { \
 #define STACK_PUSH(NAME, VALUE) \
 do { NAME##_stack_push (VALUE); } while (0)
 
-#define STACK_POP(NAME, VALUE) \
-do { \
-  decrease_##NAME##_stack_size (); \
-  VALUE = NAME##_list_element (NAME.last, (uint8_t) (NAME.current % NAME.block_len)); \
-} while (0)
-
 #define STACK_DROP(NAME, I) \
 do { \
-  JERRY_ASSERT ((I) >= 0); \
   for (size_t i = 0, till = (size_t) (I); i < till; i++) { \
     decrease_##NAME##_stack_size (); } } while (0)
 

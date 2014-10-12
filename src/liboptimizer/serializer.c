@@ -23,6 +23,19 @@
 static bool print_opcodes;
 
 void
+serializer_set_scope (scopes_tree *new_scope)
+{
+  current_scope = new_scope;
+}
+
+void
+serializer_merge_scopes_into_bytecode (void)
+{
+  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, &bytecode_data.opcodes_count);
+}
+
+
+void
 serializer_dump_strings_and_nums (const lp_string strings[], uint8_t strs_count,
                                   const ecma_number_t nums[], uint8_t nums_count)
 {
@@ -40,28 +53,26 @@ serializer_dump_strings_and_nums (const lp_string strings[], uint8_t strs_count,
 void
 serializer_dump_opcode (opcode_t opcode)
 {
-  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) < MAX_OPCODES);
+  JERRY_ASSERT (scopes_tree_opcodes_num (current_scope) < MAX_OPCODES);
 
   if (print_opcodes)
   {
-    pp_opcode (STACK_SIZE (bytecode_opcodes), opcode, false);
+    pp_opcode (scopes_tree_opcodes_num (current_scope), opcode, false);
   }
 
-  STACK_PUSH (bytecode_opcodes, opcode);
+  scopes_tree_add_opcode (current_scope, opcode);
 }
 
 void
 serializer_set_writing_position (opcode_counter_t oc)
 {
-  JERRY_ASSERT (oc < STACK_SIZE (bytecode_opcodes));
-  STACK_DROP (bytecode_opcodes, STACK_SIZE (bytecode_opcodes) - oc);
+  scopes_tree_set_opcodes_num (current_scope, oc);
 }
 
 void
 serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
-  JERRY_ASSERT (loc < STACK_SIZE (bytecode_opcodes));
-  STACK_SET_ELEMENT (bytecode_opcodes, loc, opcode);
+  scopes_tree_set_opcode (current_scope, loc, opcode);
 
   if (print_opcodes)
   {
@@ -81,9 +92,9 @@ serializer_print_opcodes (void)
 
   __printf ("AFTER OPTIMIZER:\n");
 
-  for (loc = 0; loc < STACK_SIZE (bytecode_opcodes); loc++)
+  for (loc = 0; loc < bytecode_data.opcodes_count; loc++)
   {
-    pp_opcode (loc, STACK_ELEMENT (bytecode_opcodes, loc), false);
+    pp_opcode (loc, bytecode_data.opcodes[loc], false);
   }
 }
 
@@ -102,6 +113,7 @@ serializer_adjust_strings (void)
 void
 serializer_init (bool show_opcodes)
 {
+  current_scope = NULL;
   print_opcodes = show_opcodes;
 }
 

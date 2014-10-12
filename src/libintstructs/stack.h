@@ -40,7 +40,7 @@
   STACK(temp_names, uint8_t, uint8_t)
 
   #define GLOBAL(NAME, VAR) \
-  NAME.data[VAR]
+  STACK_ELEMENT (NAME, VAR)
 
   #define MAX_TEMP_NAME() \
   GLOBAL(temp_names, max_temp_name)
@@ -54,7 +54,7 @@
   void
   parser_init (void)
   {
-    STACK_INIT(uint8_t, temp_names)
+    STACK_INIT(temp_names)
   }
 
   void
@@ -81,11 +81,11 @@ typedef struct \
 __packed \
 NAME##_stack;
 
-#define STACK_INIT(TYPE, NAME) \
+#define STACK_INIT(NAME) \
 do { \
-  NAME.blocks = linked_list_init (sizeof (TYPE)); \
+  NAME.blocks = linked_list_init (sizeof (NAME##_stack_value_type)); \
   NAME.current = NAME##_global_size; \
-  NAME.length = NAME.block_len = ((linked_list_header *) NAME.blocks)->block_size / sizeof (TYPE); \
+  NAME.length = NAME.block_len = ((linked_list_header *) NAME.blocks)->block_size / sizeof (NAME##_stack_value_type); \
 } while (0)
 
 #define STACK_FREE(NAME) \

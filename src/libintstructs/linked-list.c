@@ -22,6 +22,7 @@
 #define ASSERT_LIST(list) \
 do { \
   linked_list_header *header = (linked_list_header *) list; \
+  JERRY_ASSERT (header); \
   JERRY_ASSERT (header->magic == LINKED_LIST_MAGIC); \
 } while (0);
 

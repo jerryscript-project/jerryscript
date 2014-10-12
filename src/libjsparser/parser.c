@@ -25,6 +25,7 @@
 #include "deserializer.h"
 #include "opcodes-native-call.h"
 #include "parse-error.h"
+#include "scopes-tree.h"
 
 #define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
@@ -75,6 +76,14 @@ enum
   nestings_global_size
 };
 STATIC_STACK (nestings, uint8_t, uint8_t)
+
+typedef scopes_tree* scopes_tree_p;
+
+enum
+{
+  scopes_global_size
+};
+STATIC_STACK (scopes, uint8_t, scopes_tree_p)
 
 enum
 {
@@ -3592,6 +3601,10 @@ void
 parser_parse_program (void)
 {
   STACK_DECLARE_USAGE (IDX)
+  STACK_DECLARE_USAGE (scopes);
+
+  STACK_PUSH (scopes, scopes_tree_init (NULL));
+  serializer_set_scope (STACK_TOP (scopes));
 
   skip_newlines ();
   parse_source_element_list (true);
@@ -3601,8 +3614,14 @@ parser_parse_program (void)
   DUMP_OPCODE_1 (exitval, 0);
 
   serializer_adjust_strings ();
+  serializer_merge_scopes_into_bytecode ();
+
+  scopes_tree_free (STACK_TOP (scopes));
+  serializer_set_scope (NULL);
+  STACK_DROP (scopes, 1);
 
   STACK_CHECK_USAGE (IDX);
+  STACK_CHECK_USAGE (scopes);
 }
 
 void
@@ -3620,16 +3639,17 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   serializer_dump_strings_and_nums (identifiers, lexer_get_strings_count (),
                                     lexer_get_nums (), lexer_get_nums_count ());
 
-  STACK_INIT (uint8_t, U8);
-  STACK_INIT (uint8_t, IDX);
-  STACK_INIT (uint8_t, nestings);
-  STACK_INIT (uint8_t, temp_names);
-  STACK_INIT (token, toks);
-  STACK_INIT (opcode_t, ops);
-  STACK_INIT (uint16_t, U16);
-  STACK_INIT (opcode_counter_t, rewritable_continue);
-  STACK_INIT (opcode_counter_t, rewritable_break);
-  STACK_INIT (locus, locs);
+  STACK_INIT (U8);
+  STACK_INIT (IDX);
+  STACK_INIT (nestings);
+  STACK_INIT (temp_names);
+  STACK_INIT (toks);
+  STACK_INIT (ops);
+  STACK_INIT (U16);
+  STACK_INIT (rewritable_continue);
+  STACK_INIT (rewritable_break);
+  STACK_INIT (locs);
+  STACK_INIT (scopes);
 
   HASH_INIT (intrinsics, 1);
 
@@ -3689,6 +3709,7 @@ parser_free (void)
   STACK_FREE (rewritable_continue);
   STACK_FREE (rewritable_break);
   STACK_FREE (locs);
+  STACK_FREE (scopes);
 
   HASH_FREE (intrinsics);
 

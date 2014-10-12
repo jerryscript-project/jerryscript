@@ -16,8 +16,6 @@
 #include "deserializer.h"
 #include "bytecode-data.h"
 
-static opcode_t *raw_bytecode;
-
 const ecma_char_t *
 deserialize_string_by_id (uint8_t id)
 {
@@ -42,18 +40,14 @@ deserialize_num_by_id (uint8_t id)
 const void *
 deserialize_bytecode (void)
 {
-  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) > 0);
-  JERRY_ASSERT (raw_bytecode == NULL);
-  STACK_CONVERT_TO_RAW_DATA (bytecode_opcodes, raw_bytecode);
-  return raw_bytecode;
+  JERRY_ASSERT (bytecode_data.opcodes != NULL);
+  return bytecode_data.opcodes;
 }
 
 opcode_t
 deserialize_opcode (opcode_counter_t oc)
 {
-  JERRY_ASSERT (STACK_SIZE (bytecode_opcodes) > 0);
-  JERRY_ASSERT (oc < STACK_SIZE (bytecode_opcodes));
-  return STACK_ELEMENT (bytecode_opcodes, oc);
+  return scopes_tree_opcode (current_scope, oc);
 }
 
 uint8_t
@@ -65,18 +59,12 @@ deserialize_min_temp (void)
 void
 deserializer_init (void)
 {
-  raw_bytecode = NULL;
-  STACK_INIT (opcode_t, bytecode_opcodes);
 }
 
 void
 deserializer_free (void)
 {
-  STACK_FREE (bytecode_opcodes);
-  if (raw_bytecode)
-  {
-    mem_heap_free_block ((uint8_t *) raw_bytecode);
-  }
   mem_heap_free_block ((uint8_t *) bytecode_data.strings);
   mem_heap_free_block ((uint8_t *) bytecode_data.nums);
+  mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);
 }

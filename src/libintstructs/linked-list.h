@@ -32,6 +32,7 @@ __packed
 linked_list_header;
 
 typedef uint8_t* linked_list;
+#define null_list NULL
 
 linked_list linked_list_init (size_t);
 void linked_list_free (linked_list);

@@ -20,6 +20,7 @@
 #include "stack.h"
 #include "jerry-libc.h"
 #include "lp-string.h"
+#include "scopes-tree.h"
 
 /* bytecode_data contains identifiers, string and num literals.
    Memory map if the following.
@@ -36,17 +37,15 @@ struct
 {
   uint8_t strs_count;
   uint8_t nums_count;
+  opcode_counter_t opcodes_count;
 
   const lp_string *strings;
   const ecma_number_t *nums;
+  const opcode_t *opcodes;
 }
 __packed
 bytecode_data;
 
-enum
-{
-  bytecode_opcodes_global_size
-};
-STACK (bytecode_opcodes, opcode_counter_t, opcode_t)
+scopes_tree *current_scope;
 
 #endif // BYTECODE_DATA_H

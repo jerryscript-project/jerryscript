@@ -1300,9 +1300,9 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   buffer_size = source_size;
   lexer_set_source (source);
 
-  STACK_INIT (lp_string, strings);
-  STACK_INIT (ecma_number_t, numbers);
-  STACK_INIT (idx_t, num_ids);
+  STACK_INIT (strings);
+  STACK_INIT (numbers);
+  STACK_INIT (num_ids);
 }
 
 void

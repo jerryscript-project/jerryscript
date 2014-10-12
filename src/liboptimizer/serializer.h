@@ -25,7 +25,7 @@
 void serializer_init (bool show_opcodes);
 void serializer_dump_strings_and_nums (const lp_string *, uint8_t,
                                        const ecma_number_t *, uint8_t);
-void serializer_set_scope (scopes_tree *);
+void serializer_set_scope (scopes_tree);
 void serializer_merge_scopes_into_bytecode (void);
 void serializer_dump_opcode (opcode_t);
 void serializer_set_writing_position (opcode_counter_t);

@@ -295,8 +295,8 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     }
     case NAME_TO_ID (try):
     {
-      pp_printf ("try (end: %d);", calc_opcode_counter_from_idx_idx (opcode.data.try.oc_idx_1,
-                                                                     opcode.data.try.oc_idx_2));
+      pp_printf ("try (end: %d);", oc + calc_opcode_counter_from_idx_idx (opcode.data.try.oc_idx_1,
+                                                                          opcode.data.try.oc_idx_2));
       break;
     }
     case NAME_TO_ID (assignment):
@@ -595,14 +595,14 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
         }
         case OPCODE_META_TYPE_FUNCTION_END:
         {
-          pp_printf ("function end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                            opcode.data.meta.data_2));
+          pp_printf ("function end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                                 opcode.data.meta.data_2));
           break;
         }
         case OPCODE_META_TYPE_CATCH:
         {
-          pp_printf ("catch end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                         opcode.data.meta.data_2));
+          pp_printf ("catch end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                              opcode.data.meta.data_2));
           break;
         }
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
@@ -612,8 +612,8 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
         }
         case OPCODE_META_TYPE_FINALLY:
         {
-          pp_printf ("finally end: %d;", calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                           opcode.data.meta.data_2));
+          pp_printf ("finally end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
+                                                                                opcode.data.meta.data_2));
           break;
         }
         case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:

@@ -32,8 +32,8 @@ opfunc_try (opcode_t opdata, /**< operation data */
 {
   const idx_t block_end_oc_idx_1 = opdata.data.try.oc_idx_1;
   const idx_t block_end_oc_idx_2 = opdata.data.try.oc_idx_2;
-  const opcode_counter_t try_end_oc = calc_opcode_counter_from_idx_idx (block_end_oc_idx_1,
-                                                                        block_end_oc_idx_2);
+  const opcode_counter_t try_end_oc = (opcode_counter_t) (
+    calc_opcode_counter_from_idx_idx (block_end_oc_idx_1, block_end_oc_idx_2) + int_data->pos);
 
   int_data->pos++;
 
@@ -52,8 +52,8 @@ opfunc_try (opcode_t opdata, /**< operation data */
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH)
   {
-    const opcode_counter_t catch_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_CATCH,
-                                                                    int_data);
+    const opcode_counter_t catch_end_oc = (opcode_counter_t) (
+      read_meta_opcode_counter (OPCODE_META_TYPE_CATCH, int_data) + int_data->pos);
     int_data->pos++;
 
     if (ecma_is_completion_value_throw (try_completion))
@@ -105,8 +105,8 @@ opfunc_try (opcode_t opdata, /**< operation data */
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_FINALLY)
   {
-    const opcode_counter_t finally_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_FINALLY,
-                                                                      int_data);
+    const opcode_counter_t finally_end_oc = (opcode_counter_t) (
+      read_meta_opcode_counter (OPCODE_META_TYPE_FINALLY, int_data) + int_data->pos);
     int_data->pos++;
 
     ecma_completion_value_t finally_completion = run_int_loop (int_data);

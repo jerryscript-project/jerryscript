@@ -414,7 +414,8 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
   bool is_strict = int_data->is_strict;
   const bool is_configurable_bindings = int_data->is_eval_code;
 
-  const opcode_counter_t function_code_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  const opcode_counter_t function_code_end_oc = (opcode_counter_t) (
+    read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data) + int_data->pos);
   int_data->pos++;
 
   opcode_t next_opcode = read_opcode (int_data->pos);
@@ -497,7 +498,8 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   bool is_strict = int_data->is_strict;
 
-  const opcode_counter_t function_code_end_oc = read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data);
+  const opcode_counter_t function_code_end_oc = (opcode_counter_t) (
+    read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data) + int_data->pos);
   int_data->pos++;
 
   opcode_t next_opcode = read_opcode (int_data->pos);

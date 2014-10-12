@@ -20,22 +20,25 @@
 #include "linked-list.h"
 #include "opcodes.h"
 
-typedef struct scopes_tree
+typedef struct
 {
   tree_header t;
   opcode_counter_t opcodes_num;
   linked_list opcodes;
 }
 __packed
-scopes_tree;
+scopes_tree_int;
 
-scopes_tree *scopes_tree_init (scopes_tree *);
-void scopes_tree_free (scopes_tree *);
-opcode_counter_t scopes_tree_opcodes_num (scopes_tree *);
-void scopes_tree_add_opcode (scopes_tree *, opcode_t);
-void scopes_tree_set_opcode (scopes_tree *, opcode_counter_t, opcode_t);
-void scopes_tree_set_opcodes_num (scopes_tree *, opcode_counter_t);
-opcode_t scopes_tree_opcode (scopes_tree *, opcode_counter_t);
-opcode_t *scopes_tree_raw_data (scopes_tree *, opcode_counter_t *);
+typedef scopes_tree_int * scopes_tree;
+
+scopes_tree scopes_tree_init (scopes_tree);
+void scopes_tree_free (scopes_tree);
+opcode_counter_t scopes_tree_opcodes_num (scopes_tree);
+void scopes_tree_add_opcode (scopes_tree, opcode_t);
+void scopes_tree_set_opcode (scopes_tree, opcode_counter_t, opcode_t);
+void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
+opcode_t scopes_tree_opcode (scopes_tree, opcode_counter_t);
+opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
+opcode_t *scopes_tree_raw_data (scopes_tree, opcode_counter_t *);
 
 #endif /* SCOPES_TREE_H */

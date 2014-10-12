@@ -77,13 +77,11 @@ enum
 };
 STATIC_STACK (nestings, uint8_t, uint8_t)
 
-typedef scopes_tree* scopes_tree_p;
-
 enum
 {
   scopes_global_size
 };
-STATIC_STACK (scopes, uint8_t, scopes_tree_p)
+STATIC_STACK (scopes, uint8_t, scopes_tree)
 
 enum
 {
@@ -274,9 +272,9 @@ do { \
 do { \
   STACK_DECLARE_USAGE (IDX) \
   JERRY_STATIC_ASSERT (sizeof (idx_t) == 1); \
-  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) >> JERRY_BITSINBYTE)); \
-  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER ()) & ((1 << JERRY_BITSINBYTE) - 1))); \
-  JERRY_ASSERT ((OPCODE_COUNTER ()) \
+  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER () - OC) >> JERRY_BITSINBYTE)); \
+  STACK_PUSH (IDX, (idx_t) ((OPCODE_COUNTER () - OC) & ((1 << JERRY_BITSINBYTE) - 1))); \
+  JERRY_ASSERT ((OPCODE_COUNTER () - OC) \
                 == calc_opcode_counter_from_idx_idx (ID(2), ID(1))); \
   serializer_rewrite_opcode ((OC), getop_try (ID(2), ID(1))); \
   STACK_DROP (IDX, 2); \
@@ -311,7 +309,7 @@ static void parse_expression (void);
 static void parse_statement (void);
 static void parse_assignment_expression (void);
 static void parse_source_element_list (bool);
-static void parse_argument_list (argument_list_type, idx_t, idx_t);
+static uint8_t parse_argument_list (argument_list_type, idx_t, idx_t);
 
 static uint8_t
 lp_string_hash (lp_string str)
@@ -742,23 +740,29 @@ parse_property_name_and_value (void)
 }
 
 static void
-rewrite_meta_opcode_counter (opcode_counter_t meta_oc, opcode_meta_type type)
+rewrite_meta_opcode_counter_set_oc (opcode_counter_t meta_oc, opcode_meta_type type, opcode_counter_t oc)
 {
   // IDX oc_idx_1, oc_idx_2
   STACK_DECLARE_USAGE (IDX)
 
   JERRY_STATIC_ASSERT (sizeof (idx_t) == 1);
 
-  STACK_PUSH (IDX, (idx_t) (OPCODE_COUNTER () >> JERRY_BITSINBYTE));
-  STACK_PUSH (IDX, (idx_t) (OPCODE_COUNTER () & ((1 << JERRY_BITSINBYTE) - 1)));
+  STACK_PUSH (IDX, (idx_t) (oc >> JERRY_BITSINBYTE));
+  STACK_PUSH (IDX, (idx_t) (oc & ((1 << JERRY_BITSINBYTE) - 1)));
 
-  JERRY_ASSERT (OPCODE_COUNTER () == calc_opcode_counter_from_idx_idx (ID(2), ID(1)));
+  JERRY_ASSERT (oc == calc_opcode_counter_from_idx_idx (ID(2), ID(1)));
 
   REWRITE_OPCODE_3 (meta_oc, meta, type, ID(2), ID(1));
 
   STACK_DROP (IDX, 2);
 
   STACK_CHECK_USAGE (IDX);
+}
+
+static void
+rewrite_meta_opcode_counter (opcode_counter_t meta_oc, opcode_meta_type type)
+{
+  rewrite_meta_opcode_counter_set_oc (meta_oc, type, (opcode_counter_t) (OPCODE_COUNTER () - meta_oc));
 }
 
 /* property_assignment
@@ -862,7 +866,7 @@ cleanup:
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Returns temp var if expression has lhs, or 0 otherwise.  */
-static void
+static uint8_t
 parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
 {
   // U8 open_tt, close_tt, args_count
@@ -872,6 +876,7 @@ parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (temp_names)
+  uint8_t args_num = 0;
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   switch (alt)
@@ -1077,6 +1082,8 @@ next:
     }
   }
 
+  args_num = STACK_TOP (U8);
+
   STACK_DROP (U8, 3);
   STACK_DROP (U16, 1);
 
@@ -1094,6 +1101,8 @@ next:
     STACK_CHECK_USAGE_LHS ();
   }
 #endif
+
+  return args_num;
 }
 
 /* function_declaration
@@ -1111,6 +1120,12 @@ parse_function_declaration (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (nestings)
+  STACK_DECLARE_USAGE (scopes)
+  STACK_DECLARE_USAGE (U8)
+
+  SET_OPCODE_COUNTER (0);
+  STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
+  serializer_set_scope (STACK_TOP (scopes));
 
   assert_keyword (KW_FUNCTION);
 
@@ -1119,7 +1134,7 @@ parse_function_declaration (void)
   STACK_PUSH (IDX, token_data ());
 
   skip_newlines ();
-  parse_argument_list (AL_FUNC_DECL, ID(1), INVALID_VALUE);
+  STACK_PUSH (U8, parse_argument_list (AL_FUNC_DECL, ID(1), INVALID_VALUE));
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
@@ -1135,14 +1150,22 @@ parse_function_declaration (void)
 
   DUMP_VOID_OPCODE (ret);
 
-  rewrite_meta_opcode_counter (STACK_TOP (U16), OPCODE_META_TYPE_FUNCTION_END);
+  rewrite_meta_opcode_counter_set_oc (STACK_TOP (U16), OPCODE_META_TYPE_FUNCTION_END,
+                                      (opcode_counter_t) (
+                                        scopes_tree_count_opcodes (STACK_TOP (scopes)) - (STACK_TOP (U8) + 1)));
 
   STACK_DROP (U16, 1);
+  STACK_DROP (U8, 1);
   STACK_DROP (IDX, 1);
+  STACK_DROP (scopes, 1);
+  SET_OPCODE_COUNTER (scopes_tree_opcodes_num (STACK_TOP (scopes)));
+  serializer_set_scope (STACK_TOP (scopes));
 
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (nestings);
+  STACK_CHECK_USAGE (scopes);
 }
 
 /* function_expression
@@ -3546,6 +3569,13 @@ preparse_scope (bool is_global)
     else if (is_keyword (KW_VAR))
     {
       preparse_var_decls ();
+    }
+    else if (is_keyword (KW_FUNCTION))
+    {
+      skip_newlines ();
+      skip_optional_name_and_parens ();
+      skip_newlines ();
+      skip_braces ();
     }
     skip_newlines ();
   }

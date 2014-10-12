@@ -46,6 +46,6 @@ struct
 __packed
 bytecode_data;
 
-scopes_tree *current_scope;
+scopes_tree current_scope;
 
 #endif // BYTECODE_DATA_H

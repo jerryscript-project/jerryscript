@@ -62,7 +62,7 @@ typedef enum
   OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_VARG_PROP_SETTER, /**< name (lit_idx) and setter (var_idx) for an accessor property descriptor */
   OPCODE_META_TYPE_END_WITH, /**< end of with statement */
-  OPCODE_META_TYPE_FUNCTION_END, /**< opcode counter */
+  OPCODE_META_TYPE_FUNCTION_END, /**< offset to function end */
   OPCODE_META_TYPE_CATCH, /**< mark of beginning of catch block containing pointer to end of catch block */
   OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
   OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */

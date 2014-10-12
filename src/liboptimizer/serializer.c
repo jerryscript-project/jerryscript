@@ -23,7 +23,7 @@
 static bool print_opcodes;
 
 void
-serializer_set_scope (scopes_tree *new_scope)
+serializer_set_scope (scopes_tree new_scope)
 {
   current_scope = new_scope;
 }

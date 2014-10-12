@@ -47,6 +47,11 @@ deserialize_bytecode (void)
 opcode_t
 deserialize_opcode (opcode_counter_t oc)
 {
+  if (bytecode_data.opcodes)
+  {
+    JERRY_ASSERT (oc < bytecode_data.opcodes_count);
+    return bytecode_data.opcodes[oc];
+  }
   return scopes_tree_opcode (current_scope, oc);
 }
 
@@ -59,6 +64,9 @@ deserialize_min_temp (void)
 void
 deserializer_init (void)
 {
+  bytecode_data.strings = NULL;
+  bytecode_data.nums = NULL;
+  bytecode_data.opcodes = NULL;
 }
 
 void

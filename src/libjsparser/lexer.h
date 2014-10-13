@@ -139,9 +139,9 @@ typedef size_t locus;
 /* Represents the contents of a token.  */
 typedef struct
 {
+  locus loc;
   token_type type;
   uint8_t uid;
-  locus loc;
 }
 __packed
 token;

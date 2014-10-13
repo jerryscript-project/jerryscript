@@ -22,11 +22,11 @@
 
 typedef struct linked_list_header
 {
+  struct linked_list_header *next;
+  struct linked_list_header *prev;
   uint8_t magic;
   uint8_t block_size;
   uint8_t used_size;
-  struct linked_list_header *next;
-  struct linked_list_header *prev;
 }
 __packed
 linked_list_header;

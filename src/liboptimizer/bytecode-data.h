@@ -35,13 +35,12 @@
    } */
 struct
 {
-  uint8_t strs_count;
-  uint8_t nums_count;
-  opcode_counter_t opcodes_count;
-
   const lp_string *strings;
   const ecma_number_t *nums;
   const opcode_t *opcodes;
+  uint8_t strs_count;
+  uint8_t nums_count;
+  opcode_counter_t opcodes_count;
 }
 __packed
 bytecode_data;

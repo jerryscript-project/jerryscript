@@ -34,17 +34,16 @@ typedef struct \
   KEY_TYPE key; \
   VALUE_TYPE value; \
 } \
-__packed \
 NAME##_backet;
 
 TODO (/*Rewrite to NAME##_backet **backets when neccesary*/)
 #define DEFINE_HASH_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
 typedef struct \
 { \
+  NAME##_backet *backets; \
+  uint8_t *lens; \
   uint8_t size; \
   uint8_t max_lens; \
-  uint8_t *lens; \
-  NAME##_backet *backets; \
 } \
 __packed \
 NAME##_hash_table;

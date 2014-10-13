@@ -73,10 +73,10 @@ typedef TYPE      NAME##_stack_value_type; \
 typedef DATA_TYPE NAME##_stack_data_type; \
 typedef struct \
 { \
+  linked_list blocks; \
   DATA_TYPE length; \
   DATA_TYPE current; \
   DATA_TYPE block_len; \
-  linked_list blocks; \
 } \
 __packed \
 NAME##_stack;

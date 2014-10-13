@@ -360,12 +360,12 @@ jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
   struct rlimit data_limit = { data_size, data_size };
   struct rlimit stack_limit = { stack_size, stack_size };
 
-  int ret;
+  long int ret;
 
-  SYSCALL_2 (__NR_setrlimit, RLIMIT_DATA, &data_limit, ret);
+  ret = syscall_2 (__NR_setrlimit, RLIMIT_DATA, (intptr_t) &data_limit);
   JERRY_ASSERT (ret == 0);
 
-  SYSCALL_2 (__NR_setrlimit, RLIMIT_STACK, &stack_limit, ret);
+  ret = syscall_2 (__NR_setrlimit, RLIMIT_STACK, (intptr_t) &stack_limit);
   JERRY_ASSERT (ret == 0);
 } /* jrt_set_mem_limits */
 

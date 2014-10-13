@@ -30,8 +30,6 @@ switch (a) {
     assert (0);
 }
 
-// TODO: Uncomment when default will be supported
-/*
 switch (a) {
   default:
     assert (0);
@@ -40,4 +38,12 @@ switch (a) {
   case 2:
   case 3:
     assert (0);
-}*/
+}
+
+switch (a) {
+  default:
+    break;
+  case 2:
+  case 3:
+    assert (0);
+}

@@ -310,6 +310,7 @@ static void parse_statement (void);
 static void parse_assignment_expression (void);
 static void parse_source_element_list (bool);
 static uint8_t parse_argument_list (argument_list_type, idx_t, idx_t);
+static void skip_braces (void);
 
 static uint8_t
 lp_string_hash (lp_string str)
@@ -2888,9 +2889,6 @@ parse_with_statement (void)
 
 /* case_clause
   : 'case' LT!* expression LT!* ':' LT!* statement*
-  ;
-   default_clause
-  : 'default' LT!* ':' LT!* statement*
   ; */
 static void
 parse_case_clause (void)
@@ -2925,6 +2923,50 @@ cleanup:
   STACK_CHECK_USAGE_LHS ();
 }
 
+static void
+skip_default_clause (void)
+{
+  assert_keyword (KW_DEFAULT);
+  token_after_newlines_must_be (TOK_COLON);
+  do
+  {
+    skip_newlines ();
+    if (is_keyword (KW_DEFAULT))
+    {
+      EMIT_ERROR ("Several 'default' clauses in sigle switch");
+    }
+    if (token_is (TOK_OPEN_BRACE))
+    {
+      skip_braces ();
+    }
+  }
+  while (!token_is (TOK_CLOSE_BRACE) && !is_keyword (KW_CASE));
+  lexer_save_token (TOK ());
+}
+
+/* default_clause
+  : 'default' LT!* ':' LT!* statement*
+  ; */
+static void
+parse_default_clause (void)
+{
+  assert_keyword (KW_DEFAULT);
+  token_after_newlines_must_be (TOK_COLON);
+  skip_newlines ();
+  if (is_keyword (KW_CASE))
+  {
+    return;
+  }
+  else if (is_keyword (KW_DEFAULT))
+  {
+    EMIT_ERROR ("Several 'default' clauses in sigle switch");
+  }
+  else
+  {
+    parse_statement_list ();
+  }
+}
+
 /* switch_statement
   : 'switch' LT!* '(' LT!* expression LT!* ')' LT!* '{' LT!* case_block LT!* '}'
   ;
@@ -2939,9 +2981,11 @@ parse_switch_statement (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (U8)
+  STACK_DECLARE_USAGE (locs)
 
   assert_keyword (KW_SWITCH);
 
+  STACK_PUSH (U8, 0); // was default
   STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
   parse_expression_inside_parens ();
@@ -2953,19 +2997,33 @@ parse_switch_statement (void)
     if (is_keyword (KW_CASE))
     {
       parse_case_clause ();
+      REWRITE_COND_JMP (STACK_TOP (U16), is_false_jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
+      STACK_DROP (IDX, 1);
+      STACK_DROP (U16, 1);
     }
     else if (is_keyword (KW_DEFAULT))
     {
-      EMIT_SORRY ("'default' clause is not supported yet");
+      STACK_SET_HEAD (U8, 2, 1);
+      STACK_PUSH (locs, TOK ().loc);
+      skip_default_clause ();
     }
     else
     {
       JERRY_UNREACHABLE ();
     }
-    REWRITE_COND_JMP (STACK_TOP (U16), is_false_jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
-    STACK_DROP (IDX, 1);
-    STACK_DROP (U16, 1);
     skip_newlines ();
+  }
+
+  // if was default
+  if (STACK_HEAD (U8, 2) == 1)
+  {
+    STACK_PUSH (locs, TOK ().loc);
+    lexer_seek (STACK_HEAD (locs, 2));
+    skip_token ();
+    parse_default_clause ();
+    lexer_seek (STACK_TOP (locs));
+    STACK_DROP (locs, 2);
+    skip_token ();
   }
 
   if (!token_is (TOK_CLOSE_BRACE))
@@ -2976,8 +3034,9 @@ parse_switch_statement (void)
   rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
   STACK_DROP (IDX, 1);
-  STACK_DROP (U8, 1);
+  STACK_DROP (U8, 2);
 
+  STACK_CHECK_USAGE (locs);
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (U8);

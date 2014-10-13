@@ -1124,6 +1124,7 @@ lexer_seek (size_t locus)
   JERRY_ASSERT (token_start == NULL);
 
   buffer = buffer_start + locus;
+  saved_token = empty_token;
 }
 
 void

@@ -27,10 +27,10 @@ echo "Running Sunspider:"
 run jerry/sunspider/bitops-3bit-bits-in-byte
 run jerry/sunspider/bitops-bits-in-byte
 run jerry/sunspider/bitops-bitwise-and
-#run jerry/sunspider/controlflow-recursive # work under mem-stats
+run jerry/sunspider/controlflow-recursive
 run jerry/sunspider/math-cordic
 run jerry/sunspider/math-partial-sums
-#run jerry/sunspider/math-spectral-norm # fix
+run jerry/sunspider/math-spectral-norm
 
 echo "Running Jerry:"
 run jerry/cse

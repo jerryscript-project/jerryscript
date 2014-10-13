@@ -166,6 +166,8 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
                                                                  false,
                                                                  true,
                                                                  false);
+  ecma_deref_ecma_string (new_prop_name_p);
+
   ecma_char_t new_prop_zt_str_p [2] = { c, ECMA_CHAR_NULL };
   ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string (new_prop_zt_str_p);
   ecma_value_t new_prop_str_value = ecma_make_string_value (new_prop_str_value_p);

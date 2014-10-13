@@ -26,6 +26,7 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jerry-libc.h"
 
@@ -481,8 +482,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      /* return String object with [[PrimitiveValue]] set to the value */
-      JERRY_UNIMPLEMENTED ();
+      return ecma_op_create_string_object (&value, 1);
     }
     case ECMA_TYPE_OBJECT:
     {

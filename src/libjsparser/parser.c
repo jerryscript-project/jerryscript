@@ -3623,6 +3623,7 @@ preparse_scope (bool is_global)
   {
     if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
     {
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
       REWRITE_OPCODE_3 (STACK_TOP (U16), meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
     }
     else if (is_keyword (KW_VAR))
@@ -3711,6 +3712,19 @@ parser_parse_program (void)
 
   STACK_CHECK_USAGE (IDX);
   STACK_CHECK_USAGE (scopes);
+}
+
+bool
+parser_strict_mode (void)
+{
+  if (STACK_SIZE (scopes) > 0)
+  {
+    return scopes_tree_strict_mode (STACK_TOP (scopes));
+  }
+  else
+  {
+    return false;
+  }
 }
 
 void

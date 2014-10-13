@@ -20,6 +20,7 @@
 #include "stack.h"
 #include "opcodes.h"
 #include "parse-error.h"
+#include "parser.h"
 
 static token saved_token, prev_token, sent_token;
 static token empty_token =
@@ -750,22 +751,48 @@ parse_number (void)
   }
 
   tok_length = (size_t) (buffer - token_start);;
-  for (i = 0; i < tok_length; i++)
+  if (*token_start == '0' && tok_length != 1)
   {
-    if (!is_overflow)
+    if (parser_strict_mode ())
     {
-      res = res * 10 + hex_to_int (token_start[i]);
+      PARSE_ERROR ("Octal tnteger literals are not allowed in strict mode", token_start - buffer_start);
     }
-    else
+    for (i = 0; i < tok_length; i++)
     {
-      fp_res = fp_res * 10 + (ecma_number_t) hex_to_int (token_start[i]);
+      if (!is_overflow)
+      {
+        res = res * 8 + hex_to_int (token_start[i]);
+      }
+      else
+      {
+        fp_res = fp_res * 8 + (ecma_number_t) hex_to_int (token_start[i]);
+      }
+      if (res > 255)
+      {
+        fp_res = (ecma_number_t) res;
+        is_overflow = true;
+        res = 0;
+      }
     }
-
-    if (res > 255)
+  }
+  else
+  {
+    for (i = 0; i < tok_length; i++)
     {
-      fp_res = (ecma_number_t) res;
-      is_overflow = true;
-      res = 0;
+      if (!is_overflow)
+      {
+        res = res * 10 + hex_to_int (token_start[i]);
+      }
+      else
+      {
+        fp_res = fp_res * 10 + (ecma_number_t) hex_to_int (token_start[i]);
+      }
+      if (res > 255)
+      {
+        fp_res = (ecma_number_t) res;
+        is_overflow = true;
+        res = 0;
+      }
     }
   }
 

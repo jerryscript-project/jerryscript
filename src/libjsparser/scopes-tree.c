@@ -132,6 +132,20 @@ scopes_tree_raw_data (scopes_tree tree, opcode_counter_t *num)
   return opcodes;
 }
 
+void
+scopes_tree_set_strict_mode (scopes_tree tree, bool strict_mode)
+{
+  assert_tree (tree);
+  tree->strict_mode = strict_mode ? 1 : 0;
+}
+
+bool
+scopes_tree_strict_mode (scopes_tree tree)
+{
+  assert_tree (tree);
+  return (bool) tree->strict_mode;
+}
+
 scopes_tree
 scopes_tree_init (scopes_tree parent)
 {
@@ -153,6 +167,7 @@ scopes_tree_init (scopes_tree parent)
     parent->t.children_num++;
   }
   tree->opcodes_num = 0;
+  tree->strict_mode = 0;
   tree->opcodes = linked_list_init (sizeof (opcode_t));
   return tree;
 }

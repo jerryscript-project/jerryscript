@@ -23,6 +23,7 @@
 typedef struct
 {
   tree_header t;
+  unsigned strict_mode:1;
   opcode_counter_t opcodes_num;
   linked_list opcodes;
 }
@@ -40,5 +41,7 @@ void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
 opcode_t scopes_tree_opcode (scopes_tree, opcode_counter_t);
 opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
 opcode_t *scopes_tree_raw_data (scopes_tree, opcode_counter_t *);
+void scopes_tree_set_strict_mode (scopes_tree, bool);
+bool scopes_tree_strict_mode (scopes_tree);
 
 #endif /* SCOPES_TREE_H */

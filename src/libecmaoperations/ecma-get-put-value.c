@@ -85,9 +85,8 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
       JERRY_ASSERT (obj_p != NULL
                     && !ecma_is_lexical_environment (obj_p));
-      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL);
 
-      ret_value = ecma_op_general_object_get (obj_p, ref.referenced_name_p);
+      ret_value = ecma_op_object_get (obj_p, ref.referenced_name_p);
 
       ECMA_FINALIZE (obj_base);
 
@@ -209,20 +208,19 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
       JERRY_ASSERT (obj_p != NULL
                     && !ecma_is_lexical_environment (obj_p));
-      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL);
 
       // sub_2.
-      if (!ecma_op_general_object_can_put (obj_p, ref.referenced_name_p))
+      if (!ecma_op_object_can_put (obj_p, ref.referenced_name_p))
       {
         ret_value = ecma_reject_put (ref.is_strict);
       }
       else
       {
         // sub_3.
-        ecma_property_t *own_prop_p = ecma_op_general_object_get_own_property (obj_p, ref.referenced_name_p);
+        ecma_property_t *own_prop_p = ecma_op_object_get_own_property (obj_p, ref.referenced_name_p);
 
         // sub_5.
-        ecma_property_t *prop_p = ecma_op_general_object_get_property (obj_p, ref.referenced_name_p);
+        ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, ref.referenced_name_p);
 
         // sub_4., sub_7
         if ((own_prop_p != NULL

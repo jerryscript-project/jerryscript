@@ -212,9 +212,13 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
       ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
       JERRY_ASSERT(string_p != NULL);
 
-      ecma_ref_ecma_string (string_p);
+      string_p = ecma_copy_or_ref_ecma_string (string_p);
 
-      value_copy = value;
+      value_copy = (ecma_value_t)
+      {
+        .value_type = ECMA_TYPE_STRING
+      };
+      ECMA_SET_NON_NULL_POINTER(value_copy.value, string_p);
 
       break;
     }

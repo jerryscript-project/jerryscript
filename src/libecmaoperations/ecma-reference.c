@@ -79,7 +79,7 @@ ecma_make_reference (ecma_value_t base, /**< base value */
                      ecma_string_t *name_p, /**< referenced name */
                      bool is_strict) /**< strict reference flag */
 {
-  ecma_ref_ecma_string (name_p);
+  name_p = ecma_copy_or_ref_ecma_string (name_p);
 
   ecma_reference_t ref = (ecma_reference_t)
   {

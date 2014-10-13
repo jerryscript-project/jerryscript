@@ -174,7 +174,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
 
       ecma_string_t *prim_value_str_p = ECMA_GET_POINTER (prim_value_prop_p->u.internal_property.value);
 
-      ecma_ref_ecma_string (prim_value_str_p);
+      prim_value_str_p = ecma_copy_or_ref_ecma_string (prim_value_str_p);
 
       return ecma_make_normal_completion_value (ecma_make_string_value (prim_value_str_p));
     }

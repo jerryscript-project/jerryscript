@@ -454,7 +454,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
-  ecma_ref_ecma_string (name_p);
+  name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER(prop_p->u.named_data_property.name_p, name_p);
 
   prop_p->u.named_data_property.writable = writable;
@@ -490,7 +490,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
-  ecma_ref_ecma_string (name_p);
+  name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER(prop_p->u.named_accessor_property.name_p, name_p);
 
   ECMA_SET_POINTER(prop_p->u.named_accessor_property.get_p, get_p);

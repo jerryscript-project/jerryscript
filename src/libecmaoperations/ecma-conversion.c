@@ -421,7 +421,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
     case ECMA_TYPE_STRING:
     {
       res_p = ECMA_GET_POINTER (value.value);
-      ecma_ref_ecma_string (res_p);
+      res_p = ecma_copy_or_ref_ecma_string (res_p);
 
       break;
     }

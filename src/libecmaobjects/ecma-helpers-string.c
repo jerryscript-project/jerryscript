@@ -265,8 +265,8 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     string_desc_p->length = (ecma_length_t) length;
   }
 
-  ecma_ref_ecma_string (string1_p);
-  ecma_ref_ecma_string (string2_p);
+  string1_p = ecma_copy_or_ref_ecma_string (string1_p);
+  string2_p = ecma_copy_or_ref_ecma_string (string2_p);
 
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
@@ -278,18 +278,40 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
  * Increase reference counter of ecma-string.
  *
  * @return pointer to same ecma-string descriptor with increased reference counter
+ *         or the ecma-string's copy with reference counter set to 1
  */
-void
-ecma_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
+ecma_string_t*
+ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs > 0);
 
   string_desc_p->refs++;
 
-  /* Check for overflow */
-  JERRY_ASSERT (string_desc_p->refs > 0);
-} /* ecma_ref_ecma_string */
+  if (unlikely (string_desc_p->refs == 0))
+  {
+    string_desc_p->refs--;
+
+    if (string_desc_p->container == ECMA_STRING_CONTAINER_CHARS_IN_DESC
+        || string_desc_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
+        || string_desc_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+    {
+      ecma_string_t *new_str_p = ecma_alloc_string ();
+
+      *new_str_p = *string_desc_p;
+
+      new_str_p->refs = 1;
+
+      return new_str_p;
+    }
+    else
+    {
+      JERRY_UNIMPLEMENTED ();
+    }
+  }
+
+  return string_desc_p;
+} /* ecma_copy_or_ref_ecma_string */
 
 /**
  * Decrease reference counter and deallocate ecma-string if

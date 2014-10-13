@@ -19,3 +19,5 @@ function foo() {
 
   assert(a + b === 30);
 }
+
+foo();

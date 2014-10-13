@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var s = 'hello';
-asssert(s[0] == 'h');
+assert(s[0] == 'h');

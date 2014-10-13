@@ -173,8 +173,8 @@ ecma_gc_is_object_may_ref_younger_objects (ecma_object_t *object_p) /**< object 
   JERRY_ASSERT (object_p != NULL);
 
   return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_GC_REFS_POS,
-                                ECMA_OBJECT_GC_REFS_WIDTH);
+                                ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
+                                ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH);
 } /* ecma_gc_is_object_may_ref_younger_objects */
 
 /**

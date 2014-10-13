@@ -35,7 +35,7 @@ function f1()
 var k;
 var i;
 
-for(i = 0; i < 1000; i++)
+for(i = 0; i < 100; i++)
 {
   f1();
 }

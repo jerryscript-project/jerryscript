@@ -122,17 +122,10 @@ linked_list_set_element (linked_list list, size_t element_size, size_t element_n
       ((uint64_t *) raw)[element_num] = *((uint64_t *) element);
       break;
     }
-#ifdef __TARGET_HOST_x64
-    case sizeof (lp_string):
-    {
-      ((lp_string *) raw)[element_num] = *((lp_string *) element);
-      break;
-    }
-#endif
     default:
     {
-      __printf ("Element_size %d is not supported\n", element_size);
-      JERRY_UNIMPLEMENTED ();
+      __memcpy ((uint8_t*) raw + element_num * element_size, element, element_size);
+      break;
     }
   }
 }

@@ -288,7 +288,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
-                                                                   old_value.u.value);
+                                                                   old_num_value.u.value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_FINALIZE (old_num_value);
@@ -336,7 +336,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
                                                                    dst_var_idx,
-                                                                   old_value.u.value);
+                                                                   old_num_value.u.value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_FINALIZE (old_num_value);

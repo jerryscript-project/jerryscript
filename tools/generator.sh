@@ -16,10 +16,16 @@
 
 echo "#include \"globals.h\"" > $2
 echo "" >> $2
-echo "static const char* generated_source = \"\"" >> $2
-while read line
-do
-  echo "\"$line\n\"" >> $2
-done < $1
-echo ";" >> $2
+echo "static char generated_source [] =" >> $2
+echo "{" >> $2
+  cat $1 | fold -w1 | while read ch
+  do
+   if [ "$ch" == "" ]
+   then
+     ch=" "
+   fi
+   echo "  '$ch'," >> $2
+  done
+echo "  0" >> $2
+echo "};" >> $2
 

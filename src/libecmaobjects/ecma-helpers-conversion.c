@@ -187,7 +187,14 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
   if (begin_p > end_p)
   {
-    return num;
+    if (sign)
+    {
+      return -num;
+    }
+    else
+    {
+      return num;
+    }
   }
 
   int32_t e = 0;
@@ -198,7 +205,14 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
     if (begin_p > end_p)
     {
-      return num;
+      if (sign)
+      {
+        return -num;
+      }
+      else
+      {
+        return num;
+      }
     }
 
     while (begin_p <= end_p)

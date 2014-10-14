@@ -52,7 +52,6 @@ __aeabi_llsl:
   mov r0, #0
 
   bx lr
-.end __aeabi_llsl
 
 
 /**
@@ -71,9 +70,9 @@ __aeabi_llsr:
 
   // r0 = (r1 >> (r2 - 32));
   // r1 = 0
-  mov r0, r0
   sub r2, #32
-  lsr r0, r1, r2
+  mov r0, r1
+  lsr r0, r2
   mov r1, #0
 
   bx lr
@@ -101,4 +100,4 @@ __aeabi_llsr:
   mov r0, #0
 
   bx lr
-.end __aeabi_llsr
+

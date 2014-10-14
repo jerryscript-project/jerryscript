@@ -20,7 +20,7 @@ tmp = b * c;
 a = tmp + g;
 d = tmp * e + a;
 
-var waitTime = 600000;
+var waitTime = 60;
 var numOfIterations = 10;
 
 while (1)

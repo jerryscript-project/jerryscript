@@ -86,9 +86,9 @@ jerry_exit (jerry_status_t code) /**< status code */
         __printf ("ERR_PARSER\n");
         break;
       }
-      case ERR_MEMORY:
+      case ERR_OUT_OF_MEMORY:
       {
-        __printf ("ERR_MEMORY\n");
+        __printf ("ERR_OUT_OF_MEMORY\n");
         break;
       }
       case ERR_SYSCALL:

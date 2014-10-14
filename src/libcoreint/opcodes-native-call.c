@@ -133,7 +133,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
                                                       MEM_HEAP_ALLOC_SHORT_TERM);
         if (zt_str_p == NULL)
         {
-          jerry_exit (ERR_MEMORY);
+          jerry_exit (ERR_OUT_OF_MEMORY);
         }
 
         ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);

@@ -253,7 +253,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
   {
-    jerry_exit (ERR_MEMORY);
+    jerry_exit (ERR_OUT_OF_MEMORY);
   }
 
   if ((int64_t) ((ecma_length_t) length) != length)
@@ -421,7 +421,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
         ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -bytes_copied, MEM_HEAP_ALLOC_SHORT_TERM);
         if (heap_buffer_p == NULL)
         {
-          jerry_exit (ERR_MEMORY);
+          jerry_exit (ERR_OUT_OF_MEMORY);
         }
 
         bytes_copied = ecma_string_to_zt_string (str_p,
@@ -717,7 +717,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
-        jerry_exit (ERR_MEMORY);
+        jerry_exit (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
@@ -763,7 +763,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
         ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
         if (heap_buffer_p == NULL)
         {
-          jerry_exit (ERR_MEMORY);
+          jerry_exit (ERR_OUT_OF_MEMORY);
         }
 
         ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
@@ -918,7 +918,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
-        jerry_exit (ERR_MEMORY);
+        jerry_exit (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
@@ -952,7 +952,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
-        jerry_exit (ERR_MEMORY);
+        jerry_exit (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
@@ -1032,7 +1032,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   if (zt_str_p == NULL)
   {
-    jerry_exit (ERR_MEMORY);
+    jerry_exit (ERR_OUT_OF_MEMORY);
   }
 
   ecma_string_to_zt_string (string_p, zt_str_p, (ssize_t) buffer_size);

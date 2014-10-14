@@ -40,12 +40,12 @@ rewritable_opcode_type;
 
 typedef struct
 {
-  uint8_t args_count;
   union
   {
     void (*fun1) (idx_t);
   }
   funs;
+  uint8_t args_count;
 }
 intrinsic_dumper;
 

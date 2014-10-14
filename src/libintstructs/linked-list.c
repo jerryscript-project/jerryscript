@@ -31,7 +31,7 @@ linked_list_init (size_t element_size)
 {
   size_t size = mem_heap_recommend_allocation_size (element_size);
   linked_list list = mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
-  if (list == NULL)
+  if (list == null_list)
   {
     __printf ("Out of memory");
     JERRY_UNREACHABLE ();
@@ -39,7 +39,7 @@ linked_list_init (size_t element_size)
   __memset (list, 0, size);
   linked_list_header* header = (linked_list_header *) list;
   header->magic = LINKED_LIST_MAGIC;
-  header->prev = header->next = NULL;
+  header->prev = header->next = null_list;
   header->block_size = (uint8_t) (size - sizeof (linked_list_header));
   return list;
 }
@@ -62,7 +62,7 @@ linked_list_element (linked_list list, size_t element_size, size_t element_num)
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
   linked_list raw = list + sizeof (linked_list_header);
-  if (header->block_size <= element_size * (element_num + 1))
+  if (header->block_size < element_size * (element_num + 1))
   {
     if (header->next)
     {
@@ -84,9 +84,9 @@ linked_list_set_element (linked_list list, size_t element_size, size_t element_n
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
   linked_list raw = list + sizeof (linked_list_header);
-  if (header->block_size <= element_size * (element_num + 1))
+  if (header->block_size < element_size * (element_num + 1))
   {
-    if (header->next == NULL)
+    if (header->next == null_list)
     {
       header->next = (linked_list_header *) linked_list_init (element_size);
       header->next->prev = header;
@@ -122,11 +122,13 @@ linked_list_set_element (linked_list list, size_t element_size, size_t element_n
       ((uint64_t *) raw)[element_num] = *((uint64_t *) element);
       break;
     }
+#ifdef __TARGET_HOST_x64
     case sizeof (lp_string):
     {
       ((lp_string *) raw)[element_num] = *((lp_string *) element);
       break;
     }
+#endif
     default:
     {
       __printf ("Element_size %d is not supported\n", element_size);

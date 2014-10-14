@@ -26,9 +26,7 @@ typedef struct linked_list_header
   struct linked_list_header *prev;
   uint8_t magic;
   uint8_t block_size;
-  uint8_t used_size;
 }
-__packed
 linked_list_header;
 
 typedef uint8_t* linked_list;

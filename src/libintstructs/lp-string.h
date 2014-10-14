@@ -24,7 +24,6 @@ typedef struct
   ecma_char_t *str;
   ecma_length_t length;
 }
-__packed
 lp_string;
 
 bool lp_string_equal (lp_string, lp_string);

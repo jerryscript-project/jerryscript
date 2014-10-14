@@ -143,7 +143,6 @@ typedef struct
   token_type type;
   uint8_t uid;
 }
-__packed
 token;
 
 void lexer_init (const char *, size_t, bool);

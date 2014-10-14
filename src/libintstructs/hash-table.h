@@ -45,7 +45,6 @@ typedef struct \
   uint8_t size; \
   uint8_t max_lens; \
 } \
-__packed \
 NAME##_hash_table;
 
 #define HASH_INIT(NAME, SIZE) \

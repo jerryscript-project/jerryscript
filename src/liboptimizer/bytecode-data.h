@@ -42,7 +42,6 @@ struct
   uint8_t nums_count;
   opcode_counter_t opcodes_count;
 }
-__packed
 bytecode_data;
 
 scopes_tree current_scope;

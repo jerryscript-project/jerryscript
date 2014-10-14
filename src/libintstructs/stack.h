@@ -78,7 +78,6 @@ typedef struct \
   DATA_TYPE current; \
   DATA_TYPE block_len; \
 } \
-__packed \
 NAME##_stack;
 
 #define STACK_INIT(NAME) \

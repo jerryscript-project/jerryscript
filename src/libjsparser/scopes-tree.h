@@ -22,12 +22,11 @@
 
 typedef struct
 {
-  linked_list opcodes;
   tree_header t;
+  linked_list opcodes;
   opcode_counter_t opcodes_num;
   unsigned strict_mode:1;
 }
-__packed
 scopes_tree_int;
 
 typedef scopes_tree_int * scopes_tree;

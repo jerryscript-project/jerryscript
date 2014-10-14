@@ -26,9 +26,7 @@ typedef struct tree_header
   linked_list children;
   uint8_t magic;
   uint8_t children_num;
-  uint16_t reserved;
 }
-__packed
 tree_header;
 
 #endif /* TREE_H */

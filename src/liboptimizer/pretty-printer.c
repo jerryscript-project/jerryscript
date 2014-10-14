@@ -276,7 +276,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     }
     case NAME_TO_ID (is_false_jmp_down):
     {
-      pp_printf ("if (%s) goto %d;", opcode.data.is_false_jmp_down.value,
+      pp_printf ("if (%s == false) goto %d;", opcode.data.is_false_jmp_down.value,
                  oc + calc_opcode_counter_from_idx_idx (opcode.data.is_false_jmp_down.opcode_1,
                                                         opcode.data.is_false_jmp_down.opcode_2));
       break;

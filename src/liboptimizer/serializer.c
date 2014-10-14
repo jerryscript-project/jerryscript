@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "globals.h"
 #include "serializer.h"
 #include "parser.h"
 #include "jerry-libc.h"
@@ -39,10 +40,13 @@ void
 serializer_dump_strings_and_nums (const lp_string strings[], uint8_t strs_count,
                                   const ecma_number_t nums[], uint8_t nums_count)
 {
+#ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
     pp_strings (strings, strs_count);
+    pp_nums (nums, nums_count, strs_count);
   }
+#endif
 
   bytecode_data.strs_count = strs_count;
   bytecode_data.nums_count = nums_count;
@@ -55,10 +59,12 @@ serializer_dump_opcode (opcode_t opcode)
 {
   JERRY_ASSERT (scopes_tree_opcodes_num (current_scope) < MAX_OPCODES);
 
+#ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
     pp_opcode (scopes_tree_opcodes_num (current_scope), opcode, false);
   }
+#endif
 
   scopes_tree_add_opcode (current_scope, opcode);
 }
@@ -74,15 +80,18 @@ serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
 {
   scopes_tree_set_opcode (current_scope, loc, opcode);
 
+#ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
     pp_opcode (loc, opcode, true);
   }
+#endif
 }
 
 void
 serializer_print_opcodes (void)
 {
+#ifdef JERRY_ENABLE_PP
   opcode_counter_t loc;
 
   if (!print_opcodes)
@@ -96,6 +105,7 @@ serializer_print_opcodes (void)
   {
     pp_opcode (loc, bytecode_data.opcodes[loc], false);
   }
+#endif
 }
 
 /* Make lp_strings also zero-terminated.  */

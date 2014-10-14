@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "globals.h"
+#ifdef JERRY_ENABLE_PP
 #include "pretty-printer.h"
 #include "jerry-libc.h"
 #include "lexer.h"
@@ -646,3 +648,4 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
 
   __printf ("\n");
 }
+#endif /* JERRY_ENABLE_PP */

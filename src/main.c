@@ -172,7 +172,12 @@ main (int argc __unused,
     }
     else if (!__strcmp ("--show-opcodes", argv[i]))
     {
+#ifdef JERRY_ENABLE_PP
       show_opcodes = true;
+#else
+      __printf ("Ignoring --show-opcodes since target is not x86_64 or debug is not enabled.\n");
+      show_opcodes = false;
+#endif
     }
     else
     {

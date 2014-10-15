@@ -244,10 +244,10 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     PP_OP_1 (var_decl, "var %s;", variable_name);
     PP_OP_0 (nop, ";");
     PP_OP_1 (exitval, "exit %d;", status_code);
-    PP_OP_1 (retval, "return %d;", ret_value);
+    PP_OP_1 (retval, "return %s;", ret_value);
     PP_OP_0 (ret, "ret;");
-    PP_OP_3 (prop_getter, "%s = %s.%s;", lhs, obj, prop);
-    PP_OP_3 (prop_setter, "%s.%s = %s;", obj, prop, rhs);
+    PP_OP_3 (prop_getter, "%s = %s[%s];", lhs, obj, prop);
+    PP_OP_3 (prop_setter, "%s[%s] = %s;", obj, prop, rhs);
     PP_OP_1 (this, "%s = this;", lhs);
     PP_OP_2 (delete_var, "%s = delete %s;", lhs, name);
     PP_OP_3 (delete_prop, "%s = delete %s.%s;", lhs, base, name);
@@ -321,7 +321,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
         }
         case OPCODE_ARG_TYPE_STRING:
         {
-          pp_printf ("%s: STRING;", opcode.data.assignment.value_right);
+          pp_printf ("'%s': STRING;", opcode.data.assignment.value_right);
           break;
         }
         case OPCODE_ARG_TYPE_NUMBER:

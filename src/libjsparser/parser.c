@@ -1514,14 +1514,13 @@ parse_call_expression (void)
     goto cleanup;
   }
 
-  TODO (/* Uncomment when interpreter will catch this properly.  */)
-  // if (this_arg < lexer_get_reserved_ids_count ())
-  // {
-  //   STACK_PUSH (IDX, next_temp_name ());
-  //   DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, this_arg);
-  //   this_arg = ID(1);
-  //   STACK_DROP (IDX, 1);
-  // }
+  if (this_arg < lexer_get_reserved_ids_count ())
+  {
+    STACK_PUSH (IDX, next_temp_name ());
+    DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, this_arg);
+    this_arg = ID(1);
+    STACK_DROP (IDX, 1);
+  }
 
   parse_argument_list (AL_CALL_EXPR, ID(1), this_arg); // push lhs
   this_arg = INVALID_VALUE;
@@ -1531,44 +1530,37 @@ parse_call_expression (void)
   while (token_is (TOK_OPEN_PAREN) || token_is (TOK_OPEN_SQUARE)
          || token_is (TOK_DOT))
   {
-    switch (TOK ().type)
+    STACK_DROP (IDX, 1);
+    if (TOK ().type == TOK_OPEN_PAREN)
     {
-      case TOK_OPEN_PAREN:
+      parse_argument_list (AL_CALL_EXPR, ID(1), this_arg); // push lhs
+      skip_newlines ();
+    }
+    else
+    {
+      this_arg = ID (1);
+      if (TOK ().type == TOK_OPEN_SQUARE)
       {
-        STACK_DROP (IDX, 1);
-        parse_argument_list (AL_CALL_EXPR, ID(1), this_arg); // push lhs
-        skip_newlines ();
-        break;
-      }
-      case TOK_OPEN_SQUARE:
-      {
-        this_arg = ID (1);
         NEXT (expression); // push prop
         next_token_must_be (TOK_CLOSE_SQUARE);
-
-        DUMP_OPCODE_3 (prop_getter, ID(2), ID(3), ID(1));
-        STACK_DROP (IDX, 1);
-        STACK_SWAP (IDX);
-        skip_newlines ();
-        break;
       }
-      case TOK_DOT:
+      else if (TOK ().type == TOK_DOT)
       {
-        this_arg = ID (1);
         token_after_newlines_must_be (TOK_NAME);
-        STACK_PUSH (IDX, token_data ());
-
-        DUMP_OPCODE_3 (prop_getter, ID(2), ID(3), ID(1));
-        STACK_DROP (IDX, 1);
-        STACK_SWAP (IDX);
-        skip_newlines ();
-        break;
+        STACK_PUSH (IDX, next_temp_name ());
+        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
       }
-      default:
+      else
       {
         JERRY_UNREACHABLE ();
       }
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (prop_getter, ID(1), ID(3), ID(2));
+      STACK_SWAP (IDX);
+      STACK_DROP (IDX, 1);
+      skip_newlines ();
     }
+    STACK_SWAP (IDX);
   }
   lexer_save_token (TOK ());
 

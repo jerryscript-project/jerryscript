@@ -20,4 +20,4 @@ object = {
     return 0;
   }
 }
-assert((object - 1 !== 0) || (1 - object !== 0))
+assert(!((object - 1 !== 0) || (1 - object !== 0)));

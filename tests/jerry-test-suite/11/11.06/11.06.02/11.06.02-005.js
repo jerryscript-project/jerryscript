@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var x = 1;
-assert((x - 1 !== 0) || (1 - x !== 0))
+assert(!((x - 1 !== 0) || (1 - x !== 0)))

@@ -15,7 +15,9 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
@@ -99,8 +101,9 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
     array_items_count = arguments_list_len;
   }
 
-  FIXME (/* Set prototype to built-in Array prototype (15.4.3.1) */);
-  ecma_object_t *obj_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_ARRAY);
+  ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
+  ecma_object_t *obj_p = ecma_create_object (array_prototype_obj_p, true, ECMA_OBJECT_TYPE_ARRAY);
+  ecma_deref_object (array_prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ARRAY_UL;

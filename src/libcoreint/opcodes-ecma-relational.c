@@ -246,6 +246,8 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
   const idx_t left_var_idx = opdata.data.instanceof.var_left;
   const idx_t right_var_idx = opdata.data.instanceof.var_right;
 
+  int_data->pos++;
+
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);

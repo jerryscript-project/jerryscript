@@ -797,7 +797,7 @@ parse_property_assignment (void)
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
 
-    STACK_PUSH (U16, opcode_counter);
+    STACK_PUSH (U16, OPCODE_COUNTER ());
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
@@ -832,7 +832,7 @@ parse_property_assignment (void)
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
 
-    STACK_PUSH (U16, opcode_counter);
+    STACK_PUSH (U16, OPCODE_COUNTER ());
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);

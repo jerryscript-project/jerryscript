@@ -20,4 +20,4 @@ function test(arg)
     return 1;
 }
 
-assert(test("str"));
+assert(!test("str"));

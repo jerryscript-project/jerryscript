@@ -15,5 +15,7 @@
 var x = 1 / 3;
 do
 {
+  x = 1;
 }
 while (x === 3 / 9);
+assert (x === 1);

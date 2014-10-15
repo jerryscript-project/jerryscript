@@ -13,8 +13,9 @@
 // limitations under the License.
 
 var obj = new Object();
+obj.x = "defined";
 do
 {
-  obj.x = "defined";
+  delete obj.x;
 }
-while (delete obj.x);
+while (obj.x !== undefined);

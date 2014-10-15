@@ -538,7 +538,7 @@ rewrite_continues (opcode_counter_t cont_oc, opcode_counter_t dest_oc)
   else
   {
     // in case of do-while loop we must jump to condition
-    REWRITE_JMP (cont_oc, jmp_up, dest_oc - cont_oc);
+    REWRITE_JMP (cont_oc, jmp_down, dest_oc - cont_oc);
   }
 }
 
@@ -554,13 +554,13 @@ rewrite_rewritable_opcodes (rewritable_opcode_type type, uint8_t from, opcode_co
     case REWRITABLE_BREAK:
     {
       STACK_ITERATE_VARG (rewritable_break, rewrite_breaks, from, oc);
-      STACK_CLEAN (rewritable_break);
+      STACK_DROP (rewritable_break, STACK_SIZE (rewritable_break) - from);
       break;
     }
     case REWRITABLE_CONTINUE:
     {
       STACK_ITERATE_VARG (rewritable_continue, rewrite_continues, from, oc);
-      STACK_CLEAN (rewritable_continue);
+      STACK_DROP (rewritable_continue, STACK_SIZE (rewritable_continue) - from);
       break;
     }
     default: JERRY_UNREACHABLE ();
@@ -2795,6 +2795,7 @@ parse_do_while_statement (void)
   STACK_PUSH (U8, STACK_SIZE (rewritable_continue));
   STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
+  STACK_PUSH (U16, OPCODE_COUNTER ());
   skip_newlines ();
   push_nesting (NESTING_ITERATIONAL);
   parse_statement ();
@@ -2805,12 +2806,12 @@ parse_do_while_statement (void)
   parse_expression_inside_parens ();
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (is_true_jmp_up, INVALID_VALUE, INVALID_VALUE, INVALID_VALUE);
-  REWRITE_COND_JMP (STACK_HEAD(U16, 1), is_true_jmp_up, OPCODE_COUNTER () - STACK_HEAD (U16, 2));
+  REWRITE_COND_JMP (STACK_HEAD(U16, 1), is_true_jmp_up, STACK_HEAD(U16, 1) - STACK_HEAD (U16, 2));
 
   rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
   STACK_DROP (IDX, 1);
-  STACK_DROP (U16, 1);
+  STACK_DROP (U16, 2);
   STACK_DROP (U8, 2);
 
   STACK_CHECK_USAGE (U8);

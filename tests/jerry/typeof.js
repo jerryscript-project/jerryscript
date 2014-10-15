@@ -19,8 +19,8 @@ function f()
 
 assert(typeof(a) === "undefined");
 assert(typeof(null) === "object");
-assert(typeof(false) === "false");
-assert(typeof(true) === "true");
+assert(typeof(false) === "boolean");
+assert(typeof(true) === "boolean");
 assert(typeof(1) === "number");
 assert(typeof(1.1) === "number");
 assert(typeof('abcd') === "string");

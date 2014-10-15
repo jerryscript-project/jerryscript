@@ -1464,13 +1464,9 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
           break;
         }
         case ECMA_SIMPLE_VALUE_FALSE:
-        {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
-          break;
-        }
         case ECMA_SIMPLE_VALUE_TRUE:
         {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_BOOLEAN);
           break;
         }
         case ECMA_SIMPLE_VALUE_EMPTY:

@@ -24,4 +24,9 @@ function Animal(name)
 
 var animal = new Animal("animal");
 var bird = new Animal("bird");
-assert(animal.canFly == animal.name);
+
+assert(animal.canWalk === true);
+assert(bird.canWalk === true);
+assert(animal.canFly === undefined);
+assert(bird.canFly === true);
+

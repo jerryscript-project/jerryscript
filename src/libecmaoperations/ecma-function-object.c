@@ -646,6 +646,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ECMA_FINALIZE (call_completion);
     ECMA_FINALIZE (func_obj_prototype_prop_value);
 
+    ecma_deref_ecma_string (prototype_magic_string_p);
+
     return ret_value;
   }
   else

@@ -125,10 +125,9 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   { // 2., 3.
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
-  else if (is_x_boolean
-           || (is_x_number && is_y_string))
+  else if (is_x_number && is_y_string)
   {
-    // 4., 6.
+    // 4.
     ECMA_TRY_CATCH (y_num_value,
                     ecma_op_to_number (y),
                     ret_value);
@@ -138,10 +137,9 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
     ECMA_FINALIZE (y_num_value);
   }
-  else if (is_y_boolean
-           || (is_x_string && is_y_number))
+  else if (is_x_string && is_y_number)
   {
-    // 5., 7.
+    // 5.
     ECMA_TRY_CATCH (x_num_value,
                     ecma_op_to_number (x),
                     ret_value);
@@ -150,6 +148,30 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                                    y);
 
     ECMA_FINALIZE (x_num_value);
+  }
+  else if (is_x_boolean)
+  {
+    // 6.
+    ECMA_TRY_CATCH (x_num_value,
+                    ecma_op_to_number (x),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x_num_value.u.value,
+                                                   y);
+
+    ECMA_FINALIZE (x_num_value);
+  }
+  else if (is_y_boolean)
+  {
+    // 7.
+    ECMA_TRY_CATCH (y_num_value,
+                    ecma_op_to_number (y),
+                    ret_value);
+
+    ret_value = ecma_op_abstract_equality_compare (x,
+                                                   y_num_value.u.value);
+
+    ECMA_FINALIZE (y_num_value);
   }
   else if (is_y_object
            && (is_x_number || is_x_string))

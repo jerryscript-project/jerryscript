@@ -250,7 +250,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     PP_OP_3 (prop_setter, "%s.%s = %s;", obj, prop, rhs);
     PP_OP_1 (this, "%s = this;", lhs);
     PP_OP_2 (delete_var, "%s = delete %s;", lhs, name);
-    PP_OP_3 (delete_prop, "%s = delete %s[\"%s\"];", lhs, base, name);
+    PP_OP_3 (delete_prop, "%s = delete %s.%s;", lhs, base, name);
     PP_OP_2 (typeof, "%s = typeof %s;", lhs, obj);
     PP_OP_1 (with, "with (%s);", expr);
     case NAME_TO_ID (is_true_jmp_up):
@@ -539,7 +539,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
                 JERRY_UNREACHABLE ();
               }
             }
-            for (opcode_counter_t counter = start; counter < oc; counter++)
+            for (opcode_counter_t counter = start; counter <= oc; counter++)
             {
               opcode_t meta_op = deserialize_opcode (counter);
               switch (meta_op.op_idx)
@@ -586,7 +586,23 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
                 }
               }
             }
-            pp_printf (");");
+            switch (start_op.op_idx)
+            {
+              case NAME_TO_ID (array_decl):
+              {
+                pp_printf ("];");
+                break;
+              }
+              case NAME_TO_ID (obj_decl):
+              {
+                pp_printf ("};");
+                break;
+              }
+              default:
+              {
+                pp_printf (");");
+              }
+            }
           }
           break;
         }

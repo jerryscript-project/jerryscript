@@ -14,8 +14,8 @@
 
 var a = 1;
 assert (a === 1);
-assert (delete a === true);
-assert (a === undefined);
+assert (delete a === false);
+assert (a === 1);
 var a = [1];
 assert (a[0] === 1);
 assert (delete a[0] === true);

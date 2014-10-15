@@ -299,3 +299,81 @@ opfunc_remainder (opcode_t opdata, /**< operation data */
 
   return ret_value;
 } /* opfunc_remainder */
+
+/**
+ * 'Unary "+"' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4, 11.4.6
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_unary_plus (opcode_t opdata, /**< operation data */
+                   int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.remainder.dst;
+  const idx_t var_idx = opdata.data.remainder.var_left;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
+  ECMA_TRY_CATCH (num_value, ecma_op_to_number (var_value.u.value), ret_value);
+
+  ecma_number_t *var_p, *res_p;
+  var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
+
+  res_p = ecma_alloc_number ();
+  *res_p = *var_p;
+  ret_value = set_variable_value (int_data,
+                                  dst_var_idx,
+                                  ecma_make_number_value (res_p));
+
+  ecma_dealloc_number (res_p);
+
+  ECMA_FINALIZE (num_value);
+  ECMA_FINALIZE (var_value);
+
+  return ret_value;
+} /* opfunc_unary_plus */
+
+/**
+ * 'Unary "-"' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.4, 11.4.7
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+opfunc_unary_minus (opcode_t opdata, /**< operation data */
+                    int_data_t *int_data) /**< interpreter context */
+{
+  const idx_t dst_var_idx = opdata.data.remainder.dst;
+  const idx_t var_idx = opdata.data.remainder.var_left;
+
+  int_data->pos++;
+
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
+  ECMA_TRY_CATCH (num_value, ecma_op_to_number (var_value.u.value), ret_value);
+
+  ecma_number_t *var_p, *res_p;
+  var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
+
+  res_p = ecma_alloc_number ();
+  *res_p = ecma_number_negate (*var_p);
+  ret_value = set_variable_value (int_data,
+                                  dst_var_idx,
+                                  ecma_make_number_value (res_p));
+
+  ecma_dealloc_number (res_p);
+
+  ECMA_FINALIZE (num_value);
+  ECMA_FINALIZE (var_value);
+
+  return ret_value;
+} /* opfunc_unary_minus */

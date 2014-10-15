@@ -215,6 +215,8 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     PP_OP_3 (division, "%s = %s - %s;", dst, var_left, var_right);
     PP_OP_3 (multiplication, "%s = %s * %s;", dst, var_left, var_right);
     PP_OP_3 (remainder, "%s = %s %% %s;", dst, var_left, var_right);
+    PP_OP_2 (unary_minus, "%s = -%s;", dst, var);
+    PP_OP_2 (unary_plus, "%s = +%s;", dst, var);
     PP_OP_3 (b_shift_left, "%s = %s << %s;", dst, var_left, var_right);
     PP_OP_3 (b_shift_right, "%s = %s >> %s;", dst, var_left, var_right);
     PP_OP_3 (b_shift_uright, "%s = %s >>> %s;", dst, var_left, var_right);

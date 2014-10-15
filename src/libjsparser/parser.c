@@ -501,17 +501,6 @@ token_after_newlines_must_be_keyword (keyword kw)
 }
 
 static void
-integer_zero (void)
-{
-  STACK_DECLARE_USAGE (IDX)
-
-  STACK_PUSH (IDX, next_temp_name ());
-  DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SMALLINT, 0);
-
-  STACK_CHECK_USAGE_LHS ();
-}
-
-static void
 boolean_true (void)
 {
   STACK_DECLARE_USAGE (IDX)
@@ -1652,18 +1641,16 @@ parse_unary_expression (void)
     {
       STACK_PUSH (IDX, next_temp_name ());
       NEXT (unary_expression);
-      integer_zero ();
-      DUMP_OPCODE_3 (addition, ID(3), ID(1), ID(2));
-      STACK_DROP (IDX, 2);
+      DUMP_OPCODE_2 (unary_plus, ID(2), ID(1));
+      STACK_DROP (IDX, 1);
       break;
     }
     case TOK_MINUS:
     {
       STACK_PUSH (IDX, next_temp_name ());
       NEXT (unary_expression);
-      integer_zero ();
-      DUMP_OPCODE_3 (substraction, ID(3), ID(1), ID(2));
-      STACK_DROP (IDX, 2);
+      DUMP_OPCODE_2 (unary_minus, ID(2), ID(1));
+      STACK_DROP (IDX, 1);
       break;
     }
     case TOK_COMPL:

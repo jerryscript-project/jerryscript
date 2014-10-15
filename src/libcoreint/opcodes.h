@@ -160,7 +160,9 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_3 (a, substraction, dst, var_left, var_right)                    \
         p##_3 (a, division, dst, var_left, var_right)                        \
         p##_3 (a, multiplication, dst, var_left, var_right)                  \
-        p##_3 (a, remainder, dst, var_left, var_right)
+        p##_3 (a, remainder, dst, var_left, var_right)                       \
+        p##_2 (a, unary_minus, dst, var)                                     \
+        p##_2 (a, unary_plus, dst, var)
 
 #define OP_JUMPS(p, a)                                                       \
         p##_2 (a, jmp_up, opcode_1, opcode_2)                                \

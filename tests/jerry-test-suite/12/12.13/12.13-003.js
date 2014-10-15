@@ -30,9 +30,9 @@ function test()
   try {
     a();
   } catch (e) {
-    return 0;
+    return 1;
   }
-  return 1;
+  return 0;
 }
 
 assert(test());

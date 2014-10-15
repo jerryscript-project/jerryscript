@@ -18,7 +18,6 @@ try {
   } catch (e) {
     throw e;
   }
+  assert(false);
 } catch (e) {
 }
-
-assert(false);

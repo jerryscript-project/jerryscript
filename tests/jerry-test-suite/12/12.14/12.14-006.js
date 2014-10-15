@@ -17,10 +17,10 @@ function test()
   try {
     var x = 1;
   } finally {
-    return 0;
+    return 1;
   }
 
-  return 1;
+  return 0;
 }
 
 assert(test());

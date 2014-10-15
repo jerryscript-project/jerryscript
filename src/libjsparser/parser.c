@@ -761,6 +761,17 @@ rewrite_meta_opcode_counter (opcode_counter_t meta_oc, opcode_meta_type type)
   rewrite_meta_opcode_counter_set_oc (meta_oc, type, (opcode_counter_t) (OPCODE_COUNTER () - meta_oc));
 }
 
+static void
+generate_tmp_for_left_arg (void)
+{
+  STACK_DECLARE_USAGE (IDX);
+  STACK_PUSH (IDX, next_temp_name ());
+  DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, ID(2));
+  STACK_SWAP (IDX);
+  STACK_DROP (IDX, 1);
+  STACK_CHECK_USAGE (IDX);
+}
+
 /* property_assignment
   : property_name_and_value
   | get LT!* property_name LT!* '(' LT!* ')' LT!* '{' LT!* function_body LT!* '}'
@@ -1746,6 +1757,7 @@ parse_unary_expression (void)
 
 #define DUMP_OF(GETOP, EXPR) \
 do { \
+  generate_tmp_for_left_arg (); \
   STACK_PUSH (IDX, next_temp_name ()); \
   NEXT (EXPR);\
   DUMP_OPCODE_3 (GETOP, ID(2), ID(3), ID(1)); \
@@ -2068,19 +2080,21 @@ parse_conditional_expression (void)
   skip_newlines ();
   if (token_is (TOK_QUERY))
   {
-    DUMP_OPCODE_3 (is_true_jmp_down, ID(1), 0, 2);
-    STACK_PUSH (IDX, next_temp_name ());
+    generate_tmp_for_left_arg ();
     STACK_PUSH (U16, OPCODE_COUNTER ());
-    DUMP_OPCODE_2 (jmp_down, INVALID_VALUE, INVALID_VALUE);
+    DUMP_OPCODE_3 (is_false_jmp_down, ID(1), INVALID_VALUE, INVALID_VALUE);
 
+    STACK_PUSH (IDX, next_temp_name ());
     NEXT (assignment_expression);
     DUMP_OPCODE_3 (assignment, ID(2), OPCODE_ARG_TYPE_VARIABLE, ID(1));
+    STACK_DROP (IDX, 1);
+    STACK_SWAP (IDX);
     token_after_newlines_must_be (TOK_COLON);
 
-    REWRITE_JMP (STACK_TOP (U16), jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
-    STACK_DROP (U16, 1);
     STACK_PUSH (U16, OPCODE_COUNTER ());
     DUMP_OPCODE_2 (jmp_down, INVALID_VALUE, INVALID_VALUE);
+
+    REWRITE_COND_JMP (STACK_HEAD (U16, 2), is_false_jmp_down, OPCODE_COUNTER () - STACK_HEAD (U16, 2));
 
     STACK_DROP (IDX, 1);
     NEXT (assignment_expression);
@@ -2088,10 +2102,8 @@ parse_conditional_expression (void)
     REWRITE_JMP (STACK_TOP (U16), jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
 
     STACK_DROP (U8, 1);
-    STACK_DROP (U16, 1);
+    STACK_DROP (U16, 2);
     STACK_PUSH (U8, 1);
-    STACK_DROP (IDX, 1);
-    STACK_SWAP (IDX);
     STACK_DROP (IDX, 1);
   }
   else

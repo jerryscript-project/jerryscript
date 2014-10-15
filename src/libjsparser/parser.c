@@ -689,9 +689,15 @@ parse_property_name (void)
   {
     case TOK_NAME:
     case TOK_STRING:
+    {
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
+      break;
+    }
     case TOK_NUMBER:
     {
-      STACK_PUSH (IDX, token_data ());
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_NUMBER, token_data ());
       break;
     }
     case TOK_SMALL_INT:

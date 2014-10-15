@@ -16,7 +16,9 @@ var person = {
     firstName:"John",
     lastName:"Doe",
     age:50,
-    eyeColor:"blue"
+    eyeColor:"blue",
+    "gender":"male",
+    0:0
 };
 
 assert (person.firstName === "John");
@@ -27,6 +29,9 @@ assert (person.age === 50);
 assert (person["age"] === 50);
 assert (person.eyeColor === "blue");
 assert (person["eyeColor"] === "blue");
+assert (person.gender === "male");
+assert (person["gender"] === "male");
+assert (person["0"] === 0);
 
 var x = person;
 x.age = 40;

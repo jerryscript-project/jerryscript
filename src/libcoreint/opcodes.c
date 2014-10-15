@@ -596,6 +596,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
     JERRY_ASSERT (args_number_idx > 0);
     args_number = (idx_t) (args_number_idx - 1);
+
+    int_data->pos++;
   }
   else
   {

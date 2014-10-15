@@ -322,16 +322,10 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_TRY_CATCH (num_value, ecma_op_to_number (var_value.u.value), ret_value);
 
-  ecma_number_t *var_p, *res_p;
-  var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
-
-  res_p = ecma_alloc_number ();
-  *res_p = *var_p;
+  ecma_number_t *var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
-                                  ecma_make_number_value (res_p));
-
-  ecma_dealloc_number (res_p);
+                                  ecma_make_number_value (var_p));
 
   ECMA_FINALIZE (num_value);
   ECMA_FINALIZE (var_value);
@@ -365,7 +359,14 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
 
   res_p = ecma_alloc_number ();
-  *res_p = ecma_number_negate (*var_p);
+  if (ecma_number_is_nan (*var_p))
+  {
+    *res_p = *var_p;
+  }
+  else
+  {
+    *res_p = ecma_number_negate (*var_p);
+  }
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));

@@ -48,9 +48,12 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
 
   ecma_string_t* prim_prop_str_value_p;
 
+  ecma_number_t length_value;
+
   if (arguments_list_len == 0)
   {
     prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING__EMPTY);
+    length_value = ECMA_NUMBER_ZERO;
   }
   else
   {
@@ -66,6 +69,11 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
 
       JERRY_ASSERT (to_str_arg_value.u.value.value_type == ECMA_TYPE_STRING);
       prim_prop_str_value_p = ECMA_GET_POINTER (to_str_arg_value.u.value.value);
+
+      int32_t string_len = ecma_string_get_length (prim_prop_str_value_p);
+      JERRY_ASSERT (string_len >= 0);
+
+      length_value = ecma_uint32_to_number ((uint32_t) string_len);
     }
   }
 
@@ -81,6 +89,18 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
   ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_str_value_p);
+
+  // 15.5.5.1
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
+                                                                    length_magic_string_p,
+                                                                    false,
+                                                                    false,
+                                                                    false);
+  ecma_number_t *length_prop_value_p = ecma_alloc_number ();
+  *length_prop_value_p = length_value;
+  length_prop_p->u.named_data_property.value = ecma_make_number_value (length_prop_value_p);
+  ecma_deref_ecma_string (length_magic_string_p);
 
   return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
 } /* ecma_op_create_string_object */

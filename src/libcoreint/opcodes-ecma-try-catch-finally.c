@@ -38,7 +38,7 @@ opfunc_try (opcode_t opdata, /**< operation data */
   int_data->pos++;
 
   ecma_completion_value_t try_completion = run_int_loop (int_data);
-  JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos < try_end_oc)
+  JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos <= try_end_oc)
                 || (ecma_is_completion_value_empty (try_completion) && int_data->pos == try_end_oc));
   int_data->pos = try_end_oc;
 
@@ -88,7 +88,7 @@ opfunc_try (opcode_t opdata, /**< operation data */
 
       ecma_deref_object (catch_env_p);
       
-      JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos < catch_end_oc)
+      JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos <= catch_end_oc)
                     || (ecma_is_completion_value_empty (try_completion) && int_data->pos == catch_end_oc));
     }
 
@@ -110,7 +110,7 @@ opfunc_try (opcode_t opdata, /**< operation data */
     int_data->pos++;
 
     ecma_completion_value_t finally_completion = run_int_loop (int_data);
-    JERRY_ASSERT ((!ecma_is_completion_value_empty (finally_completion) && int_data->pos < finally_end_oc)
+    JERRY_ASSERT ((!ecma_is_completion_value_empty (finally_completion) && int_data->pos <= finally_end_oc)
                   || (ecma_is_completion_value_empty (finally_completion) && int_data->pos == finally_end_oc));
     int_data->pos = finally_end_oc;
 

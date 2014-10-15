@@ -179,7 +179,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   }
   else
   {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
   return ret_value;

@@ -14,4 +14,4 @@
 
 var o = {};
 
-asssert(typeof (o.empty) === "undefined");
+assert(typeof (o.empty) === "undefined");

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (glob === 34);
+assert (glob === undefined);
 
 var glob = 34
+
+assert (glob === 34);
+

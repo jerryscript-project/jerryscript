@@ -23,6 +23,8 @@ function main()
 
       sum += 1;
     }
+
+  assert(sum === 100);
 }
 
-assert(sum === 100);
+main ();

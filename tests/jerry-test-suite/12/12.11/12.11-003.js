@@ -16,7 +16,7 @@ switch (1) {
   case true:
     assert(false);
   case false:
-    break;
-  default:
     assert(false);
+  default:
+    assert(true);
 }

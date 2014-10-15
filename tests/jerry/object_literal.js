@@ -48,3 +48,21 @@ assert (person.firstName === john.firstName);
 assert (person.lastName === john.lastName);
 assert (person.age === john.age);
 assert (person.eyeColor === john.eyeColor);
+
+var a, b; 
+b = 'property1'; 
+a = { 
+  'property1' : 'value1', 
+  get property2 () { return 1; }, 
+  set property2 (a) { this.property3 = a * 10; }, 
+  set property3 (b) { this.property1 = b; }
+}; 
+assert (a.property1 === 'value1'); 
+assert (a.property2 === 1); 
+a.property3 = 'value2'; 
+assert (a.property1 === 'value2'); 
+a.property2 = 2.5; 
+assert (a.property1 === 25); 
+b = delete a[b]; 
+assert (b === true); 
+assert (a.property1 === undefined); 

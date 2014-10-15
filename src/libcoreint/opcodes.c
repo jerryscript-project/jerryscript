@@ -838,7 +838,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
                     || type == OPCODE_META_TYPE_VARG_PROP_GETTER
                     || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
 
-      const idx_t prop_name_lit_idx = next_opcode.data.meta.data_1;
+      const idx_t prop_name_var_idx = next_opcode.data.meta.data_1;
       const idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
 
       ecma_completion_value_t value_for_prop_desc = get_variable_value (int_data,
@@ -847,9 +847,20 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
       if (ecma_is_completion_value_normal (value_for_prop_desc))
       {
+        JERRY_ASSERT (is_reg_variable (int_data, prop_name_var_idx));
+
+        ECMA_TRY_CATCH (prop_name_value,
+                        get_variable_value (int_data,
+                                            prop_name_var_idx,
+                                            false),
+                        ret_value);
+        ECMA_TRY_CATCH (prop_name_str_value,
+                        ecma_op_to_string (prop_name_value.u.value),
+                        ret_value);
+
         bool is_throw_syntax_error = false;
 
-        ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_index (prop_name_lit_idx);
+        ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.u.value.value);
         ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
 
         const bool is_previous_undefined = (previous_p == NULL);
@@ -921,9 +932,10 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
                       || ecma_is_completion_value_normal_false (define_prop_completion));
 
-        ecma_deref_ecma_string (prop_name_string_p);
-
         ecma_free_completion_value (value_for_prop_desc);
+
+        ECMA_FINALIZE (prop_name_str_value);
+        ECMA_FINALIZE (prop_name_value);
       }
       else
       {

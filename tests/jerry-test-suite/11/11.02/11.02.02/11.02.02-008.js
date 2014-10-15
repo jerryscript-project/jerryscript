@@ -18,4 +18,6 @@ function Animal(name)
   this.canWalk = true
 }
 
+var animal = new Animal();
+
 assert(animal.canWalk);

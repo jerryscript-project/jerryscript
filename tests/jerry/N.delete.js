@@ -21,6 +21,7 @@ assert (a[0] === 1);
 assert (delete a[0] === true);
 assert (a[0] == undefined);
 assert (delete 0 === true);
+assert (delete "0" === true);
 var b = {c:0};
 assert (b.c === 0);
 assert (delete b.c === true);

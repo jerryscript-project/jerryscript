@@ -1595,6 +1595,10 @@ parse_postfix_expression (void)
 
   parse_left_hand_side_expression (); // push expr
 
+  if (lexer_prev_token ().type == TOK_NEWLINE)
+  {
+    goto cleanup;
+  }
   skip_token ();
   if (token_is (TOK_DOUBLE_PLUS))
   {
@@ -1615,6 +1619,7 @@ parse_postfix_expression (void)
     lexer_save_token (TOK ());
   }
 
+cleanup:
   STACK_CHECK_USAGE_LHS ();
 }
 

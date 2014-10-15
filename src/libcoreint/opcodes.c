@@ -1526,15 +1526,13 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.delete_var.lhs;
-  const idx_t name_var_idx = opdata.data.delete_var.name;
+  const idx_t name_lit_idx = opdata.data.delete_var.name;
 
   int_data->pos++;
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (name_value, get_variable_value (int_data, name_var_idx, false), ret_value);
-  JERRY_ASSERT (name_value.u.value.value_type == ECMA_TYPE_STRING);
-  ecma_string_t *name_string_p = ECMA_GET_POINTER (name_value.u.value.value);
+  ecma_string_t *name_string_p = ecma_new_ecma_string_from_lit_index (name_lit_idx);
 
   ecma_reference_t ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
                                                            name_string_p,
@@ -1561,7 +1559,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   ecma_free_reference (ref);
 
-  ECMA_FINALIZE (name_value);
+  ecma_deref_ecma_string (name_string_p);
 
   return ret_value;
 } /* opfunc_delete_var */

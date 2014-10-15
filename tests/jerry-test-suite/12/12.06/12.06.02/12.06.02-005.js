@@ -20,4 +20,4 @@ while (!bVal)
   val += " of while";
 }
 
-asssert(val === "test");
+assert(val === "test");

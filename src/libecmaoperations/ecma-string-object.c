@@ -150,27 +150,32 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
   int32_t length = ecma_string_get_length (prim_value_str_p);
   JERRY_ASSERT (length >= 0);
 
-  // 7.
+  ecma_property_t *new_prop_p;
+
   if (uint32_index >= (uint32_t) length)
   {
-    return NULL;
+    // 7.
+    new_prop_p = NULL;
+  }
+  else
+  {
+    // 8.
+    ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
+
+    // 9.
+    new_prop_p = ecma_create_named_data_property (obj_p,
+                                                  new_prop_name_p,
+                                                  false,
+                                                  true,
+                                                  false);
+
+    ecma_char_t new_prop_zt_str_p [2] = { c, ECMA_CHAR_NULL };
+    ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string (new_prop_zt_str_p);
+    ecma_value_t new_prop_str_value = ecma_make_string_value (new_prop_str_value_p);
+    new_prop_p->u.named_data_property.value = new_prop_str_value;
   }
 
-  // 8.
-  ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
-
-  // 9.
-  ecma_property_t *new_prop_p = ecma_create_named_data_property (obj_p,
-                                                                 new_prop_name_p,
-                                                                 false,
-                                                                 true,
-                                                                 false);
   ecma_deref_ecma_string (new_prop_name_p);
-
-  ecma_char_t new_prop_zt_str_p [2] = { c, ECMA_CHAR_NULL };
-  ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string (new_prop_zt_str_p);
-  ecma_value_t new_prop_str_value = ecma_make_string_value (new_prop_str_value_p);
-  new_prop_p->u.named_data_property.value = new_prop_str_value;
 
   return new_prop_p;
 } /* ecma_op_string_object_get_own_property */

@@ -1542,19 +1542,28 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
   }
-  else if (ecma_is_value_undefined (ref.base))
-  {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
-  }
   else
   {
-    JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
-    ecma_object_t *bindings_p = ECMA_GET_POINTER (ref.base.value);
-    JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
+    if (ecma_is_value_undefined (ref.base))
+    {
+      ret_value = set_variable_value (int_data,
+                                      dst_var_idx,
+                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE));
+    }
+    else
+    {
+      JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
+      ecma_object_t *bindings_p = ECMA_GET_POINTER (ref.base.value);
+      JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
-    ecma_completion_value_t completion = ecma_op_delete_binding (bindings_p, ref.referenced_name_p);
+      ECMA_TRY_CATCH (delete_completion,
+                      ecma_op_delete_binding (bindings_p, ref.referenced_name_p),
+                      ret_value);
 
-    ret_value = set_variable_value (int_data, dst_var_idx, completion.u.value);
+      ret_value = set_variable_value (int_data, dst_var_idx, delete_completion.u.value);
+
+      ECMA_FINALIZE (delete_completion);
+    }
   }
 
   ecma_free_reference (ref);

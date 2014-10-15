@@ -21,118 +21,120 @@
 #include "lp-string.h"
 
 /* Keywords.  */
-typedef uint8_t keyword;
+typedef enum
+{
+  /* Not a keyword.  */
+  KW_NONE = 0,
+  KW_BREAK,
+  KW_CASE,
+  KW_CATCH,
+  KW_CONTINUE,
 
-/* Not a keyword.  */
-#define KW_NONE 0
-/* Future reserved keyword.  */
-#define KW_RESERVED 1
-#define KW_BREAK 2
-#define KW_CASE 3
-#define KW_CATCH 4
+  KW_DEBUGGER,
+  KW_DEFAULT,
+  KW_DELETE,
+  KW_DO,
+  KW_ELSE,
 
-#define KW_CONTINUE 5
-#define KW_DEBUGGER 6
-#define KW_DEFAULT 7
-#define KW_DELETE 8
-#define KW_DO 9
+  KW_FINALLY,
+  KW_FOR,
+  KW_FUNCTION,
+  KW_IF,
+  KW_IN,
 
-#define KW_ELSE 10
-#define KW_FINALLY 11
-#define KW_FOR 12
-#define KW_FUNCTION 13
-#define KW_IF 14
+  KW_INSTANCEOF,
+  KW_NEW,
+  KW_RETURN,
+  KW_SWITCH,
+  KW_THIS,
 
-#define KW_IN 15
-#define KW_INSTANCEOF 16
-#define KW_NEW 17
-#define KW_RETURN 18
-#define KW_SWITCH 19
+  KW_THROW,
+  KW_TRY,
+  KW_TYPEOF,
+  KW_VAR,
+  KW_VOID,
 
-#define KW_THIS 20
-#define KW_THROW 21
-#define KW_TRY 22
-#define KW_TYPEOF 23
-#define KW_VAR 24
-
-#define KW_VOID 25
-#define KW_WHILE 26
-#define KW_WITH 27
+  KW_WHILE,
+  KW_WITH,
+}
+keyword;
 
 
 /* Type of tokens.  */
-typedef uint8_t token_type;
+typedef enum
+{
+  TOK_EOF = 0, // End of file
+  TOK_NAME, // Identifier
+  TOK_KEYWORD, // Keyword
+  TOK_SMALL_INT,
+  TOK_NUMBER,
 
-#define TOK_EOF 0 // End of file
-#define TOK_NAME 1 // Identifier
-#define TOK_KEYWORD 2 // Keyword
-#define TOK_SMALL_INT 3
-#define TOK_NUMBER 4
+  TOK_NULL,
+  TOK_BOOL,
+  TOK_NEWLINE,
+  TOK_STRING,
+  TOK_OPEN_BRACE, // {
 
-#define TOK_NULL 5
-#define TOK_BOOL 6
-#define TOK_NEWLINE 7
-#define TOK_STRING 8
-#define TOK_OPEN_BRACE 9 // {
+  TOK_CLOSE_BRACE, // }
+  TOK_OPEN_PAREN, // (
+  TOK_CLOSE_PAREN, //)
+  TOK_OPEN_SQUARE, // [
+  TOK_CLOSE_SQUARE, // [
 
-#define TOK_CLOSE_BRACE 10 // }
-#define TOK_OPEN_PAREN 11 // (
-#define TOK_CLOSE_PAREN 12 //)
-#define TOK_OPEN_SQUARE 13 // [
-#define TOK_CLOSE_SQUARE 14 // [
+  TOK_DOT, // .
+  TOK_SEMICOLON, // ;
+  TOK_COMMA, // ,
+  TOK_LESS, // <
+  TOK_GREATER, // >
 
-#define TOK_DOT 15 // .
-#define TOK_SEMICOLON 16 // ;
-#define TOK_COMMA 17 // ,
-#define TOK_LESS 18 // <
-#define TOK_GREATER 19 // >
+  TOK_LESS_EQ, // <=
+  TOK_GREATER_EQ, // <=
+  TOK_DOUBLE_EQ, // ==
+  TOK_NOT_EQ, // !=
+  TOK_TRIPLE_EQ, // ===
 
-#define TOK_LESS_EQ 20 // <=
-#define TOK_GREATER_EQ 21 // <=
-#define TOK_DOUBLE_EQ 22 // ==
-#define TOK_NOT_EQ 23 // !=
-#define TOK_TRIPLE_EQ 24 // ===
+  TOK_NOT_DOUBLE_EQ, // !==
+  TOK_PLUS, // +
+  TOK_MINUS, // -
+  TOK_MULT, // *
+  TOK_MOD, // %
 
-#define TOK_NOT_DOUBLE_EQ 25 // !==
-#define TOK_PLUS 26 // +
-#define TOK_MINUS 27 // -
-#define TOK_MULT 28 // *
-#define TOK_MOD 29 // %
+  TOK_DOUBLE_PLUS, // ++
+  TOK_DOUBLE_MINUS, // --
+  TOK_LSHIFT, // <<
+  TOK_RSHIFT, // >>
+  TOK_RSHIFT_EX, // >>>
 
-#define TOK_DOUBLE_PLUS 30 // ++
-#define TOK_DOUBLE_MINUS 31 // --
-#define TOK_LSHIFT 32 // <<
-#define TOK_RSHIFT 33 // >>
-#define TOK_RSHIFT_EX 34 // >>>
+  TOK_AND, // &
+  TOK_OR, // |
+  TOK_XOR, // ^
+  TOK_NOT, // !
+  TOK_COMPL, // ~
 
-#define TOK_AND 35 // &
-#define TOK_OR 36 // |
-#define TOK_XOR 37 // ^
-#define TOK_NOT 38 // !
-#define TOK_COMPL 39 // ~
+  TOK_DOUBLE_AND, // &&
+  TOK_DOUBLE_OR, // ||
+  TOK_QUERY, // ?
+  TOK_COLON, // :
+  TOK_EQ, // =
 
-#define TOK_DOUBLE_AND 40 // &&
-#define TOK_DOUBLE_OR 41 // ||
-#define TOK_QUERY 42 // ?
-#define TOK_COLON 43 // :
-#define TOK_EQ 44 // =
+  TOK_PLUS_EQ, // +=
+  TOK_MINUS_EQ, // -=
+  TOK_MULT_EQ, // *=
+  TOK_MOD_EQ, // %=
+  TOK_LSHIFT_EQ, // <<=
 
-#define TOK_PLUS_EQ 45 // +=
-#define TOK_MINUS_EQ 46 // -=
-#define TOK_MULT_EQ 47 // *=
-#define TOK_MOD_EQ 48 // %=
-#define TOK_LSHIFT_EQ 49 // <<=
+  TOK_RSHIFT_EQ, // >>=
+  TOK_RSHIFT_EX_EQ, // >>>=
+  TOK_AND_EQ, // &=
+  TOK_OR_EQ, // |=
+  TOK_XOR_EQ, // ^=
 
-#define TOK_RSHIFT_EQ 50 // >>=
-#define TOK_RSHIFT_EX_EQ 51 // >>>=
-#define TOK_AND_EQ 52 // &=
-#define TOK_OR_EQ 53 // |=
-#define TOK_XOR_EQ 54 // ^=
-
-#define TOK_DIV 55 // /
-#define TOK_DIV_EQ 56 // /=
-#define TOK_UNDEFINED 57 // undefined
-#define TOK_EMPTY 58
+  TOK_DIV, // /
+  TOK_DIV_EQ, // /=
+  TOK_UNDEFINED, // undefined
+  TOK_EMPTY,
+}
+token_type;
 
 typedef size_t locus;
 

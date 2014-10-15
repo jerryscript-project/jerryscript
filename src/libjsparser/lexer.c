@@ -145,6 +145,43 @@ current_token_equals_to_lp (lp_string str)
   return false;
 }
 
+static token
+convert_current_token_to_token (token_type tt)
+{
+  JERRY_ASSERT (token_start);
+
+  for (uint8_t i = 0; i < STACK_SIZE (strings); i++)
+  {
+    if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
+    {
+      if (tt == TOK_STRING)
+      {
+        // locus must point to the first '"'
+        return (token)
+        {
+          .type = tt,
+          .loc = current_locus () - 1,
+          .uid = i
+        };
+      }
+      else
+      {
+        return create_token (tt, i);
+      }
+    }
+  }
+
+  const lp_string str = (lp_string)
+  {
+    .length = (uint8_t) (buffer - token_start),
+    .str = (ecma_char_t *) token_start
+  };
+
+  STACK_PUSH (strings, str);
+
+  return create_token (tt, (idx_t) (STACK_SIZE (strings) - 1));
+}
+
 /* If TOKEN represents a keyword, return decoded keyword,
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,
    otherwise return KW_NONE.  */
@@ -165,11 +202,11 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("class"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'class' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("const"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'const' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("continue"))
   {
@@ -197,15 +234,15 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("enum"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'enum' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("export"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'export' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("extends"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'extends' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("false"))
   {
@@ -233,7 +270,14 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("interface"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'interface' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("in"))
   {
@@ -241,15 +285,29 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("import"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'import' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("implements"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'implements' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("let"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'let' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("new"))
   {
@@ -261,19 +319,47 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("package"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'package' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("private"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'private' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("protected"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'protected' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("public"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'public' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("return"))
   {
@@ -281,11 +367,18 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("static"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'static' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("super"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    PARSE_SORRY ("'super' is reseved keyword and not supported yet", current_locus ());
   }
   if (current_token_equals_to ("switch"))
   {
@@ -329,50 +422,20 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("yield"))
   {
-    return create_token (TOK_KEYWORD, KW_RESERVED);
+    if (parser_strict_mode ())
+    {
+      PARSE_ERROR ("'yield' is reseved keyword and not allowed in strict mode", current_locus ());
+    }
+    else
+    {
+      return convert_current_token_to_token (TOK_NAME);
+    }
   }
   if (current_token_equals_to ("undefined"))
   {
     return create_token (TOK_UNDEFINED, 0);
   }
   return empty_token;
-}
-
-static token
-convert_current_token_to_token (token_type tt)
-{
-  JERRY_ASSERT (token_start);
-
-  for (uint8_t i = 0; i < STACK_SIZE (strings); i++)
-  {
-    if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
-    {
-      if (tt == TOK_STRING)
-      {
-        // locus must point to the first '"'
-        return (token)
-        {
-          .type = tt,
-          .loc = current_locus () - 1,
-          .uid = i
-        };
-      }
-      else
-      {
-        return create_token (tt, i);
-      }
-    }
-  }
-
-  const lp_string str = (lp_string)
-  {
-    .length = (uint8_t) (buffer - token_start),
-    .str = (ecma_char_t *) token_start
-  };
-
-  STACK_PUSH (strings, str);
-
-  return create_token (tt, (idx_t) (STACK_SIZE (strings) - 1));
 }
 
 static token

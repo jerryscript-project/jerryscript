@@ -1448,7 +1448,7 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
         }
         case ECMA_SIMPLE_VALUE_NULL:
         {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
+          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
           break;
         }
         case ECMA_SIMPLE_VALUE_FALSE:

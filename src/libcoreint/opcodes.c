@@ -1590,8 +1590,8 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.u.value), ret_value);
   ECMA_TRY_CATCH (str_name_value, ecma_op_to_string (name_value.u.value), ret_value);
 
-  JERRY_ASSERT (name_value.u.value.value_type == ECMA_TYPE_STRING);
-  ecma_string_t *name_string_p = ECMA_GET_POINTER (name_value.u.value.value);
+  JERRY_ASSERT (str_name_value.u.value.value_type == ECMA_TYPE_STRING);
+  ecma_string_t *name_string_p = ECMA_GET_POINTER (str_name_value.u.value.value);
 
   if (ecma_is_value_undefined (base_value.u.value))
   {

@@ -15,4 +15,4 @@
 var a = Number;
 Number = null;
 var b = new a(5)
-assert(b === 5);
+assert(!(b === 5));

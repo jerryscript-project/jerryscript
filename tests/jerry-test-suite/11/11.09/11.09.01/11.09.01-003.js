@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var x = NaN, y = 1
-assert(x == y)
+assert(!(x == y))

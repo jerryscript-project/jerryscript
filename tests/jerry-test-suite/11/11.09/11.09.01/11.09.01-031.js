@@ -15,4 +15,4 @@
 var x = Object("abc")
 var y = Object("abc")
 b = x, c = y
-assert(c == b)
+assert(!(c == b))

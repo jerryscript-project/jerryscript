@@ -14,4 +14,4 @@
 
 var a = false;
 var b = false;
-assert((a && b) === true)
+assert(!((a && b) === true))

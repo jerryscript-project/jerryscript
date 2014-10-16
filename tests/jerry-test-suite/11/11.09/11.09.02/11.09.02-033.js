@@ -14,4 +14,4 @@
 
 var x = "12.1e5"
 var y = 1210000
-assert(x != y)
+assert(!(x != y))

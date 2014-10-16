@@ -14,4 +14,4 @@
 
 var a = ""; // empty string - false
 var b = new Object();
-assert((a && b) !== a)
+assert(!((a && b) !== a))

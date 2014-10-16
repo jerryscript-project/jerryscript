@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var x = 123.00, y = 0.0123e+4
-assert(x === y)
+var x = 123.00, y = 0.0123e+4, eps = .000001
+assert(x <= y + eps && x >= y - eps)

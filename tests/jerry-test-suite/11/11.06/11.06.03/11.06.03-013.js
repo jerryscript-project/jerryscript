@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(Number.MIN_VALUE + -Number.MIN_VALUE !== +0)
+assert(!(Number.MIN_VALUE + -Number.MIN_VALUE !== +0))

@@ -14,4 +14,4 @@
 
 var a = "not empty string"; // will be converted to true
 var b = new Object();
-assert((a && b) !== b)
+assert(!((a && b) !== b))

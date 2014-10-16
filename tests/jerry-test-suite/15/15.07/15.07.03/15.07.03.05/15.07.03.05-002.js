@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(isFinite(Number.NEGATIVE_INFINITY) && Number.NEGATIVE_INFINITY < 0);
+assert(!(isFinite(Number.NEGATIVE_INFINITY) && Number.NEGATIVE_INFINITY < 0));

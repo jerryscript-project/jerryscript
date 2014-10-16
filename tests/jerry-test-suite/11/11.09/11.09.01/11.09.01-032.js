@@ -14,4 +14,4 @@
 
 var x = "a"
 var y = 2
-assert(x == y)
+assert(!(x == y))

@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var x = true, y = "true"
-assert(x == y)
+assert(!(x == y))

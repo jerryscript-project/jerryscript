@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var x = 0.123, y = "b0.123"
-assert(x == y)
+assert(!(x == y))

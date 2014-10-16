@@ -91,17 +91,21 @@
 ./tests/jerry-test-suite/12/12.08/12.08-015.js
 ./tests/jerry-test-suite/12/12.08/12.08-016.js
 ./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-003.js
+./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-016.js
 ./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-019.js
 ./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-020.js
 ./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-021.js
 ./tests/jerry-test-suite/15/15.03/15.03.03/15.03.03.01/15.03.03.01-002.js
+./tests/jerry-test-suite/15/15.03/15.03.04/15.03.04.02/15.03.04.02-003.js
 ./tests/jerry-test-suite/15/15.05/15.05.03/15.05.03.01/15.05.03.01-002.js
 ./tests/jerry-test-suite/15/15.06/15.06.03/15.06.03.01/15.06.03.01-001.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.01/15.07.03.01-007.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.02/15.07.03.02-006.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-006.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.05/15.07.03.05-006.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.06/15.07.03.06-006.js
 ./tests/jerry-test-suite/15/15.07/15.07.04/15.07.04.02/15.07.04.02-002.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.04/15.07.03.04-003.js
 
 > Labelled statements
 ./tests/jerry-test-suite/12/12.07/12.07-003.js

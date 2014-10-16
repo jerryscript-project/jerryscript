@@ -67,6 +67,7 @@
 ./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-012.js
 ./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-013.js
 ./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-009.js
+./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-037.js
 ./tests/jerry-test-suite/11/11.10/11.10-017.js
 ./tests/jerry-test-suite/11/11.10/11.10-018.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-014.js
@@ -74,7 +75,7 @@
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-013.js
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-014.js
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-015.js
- ./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-003.js
+./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-003.js
 
 > for-in loop
 ./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-001.js

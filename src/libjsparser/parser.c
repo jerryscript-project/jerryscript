@@ -65,9 +65,16 @@ STATIC_STACK (U8, uint8_t, uint8_t)
 enum
 {
   native_calls = OPCODE_NATIVE_CALL__COUNT,
+  this_arg,
+  prop,
   IDX_global_size
 };
 STATIC_STACK (IDX, uint8_t, uint8_t)
+
+#define THIS_ARG() STACK_ELEMENT (IDX, this_arg)
+#define SET_THIS_ARG(S) STACK_SET_ELEMENT (IDX, this_arg, S)
+#define PROP() STACK_ELEMENT (IDX, prop)
+#define SET_PROP(S) STACK_SET_ELEMENT (IDX, prop, S)
 
 #define ID(I) STACK_HEAD(IDX, I)
 
@@ -309,7 +316,7 @@ static void parse_expression (void);
 static void parse_statement (void);
 static void parse_assignment_expression (void);
 static void parse_source_element_list (bool);
-static uint8_t parse_argument_list (argument_list_type, idx_t, idx_t);
+static uint8_t parse_argument_list (argument_list_type, idx_t);
 static void skip_braces (void);
 
 static uint8_t
@@ -806,7 +813,7 @@ parse_property_assignment (void)
     parse_property_name (); // push name
 
     skip_newlines ();
-    parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
+    parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
 
     STACK_PUSH (U16, OPCODE_COUNTER ());
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
@@ -841,7 +848,7 @@ parse_property_assignment (void)
     parse_property_name (); // push name
 
     skip_newlines ();
-    parse_argument_list (AL_FUNC_EXPR, next_temp_name (), INVALID_VALUE); // push lhs
+    parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
 
     STACK_PUSH (U16, OPCODE_COUNTER ());
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
@@ -874,7 +881,7 @@ cleanup:
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Returns temp var if expression has lhs, or 0 otherwise.  */
 static uint8_t
-parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
+parse_argument_list (argument_list_type alt, idx_t obj)
 {
   // U8 open_tt, close_tt, args_count
   // IDX lhs, current_arg
@@ -962,9 +969,9 @@ parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
   {
     case AL_CALL_EXPR:
     {
-      if (this_arg != INVALID_VALUE)
+      if (THIS_ARG () != INVALID_VALUE)
       {
-        DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, this_arg, INVALID_VALUE);
+        DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, THIS_ARG (), INVALID_VALUE);
         STACK_INCR_HEAD (U8, 1);
       }
       break;
@@ -1149,7 +1156,7 @@ parse_function_declaration (void)
   STACK_PUSH (IDX, token_data ());
 
   skip_newlines ();
-  STACK_PUSH (U8, parse_argument_list (AL_FUNC_DECL, ID(1), INVALID_VALUE));
+  STACK_PUSH (U8, parse_argument_list (AL_FUNC_DECL, ID(1)));
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
@@ -1209,7 +1216,7 @@ parse_function_expression (void)
   }
 
   skip_newlines ();
-  parse_argument_list (AL_FUNC_EXPR, ID(1), INVALID_VALUE); // push lhs
+  parse_argument_list (AL_FUNC_EXPR, ID(1)); // push lhs
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
@@ -1243,7 +1250,7 @@ parse_array_literal (void)
 {
   STACK_DECLARE_USAGE (IDX)
 
-  parse_argument_list (AL_ARRAY_DECL, 0, INVALID_VALUE);
+  parse_argument_list (AL_ARRAY_DECL, 0);
 
   STACK_CHECK_USAGE_LHS ();
 }
@@ -1256,7 +1263,7 @@ parse_object_literal (void)
 {
   STACK_DECLARE_USAGE (IDX)
 
-  parse_argument_list (AL_OBJ_DECL, 0, INVALID_VALUE);
+  parse_argument_list (AL_OBJ_DECL, 0);
 
   STACK_CHECK_USAGE_LHS ();;
 }
@@ -1406,7 +1413,7 @@ cleanup:
   : '.' LT!* Identifier
   ; */
 static void
-parse_member_expression (idx_t *this_arg)
+parse_member_expression (void)
 {
   // IDX obj, lhs, prop;
   STACK_DECLARE_USAGE (IDX)
@@ -1418,12 +1425,12 @@ parse_member_expression (idx_t *this_arg)
   else if (is_keyword (KW_NEW))
   {
     skip_newlines ();
-    parse_member_expression (NULL);
+    parse_member_expression ();
 
     skip_newlines ();
     if (token_is (TOK_OPEN_PAREN))
     {
-      parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), INVALID_VALUE); // push obj
+      parse_argument_list (AL_CONSTRUCT_EXPR, ID(1)); // push obj
     }
     else
     {
@@ -1443,16 +1450,14 @@ parse_member_expression (idx_t *this_arg)
   skip_newlines ();
   while (token_is (TOK_OPEN_SQUARE) || token_is (TOK_DOT))
   {
-    if (this_arg)
-    {
-      *this_arg = ID (1);
-    }
+    SET_THIS_ARG(ID (1));
 
     STACK_PUSH (IDX, next_temp_name ());
 
     if (token_is (TOK_OPEN_SQUARE))
     {
       NEXT (expression); // push prop
+      SET_PROP (ID (1));
       next_token_must_be (TOK_CLOSE_SQUARE);
     }
     else if (token_is (TOK_DOT))
@@ -1463,6 +1468,7 @@ parse_member_expression (idx_t *this_arg)
         EMIT_ERROR ("Expected identifier");
       }
       STACK_PUSH (IDX, next_temp_name ());
+      SET_PROP (ID (1));
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
     }
     else
@@ -1502,9 +1508,9 @@ parse_call_expression (void)
 {
   // IDX obj, lhs, prop;
   STACK_DECLARE_USAGE (IDX)
-  idx_t this_arg = INVALID_VALUE;
+  SET_THIS_ARG (INVALID_VALUE);
 
-  parse_member_expression (&this_arg);
+  parse_member_expression ();
 
   skip_newlines ();
   if (!token_is (TOK_OPEN_PAREN))
@@ -1513,16 +1519,16 @@ parse_call_expression (void)
     goto cleanup;
   }
 
-  if (this_arg < lexer_get_reserved_ids_count ())
+  if (THIS_ARG () < lexer_get_reserved_ids_count ())
   {
     STACK_PUSH (IDX, next_temp_name ());
-    DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, this_arg);
-    this_arg = ID(1);
+    DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, THIS_ARG ());
+    SET_THIS_ARG (ID(1));
     STACK_DROP (IDX, 1);
   }
 
-  parse_argument_list (AL_CALL_EXPR, ID(1), this_arg); // push lhs
-  this_arg = INVALID_VALUE;
+  parse_argument_list (AL_CALL_EXPR, ID(1)); // push lhs
+  SET_THIS_ARG (INVALID_VALUE);
   STACK_SWAP (IDX);
 
   skip_newlines ();
@@ -1532,12 +1538,12 @@ parse_call_expression (void)
     STACK_DROP (IDX, 1);
     if (TOK ().type == TOK_OPEN_PAREN)
     {
-      parse_argument_list (AL_CALL_EXPR, ID(1), this_arg); // push lhs
+      parse_argument_list (AL_CALL_EXPR, ID(1)); // push lhs
       skip_newlines ();
     }
     else
     {
-      this_arg = ID (1);
+      SET_THIS_ARG (ID (1));
       if (TOK ().type == TOK_OPEN_SQUARE)
       {
         NEXT (expression); // push prop
@@ -1591,6 +1597,7 @@ parse_postfix_expression (void)
 {
   // IDX expr, lhs
   STACK_DECLARE_USAGE (IDX)
+  SET_PROP (INVALID_VALUE);
 
   parse_left_hand_side_expression (); // push expr
 
@@ -1603,6 +1610,10 @@ parse_postfix_expression (void)
   {
     STACK_PUSH (IDX, next_temp_name ());
     DUMP_OPCODE_2 (post_incr, ID(1), ID(2));
+    if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
+    {
+      DUMP_OPCODE_3 (prop_setter, THIS_ARG (), PROP (), ID (2));
+    }
     STACK_SWAP (IDX);
     STACK_DROP (IDX, 1);
   }
@@ -1610,6 +1621,10 @@ parse_postfix_expression (void)
   {
     STACK_PUSH (IDX, next_temp_name ());
     DUMP_OPCODE_2 (post_decr, ID(1), ID(2));
+    if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
+    {
+      DUMP_OPCODE_3 (prop_setter, THIS_ARG (), PROP (), ID (2));
+    }
     STACK_SWAP (IDX);
     STACK_DROP (IDX, 1);
   }
@@ -1639,12 +1654,20 @@ parse_unary_expression (void)
     {
       NEXT (unary_expression);
       DUMP_OPCODE_2 (pre_incr, next_temp_name (), ID(1));
+      if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
+      {
+        DUMP_OPCODE_3 (prop_setter, THIS_ARG (), PROP (), ID (1));
+      }
       break;
     }
     case TOK_DOUBLE_MINUS:
     {
       NEXT (unary_expression);
       DUMP_OPCODE_2 (pre_decr, next_temp_name (), ID(1));
+      if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
+      {
+        DUMP_OPCODE_3 (prop_setter, THIS_ARG (), PROP (), ID (1));
+      }
       break;
     }
     case TOK_PLUS:

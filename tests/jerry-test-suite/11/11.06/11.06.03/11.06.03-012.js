@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assertf(-Number.MAX_VALUE - Number.MAX_VALUE === -Infinity)
+assert(-Number.MAX_VALUE - Number.MAX_VALUE === -Infinity)

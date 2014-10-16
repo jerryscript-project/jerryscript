@@ -16,6 +16,6 @@ var cnt = 0;
 
 while (1) {
   cnt++;
-  if (cnd === 10)
+  if (cnt === 10)
     break;
 }

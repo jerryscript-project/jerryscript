@@ -42,7 +42,7 @@
  * List of the Boolean.prototype object built-in object value properties in format 'macro (name, value)'.
  */
 #define ECMA_BUILTIN_BOOLEAN_PROTOTYPE_OBJECT_OBJECT_VALUES_PROPERTY_LIST(macro) \
-  macro (ECMA_MAGIC_STRING_CONSTRUCTOR, ecma_builtin_get (ECMA_BUILTIN_ID_STRING))
+  macro (ECMA_MAGIC_STRING_CONSTRUCTOR, ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN))
 
 /**
  * List of the Boolean.prototype object built-in routine properties in format

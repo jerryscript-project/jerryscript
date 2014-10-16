@@ -24,21 +24,28 @@
 
 #include <sys/resource.h>
 
-#ifdef LIBC_RAW
-
 #ifdef __TARGET_HOST_x64
 # include "asm_x64.h"
 #elif defined (__TARGET_HOST_x86)
 # include "asm_x86.h"
-#endif /* !__TARGET_HOST_x64 && TARGET_HOST_x86 */
+#elif defined (__TARGET_HOST_ARMv7)
+# include "asm_arm.h"
+#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
+# error "!__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 "
+#endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
 
 FIXME(Rename __unused)
 #undef __unused
 
-#include <linux/fs.h>
 #include <syscall.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+FIXME (/* Include linux/fs.h */)
+
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 /**
  * Exit program with ERR_SYSCALL if syscall_ret_val is negative
@@ -58,7 +65,7 @@ static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, lo
  *
  * @return syscall's return value
  */
-static long int
+static __noinline long int
 syscall_1 (long int syscall_no, /**< syscall number */
            long int arg1) /**< argument */
 {
@@ -76,7 +83,7 @@ syscall_1 (long int syscall_no, /**< syscall number */
  *
  * @return syscall's return value
  */
-static long int
+static __noinline long int
 syscall_2 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2) /**< second argument */
@@ -95,7 +102,7 @@ syscall_2 (long int syscall_no, /**< syscall number */
  *
  * @return syscall's return value
  */
-static long int
+static __noinline long int
 syscall_3 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2, /**< second argument */
@@ -357,169 +364,35 @@ void
 jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
                     size_t stack_size) /**< limit for stack */
 {
-  struct rlimit data_limit = { data_size, data_size };
-  struct rlimit stack_limit = { stack_size, stack_size };
+  struct
+  {
+    unsigned long long rlim_cur;
+    unsigned long long rlim_max;
+  } data_limit = { data_size, data_size };
+
+  struct
+  {
+    unsigned long long rlim_cur;
+    unsigned long long rlim_max;
+  } stack_limit = { stack_size, stack_size };
 
   long int ret;
 
+#ifdef __TARGET_HOST_x64
   ret = syscall_2 (__NR_setrlimit, RLIMIT_DATA, (intptr_t) &data_limit);
   JERRY_ASSERT (ret == 0);
 
   ret = syscall_2 (__NR_setrlimit, RLIMIT_STACK, (intptr_t) &stack_limit);
   JERRY_ASSERT (ret == 0);
-} /* jrt_set_mem_limits */
-
-#elif defined (LIBC_MUSL)
-
-#include <stdio.h>
-#include <stdlib.h>
-
-const _FILE **libc_stdin = (void*)&stdin;
-const _FILE **libc_stdout = (void*)&stdout;
-const _FILE **libc_stderr = (void*)&stderr;
-
-/** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
-int
-__putchar (int c)
-{
-  return putchar (c);
-} /* __putchar */
-
-/**
- * Exit - cause normal process termination with specified status code
- */
-void __noreturn
-__exit (int status) /**< status code */
-{
-  exit (status);
-
-  while (true)
-  {
-    /* unreachable */
-  }
-} /* __exit */
-
-/**
- * fopen
- *
- * @return _FILE pointer - upon successful completion,
- *         NULL - otherwise
- */
-_FILE*
-__fopen (const char *path, /**< file path */
-         const char *mode) /**< file open mode */
-{
-  return fopen (path, mode);
-} /* __fopen */
-
-/** The rewind () function sets the file position
-     indicator for the stream pointed to by STREAM to the beginning of the file.  */
-void
-__rewind (_FILE *stream)
-{
-  rewind (stream);
-}
-
-/**
- * fclose
- *
- * @return 0 - upon successful completion,
- *         non-zero value - otherwise.
- */
-int
-__fclose (_FILE *fp) /**< stream pointer */
-{
-  return fclose (fp);
-} /* __fclose */
-
-/**
- * fseek
- */
-int
-__fseek (_FILE * fp, /**< stream pointer */
-         long offset, /**< offset */
-         _whence_t whence) /**< specifies position type
-                                to add offset to */
-{
-  int whence_real = SEEK_CUR;
-  switch (whence)
-  {
-    case __SEEK_SET:
-    {
-      whence_real = SEEK_SET;
-      break;
-    }
-    case __SEEK_CUR:
-    {
-      whence_real = SEEK_CUR;
-      break;
-    }
-    case __SEEK_END:
-    {
-      whence_real = SEEK_END;
-      break;
-    }
-  }
-
-  return fseek (fp, offset, whence_real);
-} /* __fseek */
-
-/**
- * ftell
- */
-long
-__ftell (_FILE * fp) /**< stream pointer */
-{
-  return ftell (fp);
-} /* __ftell */
-
-/**
- * fread
- *
- * @return number of bytes read
- */
-size_t
-__fread (void *ptr, /**< address of buffer to read to */
-         size_t size, /**< size of elements to read */
-         size_t nmemb, /**< number of elements to read */
-         _FILE *stream) /**< stream pointer */
-{
-  return fread (ptr, size, nmemb, stream);
-} /* __fread */
-
-/**
- * fwrite
- *
- * @return number of bytes written
- */
-size_t
-__fwrite (const void *ptr, /**< data to write */
-          size_t size, /**< size of elements to write */
-          size_t nmemb, /**< number of elements */
-          _FILE *stream) /**< stream pointer */
-{
-  return fwrite (ptr, size, nmemb, stream);
-} /* __fwrite */
-
-/**
- * Setup new memory limits
- */
-void
-jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
-                    size_t stack_size) /**< limit for stack */
-{
-  struct rlimit data_limit = { data_size, data_size };
-  struct rlimit stack_limit = { stack_size, stack_size };
-
-  int ret;
-
-  ret = setrlimit (RLIMIT_DATA, &data_limit);
+#elif defined (__TARGET_HOST_ARMv7)
+  ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_DATA, (intptr_t) &data_limit);
   JERRY_ASSERT (ret == 0);
 
-  ret = setrlimit (RLIMIT_STACK, &stack_limit);
+  ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_STACK, (intptr_t) &stack_limit);
   JERRY_ASSERT (ret == 0);
+#elif defined (__TARGET_HOST_x86)
+# error "__TARGET_HOST_x86 case is not implemented"
+#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
+# error "!__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86"
+#endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
 } /* jrt_set_mem_limits */
-
-#else /* !LIBC_RAW && !LIBC_MUSL */
-# error "!LIBC_RAW && !LIBC_MUSL"
-#endif /* !LIBC_RAW && !LIBC_MUSL */

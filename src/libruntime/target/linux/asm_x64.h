@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef LINUX_X64_ASM_H
-#define LINUX_X64_ASM_H
+#ifndef ASM_X64_H
+#define ASM_X64_H
 
 /*
  * mov syscall_no -> %rax
@@ -45,7 +45,7 @@
  * mov syscall_no -> %rax
  * mov arg1 -> %rdi
  * mov arg2 -> %rsi
- * mov arg2 -> %rdx
+ * mov arg3 -> %rdx
  * syscall
  * mov %rax -> ret
  */
@@ -62,6 +62,8 @@
    callq main;            \
                           \
    mov %rax, %rdi;        \
-   callq __exit;
+   callq __exit;          \
+   1:                     \
+   jmp 1b
 
-#endif /* !LINUX_X64_ASM_H */
+#endif /* !ASM_X64_H */

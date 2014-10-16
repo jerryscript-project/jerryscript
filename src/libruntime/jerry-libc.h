@@ -23,7 +23,6 @@
 
 typedef void _FILE;
 
-#ifdef LIBC_RAW
 /**
  * stdin file descriptor
  */
@@ -38,26 +37,6 @@ typedef void _FILE;
  * stderr file descriptor
  */
 #define LIBC_STDERR  (_FILE*)2
-#else /* !LIBC_RAW */
-extern const _FILE **libc_stdin;
-extern const _FILE **libc_stdout;
-extern const _FILE **libc_stderr;
-
-/**
- * stdin file descriptor
- */
-#define LIBC_STDIN   ((_FILE*)*libc_stdin)
-
-/**
- * stdout file descriptor
- */
-#define LIBC_STDOUT  ((_FILE*)*libc_stdout)
-
-/**
- * stderr file descriptor
- */
-#define LIBC_STDERR  ((_FILE*)*libc_stderr)
-#endif /* !LIBC_RAW */
 
 extern void* __memset (void *s, int c, size_t n);
 extern int __memcmp (const void *s1, const void *s2, size_t n);

@@ -58,7 +58,7 @@ analog_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
 void
 wait_ms (uint32_t time_ms)
 {
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   // 1 millisecond = 1,000,000 Nanoseconds
 #define NANO_SECOND_MULTIPLIER  1000000
   __printf ("wait_ms: %d\n", time_ms);

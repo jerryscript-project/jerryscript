@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef LINUX_X86_ASM_H
-#define LINUX_X86_ASM_H
+#ifndef ASM_X86_H
+#define ASM_X86_H
 
 FIXME(Implement x86 ABI);
 #error "Not implemented"
@@ -48,7 +48,7 @@ FIXME(Implement x86 ABI);
  * mov syscall_no -> %rax
  * mov arg1 -> %rdi
  * mov arg2 -> %rsi
- * mov arg2 -> %rdx
+ * mov arg3 -> %rdx
  * syscall
  * mov %rax -> ret
  */
@@ -65,6 +65,8 @@ FIXME(Implement x86 ABI);
    callq main;            \
                           \
    mov %rax, %rdi;        \
-   callq __exit;
+   callq __exit;          \
+   1:                     \
+   jmp 1b
 
-#endif /* !LINUX_X86_ASM_H */
+#endif /* !ASM_X86_H */

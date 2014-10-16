@@ -48,9 +48,9 @@ jerry_run (const char *script_source, size_t script_source_size,
 
   optimizer_run_passes ((opcode_t *) opcodes);
 
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   serializer_print_opcodes ();
-#endif
+#endif /* __TARGET_HOST */
   parser_free ();
 
   if (is_parse_only)
@@ -70,7 +70,7 @@ jerry_run (const char *script_source, size_t script_source_size,
   return is_success;
 } /* jerry_run */
 
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
 static const char*
@@ -174,10 +174,10 @@ main (int argc __unused,
     {
 #ifdef JERRY_ENABLE_PP
       show_opcodes = true;
-#else
+#else /* !JERRY_ENABLE_PP */
       __printf ("Ignoring --show-opcodes since target is not x86_64 or debug is not enabled.\n");
       show_opcodes = false;
-#endif
+#endif /* JERRY_ENABLE_PP */
     }
     else
     {
@@ -197,7 +197,7 @@ main (int argc __unused,
 
   jerry_exit (is_success ? ERR_OK : ERR_FAILED_ASSERTION_IN_SCRIPT);
 }
-#endif
+#endif /* __TARGET_HOST */
 
 #ifdef __TARGET_MCU
 static uint32_t start __unused;
@@ -221,4 +221,4 @@ main (void)
              source_size, false, false, false);
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
 }
-#endif
+#endif /* __TARGET_MCU */

@@ -29,7 +29,7 @@
 void
 led_toggle (uint32_t led_id)
 {
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   __printf ("led_toggle: %d\n", led_id);
 #endif
 
@@ -42,7 +42,7 @@ led_toggle (uint32_t led_id)
 void
 led_on (uint32_t led_id)
 {
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   __printf ("led_on: %d\n", led_id);
 #endif
 
@@ -55,7 +55,7 @@ led_on (uint32_t led_id)
 void
 led_off (uint32_t led_id)
 {
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   __printf ("led_off: %d\n", led_id);
 #endif
 
@@ -67,7 +67,7 @@ led_off (uint32_t led_id)
 void
 led_blink_once (uint32_t led_id)
 {
-#ifdef __TARGET_HOST_x64
+#ifdef __TARGET_HOST
   __printf ("led_blink_once: %d\n", led_id);
 #endif
 

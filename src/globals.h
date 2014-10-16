@@ -181,8 +181,8 @@ extern void __noreturn jerry_exit (jerry_status_t code);
 /**
  * Enable --show-opcodes key.
  */
-#if defined (__TARGET_HOST_x64) && !defined (JERRY_NDEBUG)
-#define JERRY_ENABLE_PP
+#if defined (__TARGET_HOST) && !defined (JERRY_NDEBUG)
+# define JERRY_ENABLE_PP
 #endif
 
 #endif /* !JERRY_GLOBALS_H */

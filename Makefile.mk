@@ -330,8 +330,18 @@ ifeq ($(OPTION_NDEBUG),enable)
 endif
 
 ifeq ($(OPTION_MCU),disable)
- DEFINES_JERRY += -D__TARGET_HOST_x64 -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
- CFLAGS_COMMON += -fno-stack-protector
+ MACHINE_TYPE=$(shell uname -m)
+ ifeq ($(MACHINE_TYPE),x86_64)
+   DEFINES_JERRY += -D__TARGET_HOST_x64
+ else
+  ifeq ($(MACHINE_TYPE),armv7l)
+    DEFINES_JERRY += -D__TARGET_HOST_ARMv7
+  else
+    $(error Unsupported machine architecture)
+  endif
+ endif
+ DEFINES_JERRY += -D__TARGET_HOST -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
+ CFLAGS_COMMON += -fomit-frame-pointer -fno-stack-protector
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU

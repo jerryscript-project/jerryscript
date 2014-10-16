@@ -1,133 +1,133 @@
 > Escape sequences
-/home/ruben/jerry/./tests/jerry-test-suite/06/06-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/08/08.04/08.04-017.js
+./tests/jerry-test-suite/06/06-001.js
+./tests/jerry-test-suite/08/08.04/08.04-017.js
 
 > Regular expressions
-/home/ruben/jerry/./tests/jerry-test-suite/07/07.08/07.08.05/07.08.05-001.js
+./tests/jerry-test-suite/07/07.08/07.08.05/07.08.05-001.js
 
 > Arguments object
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-003.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-004.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-007.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-008.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-011.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-012.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-013.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-014.js
-/home/ruben/jerry/./tests/jerry-test-suite/13/13-008.js
-/home/ruben/jerry/./tests/jerry-test-suite/13/13-011.js
-/home/ruben/jerry/./tests/jerry-test-suite/13/13-012.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-001.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-002.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-003.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-004.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-005.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-006.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-007.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-008.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-009.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-010.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-011.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-012.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-013.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-014.js
+./tests/jerry-test-suite/13/13-008.js
+./tests/jerry-test-suite/13/13-011.js
+./tests/jerry-test-suite/13/13-012.js
 
 > eval
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.01/11.04.01-013.js
+./tests/jerry-test-suite/11/11.04/11.04.01/11.04.01-013.js
 
 > Error built-in object
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.01/15.07.01-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-005.js
+./tests/jerry-test-suite/15/15.07/15.07.01/15.07.01-006.js
+./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-005.js
 
 > ReferenceError built-in object
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-017.js
+./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-017.js
 
 > Date built-in object
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.03/11.04.03-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.02/12.02-021.js
+./tests/jerry-test-suite/11/11.04/11.04.03/11.04.03-010.js
+./tests/jerry-test-suite/12/12.02/12.02-021.js
 
 > RegExp built-in object
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.02/12.02-020.js
+./tests/jerry-test-suite/12/12.02/12.02-020.js
 
 > Function.prototype.toString
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.04/11.04.04-012.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-012.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.08/11.08.03/11.08.03-010.js
+./tests/jerry-test-suite/11/11.04/11.04.04/11.04.04-012.js
+./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-012.js
+./tests/jerry-test-suite/11/11.08/11.08.03/11.08.03-010.js
 
 > new Function ()
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.09/11.09.04/11.09.04-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.09/11.09.05/11.09.05-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-004.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-007.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-008.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-011.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-012s.js
+./tests/jerry-test-suite/11/11.09/11.09.04/11.09.04-005.js
+./tests/jerry-test-suite/11/11.09/11.09.05/11.09.05-005.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-001.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-002.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-004.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-005.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-007.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-008.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-009.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-010.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-011.js
+./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-012s.js
 
 > Float32 precision
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-011.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-012.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-013.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.10/11.10-017.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.10/11.10-018.js
-/home/ruben/jerry/./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-014.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-012.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-013.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-014.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-015.js
- /home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-003.js
+./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-006.js
+./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-010.js
+./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-011.js
+./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-012.js
+./tests/jerry-test-suite/11/11.04/11.04.08/11.04.08-013.js
+./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-009.js
+./tests/jerry-test-suite/11/11.10/11.10-017.js
+./tests/jerry-test-suite/11/11.10/11.10-018.js
+./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-014.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-012.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-013.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-014.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-015.js
+ ./tests/jerry-test-suite/15/15.07/15.07.02/15.07.02-003.js
 
 > for-in loop
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-003.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-004.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-007.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-015.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-016.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-015.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-016.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-003.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-019.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-020.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-021.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.03/15.03.03/15.03.03.01/15.03.03.01-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.05/15.05.03/15.05.03.01/15.05.03.01-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.06/15.06.03/15.06.03.01/15.06.03.01-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.01/15.07.03.01-007.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.02/15.07.03.02-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.05/15.07.03.05-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.06/15.07.03.06-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/15/15.07/15.07.04/15.07.04.02/15.07.04.02-002.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-001.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-002.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-003.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-004.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-005.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-006.js
+./tests/jerry-test-suite/12/12.06/12.06.04/12.06.04-007.js
+./tests/jerry-test-suite/12/12.07/12.07-015.js
+./tests/jerry-test-suite/12/12.07/12.07-016.js
+./tests/jerry-test-suite/12/12.08/12.08-001.js
+./tests/jerry-test-suite/12/12.08/12.08-002.js
+./tests/jerry-test-suite/12/12.08/12.08-015.js
+./tests/jerry-test-suite/12/12.08/12.08-016.js
+./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-003.js
+./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-019.js
+./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-020.js
+./tests/jerry-test-suite/15/15.02/15.02.03/15.02.03-021.js
+./tests/jerry-test-suite/15/15.03/15.03.03/15.03.03.01/15.03.03.01-002.js
+./tests/jerry-test-suite/15/15.05/15.05.03/15.05.03.01/15.05.03.01-002.js
+./tests/jerry-test-suite/15/15.06/15.06.03/15.06.03.01/15.06.03.01-001.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.01/15.07.03.01-007.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.02/15.07.03.02-006.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.05/15.07.03.05-006.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.06/15.07.03.06-006.js
+./tests/jerry-test-suite/15/15.07/15.07.04/15.07.04.02/15.07.04.02-002.js
 
 > Labelled statements
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-003.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-004.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-013.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.07/12.07-014.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-013.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-014.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-017.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.08/12.08-018.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-001.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-002.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-003.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-004.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-005.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-006.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-007.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-008.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-009.js
-/home/ruben/jerry/./tests/jerry-test-suite/12/12.12/12.12-010.js
-/home/ruben/jerry/./tests/jerry-test-suite/13/13.02/13.02-002.js
+./tests/jerry-test-suite/12/12.07/12.07-003.js
+./tests/jerry-test-suite/12/12.07/12.07-004.js
+./tests/jerry-test-suite/12/12.07/12.07-005.js
+./tests/jerry-test-suite/12/12.07/12.07-006.js
+./tests/jerry-test-suite/12/12.07/12.07-009.js
+./tests/jerry-test-suite/12/12.07/12.07-010.js
+./tests/jerry-test-suite/12/12.07/12.07-013.js
+./tests/jerry-test-suite/12/12.07/12.07-014.js
+./tests/jerry-test-suite/12/12.08/12.08-005.js
+./tests/jerry-test-suite/12/12.08/12.08-006.js
+./tests/jerry-test-suite/12/12.08/12.08-009.js
+./tests/jerry-test-suite/12/12.08/12.08-010.js
+./tests/jerry-test-suite/12/12.08/12.08-013.js
+./tests/jerry-test-suite/12/12.08/12.08-014.js
+./tests/jerry-test-suite/12/12.08/12.08-017.js
+./tests/jerry-test-suite/12/12.08/12.08-018.js
+./tests/jerry-test-suite/12/12.12/12.12-001.js
+./tests/jerry-test-suite/12/12.12/12.12-002.js
+./tests/jerry-test-suite/12/12.12/12.12-003.js
+./tests/jerry-test-suite/12/12.12/12.12-004.js
+./tests/jerry-test-suite/12/12.12/12.12-005.js
+./tests/jerry-test-suite/12/12.12/12.12-006.js
+./tests/jerry-test-suite/12/12.12/12.12-007.js
+./tests/jerry-test-suite/12/12.12/12.12-008.js
+./tests/jerry-test-suite/12/12.12/12.12-009.js
+./tests/jerry-test-suite/12/12.12/12.12-010.js
+./tests/jerry-test-suite/13/13.02/13.02-002.js

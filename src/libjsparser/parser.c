@@ -3297,6 +3297,11 @@ parse_statement (void)
     parse_variable_declaration_list (NULL);
     goto cleanup;
   }
+  if (is_keyword (KW_FUNCTION))
+  {
+    parse_function_declaration ();
+    goto cleanup;
+  }
   if (token_is (TOK_SEMICOLON))
   {
     goto cleanup;

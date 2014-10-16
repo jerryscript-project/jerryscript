@@ -74,6 +74,11 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ARRAY_UL, \
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
          array_prototype) \
+  macro (NUMBER_PROTOTYPE, \
+         TYPE_GENERAL, \
+         NUMBER_UL, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
+         number_prototype) \
   macro (STRING_PROTOTYPE, \
          TYPE_GENERAL, \
          STRING_UL, \
@@ -91,13 +96,18 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          math) \
   macro (ARRAY, \
          TYPE_FUNCTION, \
-         ARRAY_UL, \
-         ECMA_BUILTIN_ID_ARRAY_PROTOTYPE, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          array) \
+  macro (NUMBER, \
+         TYPE_FUNCTION, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
+         number) \
   macro (STRING, \
          TYPE_FUNCTION, \
-         STRING_UL, \
-         ECMA_BUILTIN_ID_STRING_PROTOTYPE, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          string) \
   macro (FUNCTION, \
          TYPE_FUNCTION, \

@@ -550,6 +550,19 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_TWO  ((ecma_number_t) 2)
 
 /**
+ * Minimum positive and maximum value of ecma-number
+ */
+#ifdef CONFIG_ECMA_NUMBER_FLOAT32
+# define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
+# define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
+#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+# define ECMA_NUMBER_MAX_VALUE (DBL_MAX)
+# define ECMA_NUMBER_MIN_VALUE (DBL_MIN)
+#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
+#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+
+/**
  * Value '0.5' of ecma_number_t
  */
 #define ECMA_NUMBER_HALF ((ecma_number_t) 0.5f)
@@ -811,6 +824,10 @@ typedef enum
   ECMA_MAGIC_STRING_TO_UTC_STRING_UL, /**< "toUTCString" */
   ECMA_MAGIC_STRING_TO_ISO_STRING_UL, /**< "toISOString" */
   ECMA_MAGIC_STRING_TO_JSON_UL, /**< "toJSON" */
+  ECMA_MAGIC_STRING_MAX_VALUE_U, /**< "MAX_VALUE" */
+  ECMA_MAGIC_STRING_MIN_VALUE_U, /**< "MIN_VALUE" */
+  ECMA_MAGIC_STRING_POSITIVE_INFINITY_U, /**< "POSITIVE_INFINITY" */
+  ECMA_MAGIC_STRING_NEGATIVE_INFINITY_U, /**< "NEGATIVE_INFINITY" */
   ECMA_MAGIC_STRING_APPLY, /**< "apply" */
   ECMA_MAGIC_STRING_CALL, /**< "call" */
   ECMA_MAGIC_STRING_BIND, /**< "bind" */

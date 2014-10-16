@@ -1448,6 +1448,10 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING_TO_UTC_STRING_UL: return (ecma_char_t*) "toUTCString";
     case ECMA_MAGIC_STRING_TO_ISO_STRING_UL: return (ecma_char_t*) "toISOString";
     case ECMA_MAGIC_STRING_TO_JSON_UL: return (ecma_char_t*) "toJSON";
+    case ECMA_MAGIC_STRING_MAX_VALUE_U: return (ecma_char_t*) "MAX_VALUE";
+    case ECMA_MAGIC_STRING_MIN_VALUE_U: return (ecma_char_t*) "MIN_VALUE";
+    case ECMA_MAGIC_STRING_POSITIVE_INFINITY_U: return (ecma_char_t*) "POSITIVE_INFINITY";
+    case ECMA_MAGIC_STRING_NEGATIVE_INFINITY_U: return (ecma_char_t*) "NEGATIVE_INFINITY";
     case ECMA_MAGIC_STRING_APPLY: return (ecma_char_t*) "apply";
     case ECMA_MAGIC_STRING_CALL: return (ecma_char_t*) "call";
     case ECMA_MAGIC_STRING_BIND: return (ecma_char_t*) "bind";

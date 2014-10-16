@@ -388,7 +388,6 @@ ecma_number_t
 ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
 {
   ecma_number_t num_value = (ecma_number_t) value;
-  JERRY_ASSERT (ecma_number_to_uint32 (num_value) == value);
 
   return num_value;
 } /* ecma_uint32_to_number */
@@ -402,7 +401,6 @@ ecma_number_t
 ecma_int32_to_number (int32_t value) /**< signed 32-bit integer value */
 {
   ecma_number_t num_value = (ecma_number_t) value;
-  JERRY_ASSERT (ecma_number_to_int32 (num_value) == value);
 
   return num_value;
 } /* ecma_int32_to_number */

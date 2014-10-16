@@ -60,7 +60,7 @@ static const ecma_magic_string_id_t ecma_builtin_boolean_property_names[] =
 };
 
 /**
- * Boolean of the Boolean object's built-in properties
+ * Number of the Boolean object's built-in properties
  */
 const ecma_length_t ecma_builtin_boolean_property_number = (sizeof (ecma_builtin_boolean_property_names) /
                                                             sizeof (ecma_magic_string_id_t));
@@ -199,9 +199,9 @@ ecma_builtin_boolean_dispatch_routine (ecma_magic_string_id_t builtin_routine_id
 } /* ecma_builtin_boolean_dispatch_routine */
 
 /**
- * Get boolean of routine's parameters
+ * Get number of routine's parameters
  *
- * @return boolean of parameters
+ * @return number of parameters
  */
 ecma_length_t
 ecma_builtin_boolean_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id __unused) /**< built-in
@@ -218,7 +218,7 @@ ecma_builtin_boolean_get_routine_parameters_number (ecma_magic_string_id_t built
  */
 ecma_completion_value_t
 ecma_builtin_boolean_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
-                                    ecma_length_t arguments_list_len) /**< boolean of arguments */
+                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -243,7 +243,7 @@ ecma_builtin_boolean_dispatch_call (ecma_value_t *arguments_list_p, /**< argumen
  */
 ecma_completion_value_t
 ecma_builtin_boolean_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
-                                         ecma_length_t arguments_list_len) /**< boolean of arguments */
+                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

@@ -958,10 +958,18 @@ parse_argument_list (argument_list_type alt, idx_t obj, idx_t this_arg)
 
   current_token_must_be (STACK_HEAD (U8, 3));
 
-  if (alt == AL_CALL_EXPR && this_arg != INVALID_VALUE)
+  switch (alt)
   {
-    DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, this_arg, INVALID_VALUE);
-    STACK_INCR_HEAD (U8, 1);
+    case AL_CALL_EXPR:
+    {
+      if (this_arg != INVALID_VALUE)
+      {
+        DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, this_arg, INVALID_VALUE);
+        STACK_INCR_HEAD (U8, 1);
+      }
+      break;
+    }
+    default: break;
   }
 
   STACK_PUSH (temp_names, TEMP_NAME ());
@@ -1410,33 +1418,18 @@ parse_member_expression (idx_t *this_arg)
   else if (is_keyword (KW_NEW))
   {
     skip_newlines ();
-    parse_member_expression (this_arg);
+    parse_member_expression (NULL);
 
     skip_newlines ();
     if (token_is (TOK_OPEN_PAREN))
     {
-      if (this_arg)
-      {
-        parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), *this_arg); // push obj
-      }
-      else
-      {
-        parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), INVALID_VALUE); // push obj
-      }
+      parse_argument_list (AL_CONSTRUCT_EXPR, ID(1), INVALID_VALUE); // push obj
     }
     else
     {
       lexer_save_token (TOK ());
       STACK_PUSH (IDX, next_temp_name ());
-      if (this_arg)
-      {
-        DUMP_OPCODE_3 (construct_n, ID (1), ID (2), 1);
-        DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_THIS_ARG, *this_arg, INVALID_VALUE);
-      }
-      else
-      {
-        DUMP_OPCODE_3 (construct_n, ID (1), ID (2), 0);
-      }
+      DUMP_OPCODE_3 (construct_n, ID (1), ID (2), 0);
     }
 
     STACK_SWAP (IDX);
@@ -1511,7 +1504,7 @@ parse_call_expression (void)
   STACK_DECLARE_USAGE (IDX)
   idx_t this_arg = INVALID_VALUE;
 
-  parse_member_expression (NULL);
+  parse_member_expression (&this_arg);
 
   skip_newlines ();
   if (!token_is (TOK_OPEN_PAREN))

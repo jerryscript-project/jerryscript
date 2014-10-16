@@ -605,7 +605,7 @@ ecma_builtin_object_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
     }
     case ECMA_MAGIC_STRING_PROTOTYPE:
     {
-      JERRY_UNIMPLEMENTED ();
+      value = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 
       writable = ECMA_PROPERTY_NOT_WRITABLE;
       enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;

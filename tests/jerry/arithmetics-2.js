@@ -26,7 +26,7 @@ c = a * b;
 assert(c == 210);
 
 c = a / b;
-assert(c == 2.1);
+assert(c >= 2.1 - 0.000001 && c <= 2.1 + 0.000001);
 
 c = a % b;
 assert(c == 1);

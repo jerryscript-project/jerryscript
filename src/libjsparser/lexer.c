@@ -21,6 +21,7 @@
 #include "opcodes.h"
 #include "parse-error.h"
 #include "parser.h"
+#include "ecma-helpers.h"
 
 static token saved_token, prev_token, sent_token;
 static token empty_token =
@@ -804,16 +805,19 @@ parse_number (void)
     consume_char ();
   }
 
+  tok_length = (size_t) (buffer - token_start);;
   if (is_fp || is_exp)
   {
-    ecma_number_t res = __strtof (token_start, NULL);
-
+    ecma_char_t *temp = mem_heap_alloc_block ((size_t) (tok_length + 1), MEM_HEAP_ALLOC_SHORT_TERM);
+    __strncpy ((char *) temp, token_start, (size_t) (tok_length));
+    temp[tok_length] = '\0';
+    ecma_number_t res = ecma_zt_string_to_number (temp);
+    mem_heap_free_block (temp);
     known_token = convert_seen_num_to_token (res);
     token_start = NULL;
     return known_token;
   }
 
-  tok_length = (size_t) (buffer - token_start);;
   if (*token_start == '0' && tok_length != 1)
   {
     if (parser_strict_mode ())

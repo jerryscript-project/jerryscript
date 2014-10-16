@@ -59,14 +59,14 @@ serializer_dump_opcode (opcode_t opcode)
 {
   JERRY_ASSERT (scopes_tree_opcodes_num (current_scope) < MAX_OPCODES);
 
+  scopes_tree_add_opcode (current_scope, opcode);
+
 #ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
-    pp_opcode (scopes_tree_opcodes_num (current_scope), opcode, false);
+    pp_opcode ((opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), opcode, false);
   }
 #endif
-
-  scopes_tree_add_opcode (current_scope, opcode);
 }
 
 void

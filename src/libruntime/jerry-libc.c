@@ -284,16 +284,6 @@ __strncpy (char *dest, const char *src, size_t n)
   return dest;
 }
 
-/** Convert the initial portion of the string pointed to by nptr to float representation.  */
-float
-__strtof (const char *nptr, char **endptr)
-{
-  (void) nptr;
-  (void) endptr;
-
-  JERRY_UNIMPLEMENTED ();
-} /* __strtof */
-
 /** Calculate the length of a string.  */
 size_t
 __strlen (const char *s)

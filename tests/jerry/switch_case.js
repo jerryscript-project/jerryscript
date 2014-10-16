@@ -47,3 +47,18 @@ switch (a) {
   case 3:
     assert (0);
 }
+
+var counter = 0;
+
+switch ("var") {
+  case "var":
+    counter++;
+  case "var1":
+    counter++;
+  case "var2":
+    counter++;
+  default:
+    counter++;
+}
+
+assert (counter === 4);

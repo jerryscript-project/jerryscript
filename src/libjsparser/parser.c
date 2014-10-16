@@ -2890,83 +2890,16 @@ parse_with_statement (void)
   STACK_CHECK_USAGE (IDX);
 }
 
-/* case_clause
-  : 'case' LT!* expression LT!* ':' LT!* statement*
-  ; */
 static void
-parse_case_clause (void)
+skip_case_clause_body (void)
 {
-  STACK_DECLARE_USAGE (IDX)
-
-  assert_keyword (KW_CASE);
-
-  skip_newlines ();
-  parse_expression ();
-  token_after_newlines_must_be (TOK_COLON);
-
-  STACK_PUSH (IDX, next_temp_name ());
-  DUMP_OPCODE_3 (equal_value_type, ID (1), ID (2), ID (3));
-  STACK_PUSH (U16, OPCODE_COUNTER ());
-  DUMP_OPCODE_3 (is_false_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
-  STACK_SWAP (IDX);
-  STACK_DROP (IDX, 1);
-
-  skip_newlines ();
-  if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
-  {
-    lexer_save_token (TOK ());
-    goto cleanup;
-  }
-  else
-  {
-    parse_statement_list ();
-  }
-
-cleanup:
-  STACK_CHECK_USAGE_LHS ();
-}
-
-static void
-skip_default_clause (void)
-{
-  assert_keyword (KW_DEFAULT);
-  token_after_newlines_must_be (TOK_COLON);
-  do
+  while (!is_keyword (KW_CASE) && !is_keyword (KW_DEFAULT) && !token_is (TOK_CLOSE_BRACE))
   {
     skip_newlines ();
-    if (is_keyword (KW_DEFAULT))
-    {
-      EMIT_ERROR ("Several 'default' clauses in sigle switch");
-    }
     if (token_is (TOK_OPEN_BRACE))
     {
       skip_braces ();
     }
-  }
-  while (!token_is (TOK_CLOSE_BRACE) && !is_keyword (KW_CASE));
-  lexer_save_token (TOK ());
-}
-
-/* default_clause
-  : 'default' LT!* ':' LT!* statement*
-  ; */
-static void
-parse_default_clause (void)
-{
-  assert_keyword (KW_DEFAULT);
-  token_after_newlines_must_be (TOK_COLON);
-  skip_newlines ();
-  if (is_keyword (KW_CASE))
-  {
-    return;
-  }
-  else if (is_keyword (KW_DEFAULT))
-  {
-    EMIT_ERROR ("Several 'default' clauses in sigle switch");
-  }
-  else
-  {
-    parse_statement_list ();
   }
 }
 
@@ -2976,7 +2909,10 @@ parse_default_clause (void)
    case_block
   : '{' LT!* case_clause* LT!* '}'
   | '{' LT!* case_clause* LT!* default_clause LT!* case_clause* LT!* '}'
-  ;*/
+  ;
+   case_clause
+  : 'case' LT!* expression LT!* ':' LT!* statement*
+  ; */
 static void
 parse_switch_statement (void)
 {
@@ -2988,56 +2924,128 @@ parse_switch_statement (void)
 
   assert_keyword (KW_SWITCH);
 
-  STACK_PUSH (U8, 0); // was default
+  STACK_PUSH (U8, 0);
+  STACK_PUSH (U8, 0);
+  STACK_PUSH (U8, STACK_SIZE (IDX));
+  STACK_PUSH (U8, STACK_SIZE (U16));
   STACK_PUSH (U8, STACK_SIZE (rewritable_break));
 
   parse_expression_inside_parens ();
   token_after_newlines_must_be (TOK_OPEN_BRACE);
-  push_nesting (NESTING_SWITCH);
+
+#define SWITCH_EXPR() STACK_ELEMENT (IDX, STACK_HEAD (U8, 3))
+#define CURRENT_JUMP() STACK_HEAD (U8, 4)
+#define INCR_CURRENT_JUMP() STACK_INCR_HEAD (U8, 4)
+#define WAS_DEFAULT() STACK_HEAD (U8, 5)
+#define SET_WAS_DEFAULT(S) STACK_SET_HEAD (U8, 5, S);
+
+  STACK_PUSH (locs, TOK ().loc);
+  // Fisrt, generate table of jumps
   skip_newlines ();
   while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
   {
     if (is_keyword (KW_CASE))
     {
-      parse_case_clause ();
-      REWRITE_COND_JMP (STACK_TOP (U16), is_false_jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
+      NEXT (expression);
+      next_token_must_be (TOK_COLON);
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (equal_value_type, ID (1), ID (2), SWITCH_EXPR ());
+      STACK_SWAP (IDX);
       STACK_DROP (IDX, 1);
-      STACK_DROP (U16, 1);
+      STACK_PUSH (U16, OPCODE_COUNTER ());
+      DUMP_OPCODE_3 (is_true_jmp_down, STACK_TOP (IDX), INVALID_VALUE, INVALID_VALUE);
+      skip_newlines ();
+      skip_case_clause_body ();
     }
     else if (is_keyword (KW_DEFAULT))
     {
-      STACK_SET_HEAD (U8, 2, 1);
-      STACK_PUSH (locs, TOK ().loc);
-      skip_default_clause ();
+      SET_WAS_DEFAULT (1);
+      token_after_newlines_must_be (TOK_COLON);
+      skip_newlines ();
+      skip_case_clause_body ();
+    }
+    else
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+  current_token_must_be (TOK_CLOSE_BRACE);
+
+  if (WAS_DEFAULT ())
+  {
+    STACK_PUSH (U16, OPCODE_COUNTER ());
+    DUMP_OPCODE_2 (jmp_down, INVALID_VALUE, INVALID_VALUE);
+  }
+
+  lexer_seek (STACK_TOP (locs));
+  next_token_must_be (TOK_OPEN_BRACE);
+
+  push_nesting (NESTING_SWITCH);
+  // Second, parse case clauses' bodies and rewrite jumps
+  skip_newlines ();
+  while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+  {
+    if (is_keyword (KW_CASE))
+    {
+      while (!token_is (TOK_COLON))
+      {
+        skip_newlines ();
+      }
+      REWRITE_OPCODE_3 (STACK_ELEMENT (U16, STACK_HEAD (U8, 2) + CURRENT_JUMP ()),
+                        is_true_jmp_down,
+                        STACK_ELEMENT (IDX, STACK_HEAD (U8, 3) + CURRENT_JUMP () + 1),
+                        (idx_t) ((OPCODE_COUNTER () - STACK_ELEMENT (
+                          U16, STACK_HEAD (U8, 2) + CURRENT_JUMP ())) >> JERRY_BITSINBYTE),
+                        (idx_t) ((OPCODE_COUNTER () - STACK_ELEMENT (
+                          U16, STACK_HEAD (U8, 2) + CURRENT_JUMP ())) & ((1 << JERRY_BITSINBYTE) - 1)));
+      skip_newlines ();
+      if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+      {
+        goto next;
+      }
+      parse_statement_list ();
+    }
+    else if (is_keyword (KW_DEFAULT))
+    {
+      token_after_newlines_must_be (TOK_COLON);
+      skip_newlines ();
+      if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+      {
+        continue;
+      }
+      parse_statement_list ();
+      continue;
     }
     else
     {
       JERRY_UNREACHABLE ();
     }
     skip_newlines ();
-  }
 
-  // if was default
-  if (STACK_HEAD (U8, 2) == 1)
-  {
-    STACK_PUSH (locs, TOK ().loc);
-    lexer_seek (STACK_HEAD (locs, 2));
-    skip_token ();
-    parse_default_clause ();
-    lexer_seek (STACK_TOP (locs));
-    STACK_DROP (locs, 2);
-    skip_token ();
+next:
+    INCR_CURRENT_JUMP ();
   }
-
-  if (!token_is (TOK_CLOSE_BRACE))
-  {
-    EMIT_ERROR ("Expected '}' token");
-  }
+  current_token_must_be (TOK_CLOSE_BRACE);
+  skip_token ();
   pop_nesting (NESTING_SWITCH);
-  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
 
-  STACK_DROP (IDX, 1);
-  STACK_DROP (U8, 2);
+  // Finally, dump 'finally' jump
+  if (WAS_DEFAULT ())
+  {
+    REWRITE_JMP (STACK_TOP (U16), jmp_down, OPCODE_COUNTER () - STACK_TOP (U16));
+  }
+
+  rewrite_rewritable_opcodes (REWRITABLE_BREAK, STACK_TOP (U8), OPCODE_COUNTER ());
+  STACK_DROP (U16, STACK_SIZE (U16) - STACK_HEAD (U8, 2));
+  STACK_DROP (IDX, STACK_SIZE (IDX) - STACK_HEAD (U8, 3));
+  STACK_DROP (U8, 5);
+  STACK_DROP (locs, 1);
+
+#undef WAS_DEFAULT
+#undef SET_WAS_DEFAULT
+#undef CURRENT_JUMP
+#undef INCR_CURRENT_JUMP
+#undef SWITCH_EXPR
 
   STACK_CHECK_USAGE (locs);
   STACK_CHECK_USAGE (IDX);

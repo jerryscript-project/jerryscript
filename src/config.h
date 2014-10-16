@@ -110,4 +110,9 @@
  */
 // #define CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
 
+/**
+ * Implementation should correspond to ECMA Compact Profile
+ */
+#define CONFIG_ECMA_COMPACT_PROFILE
+
 #endif /* !CONFIG_H */

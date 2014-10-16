@@ -68,7 +68,10 @@ static const ecma_magic_string_id_t ecma_builtin_global_property_names[] =
   ECMA_MAGIC_STRING_DECODE_URI,
   ECMA_MAGIC_STRING_DECODE_URI_COMPONENT,
   ECMA_MAGIC_STRING_ENCODE_URI,
-  ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT
+  ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT,
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+  ECMA_MAGIC_STRING_COMPACT_PROFILE_ERROR_UL
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
 };
 
 /**
@@ -529,6 +532,17 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
       break;
     }
+
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+    case ECMA_MAGIC_STRING_COMPACT_PROFILE_ERROR_UL:
+    {
+      ecma_object_t *compact_profile_error_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+
+      value = ecma_make_object_value (compact_profile_error_obj_p);
+
+      break;
+    }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
     case ECMA_MAGIC_STRING_DATE_UL:
     case ECMA_MAGIC_STRING_REG_EXP_UL:

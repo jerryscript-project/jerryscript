@@ -49,6 +49,9 @@ typedef enum
   ECMA_BUILTIN_ID_SYNTAX_URI_ERROR, /**< the URIError object (15.11.6.6) */
   ECMA_BUILTIN_ID_MATH, /**< the Math object (15.8) */
   ECMA_BUILTIN_ID_JSON, /**< the JSON object (15.12) */
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+  ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR, /**< CompactProfileError object defined in the Compact Profile */
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 

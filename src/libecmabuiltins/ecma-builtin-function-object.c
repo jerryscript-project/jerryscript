@@ -236,7 +236,11 @@ ecma_builtin_function_dispatch_construct (ecma_value_t *arguments_list_p, /**< a
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+  return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p, arguments_list_len);
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
 } /* ecma_builtin_function_dispatch_construct */
 
 /**

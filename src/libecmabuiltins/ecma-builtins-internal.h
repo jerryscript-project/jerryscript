@@ -125,7 +125,7 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          function) \
   macro (COMPACT_PROFILE_ERROR, \
-         TYPE_GENERAL, \
+         TYPE_FUNCTION, \
          COMPACT_PROFILE_ERROR_UL, \
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
          compact_profile_error) \

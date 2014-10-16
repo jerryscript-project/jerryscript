@@ -93,7 +93,13 @@ JERRY_STATIC_ASSERT (sizeof (ecma_builtin_global_property_names) > sizeof (void*
 static ecma_completion_value_t
 ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument */
 {
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+  (void) x;
+
+  return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (x);
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
 } /* ecma_builtin_global_object_eval */
 
 /**
@@ -555,6 +561,21 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
     case ECMA_MAGIC_STRING_URI_ERROR_UL:
     case ECMA_MAGIC_STRING_JSON_U:
     {
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+      /* The object throws CompactProfileError upon invocation */
+      ecma_object_t *get_set_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+      ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_set_p);
+      ecma_property_t *compact_profile_thrower_property_p = ecma_create_named_accessor_property (obj_p,
+                                                                                                 prop_name_p,
+                                                                                                 get_set_p,
+                                                                                                 get_set_p,
+                                                                                                 true,
+                                                                                                 false);
+      ecma_deref_object (get_set_p);
+
+      return compact_profile_thrower_property_p;
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+
       JERRY_UNIMPLEMENTED ();
     }
 

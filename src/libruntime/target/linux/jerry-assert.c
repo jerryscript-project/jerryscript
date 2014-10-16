@@ -25,8 +25,15 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /** line */
 {
+#ifndef JERRY_NDEBUG
   __printf ("ICE: Assertion '%s' failed at %s(%s):%u.\n",
             assertion, file, function, line);
+#else /* !JERRY_NDEBUG */
+  (void) assertion;
+  (void) file;
+  (void) function;
+  (void) line;
+#endif /* JERRY_NDEBUG */
 
   __exit (-ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
@@ -41,7 +48,14 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
+#ifndef JERRY_NDEBUG
   __printf ("ICE: Unreachable control path at %s(%s):%u was executed", file, function, line);
+#else /* !JERRY_NDEBUG */
+  (void) file;
+  (void) function;
+  (void) line;
+#endif /* JERRY_NDEBUG */
+
   if (comment != NULL)
   {
     __printf ("(%s)", comment);
@@ -61,7 +75,14 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
                      const char *function, /**< function name */
                      const uint32_t line) /**< line */
 {
+#ifndef JERRY_NDEBUG
   __printf ("SORRY: Unimplemented case at %s(%s):%u was executed", file, function, line);
+#else /* !JERRY_NDEBUG */
+  (void) file;
+  (void) function;
+  (void) line;
+#endif /* JERRY_NDEBUG */
+
   if (comment != NULL)
   {
     __printf ("(%s)", comment);

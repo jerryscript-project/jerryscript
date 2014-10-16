@@ -116,6 +116,7 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
  * Mark for unreachable points and unimplemented cases
  */
 extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
+#ifndef JERRY_NDEBUG
 #define JERRY_UNREACHABLE() \
   do \
   { \
@@ -137,7 +138,29 @@ extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
       jerry_ref_unused_variables (0, __VA_ARGS__); \
     } \
   } while (0)
+#else /* !JERRY_NDEBUG */
+#define JERRY_UNREACHABLE() \
+  do \
+  { \
+    jerry_unreachable (NULL, NULL, NULL, 0); \
+  } while (0)
 
+#define JERRY_UNIMPLEMENTED() \
+  do \
+  { \
+    jerry_unimplemented (NULL, NULL, NULL, 0); \
+  } while (0)
+
+#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(...) \
+  do \
+  { \
+    jerry_unimplemented (NULL, NULL, NULL, 0); \
+    if (false) \
+    { \
+      jerry_ref_unused_variables (0, __VA_ARGS__); \
+    } \
+  } while (0)
+#endif /* JERRY_NDEBUG */
 /**
  * Conditions' likeliness, unlikeliness.
  */

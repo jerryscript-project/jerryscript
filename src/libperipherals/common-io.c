@@ -13,23 +13,11 @@
  * limitations under the License.
  */
 
+#include "actuators.h"
 #include "common-io.h"
 #include "jerry-libc.h"
 
-#ifdef __TARGET_MCU
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include "stm32f4xx_conf.h"
-#include "stm32f4xx.h"
-#pragma GCC diagnostic pop
-
-// STM32 F4
-#define LED_GREEN      12
-#define LED_ORANGE     13
-#define LED_RED        14
-#define LED_BLUE       15
-#endif
+#include "mcu-headers.h"
 
 int
 digital_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
@@ -55,62 +43,17 @@ analog_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
   JERRY_UNIMPLEMENTED ();
 }
 
+#ifdef __TARGET_HOST
 void
 wait_ms (uint32_t time_ms)
 {
-#ifdef __TARGET_HOST
-  // 1 millisecond = 1,000,000 Nanoseconds
-#define NANO_SECOND_MULTIPLIER  1000000
   __printf ("wait_ms: %d\n", time_ms);
-#endif
-
-#ifdef __TARGET_MCU
-  while (time_ms --)
-  {
-    wait_1ms ();
-  }
-#endif
 }
+#else /* !__TARGET_HOST */
 
-#ifdef __TARGET_MCU
-
-void
-initialize_timer ()
-{
-  RCC_APB1PeriphClockCmd (RCC_APB1Periph_TIM2, ENABLE);
-
-  TIM_TimeBaseInitTypeDef timerInitStructure;
-  timerInitStructure.TIM_Prescaler = 40000;
-  timerInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  timerInitStructure.TIM_Period = 500;
-  timerInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-  timerInitStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseInit (TIM2, &timerInitStructure);
-  TIM_Cmd (TIM2, ENABLE);
-}
-
-void
-fake_exit (void)
-{
-  uint32_t pin = LED_ORANGE;
-  volatile GPIO_TypeDef* gpio = GPIOD;
-  volatile int index;
-
-  int dot = 600000;
-  int dash = dot * 3;
-
-  while (1)
-  {
-    gpio->BSRRL = (uint16_t) (1 << pin);
-    for ( index = 0; index < dot; index ++)
-    {
-    };
-    gpio->BSRRH = (uint16_t) (1 << pin);
-    for (index = 0; index < dash; index ++)
-    {
-    };
-  }
-}
+#ifndef __TARGET_MCU
+# error "!__TARGET_HOST && !__TARGET_MCU"
+#endif /* !__TARGET_MCU */
 
 static __IO uint32_t sys_tick_counter;
 
@@ -163,4 +106,49 @@ wait_1ms (void)
   {
   }
 }
-#endif
+
+void
+wait_ms (uint32_t time_ms)
+{
+  while (time_ms --)
+  {
+    wait_1ms ();
+  }
+}
+
+void
+fake_exit (void)
+{
+  uint32_t pin = LED_ORANGE;
+  volatile int index;
+
+  int dot = 600000;
+  int dash = dot * 3;
+
+  while (1)
+  {
+    led_on (pin);
+    for ( index = 0; index < dot; index ++)
+    {
+    };
+    led_off (pin);
+    for (index = 0; index < dash; index ++)
+    {
+    };
+  }
+}
+void
+initialize_timer ()
+{
+  RCC_APB1PeriphClockCmd (RCC_APB1Periph_TIM2, ENABLE);
+
+  TIM_TimeBaseInitTypeDef timerInitStructure;
+  timerInitStructure.TIM_Prescaler = 40000;
+  timerInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  timerInitStructure.TIM_Period = 500;
+  timerInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+  timerInitStructure.TIM_RepetitionCounter = 0;
+  TIM_TimeBaseInit (TIM2, &timerInitStructure);
+  TIM_Cmd (TIM2, ENABLE);
+}
+#endif /* !__TARGET_HOST && __TARGET_MCU */

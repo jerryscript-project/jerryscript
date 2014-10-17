@@ -12,6 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+var led_green = 0;
+var led_orange = 1;
+var led_red = 2;
+var led_blue = 3;
+
+function LEDSet(led_group, on)
+{
+  if (on)
+  {
+    LEDOn (led_group);
+    LEDOn (led_group + 4);
+  }
+  else
+  {
+    LEDOff (led_group);
+    LEDOff (led_group + 4);
+  }
+}
+
 var tmp, a, b = 1, c = 2, d, e = 3, g = 4;
 
 var count = 1000;
@@ -27,99 +46,99 @@ while (1)
 {
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
-    LEDOn(13);
-    LEDOn(14);
-    LEDOn(15);
+    LEDSet(led_green, true);
+    LEDSet(led_orange, true);
+    LEDSet(led_red, true);
+    LEDSet(led_blue, true);
     wait(waitTime * 2);
-    LEDOff(12);
-    LEDOff(13);
-    LEDOff(14);
-    LEDOff(15);
+    LEDSet(led_green, false);
+    LEDSet(led_orange, false);
+    LEDSet(led_red, false);
+    LEDSet(led_blue, false);
     wait(waitTime * 2);
   }
 
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
+    LEDSet(led_green, true);
     wait(waitTime);
-    LEDOff(12);
+    LEDSet(led_green, false);
     wait(waitTime);
-    LEDOn(13);
+    LEDSet(led_orange, true);
     wait(waitTime);
-    LEDOff(13);
+    LEDSet(led_orange, false);
     wait(waitTime);
-    LEDOn(14);
+    LEDSet(led_red, true);
     wait(waitTime);
-    LEDOff(14);
+    LEDSet(led_red, false);
     wait(waitTime);
-    LEDOn(15);
+    LEDSet(led_blue, true);
     wait(waitTime);
-    LEDOff(15);
+    LEDSet(led_blue, false);
     wait(waitTime);
   }
 
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
+    LEDSet(led_green, true);
     wait(waitTime);
-    LEDOff(12);
-    LEDOn(13);
+    LEDSet(led_green, false);
+    LEDSet(led_orange, true);
     wait(waitTime);
-    LEDOff(13);
-    LEDOn(14);
+    LEDSet(led_orange, false);
+    LEDSet(led_red, true);
     wait(waitTime);
-    LEDOff(14);
-    LEDOn(15);
+    LEDSet(led_red, false);
+    LEDSet(led_blue, true);
     wait(waitTime);
-    LEDOff(15);
+    LEDSet(led_blue, false);
   }
 
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
+    LEDSet(led_green, true);
     wait(waitTime / 2);
-    LEDOff(12);
-    LEDOn(13);
+    LEDSet(led_green, false);
+    LEDSet(led_orange, true);
     wait(waitTime / 2);
-    LEDOff(13);
-    LEDOn(14);
+    LEDSet(led_orange, false);
+    LEDSet(led_red, true);
     wait(waitTime / 2);
-    LEDOff(14);
-    LEDOn(15);
+    LEDSet(led_red, false);
+    LEDSet(led_blue, true);
     wait(waitTime / 2);
-    LEDOff(15);
+    LEDSet(led_blue, false);
   }
 
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
+    LEDSet(led_green, true);
     wait(waitTime / 3);
-    LEDOff(12);
-    LEDOn(13);
+    LEDSet(led_green, false);
+    LEDSet(led_orange, true);
     wait(waitTime / 3);
-    LEDOff(13);
-    LEDOn(14);
+    LEDSet(led_orange, false);
+    LEDSet(led_red, true);
     wait(waitTime / 3);
-    LEDOff(14);
-    LEDOn(15);
+    LEDSet(led_red, false);
+    LEDSet(led_blue, true);
     wait(waitTime / 3);
-    LEDOff(15);
+    LEDSet(led_blue, false);
   }
 
   for (var j = 0; j < numOfIterations; j += 1)
   {
-    LEDOn(12);
+    LEDSet(led_green, true);
     wait(waitTime / 6);
-    LEDOff(12);
-    LEDOn(13);
+    LEDSet(led_green, false);
+    LEDSet(led_orange, true);
     wait(waitTime / 6);
-    LEDOff(13);
-    LEDOn(14);
+    LEDSet(led_orange, false);
+    LEDSet(led_red, true);
     wait(waitTime / 6);
-    LEDOff(14);
-    LEDOn(15);
+    LEDSet(led_red, false);
+    LEDSet(led_blue, true);
     wait(waitTime / 6);
-    LEDOff(15);
+    LEDSet(led_blue, false);
   }
 }

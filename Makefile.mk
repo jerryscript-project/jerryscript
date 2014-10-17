@@ -16,6 +16,7 @@ STRIP = strip
 
 MAIN_MODULE_SRC = ./src/main.c
 
+LNK_SCRIPT_STM32F3 = ./third-party/stm32f3.ld
 LNK_SCRIPT_STM32F4 = ./third-party/stm32f4.ld
 
 # Parsing target
@@ -234,11 +235,6 @@ ifeq ($(TARGET_CPU),cortexm4)
  CFLAGS_COMMON += $(CFLAGS_CORTEXM4)
 endif
 
-# System-specific common
-ifeq ($(TARGET_SYSTEM),stm32f4)
- LDFLAGS += -nostartfiles -T$(LNK_SCRIPT_STM32F4)
-endif
-
 ifeq ($(OPTION_MCU),enable)
  CC := $(CROSS_COMPILE)$(CC)
  LD := $(CROSS_COMPILE)$(LD)
@@ -345,6 +341,7 @@ ifeq ($(OPTION_MCU),disable)
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU
+ LDFLAGS += -Wl,--gc-sections
 endif
 
 ifeq ($(OPTION_COLOR),enable)
@@ -377,6 +374,8 @@ INCLUDES_THIRDPARTY = -I third-party/valgrind/
 CFLAGS_THIRDPARTY =
 
 ifeq ($(TARGET_SYSTEM),stm32f4)
+ DEFINES_JERRY += -D__TARGET_MCU_STM32F4
+ LDFLAGS += -nostartfiles -T$(LNK_SCRIPT_STM32F4)
  SOURCES_THIRDPARTY += \
  	 	./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
 		./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f4xx.s \
@@ -389,9 +388,23 @@ ifeq ($(TARGET_SYSTEM),stm32f4)
  	 	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/inc \
  	 	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include \
  	 	-I third-party/STM32F4-Discovery_FW_V1.1.0/
+else
+  ifeq ($(TARGET_SYSTEM),stm32f3)
+   DEFINES_JERRY += -D__TARGET_MCU_STM32F3
+   LDFLAGS += -nostartfiles -T$(LNK_SCRIPT_STM32F3)
+   SOURCES_THIRDPARTY += \
+ 	 	./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/system_stm32f30x.c             \
+                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/gcc_ride7/startup_stm32f30x.s  \
+                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c                            \
+                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c                           \
+                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
 
-#-I third-party/STM32F4-Discovery_FW_V1.1.0/Project/Demonstration \
-
+   INCLUDES_THIRDPARTY += \
+                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include/ \
+                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc     \
+                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/                     \
+                -I ./third-party/STM32F3-Discovery_FW_V1.1.0
+  endif
 endif
 
 # Unit tests

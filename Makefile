@@ -41,25 +41,29 @@
 #   dwarf4=1 - use DWARF v4 format for debug information
 #
 
-export TARGET_MODES = debug debug_release release
+export TARGET_DEBUG_MODES = debug debug_release
+export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
-export TARGET_MCU_SYSTEMS = $(addprefix stm32f,4) # now only stm32f4 is supported, to add, for example, to stm32f3, change to $(addprefix stm32f,3 4)
+export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
 export TARGET_PC_MODS = musl sanitize valgrind \
                         musl-valgrind
 
 export TARGET_MCU_MODS =
 
-export TARGET_SYSTEMS = $(TARGET_PC_SYSTEMS) \
-                        $(TARGET_MCU_SYSTEMS) \
-                        $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD))) \
-                        $(foreach __MOD,$(TARGET_MCU_MODS),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+export TARGET_PC_SYSTEMS_MODS = $(TARGET_PC_SYSTEMS) \
+                                $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+export TARGET_MCU_SYSTEMS_MODS = $(TARGET_MCU_SYSTEMS) \
+                                 $(foreach __MOD,$(TARGET_MCU_MODS),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__SYSTEM)-$(__MOD)))
 
 # Target list
-export JERRY_TARGETS = $(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_SYSTEMS),$(__MODE).$(__SYSTEM)))
+export JERRY_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
+                       $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
+                       $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+
 export TESTS_TARGET = unittests
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
-export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
+export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
 export OUT_DIR = ./out
 export UNITTESTS_SRC_DIR = ./tests/unit

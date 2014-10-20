@@ -12,6 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var a = new String('example')
-var c = toString in a
-assert(!c)
+var a = new String('example');
+assert('toString' in a);

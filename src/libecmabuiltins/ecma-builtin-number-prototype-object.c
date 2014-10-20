@@ -107,9 +107,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
                                                 ecma_value_t* arguments_list_p, /**< arguments list */
                                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
+  ecma_number_t this_arg_number;
+
   if (this.value_type == ECMA_TYPE_NUMBER)
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this, true));
+    ecma_number_t *this_arg_number_p = ECMA_GET_POINTER (this.value);
+
+    this_arg_number = *this_arg_number_p;
   }
   else if (this.value_type == ECMA_TYPE_OBJECT)
   {
@@ -123,20 +127,27 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
       ecma_number_t *prim_value_num_p = ECMA_GET_POINTER (prim_value_prop_p->u.internal_property.value);
-
-      if (arguments_list_len == 0)
-      {
-        ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (*prim_value_num_p);
-
-        return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
-      }
-      {
-        JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p);
-      }
+      this_arg_number = *prim_value_num_p;
+    }
+    else
+    {
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
   }
+  else
+  {
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  if (arguments_list_len == 0)
+  {
+    ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
+
+    return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+  }
+  {
+    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p);
+  }
 } /* ecma_builtin_number_prototype_object_to_string */
 
 /**

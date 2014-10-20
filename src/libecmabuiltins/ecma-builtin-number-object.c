@@ -20,6 +20,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-number-object.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
@@ -255,43 +256,21 @@ ecma_builtin_number_dispatch_construct (ecma_value_t *arguments_list_p, /**< arg
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_number_t *prim_value_p;
-
   if (arguments_list_len == 0)
   {
     ecma_number_t *zero_num_p = ecma_alloc_number ();
     *zero_num_p = ECMA_NUMBER_ZERO;
 
-    prim_value_p = zero_num_p;
+    ecma_completion_value_t completion = ecma_op_create_number_object (ecma_make_number_value (zero_num_p));
+
+    ecma_dealloc_number (zero_num_p);
+
+    return completion;
   }
   else
   {
-    ecma_completion_value_t conv_to_num_completion = ecma_op_to_number (arguments_list_p [0]);
-
-    if (!ecma_is_completion_value_normal (conv_to_num_completion))
-    {
-      return conv_to_num_completion;
-    }
-    else
-    {
-      prim_value_p = ECMA_GET_POINTER (conv_to_num_completion.u.value.value);
-    }
+    return ecma_op_create_number_object (arguments_list_p[0]);
   }
-
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             true,
-                                             ECMA_OBJECT_TYPE_GENERAL);
-  ecma_deref_object (prototype_obj_p);
-
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_NUMBER_UL;
-
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-  ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_p);
-
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
 } /* ecma_builtin_number_dispatch_construct */
 
 /**

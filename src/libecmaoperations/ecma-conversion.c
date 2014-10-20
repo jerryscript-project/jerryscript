@@ -25,6 +25,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-number-object.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-string-object.h"
@@ -477,8 +478,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_NUMBER:
     {
-      /* return Number object with [[PrimitiveValue]] set to the value */
-      JERRY_UNIMPLEMENTED ();
+      return ecma_op_create_number_object (value);
     }
     case ECMA_TYPE_STRING:
     {

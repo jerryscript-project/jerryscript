@@ -312,7 +312,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     e_in_lit = -e_in_lit;
   }
 
-  ecma_number_t m = e_in_lit_sign ? 0.1f : 10.0f;
+  ecma_number_t m = e_in_lit_sign ? (ecma_number_t) 0.1 : (ecma_number_t) 10.0;
 
   while (e_in_lit)
   {

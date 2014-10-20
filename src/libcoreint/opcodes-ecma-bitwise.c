@@ -60,7 +60,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
   ecma_number_t* res_p = ecma_alloc_number ();
 
   int32_t left_int32 = ecma_number_to_int32 (*left_p);
-  int32_t right_int32 = ecma_number_to_int32 (*right_p);
+  // int32_t right_int32 = ecma_number_to_int32 (*right_p);
 
   uint32_t left_uint32 = ecma_number_to_uint32 (*left_p);
   uint32_t right_uint32 = ecma_number_to_uint32 (*right_p);
@@ -69,17 +69,17 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
   {
     case number_bitwise_logic_and:
     {
-      *res_p = ecma_int32_to_number (left_int32 & right_int32);
+      *res_p = ecma_int32_to_number ((int32_t) (left_uint32 & right_uint32));
       break;
     }
     case number_bitwise_logic_or:
     {
-      *res_p = ecma_int32_to_number (left_int32 | right_int32);
+      *res_p = ecma_int32_to_number ((int32_t) (left_uint32 | right_uint32));
       break;
     }
     case number_bitwise_logic_xor:
     {
-      *res_p = ecma_int32_to_number (left_int32 ^ right_int32);
+      *res_p = ecma_int32_to_number ((int32_t) (left_uint32 ^ right_uint32));
       break;
     }
     case number_bitwise_shift_left:
@@ -99,7 +99,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
     }
     case number_bitwise_not:
     {
-      *res_p = ecma_int32_to_number (~right_int32);
+      *res_p = ecma_int32_to_number ((int32_t) ~right_uint32);
       break;
     }
   }

@@ -430,7 +430,7 @@ ecma_number_t
 ecma_number_substract (ecma_number_t left_num, /**< left operand */
                        ecma_number_t right_num) /**< right operand */
 {
-  return ecma_number_add (left_num, ecma_number_negate (right_num));
+  return ecma_number_add (left_num, -right_num);
 } /* ecma_number_substract */
 
 /**

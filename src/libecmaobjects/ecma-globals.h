@@ -556,8 +556,19 @@ typedef double ecma_number_t;
 # define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
 #elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
-# define ECMA_NUMBER_MAX_VALUE (DBL_MAX)
-# define ECMA_NUMBER_MIN_VALUE (DBL_MIN)
+/**
+ * Number.MAX_VALUE
+ *
+ * See also: ECMA_262 v5, 15.7.3.2
+ */
+# define ECMA_NUMBER_MAX_VALUE ((ecma_number_t)1.7976931348623157e+308)
+
+/**
+ * Number.MIN_VALUE
+ *
+ * See also: ECMA_262 v5, 15.7.3.3
+ */
+# define ECMA_NUMBER_MIN_VALUE ((ecma_number_t)5e-324)
 #else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
 # error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
 #endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */

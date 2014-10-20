@@ -18,6 +18,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-boolean-object.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -462,8 +463,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
         case ECMA_SIMPLE_VALUE_FALSE:
         case ECMA_SIMPLE_VALUE_TRUE:
         {
-          /* return Boolean object with [[PrimitiveValue]] set to the value */
-          JERRY_UNIMPLEMENTED ();
+          return ecma_op_create_boolean_object (value);
         }
         case ECMA_SIMPLE_VALUE_EMPTY:
         case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:

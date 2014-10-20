@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-aseert(isNaN(Math.max(NaN)));
+assert(isNaN(Math.max(NaN)));

@@ -410,6 +410,44 @@ ecma_number_negate (ecma_number_t num) /**< ecma-number */
 } /* ecma_number_negate */
 
 /**
+ * Truncate fractional part of the number
+ *
+ * @return integer part of the number
+ */
+ecma_number_t
+ecma_number_trunc (ecma_number_t num) /**< ecma-number */
+{
+  uint64_t fraction;
+  int32_t exponent;
+  const int32_t dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction, &exponent);
+  const bool sign = ecma_number_is_negative (num);
+  
+  if (exponent < 0)
+  {
+    return 0;
+  }
+  else if (exponent < dot_shift)
+  {
+    fraction &= ~((1ull << (dot_shift - exponent)) - 1);
+
+    ecma_number_t tmp = ecma_number_make_normal_positive_from_fraction_and_exponent (fraction,
+                                                                                     exponent);
+    if (sign)
+    {
+      return ecma_number_negate (tmp);
+    }
+    else
+    {
+      return tmp;
+    }
+  }
+  else
+  {
+    return num;
+  }
+} /* ecma_number_trunc */
+
+/**
  * ECMA-number addition.
  *
  * @return number - result of addition.

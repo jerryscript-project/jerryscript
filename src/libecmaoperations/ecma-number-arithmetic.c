@@ -63,29 +63,7 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                 && !ecma_number_is_zero (d)
                 && !ecma_number_is_infinity (d));
 
-  ecma_number_t q = ecma_number_divide (n, d);
-
-  uint64_t fraction;
-  int32_t exponent;
-  const int32_t dot_shift = ecma_number_get_fraction_and_exponent (q, &fraction, &exponent);
-  const bool sign = ecma_number_is_negative (q);
-  
-  if (exponent < 0)
-  {
-    return n;
-  }
-  
-  if (exponent < dot_shift)
-  {
-    fraction &= ~((1ull << (dot_shift - exponent)) - 1);
-
-    q = ecma_number_make_normal_positive_from_fraction_and_exponent (fraction,
-                                                                     exponent);
-    if (sign)
-    {
-      q = ecma_number_negate (q);
-    }
-  }
+  ecma_number_t q = ecma_number_trunc (ecma_number_divide (n, d));
 
   return ecma_number_substract (n, ecma_number_multiply (d, q));
 } /* ecma_op_number_remainder */

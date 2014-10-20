@@ -82,11 +82,11 @@ build: clean $(JERRY_TARGETS)
 
 all: precommit
 
-PRECOMMIT_CHECK_TARGETS_LIST= debug.linux.check \
-                              release.linux.check \
-                              debug_release.linux.check \
-                              debug.linux-valgrind.check \
-                              release.linux-musl-valgrind.check
+PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
+                                          release.linux.check \
+                                          debug_release.linux.check
+PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
+                                       release.linux-musl-valgrind.check
 
                               # debug.linux-musl-valgrind.check \
                               debug_release.linux-valgrind.check \
@@ -117,9 +117,9 @@ precommit: clean
 	@ for path in "./tests/jerry" "./benchmarks/jerry"; \
           do \
             run_ids=""; \
-            for check_target in $(PRECOMMIT_CHECK_TARGETS_LIST); \
+            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST) $(PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST); \
             do \
-              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS_DIR="$$path" TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable & \
+              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable & \
               run_ids="$$run_ids $$!"; \
             done; \
             result_ok=1; \
@@ -134,9 +134,9 @@ precommit: clean
 	@ for path in "./tests/jerry"; \
           do \
             run_ids=""; \
-            for check_target in $(PRECOMMIT_CHECK_TARGETS_LIST); \
+            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST) $(PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST); \
             do \
-              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS_DIR="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
+              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
               run_ids="$$run_ids $$!"; \
             done; \
             result_ok=1; \
@@ -145,7 +145,22 @@ precommit: clean
               wait $$run_id || result_ok=0; \
             done; \
             [ $$result_ok -eq 1 ] || exit 1; \
-          done
+            done
+	@ for path in "./tests/jerry-test-suite/precommit_test_list"; \
+          do \
+            run_ids=""; \
+            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST); \
+            do \
+              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
+              run_ids="$$run_ids $$!"; \
+            done; \
+            result_ok=1; \
+            for run_id in $$run_ids; \
+            do \
+              wait $$run_id || result_ok=0; \
+            done; \
+            [ $$result_ok -eq 1 ] || exit 1; \
+            done
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 
 $(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS):

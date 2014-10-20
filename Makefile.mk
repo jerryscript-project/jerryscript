@@ -496,14 +496,14 @@ $(TESTS_TARGET):
 
 $(CHECK_TARGETS):
 	@ if [ ! -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then echo $(TARGET_OF_ACTION) is not built yet; exit 1; fi;
-	@ if [ ! -d "$(TESTS_DIR)" ]; then echo \"$(TESTS_DIR)\" is not a directory; exit 1; fi;
+	@ if [[ ! -d "$(TESTS)" && ! -f "$(TESTS)" ]]; then echo \"$(TESTS)\" is not a directory and not a file; exit 1; fi;
 	@ rm -rf $(TARGET_DIR)/check
 	@ mkdir -p $(TARGET_DIR)/check
 	@ if [ "$(OUTPUT_TO_LOG)" = "enable" ]; \
           then \
             ADD_OPTS="--output-to-log"; \
           fi; \
-          VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
+          VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS) $(TESTS_OPTS) $$ADD_OPTS; \
           status_code=$$?; \
           if [ $$status_code -ne 0 ]; \
           then \

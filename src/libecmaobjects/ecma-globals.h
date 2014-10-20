@@ -550,6 +550,11 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_TWO  ((ecma_number_t) 2)
 
 /**
+ * Value '0.5' of ecma_number_t
+ */
+#define ECMA_NUMBER_HALF ((ecma_number_t) 0.5f)
+
+/**
  * Minimum positive and maximum value of ecma-number
  */
 #ifdef CONFIG_ECMA_NUMBER_FLOAT32
@@ -562,7 +567,6 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.2
  */
 # define ECMA_NUMBER_MAX_VALUE ((ecma_number_t)1.7976931348623157e+308)
-
 /**
  * Number.MIN_VALUE
  *
@@ -573,10 +577,46 @@ typedef double ecma_number_t;
 # error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
 #endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
 
+
 /**
- * Value '0.5' of ecma_number_t
+ * Euler number
  */
-#define ECMA_NUMBER_HALF ((ecma_number_t) 0.5f)
+#define ECMA_NUMBER_E  ((ecma_number_t)2.7182818284590452354)
+
+/**
+ * Natural logarithm of 10
+ */
+#define ECMA_NUMBER_LN10 ((ecma_number_t)2.302585092994046)
+
+/**
+ * Natural logarithm of 2
+ */
+#define ECMA_NUMBER_LN2 ((ecma_number_t)0.6931471805599453)
+
+/**
+ * Logarithm base 2 of the Euler number
+ */
+#define ECMA_NUMBER_LOG2E ((ecma_number_t)1.4426950408889634)
+
+/**
+ * Logarithm base 10 of the Euler number
+ */
+#define ECMA_NUMBER_LOG10E ((ecma_number_t)0.4342944819032518)
+
+/**
+ * Pi number
+ */
+#define ECMA_NUMBER_PI  ((ecma_number_t)3.1415926535897932)
+
+/**
+ * Square root of 0.5
+ */
+#define ECMA_NUMBER_SQRT_1_2  ((ecma_number_t)0.7071067811865476)
+
+/**
+ * Square root of 2
+ */
+#define ECMA_NUMBER_SQRT2  ((ecma_number_t)1.4142135623730951)
 
 /**
  * Null character (zt-string end marker)

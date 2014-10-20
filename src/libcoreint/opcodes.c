@@ -176,7 +176,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
   ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
-  *new_num_p = ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
 
@@ -226,7 +226,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
   ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
-  *new_num_p = ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
 
@@ -276,7 +276,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
   ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
-  *new_num_p = ecma_op_number_add (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
   ret_value = set_variable_value (int_data,
@@ -324,7 +324,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
   ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
-  *new_num_p = ecma_op_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
   ret_value = set_variable_value (int_data,

@@ -63,22 +63,22 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
   {
     case number_arithmetic_addition:
     {
-      *res_p = ecma_op_number_add (*left_p, *right_p);
+      *res_p = ecma_number_add (*left_p, *right_p);
       break;
     }
     case number_arithmetic_substraction:
     {
-      *res_p = ecma_op_number_substract (*left_p, *right_p);
+      *res_p = ecma_number_substract (*left_p, *right_p);
       break;
     }
     case number_arithmetic_multiplication:
     {
-      *res_p = ecma_op_number_multiply (*left_p, *right_p);
+      *res_p = ecma_number_multiply (*left_p, *right_p);
       break;
     }
     case number_arithmetic_division:
     {
-      *res_p = ecma_op_number_divide (*left_p, *right_p);
+      *res_p = ecma_number_divide (*left_p, *right_p);
       break;
     }
     case number_arithmetic_remainder:

@@ -39,14 +39,6 @@
  * @{
  */
 
-#if defined (CONFIG_ECMA_NUMBER_FLOAT32)
-const ecma_number_t ecma_builtin_math_object_relative_eps = 1.0e-10f;
-#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
-const ecma_number_t ecma_builtin_math_object_relative_eps = 1.0e-16;
-#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
-#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-
 /**
  * List of the Math object built-in value properties in format 'macro (name, value)'.
  */
@@ -159,180 +151,6 @@ const ecma_length_t ecma_builtin_math_property_number = (sizeof (ecma_builtin_ma
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_math_property_names) > sizeof (void*));
 
 /**
- * Helper for calculating absolute value
- *
- * Warning:
- *         argument should be valid finite number
- *
- * @return square root of specified number
- */
-static ecma_number_t
-ecma_builtin_math_object_helper_abs (ecma_number_t num) /**< valid finite number */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-
-  if (num < 0)
-  {
-    return ecma_number_negate (num);
-  }
-  else
-  {
-    return num;
-  }
-} /* ecma_builtin_math_object_helper_abs */
-
-/**
- * Helper for calculating square root using Newton's method.
- *
- * @return square root of specified number
- */
-static ecma_number_t
-ecma_builtin_math_object_helper_sqrt (ecma_number_t num) /**< valid finite
-                                                              positive number */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-  JERRY_ASSERT (!ecma_number_is_infinity (num));
-  JERRY_ASSERT (!ecma_number_is_negative (num));
-
-  ecma_number_t x = ECMA_NUMBER_ONE;
-  ecma_number_t diff = ecma_number_make_infinity (false);
-
-  while (ecma_op_number_divide (diff, x) > ecma_builtin_math_object_relative_eps)
-  {
-    ecma_number_t x_next = ecma_op_number_multiply (ECMA_NUMBER_HALF,
-                                                    (ecma_op_number_add (x,
-                                                                         ecma_op_number_divide (num, x))));
-
-    diff = ecma_op_number_substract (x, x_next);
-    if (diff < 0)
-    {
-      diff = ecma_number_negate (diff);
-    }
-
-    x = x_next;
-  }
-
-  return x;
-} /* ecma_builtin_math_object_helper_sqrt */
-
-/**
- * Helper for calculating natural logarithm.
- *
- * @return natural logarithm of specified number
- */
-static ecma_number_t
-ecma_builtin_math_object_helper_ln (ecma_number_t num) /**< valid finite
-                                                            positive number */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-  JERRY_ASSERT (!ecma_number_is_infinity (num));
-  JERRY_ASSERT (!ecma_number_is_negative (num));
-
-  if (num == ECMA_NUMBER_ONE)
-  {
-    return ECMA_NUMBER_ZERO;
-  }
-
-  /* Taylor series of ln (1 + x) around x = 0 is x - x^2/2 + x^3/3 - x^4/4 + ... */
-
-  ecma_number_t x = num;
-  ecma_number_t multiplier = ECMA_NUMBER_ONE;
-
-  while (ecma_builtin_math_object_helper_abs (ecma_op_number_substract (x,
-                                                                        ECMA_NUMBER_ONE)) > ECMA_NUMBER_HALF)
-  {
-    x = ecma_builtin_math_object_helper_sqrt (x);
-    multiplier = ecma_op_number_multiply (multiplier, ECMA_NUMBER_TWO);
-  }
-
-  x = ecma_op_number_substract (x, ECMA_NUMBER_ONE);
-
-  ecma_number_t sum = ECMA_NUMBER_ZERO;
-  ecma_number_t next_power = x;
-  ecma_number_t next_divisor = ECMA_NUMBER_ONE;
-
-  ecma_number_t diff;
-
-  do
-  {
-    ecma_number_t next_sum = ecma_op_number_add (sum,
-                                                 ecma_op_number_divide (next_power,
-                                                                        next_divisor));
-
-    next_divisor = ecma_op_number_add (next_divisor, ECMA_NUMBER_ONE);
-    next_power = ecma_op_number_multiply (next_power, x);
-    next_power = ecma_number_negate (next_power);
-
-    diff = ecma_builtin_math_object_helper_abs (ecma_op_number_substract (sum, next_sum));
-
-    sum = next_sum;
-  }
-  while (ecma_builtin_math_object_helper_abs (ecma_op_number_divide (diff,
-                                                                     sum)) > ecma_builtin_math_object_relative_eps);
-
-  sum = ecma_op_number_multiply (sum, multiplier);
-
-  return sum;
-} /* ecma_builtin_math_object_helper_ln */
-
-/**
- * Helper for calculating exponent of a number
- *
- * @return exponent of specified number
- */
-static ecma_number_t
-ecma_builtin_math_object_helper_exp (ecma_number_t num) /**< valid finite number */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-  JERRY_ASSERT (!ecma_number_is_infinity (num));
-
-  bool invert = false;
-  ecma_number_t pow_e;
-
-  if (ecma_number_is_negative (num))
-  {
-    invert = true;
-    pow_e = ecma_number_negate (num);
-  }
-  else
-  {
-    pow_e = num;
-  }
-
-  /* Taylor series of e^x is 1 + x/1! + x^2/2! + x^3/3! + ... + x^n/n! + ... */
-
-  ecma_number_t sum = ECMA_NUMBER_ONE;
-  ecma_number_t next_addendum = ecma_op_number_divide (pow_e, ECMA_NUMBER_ONE);
-  ecma_number_t next_factorial_factor = ECMA_NUMBER_ONE;
-
-  ecma_number_t diff = ecma_number_make_infinity (false);
-
-  while (ecma_op_number_divide (diff, sum) > ecma_builtin_math_object_relative_eps)
-  {
-    ecma_number_t next_sum = ecma_op_number_add (sum, next_addendum);
-
-    next_factorial_factor = ecma_op_number_add (next_factorial_factor, ECMA_NUMBER_ONE);
-    next_addendum = ecma_op_number_multiply (next_addendum, pow_e);
-    next_addendum = ecma_op_number_divide (next_addendum, next_factorial_factor);
-
-    diff = ecma_op_number_substract (sum, next_sum);
-    if (diff < 0)
-    {
-      diff = ecma_number_negate (diff);
-    }
-
-    sum = next_sum;
-  }
-
-  if (invert)
-  {
-    sum = ecma_op_number_divide (ECMA_NUMBER_ONE, sum);
-  }
-
-  return sum;
-} /* ecma_builtin_math_object_helper_exp */
-
-/**
  * The Math object's 'abs' routine
  *
  * See also:
@@ -353,14 +171,14 @@ ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
   ecma_number_t *num_p = ecma_alloc_number ();
 
   const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
-  
+
   if (ecma_number_is_nan (arg_num))
   {
     *num_p = arg_num;
   }
   else
   {
-    *num_p = ecma_builtin_math_object_helper_abs (arg_num);
+    *num_p = ecma_number_abs (arg_num);
   }
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
@@ -482,7 +300,7 @@ ecma_builtin_math_object_exp (ecma_value_t arg) /**< routine's argument */
   ecma_number_t *num_p = ecma_alloc_number ();
 
   const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
-  
+
   if (ecma_number_is_nan (arg_num))
   {
     *num_p = arg_num;
@@ -504,7 +322,7 @@ ecma_builtin_math_object_exp (ecma_value_t arg) /**< routine's argument */
   }
   else
   {
-    *num_p = ecma_builtin_math_object_helper_exp (arg_num);
+    *num_p = ecma_number_exp (arg_num);
   }
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
@@ -550,7 +368,7 @@ ecma_builtin_math_object_log (ecma_value_t arg) /**< routine's argument */
   ecma_number_t *num_p = ecma_alloc_number ();
 
   const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
-  
+
   if (ecma_number_is_nan (arg_num))
   {
     *num_p = arg_num;
@@ -569,7 +387,7 @@ ecma_builtin_math_object_log (ecma_value_t arg) /**< routine's argument */
   }
   else
   {
-    *num_p = ecma_builtin_math_object_helper_ln (arg_num);
+    *num_p = ecma_number_ln (arg_num);
   }
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
@@ -798,7 +616,7 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
   }
   else if (ecma_number_is_infinity (y))
   {
-    const ecma_number_t x_abs = ecma_builtin_math_object_helper_abs (x);
+    const ecma_number_t x_abs = ecma_number_abs (x);
 
     if (x_abs == ECMA_NUMBER_ONE)
     {
@@ -820,17 +638,17 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
   else
   {
     const ecma_number_t diff_is_int = ecma_op_number_remainder (y, ECMA_NUMBER_ONE);
-    const ecma_number_t rel_diff_is_int = ecma_builtin_math_object_helper_abs (ecma_op_number_divide (diff_is_int,
-                                                                                                      y));
-    const ecma_number_t y_int = ecma_op_number_substract (y, diff_is_int);
+    const ecma_number_t rel_diff_is_int = ecma_number_abs (ecma_number_divide (diff_is_int,
+                                                                               y));
+    const ecma_number_t y_int = ecma_number_substract (y, diff_is_int);
 
-    const ecma_number_t y_int_half = ecma_op_number_multiply (y_int, ECMA_NUMBER_HALF);
+    const ecma_number_t y_int_half = ecma_number_multiply (y_int, ECMA_NUMBER_HALF);
     const ecma_number_t diff_is_odd = ecma_op_number_remainder (y_int_half, ECMA_NUMBER_ONE);
-    const ecma_number_t rel_diff_is_odd = ecma_builtin_math_object_helper_abs (ecma_op_number_divide (diff_is_odd,
-                                                                                                      y_int_half));
+    const ecma_number_t rel_diff_is_odd = ecma_number_abs (ecma_number_divide (diff_is_odd,
+                                                                               y_int_half));
 
-    const bool is_y_int = (rel_diff_is_int < ecma_builtin_math_object_relative_eps);
-    const bool is_y_odd = (is_y_int && rel_diff_is_odd > ecma_builtin_math_object_relative_eps);
+    const bool is_y_int = (rel_diff_is_int < ecma_number_relative_eps);
+    const bool is_y_odd = (is_y_int && rel_diff_is_odd > ecma_number_relative_eps);
 
     if (ecma_number_is_infinity (x))
     {
@@ -960,21 +778,21 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
         {
           if (power_uint32 % 2)
           {
-            ret_num = ecma_op_number_multiply (ret_num, power_accumulator);
+            ret_num = ecma_number_multiply (ret_num, power_accumulator);
 
             power_uint32--;
           }
 
-          power_accumulator = ecma_op_number_multiply (power_accumulator, power_accumulator);
+          power_accumulator = ecma_number_multiply (power_accumulator, power_accumulator);
           power_uint32 /= 2;
         }
       }
       else
       {
         /* pow (x, y) = exp (y * ln (x)) */
-        ecma_number_t ln_x = ecma_builtin_math_object_helper_ln (positive_x);
-        ecma_number_t y_m_ln_x = ecma_op_number_multiply (positive_y, ln_x);
-        ret_num = ecma_builtin_math_object_helper_exp (y_m_ln_x);
+        ecma_number_t ln_x = ecma_number_ln (positive_x);
+        ecma_number_t y_m_ln_x = ecma_number_multiply (positive_y, ln_x);
+        ret_num = ecma_number_exp (y_m_ln_x);
       }
 
       if (sign)
@@ -984,7 +802,7 @@ ecma_builtin_math_object_pow (ecma_value_t arg1, /**< first routine's argument *
 
       if (invert)
       {
-        ret_num = ecma_op_number_divide (ECMA_NUMBER_ONE, ret_num);
+        ret_num = ecma_number_divide (ECMA_NUMBER_ONE, ret_num);
       }
 
       *num_p = ret_num;
@@ -1061,7 +879,7 @@ ecma_builtin_math_object_round (ecma_value_t arg) /**< routine's argument */
   ecma_number_t *num_p = ecma_alloc_number ();
 
   const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
-  
+
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_zero (arg_num)
       || ecma_number_is_infinity (arg_num))
@@ -1151,7 +969,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
   }
   else
   {
-    ret_num = ecma_builtin_math_object_helper_sqrt (arg_num);
+    ret_num = ecma_number_sqrt (arg_num);
   }
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -1325,10 +1143,10 @@ ecma_builtin_math_dispatch_routine (ecma_magic_string_id_t builtin_routine_id, /
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2, ROUTINE_ARG(3)
 #define ROUTINE_ARG_LIST_NON_FIXED arguments_list, arguments_number
 #define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) \
-       case name: \
-       { \
-         return c_function_name (ROUTINE_ARG_LIST_ ## args_number); \
-       }
+    case name: \
+    { \
+      return c_function_name (ROUTINE_ARG_LIST_ ## args_number); \
+    }
     ECMA_BUILTIN_MATH_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
 #undef CASE_ROUTINE_PROP_LIST
 #undef ROUTINE_ARG_LIST_0

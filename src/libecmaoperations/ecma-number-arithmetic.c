@@ -27,66 +27,6 @@
  */
 
 /**
- * ECMA-defined number addition.
- *
- * See also:
- *          ECMA-262 v5, 11.6.3
- *
- * @return number - result of addition.
- */
-ecma_number_t
-ecma_op_number_add (ecma_number_t left_num, /**< left operand */
-                    ecma_number_t right_num) /**< right operand */
-{
-  return left_num + right_num;
-} /* ecma_op_number_add */
-
-/**
- * ECMA-defined number substraction.
- *
- * See also:
- *          ECMA-262 v5, 11.6.3
- *
- * @return number - result of substraction.
- */
-ecma_number_t
-ecma_op_number_substract (ecma_number_t left_num, /**< left operand */
-                          ecma_number_t right_num) /**< right operand */
-{
-  return ecma_op_number_add (left_num, ecma_op_number_negate (right_num));
-} /* ecma_op_number_substract */
-
-/**
- * ECMA-defined number multiplication.
- *
- * See also:
- *          ECMA-262 v5, 11.5.1
- *
- * @return number - result of multiplication.
- */
-ecma_number_t
-ecma_op_number_multiply (ecma_number_t left_num, /**< left operand */
-                         ecma_number_t right_num) /**< right operand */
-{
-  return left_num * right_num;
-} /* ecma_op_number_multiply */
-
-/**
- * ECMA-defined number division.
- *
- * See also:
- *          ECMA-262 v5, 11.5.2
- *
- * @return number - result of division.
- */
-ecma_number_t
-ecma_op_number_divide (ecma_number_t left_num, /**< left operand */
-                       ecma_number_t right_num) /**< right operand */
-{
-  return left_num / right_num;
-} /* ecma_op_number_divide */
-
-/**
  * ECMA-defined number remainder calculation.
  *
  * See also:
@@ -123,7 +63,7 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                 && !ecma_number_is_zero (d)
                 && !ecma_number_is_infinity (d));
 
-  ecma_number_t q = n / d;
+  ecma_number_t q = ecma_number_divide (n, d);
 
   uint64_t fraction;
   int32_t exponent;
@@ -134,11 +74,8 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
   {
     return n;
   }
-  else if (exponent >= dot_shift)
-  {
-    return n - d * q;
-  }
-  else
+  
+  if (exponent < dot_shift)
   {
     fraction &= ~((1ull << (dot_shift - exponent)) - 1);
 
@@ -148,24 +85,10 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
     {
       q = ecma_number_negate (q);
     }
-
-    return n - d * q;
   }
-} /* ecma_op_number_remainder */
 
-/**
- * ECMA-defined number negation.
- *
- * See also:
- *          ECMA-262 v5, 11.4.7
- *
- * @return number - result of negation.
- */
-ecma_number_t
-ecma_op_number_negate (ecma_number_t num) /**< operand */
-{
-  return -num;
-} /* ecma_op_number_negate */
+  return ecma_number_substract (n, ecma_number_multiply (d, q));
+} /* ecma_op_number_remainder */
 
 /**
  * @}

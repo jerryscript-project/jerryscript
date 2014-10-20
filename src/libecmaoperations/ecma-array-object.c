@@ -441,7 +441,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     {
       // i., ii.
       ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = ecma_op_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
+      *num_p = ecma_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
 
       ecma_free_value (len_prop_p->u.named_data_property.value, false);
       len_prop_p->u.named_data_property.value = ecma_make_number_value (num_p);

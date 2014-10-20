@@ -129,6 +129,8 @@ extern bool ecma_is_string_magic (ecma_string_t *string_p, ecma_magic_string_id_
 extern bool ecma_is_zt_string_magic (ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
 
 /* ecma-helpers-number.c */
+extern const ecma_number_t ecma_number_relative_eps;
+
 extern ecma_number_t ecma_number_make_nan (void);
 extern ecma_number_t ecma_number_make_infinity (bool sign);
 extern bool ecma_number_is_nan (ecma_number_t num);
@@ -141,6 +143,14 @@ extern int32_t ecma_number_get_fraction_and_exponent (ecma_number_t num,
 extern ecma_number_t ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction,
                                                                                   int32_t exponent);
 extern ecma_number_t ecma_number_negate (ecma_number_t num);
+extern ecma_number_t ecma_number_add (ecma_number_t left_num, ecma_number_t right_num);
+extern ecma_number_t ecma_number_substract (ecma_number_t left_num, ecma_number_t right_num);
+extern ecma_number_t ecma_number_multiply (ecma_number_t left_num, ecma_number_t right_num);
+extern ecma_number_t ecma_number_divide (ecma_number_t left_num, ecma_number_t right_num);
+extern ecma_number_t ecma_number_sqrt (ecma_number_t num);
+extern ecma_number_t ecma_number_abs (ecma_number_t num);
+extern ecma_number_t ecma_number_ln (ecma_number_t num);
+extern ecma_number_t ecma_number_exp (ecma_number_t num);
 
 /* ecma-helpers-values-collection.c */
 

@@ -21,8 +21,8 @@
 ./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-013.js
 ./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-014.js
 ./tests/jerry-test-suite/13/13-008.js
-./tests/jerry-test-suite/13/13-011.js
 ./tests/jerry-test-suite/13/13-012.js
+./tests/jerry-test-suite/13/13-013.js
 
 > eval
 ./tests/jerry-test-suite/11/11.04/11.04.01/11.04.01-013.js
@@ -50,10 +50,7 @@
 ./tests/jerry-test-suite/11/11.09/11.09.04/11.09.04-005.js
 ./tests/jerry-test-suite/11/11.09/11.09.05/11.09.05-005.js
 ./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-001.js
-./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-002.js
-./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-004.js
 ./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-005.js
-./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-007.js
 ./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-008.js
 ./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-009.js
 ./tests/jerry-test-suite/15/15.03/15.03.02/15.03.02.01/15.03.02.01-010.js

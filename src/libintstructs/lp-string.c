@@ -38,6 +38,12 @@ lp_string_equal (lp_string s1, lp_string s2)
 bool
 lp_string_equal_s (lp_string lp, const char *s)
 {
+  return lp_string_equal_zt (lp, (const ecma_char_t *) s);
+}
+
+bool
+lp_string_equal_zt (lp_string lp, const ecma_char_t *s)
+{
   for (ecma_length_t i = 0; i < lp.length; i++)
   {
     JERRY_ASSERT (lp.str[i] != '\0');

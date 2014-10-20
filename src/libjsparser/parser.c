@@ -26,6 +26,7 @@
 #include "opcodes-native-call.h"
 #include "parse-error.h"
 #include "scopes-tree.h"
+#include "ecma-helpers.h"
 
 #define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
@@ -877,6 +878,88 @@ cleanup:
   STACK_CHECK_USAGE (IDX);
 }
 
+static void
+check_for_eval_and_arguments_in_strict_mode (idx_t id)
+{
+  if (parser_strict_mode ())
+  {
+    if (id < lexer_get_strings_count ())
+    {
+      if (lp_string_equal_zt (lexer_get_string_by_id (id),
+                              ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
+          || lp_string_equal_zt (lexer_get_string_by_id (id),
+                                 ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+      {
+        EMIT_ERROR ("'eval' and 'arguments' are not allowed here in strict mode");
+      }
+    }
+  }
+}
+
+static void
+check_for_duplication_of_param (opcode_counter_t from, uint8_t metas_num)
+{
+  if (!parser_strict_mode () || metas_num < 2)
+  {
+    return;
+  }
+
+  STACK_DECLARE_USAGE (IDX);
+  STACK_DECLARE_USAGE (U8);
+  STACK_DECLARE_USAGE (ops);
+
+  STACK_PUSH (U8, STACK_SIZE (IDX));
+
+  uint8_t seen_metas = 0;
+  for (opcode_counter_t oc = from; oc < OPCODE_COUNTER (); oc = (opcode_counter_t) (oc + 1))
+  {
+    STACK_PUSH (ops, deserialize_opcode (oc));
+    if (OPCODE_IS (STACK_TOP (ops), meta))
+    {
+      switch (STACK_TOP (ops).data.meta.type)
+      {
+        case OPCODE_META_TYPE_VARG:
+        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        {
+          for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (IDX); i = (uint8_t) (i + 1))
+          {
+            if (i == STACK_TOP (ops).data.meta.data_1)
+            {
+              JERRY_ASSERT (i < lexer_get_strings_count ());
+              EMIT_ERROR_VARG ("Duplication of identifier '%s' as parameter is not allowed in strict mode.",
+                               lexer_get_string_by_id (i));
+            }
+          }
+          /* FALLTHRU.  */
+        }
+        case OPCODE_META_TYPE_THIS_ARG:
+        case OPCODE_META_TYPE_VARG_PROP_GETTER:
+        case OPCODE_META_TYPE_VARG_PROP_SETTER:
+        {
+          seen_metas = (uint8_t) (seen_metas + 1);
+          break;
+        }
+        default:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+    }
+    STACK_DROP (ops, 1);
+    if (seen_metas == metas_num)
+    {
+      break;
+    }
+  }
+
+  STACK_DROP (IDX, STACK_SIZE (IDX) - STACK_TOP (U8));
+  STACK_DROP (U8, 1);
+
+  STACK_CHECK_USAGE (ops);
+  STACK_CHECK_USAGE (U8);
+  STACK_CHECK_USAGE (IDX);
+}
+
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Returns temp var if expression has lhs, or 0 otherwise.  */
@@ -988,9 +1071,11 @@ parse_argument_list (argument_list_type alt, idx_t obj)
     switch (alt)
     {
       case AL_FUNC_DECL:
+      case AL_FUNC_EXPR:
       {
         current_token_must_be (TOK_NAME);
         STACK_PUSH (IDX, token_data ());
+        check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
         break;
       }
       case AL_ARRAY_DECL:
@@ -1007,7 +1092,6 @@ parse_argument_list (argument_list_type alt, idx_t obj)
         }
         /* FALLTHRU  */
       }
-      case AL_FUNC_EXPR:
       case AL_CONSTRUCT_EXPR:
       {
         parse_assignment_expression ();
@@ -1057,11 +1141,13 @@ next:
   {
     case AL_FUNC_DECL:
     {
+      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
       REWRITE_OPCODE_2 (STACK_TOP (U16), func_decl_n, obj, STACK_TOP (U8));
       break;
     }
     case AL_FUNC_EXPR:
     {
+      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
       REWRITE_OPCODE_3 (STACK_TOP (U16), func_expr_n, ID(1), obj, STACK_TOP (U8));
       break;
     }
@@ -1605,6 +1691,9 @@ parse_postfix_expression (void)
   {
     goto cleanup;
   }
+
+  check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
+
   skip_token ();
   if (token_is (TOK_DOUBLE_PLUS))
   {
@@ -1653,6 +1742,7 @@ parse_unary_expression (void)
     case TOK_DOUBLE_PLUS:
     {
       NEXT (unary_expression);
+      check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
       DUMP_OPCODE_2 (pre_incr, next_temp_name (), ID(1));
       if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
       {
@@ -1663,6 +1753,7 @@ parse_unary_expression (void)
     case TOK_DOUBLE_MINUS:
     {
       NEXT (unary_expression);
+      check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
       DUMP_OPCODE_2 (pre_decr, next_temp_name (), ID(1));
       if (THIS_ARG () != INVALID_VALUE && PROP () != INVALID_VALUE)
       {
@@ -1709,6 +1800,10 @@ parse_unary_expression (void)
         NEXT (unary_expression);
         if (ID (1) < lexer_get_strings_count ())
         {
+          if (parser_strict_mode ())
+          {
+            EMIT_ERROR ("'delete' operator shall not apply on identifier in strict mode.");
+          }
           STACK_PUSH (IDX, next_temp_name ());
           DUMP_OPCODE_2 (delete_var, ID (1), ID (2));
           STACK_SWAP (IDX);
@@ -2161,6 +2256,8 @@ parse_assignment_expression (void)
     STACK_DROP (U8, 1);
     STACK_PUSH (U8, 1);
   }
+
+  check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
 
   skip_newlines ();
   switch (TOK ().type)
@@ -2892,6 +2989,12 @@ parse_with_statement (void)
   STACK_DECLARE_USAGE (IDX)
 
   assert_keyword (KW_WITH);
+
+  if (parser_strict_mode ())
+  {
+    EMIT_ERROR ("'with' expression is not allowed in strict mode.");
+  }
+
   parse_expression_inside_parens ();
 
   DUMP_OPCODE_1 (with, ID(1));
@@ -3086,6 +3189,7 @@ parse_catch_clause (void)
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   token_after_newlines_must_be (TOK_NAME);
   STACK_PUSH (IDX, token_data ());
+  check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
@@ -3639,6 +3743,31 @@ preparse_var_decls (void)
 }
 
 static void
+check_for_eval_and_arguments_in_var_decls (opcode_counter_t first_var_decl)
+{
+  if (!parser_strict_mode ())
+  {
+    return;
+  }
+
+  STACK_DECLARE_USAGE (ops);
+
+  for (opcode_counter_t oc = first_var_decl; oc < OPCODE_COUNTER (); oc = (opcode_counter_t) (oc + 1))
+  {
+    STACK_PUSH (ops, deserialize_opcode (oc));
+    if (!OPCODE_IS (STACK_TOP (ops), var_decl))
+    {
+      STACK_DROP (ops, 1);
+      break;
+    }
+    check_for_eval_and_arguments_in_strict_mode (STACK_TOP (ops).data.var_decl.variable_name);
+    STACK_DROP (ops, 1);
+  }
+
+  STACK_CHECK_USAGE (ops);
+}
+
+static void
 preparse_scope (bool is_global)
 {
   STACK_DECLARE_USAGE (locs);
@@ -3670,6 +3799,11 @@ preparse_scope (bool is_global)
       skip_braces ();
     }
     skip_newlines ();
+  }
+
+  if (parser_strict_mode ())
+  {
+    check_for_eval_and_arguments_in_var_decls ((opcode_counter_t) (STACK_TOP (U16) + 1));
   }
 
   lexer_seek (STACK_TOP (locs));

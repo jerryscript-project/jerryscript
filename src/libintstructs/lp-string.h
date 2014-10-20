@@ -28,5 +28,6 @@ lp_string;
 
 bool lp_string_equal (lp_string, lp_string);
 bool lp_string_equal_s (lp_string, const char *);
+bool lp_string_equal_zt (lp_string, const ecma_char_t *);
 
 #endif /* LP_STRING */

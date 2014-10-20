@@ -13,5 +13,6 @@
 // limitations under the License.
 
 var a = 1.12;
+var eps = 0.00000001;
 
-assert(++a === 2.12)
+assert(++a >= 2.12 - eps && a <= 2.12 + eps);

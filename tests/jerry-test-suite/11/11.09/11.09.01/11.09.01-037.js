@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var x = 1e-323
+var x = 0.1e-323
 var y = false
 assert(x == y)

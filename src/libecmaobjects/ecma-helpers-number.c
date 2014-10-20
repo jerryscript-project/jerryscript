@@ -370,7 +370,7 @@ ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, 
   JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
 
   u.fields.biased_exp = biased_exp & ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
-  u.fields.fraction = fraction & ((1u << ECMA_NUMBER_FRACTION_WIDTH) - 1);
+  u.fields.fraction = fraction & ((1ul << ECMA_NUMBER_FRACTION_WIDTH) - 1);
   u.fields.sign = 0;
 
   return u.value;

@@ -1331,6 +1331,7 @@ parse_function_expression (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (nestings)
+  STACK_DECLARE_USAGE (U8)
 
   assert_keyword (KW_FUNCTION);
 
@@ -1353,10 +1354,16 @@ parse_function_expression (void)
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
+  STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
+
   skip_newlines ();
   push_nesting (NESTING_FUNCTION);
   parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
+
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
+  STACK_DROP (U8, 1);
 
   next_token_must_be (TOK_CLOSE_BRACE);
 
@@ -1367,6 +1374,7 @@ parse_function_expression (void)
   STACK_DROP (IDX, 1);
   STACK_DROP (U16, 1);
 
+  STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE_LHS ();
   STACK_CHECK_USAGE (nestings);
@@ -3837,10 +3845,14 @@ preparse_scope (bool is_global)
     }
     else if (is_keyword (KW_FUNCTION))
     {
+      STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
       skip_newlines ();
       skip_optional_name_and_parens ();
       skip_newlines ();
       skip_braces ();
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
+      STACK_DROP (U8, 1);
     }
     skip_newlines ();
   }

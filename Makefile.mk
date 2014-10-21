@@ -88,6 +88,9 @@ else
     OPTION_TODO := disable
 endif
 
+# Parser error code
+PARSER_ERROR_CODE := 255
+
 ifeq ($(fixme),1)
     OPTION_FIXME := enable
 else
@@ -514,6 +517,21 @@ $(CHECK_TARGETS):
             fi; \
             \
             exit $$status_code; \
+          fi; \
+          if [ -d $(TESTS_DIR)/fail/ ]; \
+          then \
+            VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test_fail.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(PARSER_ERROR_CODE) $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
+            status_code=$$?; \
+            if [ $$status_code -ne 0 ]; \
+            then \
+              echo $(TARGET) failed; \
+              if [ "$(OUTPUT_TO_LOG)" = "enable" ]; \
+              then \
+                echo See log in $(TARGET_DIR)/check directory for details.; \
+              fi; \
+              \
+              exit $$status_code; \
+            fi; \
           fi;
 
 

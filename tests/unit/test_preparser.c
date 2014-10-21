@@ -39,12 +39,11 @@ main( int __unused argc,
 
   if (!opcodes_equal(deserialize_bytecode (), (opcode_t[]) {
     [0] = getop_reg_var_decl (1, 2),    // var tmp1 .. tmp2;
-    [1] =          getop_nop (),        // ;
-    [2] =     getop_var_decl (0),       // var a;
-    [3] =   getop_assignment (1, 1, 1), // tmp1 = 1: SMALLINT;
-    [4] =   getop_assignment (0, 4, 1), // a = tmp1: TYPEOF(tmp1);
-    [5] =      getop_exitval (0)        // exit 0;
-  }, 6))
+    [1] =     getop_var_decl (0),       // var a;
+    [2] =   getop_assignment (1, 1, 1), // tmp1 = 1: SMALLINT;
+    [3] =   getop_assignment (0, 4, 1), // a = tmp1: TYPEOF(tmp1);
+    [4] =      getop_exitval (0)        // exit 0;
+  }, 5))
   {
     is_ok = false;
   }

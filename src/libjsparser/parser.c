@@ -879,21 +879,46 @@ cleanup:
 }
 
 static void
+emit_error_on_eval_and_arguments (idx_t id)
+{
+  if (id < lexer_get_strings_count ())
+  {
+    if (lp_string_equal_zt (lexer_get_string_by_id (id),
+                            ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
+        || lp_string_equal_zt (lexer_get_string_by_id (id),
+                               ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+    {
+      EMIT_ERROR ("'eval' and 'arguments' are not allowed here in strict mode");
+    }
+  }
+}
+
+static void
 check_for_eval_and_arguments_in_strict_mode (idx_t id)
 {
   if (parser_strict_mode ())
   {
-    if (id < lexer_get_strings_count ())
+    emit_error_on_eval_and_arguments (id);
+  }
+}
+
+static bool
+find_assignment_to (opcode_counter_t from, idx_t tmp_id, opcode_t *res)
+{
+  JERRY_ASSERT (res != NULL);
+  JERRY_ASSERT (tmp_id >= lexer_get_reserved_ids_count ());
+  for (opcode_counter_t oc = from; oc > 0; oc = (opcode_counter_t) (oc - 1))
+  {
+    *res = deserialize_opcode (oc);
+    if (OPCODE_IS ((*res), assignment))
     {
-      if (lp_string_equal_zt (lexer_get_string_by_id (id),
-                              ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
-          || lp_string_equal_zt (lexer_get_string_by_id (id),
-                                 ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+      if (res->data.assignment.var_left == tmp_id)
       {
-        EMIT_ERROR ("'eval' and 'arguments' are not allowed here in strict mode");
+        return true;
       }
     }
   }
+  return false;
 }
 
 static void
@@ -908,9 +933,9 @@ check_for_duplication_of_param (opcode_counter_t from, uint8_t metas_num)
   STACK_DECLARE_USAGE (U8);
   STACK_DECLARE_USAGE (ops);
 
+  STACK_PUSH (U8, 0); // seen metas
   STACK_PUSH (U8, STACK_SIZE (IDX));
 
-  uint8_t seen_metas = 0;
   for (opcode_counter_t oc = from; oc < OPCODE_COUNTER (); oc = (opcode_counter_t) (oc + 1))
   {
     STACK_PUSH (ops, deserialize_opcode (oc));
@@ -919,41 +944,58 @@ check_for_duplication_of_param (opcode_counter_t from, uint8_t metas_num)
       switch (STACK_TOP (ops).data.meta.type)
       {
         case OPCODE_META_TYPE_VARG:
-        case OPCODE_META_TYPE_VARG_PROP_DATA:
         {
           for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (IDX); i = (uint8_t) (i + 1))
           {
-            if (i == STACK_TOP (ops).data.meta.data_1)
+            if (STACK_ELEMENT (IDX, i) == STACK_TOP (ops).data.meta.data_1)
             {
-              JERRY_ASSERT (i < lexer_get_strings_count ());
-              EMIT_ERROR_VARG ("Duplication of identifier '%s' as parameter is not allowed in strict mode.",
-                               lexer_get_string_by_id (i));
+              JERRY_ASSERT (STACK_ELEMENT (IDX, i) < lexer_get_strings_count ());
+              EMIT_ERROR ("Duplication of identifier as parameter is not allowed in strict mode.");
             }
           }
-          /* FALLTHRU.  */
+          STACK_PUSH (IDX, STACK_TOP (ops).data.meta.data_1);
+          STACK_INCR_HEAD (U8, 2);
+          break;
+        }
+        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        {
+          opcode_t res;
+          if (find_assignment_to (oc, STACK_TOP (ops).data.meta.data_1, &res))
+          {
+            for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (IDX); i = (uint8_t) (i + 1))
+            {
+              if (STACK_ELEMENT (IDX, i) == res.data.assignment.value_right)
+              {
+                JERRY_ASSERT (STACK_ELEMENT (IDX, i) < lexer_get_strings_count ());
+                EMIT_ERROR ("Duplication of identifier as parameter is not allowed in strict mode.");
+              }
+            }
+            STACK_PUSH (IDX, res.data.assignment.value_right);
+          }
+          /* FALLTHRU. */
         }
         case OPCODE_META_TYPE_THIS_ARG:
         case OPCODE_META_TYPE_VARG_PROP_GETTER:
         case OPCODE_META_TYPE_VARG_PROP_SETTER:
         {
-          seen_metas = (uint8_t) (seen_metas + 1);
+          STACK_INCR_HEAD (U8, 2);
           break;
         }
         default:
         {
-          JERRY_UNREACHABLE ();
+          break;
         }
       }
     }
     STACK_DROP (ops, 1);
-    if (seen_metas == metas_num)
+    if (STACK_HEAD (U8, 2) == metas_num)
     {
       break;
     }
   }
 
   STACK_DROP (IDX, STACK_SIZE (IDX) - STACK_TOP (U8));
-  STACK_DROP (U8, 1);
+  STACK_DROP (U8, 2);
 
   STACK_CHECK_USAGE (ops);
   STACK_CHECK_USAGE (U8);
@@ -1181,6 +1223,7 @@ next:
     }
     case AL_OBJ_DECL:
     {
+      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
       REWRITE_OPCODE_2 (STACK_TOP (U16), obj_decl, ID(1), STACK_TOP (U8));
       break;
     }
@@ -1231,10 +1274,6 @@ parse_function_declaration (void)
   STACK_DECLARE_USAGE (scopes)
   STACK_DECLARE_USAGE (U8)
 
-  SET_OPCODE_COUNTER (0);
-  STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
-  serializer_set_scope (STACK_TOP (scopes));
-
   assert_keyword (KW_FUNCTION);
 
   token_after_newlines_must_be (TOK_NAME);
@@ -1242,7 +1281,12 @@ parse_function_declaration (void)
   STACK_PUSH (IDX, token_data ());
 
   skip_newlines ();
+  SET_OPCODE_COUNTER (0);
+  STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
+  serializer_set_scope (STACK_TOP (scopes));
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
   STACK_PUSH (U8, parse_argument_list (AL_FUNC_DECL, ID(1)));
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_UNDEFINED, INVALID_VALUE, INVALID_VALUE);
@@ -3778,16 +3822,16 @@ preparse_scope (bool is_global)
   STACK_PUSH (U8, is_global ? TOK_EOF : TOK_CLOSE_BRACE);
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
-  DUMP_VOID_OPCODE (nop); /* use strict.  */
+
+  if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
+  {
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
+    DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
+  }
 
   while (!token_is (STACK_TOP (U8)))
   {
-    if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
-    {
-      scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
-      REWRITE_OPCODE_3 (STACK_TOP (U16), meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
-    }
-    else if (is_keyword (KW_VAR))
+    if (is_keyword (KW_VAR))
     {
       preparse_var_decls ();
     }

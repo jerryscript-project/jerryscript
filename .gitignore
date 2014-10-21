@@ -25,6 +25,7 @@ nbproject
 *.swp
 *~
 js.files
+js.fail.files
 jerry.error
 jerry.passed
 core

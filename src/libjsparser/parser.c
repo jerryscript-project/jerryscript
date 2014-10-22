@@ -791,6 +791,7 @@ parse_property_assignment (void)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (toks)
+  STACK_DECLARE_USAGE (U8)
 
   if (!token_is (TOK_NAME))
   {
@@ -820,8 +821,18 @@ parse_property_assignment (void)
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
+
+    STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
+
     skip_newlines ();
+    push_nesting (NESTING_FUNCTION);
     parse_source_element_list (false);
+    pop_nesting (NESTING_FUNCTION);
+
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
+    STACK_DROP (U8, 1);
+
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     DUMP_VOID_OPCODE (ret);
@@ -855,8 +866,18 @@ parse_property_assignment (void)
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_FUNCTION_END, INVALID_VALUE, INVALID_VALUE);
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
+
+    STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
+
     skip_newlines ();
+    push_nesting (NESTING_FUNCTION);
     parse_source_element_list (false);
+    pop_nesting (NESTING_FUNCTION);
+
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
+    STACK_DROP (U8, 1);
+
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     DUMP_VOID_OPCODE (ret);
@@ -873,7 +894,8 @@ simple_prop:
   parse_property_name_and_value ();
 
 cleanup:
-  STACK_CHECK_USAGE (toks)
+  STACK_CHECK_USAGE (U8);
+  STACK_CHECK_USAGE (toks);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (IDX);
 }
@@ -3847,9 +3869,14 @@ preparse_scope (bool is_global)
     {
       STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
       scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
-      skip_newlines ();
-      skip_optional_name_and_parens ();
-      skip_newlines ();
+      skip_function ();
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
+      STACK_DROP (U8, 1);
+    }
+    else if (token_is (TOK_OPEN_BRACE))
+    {
+      STACK_PUSH (U8, scopes_tree_strict_mode (STACK_TOP (scopes)) ? 1 : 0);
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
       skip_braces ();
       scopes_tree_set_strict_mode (STACK_TOP (scopes), STACK_TOP (U8) != 0);
       STACK_DROP (U8, 1);

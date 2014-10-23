@@ -96,14 +96,34 @@
 /**
  * Use 32-bit/64-bit float for ecma-numbers
  */
-#define CONFIG_ECMA_NUMBER_FLOAT32
-// #define CONFIG_ECMA_NUMBER_FLOAT64
+#define CONFIG_ECMA_NUMBER_FLOAT32 (1u) /* 32-bit float */
+#define CONFIG_ECMA_NUMBER_FLOAT64 (2u) /* 64-bit float */
+
+#ifndef CONFIG_ECMA_NUMBER_TYPE
+# define CONFIG_ECMA_NUMBER_TYPE CONFIG_ECMA_NUMBER_FLOAT32
+#else /* !CONFIG_ECMA_NUMBER_TYPE */
+# if (CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 \
+      && CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT64)
+#  error "ECMA-number storage is configured incorrectly"
+# endif /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32
+           && CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE */
 
 /**
- * Use ASCII/UTF-16 representation for ecma-characters
+ * Representation for ecma-characters
  */
-#define CONFIG_ECMA_CHAR_ASCII
-// #define CONFIG_ECMA_CHAR_UTF16
+#define CONFIG_ECMA_CHAR_ASCII (1) /* ASCII */
+#define CONFIG_ECMA_CHAR_UTF16 (2) /* UTF-16 */
+
+#ifndef CONFIG_ECMA_CHAR_ENCODING
+# define CONFIG_ECMA_CHAR_ENCODING CONFIG_ECMA_CHAR_ASCII
+#else /* !CONFIG_ECMA_CHAR_ENCODING */
+# if (CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII \
+      && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16)
+#  error "ECMA-char encoding is configured incorrectly"
+# endif /* CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII
+           && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16 */
+#endif /* CONFIG_ECMA_CHAR_ENCODING */
 
 /**
  * Enable ecma-exception support

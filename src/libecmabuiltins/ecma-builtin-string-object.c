@@ -108,7 +108,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t args[], /**< arguments l
     uint32_t uint32_char_code = ecma_number_to_uint32 (*arg_num_p);
     uint16_t uint16_char_code = (uint16_t) uint32_char_code;
 
-#if defined (CONFIG_ECMA_CHAR_ASCII)
+#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
     if ((uint16_char_code >> JERRY_BITSINBYTE) != 0)
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
@@ -117,11 +117,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t args[], /**< arguments l
     {
       ret_zt_str_p [arg_index] = (ecma_char_t) uint16_char_code;
     }
-#elif defined (CONFIG_ECMA_CHAR_UTF16)
+#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
     ret_zt_str_p [arg_index] = (ecma_char_t) uint16_char_code;
-#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
-# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
-#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
     ECMA_FINALIZE (arg_num_value);
 

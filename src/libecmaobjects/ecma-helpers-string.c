@@ -1088,7 +1088,7 @@ ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, /**< zero-term
   while (*iter_1_p != ECMA_CHAR_NULL
          && *iter_2_p != ECMA_CHAR_NULL)
   {
-#ifdef CONFIG_ECMA_CHAR_ASCII
+#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
     const ecma_char_t chr_1 = *iter_1_p++;
     const ecma_char_t chr_2 = *iter_2_p++;
 
@@ -1100,7 +1100,7 @@ ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, /**< zero-term
     {
       return false;
     }
-#elif defined (CONFIG_ECMA_CHAR_UTF16)
+#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
     const ecma_char_t first_in_pair_range_begin = 0xD800;
     const ecma_char_t first_in_pair_range_end = 0xDBFF;
     const ecma_char_t second_in_pair_range_begin = 0xDC00;
@@ -1176,9 +1176,7 @@ ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, /**< zero-term
         return false;
       }
     }
-#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
-# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
-#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
   }
 
   return (*iter_1_p == ECMA_CHAR_NULL

@@ -506,21 +506,19 @@ typedef struct
   ecma_property_configurable_value_t configurable;
 } ecma_property_descriptor_t;
 
-#ifdef CONFIG_ECMA_CHAR_ASCII
+#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
 /**
  * Description of an ecma-character
  */
 typedef uint8_t ecma_char_t;
-#elif defined (CONFIG_ECMA_CHAR_UTF16)
+#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
 /**
  * Description of an ecma-character
  */
 typedef uint16_t ecma_char_t;
-#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
-# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
-#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
-#ifdef CONFIG_ECMA_NUMBER_FLOAT32
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Description of an ecma-number
  */
@@ -530,7 +528,7 @@ typedef float ecma_number_t;
  * Maximum number of significant digits that ecma-number can store
  */
 #define ECMA_NUMBER_MAX_DIGITS  (10u)
-#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Description of an ecma-number
  */
@@ -540,9 +538,7 @@ typedef double ecma_number_t;
  * Maximum number of significant digits that ecma-number can store
  */
 #define ECMA_NUMBER_MAX_DIGITS  (18u)
-#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-#error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
-#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
  * Value '0' of ecma_number_t
@@ -567,10 +563,10 @@ typedef double ecma_number_t;
 /**
  * Minimum positive and maximum value of ecma-number
  */
-#ifdef CONFIG_ECMA_NUMBER_FLOAT32
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 # define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
-#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Number.MAX_VALUE
  *
@@ -583,10 +579,7 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.3
  */
 # define ECMA_NUMBER_MIN_VALUE ((ecma_number_t)5e-324)
-#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
-#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
  * Euler number

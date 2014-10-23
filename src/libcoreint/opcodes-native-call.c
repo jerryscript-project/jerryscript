@@ -138,13 +138,11 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
         ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
 
-#if defined (CONFIG_ECMA_CHAR_ASCII)
+#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
         __printf ("%s\n", (char*) zt_str_p);
-#elif defined (CONFIG_ECMA_CHAR_UTF16)
+#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
         JERRY_UNIMPLEMENTED ();
-#else /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
-# error "!CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16"
-#endif /* !CONFIG_ECMA_CHAR_ASCII && !CONFIG_ECMA_CHAR_UTF16 */
+#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
         mem_heap_free_block (zt_str_p);
 

@@ -23,7 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 
-#ifdef CONFIG_ECMA_NUMBER_FLOAT32
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t));
 
 /**
@@ -80,7 +80,7 @@ const int32_t ecma_number_exponent_bias = 127;
  * Relative precision used in calculation with ecma-numbers
  */
 const ecma_number_t ecma_number_relative_eps = 1.0e-10f;
-#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t));
 
 /**
@@ -137,9 +137,7 @@ const int32_t ecma_number_exponent_bias = 1023;
  * Relative precision used in calculation with ecma-numbers
  */
 const ecma_number_t ecma_number_relative_eps = 1.0e-16;
-#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
-#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
  * Get fraction of number

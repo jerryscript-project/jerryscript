@@ -801,15 +801,13 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
     else
     {
       // 5.
-#ifdef CONFIG_ECMA_NUMBER_FLOAT32
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 #define LL_T uint32_t
 #define LL_MAX_DIGITS 10
-#elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 #define LL_T uint64_t
 #define LL_MAX_DIGITS 18
-#else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
-# error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
-#endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
       uint32_t num_uint32 = ecma_number_to_uint32 (num);
       if (ecma_uint32_to_number (num_uint32) == num)

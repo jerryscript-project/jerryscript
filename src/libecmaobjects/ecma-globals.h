@@ -525,11 +525,21 @@ typedef uint16_t ecma_char_t;
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
+
+/**
+ * Maximum number of significant digits that ecma-number can store
+ */
+#define ECMA_NUMBER_MAX_DIGITS  (10u)
 #elif defined (CONFIG_ECMA_NUMBER_FLOAT64)
 /**
  * Description of an ecma-number
  */
 typedef double ecma_number_t;
+
+/**
+ * Maximum number of significant digits that ecma-number can store
+ */
+#define ECMA_NUMBER_MAX_DIGITS  (18u)
 #else /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */
 #error "!CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64"
 #endif /* !CONFIG_ECMA_NUMBER_FLOAT32 && !CONFIG_ECMA_NUMBER_FLOAT64 */

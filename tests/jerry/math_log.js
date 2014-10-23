@@ -31,7 +31,7 @@ var very_close_to_1_but_less = 0.999999;
 assert( very_close_to_1_but_less < 1.0 );
 
 assert( Math.log (very_close_to_1_but_less) <= 0.0 );
-assert( Math.log (very_close_to_1_but_less) >= -0.000001 );
+assert( Math.log (very_close_to_1_but_less) >= -0.00001 );
 
 assert( Math.log (2.7182818284590452354) >= 0.999999 );
 assert( Math.log (2.7182818284590452354) <= 1.000001 );

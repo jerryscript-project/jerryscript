@@ -352,8 +352,8 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
     exponent = (int32_t) biased_exp - ecma_number_exponent_bias;
 
     JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
-    JERRY_ASSERT ((fraction & (1ul << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
-    fraction |= 1ul << ECMA_NUMBER_FRACTION_WIDTH;
+    JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
+    fraction |= 1ull << ECMA_NUMBER_FRACTION_WIDTH;
   }
 
   *out_fraction_p = fraction;
@@ -378,13 +378,108 @@ ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, 
 
   uint32_t biased_exp = (uint32_t) (exponent + ecma_number_exponent_bias);
   JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  JERRY_ASSERT ((fraction & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1)) == 0);
+  JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) != 0);
 
   u.fields.biased_exp = biased_exp & ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
-  u.fields.fraction = fraction & ((1ul << ECMA_NUMBER_FRACTION_WIDTH) - 1);
+  u.fields.fraction = fraction & ((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1);
   u.fields.sign = 0;
 
   return u.value;
 } /* ecma_number_make_normal_positive_from_fraction_and_exponent */
+
+/**
+ * Make Number of given sign from given mantissa value and binary exponent
+ *
+ * @return ecma-number (possibly Infinity of specified sign)
+ */
+ecma_number_t
+ecma_number_make_from_sign_mantissa_and_exponent (bool sign, /**< true - for negative sign,
+                                                                  false - for positive sign */
+                                                  uint64_t mantissa, /**< mantissa */
+                                                  int32_t exponent) /**< binary exponent */
+{
+  union
+  {
+    ecma_number_fields_t fields;
+    ecma_number_t value;
+  } u;
+
+  /* Rounding mantissa to fit into fraction field width */
+  if (mantissa & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1))
+  {
+    /* Rounded mantissa looks like the following: |00...0|1|fraction_width mantissa bits| */
+    while ((mantissa & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1)) != 0)
+    {
+      uint64_t rightmost_bit = (mantissa & 1);
+
+      exponent++;
+      mantissa >>= 1;
+
+      if ((mantissa & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1)) == 0)
+      {
+        /* Rounding to nearest value */
+        mantissa += rightmost_bit;
+
+        /* In the first case loop is finished,
+           and in the second - just one shift follows and then loop finishes */
+        JERRY_ASSERT (((mantissa & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1)) == 0)
+                      || (mantissa == (1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1))));
+      }
+    }
+  }
+
+  /* Normalizing mantissa */
+  while (mantissa != 0
+         && ((mantissa & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0))
+  {
+    exponent--;
+    mantissa <<= 1;
+  }
+
+  /* Moving floating point */
+  exponent += ECMA_NUMBER_FRACTION_WIDTH - 1;
+
+  int32_t biased_exp_signed = exponent + ecma_number_exponent_bias;
+
+  if (biased_exp_signed < 1)
+  {
+    /* Denormalizing mantissa if biased_exponent is less than zero */
+    while (biased_exp_signed < 0)
+    {
+      biased_exp_signed++;
+      mantissa >>= 1;
+    }
+
+    /* Rounding to nearest value */
+    mantissa += 1;
+    mantissa >>= 1;
+
+    /* Encoding denormalized exponent */
+    biased_exp_signed = 0;
+  }
+  else
+  {
+    /* Clearing highest mantissa bit that should have been non-zero if mantissa is non-zero */
+    mantissa &= ~(1ull << ECMA_NUMBER_FRACTION_WIDTH);
+  }
+
+  uint32_t biased_exp = (uint32_t) biased_exp_signed;
+
+  if (biased_exp >= ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1))
+  {
+    return ecma_number_make_infinity (sign);
+  }
+
+  JERRY_ASSERT (biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  JERRY_ASSERT ((mantissa & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
+
+  u.fields.biased_exp = biased_exp & ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  u.fields.fraction = mantissa & ((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1);
+  u.fields.sign = (sign ? 1 : 0);
+
+  return u.value;
+} /* ecma_number_make_from_sign_mantissa_and_exponent */
 
 /**
  * Negate ecma-number

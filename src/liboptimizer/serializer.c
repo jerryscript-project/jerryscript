@@ -108,18 +108,6 @@ serializer_print_opcodes (void)
 #endif
 }
 
-/* Make lp_strings also zero-terminated.  */
-void
-serializer_adjust_strings (void)
-{
-  for (uint8_t i = 0; i < bytecode_data.strs_count; ++i)
-  {
-    ecma_length_t len = bytecode_data.strings[i].length;
-    ecma_char_t *str = bytecode_data.strings[i].str;
-    str[len] = '\0';
-  }
-}
-
 void
 serializer_init (bool show_opcodes)
 {

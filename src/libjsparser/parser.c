@@ -3952,7 +3952,6 @@ parser_parse_program (void)
   JERRY_ASSERT (token_is (TOK_EOF));
   DUMP_OPCODE_1 (exitval, 0);
 
-  serializer_adjust_strings ();
   serializer_merge_scopes_into_bytecode ();
 
   scopes_tree_free (STACK_TOP (scopes));

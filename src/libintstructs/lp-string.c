@@ -14,6 +14,7 @@
  */
 
 #include "lp-string.h"
+#include "jerry-libc.h"
 
 bool
 lp_string_equal (lp_string s1, lp_string s2)

@@ -38,6 +38,9 @@ static size_t buffer_size = 0;
 static const char *buffer_start = NULL;
 static const char *buffer = NULL;
 static const char *token_start;
+static ecma_char_t *strings_cache;
+static size_t strings_cache_size;
+static size_t strings_cache_used_size;
 
 #define LA(I)       (get_char (I))
 
@@ -146,6 +149,39 @@ current_token_equals_to_lp (lp_string str)
   return false;
 }
 
+static lp_string
+adjust_string_ptrs (lp_string lp, size_t diff)
+{
+  return (lp_string)
+  {
+    .length = lp.length,
+    .str = lp.str + diff
+  };
+}
+
+static lp_string
+add_current_token_to_string_cache (void)
+{
+  lp_string res;
+  res.length = (ecma_length_t) (buffer - token_start);
+  if (strings_cache_used_size + res.length * sizeof (ecma_char_t) >= strings_cache_size)
+  {
+    strings_cache_size = mem_heap_recommend_allocation_size (strings_cache_used_size
+                                                             + ((size_t) res.length + 1) * sizeof (ecma_char_t));
+    ecma_char_t *temp = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size,
+                                                              MEM_HEAP_ALLOC_SHORT_TERM);
+    __memcpy (temp, strings_cache, strings_cache_used_size);
+    mem_heap_free_block ((uint8_t *) strings_cache);
+    STACK_ITERATE_VARG_SET (strings, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
+    strings_cache = temp;
+  }
+  __strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, res.length);
+  res.str = strings_cache + strings_cache_used_size;
+  res.str[res.length] = '\0';
+  strings_cache_used_size = (size_t) (((size_t) res.length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
+  return res;
+}
+
 static token
 convert_current_token_to_token (token_type tt)
 {
@@ -172,11 +208,7 @@ convert_current_token_to_token (token_type tt)
     }
   }
 
-  const lp_string str = (lp_string)
-  {
-    .length = (uint8_t) (buffer - token_start),
-    .str = (ecma_char_t *) token_start
-  };
+  const lp_string str = add_current_token_to_string_cache ();
 
   STACK_PUSH (strings, str);
 
@@ -812,6 +844,7 @@ parse_number (void)
     __strncpy ((char *) temp, token_start, (size_t) (tok_length));
     temp[tok_length] = '\0';
     ecma_number_t res = ecma_zt_string_to_number (temp);
+    JERRY_ASSERT (!ecma_number_is_nan (res));
     mem_heap_free_block (temp);
     known_token = convert_seen_num_to_token (res);
     token_start = NULL;
@@ -1394,6 +1427,9 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   allow_dump_lines = show_opcodes;
   buffer_size = source_size;
   lexer_set_source (source);
+  strings_cache_size = mem_heap_recommend_allocation_size (sizeof (ecma_char_t));
+  strings_cache = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  strings_cache_used_size = 0;
 
   STACK_INIT (strings);
   STACK_INIT (numbers);
@@ -1403,6 +1439,10 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
 void
 lexer_free (void)
 {
+  if (STACK_SIZE (strings) == 0)
+  {
+    mem_heap_free_block (strings_cache);
+  }
   STACK_FREE (strings);
   STACK_FREE (numbers);
   STACK_FREE (num_ids);

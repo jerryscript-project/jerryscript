@@ -72,6 +72,10 @@ deserializer_init (void)
 void
 deserializer_free (void)
 {
+  if (bytecode_data.strs_count > 0)
+  {
+    mem_heap_free_block ((uint8_t *) bytecode_data.strings[0].str);
+  }
   mem_heap_free_block ((uint8_t *) bytecode_data.strings);
   mem_heap_free_block ((uint8_t *) bytecode_data.nums);
   mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);

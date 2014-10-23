@@ -47,7 +47,7 @@ export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
 export TARGET_PC_MODS = musl sanitize valgrind \
-                        musl-valgrind
+                        musl-valgrind float64
 
 export TARGET_MCU_MODS =
 

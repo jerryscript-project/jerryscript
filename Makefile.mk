@@ -160,6 +160,16 @@ else
      OPTION_LIBC := raw
 endif
 
+ifeq ($(filter float64,$(TARGET_MODS)), float64)
+     ifeq ($(OPTION_MCU),enable)
+      $(error MCU target doesn\'t support float64)
+     endif
+
+     OPTION_FLOAT64 := enable
+else
+     OPTION_FLOAT64 := disable
+endif
+
 ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)
      ifeq ($(OPTION_LIBC),musl)
       $(error ASAN and LIBC_MUSL are mutually exclusive)
@@ -333,6 +343,10 @@ endif
 
 ifeq ($(OPTION_NDEBUG),enable)
  DEFINES_JERRY += -DJERRY_NDEBUG
+endif
+
+ifeq ($(OPTION_FLOAT64),enable)
+  DEFINES_JERRY += -DCONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64
 endif
 
 ifeq ($(OPTION_MCU),disable)

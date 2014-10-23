@@ -85,7 +85,8 @@ all: precommit
 
 PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
                                           release.linux.check \
-                                          debug_release.linux.check
+                                          debug_release.linux.check \
+                                          debug.linux-float64.check
 PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
                                        release.linux-musl-valgrind.check
 

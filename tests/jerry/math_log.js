@@ -19,7 +19,8 @@ assert( isNaN (Math.log (-Infinity)) );
 assert( Math.log (0) === -Infinity );
 assert( Math.log (1) === 0 );
 assert( Math.log (Infinity) === Infinity );
-assert( Math.log (2) === Math.LN2 );
+assert( Math.log (2) >= Math.LN2 * 0.999999 );
+assert( Math.log (2) <= Math.LN2 * 1.000001 );
 
 var very_close_to_1_but_greater = 1.0000001;
 assert( very_close_to_1_but_greater > 1.0 );

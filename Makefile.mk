@@ -104,6 +104,13 @@ else
      OPTION_ECHO := disable
 endif
 
+# Turn off pre-compilation static analysis tools
+ifeq ($(nostaticcheck),1)
+  OPTION_DISABLE_STATIC_ANALYSIS := enable
+else
+  OPTION_DISABLE_STATIC_ANALYSIS := disable
+endif
+
 # -fdiagnostics-color=always
 ifeq ($(color),1)
      ifeq ($(OPTION_MCU),enable)
@@ -424,9 +431,11 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
+          ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
-	@vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) -e --no-duplicate 1>$(TARGET_DIR)/vera.log
+	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
+          vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) -e --no-duplicate 1>$(TARGET_DIR)/vera.log
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \
@@ -457,7 +466,8 @@ $(TESTS_TARGET):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)/obj
-	@./tools/cppcheck.sh -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
+          ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
           --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY); \

@@ -77,6 +77,7 @@ export fixme
 export color
 export dbgsyms
 export noopt
+export nostaticcheck
 
 build: clean $(JERRY_TARGETS)
 

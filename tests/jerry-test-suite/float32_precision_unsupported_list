@@ -7,8 +7,6 @@
 ./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-037.js
 ./tests/jerry-test-suite/11/11.10/11.10-017.js
 ./tests/jerry-test-suite/11/11.10/11.10-018.js
-./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-012.js
-./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-013.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-014.js
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-012.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-002.js

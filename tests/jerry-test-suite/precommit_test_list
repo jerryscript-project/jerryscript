@@ -111,6 +111,9 @@
 ./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-009.js
 ./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-010.js
 ./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-011.js
+./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-012.js
+./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-013.js
+./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-014.js
 ./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-015.js
 ./tests/jerry-test-suite/11/11.03/11.03.02/11.03.02-016.js
 ./tests/jerry-test-suite/11/11.04/11.04.01/11.04.01-001.js

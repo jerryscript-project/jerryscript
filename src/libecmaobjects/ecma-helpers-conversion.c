@@ -831,20 +831,20 @@ ecma_number_to_zt_string_calc_number_params (ecma_number_t num, /**< ecma-number
     {
       /* Lowest binary fraction that should round to fraction_uint64 */
       ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INIT (fraction_uint96,
-                                                 (fraction_uint64 - 1ull) >> 60u,
-                                                 ((fraction_uint64 - 1ull) << 4u) >> 32u,
-                                                 ((fraction_uint64 - 1ull) << 36u) >> 32u | 0x8u);
+                                                 (fraction_uint64 - 1ull) >> 48u,
+                                                 ((fraction_uint64 - 1ull) << 16u) >> 32u,
+                                                 ((fraction_uint64 - 1ull) << 48u) >> 32u | 0x8000u);
     }
     else
     {
       /* Highest binary fraction that should round to fraction_uint64 */
       ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INIT (fraction_uint96,
-                                                 (fraction_uint64) >> 60u,
-                                                 ((fraction_uint64) << 4u) >> 32u,
-                                                 ((fraction_uint64) << 36u) >> 32u | 0x7u);
+                                                 (fraction_uint64) >> 48u,
+                                                 ((fraction_uint64) << 16u) >> 32u,
+                                                 ((fraction_uint64) << 48u) >> 32u | 0x7fffu);
     }
 
-    binary_exponent -= 4;
+    binary_exponent -= 16;
 
     /* Converting binary exponent to decimal exponent */
     if (binary_exponent > 0)

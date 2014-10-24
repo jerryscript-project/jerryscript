@@ -790,7 +790,7 @@ ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
     return 0;
   }
 
-  return (int32_t) value;
+  return (int32_t) (uint32_t) value;
 } /* ecma_number_to_int32 */
 
 /**

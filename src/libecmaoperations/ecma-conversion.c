@@ -332,13 +332,17 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_OBJECT:
     {
-      ecma_completion_value_t completion_to_primitive = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER);
-      JERRY_ASSERT(ecma_is_completion_value_normal (completion_to_primitive));
+      ecma_completion_value_t ret_value;
 
-      ecma_completion_value_t completion_to_number = ecma_op_to_number (completion_to_primitive.u.value);
-      ecma_free_completion_value (completion_to_primitive);
+      ECMA_TRY_CATCH (completion_to_primitive,
+                      ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
+                      ret_value);
 
-      return completion_to_number;
+      ret_value = ecma_op_to_number (completion_to_primitive.u.value);
+
+      ECMA_FINALIZE (completion_to_primitive);
+
+      return ret_value;
     }
   }
 

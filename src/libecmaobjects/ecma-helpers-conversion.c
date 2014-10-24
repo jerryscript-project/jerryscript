@@ -553,7 +553,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
   if (fraction_uint64 == 0)
   {
-    return ECMA_NUMBER_ZERO;
+    return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
   }
 
   int32_t binary_exponent = 1;

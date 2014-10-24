@@ -32,8 +32,8 @@ main( int __unused argc,
     (const ecma_char_t*) "1",
     (const ecma_char_t*) "0.5",
     (const ecma_char_t*) "12345",
-    (const ecma_char_t*) "12345.12209",
-    (const ecma_char_t*) "1.401298403e-45",
+    (const ecma_char_t*) "12345.123",
+    (const ecma_char_t*) "1e-45",
     (const ecma_char_t*) "-2.5e+38",
     (const ecma_char_t*) "NaN",
     (const ecma_char_t*) "Infinity",
@@ -44,17 +44,17 @@ main( int __unused argc,
 
   const ecma_number_t nums[] =
   {
-    1.0f,
-    0.5f,
-    12345.0f,
-    12345.123f,
-    1.0e-45f,
-    -2.5e+38f,
+    1.0,
+    0.5,
+    12345.0,
+    12345.123,
+    1.0e-45,
+    -2.5e+38,
     NAN,
     INFINITY,
     -INFINITY,
-    +0.0f,
-    -0.0f
+    +0.0,
+    -0.0
   };
 
   for (uint32_t i = 0;

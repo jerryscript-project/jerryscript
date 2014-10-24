@@ -527,7 +527,7 @@ typedef float ecma_number_t;
 /**
  * Maximum number of significant digits that ecma-number can store
  */
-#define ECMA_NUMBER_MAX_DIGITS  (10u)
+#define ECMA_NUMBER_MAX_DIGITS  (9)
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Description of an ecma-number
@@ -537,7 +537,7 @@ typedef double ecma_number_t;
 /**
  * Maximum number of significant digits that ecma-number can store
  */
-#define ECMA_NUMBER_MAX_DIGITS  (18u)
+#define ECMA_NUMBER_MAX_DIGITS  (18)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**

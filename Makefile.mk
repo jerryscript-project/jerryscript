@@ -160,6 +160,7 @@ else
      OPTION_LIBC := raw
 endif
 
+# float64 mode
 ifeq ($(filter float64,$(TARGET_MODS)), float64)
      ifeq ($(OPTION_MCU),enable)
       $(error MCU target doesn\'t support float64)
@@ -168,6 +169,11 @@ ifeq ($(filter float64,$(TARGET_MODS)), float64)
      OPTION_FLOAT64 := enable
 else
      OPTION_FLOAT64 := disable
+endif
+
+# Enabling float64 mode for unittests
+ifeq ($(filter-out $(TESTS_TARGET),$(TARGET_MODE)),)
+  OPTION_FLOAT64 := enable
 endif
 
 ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)

@@ -79,18 +79,43 @@
 }
 
 /**
+ * Copy middle and low parts of 96-bit integer to specified uint64_t variable
+ */
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64(name, uint64_var) \
+{ \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  uint64_var = (name[1] << 32u) | (name[0]); \
+}
+
+/**
+ * Check if specified 96-bit integers are equal
+ */
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ARE_EQUAL(name1, name2) \
+  ((name1)[0] == (name2[0]) \
+   && (name1)[1] == (name2[1]) \
+   && (name1)[2] == (name2[2]))
+
+/**
  * Check if bits [lowest_bit, 96) are zero
  */
-#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO(name, lowest_bit) \
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO(name, lowest_bit) \
   ((lowest_bit) >= 64 ? ((name[2] >> ((lowest_bit) - 64)) == 0) : \
    ((lowest_bit) >= 32 ? (name[2] == 0 && ((name[1] >> ((lowest_bit) - 32)) == 0)) : \
    (name[2] == 0 && name[1] == 0 && ((name[0] >> (lowest_bit)) == 0))))
 
 /**
+ * Check if bits [0, highest_bit] are zero
+ */
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_LOW_BIT_MASK_ZERO(name, highest_bit) \
+  ((highest_bit >= 64) ? (name[1] == 0 && name[0] == 0 && (((uint32_t) name[2] << (95 - (highest_bit))) == 0)) : \
+   ((highest_bit >= 32) ? (name[0] == 0 && (((uint32_t) name[1] << (63 - (highest_bit))) == 0)) : \
+    (((uint32_t) name[0] << (31 - (highest_bit))) == 0)))
+
+/**
  * Check if 96-bit integer is zero
  */
 #define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_ZERO(name) \
-  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (name, 0)
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (name, 0)
 
 /**
  * Shift 96-bit integer one bit left
@@ -125,7 +150,23 @@
 }
 
 /**
- * Add to 96-bit integers
+ * Increment 96-bit integer
+ */
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INC(name) \
+{ \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  \
+  name [0] += 1ull; \
+  name [1] += (name [0] >> 32u); \
+  name [0] = (uint32_t) name [0]; \
+  name [2] += (name [1] >> 32u); \
+  name [1] = (uint32_t) name [1]; \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+}
+
+/**
+ * Add 96-bit integer
  */
 #define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ADD(name_add_to, name_to_add) \
 { \
@@ -142,6 +183,28 @@
   \
   ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
   ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_to_add); \
+}
+
+/**
+ * Multiply 96-bit integer by 10
+ */
+#define ECMA_NUMBER_CONVERSION_96BIT_INTEGER_MUL_10(name) \
+{ \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  \
+  /* fraction_uint96 = (fraction_uint96 << 3) + (fraction_uint96 << 1) or fraction_uint96 *= 10 */ \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (name); \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER (name ## _tmp); \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_COPY (name ## _tmp, name); \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (name ## _tmp); \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (name ## _tmp); \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ADD (name, name ## _tmp); \
+  \
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
 
 /**
@@ -507,9 +570,9 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
                                              0ull);
 
   /* Normalizing mantissa */
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 92));
+  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92));
 
-  while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 91))
+  while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 91))
   {
     ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
     binary_exponent--;
@@ -524,30 +587,20 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
     while (e > 0)
     {
-      JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 92));
+      JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92));
 
-      /* fraction_uint96 = (fraction_uint96 << 3) + (fraction_uint96 << 1) or fraction_uint96 *= 10 */
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
-
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER (fraction_uint96_tmp);
-
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_COPY (fraction_uint96_tmp, fraction_uint96);
-
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96_tmp);
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96_tmp);
-
-      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ADD (fraction_uint96, fraction_uint96_tmp);
+      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_MUL_10 (fraction_uint96);
 
       e--;
 
       /* Normalizing mantissa */
-      while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 92))
+      while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92))
       {
         ECMA_NUMBER_CONVERSION_96BIT_INTEGER_RIGHT_SHIFT (fraction_uint96);
 
         binary_exponent++;
       }
-      while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 91))
+      while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 91))
       {
         ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
 
@@ -565,7 +618,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     while (e > 0)
     {
       /* Denormalizing mantissa, moving highest 1 to 95-bit */
-      while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 95))
+      while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 95))
       {
         ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
 
@@ -580,13 +633,13 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     }
 
     /* Normalizing mantissa */
-    while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 92))
+    while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92))
     {
       ECMA_NUMBER_CONVERSION_96BIT_INTEGER_RIGHT_SHIFT (fraction_uint96);
 
       binary_exponent++;
     }
-    while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 91))
+    while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 91))
     {
       ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
 
@@ -597,20 +650,20 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
   }
 
   JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_ZERO (fraction_uint96));
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 92));
+  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92));
 
   /*
    * Preparing mantissa for conversion to 52-bit representation, converting it to:
    *
    * |12 zero bits|84 mantissa bits|
    */
-  while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 84 + 1))
+  while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 84 + 1))
   {
     ECMA_NUMBER_CONVERSION_96BIT_INTEGER_RIGHT_SHIFT (fraction_uint96);
 
     binary_exponent++;
   }
-  while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 84))
+  while (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 84))
   {
     ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
 
@@ -619,7 +672,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_ZERO (fraction_uint96));
   }
 
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_BIT_MASK_ZERO (fraction_uint96, 84 + 1));
+  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 84 + 1));
 
   ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ROUND_HIGH_AND_MIDDLE_TO_UINT64 (fraction_uint96, fraction_uint64);
 
@@ -741,6 +794,209 @@ ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
 } /* ecma_number_to_int32 */
 
 /**
+ * Calculate s, n and k parameters for specified ecma-number according to ECMA-262 v5, 9.8.1, item 5
+ */
+static void
+ecma_number_to_zt_string_calc_number_params (ecma_number_t num, /**< ecma-number */
+                                             uint64_t *out_digits_p, /**< out: digits */
+                                             int32_t *out_digits_num_p, /**< out: number of digits */
+                                             int32_t *out_decimal_exp_p) /**< out: decimal exponent */
+{
+  ECMA_NUMBER_CONVERSION_96BIT_INTEGER (fraction_uint96);
+
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+  uint32_t s[2];
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+  uint64_t s[2];
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+  int32_t k[2];
+  int32_t n[2];
+
+  for (uint32_t i = 0;
+       i <= 1;
+       i++)
+  {
+    uint64_t fraction_uint64;
+    int32_t binary_exponent;
+    int32_t dot_shift;
+    int32_t decimal_exp = 0;
+
+    dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &binary_exponent);
+
+    binary_exponent -= dot_shift;
+
+    JERRY_ASSERT (fraction_uint64 != 0);
+
+    if (i == 0)
+    {
+      /* Lowest binary fraction that should round to fraction_uint64 */
+      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INIT (fraction_uint96,
+                                                 (fraction_uint64 - 1ull) >> 60u,
+                                                 ((fraction_uint64 - 1ull) << 4u) >> 32u,
+                                                 ((fraction_uint64 - 1ull) << 36u) >> 32u | 0x8u);
+    }
+    else
+    {
+      /* Highest binary fraction that should round to fraction_uint64 */
+      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INIT (fraction_uint96,
+                                                 (fraction_uint64) >> 60u,
+                                                 ((fraction_uint64) << 4u) >> 32u,
+                                                 ((fraction_uint64) << 36u) >> 32u | 0x7u);
+    }
+
+    binary_exponent -= 4;
+
+    /* Converting binary exponent to decimal exponent */
+    if (binary_exponent > 0)
+    {
+      while (binary_exponent > 0)
+      {
+        if (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92))
+        {
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_INC (fraction_uint96);
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_RIGHT_SHIFT (fraction_uint96);
+          binary_exponent++;
+        }
+        else
+        {
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER (fraction_uint96_tmp);
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_COPY (fraction_uint96_tmp, fraction_uint96);
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_DIV_10 (fraction_uint96_tmp);
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_MUL_10 (fraction_uint96_tmp);
+
+          if (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ARE_EQUAL (fraction_uint96, fraction_uint96_tmp)
+              && ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 91))
+          {
+            ECMA_NUMBER_CONVERSION_96BIT_INTEGER_LEFT_SHIFT (fraction_uint96);
+            binary_exponent--;
+          }
+          else
+          {
+            ECMA_NUMBER_CONVERSION_96BIT_INTEGER_DIV_10 (fraction_uint96);
+            decimal_exp++;
+          }
+        }
+      }
+    }
+    else if (binary_exponent < 0)
+    {
+      while (binary_exponent < 0)
+      {
+        if (ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_LOW_BIT_MASK_ZERO (fraction_uint96, 0)
+            || !ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 92))
+        {
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_RIGHT_SHIFT (fraction_uint96);
+
+          binary_exponent++;
+        }
+        else
+        {
+          ECMA_NUMBER_CONVERSION_96BIT_INTEGER_MUL_10 (fraction_uint96);
+
+          decimal_exp--;
+        }
+      }
+    }
+
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    uint64_t digits, t;
+
+    /* While fraction doesn't fit to 64-bit integer, divide it by 10
+         and simultaneously increment decimal exponent */
+    while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 64))
+    {
+      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_DIV_10 (fraction_uint96);
+      decimal_exp++;
+    }
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+    uint32_t digits, t;
+
+    while (!ECMA_NUMBER_CONVERSION_96BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint96, 32))
+    {
+      ECMA_NUMBER_CONVERSION_96BIT_INTEGER_DIV_10 (fraction_uint96);
+      decimal_exp++;
+    }
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+    uint64_t digits_uint64;
+    int32_t digits_num = 0;
+
+    ECMA_NUMBER_CONVERSION_96BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64 (fraction_uint96, digits_uint64);
+
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    digits = digits_uint64;
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+    digits = (uint32_t) digits_uint64;
+
+    JERRY_ASSERT (digits == digits_uint64);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+    /* Calculate number of digits in the number */
+    t = digits;
+    while (t != 0)
+    {
+      if (digits_num < ECMA_NUMBER_MAX_DIGITS)
+      {
+        digits_num++;
+      }
+      else
+      {
+        if (t < 10)
+        {
+          digits += 5;
+        }
+
+        digits /= 10;
+      }
+
+      t /= 10;
+
+      decimal_exp++;
+    }
+
+    /* Saving bound values */
+    s[i] = digits;
+    k[i] = digits_num;
+    n[i] = decimal_exp;
+  }
+
+  /* Making bound values' digit sets to be of one length */
+  for (uint32_t i = 0; i <= 1; i++)
+  {
+    while (n[i] - k[i] > n[1 - i] - k[1 - i])
+    {
+      JERRY_ASSERT (s[i] * 10 > s[i]);
+
+      s[i] *= 10;
+      k[i]++;
+    }
+  }
+
+  JERRY_ASSERT (s[1] > s[0]);
+
+  while (s[0] / 10 != s[1] / 10)
+  {
+    s[0] /= 10;
+    s[1] /= 10;
+    k[0]--;
+    k[1]--;
+  }
+
+  /* Rounding up */
+  if (k[0] == k[1])
+  {
+    *out_digits_p = (s[0] + s[1] + 1) / 2;
+  }
+  else
+  {
+    *out_digits_p = s[1];
+  }
+
+  *out_digits_num_p = k[1];
+  *out_decimal_exp_p = n[1];
+} /* ecma_number_to_zt_string_calc_number_params */
+
+/**
  * Convert ecma-number to zero-terminated string
  *
  * See also:
@@ -757,8 +1013,6 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
                           ecma_char_t *buffer_p, /**< buffer for zt-string */
                           ssize_t buffer_size) /**< size of buffer */
 {
-  FIXME (Conversion precision);
-
   const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
   const ecma_char_t e_chars [2] = { 'e', 'E' };
   const ecma_char_t plus_char = '+';
@@ -801,14 +1055,6 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
     else
     {
       // 5.
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-#define LL_T uint32_t
-#define LL_MAX_DIGITS 10
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-#define LL_T uint64_t
-#define LL_MAX_DIGITS 18
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
-
       uint32_t num_uint32 = ecma_number_to_uint32 (num);
       if (ecma_uint32_to_number (num_uint32) == num)
       {
@@ -817,116 +1063,29 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
       else
       {
         uint64_t fraction_uint64;
-        LL_T fraction;
-        int32_t exponent;
-        int32_t dot_shift;
-        int32_t decimal_exp = 0;
+        int32_t binary_exponent;
 
-        dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &exponent);
+        ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &binary_exponent);
 
-        fraction = (LL_T) fraction_uint64;
-        JERRY_ASSERT (fraction == fraction_uint64);
-
-        if (exponent != 0)
-        {
-          ecma_number_t t = 1.0f;
-          bool do_divide;
-
-          if (exponent < 0)
-          {
-            do_divide = true;
-
-            while (exponent <= 0)
-            {
-              t *= 2.0f;
-              exponent++;
-
-              if (t >= 10.0f)
-              {
-                t /= 10.0f;
-                decimal_exp--;
-              }
-
-              JERRY_ASSERT (t < 10.0f);
-            }
-
-            while (t > 1.0f)
-            {
-              exponent--;
-              t /= 2.0f;
-            }
-          }
-          else
-          {
-            do_divide = false;
-
-            while (exponent >= 0)
-            {
-              t *= 2.0f;
-              exponent--;
-
-              if (t >= 10.0f)
-              {
-                t /= 10.0f;
-                decimal_exp++;
-              }
-
-              JERRY_ASSERT (t < 10.0f);
-            }
-
-            while (t > 2.0f)
-            {
-              exponent++;
-              t /= 2.0f;
-            }
-          }
-
-          if (do_divide)
-          {
-            fraction = (LL_T) ((ecma_number_t) fraction / t);
-          }
-          else
-          {
-            fraction = (LL_T) ((ecma_number_t) fraction * t);
-          }
-        }
-
-        LL_T s;
+        /* mantissa */
+        uint64_t s_uint64;
+        /* decimal exponent */
         int32_t n;
+        /* number of digits in k */
         int32_t k;
 
-        if (exponent > 0)
-        {
-          fraction <<= exponent;
-        }
-        else
-        {
-          fraction >>= -exponent;
-        }
+        ecma_number_to_zt_string_calc_number_params (num,
+                                                     &s_uint64,
+                                                     &k,
+                                                     &n);
 
-        const int32_t int_part_shift = dot_shift;
-        const LL_T frac_part_mask = ((((LL_T)1) << int_part_shift) - 1);
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+        uint64_t s = s_uint64;
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+        uint32_t s = (uint32_t) s_uint64;
 
-        LL_T int_part = fraction >> int_part_shift;
-        LL_T frac_part = fraction & frac_part_mask;
-
-        s = int_part;
-        k = 1;
-        n = decimal_exp + 1;
-
-        JERRY_ASSERT (int_part < 10);
-
-        while (k < LL_MAX_DIGITS
-               && frac_part != 0)
-        {
-          frac_part *= 10;
-
-          LL_T new_frac_part = frac_part & frac_part_mask;
-          LL_T digit = (frac_part - new_frac_part) >> int_part_shift;
-          s = s * 10 + digit;
-          k++;
-          frac_part = new_frac_part;
-        }
+        JERRY_ASSERT (s == s_uint64);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
         // 6.
         if (k <= n && n <= 21)
@@ -969,7 +1128,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
             s /= 10;
           }
         }
-        else if (-6 <= n && n <= 0)
+        else if (-6 < n && n <= 0)
         {
           // 8.
           dst_p += k - n + 1 + 1;
@@ -1039,7 +1198,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
             {
               t_mod /= 10;
 
-              JERRY_ASSERT (t_mod != 0);
+              JERRY_ASSERT (t != 0);
             }
 
             while (t_mod != 0)

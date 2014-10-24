@@ -789,8 +789,6 @@
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-009.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-010.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-011.js
-./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-012.js
-./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-013.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-039.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-040.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-041.js

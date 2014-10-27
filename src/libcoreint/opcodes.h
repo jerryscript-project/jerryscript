@@ -133,8 +133,6 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_2 (a, b_not, dst, var_right)
 
 #define OP_B_LOGICAL(p, a)                                                   \
-        p##_3 (a, logical_and, dst, var_left, var_right)                     \
-        p##_3 (a, logical_or, dst, var_left, var_right)                      \
         p##_2 (a, logical_not, dst, var_right)
 
 #define OP_EQUALITY(p, a)                                                    \

@@ -224,8 +224,6 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     PP_OP_3 (b_or, "%s = %s | %s;", dst, var_left, var_right);
     PP_OP_3 (b_xor, "%s = %s ^ %s;", dst, var_left, var_right);
     PP_OP_2 (b_not, "%s = ~ %s;", dst, var_right);
-    PP_OP_3 (logical_and, "%s = %s && %s;", dst, var_left, var_right);
-    PP_OP_3 (logical_or, "%s = %s || %s;", dst, var_left, var_right);
     PP_OP_2 (logical_not, "%s = ! %s;", dst, var_right);
     PP_OP_3 (equal_value, "%s = %s == %s;", dst, var_left, var_right);
     PP_OP_3 (not_equal_value, "%s = %s != %s;", dst, var_left, var_right);

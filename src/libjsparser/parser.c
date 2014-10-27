@@ -319,6 +319,7 @@ static void parse_assignment_expression (void);
 static void parse_source_element_list (bool);
 static uint8_t parse_argument_list (argument_list_type, idx_t);
 static void skip_braces (void);
+static void parse_logical_expression (bool);
 
 static uint8_t
 lp_string_hash (lp_string str)
@@ -2157,92 +2158,96 @@ PARSE_OF (bitwise_xor_expression, bitwise_and_expression, XOR, b_xor)
   ; */
 PARSE_OF (bitwise_or_expression, bitwise_xor_expression, OR, b_or)
 
-/* logical_and_expression
-  : bitwise_or_expression (LT!* '&&' LT!* bitwise_or_expression)*
-  ; */
 static void
-parse_logical_and_expression (void)
+dump_logical_check_and_op (bool logical_or)
 {
-  STACK_DECLARE_USAGE (IDX)
-  STACK_DECLARE_USAGE (U16)
-  STACK_DECLARE_USAGE (U8)
+  STACK_DECLARE_USAGE (IDX);
 
-  STACK_PUSH (U8, STACK_SIZE (U16));
-
-  parse_bitwise_or_expression ();
-
-  skip_newlines ();
-  while (true)
+  STACK_PUSH (U16, OPCODE_COUNTER ());
+  if (logical_or)
   {
-    if (token_is (TOK_DOUBLE_AND))
-    {
-      STACK_PUSH (U16, OPCODE_COUNTER ());
-      DUMP_OPCODE_3 (is_false_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
-      NEXT (bitwise_or_expression);
-      DUMP_OPCODE_3 (logical_and, ID (2), ID (2), ID (1));
-      STACK_DROP (IDX, 1);
-    }
-    else
-    {
-      lexer_save_token (TOK ());
-      break;
-    }
+    DUMP_OPCODE_3 (is_true_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
     skip_newlines ();
+    parse_logical_expression (false);
   }
-
-  for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (U16); i++)
+  else
   {
-    REWRITE_COND_JMP (STACK_ELEMENT (U16, i), is_false_jmp_down, OPCODE_COUNTER () - STACK_ELEMENT (U16, i));
+    DUMP_OPCODE_3 (is_false_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
+    NEXT (bitwise_or_expression);
   }
+  DUMP_OPCODE_3 (assignment, ID(2), OPCODE_ARG_TYPE_VARIABLE, ID (1));
+  STACK_DROP (IDX, 1);
 
-  STACK_DROP (U16, STACK_SIZE (U16) - STACK_TOP (U8));
-  STACK_DROP (U8, 1);
-
-  STACK_CHECK_USAGE (U16);
-  STACK_CHECK_USAGE (U8);
-  STACK_CHECK_USAGE_LHS ();
+  STACK_CHECK_USAGE (IDX);
 }
 
-/* logical_or_expression
+static void
+rewrite_logical_check (bool logical_or, uint8_t elem)
+{
+  if (logical_or)
+  {
+    REWRITE_COND_JMP (STACK_ELEMENT (U16, elem), is_true_jmp_down,
+                      OPCODE_COUNTER () - STACK_ELEMENT (U16, elem));
+  }
+  else
+  {
+    REWRITE_COND_JMP (STACK_ELEMENT (U16, elem), is_false_jmp_down,
+                      OPCODE_COUNTER () - STACK_ELEMENT (U16, elem));
+  }
+}
+
+/* logical_and_expression
+  : bitwise_or_expression (LT!* '&&' LT!* bitwise_or_expression)*
+  ;
+   logical_or_expression
   : logical_and_expression (LT!* '||' LT!* logical_and_expression)*
   ; */
 static void
-parse_logical_or_expression (void)
+parse_logical_expression (bool logical_or)
 {
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (U8)
 
+  STACK_PUSH (U8, logical_or ? TOK_DOUBLE_OR : TOK_DOUBLE_AND);
   STACK_PUSH (U8, STACK_SIZE (U16));
 
-  parse_logical_and_expression ();
-
-  skip_newlines ();
-  while (true)
+  if (logical_or)
   {
-    if (token_is (TOK_DOUBLE_OR))
-    {
-      STACK_PUSH (U16, OPCODE_COUNTER ());
-      DUMP_OPCODE_3 (is_true_jmp_down, ID (1), INVALID_VALUE, INVALID_VALUE);
-      NEXT (logical_and_expression);
-      DUMP_OPCODE_3 (logical_or, ID (2), ID (2), ID (1));
-      STACK_DROP (IDX, 1);
-    }
-    else
-    {
-      lexer_save_token (TOK ());
-      break;
-    }
-    skip_newlines ();
+    parse_logical_expression (false);
+  }
+  else
+  {
+    parse_bitwise_or_expression ();
   }
 
-  for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (U16); i++)
+  skip_newlines ();
+  if (token_is (STACK_HEAD (U8, 2)))
   {
-    REWRITE_COND_JMP (STACK_ELEMENT (U16, i), is_true_jmp_down, OPCODE_COUNTER () - STACK_ELEMENT (U16, i));
+    STACK_PUSH (IDX, next_temp_name ());
+    DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, ID (2));
+    dump_logical_check_and_op (logical_or);
+    skip_newlines ();
+  }
+  while (token_is (STACK_HEAD (U8, 2)))
+  {
+    dump_logical_check_and_op (logical_or);
+    skip_newlines ();
+  }
+  lexer_save_token (TOK ());
+
+  if (STACK_TOP (U8) != STACK_SIZE (U16))
+  {
+    for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (U16); i++)
+    {
+      rewrite_logical_check (logical_or, i);
+    }
+    STACK_SWAP (IDX);
+    STACK_DROP (IDX, 1);
   }
 
   STACK_DROP (U16, STACK_SIZE (U16) - STACK_TOP (U8));
-  STACK_DROP (U8, 1);
+  STACK_DROP (U8, 2);
 
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (U8);
@@ -2260,7 +2265,7 @@ parse_conditional_expression (void)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (U8)
 
-  parse_logical_or_expression ();
+  parse_logical_expression (true);
 
   skip_newlines ();
   if (token_is (TOK_QUERY))

@@ -14,5 +14,5 @@
 
 TARGET=$1
 PARSE=$2
-rm ./js.files jerry.error jerry.passed; ./tools/jerry_test.sh ./out/$TARGET/jerry . ./tests/test262/test/suite/ $PARSE
+rm ./js.files jerry.error jerry.passed; ./tools/jerry_test.sh ./out/$TARGET/jerry . ./tests/test262/test/suite/ ./tests/test262/test/harness/sta-jerry.js $PARSE
 

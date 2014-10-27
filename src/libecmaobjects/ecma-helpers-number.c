@@ -401,8 +401,6 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
                                        int32_t *out_exponent_p) /**< out: exponent of the number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
-  JERRY_ASSERT (!ecma_number_is_zero (num));
-  JERRY_ASSERT (!ecma_number_is_infinity (num));
 
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
   uint64_t fraction = ecma_number_get_fraction_field (num);
@@ -411,15 +409,30 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
   if (unlikely (biased_exp == 0))
   {
     /* IEEE-754 2008, 3.4, d */
-    exponent = 1 - ecma_number_exponent_bias;
-
-    while (!(fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)))
+    if (ecma_number_is_zero (num))
     {
-      JERRY_ASSERT (fraction != 0);
-
-      fraction <<= 1;
-      exponent--;
+      exponent = -ecma_number_exponent_bias;
     }
+    else
+    {
+      exponent = 1 - ecma_number_exponent_bias;
+
+      while (!(fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)))
+      {
+        JERRY_ASSERT (fraction != 0);
+
+        fraction <<= 1;
+        exponent--;
+      }
+    }
+  }
+  else if (ecma_number_is_infinity (num))
+  {
+    /* The fraction and exponent should round to infinity */
+    exponent = (int32_t) biased_exp - ecma_number_exponent_bias;
+
+    JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
+    fraction |= 1ull << ECMA_NUMBER_FRACTION_WIDTH;
   }
   else
   {
@@ -539,6 +552,80 @@ ecma_number_make_from_sign_mantissa_and_exponent (bool sign, /**< true - for neg
                            biased_exp,
                            mantissa);
 } /* ecma_number_make_from_sign_mantissa_and_exponent */
+
+/**
+ * Get previous representable ecma-number
+ *
+ * @return maximum ecma-number that is less compared to passed argument
+ */
+ecma_number_t
+ecma_number_get_prev (ecma_number_t num) /**< ecma-number */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+  JERRY_ASSERT (!ecma_number_is_zero (num));
+
+  if (ecma_number_is_negative (num))
+  {
+    return ecma_number_negate (ecma_number_get_next (num));
+  }
+
+  uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
+  uint64_t fraction = ecma_number_get_fraction_field (num);
+
+  if (fraction == 0 && biased_exp != 0)
+  {
+    fraction = (1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1;
+
+    biased_exp--;
+  }
+  else
+  {
+    fraction--;
+  }
+
+  return ecma_number_pack (false,
+                           biased_exp,
+                           fraction);
+} /* ecma_number_get_prev */
+
+/**
+ * Get next representable ecma-number
+ *
+ * @return minimum ecma-number that is greater compared to passed argument
+ */
+ecma_number_t
+ecma_number_get_next (ecma_number_t num) /**< ecma-number */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+  JERRY_ASSERT (!ecma_number_is_infinity (num));
+
+  if (ecma_number_is_negative (num))
+  {
+    return ecma_number_negate (ecma_number_get_prev (num));
+  }
+
+  uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
+  uint64_t fraction = ecma_number_get_fraction_field (num);
+
+  fraction |= (1ull << ECMA_NUMBER_FRACTION_WIDTH);
+
+  fraction++;
+
+  if ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0)
+  {
+    fraction >>= 1;
+
+    biased_exp++;
+  }
+
+  JERRY_ASSERT (fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH));
+
+  fraction &= ~(1ull << ECMA_NUMBER_FRACTION_WIDTH);
+
+  return ecma_number_pack (false,
+                           biased_exp,
+                           fraction);
+} /* ecma_number_get_next */
 
 /**
  * Negate ecma-number

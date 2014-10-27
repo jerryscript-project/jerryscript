@@ -148,6 +148,8 @@ extern ecma_number_t
 ecma_number_make_from_sign_mantissa_and_exponent (bool sign,
                                                   uint64_t mantissa,
                                                   int32_t exponent);
+extern ecma_number_t ecma_number_get_prev (ecma_number_t num);
+extern ecma_number_t ecma_number_get_next (ecma_number_t num);
 extern ecma_number_t ecma_number_negate (ecma_number_t num);
 extern ecma_number_t ecma_number_trunc (ecma_number_t num);
 extern ecma_number_t ecma_number_add (ecma_number_t left_num, ecma_number_t right_num);

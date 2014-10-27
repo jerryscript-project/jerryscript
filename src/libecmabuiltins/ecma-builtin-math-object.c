@@ -200,7 +200,7 @@ ecma_builtin_math_object_abs (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_acos (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_acos */
 
 /**
@@ -215,7 +215,7 @@ ecma_builtin_math_object_acos (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_asin (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_asin */
 
 /**
@@ -230,7 +230,7 @@ ecma_builtin_math_object_asin (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_atan (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_atan */
 
 /**
@@ -246,7 +246,7 @@ static ecma_completion_value_t
 ecma_builtin_math_object_atan2 (ecma_value_t arg1, /**< first routine's argument */
                                 ecma_value_t arg2) /**< second routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg1, arg2);
 } /* ecma_builtin_math_object_atan2 */
 
 /**
@@ -261,7 +261,7 @@ ecma_builtin_math_object_atan2 (ecma_value_t arg1, /**< first routine's argument
 static ecma_completion_value_t
 ecma_builtin_math_object_ceil (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_ceil */
 
 /**
@@ -276,7 +276,7 @@ ecma_builtin_math_object_ceil (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_cos (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_cos */
 
 /**
@@ -344,7 +344,7 @@ ecma_builtin_math_object_exp (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_floor (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_floor */
 
 /**
@@ -927,7 +927,7 @@ ecma_builtin_math_object_round (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_sin (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_sin */
 
 /**
@@ -994,7 +994,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_math_object_tan (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_math_object_tan */
 
 /**

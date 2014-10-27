@@ -268,7 +268,11 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
     default:
     {
-      JERRY_UNIMPLEMENTED ();
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+      JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
 
@@ -408,7 +412,11 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 
       default:
       {
-        JERRY_UNIMPLEMENTED ();
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+        JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+        JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
       }
     }
   }
@@ -468,7 +476,11 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 
     default:
     {
-      JERRY_UNIMPLEMENTED ();
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+      JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
 
@@ -510,7 +522,11 @@ ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< i
 
     default:
     {
-      JERRY_UNIMPLEMENTED ();
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+      JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
 
@@ -557,7 +573,11 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
 
     default:
     {
-      JERRY_UNIMPLEMENTED ();
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+      JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
 

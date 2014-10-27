@@ -181,7 +181,7 @@ ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p, /**< arg
 static ecma_completion_value_t
 ecma_builtin_object_object_get_prototype_of (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_get_prototype_of */
 
 /**
@@ -196,7 +196,7 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t arg) /**< routine's ar
 static ecma_completion_value_t
 ecma_builtin_object_object_get_own_property_names (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_get_own_property_names */
 
 /**
@@ -211,7 +211,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t arg) /**< routin
 static ecma_completion_value_t
 ecma_builtin_object_object_seal (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_seal */
 
 /**
@@ -226,7 +226,7 @@ ecma_builtin_object_object_seal (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_object_object_freeze (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_freeze */
 
 /**
@@ -241,7 +241,7 @@ ecma_builtin_object_object_freeze (ecma_value_t arg) /**< routine's argument */
 static ecma_completion_value_t
 ecma_builtin_object_object_prevent_extensions (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_prevent_extensions */
 
 /**
@@ -256,7 +256,7 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t arg) /**< routine's 
 static ecma_completion_value_t
 ecma_builtin_object_object_is_sealed (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_is_sealed */
 
 /**
@@ -271,7 +271,7 @@ ecma_builtin_object_object_is_sealed (ecma_value_t arg) /**< routine's argument 
 static ecma_completion_value_t
 ecma_builtin_object_object_is_frozen (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_is_frozen */
 
 /**
@@ -286,7 +286,7 @@ ecma_builtin_object_object_is_frozen (ecma_value_t arg) /**< routine's argument 
 static ecma_completion_value_t
 ecma_builtin_object_object_is_extensible (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_is_extensible */
 
 /**
@@ -301,7 +301,7 @@ ecma_builtin_object_object_is_extensible (ecma_value_t arg) /**< routine's argum
 static ecma_completion_value_t
 ecma_builtin_object_object_keys (ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg);
 } /* ecma_builtin_object_object_keys */
 
 /**
@@ -317,7 +317,7 @@ static ecma_completion_value_t
 ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t arg1, /**< routine's first argument */
                                                         ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg1, arg2);
 } /* ecma_builtin_object_object_get_own_property_descriptor */
 
 /**
@@ -333,7 +333,7 @@ static ecma_completion_value_t
 ecma_builtin_object_object_create (ecma_value_t arg1, /**< routine's first argument */
                                    ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg1, arg2);
 } /* ecma_builtin_object_object_create */
 
 /**
@@ -349,7 +349,7 @@ static ecma_completion_value_t
 ecma_builtin_object_object_define_properties (ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (arg1, arg2);
 } /* ecma_builtin_object_object_define_properties */
 
 /**

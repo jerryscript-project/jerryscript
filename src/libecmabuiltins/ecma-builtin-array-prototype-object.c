@@ -89,7 +89,7 @@ const ecma_length_t ecma_builtin_array_prototype_property_number = (sizeof (ecma
 static ecma_completion_value_t
 ecma_builtin_array_prototype_object_to_string (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_array_prototype_object_to_string */
 
 /**

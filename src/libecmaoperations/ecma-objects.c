@@ -68,7 +68,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -126,7 +126,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -176,7 +176,7 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -219,7 +219,7 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -260,7 +260,7 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -301,7 +301,7 @@ ecma_op_object_has_property (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -347,7 +347,7 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -387,7 +387,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -438,7 +438,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 
@@ -479,7 +479,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
 
     case ECMA_OBJECT_TYPE_HOST:
     {
-      JERRY_UNIMPLEMENTED();
+      JERRY_UNIMPLEMENTED("Host objects support is not implemented.");
     }
   }
 

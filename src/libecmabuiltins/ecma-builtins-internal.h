@@ -169,4 +169,19 @@ ECMA_BUILTIN_LIST (DECLARE_DISPATCH_ROUTINES)
 #undef DECLARE_PROPERTY_NUMBER_VARIABLES
 #undef DECLARE_DISPATCH_ROUTINES
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE
+# define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Compact Profile optional built-in.", __VA_ARGS__)
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
+# define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
+{ \
+  if (false) \
+  { \
+    jerry_ref_unused_variables (0, __VA_ARGS__); \
+  } \
+  ecma_object_t *cp_error_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
+  return ecma_make_throw_obj_completion_value (cp_error_p); \
+}
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

@@ -93,13 +93,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_builtin_global_property_names) > sizeof (void*
 static ecma_completion_value_t
 ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument */
 {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-  (void) x;
-
-  return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
-#else /* !CONFIG_ECMA_COMPACT_PROFILE */
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (x);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (x);
 } /* ecma_builtin_global_object_eval */
 
 /**
@@ -115,7 +109,7 @@ static ecma_completion_value_t
 ecma_builtin_global_object_parse_int (ecma_value_t string, /**< routine's first argument */
                                       ecma_value_t radix) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (string, radix);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (string, radix);
 } /* ecma_builtin_global_object_parse_int */
 
 /**
@@ -130,7 +124,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t string, /**< routine's first 
 static ecma_completion_value_t
 ecma_builtin_global_object_parse_float (ecma_value_t string) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (string);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (string);
 } /* ecma_builtin_global_object_parse_float */
 
 /**
@@ -202,7 +196,7 @@ ecma_builtin_global_object_is_finite (ecma_value_t arg) /**< routine's first arg
 static ecma_completion_value_t
 ecma_builtin_global_object_decode_uri (ecma_value_t encoded_uri) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (encoded_uri);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (encoded_uri);
 } /* ecma_builtin_global_object_decode_uri */
 
 /**
@@ -217,7 +211,7 @@ ecma_builtin_global_object_decode_uri (ecma_value_t encoded_uri) /**< routine's 
 static ecma_completion_value_t
 ecma_builtin_global_object_decode_uri_component (ecma_value_t encoded_uri_component) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (encoded_uri_component);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (encoded_uri_component);
 } /* ecma_builtin_global_object_decode_uri_component */
 
 /**
@@ -232,7 +226,7 @@ ecma_builtin_global_object_decode_uri_component (ecma_value_t encoded_uri_compon
 static ecma_completion_value_t
 ecma_builtin_global_object_encode_uri (ecma_value_t uri) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (uri);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (uri);
 } /* ecma_builtin_global_object_encode_uri */
 
 /**
@@ -247,7 +241,7 @@ ecma_builtin_global_object_encode_uri (ecma_value_t uri) /**< routine's first ar
 static ecma_completion_value_t
 ecma_builtin_global_object_encode_uri_component (ecma_value_t uri_component) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (uri_component);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (uri_component);
 } /* ecma_builtin_global_object_encode_uri_component */
 
 /**
@@ -564,7 +558,6 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
       /* The object throws CompactProfileError upon invocation */
       ecma_object_t *get_set_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
-      ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_set_p);
       ecma_property_t *compact_profile_thrower_property_p = ecma_create_named_accessor_property (obj_p,
                                                                                                  prop_name_p,
                                                                                                  get_set_p,
@@ -574,9 +567,11 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
       ecma_deref_object (get_set_p);
 
       return compact_profile_thrower_property_p;
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
-      JERRY_UNIMPLEMENTED ();
+      JERRY_UNREACHABLE ();
     }
 
     default:

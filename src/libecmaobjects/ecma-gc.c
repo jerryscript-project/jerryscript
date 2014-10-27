@@ -393,7 +393,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
           case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
           {
-            JERRY_UNIMPLEMENTED();
+            JERRY_UNIMPLEMENTED("Indexed array storage is not implemented yet.");
           }
 
           case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t

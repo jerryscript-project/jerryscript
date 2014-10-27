@@ -22,25 +22,25 @@
 int
 digital_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
 {
-  JERRY_UNIMPLEMENTED ();
+  JERRY_UNIMPLEMENTED ("Digital read operation is not implemented.");
 }
 
 void
 digital_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
 {
-  JERRY_UNIMPLEMENTED ();
+  JERRY_UNIMPLEMENTED ("Digital write operation is not implemented.");
 }
 
 int
 analog_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
 {
-  JERRY_UNIMPLEMENTED ();
+  JERRY_UNIMPLEMENTED ("Analog read operation is not implemented.");
 }
 
 void
 analog_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
 {
-  JERRY_UNIMPLEMENTED ();
+  JERRY_UNIMPLEMENTED ("Analog write operation is not implemented.");
 }
 
 #ifdef __TARGET_HOST

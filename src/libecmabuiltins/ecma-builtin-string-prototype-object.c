@@ -211,7 +211,7 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_char_at (ecma_value_t this, /**< this argument */
                                               ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_string_prototype_object_char_at */
 
 /**
@@ -227,7 +227,7 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_string_prototype_object_char_code_at */
 
 /**
@@ -244,7 +244,7 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this, /**< this argume
                                              ecma_value_t* argument_list_p, /**< arguments list */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, argument_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, argument_list_p, arguments_number);
 } /* ecma_builtin_string_prototype_object_concat */
 
 /**
@@ -261,7 +261,7 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this, /**< this argu
                                                ecma_value_t arg1, /**< routine's first argument */
                                                ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_index_of */
 
 /**
@@ -278,7 +278,7 @@ ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this, /**< this
                                                     ecma_value_t arg1, /**< routine's first argument */
                                                     ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_last_index_of */
 
 /**
@@ -294,7 +294,7 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
 /**
@@ -310,7 +310,7 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_match (ecma_value_t this, /**< this argument */
                                             ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_string_prototype_object_match */
 
 /**
@@ -327,7 +327,7 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this, /**< this argum
                                               ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_replace */
 
 /**
@@ -343,7 +343,7 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_search (ecma_value_t this, /**< this argument */
                                              ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_string_prototype_object_search */
 
 /**
@@ -360,7 +360,7 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this, /**< this argumen
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_slice */
 
 /**
@@ -377,7 +377,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this, /**< this argumen
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_split */
 
 /**
@@ -394,7 +394,7 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this, /**< this arg
                                                 ecma_value_t arg1, /**< routine's first argument */
                                                 ecma_value_t arg2) /**< routine's second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_substring */
 
 /**
@@ -409,7 +409,7 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this, /**< this arg
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_string_prototype_object_to_lower_case */
 
 /**
@@ -424,7 +424,7 @@ ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this) /**< this
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_string_prototype_object_to_locale_lower_case */
 
 /**
@@ -439,7 +439,7 @@ ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this) /*
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_string_prototype_object_to_upper_case */
 
 /**
@@ -454,7 +454,7 @@ ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this) /**< this
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_string_prototype_object_to_locale_upper_case */
 
 /**
@@ -469,7 +469,7 @@ ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this) /*
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_trim (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_string_prototype_object_trim */
 
 /**

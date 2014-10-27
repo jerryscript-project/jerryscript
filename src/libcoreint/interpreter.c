@@ -439,7 +439,7 @@ run_int_loop (int_data_t *int_data)
     if (completion.type == ECMA_COMPLETION_TYPE_BREAK
         || completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
     {
-      JERRY_UNIMPLEMENTED ();
+      JERRY_UNIMPLEMENTED ("break and continue on labels are not supported.");
 
       continue;
     }

@@ -97,7 +97,7 @@ const ecma_length_t ecma_builtin_function_prototype_property_number = (sizeof (e
 static ecma_completion_value_t
 ecma_builtin_function_prototype_object_to_string (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_function_prototype_object_to_string */
 
 /**
@@ -114,7 +114,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this, /**< this argum
                                               ecma_value_t arg1, /**< first argument */
                                               ecma_value_t arg2) /**< second argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
 } /* ecma_builtin_function_prototype_object_apply */
 
 /**
@@ -131,7 +131,7 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this, /**< this argume
                                              ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arguments_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arguments_list_p, arguments_number);
 } /* ecma_builtin_function_prototype_object_call */
 
 /**
@@ -148,7 +148,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this, /**< this argume
                                              ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arguments_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arguments_list_p, arguments_number);
 } /* ecma_builtin_function_prototype_object_bind */
 
 /**

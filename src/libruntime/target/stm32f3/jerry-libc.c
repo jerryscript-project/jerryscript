@@ -27,7 +27,7 @@ extern void __noreturn exit (int status);
 int
 __putchar (int c)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(c);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS("putchar is not implemented for STM32F3.", c);
 } /* __putchar */
 
 /** exit - cause normal process termination  */
@@ -54,6 +54,6 @@ __fwrite (const void *ptr, /**< data to write */
          size_t nmemb, /**< number of elements */
          _FILE *stream) /**< stream pointer */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(ptr, size, nmemb, stream);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS("fwrite is not implemented for STM32F3.", ptr, size, nmemb, stream);
 } /* __fwrite */
 

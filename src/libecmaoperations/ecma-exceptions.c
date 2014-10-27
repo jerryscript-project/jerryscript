@@ -39,7 +39,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   /* SyntaxError should be treated as an early error */
   JERRY_ASSERT (error_type != ECMA_ERROR_SYNTAX);
 
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(error_type);
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS("Built-in error objects are not implemented.", error_type);
 } /* ecma_new_standard_error */
 
 /**

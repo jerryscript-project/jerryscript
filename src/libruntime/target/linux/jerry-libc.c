@@ -186,7 +186,8 @@ __fopen (const char *path, /**< file path */
       create_if_not_exist = true;
       if (mode[1] == '+')
       {
-        JERRY_UNIMPLEMENTED();
+        /* Not supported */
+        JERRY_UNREACHABLE();
       }
       break;
     }

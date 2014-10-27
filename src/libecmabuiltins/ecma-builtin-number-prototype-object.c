@@ -146,7 +146,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
     return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
   }
   {
-    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (arguments_list_p);
+    ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p);
   }
 } /* ecma_builtin_number_prototype_object_to_string */
 
@@ -217,7 +217,7 @@ static ecma_completion_value_t
 ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this, /**< this argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_number_prototype_object_to_fixed */
 
 /**
@@ -233,7 +233,7 @@ static ecma_completion_value_t
 ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_number_prototype_object_to_exponential */
 
 /**
@@ -249,7 +249,7 @@ static ecma_completion_value_t
 ecma_builtin_number_prototype_object_to_precision (ecma_value_t this, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_number_prototype_object_to_precision */
 
 /**

@@ -449,7 +449,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-    JERRY_UNIMPLEMENTED ();
+    JERRY_UNIMPLEMENTED ("Bound functions are not implemented.");
   }
 } /* ecma_op_function_has_instance */
 
@@ -557,7 +557,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   {
     JERRY_ASSERT(ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-    JERRY_UNIMPLEMENTED();
+    JERRY_UNIMPLEMENTED ("Bound functions are not implemented.");
   }
 } /* ecma_op_function_call */
 
@@ -654,7 +654,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   {
     JERRY_ASSERT(ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-    JERRY_UNIMPLEMENTED();
+    JERRY_UNIMPLEMENTED ("Bound functions are not implemented.");
   }
 } /* ecma_op_function_construct */
 /**
@@ -779,7 +779,7 @@ ecma_op_get_throw_type_error (void)
 {
   TODO(Create [[ThrowTypeError]] during engine initialization and return it from here);
 
-  JERRY_UNIMPLEMENTED();
+  JERRY_UNIMPLEMENTED("Type error thrower is not implemented.");
 } /* ecma_op_get_throw_type_error */
 
 /**

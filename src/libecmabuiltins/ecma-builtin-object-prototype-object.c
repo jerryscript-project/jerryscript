@@ -204,7 +204,7 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this) /**< this argu
 static ecma_completion_value_t
 ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this) /**< this argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
 } /* ecma_builtin_object_prototype_object_to_locale_string */
 
 /**
@@ -220,7 +220,7 @@ static ecma_completion_value_t
 ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this, /**< this argument */
                                                        ecma_value_t arg) /**< first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**
@@ -236,7 +236,7 @@ static ecma_completion_value_t
 ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this, /**< this argument */
                                                       ecma_value_t arg) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_object_prototype_object_is_prototype_of */
 
 /**
@@ -252,7 +252,7 @@ static ecma_completion_value_t
 ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this, /**< this argument */
                                                              ecma_value_t arg) /**< routine's first argument */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
 /**

@@ -530,7 +530,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '*')
       {
-        JERRY_UNIMPLEMENTED();
+        /* Not supported */
+        JERRY_UNREACHABLE ();
       }
 
       // If there is a number, recognize it as field width
@@ -543,7 +544,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '.')
       {
-        JERRY_UNIMPLEMENTED();
+        /* Not supported */
+        JERRY_UNREACHABLE ();
       }
 
       switch (*format_iter_p)
@@ -636,7 +638,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
         case 'a':
         case 'A':
         {
-          JERRY_UNIMPLEMENTED();
+          /* Not supported */
+          JERRY_UNREACHABLE ();
           break;
         }
 
@@ -644,7 +647,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            JERRY_UNIMPLEMENTED();
+            /* Not supported */
+            JERRY_UNREACHABLE ();
           }
           else
           {
@@ -667,7 +671,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            JERRY_UNIMPLEMENTED();
+            /* Not supported */
+            JERRY_UNREACHABLE ();
           }
           else
           {
@@ -707,7 +712,8 @@ __vfprintf (_FILE *stream, /**< stream pointer */
 
         case 'n':
         {
-          JERRY_UNIMPLEMENTED();
+          /* Not supported */
+          JERRY_UNREACHABLE ();
           break;
         }
       }

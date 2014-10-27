@@ -306,7 +306,8 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
     }
     else
     {
-      JERRY_UNIMPLEMENTED ();
+      JERRY_UNIMPLEMENTED ("Unimplemented copy operation for strings, "
+                           "stored in heap chunks or number, or concatenated strings.");
     }
   }
 

@@ -115,7 +115,7 @@ read_sources (const char *script_file_names[],
       jerry_exit (ERR_OUT_OF_MEMORY);
     }
 
-    size_t bytes_read = __fread (source_buffer, 1, current_source_size, file);
+    size_t bytes_read = __fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
       jerry_exit (ERR_IO);

@@ -40,6 +40,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                ecma_value_t this_arg_value,
                                ecma_value_t arguments_list [],
                                ecma_length_t arguments_number);
+static void ecma_instantiate_builtin (ecma_builtin_id_t id);
 
 /**
  * Pointer to instances of built-in objects
@@ -55,7 +56,11 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
 {
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
-  JERRY_ASSERT (ecma_builtin_objects [builtin_id] != NULL);
+
+  if (unlikely (ecma_builtin_objects [builtin_id] == NULL))
+  {
+    ecma_instantiate_builtin (builtin_id);
+  }
 
   return (obj_p == ecma_builtin_objects [builtin_id]);
 } /* ecma_builtin_is */
@@ -69,7 +74,11 @@ ecma_object_t*
 ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
-  JERRY_ASSERT (ecma_builtin_objects [builtin_id] != NULL);
+
+  if (unlikely (ecma_builtin_objects [builtin_id] == NULL))
+  {
+    ecma_instantiate_builtin (builtin_id);
+  }
 
   ecma_ref_object (ecma_builtin_objects [builtin_id]);
 
@@ -145,7 +154,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 } /* ecma_builtin_init_object */
 
 /**
- * Initialize ECMA built-in objects
+ * Initialize ECMA built-ins components
  */
 void
 ecma_init_builtins (void)
@@ -156,35 +165,59 @@ ecma_init_builtins (void)
   {
     ecma_builtin_objects [id] = NULL;
   }
+} /* ecma_init_builtins */
 
-#define INIT_BUILTIN(builtin_id, \
+/**
+ * Instantiate specified ECMA built-in object
+ */
+static void
+ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
+{
+  switch (id)
+  {
+#define CASE_BUILTIN(builtin_id, \
                      object_type, \
                      object_class, \
                      object_prototype_builtin_id, \
                      lowercase_name) \
-  { \
-    ecma_object_t *prototype_obj_p; \
-    if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
+    case ECMA_BUILTIN_ID_ ## builtin_id: \
     { \
-      prototype_obj_p = NULL; \
-    } \
-    else \
-    { \
-      prototype_obj_p = ecma_builtin_objects [object_prototype_builtin_id]; \
-      JERRY_ASSERT (prototype_obj_p != NULL); \
-    } \
-    \
-    ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
-                                                              prototype_obj_p, \
-                                                              ECMA_OBJECT_ ## object_type, \
-                                                              ECMA_MAGIC_STRING_ ## object_class); \
-    ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
+      JERRY_ASSERT (ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] == NULL); \
+      \
+      ecma_object_t *prototype_obj_p; \
+      if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
+      { \
+        prototype_obj_p = NULL; \
+      } \
+      else \
+      { \
+        if (ecma_builtin_objects [object_prototype_builtin_id] == NULL) \
+        { \
+          ecma_instantiate_builtin (object_prototype_builtin_id); \
+        } \
+        prototype_obj_p = ecma_builtin_objects [object_prototype_builtin_id]; \
+        JERRY_ASSERT (prototype_obj_p != NULL); \
+      } \
+      \
+      ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
+                                                                prototype_obj_p, \
+                                                                ECMA_OBJECT_ ## object_type, \
+                                                                ECMA_MAGIC_STRING_ ## object_class); \
+      ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
+      \
+      break; \
+    }
+
+    ECMA_BUILTIN_LIST (CASE_BUILTIN);
+
+#undef CASE_BUILTIN
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
   }
-
-  ECMA_BUILTIN_LIST (INIT_BUILTIN);
-
-#undef INIT_BUILTIN
-} /* ecma_init_builtins */
+} /* ecma_instantiate_builtin */
 
 /**
  * Finalize ECMA built-in objects

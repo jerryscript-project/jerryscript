@@ -82,8 +82,8 @@ static const ecma_magic_string_id_t ecma_builtin_property_names[] =
 /**
  * Number of the Function.prototype object's built-in properties
  */
-const ecma_length_t ecma_builtin_function_prototype_property_number = (sizeof (ecma_builtin_property_names) /
-                                                                       sizeof (ecma_magic_string_id_t));
+static const ecma_length_t ecma_builtin_function_prototype_property_number = (sizeof (ecma_builtin_property_names) /
+                                                                              sizeof (ecma_magic_string_id_t));
 
 /**
  * The Function.prototype object's 'toString' routine
@@ -226,15 +226,21 @@ ecma_builtin_function_prototype_try_to_instantiate_property (ecma_object_t *obj_
     bit = (uint32_t) 1u << index;
   }
 
-  ecma_property_t *mask_prop_p = ecma_get_internal_property (obj_p, mask_prop_id);
+  ecma_property_t *mask_prop_p = ecma_find_internal_property (obj_p, mask_prop_id);
+  if (mask_prop_p == NULL)
+  {
+    mask_prop_p = ecma_create_internal_property (obj_p, mask_prop_id);
+    mask_prop_p->u.internal_property.value = 0;
+  }
+
   uint32_t bit_mask = mask_prop_p->u.internal_property.value;
 
-  if (!(bit_mask & bit))
+  if (bit_mask & bit)
   {
     return NULL;
   }
 
-  bit_mask &= ~bit;
+  bit_mask |= bit;
 
   mask_prop_p->u.internal_property.value = bit_mask;
 

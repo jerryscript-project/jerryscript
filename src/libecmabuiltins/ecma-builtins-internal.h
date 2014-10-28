@@ -156,14 +156,7 @@ ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t bui
 extern ecma_property_t* \
 ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \
                                                                  ecma_string_t *prop_name_p);
-#define DECLARE_PROPERTY_NUMBER_VARIABLES(builtin_id, \
-                                          object_type, \
-                                          object_class, \
-                                          object_prototype_builtin_id, \
-                                          lowercase_name) \
-extern const ecma_length_t ecma_builtin_ ## lowercase_name ## _property_number;
 
-ECMA_BUILTIN_LIST (DECLARE_PROPERTY_NUMBER_VARIABLES)
 ECMA_BUILTIN_LIST (DECLARE_DISPATCH_ROUTINES)
 
 #undef DECLARE_PROPERTY_NUMBER_VARIABLES

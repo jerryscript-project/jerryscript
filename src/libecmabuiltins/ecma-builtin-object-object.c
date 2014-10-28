@@ -63,8 +63,8 @@ static const ecma_magic_string_id_t ecma_builtin_object_property_names[] =
 /**
  * Number of the Object object's built-in properties
  */
-const ecma_length_t ecma_builtin_object_property_number = (sizeof (ecma_builtin_object_property_names) /
-                                                           sizeof (ecma_magic_string_id_t));
+static const ecma_length_t ecma_builtin_object_property_number = (sizeof (ecma_builtin_object_property_names) /
+                                                                  sizeof (ecma_magic_string_id_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_builtin_object_property_names) > sizeof (void*));
 
 /**
@@ -559,21 +559,26 @@ ecma_builtin_object_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
   JERRY_ASSERT (index >= 0 && (uint32_t) index < sizeof (uint32_t) * JERRY_BITSINBYTE);
 
+  ecma_internal_property_id_t mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31;
   uint32_t bit = (uint32_t) 1u << index;
 
-  ecma_property_t *mask_0_31_prop_p;
-  mask_0_31_prop_p = ecma_get_internal_property (obj_p,
-                                                 ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31);
-  uint32_t bit_mask = mask_0_31_prop_p->u.internal_property.value;
+  ecma_property_t *mask_prop_p = ecma_find_internal_property (obj_p, mask_prop_id);
+  if (mask_prop_p == NULL)
+  {
+    mask_prop_p = ecma_create_internal_property (obj_p, mask_prop_id);
+    mask_prop_p->u.internal_property.value = 0;
+  }
 
-  if (!(bit_mask & bit))
+  uint32_t bit_mask = mask_prop_p->u.internal_property.value;
+
+  if (bit_mask & bit)
   {
     return NULL;
   }
 
-  bit_mask &= ~bit;
+  bit_mask |= bit;
 
-  mask_0_31_prop_p->u.internal_property.value = bit_mask;
+  mask_prop_p->u.internal_property.value = bit_mask;
 
   ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_property_writable_value_t writable = ECMA_PROPERTY_WRITABLE;

@@ -88,8 +88,7 @@ static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_t* prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
-                          ecma_magic_string_id_t obj_class, /**< object's class */
-                          ecma_length_t property_number) /**< number of the object's properties */
+                          ecma_magic_string_id_t obj_class) /**< object's class */
 {
   ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, true, obj_type);
 
@@ -100,22 +99,6 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
   ecma_property_t *built_in_id_prop_p = ecma_create_internal_property (object_obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
   built_in_id_prop_p->u.internal_property.value = obj_builtin_id;
-
-  JERRY_STATIC_ASSERT (property_number < sizeof (uint64_t) * JERRY_BITSINBYTE);
-  uint64_t builtin_mask = ((uint32_t) 1u << property_number) - 1;
-
-  ecma_property_t *mask_0_31_prop_p;
-  mask_0_31_prop_p = ecma_create_internal_property (object_obj_p,
-                                                    ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31);
-  mask_0_31_prop_p->u.internal_property.value = (uint32_t) builtin_mask;
-
-  if (jrt_extract_bit_field (builtin_mask, 32, 32) != 0)
-  {
-    ecma_property_t *mask_32_63_prop_p;
-    mask_32_63_prop_p = ecma_create_internal_property (object_obj_p,
-                                                       ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63);
-    mask_32_63_prop_p->u.internal_property.value = (uint32_t) jrt_extract_bit_field (builtin_mask, 32, 32);
-  }
 
   ecma_set_object_is_builtin (object_obj_p, true);
 
@@ -141,7 +124,6 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
       ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_num_value_p);
-
       break;
     }
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
@@ -195,8 +177,7 @@ ecma_init_builtins (void)
     ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
                                                               prototype_obj_p, \
                                                               ECMA_OBJECT_ ## object_type, \
-                                                              ECMA_MAGIC_STRING_ ## object_class, \
-                                                              ecma_builtin_ ## lowercase_name ## _property_number); \
+                                                              ECMA_MAGIC_STRING_ ## object_class); \
     ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
   }
 

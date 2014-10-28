@@ -31,9 +31,6 @@
  * @{
  */
 
-static ecma_length_t
-ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id,
-                                            ecma_magic_string_id_t routine_id);
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                ecma_magic_string_id_t builtin_routine_id,
@@ -304,8 +301,11 @@ ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
                                                                                   that initially contains property
                                                                                   with the routine */
-                                               ecma_magic_string_id_t routine_id) /**< name of the built-in
+                                               ecma_magic_string_id_t routine_id, /**< name of the built-in
                                                                                        object's routine property */
+                                               ecma_number_t length_prop_num_value) /**< ecma-number - value
+                                                                                         of 'length' property
+                                                                                         of function object to create */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -339,7 +339,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_deref_ecma_string (magic_string_length_p);
 
   ecma_number_t* len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (ecma_builtin_get_routine_parameters_number (builtin_id, routine_id));
+  *len_p = length_prop_num_value;
 
   len_prop_p->u.named_data_property.value = ecma_make_number_value (len_p);
 
@@ -500,52 +500,6 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 
   JERRY_UNREACHABLE ();
 } /* ecma_builtin_dispatch_construct */
-
-/**
- * Get parameters number of the built-in routine
- *
- * @return number of parameters of the routine according to ECMA-262 v5 specification
- */
-static ecma_length_t
-ecma_builtin_get_routine_parameters_number (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
-                                                                               that initially contains property
-                                                                               with the routine */
-                                            ecma_magic_string_id_t routine_id) /**< name of the built-in object's
-                                                                                    routine property */
-{
-  switch (builtin_id)
-  {
-#define DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER(builtin_id, \
-                                               object_type, \
-                                               object_class, \
-                                               object_prototype_builtin_id, \
-                                               lowercase_name) \
-    case ECMA_BUILTIN_ID_ ## builtin_id: \
-      { \
-        return ecma_builtin_ ## lowercase_name ## _get_routine_parameters_number (routine_id); \
-      }
-
-    ECMA_BUILTIN_LIST (DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER)
-
-#undef DISPATCH_GET_ROUTINE_PARAMETERS_NUMBER
-
-    case ECMA_BUILTIN_ID__COUNT:
-    {
-      JERRY_UNREACHABLE ();
-    }
-
-    default:
-    {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-      JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
-      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
-    }
-  }
-
-  JERRY_UNREACHABLE ();
-} /* ecma_builtin_get_routine_parameters_number */
 
 /**
  * Dispatcher of built-in routines

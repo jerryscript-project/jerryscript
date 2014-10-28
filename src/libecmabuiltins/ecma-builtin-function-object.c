@@ -205,19 +205,6 @@ ecma_builtin_function_dispatch_routine (ecma_magic_string_id_t builtin_routine_i
 } /* ecma_builtin_function_dispatch_routine */
 
 /**
- * Get number of routine's parameters
- *
- * @return number of parameters
- */
-ecma_length_t
-ecma_builtin_function_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id __unused) /**< built-in
-                                                                                                              routine's
-                                                                                                              name */
-{
-  JERRY_UNREACHABLE ();
-} /* ecma_builtin_function_get_routine_parameters_number */
-
-/**
  * Handle calling [[Call]] of built-in Function object
  *
  * @return completion-value

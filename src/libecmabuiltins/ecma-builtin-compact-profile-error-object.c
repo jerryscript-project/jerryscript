@@ -76,17 +76,6 @@ ecma_builtin_compact_profile_error_dispatch_routine (ecma_magic_string_id_t buil
 } /* ecma_builtin_compact_profile_error_dispatch_routine */
 
 /**
- * Get compact_profile_error of routine's parameters
- *
- * @return compact_profile_error of parameters
- */
-ecma_length_t
-ecma_builtin_compact_profile_error_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id __unused)
-{
-  JERRY_UNREACHABLE ();
-} /* ecma_builtin_compact_profile_error_get_routine_parameters_compact_profile_error */
-
-/**
  * Handle calling [[Call]] of built-in CompactProfileError object
  *
  * @return completion-value

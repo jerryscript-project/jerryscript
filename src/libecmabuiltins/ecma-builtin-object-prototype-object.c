@@ -327,17 +327,18 @@ ecma_builtin_object_prototype_try_to_instantiate_property (ecma_object_t *obj_p,
 
   switch (id)
   {
-#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name:
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name: \
+    { \
+      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
+                                                                                 id, \
+                                                                                 length); \
+      \
+      value = ecma_make_object_value (func_obj_p); \
+      \
+      break; \
+    }
     ECMA_BUILTIN_OBJECT_PROTOTYPE_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
 #undef CASE_ROUTINE_PROP_LIST
-    {
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-                                                                                 id);
-
-      value = ecma_make_object_value (func_obj_p);
-
-      break;
-    }
 #define CASE_VALUE_PROP_LIST(name, value) case name:
     ECMA_BUILTIN_OBJECT_PROTOTYPE_OBJECT_OBJECT_VALUES_PROPERTY_LIST (CASE_VALUE_PROP_LIST)
 #undef CASE_VALUE_PROP_LIST
@@ -425,29 +426,6 @@ ecma_builtin_object_prototype_dispatch_routine (ecma_magic_string_id_t builtin_r
     }
   }
 } /* ecma_builtin_object_prototype_dispatch_routine */
-
-/**
- * Get number of routine's parameters
- *
- * @return number of parameters
- */
-ecma_length_t
-ecma_builtin_object_prototype_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id) /**< built-in
-                                                                                                             routine's
-                                                                                                             name */
-{
-  switch (builtin_routine_id)
-  {
-#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name: return length;
-    ECMA_BUILTIN_OBJECT_PROTOTYPE_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
-#undef CASE_ROUTINE_PROP_LIST
-
-    default:
-    {
-      JERRY_UNREACHABLE ();
-    }
-  }
-} /* ecma_builtin_object_prototype_get_routine_parameters_number */
 
 /**
  * @}

@@ -48,7 +48,8 @@
 /* ecma-builtins.c */
 extern ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
-                                               ecma_magic_string_id_t routine_id);
+                                               ecma_magic_string_id_t routine_id,
+                                               ecma_number_t length_prop_num_value);
 extern int32_t
 ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
                                                       ecma_length_t array_length,
@@ -146,8 +147,6 @@ ecma_builtin_ ## lowercase_name ## _dispatch_call (ecma_value_t *arguments_list_
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_construct (ecma_value_t *arguments_list_p, \
                                                         ecma_length_t arguments_list_len); \
-extern ecma_length_t \
-ecma_builtin_ ## lowercase_name ## _get_routine_parameters_number (ecma_magic_string_id_t routine_id); \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \

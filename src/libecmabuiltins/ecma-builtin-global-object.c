@@ -74,6 +74,44 @@ static const ecma_magic_string_id_t ecma_builtin_global_property_names[] =
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 };
 
+#define ECMA_BUILTIN_GLOBAL_OBJECT_ROUTINES_PROPERTY_LIST(macro) \
+  macro (ECMA_MAGIC_STRING_EVAL, \
+         ecma_builtin_global_object_eval, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_PARSE_FLOAT, \
+         ecma_builtin_global_object_parse_float, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_IS_NAN, \
+         ecma_builtin_global_object_is_nan, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_IS_FINITE, \
+         ecma_builtin_global_object_is_finite, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_DECODE_URI, \
+         ecma_builtin_global_object_decode_uri, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_DECODE_URI_COMPONENT, \
+         ecma_builtin_global_object_decode_uri_component, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ENCODE_URI, \
+         ecma_builtin_global_object_encode_uri, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT, \
+         ecma_builtin_global_object_encode_uri_component, \
+         1, \
+         1) \
+  macro (ECMA_MAGIC_STRING_PARSE_INT, \
+         ecma_builtin_global_object_parse_int, \
+         2, \
+         2)
+
 /**
  * Number of the Global object's built-in properties
  */
@@ -245,41 +283,6 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t uri_component) /**
 } /* ecma_builtin_global_object_encode_uri_component */
 
 /**
- * Get number of routine's parameters
- *
- * @return number of parameters
- */
-ecma_length_t
-ecma_builtin_global_get_routine_parameters_number (ecma_magic_string_id_t builtin_routine_id) /**< built-in routine's
-                                                                                                   name */
-{
-  switch (builtin_routine_id)
-  {
-    case ECMA_MAGIC_STRING_EVAL:
-    case ECMA_MAGIC_STRING_PARSE_FLOAT:
-    case ECMA_MAGIC_STRING_IS_NAN:
-    case ECMA_MAGIC_STRING_IS_FINITE:
-    case ECMA_MAGIC_STRING_DECODE_URI:
-    case ECMA_MAGIC_STRING_DECODE_URI_COMPONENT:
-    case ECMA_MAGIC_STRING_ENCODE_URI:
-    case ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT:
-    {
-      return 1;
-    }
-
-    case ECMA_MAGIC_STRING_PARSE_INT:
-    {
-      return 2;
-    }
-
-    default:
-    {
-      JERRY_UNREACHABLE ();
-    }
-  }
-} /* ecma_builtin_global_get_routine_parameters_number */
-
-/**
  * Dispatcher of the Global object's built-in routines
  *
  * @return completion-value
@@ -296,69 +299,18 @@ ecma_builtin_global_dispatch_routine (ecma_magic_string_id_t builtin_routine_id,
 
   switch (builtin_routine_id)
   {
-    case ECMA_MAGIC_STRING_EVAL:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_eval (arg);
-    }
-
-    case ECMA_MAGIC_STRING_PARSE_INT:
-    {
-      ecma_value_t arg1 = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-      ecma_value_t arg2 = (arguments_number >= 2 ? arguments_list[1] : value_undefined);
-
-      return ecma_builtin_global_object_parse_int (arg1, arg2);
-    }
-
-    case ECMA_MAGIC_STRING_PARSE_FLOAT:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_parse_float (arg);
-    }
-
-    case ECMA_MAGIC_STRING_IS_NAN:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_is_nan (arg);
-    }
-
-    case ECMA_MAGIC_STRING_IS_FINITE:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_is_finite (arg);
-    }
-
-    case ECMA_MAGIC_STRING_DECODE_URI:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_decode_uri (arg);
-    }
-
-    case ECMA_MAGIC_STRING_DECODE_URI_COMPONENT:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_decode_uri_component (arg);
-    }
-
-    case ECMA_MAGIC_STRING_ENCODE_URI:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_encode_uri (arg);
-    }
-
-    case ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT:
-    {
-      ecma_value_t arg = (arguments_number >= 1 ? arguments_list[0] : value_undefined);
-
-      return ecma_builtin_global_object_encode_uri_component (arg);
-    }
+#define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] : value_undefined)
+#define ROUTINE_ARG_LIST_1 ROUTINE_ARG(1)
+#define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) \
+       case name: \
+       { \
+         return c_function_name (ROUTINE_ARG_LIST_ ## args_number); \
+       }
+    ECMA_BUILTIN_GLOBAL_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
+#undef CASE_ROUTINE_PROP_LIST
+#undef ROUTINE_ARG_LIST_1
+#undef ROUTINE_ARG_LIST_2
 
     default:
     {
@@ -428,23 +380,19 @@ ecma_builtin_global_try_to_instantiate_property (ecma_object_t *obj_p, /**< obje
 
   switch (id)
   {
-    case ECMA_MAGIC_STRING_EVAL:
-    case ECMA_MAGIC_STRING_PARSE_INT:
-    case ECMA_MAGIC_STRING_PARSE_FLOAT:
-    case ECMA_MAGIC_STRING_IS_NAN:
-    case ECMA_MAGIC_STRING_IS_FINITE:
-    case ECMA_MAGIC_STRING_DECODE_URI:
-    case ECMA_MAGIC_STRING_DECODE_URI_COMPONENT:
-    case ECMA_MAGIC_STRING_ENCODE_URI:
-    case ECMA_MAGIC_STRING_ENCODE_URI_COMPONENT:
-    {
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_GLOBAL,
-                                                                                 id);
-
-      value = ecma_make_object_value (func_obj_p);
-
-      break;
+#define CASE_ROUTINE_PROP_LIST(name, c_function_name, args_number, length) case name: \
+    { \
+      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (ECMA_BUILTIN_ID_GLOBAL, \
+                                                                                 id, \
+                                                                                 length); \
+      \
+      value = ecma_make_object_value (func_obj_p); \
+      \
+      break; \
     }
+    ECMA_BUILTIN_GLOBAL_OBJECT_ROUTINES_PROPERTY_LIST (CASE_ROUTINE_PROP_LIST)
+#undef CASE_ROUTINE_PROP_LIST
+
     case ECMA_MAGIC_STRING_UNDEFINED:
     {
       value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);

@@ -22,6 +22,7 @@
 
 #include "deserializer.h"
 #include "ecma-alloc.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "globals.h"
@@ -275,6 +276,100 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 } /* ecma_concat_ecma_strings */
 
 /**
+ * Copy ecma-string
+ *
+ * @return pointer to copy of ecma-string with reference counter set to 1
+ */
+static ecma_string_t*
+ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
+{
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs > 0);
+
+  ecma_string_t *new_str_p;
+
+  switch ((ecma_string_container_t) string_desc_p->container)
+  {
+    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      new_str_p = ecma_alloc_string ();
+
+      *new_str_p = *string_desc_p;
+
+      new_str_p->refs = 1;
+
+      break;
+    }
+
+    case ECMA_STRING_CONTAINER_CONCATENATION:
+    {
+      ecma_string_t *part1_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string1_cp);
+      ecma_string_t *part2_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string2_cp);
+
+      new_str_p = ecma_concat_ecma_strings (part1_p, part2_p);
+
+      break;
+    }
+
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      ecma_number_t *num_p = ECMA_GET_POINTER (string_desc_p->u.number_cp);
+
+      new_str_p = ecma_new_ecma_string_from_number (*num_p);
+
+      break;
+    }
+
+    case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+    {
+      ecma_collection_chunk_t *str_heap_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
+      JERRY_ASSERT (str_heap_chunk_p != NULL);
+
+      new_str_p = ecma_alloc_string ();
+      *new_str_p = *string_desc_p;
+
+      ecma_collection_chunk_t *new_str_heap_chunk_p = ecma_alloc_collection_chunk ();
+      ECMA_SET_NON_NULL_POINTER (new_str_p->u.chunk_cp, new_str_heap_chunk_p);
+
+      while (true)
+      {
+        __memcpy (new_str_heap_chunk_p->data, str_heap_chunk_p->data, sizeof (new_str_heap_chunk_p->data));
+
+        str_heap_chunk_p = ECMA_GET_POINTER (str_heap_chunk_p->next_chunk_cp);
+
+        if (str_heap_chunk_p != NULL)
+        {
+          ecma_collection_chunk_t *new_str_next_heap_chunk_p = ecma_alloc_collection_chunk ();
+
+          ECMA_SET_NON_NULL_POINTER (new_str_heap_chunk_p->next_chunk_cp, new_str_next_heap_chunk_p);
+          new_str_heap_chunk_p = new_str_next_heap_chunk_p;
+        }
+        else
+        {
+          break;
+        }
+      }
+
+      new_str_heap_chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
+
+      break;
+    }
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  JERRY_ASSERT (ecma_compare_ecma_strings (string_desc_p, new_str_p));
+
+  return new_str_p;
+} /* ecma_copy_ecma_string */
+
+/**
  * Increase reference counter of ecma-string.
  *
  * @return pointer to same ecma-string descriptor with increased reference counter
@@ -290,25 +385,24 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
 
   if (unlikely (string_desc_p->refs == 0))
   {
+    /* reference counter has overflowed */
     string_desc_p->refs--;
 
-    if (string_desc_p->container == ECMA_STRING_CONTAINER_CHARS_IN_DESC
-        || string_desc_p->container == ECMA_STRING_CONTAINER_LIT_TABLE
-        || string_desc_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+    uint32_t current_refs = string_desc_p->refs;
+
+    /* First trying to free unreachable objects that maybe refer to the string */
+    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+
+    if (current_refs == string_desc_p->refs)
     {
-      ecma_string_t *new_str_p = ecma_alloc_string ();
+      /* reference counter was not changed during GC, copying string */
 
-      *new_str_p = *string_desc_p;
-
-      new_str_p->refs = 1;
-
-      return new_str_p;
+      return ecma_copy_ecma_string (string_desc_p);
     }
-    else
-    {
-      JERRY_UNIMPLEMENTED ("Unimplemented copy operation for strings, "
-                           "stored in heap chunks or number, or concatenated strings.");
-    }
+
+    string_desc_p->refs++;
+
+    JERRY_ASSERT (string_desc_p->refs != 0);
   }
 
   return string_desc_p;

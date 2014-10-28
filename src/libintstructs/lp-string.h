@@ -21,7 +21,7 @@
 /* Length-prefixed or "pascal" string.  */
 typedef struct
 {
-  ecma_char_t *str;
+  const ecma_char_t *str;
   ecma_length_t length;
 }
 lp_string;

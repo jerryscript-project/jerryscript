@@ -50,6 +50,29 @@ typedef struct
 }
 intrinsic_dumper;
 
+typedef enum
+{
+  PROP_DATA,
+  PROP_SET,
+  PROP_GET,
+  VARG
+}
+prop_type;
+
+typedef struct
+{
+  lp_string str;
+  bool was_num;
+}
+allocatable_string;
+
+typedef struct
+{
+  prop_type type;
+  allocatable_string str;
+}
+prop_as_str_or_varg;
+
 #define NESTING_ITERATIONAL 1
 #define NESTING_SWITCH      2
 #define NESTING_FUNCTION    3
@@ -173,6 +196,18 @@ enum
   rewritable_break_global_size
 };
 STATIC_STACK (rewritable_break, uint8_t, uint16_t)
+
+enum
+{
+  strings_global_size
+};
+STATIC_STACK (strings, uint8_t, allocatable_string)
+
+enum
+{
+  props_global_size
+};
+STATIC_STACK (props, uint8_t, prop_as_str_or_varg)
 
 #ifndef JERRY_NDEBUG
 #define STACK_CHECK_USAGE_LHS() \
@@ -684,6 +719,84 @@ name_to_native_call_id (idx_t obj)
   JERRY_UNREACHABLE ();
 }
 
+static void
+free_allocatable_string (prop_as_str_or_varg p)
+{
+  if (p.str.was_num)
+  {
+    mem_heap_free_block ((uint8_t *) p.str.str.str);
+  }
+}
+
+static allocatable_string
+create_allocatable_string_from_num_uid (idx_t uid)
+{
+  ecma_char_t *str = mem_heap_alloc_block (ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER * sizeof (ecma_char_t),
+                                           MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_number_to_zt_string (lexer_get_num_by_id (uid), str,
+                            ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER * sizeof (ecma_char_t));
+
+  return (allocatable_string)
+  {
+    .was_num = true,
+    .str = (lp_string)
+    {
+      .length = ecma_zt_string_length (str),
+      .str = str
+    }
+  };
+}
+
+static allocatable_string
+create_allocatable_string_from_literal (idx_t uid)
+{
+  return (allocatable_string)
+  {
+    .was_num = false,
+    .str = lexer_get_string_by_id (uid)
+  };
+}
+
+static allocatable_string
+create_allocatable_string_from_small_int (idx_t uid)
+{
+  const uint8_t chars_need = 4; /* Max is 255.  */
+  uint8_t index = 0;
+  ecma_char_t *str = mem_heap_alloc_block (chars_need * sizeof (ecma_char_t),
+                                           MEM_HEAP_ALLOC_SHORT_TERM);
+  if (uid >= 100)
+  {
+    str[index++] = (ecma_char_t) (uid/100 + '0');
+    uid %= 100;
+  }
+  if (uid >= 10)
+  {
+    str[index++] = (ecma_char_t) (uid/10 + '0');
+  }
+  str[index++] = (ecma_char_t) (uid%10 + '0');
+  str[index] = ECMA_CHAR_NULL;
+
+  return (allocatable_string)
+  {
+    .was_num = true,
+    .str = (lp_string)
+    {
+      .length = index,
+      .str = str
+    }
+  };
+}
+
+static prop_as_str_or_varg
+create_prop_as_str_or_varg (allocatable_string str, prop_type type)
+{
+  return (prop_as_str_or_varg)
+  {
+    .type = type,
+    .str = str
+  };
+}
+
 /* property_name
   : Identifier
   | StringLiteral
@@ -701,18 +814,21 @@ parse_property_name (void)
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
+      STACK_PUSH (strings, create_allocatable_string_from_literal (token_data ()));
       break;
     }
     case TOK_NUMBER:
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_NUMBER, token_data ());
+      STACK_PUSH (strings, create_allocatable_string_from_num_uid (token_data ()));
       break;
     }
     case TOK_SMALL_INT:
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SMALLINT, token_data ());
+      STACK_PUSH (strings, create_allocatable_string_from_small_int (token_data ()));
       break;
     }
     default:
@@ -739,6 +855,9 @@ parse_property_name_and_value (void)
   NEXT (assignment_expression); // push expr
 
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_DATA, STACK_HEAD(IDX, 2), STACK_HEAD(IDX, 1));
+
+  STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_DATA));
+  STACK_DROP (strings, 1);
 
   STACK_DROP (IDX, 2);
   STACK_CHECK_USAGE (IDX);
@@ -793,6 +912,7 @@ parse_property_assignment (void)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (toks)
   STACK_DECLARE_USAGE (U8)
+  STACK_DECLARE_USAGE (strings)
 
   if (!token_is (TOK_NAME))
   {
@@ -814,6 +934,8 @@ parse_property_assignment (void)
     STACK_DROP (toks, 1);
     // name, lhs
     parse_property_name (); // push name
+    STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_GET));
+    STACK_DROP (strings, 1);
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
@@ -859,6 +981,8 @@ parse_property_assignment (void)
     STACK_DROP (toks, 1);
     // name, lhs
     parse_property_name (); // push name
+    STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_SET));
+    STACK_DROP (strings, 1);
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
@@ -895,6 +1019,7 @@ simple_prop:
   parse_property_name_and_value ();
 
 cleanup:
+  STACK_CHECK_USAGE (strings);
   STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (toks);
   STACK_CHECK_USAGE (U16);
@@ -925,109 +1050,86 @@ check_for_eval_and_arguments_in_strict_mode (idx_t id)
   }
 }
 
-static bool
-find_assignment_to (opcode_counter_t from, idx_t tmp_id, opcode_t *res)
+/* 13.1, 15.3.2 */
+static void
+check_for_syntax_errors_in_formal_param_list (uint8_t from)
 {
-  JERRY_ASSERT (res != NULL);
-  JERRY_ASSERT (tmp_id >= lexer_get_reserved_ids_count ());
-  for (opcode_counter_t oc = from; oc > 0; oc = (opcode_counter_t) (oc - 1))
+  if (STACK_SIZE (props) - from < 2 || !parser_strict_mode ())
   {
-    *res = deserialize_opcode (oc);
-    if (OPCODE_IS ((*res), assignment))
+    return;
+  }
+  for (uint8_t i = (uint8_t) (from + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
+  {
+    JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
+    for (uint8_t j = from; j < i; j = (uint8_t) (j + 1))
     {
-      if (res->data.assignment.var_left == tmp_id)
+      if (lp_string_equal (STACK_ELEMENT (props, i).str.str, STACK_ELEMENT (props, j).str.str))
       {
-        return true;
+        EMIT_ERROR_VARG ("Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
+                         STACK_ELEMENT (props, j).str.str.str);
       }
     }
   }
-  return false;
 }
 
+/* 11.1.5 */
 static void
-check_for_duplication_of_param (opcode_counter_t from, uint8_t metas_num)
+check_for_syntax_errors_in_obj_decl (uint8_t from)
 {
-  if (!parser_strict_mode () || metas_num < 2)
+  if (STACK_SIZE (props) - from < 2)
   {
     return;
   }
 
-  STACK_DECLARE_USAGE (IDX);
-  STACK_DECLARE_USAGE (U8);
-  STACK_DECLARE_USAGE (ops);
-
-  STACK_PUSH (U8, 0); // seen metas
-  STACK_PUSH (U8, STACK_SIZE (IDX));
-
-  for (opcode_counter_t oc = from; oc < OPCODE_COUNTER (); oc = (opcode_counter_t) (oc + 1))
+  for (uint8_t i = (uint8_t) (from + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
   {
-    STACK_PUSH (ops, deserialize_opcode (oc));
-    if (OPCODE_IS (STACK_TOP (ops), meta))
+    JERRY_ASSERT (STACK_ELEMENT (props, i).type == PROP_DATA
+                  || STACK_ELEMENT (props, i).type == PROP_GET
+                  || STACK_ELEMENT (props, i).type == PROP_SET);
+    for (uint8_t j = from; j < i; j = (uint8_t) (j + 1))
     {
-      switch (STACK_TOP (ops).data.meta.type)
+      /*4*/
+      const lp_string previous = STACK_ELEMENT (props, j).str.str;
+      const prop_type prop_type_previous = STACK_ELEMENT (props, j).type;
+      const lp_string prop_id_desc = STACK_ELEMENT (props, i).str.str;
+      const prop_type prop_type_prop_id_desc = STACK_ELEMENT (props, i).type;
+      if (lp_string_equal (previous, prop_id_desc))
       {
-        case OPCODE_META_TYPE_VARG:
+        /*a*/
+        if (parser_strict_mode () && prop_type_previous == PROP_DATA && prop_type_prop_id_desc == PROP_DATA)
         {
-          for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (IDX); i = (uint8_t) (i + 1))
-          {
-            if (STACK_ELEMENT (IDX, i) == STACK_TOP (ops).data.meta.data_1)
-            {
-              JERRY_ASSERT (STACK_ELEMENT (IDX, i) < lexer_get_strings_count ());
-              EMIT_ERROR ("Duplication of identifier as parameter is not allowed in strict mode.");
-            }
-          }
-          STACK_PUSH (IDX, STACK_TOP (ops).data.meta.data_1);
-          STACK_INCR_HEAD (U8, 2);
-          break;
+          EMIT_ERROR_VARG ("Duplication of parameter name '%s' in ObjectDeclaration is not allowed in strict mode",
+                           previous.str);
         }
-        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        /*b*/
+        if (prop_type_previous == PROP_DATA
+            && (prop_type_prop_id_desc == PROP_SET || prop_type_prop_id_desc == PROP_GET))
         {
-          opcode_t res;
-          if (find_assignment_to (oc, STACK_TOP (ops).data.meta.data_1, &res))
-          {
-            for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (IDX); i = (uint8_t) (i + 1))
-            {
-              if (STACK_ELEMENT (IDX, i) == res.data.assignment.value_right)
-              {
-                JERRY_ASSERT (STACK_ELEMENT (IDX, i) < lexer_get_strings_count ());
-                EMIT_ERROR ("Duplication of identifier as parameter is not allowed in strict mode.");
-              }
-            }
-            STACK_PUSH (IDX, res.data.assignment.value_right);
-          }
-          /* FALLTHRU. */
+          EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
+                           previous.str);
         }
-        case OPCODE_META_TYPE_THIS_ARG:
-        case OPCODE_META_TYPE_VARG_PROP_GETTER:
-        case OPCODE_META_TYPE_VARG_PROP_SETTER:
+        /*c*/
+        if (prop_type_prop_id_desc == PROP_DATA
+            && (prop_type_previous == PROP_SET || prop_type_previous == PROP_GET))
         {
-          STACK_INCR_HEAD (U8, 2);
-          break;
+          EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
+                           previous.str);
         }
-        default:
+        /*d*/
+        if ((prop_type_previous == PROP_SET && prop_type_prop_id_desc == PROP_SET)
+            || (prop_type_previous == PROP_GET && prop_type_prop_id_desc == PROP_GET))
         {
-          break;
+          EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be accessor of same type",
+                           previous.str);
         }
       }
     }
-    STACK_DROP (ops, 1);
-    if (STACK_HEAD (U8, 2) == metas_num)
-    {
-      break;
-    }
   }
-
-  STACK_DROP (IDX, STACK_SIZE (IDX) - STACK_TOP (U8));
-  STACK_DROP (U8, 2);
-
-  STACK_CHECK_USAGE (ops);
-  STACK_CHECK_USAGE (U8);
-  STACK_CHECK_USAGE (IDX);
 }
 
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
-    Returns temp var if expression has lhs, or 0 otherwise.  */
+    Returns number of arguments.  */
 static uint8_t
 parse_argument_list (argument_list_type alt, idx_t obj)
 {
@@ -1038,38 +1140,35 @@ parse_argument_list (argument_list_type alt, idx_t obj)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (temp_names)
-  uint8_t args_num = 0;
+  STACK_DECLARE_USAGE (props)
+
+  STACK_PUSH (U8, STACK_SIZE (props));
+  STACK_PUSH (U8, TOK_OPEN_PAREN);
+  STACK_PUSH (U8, TOK_CLOSE_PAREN);
+  STACK_PUSH (U8, 0);
 
   STACK_PUSH (U16, OPCODE_COUNTER ());
   switch (alt)
   {
     case AL_FUNC_DECL:
     {
-      STACK_PUSH (U8, TOK_OPEN_PAREN); // Openning token;
-      STACK_PUSH (U8, TOK_CLOSE_PAREN); // Ending token;
       DUMP_OPCODE_2 (func_decl_n, obj, INVALID_VALUE);
       break;
     }
     case AL_FUNC_EXPR:
     {
-      STACK_PUSH (U8, TOK_OPEN_PAREN);
-      STACK_PUSH (U8, TOK_CLOSE_PAREN);
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (func_expr_n, ID(1), obj, INVALID_VALUE);
       break;
     }
     case AL_CONSTRUCT_EXPR:
     {
-      STACK_PUSH (U8, TOK_OPEN_PAREN);
-      STACK_PUSH (U8, TOK_CLOSE_PAREN);
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (construct_n, ID(1), obj, INVALID_VALUE);
       break;
     }
     case AL_CALL_EXPR:
     {
-      STACK_PUSH (U8, TOK_OPEN_PAREN);
-      STACK_PUSH (U8, TOK_CLOSE_PAREN);
       if (is_intrinsic (obj))
       {
         break;
@@ -1089,16 +1188,16 @@ parse_argument_list (argument_list_type alt, idx_t obj)
     }
     case AL_ARRAY_DECL:
     {
-      STACK_PUSH (U8, TOK_OPEN_SQUARE);
-      STACK_PUSH (U8, TOK_CLOSE_SQUARE);
+      STACK_SET_HEAD (U8, 3, TOK_OPEN_SQUARE);
+      STACK_SET_HEAD (U8, 2, TOK_CLOSE_SQUARE);
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_2 (array_decl, ID(1), INVALID_VALUE);
       break;
     }
     case AL_OBJ_DECL:
     {
-      STACK_PUSH (U8, TOK_OPEN_BRACE);
-      STACK_PUSH (U8, TOK_CLOSE_BRACE);
+      STACK_SET_HEAD (U8, 3, TOK_OPEN_BRACE);
+      STACK_SET_HEAD (U8, 2, TOK_CLOSE_BRACE);
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_2 (obj_decl, ID(1), INVALID_VALUE);
       break;
@@ -1108,8 +1207,6 @@ parse_argument_list (argument_list_type alt, idx_t obj)
       JERRY_UNREACHABLE ();
     }
   }
-
-  STACK_PUSH (U8, 0);
 
   current_token_must_be (STACK_HEAD (U8, 3));
 
@@ -1140,6 +1237,9 @@ parse_argument_list (argument_list_type alt, idx_t obj)
       {
         current_token_must_be (TOK_NAME);
         STACK_PUSH (IDX, token_data ());
+        STACK_PUSH (props,
+                    create_prop_as_str_or_varg (create_allocatable_string_from_literal (token_data ()),
+                                                VARG));
         check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
         break;
       }
@@ -1206,13 +1306,13 @@ next:
   {
     case AL_FUNC_DECL:
     {
-      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
+      check_for_syntax_errors_in_formal_param_list (STACK_HEAD (U8, 4));
       REWRITE_OPCODE_2 (STACK_TOP (U16), func_decl_n, obj, STACK_TOP (U8));
       break;
     }
     case AL_FUNC_EXPR:
     {
-      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
+      check_for_syntax_errors_in_formal_param_list (STACK_HEAD (U8, 4));
       REWRITE_OPCODE_3 (STACK_TOP (U16), func_expr_n, ID(1), obj, STACK_TOP (U8));
       break;
     }
@@ -1246,7 +1346,7 @@ next:
     }
     case AL_OBJ_DECL:
     {
-      check_for_duplication_of_param (STACK_TOP (U16), STACK_TOP (U8));
+      check_for_syntax_errors_in_obj_decl (STACK_HEAD (U8, 4));
       REWRITE_OPCODE_2 (STACK_TOP (U16), obj_decl, ID(1), STACK_TOP (U8));
       break;
     }
@@ -1256,11 +1356,15 @@ next:
     }
   }
 
-  args_num = STACK_TOP (U8);
+  const uint8_t args_num = STACK_TOP (U8);
 
-  STACK_DROP (U8, 3);
+  STACK_ITERATE (props, free_allocatable_string, STACK_HEAD (U8, 4));
+
+  STACK_DROP (props, (uint8_t) (STACK_SIZE (props) - STACK_HEAD (U8, 4)));
+  STACK_DROP (U8, 4);
   STACK_DROP (U16, 1);
 
+  STACK_CHECK_USAGE (props);
   STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (temp_names);
@@ -4006,6 +4110,8 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   STACK_INIT (rewritable_break);
   STACK_INIT (locs);
   STACK_INIT (scopes);
+  STACK_INIT (props);
+  STACK_INIT (strings);
 
   HASH_INIT (intrinsics, 1);
 
@@ -4066,6 +4172,8 @@ parser_free (void)
   STACK_FREE (rewritable_break);
   STACK_FREE (locs);
   STACK_FREE (scopes);
+  STACK_FREE (props);
+  STACK_FREE (strings);
 
   HASH_FREE (intrinsics);
 

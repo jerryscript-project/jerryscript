@@ -218,6 +218,11 @@ do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, 
 #define STACK_DECR_ELEMENT(NAME, I) \
 do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, I) - 1)); } while (0)
 
+#define STACK_ITERATE(NAME, FUNC, FROM) \
+do { for (NAME##_stack_data_type i = FROM; i < NAME.current; i++) { \
+  FUNC (STACK_ELEMENT (NAME, i)); \
+} } while (0)
+
 #define STACK_ITERATE_VARG(NAME, FUNC, FROM, ...) \
 do { for (NAME##_stack_data_type i = FROM; i < NAME.current; i++) { \
   FUNC (STACK_ELEMENT (NAME, i), __VA_ARGS__); \

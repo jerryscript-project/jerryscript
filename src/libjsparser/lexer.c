@@ -177,7 +177,7 @@ add_current_token_to_string_cache (void)
   }
   __strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, res.length);
   res.str = strings_cache + strings_cache_used_size;
-  res.str[res.length] = '\0';
+  (strings_cache + strings_cache_used_size)[res.length] = '\0';
   strings_cache_used_size = (size_t) (((size_t) res.length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
   return res;
 }
@@ -788,6 +788,7 @@ parse_number (void)
     c = LA (0);
     if (is_fp && c == '.')
     {
+      FIXME (/* This is wrong: 1..toString ().  */)
       PARSE_ERROR ("Integer literal shall not contain more than one dot character", buffer - buffer_start);
     }
     if (is_exp && (c == 'e' || c == 'E'))

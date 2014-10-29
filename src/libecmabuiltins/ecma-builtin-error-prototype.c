@@ -120,48 +120,61 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
         ecma_string_t *name_string_p = ECMA_GET_POINTER (name_to_str_completion.u.value.value);
         ecma_string_t *msg_string_p = ECMA_GET_POINTER (msg_to_str_completion.u.value.value);
 
-        const ecma_char_t *colon_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_COLON_CHAR);
-        const ecma_char_t *space_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_SPACE_CHAR);
+        ecma_string_t *ret_str_p;
+        
+        if (ecma_string_get_length (name_string_p) == 0)
+        {
+          ret_str_p = ecma_copy_or_ref_ecma_string (msg_string_p);
+        }
+        else if (ecma_string_get_length (msg_string_p) == 0)
+        {
+          ret_str_p = ecma_copy_or_ref_ecma_string (name_string_p);
+        }
+        else
+        {
+          const ecma_char_t *colon_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_COLON_CHAR);
+          const ecma_char_t *space_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_SPACE_CHAR);
 
-        const int32_t len = (ecma_string_get_length (name_string_p) +
-                             ecma_string_get_length (msg_string_p) +
-                             ecma_zt_string_length (colon_zt_magic_string_p) +
-                             ecma_zt_string_length (space_zt_magic_string_p));
+          const int32_t len = (ecma_string_get_length (name_string_p) +
+                               ecma_string_get_length (msg_string_p) +
+                               ecma_zt_string_length (colon_zt_magic_string_p) +
+                               ecma_zt_string_length (space_zt_magic_string_p));
 
-        const ssize_t buffer_size = (len + 1) * (ssize_t) sizeof (ecma_char_t);
-        ssize_t bytes, buffer_size_left = buffer_size;
+          const ssize_t buffer_size = (len + 1) * (ssize_t) sizeof (ecma_char_t);
+          ssize_t bytes, buffer_size_left = buffer_size;
 
-        ecma_char_t ret_str_buffer [buffer_size];
-        ecma_char_t *ret_str_buffer_p = ret_str_buffer;
+          ecma_char_t ret_str_buffer [buffer_size];
+          ecma_char_t *ret_str_buffer_p = ret_str_buffer;
 
-        bytes = ecma_string_to_zt_string (name_string_p, ret_str_buffer_p, buffer_size_left);
-        JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
+          bytes = ecma_string_to_zt_string (name_string_p, ret_str_buffer_p, buffer_size_left);
+          JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
 
-        buffer_size_left -= bytes - 1 /* null character */;
-        ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
+          buffer_size_left -= bytes - 1 /* null character */;
+          ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
 
-        ret_str_buffer_p = ecma_copy_zt_string_to_buffer (colon_zt_magic_string_p,
-                                                          ret_str_buffer_p,
-                                                          buffer_size_left);
-        buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
-        JERRY_ASSERT (buffer_size_left >= 0);
+          ret_str_buffer_p = ecma_copy_zt_string_to_buffer (colon_zt_magic_string_p,
+                                                            ret_str_buffer_p,
+                                                            buffer_size_left);
+          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
+          JERRY_ASSERT (buffer_size_left >= 0);
 
-        ret_str_buffer_p = ecma_copy_zt_string_to_buffer (space_zt_magic_string_p,
-                                                          ret_str_buffer_p,
-                                                          buffer_size_left);
-        buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
-        JERRY_ASSERT (buffer_size_left >= 0);
+          ret_str_buffer_p = ecma_copy_zt_string_to_buffer (space_zt_magic_string_p,
+                                                            ret_str_buffer_p,
+                                                            buffer_size_left);
+          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
+          JERRY_ASSERT (buffer_size_left >= 0);
 
-        bytes = ecma_string_to_zt_string (msg_string_p, ret_str_buffer_p, buffer_size_left);
-        JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
+          bytes = ecma_string_to_zt_string (msg_string_p, ret_str_buffer_p, buffer_size_left);
+          JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
 
-        buffer_size_left -= bytes - 1 /* null character */;
-        ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
+          buffer_size_left -= bytes - 1 /* null character */;
+          ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
 
-        JERRY_ASSERT (buffer_size_left >= (ssize_t) sizeof (ecma_char_t));
-        *ret_str_buffer_p = ECMA_CHAR_NULL;
+          JERRY_ASSERT (buffer_size_left >= (ssize_t) sizeof (ecma_char_t));
+          *ret_str_buffer_p = ECMA_CHAR_NULL;
 
-        ecma_string_t *ret_str_p = ecma_new_ecma_string (ret_str_buffer);
+          ret_str_p = ecma_new_ecma_string (ret_str_buffer);
+        }
 
         ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
       }

@@ -27,8 +27,8 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-#define BUILTIN_INC_HEADER_NAME "ecma-builtin-error.inc.h"
-#define BUILTIN_UNDERSCORED_ID error
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-typeerror.inc.h"
+#define BUILTIN_UNDERSCORED_ID type_error
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -37,18 +37,18 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup error ECMA Error object built-in
+ * \addtogroup typeerror ECMA TypeError object built-in
  * @{
  */
 
 /**
- * Handle calling [[Call]] of built-in Error object
+ * Handle calling [[Call]] of built-in TypeError object
  *
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_error_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
-                                  ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_builtin_type_error_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
+                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -62,7 +62,7 @@ ecma_builtin_error_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments
                     ret_value);
 
     ecma_string_t *message_string_p = ECMA_GET_POINTER (msg_to_str_completion.u.value.value);
-    ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_COMMON,
+    ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_TYPE,
                                                                               message_string_p);
     ret_value = ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));
 
@@ -72,23 +72,23 @@ ecma_builtin_error_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments
   }
   else
   {
-    ecma_object_t *new_error_object_p = ecma_new_standard_error (ECMA_ERROR_COMMON);
+    ecma_object_t *new_error_object_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
 
     return ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));
   }
-} /* ecma_builtin_error_dispatch_call */
+} /* ecma_builtin_type_error_dispatch_call */
 
 /**
- * Handle calling [[Construct]] of built-in Error object
+ * Handle calling [[Construct]] of built-in TypeError object
  *
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_error_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
-                                       ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_builtin_type_error_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
+                                            ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_builtin_error_dispatch_call (arguments_list_p, arguments_list_len);
-} /* ecma_builtin_error_dispatch_construct */
+  return ecma_builtin_type_error_dispatch_call (arguments_list_p, arguments_list_len);
+} /* ecma_builtin_type_error_dispatch_construct */
 
 /**
  * @}

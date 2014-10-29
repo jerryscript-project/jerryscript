@@ -135,6 +135,16 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ERROR_UL, \
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
          error) \
+  macro (TYPE_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         type_error_prototype) \
+  macro (TYPE_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE, \
+         type_error) \
   macro (COMPACT_PROFILE_ERROR, \
          TYPE_FUNCTION, \
          COMPACT_PROFILE_ERROR_UL, \

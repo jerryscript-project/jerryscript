@@ -31,10 +31,11 @@
 /**
  * Native errors.
  *
- * See also: 15.11.6
+ * See also: 15.11.1, 15.11.6
  */
 typedef enum
 {
+  ECMA_ERROR_COMMON, /**< Error */
   ECMA_ERROR_EVAL, /**< EvalError */
   ECMA_ERROR_RANGE, /**< RangeError */
   ECMA_ERROR_REFERENCE, /**< ReferenceError */
@@ -44,6 +45,8 @@ typedef enum
 } ecma_standard_error_t;
 
 extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
+extern ecma_object_t* ecma_new_standard_error_with_message (ecma_standard_error_t error_type,
+                                                            ecma_string_t *message_string_p);
 
 /**
  * @}

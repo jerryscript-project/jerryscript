@@ -14,38 +14,54 @@
  */
 
 /*
- * Boolean.prototype description
+ * Function.prototype built-in description
  */
 
 #ifndef OBJECT_ID
-# define OBJECT_ID(builtin_id)
+# define OBJECT_ID(builtin_object_id)
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
 # define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
 #endif /* !OBJECT_VALUE */
 
+#ifndef NUMBER_VALUE
+# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !NUMBER_VALUE */
+
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
 
 /* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE)
+OBJECT_ID (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE)
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.6.4.1
+// 15.3.4.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN),
+              ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
+/* Number properties:
+ *  (property name, object pointer getter) */
+
+// 15.3.4
+NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+              0,
+              ECMA_PROPERTY_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_boolean_prototype_object_to_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_value_of,  0, 0)
+ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_function_prototype_object_to_string, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_APPLY, ecma_builtin_function_prototype_object_apply, 2, 2)
+ROUTINE (ECMA_MAGIC_STRING_CALL, ecma_builtin_function_prototype_object_call, NON_FIXED, 1)
+ROUTINE (ECMA_MAGIC_STRING_BIND, ecma_builtin_function_prototype_object_bind, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

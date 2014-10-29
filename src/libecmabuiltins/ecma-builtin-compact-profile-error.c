@@ -24,8 +24,14 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
+
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-compact-profile-error.inc.h"
+#define BUILTIN_UNDERSCORED_ID compact_profile_error
+#include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -36,44 +42,6 @@
  * \addtogroup compact_profile_error ECMA CompactProfileError object built-in
  * @{
  */
-
-/**
- * Number of the Boolean object's built-in properties
- */
-const ecma_length_t ecma_builtin_compact_profile_error_property_number = 0;
-
-/**
- * If the property's name is one of built-in properties of the CompactProfileError object
- * that is not instantiated yet, instantiate the property and
- * return pointer to the instantiated property.
- *
- * @return pointer property, if one was instantiated,
- *         NULL - otherwise.
- */
-ecma_property_t*
-ecma_builtin_compact_profile_error_try_to_instantiate_property (ecma_object_t *obj_p, /**< object */
-                                                              ecma_string_t *prop_name_p) /**< property's name */
-{
-  JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
-  JERRY_ASSERT (ecma_find_named_property (obj_p, prop_name_p) == NULL);
-
-  return NULL;
-} /* ecma_builtin_compact_profile_error_try_to_instantiate_property */
-
-/**
- * Dispatcher of the CompactProfileError object's built-in routines
- *
- * @return completion-value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-ecma_completion_value_t
-ecma_builtin_compact_profile_error_dispatch_routine (ecma_magic_string_id_t builtin_routine_id __unused,
-                                                   ecma_value_t this_arg_value __unused,
-                                                   ecma_value_t arguments_list [] __unused,
-                                                   ecma_length_t arguments_compact_profile_error __unused)
-{
-  JERRY_UNREACHABLE ();
-} /* ecma_builtin_compact_profile_error_dispatch_routine */
 
 /**
  * Handle calling [[Call]] of built-in CompactProfileError object
@@ -108,3 +76,5 @@ ecma_builtin_compact_profile_error_dispatch_construct (ecma_value_t *arguments_l
  * @}
  * @}
  */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */

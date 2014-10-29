@@ -46,7 +46,7 @@ typedef enum
   ECMA_BUILTIN_ID_REFERENCE_ERROR, /**< the ReferenceError object (15.11.6.3) */
   ECMA_BUILTIN_ID_SYNTAX_ERROR, /**< the SyntaxError object (15.11.6.4) */
   ECMA_BUILTIN_ID_TYPE_ERROR, /**< the SyntaxError object (15.11.6.5) */
-  ECMA_BUILTIN_ID_SYNTAX_URI_ERROR, /**< the URIError object (15.11.6.6) */
+  ECMA_BUILTIN_ID_URI_ERROR, /**< the URIError object (15.11.6.6) */
   ECMA_BUILTIN_ID_MATH, /**< the Math object (15.8) */
   ECMA_BUILTIN_ID_JSON, /**< the JSON object (15.12) */
 #ifdef CONFIG_ECMA_COMPACT_PROFILE

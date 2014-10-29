@@ -14,11 +14,11 @@
  */
 
 /*
- * Boolean.prototype description
+ * Object.prototype built-in description
  */
 
 #ifndef OBJECT_ID
-# define OBJECT_ID(builtin_id)
+# define OBJECT_ID(builtin_object_id)
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
@@ -30,22 +30,26 @@
 #endif /* !ROUTINE */
 
 /* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE)
+OBJECT_ID (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE)
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.6.4.1
+// 15.2.4.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN),
+              ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_boolean_prototype_object_to_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_value_of,  0, 0)
+ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_object_prototype_object_to_string, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_VALUE_OF_UL, ecma_builtin_object_prototype_object_value_of, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_object_prototype_object_to_locale_string, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_HAS_OWN_PROPERTY_UL, ecma_builtin_object_prototype_object_has_own_property, 1, 1)
+ROUTINE (ECMA_MAGIC_STRING_IS_PROTOTYPE_OF_UL, ecma_builtin_object_prototype_object_is_prototype_of, 1, 1)
+ROUTINE (ECMA_MAGIC_STRING_PROPERTY_IS_ENUMERABLE_UL, ecma_builtin_object_prototype_object_property_is_enumerable, 1, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

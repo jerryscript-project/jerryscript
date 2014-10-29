@@ -180,6 +180,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
     case ECMA_BUILTIN_ID_ ## builtin_id: \
     { \
       JERRY_ASSERT (ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] == NULL); \
+      ecma_builtin_ ## lowercase_name ## _sort_property_names (); \
       \
       ecma_object_t *prototype_obj_p; \
       if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
@@ -211,7 +212,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 
     default:
     {
-      JERRY_UNREACHABLE ();
+      JERRY_ASSERT (id < ECMA_BUILTIN_ID__COUNT);
+
+      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
     }
   }
 } /* ecma_instantiate_builtin */

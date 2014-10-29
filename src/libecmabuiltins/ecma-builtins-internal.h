@@ -154,7 +154,9 @@ ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t bui
                                                       ecma_length_t arguments_number); \
 extern ecma_property_t* \
 ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \
-                                                                 ecma_string_t *prop_name_p);
+                                                                 ecma_string_t *prop_name_p); \
+extern void \
+ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
 
 ECMA_BUILTIN_LIST (DECLARE_DISPATCH_ROUTINES)
 

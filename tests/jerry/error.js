@@ -72,3 +72,41 @@ catch (e)
 
   assert(!(e instanceof Function));
 }
+
+
+/* ReferenceError */
+e = new ReferenceError ();
+assert (e.name === "ReferenceError");
+assert (e.message === "");
+assert (e.toString() === "ReferenceError");
+
+e = new ReferenceError("some message");
+assert (e.name === "ReferenceError");
+assert (e.message === "some message");
+assert (e.toString() === "ReferenceError: some message");
+
+e.name = "";
+assert (e.toString() === "some message");
+e.message = "";
+assert (e.toString() === "");
+
+assert (ReferenceError.prototype.toString === Error.prototype.toString);
+assert (ReferenceError.prototype.constructor === ReferenceError);
+assert (ReferenceError.prototype.name === "ReferenceError");
+assert (ReferenceError.prototype.message === "");
+assert (ReferenceError.prototype.toString() === "ReferenceError");
+
+try
+{
+  var a = non_existing_variable;
+
+  assert (false);
+}
+catch (e)
+{
+  assert(e instanceof ReferenceError);
+  assert(e instanceof Error);
+  assert(e instanceof Object);
+
+  assert(!(e instanceof Function));
+}

@@ -140,6 +140,16 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ERROR_UL, \
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
          type_error_prototype) \
+  macro (REFERENCE_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE, \
+         reference_error) \
+  macro (REFERENCE_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         reference_error_prototype) \
   macro (TYPE_ERROR, \
          TYPE_FUNCTION, \
          ERROR_UL, \

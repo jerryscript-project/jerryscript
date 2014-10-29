@@ -1368,7 +1368,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
   switch (id)
   {
 #define ECMA_MAGIC_STRING_DEF(id, ascii_zt_string) \
-     case ECMA_MAGIC_STRING_ ## id: return (ecma_char_t*) ascii_zt_string;
+     case id: return (ecma_char_t*) ascii_zt_string;
 #include "ecma-magic-strings.inc.h"
 #undef ECMA_MAGIC_STRING_DEF
 

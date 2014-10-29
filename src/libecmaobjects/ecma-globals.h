@@ -705,7 +705,7 @@ typedef uint32_t literal_index_t;
 typedef enum
 {
 #define ECMA_MAGIC_STRING_DEF(id, ascii_zt_string) \
-     ECMA_MAGIC_STRING_ ## id,
+     id,
 #include "ecma-magic-strings.inc.h"
 #undef ECMA_MAGIC_STRING_DEF
 

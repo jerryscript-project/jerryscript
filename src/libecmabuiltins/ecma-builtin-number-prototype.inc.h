@@ -35,7 +35,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE)
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// ECMA-262 v5, 15.7.4.1
+// 15.7.4.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
               ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER),
               ECMA_PROPERTY_WRITABLE,
@@ -54,6 +54,7 @@ ROUTINE (ECMA_MAGIC_STRING_TO_PRECISION_UL, ecma_builtin_number_prototype_object
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
+#undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

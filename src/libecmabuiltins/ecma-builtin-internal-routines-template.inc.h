@@ -52,6 +52,7 @@ static ecma_magic_string_id_t ecma_builtin_property_names[] =
 {
 #define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
+#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) name,
@@ -203,6 +204,18 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
       *num_p = number_value; \
       \
       value = ecma_make_number_value (num_p); \
+      \
+      writable = prop_writable; \
+      enumerable = prop_enumerable; \
+      configurable = prop_configurable; \
+      \
+      break; \
+    }
+#define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable) case name: \
+    { \
+      ecma_string_t *magic_string_p = ecma_get_magic_string (magic_string_id); \
+      \
+      value = ecma_make_string_value (magic_string_p); \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \

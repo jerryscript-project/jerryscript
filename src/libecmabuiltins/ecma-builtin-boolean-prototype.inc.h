@@ -50,6 +50,7 @@ ROUTINE (ECMA_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_v
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
+#undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

@@ -53,6 +53,7 @@ ROUTINE (ECMA_MAGIC_STRING_IS_ARRAY_UL, ecma_builtin_array_object_is_array, 1, 1
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
+#undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

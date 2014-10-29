@@ -123,6 +123,7 @@ ROUTINE (ECMA_MAGIC_STRING_TAN, ecma_builtin_math_object_tan, 1, 1)
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
+#undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

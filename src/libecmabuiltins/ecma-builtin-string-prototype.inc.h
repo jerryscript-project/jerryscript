@@ -67,6 +67,7 @@ ROUTINE (ECMA_MAGIC_STRING_TRIM, ecma_builtin_string_prototype_object_trim, 0, 0
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
+#undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

@@ -102,22 +102,22 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          math) \
   macro (ARRAY, \
          TYPE_FUNCTION, \
-         FUNCTION_UL, \
+         ARRAY_UL, \
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          array) \
   macro (STRING, \
          TYPE_FUNCTION, \
-         FUNCTION_UL, \
+         STRING_UL, \
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          string) \
   macro (BOOLEAN, \
          TYPE_FUNCTION, \
-         FUNCTION_UL, \
+         BOOLEAN_UL, \
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          boolean) \
   macro (NUMBER, \
          TYPE_FUNCTION, \
-         FUNCTION_UL, \
+         NUMBER_UL, \
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          number) \
   macro (FUNCTION, \
@@ -125,6 +125,16 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          FUNCTION_UL, \
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
          function) \
+  macro (ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
+         error_prototype) \
+  macro (ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         error) \
   macro (COMPACT_PROFILE_ERROR, \
          TYPE_FUNCTION, \
          COMPACT_PROFILE_ERROR_UL, \

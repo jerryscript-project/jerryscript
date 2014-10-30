@@ -74,7 +74,8 @@ function ctrl_c() {
 #      git notes --ref=perf remove $commit_hash
 #      git notes --ref=mem remove $commit_hash
 #    done
-#    exit 1
+
+    exit 1
 }
 
 echo

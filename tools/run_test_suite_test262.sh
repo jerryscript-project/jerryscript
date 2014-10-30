@@ -14,5 +14,29 @@
 
 TARGET=$1
 PARSE=$2
-rm ./js.files jerry.error jerry.passed; ./tools/jerry_test.sh ./out/$TARGET/jerry . ./tests/test262/test/suite/ ./tests/test262/test/harness/sta-jerry.js $PARSE
 
+TEST_SUITE_PATH="./tests/test262/test"
+STA_JS="$TEST_SUITE_PATH/harness/sta-jerry.js"
+
+for chapter in `ls $TEST_SUITE_PATH/suite`;
+do
+  rm -f jerry.error."$chapter"
+
+  for test in `find $TEST_SUITE_PATH/suite/$chapter -name *.js`
+  do
+    grep "\* @negative" $test 2>&1 >/dev/null
+    negative=$?
+
+    output=`./out/$TARGET/jerry $PARSE $STA_JS $test 2>&1`
+    status=$?
+
+    if [[ $status -eq 0 && $negative -eq 0 || $status -ne 0 && $negative -ne 0 ]]
+    then
+      (echo "====================";
+       echo "./out/$TARGET/jerry $PARSE $STA_JS $test failed: $status";
+       echo "---------------------";
+       echo $output;
+       echo;) >> jerry.error."$chapter"
+    fi   
+  done
+done

@@ -94,9 +94,10 @@ static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_t* prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
-                          ecma_magic_string_id_t obj_class) /**< object's class */
+                          ecma_magic_string_id_t obj_class, /**< object's class */
+                          bool is_extensible) /**< value of object's [[Extensible]] property */
 {
-  ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, true, obj_type);
+  ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, is_extensible, obj_type);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (object_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_CLASS);
@@ -176,6 +177,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
                      object_type, \
                      object_class, \
                      object_prototype_builtin_id, \
+                     is_extensible, \
                      lowercase_name) \
     case ECMA_BUILTIN_ID_ ## builtin_id: \
     { \
@@ -200,7 +202,8 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
       ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (ECMA_BUILTIN_ID_ ## builtin_id, \
                                                                 prototype_obj_p, \
                                                                 ECMA_OBJECT_ ## object_type, \
-                                                                ECMA_MAGIC_STRING_ ## object_class); \
+                                                                ECMA_MAGIC_STRING_ ## object_class, \
+                                                                is_extensible); \
       ecma_builtin_objects [ECMA_BUILTIN_ID_ ## builtin_id] = builtin_obj_p; \
       \
       break; \
@@ -264,6 +267,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                     object_type, \
                                     object_class, \
                                     object_prototype_builtin_id, \
+                                    is_extensible, \
                                     lowercase_name) \
     case ECMA_BUILTIN_ID_ ## builtin_id: \
     { \
@@ -404,6 +408,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                       object_type, \
                       object_class, \
                       object_prototype_builtin_id, \
+                      is_extensible, \
                       lowercase_name) \
       case ECMA_BUILTIN_ID_ ## builtin_id: \
       { \
@@ -468,6 +473,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                            object_type, \
                            object_class, \
                            object_prototype_builtin_id, \
+                           is_extensible, \
                            lowercase_name) \
     case ECMA_BUILTIN_ID_ ## builtin_id: \
       { \
@@ -524,6 +530,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                          object_type, \
                          object_class, \
                          object_prototype_builtin_id, \
+                         is_extensible, \
                          lowercase_name) \
     case ECMA_BUILTIN_ID_ ## builtin_id: \
       { \

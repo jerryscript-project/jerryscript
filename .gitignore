@@ -33,6 +33,8 @@ vgcore.*
 **.orig
 **.directory
 **.patch
+.tags*
+cscope.*
 
 # ctags and ID database
 tags

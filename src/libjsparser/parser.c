@@ -3955,18 +3955,18 @@ preparse_scope (bool is_global)
 {
   STACK_DECLARE_USAGE (locs);
   STACK_DECLARE_USAGE (U8)
-  STACK_DECLARE_USAGE (U16)
 
   STACK_PUSH (locs, TOK ().loc);
   STACK_PUSH (U8, is_global ? TOK_EOF : TOK_CLOSE_BRACE);
-
-  STACK_PUSH (U16, OPCODE_COUNTER ());
 
   if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
   {
     scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
   }
+
+  STACK_PUSH (U16, OPCODE_COUNTER ());
+  DUMP_OPCODE_2 (reg_var_decl, MIN_TEMP_NAME (), INVALID_VALUE);
 
   while (!token_is (STACK_TOP (U8)))
   {
@@ -4001,10 +4001,8 @@ preparse_scope (bool is_global)
   lexer_seek (STACK_TOP (locs));
   STACK_DROP (locs, 1);
   STACK_DROP (U8, 1);
-  STACK_DROP (U16, 1);
 
   STACK_CHECK_USAGE (U8);
-  STACK_CHECK_USAGE (U16);
   STACK_CHECK_USAGE (locs);
 }
 
@@ -4020,9 +4018,6 @@ parse_source_element_list (bool is_global)
   STACK_DECLARE_USAGE (temp_names)
 
   start_new_scope ();
-  STACK_PUSH (U16, OPCODE_COUNTER ());
-  DUMP_OPCODE_2 (reg_var_decl, MIN_TEMP_NAME (), INVALID_VALUE);
-
   preparse_scope (is_global);
 
   skip_newlines ();

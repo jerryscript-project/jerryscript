@@ -32,7 +32,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR)
  *  (property name, number value, writable, enumerable, configurable) */
 
 NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
-              1,
+              0,
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)

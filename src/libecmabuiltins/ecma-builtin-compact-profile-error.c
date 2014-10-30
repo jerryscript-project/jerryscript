@@ -50,7 +50,7 @@
  */
 ecma_completion_value_t
 ecma_builtin_compact_profile_error_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
-                                                ecma_length_t arguments_list_len) /**< number of arguments */
+                                                  ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -64,7 +64,7 @@ ecma_builtin_compact_profile_error_dispatch_call (ecma_value_t *arguments_list_p
  */
 ecma_completion_value_t
 ecma_builtin_compact_profile_error_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
-                                                     ecma_length_t arguments_list_len) /**< number of arguments */
+                                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

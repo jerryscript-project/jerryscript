@@ -464,10 +464,6 @@ decode_keyword (void)
       return convert_current_token_to_token (TOK_NAME);
     }
   }
-  if (current_token_equals_to ("undefined"))
-  {
-    return create_token (TOK_UNDEFINED, 0);
-  }
   return empty_token;
 }
 
@@ -1416,7 +1412,6 @@ lexer_token_type_to_string (token_type tt)
 
     case TOK_DIV: return "/";
     case TOK_DIV_EQ: return "/=";
-    case TOK_UNDEFINED: return "undefined";
     default: JERRY_UNREACHABLE ();
   }
 }

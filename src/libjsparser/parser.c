@@ -1610,12 +1610,6 @@ parse_primary_expression (void)
       STACK_PUSH (IDX, token_data ());
       break;
     }
-    case TOK_UNDEFINED:
-    {
-      STACK_PUSH (IDX, next_temp_name ());
-      DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNDEFINED);
-      break;
-    }
     case TOK_NULL:
     case TOK_BOOL:
     case TOK_SMALL_INT:

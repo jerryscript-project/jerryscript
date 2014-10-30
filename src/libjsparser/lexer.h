@@ -131,7 +131,6 @@ typedef enum
 
   TOK_DIV, // /
   TOK_DIV_EQ, // /=
-  TOK_UNDEFINED, // undefined
   TOK_EMPTY,
 }
 token_type;

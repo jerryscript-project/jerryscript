@@ -207,7 +207,7 @@ NAME.current
 NAME##_stack_element ((NAME##_stack_data_type) (I))
 
 #define STACK_SET_ELEMENT(NAME, I, VALUE) \
-do { set_##NAME##_stack_element ((NAME##_stack_data_type) I, VALUE); } while (0);
+do { set_##NAME##_stack_element ((NAME##_stack_data_type) I, VALUE); } while (0)
 
 #define STACK_CONVERT_TO_RAW_DATA(NAME, DATA) \
 do { DATA = convert_##NAME##_to_raw_data (); } while (0)

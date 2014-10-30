@@ -27,13 +27,14 @@ do
     grep "\* @negative" $test 2>&1 >/dev/null
     negative=$?
 
-    output=`./out/$TARGET/jerry $PARSE $STA_JS $test 2>&1`
+    cmd="./out/$TARGET/jerry $PARSE $test $STA_JS"
+    output=`$cmd 2>&1`
     status=$?
 
     if [[ $status -eq 0 && $negative -eq 0 || $status -ne 0 && $negative -ne 0 ]]
     then
       (echo "====================";
-       echo "./out/$TARGET/jerry $PARSE $STA_JS $test failed: $status";
+       echo "$cmd failed: $status";
        echo "---------------------";
        echo $output;
        echo;) >> jerry.error."$chapter"

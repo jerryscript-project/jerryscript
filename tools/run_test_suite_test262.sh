@@ -12,32 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#!/bin/bash
+
 TARGET=$1
 PARSE=$2
 
+TIMEOUT=5
+TMP_DIR=`mktemp -d --tmpdir=./`
+
+echo $TMP_DIR | grep -q tmp || exit 1
+
+trap clean_on_exit INT
+
+function clean_on_exit() {
+  rm -rf $TMP_DIR
+
+  [[ $1 == "OK" ]] || exit 1
+}
+
 TEST_SUITE_PATH="./tests/test262/test"
 STA_JS="$TEST_SUITE_PATH/harness/sta-jerry.js"
+MAX_THREADS=${MAX_CPUS:-32}
 
-for chapter in `ls $TEST_SUITE_PATH/suite`;
+rm -f jerry.error.*
+
+find $TEST_SUITE_PATH/suite -name *.js -printf "%p %D%i\0" | xargs -0 -n 1 -P $MAX_THREADS bash -c '
+  target=$0
+  sta_js_path=$1;
+  timeout=$2;
+  tmp_dir=$3;
+  test=`echo $4 | cut -d " " -f 1`;
+  test_id=`echo $4 | cut -d " " -f 2`;
+  chapter=`echo $test | cut -d "/" -f 6`;
+
+  grep "\* @negative" $test 2>&1 >/dev/null;
+  negative=$?;
+
+  cmd="$target $test $sta_js_path";
+  output=`ulimit -t $timeout; $cmd 2>&1`;
+  status=$?;
+
+  if [[ $status -eq 0 && $negative -eq 0 || $status -ne 0 && $negative -ne 0 ]];
+  then
+    (echo "====================";
+     echo "$cmd failed: $status";
+     echo "---------------------";
+     echo $output;
+     echo;) >> $tmp_dir/jerry.error."$chapter"."$test_id";
+  fi;
+' "./out/$TARGET/jerry $PARSE" $STA_JS $TIMEOUT $TMP_DIR 2>/dev/null;
+
+for CHAPTER in `ls $TEST_SUITE_PATH/suite`;
 do
-  rm -f jerry.error."$chapter"
-
-  for test in `find $TEST_SUITE_PATH/suite/$chapter -name *.js`
-  do
-    grep "\* @negative" $test 2>&1 >/dev/null
-    negative=$?
-
-    cmd="./out/$TARGET/jerry $PARSE $test $STA_JS"
-    output=`$cmd 2>&1`
-    status=$?
-
-    if [[ $status -eq 0 && $negative -eq 0 || $status -ne 0 && $negative -ne 0 ]]
-    then
-      (echo "====================";
-       echo "$cmd failed: $status";
-       echo "---------------------";
-       echo $output;
-       echo;) >> jerry.error."$chapter"
-    fi   
-  done
+  cat $TMP_DIR/jerry.error."$CHAPTER".* > jerry.error."$CHAPTER"
 done
+
+clean_on_exit OK

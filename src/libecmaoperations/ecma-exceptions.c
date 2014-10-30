@@ -80,8 +80,8 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
     case ECMA_ERROR_SYNTAX:
     {
-      /* SyntaxError should be treated as an early error */
-      JERRY_UNREACHABLE ();
+      prototype_id = ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE;
+      break;
     }
   }
 

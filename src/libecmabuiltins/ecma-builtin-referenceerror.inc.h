@@ -49,7 +49,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.7.3.1
+// 15.11.3.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
               ecma_builtin_get (ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,

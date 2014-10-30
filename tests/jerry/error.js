@@ -110,3 +110,91 @@ catch (e)
 
   assert(!(e instanceof Function));
 }
+
+/* EvalError */
+e = new EvalError ();
+assert (e.name === "EvalError");
+assert (e.message === "");
+assert (e.toString() === "EvalError");
+
+e = new EvalError("some message");
+assert (e.name === "EvalError");
+assert (e.message === "some message");
+assert (e.toString() === "EvalError: some message");
+
+e.name = "";
+assert (e.toString() === "some message");
+e.message = "";
+assert (e.toString() === "");
+
+assert (EvalError.prototype.toString === Error.prototype.toString);
+assert (EvalError.prototype.constructor === EvalError);
+assert (EvalError.prototype.name === "EvalError");
+assert (EvalError.prototype.message === "");
+assert (EvalError.prototype.toString() === "EvalError");
+
+/* RangeError */
+e = new RangeError ();
+assert (e.name === "RangeError");
+assert (e.message === "");
+assert (e.toString() === "RangeError");
+
+e = new RangeError("some message");
+assert (e.name === "RangeError");
+assert (e.message === "some message");
+assert (e.toString() === "RangeError: some message");
+
+e.name = "";
+assert (e.toString() === "some message");
+e.message = "";
+assert (e.toString() === "");
+
+assert (RangeError.prototype.toString === Error.prototype.toString);
+assert (RangeError.prototype.constructor === RangeError);
+assert (RangeError.prototype.name === "RangeError");
+assert (RangeError.prototype.message === "");
+assert (RangeError.prototype.toString() === "RangeError");
+
+/* SyntaxError */
+e = new SyntaxError ();
+assert (e.name === "SyntaxError");
+assert (e.message === "");
+assert (e.toString() === "SyntaxError");
+
+e = new SyntaxError("some message");
+assert (e.name === "SyntaxError");
+assert (e.message === "some message");
+assert (e.toString() === "SyntaxError: some message");
+
+e.name = "";
+assert (e.toString() === "some message");
+e.message = "";
+assert (e.toString() === "");
+
+assert (SyntaxError.prototype.toString === Error.prototype.toString);
+assert (SyntaxError.prototype.constructor === SyntaxError);
+assert (SyntaxError.prototype.name === "SyntaxError");
+assert (SyntaxError.prototype.message === "");
+assert (SyntaxError.prototype.toString() === "SyntaxError");
+
+/* URIError */
+e = new URIError ();
+assert (e.name === "URIError");
+assert (e.message === "");
+assert (e.toString() === "URIError");
+
+e = new URIError("some message");
+assert (e.name === "URIError");
+assert (e.message === "some message");
+assert (e.toString() === "URIError: some message");
+
+e.name = "";
+assert (e.toString() === "some message");
+e.message = "";
+assert (e.toString() === "");
+
+assert (URIError.prototype.toString === Error.prototype.toString);
+assert (URIError.prototype.constructor === URIError);
+assert (URIError.prototype.name === "URIError");
+assert (URIError.prototype.message === "");
+assert (URIError.prototype.toString() === "URIError");

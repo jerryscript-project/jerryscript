@@ -14,7 +14,7 @@
  */
 
 /*
- * TypeError built-in description
+ * UriError built-in description
  */
 
 #ifndef OBJECT_ID
@@ -34,7 +34,7 @@
 #endif /* !OBJECT_VALUE */
 
 /* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_TYPE_ERROR)
+OBJECT_ID (ECMA_BUILTIN_ID_URI_ERROR)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -51,7 +51,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 
 // 15.11.3.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
-              ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
+              ecma_builtin_get (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)

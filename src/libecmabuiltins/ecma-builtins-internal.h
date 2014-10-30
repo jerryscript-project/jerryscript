@@ -135,26 +135,66 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ERROR_UL, \
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
          error) \
-  macro (TYPE_ERROR_PROTOTYPE, \
+  macro (EVAL_ERROR_PROTOTYPE, \
          TYPE_GENERAL, \
          ERROR_UL, \
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         type_error_prototype) \
-  macro (REFERENCE_ERROR, \
+         eval_error_prototype) \
+  macro (EVAL_ERROR, \
          TYPE_FUNCTION, \
          ERROR_UL, \
-         ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE, \
-         reference_error) \
+         ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE, \
+         eval_error) \
+  macro (RANGE_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         range_error_prototype) \
+  macro (RANGE_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE, \
+         range_error) \
   macro (REFERENCE_ERROR_PROTOTYPE, \
          TYPE_GENERAL, \
          ERROR_UL, \
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
          reference_error_prototype) \
+  macro (REFERENCE_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE, \
+         reference_error) \
+  macro (SYNTAX_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         syntax_error_prototype) \
+  macro (SYNTAX_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE, \
+         syntax_error) \
+  macro (TYPE_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         type_error_prototype) \
   macro (TYPE_ERROR, \
          TYPE_FUNCTION, \
          ERROR_UL, \
          ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE, \
          type_error) \
+  macro (URI_ERROR_PROTOTYPE, \
+         TYPE_GENERAL, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
+         uri_error_prototype) \
+  macro (URI_ERROR, \
+         TYPE_FUNCTION, \
+         ERROR_UL, \
+         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE, \
+         uri_error) \
   macro (COMPACT_PROFILE_ERROR, \
          TYPE_FUNCTION, \
          COMPACT_PROFILE_ERROR_UL, \

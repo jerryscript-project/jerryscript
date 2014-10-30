@@ -104,7 +104,8 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
     if (unlikely (do_eval_or_arguments_check
                   && do_strict_eval_arguments_check (ref)))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      /* SyntaxError should be treated as an early error */
+      JERRY_UNREACHABLE ();
     }
     else
     {
@@ -156,7 +157,8 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
 
     if (unlikely (do_strict_eval_arguments_check (ref)))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      /* SyntaxError should be treated as an early error */
+      JERRY_UNREACHABLE ();
     }
     else
     {

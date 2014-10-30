@@ -1452,7 +1452,8 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   if (ref.is_strict)
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+    /* SyntaxError should be treated as an early error */
+    JERRY_UNREACHABLE ();
   }
   else
   {
@@ -1518,7 +1519,8 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   {
     if (int_data->is_strict)
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+      /* SyntaxError should be treated as an early error */
+      JERRY_UNREACHABLE ();
     }
     else
     {

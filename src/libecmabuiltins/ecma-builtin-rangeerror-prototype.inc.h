@@ -14,16 +14,12 @@
  */
 
 /*
- * TypeError built-in description
+ * RangeError.prototype built-in description
  */
 
 #ifndef OBJECT_ID
 # define OBJECT_ID(builtin_object_id)
 #endif /* !OBJECT_ID */
-
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
-#endif /* !NUMBER_VALUE */
 
 #ifndef STRING_VALUE
 # define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable)
@@ -34,27 +30,31 @@
 #endif /* !OBJECT_VALUE */
 
 /* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_TYPE_ERROR)
-
-/* Number properties:
- *  (property name, number value, writable, enumerable, configurable) */
-
-// 15.11.3
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
-              1,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+OBJECT_ID (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE)
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.11.3.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
-              ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
-              ECMA_PROPERTY_NOT_WRITABLE,
+// 15.11.7.8
+OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+              ecma_builtin_get (ECMA_BUILTIN_ID_RANGE_ERROR),
+              ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_CONFIGURABLE)
+
+// 15.11.7.9
+STRING_VALUE (ECMA_MAGIC_STRING_NAME,
+              ECMA_MAGIC_STRING_RANGE_ERROR_UL,
+              ECMA_PROPERTY_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_CONFIGURABLE)
+
+// 15.11.7.10
+STRING_VALUE (ECMA_MAGIC_STRING_MESSAGE,
+              ECMA_MAGIC_STRING__EMPTY,
+              ECMA_PROPERTY_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_CONFIGURABLE)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

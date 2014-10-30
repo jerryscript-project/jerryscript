@@ -60,8 +60,6 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p,
                               bool is_strict,
                               bool is_configurable_bindings);
 
-extern ecma_object_t* ecma_op_get_throw_type_error (void);
-
 /**
  * @}
  * @}

@@ -195,6 +195,11 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
          ERROR_UL, \
          ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE, \
          uri_error) \
+  macro (TYPE_ERROR_THROWER, \
+         TYPE_FUNCTION, \
+         FUNCTION_UL, \
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
+         type_error_thrower) \
   macro (COMPACT_PROFILE_ERROR, \
          TYPE_FUNCTION, \
          COMPACT_PROFILE_ERROR_UL, \

@@ -55,6 +55,7 @@ typedef enum
   ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE, /**< the URIError.prototype object (15.11.6.6) */
   ECMA_BUILTIN_ID_MATH, /**< the Math object (15.8) */
   ECMA_BUILTIN_ID_JSON, /**< the JSON object (15.12) */
+  ECMA_BUILTIN_ID_TYPE_ERROR_THROWER, /**< the [[ThrowTypeError]] object (13.2.3) */
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
   ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR, /**< CompactProfileError object defined in the Compact Profile */
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */

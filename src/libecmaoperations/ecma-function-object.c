@@ -252,7 +252,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 19.
   if (is_strict)
   {
-    ecma_object_t *thrower_p = ecma_op_get_throw_type_error ();
+    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
     prop_desc = ecma_make_empty_property_descriptor ();
     {
@@ -269,7 +269,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
       prop_desc.set_p = thrower_p;
     }
 
-    ecma_string_t *magic_string_caller_p =ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER) ;
+    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER);
     ecma_op_object_define_own_property (f,
                                         magic_string_caller_p,
                                         prop_desc,
@@ -768,19 +768,6 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
 
   return ret_value;
 } /* ecma_op_function_declaration */
-
-/**
- * Get [[ThrowTypeError]] Function Object
- *
- * @return pointer to unique [[ThrowTypeError]] Function Object
- */
-ecma_object_t*
-ecma_op_get_throw_type_error (void)
-{
-  TODO(Create [[ThrowTypeError]] during engine initialization and return it from here);
-
-  JERRY_UNIMPLEMENTED("Type error thrower is not implemented.");
-} /* ecma_op_get_throw_type_error */
 
 /**
  * @}

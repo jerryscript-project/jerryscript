@@ -615,7 +615,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
       const literal lit = deserialize_literal_by_id ((idx_t) string_desc_p->u.lit_index);
-      JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+      JERRY_ASSERT (lit.type == LIT_STR);
       const ecma_char_t *str_p = literal_to_zt (lit);
       JERRY_ASSERT (str_p != NULL);
 
@@ -805,7 +805,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   {
     FIXME (uint8_t -> literal_index_t);
     const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    JERRY_ASSERT (lit.type == LIT_STR);
     zt_string1_p = literal_to_zt (lit);
   }
   else
@@ -853,7 +853,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     {
       FIXME (uint8_t -> literal_index_t);
       const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
-      JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+      JERRY_ASSERT (lit.type == LIT_STR);
       zt_string2_p = literal_to_zt (lit);
     }
     else
@@ -1010,7 +1010,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   {
     FIXME (uint8_t -> literal_index_t);
     const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    JERRY_ASSERT (lit.type == LIT_STR);
     zt_string1_p = literal_to_zt (lit);
   }
   else
@@ -1046,7 +1046,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   {
     FIXME (uint8_t -> literal_index_t);
     const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    JERRY_ASSERT (lit.type == LIT_STR);
     zt_string2_p = literal_to_zt (lit);
   }
   else

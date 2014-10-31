@@ -23,42 +23,14 @@
  */
 typedef enum
 {
-  ECMA_BUILTIN_ID_GLOBAL, /**< the Global object (15.1) */
-  ECMA_BUILTIN_ID_OBJECT, /**< the Object object (15.2.1) */
-  ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, /**< the Object.prototype object (15.2.4) */
-  ECMA_BUILTIN_ID_FUNCTION, /**< the Function object (15.3.1) */
-  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, /**< the Function.prototype object (15.3.4) */
-  ECMA_BUILTIN_ID_ARRAY, /**< the Array object (15.4.1) */
-  ECMA_BUILTIN_ID_ARRAY_PROTOTYPE, /**< the Array.prototype object (15.4.4) */
-  ECMA_BUILTIN_ID_STRING, /**< the String object (15.5.1) */
-  ECMA_BUILTIN_ID_STRING_PROTOTYPE, /**< the String.prototype object (15.5.4) */
-  ECMA_BUILTIN_ID_BOOLEAN, /**< the Boolean object (15.6.1) */
-  ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE, /**< the Boolean.prototype object (15.6.4) */
-  ECMA_BUILTIN_ID_NUMBER, /**< the Number object (15.7.1) */
-  ECMA_BUILTIN_ID_NUMBER_PROTOTYPE, /**< the Number.prototype object (15.7.4) */
-  ECMA_BUILTIN_ID_DATE, /**< the Date object (15.9.2) */
-  ECMA_BUILTIN_ID_REGEXP, /**< the RegExp object (15.10.3) */
-  ECMA_BUILTIN_ID_REGEXP_PROTOTYPE, /**< the RegExp.prototype object (15.10.6) */
-  ECMA_BUILTIN_ID_ERROR, /**< the Error object (15.11.1) */
-  ECMA_BUILTIN_ID_ERROR_PROTOTYPE, /**< the Error.prototype object (15.11.4) */
-  ECMA_BUILTIN_ID_EVAL_ERROR, /**< the EvalError object (15.11.6.1) */
-  ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE, /**< the EvalError.prototype object (15.11.6.1) */
-  ECMA_BUILTIN_ID_RANGE_ERROR, /**< the RangeError object (15.11.6.2) */
-  ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE, /**< the RangeError.prototype object (15.11.6.2) */
-  ECMA_BUILTIN_ID_REFERENCE_ERROR, /**< the ReferenceError object (15.11.6.3) */
-  ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE, /**< the ReferenceError.prototype object (15.11.6.3) */
-  ECMA_BUILTIN_ID_SYNTAX_ERROR, /**< the SyntaxError object (15.11.6.4) */
-  ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE, /**< the SyntaxError.prototype object (15.11.6.4) */
-  ECMA_BUILTIN_ID_TYPE_ERROR, /**< the TypeError object (15.11.6.5) */
-  ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE, /**< the TypeError.prototype object (15.11.6.5) */
-  ECMA_BUILTIN_ID_URI_ERROR, /**< the URIError object (15.11.6.6) */
-  ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE, /**< the URIError.prototype object (15.11.6.6) */
-  ECMA_BUILTIN_ID_MATH, /**< the Math object (15.8) */
-  ECMA_BUILTIN_ID_JSON, /**< the JSON object (15.12) */
-  ECMA_BUILTIN_ID_TYPE_ERROR_THROWER, /**< the [[ThrowTypeError]] object (13.2.3) */
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-  ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR, /**< CompactProfileError object defined in the Compact Profile */
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+#define BUILTIN(builtin_id, \
+                object_type, \
+                object_class, \
+                object_prototype_builtin_id, \
+                is_extensible, \
+                lowercase_name) \
+  builtin_id,
+#include "ecma-builtins.inc.h"
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 

@@ -55,198 +55,12 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
                                                       ecma_length_t array_length,
                                                       ecma_magic_string_id_t key);
 
-/**
- * List of built-in objects in format
- * 'macro (builtin_id, object_type, object_class, object_prototype_builtin_id, is_extensible, lowercase_name)'
- */
-#define ECMA_BUILTIN_LIST(macro) \
-  macro (OBJECT_PROTOTYPE, \
-         TYPE_GENERAL, \
-         OBJECT_UL, \
-         ECMA_BUILTIN_ID__COUNT /* no prototype */, \
-         true, \
-         object_prototype) \
-  macro (FUNCTION_PROTOTYPE, \
-         TYPE_FUNCTION, \
-         FUNCTION_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         function_prototype) \
-  macro (ARRAY_PROTOTYPE, \
-         TYPE_ARRAY, \
-         ARRAY_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         array_prototype) \
-  macro (STRING_PROTOTYPE, \
-         TYPE_GENERAL, \
-         STRING_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         string_prototype) \
-  macro (BOOLEAN_PROTOTYPE, \
-         TYPE_GENERAL, \
-         BOOLEAN_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         boolean_prototype) \
-  macro (NUMBER_PROTOTYPE, \
-         TYPE_GENERAL, \
-         NUMBER_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         number_prototype) \
-  macro (OBJECT, \
-         TYPE_FUNCTION, \
-         OBJECT_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         object) \
-  macro (MATH, \
-         TYPE_GENERAL, \
-         MATH_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         math) \
-  macro (ARRAY, \
-         TYPE_FUNCTION, \
-         ARRAY_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         true, \
-         array) \
-  macro (STRING, \
-         TYPE_FUNCTION, \
-         STRING_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         true, \
-         string) \
-  macro (BOOLEAN, \
-         TYPE_FUNCTION, \
-         BOOLEAN_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         true, \
-         boolean) \
-  macro (NUMBER, \
-         TYPE_FUNCTION, \
-         NUMBER_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         true, \
-         number) \
-  macro (FUNCTION, \
-         TYPE_FUNCTION, \
-         FUNCTION_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         true, \
-         function) \
-  macro (ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         true, \
-         error_prototype) \
-  macro (ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         error) \
-  macro (EVAL_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         eval_error_prototype) \
-  macro (EVAL_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE, \
-         true, \
-         eval_error) \
-  macro (RANGE_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         range_error_prototype) \
-  macro (RANGE_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE, \
-         true, \
-         range_error) \
-  macro (REFERENCE_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         reference_error_prototype) \
-  macro (REFERENCE_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE, \
-         true, \
-         reference_error) \
-  macro (SYNTAX_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         syntax_error_prototype) \
-  macro (SYNTAX_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE, \
-         true, \
-         syntax_error) \
-  macro (TYPE_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         type_error_prototype) \
-  macro (TYPE_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE, \
-         true, \
-         type_error) \
-  macro (URI_ERROR_PROTOTYPE, \
-         TYPE_GENERAL, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_ERROR_PROTOTYPE, \
-         true, \
-         uri_error_prototype) \
-  macro (URI_ERROR, \
-         TYPE_FUNCTION, \
-         ERROR_UL, \
-         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE, \
-         true, \
-         uri_error) \
-  macro (TYPE_ERROR_THROWER, \
-         TYPE_FUNCTION, \
-         FUNCTION_UL, \
-         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE, \
-         false, \
-         type_error_thrower) \
-  macro (COMPACT_PROFILE_ERROR, \
-         TYPE_FUNCTION, \
-         COMPACT_PROFILE_ERROR_UL, \
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, \
-         false, \
-         compact_profile_error) \
-  macro (GLOBAL, \
-         TYPE_GENERAL, \
-         OBJECT_UL, \
-         ECMA_BUILTIN_ID__COUNT /* no prototype */, \
-         true, \
-         global)
-
-#define DECLARE_DISPATCH_ROUTINES(builtin_id, \
-                                  object_type, \
-                                  object_class, \
-                                  object_prototype_builtin_id, \
-                                  is_extensible, \
-                                  lowercase_name) \
+#define BUILTIN(builtin_id, \
+                object_type, \
+                object_class, \
+                object_prototype_builtin_id, \
+                is_extensible, \
+                lowercase_name) \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (ecma_value_t *arguments_list_p, \
                                                    ecma_length_t arguments_list_len); \
@@ -263,15 +77,12 @@ ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *
                                                                  ecma_string_t *prop_name_p); \
 extern void \
 ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
+#include "ecma-builtins.inc.h"
 
-ECMA_BUILTIN_LIST (DECLARE_DISPATCH_ROUTINES)
-
-#undef DECLARE_PROPERTY_NUMBER_VARIABLES
-#undef DECLARE_DISPATCH_ROUTINES
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE
 # define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Compact Profile optional built-in.", __VA_ARGS__)
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Built-in is not implemented.", __VA_ARGS__)
 #else /* !CONFIG_ECMA_COMPACT_PROFILE */
 # define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
 { \

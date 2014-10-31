@@ -1399,7 +1399,14 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
 ecma_string_t*
 ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
-  return ecma_new_ecma_string (ecma_get_magic_string_zt (id));
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+
+  string_desc_p->refs = 1;
+  string_desc_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
+  string_desc_p->length = ecma_zt_string_length (ecma_get_magic_string_zt (id));
+  string_desc_p->u.magic_string_id = id;
+
+  return string_desc_p;
 } /* ecma_get_magic_string */
 
 /**

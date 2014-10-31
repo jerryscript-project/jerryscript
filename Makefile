@@ -46,11 +46,12 @@ export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
-export TARGET_PC_MODS = musl sanitize valgrind float64 cp cp_minimal \
+export TARGET_PC_MODS = musl sanitize valgrind cp cp_minimal \
                         musl-valgrind \
+                        valgrind-cp \
                         musl-cp_minimal
 
-export TARGET_MCU_MODS =
+export TARGET_MCU_MODS = cp_minimal
 
 export TARGET_PC_SYSTEMS_MODS = $(TARGET_PC_SYSTEMS) \
                                 $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD)))
@@ -86,10 +87,10 @@ all: precommit
 
 PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
                                           release.linux.check \
-                                          debug_release.linux.check \
-                                          debug.linux-float64.check
+                                          debug_release.linux.check
 PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
-                                       release.linux-musl-valgrind.check
+                                       release.linux-musl-valgrind.check \
+                                       debug.linux-valgrind-cp.check
 
                               # debug.linux-musl-valgrind.check \
                               debug_release.linux-valgrind.check \

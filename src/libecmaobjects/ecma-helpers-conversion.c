@@ -609,6 +609,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
   }
 
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
   int32_t binary_exponent = 1;
 
   /*
@@ -733,6 +734,25 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
   return ecma_number_make_from_sign_mantissa_and_exponent (sign,
                                                            fraction_uint64,
                                                            binary_exponent);
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+  /* Less precise conversion */
+  ecma_number_t num = (ecma_number_t) (uint32_t) fraction_uint64;
+
+  ecma_number_t m = e_sign ? (ecma_number_t) 0.1 : (ecma_number_t) 10.0;
+
+  while (e)
+  {
+    if (e % 2)
+    {
+      num *= m;
+    }
+
+    m *= m;
+    e /= 2;
+  }
+
+  return num;
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 } /* ecma_zt_string_to_number */
 
 /**
@@ -847,6 +867,7 @@ ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
   return (int32_t) (uint32_t) value;
 } /* ecma_number_to_int32 */
 
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Perform conversion of binary representation of number to decimal representation with decimal exponent
  */
@@ -1085,6 +1106,8 @@ ecma_number_to_zt_string_calc_number_params (ecma_number_t num, /**< ecma-number
   *out_decimal_exp_p = decimal_exp_p1 + digits_num;
 } /* ecma_number_to_zt_string_calc_number_params */
 
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+
 /**
  * Convert ecma-number to zero-terminated string
  *
@@ -1155,6 +1178,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
       }
       else
       {
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
         uint64_t fraction_uint64;
         int32_t binary_exponent;
 
@@ -1178,6 +1202,122 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
         uint32_t s = (uint32_t) s_uint64;
 
         JERRY_ASSERT (s == s_uint64);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+        /* Less precise conversion */
+
+        uint64_t fraction_uint64;
+        uint32_t fraction;
+        int32_t exponent;
+        int32_t dot_shift;
+        int32_t decimal_exp = 0;
+
+        dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &exponent);
+
+        fraction = (uint32_t) fraction_uint64;
+        JERRY_ASSERT (fraction == fraction_uint64);
+
+        if (exponent != 0)
+        {
+          ecma_number_t t = 1.0f;
+          bool do_divide;
+
+          if (exponent < 0)
+          {
+            do_divide = true;
+
+            while (exponent <= 0)
+            {
+              t *= 2.0f;
+              exponent++;
+
+              if (t >= 10.0f)
+              {
+                t /= 10.0f;
+                decimal_exp--;
+              }
+
+              JERRY_ASSERT (t < 10.0f);
+            }
+
+            while (t > 1.0f)
+            {
+              exponent--;
+              t /= 2.0f;
+            }
+          }
+          else
+          {
+            do_divide = false;
+
+            while (exponent >= 0)
+            {
+              t *= 2.0f;
+              exponent--;
+
+              if (t >= 10.0f)
+              {
+                t /= 10.0f;
+                decimal_exp++;
+              }
+
+              JERRY_ASSERT (t < 10.0f);
+            }
+
+            while (t > 2.0f)
+            {
+              exponent++;
+              t /= 2.0f;
+            }
+          }
+
+          if (do_divide)
+          {
+            fraction = (uint32_t) ((ecma_number_t) fraction / t);
+          }
+          else
+          {
+            fraction = (uint32_t) ((ecma_number_t) fraction * t);
+          }
+        }
+
+        uint32_t s;
+        int32_t n;
+        int32_t k;
+
+        if (exponent > 0)
+        {
+          fraction <<= exponent;
+        }
+        else
+        {
+          fraction >>= -exponent;
+        }
+
+        const int32_t int_part_shift = dot_shift;
+        const uint32_t frac_part_mask = ((((uint32_t)1) << int_part_shift) - 1);
+
+        uint32_t int_part = fraction >> int_part_shift;
+        uint32_t frac_part = fraction & frac_part_mask;
+
+        s = int_part;
+        k = 1;
+        n = decimal_exp + 1;
+
+        JERRY_ASSERT (int_part < 10);
+
+        while (k < ECMA_NUMBER_MAX_DIGITS
+               && frac_part != 0)
+        {
+          frac_part *= 10;
+
+          uint32_t new_frac_part = frac_part & frac_part_mask;
+          uint32_t digit = (frac_part - new_frac_part) >> int_part_shift;
+          s = s * 10 + digit;
+          k++;
+          frac_part = new_frac_part;
+        }
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
         // 6.

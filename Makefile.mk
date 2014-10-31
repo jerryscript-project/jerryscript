@@ -160,22 +160,15 @@ else
      OPTION_LIBC := raw
 endif
 
-# float64 mode
-ifeq ($(filter float64,$(TARGET_MODS)), float64)
-     ifeq ($(OPTION_MCU),enable)
-      $(error MCU target doesn\'t support float64)
-     endif
-
-     OPTION_FLOAT64 := enable
-else
-     OPTION_FLOAT64 := disable
-endif
-
 # CompactProfile mode
-ifeq ($(filter cp,$(TARGET_MODS)), cp)
+ifeq ($(OPTION_MCU),enable)
      OPTION_COMPACT_PROFILE := enable
 else
-     OPTION_COMPACT_PROFILE := disable
+  ifeq ($(filter cp,$(TARGET_MODS)), cp)
+       OPTION_COMPACT_PROFILE := enable
+  else
+       OPTION_COMPACT_PROFILE := disable
+  endif
 endif
 
 # minimal CompactProfile mode
@@ -184,11 +177,6 @@ ifeq ($(filter cp_minimal,$(TARGET_MODS)), cp_minimal)
      OPTION_CP_MINIMAL := enable
 else
      OPTION_CP_MINIMAL := disable
-endif
-
-# Enabling float64 mode for unittests
-ifeq ($(filter-out $(TESTS_TARGET),$(TARGET_MODE)),)
-  OPTION_FLOAT64 := enable
 endif
 
 ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)
@@ -366,12 +354,10 @@ ifeq ($(OPTION_NDEBUG),enable)
  DEFINES_JERRY += -DJERRY_NDEBUG
 endif
 
-ifeq ($(OPTION_FLOAT64),enable)
-  DEFINES_JERRY += -DCONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64
-endif
-
 ifeq ($(OPTION_COMPACT_PROFILE),enable)
   DEFINES_JERRY += -DCONFIG_ECMA_COMPACT_PROFILE
+else
+  DEFINES_JERRY += -DCONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64
 endif
 
 ifeq ($(OPTION_CP_MINIMAL),enable)
@@ -383,7 +369,8 @@ ifeq ($(OPTION_CP_MINIMAL),enable)
                    -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN \
                    -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN \
                    -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN \
-                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN \
+                   -DCONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT32
 endif
 
 ifeq ($(OPTION_MCU),disable)

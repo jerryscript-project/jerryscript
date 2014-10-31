@@ -307,11 +307,8 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
       ecma_value_t prop_value = property_p->u.named_data_property.value;
 
       /* is the binding mutable? */
-      if (property_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE)
-      {
-        return ecma_make_normal_completion_value (ecma_copy_value (prop_value, true));
-      }
-      else if (ecma_is_value_empty (prop_value))
+      if (property_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE
+          && ecma_is_value_empty (prop_value))
       {
         /* unitialized immutable binding */
         if (is_strict)
@@ -323,6 +320,8 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
         }
       }
+
+      return ecma_make_normal_completion_value (ecma_copy_value (prop_value, true));
 
       break;
     }

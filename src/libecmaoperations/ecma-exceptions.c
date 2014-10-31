@@ -38,6 +38,7 @@
 ecma_object_t*
 ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
 {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
 
   switch (error_type)
@@ -98,6 +99,11 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
+#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+  (void) error_type;
+
+  return ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 } /* ecma_new_standard_error */
 
 /**

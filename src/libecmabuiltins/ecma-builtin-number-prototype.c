@@ -25,6 +25,8 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -206,3 +208,5 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this, /**< this 
  * @}
  * @}
  */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */

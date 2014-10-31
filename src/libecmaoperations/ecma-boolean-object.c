@@ -52,7 +52,12 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
 
   JERRY_ASSERT (bool_value == ECMA_SIMPLE_VALUE_TRUE || bool_value == ECMA_SIMPLE_VALUE_FALSE);
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE);
+#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              true,
                                              ECMA_OBJECT_TYPE_GENERAL);

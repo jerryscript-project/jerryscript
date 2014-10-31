@@ -46,8 +46,9 @@ export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
-export TARGET_PC_MODS = musl sanitize valgrind \
-                        musl-valgrind float64
+export TARGET_PC_MODS = musl sanitize valgrind float64 cp cp_minimal \
+                        musl-valgrind \
+                        musl-cp_minimal
 
 export TARGET_MCU_MODS =
 

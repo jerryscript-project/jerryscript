@@ -24,6 +24,8 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -95,3 +97,5 @@ ecma_builtin_reference_error_dispatch_construct (ecma_value_t *arguments_list_p,
  * @}
  * @}
  */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */

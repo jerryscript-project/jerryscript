@@ -25,6 +25,8 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -62,3 +64,5 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this) /**< this argu
  * @}
  * @}
  */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */

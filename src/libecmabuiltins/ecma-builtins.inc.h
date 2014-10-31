@@ -24,14 +24,15 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
          object_prototype)
 
-/* The Function.prototype object (15.3.4) */
-BUILTIN (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+/* The Object object (15.2.1) */
+BUILTIN (ECMA_BUILTIN_ID_OBJECT,
          ECMA_OBJECT_TYPE_FUNCTION,
-         ECMA_MAGIC_STRING_FUNCTION_UL,
+         ECMA_MAGIC_STRING_OBJECT_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         function_prototype)
+         object)
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
 /* The Array.prototype object (15.4.4) */
 BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_ARRAY,
@@ -41,52 +42,22 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
          array_prototype)
 
 /* The Array object (15.4.1) */
-BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_MAGIC_STRING_STRING_UL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         string_prototype)
-
-/* The Boolean.prototype object (15.6.4) */
-BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_MAGIC_STRING_BOOLEAN_UL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         boolean_prototype)
-
-/* The Number.prototype object (15.7.4) */
-BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_MAGIC_STRING_NUMBER_UL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         number_prototype)
-
-/* The Object object (15.2.1) */
-BUILTIN (ECMA_BUILTIN_ID_OBJECT,
-         ECMA_OBJECT_TYPE_FUNCTION,
-         ECMA_MAGIC_STRING_OBJECT_UL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         object)
-
-/* The Math object (15.8) */
-BUILTIN (ECMA_BUILTIN_ID_MATH,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_MAGIC_STRING_MATH_UL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         math)
-
-/* The Array object (15.4.1) */
 BUILTIN (ECMA_BUILTIN_ID_ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ARRAY_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
          array)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN*/
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+/* The String.prototype object (15.5.4) */
+BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_MAGIC_STRING_STRING_UL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         string_prototype)
 
 /* The String object (15.5.1) */
 BUILTIN (ECMA_BUILTIN_ID_STRING,
@@ -95,6 +66,16 @@ BUILTIN (ECMA_BUILTIN_ID_STRING,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
          string)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
+/* The Boolean.prototype object (15.6.4) */
+BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_MAGIC_STRING_BOOLEAN_UL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         boolean_prototype)
 
 /* The Boolean object (15.6.1) */
 BUILTIN (ECMA_BUILTIN_ID_BOOLEAN,
@@ -103,6 +84,16 @@ BUILTIN (ECMA_BUILTIN_ID_BOOLEAN,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
          boolean)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
+/* The Number.prototype object (15.7.4) */
+BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_MAGIC_STRING_NUMBER_UL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         number_prototype)
 
 /* The Number object (15.7.1) */
 BUILTIN (ECMA_BUILTIN_ID_NUMBER,
@@ -111,6 +102,15 @@ BUILTIN (ECMA_BUILTIN_ID_NUMBER,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
          number)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+
+/* The Function.prototype object (15.3.4) */
+BUILTIN (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         ECMA_OBJECT_TYPE_FUNCTION,
+         ECMA_MAGIC_STRING_FUNCTION_UL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         function_prototype)
 
 /* The Function object (15.3.1) */
 BUILTIN (ECMA_BUILTIN_ID_FUNCTION,
@@ -120,6 +120,17 @@ BUILTIN (ECMA_BUILTIN_ID_FUNCTION,
          true,
          function)
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
+/* The Math object (15.8) */
+BUILTIN (ECMA_BUILTIN_ID_MATH,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_MAGIC_STRING_MATH_UL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         math)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
 /* The Error.prototype object (15.11.4) */
 BUILTIN (ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
@@ -231,6 +242,7 @@ BUILTIN (ECMA_BUILTIN_ID_URI_ERROR,
          ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
          true,
          uri_error)
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 
 /**< The [[ThrowTypeError]] object (13.2.3) */
 BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,

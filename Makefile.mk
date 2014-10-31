@@ -171,6 +171,21 @@ else
      OPTION_FLOAT64 := disable
 endif
 
+# CompactProfile mode
+ifeq ($(filter cp,$(TARGET_MODS)), cp)
+     OPTION_COMPACT_PROFILE := enable
+else
+     OPTION_COMPACT_PROFILE := disable
+endif
+
+# minimal CompactProfile mode
+ifeq ($(filter cp_minimal,$(TARGET_MODS)), cp_minimal)
+     OPTION_COMPACT_PROFILE := enable
+     OPTION_CP_MINIMAL := enable
+else
+     OPTION_CP_MINIMAL := disable
+endif
+
 # Enabling float64 mode for unittests
 ifeq ($(filter-out $(TESTS_TARGET),$(TARGET_MODE)),)
   OPTION_FLOAT64 := enable
@@ -353,6 +368,22 @@ endif
 
 ifeq ($(OPTION_FLOAT64),enable)
   DEFINES_JERRY += -DCONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64
+endif
+
+ifeq ($(OPTION_COMPACT_PROFILE),enable)
+  DEFINES_JERRY += -DCONFIG_ECMA_COMPACT_PROFILE
+endif
+
+ifeq ($(OPTION_CP_MINIMAL),enable)
+  DEFINES_JERRY += -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN \
+                   -DCONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 endif
 
 ifeq ($(OPTION_MCU),disable)

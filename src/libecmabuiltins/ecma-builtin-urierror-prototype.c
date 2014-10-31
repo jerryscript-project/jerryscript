@@ -25,9 +25,13 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-urierror-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID uri_error_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */

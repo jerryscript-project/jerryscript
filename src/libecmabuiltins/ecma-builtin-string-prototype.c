@@ -25,6 +25,8 @@
 #include "ecma-try-catch-macro.h"
 #include "globals.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -374,3 +376,5 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this) /**< this argument
  * @}
  * @}
  */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */

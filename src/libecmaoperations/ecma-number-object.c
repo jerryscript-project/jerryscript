@@ -50,7 +50,12 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 
   ecma_number_t *prim_value_p = ECMA_GET_POINTER (conv_to_num_completion.u.value.value);
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
+#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              true,
                                              ECMA_OBJECT_TYPE_GENERAL);

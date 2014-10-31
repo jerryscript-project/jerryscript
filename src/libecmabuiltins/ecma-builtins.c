@@ -112,6 +112,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
   /** Initializing [[PrimitiveValue]] properties of built-in prototype objects */
   switch (obj_builtin_id)
   {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
       ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
@@ -122,6 +123,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_str_value_p);
       break;
     }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
     case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
     {
       ecma_number_t *prim_prop_num_value_p = ecma_alloc_number ();
@@ -133,6 +137,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_num_value_p);
       break;
     }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     {
       ecma_property_t *prim_value_prop_p;
@@ -141,6 +148,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       prim_value_prop_p->u.internal_property.value = ECMA_SIMPLE_VALUE_FALSE;
       break;
     }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
 
     default:
     {

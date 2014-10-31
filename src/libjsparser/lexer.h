@@ -18,8 +18,10 @@
 
 #include "globals.h"
 #include "ecma-globals.h"
-#include "lp-string.h"
+#include "literal.h"
+#include "opcodes.h"
 
+#define INVALID_VALUE 255
 /* Keywords.  */
 typedef enum
 {
@@ -28,13 +30,19 @@ typedef enum
   KW_BREAK,
   KW_CASE,
   KW_CATCH,
-  KW_CONTINUE,
+  KW_CLASS,
 
+  KW_CONST,
+  KW_CONTINUE,
   KW_DEBUGGER,
   KW_DEFAULT,
   KW_DELETE,
+
   KW_DO,
   KW_ELSE,
+  KW_ENUM,
+  KW_EXPORT,
+  KW_EXTENDS,
 
   KW_FINALLY,
   KW_FOR,
@@ -43,8 +51,20 @@ typedef enum
   KW_IN,
 
   KW_INSTANCEOF,
+  KW_INTERFACE,
+  KW_IMPORT,
+  KW_IMPLEMENTS,
+  KW_LET,
+
   KW_NEW,
+  KW_PACKAGE,
+  KW_PRIVATE,
+  KW_PROTECTED,
+  KW_PUBLIC,
+  
   KW_RETURN,
+  KW_STATIC,
+  KW_SUPER,
   KW_SWITCH,
   KW_THIS,
 
@@ -56,6 +76,7 @@ typedef enum
 
   KW_WHILE,
   KW_WITH,
+  KW_YIELD
 }
 keyword;
 
@@ -142,30 +163,23 @@ typedef struct
 {
   locus loc;
   token_type type;
-  uint8_t uid;
+  idx_t uid;
 }
 token;
 
 void lexer_init (const char *, size_t, bool);
 void lexer_free (void);
 
-void lexer_run_first_pass (void);
-
 token lexer_next_token (void);
 void lexer_save_token (token);
 token lexer_prev_token (void);
 
-uint8_t lexer_get_reserved_ids_count (void);
-
-const lp_string *lexer_get_strings (void);
-uint8_t lexer_get_strings_count (void);
-lp_string lexer_get_string_by_id (uint8_t);
-
-const ecma_number_t *lexer_get_nums (void);
-ecma_number_t lexer_get_num_by_id (uint8_t);
-uint8_t lexer_get_nums_count (void);
-
-void lexer_adjust_num_ids (void);
+const literal *lexer_get_literals (void);
+const ecma_char_t *lexer_get_strings_cache (void);
+void lexer_add_literal_if_not_present (literal);
+uint8_t lexer_get_literals_count (void);
+literal lexer_get_literal_by_id (uint8_t);
+idx_t lexer_lookup_literal_uid (literal lit);
 
 void lexer_seek (locus);
 void lexer_locus_to_line_and_column (locus, size_t *, size_t *);

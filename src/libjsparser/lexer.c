@@ -46,21 +46,9 @@ static size_t strings_cache_used_size;
 
 enum
 {
-  strings_global_size
+  literals_global_size
 };
-STATIC_STACK (strings, uint8_t, lp_string)
-
-enum
-{
-  numbers_global_size
-};
-STATIC_STACK (numbers, uint8_t, ecma_number_t)
-
-enum
-{
-  num_ids_global_size
-};
-STATIC_STACK (num_ids, uint8_t, idx_t)
+STATIC_STACK (literals, uint8_t, literal)
 
 static bool
 is_empty (token tok)
@@ -116,7 +104,7 @@ create_token (token_type type, uint8_t uid)
   return (token)
   {
     .type = type,
-    .loc = current_locus (),
+    .loc = current_locus () - (type == TOK_STRING ? 1 : 0),
     .uid = uid
   };
 }
@@ -136,49 +124,74 @@ current_token_equals_to (const char *str)
 }
 
 static bool
-current_token_equals_to_lp (lp_string str)
+current_token_equals_to_literal (literal lit)
 {
-  if (str.length != (ecma_length_t) (buffer - token_start))
+  if (lit.type == LIT_STR)
   {
-    return false;
+    if (lit.data.lp.length != (ecma_length_t) (buffer - token_start))
+    {
+      return false;
+    }
+    if (!__strncmp ((const char *) lit.data.lp.str, token_start, lit.data.lp.length))
+    {
+      return true;
+    }
   }
-  if (!__strncmp ((const char *) str.str, token_start, str.length))
+  else if (lit.type == LIT_MAGIC_STR)
   {
-    return true;
+    const char *str = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
+    if (__strlen (str) != /* Fucking [-Werror=sign-compare] */ (size_t) (buffer - token_start))
+    {
+      return false;
+    }
+    if (!__strncmp (str, token_start, __strlen (str)))
+    {
+      return true;
+    }
   }
   return false;
 }
 
-static lp_string
-adjust_string_ptrs (lp_string lp, size_t diff)
+static literal
+adjust_string_ptrs (literal lit, size_t diff)
 {
-  return (lp_string)
+  if (lit.type != LIT_STR)
   {
-    .length = lp.length,
-    .str = lp.str + diff
+    return lit;
+  }
+  return (literal)
+  {
+    .type = LIT_STR,
+    .data.lp = (lp_string)
+    {
+      .length = lit.data.lp.length,
+      .str = lit.data.lp.str + diff
+    }
   };
 }
 
-static lp_string
+static literal
 add_current_token_to_string_cache (void)
 {
-  lp_string res;
-  res.length = (ecma_length_t) (buffer - token_start);
-  if (strings_cache_used_size + res.length * sizeof (ecma_char_t) >= strings_cache_size)
+  const ecma_length_t length = (ecma_length_t) (buffer - token_start);
+  if (strings_cache_used_size + length * sizeof (ecma_char_t) >= strings_cache_size)
   {
     strings_cache_size = mem_heap_recommend_allocation_size (strings_cache_used_size
-                                                             + ((size_t) res.length + 1) * sizeof (ecma_char_t));
+                                                             + ((size_t) length + 1) * sizeof (ecma_char_t));
     ecma_char_t *temp = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size,
                                                               MEM_HEAP_ALLOC_SHORT_TERM);
     __memcpy (temp, strings_cache, strings_cache_used_size);
-    mem_heap_free_block ((uint8_t *) strings_cache);
-    STACK_ITERATE_VARG_SET (strings, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
+    STACK_ITERATE_VARG_SET (literals, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
+    if (strings_cache)
+    {
+      mem_heap_free_block ((uint8_t *) strings_cache);
+    }
     strings_cache = temp;
   }
-  __strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, res.length);
-  res.str = strings_cache + strings_cache_used_size;
-  (strings_cache + strings_cache_used_size)[res.length] = '\0';
-  strings_cache_used_size = (size_t) (((size_t) res.length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
+  __strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, length);
+  (strings_cache + strings_cache_used_size)[length] = '\0';
+  const literal res = create_literal_from_zt (strings_cache + strings_cache_used_size, length);
+  strings_cache_used_size = (size_t) (((size_t) length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
   return res;
 }
 
@@ -187,9 +200,11 @@ convert_current_token_to_token (token_type tt)
 {
   JERRY_ASSERT (token_start);
 
-  for (uint8_t i = 0; i < STACK_SIZE (strings); i++)
+  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
   {
-    if (current_token_equals_to_lp (STACK_ELEMENT (strings, i)))
+    const literal lit = STACK_ELEMENT (literals, i);
+    if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+        && current_token_equals_to_literal (lit))
     {
       if (tt == TOK_STRING)
       {
@@ -208,11 +223,16 @@ convert_current_token_to_token (token_type tt)
     }
   }
 
-  const lp_string str = add_current_token_to_string_cache ();
+  literal lit = create_literal_from_str (token_start, (ecma_length_t) (buffer - token_start));
+  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+  if (lit.type == LIT_STR)
+  {
+    lit = add_current_token_to_string_cache ();
+  }
 
-  STACK_PUSH (strings, str);
+  STACK_PUSH (literals, lit);
 
-  return create_token (tt, (idx_t) (STACK_SIZE (strings) - 1));
+  return create_token (tt, (idx_t) (STACK_SIZE (literals) - 1));
 }
 
 /* If TOKEN represents a keyword, return decoded keyword,
@@ -235,11 +255,11 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("class"))
   {
-    PARSE_SORRY ("'class' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_CLASS);
   }
   if (current_token_equals_to ("const"))
   {
-    PARSE_SORRY ("'const' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_CONST);
   }
   if (current_token_equals_to ("continue"))
   {
@@ -267,15 +287,15 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("enum"))
   {
-    PARSE_SORRY ("'enum' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_ENUM);
   }
   if (current_token_equals_to ("export"))
   {
-    PARSE_SORRY ("'export' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_EXPORT);
   }
   if (current_token_equals_to ("extends"))
   {
-    PARSE_SORRY ("'extends' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_EXTENDS);
   }
   if (current_token_equals_to ("false"))
   {
@@ -297,6 +317,10 @@ decode_keyword (void)
   {
     return create_token (TOK_KEYWORD, KW_IF);
   }
+  if (current_token_equals_to ("in"))
+  {
+    return create_token (TOK_KEYWORD, KW_IN);
+  }
   if (current_token_equals_to ("instanceof"))
   {
     return create_token (TOK_KEYWORD, KW_INSTANCEOF);
@@ -305,26 +329,22 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'interface' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_INTERFACE);
     }
     else
     {
       return convert_current_token_to_token (TOK_NAME);
     }
   }
-  if (current_token_equals_to ("in"))
-  {
-    return create_token (TOK_KEYWORD, KW_IN);
-  }
   if (current_token_equals_to ("import"))
   {
-    PARSE_SORRY ("'import' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_IMPORT);
   }
   if (current_token_equals_to ("implements"))
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'implements' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_IMPLEMENTS);
     }
     else
     {
@@ -335,7 +355,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'let' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_LET);
     }
     else
     {
@@ -354,7 +374,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'package' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_PACKAGE);
     }
     else
     {
@@ -365,7 +385,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'private' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_PRIVATE);
     }
     else
     {
@@ -376,7 +396,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'protected' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_PROTECTED);
     }
     else
     {
@@ -387,7 +407,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'public' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_PUBLIC);
     }
     else
     {
@@ -402,7 +422,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'static' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_STATIC);
     }
     else
     {
@@ -411,7 +431,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("super"))
   {
-    PARSE_SORRY ("'super' is reseved keyword and not supported yet", current_locus ());
+    return create_token (TOK_KEYWORD, KW_SUPER);
   }
   if (current_token_equals_to ("switch"))
   {
@@ -457,7 +477,7 @@ decode_keyword (void)
   {
     if (parser_strict_mode ())
     {
-      PARSE_ERROR ("'yield' is reseved keyword and not allowed in strict mode", current_locus ());
+      return create_token (TOK_KEYWORD, KW_YIELD);
     }
     else
     {
@@ -470,81 +490,75 @@ decode_keyword (void)
 static token
 convert_seen_num_to_token (ecma_number_t num)
 {
-  uint8_t num_id;
-
-  JERRY_ASSERT (STACK_SIZE (num_ids) == STACK_SIZE (numbers));
-  for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
+  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
   {
-    if (STACK_ELEMENT (numbers, i) == num)
+    const literal lit = STACK_ELEMENT (literals, i);
+    if (lit.type != LIT_NUMBER)
     {
-      return create_token (TOK_NUMBER, STACK_ELEMENT (num_ids, i));
+      continue;
+    }
+    if (lit.data.num == num)
+    {
+      return create_token (TOK_NUMBER, i);
     }
   }
 
-  num_id = STACK_SIZE (num_ids);
-  STACK_PUSH (num_ids, num_id);
-  STACK_PUSH (numbers, num);
+  STACK_PUSH (literals, create_literal_from_num (num));
 
-  return create_token (TOK_NUMBER, num_id);
+  return create_token (TOK_NUMBER, (idx_t) (STACK_SIZE (literals) - 1));
 }
 
-const lp_string *
-lexer_get_strings (void)
+const literal *
+lexer_get_literals (void)
 {
-  lp_string *data = NULL;
-  STACK_CONVERT_TO_RAW_DATA (strings, data);
+  literal *data = NULL;
+  STACK_CONVERT_TO_RAW_DATA (literals, data);
   return data;
 }
 
 uint8_t
-lexer_get_strings_count (void)
+lexer_get_literals_count (void)
 {
-  return STACK_SIZE (strings);
+  return STACK_SIZE (literals);
 }
 
-uint8_t
-lexer_get_reserved_ids_count (void)
+idx_t
+lexer_lookup_literal_uid (literal lit)
 {
-  return (uint8_t) (STACK_SIZE (strings) + STACK_SIZE (numbers));
+  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
+  {
+    if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
+    {
+      return i;
+    }
+  }
+  return INVALID_VALUE;
 }
 
-lp_string
-lexer_get_string_by_id (uint8_t id)
+literal
+lexer_get_literal_by_id (uint8_t id)
 {
-  JERRY_ASSERT (id < STACK_SIZE (strings));
-  return STACK_ELEMENT (strings, id);
+  JERRY_ASSERT (id < STACK_SIZE (literals));
+  return STACK_ELEMENT (literals, id);
 }
 
-const ecma_number_t *
-lexer_get_nums (void)
+const ecma_char_t *
+lexer_get_strings_cache (void)
 {
-  ecma_number_t *data = NULL;
-  STACK_CONVERT_TO_RAW_DATA (numbers, data);
-  return data;
-}
-
-uint8_t
-lexer_get_nums_count (void)
-{
-  return STACK_SIZE (numbers);
+  return strings_cache;
 }
 
 void
-lexer_adjust_num_ids (void)
+lexer_add_literal_if_not_present (literal lit)
 {
-  JERRY_ASSERT (STACK_SIZE (numbers) == STACK_SIZE (num_ids));
-  for (uint8_t i = 0; i < STACK_SIZE (numbers); i++)
+  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
   {
-    STACK_SET_ELEMENT (num_ids, i, (uint8_t) (STACK_ELEMENT (num_ids, i) + STACK_SIZE (strings)));
+    if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
+    {
+      return;
+    }
   }
-}
-
-ecma_number_t
-lexer_get_num_by_id (uint8_t id)
-{
-  JERRY_ASSERT (id >= lexer_get_strings_count () && id < lexer_get_reserved_ids_count ());
-  JERRY_ASSERT (STACK_ELEMENT (num_ids, id - lexer_get_strings_count ()) == id);
-  return STACK_ELEMENT (numbers, id - lexer_get_strings_count ());
+  STACK_PUSH (literals, lit);
 }
 
 static void
@@ -989,14 +1003,6 @@ lexer_set_source (const char * source)
   buffer = buffer_start;
 }
 
-static void
-lexer_rewind (void)
-{
-  JERRY_ASSERT (buffer_start != NULL);
-
-  buffer = buffer_start;
-}
-
 static bool
 replace_comment_by_newline (void)
 {
@@ -1230,18 +1236,6 @@ lexer_prev_token (void)
 }
 
 void
-lexer_run_first_pass (void)
-{
-  token tok = lexer_next_token ();
-  while (tok.type != TOK_EOF)
-  {
-    tok = lexer_next_token ();
-  }
-
-  lexer_rewind ();
-}
-
-void
 lexer_seek (size_t locus)
 {
   JERRY_ASSERT (locus < buffer_size);
@@ -1307,34 +1301,53 @@ lexer_keyword_to_string (keyword kw)
     case KW_BREAK: return "break";
     case KW_CASE: return "case";
     case KW_CATCH: return "catch";
+    case KW_CLASS: return "class";
 
+    case KW_CONST: return "const";
     case KW_CONTINUE: return "continue";
     case KW_DEBUGGER: return "debugger";
     case KW_DEFAULT: return "default";
     case KW_DELETE: return "delete";
-    case KW_DO: return "do";
 
+    case KW_DO: return "do";
     case KW_ELSE: return "else";
+    case KW_ENUM: return "enum";
+    case KW_EXPORT: return "export";
+    case KW_EXTENDS: return "extends";
+
     case KW_FINALLY: return "finally";
     case KW_FOR: return "for";
     case KW_FUNCTION: return "function";
     case KW_IF: return "if";
-
     case KW_IN: return "in";
-    case KW_INSTANCEOF: return "instanceof";
-    case KW_NEW: return "new";
-    case KW_RETURN: return "return";
-    case KW_SWITCH: return "switch";
 
+    case KW_INSTANCEOF: return "instanceof";
+    case KW_INTERFACE: return "interface";
+    case KW_IMPORT: return "import";
+    case KW_IMPLEMENTS: return "implements";
+    case KW_LET: return "let";
+
+    case KW_NEW: return "new";
+    case KW_PACKAGE: return "package";
+    case KW_PRIVATE: return "private";
+    case KW_PROTECTED: return "protected";
+    case KW_PUBLIC: return "public";
+
+    case KW_RETURN: return "return";
+    case KW_STATIC: return "static";
+    case KW_SUPER: return "super";
+    case KW_SWITCH: return "switch";
     case KW_THIS: return "this";
+
     case KW_THROW: return "throw";
     case KW_TRY: return "try";
     case KW_TYPEOF: return "typeof";
     case KW_VAR: return "var";
-
     case KW_VOID: return "void";
+
     case KW_WHILE: return "while";
     case KW_WITH: return "with";
+    case KW_YIELD: return "yield";
     default: JERRY_UNREACHABLE ();
   }
 }
@@ -1423,23 +1436,14 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   allow_dump_lines = show_opcodes;
   buffer_size = source_size;
   lexer_set_source (source);
-  strings_cache_size = mem_heap_recommend_allocation_size (sizeof (ecma_char_t));
-  strings_cache = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size, MEM_HEAP_ALLOC_SHORT_TERM);
-  strings_cache_used_size = 0;
+  strings_cache = NULL;
+  strings_cache_used_size = strings_cache_size = 0;
 
-  STACK_INIT (strings);
-  STACK_INIT (numbers);
-  STACK_INIT (num_ids);
+  STACK_INIT (literals);
 }
 
 void
 lexer_free (void)
 {
-  if (STACK_SIZE (strings) == 0)
-  {
-    mem_heap_free_block (strings_cache);
-  }
-  STACK_FREE (strings);
-  STACK_FREE (numbers);
-  STACK_FREE (num_ids);
+  STACK_FREE (literals);
 }

@@ -172,14 +172,14 @@ main( int __unused argc,
   mem_init();
   serializer_init (false);
 
-  const lp_string strings[] = { LP("a"),
-                                LP("b"),
-                                LP("length"),
-                                LP("1") };
-  ecma_number_t nums [] = { 2.0,
-                            12.0,
-                            2.5 };
-  serializer_dump_strings_and_nums (strings, 4, nums, 3);
+  const literal literals[] = { LP("a"),
+                               LP("b"),
+                               LP("length"),
+                               LP("1"),
+                               NUM(2.0),
+                               NUM(12.0),
+                               NUM(2.5) };
+  serializer_dump_literals (literals, 7);
 
   init_int( test_program, false);
 

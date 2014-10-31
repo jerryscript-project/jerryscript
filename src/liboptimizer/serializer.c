@@ -37,21 +37,17 @@ serializer_merge_scopes_into_bytecode (void)
 
 
 void
-serializer_dump_strings_and_nums (const lp_string strings[], uint8_t strs_count,
-                                  const ecma_number_t nums[], uint8_t nums_count)
+serializer_dump_literals (const literal literals[], uint8_t literals_count)
 {
 #ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
-    pp_strings (strings, strs_count);
-    pp_nums (nums, nums_count, strs_count);
+    pp_literals (literals, literals_count);
   }
 #endif
 
-  bytecode_data.strs_count = strs_count;
-  bytecode_data.nums_count = nums_count;
-  bytecode_data.strings = strings;
-  bytecode_data.nums = nums;
+  bytecode_data.literals_count = literals_count;
+  bytecode_data.literals = literals;
 }
 
 void

@@ -19,7 +19,7 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "jerry-libc.h"
-#include "lp-string.h"
+#include "literal.h"
 #include "scopes-tree.h"
 
 /* bytecode_data contains identifiers, string and num literals.
@@ -35,11 +35,9 @@
    } */
 struct
 {
-  const lp_string *strings;
-  const ecma_number_t *nums;
+  const literal *literals;
   const opcode_t *opcodes;
-  uint8_t strs_count;
-  uint8_t nums_count;
+  uint8_t literals_count;
   opcode_counter_t opcodes_count;
 }
 bytecode_data;

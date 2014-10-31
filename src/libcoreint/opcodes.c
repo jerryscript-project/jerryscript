@@ -116,7 +116,9 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     case OPCODE_ARG_TYPE_NUMBER:
     {
       ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = deserialize_num_by_id (src_val_descr);
+      const literal lit = deserialize_literal_by_id (src_val_descr);
+      JERRY_ASSERT (lit.type == LIT_NUMBER);
+      *num_p = lit.data.num;
 
       get_value_completion = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
       break;

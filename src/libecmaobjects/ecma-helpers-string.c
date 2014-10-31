@@ -218,15 +218,18 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 ecma_string_t*
 ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number */
 {
+  const literal lit = deserialize_literal_by_id ((idx_t) lit_index);
+  if (lit.type == LIT_MAGIC_STR)
+  {
+    return ecma_get_magic_string (lit.data.magic_str_id);
+  }
+
+  JERRY_ASSERT (lit.type == LIT_STR);
+
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
 
-  FIXME (/* Interface for getting literal's length without string's characters iteration */);
-  const ecma_char_t *str_p = deserialize_string_by_id ((idx_t) lit_index);
-  JERRY_ASSERT (str_p != NULL);
-  ecma_length_t length = (ecma_length_t) __strlen ((const char*)str_p);
-
-  string_desc_p->length = length;
+  string_desc_p->length = lit.data.lp.length;
   string_desc_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
 
   string_desc_p->u.lit_index = lit_index;
@@ -611,7 +614,9 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      const ecma_char_t *str_p = deserialize_string_by_id ((idx_t) string_desc_p->u.lit_index);
+      const literal lit = deserialize_literal_by_id ((idx_t) string_desc_p->u.lit_index);
+      JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+      const ecma_char_t *str_p = literal_to_zt (lit);
       JERRY_ASSERT (str_p != NULL);
 
       ecma_copy_zt_string_to_buffer (str_p, buffer_p, required_buffer_size);
@@ -799,7 +804,9 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
     FIXME (uint8_t -> literal_index_t);
-    zt_string1_p = deserialize_string_by_id ((uint8_t) string1_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
+    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    zt_string1_p = literal_to_zt (lit);
   }
   else
   {
@@ -845,7 +852,9 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
     {
       FIXME (uint8_t -> literal_index_t);
-      zt_string2_p = deserialize_string_by_id ((uint8_t) string2_p->u.lit_index);
+      const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
+      JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+      zt_string2_p = literal_to_zt (lit);
     }
     else
     {
@@ -1000,7 +1009,9 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
     FIXME (uint8_t -> literal_index_t);
-    zt_string1_p = deserialize_string_by_id ((uint8_t) string1_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
+    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    zt_string1_p = literal_to_zt (lit);
   }
   else
   {
@@ -1034,7 +1045,9 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
     FIXME (uint8_t -> literal_index_t);
-    zt_string2_p = deserialize_string_by_id ((uint8_t) string2_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
+    JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+    zt_string2_p = literal_to_zt (lit);
   }
   else
   {

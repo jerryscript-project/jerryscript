@@ -53,11 +53,11 @@ main( int __unused argc,
   mem_init();
   serializer_init (false);
 
-  const lp_string strings[] = { LP("a"), 
-                                LP("b"),
-                                LP("c") };
-  ecma_number_t nums [] = { 2.0 };
-  serializer_dump_strings_and_nums (strings, 3, nums, 1);
+  const literal lits[] = { LP("a"), 
+                           LP("b"),
+                           LP("c"),
+                           NUM(2.0) };
+  serializer_dump_literals (lits, 4);
 
   init_int( test_program, false);
 

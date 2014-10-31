@@ -15,26 +15,21 @@
 
 #include "deserializer.h"
 #include "bytecode-data.h"
+#include "ecma-helpers.h"
 
-const ecma_char_t *
-deserialize_string_by_id (uint8_t id)
+const ecma_char_t *strings_buffer;
+
+void
+deserializer_set_strings_buffer (const ecma_char_t *s)
 {
-  JERRY_ASSERT (id < bytecode_data.strs_count);
-  JERRY_ASSERT (bytecode_data.strings[id].str[bytecode_data.strings[id].length] == '\0');
-
-  return ((const ecma_char_t *) bytecode_data.strings[id].str);
+  strings_buffer = s;
 }
 
-ecma_number_t
-deserialize_num_by_id (uint8_t id)
+literal
+deserialize_literal_by_id (uint8_t id)
 {
-  JERRY_ASSERT (id >= bytecode_data.strs_count);
-
-  id = (uint8_t) (id - bytecode_data.strs_count);
-
-  JERRY_ASSERT (id < bytecode_data.nums_count);
-
-  return bytecode_data.nums[id];
+  JERRY_ASSERT (id < bytecode_data.literals_count);
+  return bytecode_data.literals[id];
 }
 
 const void *
@@ -58,25 +53,24 @@ deserialize_opcode (opcode_counter_t oc)
 uint8_t
 deserialize_min_temp (void)
 {
-  return (uint8_t) (bytecode_data.strs_count + bytecode_data.nums_count);
+  return bytecode_data.literals_count;
 }
 
 void
 deserializer_init (void)
 {
-  bytecode_data.strings = NULL;
-  bytecode_data.nums = NULL;
+  bytecode_data.literals = NULL;
+  strings_buffer = NULL;
   bytecode_data.opcodes = NULL;
 }
 
 void
 deserializer_free (void)
 {
-  if (bytecode_data.strs_count > 0)
+  if (strings_buffer)
   {
-    mem_heap_free_block ((uint8_t *) bytecode_data.strings[0].str);
+    mem_heap_free_block ((uint8_t *) strings_buffer);
   }
-  mem_heap_free_block ((uint8_t *) bytecode_data.strings);
-  mem_heap_free_block ((uint8_t *) bytecode_data.nums);
+  mem_heap_free_block ((uint8_t *) bytecode_data.literals);
   mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);
 }

@@ -17,13 +17,15 @@
 #define COMMON_H
 
 #include "jerry-libc.h"
+#include "literal.h"
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
 #define __OPCODE_SIZE(name, arg1, arg2, arg3) \
   sizeof (__op_##name) + 1,
 
-#define LP(s) (lp_string) { .length = (uint8_t) __strlen(s), .str = (ecma_char_t *) s }
+#define LP(s) create_literal_from_str_compute_len (s)
+#define NUM(s) create_literal_from_num (s)
 
 static uint8_t opcode_sizes[] = {
   OP_LIST (OPCODE_SIZE)

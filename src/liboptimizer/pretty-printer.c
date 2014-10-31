@@ -20,6 +20,7 @@
 #include "lexer.h"
 #include "deserializer.h"
 #include "opcodes-native-call.h"
+#include "ecma-helpers.h"
 #include <stdarg.h>
 
 #define NAME_TO_ID(op) (__op__idx_##op)
@@ -45,43 +46,48 @@ static uint8_t opcode_sizes[] =
 };
 
 static void
-dump_lp (lp_string lp)
+dump_literal (literal lit)
 {
-  for (ecma_length_t i = 0; i < lp.length; i++)
+  switch (lit.type)
   {
-    __putchar (lp.str[i]);
+    case LIT_NUMBER:
+    {
+      __printf ("%d : NUMBER", lit.data.num);
+      break;
+    }
+    case LIT_MAGIC_STR:
+    {
+      __printf ("%s : MAGIC STRING", (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id));
+      break;
+    }
+    case LIT_STR:
+    {
+      __printf ("%s : STRING", (const char *) (lit.data.lp.str));
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
   }
 }
 
 void
-pp_strings (const lp_string strings[], uint8_t size)
+pp_literals (const literal lits[], uint8_t size)
 {
-  __printf ("STRINGS %d:\n", size);
+  __printf ("LITERALS %d:\n", size);
   for (uint8_t i = 0; i < size; i++)
   {
     __printf ("%3d ", i);
-    dump_lp (strings[i]);
+    dump_literal (lits[i]);
     __putchar ('\n');
   }
-}
-
-void
-pp_nums (const ecma_number_t nums[], uint8_t size, uint8_t strings_num)
-{
-  uint8_t i;
-
-  __printf ("NUMS %d:\n", size);
-  for (i = 0; i < size; i++)
-  {
-    __printf ("%3d %7d\n", i + strings_num, (int) nums[i]);
-  }
-  __printf ("\n");
 }
 
 static const char *
 var_id_to_string (char *res, idx_t id)
 {
-  if (id >= lexer_get_reserved_ids_count ())
+  if (id >= lexer_get_literals_count ())
   {
     __strncpy (res, "tmp", 3);
     if (id / 100 != 0)
@@ -103,28 +109,19 @@ var_id_to_string (char *res, idx_t id)
       return res;
     }
   }
-  else if (id < lexer_get_strings_count ())
+  literal lit = lexer_get_literal_by_id (id);
+  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
   {
-    lp_string str = lexer_get_string_by_id (id);
-    __strncpy (res, (char *) str.str, str.length);
+    return (char *) literal_to_zt (lit);
+  }
+  else if (lit.type == LIT_NUMBER)
+  {
+    ecma_number_to_zt_string (lit.data.num, (ecma_char_t *) res, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
     return res;
   }
   else
   {
-    int i = 0;
-    int num = (int) lexer_get_num_by_id (id);
-    int temp = num;
-    for (; temp != 0; i++)
-    {
-      temp /= 10;
-    }
-    do
-    {
-      res[i--] = (char) (num % 10 + '0');
-      num /= 10;
-    }
-    while (i >= 0);
-    return res;
+    JERRY_UNREACHABLE ();
   }
 }
 
@@ -152,7 +149,7 @@ pp_printf (const char *format, ...)
       }
       case 's':
       {
-        char res[32] = {'\0'};
+        char res[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER] = {'\0'};
         __printf ("%s", var_id_to_string (res, (idx_t) va_arg (args, int)));
         break;
       }

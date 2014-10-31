@@ -28,7 +28,6 @@
 #include "scopes-tree.h"
 #include "ecma-helpers.h"
 
-#define INVALID_VALUE 255
 #define INTRINSICS_COUNT 1
 
 typedef enum
@@ -38,17 +37,6 @@ typedef enum
   REWRITABLE_OPCODES_COUNT
 }
 rewritable_opcode_type;
-
-typedef struct
-{
-  union
-  {
-    void (*fun1) (idx_t);
-  }
-  funs;
-  uint8_t args_count;
-}
-intrinsic_dumper;
 
 typedef enum
 {
@@ -61,17 +49,10 @@ prop_type;
 
 typedef struct
 {
-  lp_string str;
-  bool was_num;
-}
-allocatable_string;
-
-typedef struct
-{
   prop_type type;
-  allocatable_string str;
+  literal lit;
 }
-prop_as_str_or_varg;
+prop_literal;
 
 #define NESTING_ITERATIONAL 1
 #define NESTING_SWITCH      2
@@ -88,7 +69,6 @@ STATIC_STACK (U8, uint8_t, uint8_t)
 
 enum
 {
-  native_calls = OPCODE_NATIVE_CALL__COUNT,
   this_arg,
   prop,
   IDX_global_size
@@ -199,15 +179,15 @@ STATIC_STACK (rewritable_break, uint8_t, uint16_t)
 
 enum
 {
-  strings_global_size
+  literals_global_size
 };
-STATIC_STACK (strings, uint8_t, allocatable_string)
+STATIC_STACK (literals, uint8_t, literal)
 
 enum
 {
   props_global_size
 };
-STATIC_STACK (props, uint8_t, prop_as_str_or_varg)
+STATIC_STACK (props, uint8_t, prop_literal)
 
 #ifndef JERRY_NDEBUG
 #define STACK_CHECK_USAGE_LHS() \
@@ -215,9 +195,6 @@ JERRY_ASSERT (IDX.current == IDX_current + 1);
 #else
 #define STACK_CHECK_USAGE_LHS() ;
 #endif
-
-static uint8_t lp_string_hash (lp_string);
-STATIC_HASH_TABLE (intrinsics, lp_string, intrinsic_dumper)
 
 #define LAST_OPCODE_IS(OP) (deserialize_opcode((opcode_counter_t)(OPCODE_COUNTER()-1)).op_idx == __op__idx_##OP)
 
@@ -355,12 +332,6 @@ static void parse_source_element_list (bool);
 static uint8_t parse_argument_list (argument_list_type, idx_t);
 static void skip_braces (void);
 static void parse_logical_expression (bool);
-
-static uint8_t
-lp_string_hash (lp_string str)
-{
-  return str.length % INTRINSICS_COUNT;
-}
 
 static idx_t
 next_temp_name (void)
@@ -622,22 +593,6 @@ dump_assert (idx_t arg)
   DUMP_OPCODE_1 (exitval, 1);
 }
 
-static void
-fill_intrinsics (void)
-{
-  lp_string str = (lp_string)
-  {
-    .length = 6,
-    .str = (ecma_char_t *) "assert"
-  };
-  intrinsic_dumper dumper = (intrinsic_dumper)
-  {
-    .args_count = 1,
-    .funs.fun1 = dump_assert
-  };
-  HASH_INSERT (intrinsics, str, dumper);
-}
-
 static bool
 is_intrinsic (idx_t obj)
 {
@@ -649,10 +604,10 @@ is_intrinsic (idx_t obj)
 
   STACK_DECLARE_USAGE (U8)
 
-  STACK_PUSH (U8, lexer_get_strings_count ());
+  STACK_PUSH (U8, lexer_get_literals_count ());
   if (obj < STACK_TOP (U8))
   {
-    if (HASH_LOOKUP (intrinsics, lexer_get_string_by_id (obj)) != NULL)
+    if (literal_equal_type_s (lexer_get_literal_by_id (obj), "assert"))
     {
       result = true;
       goto cleanup;
@@ -669,131 +624,65 @@ cleanup:
 static void
 dump_intrinsic (idx_t obj, idx_t arg)
 {
-  if (obj < lexer_get_strings_count ())
+  if (obj < lexer_get_literals_count ())
   {
-    intrinsic_dumper *dumper = HASH_LOOKUP (intrinsics, lexer_get_string_by_id (obj));
-
-    JERRY_ASSERT (dumper);
-
-    switch (dumper->args_count)
+    if (literal_equal_type_s (lexer_get_literal_by_id (obj), "assert"))
     {
-      case 1: dumper->funs.fun1 (arg); return;
-      default: JERRY_UNREACHABLE ();
+      dump_assert (arg);
+      return;
     }
   }
 
   JERRY_UNREACHABLE ();
-}
-
-static bool
-is_native_call (idx_t obj)
-{
-  if (obj >= lexer_get_strings_count ())
-  {
-    return false;
-  }
-
-  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
-  {
-    if (STACK_ELEMENT (IDX, i) == obj)
-    {
-      return true;
-    }
-  }
-  return false;
 }
 
 static idx_t
 name_to_native_call_id (idx_t obj)
 {
-  JERRY_ASSERT (obj < lexer_get_strings_count ());
-
-  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
+  if (obj >= lexer_get_literals_count ())
   {
-    if (STACK_ELEMENT (IDX, i) == obj)
-    {
-      return i;
-    }
+    return OPCODE_NATIVE_CALL__COUNT;
   }
-
-  JERRY_UNREACHABLE ();
-}
-
-static void
-free_allocatable_string (prop_as_str_or_varg p)
-{
-  if (p.str.was_num)
+  if (literal_equal_type_s (lexer_get_literal_by_id (obj), "LEDToggle"))
   {
-    mem_heap_free_block ((uint8_t *) p.str.str.str);
+    return OPCODE_NATIVE_CALL_LED_TOGGLE;
   }
-}
-
-static allocatable_string
-create_allocatable_string_from_num_uid (idx_t uid)
-{
-  ecma_char_t *str = mem_heap_alloc_block (ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER * sizeof (ecma_char_t),
-                                           MEM_HEAP_ALLOC_SHORT_TERM);
-  ecma_number_to_zt_string (lexer_get_num_by_id (uid), str,
-                            ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER * sizeof (ecma_char_t));
-
-  return (allocatable_string)
+  else if (literal_equal_type_s (lexer_get_literal_by_id (obj), "LEDOn"))
   {
-    .was_num = true,
-    .str = (lp_string)
-    {
-      .length = ecma_zt_string_length (str),
-      .str = str
-    }
-  };
-}
-
-static allocatable_string
-create_allocatable_string_from_literal (idx_t uid)
-{
-  return (allocatable_string)
-  {
-    .was_num = false,
-    .str = lexer_get_string_by_id (uid)
-  };
-}
-
-static allocatable_string
-create_allocatable_string_from_small_int (idx_t uid)
-{
-  const uint8_t chars_need = 4; /* Max is 255.  */
-  uint8_t index = 0;
-  ecma_char_t *str = mem_heap_alloc_block (chars_need * sizeof (ecma_char_t),
-                                           MEM_HEAP_ALLOC_SHORT_TERM);
-  if (uid >= 100)
-  {
-    str[index++] = (ecma_char_t) (uid/100 + '0');
-    uid %= 100;
+    return OPCODE_NATIVE_CALL_LED_ON;
   }
-  if (uid >= 10)
+  else if (literal_equal_type_s (lexer_get_literal_by_id (obj), "LEDOff"))
   {
-    str[index++] = (ecma_char_t) (uid/10 + '0');
+    return OPCODE_NATIVE_CALL_LED_OFF;
   }
-  str[index++] = (ecma_char_t) (uid%10 + '0');
-  str[index] = ECMA_CHAR_NULL;
-
-  return (allocatable_string)
+  else if (literal_equal_type_s (lexer_get_literal_by_id (obj), "LEDOnce"))
   {
-    .was_num = true,
-    .str = (lp_string)
-    {
-      .length = index,
-      .str = str
-    }
-  };
+    return OPCODE_NATIVE_CALL_LED_ONCE;
+  }
+  else if (literal_equal_type_s (lexer_get_literal_by_id (obj), "wait"))
+  {
+    return OPCODE_NATIVE_CALL_WAIT;
+  }
+  else if (literal_equal_type_s (lexer_get_literal_by_id (obj), "print"))
+  {
+    return OPCODE_NATIVE_CALL_PRINT;
+  }
+  return OPCODE_NATIVE_CALL__COUNT;
 }
 
-static prop_as_str_or_varg
-create_prop_as_str_or_varg (allocatable_string str, prop_type type)
+static bool
+is_native_call (idx_t obj)
 {
-  return (prop_as_str_or_varg)
+  return name_to_native_call_id (obj) < OPCODE_NATIVE_CALL__COUNT;
+}
+
+static prop_literal
+create_prop_literal (literal lit, prop_type type)
+{
+  return (prop_literal)
   {
     .type = type,
-    .str = str
+    .lit = lit
   };
 }
 
@@ -814,21 +703,30 @@ parse_property_name (void)
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
-      STACK_PUSH (strings, create_allocatable_string_from_literal (token_data ()));
+      STACK_PUSH (literals, lexer_get_literal_by_id (token_data ()));
       break;
     }
     case TOK_NUMBER:
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_NUMBER, token_data ());
-      STACK_PUSH (strings, create_allocatable_string_from_num_uid (token_data ()));
+      STACK_PUSH (literals, lexer_get_literal_by_id (token_data ()));
       break;
     }
     case TOK_SMALL_INT:
     {
       STACK_PUSH (IDX, next_temp_name ());
       DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_SMALLINT, token_data ());
-      STACK_PUSH (strings, create_allocatable_string_from_small_int (token_data ()));
+      STACK_PUSH (literals, create_literal_from_num ((ecma_number_t) token_data ()));
+      break;
+    }
+    case TOK_KEYWORD:
+    {
+      literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string (token_data ()));
+      STACK_PUSH (IDX, next_temp_name ());
+      DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING,
+                     lexer_lookup_literal_uid (lit));
+      STACK_PUSH (literals, lit);
       break;
     }
     default:
@@ -856,8 +754,8 @@ parse_property_name_and_value (void)
 
   DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_VARG_PROP_DATA, STACK_HEAD(IDX, 2), STACK_HEAD(IDX, 1));
 
-  STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_DATA));
-  STACK_DROP (strings, 1);
+  STACK_PUSH (props, create_prop_literal (STACK_TOP (literals), PROP_DATA));
+  STACK_DROP (literals, 1);
 
   STACK_DROP (IDX, 2);
   STACK_CHECK_USAGE (IDX);
@@ -912,7 +810,7 @@ parse_property_assignment (void)
   STACK_DECLARE_USAGE (U16)
   STACK_DECLARE_USAGE (toks)
   STACK_DECLARE_USAGE (U8)
-  STACK_DECLARE_USAGE (strings)
+  STACK_DECLARE_USAGE (literals)
 
   if (!token_is (TOK_NAME))
   {
@@ -920,7 +818,7 @@ parse_property_assignment (void)
     goto cleanup;
   }
 
-  if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "get"))
+  if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get"))
   {
     STACK_PUSH (toks, TOK ());
     skip_newlines ();
@@ -934,8 +832,8 @@ parse_property_assignment (void)
     STACK_DROP (toks, 1);
     // name, lhs
     parse_property_name (); // push name
-    STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_GET));
-    STACK_DROP (strings, 1);
+    STACK_PUSH (props, create_prop_literal (STACK_TOP (literals), PROP_GET));
+    STACK_DROP (literals, 1);
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
@@ -967,7 +865,7 @@ parse_property_assignment (void)
 
     goto cleanup;
   }
-  else if (lp_string_equal_s (lexer_get_string_by_id (token_data ()), "set"))
+  else if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
   {
     STACK_PUSH (toks, TOK ());
     skip_newlines ();
@@ -981,8 +879,8 @@ parse_property_assignment (void)
     STACK_DROP (toks, 1);
     // name, lhs
     parse_property_name (); // push name
-    STACK_PUSH (props, create_prop_as_str_or_varg (STACK_TOP (strings), PROP_SET));
-    STACK_DROP (strings, 1);
+    STACK_PUSH (props, create_prop_literal (STACK_TOP (literals), PROP_SET));
+    STACK_DROP (literals, 1);
 
     skip_newlines ();
     parse_argument_list (AL_FUNC_EXPR, next_temp_name ()); // push lhs
@@ -1019,7 +917,7 @@ simple_prop:
   parse_property_name_and_value ();
 
 cleanup:
-  STACK_CHECK_USAGE (strings);
+  STACK_CHECK_USAGE (literals);
   STACK_CHECK_USAGE (U8);
   STACK_CHECK_USAGE (toks);
   STACK_CHECK_USAGE (U16);
@@ -1029,12 +927,12 @@ cleanup:
 static void
 emit_error_on_eval_and_arguments (idx_t id)
 {
-  if (id < lexer_get_strings_count ())
+  if (id < lexer_get_literals_count ())
   {
-    if (lp_string_equal_zt (lexer_get_string_by_id (id),
-                            ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
-        || lp_string_equal_zt (lexer_get_string_by_id (id),
-                               ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+    if (literal_equal_type_zt (lexer_get_literal_by_id (id),
+                               ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
+        || literal_equal_type_zt (lexer_get_literal_by_id (id),
+                                  ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
     {
       EMIT_ERROR ("'eval' and 'arguments' are not allowed here in strict mode");
     }
@@ -1061,12 +959,17 @@ check_for_syntax_errors_in_formal_param_list (uint8_t from)
   for (uint8_t i = (uint8_t) (from + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
   {
     JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
+    const literal previous = STACK_ELEMENT (props, i).lit;
+    JERRY_ASSERT (previous.type == LIT_STR || previous.type == LIT_MAGIC_STR);
     for (uint8_t j = from; j < i; j = (uint8_t) (j + 1))
     {
-      if (lp_string_equal (STACK_ELEMENT (props, i).str.str, STACK_ELEMENT (props, j).str.str))
+      JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
+      const literal current = STACK_ELEMENT (props, j).lit;
+      JERRY_ASSERT (current.type == LIT_STR || current.type == LIT_MAGIC_STR);
+      if (literal_equal_type (previous, current))
       {
         EMIT_ERROR_VARG ("Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
-                         STACK_ELEMENT (props, j).str.str.str);
+                         (const char *) literal_to_zt (previous));
       }
     }
   }
@@ -1083,44 +986,45 @@ check_for_syntax_errors_in_obj_decl (uint8_t from)
 
   for (uint8_t i = (uint8_t) (from + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
   {
-    JERRY_ASSERT (STACK_ELEMENT (props, i).type == PROP_DATA
-                  || STACK_ELEMENT (props, i).type == PROP_GET
-                  || STACK_ELEMENT (props, i).type == PROP_SET);
+    const prop_literal previous = STACK_ELEMENT (props, i);
+    JERRY_ASSERT (previous.type == PROP_DATA
+                  || previous.type == PROP_GET
+                  || previous.type == PROP_SET);
     for (uint8_t j = from; j < i; j = (uint8_t) (j + 1))
     {
       /*4*/
-      const lp_string previous = STACK_ELEMENT (props, j).str.str;
-      const prop_type prop_type_previous = STACK_ELEMENT (props, j).type;
-      const lp_string prop_id_desc = STACK_ELEMENT (props, i).str.str;
-      const prop_type prop_type_prop_id_desc = STACK_ELEMENT (props, i).type;
-      if (lp_string_equal (previous, prop_id_desc))
+      const prop_literal current = STACK_ELEMENT (props, j);
+      JERRY_ASSERT (current.type == PROP_DATA
+                    || current.type == PROP_GET
+                    || current.type == PROP_SET);
+      if (literal_equal (previous.lit, current.lit))
       {
         /*a*/
-        if (parser_strict_mode () && prop_type_previous == PROP_DATA && prop_type_prop_id_desc == PROP_DATA)
+        if (parser_strict_mode () && previous.type == PROP_DATA && current.type == PROP_DATA)
         {
           EMIT_ERROR_VARG ("Duplication of parameter name '%s' in ObjectDeclaration is not allowed in strict mode",
-                           previous.str);
+                           (const char *) literal_to_zt (current.lit));
         }
         /*b*/
-        if (prop_type_previous == PROP_DATA
-            && (prop_type_prop_id_desc == PROP_SET || prop_type_prop_id_desc == PROP_GET))
+        if (previous.type == PROP_DATA
+            && (current.type == PROP_SET || current.type == PROP_GET))
         {
           EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
-                           previous.str);
+                           (const char *) literal_to_zt (current.lit));
         }
         /*c*/
-        if (prop_type_prop_id_desc == PROP_DATA
-            && (prop_type_previous == PROP_SET || prop_type_previous == PROP_GET))
+        if (current.type == PROP_DATA
+            && (previous.type == PROP_SET || previous.type == PROP_GET))
         {
           EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
-                           previous.str);
+                           (const char *) literal_to_zt (current.lit));
         }
         /*d*/
-        if ((prop_type_previous == PROP_SET && prop_type_prop_id_desc == PROP_SET)
-            || (prop_type_previous == PROP_GET && prop_type_prop_id_desc == PROP_GET))
+        if ((previous.type == PROP_SET && current.type == PROP_SET)
+            || (previous.type == PROP_GET && current.type == PROP_GET))
         {
           EMIT_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be accessor of same type",
-                           previous.str);
+                           (const char *) literal_to_zt (current.lit));
         }
       }
     }
@@ -1238,8 +1142,8 @@ parse_argument_list (argument_list_type alt, idx_t obj)
         current_token_must_be (TOK_NAME);
         STACK_PUSH (IDX, token_data ());
         STACK_PUSH (props,
-                    create_prop_as_str_or_varg (create_allocatable_string_from_literal (token_data ()),
-                                                VARG));
+                    create_prop_literal (lexer_get_literal_by_id (token_data ()),
+                                         VARG));
         check_for_eval_and_arguments_in_strict_mode (STACK_TOP (IDX));
         break;
       }
@@ -1357,8 +1261,6 @@ next:
   }
 
   const uint8_t args_num = STACK_TOP (U8);
-
-  STACK_ITERATE (props, free_allocatable_string, STACK_HEAD (U8, 4));
 
   STACK_DROP (props, (uint8_t) (STACK_SIZE (props) - STACK_HEAD (U8, 4)));
   STACK_DROP (U8, 4);
@@ -1722,13 +1624,28 @@ parse_member_expression (void)
     else if (token_is (TOK_DOT))
     {
       skip_newlines ();
-      if (!token_is (TOK_NAME))
+      if (token_is (TOK_NAME))
+      {
+        STACK_PUSH (IDX, next_temp_name ());
+        SET_PROP (ID (1));
+        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
+      }
+      else if (token_is (TOK_KEYWORD))
+      {
+        const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string (token_data ()));
+        const idx_t uid = lexer_lookup_literal_uid (lit);
+        if (uid == INVALID_VALUE)
+        {
+          EMIT_ERROR ("Expected identifier");
+        }
+        STACK_PUSH (IDX, next_temp_name ());
+        SET_PROP (ID (1));
+        DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, uid);
+      }
+      else
       {
         EMIT_ERROR ("Expected identifier");
       }
-      STACK_PUSH (IDX, next_temp_name ());
-      SET_PROP (ID (1));
-      DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_STRING, token_data ());
     }
     else
     {
@@ -1778,7 +1695,7 @@ parse_call_expression (void)
     goto cleanup;
   }
 
-  if (THIS_ARG () < lexer_get_reserved_ids_count ())
+  if (THIS_ARG () < lexer_get_literals_count ())
   {
     STACK_PUSH (IDX, next_temp_name ());
     DUMP_OPCODE_3 (assignment, ID(1), OPCODE_ARG_TYPE_VARIABLE, THIS_ARG ());
@@ -1899,6 +1816,15 @@ cleanup:
   STACK_CHECK_USAGE_LHS ();
 }
 
+static void
+dump_boolean_true (void)
+{
+  STACK_DECLARE_USAGE (IDX);
+  STACK_PUSH (IDX, next_temp_name ());
+  DUMP_OPCODE_3 (assignment, ID (1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE);
+  STACK_CHECK_USAGE_LHS ();
+}
+
 /* unary_expression
   : postfix_expression
   | ('delete' | 'void' | 'typeof' | '++' | '--' | '+' | '-' | '~' | '!') unary_expression
@@ -1971,17 +1897,31 @@ parse_unary_expression (void)
       if (is_keyword (KW_DELETE))
       {
         NEXT (unary_expression);
-        if (ID (1) < lexer_get_strings_count ())
+        if (ID (1) < lexer_get_literals_count ())
         {
-          if (parser_strict_mode ())
+          literal lit = lexer_get_literal_by_id (ID (1));
+          if (lit.type == LIT_MAGIC_STR || lit.type == LIT_STR)
           {
-            EMIT_ERROR ("'delete' operator shall not apply on identifier in strict mode.");
+            if (parser_strict_mode ())
+            {
+              EMIT_ERROR ("'delete' operator shall not apply on identifier in strict mode.");
+            }
+            STACK_PUSH (IDX, next_temp_name ());
+            DUMP_OPCODE_2 (delete_var, ID (1), ID (2));
+            STACK_SWAP (IDX);
+            STACK_DROP (IDX, 1);
+            break;
           }
-          STACK_PUSH (IDX, next_temp_name ());
-          DUMP_OPCODE_2 (delete_var, ID (1), ID (2));
-          STACK_SWAP (IDX);
-          STACK_DROP (IDX, 1);
-          break;
+          else if (lit.type == LIT_NUMBER)
+          {
+            dump_boolean_true ();
+            STACK_SWAP (IDX);
+            STACK_DROP (IDX, 1);
+          }
+          else
+          {
+            JERRY_UNREACHABLE ();
+          }
         }
         STACK_PUSH (ops, deserialize_opcode ((opcode_counter_t) (OPCODE_COUNTER () - 1)));
         if (LAST_OPCODE_IS (assignment)
@@ -2002,8 +1942,7 @@ parse_unary_expression (void)
         }
         else
         {
-          STACK_PUSH (IDX, next_temp_name ());
-          DUMP_OPCODE_3 (assignment, ID (1), OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_TRUE);
+          dump_boolean_true ();
           STACK_SWAP (IDX);
           STACK_DROP (IDX, 1);
         }
@@ -3769,6 +3708,44 @@ skip_braces (void)
     {
       STACK_DECR_HEAD (U8, 1);
     }
+    else if (token_is (TOK_KEYWORD))
+    {
+      keyword kw = (keyword) token_data ();
+      skip_newlines ();
+      if (token_is (TOK_COLON))
+      {
+        lexer_add_literal_if_not_present (create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+      }
+      else
+      {
+        lexer_save_token (TOK ());
+      }
+    }
+    else if (token_is (TOK_NAME))
+    {
+      if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get")
+          || literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
+      {
+        skip_newlines ();
+        if (token_is (TOK_KEYWORD))
+        {
+          keyword kw = (keyword) token_data ();
+          skip_newlines ();
+          if (token_is (TOK_OPEN_PAREN))
+          {
+            lexer_add_literal_if_not_present (create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+          }
+          else
+          {
+            lexer_save_token (TOK ());
+          }
+        }
+        else
+        {
+          lexer_save_token (TOK ());
+        }
+      }
+    }
   }
 
   STACK_DROP (U8,1);
@@ -3953,7 +3930,7 @@ preparse_scope (bool is_global)
   STACK_PUSH (locs, TOK ().loc);
   STACK_PUSH (U8, is_global ? TOK_EOF : TOK_CLOSE_BRACE);
 
-  if (token_is (TOK_STRING) && lp_string_equal_s (lexer_get_string_by_id (token_data ()), "use strict"))
+  if (token_is (TOK_STRING) && literal_equal_s (lexer_get_literal_by_id (token_data ()), "use strict"))
   {
     scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
     DUMP_OPCODE_3 (meta, OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
@@ -4011,9 +3988,16 @@ parse_source_element_list (bool is_global)
   STACK_DECLARE_USAGE (IDX)
   STACK_DECLARE_USAGE (temp_names)
 
-  start_new_scope ();
-  preparse_scope (is_global);
 
+  preparse_scope (is_global);
+  if (is_global)
+  {
+    SET_MAX_TEMP_NAME (lexer_get_literals_count ());
+    SET_TEMP_NAME (lexer_get_literals_count ());
+    SET_MIN_TEMP_NAME (lexer_get_literals_count ());
+  }
+
+  start_new_scope ();
   skip_newlines ();
   while (!token_is (TOK_EOF) && !token_is (TOK_CLOSE_BRACE))
   {
@@ -4050,10 +4034,12 @@ parser_parse_program (void)
   JERRY_ASSERT (token_is (TOK_EOF));
   DUMP_OPCODE_1 (exitval, 0);
 
+  serializer_dump_literals (lexer_get_literals (), lexer_get_literals_count ());
   serializer_merge_scopes_into_bytecode ();
+  serializer_set_scope (NULL);
+  deserializer_set_strings_buffer (lexer_get_strings_cache ());
 
   scopes_tree_free (STACK_TOP (scopes));
-  serializer_set_scope (NULL);
   STACK_DROP (scopes, 1);
 
   STACK_CHECK_USAGE (IDX);
@@ -4079,15 +4065,6 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   lexer_init (source, source_size, show_opcodes);
   serializer_init (show_opcodes);
 
-  lexer_run_first_pass ();
-
-  lexer_adjust_num_ids ();
-
-  const lp_string *identifiers = lexer_get_strings ();
-
-  serializer_dump_strings_and_nums (identifiers, lexer_get_strings_count (),
-                                    lexer_get_nums (), lexer_get_nums_count ());
-
   STACK_INIT (U8);
   STACK_INIT (IDX);
   STACK_INIT (nestings);
@@ -4100,51 +4077,10 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   STACK_INIT (locs);
   STACK_INIT (scopes);
   STACK_INIT (props);
-  STACK_INIT (strings);
+  STACK_INIT (literals);
 
-  HASH_INIT (intrinsics, 1);
-
-  fill_intrinsics ();
-
-  SET_MAX_TEMP_NAME (lexer_get_reserved_ids_count ());
-  SET_TEMP_NAME (lexer_get_reserved_ids_count ());
-  SET_MIN_TEMP_NAME (lexer_get_reserved_ids_count ());
   SET_OPCODE_COUNTER (0);
   STACK_SET_ELEMENT (U8, no_in, 0);
-
-  TODO (/* Rewrite using hash when number of natives reaches 20 */)
-  for (uint8_t i = 0; i < OPCODE_NATIVE_CALL__COUNT; i++)
-  {
-    STACK_SET_ELEMENT (IDX, i, INVALID_VALUE);
-  }
-
-  for (uint8_t i = 0, strs_count = lexer_get_strings_count (); i < strs_count; i++)
-  {
-    if (lp_string_equal_s (identifiers[i], "LEDToggle"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_TOGGLE, i);
-    }
-    else if (lp_string_equal_s (identifiers[i], "LEDOn"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_ON, i);
-    }
-    else if (lp_string_equal_s (identifiers[i], "LEDOff"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_OFF, i);
-    }
-    else if (lp_string_equal_s (identifiers[i], "LEDOnce"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_LED_ONCE, i);
-    }
-    else if (lp_string_equal_s (identifiers[i], "wait"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_WAIT, i);
-    }
-    else if (lp_string_equal_s (identifiers[i], "print"))
-    {
-      STACK_SET_ELEMENT (IDX, OPCODE_NATIVE_CALL_PRINT, i);
-    }
-  }
 }
 
 void
@@ -4162,9 +4098,7 @@ parser_free (void)
   STACK_FREE (locs);
   STACK_FREE (scopes);
   STACK_FREE (props);
-  STACK_FREE (strings);
-
-  HASH_FREE (intrinsics);
+  STACK_FREE (literals);
 
   serializer_free ();
   lexer_free ();

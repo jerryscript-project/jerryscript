@@ -19,11 +19,10 @@
 #include "globals.h"
 #ifdef JERRY_ENABLE_PP
 #include "interpreter.h"
-#include "lp-string.h"
+#include "literal.h"
 
 void pp_opcode (opcode_counter_t, opcode_t, bool);
-void pp_strings (const lp_string *, uint8_t);
-void pp_nums (const ecma_number_t *, uint8_t, uint8_t);
+void pp_literals (const literal *, uint8_t);
 #endif // JERRY_ENABLE_PP
 
 #endif // PRETTY_PRINTER

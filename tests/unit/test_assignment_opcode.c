@@ -45,10 +45,10 @@ main( int __unused argc,
   mem_init();
   serializer_init (false);
 
-  const lp_string strings[] = { LP("a"), 
-                                LP("b") };
-  ecma_number_t nums [] = { 2.0 };
-  serializer_dump_strings_and_nums (strings, 2, nums, 1);
+  const literal lits[] = { LP("a"), 
+                           LP("b"),
+                           NUM(2.0) };
+  serializer_dump_literals (lits, 3);
 
   init_int( test_program, false);
 

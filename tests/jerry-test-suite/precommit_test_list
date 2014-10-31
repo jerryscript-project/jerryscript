@@ -158,6 +158,7 @@
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-002.js
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-004.js
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-005.js
+./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-006.js
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-007.js
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-008.js
 ./tests/jerry-test-suite/11/11.04/11.04.05/11.04.05-009.js
@@ -351,6 +352,8 @@
 ./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-085.js
 ./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-086.js
 ./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-087.js
+./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-088.js
+./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-089.js
 ./tests/jerry-test-suite/11/11.05/11.05.01/11.05.01-090.js
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-001.js
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-002.js
@@ -439,6 +442,8 @@
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-085.js
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-086.js
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-087.js
+./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-088.js
+./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-089.js
 ./tests/jerry-test-suite/11/11.05/11.05.02/11.05.02-090.js
 ./tests/jerry-test-suite/11/11.05/11.05.03/11.05.03-001.js
 ./tests/jerry-test-suite/11/11.05/11.05.03/11.05.03-002.js
@@ -537,6 +542,7 @@
 ./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-006.js
 ./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-007.js
 ./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-008.js
+./tests/jerry-test-suite/11/11.07/11.07.01/11.07.01-009.js
 ./tests/jerry-test-suite/11/11.07/11.07.02/11.07.02-001.js
 ./tests/jerry-test-suite/11/11.07/11.07.02/11.07.02-002.js
 ./tests/jerry-test-suite/11/11.07/11.07.02/11.07.02-003.js
@@ -678,6 +684,7 @@
 ./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-034.js
 ./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-035.js
 ./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-036.js
+./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-037.js
 ./tests/jerry-test-suite/11/11.09/11.09.02/11.09.02-038.js
 ./tests/jerry-test-suite/11/11.09/11.09.04/11.09.04-001.js
 ./tests/jerry-test-suite/11/11.09/11.09.04/11.09.04-002.js
@@ -743,6 +750,8 @@
 ./tests/jerry-test-suite/11/11.10/11.10-014.js
 ./tests/jerry-test-suite/11/11.10/11.10-015.js
 ./tests/jerry-test-suite/11/11.10/11.10-016.js
+./tests/jerry-test-suite/11/11.10/11.10-017.js
+./tests/jerry-test-suite/11/11.10/11.10-018.js
 ./tests/jerry-test-suite/11/11.11/11.11-001.js
 ./tests/jerry-test-suite/11/11.11/11.11-002.js
 ./tests/jerry-test-suite/11/11.11/11.11-003.js
@@ -789,6 +798,9 @@
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-009.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-010.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-011.js
+./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-012.js
+./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-013.js
+./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-014.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-039.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-040.js
 ./tests/jerry-test-suite/11/11.13/11.13.02/11.13.02-041.js
@@ -990,6 +1002,10 @@
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-009.js
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-010.js
 ./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-011.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-012.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-013.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-014.js
+./tests/jerry-test-suite/15/15.05/15.05.01/15.05.01.01/15.05.01.01-015.js
 ./tests/jerry-test-suite/15/15.05/15.05.02/15.05.02.01/15.05.02.01-002.js
 ./tests/jerry-test-suite/15/15.05/15.05.03/15.05.03.01/15.05.03.01-001.js
 ./tests/jerry-test-suite/15/15.05/15.05.03/15.05.03.02/15.05.03.02-001.js
@@ -1044,6 +1060,8 @@
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.01/15.07.03.01-011.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.02/15.07.03.02-004.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.02/15.07.03.02-005.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-002.js
+./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-003.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-004.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.03/15.07.03.03-005.js
 ./tests/jerry-test-suite/15/15.07/15.07.03/15.07.03.04/15.07.03.04-002.js

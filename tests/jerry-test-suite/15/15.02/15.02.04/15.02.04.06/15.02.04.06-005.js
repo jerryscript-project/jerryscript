@@ -14,4 +14,4 @@
 
 var object = Object.create(null);
 var temp = new Object();
-assert(temp.isPrototypeOf(object));
+assert(!temp.isPrototypeOf(object));

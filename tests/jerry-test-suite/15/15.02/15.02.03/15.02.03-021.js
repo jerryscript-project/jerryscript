@@ -49,4 +49,4 @@ for (p in emptyObject) {
 if (delete emptyObject.myProperty)
   isConfigurable = true;
 
-assert(isWritable || isEnumerable || isConfigurable);
+assert(!isWritable && !isEnumerable && !isConfigurable);

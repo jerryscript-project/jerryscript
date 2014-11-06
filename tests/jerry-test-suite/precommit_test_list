@@ -934,7 +934,6 @@
 ./tests/jerry-test-suite/13/13-007.js
 ./tests/jerry-test-suite/13/13-009.js
 ./tests/jerry-test-suite/13/13-010.js
-./tests/jerry-test-suite/13/13-011.js
 ./tests/jerry-test-suite/13/13.01/13.01-001.js
 ./tests/jerry-test-suite/13/13.02/13.02-001.js
 ./tests/jerry-test-suite/13/13.02/13.02-003.js

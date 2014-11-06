@@ -14,4 +14,4 @@
 
 var b = Number.MIN_VALUE
 Number.MIN_VALUE = 0
-assert(Number.MIN_VALUE === b);f
+assert(Number.MIN_VALUE === b);

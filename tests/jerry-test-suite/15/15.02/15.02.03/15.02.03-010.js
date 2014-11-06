@@ -13,9 +13,18 @@
 // limitations under the License.
 
 var a = new String("qwe");
+
 names = Object.getOwnPropertyNames(a);
-assert(names instanceof Array &&
-        names[0] === "0" &&
-        names[1] === "1" &&
-        names[2] === "2" &&
-        names[3] === "length");
+
+assert(names instanceof Array);
+
+var is_0 = false, is_1 = false, is_2 = false, is_length = false;
+for (var i = 0; i <= 3; i++)
+{
+  if (names[i] === "0") { is_0 = true; }
+  if (names[i] === "1") { is_1 = true; }
+  if (names[i] === "2") { is_2 = true; }
+  if (names[i] === "length") { is_length = true; }
+}
+
+assert (is_0 && is_1 && is_2 && is_length);

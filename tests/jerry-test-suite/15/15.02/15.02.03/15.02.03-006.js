@@ -26,4 +26,4 @@ var object2 = {
 
 Object.freeze(object1);
 
-assert(Object.isExtensible(object1) && !Object.isExtensible(object2));
+assert(!Object.isExtensible(object1) && Object.isExtensible(object2));

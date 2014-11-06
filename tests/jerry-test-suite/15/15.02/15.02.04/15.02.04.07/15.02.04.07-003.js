@@ -23,4 +23,4 @@ var propertyDescriptor = {
 
 Object.defineProperty(object, 'prop', propertyDescriptor);
 
-assert(object.propertyIsEnumerable('prop'));
+assert(!object.propertyIsEnumerable('prop'));

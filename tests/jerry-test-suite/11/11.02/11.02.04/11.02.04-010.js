@@ -16,4 +16,11 @@ f_arg = function () {
   return arguments;
 }
 
-assert(f_arg(1, 2, 3)[3] !== undefined);
+var args = f_arg (1, 2, 3);
+
+for (var i = 0; i < 3; i++)
+{
+  assert(args[i] === i + 1);
+}
+
+assert(args[3] === undefined);

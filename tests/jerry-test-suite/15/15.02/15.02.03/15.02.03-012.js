@@ -23,4 +23,5 @@ veryUsefulObject.method = function () {
   return "asdf";
 }
 
-assert(veryUsefulObject.property && veryUsefulObject.method());
+assert(veryUsefulObject.property === undefined);
+assert(veryUsefulObject.method === undefined);

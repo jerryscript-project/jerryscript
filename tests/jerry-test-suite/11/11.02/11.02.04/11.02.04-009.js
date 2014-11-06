@@ -16,4 +16,4 @@ f_arg = function () {
   return arguments;
 }
 
-assert(f_arg(1, 2, 3)[3] !== undefined);
+assert(f_arg(1, 2, 3)[3] === undefined);

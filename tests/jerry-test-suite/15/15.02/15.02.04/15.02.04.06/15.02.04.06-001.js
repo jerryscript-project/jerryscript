@@ -15,5 +15,5 @@
 var a = new Object();
 var b = 123;
 
-assert(a.isPrototypeOf(b));
+assert(!a.isPrototypeOf(b));
 

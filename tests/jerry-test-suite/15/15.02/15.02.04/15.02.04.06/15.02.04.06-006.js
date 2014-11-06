@@ -12,4 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.prototype.isPrototypeOf.call(undefined, {});
+try
+{
+  Object.prototype.isPrototypeOf.call(undefined, {});
+
+  assert(false);
+} catch (e)
+{
+  assert (e instanceof TypeError);
+}

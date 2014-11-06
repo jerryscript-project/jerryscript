@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var object = new Object();
-assert(object.isPrototypeOf(object));
+assert(!object.isPrototypeOf(object));

@@ -13,5 +13,5 @@
 // limitations under the License.
 
 assert(Function.prototype.toString.hasOwnProperty('length'));
-assert(delete Function.prototype.toString.length);
+assert(!(delete Function.prototype.toString.length));
 assert(Function.prototype.toString.hasOwnProperty('length'));

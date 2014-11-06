@@ -15,4 +15,4 @@
 var object = new Object();
 var otherObject = new Object();
 
-assert(otherObject.isPrototypeOf(object));
+assert(!otherObject.isPrototypeOf(object));

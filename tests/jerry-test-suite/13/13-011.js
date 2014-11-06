@@ -16,4 +16,4 @@ function foo(param1) {
   return delete arguments; //arguments is non-configurable
 }
 
-assert(foo("param"));
+assert(!foo("param"));

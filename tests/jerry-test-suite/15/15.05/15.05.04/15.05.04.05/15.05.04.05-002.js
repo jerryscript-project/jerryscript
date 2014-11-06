@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(String("abc").charCodeAt(3) === NaN ? 1 : 0);
+assert(isNaN(String("abc").charCodeAt(3)));

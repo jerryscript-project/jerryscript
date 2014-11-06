@@ -30,4 +30,4 @@ for (prop in Object)
 if (delete Object.prototype)
   configurable = true;
 
-assert(writable || enumerable || configurable);
+assert(!writable && !enumerable && !configurable);

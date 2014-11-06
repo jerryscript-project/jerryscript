@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(Number.propertyIsEnumerable('NEGATIVE_INFINITY'));
+assert(!Number.propertyIsEnumerable('NEGATIVE_INFINITY'));

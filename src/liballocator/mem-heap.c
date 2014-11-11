@@ -415,7 +415,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   mem_check_heap ();
 
-  if (alloc_term == MEM_HEAP_ALLOC_SHORT_TERM)
+  if (alloc_term == MEM_HEAP_ALLOC_LONG_TERM)
   {
     block_p = mem_heap.first_block_p;
     direction = MEM_DIRECTION_NEXT;
@@ -473,7 +473,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
     mem_init_block_header (new_free_block_first_chunk_p,
                            0,
                            MEM_BLOCK_FREE,
-                           block_p /* there we will place new allocated block */,
+                           block_p,
                            next_block_p);
 
     mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
@@ -520,6 +520,143 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   return data_space_p;
 } /* mem_heap_alloc_block */
+
+/**
+ * Try to resize memory region.
+ *
+ * @return true - if resize is successful,
+ *         false - if there is not enough memory in front of the block.
+ */
+bool
+mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space of the block to resize */
+                           size_t size_in_bytes) /**< new block size */
+{
+  /* checking that ptr points to the heap */
+  JERRY_ASSERT(ptr >= mem_heap.heap_start
+               && ptr <= mem_heap.heap_start + mem_heap.heap_size);
+
+  mem_check_heap ();
+
+  mem_block_header_t *block_p = (mem_block_header_t*) ptr - 1;
+
+  VALGRIND_DEFINED_STRUCT(block_p);
+
+  JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+
+  /* For heap statistics unit we show what is going on as though
+   * the block is freed and then new block (the same or resized)
+   * is allocated */
+  mem_heap_stat_free_block (block_p);
+
+  size_t current_block_may_expand_up_to = mem_get_block_data_space_size (block_p);
+
+  bool is_resized = false;
+
+  if (current_block_may_expand_up_to >= size_in_bytes)
+  {
+    is_resized = true;
+  }
+  else
+  {
+    size_t need_additional_bytes = size_in_bytes - current_block_may_expand_up_to;
+
+    mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
+
+    if (next_block_p != NULL)
+    {
+      VALGRIND_DEFINED_STRUCT (next_block_p);
+
+      if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
+      {
+        size_t next_block_data_space_size = mem_get_block_data_space_size (next_block_p);
+
+        if (next_block_data_space_size >= need_additional_bytes)
+        {
+          /* next block is free and contains enough space */
+
+          is_resized = true;
+
+          size_t new_block_chunks_count = mem_get_block_chunks_count_from_data_size (size_in_bytes);
+          size_t current_block_chunks_count = mem_get_block_chunks_count (block_p);
+          size_t next_block_chunks_count = mem_get_block_chunks_count (next_block_p);
+
+          JERRY_ASSERT (new_block_chunks_count <= current_block_chunks_count + next_block_chunks_count);
+
+          size_t diff_in_chunks = (size_t) ((current_block_chunks_count +
+                                             next_block_chunks_count) - new_block_chunks_count);
+
+          mem_block_header_t *block_after_next_p = mem_get_next_block_by_direction (next_block_p,
+                                                                                    MEM_DIRECTION_NEXT);
+          mem_block_header_t *new_next_of_current_block_p;
+          mem_block_header_t *new_prev_of_block_after_next_p;
+
+          if (diff_in_chunks > 0)
+          {
+            mem_block_header_t *new_free_block_p = (mem_block_header_t*) ((uint8_t*) block_p +
+                                                                          new_block_chunks_count * MEM_HEAP_CHUNK_SIZE);
+
+            mem_init_block_header ((uint8_t*) new_free_block_p,
+                                   0,
+                                   MEM_BLOCK_FREE,
+                                   block_p,
+                                   block_after_next_p);
+
+            new_prev_of_block_after_next_p = new_free_block_p;
+            new_next_of_current_block_p = new_free_block_p;
+          }
+          else
+          {
+            new_prev_of_block_after_next_p = block_p;
+            new_next_of_current_block_p = block_after_next_p;
+          }
+
+          block_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (block_p,
+                                                                                     new_next_of_current_block_p);
+          if (block_after_next_p != NULL)
+          {
+            VALGRIND_DEFINED_STRUCT (block_after_next_p);
+
+            mem_heap_offset_t offset = mem_get_block_neighbour_field (new_prev_of_block_after_next_p,
+                                                                      block_after_next_p);
+            block_after_next_p->neighbours[ MEM_DIRECTION_PREV ] = offset;
+
+            VALGRIND_NOACCESS_STRUCT (block_after_next_p);
+          }
+          else
+          {
+            mem_heap.last_block_p = new_prev_of_block_after_next_p;
+          }
+        }
+      }
+      else
+      {
+        JERRY_ASSERT (next_block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+      }
+
+      VALGRIND_NOACCESS_STRUCT (next_block_p);
+    }
+  }
+
+  if (is_resized)
+  {
+    JERRY_ASSERT ((mem_heap_offset_t) size_in_bytes == size_in_bytes);
+
+    if (size_in_bytes >= block_p->allocated_bytes)
+    {
+      VALGRIND_UNDEFINED_SPACE (ptr + block_p->allocated_bytes, size_in_bytes - block_p->allocated_bytes);
+    }
+
+    block_p->allocated_bytes = (mem_heap_offset_t) size_in_bytes;
+  }
+
+  mem_heap_stat_alloc_block (block_p);
+
+  VALGRIND_NOACCESS_STRUCT(block_p);
+
+  mem_check_heap ();
+
+  return is_resized;
+} /* mem_heap_try_resize_block */
 
 /**
  * Free the memory block.

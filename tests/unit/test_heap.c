@@ -22,17 +22,17 @@ extern long int time (long int *__timer);
 extern int printf (__const char *__restrict __format, ...);
 extern void *memset (void *__s, int __c, size_t __n);
 
-// Heap size is 8K
-const size_t test_heap_size = 8 * 1024;
+// Heap size is 32K
+const size_t test_heap_size = 32 * 1024;
 
 // Iterations count
-const uint32_t test_iters = 1024 * 1024;
+const uint32_t test_iters = 64 * 1024;
 
 // Subiterations count
-const uint32_t test_sub_iters = 3;
+const uint32_t test_sub_iters = 32;
 
 // Threshold size of block to allocate
-const uint32_t test_threshold_block_size = 2048;
+const uint32_t test_threshold_block_size = 8192;
 
 int
 main( int __unused argc,
@@ -68,6 +68,25 @@ main( int __unused argc,
         }
 
         // mem_heap_print( true);
+
+        for ( uint32_t j = 0; j < subiters; j++ )
+        {
+            if ( ptrs[j] != NULL && (rand () % 2) == 0 )
+            {
+              for( size_t k = 0; k < sizes[j]; k++ )
+              {
+                JERRY_ASSERT( ptrs[j][k] == 0 );
+              }
+
+              size_t new_size = (unsigned int) rand() % ( test_threshold_block_size );
+
+              if (mem_heap_try_resize_block (ptrs[j], new_size))
+              {
+                sizes[j] = new_size;
+                memset (ptrs[j], 0, sizes[j]);
+              }
+            }
+        }
 
         for ( uint32_t j = 0; j < subiters; j++ )
         {

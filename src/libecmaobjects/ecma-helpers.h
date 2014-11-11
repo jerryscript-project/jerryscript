@@ -197,18 +197,18 @@ extern ecma_object_t* ecma_create_decl_lex_env (ecma_object_t *outer_lexical_env
 extern ecma_object_t* ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p,
                                                   ecma_object_t *binding_obj_p,
                                                   bool provide_this);
-extern bool ecma_is_lexical_environment (ecma_object_t *object_p);
-extern bool ecma_get_object_extensible (ecma_object_t *object_p);
+extern bool __attribute_pure__ ecma_is_lexical_environment (const ecma_object_t *object_p);
+extern bool __attribute_pure__ ecma_get_object_extensible (const ecma_object_t *object_p);
 extern void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
-extern ecma_object_type_t ecma_get_object_type (ecma_object_t *object_p);
+extern ecma_object_type_t __attribute_pure__ ecma_get_object_type (const ecma_object_t *object_p);
 extern void ecma_set_object_type (ecma_object_t *object_p, ecma_object_type_t type);
-extern ecma_object_t* ecma_get_object_prototype (ecma_object_t *object_p);
-extern bool ecma_get_object_is_builtin (ecma_object_t *object_p);
+extern ecma_object_t* __attribute_pure__ ecma_get_object_prototype (const ecma_object_t *object_p);
+extern bool __attribute_pure__ ecma_get_object_is_builtin (const ecma_object_t *object_p);
 extern void ecma_set_object_is_builtin (ecma_object_t *object_p,
                                         bool is_builtin);
-extern ecma_lexical_environment_type_t ecma_get_lex_env_type (ecma_object_t *object_p);
-extern ecma_object_t *ecma_get_lex_env_outer_reference (ecma_object_t *object_p);
-extern ecma_property_t *ecma_get_property_list (ecma_object_t *object_p);
+extern ecma_lexical_environment_type_t __attribute_pure__ ecma_get_lex_env_type (const ecma_object_t *object_p);
+extern ecma_object_t* __attribute_pure__ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
+extern ecma_property_t* __attribute_pure__ ecma_get_property_list (const ecma_object_t *object_p);
 
 extern ecma_property_t* ecma_create_internal_property (ecma_object_t *object_p,
                                                        ecma_internal_property_id_t property_id);

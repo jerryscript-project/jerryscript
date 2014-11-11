@@ -21,7 +21,7 @@
  *
  * @return bit-field's value
  */
-extern uint64_t
+uint64_t __attribute_const__
 jrt_extract_bit_field (uint64_t container, /**< container to extract bit-field from */
                        uint32_t lsb, /**< least significant bit of the value
                                       *   to be extracted */
@@ -42,7 +42,7 @@ jrt_extract_bit_field (uint64_t container, /**< container to extract bit-field f
  *
  * @return bit-field's value
  */
-extern uint64_t
+uint64_t __attribute_const__
 jrt_set_bit_field_value (uint64_t container, /**< container to insert bit-field to */
                          uint64_t new_bit_field_value, /**< value of bit-field to insert */
                          uint32_t lsb, /**< least significant bit of the value

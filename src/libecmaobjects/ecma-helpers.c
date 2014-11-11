@@ -170,8 +170,8 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 /**
  * Check if the object is lexical environment.
  */
-bool
-ecma_is_lexical_environment (ecma_object_t *object_p) /**< object or lexical environment */
+bool __attribute_pure__
+ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
 
@@ -183,8 +183,8 @@ ecma_is_lexical_environment (ecma_object_t *object_p) /**< object or lexical env
 /**
  * Get value of [[Extensible]] object's internal property.
  */
-bool
-ecma_get_object_extensible (ecma_object_t *object_p) /**< object */
+bool __attribute_pure__
+ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
@@ -213,8 +213,8 @@ ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
 /**
  * Get object's internal implementation-defined type.
  */
-ecma_object_type_t
-ecma_get_object_type (ecma_object_t *object_p) /**< object */
+ecma_object_type_t __attribute_pure__
+ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
@@ -243,8 +243,8 @@ ecma_set_object_type (ecma_object_t *object_p, /**< object */
 /**
  * Get object's prototype.
  */
-ecma_object_t*
-ecma_get_object_prototype (ecma_object_t *object_p) /**< object */
+ecma_object_t* __attribute_pure__
+ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
@@ -261,8 +261,8 @@ ecma_get_object_prototype (ecma_object_t *object_p) /**< object */
  *
  * @return true / false
  */
-bool
-ecma_get_object_is_builtin (ecma_object_t *object_p) /**< object */
+bool __attribute_pure__
+ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
@@ -301,8 +301,8 @@ ecma_set_object_is_builtin (ecma_object_t *object_p, /**< object */
 /**
  * Get type of lexical environment.
  */
-ecma_lexical_environment_type_t
-ecma_get_lex_env_type (ecma_object_t *object_p) /**< lexical environment */
+ecma_lexical_environment_type_t __attribute_pure__
+ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
@@ -315,8 +315,8 @@ ecma_get_lex_env_type (ecma_object_t *object_p) /**< lexical environment */
 /**
  * Get outer reference of lexical environment.
  */
-ecma_object_t*
-ecma_get_lex_env_outer_reference (ecma_object_t *object_p) /**< lexical environment */
+ecma_object_t* __attribute_pure__
+ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
@@ -331,8 +331,8 @@ ecma_get_lex_env_outer_reference (ecma_object_t *object_p) /**< lexical environm
 /**
  * Get object's/lexical environment's property list.
  */
-ecma_property_t*
-ecma_get_property_list (ecma_object_t *object_p) /**< object or lexical environment */
+ecma_property_t* __attribute_pure__
+ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
 

@@ -14,5 +14,9 @@
 
 #!/bin/bash
 
-git log --show-notes=perf --show-notes=mem --show-notes=test_build_env --show-notes=arm-linux-perf --show-notes=arm-linux-binary-size
+git log --show-notes=perf --show-notes=mem --show-notes=test_build_env \
+        --show-notes=arm-linux-perf \
+        --show-notes=arm-linux-binary-size \
+        --show-notes=stm32f4-binary-size
+
 exit 0

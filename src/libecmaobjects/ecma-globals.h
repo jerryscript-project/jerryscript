@@ -333,7 +333,8 @@ typedef enum
                                           of ECMA-262 v5 specification */
   ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
   ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_HOST /**< Host object */
+  // ECMA_OBJECT_TYPE_HOST, /**< Host object */
+  ECMA_OBJECT_TYPE__COUNT /**< number of object types */
 } ecma_object_type_t;
 
 /**

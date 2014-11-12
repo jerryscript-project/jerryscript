@@ -199,6 +199,12 @@ else
      OPTION_VALGRIND := disable
 endif
 
+ifeq ($(filter mem_stats,$(TARGET_MODS)), mem_stats)
+     OPTION_MEM_STATS := enable
+else
+     OPTION_MEM_STATS := disable
+endif
+
 #
 # Target CPU
 #
@@ -282,7 +288,7 @@ GIT_HASH=$(shell git rev-parse HEAD)
 BUILD_DATE=$(shell date +'%d/%m/%Y')
 
 CFLAGS_JERRY = $(CFLAGS_WARNINGS) $(CFLAGS_WERROR) $(CFLAGS_WFATAL_ERRORS)
-DEFINES_JERRY = -DMEM_STATS
+DEFINES_JERRY =
 
 DEFINES_JERRY += -DJERRY_BUILD_DATE="\"$(BUILD_DATE)\"" \
                  -DJERRY_COMMIT_HASH="\"$(GIT_HASH)\"" \
@@ -390,6 +396,10 @@ else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU
  LDFLAGS += -Wl,--gc-sections
+endif
+
+ifeq ($(OPTION_MEM_STATS),enable)
+  DEFINES_JERRY += -DMEM_STATS
 endif
 
 ifeq ($(OPTION_COLOR),enable)

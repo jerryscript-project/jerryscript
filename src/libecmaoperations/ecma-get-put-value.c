@@ -73,7 +73,7 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       JERRY_ASSERT(obj_p != NULL
                    && !ecma_is_lexical_environment (obj_p));
 
-      return ecma_op_object_get (obj_p, ref.referenced_name_p);
+      return ecma_op_object_get (obj_p, ECMA_GET_POINTER (ref.referenced_name_cp));
     }
     else
     {
@@ -86,7 +86,7 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
       JERRY_ASSERT (obj_p != NULL
                     && !ecma_is_lexical_environment (obj_p));
 
-      ret_value = ecma_op_object_get (obj_p, ref.referenced_name_p);
+      ret_value = ecma_op_object_get (obj_p, ECMA_GET_POINTER (ref.referenced_name_cp));
 
       ECMA_FINALIZE (obj_base);
 
@@ -101,7 +101,9 @@ ecma_op_get_value (ecma_reference_t ref) /**< ECMA-reference */
                  && ecma_is_lexical_environment (lex_env_p));
 
     // 5.a
-    return ecma_op_get_binding_value (lex_env_p, ref.referenced_name_p, ref.is_strict);
+    return ecma_op_get_binding_value (lex_env_p,
+                                      ECMA_GET_POINTER (ref.referenced_name_cp),
+                                      ref.is_strict);
   }
 } /* ecma_op_get_value */
 
@@ -159,7 +161,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
-                                                               ref.referenced_name_p,
+                                                               ECMA_GET_POINTER (ref.referenced_name_cp),
                                                                value,
                                                                false);
 
@@ -186,7 +188,7 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
 
       ECMA_TRY_CATCH (put_completion,
                       ecma_op_object_put (obj_p,
-                                          ref.referenced_name_p,
+                                          ECMA_GET_POINTER (ref.referenced_name_cp),
                                           value,
                                           ref.is_strict),
                       ret_value);
@@ -209,18 +211,20 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
       JERRY_ASSERT (obj_p != NULL
                     && !ecma_is_lexical_environment (obj_p));
 
+      ecma_string_t *referenced_name_p = ECMA_GET_POINTER (ref.referenced_name_cp);
+
       // sub_2.
-      if (!ecma_op_object_can_put (obj_p, ref.referenced_name_p))
+      if (!ecma_op_object_can_put (obj_p, referenced_name_p))
       {
         ret_value = ecma_reject_put (ref.is_strict);
       }
       else
       {
         // sub_3.
-        ecma_property_t *own_prop_p = ecma_op_object_get_own_property (obj_p, ref.referenced_name_p);
+        ecma_property_t *own_prop_p = ecma_op_object_get_own_property (obj_p, referenced_name_p);
 
         // sub_5.
-        ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, ref.referenced_name_p);
+        ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, referenced_name_p);
 
         // sub_4., sub_7
         if ((own_prop_p != NULL
@@ -261,7 +265,10 @@ ecma_op_put_value (ecma_reference_t ref, /**< ECMA-reference */
                  && ecma_is_lexical_environment (lex_env_p));
 
     // 5.a.
-    return ecma_op_set_mutable_binding (lex_env_p, ref.referenced_name_p, value, ref.is_strict);
+    return ecma_op_set_mutable_binding (lex_env_p,
+                                        ECMA_GET_POINTER (ref.referenced_name_cp),
+                                        value,
+                                        ref.is_strict);
   }
 } /* ecma_op_put_value */
 

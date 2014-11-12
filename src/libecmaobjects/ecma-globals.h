@@ -773,10 +773,10 @@ typedef struct
   ecma_value_t base;
 
   /** referenced name */
-  ecma_string_t *referenced_name_p;
+  unsigned int referenced_name_cp : ECMA_POINTER_FIELD_WIDTH;
 
   /** strict reference flag */
-  bool is_strict;
+  unsigned int is_strict : 1;
 } ecma_reference_t;
 
 /**

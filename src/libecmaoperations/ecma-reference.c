@@ -84,9 +84,10 @@ ecma_make_reference (ecma_value_t base, /**< base value */
   ecma_reference_t ref = (ecma_reference_t)
   {
     .base = ecma_copy_value (base, true),
-    .referenced_name_p = name_p,
     .is_strict = is_strict
   };
+
+  ECMA_SET_POINTER (ref.referenced_name_cp, name_p);
 
   return ref;
 } /* ecma_make_reference */
@@ -101,7 +102,7 @@ void
 ecma_free_reference (ecma_reference_t ref) /**< reference */
 {
   ecma_free_value (ref.base, true);
-  ecma_deref_ecma_string (ref.referenced_name_p);
+  ecma_deref_ecma_string (ECMA_GET_POINTER (ref.referenced_name_cp));
 } /* ecma_free_reference */
 
 /**

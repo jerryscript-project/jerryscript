@@ -1472,7 +1472,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
       JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
       ECMA_TRY_CATCH (delete_completion,
-                      ecma_op_delete_binding (bindings_p, ref.referenced_name_p),
+                      ecma_op_delete_binding (bindings_p, ECMA_GET_POINTER (ref.referenced_name_cp)),
                       ret_value);
 
       ret_value = set_variable_value (int_data, dst_var_idx, delete_completion.u.value);

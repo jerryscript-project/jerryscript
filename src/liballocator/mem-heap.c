@@ -154,12 +154,18 @@ static void mem_heap_stat_alloc_block (mem_block_header_t *block_header_p);
 static void mem_heap_stat_free_block (mem_block_header_t *block_header_p);
 static void mem_heap_stat_free_block_split (void);
 static void mem_heap_stat_free_block_merge (void);
+
+#  define MEM_HEAP_STAT_INIT() mem_heap_stat_init ()
+#  define MEM_HEAP_STAT_ALLOC_BLOCK(v) mem_heap_stat_alloc_block (v)
+#  define MEM_HEAP_STAT_FREE_BLOCK(v) mem_heap_stat_free_block (v)
+#  define MEM_HEAP_STAT_FREE_BLOCK_SPLIT() mem_heap_stat_free_block_split ()
+#  define MEM_HEAP_STAT_FREE_BLOCK_MERGE() mem_heap_stat_free_block_merge ()
 #else /* !MEM_STATS */
-#  define mem_heap_stat_init ()
-#  define mem_heap_stat_alloc_block (v)
-#  define mem_heap_stat_free_block (v)
-#  define mem_heap_stat_free_block_split ()
-#  define mem_heap_stat_free_block_merge ()
+#  define MEM_HEAP_STAT_INIT()
+#  define MEM_HEAP_STAT_ALLOC_BLOCK(v)
+#  define MEM_HEAP_STAT_FREE_BLOCK(v)
+#  define MEM_HEAP_STAT_FREE_BLOCK_SPLIT()
+#  define MEM_HEAP_STAT_FREE_BLOCK_MERGE()
 #endif /* !MEM_STATS */
 
 /**
@@ -338,7 +344,7 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
   mem_heap.first_block_p = (mem_block_header_t*) mem_heap.heap_start;
   mem_heap.last_block_p = mem_heap.first_block_p;
 
-  mem_heap_stat_init ();
+  MEM_HEAP_STAT_INIT ();
 } /* mem_heap_init */
 
 /**
@@ -467,7 +473,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   if (new_block_size_in_chunks < found_block_size_in_chunks)
   {
-    mem_heap_stat_free_block_split ();
+    MEM_HEAP_STAT_FREE_BLOCK_SPLIT ();
 
     uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
     mem_init_block_header (new_free_block_first_chunk_p,
@@ -504,7 +510,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   VALGRIND_DEFINED_STRUCT(block_p);
 
-  mem_heap_stat_alloc_block (block_p);
+  MEM_HEAP_STAT_ALLOC_BLOCK (block_p);
 
   JERRY_ASSERT(mem_get_block_data_space_size (block_p) >= size_in_bytes);
 
@@ -546,7 +552,7 @@ mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space
   /* For heap statistics unit we show what is going on as though
    * the block is freed and then new block (the same or resized)
    * is allocated */
-  mem_heap_stat_free_block (block_p);
+  MEM_HEAP_STAT_FREE_BLOCK (block_p);
 
   size_t current_block_may_expand_up_to = mem_get_block_data_space_size (block_p);
 
@@ -649,7 +655,7 @@ mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space
     block_p->allocated_bytes = (mem_heap_offset_t) size_in_bytes;
   }
 
-  mem_heap_stat_alloc_block (block_p);
+  MEM_HEAP_STAT_ALLOC_BLOCK (block_p);
 
   VALGRIND_NOACCESS_STRUCT(block_p);
 
@@ -677,7 +683,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
   mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
   mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
-  mem_heap_stat_free_block (block_p);
+  MEM_HEAP_STAT_FREE_BLOCK (block_p);
 
   VALGRIND_NOACCESS_SPACE(ptr, block_p->allocated_bytes);
 
@@ -702,7 +708,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
     if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
     {
       /* merge with the next block */
-      mem_heap_stat_free_block_merge ();
+      MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
 
       mem_block_header_t *next_next_block_p = mem_get_next_block_by_direction (next_block_p, MEM_DIRECTION_NEXT);
 
@@ -733,7 +739,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
     if (prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
     {
       /* merge with the previous block */
-      mem_heap_stat_free_block_merge ();
+      MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
 
       prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (prev_block_p, next_block_p);
       if (next_block_p != NULL)
@@ -853,7 +859,9 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
               mem_heap_stats.peak_allocated_bytes,
               mem_heap_stats.peak_waste_bytes);
   }
-#endif /* MEM_STATS */
+#else /* MEM_STATS */
+  (void) dump_stats;
+#endif /* !MEM_STATS */
 
   __printf ("\n");
 } /* mem_heap_print */

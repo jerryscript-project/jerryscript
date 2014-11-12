@@ -54,12 +54,18 @@ static void mem_pools_stat_alloc_pool (void);
 static void mem_pools_stat_free_pool (void);
 static void mem_pools_stat_alloc_chunk (void);
 static void mem_pools_stat_free_chunk (void);
+
+#  define MEM_POOLS_STAT_INIT() mem_pools_stat_init ()
+#  define MEM_POOLS_STAT_ALLOC_POOL() mem_pools_stat_alloc_pool ()
+#  define MEM_POOLS_STAT_FREE_POOL() mem_pools_stat_free_pool ()
+#  define MEM_POOLS_STAT_ALLOC_CHUNK() mem_pools_stat_alloc_chunk ()
+#  define MEM_POOLS_STAT_FREE_CHUNK() mem_pools_stat_free_chunk ()
 #else /* !MEM_STATS */
-#  define mem_pools_stat_init ()
-#  define mem_pools_stat_alloc_pool ()
-#  define mem_pools_stat_free_pool ()
-#  define mem_pools_stat_alloc_chunk ()
-#  define mem_pools_stat_free_chunk ()
+#  define MEM_POOLS_STAT_INIT()
+#  define MEM_POOLS_STAT_ALLOC_POOL()
+#  define MEM_POOLS_STAT_FREE_POOL()
+#  define MEM_POOLS_STAT_ALLOC_CHUNK()
+#  define MEM_POOLS_STAT_FREE_CHUNK()
 #endif /* !MEM_STATS */
 
 /**
@@ -71,7 +77,7 @@ mem_pools_init (void)
   mem_pools = NULL;
   mem_free_chunks_number = 0;
 
-  mem_pools_stat_init ();
+  MEM_POOLS_STAT_INIT ();
 } /* mem_pools_init */
 
 /**
@@ -129,7 +135,7 @@ mem_pools_alloc (void)
 
     mem_free_chunks_number += pool_state->chunks_number;
 
-    mem_pools_stat_alloc_pool ();
+    MEM_POOLS_STAT_ALLOC_POOL ();
   }
 
   /**
@@ -151,7 +157,7 @@ mem_pools_alloc (void)
    */
   mem_free_chunks_number--;
 
-  mem_pools_stat_alloc_chunk ();
+  MEM_POOLS_STAT_ALLOC_CHUNK ();
 
   return mem_pool_alloc_chunk (pool_state);
 } /* mem_pools_alloc */
@@ -182,7 +188,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
   mem_pool_free_chunk (pool_state, chunk_p);
   mem_free_chunks_number++;
 
-  mem_pools_stat_free_chunk ();
+  MEM_POOLS_STAT_FREE_CHUNK ();
 
   /**
    * If all chunks of the pool are free, free the pool itself.
@@ -209,7 +215,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 
     mem_heap_free_block ((uint8_t*)pool_state);
 
-    mem_pools_stat_free_pool ();
+    MEM_POOLS_STAT_FREE_POOL ();
   }
 } /* mem_pools_free */
 

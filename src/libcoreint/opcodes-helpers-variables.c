@@ -79,7 +79,7 @@ ecma_completion_value_t
 get_variable_value (int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
-                                                        See also: do_strict_eval_arguments_check */
+                                                          See also: do_strict_eval_arguments_check */
 {
   ecma_completion_value_t ret_value;
 
@@ -101,16 +101,11 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
                                             var_name_string_p,
                                             int_data->is_strict);
 
-    if (unlikely (do_eval_or_arguments_check
-                  && do_strict_eval_arguments_check (ref)))
-    {
-      /* SyntaxError should be treated as an early error */
-      JERRY_UNREACHABLE ();
-    }
-    else
-    {
-      ret_value = ecma_op_get_value (ref);
-    }
+    /* SyntaxError should be treated as an early error */
+    JERRY_ASSERT (!do_eval_or_arguments_check
+                  || !do_strict_eval_arguments_check (ref));
+
+    ret_value = ecma_op_get_value (ref);
 
     ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);
@@ -155,15 +150,10 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
                                             var_name_string_p,
                                             int_data->is_strict);
 
-    if (unlikely (do_strict_eval_arguments_check (ref)))
-    {
-      /* SyntaxError should be treated as an early error */
-      JERRY_UNREACHABLE ();
-    }
-    else
-    {
-      ret_value = ecma_op_put_value (ref, value);
-    }
+    /* SyntaxError should be treated as an early error */
+    JERRY_ASSERT (!do_strict_eval_arguments_check (ref));
+
+    ret_value = ecma_op_put_value (ref, value);
 
     ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);

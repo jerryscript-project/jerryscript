@@ -105,7 +105,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
     JERRY_ASSERT (!do_eval_or_arguments_check
                   || !do_strict_eval_arguments_check (ref));
 
-    ret_value = ecma_op_get_value (ref);
+    ret_value = ecma_op_get_value_lex_env_base (ref);
 
     ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);
@@ -153,7 +153,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
     /* SyntaxError should be treated as an early error */
     JERRY_ASSERT (!do_strict_eval_arguments_check (ref));
 
-    ret_value = ecma_op_put_value (ref, value);
+    ret_value = ecma_op_put_value_lex_env_base (ref, value);
 
     ecma_deref_ecma_string (var_name_string_p);
     ecma_free_reference (ref);

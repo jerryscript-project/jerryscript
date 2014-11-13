@@ -29,9 +29,12 @@
  */
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
-extern ecma_completion_value_t ecma_op_get_value (ecma_reference_t ref);
-extern ecma_completion_value_t ecma_op_put_value (ecma_reference_t ref,
-                                                  ecma_value_t value);
+extern ecma_completion_value_t ecma_op_get_value_lex_env_base (ecma_reference_t ref);
+extern ecma_completion_value_t ecma_op_get_value_object_base (ecma_reference_t ref);
+extern ecma_completion_value_t ecma_op_put_value_lex_env_base (ecma_reference_t ref,
+                                                               ecma_value_t value);
+extern ecma_completion_value_t ecma_op_put_value_object_base (ecma_reference_t ref,
+                                                              ecma_value_t value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
 extern ecma_completion_value_t ecma_op_has_binding (ecma_object_t *lex_env_p,

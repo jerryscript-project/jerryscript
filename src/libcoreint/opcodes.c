@@ -1042,7 +1042,7 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
                                               prop_name_string_p,
                                               int_data->is_strict);
 
-  ECMA_TRY_CATCH (prop_value, ecma_op_get_value (ref), ret_value);
+  ECMA_TRY_CATCH (prop_value, ecma_op_get_value_object_base (ref), ret_value);
 
   ret_value = set_variable_value (int_data, lhs_var_idx, prop_value.u.value);
 
@@ -1090,7 +1090,7 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
                                               int_data->is_strict);
 
   ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
-  ret_value = ecma_op_put_value (ref, rhs_value.u.value);
+  ret_value = ecma_op_put_value_object_base (ref, rhs_value.u.value);
   ECMA_FINALIZE (rhs_value);
 
   ecma_free_reference (ref);
@@ -1324,7 +1324,7 @@ evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
     }
     else
     {
-      ret_value = ecma_op_get_value (ref);
+      ret_value = ecma_op_get_value_lex_env_base (ref);
     }
 
     ecma_free_reference (ref);

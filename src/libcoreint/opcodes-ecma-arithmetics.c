@@ -54,8 +54,8 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
   ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
 
   ecma_number_t *left_p, *right_p, *res_p;
-  left_p = (ecma_number_t*) ECMA_GET_POINTER (num_left_value.u.value.value);
-  right_p = (ecma_number_t*) ECMA_GET_POINTER (num_right_value.u.value.value);
+  left_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_left_value.u.value.value);
+  right_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_right_value.u.value.value);
 
   res_p = ecma_alloc_number ();
 
@@ -131,8 +131,8 @@ opfunc_addition (opcode_t opdata, /**< operation data */
     ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value.u.value), ret_value);
     ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value.u.value), ret_value);
 
-    ecma_string_t *string1_p = ECMA_GET_POINTER (str_left_value.u.value.value);
-    ecma_string_t *string2_p = ECMA_GET_POINTER (str_right_value.u.value.value);
+    ecma_string_t *string1_p = ECMA_GET_NON_NULL_POINTER (str_left_value.u.value.value);
+    ecma_string_t *string2_p = ECMA_GET_NON_NULL_POINTER (str_right_value.u.value.value);
 
     ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
 
@@ -322,7 +322,7 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_TRY_CATCH (num_value, ecma_op_to_number (var_value.u.value), ret_value);
 
-  ecma_number_t *var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
+  ecma_number_t *var_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_value.u.value.value);
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
                                   ecma_make_number_value (var_p));
@@ -356,7 +356,7 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (num_value, ecma_op_to_number (var_value.u.value), ret_value);
 
   ecma_number_t *var_p, *res_p;
-  var_p = (ecma_number_t*) ECMA_GET_POINTER (num_value.u.value.value);
+  var_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_value.u.value.value);
 
   res_p = ecma_alloc_number ();
   if (ecma_number_is_nan (*var_p))

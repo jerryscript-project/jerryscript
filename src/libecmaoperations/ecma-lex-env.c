@@ -47,7 +47,7 @@ ecma_get_lex_env_binding_object (ecma_object_t* obj_lex_env_p) /**< object lexic
   JERRY_ASSERT(binding_obj_prop_p != NULL
                && binding_obj_prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
 
-  return ECMA_GET_POINTER(binding_obj_prop_p->u.internal_property.value);
+  return ECMA_GET_NON_NULL_POINTER (binding_obj_prop_p->u.internal_property.value);
 } /* ecma_get_lex_env_binding_object */
 
 /**

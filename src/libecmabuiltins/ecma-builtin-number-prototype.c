@@ -62,13 +62,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
 
   if (this.value_type == ECMA_TYPE_NUMBER)
   {
-    ecma_number_t *this_arg_number_p = ECMA_GET_POINTER (this.value);
+    ecma_number_t *this_arg_number_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
     this_arg_number = *this_arg_number_p;
   }
   else if (this.value_type == ECMA_TYPE_OBJECT)
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (this.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -77,7 +77,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-      ecma_number_t *prim_value_num_p = ECMA_GET_POINTER (prim_value_prop_p->u.internal_property.value);
+      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
       this_arg_number = *prim_value_num_p;
     }
     else
@@ -134,7 +134,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argu
   }
   else if (this.value_type == ECMA_TYPE_OBJECT)
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (this.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -143,7 +143,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argu
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-      ecma_number_t *prim_value_num_p = ECMA_GET_POINTER (prim_value_prop_p->u.internal_property.value);
+      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
 
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;

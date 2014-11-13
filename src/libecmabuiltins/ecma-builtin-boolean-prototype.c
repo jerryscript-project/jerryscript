@@ -100,7 +100,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this) /**< this arg
   }
   else if (this.value_type == ECMA_TYPE_OBJECT)
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (this.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 

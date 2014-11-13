@@ -63,7 +63,7 @@ ecma_builtin_reference_error_dispatch_call (ecma_value_t *arguments_list_p, /**<
                     ecma_op_to_string (arguments_list_p[0]),
                     ret_value);
 
-    ecma_string_t *message_string_p = ECMA_GET_POINTER (msg_to_str_completion.u.value.value);
+    ecma_string_t *message_string_p = ECMA_GET_NON_NULL_POINTER (msg_to_str_completion.u.value.value);
     ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_REFERENCE,
                                                                               message_string_p);
     ret_value = ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));

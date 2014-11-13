@@ -94,7 +94,7 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
     return false;
   }
 
-  ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
+  ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
@@ -118,7 +118,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
     return false;
   }
 
-  ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
+  ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
@@ -339,7 +339,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
 
     ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
     JERRY_ASSERT (formal_parameter_name_value.value_type == ECMA_TYPE_STRING);
-    ecma_string_t *formal_parameter_name_string_p = ECMA_GET_POINTER (formal_parameter_name_value.value);
+    ecma_string_t *formal_parameter_name_string_p = ECMA_GET_NON_NULL_POINTER (formal_parameter_name_value.value);
     
     bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
     if (!arg_already_declared)
@@ -395,7 +395,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
       return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
     }
 
-    ecma_object_t* v_obj_p = ECMA_GET_POINTER (value.value);
+    ecma_object_t* v_obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
     JERRY_ASSERT (v_obj_p != NULL);
 
     ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
@@ -412,7 +412,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     }
     else
     {
-      ecma_object_t *prototype_obj_p = ECMA_GET_POINTER (prototype_obj_value.u.value.value);
+      ecma_object_t *prototype_obj_p = ECMA_GET_NON_NULL_POINTER (prototype_obj_value.u.value.value);
       JERRY_ASSERT (prototype_obj_p != NULL);
 
       do
@@ -487,7 +487,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
     ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
 
-    ecma_object_t *scope_p = ECMA_GET_POINTER(scope_prop_p->u.internal_property.value);
+    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER(scope_prop_p->u.internal_property.value);
     uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
     bool is_strict;
@@ -599,7 +599,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ecma_object_t *prototype_p;
     if (func_obj_prototype_prop_value.u.value.value_type == ECMA_TYPE_OBJECT)
     {
-      prototype_p = ECMA_GET_POINTER (func_obj_prototype_prop_value.u.value.value);
+      prototype_p = ECMA_GET_NON_NULL_POINTER (func_obj_prototype_prop_value.u.value.value);
       ecma_ref_object (prototype_p);
     }
     else

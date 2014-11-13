@@ -309,8 +309,8 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_CONCATENATION:
     {
-      ecma_string_t *part1_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string1_cp);
-      ecma_string_t *part2_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string2_cp);
+      ecma_string_t *part1_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp);
+      ecma_string_t *part2_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp);
 
       new_str_p = ecma_concat_ecma_strings (part1_p, part2_p);
 
@@ -319,7 +319,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (string_desc_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.number_cp);
 
       new_str_p = ecma_new_ecma_string_from_number (*num_p);
 
@@ -328,7 +328,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_chunk_t *str_heap_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
+      ecma_collection_chunk_t *str_heap_chunk_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.chunk_cp);
       JERRY_ASSERT (str_heap_chunk_p != NULL);
 
       new_str_p = ecma_alloc_string ();
@@ -432,7 +432,7 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
   {
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
+      ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (string_p->u.chunk_cp);
 
       JERRY_ASSERT (chunk_p != NULL);
 
@@ -449,7 +449,7 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (string_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_p->u.number_cp);
 
       ecma_dealloc_number (num_p);
 
@@ -459,8 +459,8 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     {
       ecma_string_t *string1_p, *string2_p;
 
-      string1_p = ECMA_GET_POINTER (string_p->u.concatenation.string1_cp);
-      string2_p = ECMA_GET_POINTER (string_p->u.concatenation.string2_cp);
+      string1_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string1_cp);
+      string2_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string2_cp);
 
       ecma_deref_ecma_string (string1_p);
       ecma_deref_ecma_string (string2_p);
@@ -498,7 +498,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (str_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (str_p->u.number_cp);
 
       return *num_p;
     }
@@ -590,7 +590,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     {
       ecma_length_t string_length = string_desc_p->length;
 
-      ecma_collection_chunk_t *string_chunk_p = ECMA_GET_POINTER (string_desc_p->u.chunk_cp);
+      ecma_collection_chunk_t *string_chunk_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.chunk_cp);
 
       const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
 
@@ -634,7 +634,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (string_desc_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.number_cp);
 
       ecma_length_t length = ecma_number_to_zt_string (*num_p, buffer_p, buffer_size);
 
@@ -646,8 +646,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_CONCATENATION:
     {
-      const ecma_string_t *string1_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string1_cp);
-      const ecma_string_t *string2_p = ECMA_GET_POINTER (string_desc_p->u.concatenation.string2_cp);
+      const ecma_string_t *string1_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp);
+      const ecma_string_t *string2_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp);
 
       ecma_char_t *dest_p = buffer_p;
 
@@ -703,8 +703,8 @@ ecma_compare_strings_in_heap_chunks (const ecma_string_t *string1_p, /* ecma-str
                 && string2_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
   JERRY_ASSERT (ecma_string_get_length (string1_p) == ecma_string_get_length (string2_p));
 
-  ecma_collection_chunk_t *string1_chunk_p = ECMA_GET_POINTER (string1_p->u.chunk_cp);
-  ecma_collection_chunk_t *string2_chunk_p = ECMA_GET_POINTER (string2_p->u.chunk_cp);
+  ecma_collection_chunk_t *string1_chunk_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.chunk_cp);
+  ecma_collection_chunk_t *string2_chunk_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.chunk_cp);
 
   ecma_length_t chars_left = string1_p->length;
   const ecma_length_t max_chars_in_chunk = sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
@@ -744,7 +744,7 @@ ecma_compare_ecma_string_to_zt_string (const ecma_string_t *string_p, /**< ecma-
 {
   JERRY_ASSERT (string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
 
-  ecma_collection_chunk_t *string_chunk_p = ECMA_GET_POINTER (string_p->u.chunk_cp);
+  ecma_collection_chunk_t *string_chunk_p = ECMA_GET_NON_NULL_POINTER (string_p->u.chunk_cp);
 
   ecma_length_t chars_left = string_p->length;
   const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
@@ -935,8 +935,8 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
       case ECMA_STRING_CONTAINER_HEAP_NUMBER:
       {
         ecma_number_t *num1_p, *num2_p;
-        num1_p = ECMA_GET_POINTER (string1_p->u.number_cp);
-        num2_p = ECMA_GET_POINTER (string2_p->u.number_cp);
+        num1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.number_cp);
+        num2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.number_cp);
 
         if (ecma_number_is_nan (*num1_p)
             && ecma_number_is_nan (*num2_p))
@@ -1115,8 +1115,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   {
     const ecma_string_t *string1_p, *string2_p;
 
-    string1_p = ECMA_GET_POINTER (string_p->u.concatenation.string1_cp);
-    string2_p = ECMA_GET_POINTER (string_p->u.concatenation.string2_cp);
+    string1_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string1_cp);
+    string2_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string2_cp);
 
     return ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p);
   }

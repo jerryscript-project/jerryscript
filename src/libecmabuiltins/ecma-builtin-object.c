@@ -319,13 +319,13 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __unused, /**<
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (arg1.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (arg1.value);
 
     ECMA_TRY_CATCH (name_str_value,
                     ecma_op_to_string (arg2),
                     ret_value);
 
-    ecma_string_t *name_str_p = ECMA_GET_POINTER (name_str_value.u.value.value);
+    ecma_string_t *name_str_p = ECMA_GET_NON_NULL_POINTER (name_str_value.u.value.value);
 
     ecma_property_descriptor_t prop_desc;
 

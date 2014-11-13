@@ -243,7 +243,7 @@ ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< 
     return;
   }
 
-  ecma_object_t *ref_obj_p = ECMA_GET_POINTER(value.value);
+  ecma_object_t *ref_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
   JERRY_ASSERT(ref_obj_p != NULL);
 
   ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, ref_obj_p);
@@ -323,7 +323,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
        property_p != NULL;
        property_p = next_property_p)
   {
-    next_property_p = ECMA_GET_POINTER(property_p->next_property_p);
+    next_property_p = ECMA_GET_NON_NULL_POINTER(property_p->next_property_p);
 
     switch ((ecma_property_type_t) property_p->type)
     {
@@ -333,7 +333,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         if (value.value_type == ECMA_TYPE_OBJECT)
         {
-          ecma_object_t *value_obj_p = ECMA_GET_POINTER(value.value);
+          ecma_object_t *value_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
           if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
           {
@@ -423,7 +423,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
           case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
           {
-            ecma_object_t *obj_p = ECMA_GET_POINTER(property_value);
+            ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(property_value);
 
             if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
             {

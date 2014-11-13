@@ -130,8 +130,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_number)
   {
-    ecma_number_t *x_num_p = (ecma_number_t*)ECMA_GET_POINTER(x.value);
-    ecma_number_t *y_num_p = (ecma_number_t*)ECMA_GET_POINTER(y.value);
+    ecma_number_t *x_num_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(x.value);
+    ecma_number_t *y_num_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(y.value);
 
     if (ecma_number_is_nan (*x_num_p)
         && ecma_number_is_nan (*y_num_p))
@@ -150,8 +150,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_string)
   {
-    ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
-    ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
+    ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER(x.value);
+    ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER(y.value);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
@@ -163,7 +163,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   JERRY_ASSERT(is_x_object);
 
-  return (ECMA_GET_POINTER(x.value) == ECMA_GET_POINTER(y.value));
+  return (ECMA_GET_NON_NULL_POINTER(x.value) == ECMA_GET_NON_NULL_POINTER(y.value));
 } /* ecma_op_same_value */
 
 /**
@@ -190,7 +190,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
 
     case ECMA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = ECMA_GET_POINTER (value.value);
+      ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
 
       return ecma_op_object_default_value (obj_p, preferred_type);
     }
@@ -216,7 +216,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
   {
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER(value.value);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
       if (ecma_number_is_nan (*num_p)
           || ecma_number_is_zero (*num_p))
@@ -250,7 +250,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *str_p = ECMA_GET_POINTER(value.value);
+      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
       return ecma_make_simple_completion_value ((ecma_string_get_length (str_p) == 0) ? ECMA_SIMPLE_VALUE_FALSE
                                                 : ECMA_SIMPLE_VALUE_TRUE);
@@ -323,7 +323,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *str_p = ECMA_GET_POINTER (value.value);
+      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (value.value);
 
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = ecma_string_to_number (str_p);
@@ -418,7 +418,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (value.value);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (value.value);
       res_p = ecma_new_ecma_string_from_number (*num_p);
 
       break;
@@ -426,7 +426,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
     case ECMA_TYPE_STRING:
     {
-      res_p = ECMA_GET_POINTER (value.value);
+      res_p = ECMA_GET_NON_NULL_POINTER (value.value);
       res_p = ecma_copy_or_ref_ecma_string (res_p);
 
       break;
@@ -649,7 +649,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_value.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_value.value);
 
     // 2.
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
@@ -806,7 +806,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
           {
             JERRY_ASSERT (get_prop_value.u.value.value_type == ECMA_TYPE_OBJECT);
 
-            ecma_object_t *get_p = ECMA_GET_POINTER (get_prop_value.u.value.value);
+            ecma_object_t *get_p = ECMA_GET_NON_NULL_POINTER (get_prop_value.u.value.value);
             ecma_ref_object (get_p);
 
             prop_desc.get_p = get_p;
@@ -850,7 +850,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
           {
             JERRY_ASSERT (set_prop_value.u.value.value_type == ECMA_TYPE_OBJECT);
 
-            ecma_object_t *set_p = ECMA_GET_POINTER (set_prop_value.u.value.value);
+            ecma_object_t *set_p = ECMA_GET_NON_NULL_POINTER (set_prop_value.u.value.value);
             ecma_ref_object (set_p);
 
             prop_desc.set_p = set_p;

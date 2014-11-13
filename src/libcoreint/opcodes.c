@@ -177,7 +177,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
-  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (old_num_value.u.value.value);
   *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
@@ -227,7 +227,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
-  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (old_num_value.u.value.value);
   *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
@@ -277,7 +277,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
-  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (old_num_value.u.value.value);
   *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
@@ -325,7 +325,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   // 4.
   ecma_number_t* new_num_p = ecma_alloc_number ();
 
-  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_POINTER (old_num_value.u.value.value);
+  ecma_number_t* old_num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (old_num_value.u.value.value);
   *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
 
   // 5.
@@ -635,7 +635,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     }
     else
     {
-      ecma_object_t *func_obj_p = ECMA_GET_POINTER (func_value.u.value.value);
+      ecma_object_t *func_obj_p = ECMA_GET_NON_NULL_POINTER (func_value.u.value.value);
 
       ECMA_TRY_CATCH (call_completion,
                       ecma_op_function_call (func_obj_p, this_value.u.value, arg_values, args_number),
@@ -707,7 +707,7 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
     }
     else
     {
-      ecma_object_t *constructor_obj_p = ECMA_GET_POINTER (constructor_value.u.value.value);
+      ecma_object_t *constructor_obj_p = ECMA_GET_NON_NULL_POINTER (constructor_value.u.value.value);
 
       ECMA_TRY_CATCH (construction_completion,
                       ecma_op_function_construct (constructor_obj_p,
@@ -861,7 +861,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
         bool is_throw_syntax_error = false;
 
-        ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.u.value.value);
+        ecma_string_t *prop_name_string_p = ECMA_GET_NON_NULL_POINTER (prop_name_str_value.u.value.value);
         ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
 
         const bool is_previous_undefined = (previous_p == NULL);
@@ -901,7 +901,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           JERRY_ASSERT (value_for_prop_desc.u.value.value_type == ECMA_TYPE_OBJECT);
 
           prop_desc.is_get_defined = true;
-          prop_desc.get_p = ECMA_GET_POINTER (value_for_prop_desc.u.value.value);
+          prop_desc.get_p = ECMA_GET_NON_NULL_POINTER (value_for_prop_desc.u.value.value);
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -914,7 +914,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           JERRY_ASSERT (value_for_prop_desc.u.value.value_type == ECMA_TYPE_OBJECT);
 
           prop_desc.is_set_defined = true;
-          prop_desc.set_p = ECMA_GET_POINTER (value_for_prop_desc.u.value.value);
+          prop_desc.set_p = ECMA_GET_NON_NULL_POINTER (value_for_prop_desc.u.value.value);
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -1036,7 +1036,7 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.u.value), ret_value);
   ECMA_TRY_CATCH (prop_name_str_value, ecma_op_to_string (prop_name_value.u.value), ret_value);
 
-  ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.u.value.value);
+  ecma_string_t *prop_name_string_p = ECMA_GET_NON_NULL_POINTER (prop_name_str_value.u.value.value);
   ecma_reference_t ref = ecma_make_reference (base_value.u.value,
                                               prop_name_string_p,
                                               int_data->is_strict);
@@ -1083,7 +1083,7 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.u.value), ret_value);
   ECMA_TRY_CATCH (prop_name_str_value, ecma_op_to_string (prop_name_value.u.value), ret_value);
 
-  ecma_string_t *prop_name_string_p = ECMA_GET_POINTER (prop_name_str_value.u.value.value);
+  ecma_string_t *prop_name_string_p = ECMA_GET_NON_NULL_POINTER (prop_name_str_value.u.value.value);
   ecma_reference_t ref = ecma_make_reference (base_value.u.value,
                                               prop_name_string_p,
                                               int_data->is_strict);
@@ -1215,7 +1215,7 @@ opfunc_with (opcode_t opdata, /**< operation data */
                   ecma_op_to_object (expr_value.u.value),
                   ret_value);
 
-  ecma_object_t *obj_p = ECMA_GET_POINTER (obj_expr_value.u.value.value);
+  ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_expr_value.u.value.value);
 
   ecma_object_t *old_env_p = int_data->lex_env_p;
   ecma_object_t *new_env_p = ecma_create_object_lex_env (old_env_p,
@@ -1467,11 +1467,12 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
     else
     {
       JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
-      ecma_object_t *bindings_p = ECMA_GET_POINTER (ref.base.value);
+      ecma_object_t *bindings_p = ECMA_GET_NON_NULL_POINTER (ref.base.value);
       JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
       ECMA_TRY_CATCH (delete_completion,
-                      ecma_op_delete_binding (bindings_p, ECMA_GET_POINTER (ref.referenced_name_cp)),
+                      ecma_op_delete_binding (bindings_p,
+                                              ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp)),
                       ret_value);
 
       ret_value = set_variable_value (int_data, dst_var_idx, delete_completion.u.value);
@@ -1514,7 +1515,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (str_name_value, ecma_op_to_string (name_value.u.value), ret_value);
 
   JERRY_ASSERT (str_name_value.u.value.value_type == ECMA_TYPE_STRING);
-  ecma_string_t *name_string_p = ECMA_GET_POINTER (str_name_value.u.value.value);
+  ecma_string_t *name_string_p = ECMA_GET_NON_NULL_POINTER (str_name_value.u.value.value);
 
   if (ecma_is_value_undefined (base_value.u.value))
   {
@@ -1533,7 +1534,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
     ECMA_TRY_CATCH (obj_value, ecma_op_to_object (base_value.u.value), ret_value);
 
     JERRY_ASSERT (obj_value.u.value.value_type == ECMA_TYPE_OBJECT);
-    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_value.u.value.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_value.u.value.value);
     JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
     ECMA_TRY_CATCH (delete_op_completion,

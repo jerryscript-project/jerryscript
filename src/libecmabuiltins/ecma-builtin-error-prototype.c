@@ -65,7 +65,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (this.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
     ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
 
     ECMA_TRY_CATCH (name_get_completion,
@@ -119,8 +119,8 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
         JERRY_ASSERT (name_to_str_completion.u.value.value_type == ECMA_TYPE_STRING);
         JERRY_ASSERT (msg_to_str_completion.u.value.value_type == ECMA_TYPE_STRING);
 
-        ecma_string_t *name_string_p = ECMA_GET_POINTER (name_to_str_completion.u.value.value);
-        ecma_string_t *msg_string_p = ECMA_GET_POINTER (msg_to_str_completion.u.value.value);
+        ecma_string_t *name_string_p = ECMA_GET_NON_NULL_POINTER (name_to_str_completion.u.value.value);
+        ecma_string_t *msg_string_p = ECMA_GET_NON_NULL_POINTER (msg_to_str_completion.u.value.value);
 
         ecma_string_t *ret_str_p;
         

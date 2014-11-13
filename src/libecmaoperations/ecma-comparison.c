@@ -73,8 +73,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_number)
     { // c.
-      ecma_number_t x_num = *(ecma_number_t*)(ECMA_GET_POINTER(x.value));
-      ecma_number_t y_num = *(ecma_number_t*)(ECMA_GET_POINTER(y.value));
+      ecma_number_t x_num = *(ecma_number_t*)(ECMA_GET_NON_NULL_POINTER(x.value));
+      ecma_number_t y_num = *(ecma_number_t*)(ECMA_GET_NON_NULL_POINTER(y.value));
 
       bool is_equal;
 
@@ -98,8 +98,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_string)
     { // d.
-      ecma_string_t* x_str_p = ECMA_GET_POINTER(x.value);
-      ecma_string_t* y_str_p = ECMA_GET_POINTER(y.value);
+      ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER(x.value);
+      ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER(y.value);
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
@@ -267,8 +267,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     // d. If x is +0 and y is -0, return true.
     // e. If x is -0 and y is +0, return true.
 
-    ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_POINTER (x.value));
-    ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_POINTER (y.value));
+    ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_NON_NULL_POINTER (x.value));
+    ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_NON_NULL_POINTER (y.value));
 
     if (ecma_number_is_nan (x_num)
         || ecma_number_is_nan (y_num))
@@ -291,8 +291,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // (same length and same characters in corresponding positions); otherwise, return false.
   if (is_x_string)
   {
-    ecma_string_t* x_str_p = ECMA_GET_POINTER (x.value);
-    ecma_string_t* y_str_p = ECMA_GET_POINTER (y.value);
+    ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER (x.value);
+    ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER (y.value);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
@@ -306,7 +306,7 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // 7. Return true if x and y refer to the same object. Otherwise, return false.
   JERRY_ASSERT (is_x_object);
 
-  return (ECMA_GET_POINTER (x.value) == ECMA_GET_POINTER (y.value));
+  return (ECMA_GET_NON_NULL_POINTER (x.value) == ECMA_GET_NON_NULL_POINTER (y.value));
 } /* ecma_op_strict_equality_compare */
 
 /**
@@ -351,8 +351,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     // b.
     ECMA_TRY_CATCH(ny, ecma_op_to_number (py.u.value), ret_value);
 
-    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_POINTER(nx.u.value.value);
-    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_POINTER(ny.u.value.value);
+    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(nx.u.value.value);
+    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(ny.u.value.value);
 
     if (ecma_number_is_nan (*num_x_p)
         || ecma_number_is_nan (*num_y_p))
@@ -418,8 +418,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   { // 4.
     JERRY_ASSERT (is_px_string && is_py_string);
 
-    ecma_string_t *str_x_p = ECMA_GET_POINTER (px.u.value.value);
-    ecma_string_t *str_y_p = ECMA_GET_POINTER (py.u.value.value);
+    ecma_string_t *str_x_p = ECMA_GET_NON_NULL_POINTER (px.u.value.value);
+    ecma_string_t *str_y_p = ECMA_GET_NON_NULL_POINTER (py.u.value.value);
 
     bool is_px_less = ecma_compare_ecma_strings_relational (str_x_p, str_y_p);
 

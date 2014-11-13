@@ -95,7 +95,7 @@ void
 ecma_free_reference (ecma_reference_t ref) /**< reference */
 {
   ecma_free_value (ref.base, true);
-  ecma_deref_ecma_string (ECMA_GET_POINTER (ref.referenced_name_cp));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp));
 } /* ecma_free_reference */
 
 /**

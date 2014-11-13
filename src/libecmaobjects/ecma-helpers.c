@@ -530,11 +530,11 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
-      property_name_p = ECMA_GET_POINTER(property_p->u.named_data_property.name_p);
+      property_name_p = ECMA_GET_NON_NULL_POINTER(property_p->u.named_data_property.name_p);
     }
     else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      property_name_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.name_p);
+      property_name_p = ECMA_GET_NON_NULL_POINTER(property_p->u.named_accessor_property.name_p);
     }
     else
     {
@@ -606,7 +606,7 @@ ecma_free_named_data_property (ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-  ecma_deref_ecma_string (ECMA_GET_POINTER (property_p->u.named_data_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property (property_p);
@@ -620,7 +620,7 @@ ecma_free_named_accessor_property (ecma_property_t *property_p) /**< the propert
 {
   JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  ecma_deref_ecma_string (ECMA_GET_POINTER (property_p->u.named_accessor_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_accessor_property.name_p));
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */
@@ -641,7 +641,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
     {
-      ecma_free_values_collection (ECMA_GET_POINTER(property_value), true);
+      ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER(property_value), true);
 
       break;
     }
@@ -650,14 +650,14 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     {
       if (property_value != ECMA_NULL_POINTER)
       {
-        ecma_free_values_collection (ECMA_GET_POINTER(property_value), false);
+        ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER(property_value), false);
       }
       break;
     }
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
     {
-      ecma_string_t *str_p = ECMA_GET_POINTER (property_value);
+      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (property_value);
       ecma_deref_ecma_string (str_p);
 
       break;
@@ -665,7 +665,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* pointer to a ecma_number_t */
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER (property_value);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (property_value);
       ecma_dealloc_number (num_p);
 
       break;

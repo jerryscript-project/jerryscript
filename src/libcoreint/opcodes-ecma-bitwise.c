@@ -54,8 +54,8 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
   ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
 
   ecma_number_t *left_p, *right_p;
-  left_p = (ecma_number_t*) ECMA_GET_POINTER (num_left_value.u.value.value);
-  right_p = (ecma_number_t*) ECMA_GET_POINTER (num_right_value.u.value.value);
+  left_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_left_value.u.value.value);
+  right_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_right_value.u.value.value);
 
   ecma_number_t* res_p = ecma_alloc_number ();
 

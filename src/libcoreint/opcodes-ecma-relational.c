@@ -259,7 +259,7 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
   }
   else
   {
-    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.u.value.value);
+    ecma_object_t *right_value_obj_p = ECMA_GET_NON_NULL_POINTER (right_value.u.value.value);
 
     ECMA_TRY_CATCH (is_instance_of,
                     ecma_op_object_has_instance (right_value_obj_p,
@@ -309,8 +309,8 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
     ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value.u.value), ret_value);
 
     ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
-    ecma_string_t *left_value_prop_name_p = ECMA_GET_POINTER (str_left_value.u.value.value);
-    ecma_object_t *right_value_obj_p = ECMA_GET_POINTER (right_value.u.value.value);
+    ecma_string_t *left_value_prop_name_p = ECMA_GET_NON_NULL_POINTER (str_left_value.u.value.value);
+    ecma_object_t *right_value_obj_p = ECMA_GET_NON_NULL_POINTER (right_value.u.value.value);
 
     if (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p))
     {

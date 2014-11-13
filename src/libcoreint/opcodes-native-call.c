@@ -63,7 +63,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
         JERRY_ASSERT (arg_values[0].value_type == ECMA_TYPE_NUMBER);
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_toggle (int_num);
 
@@ -74,7 +74,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
         JERRY_ASSERT (arg_values[0].value_type == ECMA_TYPE_NUMBER);
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_on (int_num);
 
@@ -85,7 +85,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
         JERRY_ASSERT (arg_values[0].value_type == ECMA_TYPE_NUMBER);
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_off (int_num);
 
@@ -96,7 +96,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
         JERRY_ASSERT (arg_values[0].value_type == ECMA_TYPE_NUMBER);
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_blink_once (int_num);
 
@@ -107,7 +107,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
         JERRY_ASSERT (arg_values[0].value_type == ECMA_TYPE_NUMBER);
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         wait_ms (int_num);
 
@@ -123,7 +123,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
                         ecma_op_to_string (arg_values[0]),
                         ret_value);
 
-        ecma_string_t *str_p = ECMA_GET_POINTER (str_value.u.value.value);
+        ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (str_value.u.value.value);
 
         int32_t chars = ecma_string_get_length (str_p);
         JERRY_ASSERT (chars >= 0);

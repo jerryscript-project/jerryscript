@@ -48,7 +48,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
     return conv_to_num_completion;
   }
 
-  ecma_number_t *prim_value_p = ECMA_GET_POINTER (conv_to_num_completion.u.value.value);
+  ecma_number_t *prim_value_p = ECMA_GET_NON_NULL_POINTER (conv_to_num_completion.u.value.value);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);

@@ -66,7 +66,7 @@ ecma_builtin_math_object_abs (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ecma_number_t *num_p = ecma_alloc_number ();
 
-  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -202,7 +202,7 @@ ecma_builtin_math_object_exp (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ecma_number_t *num_p = ecma_alloc_number ();
 
-  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -272,7 +272,7 @@ ecma_builtin_math_object_log (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ecma_number_t *num_p = ecma_alloc_number ();
 
-  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -332,7 +332,7 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __unused, /**< 'this' argume
 
     if (!is_just_convert)
     {
-      ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+      ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
@@ -423,7 +423,7 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __unused, /**< 'this' argume
 
     if (!is_just_convert)
     {
-      ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+      ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
@@ -509,8 +509,8 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ecma_number_t *num_p = ecma_alloc_number ();
 
-  const ecma_number_t x = *(ecma_number_t*) ECMA_GET_POINTER (arg1_num_value.u.value.value);
-  const ecma_number_t y = *(ecma_number_t*) ECMA_GET_POINTER (arg2_num_value.u.value.value);
+  const ecma_number_t x = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg1_num_value.u.value.value);
+  const ecma_number_t y = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg2_num_value.u.value.value);
 
   if (ecma_number_is_nan (y)
       || (ecma_number_is_nan (x)
@@ -787,7 +787,7 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __unused, /**< 'this' argu
 
   ecma_number_t *num_p = ecma_alloc_number ();
 
-  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
 
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_zero (arg_num)
@@ -859,7 +859,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t this_arg __unused, /**< 'this' argum
                   ecma_op_to_number (arg),
                   ret_value);
 
-  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_POINTER (arg_num_value.u.value.value);
+  const ecma_number_t arg_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
   ecma_number_t ret_num;
 
   if (ecma_number_is_nan (arg_num)

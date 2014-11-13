@@ -56,13 +56,13 @@ ecma_op_get_value_lex_env_base (ecma_reference_t ref) /**< ECMA-reference */
   }
 
   // 5.
-  ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
+  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER(base.value);
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
   // 5.a
   return ecma_op_get_binding_value (lex_env_p,
-                                    ECMA_GET_POINTER (ref.referenced_name_cp),
+                                    ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
                                     ref.is_strict);
 } /* ecma_op_get_value_lex_env_base */
 
@@ -83,7 +83,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
                                    || base.value_type == ECMA_TYPE_NUMBER
                                    || base.value_type == ECMA_TYPE_STRING);
   const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
-                                && !(ecma_is_lexical_environment ((ecma_object_t*)ECMA_GET_POINTER(base.value))));
+                                && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -98,7 +98,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     JERRY_ASSERT(obj_p != NULL
                  && !ecma_is_lexical_environment (obj_p));
 
-    return ecma_op_object_get (obj_p, ECMA_GET_POINTER (ref.referenced_name_cp));
+    return ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp));
   }
   else
   {
@@ -107,11 +107,11 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
 
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_base.u.value.value);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ret_value = ecma_op_object_get (obj_p, ECMA_GET_POINTER (ref.referenced_name_cp));
+    ret_value = ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp));
 
     ECMA_FINALIZE (obj_base);
 
@@ -148,7 +148,7 @@ ecma_op_put_value_lex_env_base (ecma_reference_t ref, /**< ECMA-reference */
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
-                                                               ECMA_GET_POINTER (ref.referenced_name_cp),
+                                                               ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
                                                                value,
                                                                false);
 
@@ -162,13 +162,13 @@ ecma_op_put_value_lex_env_base (ecma_reference_t ref, /**< ECMA-reference */
   }
 
   // 5.
-  ecma_object_t *lex_env_p = ECMA_GET_POINTER(base.value);
+  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER(base.value);
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
   // 5.a
   return ecma_op_set_mutable_binding (lex_env_p,
-                                      ECMA_GET_POINTER (ref.referenced_name_cp),
+                                      ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
                                       value,
                                       ref.is_strict);
 } /* ecma_op_put_value_lex_env_base */
@@ -210,7 +210,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                                    || base.value_type == ECMA_TYPE_NUMBER
                                    || base.value_type == ECMA_TYPE_STRING);
   const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
-                                && !(ecma_is_lexical_environment ((ecma_object_t*)ECMA_GET_POINTER(base.value))));
+                                && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -221,7 +221,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
   {
     // 4.b case 1
 
-    ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(base.value);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
@@ -229,7 +229,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
 
     ECMA_TRY_CATCH (put_completion,
                     ecma_op_object_put (obj_p,
-                                        ECMA_GET_POINTER (ref.referenced_name_cp),
+                                        ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
                                         value,
                                         ref.is_strict),
                     ret_value);
@@ -248,11 +248,11 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     // sub_1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ECMA_GET_POINTER (obj_base.u.value.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_base.u.value.value);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ecma_string_t *referenced_name_p = ECMA_GET_POINTER (ref.referenced_name_cp);
+    ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp);
 
     // sub_2.
     if (!ecma_op_object_can_put (obj_p, referenced_name_p))
@@ -280,7 +280,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
         // sub_6.
         JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-        ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
+        ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(prop_p->u.named_accessor_property.set_p);
         JERRY_ASSERT (setter_p != NULL);
 
         ECMA_TRY_CATCH (call_completion,

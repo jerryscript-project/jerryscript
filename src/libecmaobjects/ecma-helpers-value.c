@@ -193,7 +193,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
     }
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_POINTER(value.value);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
       JERRY_ASSERT(num_p != NULL);
 
       ecma_number_t *number_copy_p = ecma_alloc_number ();
@@ -209,7 +209,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
+      ecma_string_t *string_p = ECMA_GET_NON_NULL_POINTER(value.value);
       JERRY_ASSERT(string_p != NULL);
 
       string_p = ecma_copy_or_ref_ecma_string (string_p);
@@ -224,7 +224,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
     }
     case ECMA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = ECMA_GET_POINTER(value.value);
+      ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
       JERRY_ASSERT(obj_p != NULL);
 
       if (do_ref_if_object)
@@ -259,14 +259,14 @@ ecma_free_value (ecma_value_t value, /**< value description */
 
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *number_p = ECMA_GET_POINTER(value.value);
+      ecma_number_t *number_p = ECMA_GET_NON_NULL_POINTER(value.value);
       ecma_dealloc_number (number_p);
       break;
     }
 
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *string_p = ECMA_GET_POINTER(value.value);
+      ecma_string_t *string_p = ECMA_GET_NON_NULL_POINTER(value.value);
       ecma_deref_ecma_string (string_p);
       break;
     }
@@ -275,7 +275,7 @@ ecma_free_value (ecma_value_t value, /**< value description */
     {
       if (do_deref_if_object)
       {
-        ecma_deref_object (ECMA_GET_POINTER(value.value));
+        ecma_deref_object (ECMA_GET_NON_NULL_POINTER(value.value));
       }
       break;
     }
@@ -497,7 +497,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_CONTINUE:
     case ECMA_COMPLETION_TYPE_BREAK:
     {
-      ecma_dealloc_label_descriptor (ECMA_GET_POINTER (completion_value.u.label_desc_cp));
+      ecma_dealloc_label_descriptor (ECMA_GET_NON_NULL_POINTER (completion_value.u.label_desc_cp));
       break;
     }
     case ECMA_COMPLETION_TYPE_META:

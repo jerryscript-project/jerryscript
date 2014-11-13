@@ -61,7 +61,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg __unused, /**< 'this' 
 
   if (arg.value_type == ECMA_TYPE_OBJECT)
   {
-    ecma_object_t *obj_p = ECMA_GET_POINTER (arg.value);
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (arg.value);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
                                                                 ECMA_INTERNAL_PROPERTY_CLASS);

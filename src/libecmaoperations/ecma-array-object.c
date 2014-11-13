@@ -81,7 +81,7 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
       && arguments_list_len == 1
       && arguments_list_p[0].value_type == ECMA_TYPE_NUMBER)
   {
-    ecma_number_t *num_p = ECMA_GET_POINTER (arguments_list_p[0].value);
+    ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (arguments_list_p[0].value);
     uint32_t num_uint32 = ecma_number_to_uint32 (*num_p);
     if (*num_p != ecma_uint32_to_number (num_uint32))
     {
@@ -187,7 +187,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
   JERRY_ASSERT (old_len_value.value_type == ECMA_TYPE_NUMBER);
 
-  ecma_number_t *num_p = ECMA_GET_POINTER (old_len_value.value);
+  ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (old_len_value.value);
   uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
 
   // 3.
@@ -217,7 +217,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     JERRY_ASSERT (ecma_is_completion_value_normal (completion)
                   && completion.u.value.value_type == ECMA_TYPE_NUMBER);
 
-    new_len_num = *(ecma_number_t*) ECMA_GET_POINTER (completion.u.value.value);
+    new_len_num = *(ecma_number_t*) ECMA_GET_NON_NULL_POINTER (completion.u.value.value);
 
     ecma_free_completion_value (completion);
 
@@ -317,7 +317,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
               {
                 JERRY_ASSERT (new_len_property_desc.value.value_type == ECMA_TYPE_NUMBER);
 
-                ecma_number_t *new_len_num_p = ECMA_GET_POINTER (new_len_property_desc.value.value);
+                ecma_number_t *new_len_num_p = ECMA_GET_NON_NULL_POINTER (new_len_property_desc.value.value);
 
                 // 1.
                 *new_len_num_p = ecma_uint32_to_number (old_len_uint32 + 1);

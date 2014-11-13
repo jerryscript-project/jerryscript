@@ -27,10 +27,23 @@
 #include "mem-allocator.h"
 
 /**
+ * Get value of pointer from specified non-null compressed pointer field.
+ */
+#define ECMA_GET_NON_NULL_POINTER(field) \
+  (mem_decompress_pointer (field))
+
+/**
  * Get value of pointer from specified compressed pointer field.
  */
 #define ECMA_GET_POINTER(field) \
-  ((unlikely (field == ECMA_NULL_POINTER)) ? NULL : mem_decompress_pointer (field))
+  ((unlikely (field == ECMA_NULL_POINTER)) ? NULL : ECMA_GET_NON_NULL_POINTER (field))
+
+/**
+ * Set value of non-null compressed pointer field so that it will correspond
+ * to specified non_compressed_pointer.
+ */
+#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) \
+  (field) = (mem_compress_pointer (non_compressed_pointer) & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1))
 
 /**
  * Set value of compressed pointer field so that it will correspond
@@ -46,13 +59,6 @@
   (field) = (unlikely ((non_compressed_pointer) == NULL) ? ECMA_NULL_POINTER \
                                                          : (mem_compress_pointer (non_compressed_pointer) \
                                                             & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1)))
-
-/**
- * Set value of non-null compressed pointer field so that it will correspond
- * to specified non_compressed_pointer.
- */
-#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) \
-  (field) = (mem_compress_pointer (non_compressed_pointer) & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1))
 
 /* ecma-helpers-value.c */
 extern bool ecma_is_value_empty (ecma_value_t value);

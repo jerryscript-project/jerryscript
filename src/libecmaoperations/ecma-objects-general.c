@@ -306,7 +306,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
       && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     // a.
-    ecma_object_t *setter_p = ECMA_GET_POINTER(desc_p->u.named_accessor_property.set_p);
+    ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(desc_p->u.named_accessor_property.set_p);
     JERRY_ASSERT(setter_p != NULL);
 
     ecma_completion_value_t ret_value;
@@ -606,7 +606,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     if (ecma_op_is_callable (function_value_get_completion.u.value))
     {
-      ecma_object_t *func_obj_p = ECMA_GET_POINTER (function_value_get_completion.u.value.value);
+      ecma_object_t *func_obj_p = ECMA_GET_NON_NULL_POINTER (function_value_get_completion.u.value.value);
 
       call_completion = ecma_op_function_call (func_obj_p,
                                                ecma_make_object_value (obj_p),

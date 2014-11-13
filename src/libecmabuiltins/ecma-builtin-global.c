@@ -105,7 +105,7 @@ ecma_builtin_global_object_is_nan (ecma_value_t this_arg __unused, /**< this arg
 
   ECMA_TRY_CATCH (num_value, ecma_op_to_number (arg), ret_value);
 
-  ecma_number_t *num_p = ECMA_GET_POINTER (num_value.u.value.value);
+  ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (num_value.u.value.value);
 
   bool is_nan = ecma_number_is_nan (*num_p);
 
@@ -134,7 +134,7 @@ ecma_builtin_global_object_is_finite (ecma_value_t this_arg __unused, /**< this 
 
   ECMA_TRY_CATCH (num_value, ecma_op_to_number (arg), ret_value);
 
-  ecma_number_t *num_p = ECMA_GET_POINTER (num_value.u.value.value);
+  ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (num_value.u.value.value);
 
   bool is_finite = !(ecma_number_is_nan (*num_p)
                      || ecma_number_is_infinity (*num_p));

@@ -323,7 +323,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
        property_p != NULL;
        property_p = next_property_p)
   {
-    next_property_p = ECMA_GET_NON_NULL_POINTER(property_p->next_property_p);
+    next_property_p = ECMA_GET_POINTER(property_p->next_property_p);
 
     switch ((ecma_property_type_t) property_p->type)
     {

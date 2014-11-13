@@ -55,18 +55,14 @@ ecma_get_lex_env_binding_object (ecma_object_t* obj_lex_env_p) /**< object lexic
  *
  * See also: ECMA-262 v5, 10.2.1
  *
- * @return completion value
- *         Return value is simple and so need not be freed.
- *         However, ecma_free_completion_value may be called for it, but it is a no-op.
+ * @return true / false
  */
-ecma_completion_value_t
+bool
 ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                      ecma_string_t *name_p) /**< argument N */
 {
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
-
-  ecma_simple_value_t has_binding = ECMA_SIMPLE_VALUE_UNDEFINED;
 
   switch (ecma_get_lex_env_type (lex_env_p))
   {
@@ -83,34 +79,24 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 
       if (is_equal)
       {
-        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+        return true;
       }
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
       ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-      has_binding = (property_p != NULL) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
-
-      break;
+      return (property_p != NULL);
     }
+
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      if (ecma_op_object_has_property (binding_obj_p, name_p))
-      {
-        has_binding = ECMA_SIMPLE_VALUE_TRUE;
-      }
-      else
-      {
-        has_binding = ECMA_SIMPLE_VALUE_FALSE;
-      }
-
-      break;
+      return ecma_op_object_has_property (binding_obj_p, name_p);
     }
   }
 
-  return ecma_make_simple_completion_value (has_binding);
+  JERRY_UNREACHABLE ();
 } /* ecma_op_has_binding */
 
 /**
@@ -134,7 +120,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(ecma_is_completion_value_normal_false (ecma_op_has_binding (lex_env_p, name_p)));
+      JERRY_ASSERT(!ecma_op_has_binding (lex_env_p, name_p));
 
       ecma_create_named_data_property (lex_env_p,
                                        name_p,
@@ -203,7 +189,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
-  JERRY_ASSERT(ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p, name_p)));
+  JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
 
   switch (ecma_get_lex_env_type (lex_env_p))
   {
@@ -280,7 +266,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
-  JERRY_ASSERT(ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p, name_p)));
+  JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
 
   switch (ecma_get_lex_env_type (lex_env_p))
   {
@@ -467,7 +453,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(ecma_is_completion_value_normal_false (ecma_op_has_binding (lex_env_p, name_p)));
+      JERRY_ASSERT(!ecma_op_has_binding (lex_env_p, name_p));
 
       /*
        * Warning:
@@ -512,7 +498,7 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p, name_p)));
+      JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
 
       ecma_property_t *prop_p = ecma_get_named_data_property (lex_env_p, name_p);
 

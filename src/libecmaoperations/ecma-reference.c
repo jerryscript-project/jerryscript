@@ -46,18 +46,11 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
 
   while (lex_env_iter_p != NULL)
   {
-    ecma_completion_value_t completion_value;
-    completion_value = ecma_op_has_binding (lex_env_iter_p, name_p);
-
-    if (ecma_is_completion_value_normal_true (completion_value))
+    if (ecma_op_has_binding (lex_env_iter_p, name_p))
     {
       return ecma_make_reference (ecma_make_object_value (lex_env_iter_p),
                                   name_p,
                                   is_strict);
-    }
-    else
-    {
-      JERRY_ASSERT(ecma_is_completion_value_normal_false (completion_value));
     }
 
     lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);

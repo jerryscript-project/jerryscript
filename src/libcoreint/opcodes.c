@@ -374,8 +374,7 @@ opfunc_var_decl (opcode_t opdata, /**< operation data */
 {
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (opdata.data.var_decl.variable_name);
 
-  if (ecma_is_completion_value_normal_false (ecma_op_has_binding (int_data->lex_env_p,
-                                                                  var_name_string_p)))
+  if (!ecma_op_has_binding (int_data->lex_env_p, var_name_string_p))
   {
     const bool is_configurable_bindings = int_data->is_eval_code;
 

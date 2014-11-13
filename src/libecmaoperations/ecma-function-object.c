@@ -341,9 +341,8 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
     JERRY_ASSERT (formal_parameter_name_value.value_type == ECMA_TYPE_STRING);
     ecma_string_t *formal_parameter_name_string_p = ECMA_GET_POINTER (formal_parameter_name_value.value);
     
-    ecma_completion_value_t arg_already_declared = ecma_op_has_binding (env_p,
-                                                                        formal_parameter_name_string_p);
-    if (!ecma_is_completion_value_normal_true (arg_already_declared))
+    bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
+    if (!arg_already_declared)
     {
       ecma_completion_value_t completion = ecma_op_create_mutable_binding (env_p,
                                                                            formal_parameter_name_string_p,
@@ -683,9 +682,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                               function_code_opcode_idx);
 
   // c.
-  bool func_already_declared = ecma_is_completion_value_normal_true (ecma_op_has_binding (lex_env_p,
-                                                                                          function_name_p));
-
+  bool func_already_declared = ecma_op_has_binding (lex_env_p, function_name_p);
 
   // d.
   ecma_completion_value_t completion = ecma_make_empty_completion_value ();

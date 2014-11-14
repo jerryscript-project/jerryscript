@@ -109,8 +109,10 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
 
   ecma_magic_string_id_t id;
 
-  bool is_string_magic = ecma_is_string_magic (prop_name_p, &id);
-  JERRY_ASSERT (is_string_magic);
+  if (!ecma_is_string_magic (prop_name_p, &id))
+  {
+    return NULL;
+  }
 
   int32_t index;
   index = ecma_builtin_bin_search_for_magic_string_id_in_array (ecma_builtin_property_names,

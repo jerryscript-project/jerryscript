@@ -104,11 +104,8 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
 
   if (unlikely (prop_p == NULL))
   {
-    ecma_magic_string_id_t magic_string_id __unused;
-
     if (is_builtin
-        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
-        && ecma_is_string_magic (property_name_p, &magic_string_id))
+        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
     {
       prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
     }

@@ -131,8 +131,8 @@ extern ecma_length_t ecma_zt_string_length (const ecma_char_t *string_p);
 extern void ecma_strings_init (void);
 extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
-extern bool ecma_is_string_magic (ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
-extern bool ecma_is_zt_string_magic (ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_is_string_magic (const ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
 
 /* ecma-helpers-number.c */
 extern const ecma_number_t ecma_number_relative_eps;

@@ -86,6 +86,12 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
 {
   JERRY_ASSERT (string_p != NULL);
 
+  ecma_magic_string_id_t magic_string_id;
+  if (ecma_is_zt_string_magic (string_p, &magic_string_id))
+  {
+    return ecma_get_magic_string (magic_string_id);
+  }
+
   ecma_length_t length = 0;
   const ecma_char_t *iter_p = string_p;
 
@@ -1417,7 +1423,7 @@ ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
  *         false - otherwise.
  */
 bool
-ecma_is_zt_string_magic (ecma_char_t *zt_string_p, /**< zero-terminated string */
+ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, /**< zero-terminated string */
                          ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
 {
   TODO (Improve performance of search);
@@ -1440,6 +1446,28 @@ ecma_is_zt_string_magic (ecma_char_t *zt_string_p, /**< zero-terminated string *
 } /* ecma_is_zt_string_magic */
 
 /**
+ * Long path part of ecma_is_string_magic
+ *
+ * Converts passed ecma-string to zt-string and
+ * checks if it is equal to one of magic string
+ *
+ * @return true - if magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+static bool
+ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
+                               ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
+{
+  JERRY_ASSERT (ecma_string_get_length (string_p) <= ecma_magic_string_max_length);
+  ecma_char_t zt_string_buffer [ecma_magic_string_max_length + 1];
+
+  ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
+  JERRY_ASSERT (copied > 0);
+
+  return ecma_is_zt_string_magic (zt_string_buffer, out_id_p);
+} /* ecma_is_string_magic_longpath */
+
+/**
  * Check if passed string equals to one of magic strings
  * and if equal magic string was found, return it's id in 'out_id_p' argument.
  *
@@ -1447,7 +1475,7 @@ ecma_is_zt_string_magic (ecma_char_t *zt_string_p, /**< zero-terminated string *
  *         false - otherwise.
  */
 bool
-ecma_is_string_magic (ecma_string_t *string_p, /**< ecma-string */
+ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
                       ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
 {
   if (string_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
@@ -1458,18 +1486,22 @@ ecma_is_string_magic (ecma_string_t *string_p, /**< ecma-string */
 
     return true;
   }
-  else if (ecma_string_get_length (string_p) > ecma_magic_string_max_length)
+  else if (string_p->container == ECMA_STRING_CONTAINER_CONCATENATION
+           && ecma_string_get_length (string_p) <= ecma_magic_string_max_length)
   {
-    return false;
+    return ecma_is_string_magic_longpath (string_p, out_id_p);
   }
   else
   {
-    ecma_char_t zt_string_buffer [ecma_magic_string_max_length + 1];
+    /*
+     * Any ecma-string constructor except ecma_concat_ecma_strings
+     * should return ecma-string with ECMA_STRING_CONTAINER_MAGIC_STRING
+     * container type if new ecma-string's content is equal to one of magic strings.
+     */
+    JERRY_ASSERT (ecma_string_get_length (string_p) > ecma_magic_string_max_length
+                  || !ecma_is_string_magic_longpath (string_p, out_id_p));
 
-    ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
-    JERRY_ASSERT (copied > 0);
-
-    return ecma_is_zt_string_magic (zt_string_buffer, out_id_p);
+    return false;
   }
 } /* ecma_is_string_magic */
 

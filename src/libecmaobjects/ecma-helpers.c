@@ -588,12 +588,12 @@ ecma_property_t*
 ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property in */
                               const ecma_string_t *name_p) /**< property's name */
 {
-  JERRY_ASSERT(obj_p != NULL);
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL);
+  JERRY_ASSERT (name_p != NULL);
 
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
-  JERRY_ASSERT(property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
 
   return property_p;
 } /* ecma_get_named_data_property */
@@ -601,10 +601,12 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 /**
  * Free the named data property and values it references.
  */
-void
-ecma_free_named_data_property (ecma_property_t *property_p) /**< the property */
+static void
+ecma_free_named_data_property (ecma_object_t *object_p __unused, /**< object the property belongs to */
+                               ecma_property_t *property_p) /**< the property */
 {
-  JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
@@ -615,10 +617,12 @@ ecma_free_named_data_property (ecma_property_t *property_p) /**< the property */
 /**
  * Free the named accessor property and values it references.
  */
-void
-ecma_free_named_accessor_property (ecma_property_t *property_p) /**< the property */
+static void
+ecma_free_named_accessor_property (ecma_object_t *object_p __unused, /**< object the property belongs to */
+                                   ecma_property_t *property_p) /**< the property */
 {
-  JERRY_ASSERT(property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_accessor_property.name_p));
 
@@ -628,10 +632,10 @@ ecma_free_named_accessor_property (ecma_property_t *property_p) /**< the propert
 /**
  * Free the internal property and values it references.
  */
-void
+static void
 ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 {
-  JERRY_ASSERT(property_p->type == ECMA_PROPERTY_INTERNAL);
+  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_INTERNAL);
 
   ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
   uint32_t property_value = property_p->u.internal_property.value;
@@ -696,20 +700,21 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
  * Free the property and values it references.
  */
 void
-ecma_free_property (ecma_property_t *prop_p) /**< property */
+ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to */
+                    ecma_property_t *prop_p) /**< property */
 {
   switch ((ecma_property_type_t) prop_p->type)
   {
     case ECMA_PROPERTY_NAMEDDATA:
     {
-      ecma_free_named_data_property (prop_p);
+      ecma_free_named_data_property (object_p, prop_p);
 
       break;
     }
 
     case ECMA_PROPERTY_NAMEDACCESSOR:
     {
-      ecma_free_named_accessor_property (prop_p);
+      ecma_free_named_accessor_property (object_p, prop_p);
 
       break;
     }
@@ -740,7 +745,7 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 
     if (cur_prop_p == prop_p)
     {
-      ecma_free_property (prop_p);
+      ecma_free_property (obj_p, prop_p);
 
       if (prev_prop_p == NULL)
       {

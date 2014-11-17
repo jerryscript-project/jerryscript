@@ -241,10 +241,7 @@ extern ecma_property_t *ecma_get_named_property (ecma_object_t *obj_p,
 extern ecma_property_t *ecma_get_named_data_property (ecma_object_t *obj_p,
                                                       const ecma_string_t *name_p);
 
-extern void ecma_free_internal_property (ecma_property_t *prop_p);
-extern void ecma_free_named_data_property (ecma_property_t *prop_p);
-extern void ecma_free_named_accessor_property (ecma_property_t *prop_p);
-extern void ecma_free_property (ecma_property_t *prop_p);
+extern void ecma_free_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 

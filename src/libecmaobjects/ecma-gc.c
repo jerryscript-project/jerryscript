@@ -467,7 +467,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
   {
     next_property_p = ECMA_GET_POINTER(property->next_property_p);
 
-    ecma_free_property (property);
+    ecma_free_property (object_p, property);
   }
 
   ecma_dealloc_object (object_p);

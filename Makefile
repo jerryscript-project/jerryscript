@@ -15,11 +15,10 @@
 #
 # Target naming scheme
 #
-#   Main targets: {debug,release,debug_release}.{linux,stm32f{4}}[.{check,flash}]
+#   Main targets: {debug,release}.{linux,stm32f{4}}[.{check,flash}]
 #
 #    Target mode part (before dot):
 #       debug:         - JERRY_NDEBUG; - optimizations; + debug symbols; + -Werror  | debug build
-#       debug_release: - JERRY_NDEBUG; + optimizations; + debug symbols; + -Werror  | checked release build
 #       release:       + JERRY_NDEBUG; + optimizations; - debug symbols; + -Werror  | release build
 #
 #    Target system and modifiers part (after first dot):
@@ -41,7 +40,7 @@
 #   dwarf4=1 - use DWARF v4 format for debug information
 #
 
-export TARGET_DEBUG_MODES = debug debug_release
+export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
@@ -86,20 +85,17 @@ build: clean $(JERRY_TARGETS)
 all: precommit
 
 PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
-                                          release.linux.check \
-                                          debug_release.linux.check
+                                          release.linux.check
 PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
                                        release.linux-musl-valgrind.check \
                                        debug.linux-valgrind-cp.check
 
-                              # debug.linux-musl-valgrind.check \
-                              debug_release.linux-valgrind.check \
-                              debug_release.linux-musl.check \
-                              release.linux-valgrind.check \
-                              release.linux.check \
-                              debug.linux-sanitize.check \
-                              release.linux-sanitize.check \
-                              debug_release.linux-sanitize.check
+                                     # debug.linux-musl-valgrind.check \
+                                       release.linux-valgrind.check \
+                                       release.linux.check \
+                                       debug.linux-sanitize.check \
+                                       release.linux-sanitize.check \
+
 push: ./tools/push.sh
 	@ ./tools/push.sh
 

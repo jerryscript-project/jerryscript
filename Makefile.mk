@@ -134,7 +134,7 @@ else
 endif
 
 # Optimizations
-ifeq ($(filter-out debug_release release $(TESTS_TARGET),$(TARGET_MODE)),)
+ifeq ($(filter-out release $(TESTS_TARGET),$(TARGET_MODE)),)
  OPTION_OPTIMIZE = enable
 else
  OPTION_OPTIMIZE = disable

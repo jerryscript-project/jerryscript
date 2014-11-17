@@ -115,7 +115,7 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
 #define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
     jerry_assert_fail (#x, __FILE__, __FUNCTION__, __LINE__); } } while (0)
 #else /* !JERRY_NDEBUG */
-#define JERRY_ASSERT(x) (void) (x)
+#define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
 #endif /* !JERRY_NDEBUG */
 
 /**

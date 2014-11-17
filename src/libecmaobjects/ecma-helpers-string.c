@@ -1536,7 +1536,7 @@ ecma_string_try_hash (const ecma_string_t *string_p, /**< ecma-string to calcula
 
 {
   JERRY_ASSERT (hash_length_bits < sizeof (uint32_t) * JERRY_BITSINBYTE);
-  uint32_t hash_mask = (1u << hash_length_bits);
+  uint32_t hash_mask = ((1u << hash_length_bits) - 1);
 
   if (string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
@@ -1548,7 +1548,7 @@ ecma_string_try_hash (const ecma_string_t *string_p, /**< ecma-string to calcula
   return false;
 } /* ecma_string_try_hash */
 
- /**
+/**
  * @}
  * @}
  */

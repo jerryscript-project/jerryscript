@@ -919,6 +919,22 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
+  if (string1_p->container == string2_p->container)
+  {
+    if (likely (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE))
+    {
+      return (string1_p->u.lit_index == string2_p->u.lit_index);
+    }
+    else if (likely (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING))
+    {
+      return (string1_p->u.magic_string_id == string2_p->u.magic_string_id);
+    }
+    else if (string1_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+    {
+      return (string1_p->u.uint32_number == string2_p->u.uint32_number);
+    }
+  }
+
   if (unlikely (string1_p == string2_p))
   {
     return true;
@@ -931,11 +947,6 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 
   if (string1_p->container == string2_p->container)
   {
-    if (likely (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE))
-    {
-      return (string1_p->u.lit_index == string2_p->u.lit_index);
-    }
-
     switch ((ecma_string_container_t) string1_p->container)
     {
       case ECMA_STRING_CONTAINER_HEAP_NUMBER:
@@ -964,20 +975,14 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
       {
         return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
       }
-      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-      {
-        return (string1_p->u.uint32_number == string2_p->u.uint32_number);
-      }
-      case ECMA_STRING_CONTAINER_MAGIC_STRING:
-      {
-        return (string1_p->u.magic_string_id == string2_p->u.magic_string_id);
-      }
       case ECMA_STRING_CONTAINER_CONCATENATION:
       {
         /* long path */
         break;
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
+      case ECMA_STRING_CONTAINER_MAGIC_STRING:
+      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
       {
         JERRY_UNREACHABLE ();
       }

@@ -274,6 +274,9 @@ typedef struct ecma_property_t
       /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
       unsigned int configurable : 1;
 
+      /** Flag indicating whether the property is registered in LCache */
+      unsigned int is_lcached : 1;
+
       /** Value */
       ecma_value_t value;
     } named_data_property;
@@ -289,6 +292,9 @@ typedef struct ecma_property_t
 
       /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
       unsigned int configurable : 1;
+
+      /** Flag indicating whether the property is registered in LCache */
+      unsigned int is_lcached : 1;
 
       /** Compressed pointer to property's getter */
       unsigned int get_p : ECMA_POINTER_FIELD_WIDTH;

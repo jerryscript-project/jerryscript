@@ -24,6 +24,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-lcache.h"
 #include "jrt-bit-fields.h"
 
 /**
@@ -461,10 +462,13 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
   prop_p->u.named_data_property.enumerable = enumerable;
   prop_p->u.named_data_property.configurable = configurable;
 
+  prop_p->u.named_data_property.is_lcached = false;
+
   prop_p->u.named_data_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
+  ecma_lcache_invalidate (obj_p, name_p, NULL);
 
+  ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
 
@@ -501,6 +505,10 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_accessor_property.enumerable = enumerable;
   prop_p->u.named_accessor_property.configurable = configurable;
+
+  prop_p->u.named_accessor_property.is_lcached = false;
+
+  ecma_lcache_invalidate (obj_p, name_p, NULL);
 
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
@@ -602,11 +610,13 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
  * Free the named data property and values it references.
  */
 static void
-ecma_free_named_data_property (ecma_object_t *object_p __unused, /**< object the property belongs to */
+ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property belongs to */
                                ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  ecma_lcache_invalidate (object_p, NULL, property_p);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
@@ -618,11 +628,13 @@ ecma_free_named_data_property (ecma_object_t *object_p __unused, /**< object the
  * Free the named accessor property and values it references.
  */
 static void
-ecma_free_named_accessor_property (ecma_object_t *object_p __unused, /**< object the property belongs to */
+ecma_free_named_accessor_property (ecma_object_t *object_p, /**< object the property belongs to */
                                    ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+  ecma_lcache_invalidate (object_p, NULL, property_p);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_accessor_property.name_p));
 
@@ -804,6 +816,47 @@ ecma_is_property_configurable (ecma_property_t* prop_p) /**< property */
     return (prop_p->u.named_accessor_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
   }
 } /* ecma_is_property_configurable */
+
+/**
+ * Check whether the property is registered in LCache
+ *
+ * @return true / false
+ */
+bool
+ecma_is_property_lcached (ecma_property_t *prop_p) /**< property */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA
+                || prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    return prop_p->u.named_data_property.is_lcached;
+  }
+  else
+  {
+    return prop_p->u.named_accessor_property.is_lcached;
+  }
+} /* ecma_is_property_lcached */
+
+/**
+ * Set value of flag indicating whether the property is registered in LCache
+ */
+void
+ecma_set_property_lcached (ecma_property_t *prop_p, /**< property */
+                           bool is_lcached) /**< contained (true) or not (false) */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA
+                || prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    prop_p->u.named_data_property.is_lcached = is_lcached;
+  }
+  else
+  {
+    prop_p->u.named_accessor_property.is_lcached = is_lcached;
+  }
+} /* ecma_set_property_lcached */
 
 /**
  * Construct empty property descriptor, i.e.:

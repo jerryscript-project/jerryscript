@@ -13,40 +13,25 @@
  * limitations under the License.
  */
 
-#include "ecma-builtins.h"
-#include "ecma-helpers.h"
-#include "ecma-lcache.h"
-#include "ecma-operations.h"
+#ifndef ECMA_LCACHE_H
+#define ECMA_LCACHE_H
 
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmainitfinalize Initialization and finalization of ECMA components
+ * \addtogroup ecmalcache Property lookup cache
  * @{
  */
 
-/**
- * Initialize ECMA components
- */
-void
-ecma_init (void)
-{
-  ecma_strings_init ();
-  ecma_init_builtins ();
-  ecma_lcache_init ();
-} /* ecma_init */
-
-/**
- * Finalize ECMA components
- */
-void
-ecma_finalize (void)
-{
-  ecma_lcache_invalidate_all ();
-  ecma_finalize_builtins ();
-} /* ecma_finalize */
+extern void ecma_lcache_init (void);
+extern void ecma_lcache_invalidate_all (void);
+extern void ecma_lcache_insert (ecma_object_t *object_p, ecma_string_t *prop_name_p, ecma_property_t *prop_p);
+extern bool ecma_lcache_lookup (ecma_object_t *object_p, const ecma_string_t *prop_name_p, ecma_property_t **prop_p_p);
+extern void ecma_lcache_invalidate (ecma_object_t *object_p, ecma_string_t *prop_name_arg_p, ecma_property_t *prop_p);
 
 /**
  * @}
  * @}
  */
+
+#endif /* ECMA_LCACHE_H */

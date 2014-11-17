@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
-#include "ecma-array-object.h"
 #include "ecma-function-object.h"
+#include "ecma-lcache.h"
 #include "ecma-string-object.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
@@ -82,12 +83,18 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
+  ecma_property_t *prop_p = NULL;
+
+  if (likely (ecma_lcache_lookup (obj_p, property_name_p, &prop_p)))
+  {
+    return prop_p;
+  }
+
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
 
   const bool is_builtin = ecma_get_object_is_builtin (obj_p);
 
-  ecma_property_t *prop_p = NULL;
   typedef ecma_property_t* (*get_own_property_ptr_t) (ecma_object_t *, ecma_string_t *);
   static const get_own_property_ptr_t get_own_property [ECMA_OBJECT_TYPE__COUNT] =
   {
@@ -110,6 +117,12 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
       prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
     }
   }
+
+  /*
+   * Property name should be the same as the value passed to ecma_lcache_lookup above,
+   * or at least hash for the two strings should be either non-computable or the same (see also: ecma_string_try_hash).
+   */
+  ecma_lcache_insert (obj_p, property_name_p, prop_p);
 
   return prop_p;
 } /* ecma_op_object_get_own_property */

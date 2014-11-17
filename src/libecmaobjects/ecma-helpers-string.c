@@ -1510,6 +1510,44 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
   }
 } /* ecma_is_string_magic */
 
+/**
+ * Try to calculate hash of the ecma-string
+ *
+ * Note:
+ *      Not all ecma-string containers provide ability to calculate hash.
+ *      For now, only strings stored in literal table support calculating of hash.
+ *
+ * Warning:
+ *      Anyway, if ecma-string is hashable, for given length of hash,
+ *      the hash values should always be equal for equal strings
+ *      irrespective of the strings' container type.
+ *
+ *      If a ecma-string stored in a container of some type is hashable,
+ *      then the ecma-string should always be hashable if stored in container
+ *      of the same type.
+ *
+ * @return true - if hash was calculated,
+ *         false - otherwise (the string is not hashable).
+ */
+bool
+ecma_string_try_hash (const ecma_string_t *string_p, /**< ecma-string to calculate hash for */
+                      uint32_t hash_length_bits, /**< length of hash value, in bits */
+                      uint32_t *out_hash_p) /**< out: hash value, if calculated */
+
+{
+  JERRY_ASSERT (hash_length_bits < sizeof (uint32_t) * JERRY_BITSINBYTE);
+  uint32_t hash_mask = (1u << hash_length_bits);
+
+  if (string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  {
+    *out_hash_p = (string_p->u.lit_index) & hash_mask;
+
+    return true;
+  }
+
+  return false;
+} /* ecma_string_try_hash */
+
  /**
  * @}
  * @}

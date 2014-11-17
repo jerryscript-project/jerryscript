@@ -133,6 +133,7 @@ extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
 extern bool ecma_is_string_magic (const ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
 extern bool ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_string_try_hash (const ecma_string_t *string_p, uint32_t hash_length_bits, uint32_t *out_hash_p);
 
 /* ecma-helpers-number.c */
 extern const ecma_number_t ecma_number_relative_eps;
@@ -247,6 +248,10 @@ extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p)
 
 extern bool ecma_is_property_enumerable (ecma_property_t* prop_p);
 extern bool ecma_is_property_configurable (ecma_property_t* prop_p);
+
+extern bool ecma_is_property_lcached (ecma_property_t *prop_p);
+extern void ecma_set_property_lcached (ecma_property_t *prop_p,
+                                       bool is_lcached);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);

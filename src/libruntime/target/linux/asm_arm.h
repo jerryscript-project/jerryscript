@@ -68,6 +68,8 @@
                   : "r0", "r1", "r2", "r3", "r7", "r9", "memory");
 
 #define _START            \
+   ldr r0, [sp, #0];      \
+   add r1, sp, #4;        \
    bl main;               \
                           \
    bl __exit;             \

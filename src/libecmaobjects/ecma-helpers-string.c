@@ -795,6 +795,55 @@ static bool __noinline
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
                                     const ecma_string_t *string2_p) /* ecma-string */
 {
+  if (likely (ecma_string_get_length (string1_p) != ecma_string_get_length (string2_p)))
+  {
+    return false;
+  }
+
+  if (string1_p->container == string2_p->container)
+  {
+    switch ((ecma_string_container_t) string1_p->container)
+    {
+      case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+      {
+        ecma_number_t *num1_p, *num2_p;
+        num1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.number_cp);
+        num2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.number_cp);
+
+        if (ecma_number_is_nan (*num1_p)
+            && ecma_number_is_nan (*num2_p))
+        {
+          return true;
+        }
+
+        return (*num1_p == *num2_p);
+      }
+      case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
+      {
+        JERRY_ASSERT (ecma_string_get_length (string1_p) == ecma_string_get_length (string2_p));
+
+        return (__memcmp (string1_p->u.chars,
+                          string2_p->u.chars,
+                          (size_t) (ecma_string_get_length (string1_p) * ((ssize_t) sizeof (ecma_char_t)))) == 0);
+      }
+      case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
+      {
+        return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
+      }
+      case ECMA_STRING_CONTAINER_CONCATENATION:
+      {
+        /* long path */
+        break;
+      }
+      case ECMA_STRING_CONTAINER_LIT_TABLE:
+      case ECMA_STRING_CONTAINER_MAGIC_STRING:
+      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+      {
+        JERRY_UNREACHABLE ();
+      }
+    }
+  }
+
   if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
     const ecma_string_t *tmp_string_p = string1_p;
@@ -919,6 +968,11 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
+  if (unlikely (string1_p == string2_p))
+  {
+    return true;
+  }
+
   if (string1_p->container == string2_p->container)
   {
     if (likely (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE))
@@ -932,60 +986,6 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
     else if (string1_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
     {
       return (string1_p->u.uint32_number == string2_p->u.uint32_number);
-    }
-  }
-
-  if (unlikely (string1_p == string2_p))
-  {
-    return true;
-  }
-
-  if (likely (ecma_string_get_length (string1_p) != ecma_string_get_length (string2_p)))
-  {
-    return false;
-  }
-
-  if (string1_p->container == string2_p->container)
-  {
-    switch ((ecma_string_container_t) string1_p->container)
-    {
-      case ECMA_STRING_CONTAINER_HEAP_NUMBER:
-      {
-        ecma_number_t *num1_p, *num2_p;
-        num1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.number_cp);
-        num2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.number_cp);
-
-        if (ecma_number_is_nan (*num1_p)
-            && ecma_number_is_nan (*num2_p))
-        {
-          return true;
-        }
-
-        return (*num1_p == *num2_p);
-      }
-      case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
-      {
-        JERRY_ASSERT (ecma_string_get_length (string1_p) == ecma_string_get_length (string2_p));
-
-        return (__memcmp (string1_p->u.chars,
-                          string2_p->u.chars,
-                          (size_t) (ecma_string_get_length (string1_p) * ((ssize_t) sizeof (ecma_char_t)))) == 0);
-      }
-      case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
-      {
-        return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
-      }
-      case ECMA_STRING_CONTAINER_CONCATENATION:
-      {
-        /* long path */
-        break;
-      }
-      case ECMA_STRING_CONTAINER_LIT_TABLE:
-      case ECMA_STRING_CONTAINER_MAGIC_STRING:
-      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-      {
-        JERRY_UNREACHABLE ();
-      }
     }
   }
 

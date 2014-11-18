@@ -19,9 +19,6 @@
 
 #include "jerry-libc.h"
 
-FIXME(#ifndef LIBC_MUSL should be removed from here when own libc will be implemented)
-
-#ifndef LIBC_MUSL
 /**
  * memcpy alias to __memcpy (for compiler usage)
  */
@@ -85,7 +82,23 @@ CALL_PRAGMA(GCC pop_options)
 CALL_PRAGMA(GCC diagnostic pop)
 #endif /* __GNUC__ */
 
-#endif /* LIBC_MUSL */
+/**
+ * Unreachable stubs for routines that are never called,
+ * but referenced from third-party libraries.
+ */
+#define JRT_UNREACHABLE_STUB_FOR(...) \
+  extern __VA_ARGS__; \
+  __used __VA_ARGS__ \
+  { \
+    JERRY_UNREACHABLE (); \
+  }
+
+JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
+#ifdef __TARGET_HOST_ARMv7
+JRT_UNREACHABLE_STUB_FOR(void __aeabi_unwind_cpp_pr0 (void))
+#endif /* __TARGET_HOST_ARMv7 */
+
+#undef JRT_UNREACHABLE_STUB_FOR
 
 /**
  * memset

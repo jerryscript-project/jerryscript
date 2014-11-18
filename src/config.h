@@ -19,11 +19,7 @@
 /**
  * Limit of data (system heap, engine's data except engine's own heap)
  */
-#ifdef LIBC_RAW
-# define CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE 1024
-#else /* !LIBC_RAW */
-# define CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE 16384
-#endif /* !LIBC_RAW */
+#define CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE 1024
 
 /**
  * Limit of stack size

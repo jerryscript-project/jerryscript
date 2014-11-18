@@ -8,9 +8,7 @@
 # error "!__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7"
 #endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
 
-#ifdef LIBC_RAW
 .global _start
 _start:
   _START
 .end _start
-#endif /* LIBC_RAW */

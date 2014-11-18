@@ -150,16 +150,6 @@ ifeq ($(OPTION_OVERRIDE_DISABLE_OPTIMIZE),enable)
   OPTION_OPTIMIZE = disable
 endif
 
-ifeq ($(filter musl,$(TARGET_MODS)), musl)
-     ifeq ($(OPTION_MCU),enable)
-      $(error MCU target doesn\'t support LIBC_MUSL)
-     endif
-
-     OPTION_LIBC := musl
-else
-     OPTION_LIBC := raw
-endif
-
 # CompactProfile mode
 ifeq ($(OPTION_MCU),enable)
      OPTION_COMPACT_PROFILE := enable
@@ -180,10 +170,6 @@ else
 endif
 
 ifeq ($(filter sanitize,$(TARGET_MODS)), sanitize)
-     ifeq ($(OPTION_LIBC),musl)
-      $(error ASAN and LIBC_MUSL are mutually exclusive)
-     endif
-
      OPTION_SANITIZE := enable
 else
      OPTION_SANITIZE := disable
@@ -249,9 +235,8 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 # Common
 #
 
-CFLAGS_COMMON ?= $(INCLUDES) -std=c99
-
-LDFLAGS ?= 
+CFLAGS_COMMON ?= $(INCLUDES) -std=c99 -nostdlib
+LDFLAGS ?= -lgcc
 
 ifeq ($(OPTION_OPTIMIZE),enable)
  CFLAGS_COMMON += $(CFLAGS_OPTIMIZE)
@@ -341,19 +326,9 @@ INCLUDES_JERRY = \
  -I src/libcoreint \
  -I src/libintstructs
 
-# libc
-ifeq ($(OPTION_LIBC),musl)
-  CC := musl-$(CC) 
-  DEFINES_JERRY += -DLIBC_MUSL
-  CFLAGS_COMMON += -static
-else
-  DEFINES_JERRY += -DLIBC_RAW
-  CFLAGS_COMMON += -nostdlib
-
-  ifeq ($(OPTION_SANITIZE),enable)
-    CFLAGS_COMMON += -fsanitize=address
-    LDFLAGS += -lasan
-  endif
+ifeq ($(OPTION_SANITIZE),enable)
+  CFLAGS_COMMON += -fsanitize=address
+  LDFLAGS += -lasan
 endif
 
 ifeq ($(OPTION_NDEBUG),enable)

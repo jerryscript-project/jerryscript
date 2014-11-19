@@ -129,6 +129,21 @@ ecma_is_value_object (ecma_value_t value) /**< ecma-value */
 } /* ecma_is_value_object */
 
 /**
+ * Debug assertion that specified value's type is one of ECMA-defined
+ * script-visible types, i.e.: undefined, null, boolean, number, string, object.
+ */
+void
+ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma-value */
+{
+  JERRY_ASSERT (ecma_is_value_undefined (value)
+                || ecma_is_value_null (value)
+                || ecma_is_value_boolean (value)
+                || ecma_is_value_number (value)
+                || ecma_is_value_string (value)
+                || ecma_is_value_object (value));
+} /* ecma_check_value_type_is_spec_defined */
+
+/**
  * Simple value constructor
  */
 ecma_value_t

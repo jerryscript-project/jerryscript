@@ -71,6 +71,8 @@ extern bool ecma_is_value_number (ecma_value_t value);
 extern bool ecma_is_value_string (ecma_value_t value);
 extern bool ecma_is_value_object (ecma_value_t value);
 
+extern void ecma_check_value_type_is_spec_defined (ecma_value_t value);
+
 extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
 extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
 extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);

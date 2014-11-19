@@ -51,36 +51,17 @@
 ecma_completion_value_t
 ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (ecma_is_value_undefined (value)
+      || ecma_is_value_null (value))
   {
-    case ECMA_TYPE_SIMPLE:
-    {
-      if (ecma_is_value_undefined (value)
-          || ecma_is_value_null (value))
-      {
-        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-      }
-      else if (ecma_is_value_boolean (value))
-      {
-        break;
-      }
-      else
-      {
-        JERRY_UNREACHABLE();
-      }
-
-      break;
-    }
-
-    case ECMA_TYPE_NUMBER:
-    case ECMA_TYPE_STRING:
-    case ECMA_TYPE_OBJECT:
-    {
-      break;
-    }
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
-
-  return ecma_make_empty_completion_value ();
+  else
+  {
+    return ecma_make_empty_completion_value ();
+  }
 } /* ecma_op_check_object_coercible */
 
 /**
@@ -179,24 +160,18 @@ ecma_completion_value_t
 ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
                       ecma_preferred_type_hint_t preferred_type) /**< preferred type hint */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (ecma_is_value_object (value))
   {
-    case ECMA_TYPE_SIMPLE:
-    case ECMA_TYPE_NUMBER:
-    case ECMA_TYPE_STRING:
-    {
-      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
-    }
+    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
 
-    case ECMA_TYPE_OBJECT:
-    {
-      ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
-
-      return ecma_op_object_default_value (obj_p, preferred_type);
-    }
+    return ecma_op_object_default_value (obj_p, preferred_type);
   }
-
-  JERRY_UNREACHABLE();
+  else
+  {
+    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+  }
 } /* ecma_op_to_primitive */
 
 /**
@@ -212,60 +187,54 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  ecma_simple_value_t ret_value;
+
+  if (ecma_is_value_boolean (value))
   {
-    case ECMA_TYPE_NUMBER:
+    ret_value = value.value;
+  }
+  else if (ecma_is_value_undefined (value)
+           || ecma_is_value_null (value))
+  {
+    ret_value = ECMA_SIMPLE_VALUE_FALSE;
+  }
+  else if (ecma_is_value_number (value))
+  {
+    ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
+
+    if (ecma_number_is_nan (*num_p)
+        || ecma_number_is_zero (*num_p))
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
-
-      if (ecma_number_is_nan (*num_p)
-          || ecma_number_is_zero (*num_p))
-      {
-        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-      }
-      else
-      {
-        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
-      }
-
-      break;
+      ret_value = ECMA_SIMPLE_VALUE_FALSE;
     }
-    case ECMA_TYPE_SIMPLE:
+    else
     {
-      if (ecma_is_value_boolean (value))
-      {
-        return ecma_make_simple_completion_value (value.value);
-      }
-      else if (ecma_is_value_undefined (value)
-                 || ecma_is_value_null (value))
-      {
-        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-      }
-      else
-      {
-        JERRY_UNREACHABLE();
-      }
-
-      break;
-    }
-    case ECMA_TYPE_STRING:
-    {
-      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER(value.value);
-
-      return ecma_make_simple_completion_value ((ecma_string_get_length (str_p) == 0) ? ECMA_SIMPLE_VALUE_FALSE
-                                                : ECMA_SIMPLE_VALUE_TRUE);
-
-      break;
-    }
-    case ECMA_TYPE_OBJECT:
-    {
-      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
-
-      break;
+      ret_value = ECMA_SIMPLE_VALUE_TRUE;
     }
   }
+  else if (ecma_is_value_string (value))
+  {
+    ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER(value.value);
 
-  JERRY_UNREACHABLE();
+    if (ecma_string_get_length (str_p) == 0)
+    {
+      ret_value = ECMA_SIMPLE_VALUE_FALSE;
+    }
+    else
+    {
+      ret_value = ECMA_SIMPLE_VALUE_TRUE;
+    }
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_value_object (value));
+
+    ret_value = ECMA_SIMPLE_VALUE_TRUE;
+  }
+
+  return ecma_make_simple_completion_value (ret_value);
 } /* ecma_op_to_boolean */
 
 /**
@@ -280,73 +249,63 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_number (ecma_value_t value) /**< ecma-value */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (ecma_is_value_number (value))
   {
-    case ECMA_TYPE_NUMBER:
-    {
-      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
-    }
-    case ECMA_TYPE_SIMPLE:
-    {
-      ecma_number_t *num_p = ecma_alloc_number ();
-
-      switch ((ecma_simple_value_t)value.value)
-      {
-        case ECMA_SIMPLE_VALUE_UNDEFINED:
-        {
-          *num_p = ecma_number_make_nan ();
-
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_NULL:
-        case ECMA_SIMPLE_VALUE_FALSE:
-        {
-          *num_p = ECMA_NUMBER_ZERO;
-
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_TRUE:
-        {
-          *num_p = ECMA_NUMBER_ONE;
-
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_EMPTY:
-        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
-        case ECMA_SIMPLE_VALUE__COUNT:
-        {
-          JERRY_UNREACHABLE ();
-        }
-      }
-
-      return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-    }
-    case ECMA_TYPE_STRING:
-    {
-      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (value.value);
-
-      ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = ecma_string_to_number (str_p);
-
-      return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-    }
-    case ECMA_TYPE_OBJECT:
-    {
-      ecma_completion_value_t ret_value;
-
-      ECMA_TRY_CATCH (completion_to_primitive,
-                      ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
-                      ret_value);
-
-      ret_value = ecma_op_to_number (completion_to_primitive.u.value);
-
-      ECMA_FINALIZE (completion_to_primitive);
-
-      return ret_value;
-    }
+    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
   }
+  else if (ecma_is_value_string (value))
+  {
+    ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (value.value);
 
-  JERRY_UNREACHABLE();
+    ecma_number_t *num_p = ecma_alloc_number ();
+    *num_p = ecma_string_to_number (str_p);
+
+    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
+  else if (ecma_is_value_object (value))
+  {
+    ecma_completion_value_t ret_value;
+
+    ECMA_TRY_CATCH (completion_to_primitive,
+                    ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
+                    ret_value);
+
+    ret_value = ecma_op_to_number (completion_to_primitive.u.value);
+
+    ECMA_FINALIZE (completion_to_primitive);
+
+    return ret_value;
+  }
+  else
+  {
+    ecma_number_t *num_p = ecma_alloc_number ();
+
+    if (ecma_is_value_undefined (value))
+    {
+      *num_p = ecma_number_make_nan ();
+    }
+    else if (ecma_is_value_null (value))
+    {
+      *num_p = ECMA_NUMBER_ZERO;
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_value_boolean (value));
+
+      if (ecma_is_value_true (value))
+      {
+        *num_p = ECMA_NUMBER_ONE;
+      }
+      else
+      {
+        *num_p = ECMA_NUMBER_ZERO;
+      }
+    }
+
+    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
 } /* ecma_op_to_number */
 
 /**
@@ -361,6 +320,8 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 {
+  ecma_check_value_type_is_spec_defined (value);
+
   if (unlikely (ecma_is_value_object (value)))
   {
     ecma_completion_value_t ret_value;
@@ -375,70 +336,44 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
     return ret_value;
   }
-
-  ecma_string_t *res_p = NULL;
-
-  switch ((ecma_type_t) value.value_type)
+  else
   {
-    case ECMA_TYPE_SIMPLE:
-    {
-      switch ((ecma_simple_value_t) value.value)
-      {
-        case ECMA_SIMPLE_VALUE_UNDEFINED:
-        {
-          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_NULL:
-        {
-          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_FALSE:
-        {
-          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_TRUE:
-        {
-          res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
-          break;
-        }
+    ecma_string_t *res_p = NULL;
 
-        case ECMA_SIMPLE_VALUE_EMPTY:
-        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
-        case ECMA_SIMPLE_VALUE__COUNT:
-        {
-          JERRY_UNREACHABLE ();
-        }
-      }
-
-      break;
-    }
-
-    case ECMA_TYPE_NUMBER:
-    {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (value.value);
-      res_p = ecma_new_ecma_string_from_number (*num_p);
-
-      break;
-    }
-
-    case ECMA_TYPE_STRING:
+    if (ecma_is_value_string (value))
     {
       res_p = ECMA_GET_NON_NULL_POINTER (value.value);
       res_p = ecma_copy_or_ref_ecma_string (res_p);
-
-      break;
     }
-
-    case ECMA_TYPE_OBJECT:
+    else if (ecma_is_value_number (value))
     {
-      JERRY_UNREACHABLE ();
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (value.value);
+      res_p = ecma_new_ecma_string_from_number (*num_p);
     }
-  }
+    else if (ecma_is_value_undefined (value))
+    {
+      res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+    }
+    else if (ecma_is_value_null (value))
+    {
+      res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_value_boolean (value));
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (res_p));
+      if (ecma_is_value_true (value))
+      {
+        res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
+      }
+      else
+      {
+        res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
+      }
+    }
+
+    return ecma_make_normal_completion_value (ecma_make_string_value (res_p));
+  }
 } /* ecma_op_to_string */
 
 /**
@@ -453,48 +388,34 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_object (ecma_value_t value) /**< ecma-value */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (ecma_is_value_number (value))
   {
-    case ECMA_TYPE_SIMPLE:
+    return ecma_op_create_number_object (value);
+  }
+  else if (ecma_is_value_string (value))
+  {
+    return ecma_op_create_string_object (&value, 1);
+  }
+  else if (ecma_is_value_object (value))
+  {
+    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+  }
+  else
+  {
+    if (ecma_is_value_undefined (value)
+        || ecma_is_value_null (value))
     {
-      switch ((ecma_simple_value_t)value.value)
-      {
-        case ECMA_SIMPLE_VALUE_UNDEFINED:
-        case ECMA_SIMPLE_VALUE_NULL:
-        {
-          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-        }
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_value_boolean (value));
 
-        case ECMA_SIMPLE_VALUE_FALSE:
-        case ECMA_SIMPLE_VALUE_TRUE:
-        {
-          return ecma_op_create_boolean_object (value);
-        }
-        case ECMA_SIMPLE_VALUE_EMPTY:
-        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
-        case ECMA_SIMPLE_VALUE__COUNT:
-        {
-          JERRY_UNREACHABLE ();
-        }
-      }
-
-      JERRY_UNREACHABLE ();
-    }
-    case ECMA_TYPE_NUMBER:
-    {
-      return ecma_op_create_number_object (value);
-    }
-    case ECMA_TYPE_STRING:
-    {
-      return ecma_op_create_string_object (&value, 1);
-    }
-    case ECMA_TYPE_OBJECT:
-    {
-      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+      return ecma_op_create_boolean_object (value);
     }
   }
-
-  JERRY_UNREACHABLE ();
 } /* ecma_op_to_object */
 
 /**

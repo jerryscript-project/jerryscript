@@ -82,38 +82,26 @@ ecma_op_create_object_object_noarg (void)
 ecma_completion_value_t
 ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of constructor */
 {
-  switch ((ecma_type_t)value.value_type)
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (ecma_is_value_object (value)
+      || ecma_is_value_number (value)
+      || ecma_is_value_string (value)
+      || ecma_is_value_boolean (value))
   {
-    case ECMA_TYPE_OBJECT:
-    {
-      // 1.a
-      return ecma_make_normal_completion_value (ecma_copy_value (value, true));
-    }
-    case ECMA_TYPE_NUMBER:
-    case ECMA_TYPE_STRING:
-    {
-      // 1.b, 1.d
-      return ecma_op_to_object (value);
-    }
-    case ECMA_TYPE_SIMPLE:
-    {
-      // 1.c
-      if (ecma_is_value_boolean (value))
-      {
-        return ecma_op_to_object (value);
-      }
-
-      // 2.
-      JERRY_ASSERT (ecma_is_value_undefined (value)
-                    || ecma_is_value_null (value));
-
-      ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
-
-      return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
-    }
+    // 1.b, 1.c, 1.d
+    return ecma_op_to_object (value);
   }
+  else
+  {
+    // 2.
+    JERRY_ASSERT (ecma_is_value_undefined (value)
+                  || ecma_is_value_null (value));
 
-  JERRY_UNREACHABLE();
+    ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+
+    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  }
 } /* ecma_op_create_object_object_arg */
 
 /**

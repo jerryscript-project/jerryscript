@@ -1360,58 +1360,37 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   ecma_string_t *type_str_p = NULL;
 
-  switch ((ecma_type_t)typeof_arg.value_type)
+  if (ecma_is_value_undefined (typeof_arg))
   {
-    case ECMA_TYPE_SIMPLE:
+    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+  }
+  else if (ecma_is_value_null (typeof_arg))
+  {
+    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
+  }
+  else if (ecma_is_value_boolean (typeof_arg))
+  {
+    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_BOOLEAN);
+  }
+  else if (ecma_is_value_number (typeof_arg))
+  {
+    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NUMBER);
+  }
+  else if (ecma_is_value_string (typeof_arg))
+  {
+    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_STRING);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_value_object (typeof_arg));
+
+    if (ecma_op_is_callable (typeof_arg))
     {
-      switch ((ecma_simple_value_t)typeof_arg.value)
-      {
-        case ECMA_SIMPLE_VALUE_UNDEFINED:
-        {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_NULL:
-        {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_FALSE:
-        case ECMA_SIMPLE_VALUE_TRUE:
-        {
-          type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_BOOLEAN);
-          break;
-        }
-        case ECMA_SIMPLE_VALUE_EMPTY:
-        case ECMA_SIMPLE_VALUE_ARRAY_REDIRECT:
-        case ECMA_SIMPLE_VALUE__COUNT:
-        {
-          JERRY_UNREACHABLE ();
-        }
-      }
-      break;
+      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FUNCTION);
     }
-    case ECMA_TYPE_NUMBER:
+    else
     {
-      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NUMBER);
-      break;
-    }
-    case ECMA_TYPE_STRING:
-    {
-      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_STRING);
-      break;
-    }
-    case ECMA_TYPE_OBJECT:
-    {
-      if (ecma_op_is_callable (typeof_arg))
-      {
-        type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FUNCTION);
-      }
-      else
-      {
-        type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
-      }
-      break;
+      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
     }
   }
 

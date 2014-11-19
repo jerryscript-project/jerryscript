@@ -56,11 +56,11 @@
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this argument */
 {
-  if (this.value_type == ECMA_TYPE_STRING)
+  if (ecma_is_value_string (this))
   {
     return ecma_make_normal_completion_value (ecma_copy_value (this, true));
   }
-  else if (this.value_type == ECMA_TYPE_OBJECT)
+  else if (ecma_is_value_object (this))
   {
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 

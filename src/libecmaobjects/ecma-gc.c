@@ -238,7 +238,7 @@ void
 ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< object */
                                                      ecma_value_t value) /**< value */
 {
-  if (value.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (value))
   {
     return;
   }
@@ -331,7 +331,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
       {
         ecma_value_t value = property_p->u.named_data_property.value;
 
-        if (value.value_type == ECMA_TYPE_OBJECT)
+        if (ecma_is_value_object (value))
         {
           ecma_object_t *value_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
 

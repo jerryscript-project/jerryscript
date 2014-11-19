@@ -73,7 +73,7 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
       return obj_this;
     }
 
-    JERRY_ASSERT (obj_this.u.value.value_type == ECMA_TYPE_OBJECT);
+    JERRY_ASSERT (ecma_is_value_object (obj_this.u.value));
 
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_this.u.value.value);
 

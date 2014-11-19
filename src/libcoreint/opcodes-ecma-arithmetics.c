@@ -125,8 +125,8 @@ opfunc_addition (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (prim_left_value, ecma_op_to_primitive (left_value.u.value, ECMA_PREFERRED_TYPE_NO), ret_value);
   ECMA_TRY_CATCH (prim_right_value, ecma_op_to_primitive (right_value.u.value, ECMA_PREFERRED_TYPE_NO), ret_value);
 
-  if (prim_left_value.u.value.value_type == ECMA_TYPE_STRING
-      || prim_right_value.u.value.value_type == ECMA_TYPE_STRING)
+  if (ecma_is_value_string (prim_left_value.u.value)
+      || ecma_is_value_string (prim_right_value.u.value))
   {
     ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value.u.value), ret_value);
     ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value.u.value), ret_value);

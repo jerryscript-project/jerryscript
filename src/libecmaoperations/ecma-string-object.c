@@ -67,7 +67,7 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
     {
       JERRY_ASSERT (ecma_is_completion_value_normal (to_str_arg_value));
 
-      JERRY_ASSERT (to_str_arg_value.u.value.value_type == ECMA_TYPE_STRING);
+      JERRY_ASSERT (ecma_is_value_string (to_str_arg_value.u.value));
       prim_prop_str_value_p = ECMA_GET_NON_NULL_POINTER (to_str_arg_value.u.value.value);
 
       int32_t string_len = ecma_string_get_length (prim_prop_str_value_p);

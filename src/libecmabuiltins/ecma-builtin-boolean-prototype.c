@@ -98,7 +98,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this) /**< this arg
   {
     return ecma_make_normal_completion_value (this);
   }
-  else if (this.value_type == ECMA_TYPE_OBJECT)
+  else if (ecma_is_value_object (this))
   {
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 

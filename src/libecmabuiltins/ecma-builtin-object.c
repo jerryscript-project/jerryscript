@@ -313,7 +313,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __unused, /**<
 {
   ecma_completion_value_t ret_value;
 
-  if (arg1.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (arg1))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }

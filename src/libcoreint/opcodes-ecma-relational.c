@@ -253,7 +253,7 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (right_value.u.value))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
@@ -300,7 +300,7 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  if (right_value.u.value.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (right_value.u.value))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }

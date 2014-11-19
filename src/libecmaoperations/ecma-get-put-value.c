@@ -80,9 +80,9 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
   const ecma_value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined (base);
   const bool has_primitive_base = (ecma_is_value_boolean (base)
-                                   || base.value_type == ECMA_TYPE_NUMBER
-                                   || base.value_type == ECMA_TYPE_STRING);
-  const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
+                                   || ecma_is_value_number (base)
+                                   || ecma_is_value_string (base));
+  const bool has_object_base = (ecma_is_value_object (base)
                                 && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
@@ -207,9 +207,9 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
   const ecma_value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined (base);
   const bool has_primitive_base = (ecma_is_value_boolean (base)
-                                   || base.value_type == ECMA_TYPE_NUMBER
-                                   || base.value_type == ECMA_TYPE_STRING);
-  const bool has_object_base = (base.value_type == ECMA_TYPE_OBJECT
+                                   || ecma_is_value_number (base)
+                                   || ecma_is_value_string (base));
+  const bool has_object_base = (ecma_is_value_object (base)
                                 && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 

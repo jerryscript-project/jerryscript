@@ -59,7 +59,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
   ecma_completion_value_t ret_value;
 
   // 2.
-  if (this.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (this))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
@@ -116,8 +116,8 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
       }
       else
       {
-        JERRY_ASSERT (name_to_str_completion.u.value.value_type == ECMA_TYPE_STRING);
-        JERRY_ASSERT (msg_to_str_completion.u.value.value_type == ECMA_TYPE_STRING);
+        JERRY_ASSERT (ecma_is_value_string (name_to_str_completion.u.value));
+        JERRY_ASSERT (ecma_is_value_string (msg_to_str_completion.u.value));
 
         ecma_string_t *name_string_p = ECMA_GET_NON_NULL_POINTER (name_to_str_completion.u.value.value);
         ecma_string_t *msg_string_p = ECMA_GET_NON_NULL_POINTER (msg_to_str_completion.u.value.value);

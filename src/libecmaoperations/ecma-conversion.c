@@ -99,16 +99,16 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
   const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = (x.value_type == ECMA_TYPE_NUMBER);
-  const bool is_x_string = (x.value_type == ECMA_TYPE_STRING);
-  const bool is_x_object = (x.value_type == ECMA_TYPE_OBJECT);
+  const bool is_x_number = ecma_is_value_number (x);
+  const bool is_x_string = ecma_is_value_string (x);
+  const bool is_x_object = ecma_is_value_object (x);
 
   const bool is_y_undefined = ecma_is_value_undefined (y);
   const bool is_y_null = ecma_is_value_null (y);
   const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = (y.value_type == ECMA_TYPE_NUMBER);
-  const bool is_y_string = (y.value_type == ECMA_TYPE_STRING);
-  const bool is_y_object = (y.value_type == ECMA_TYPE_OBJECT);
+  const bool is_y_number = ecma_is_value_number (y);
+  const bool is_y_string = ecma_is_value_string (y);
+  const bool is_y_object = ecma_is_value_object (y);
 
   const bool is_types_equal = ((is_x_undefined && is_y_undefined)
                                || (is_x_null && is_y_null)
@@ -361,7 +361,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
 ecma_completion_value_t
 ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 {
-  if (unlikely (value.value_type == ECMA_TYPE_OBJECT))
+  if (unlikely (ecma_is_value_object (value)))
   {
     ecma_completion_value_t ret_value;
 
@@ -643,7 +643,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1.
-  if (obj_value.value_type != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (obj_value))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
@@ -804,7 +804,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
           }
           else
           {
-            JERRY_ASSERT (get_prop_value.u.value.value_type == ECMA_TYPE_OBJECT);
+            JERRY_ASSERT (ecma_is_value_object (get_prop_value.u.value));
 
             ecma_object_t *get_p = ECMA_GET_NON_NULL_POINTER (get_prop_value.u.value.value);
             ecma_ref_object (get_p);
@@ -848,7 +848,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
           }
           else
           {
-            JERRY_ASSERT (set_prop_value.u.value.value_type == ECMA_TYPE_OBJECT);
+            JERRY_ASSERT (ecma_is_value_object (set_prop_value.u.value));
 
             ecma_object_t *set_p = ECMA_GET_NON_NULL_POINTER (set_prop_value.u.value.value);
             ecma_ref_object (set_p);

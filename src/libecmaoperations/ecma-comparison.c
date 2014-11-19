@@ -41,16 +41,16 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
   const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = (x.value_type == ECMA_TYPE_NUMBER);
-  const bool is_x_string = (x.value_type == ECMA_TYPE_STRING);
-  const bool is_x_object = (x.value_type == ECMA_TYPE_OBJECT);
+  const bool is_x_number = ecma_is_value_number (x);
+  const bool is_x_string = ecma_is_value_string (x);
+  const bool is_x_object = ecma_is_value_object (x);
 
   const bool is_y_undefined = ecma_is_value_undefined (y);
   const bool is_y_null = ecma_is_value_null (y);
   const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = (y.value_type == ECMA_TYPE_NUMBER);
-  const bool is_y_string = (y.value_type == ECMA_TYPE_STRING);
-  const bool is_y_object = (y.value_type == ECMA_TYPE_OBJECT);
+  const bool is_y_number = ecma_is_value_number (y);
+  const bool is_y_string = ecma_is_value_string (y);
+  const bool is_y_object = ecma_is_value_object (y);
 
   const bool is_types_equal = ((is_x_undefined && is_y_undefined)
                                || (is_x_null && is_y_null)
@@ -222,16 +222,16 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
   const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = (x.value_type == ECMA_TYPE_NUMBER);
-  const bool is_x_string = (x.value_type == ECMA_TYPE_STRING);
-  const bool is_x_object = (x.value_type == ECMA_TYPE_OBJECT);
+  const bool is_x_number = ecma_is_value_number (x);
+  const bool is_x_string = ecma_is_value_string (x);
+  const bool is_x_object = ecma_is_value_object (x);
 
   const bool is_y_undefined = ecma_is_value_undefined (y);
   const bool is_y_null = ecma_is_value_null (y);
   const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = (y.value_type == ECMA_TYPE_NUMBER);
-  const bool is_y_string = (y.value_type == ECMA_TYPE_STRING);
-  const bool is_y_object = (y.value_type == ECMA_TYPE_OBJECT);
+  const bool is_y_number = ecma_is_value_number (y);
+  const bool is_y_string = ecma_is_value_string (y);
+  const bool is_y_object = ecma_is_value_object (y);
 
   const bool is_types_equal = ((is_x_undefined && is_y_undefined)
                                || (is_x_null && is_y_null)
@@ -338,8 +338,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   px = left_first ? prim_first_converted_value : prim_second_converted_value;
   py = left_first ? prim_second_converted_value : prim_first_converted_value;
 
-  const bool is_px_string = (px.u.value.value_type == ECMA_TYPE_STRING);
-  const bool is_py_string = (py.u.value.value_type == ECMA_TYPE_STRING);
+  const bool is_px_string = ecma_is_value_string (px.u.value);
+  const bool is_py_string = ecma_is_value_string (py.u.value);
 
   if (!(is_px_string && is_py_string))
   {

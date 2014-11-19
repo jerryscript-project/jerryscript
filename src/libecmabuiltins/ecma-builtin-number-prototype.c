@@ -60,13 +60,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
 {
   ecma_number_t this_arg_number;
 
-  if (this.value_type == ECMA_TYPE_NUMBER)
+  if (ecma_is_value_number (this))
   {
     ecma_number_t *this_arg_number_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
     this_arg_number = *this_arg_number_p;
   }
-  else if (this.value_type == ECMA_TYPE_OBJECT)
+  else if (ecma_is_value_object (this))
   {
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 
@@ -128,11 +128,11 @@ ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this) /**< t
 static ecma_completion_value_t
 ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argument */
 {
-  if (this.value_type == ECMA_TYPE_NUMBER)
+  if (ecma_is_value_number (this))
   {
     return ecma_make_normal_completion_value (ecma_copy_value (this, true));
   }
-  else if (this.value_type == ECMA_TYPE_OBJECT)
+  else if (ecma_is_value_object (this))
   {
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
 

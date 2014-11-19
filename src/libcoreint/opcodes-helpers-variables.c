@@ -32,7 +32,7 @@ do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
 
   if (ref.is_strict)
   {
-    if (ref.base.value_type == ECMA_TYPE_OBJECT)
+    if (ecma_is_value_object (ref.base))
     {
       ecma_object_t *obj_p = ECMA_GET_POINTER (ref.base.value);
 

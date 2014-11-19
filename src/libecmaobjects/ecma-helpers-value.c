@@ -93,6 +93,42 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 } /* ecma_is_value_true */
 
 /**
+ * Check if the value is ecma-number.
+ *
+ * @return true - if the value contains ecma-number value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_value_number (ecma_value_t value) /**< ecma-value */
+{
+  return (value.value_type == ECMA_TYPE_NUMBER);
+} /* ecma_is_value_number */
+
+/**
+ * Check if the value is ecma-string.
+ *
+ * @return true - if the value contains ecma-string value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_value_string (ecma_value_t value) /**< ecma-value */
+{
+  return (value.value_type == ECMA_TYPE_STRING);
+} /* ecma_is_value_string */
+
+/**
+ * Check if the value is object.
+ *
+ * @return true - if the value contains object value,
+ *         false - otherwise.
+ */
+bool
+ecma_is_value_object (ecma_value_t value) /**< ecma-value */
+{
+  return (value.value_type == ECMA_TYPE_OBJECT);
+} /* ecma_is_value_object */
+
+/**
  * Simple value constructor
  */
 ecma_value_t

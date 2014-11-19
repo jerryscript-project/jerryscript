@@ -898,7 +898,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         }
         else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
         {
-          JERRY_ASSERT (value_for_prop_desc.u.value.value_type == ECMA_TYPE_OBJECT);
+          JERRY_ASSERT (ecma_is_value_object (value_for_prop_desc.u.value));
 
           prop_desc.is_get_defined = true;
           prop_desc.get_p = ECMA_GET_NON_NULL_POINTER (value_for_prop_desc.u.value.value);
@@ -911,7 +911,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         }
         else
         {
-          JERRY_ASSERT (value_for_prop_desc.u.value.value_type == ECMA_TYPE_OBJECT);
+          JERRY_ASSERT (ecma_is_value_object (value_for_prop_desc.u.value));
 
           prop_desc.is_set_defined = true;
           prop_desc.set_p = ECMA_GET_NON_NULL_POINTER (value_for_prop_desc.u.value.value);
@@ -1466,7 +1466,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
     }
     else
     {
-      JERRY_ASSERT (ref.base.value_type == ECMA_TYPE_OBJECT);
+      JERRY_ASSERT (ecma_is_value_object (ref.base));
       ecma_object_t *bindings_p = ECMA_GET_NON_NULL_POINTER (ref.base.value);
       JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
@@ -1514,7 +1514,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (check_coercible_ret, ecma_op_check_object_coercible (base_value.u.value), ret_value);
   ECMA_TRY_CATCH (str_name_value, ecma_op_to_string (name_value.u.value), ret_value);
 
-  JERRY_ASSERT (str_name_value.u.value.value_type == ECMA_TYPE_STRING);
+  JERRY_ASSERT (ecma_is_value_string (str_name_value.u.value));
   ecma_string_t *name_string_p = ECMA_GET_NON_NULL_POINTER (str_name_value.u.value.value);
 
   if (ecma_is_value_undefined (base_value.u.value))
@@ -1533,7 +1533,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   {
     ECMA_TRY_CATCH (obj_value, ecma_op_to_object (base_value.u.value), ret_value);
 
-    JERRY_ASSERT (obj_value.u.value.value_type == ECMA_TYPE_OBJECT);
+    JERRY_ASSERT (ecma_is_value_object (obj_value.u.value));
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_value.u.value.value);
     JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 

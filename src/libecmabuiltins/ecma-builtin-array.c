@@ -59,7 +59,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg __unused, /**< 'this' 
 {
   ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;
 
-  if (arg.value_type == ECMA_TYPE_OBJECT)
+  if (ecma_is_value_object (arg))
   {
     ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (arg.value);
 

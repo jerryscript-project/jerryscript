@@ -467,8 +467,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
 
       JERRY_ASSERT(ecma_is_value_undefined (prop_p->u.named_data_property.value));
 
-      prop_p->u.named_data_property.value.value_type = ECMA_TYPE_SIMPLE;
-      prop_p->u.named_data_property.value.value = ECMA_SIMPLE_VALUE_EMPTY;
+      prop_p->u.named_data_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
       return;
     }

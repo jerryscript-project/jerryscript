@@ -14,10 +14,10 @@ OBJCOPY = objcopy
 SIZE = size
 STRIP = strip
 
-MAIN_MODULE_SRC = ./src/main.c
+MAIN_MODULE_SRC = src/main.c
 
-LNK_SCRIPT_STM32F3 = ./third-party/stm32f3.ld
-LNK_SCRIPT_STM32F4 = ./third-party/stm32f4.ld
+LNK_SCRIPT_STM32F3 = third-party/stm32f3.ld
+LNK_SCRIPT_STM32F4 = third-party/stm32f4.ld
 
 # Parsing target
 #   '.' -> ' '
@@ -281,32 +281,32 @@ DEFINES_JERRY += -DJERRY_BUILD_DATE="\"$(BUILD_DATE)\"" \
 
 SOURCES_JERRY_C = \
  $(sort \
- $(wildcard ./src/libruntime/*.c) \
- $(wildcard ./src/libperipherals/*.c) \
- $(wildcard ./src/libjsparser/*.c) \
- $(wildcard ./src/libecmaobjects/*.c) \
- $(wildcard ./src/libecmaoperations/*.c) \
- $(wildcard ./src/libecmabuiltins/*.c) \
- $(wildcard ./src/liballocator/*.c) \
- $(wildcard ./src/libcoreint/*.c) \
- $(wildcard ./src/libintstructs/*.c) \
- $(wildcard ./src/liboptimizer/*.c ) \
- $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.c) )
+ $(wildcard src/libruntime/*.c) \
+ $(wildcard src/libperipherals/*.c) \
+ $(wildcard src/libjsparser/*.c) \
+ $(wildcard src/libecmaobjects/*.c) \
+ $(wildcard src/libecmaoperations/*.c) \
+ $(wildcard src/libecmabuiltins/*.c) \
+ $(wildcard src/liballocator/*.c) \
+ $(wildcard src/libcoreint/*.c) \
+ $(wildcard src/libintstructs/*.c) \
+ $(wildcard src/liboptimizer/*.c ) \
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c) )
 
 SOURCES_JERRY_H = \
  $(sort \
- $(wildcard ./src/*.h) \
- $(wildcard ./src/libruntime/*.h) \
- $(wildcard ./src/libperipherals/*.h) \
- $(wildcard ./src/libjsparser/*.h) \
- $(wildcard ./src/libecmaobjects/*.h) \
- $(wildcard ./src/libecmaoperations/*.h) \
- $(wildcard ./src/libecmabuiltins/*.h) \
- $(wildcard ./src/liballocator/*.h) \
- $(wildcard ./src/libcoreint/*.h) \
- $(wildcard ./src/liboptimizer/*.h) \
- $(wildcard ./src/libintstructs/*.h) \
- $(wildcard ./src/libruntime/target/$(TARGET_SYSTEM)/*.h) )
+ $(wildcard src/*.h) \
+ $(wildcard src/libruntime/*.h) \
+ $(wildcard src/libperipherals/*.h) \
+ $(wildcard src/libjsparser/*.h) \
+ $(wildcard src/libecmaobjects/*.h) \
+ $(wildcard src/libecmaoperations/*.h) \
+ $(wildcard src/libecmabuiltins/*.h) \
+ $(wildcard src/liballocator/*.h) \
+ $(wildcard src/libcoreint/*.h) \
+ $(wildcard src/liboptimizer/*.h) \
+ $(wildcard src/libintstructs/*.h) \
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.h) )
 
 SOURCES_JERRY_ASM = \
  $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.S)
@@ -410,11 +410,11 @@ ifeq ($(TARGET_SYSTEM),stm32f4)
  DEFINES_JERRY += -D__TARGET_MCU_STM32F4
  LDFLAGS += -nostartfiles -T$(LNK_SCRIPT_STM32F4)
  SOURCES_THIRDPARTY += \
- 	 	./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
-		./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f4xx.s \
-                ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c \
-                ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c \
-                ./third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
+ 	 	third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
+		third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f4xx.s \
+                third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c \
+                third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c \
+                third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
 
  INCLUDES_THIRDPARTY += \
  	 	-I third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Include \
@@ -426,17 +426,17 @@ else
    DEFINES_JERRY += -D__TARGET_MCU_STM32F3
    LDFLAGS += -nostartfiles -T$(LNK_SCRIPT_STM32F3)
    SOURCES_THIRDPARTY += \
- 	 	./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/system_stm32f30x.c             \
-                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/gcc_ride7/startup_stm32f30x.s  \
-                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c                            \
-                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c                           \
-                ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
+ 	 	third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/system_stm32f30x.c             \
+                third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/gcc_ride7/startup_stm32f30x.s  \
+                third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c                            \
+                third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c                           \
+                third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
 
    INCLUDES_THIRDPARTY += \
-                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include/ \
-                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc     \
-                -I ./third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/                     \
-                -I ./third-party/STM32F3-Discovery_FW_V1.1.0
+                -I third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include/ \
+                -I third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc     \
+                -I third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/                     \
+                -I third-party/STM32F3-Discovery_FW_V1.1.0
   endif
 endif
 
@@ -454,11 +454,21 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
-          ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
-	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
-          vera++ -r ./tools/vera++ -p jerry $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) -e --no-duplicate 1>$(TARGET_DIR)/vera.log
+	@changed_sources_and_headers_list=`comm -12 \
+                                      <(for file in $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) ; do echo $$file; done | sort) \
+                                      <(git diff --name-only origin/master | sort)`; \
+         echo "$$changed_sources_and_headers_list" | grep "\.h$$" > /dev/null; is_any_header_changed=$$?; \
+         if [ $$is_any_header_changed -eq 0 ]; \
+         then \
+           cpp_check_file_list="$(SOURCES_JERRY_C) $(MAIN_MODULE_SRC)"; \
+         else \
+           cpp_check_file_list="$$changed_sources_and_headers_list"; \
+         fi; \
+	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$cpp_check_file_list" == "" ]] || \
+          ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $$cpp_check_file_list $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
+          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null && \
+	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$changed_sources_and_headers_list" == "" ]] || \
+          vera++ -r ./tools/vera++ -p jerry $$changed_sources_and_headers_list -e --no-duplicate 1>$(TARGET_DIR)/vera.log
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \

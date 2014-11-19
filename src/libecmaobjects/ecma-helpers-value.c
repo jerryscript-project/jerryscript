@@ -35,7 +35,22 @@
 bool
 ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_EMPTY);
+  JERRY_STATIC_ASSERT (ECMA_TYPE_SIMPLE == 0 && ECMA_SIMPLE_VALUE_EMPTY == 0);
+  const uint16_t simple_empty = 0; // (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_EMPTY << 2u));
+
+  union
+  {
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
+
+  u.value = value;
+
+  bool is_empty = (u.uint16 == simple_empty);
+
+  JERRY_ASSERT (is_empty == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_EMPTY));
+
+  return is_empty;
 } /* ecma_is_value_empty */
 
 /**
@@ -47,7 +62,20 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_UNDEFINED);
+  const uint16_t simple_undefined = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_UNDEFINED << 2u));
+  union
+  {
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
+
+  u.value = value;
+
+  bool is_undefined = (u.uint16 == simple_undefined);
+
+  JERRY_ASSERT (is_undefined == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_UNDEFINED));
+
+  return is_undefined;
 } /* ecma_is_value_undefined */
 
 /**
@@ -59,7 +87,20 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_null (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_NULL);
+  const uint16_t simple_null = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_NULL << 2u));
+  union
+  {
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
+
+  u.value = value;
+
+  bool is_null = (u.uint16 == simple_null);
+
+  JERRY_ASSERT (is_null == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_NULL));
+
+  return is_null;
 } /* ecma_is_value_null */
 
 /**
@@ -71,8 +112,22 @@ ecma_is_value_null (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
 {
-  return ((value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_FALSE)
-          || (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE));
+  const uint16_t simple_false = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_FALSE << 2u));
+  const uint16_t simple_true = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_TRUE << 2u));
+  union
+  {
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
+
+  u.value = value;
+
+  bool is_boolean = (u.uint16 == simple_false || u.uint16 == simple_true);
+
+  JERRY_ASSERT (is_boolean == ((value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_FALSE)
+                               || (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE)));
+
+  return is_boolean;
 } /* ecma_is_value_boolean */
 
 /**
@@ -89,7 +144,20 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT(ecma_is_value_boolean (value));
 
-  return (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE);
+  const uint16_t simple_true = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_TRUE << 2u));
+  union
+  {
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
+
+  u.value = value;
+
+  bool is_true = (u.uint16 == simple_true);
+
+  JERRY_ASSERT (is_true == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE));
+
+  return is_true;
 } /* ecma_is_value_true */
 
 /**

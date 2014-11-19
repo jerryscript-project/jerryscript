@@ -359,14 +359,7 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   var_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_value.u.value.value);
 
   res_p = ecma_alloc_number ();
-  if (ecma_number_is_nan (*var_p))
-  {
-    *res_p = *var_p;
-  }
-  else
-  {
-    *res_p = ecma_number_negate (*var_p);
-  }
+  *res_p = ecma_number_negate (*var_p);
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));

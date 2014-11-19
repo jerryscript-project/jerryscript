@@ -299,13 +299,20 @@ ecma_number_get_sign_field (ecma_number_t num) /**< ecma-number */
 bool
 ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 {
+  bool is_nan = (num != num);
+
+#ifndef JERRY_NDEBUG
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
   uint64_t fraction = ecma_number_get_fraction_field (num);
 
    /* IEEE-754 2008, 3.4, a */
+  bool is_nan_ieee754 = ((biased_exp == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+                         && (fraction != 0));
 
-  return ((biased_exp == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
-          && (fraction != 0));
+  JERRY_ASSERT (is_nan == is_nan_ieee754);
+#endif /* !JERRY_NDEBUG */
+
+  return is_nan;
 } /* ecma_number_is_nan */
 
 /**
@@ -331,9 +338,20 @@ ecma_number_t
 ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
                                            false - for positive Infinity */
 {
-  return ecma_number_pack (sign,
-                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                           0u);
+  const ecma_number_t positive_infinity = ECMA_NUMBER_ONE / ECMA_NUMBER_ZERO;
+  const ecma_number_t negative_infinity = ecma_number_negate (positive_infinity);
+  
+  ecma_number_t sign_infinity = (sign ? negative_infinity : positive_infinity);
+
+#ifndef JERRY_NDEBUG
+  ecma_number_t sign_infinity_ieee754 = ecma_number_pack (sign,
+                                                          (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
+                                                          0u);
+
+  JERRY_ASSERT (sign_infinity == sign_infinity_ieee754);
+#endif /* !JERRY_NDEBUG */
+
+  return sign_infinity;
 } /* ecma_number_make_infinity */
 
 /**
@@ -348,7 +366,6 @@ ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
   JERRY_ASSERT (!ecma_number_is_nan (num));
 
   /* IEEE-754 2008, 3.4 */
-
   return (ecma_number_get_sign_field (num) != 0);
 } /* ecma_number_is_negative */
 
@@ -363,10 +380,17 @@ ecma_number_is_zero (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
 
-  /* IEEE-754 2008, 3.4, e */
+  bool is_zero = (num == ECMA_NUMBER_ZERO);
 
-  return (ecma_number_get_fraction_field (num) == 0
-          && ecma_number_get_biased_exponent_field (num) == 0);
+#ifndef JERRY_NDEBUG
+  /* IEEE-754 2008, 3.4, e */
+  bool is_zero_ieee754 = (ecma_number_get_fraction_field (num) == 0
+                          && ecma_number_get_biased_exponent_field (num) == 0);
+
+  JERRY_ASSERT (is_zero == is_zero_ieee754);
+#endif /* !JERRY_NDEBUG */
+
+  return is_zero;
 } /* ecma_number_is_zero */
 
 /**
@@ -381,13 +405,24 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
 
+  const ecma_number_t positive_infinity = ECMA_NUMBER_ONE / ECMA_NUMBER_ZERO;
+  const ecma_number_t negative_infinity = -positive_infinity;
+
+  bool is_infinity = (num == positive_infinity || num == negative_infinity);
+
+#ifndef JERRY_NDEBUG
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
   uint64_t fraction = ecma_number_get_fraction_field (num);
 
   /* IEEE-754 2008, 3.4, b */
 
-  return ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
-          && (fraction == 0));
+  bool is_infinity_ieee754 = ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+                              && (fraction == 0));
+
+  JERRY_ASSERT (is_infinity == is_infinity_ieee754);
+#endif /* !JERRY_NDEBUG */
+
+  return is_infinity;
 } /* ecma_number_is_infinity */
 
 /**
@@ -635,8 +670,9 @@ ecma_number_get_next (ecma_number_t num) /**< ecma-number */
 ecma_number_t
 ecma_number_negate (ecma_number_t num) /**< ecma-number */
 {
-  JERRY_ASSERT (!ecma_number_is_nan (num));
+  ecma_number_t negated = -num;
 
+#ifndef JERRY_NDEBUG
   bool sign;
   uint32_t biased_exp;
   uint64_t fraction;
@@ -645,7 +681,14 @@ ecma_number_negate (ecma_number_t num) /**< ecma-number */
 
   sign = !sign;
 
-  return ecma_number_pack (sign, biased_exp, fraction);
+  ecma_number_t negated_ieee754 = ecma_number_pack (sign, biased_exp, fraction);
+
+  JERRY_ASSERT (negated == negated_ieee754
+                || (ecma_number_is_nan (negated)
+                    && ecma_number_is_nan (negated_ieee754)));
+#endif /* !JERRY_NDEBUG */
+
+  return negated;
 } /* ecma_number_negate */
 
 /**
@@ -707,7 +750,7 @@ ecma_number_t
 ecma_number_substract (ecma_number_t left_num, /**< left operand */
                        ecma_number_t right_num) /**< right operand */
 {
-  return ecma_number_add (left_num, -right_num);
+  return ecma_number_add (left_num, ecma_number_negate (right_num));
 } /* ecma_number_substract */
 
 /**

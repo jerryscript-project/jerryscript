@@ -338,20 +338,9 @@ ecma_number_t
 ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
                                            false - for positive Infinity */
 {
-  const ecma_number_t positive_infinity = ECMA_NUMBER_ONE / ECMA_NUMBER_ZERO;
-  const ecma_number_t negative_infinity = ecma_number_negate (positive_infinity);
-  
-  ecma_number_t sign_infinity = (sign ? negative_infinity : positive_infinity);
-
-#ifndef JERRY_NDEBUG
-  ecma_number_t sign_infinity_ieee754 = ecma_number_pack (sign,
-                                                          (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                                                          0u);
-
-  JERRY_ASSERT (sign_infinity == sign_infinity_ieee754);
-#endif /* !JERRY_NDEBUG */
-
-  return sign_infinity;
+  return ecma_number_pack (sign,
+                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
+                           0u);
 } /* ecma_number_make_infinity */
 
 /**
@@ -405,24 +394,12 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
 
-  const ecma_number_t positive_infinity = ECMA_NUMBER_ONE / ECMA_NUMBER_ZERO;
-  const ecma_number_t negative_infinity = -positive_infinity;
-
-  bool is_infinity = (num == positive_infinity || num == negative_infinity);
-
-#ifndef JERRY_NDEBUG
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
   uint64_t fraction = ecma_number_get_fraction_field (num);
 
   /* IEEE-754 2008, 3.4, b */
-
-  bool is_infinity_ieee754 = ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
-                              && (fraction == 0));
-
-  JERRY_ASSERT (is_infinity == is_infinity_ieee754);
-#endif /* !JERRY_NDEBUG */
-
-  return is_infinity;
+  return ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+          && (fraction == 0));
 } /* ecma_number_is_infinity */
 
 /**

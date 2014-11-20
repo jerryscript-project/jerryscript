@@ -217,13 +217,17 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma-value */
 ecma_value_t
 ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
 {
-  ecma_value_t ret_value = (ecma_value_t)
+  union
   {
-    .value_type = ECMA_TYPE_SIMPLE,
-    .value = value
-  };
+    ecma_value_t value;
+    uint16_t uint16;
+  } u;
 
-  return ret_value;
+  u.uint16 = (uint16_t) (ECMA_TYPE_SIMPLE | (value << 2u));
+
+  JERRY_ASSERT (u.value.value_type == ECMA_TYPE_SIMPLE && u.value.value == value);
+
+  return u.value;
 } /* ecma_make_simple_value */
 
 /**
@@ -421,13 +425,28 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
 
   JERRY_ASSERT (is_type_ok);
 
-  ecma_completion_value_t ret_value = (ecma_completion_value_t)
+  union
   {
-    .type = type,
-    .u.value = value,
-  };
+    ecma_value_t value;
+    uint16_t uint16;
+  } u_v;
 
-  return ret_value;
+  u_v.value = value;
+
+  union
+  {
+    ecma_completion_value_t value;
+    uint32_t uint32;
+  } u_cv;
+
+  u_cv.uint32 = ((uint32_t) type | (uint32_t) (u_v.uint16 << 16u));
+
+  JERRY_ASSERT (u_cv.value.type == type &&
+                u_cv.value.padding == 0u &&
+                u_cv.value.u.value.value_type == value.value_type &&
+                u_cv.value.u.value.value == value.value);
+
+  return u_cv.value;
 } /* ecma_make_completion_value */
 
 /**

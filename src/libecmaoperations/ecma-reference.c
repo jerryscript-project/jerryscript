@@ -30,6 +30,34 @@
  */
 
 /**
+ * Resolve syntactic reference.
+ *
+ * @return if reference was resolved successfully,
+ *          pointer to lexical environment - reference's base,
+ *         else - NULL.
+ */
+ecma_object_t*
+ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
+                                ecma_string_t *name_p) /**< identifier's name */
+{
+  JERRY_ASSERT(lex_env_p != NULL);
+
+  ecma_object_t *lex_env_iter_p = lex_env_p;
+
+  while (lex_env_iter_p != NULL)
+  {
+    if (ecma_op_has_binding (lex_env_iter_p, name_p))
+    {
+      return lex_env_iter_p;
+    }
+
+    lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
+  }
+
+  return NULL;
+} /* ecma_op_resolve_reference_base */
+
+/**
  * Resolve syntactic reference to ECMA-reference.
  *
  * @return ECMA-reference
@@ -42,23 +70,20 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
 {
   JERRY_ASSERT(lex_env_p != NULL);
 
-  ecma_object_t *lex_env_iter_p = lex_env_p;
+  ecma_object_t *base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, name_p);
 
-  while (lex_env_iter_p != NULL)
+  if (base_lex_env_p != NULL)
   {
-    if (ecma_op_has_binding (lex_env_iter_p, name_p))
-    {
-      return ecma_make_reference (ecma_make_object_value (lex_env_iter_p),
-                                  name_p,
-                                  is_strict);
-    }
-
-    lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
+    return ecma_make_reference (ecma_make_object_value (base_lex_env_p),
+                                name_p,
+                                is_strict);
   }
-
-  return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                              name_p,
-                              is_strict);
+  else
+  {
+    return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                name_p,
+                                is_strict);
+  }
 } /* ecma_op_get_identifier_reference */
 
 /**

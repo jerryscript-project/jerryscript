@@ -1309,24 +1309,20 @@ evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
   {
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
 
-    ecma_reference_t ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                                             var_name_string_p,
-                                                             int_data->is_strict);
-
-    ecma_deref_ecma_string (var_name_string_p);
-
-    const bool is_unresolvable_reference = ecma_is_value_undefined (ref.base);
-
-    if (is_unresolvable_reference)
+    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
+                                                                        var_name_string_p);
+    if (ref_base_lex_env_p == NULL)
     {
       ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
-      ret_value = ecma_op_get_value_lex_env_base (ref);
+      ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
+                                                  var_name_string_p,
+                                                  int_data->is_strict);
     }
 
-    ecma_free_reference (ref);
+    ecma_deref_ecma_string (var_name_string_p);
   }
 
   return ret_value;

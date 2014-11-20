@@ -15,46 +15,42 @@
 
 #include "opcodes-ecma-support.h"
 
+#ifndef JERRY_NDEBUG
 /**
  * Perform so-called 'strict eval or arguments reference' check
  * that is used in definition of several statement handling algorithms,
  * but has no ECMA-defined name.
- *
- * @return true - if ref is strict reference
- *                   and it's base is lexical environment
- *                   and it's referenced name is 'eval' or 'arguments';
- *         false - otherwise.
  */
-static bool
-do_strict_eval_arguments_check (ecma_reference_t ref) /**< ECMA-reference */
+static void
+do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of ECMA-reference
+                                                                        (lexical environment) */
+                                ecma_string_t *var_name_string_p, /**< variable name */
+                                bool is_strict) /**< flag indicating strict mode */
 {
-  bool ret = false;
+  bool is_check_failed = false;
 
-  if (ref.is_strict)
+  if (is_strict)
   {
-    if (ecma_is_value_object (ref.base))
+    if (ref_base_lex_env_p != NULL)
     {
-      ecma_object_t *obj_p = ECMA_GET_POINTER (ref.base.value);
+      JERRY_ASSERT (ecma_is_lexical_environment (ref_base_lex_env_p));
 
-      if (obj_p != NULL
-          && ecma_is_lexical_environment (obj_p))
-      {
-        ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
-        ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+      ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
+      ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
 
-        ret = (ecma_compare_ecma_strings (ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
-                                          magic_string_eval)
-               || ecma_compare_ecma_strings (ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
-                                             magic_string_arguments));
+      is_check_failed = (ecma_compare_ecma_strings (var_name_string_p,
+                                                    magic_string_eval)
+                         || ecma_compare_ecma_strings (var_name_string_p,
+                                                       magic_string_arguments));
 
-        ecma_deref_ecma_string (magic_string_eval);
-        ecma_deref_ecma_string (magic_string_arguments);
-      }
+      ecma_deref_ecma_string (magic_string_eval);
+      ecma_deref_ecma_string (magic_string_arguments);
     }
   }
 
-  return ret;
+  JERRY_ASSERT (!is_check_failed);
 } /* do_strict_eval_arguments_check */
+#endif /* !JERRY_NDEBUG */
 
 /**
  * Check if the variable is register variable.
@@ -93,22 +89,25 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    ecma_reference_t ref;
-
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
 
-    ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                            var_name_string_p,
-                                            int_data->is_strict);
+    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
+                                                                        var_name_string_p);
 
-    /* SyntaxError should be treated as an early error */
-    JERRY_ASSERT (!do_eval_or_arguments_check
-                  || !do_strict_eval_arguments_check (ref));
+    if (do_eval_or_arguments_check)
+    {
+#ifndef JERRY_NDEBUG
+      do_strict_eval_arguments_check (ref_base_lex_env_p,
+                                      var_name_string_p,
+                                      int_data->is_strict);
+#endif /* !JERRY_NDEBUG */
+    }
 
-    ret_value = ecma_op_get_value_lex_env_base (ref);
+    ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
+                                                var_name_string_p,
+                                                int_data->is_strict);
 
     ecma_deref_ecma_string (var_name_string_p);
-    ecma_free_reference (ref);
   }
 
   return ret_value;
@@ -142,21 +141,23 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    ecma_reference_t ref;
-
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
 
-    ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                            var_name_string_p,
-                                            int_data->is_strict);
+    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
+                                                                        var_name_string_p);
 
-    /* SyntaxError should be treated as an early error */
-    JERRY_ASSERT (!do_strict_eval_arguments_check (ref));
+#ifndef JERRY_NDEBUG
+    do_strict_eval_arguments_check (ref_base_lex_env_p,
+                                    var_name_string_p,
+                                    int_data->is_strict);
+#endif /* !JERRY_NDEBUG */
 
-    ret_value = ecma_op_put_value_lex_env_base (ref, value);
+    ret_value = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+                                                var_name_string_p,
+                                                int_data->is_strict,
+                                                value);
 
     ecma_deref_ecma_string (var_name_string_p);
-    ecma_free_reference (ref);
   }
 
   return ret_value;

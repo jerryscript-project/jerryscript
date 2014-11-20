@@ -28,6 +28,9 @@
  * @{
  */
 
+extern ecma_object_t* ecma_op_resolve_reference_base (ecma_object_t *lex_env_p,
+                                                      ecma_string_t *name_p);
+
 extern ecma_reference_t ecma_op_get_identifier_reference (ecma_object_t *lex_env_p,
                                                           ecma_string_t *name_p,
                                                           bool is_strict);

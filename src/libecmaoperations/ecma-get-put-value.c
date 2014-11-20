@@ -44,10 +44,11 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_op_get_value_lex_env_base (ecma_reference_t ref) /**< ECMA-reference */
+ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
+                                ecma_string_t *var_name_string_p, /**< variable name */
+                                bool is_strict) /**< flag indicating strict mode */
 {
-  const ecma_value_t base = ref.base;
-  const bool is_unresolvable_reference = ecma_is_value_undefined (base);
+  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
   // 3.
   if (unlikely (is_unresolvable_reference))
@@ -56,14 +57,13 @@ ecma_op_get_value_lex_env_base (ecma_reference_t ref) /**< ECMA-reference */
   }
 
   // 5.
-  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER(base.value);
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT(ref_base_lex_env_p != NULL
+               && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
-  return ecma_op_get_binding_value (lex_env_p,
-                                    ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
-                                    ref.is_strict);
+  return ecma_op_get_binding_value (ref_base_lex_env_p,
+                                    var_name_string_p,
+                                    is_strict);
 } /* ecma_op_get_value_lex_env_base */
 
 /**
@@ -128,17 +128,18 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_op_put_value_lex_env_base (ecma_reference_t ref, /**< ECMA-reference */
+ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
+                                ecma_string_t *var_name_string_p, /**< variable name */
+                                bool is_strict, /**< flag indicating strict mode */
                                 ecma_value_t value) /**< ECMA-value */
 {
-  const ecma_value_t base = ref.base;
-  const bool is_unresolvable_reference = ecma_is_value_undefined (base);
+  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
   // 3.
   if (unlikely (is_unresolvable_reference))
   {
     // 3.a.
-    if (ref.is_strict)
+    if (is_strict)
     {
       return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
     }
@@ -148,7 +149,7 @@ ecma_op_put_value_lex_env_base (ecma_reference_t ref, /**< ECMA-reference */
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
-                                                               ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
+                                                               var_name_string_p,
                                                                value,
                                                                false);
 
@@ -162,15 +163,14 @@ ecma_op_put_value_lex_env_base (ecma_reference_t ref, /**< ECMA-reference */
   }
 
   // 5.
-  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER(base.value);
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT(ref_base_lex_env_p != NULL
+               && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
-  return ecma_op_set_mutable_binding (lex_env_p,
-                                      ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
+  return ecma_op_set_mutable_binding (ref_base_lex_env_p,
+                                      var_name_string_p,
                                       value,
-                                      ref.is_strict);
+                                      is_strict);
 } /* ecma_op_put_value_lex_env_base */
 
 /**

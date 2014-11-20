@@ -68,21 +68,6 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-      ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
-      bool is_equal = false;
-      if (ecma_compare_ecma_strings (name_p, arguments_magic_string_p))
-      {
-        is_equal = true;
-      }
-      ecma_deref_ecma_string (arguments_magic_string_p);
-
-      if (is_equal)
-      {
-        return true;
-      }
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
-
       ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
       return (property_p != NULL);
@@ -195,7 +180,8 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
+#ifndef JERRY_NDEBUG
+# ifdef CONFIG_ECMA_COMPACT_PROFILE
       bool is_equal = false;
 
       ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
@@ -205,11 +191,14 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
       }
       ecma_deref_ecma_string (arguments_magic_string_p);
 
+      JERRY_ASSERT (!is_equal);
+
       if (is_equal)
       {
         return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
       }
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+# endif /* CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* !JERRY_NDEBUG */
 
       ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 
@@ -272,7 +261,8 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
+#ifndef JERRY_NDEBUG
+# ifdef CONFIG_ECMA_COMPACT_PROFILE
       bool is_equal = false;
 
       ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
@@ -282,11 +272,14 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
       }
       ecma_deref_ecma_string (arguments_magic_string_p);
 
+      JERRY_ASSERT (!is_equal);
+
       if (is_equal)
       {
         return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
       }
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+# endif /* CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* !JERRY_NDEBUG */
 
       ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 

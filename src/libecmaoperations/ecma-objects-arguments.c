@@ -133,7 +133,8 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     ecma_string_t *formal_params[formal_params_number];
 
     JERRY_ASSERT (formal_params_iter_p->current_value_p == NULL);
-    for (uint32_t param_index = 0;
+    uint32_t param_index;
+    for (param_index = 0;
          ecma_collection_iterator_next (formal_params_iter_p);
          param_index++)
     {
@@ -143,6 +144,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       JERRY_ASSERT (ecma_is_value_string (*formal_params_iter_p->current_value_p));
       formal_params[param_index] = ECMA_GET_NON_NULL_POINTER (formal_params_iter_p->current_value_p->value);
     }
+    JERRY_ASSERT (param_index == formal_params_number);
 
     for (int32_t indx = formal_params_number - 1;
          indx >= 0;

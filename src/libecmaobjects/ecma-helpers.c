@@ -46,8 +46,8 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
 
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  ECMA_NULL_POINTER,
-                                                 ECMA_OBJECT_PROPERTIES_CP_POS,
-                                                 ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+                                                 ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                 ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  false,
                                                  ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
@@ -92,8 +92,8 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
   new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
                                                                   ECMA_NULL_POINTER,
-                                                                  ECMA_OBJECT_PROPERTIES_CP_POS,
-                                                                  ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+                                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
                                                                   true,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
@@ -136,10 +136,6 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
   ecma_init_gc_info (new_lexical_environment_p);
 
   new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
-                                                                  ECMA_NULL_POINTER,
-                                                                  ECMA_OBJECT_PROPERTIES_CP_POS,
-                                                                  ECMA_OBJECT_PROPERTIES_CP_WIDTH);
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
                                                                   true,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
@@ -156,13 +152,17 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
 
-  ecma_property_t *provide_this_prop_p = ecma_create_internal_property (new_lexical_environment_p,
-                                                                        ECMA_INTERNAL_PROPERTY_PROVIDE_THIS);
-  provide_this_prop_p->u.internal_property.value = provide_this;
+  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+                                                                  provide_this,
+                                                                  ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
+                                                                  ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH);
 
-  ecma_property_t *binding_object_prop_p = ecma_create_internal_property (new_lexical_environment_p,
-                                                                          ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
-  ECMA_SET_POINTER(binding_object_prop_p->u.internal_property.value, binding_obj_p);
+  uint64_t bound_object_cp;
+  ECMA_SET_NON_NULL_POINTER (bound_object_cp, binding_obj_p);
+  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+                                                                  bound_object_cp,
+                                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_p, binding_obj_p);
 
   return new_lexical_environment_p;
@@ -250,7 +250,7 @@ ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
   uintptr_t prototype_object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
@@ -322,7 +322,7 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
   uintptr_t outer_reference_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
@@ -336,11 +336,13 @@ ecma_property_t* __attribute_pure__
 ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p) ||
+                ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   uintptr_t properties_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
-                                                               ECMA_OBJECT_PROPERTIES_CP_POS,
-                                                               ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+                                                               ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                               ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   return ECMA_GET_POINTER (properties_cp);
 } /* ecma_get_property_list */
 
@@ -352,15 +354,52 @@ ecma_set_property_list (ecma_object_t *object_p, /**< object or lexical environm
                         ecma_property_t *property_list_p) /**< properties' list */
 {
   JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p) ||
+                ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   uint64_t properties_cp;
   ECMA_SET_POINTER (properties_cp, property_list_p);
 
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  properties_cp,
-                                                 ECMA_OBJECT_PROPERTIES_CP_POS,
-                                                 ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+                                                 ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                 ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
 } /* ecma_set_property_list */
+
+/**
+ * Get lexical environment's 'provideThis' property
+ */
+bool __attribute_pure__
+ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p) &&
+                ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
+
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
+  bool provide_this = (jrt_extract_bit_field (object_p->container,
+                                              ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
+                                              ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH) != 0);
+
+  return provide_this;
+} /* ecma_get_lex_env_provide_this */
+
+/**
+ * Get lexical environment's bound object.
+ */
+ecma_object_t* __attribute_pure__
+ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p) &&
+                ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
+
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
+  uintptr_t object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+                                                           ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
+                                                           ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
+  return ECMA_GET_NON_NULL_POINTER (object_cp);
+} /* ecma_get_lex_env_binding_object */
 
 /**
  * Create internal property in an object and link it into
@@ -690,10 +729,8 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
-    case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
-    case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
     case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */

@@ -109,7 +109,7 @@ ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
   uintptr_t next_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                          ECMA_OBJECT_GC_NEXT_CP_POS,
                                                          ECMA_OBJECT_GC_NEXT_CP_WIDTH);
@@ -129,7 +129,7 @@ ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
   uintptr_t next_cp;
   ECMA_SET_POINTER (next_cp, next_object_p);
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_CP_WIDTH);
+  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  next_cp,
                                                  ECMA_OBJECT_GC_NEXT_CP_POS,
@@ -289,6 +289,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
   ecma_gc_set_object_visited (object_p, true);
 
   bool does_reference_object_to_traverse = false;
+  bool traverse_properties = true;
 
   if (ecma_is_lexical_environment (object_p))
   {
@@ -302,6 +303,22 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
       }
 
       does_reference_object_to_traverse = true;
+    }
+
+    if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
+    {
+      ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
+      if (ecma_gc_get_object_generation (binding_object_p) <= maximum_gen_to_traverse)
+      {
+        if (!ecma_gc_is_object_visited (binding_object_p))
+        {
+          ecma_gc_mark (binding_object_p, ECMA_GC_GEN_COUNT);
+        }
+
+        does_reference_object_to_traverse = true;
+      }
+
+      traverse_properties = false;
     }
   }
   else
@@ -319,127 +336,128 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
     }
   }
 
-  for (ecma_property_t *property_p = ecma_get_property_list (object_p), *next_property_p;
-       property_p != NULL;
-       property_p = next_property_p)
+  if (traverse_properties)
   {
-    next_property_p = ECMA_GET_POINTER(property_p->next_property_p);
-
-    switch ((ecma_property_type_t) property_p->type)
+    for (ecma_property_t *property_p = ecma_get_property_list (object_p), *next_property_p;
+         property_p != NULL;
+         property_p = next_property_p)
     {
-      case ECMA_PROPERTY_NAMEDDATA:
+      next_property_p = ECMA_GET_POINTER(property_p->next_property_p);
+
+      switch ((ecma_property_type_t) property_p->type)
       {
-        ecma_value_t value = property_p->u.named_data_property.value;
-
-        if (ecma_is_value_object (value))
+        case ECMA_PROPERTY_NAMEDDATA:
         {
-          ecma_object_t *value_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+          ecma_value_t value = property_p->u.named_data_property.value;
 
-          if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
+          if (ecma_is_value_object (value))
           {
-            if (!ecma_gc_is_object_visited (value_obj_p))
+            ecma_object_t *value_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+
+            if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
             {
-              ecma_gc_mark (value_obj_p, ECMA_GC_GEN_COUNT);
-            }
-
-            does_reference_object_to_traverse = true;
-          }
-        }
-
-        break;
-      }
-
-      case ECMA_PROPERTY_NAMEDACCESSOR:
-      {
-        ecma_object_t *getter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.get_p);
-        ecma_object_t *setter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.set_p);
-
-        if (getter_obj_p != NULL)
-        {
-          if (ecma_gc_get_object_generation (getter_obj_p) <= maximum_gen_to_traverse)
-          {
-            if (!ecma_gc_is_object_visited (getter_obj_p))
-            {
-              ecma_gc_mark (getter_obj_p, ECMA_GC_GEN_COUNT);
-            }
-
-            does_reference_object_to_traverse = true;
-          }
-        }
-
-        if (setter_obj_p != NULL)
-        {
-          if (ecma_gc_get_object_generation (setter_obj_p) <= maximum_gen_to_traverse)
-          {
-            if (!ecma_gc_is_object_visited (setter_obj_p))
-            {
-              ecma_gc_mark (setter_obj_p, ECMA_GC_GEN_COUNT);
-            }
-
-            does_reference_object_to_traverse = true;
-          }
-        }
-
-        break;
-      }
-
-      case ECMA_PROPERTY_INTERNAL:
-      {
-        ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
-        uint32_t property_value = property_p->u.internal_property.value;
-
-        switch (property_id)
-        {
-          case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
-          case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
-          {
-            JERRY_UNIMPLEMENTED("Indexed array storage is not implemented yet.");
-          }
-
-          case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
-                                                      (see above in the routine) */
-          case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
-                                                       (see above in the routine) */
-          {
-            JERRY_UNREACHABLE();
-          }
-
-          case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection of strings */
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
-          case ECMA_INTERNAL_PROPERTY_PROVIDE_THIS: /* a boolean */
-          case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-          case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
-          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
-          {
-            break;
-          }
-
-          case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
-          case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
-          case ECMA_INTERNAL_PROPERTY_BINDING_OBJECT: /* an object */
-          {
-            ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(property_value);
-
-            if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
-            {
-              if (!ecma_gc_is_object_visited (obj_p))
+              if (!ecma_gc_is_object_visited (value_obj_p))
               {
-                ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
+                ecma_gc_mark (value_obj_p, ECMA_GC_GEN_COUNT);
               }
 
               does_reference_object_to_traverse = true;
             }
-
-            break;
           }
+
+          break;
         }
 
-        break;
+        case ECMA_PROPERTY_NAMEDACCESSOR:
+        {
+          ecma_object_t *getter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.get_p);
+          ecma_object_t *setter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.set_p);
+
+          if (getter_obj_p != NULL)
+          {
+            if (ecma_gc_get_object_generation (getter_obj_p) <= maximum_gen_to_traverse)
+            {
+              if (!ecma_gc_is_object_visited (getter_obj_p))
+              {
+                ecma_gc_mark (getter_obj_p, ECMA_GC_GEN_COUNT);
+              }
+
+              does_reference_object_to_traverse = true;
+            }
+          }
+
+          if (setter_obj_p != NULL)
+          {
+            if (ecma_gc_get_object_generation (setter_obj_p) <= maximum_gen_to_traverse)
+            {
+              if (!ecma_gc_is_object_visited (setter_obj_p))
+              {
+                ecma_gc_mark (setter_obj_p, ECMA_GC_GEN_COUNT);
+              }
+
+              does_reference_object_to_traverse = true;
+            }
+          }
+
+          break;
+        }
+
+        case ECMA_PROPERTY_INTERNAL:
+        {
+          ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
+          uint32_t property_value = property_p->u.internal_property.value;
+
+          switch (property_id)
+          {
+            case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
+            case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
+            {
+              JERRY_UNIMPLEMENTED("Indexed array storage is not implemented yet.");
+            }
+
+            case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
+                                                        (see above in the routine) */
+            case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
+                                                         (see above in the routine) */
+            {
+              JERRY_UNREACHABLE();
+            }
+
+            case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection of strings */
+            case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
+            case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
+            case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
+            case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
+            case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
+            case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
+            case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
+            case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
+            case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
+            {
+              break;
+            }
+
+            case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
+            case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
+            {
+              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(property_value);
+
+              if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
+              {
+                if (!ecma_gc_is_object_visited (obj_p))
+                {
+                  ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
+                }
+
+                does_reference_object_to_traverse = true;
+              }
+
+              break;
+            }
+          }
+
+          break;
+        }
       }
     }
   }
@@ -460,14 +478,17 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                && !ecma_gc_is_object_visited (object_p)
                && ecma_gc_get_object_refs (object_p) == 0);
 
-  for (ecma_property_t *property = ecma_get_property_list (object_p),
-       *next_property_p;
-       property != NULL;
-       property = next_property_p)
+  if (!ecma_is_lexical_environment (object_p) ||
+      ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
   {
-    next_property_p = ECMA_GET_POINTER(property->next_property_p);
+    for (ecma_property_t *property = ecma_get_property_list (object_p), *next_property_p;
+         property != NULL;
+         property = next_property_p)
+    {
+      next_property_p = ECMA_GET_POINTER(property->next_property_p);
 
-    ecma_free_property (object_p, property);
+      ecma_free_property (object_p, property);
+    }
   }
 
   ecma_dealloc_object (object_p);

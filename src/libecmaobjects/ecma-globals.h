@@ -187,12 +187,6 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE, /**< [[Primitive value]] for Number objects */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE, /**< [[Primitive value]] for Boolean objects */
 
-  /** provideThis property of lexical environment */
-  ECMA_INTERNAL_PROPERTY_PROVIDE_THIS,
-
-  /** binding object of lexical environment */
-  ECMA_INTERNAL_PROPERTY_BINDING_OBJECT,
-
   /** Part of an array, that is indexed by numbers */
   ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES,
 
@@ -354,15 +348,15 @@ typedef struct
 /**
  * Compressed pointer to property list
  */
-#define ECMA_OBJECT_PROPERTIES_CP_POS   (0)
-#define ECMA_OBJECT_PROPERTIES_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+#define ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS   (0)
+#define ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Flag indicating whether it is a general object (false)
  * or a lexical environment (true)
  */
-#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS (ECMA_OBJECT_PROPERTIES_CP_POS + \
-                                                ECMA_OBJECT_PROPERTIES_CP_WIDTH)
+#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS (ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS + \
+                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH)
 #define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH (1)
 
 /**
@@ -456,10 +450,17 @@ typedef struct
 #define ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
+ * 'provideThis' property of object-bound lexical environments
+ */
+#define ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS (ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS + \
+                                              ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH)
+#define ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH (1)
+
+/**
  * Size of structure for lexical environments
  */
-#define ECMA_OBJECT_LEX_ENV_TYPE_SIZE (ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS + \
-                                       ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH)
+#define ECMA_OBJECT_LEX_ENV_TYPE_SIZE (ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS + \
+                                       ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH)
 
   uint64_t container; /**< container for fields described above */
 } ecma_object_t;

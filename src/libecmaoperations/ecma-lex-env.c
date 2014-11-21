@@ -32,25 +32,6 @@
  */
 
 /**
- * Get binding object of object lexical environment.
- *
- * @return pointer to binding object
- */
-static ecma_object_t*
-ecma_get_lex_env_binding_object (ecma_object_t* obj_lex_env_p) /**< object lexical environment */
-{
-  JERRY_ASSERT(obj_lex_env_p != NULL
-               && ecma_is_lexical_environment (obj_lex_env_p)
-               && ecma_get_lex_env_type (obj_lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
-
-  ecma_property_t *binding_obj_prop_p = ecma_get_property_list (obj_lex_env_p);
-  JERRY_ASSERT(binding_obj_prop_p != NULL
-               && binding_obj_prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_BINDING_OBJECT);
-
-  return ECMA_GET_NON_NULL_POINTER (binding_obj_prop_p->u.internal_property.value);
-} /* ecma_get_lex_env_binding_object */
-
-/**
  * HasBinding operation.
  *
  * See also: ECMA-262 v5, 10.2.1
@@ -408,12 +389,7 @@ ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment 
     }
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
-      ecma_property_t *provide_this_prop_p = ecma_get_internal_property (lex_env_p,
-                                                                         ECMA_INTERNAL_PROPERTY_PROVIDE_THIS);
-
-      bool provide_this = provide_this_prop_p->u.internal_property.value;
-
-      if (provide_this)
+      if (ecma_get_lex_env_provide_this (lex_env_p))
       {
         ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
         ecma_ref_object (binding_obj_p);

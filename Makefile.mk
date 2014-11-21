@@ -454,21 +454,39 @@ all: clean $(JERRY_TARGETS)
 $(JERRY_TARGETS):
 	@rm -rf $(TARGET_DIR)
 	@mkdir -p $(TARGET_DIR)
-	@changed_sources_and_headers_list=`comm -12 \
-                                      <(for file in $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) ; do echo $$file; done | sort) \
-                                      <(git diff --name-only origin/master | sort)`; \
-         echo "$$changed_sources_and_headers_list" | grep "\.h$$" > /dev/null; is_any_header_changed=$$?; \
-         if [ $$is_any_header_changed -eq 0 ]; \
-         then \
-           cpp_check_file_list="$(SOURCES_JERRY_C) $(MAIN_MODULE_SRC)"; \
-         else \
-           cpp_check_file_list="$$changed_sources_and_headers_list"; \
-         fi; \
+	@source_and_headers_list=$$(for file in $(SOURCES_JERRY_C) $(MAIN_MODULE_SRC) $(SOURCES_JERRY_H) ; do echo $$file; done | sort); \
+     changed_sources_and_headers_list=`comm -12 \
+                                       <(echo "$$source_and_headers_list") \
+                                       <(git diff --name-only origin/master | sort)`; \
+     cpp_check_file_list=$$(echo "$$changed_sources_and_headers_list" | sort); \
+     source_to_grep_for_includes="$$source_and_headers_list"; \
+     while [[ "$$source_to_grep_for_includes" != "" ]]; \
+     do \
+       new_cpp_check_file_list="$$cpp_check_file_list"; \
+       source_to_grep_for_includes=$$(comm -23 \
+                                      <(echo "$$source_to_grep_for_includes") \
+                                      <(echo "$$cpp_check_file_list")); \
+       cpp_check_header_file_list=$$(echo "$$cpp_check_file_list" | grep "\.h$$"); \
+       for header in $$cpp_check_header_file_list; \
+       do \
+         header=$$(basename $$header); \
+         includers=$$(grep "#include \"$$header\"" $$source_to_grep_for_includes | cut -d ':' -f 1); \
+         new_cpp_check_file_list=$$(echo -e "$$new_cpp_check_file_list\n$$includers"); \
+       done; \
+       new_cpp_check_file_list=$$(echo "$$new_cpp_check_file_list" | sort | uniq); \
+       if [[ "$$cpp_check_file_list" == "$$new_cpp_check_file_list" ]]; \
+       then \
+         break; \
+       fi; \
+       cpp_check_file_list="$$new_cpp_check_file_list"; \
+     done; \
+     cpp_check_file_list=$$(echo "$$cpp_check_file_list" | grep -v "\.h$$"); \
 	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$cpp_check_file_list" == "" ]] || \
           ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $$cpp_check_file_list $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null && \
+          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null || exit $$?; \
 	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$changed_sources_and_headers_list" == "" ]] || \
-          vera++ -r ./tools/vera++ -p jerry $$changed_sources_and_headers_list -e --no-duplicate 1>$(TARGET_DIR)/vera.log
+          vera++ -r ./tools/vera++ -p jerry $$changed_sources_and_headers_list \
+          -e --no-duplicate 1>$(TARGET_DIR)/vera.log || exit $$?;
 	@mkdir -p $(TARGET_DIR)/obj
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY) $(MAIN_MODULE_SRC); do \

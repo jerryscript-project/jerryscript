@@ -49,6 +49,10 @@ extern void mem_finalize (bool is_show_mem_stats);
 extern uintptr_t mem_compress_pointer (void *pointer);
 extern void* mem_decompress_pointer (uintptr_t compressed_pointer);
 
+#ifndef JERRY_NDEBUG
+extern bool mem_is_heap_pointer (void *pointer);
+#endif /* !JERRY_NDEBUG */
+
 #endif /* !JERRY_MEM_ALLOCATOR_H */
 
 /**

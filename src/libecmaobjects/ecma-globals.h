@@ -730,6 +730,10 @@ typedef struct
   /** Where the string's data is placed (ecma_string_container_t) */
   unsigned int container : 3;
 
+  /** Flag indicating whether the string descriptor is placed
+    * in a stack variable (not in the heap) */
+  unsigned int is_stack_var : 1;
+
   /** String's length */
   ecma_length_t length;
 

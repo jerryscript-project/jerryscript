@@ -89,25 +89,26 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
+    ecma_string_t var_name_string;
+    ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, var_idx);
 
     ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
-                                                                        var_name_string_p);
+                                                                        &var_name_string);
 
     if (do_eval_or_arguments_check)
     {
 #ifndef JERRY_NDEBUG
       do_strict_eval_arguments_check (ref_base_lex_env_p,
-                                      var_name_string_p,
+                                      &var_name_string,
                                       int_data->is_strict);
 #endif /* !JERRY_NDEBUG */
     }
 
     ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                var_name_string_p,
+                                                &var_name_string,
                                                 int_data->is_strict);
 
-    ecma_deref_ecma_string (var_name_string_p);
+    ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
   }
 
   return ret_value;
@@ -141,23 +142,24 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (var_idx);
+    ecma_string_t var_name_string;
+    ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, var_idx);
 
     ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
-                                                                        var_name_string_p);
+                                                                        &var_name_string);
 
 #ifndef JERRY_NDEBUG
     do_strict_eval_arguments_check (ref_base_lex_env_p,
-                                    var_name_string_p,
+                                    &var_name_string,
                                     int_data->is_strict);
 #endif /* !JERRY_NDEBUG */
 
     ret_value = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                                var_name_string_p,
+                                                &var_name_string,
                                                 int_data->is_strict,
                                                 value);
 
-    ecma_deref_ecma_string (var_name_string_p);
+    ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
   }
 
   return ret_value;

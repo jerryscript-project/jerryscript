@@ -125,3 +125,22 @@ mem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress
 
   return (void*) int_ptr;
 } /* mem_decompress_pointer */
+
+#ifndef JERRY_NDEBUG
+/**
+ * Check whether the pointer points to the heap
+ *
+ * Note:
+ *      the routine should be used only for assertion checks
+ *
+ * @return true - if pointer points to the heap,
+ *         false - otherwise
+ */
+bool
+mem_is_heap_pointer (void *pointer) /**< pointer */
+{
+  uint8_t *uint8_pointer = pointer;
+
+  return (uint8_pointer >= mem_heap_area && uint8_pointer <= (mem_heap_area + MEM_HEAP_AREA_SIZE));
+} /* mem_is_heap_pointer */
+#endif /* !JERRY_NDEBUG */

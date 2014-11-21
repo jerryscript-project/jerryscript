@@ -111,11 +111,16 @@ extern bool ecma_is_completion_value_empty (ecma_completion_value_t value);
 extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
 extern ecma_string_t* ecma_new_ecma_string_from_uint32 (uint32_t uint_number);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
+extern void ecma_new_ecma_string_on_stack_from_lit_index (ecma_string_t *string_p,
+                                                          literal_index_t lit_index);
 extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_index);
+extern void ecma_new_ecma_string_on_stack_from_magic_string_id (ecma_string_t *string_p,
+                                                                ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 extern ecma_string_t* ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
+extern void ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,

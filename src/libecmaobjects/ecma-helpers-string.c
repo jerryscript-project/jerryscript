@@ -56,6 +56,15 @@ static ecma_length_t ecma_magic_string_lengths [ECMA_MAGIC_STRING__COUNT];
  */
 static ecma_length_t ecma_magic_string_max_length;
 
+static void
+ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p,
+                                      literal_index_t lit_index,
+                                      bool is_stack_var);
+static void
+ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p,
+                                            ecma_magic_string_id_t magic_string_id,
+                                            bool is_stack_var);
+
 /**
  * Initialize data for string helpers
  */
@@ -75,6 +84,63 @@ ecma_strings_init (void)
     ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_lengths [id]);
   }
 } /* ecma_strings_init */
+
+/**
+ * Initialize ecma-string descriptor with string described by index in literal table
+ */
+static void
+ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor to initialize */
+                                      literal_index_t lit_index, /**< index in the literal table */
+                                      bool is_stack_var) /**< flag indicating whether the string descriptor
+                                                              is placed on stack (true) or in the heap (false) */
+{
+#ifndef JERRY_NDEBUG
+  JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
+#endif /* !JERRY_NDEBUG */
+
+  const literal lit = deserialize_literal_by_id ((idx_t) lit_index);
+  if (lit.type == LIT_MAGIC_STR)
+  {
+    ecma_init_ecma_string_from_magic_string_id (string_p,
+                                                lit.data.magic_str_id,
+                                                is_stack_var);
+
+    return;
+  }
+
+  JERRY_ASSERT (lit.type == LIT_STR);
+
+  string_p->refs = 1;
+  string_p->is_stack_var = is_stack_var;
+
+  string_p->length = lit.data.lp.length;
+  string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
+
+  string_p->u.lit_index = lit_index;
+} /* ecma_init_ecma_string_from_lit_index */
+
+/**
+ * Initialize ecma-string descriptor with specified magic string
+ */
+static void
+ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descriptor to initialize */
+                                            ecma_magic_string_id_t magic_string_id, /**< identifier of
+                                                                                         the magic string */
+                                            bool is_stack_var) /**< flag indicating whether the string descriptor
+                                                                    is placed on stack (true) or in the heap (false) */
+{
+#ifndef JERRY_NDEBUG
+  JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
+#endif /* !JERRY_NDEBUG */
+
+  string_p->refs = 1;
+  string_p->is_stack_var = is_stack_var;
+
+  string_p->length = ecma_magic_string_lengths [magic_string_id];
+  string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
+
+  string_p->u.magic_string_id = magic_string_id;
+} /* ecma_init_ecma_string_from_magic_string_id */
 
 /**
  * Allocate new ecma-string and fill it with characters from specified buffer
@@ -106,6 +172,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
   string_desc_p->length = length;
 
   if (bytes_needed_for_current_string <= bytes_for_chars_in_string_descriptor)
@@ -156,6 +223,7 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
 {
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_UINT32_IN_DESC;
   string_desc_p->u.uint32_number = uint32_number;
 
@@ -206,6 +274,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
   string_desc_p->length = length;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
 
@@ -217,31 +286,58 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 } /* ecma_new_ecma_string_from_number */
 
 /**
+ * Initialize ecma-string descriptor placed on stack
+ * with string described by index in literal table
+ */
+void
+ecma_new_ecma_string_on_stack_from_lit_index (ecma_string_t *string_p, /**< pointer to the ecma-string
+                                                                            descriptor to initialize */
+                                              literal_index_t lit_index) /**< index in the literal table */
+{
+  ecma_init_ecma_string_from_lit_index (string_p, lit_index, true);
+} /* ecma_new_ecma_string_on_stack_from_lit_index */
+
+/**
  * Allocate new ecma-string and fill it with reference to string literal
  *
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t*
-ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< ecma-number */
+ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< index in the literal table */
 {
-  const literal lit = deserialize_literal_by_id ((idx_t) lit_index);
-  if (lit.type == LIT_MAGIC_STR)
-  {
-    return ecma_get_magic_string (lit.data.magic_str_id);
-  }
-
-  JERRY_ASSERT (lit.type == LIT_STR);
-
   ecma_string_t* string_desc_p = ecma_alloc_string ();
-  string_desc_p->refs = 1;
 
-  string_desc_p->length = lit.data.lp.length;
-  string_desc_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
-
-  string_desc_p->u.lit_index = lit_index;
+  ecma_init_ecma_string_from_lit_index (string_desc_p, lit_index, false);
 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_lit_index */
+
+/**
+ * Initialize ecma-string descriptor placed on stack with specified magic string
+ */
+void
+ecma_new_ecma_string_on_stack_from_magic_string_id (ecma_string_t *string_p, /**< pointer to the ecma-string
+                                                                                  descriptor to initialize */
+                                                    ecma_magic_string_id_t id) /**< magic string id */
+{
+  ecma_init_ecma_string_from_magic_string_id (string_p, id, true);
+} /* ecma_new_ecma_string_on_stack_from_magic_string_id */
+
+/**
+ * Allocate new ecma-string and fill it with reference to ECMA magic string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id) /**< identifier of magic string */
+{
+  JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
+
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_init_ecma_string_from_magic_string_id (string_desc_p, id, false);
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_magic_string_id */
 
 /**
  * Concatenate ecma-strings
@@ -259,6 +355,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_CONCATENATION;
 
   if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
@@ -309,6 +406,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
       *new_str_p = *string_desc_p;
 
       new_str_p->refs = 1;
+      new_str_p->is_stack_var = false;
 
       break;
     }
@@ -390,28 +488,35 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs > 0);
 
-  string_desc_p->refs++;
-
-  if (unlikely (string_desc_p->refs == 0))
+  if (string_desc_p->is_stack_var)
   {
-    /* reference counter has overflowed */
-    string_desc_p->refs--;
-
-    uint32_t current_refs = string_desc_p->refs;
-
-    /* First trying to free unreachable objects that maybe refer to the string */
-    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
-
-    if (current_refs == string_desc_p->refs)
-    {
-      /* reference counter was not changed during GC, copying string */
-
-      return ecma_copy_ecma_string (string_desc_p);
-    }
-
+    return ecma_copy_ecma_string (string_desc_p);
+  }
+  else
+  {
     string_desc_p->refs++;
 
-    JERRY_ASSERT (string_desc_p->refs != 0);
+    if (unlikely (string_desc_p->refs == 0))
+    {
+      /* reference counter has overflowed */
+      string_desc_p->refs--;
+
+      uint32_t current_refs = string_desc_p->refs;
+
+      /* First trying to free unreachable objects that maybe refer to the string */
+      ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+
+      if (current_refs == string_desc_p->refs)
+      {
+        /* reference counter was not changed during GC, copying string */
+
+        return ecma_copy_ecma_string (string_desc_p);
+      }
+
+      string_desc_p->refs++;
+
+      JERRY_ASSERT (string_desc_p->refs != 0);
+    }
   }
 
   return string_desc_p;
@@ -426,6 +531,11 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 {
   JERRY_ASSERT (string_p != NULL);
   JERRY_ASSERT (string_p->refs != 0);
+
+#ifndef JERRY_NDEBUG
+  JERRY_ASSERT (string_p->is_stack_var == (!mem_is_heap_pointer (string_p)));
+#endif /* !JERRY_NDEBUG */
+  JERRY_ASSERT (!string_p->is_stack_var || string_p->refs == 1);
 
   string_p->refs--;
 
@@ -482,8 +592,39 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     }
   }
 
-  ecma_dealloc_string (string_p);
+  if (!string_p->is_stack_var)
+  {
+    ecma_dealloc_string (string_p);
+  }
 } /* ecma_deref_ecma_string */
+
+/**
+ * Assertion that specified ecma-string need not be freed
+ */
+void
+ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p) /**< ecma-string descriptor */
+{
+#ifdef JERRY_NDEBUG
+  (void) string_p;
+#else /* JERRY_NDEBUG */
+  /* Heap strings always need to be freed */
+  JERRY_ASSERT (string_p->is_stack_var);
+
+  /*
+   * No reference counter increment or decrement
+   * should be performed with ecma-string placed
+   * on stack
+   */
+  JERRY_ASSERT (string_p->refs == 1);
+
+  ecma_string_container_t container_type = string_p->container;
+
+  JERRY_ASSERT (container_type == ECMA_STRING_CONTAINER_LIT_TABLE ||
+                container_type == ECMA_STRING_CONTAINER_MAGIC_STRING ||
+                container_type == ECMA_STRING_CONTAINER_UINT32_IN_DESC ||
+                container_type == ECMA_STRING_CONTAINER_CHARS_IN_DESC);
+#endif /* !JERRY_NDEBUG */
+} /* ecma_check_that_ecma_string_need_not_be_freed */
 
 /**
  * Convert ecma-string to number
@@ -1359,27 +1500,6 @@ ecma_zt_string_length (const ecma_char_t *string_p) /**< zero-terminated string 
 } /* ecma_zt_string_length */
 
 /**
- * Allocate new ecma-string and fill it with reference to ECMA magic string
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t*
-ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id) /**< identifier of magic string */
-{
-  JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
-
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
-  string_desc_p->refs = 1;
-
-  string_desc_p->length = ecma_magic_string_lengths [id];
-  string_desc_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
-
-  string_desc_p->u.magic_string_id = id;
-
-  return string_desc_p;
-} /* ecma_new_ecma_string_from_magic_string_id */
-
-/**
  * Get specified magic string as zero-terminated string
  *
  * @return pointer to zero-terminated magic string
@@ -1410,14 +1530,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
 ecma_string_t*
 ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
-
-  string_desc_p->refs = 1;
-  string_desc_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
-  string_desc_p->length = ecma_zt_string_length (ecma_get_magic_string_zt (id));
-  string_desc_p->u.magic_string_id = id;
-
-  return string_desc_p;
+  return ecma_new_ecma_string_from_magic_string_id (id);
 } /* ecma_get_magic_string */
 
 /**

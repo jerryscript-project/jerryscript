@@ -475,31 +475,61 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
   {
     MEM_HEAP_STAT_FREE_BLOCK_SPLIT ();
 
-    uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
-    mem_init_block_header (new_free_block_first_chunk_p,
-                           0,
-                           MEM_BLOCK_FREE,
-                           block_p,
-                           next_block_p);
-
-    mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
-
-    if (next_block_p == NULL)
+    if (direction == MEM_DIRECTION_PREV)
     {
-      mem_heap.last_block_p = new_free_block_p;
+      prev_block_p = block_p;
+      uint8_t *block_end_p = (uint8_t*) block_p + found_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
+      block_p = (mem_block_header_t*) (block_end_p - new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE);
+
+      VALGRIND_DEFINED_STRUCT(prev_block_p);
+
+      prev_block_p->neighbours[ MEM_DIRECTION_NEXT ] = mem_get_block_neighbour_field (prev_block_p,
+                                                                                      block_p);
+
+      VALGRIND_NOACCESS_STRUCT(prev_block_p);
+
+      if (next_block_p == NULL)
+      {
+        mem_heap.last_block_p = block_p;
+      }
+      else
+      {
+        VALGRIND_DEFINED_STRUCT(next_block_p);
+
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (block_p,
+                                                                                        next_block_p);
+
+        VALGRIND_NOACCESS_STRUCT(next_block_p);
+      }
     }
     else
     {
-      VALGRIND_DEFINED_STRUCT(next_block_p);
+      uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
+      mem_init_block_header (new_free_block_first_chunk_p,
+                             0,
+                             MEM_BLOCK_FREE,
+                             block_p,
+                             next_block_p);
 
-      const mem_block_header_t* new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
-      next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (new_free_block_p,
-                                                                                      next_block_p);
+      mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
 
-      VALGRIND_NOACCESS_STRUCT(next_block_p);
+      if (next_block_p == NULL)
+      {
+        mem_heap.last_block_p = new_free_block_p;
+      }
+      else
+      {
+        VALGRIND_DEFINED_STRUCT(next_block_p);
+
+        const mem_block_header_t* new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
+        next_block_p->neighbours[ MEM_DIRECTION_PREV ] = mem_get_block_neighbour_field (new_free_block_p,
+                                                                                        next_block_p);
+
+        VALGRIND_NOACCESS_STRUCT(next_block_p);
+      }
+
+      next_block_p = new_free_block_p;
     }
-
-    next_block_p = new_free_block_p;
   }
 
   mem_init_block_header ((uint8_t*) block_p,

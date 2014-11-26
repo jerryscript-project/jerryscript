@@ -26,9 +26,6 @@ extern long int time (long int *__timer);
 extern int printf (__const char *__restrict __format, ...);
 extern void *memset (void *__s, int __c, size_t __n);
 
-// Pool area size is 8K
-const size_t test_pool_area_size = 8 * 1024;
-
 // Iterations count
 const uint32_t test_iters = 64;
 
@@ -46,24 +43,27 @@ main( int __unused argc,
 
     for ( uint32_t i = 0; i < test_iters; i++ )
     {
-	uint8_t test_pool[test_pool_area_size] __attribute__((aligned(MEM_ALIGNMENT)));
+	uint8_t test_pool[MEM_POOL_SIZE] __attribute__((aligned(MEM_ALIGNMENT)));
 	mem_pool_state_t* pool_p = (mem_pool_state_t*) test_pool;
 
-	mem_pool_init( pool_p, sizeof (test_pool));
+	mem_pool_init( pool_p, MEM_POOL_SIZE);
 
         const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
         uint8_t* ptrs[subiters];
 
         for ( size_t j = 0; j < subiters; j++ )
         {
-            ptrs[j] = mem_pool_alloc_chunk( pool_p);
-
-	    // TODO: Enable check with condition that j <= minimum count of chunks that fit in the pool
-            // JERRY_ASSERT(ptrs[j] != NULL);
-
-            if ( ptrs[j] != NULL )
+            if (pool_p->free_chunks_number != 0)
             {
-                memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+              ptrs[j] = mem_pool_alloc_chunk( pool_p);
+
+              memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+            }
+            else
+            {
+              JERRY_ASSERT (j >= MEM_POOL_CHUNKS_NUMBER);
+
+              ptrs[j] = NULL;
             }
         }
 

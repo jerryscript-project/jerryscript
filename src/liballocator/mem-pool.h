@@ -21,10 +21,27 @@
 #define JERRY_MEM_POOL_H
 
 #include "mem-config.h"
+#include "mem-heap.h"
 
 /** \addtogroup pool Memory pool
  * @{
  */
+
+/**
+ * Size of a pool (header + chunks)
+ */
+#define MEM_POOL_SIZE \
+  ((size_t) JERRY_MIN (sizeof (mem_pool_state_t) + (1ull << MEM_POOL_MAX_CHUNKS_NUMBER_LOG) * MEM_POOL_CHUNK_SIZE, \
+                       JERRY_ALIGNDOWN (mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + \
+                                                                            CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL * \
+                                                                            MEM_POOL_CHUNK_SIZE) \
+                                        - sizeof (mem_pool_state_t), \
+                                        MEM_POOL_CHUNK_SIZE)) + sizeof (mem_pool_state_t))
+
+/**
+ * Number of chunks in a pool
+ */
+#define MEM_POOL_CHUNKS_NUMBER ((MEM_POOL_SIZE - sizeof (mem_pool_state_t)) / MEM_POOL_CHUNK_SIZE)
 
 /**
  * Get pool's space size
@@ -34,20 +51,18 @@
 /**
  * Index of chunk in a pool
  */
-typedef uint16_t mem_pool_chunk_index_t;
+typedef uint8_t mem_pool_chunk_index_t;
 
 /**
  * State of a memory pool
  */
-typedef struct mem_pool_state_t
+typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_pool_state_t
 {
-  /** Number of chunks (mem_pool_chunk_index_t) */
-  unsigned int chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
-  /** Number of free chunks (mem_pool_chunk_index_t) */
-  unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
-
   /** Offset of first free chunk from the beginning of the pool (mem_pool_chunk_index_t) */
   unsigned int first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
+
+  /** Number of free chunks (mem_pool_chunk_index_t) */
+  unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
 
   /** Pointer to the next pool with same chunk size */
   unsigned int next_pool_cp : MEM_HEAP_OFFSET_LOG;

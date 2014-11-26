@@ -29,7 +29,7 @@
 /**
  * Log2 of maximum number of chunks in a pool
  */
-#define CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG 16
+#define CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG 8
 
 /**
  * Size of pool chunk

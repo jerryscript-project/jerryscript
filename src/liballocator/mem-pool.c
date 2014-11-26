@@ -56,17 +56,16 @@ mem_pool_init (mem_pool_state_t *pool_p, /**< pool */
   JERRY_STATIC_ASSERT(MEM_POOL_MAX_CHUNKS_NUMBER_LOG <= sizeof (mem_pool_chunk_index_t) * JERRY_BITSINBYTE);
   JERRY_ASSERT(sizeof (mem_pool_chunk_index_t) <= MEM_POOL_CHUNK_SIZE);
 
-  const size_t pool_space_size = pool_size - sizeof (mem_pool_state_t);
-  const size_t chunks_number = pool_space_size / MEM_POOL_CHUNK_SIZE;
+  JERRY_ASSERT (MEM_POOL_SIZE == sizeof (mem_pool_state_t) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE);
+  JERRY_ASSERT (MEM_POOL_CHUNKS_NUMBER >= CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL);
 
-  JERRY_ASSERT(((mem_pool_chunk_index_t) chunks_number) == chunks_number);
-
-  pool_p->chunks_number = (mem_pool_chunk_index_t) chunks_number;
+  JERRY_ASSERT (pool_size == MEM_POOL_SIZE);
 
   /*
    * All chunks are free right after initialization
    */
-  pool_p->free_chunks_number = pool_p->chunks_number;
+  pool_p->free_chunks_number = (mem_pool_chunk_index_t) MEM_POOL_CHUNKS_NUMBER;
+  JERRY_ASSERT (pool_p->free_chunks_number == MEM_POOL_CHUNKS_NUMBER);
 
   /*
    * Chunk with zero index is first free chunk in the pool now
@@ -74,7 +73,7 @@ mem_pool_init (mem_pool_state_t *pool_p, /**< pool */
   pool_p->first_free_chunk = 0;
 
   for (mem_pool_chunk_index_t chunk_index = 0;
-       chunk_index < chunks_number;
+       chunk_index < MEM_POOL_CHUNKS_NUMBER;
        chunk_index++)
   {
     mem_pool_chunk_index_t *next_free_chunk_index_p = (mem_pool_chunk_index_t*) MEM_POOL_CHUNK_ADDRESS(pool_p,
@@ -94,14 +93,8 @@ mem_pool_alloc_chunk (mem_pool_state_t *pool_p) /**< pool */
 {
   mem_check_pool (pool_p);
 
-  if (unlikely (pool_p->free_chunks_number == 0))
-  {
-    JERRY_ASSERT(pool_p->first_free_chunk == pool_p->chunks_number);
-
-    return NULL;
-  }
-
-  JERRY_ASSERT(pool_p->first_free_chunk < pool_p->chunks_number);
+  JERRY_ASSERT (pool_p->free_chunks_number != 0);
+  JERRY_ASSERT (pool_p->first_free_chunk < MEM_POOL_CHUNKS_NUMBER);
 
   mem_pool_chunk_index_t chunk_index = pool_p->first_free_chunk;
   uint8_t *chunk_p = MEM_POOL_CHUNK_ADDRESS(pool_p, chunk_index);
@@ -122,9 +115,9 @@ void
 mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
                      uint8_t *chunk_p)         /**< chunk pointer */
 {
-  JERRY_ASSERT(pool_p->free_chunks_number < pool_p->chunks_number);
+  JERRY_ASSERT(pool_p->free_chunks_number < MEM_POOL_CHUNKS_NUMBER);
   JERRY_ASSERT(chunk_p >= MEM_POOL_SPACE_START(pool_p)
-               && chunk_p <= MEM_POOL_SPACE_START(pool_p) + pool_p->chunks_number * MEM_POOL_CHUNK_SIZE);
+               && chunk_p <= MEM_POOL_SPACE_START(pool_p) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE);
   JERRY_ASSERT(((uintptr_t) chunk_p - (uintptr_t) MEM_POOL_SPACE_START(pool_p)) % MEM_POOL_CHUNK_SIZE == 0);
 
   mem_check_pool (pool_p);
@@ -149,13 +142,12 @@ static void
 mem_check_pool (mem_pool_state_t __unused *pool_p) /**< pool (unused #ifdef JERRY_NDEBUG) */
 {
 #ifndef JERRY_NDEBUG
-  JERRY_ASSERT(pool_p->chunks_number != 0);
-  JERRY_ASSERT(pool_p->free_chunks_number <= pool_p->chunks_number);
+  JERRY_ASSERT(pool_p->free_chunks_number <= MEM_POOL_CHUNKS_NUMBER);
 
   size_t met_free_chunks_number = 0;
   mem_pool_chunk_index_t chunk_index = pool_p->first_free_chunk;
 
-  while (chunk_index != pool_p->chunks_number)
+  while (chunk_index != MEM_POOL_CHUNKS_NUMBER)
   {
     uint8_t *chunk_p = MEM_POOL_CHUNK_ADDRESS(pool_p, chunk_index);
     mem_pool_chunk_index_t *next_free_chunk_index_p = (mem_pool_chunk_index_t*) chunk_p;

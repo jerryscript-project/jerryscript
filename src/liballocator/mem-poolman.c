@@ -104,13 +104,7 @@ mem_pools_alloc (void)
    */
   if (mem_free_chunks_number == 0)
   {
-    /**
-     * Space, at least for header and eight chunks.
-     */
-    size_t pool_chunks_area_size = CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL * MEM_POOL_CHUNK_SIZE;
-    size_t pool_size = mem_heap_recommend_allocation_size (sizeof (mem_pool_state_t) + pool_chunks_area_size);
-
-    mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (pool_size, MEM_HEAP_ALLOC_LONG_TERM);
+    mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (MEM_POOL_SIZE, MEM_HEAP_ALLOC_LONG_TERM);
 
     if (pool_state == NULL)
     {
@@ -120,7 +114,7 @@ mem_pools_alloc (void)
       return NULL;
     }
 
-    mem_pool_init (pool_state, pool_size);
+    mem_pool_init (pool_state, MEM_POOL_SIZE);
 
     if (mem_pools == NULL)
     {
@@ -133,7 +127,7 @@ mem_pools_alloc (void)
 
     mem_pools = pool_state;
 
-    mem_free_chunks_number += pool_state->chunks_number;
+    mem_free_chunks_number += MEM_POOL_CHUNKS_NUMBER;
 
     MEM_POOLS_STAT_ALLOC_POOL ();
   }
@@ -145,7 +139,7 @@ mem_pools_alloc (void)
    */
   mem_pool_state_t *pool_state = mem_pools;
 
-  while (pool_state->first_free_chunk == pool_state->chunks_number)
+  while (pool_state->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
   {
     pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
 
@@ -174,7 +168,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
    * Search for the pool containing specified chunk.
    */
   while (!(chunk_p >= MEM_POOL_SPACE_START(pool_state)
-           && chunk_p <= MEM_POOL_SPACE_START(pool_state) + pool_state->chunks_number * MEM_POOL_CHUNK_SIZE))
+           && chunk_p <= MEM_POOL_SPACE_START(pool_state) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE))
   {
     prev_pool_state = pool_state;
     pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
@@ -193,7 +187,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
   /**
    * If all chunks of the pool are free, free the pool itself.
    */
-  if (pool_state->free_chunks_number == pool_state->chunks_number)
+  if (pool_state->free_chunks_number == MEM_POOL_CHUNKS_NUMBER)
   {
     if (prev_pool_state != NULL)
     {
@@ -211,7 +205,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
       }
     }
 
-    mem_free_chunks_number -= pool_state->chunks_number;
+    mem_free_chunks_number -= MEM_POOL_CHUNKS_NUMBER;
 
     mem_heap_free_block ((uint8_t*)pool_state);
 

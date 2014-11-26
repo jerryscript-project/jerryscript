@@ -90,7 +90,7 @@ JERRY_STATIC_ASSERT (sizeof (mem_heap_offset_t) * JERRY_BITSINBYTE >= MEM_HEAP_O
 /**
  * Description of heap memory block layout
  */
-typedef struct mem_block_header_t
+typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_block_header_t
 {
   uint16_t magic_num; /**< magic number (mem_magic_num_of_block_t):
                            MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
@@ -800,7 +800,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
  *
  * @return recommended allocation size
  */
-size_t
+size_t __attribute_pure__
 mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum allocation size */
 {
   size_t minimum_allocation_size_with_block_header = minimum_allocation_size + sizeof (mem_block_header_t);

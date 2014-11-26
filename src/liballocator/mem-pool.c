@@ -40,6 +40,26 @@ static void mem_check_pool (mem_pool_state_t *pool_p);
                                                                         MEM_POOL_CHUNK_SIZE * chunk_index))
 
 /**
+ * Is the chunk is inside of the pool?
+ *
+ * @return true / false
+ */
+bool __attribute_const__
+mem_pool_is_chunk_inside (mem_pool_state_t *pool_p, /**< pool */
+                          uint8_t *chunk_p) /**< chunk */
+{
+  if (chunk_p >= (uint8_t*) pool_p && chunk_p < (uint8_t*) pool_p + MEM_POOL_SIZE)
+  {
+    JERRY_ASSERT (chunk_p >= MEM_POOL_SPACE_START(pool_p)
+                  && chunk_p <= MEM_POOL_SPACE_START(pool_p) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE);
+
+    return true;
+  }
+
+  return false;
+} /* mem_pool_is_chunk_inside */
+
+/**
  * Initialization of memory pool.
  *
  * Pool will be located in the segment [pool_start; pool_start + pool_size).
@@ -116,8 +136,7 @@ mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
                      uint8_t *chunk_p)         /**< chunk pointer */
 {
   JERRY_ASSERT(pool_p->free_chunks_number < MEM_POOL_CHUNKS_NUMBER);
-  JERRY_ASSERT(chunk_p >= MEM_POOL_SPACE_START(pool_p)
-               && chunk_p <= MEM_POOL_SPACE_START(pool_p) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE);
+  JERRY_ASSERT(mem_pool_is_chunk_inside (pool_p, chunk_p));
   JERRY_ASSERT(((uintptr_t) chunk_p - (uintptr_t) MEM_POOL_SPACE_START(pool_p)) % MEM_POOL_CHUNK_SIZE == 0);
 
   mem_check_pool (pool_p);

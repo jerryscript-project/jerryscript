@@ -91,13 +91,13 @@ mem_pools_finalize (void)
 } /* mem_pools_finalize */
 
 /**
- * Allocate a chunk of specified size
+ * Long path for mem_pools_alloc
  *
- * @return pointer to allocated chunk, if allocation was successful,
- *         or NULL - if not enough memory.
+ * @return true - if there is a free chunk in mem_pools,
+ *         false - otherwise (not enough memory).
  */
-uint8_t*
-mem_pools_alloc (void)
+static bool __noinline
+mem_pools_alloc_longpath (void)
 {
   /**
    * If there are no free chunks, allocate new pool.
@@ -131,20 +131,51 @@ mem_pools_alloc (void)
 
     MEM_POOLS_STAT_ALLOC_POOL ();
   }
-
-  /**
-   * Now there is definitely at least one pool of specified type with at least one free chunk.
-   *
-   * Search for the pool.
-   */
-  mem_pool_state_t *pool_state = mem_pools;
-
-  while (pool_state->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
+  else
   {
-    pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+    /**
+     * There is definitely at least one pool of specified type with at least one free chunk.
+     *
+     * Search for the pool.
+     */
+    mem_pool_state_t *pool_state = mem_pools, *prev_pool_state_p = NULL;
 
-    JERRY_ASSERT(pool_state != NULL);
+    while (pool_state->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
+    {
+      prev_pool_state_p = pool_state;
+      pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+
+      JERRY_ASSERT(pool_state != NULL);
+    }
+
+    JERRY_ASSERT (prev_pool_state_p != NULL && pool_state != mem_pools);
+
+    prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
+    pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+    mem_pools = pool_state;
   }
+
+  return true;
+} /* mem_pools_alloc_longpath */
+
+/**
+ * Allocate a chunk of specified size
+ *
+ * @return pointer to allocated chunk, if allocation was successful,
+ *         or NULL - if not enough memory.
+ */
+uint8_t*
+mem_pools_alloc (void)
+{
+  if (mem_pools == NULL || mem_pools->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
+  {
+    if (!mem_pools_alloc_longpath ())
+    {
+      return NULL;
+    }
+  }
+
+  JERRY_ASSERT (mem_pools != NULL && mem_pools->first_free_chunk != MEM_POOL_CHUNKS_NUMBER);
 
   /**
    * And allocate chunk within it.
@@ -153,7 +184,7 @@ mem_pools_alloc (void)
 
   MEM_POOLS_STAT_ALLOC_CHUNK ();
 
-  return mem_pool_alloc_chunk (pool_state);
+  return mem_pool_alloc_chunk (mem_pools);
 } /* mem_pools_alloc */
 
 /**
@@ -162,15 +193,14 @@ mem_pools_alloc (void)
 void
 mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 {
-  mem_pool_state_t *pool_state = mem_pools, *prev_pool_state = NULL;
+  mem_pool_state_t *pool_state = mem_pools, *prev_pool_state_p = NULL;
 
   /**
    * Search for the pool containing specified chunk.
    */
-  while (!(chunk_p >= MEM_POOL_SPACE_START(pool_state)
-           && chunk_p <= MEM_POOL_SPACE_START(pool_state) + MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE))
+  while (!mem_pool_is_chunk_inside (pool_state, chunk_p))
   {
-    prev_pool_state = pool_state;
+    prev_pool_state_p = pool_state;
     pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
 
     JERRY_ASSERT(pool_state != NULL);
@@ -189,9 +219,9 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
    */
   if (pool_state->free_chunks_number == MEM_POOL_CHUNKS_NUMBER)
   {
-    if (prev_pool_state != NULL)
+    if (prev_pool_state_p != NULL)
     {
-      prev_pool_state->next_pool_cp = pool_state->next_pool_cp;
+      prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
     }
     else
     {
@@ -210,6 +240,14 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
     mem_heap_free_block ((uint8_t*)pool_state);
 
     MEM_POOLS_STAT_FREE_POOL ();
+  }
+  else if (mem_pools != pool_state)
+  {
+    JERRY_ASSERT (prev_pool_state_p != NULL);
+
+    prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
+    pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+    mem_pools = pool_state;
   }
 } /* mem_pools_free */
 

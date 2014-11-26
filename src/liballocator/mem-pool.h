@@ -71,6 +71,7 @@ typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_pool_state_t
 extern void mem_pool_init (mem_pool_state_t *pool_p, size_t pool_size);
 extern uint8_t* mem_pool_alloc_chunk (mem_pool_state_t *pool_p);
 extern void mem_pool_free_chunk (mem_pool_state_t *pool_p, uint8_t *chunk_p);
+extern bool __attribute_const__ mem_pool_is_chunk_inside (mem_pool_state_t *pool_p, uint8_t *chunk_p);
 
 /**
  * @}

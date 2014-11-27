@@ -91,7 +91,7 @@ ecma_set_value_value_field (ecma_value_t value, /**< ecma-value to set field in 
  * @return true - if the value contains implementation-defined empty simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -104,7 +104,7 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-undefined simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -117,7 +117,7 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-null simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_null (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -130,7 +130,7 @@ ecma_is_value_null (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-true or ecma-false simple values,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -147,7 +147,7 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-true simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -160,7 +160,7 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-number value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_number (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
@@ -172,7 +172,7 @@ ecma_is_value_number (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-string value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_string (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
@@ -184,7 +184,7 @@ ecma_is_value_string (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains object value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_value_object (ecma_value_t value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
@@ -208,7 +208,7 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma-value */
 /**
  * Simple value constructor
  */
-ecma_value_t __attribute_const__
+inline ecma_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
 {
   ecma_value_t ret_value = 0;
@@ -527,7 +527,7 @@ ecma_set_completion_value_label_descriptor (ecma_completion_value_t completion_v
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_completion_value (ecma_completion_type_t type, /**< type */
                             ecma_value_t value) /**< value */
 {
@@ -588,7 +588,7 @@ ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple ecma-value */
 {
   JERRY_ASSERT(simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
@@ -605,7 +605,7 @@ ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_normal_completion_value (ecma_value_t value) /**< value */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, value);
@@ -616,7 +616,7 @@ ecma_make_normal_completion_value (ecma_value_t value) /**< value */
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_throw_completion_value (ecma_value_t value) /**< value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -649,7 +649,7 @@ ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object
  *
  * @return (normal, empty, reserved) completion value.
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_empty_completion_value (void)
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
@@ -661,7 +661,7 @@ ecma_make_empty_completion_value (void)
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_return_completion_value (ecma_value_t value) /**< value */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN, value);
@@ -672,7 +672,7 @@ ecma_make_return_completion_value (ecma_value_t value) /**< value */
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_exit_completion_value (bool is_successful) /**< does completion value indicate
                                                           successfulness completion
                                                           of script execution (true) or not (false) */
@@ -687,7 +687,7 @@ ecma_make_exit_completion_value (bool is_successful) /**< does completion value 
  *
  * @return completion value
  */
-ecma_completion_value_t __attribute_const__
+inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
 ecma_make_meta_completion_value (void)
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
@@ -699,7 +699,7 @@ ecma_make_meta_completion_value (void)
  *
  * @return ecma-value
  */
-ecma_value_t __attribute_const__
+inline ecma_value_t __attribute_const__ __attribute_always_inline__
 ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< completion value */
 {
   const ecma_completion_type_t type = ecma_get_completion_value_type_field (completion_value);
@@ -813,7 +813,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
  * @return true - if the completion type is normal,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_NORMAL);
@@ -825,7 +825,7 @@ ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion 
  * @return true - if the completion type is throw,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -843,7 +843,7 @@ ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion v
  * @return true - if the completion type is return,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_RETURN);
@@ -855,7 +855,7 @@ ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion 
  * @return true - if the completion type is exit,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion value */
 {
   if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_EXIT)
@@ -876,7 +876,7 @@ ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion va
  * @return true - if the completion type is meta,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion value */
 {
   if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_META)
@@ -897,7 +897,7 @@ ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion va
  * @return true - if the completion type is break,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_BREAK);
@@ -909,7 +909,7 @@ ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion v
  * @return true - if the completion type is continue,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_continue (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_CONTINUE);
@@ -922,7 +922,7 @@ ecma_is_completion_value_continue (ecma_completion_value_t value) /**< completio
  *                value contains specified simple ecma-value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**< completion value */
                                               ecma_simple_value_t simple_value) /**< simple value to check
                                                                                      for equality with */
@@ -937,7 +937,7 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
  *                value contains ecma-true simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_normal_true (ecma_completion_value_t value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value (value, ECMA_SIMPLE_VALUE_TRUE);
@@ -950,7 +950,7 @@ ecma_is_completion_value_normal_true (ecma_completion_value_t value) /**< comple
  *                value contains ecma-false simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_normal_false (ecma_completion_value_t value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value (value, ECMA_SIMPLE_VALUE_FALSE);
@@ -963,7 +963,7 @@ ecma_is_completion_value_normal_false (ecma_completion_value_t value) /**< compl
  *                value contains empty simple value,
  *         false - otherwise.
  */
-bool __attribute_const__
+inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_empty (ecma_completion_value_t value) /**< completion value */
 {
   return (ecma_is_completion_value_normal (value)

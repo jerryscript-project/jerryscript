@@ -35,6 +35,9 @@ typedef signed long ssize_t;
 #define __packed __attribute__((packed))
 #define __noreturn __attribute__((noreturn))
 #define __noinline __attribute__((noinline))
+#ifndef __attribute_always_inline__
+# define __attribute_always_inline__ __attribute__((always_inline))
+#endif /* !__attribute_always_inline__ */
 #ifndef __attribute_const__
 # define __attribute_const__ __attribute__((const))
 #endif /* !__attribute_const__ */

@@ -411,6 +411,8 @@ ecma_property_t*
 ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
                                ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
+  JERRY_ASSERT (ecma_find_internal_property (object_p, property_id) == NULL);
+
   ecma_property_t *new_property_p = ecma_alloc_property ();
 
   new_property_p->type = ECMA_PROPERTY_INTERNAL;
@@ -489,6 +491,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
                                  ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
 {
   JERRY_ASSERT(obj_p != NULL && name_p != NULL);
+  JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
 
@@ -528,6 +531,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
                                      ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
 {
   JERRY_ASSERT(obj_p != NULL && name_p != NULL);
+  JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
 

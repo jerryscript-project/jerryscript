@@ -68,7 +68,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 /**
  * CreateMutableBinding operation.
  *
- * see also: ecma-262 v5, 10.2.1
+ * See also: ECMA-262 v5, 10.2.1
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
@@ -86,8 +86,6 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(!ecma_op_has_binding (lex_env_p, name_p));
-
       ecma_create_named_data_property (lex_env_p,
                                        name_p,
                                        ECMA_PROPERTY_WRITABLE,
@@ -154,8 +152,6 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
-
-  JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
 
   switch (ecma_get_lex_env_type (lex_env_p))
   {
@@ -235,8 +231,6 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
-
-  JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
 
   switch (ecma_get_lex_env_type (lex_env_p))
   {
@@ -422,8 +416,6 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(!ecma_op_has_binding (lex_env_p, name_p));
-
       /*
        * Warning:
        *         Whether immutable bindings are deletable seems not to be defined by ECMA v5.
@@ -466,8 +458,6 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
   {
     case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
     {
-      JERRY_ASSERT(ecma_op_has_binding (lex_env_p, name_p));
-
       ecma_property_t *prop_p = ecma_get_named_data_property (lex_env_p, name_p);
 
       /* The binding must be unitialized immutable binding */

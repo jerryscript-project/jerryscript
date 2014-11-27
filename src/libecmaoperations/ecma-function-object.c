@@ -406,13 +406,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
                     ecma_op_object_get (func_obj_p, prototype_magic_string_p),
                     ret_value);
 
-    if (!ecma_is_value_object (prototype_obj_value.u.value))
+    if (!ecma_is_value_object (ecma_get_completion_value_value (prototype_obj_value)))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
-      ecma_object_t *prototype_obj_p = ECMA_GET_NON_NULL_POINTER (prototype_obj_value.u.value.value);
+      ecma_object_t *prototype_obj_p = ecma_get_object_from_completion_value (prototype_obj_value);
       JERRY_ASSERT (prototype_obj_p != NULL);
 
       do
@@ -512,7 +512,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
       JERRY_ASSERT (ecma_is_completion_value_normal (completion));
 
-      this_binding = completion.u.value;
+      this_binding = ecma_get_completion_value_value (completion);
     }
 
     // 5.
@@ -534,7 +534,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                            false);
     if (ecma_is_completion_value_return (completion))
     {
-      ret_value = ecma_make_normal_completion_value (completion.u.value);
+      ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
     }
     else
     {
@@ -597,9 +597,9 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     //  6.
     ecma_object_t *prototype_p;
-    if (ecma_is_value_object (func_obj_prototype_prop_value.u.value))
+    if (ecma_is_value_object (ecma_get_completion_value_value (func_obj_prototype_prop_value)))
     {
-      prototype_p = ECMA_GET_NON_NULL_POINTER (func_obj_prototype_prop_value.u.value.value);
+      prototype_p = ecma_get_object_from_completion_value (func_obj_prototype_prop_value);
       ecma_ref_object (prototype_p);
     }
     else
@@ -628,11 +628,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     ecma_value_t obj_value;
 
     // 9.
-    if (ecma_is_value_object (call_completion.u.value))
+    if (ecma_is_value_object (ecma_get_completion_value_value (call_completion)))
     {
       ecma_deref_object (obj_p);
 
-      obj_value = ecma_copy_value (call_completion.u.value, true);
+      obj_value = ecma_copy_value (ecma_get_completion_value_value (call_completion), true);
     }
     else
     {

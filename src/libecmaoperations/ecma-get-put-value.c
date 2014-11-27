@@ -107,7 +107,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
 
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_base.u.value.value);
+    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
@@ -248,7 +248,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     // sub_1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_base.u.value.value);
+    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 

@@ -35,10 +35,10 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (ecma_is_value_true (to_bool_completion.u.value))
+  if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
   {
     JERRY_ASSERT (offset != 0 && ((uint32_t) int_data->pos + offset < MAX_OPCODES));
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
@@ -68,10 +68,10 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (ecma_is_value_true (to_bool_completion.u.value))
+  if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
   {
     JERRY_ASSERT (offset != 0 && (uint32_t) int_data->pos >= offset);
     int_data->pos = (opcode_counter_t) (int_data->pos - offset);
@@ -107,10 +107,10 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (!ecma_is_value_true (to_bool_completion.u.value))
+  if (!ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
   {
     JERRY_ASSERT (offset != 0 && ((uint32_t) int_data->pos + offset < MAX_OPCODES));
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
@@ -140,10 +140,10 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value.u.value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
-  if (!ecma_is_value_true (to_bool_completion.u.value))
+  if (!ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
   {
     JERRY_ASSERT (offset != 0 && (uint32_t) int_data->pos >= offset);
     int_data->pos = (opcode_counter_t) (int_data->pos - offset);

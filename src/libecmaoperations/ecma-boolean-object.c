@@ -48,7 +48,7 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
     return conv_to_boolean_completion;
   }
 
-  ecma_simple_value_t bool_value = conv_to_boolean_completion.u.value.value;
+  ecma_simple_value_t bool_value = ecma_get_completion_value_value (conv_to_boolean_completion).value;
 
   JERRY_ASSERT (bool_value == ECMA_SIMPLE_VALUE_TRUE || bool_value == ECMA_SIMPLE_VALUE_FALSE);
 

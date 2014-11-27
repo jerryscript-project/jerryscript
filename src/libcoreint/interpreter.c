@@ -375,7 +375,7 @@ run_int (void)
       ecma_finalize ();
       ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
-      return ecma_is_value_true (completion.u.value);
+      return ecma_is_value_true (ecma_get_completion_value_value (completion));
     }
     case ECMA_COMPLETION_TYPE_BREAK:
     case ECMA_COMPLETION_TYPE_CONTINUE:

@@ -133,7 +133,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ret_value);
 
     ret_value = ecma_op_abstract_equality_compare (x,
-                                                   y_num_value.u.value);
+                                                   ecma_get_completion_value_value (y_num_value));
 
     ECMA_FINALIZE (y_num_value);
   }
@@ -144,7 +144,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ecma_op_to_number (x),
                     ret_value);
 
-    ret_value = ecma_op_abstract_equality_compare (x_num_value.u.value,
+    ret_value = ecma_op_abstract_equality_compare (ecma_get_completion_value_value (x_num_value),
                                                    y);
 
     ECMA_FINALIZE (x_num_value);
@@ -156,7 +156,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ecma_op_to_number (x),
                     ret_value);
 
-    ret_value = ecma_op_abstract_equality_compare (x_num_value.u.value,
+    ret_value = ecma_op_abstract_equality_compare (ecma_get_completion_value_value (x_num_value),
                                                    y);
 
     ECMA_FINALIZE (x_num_value);
@@ -169,7 +169,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ret_value);
 
     ret_value = ecma_op_abstract_equality_compare (x,
-                                                   y_num_value.u.value);
+                                                   ecma_get_completion_value_value (y_num_value));
 
     ECMA_FINALIZE (y_num_value);
   }
@@ -182,7 +182,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ret_value);
 
     ret_value = ecma_op_abstract_equality_compare (x,
-                                                   y_prim_value.u.value);
+                                                   ecma_get_completion_value_value (y_prim_value));
 
     ECMA_FINALIZE (y_prim_value);
   }
@@ -194,7 +194,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                     ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO),
                     ret_value);
 
-    ret_value = ecma_op_abstract_equality_compare (x_prim_value.u.value,
+    ret_value = ecma_op_abstract_equality_compare (ecma_get_completion_value_value (x_prim_value),
                                                    y);
 
     ECMA_FINALIZE (x_prim_value);
@@ -338,21 +338,21 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   px = left_first ? prim_first_converted_value : prim_second_converted_value;
   py = left_first ? prim_second_converted_value : prim_first_converted_value;
 
-  const bool is_px_string = ecma_is_value_string (px.u.value);
-  const bool is_py_string = ecma_is_value_string (py.u.value);
+  const bool is_px_string = ecma_is_value_string (ecma_get_completion_value_value (px));
+  const bool is_py_string = ecma_is_value_string (ecma_get_completion_value_value (py));
 
   if (!(is_px_string && is_py_string))
   {
     // 3.
 
     // a.
-    ECMA_TRY_CATCH(nx, ecma_op_to_number (px.u.value), ret_value);
+    ECMA_TRY_CATCH(nx, ecma_op_to_number (ecma_get_completion_value_value (px)), ret_value);
 
     // b.
-    ECMA_TRY_CATCH(ny, ecma_op_to_number (py.u.value), ret_value);
+    ECMA_TRY_CATCH(ny, ecma_op_to_number (ecma_get_completion_value_value (py)), ret_value);
 
-    ecma_number_t* num_x_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(nx.u.value.value);
-    ecma_number_t* num_y_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(ny.u.value.value);
+    ecma_number_t* num_x_p = ecma_get_number_from_completion_value (nx);
+    ecma_number_t* num_y_p = ecma_get_number_from_completion_value (ny);
 
     if (ecma_number_is_nan (*num_x_p)
         || ecma_number_is_nan (*num_y_p))
@@ -418,8 +418,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   { // 4.
     JERRY_ASSERT (is_px_string && is_py_string);
 
-    ecma_string_t *str_x_p = ECMA_GET_NON_NULL_POINTER (px.u.value.value);
-    ecma_string_t *str_y_p = ECMA_GET_NON_NULL_POINTER (py.u.value.value);
+    ecma_string_t *str_x_p = ecma_get_string_from_completion_value (px);
+    ecma_string_t *str_y_p = ecma_get_string_from_completion_value (py);
 
     bool is_px_less = ecma_compare_ecma_strings_relational (str_x_p, str_y_p);
 

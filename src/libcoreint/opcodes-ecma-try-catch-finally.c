@@ -73,7 +73,7 @@ opfunc_try (opcode_t opdata, /**< operation data */
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
       completion = ecma_op_set_mutable_binding (catch_env_p,
                                                 catch_exc_var_name_str_p,
-                                                try_completion.u.value,
+                                                ecma_get_completion_value_value (try_completion),
                                                 false);
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 

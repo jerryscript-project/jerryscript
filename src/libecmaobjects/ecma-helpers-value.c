@@ -279,6 +279,45 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
 } /* ecma_make_object_value */
 
 /**
+ * Get pointer to ecma-number from ecma-value
+ *
+ * @return the pointer
+ */
+ecma_number_t* __attribute_const__
+ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
+{
+  JERRY_ASSERT (value.value_type == ECMA_TYPE_NUMBER);
+
+  return (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+} /* ecma_get_number_from_value */
+
+/**
+ * Get pointer to ecma-string from ecma-value
+ *
+ * @return the pointer
+ */
+ecma_string_t* __attribute_const__
+ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
+{
+  JERRY_ASSERT (value.value_type == ECMA_TYPE_STRING);
+
+  return (ecma_string_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+} /* ecma_get_string_from_value */
+
+/**
+ * Get pointer to ecma-object from ecma-value
+ *
+ * @return the pointer
+ */
+ecma_object_t* __attribute_const__
+ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
+{
+  JERRY_ASSERT (value.value_type == ECMA_TYPE_OBJECT);
+
+  return (ecma_object_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+} /* ecma_get_object_from_value */
+
+/**
  * Copy ecma-value.
  *
  * Note:
@@ -588,6 +627,61 @@ ecma_make_meta_completion_value (void)
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_make_meta_completion_value */
+
+/**
+ * Get ecma-value from specified completion value
+ *
+ * @return ecma-value
+ */
+ecma_value_t __attribute_const__
+ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< completion value */
+{
+  const ecma_completion_type_t type = completion_value.type;
+
+  const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
+#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
+                           || type == ECMA_COMPLETION_TYPE_THROW
+#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+                           || type == ECMA_COMPLETION_TYPE_RETURN
+                           || type == ECMA_COMPLETION_TYPE_EXIT);
+
+  JERRY_ASSERT (is_type_ok);
+
+  return completion_value.u.value;
+} /* ecma_get_completion_value_value */
+
+/**
+ * Get pointer to ecma-number from completion value
+ *
+ * @return pointer
+ */
+ecma_number_t* __attribute_const__
+ecma_get_number_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
+{
+  return ecma_get_number_from_value (ecma_get_completion_value_value (completion_value));
+} /* ecma_get_number_from_completion_value */
+
+/**
+ * Get pointer to ecma-string from completion value
+ *
+ * @return pointer
+ */
+ecma_string_t* __attribute_const__
+ecma_get_string_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
+{
+  return ecma_get_string_from_value (ecma_get_completion_value_value (completion_value));
+} /* ecma_get_string_from_completion_value */
+
+/**
+ * Get pointer to ecma-object from completion value
+ *
+ * @return pointer
+ */
+ecma_object_t* __attribute_const__
+ecma_get_object_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
+{
+  return ecma_get_object_from_value (ecma_get_completion_value_value (completion_value));
+} /* ecma_get_object_from_completion_value */
 
 /**
  * Copy ecma-completion value.

@@ -67,8 +67,8 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
     {
       JERRY_ASSERT (ecma_is_completion_value_normal (to_str_arg_value));
 
-      JERRY_ASSERT (ecma_is_value_string (to_str_arg_value.u.value));
-      prim_prop_str_value_p = ECMA_GET_NON_NULL_POINTER (to_str_arg_value.u.value.value);
+      JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (to_str_arg_value)));
+      prim_prop_str_value_p = ecma_get_string_from_completion_value (to_str_arg_value);
 
       int32_t string_len = ecma_string_get_length (prim_prop_str_value_p);
       JERRY_ASSERT (string_len >= 0);

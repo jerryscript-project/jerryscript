@@ -54,8 +54,8 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
   ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
 
   ecma_number_t *left_p, *right_p;
-  left_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_left_value.u.value.value);
-  right_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (num_right_value.u.value.value);
+  left_p = ecma_get_number_from_completion_value (num_left_value);
+  right_p = ecma_get_number_from_completion_value (num_right_value);
 
   ecma_number_t* res_p = ecma_alloc_number ();
 
@@ -142,8 +142,8 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_and,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -177,8 +177,8 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_or,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -212,8 +212,8 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_xor,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -247,8 +247,8 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_left,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -282,8 +282,8 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_right,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -317,8 +317,8 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_uright,
-                                       left_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (left_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -350,8 +350,8 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_not,
-                                       right_value.u.value,
-                                       right_value.u.value);
+                                       ecma_get_completion_value_value (right_value),
+                                       ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
 

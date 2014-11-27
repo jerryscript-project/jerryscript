@@ -54,7 +54,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
       if (ecma_is_completion_value_normal (get_arg_completion))
       {
-        arg_values[arg_index] = get_arg_completion.u.value;
+        arg_values[arg_index] = ecma_get_completion_value_value (get_arg_completion);
       }
       else
       {

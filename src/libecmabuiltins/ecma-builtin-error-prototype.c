@@ -82,7 +82,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
     }
     else
     {
-      name_to_str_completion = ecma_op_to_string (name_get_completion.u.value);
+      name_to_str_completion = ecma_op_to_string (ecma_get_completion_value_value (name_get_completion));
     }
 
     if (unlikely (!ecma_is_completion_value_normal (name_to_str_completion)))
@@ -107,7 +107,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
       }
       else
       {
-        msg_to_str_completion = ecma_op_to_string (msg_get_completion.u.value);
+        msg_to_str_completion = ecma_op_to_string (ecma_get_completion_value_value (msg_get_completion));
       }
 
       if (unlikely (!ecma_is_completion_value_normal (msg_to_str_completion)))
@@ -116,11 +116,11 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
       }
       else
       {
-        JERRY_ASSERT (ecma_is_value_string (name_to_str_completion.u.value));
-        JERRY_ASSERT (ecma_is_value_string (msg_to_str_completion.u.value));
+        JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (name_to_str_completion)));
+        JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (msg_to_str_completion)));
 
-        ecma_string_t *name_string_p = ECMA_GET_NON_NULL_POINTER (name_to_str_completion.u.value.value);
-        ecma_string_t *msg_string_p = ECMA_GET_NON_NULL_POINTER (msg_to_str_completion.u.value.value);
+        ecma_string_t *name_string_p = ecma_get_string_from_completion_value (name_to_str_completion);
+        ecma_string_t *msg_string_p = ecma_get_string_from_completion_value (msg_to_str_completion);
 
         ecma_string_t *ret_str_p;
         

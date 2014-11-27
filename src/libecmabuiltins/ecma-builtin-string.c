@@ -74,8 +74,8 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 
                     ecma_op_to_number (args[arg_index]),
                     ret_value);
 
-    JERRY_ASSERT (ecma_is_value_number (arg_num_value.u.value));
-    ecma_number_t *arg_num_p = ECMA_GET_NON_NULL_POINTER (arg_num_value.u.value.value);
+    JERRY_ASSERT (ecma_is_value_number (ecma_get_completion_value_value (arg_num_value)));
+    ecma_number_t *arg_num_p = ecma_get_number_from_completion_value (arg_num_value);
 
     uint32_t uint32_char_code = ecma_number_to_uint32 (*arg_num_p);
     uint16_t uint16_char_code = (uint16_t) uint32_char_code;

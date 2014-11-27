@@ -96,7 +96,7 @@ ecma_builtin_object_dispatch_construct (ecma_value_t *arguments_list_p, /**< arg
     }
     else
     {
-      return ecma_make_normal_completion_value (new_obj_value.u.value);
+      return ecma_make_normal_completion_value (ecma_get_completion_value_value (new_obj_value));
     }
   }
 } /* ecma_builtin_object_dispatch_construct */
@@ -325,7 +325,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __unused, /**<
                     ecma_op_to_string (arg2),
                     ret_value);
 
-    ecma_string_t *name_str_p = ECMA_GET_NON_NULL_POINTER (name_str_value.u.value.value);
+    ecma_string_t *name_str_p = ecma_get_string_from_completion_value (name_str_value);
 
     ecma_property_descriptor_t prop_desc;
 

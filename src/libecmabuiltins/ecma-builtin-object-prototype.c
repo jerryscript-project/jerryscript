@@ -73,9 +73,9 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
       return obj_this;
     }
 
-    JERRY_ASSERT (ecma_is_value_object (obj_this.u.value));
+    JERRY_ASSERT (ecma_is_value_object (ecma_get_completion_value_value (obj_this)));
 
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_this.u.value.value);
+    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
                                                                 ECMA_INTERNAL_PROPERTY_CLASS);

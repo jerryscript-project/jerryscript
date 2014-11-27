@@ -77,6 +77,9 @@ extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
 extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
 extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);
 extern ecma_value_t ecma_make_object_value (ecma_object_t* object_p);
+extern ecma_number_t* __attribute_const__ ecma_get_number_from_value (ecma_value_t value);
+extern ecma_string_t* __attribute_const__ ecma_get_string_from_value (ecma_value_t value);
+extern ecma_object_t* __attribute_const__ ecma_get_object_from_value (ecma_value_t value);
 extern ecma_value_t ecma_copy_value (const ecma_value_t value, bool do_ref_if_object);
 extern void ecma_free_value (const ecma_value_t value, bool do_deref_if_object);
 
@@ -93,6 +96,13 @@ extern ecma_completion_value_t ecma_make_empty_completion_value (void);
 extern ecma_completion_value_t ecma_make_return_completion_value (ecma_value_t value);
 extern ecma_completion_value_t ecma_make_exit_completion_value (bool is_successful);
 extern ecma_completion_value_t ecma_make_meta_completion_value (void);
+extern ecma_value_t ecma_get_completion_value_value (ecma_completion_value_t completion_value);
+extern ecma_number_t* __attribute_const__
+ecma_get_number_from_completion_value (ecma_completion_value_t completion_value);
+extern ecma_string_t* __attribute_const__
+ecma_get_string_from_completion_value (ecma_completion_value_t completion_value);
+extern ecma_object_t* __attribute_const__
+ecma_get_object_from_completion_value (ecma_completion_value_t completion_value);
 extern ecma_completion_value_t ecma_copy_completion_value (ecma_completion_value_t value);
 extern void ecma_free_completion_value (ecma_completion_value_t completion_value);
 

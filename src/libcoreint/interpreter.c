@@ -361,35 +361,18 @@ run_int (void)
                                                          is_strict,
                                                          false);
 
-  switch ((ecma_completion_type_t) completion.type)
+  if (ecma_is_completion_value_exit (completion))
   {
-    case ECMA_COMPLETION_TYPE_NORMAL:
-    case ECMA_COMPLETION_TYPE_META:
-    {
-      JERRY_UNREACHABLE ();
-    }
-    case ECMA_COMPLETION_TYPE_EXIT:
-    {
-      ecma_deref_object (glob_obj_p);
-      ecma_deref_object (lex_env_p);
-      ecma_finalize ();
-      ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+    ecma_deref_object (glob_obj_p);
+    ecma_deref_object (lex_env_p);
+    ecma_finalize ();
+    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
-      return ecma_is_value_true (ecma_get_completion_value_value (completion));
-    }
-    case ECMA_COMPLETION_TYPE_BREAK:
-    case ECMA_COMPLETION_TYPE_CONTINUE:
-    case ECMA_COMPLETION_TYPE_RETURN:
-    {
-      /* SyntaxError should be treated as an early error */
-      JERRY_UNREACHABLE ();
-    }
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
-    case ECMA_COMPLETION_TYPE_THROW:
-    {
-      jerry_exit (ERR_UNHANDLED_EXCEPTION);
-    }
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
+    return ecma_is_value_true (ecma_get_completion_value_value (completion));
+  }
+  else if (ecma_is_completion_value_throw (completion))
+  {
+    jerry_exit (ERR_UNHANDLED_EXCEPTION);
   }
 
   JERRY_UNREACHABLE ();
@@ -436,8 +419,8 @@ run_int_loop (int_data_t *int_data)
     }
     while (ecma_is_completion_value_normal (completion));
 
-    if (completion.type == ECMA_COMPLETION_TYPE_BREAK
-        || completion.type == ECMA_COMPLETION_TYPE_CONTINUE)
+    if (ecma_is_completion_value_break (completion)
+        || ecma_is_completion_value_continue (completion))
     {
       JERRY_UNIMPLEMENTED ("break and continue on labels are not supported.");
 

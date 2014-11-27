@@ -111,6 +111,8 @@ extern bool ecma_is_completion_value_throw (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_return (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_exit (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_meta (ecma_completion_value_t value);
+extern bool ecma_is_completion_value_break (ecma_completion_value_t value);
+extern bool ecma_is_completion_value_continue (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value,
                                                           ecma_simple_value_t simple_value);
 extern bool ecma_is_completion_value_normal_true (ecma_completion_value_t value);

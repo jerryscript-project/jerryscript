@@ -141,32 +141,43 @@ typedef uint16_t ecma_value_t;
  * Description of a block completion value
  *
  * See also: ECMA-262 v5, 8.9.
+ *
+ *                                               value (16)
+ * Bit-field structure: type (8) | padding (8) <
+ *                                               label_desc_cp (16)
  */
-typedef struct
-{
-  /** Type (ecma_completion_type_t) */
-  uint8_t type;
+typedef uint32_t ecma_completion_value_t;
 
-  /** Just padding for the structure */
-  uint8_t padding;
+/**
+ * Type (ecma_completion_type_t)
+ */
+#define ECMA_COMPLETION_VALUE_TYPE_POS (0)
+#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
 
-  union
-  {
-    /**
-      * Value
-      *
-      * Used for normal, return, throw and exit completion types.
-      */
-    ecma_value_t value;
+/**
+ * Padding (1 byte)
+ */
+#define ECMA_COMPLETION_VALUE_PADDING_WIDTH (8)
 
-    /**
-      * Label
-      *
-      * Used for break and continue completion types.
-      */
-    uint16_t label_desc_cp;
-  } u;
-} ecma_completion_value_t;
+/**
+ * Value
+ *
+ * Used for normal, return, throw and exit completion types.
+ */
+#define ECMA_COMPLETION_VALUE_VALUE_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
+                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
+                                         ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
+
+/**
+ * Label
+ *
+ * Used for break and continue completion types.
+ */
+#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
+                                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
+                                                 ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Label

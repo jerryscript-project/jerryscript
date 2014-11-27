@@ -45,7 +45,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
   ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = 0;
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,

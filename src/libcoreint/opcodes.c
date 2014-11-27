@@ -89,7 +89,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t get_value_completion;
+  ecma_completion_value_t get_value_completion = 0;
 
   switch (type_value_right)
   {

@@ -322,7 +322,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                      ecma_value_t y, /**< second operand */
                                      bool left_first) /**< 'LeftFirst' flag */
 {
-  ecma_completion_value_t ret_value, px, py;
+  ecma_completion_value_t ret_value;
 
   ecma_value_t first_converted_value = left_first ? x : y;
   ecma_value_t second_converted_value = left_first ? y : x;
@@ -334,6 +334,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   ECMA_TRY_CATCH(prim_second_converted_value,
                  ecma_op_to_primitive (second_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
                  ret_value);
+
+  ecma_completion_value_t px, py;
 
   px = left_first ? prim_first_converted_value : prim_second_converted_value;
   py = left_first ? prim_second_converted_value : prim_first_converted_value;

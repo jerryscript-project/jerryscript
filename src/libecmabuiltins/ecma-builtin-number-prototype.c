@@ -62,13 +62,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
 
   if (ecma_is_value_number (this))
   {
-    ecma_number_t *this_arg_number_p = ECMA_GET_NON_NULL_POINTER (this.value);
+    ecma_number_t *this_arg_number_p = ecma_get_number_from_value (this);
 
     this_arg_number = *this_arg_number_p;
   }
   else if (ecma_is_value_object (this))
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -134,7 +134,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argu
   }
   else if (ecma_is_value_object (this))
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 

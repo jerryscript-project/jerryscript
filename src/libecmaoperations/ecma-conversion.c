@@ -111,8 +111,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_number)
   {
-    ecma_number_t *x_num_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(x.value);
-    ecma_number_t *y_num_p = (ecma_number_t*)ECMA_GET_NON_NULL_POINTER(y.value);
+    ecma_number_t *x_num_p = ecma_get_number_from_value (x);
+    ecma_number_t *y_num_p = ecma_get_number_from_value (y);
 
     if (ecma_number_is_nan (*x_num_p)
         && ecma_number_is_nan (*y_num_p))
@@ -131,8 +131,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   if (is_x_string)
   {
-    ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER(x.value);
-    ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER(y.value);
+    ecma_string_t* x_str_p = ecma_get_string_from_value (x);
+    ecma_string_t* y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
@@ -144,7 +144,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
 
   JERRY_ASSERT(is_x_object);
 
-  return (ECMA_GET_NON_NULL_POINTER(x.value) == ECMA_GET_NON_NULL_POINTER(y.value));
+  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 } /* ecma_op_same_value */
 
 /**
@@ -164,7 +164,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
 
   if (ecma_is_value_object (value))
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
     return ecma_op_object_default_value (obj_p, preferred_type);
   }
@@ -193,7 +193,8 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
 
   if (ecma_is_value_boolean (value))
   {
-    ret_value = value.value;
+    ret_value = (ecma_is_value_true (value) ?
+                 ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
   else if (ecma_is_value_undefined (value)
            || ecma_is_value_null (value))
@@ -202,7 +203,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
   }
   else if (ecma_is_value_number (value))
   {
-    ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
+    ecma_number_t *num_p = ecma_get_number_from_value (value);
 
     if (ecma_number_is_nan (*num_p)
         || ecma_number_is_zero (*num_p))
@@ -216,7 +217,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
   }
   else if (ecma_is_value_string (value))
   {
-    ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER(value.value);
+    ecma_string_t *str_p = ecma_get_string_from_value (value);
 
     if (ecma_string_get_length (str_p) == 0)
     {
@@ -257,7 +258,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
   }
   else if (ecma_is_value_string (value))
   {
-    ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (value.value);
+    ecma_string_t *str_p = ecma_get_string_from_value (value);
 
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = ecma_string_to_number (str_p);
@@ -342,12 +343,12 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
     if (ecma_is_value_string (value))
     {
-      res_p = ECMA_GET_NON_NULL_POINTER (value.value);
+      res_p = ecma_get_string_from_value (value);
       res_p = ecma_copy_or_ref_ecma_string (res_p);
     }
     else if (ecma_is_value_number (value))
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (value.value);
+      ecma_number_t *num_p = ecma_get_number_from_value (value);
       res_p = ecma_new_ecma_string_from_number (*num_p);
     }
     else if (ecma_is_value_undefined (value))
@@ -570,7 +571,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (obj_value.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
 
     // 2.
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();

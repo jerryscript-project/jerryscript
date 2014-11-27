@@ -73,8 +73,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_number)
     { // c.
-      ecma_number_t x_num = *(ecma_number_t*)(ECMA_GET_NON_NULL_POINTER(x.value));
-      ecma_number_t y_num = *(ecma_number_t*)(ECMA_GET_NON_NULL_POINTER(y.value));
+      ecma_number_t x_num = *ecma_get_number_from_value (x);
+      ecma_number_t y_num = *ecma_get_number_from_value (y);
 
       bool is_equal;
 
@@ -98,8 +98,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_string)
     { // d.
-      ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER(x.value);
-      ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER(y.value);
+      ecma_string_t* x_str_p = ecma_get_string_from_value (x);
+      ecma_string_t* y_str_p = ecma_get_string_from_value (y);
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
@@ -107,7 +107,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_boolean)
     { // e.
-      bool is_equal = (x.value == y.value);
+      bool is_equal = (ecma_is_value_true (x) == ecma_is_value_true (y));
 
       ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
@@ -115,7 +115,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     { // f.
       JERRY_ASSERT(is_x_object);
 
-      bool is_equal = (x.value == y.value);
+      bool is_equal = (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 
       ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
@@ -267,8 +267,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     // d. If x is +0 and y is -0, return true.
     // e. If x is -0 and y is +0, return true.
 
-    ecma_number_t x_num = *(ecma_number_t*) (ECMA_GET_NON_NULL_POINTER (x.value));
-    ecma_number_t y_num = *(ecma_number_t*) (ECMA_GET_NON_NULL_POINTER (y.value));
+    ecma_number_t x_num = *ecma_get_number_from_value (x);
+    ecma_number_t y_num = *ecma_get_number_from_value (y);
 
     if (ecma_number_is_nan (x_num)
         || ecma_number_is_nan (y_num))
@@ -291,8 +291,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // (same length and same characters in corresponding positions); otherwise, return false.
   if (is_x_string)
   {
-    ecma_string_t* x_str_p = ECMA_GET_NON_NULL_POINTER (x.value);
-    ecma_string_t* y_str_p = ECMA_GET_NON_NULL_POINTER (y.value);
+    ecma_string_t* x_str_p = ecma_get_string_from_value (x);
+    ecma_string_t* y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
@@ -300,13 +300,13 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // 6. If Type (x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
   if (is_x_boolean)
   {
-    return (x.value == y.value);
+    return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
 
   // 7. Return true if x and y refer to the same object. Otherwise, return false.
   JERRY_ASSERT (is_x_object);
 
-  return (ECMA_GET_NON_NULL_POINTER (x.value) == ECMA_GET_NON_NULL_POINTER (y.value));
+  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 } /* ecma_op_strict_equality_compare */
 
 /**

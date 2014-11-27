@@ -243,7 +243,7 @@ ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< 
     return;
   }
 
-  ecma_object_t *ref_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+  ecma_object_t *ref_obj_p = ecma_get_object_from_value (value);
   JERRY_ASSERT(ref_obj_p != NULL);
 
   ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, ref_obj_p);
@@ -352,7 +352,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
           if (ecma_is_value_object (value))
           {
-            ecma_object_t *value_obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+            ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
 
             if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
             {

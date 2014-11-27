@@ -25,6 +25,65 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "globals.h"
+#include "jrt-bit-fields.h"
+
+JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE == ECMA_VALUE_SIZE);
+
+/**
+ * Get type field of ecma-value
+ *
+ * @return type field
+ */
+static ecma_type_t
+ecma_get_value_type_field (ecma_value_t value) /**< ecma-value */
+{
+  return jrt_extract_bit_field (value,
+                                ECMA_VALUE_TYPE_POS,
+                                ECMA_VALUE_TYPE_WIDTH);
+} /* ecma_get_value_type_field */
+
+/**
+ * Get value field of ecma-value
+ *
+ * @return value field
+ */
+static uintptr_t
+ecma_get_value_value_field (ecma_value_t value) /**< ecma-value */
+{
+  return (uintptr_t) jrt_extract_bit_field (value,
+                                            ECMA_VALUE_VALUE_POS,
+                                            ECMA_VALUE_VALUE_WIDTH);
+} /* ecma_get_value_value_field */
+
+/**
+ * Set type field of ecma-value
+ *
+ * @return ecma-value with updated field
+ */
+static ecma_value_t
+ecma_set_value_type_field (ecma_value_t value, /**< ecma-value to set field in */
+                           ecma_type_t type_field) /**< new field value */
+{
+  return (ecma_value_t) jrt_set_bit_field_value (value,
+                                                 type_field,
+                                                 ECMA_VALUE_TYPE_POS,
+                                                 ECMA_VALUE_TYPE_WIDTH);
+} /* ecma_set_value_type_field */
+
+/**
+ * Set value field of ecma-value
+ *
+ * @return ecma-value with updated field
+ */
+static ecma_value_t
+ecma_set_value_value_field (ecma_value_t value, /**< ecma-value to set field in */
+                            uintptr_t value_field) /**< new field value */
+{
+  return (ecma_value_t) jrt_set_bit_field_value (value,
+                                                 value_field,
+                                                 ECMA_VALUE_VALUE_POS,
+                                                 ECMA_VALUE_VALUE_WIDTH);
+} /* ecma_set_value_value_field */
 
 /**
  * Check if the value is empty.
@@ -35,22 +94,8 @@
 bool
 ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_STATIC_ASSERT (ECMA_TYPE_SIMPLE == 0 && ECMA_SIMPLE_VALUE_EMPTY == 0);
-  const uint16_t simple_empty = 0; // (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_EMPTY << 2u));
-
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
-
-  u.value = value;
-
-  bool is_empty = (u.uint16 == simple_empty);
-
-  JERRY_ASSERT (is_empty == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_EMPTY));
-
-  return is_empty;
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_is_value_empty */
 
 /**
@@ -62,20 +107,8 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 {
-  const uint16_t simple_undefined = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_UNDEFINED << 2u));
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
-
-  u.value = value;
-
-  bool is_undefined = (u.uint16 == simple_undefined);
-
-  JERRY_ASSERT (is_undefined == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_UNDEFINED));
-
-  return is_undefined;
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_UNDEFINED);
 } /* ecma_is_value_undefined */
 
 /**
@@ -87,20 +120,8 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_null (ecma_value_t value) /**< ecma-value */
 {
-  const uint16_t simple_null = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_NULL << 2u));
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
-
-  u.value = value;
-
-  bool is_null = (u.uint16 == simple_null);
-
-  JERRY_ASSERT (is_null == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_NULL));
-
-  return is_null;
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_NULL);
 } /* ecma_is_value_null */
 
 /**
@@ -112,22 +133,9 @@ ecma_is_value_null (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
 {
-  const uint16_t simple_false = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_FALSE << 2u));
-  const uint16_t simple_true = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_TRUE << 2u));
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
-
-  u.value = value;
-
-  bool is_boolean = (u.uint16 == simple_false || u.uint16 == simple_true);
-
-  JERRY_ASSERT (is_boolean == ((value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_FALSE)
-                               || (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE)));
-
-  return is_boolean;
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && (ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE
+              || ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_FALSE));
 } /* ecma_is_value_boolean */
 
 /**
@@ -142,22 +150,8 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT(ecma_is_value_boolean (value));
-
-  const uint16_t simple_true = (ECMA_TYPE_SIMPLE | (ECMA_SIMPLE_VALUE_TRUE << 2u));
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
-
-  u.value = value;
-
-  bool is_true = (u.uint16 == simple_true);
-
-  JERRY_ASSERT (is_true == (value.value_type == ECMA_TYPE_SIMPLE && value.value == ECMA_SIMPLE_VALUE_TRUE));
-
-  return is_true;
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_is_value_true */
 
 /**
@@ -169,7 +163,7 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_number (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_NUMBER);
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
 } /* ecma_is_value_number */
 
 /**
@@ -181,7 +175,7 @@ ecma_is_value_number (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_string (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_STRING);
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
 
 /**
@@ -193,7 +187,7 @@ ecma_is_value_string (ecma_value_t value) /**< ecma-value */
 bool
 ecma_is_value_object (ecma_value_t value) /**< ecma-value */
 {
-  return (value.value_type == ECMA_TYPE_OBJECT);
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
 } /* ecma_is_value_object */
 
 /**
@@ -217,17 +211,12 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma-value */
 ecma_value_t
 ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
 {
-  union
-  {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u;
+  ecma_value_t ret_value = 0;
 
-  u.uint16 = (uint16_t) (ECMA_TYPE_SIMPLE | (value << 2u));
+  ret_value = ecma_set_value_type_field (ret_value, ECMA_TYPE_SIMPLE);
+  ret_value = ecma_set_value_value_field (ret_value, value);
 
-  JERRY_ASSERT (u.value.value_type == ECMA_TYPE_SIMPLE && u.value.value == value);
-
-  return u.value;
+  return ret_value;
 } /* ecma_make_simple_value */
 
 /**
@@ -238,12 +227,15 @@ ecma_make_number_value (ecma_number_t* num_p) /**< number to reference in value 
 {
   JERRY_ASSERT(num_p != NULL);
 
-  ecma_value_t number_value;
+  uint16_t num_cp;
+  ECMA_SET_NON_NULL_POINTER (num_cp, num_p);
 
-  number_value.value_type = ECMA_TYPE_NUMBER;
-  ECMA_SET_POINTER(number_value.value, num_p);
+  ecma_value_t ret_value = 0;
 
-  return number_value;
+  ret_value = ecma_set_value_type_field (ret_value, ECMA_TYPE_NUMBER);
+  ret_value = ecma_set_value_value_field (ret_value, num_cp);
+
+  return ret_value;
 } /* ecma_make_number_value */
 
 /**
@@ -254,12 +246,15 @@ ecma_make_string_value (ecma_string_t* ecma_string_p) /**< string to reference i
 {
   JERRY_ASSERT(ecma_string_p != NULL);
 
-  ecma_value_t string_value;
+  uint16_t string_cp;
+  ECMA_SET_NON_NULL_POINTER (string_cp, ecma_string_p);
 
-  string_value.value_type = ECMA_TYPE_STRING;
-  ECMA_SET_POINTER(string_value.value, ecma_string_p);
+  ecma_value_t ret_value = 0;
 
-  return string_value;
+  ret_value = ecma_set_value_type_field (ret_value, ECMA_TYPE_STRING);
+  ret_value = ecma_set_value_value_field (ret_value, string_cp);
+
+  return ret_value;
 } /* ecma_make_string_value */
 
 /**
@@ -270,12 +265,15 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
 {
   JERRY_ASSERT(object_p != NULL);
 
-  ecma_value_t object_value;
+  uint16_t object_cp;
+  ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  object_value.value_type = ECMA_TYPE_OBJECT;
-  ECMA_SET_POINTER(object_value.value, object_p);
+  ecma_value_t ret_value = 0;
 
-  return object_value;
+  ret_value = ecma_set_value_type_field (ret_value, ECMA_TYPE_OBJECT);
+  ret_value = ecma_set_value_value_field (ret_value, object_cp);
+
+  return ret_value;
 } /* ecma_make_object_value */
 
 /**
@@ -286,9 +284,9 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
 ecma_number_t* __attribute_const__
 ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT (value.value_type == ECMA_TYPE_NUMBER);
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
 
-  return (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+  return (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
 } /* ecma_get_number_from_value */
 
 /**
@@ -299,9 +297,9 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
 ecma_string_t* __attribute_const__
 ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT (value.value_type == ECMA_TYPE_STRING);
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
 
-  return (ecma_string_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+  return (ecma_string_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
 } /* ecma_get_string_from_value */
 
 /**
@@ -312,9 +310,9 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
 ecma_object_t* __attribute_const__
 ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT (value.value_type == ECMA_TYPE_OBJECT);
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
 
-  return (ecma_object_t*) ECMA_GET_NON_NULL_POINTER (value.value);
+  return (ecma_object_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
 } /* ecma_get_object_from_value */
 
 /**
@@ -343,9 +341,9 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
                  bool do_ref_if_object) /**< if the value is object value,
                                              increment reference counter of the object */
 {
-  ecma_value_t value_copy;
+  ecma_value_t value_copy = 0;
 
-  switch ((ecma_type_t)value.value_type)
+  switch (ecma_get_value_type_field (value))
   {
     case ECMA_TYPE_SIMPLE:
     {
@@ -355,39 +353,28 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
     }
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER(value.value);
-      JERRY_ASSERT(num_p != NULL);
+      ecma_number_t *num_p = ecma_get_number_from_value (value);
 
       ecma_number_t *number_copy_p = ecma_alloc_number ();
       *number_copy_p = *num_p;
 
-      value_copy = (ecma_value_t)
-      {
-        .value_type = ECMA_TYPE_NUMBER
-      };
-      ECMA_SET_NON_NULL_POINTER(value_copy.value, number_copy_p);
+      value_copy = ecma_make_number_value (number_copy_p);
 
       break;
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *string_p = ECMA_GET_NON_NULL_POINTER(value.value);
-      JERRY_ASSERT(string_p != NULL);
+      ecma_string_t *string_p = ecma_get_string_from_value (value);
 
       string_p = ecma_copy_or_ref_ecma_string (string_p);
 
-      value_copy = (ecma_value_t)
-      {
-        .value_type = ECMA_TYPE_STRING
-      };
-      ECMA_SET_NON_NULL_POINTER(value_copy.value, string_p);
+      value_copy = ecma_make_string_value (string_p);
 
       break;
     }
     case ECMA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
-      JERRY_ASSERT(obj_p != NULL);
+      ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
       if (do_ref_if_object)
       {
@@ -411,7 +398,7 @@ ecma_free_value (ecma_value_t value, /**< value description */
                  bool do_deref_if_object) /**< if the value is object value,
                                                decrement reference counter of the object */
 {
-  switch ((ecma_type_t) value.value_type)
+  switch (ecma_get_value_type_field (value))
   {
     case ECMA_TYPE_SIMPLE:
     {
@@ -421,14 +408,14 @@ ecma_free_value (ecma_value_t value, /**< value description */
 
     case ECMA_TYPE_NUMBER:
     {
-      ecma_number_t *number_p = ECMA_GET_NON_NULL_POINTER(value.value);
+      ecma_number_t *number_p = ecma_get_number_from_value (value);
       ecma_dealloc_number (number_p);
       break;
     }
 
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *string_p = ECMA_GET_NON_NULL_POINTER(value.value);
+      ecma_string_t *string_p = ecma_get_string_from_value (value);
       ecma_deref_ecma_string (string_p);
       break;
     }
@@ -437,7 +424,7 @@ ecma_free_value (ecma_value_t value, /**< value description */
     {
       if (do_deref_if_object)
       {
-        ecma_deref_object (ECMA_GET_NON_NULL_POINTER(value.value));
+        ecma_deref_object (ecma_get_object_from_value (value));
       }
       break;
     }
@@ -466,24 +453,15 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
 
   union
   {
-    ecma_value_t value;
-    uint16_t uint16;
-  } u_v;
-
-  u_v.value = value;
-
-  union
-  {
     ecma_completion_value_t value;
     uint32_t uint32;
   } u_cv;
 
-  u_cv.uint32 = ((uint32_t) type | (uint32_t) (u_v.uint16 << 16u));
+  u_cv.uint32 = ((uint32_t) type | (uint32_t) (value << 16u));
 
   JERRY_ASSERT (u_cv.value.type == type &&
                 u_cv.value.padding == 0u &&
-                u_cv.value.u.value.value_type == value.value_type &&
-                u_cv.value.u.value.value == value.value);
+                u_cv.value.u.value == value);
 
   return u_cv.value;
 } /* ecma_make_completion_value */
@@ -723,7 +701,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     }
     case ECMA_COMPLETION_TYPE_EXIT:
     {
-      JERRY_ASSERT(completion_value.u.value.value_type == ECMA_TYPE_SIMPLE);
+      JERRY_ASSERT(ecma_get_value_type_field (ecma_get_completion_value_value (completion_value)) == ECMA_TYPE_SIMPLE);
       break;
     }
     case ECMA_COMPLETION_TYPE_CONTINUE:
@@ -836,8 +814,7 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
                                                                                      for equality with */
 {
   return (ecma_is_completion_value_normal (value)
-          && value.u.value.value_type == ECMA_TYPE_SIMPLE
-          && value.u.value.value == simple_value);
+          && value.u.value == ecma_make_simple_value (simple_value));
 } /* ecma_is_completion_value_normal_simple_value */
 
 /**

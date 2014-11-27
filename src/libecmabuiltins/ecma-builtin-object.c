@@ -319,7 +319,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __unused, /**<
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (arg1.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
 
     ECMA_TRY_CATCH (name_str_value,
                     ecma_op_to_string (arg2),

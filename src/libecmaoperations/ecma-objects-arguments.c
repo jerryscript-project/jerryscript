@@ -142,7 +142,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       JERRY_ASSERT (param_index < formal_params_number);
 
       JERRY_ASSERT (ecma_is_value_string (*formal_params_iter_p->current_value_p));
-      formal_params[param_index] = ECMA_GET_NON_NULL_POINTER (formal_params_iter_p->current_value_p->value);
+      formal_params[param_index] = ecma_get_string_from_value (*formal_params_iter_p->current_value_p);
     }
     JERRY_ASSERT (param_index == formal_params_number);
 
@@ -285,8 +285,7 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
 
   ecma_value_t arg_name_prop_value = arg_name_prop_p->u.named_data_property.value;
 
-  JERRY_ASSERT (ecma_is_value_string (arg_name_prop_value));
-  ecma_string_t *arg_name_p = ECMA_GET_NON_NULL_POINTER (arg_name_prop_value.value);
+  ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
 
   ecma_completion_value_t completion = ecma_op_get_binding_value (lex_env_p,
                                                                   arg_name_p,

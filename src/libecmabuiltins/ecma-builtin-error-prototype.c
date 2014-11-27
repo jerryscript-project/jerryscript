@@ -65,7 +65,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
   }
   else
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this);
     ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
 
     ECMA_TRY_CATCH (name_get_completion,

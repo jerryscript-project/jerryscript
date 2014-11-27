@@ -114,17 +114,28 @@ typedef enum
 
 /**
  * Description of an ecma-value
+ *
+ * Bit-field structure: type (2) | value (ECMA_POINTER_FIELD_WIDTH)
  */
-typedef struct
-{
-  /** Value type (ecma_type_t) */
-  unsigned int value_type : 2;
+typedef uint16_t ecma_value_t;
 
-  /**
-   * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
-   */
-  unsigned int value : ECMA_POINTER_FIELD_WIDTH;
-} __packed ecma_value_t;
+/**
+ * Value type (ecma_type_t)
+ */
+#define ECMA_VALUE_TYPE_POS (0)
+#define ECMA_VALUE_TYPE_WIDTH (2)
+
+/**
+ * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
+ */
+#define ECMA_VALUE_VALUE_POS (ECMA_VALUE_TYPE_POS + \
+                              ECMA_VALUE_TYPE_WIDTH)
+#define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+
+/**
+ * ecma_value_t size
+ */
+#define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
 
 /**
  * Description of a block completion value

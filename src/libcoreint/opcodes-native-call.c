@@ -62,8 +62,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_LED_TOGGLE:
       {
         JERRY_ASSERT (args_number == 1);
-        JERRY_ASSERT (ecma_is_value_number (arg_values[0]));
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_toggle (int_num);
 
@@ -73,8 +72,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_LED_ON:
       {
         JERRY_ASSERT (args_number == 1);
-        JERRY_ASSERT (ecma_is_value_number (arg_values[0]));
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_on (int_num);
 
@@ -84,8 +82,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_LED_OFF:
       {
         JERRY_ASSERT (args_number == 1);
-        JERRY_ASSERT (ecma_is_value_number (arg_values[0]));
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_off (int_num);
 
@@ -95,8 +92,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_LED_ONCE:
       {
         JERRY_ASSERT (args_number == 1);
-        JERRY_ASSERT (ecma_is_value_number (arg_values[0]));
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_blink_once (int_num);
 
@@ -106,8 +102,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_WAIT:
       {
         JERRY_ASSERT (args_number == 1);
-        JERRY_ASSERT (ecma_is_value_number (arg_values[0]));
-        ecma_number_t* num_p = (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (arg_values[0].value);
+        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         wait_ms (int_num);
 

@@ -54,7 +54,7 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value (compare_result)));
 
-    res = ecma_get_completion_value_value (compare_result).value;
+    res = (ecma_is_completion_value_normal_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (res));
@@ -104,7 +104,7 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value (compare_result)));
 
-    res = ecma_get_completion_value_value (compare_result).value;
+    res = (ecma_is_completion_value_normal_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   ret_value = set_variable_value (int_data, dst_var_idx, ecma_make_simple_value (res));
@@ -154,7 +154,7 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value (compare_result)));
 
-    if (ecma_get_completion_value_value (compare_result).value == ECMA_SIMPLE_VALUE_TRUE)
+    if (ecma_is_completion_value_normal_true (compare_result))
     {
       res = ECMA_SIMPLE_VALUE_FALSE;
     }
@@ -211,7 +211,7 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value (compare_result)));
 
-    if (ecma_get_completion_value_value (compare_result).value == ECMA_SIMPLE_VALUE_TRUE)
+    if (ecma_is_completion_value_normal_true (compare_result))
     {
       res = ECMA_SIMPLE_VALUE_FALSE;
     }

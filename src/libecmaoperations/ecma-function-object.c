@@ -94,7 +94,7 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
     return false;
   }
 
-  ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+  ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
@@ -118,7 +118,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
     return false;
   }
 
-  ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(value.value);
+  ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
@@ -338,8 +338,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
     JERRY_ASSERT (is_moved);
 
     ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
-    JERRY_ASSERT (ecma_is_value_string (formal_parameter_name_value));
-    ecma_string_t *formal_parameter_name_string_p = ECMA_GET_NON_NULL_POINTER (formal_parameter_name_value.value);
+    ecma_string_t *formal_parameter_name_string_p = ecma_get_string_from_value (formal_parameter_name_value);
     
     bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
     if (!arg_already_declared)
@@ -395,8 +394,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
       return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
     }
 
-    ecma_object_t* v_obj_p = ECMA_GET_NON_NULL_POINTER (value.value);
-    JERRY_ASSERT (v_obj_p != NULL);
+    ecma_object_t* v_obj_p = ecma_get_object_from_value (value);
 
     ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
 

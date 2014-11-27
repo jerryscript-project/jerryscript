@@ -1459,8 +1459,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
     }
     else
     {
-      JERRY_ASSERT (ecma_is_value_object (ref.base));
-      ecma_object_t *bindings_p = ECMA_GET_NON_NULL_POINTER (ref.base.value);
+      ecma_object_t *bindings_p = ecma_get_object_from_value (ref.base);
       JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
       ECMA_TRY_CATCH (delete_completion,

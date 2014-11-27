@@ -83,7 +83,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
                                    || ecma_is_value_number (base)
                                    || ecma_is_value_string (base));
   const bool has_object_base = (ecma_is_value_object (base)
-                                && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
+                                && !(ecma_is_lexical_environment (ecma_get_object_from_value (base))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -94,7 +94,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
   {
     // 4.b case 1
 
-    ecma_object_t *obj_p = ECMA_GET_POINTER(base.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (base);
     JERRY_ASSERT(obj_p != NULL
                  && !ecma_is_lexical_environment (obj_p));
 
@@ -210,7 +210,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                                    || ecma_is_value_number (base)
                                    || ecma_is_value_string (base));
   const bool has_object_base = (ecma_is_value_object (base)
-                                && !(ecma_is_lexical_environment (ECMA_GET_NON_NULL_POINTER(base.value))));
+                                && !(ecma_is_lexical_environment (ecma_get_object_from_value (base))));
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -221,7 +221,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
   {
     // 4.b case 1
 
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(base.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 

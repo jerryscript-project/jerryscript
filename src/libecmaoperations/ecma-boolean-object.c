@@ -48,9 +48,8 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
     return conv_to_boolean_completion;
   }
 
-  ecma_simple_value_t bool_value = ecma_get_completion_value_value (conv_to_boolean_completion).value;
-
-  JERRY_ASSERT (bool_value == ECMA_SIMPLE_VALUE_TRUE || bool_value == ECMA_SIMPLE_VALUE_FALSE);
+  ecma_simple_value_t bool_value = (ecma_is_value_true (ecma_get_completion_value_value (conv_to_boolean_completion)) ?
+                                    ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE);

@@ -62,7 +62,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
   }
   else if (ecma_is_value_object (this))
   {
-    ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (this.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 

@@ -73,7 +73,8 @@ create_literal_from_zt (const ecma_char_t *s, ecma_length_t len)
     .data.lp = (lp_string)
     {
       .length = len,
-      .str = s
+      .str = s,
+      .hash = ecma_chars_buffer_calc_hash_last_chars (s, len)
     }
   };
 }

@@ -165,6 +165,7 @@ adjust_string_ptrs (literal lit, size_t diff)
     .data.lp = (lp_string)
     {
       .length = lit.data.lp.length,
+      .hash = lit.data.lp.hash,
       .str = lit.data.lp.str + diff
     }
   };

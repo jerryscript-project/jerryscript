@@ -305,8 +305,8 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
 
   string_p->refs = 1;
   string_p->is_stack_var = is_stack_var;
-
   string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
+  string_p->hash = lit.data.lp.hash;
 
   string_p->u.lit_index = lit_index;
 } /* ecma_init_ecma_string_from_lit_index */
@@ -327,8 +327,9 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
 
   string_p->refs = 1;
   string_p->is_stack_var = is_stack_var;
-
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
+  string_p->hash = ecma_chars_buffer_calc_hash_last_chars (ecma_get_magic_string_zt (magic_string_id),
+                                                           ecma_magic_string_lengths [magic_string_id]);
 
   string_p->u.magic_string_id = magic_string_id;
 } /* ecma_init_ecma_string_from_magic_string_id */
@@ -363,6 +364,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
+  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
 
   ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
@@ -384,6 +386,34 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   string_desc_p->container = ECMA_STRING_CONTAINER_UINT32_IN_DESC;
   string_desc_p->u.uint32_number = uint32_number;
 
+  uint32_t last_two_digits = uint32_number % 100;
+  uint32_t digit_pl = last_two_digits / 10;
+  uint32_t digit_l = last_two_digits % 10;
+
+  FIXME (/* Use digit to char conversion routine */);
+  const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  const bool is_one_char_or_more = (uint32_number >= 10);
+  const ecma_char_t last_chars [ECMA_STRING_HASH_LAST_CHARS_COUNT] =
+  {
+    is_one_char_or_more ? digits [digit_pl] : digits[digit_l],
+    is_one_char_or_more ? digits [digit_l] : ECMA_CHAR_NULL
+  };
+
+  /* Only last two chars are really used for hash calculation */
+  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (last_chars,
+                                                                is_one_char_or_more ? 2 : 1);
+
+#ifndef JERRY_NDEBUG
+  ecma_char_t char_buf [ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  ssize_t chars_copied = ecma_uint32_to_string (uint32_number,
+                                                char_buf,
+                                                ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+  JERRY_ASSERT ((ecma_length_t) chars_copied == chars_copied);
+
+  JERRY_ASSERT (string_desc_p->hash == ecma_chars_buffer_calc_hash_last_chars (char_buf,
+                                                                               ecma_zt_string_length (char_buf)));
+#endif /* !JERRY_NDEBUG */
+
   return string_desc_p;
 } /* ecma_new_ecma_string_from_uint32 */
 
@@ -401,10 +431,16 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
     return ecma_new_ecma_string_from_uint32 (uint32_num);
   }
 
+  ecma_char_t str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  ecma_length_t length = ecma_number_to_zt_string (num,
+                                                   str_buf,
+                                                   sizeof (str_buf));
+
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
+  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (str_buf, length);
 
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = num;
@@ -479,7 +515,19 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   JERRY_ASSERT (string1_p != NULL
                 && string2_p != NULL);
 
-  int64_t length = (int64_t)ecma_string_get_length (string1_p) + (int64_t) ecma_string_get_length (string2_p);
+  uint32_t str1_len = (uint32_t) ecma_string_get_length (string1_p);
+  uint32_t str2_len = (uint32_t) ecma_string_get_length (string2_p);
+
+  if (str1_len == 0)
+  {
+    return ecma_copy_or_ref_ecma_string (string2_p);
+  }
+  else if (str2_len == 0)
+  {
+    return ecma_copy_or_ref_ecma_string (string1_p);
+  }
+
+  int64_t length = (int64_t) str1_len + (int64_t) str2_len;
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
@@ -496,6 +544,24 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
+
+  if (str2_len >= ECMA_STRING_HASH_LAST_CHARS_COUNT)
+  {
+    string_desc_p->hash = string2_p->hash;
+  }
+  else
+  {
+    JERRY_STATIC_ASSERT (ECMA_STRING_HASH_LAST_CHARS_COUNT == 2);
+    JERRY_ASSERT (str2_len == 1);
+
+    ecma_char_t chars_buf[ECMA_STRING_HASH_LAST_CHARS_COUNT] =
+    {
+      ecma_string_get_char_at_pos (string1_p, str1_len - 1u),
+      ecma_string_get_char_at_pos (string2_p, 0)
+    };
+
+    string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (chars_buf, ECMA_STRING_HASH_LAST_CHARS_COUNT);
+  }
 
   return string_desc_p;
 } /* ecma_concat_ecma_strings */
@@ -982,9 +1048,9 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
-  if (unlikely (string1_p == string2_p))
+  if (string1_p->hash != string2_p->hash)
   {
-    return true;
+    return false;
   }
 
   if (string1_p->container == string2_p->container)
@@ -1582,6 +1648,27 @@ ecma_string_try_hash (const ecma_string_t *string_p, /**< ecma-string to calcula
 
   return false;
 } /* ecma_string_try_hash */
+
+/**
+ * Calculate hash from last ECMA_STRING_HASH_LAST_CHARS_COUNT characters from the buffer.
+ *
+ * @return ecma-string's hash
+ */
+ecma_string_hash_t
+ecma_chars_buffer_calc_hash_last_chars (const ecma_char_t *chars, /**< characters buffer */
+                                        ecma_length_t length) /**< number of characters in the buffer */
+{
+  JERRY_ASSERT (chars != NULL);
+
+  ecma_char_t char1 = (length > 0) ? chars[length - 1] : ECMA_CHAR_NULL;
+  ecma_char_t char2 = (length > 1) ? chars[length - 2] : ECMA_CHAR_NULL;
+
+  uint32_t t1 = (uint32_t) char1 + (uint32_t) char2;
+  uint32_t t2 = t1 * 0x24418b66;
+  uint32_t t3 = (t2 >> 16) ^ (t2 & 0xffffu);
+
+  return (ecma_string_hash_t) t3;
+} /* ecma_chars_buffer_calc_hash_last_chars */
 
 /**
  * @}

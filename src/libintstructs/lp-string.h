@@ -23,6 +23,7 @@ typedef struct
 {
   const ecma_char_t *str;
   ecma_length_t length;
+  ecma_string_hash_t hash;
 }
 lp_string;
 

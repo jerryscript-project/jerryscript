@@ -741,6 +741,16 @@ typedef enum
 } ecma_magic_string_id_t;
 
 /**
+ * ECMA string hash
+ */
+typedef uint16_t ecma_string_hash_t;
+
+/**
+ * Number of string's last characters to use for hash calculation
+ */
+#define ECMA_STRING_HASH_LAST_CHARS_COUNT (2)
+
+/**
  * ECMA string-value descriptor
  */
 typedef struct
@@ -755,8 +765,8 @@ typedef struct
     * in a stack variable (not in the heap) */
   unsigned int is_stack_var : 1;
 
-  /** Padding */
-  ecma_length_t padding;
+  /** Hash of the string (calculated from two last characters of the string) */
+  ecma_string_hash_t hash;
 
   /**
    * Actual data or identifier of it's place in container (depending on 'container' field)

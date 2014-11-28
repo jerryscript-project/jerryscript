@@ -743,7 +743,7 @@ typedef enum
 /**
  * ECMA string hash
  */
-typedef uint16_t ecma_string_hash_t;
+typedef uint8_t ecma_string_hash_t;
 
 /**
  * Number of string's last characters to use for hash calculation
@@ -758,12 +758,12 @@ typedef struct
   /** Reference counter for the string */
   unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
 
-  /** Where the string's data is placed (ecma_string_container_t) */
-  unsigned int container : 3;
-
   /** Flag indicating whether the string descriptor is placed
     * in a stack variable (not in the heap) */
   unsigned int is_stack_var : 1;
+
+  /** Where the string's data is placed (ecma_string_container_t) */
+  uint8_t container;
 
   /** Hash of the string (calculated from two last characters of the string) */
   ecma_string_hash_t hash;
@@ -794,6 +794,9 @@ typedef struct
 
     /** Identifier of magic string */
     ecma_magic_string_id_t magic_string_id;
+
+    /** For zeroing and comparison in some cases */
+    uint32_t common_field;
   } u;
 } ecma_string_t;
 

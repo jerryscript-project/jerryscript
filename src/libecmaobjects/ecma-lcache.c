@@ -44,7 +44,7 @@ typedef struct
 /**
  * LCache hash value length, in bits
  */
-#define ECMA_LCACHE_HASH_BITS (8)
+#define ECMA_LCACHE_HASH_BITS (sizeof (ecma_string_hash_t) * JERRY_BITSINBYTE)
 
 /**
  * Number of rows in LCache's hash table
@@ -142,15 +142,28 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
 
-  uint32_t hash_key;
-
-  if (!ecma_string_try_hash (prop_name_p, ECMA_LCACHE_HASH_BITS, &hash_key))
-  {
-    return;
-  }
+  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   if (prop_p != NULL)
   {
+    if (unlikely (ecma_is_property_lcached (prop_p)))
+    {
+      uint16_t prop_cp;
+      ECMA_SET_NON_NULL_POINTER (prop_cp, prop_p);
+
+      int32_t entry_index;
+      for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
+      {
+        if (ecma_lcache_hash_table[hash_key][entry_index].prop_cp == prop_cp)
+        {
+          break;
+        }
+      }
+
+      JERRY_ASSERT (entry_index != ECMA_LCACHE_HASH_ROW_LENGTH);
+      ecma_lcache_invalidate_entry (&ecma_lcache_hash_table[hash_key][entry_index]);
+    }
+
     JERRY_ASSERT (!ecma_is_property_lcached (prop_p));
     ecma_set_property_lcached (prop_p, true);
   }
@@ -186,7 +199,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
  * Lookup property in the LCache
  *
  * @return true - if (object, property name) pair is registered in LCache,
- *         false - otherwise.
+ *         false - probably, not registered.
  */
 bool
 ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
@@ -198,28 +211,30 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                                                  *        if return value is false,
                                                  *         then the output parameter is not set */
 {
-  uint32_t hash_key;
-
-  if (!ecma_string_try_hash (prop_name_p, ECMA_LCACHE_HASH_BITS, &hash_key))
-  {
-    return false;
-  }
+  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   unsigned int object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
   for (uint32_t i = 0; i < ECMA_LCACHE_HASH_ROW_LENGTH; i++)
   {
-    if (ecma_lcache_hash_table[hash_key][i].object_cp == object_cp
-        && ecma_compare_ecma_strings (prop_name_p,
-                                      ECMA_GET_NON_NULL_POINTER (ecma_lcache_hash_table[hash_key][i].prop_name_cp)))
+    if (ecma_lcache_hash_table[hash_key][i].object_cp == object_cp)
     {
-      ecma_property_t *prop_p = ECMA_GET_POINTER (ecma_lcache_hash_table[hash_key][i].prop_cp);
-      JERRY_ASSERT (prop_p == NULL || ecma_is_property_lcached (prop_p));
+      ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_lcache_hash_table[hash_key][i].prop_name_cp);
 
-      *prop_p_p = prop_p;
+      if (ecma_compare_ecma_strings_equal_hashes (prop_name_p, entry_prop_name_p))
+      {
+        ecma_property_t *prop_p = ECMA_GET_POINTER (ecma_lcache_hash_table[hash_key][i].prop_cp);
+        JERRY_ASSERT (prop_p == NULL || ecma_is_property_lcached (prop_p));
 
-      return true;
+        *prop_p_p = prop_p;
+
+        return true;
+      }
+      else
+      {
+        /* may be equal but it is long to compare it here */
+      }
     }
   }
 
@@ -277,23 +292,12 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
   ECMA_SET_POINTER (prop_cp, prop_p);
 
-  uint32_t hash_key;
+  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
-  if (!ecma_string_try_hash (prop_name_p, ECMA_LCACHE_HASH_BITS, &hash_key))
-  {
-    /* Property's name hash was not computed, so iterating the whole hash table */
-    for (uint32_t row_index = 0; row_index < ECMA_LCACHE_HASH_ROWS_COUNT; row_index++)
-    {
-      ecma_lcache_invalidate_row_for_object_property_pair (row_index, object_cp, prop_cp);
-    }
-  }
-  else
-  {
-    /* Property's name has was computed.
-     * Given (object, property name) pair should be in the row corresponding to computed hash.
-     */
-    ecma_lcache_invalidate_row_for_object_property_pair (hash_key, object_cp, prop_cp);
-  }
+  /* Property's name has was computed.
+   * Given (object, property name) pair should be in the row corresponding to computed hash.
+   */
+  ecma_lcache_invalidate_row_for_object_property_pair (hash_key, object_cp, prop_cp);
 } /* ecma_lcache_invalidate */
 
 /**

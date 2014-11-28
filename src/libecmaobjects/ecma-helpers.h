@@ -137,6 +137,8 @@ extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
                                          ecma_char_t *buffer_p,
                                          ssize_t buffer_size);
+extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *string1_p,
+                                                    const ecma_string_t *string2_p);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *string1_p,
                                        const ecma_string_t *string2_p);
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p,
@@ -156,7 +158,7 @@ extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
 extern bool ecma_is_string_magic (const ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
 extern bool ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
-extern bool ecma_string_try_hash (const ecma_string_t *string_p, uint32_t hash_length_bits, uint32_t *out_hash_p);
+extern ecma_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
 extern ecma_string_hash_t ecma_chars_buffer_calc_hash_last_chars (const ecma_char_t *chars, ecma_length_t length);
 
 /* ecma-helpers-number.c */

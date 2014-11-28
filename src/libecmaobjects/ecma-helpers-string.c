@@ -308,6 +308,7 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
   string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
   string_p->hash = lit.data.lp.hash;
 
+  string_p->u.common_field = 0;
   string_p->u.lit_index = lit_index;
 } /* ecma_init_ecma_string_from_lit_index */
 
@@ -331,6 +332,7 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
   string_p->hash = ecma_chars_buffer_calc_hash_last_chars (ecma_get_magic_string_zt (magic_string_id),
                                                            ecma_magic_string_lengths [magic_string_id]);
 
+  string_p->u.common_field = 0;
   string_p->u.magic_string_id = magic_string_id;
 } /* ecma_init_ecma_string_from_magic_string_id */
 
@@ -366,6 +368,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
   string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
 
+  string_desc_p->u.common_field = 0;
   ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
 
@@ -384,7 +387,6 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_UINT32_IN_DESC;
-  string_desc_p->u.uint32_number = uint32_number;
 
   uint32_t last_two_digits = uint32_number % 100;
   uint32_t digit_pl = last_two_digits / 10;
@@ -414,6 +416,9 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
                                                                                ecma_zt_string_length (char_buf)));
 #endif /* !JERRY_NDEBUG */
 
+  string_desc_p->u.common_field = 0;
+  string_desc_p->u.uint32_number = uint32_number;
+
   return string_desc_p;
 } /* ecma_new_ecma_string_from_uint32 */
 
@@ -442,6 +447,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
   string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (str_buf, length);
 
+  string_desc_p->u.common_field = 0;
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = num;
   ECMA_SET_POINTER (string_desc_p->u.number_cp, num_p);
@@ -529,15 +535,17 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   int64_t length = (int64_t) str1_len + (int64_t) str2_len;
 
+  if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
+  {
+    jerry_exit (ERR_OUT_OF_MEMORY);
+  }
+
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_CONCATENATION;
 
-  if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
-  {
-    jerry_exit (ERR_OUT_OF_MEMORY);
-  }
+  string_desc_p->u.common_field = 0;
 
   string1_p = ecma_copy_or_ref_ecma_string (string1_p);
   string2_p = ecma_copy_or_ref_ecma_string (string2_p);
@@ -954,6 +962,28 @@ static bool __noinline
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
                                     const ecma_string_t *string2_p) /* ecma-string */
 {
+  if (string1_p->container == string2_p->container)
+  {
+    if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+    {
+      JERRY_ASSERT (string1_p->u.lit_index != string2_p->u.lit_index);
+
+      return false;
+    }
+    else if (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
+    {
+      JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
+
+      return false;
+    }
+    else if (string1_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+    {
+      JERRY_ASSERT (string1_p->u.uint32_number != string2_p->u.uint32_number);
+
+      return false;
+    }
+  }
+
   const int32_t string1_len = ecma_string_get_length (string1_p);
   const int32_t string2_len = ecma_string_get_length (string2_p);
 
@@ -1000,10 +1030,22 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
         break;
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
+      {
+        JERRY_ASSERT (string1_p->u.lit_index != string2_p->u.lit_index);
+
+        return false;
+      }
       case ECMA_STRING_CONTAINER_MAGIC_STRING:
+      {
+        JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
+
+        return false;
+      }
       case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
       {
-        JERRY_UNREACHABLE ();
+        JERRY_ASSERT (string1_p->u.uint32_number != string2_p->u.uint32_number);
+
+        return false;
       }
     }
   }
@@ -1037,6 +1079,29 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 } /* ecma_compare_ecma_strings_longpath */
 
 /**
+ * Compare ecma-string to ecma-string if they're hashes are equal
+ *
+ * @return true - if strings are equal;
+ *         false - may be.
+ */
+bool
+ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *string1_p, /* ecma-string */
+                                        const ecma_string_t *string2_p) /* ecma-string */
+{
+  JERRY_ASSERT (string1_p->hash == string2_p->hash);
+
+  if (string1_p->container == string2_p->container
+      && string1_p->u.common_field == string2_p->u.common_field)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+} /* ecma_compare_ecma_strings_equal_hashes */
+
+/**
  * Compare ecma-string to ecma-string
  *
  * @return true - if strings are equal;
@@ -1048,28 +1113,23 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
-  if (string1_p->hash != string2_p->hash)
+  const bool is_equal_hashes = (string1_p->hash == string2_p->hash);
+
+  if (!is_equal_hashes)
   {
     return false;
   }
+  const bool is_equal_containers = (string1_p->container == string2_p->container);
+  const bool is_equal_fields = (string1_p->u.common_field == string2_p->u.common_field);
 
-  if (string1_p->container == string2_p->container)
+  if (is_equal_containers && is_equal_fields)
   {
-    if (likely (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE))
-    {
-      return (string1_p->u.lit_index == string2_p->u.lit_index);
-    }
-    else if (likely (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING))
-    {
-      return (string1_p->u.magic_string_id == string2_p->u.magic_string_id);
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-    {
-      return (string1_p->u.uint32_number == string2_p->u.uint32_number);
-    }
+    return true;
   }
-
-  return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
+  else
+  {
+    return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
+  }
 } /* ecma_compare_ecma_strings */
 
 /**
@@ -1614,39 +1674,13 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
 /**
  * Try to calculate hash of the ecma-string
  *
- * Note:
- *      Not all ecma-string containers provide ability to calculate hash.
- *      For now, only strings stored in literal table support calculating of hash.
- *
- * Warning:
- *      Anyway, if ecma-string is hashable, for given length of hash,
- *      the hash values should always be equal for equal strings
- *      irrespective of the strings' container type.
- *
- *      If a ecma-string stored in a container of some type is hashable,
- *      then the ecma-string should always be hashable if stored in container
- *      of the same type.
- *
- * @return true - if hash was calculated,
- *         false - otherwise (the string is not hashable).
+ * @return calculated hash
  */
-bool
-ecma_string_try_hash (const ecma_string_t *string_p, /**< ecma-string to calculate hash for */
-                      uint32_t hash_length_bits, /**< length of hash value, in bits */
-                      uint32_t *out_hash_p) /**< out: hash value, if calculated */
+ecma_string_hash_t
+ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate hash for */
 
 {
-  JERRY_ASSERT (hash_length_bits < sizeof (uint32_t) * JERRY_BITSINBYTE);
-  uint32_t hash_mask = ((1u << hash_length_bits) - 1);
-
-  if (string_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    *out_hash_p = (string_p->u.lit_index) & hash_mask;
-
-    return true;
-  }
-
-  return false;
+  return (string_p->hash);
 } /* ecma_string_try_hash */
 
 /**
@@ -1666,8 +1700,9 @@ ecma_chars_buffer_calc_hash_last_chars (const ecma_char_t *chars, /**< character
   uint32_t t1 = (uint32_t) char1 + (uint32_t) char2;
   uint32_t t2 = t1 * 0x24418b66;
   uint32_t t3 = (t2 >> 16) ^ (t2 & 0xffffu);
+  uint32_t t4 = (t3 >> 8) ^ (t3 & 0xffu);
 
-  return (ecma_string_hash_t) t3;
+  return (ecma_string_hash_t) t4;
 } /* ecma_chars_buffer_calc_hash_last_chars */
 
 /**

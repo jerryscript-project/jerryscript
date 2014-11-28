@@ -715,8 +715,6 @@ typedef enum
   ECMA_STRING_CONTAINER_HEAP_CHUNKS, /**< actual data is on the heap
                                           in a ecma_collection_chunk_t chain */
   ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
-  ECMA_STRING_CONTAINER_CHARS_IN_DESC, /**< actual data are several characters
-                                            stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_CONCATENATION, /**< the ecma-string is concatenation of two specified ecma-strings */
@@ -757,8 +755,8 @@ typedef struct
     * in a stack variable (not in the heap) */
   unsigned int is_stack_var : 1;
 
-  /** String's length */
-  ecma_length_t length;
+  /** Padding */
+  ecma_length_t padding;
 
   /**
    * Actual data or identifier of it's place in container (depending on 'container' field)
@@ -768,15 +766,12 @@ typedef struct
     /** Index of string in literal table */
     literal_index_t lit_index;
 
-    /** Compressed pointer to an ecma_collection_chunk_t */
-    unsigned int chunk_cp : ECMA_POINTER_FIELD_WIDTH;
+    /** Compressed pointer to an ecma_collection_header_t */
+    unsigned int collection_cp : ECMA_POINTER_FIELD_WIDTH;
 
     /** Compressed pointer to an ecma_number_t */
     unsigned int number_cp : ECMA_POINTER_FIELD_WIDTH;
     
-    /** Actual data placed locally in the descriptor */
-    ecma_char_t chars[ sizeof (uint32_t) ];
-
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;
 

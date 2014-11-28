@@ -30,12 +30,6 @@
 #include "interpreter.h"
 
 /**
- * Value for length field of ecma_string_t indicating that
- * length of string is unknown and should be calculated.
- */
-#define ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED ((ecma_length_t)-1)
-
-/**
  * Maximum length of strings' concatenation
  */
 #define ECMA_STRING_MAX_CONCATENATION_LENGTH (CONFIG_ECMA_STRING_MAX_CONCATENATION_LENGTH)
@@ -64,6 +58,205 @@ static void
 ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p,
                                             ecma_magic_string_id_t magic_string_id,
                                             bool is_stack_var);
+
+/**
+ * Allocate a collection of ecma-chars.
+ *
+ * @return pointer to the collection's header
+ */
+static ecma_collection_header_t*
+ecma_new_chars_collection (const ecma_char_t chars_buffer[], /**< ecma-chars */
+                           ecma_length_t chars_number) /**< number of ecma-chars */
+{
+  JERRY_ASSERT (chars_buffer != NULL);
+  JERRY_ASSERT (chars_number > 0);
+
+  ecma_collection_header_t* collection_p = ecma_alloc_collection_header ();
+
+  collection_p->unit_number = chars_number;
+
+  uint16_t* next_chunk_cp_p = &collection_p->next_chunk_cp;
+  ecma_char_t* cur_char_buf_iter_p = (ecma_char_t*) collection_p->data;
+  ecma_char_t* cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data) / sizeof (ecma_char_t);
+
+  for (ecma_length_t char_index = 0;
+       char_index < chars_number;
+       char_index++)
+  {
+    if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
+    {
+      ecma_collection_chunk_t *chunk_p = ecma_alloc_collection_chunk ();
+      ECMA_SET_NON_NULL_POINTER (*next_chunk_cp_p, chunk_p);
+      next_chunk_cp_p = &chunk_p->next_chunk_cp;
+
+      cur_char_buf_iter_p = (ecma_char_t*) chunk_p->data;
+      cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (chunk_p->data) / sizeof (ecma_char_t);
+    }
+
+    JERRY_ASSERT (cur_char_buf_iter_p + 1 <= cur_char_buf_end_p);
+
+    *cur_char_buf_iter_p++ = chars_buffer[char_index];
+  }
+
+  *next_chunk_cp_p = ECMA_NULL_POINTER;
+
+  return collection_p;
+} /* ecma_new_chars_collection */
+
+/**
+ * Compare two collection of ecma-chars.
+ *
+ * @return true - if collections are equal,
+ *         false - otherwise.
+ */
+static bool
+ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< first collection's header */
+                               const ecma_collection_header_t* header2_p) /**< second collection's header */
+{
+  JERRY_ASSERT (header1_p != NULL && header2_p != NULL);
+
+  if (header1_p->unit_number != header2_p->unit_number)
+  {
+    return false;
+  }
+
+  const ecma_length_t chars_number = header1_p->unit_number;
+
+  const ecma_char_t* cur_char_buf1_iter_p = (ecma_char_t*) header1_p->data;
+  const ecma_char_t* cur_char_buf1_end_p = cur_char_buf1_iter_p + sizeof (header1_p->data) / sizeof (ecma_char_t);
+  const ecma_char_t* cur_char_buf2_iter_p = (ecma_char_t*) header2_p->data;
+  const ecma_char_t* cur_char_buf2_end_p = cur_char_buf2_iter_p + sizeof (header2_p->data) / sizeof (ecma_char_t);
+
+  uint16_t next_chunk1_cp = header1_p->next_chunk_cp;
+  uint16_t next_chunk2_cp = header2_p->next_chunk_cp;
+
+  for (ecma_length_t char_index = 0;
+       char_index < chars_number;
+       char_index++)
+  {
+    if (unlikely (cur_char_buf1_iter_p == cur_char_buf1_end_p))
+    {
+      JERRY_ASSERT (cur_char_buf2_iter_p == cur_char_buf2_end_p);
+
+      const ecma_collection_chunk_t *chunk1_p = ECMA_GET_NON_NULL_POINTER (next_chunk1_cp);
+      const ecma_collection_chunk_t *chunk2_p = ECMA_GET_NON_NULL_POINTER (next_chunk2_cp);
+
+      cur_char_buf1_iter_p = (ecma_char_t*) chunk1_p->data;
+      cur_char_buf1_end_p = cur_char_buf1_iter_p + sizeof (chunk1_p->data) / sizeof (ecma_char_t);
+      cur_char_buf2_iter_p = (ecma_char_t*) chunk2_p->data;
+      cur_char_buf2_end_p = cur_char_buf2_iter_p + sizeof (chunk2_p->data) / sizeof (ecma_char_t);
+
+      next_chunk1_cp = chunk1_p->next_chunk_cp;
+      next_chunk2_cp = chunk2_p->next_chunk_cp;
+    }
+
+    JERRY_ASSERT (cur_char_buf1_iter_p + 1 <= cur_char_buf1_end_p);
+    JERRY_ASSERT (cur_char_buf2_iter_p + 1 <= cur_char_buf2_end_p);
+
+    if (*cur_char_buf1_iter_p++ != *cur_char_buf2_iter_p++)
+    {
+      return false;
+    }
+  }
+
+  return true;
+} /* ecma_compare_chars_collection */
+
+/**
+ * Copy the collection of ecma-chars.
+ *
+ * @return pointer to collection copy
+ */
+static ecma_collection_header_t*
+ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< collection's header */
+{
+  JERRY_ASSERT (collection_p != NULL);
+
+  ecma_collection_header_t *new_header_p = ecma_alloc_collection_header ();
+  *new_header_p = *collection_p;
+
+  uint16_t* next_chunk_cp_p = &new_header_p->next_chunk_cp;
+
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (collection_p->next_chunk_cp);
+
+  while (chunk_p != NULL)
+  {
+    ecma_collection_chunk_t *new_chunk_p = ecma_alloc_collection_chunk ();
+    *new_chunk_p = *chunk_p;
+
+    ECMA_SET_NON_NULL_POINTER (*next_chunk_cp_p, new_chunk_p);
+    next_chunk_cp_p = &new_chunk_p->next_chunk_cp;
+
+    chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+  }
+
+  *next_chunk_cp_p = ECMA_NULL_POINTER;
+
+  return new_header_p;
+} /* ecma_copy_chars_collection */
+
+/**
+ * Copy characters of the collection to buffer
+ */
+static void
+ecma_copy_chars_collection_to_buffer (const ecma_collection_header_t *collection_p, /**< collection header */
+                                      ecma_char_t chars_buffer[], /**< buffer for characters */
+                                      size_t buffer_size) /**< size of the buffer */
+{
+  JERRY_ASSERT (collection_p != NULL);
+
+  ecma_char_t *out_chars_buf_iter_p = chars_buffer;
+
+  const ecma_length_t chars_number = collection_p->unit_number;
+
+  uint16_t next_chunk_cp = collection_p->next_chunk_cp;
+  const ecma_char_t* cur_char_buf_iter_p = (ecma_char_t*) collection_p->data;
+  const ecma_char_t* cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data) / sizeof (ecma_char_t);
+
+  for (ecma_length_t char_index = 0;
+       char_index < chars_number;
+       char_index++)
+  {
+    if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
+    {
+      const ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (next_chunk_cp);
+
+      cur_char_buf_iter_p = (ecma_char_t*) chunk_p->data;
+      cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (chunk_p->data) / sizeof (ecma_char_t);
+
+      next_chunk_cp = chunk_p->next_chunk_cp;
+    }
+
+    JERRY_ASSERT (cur_char_buf_iter_p + 1 <= cur_char_buf_end_p);
+
+    *out_chars_buf_iter_p++ = *cur_char_buf_iter_p++;
+  }
+
+  *out_chars_buf_iter_p = ECMA_CHAR_NULL;
+
+  JERRY_ASSERT (out_chars_buf_iter_p - chars_buffer <= (ssize_t) buffer_size);
+} /* ecma_copy_chars_collection_to_buffer */
+
+/**
+ * Free the collection of ecma-chars.
+ */
+static void
+ecma_free_chars_collection (ecma_collection_header_t* collection_p) /**< collection's header */
+{
+  JERRY_ASSERT (collection_p != NULL);
+
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (collection_p->next_chunk_cp);
+
+  while (chunk_p != NULL)
+  {
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+    ecma_dealloc_collection_chunk (chunk_p);
+
+    chunk_p = next_chunk_p;
+  }
+
+  ecma_dealloc_collection_header (collection_p);
+} /* ecma_free_chars_collection */
 
 /**
  * Initialize data for string helpers
@@ -113,7 +306,6 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
   string_p->refs = 1;
   string_p->is_stack_var = is_stack_var;
 
-  string_p->length = lit.data.lp.length;
   string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
 
   string_p->u.lit_index = lit_index;
@@ -136,7 +328,6 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
   string_p->refs = 1;
   string_p->is_stack_var = is_stack_var;
 
-  string_p->length = ecma_magic_string_lengths [magic_string_id];
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
 
   string_p->u.magic_string_id = magic_string_id;
@@ -166,49 +357,15 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
     length++;
   }
 
-  const size_t bytes_needed_for_current_string = sizeof (ecma_char_t) * length;
-  const size_t bytes_for_chars_in_string_descriptor = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_string_t, u.chars);
-  JERRY_STATIC_ASSERT (bytes_for_chars_in_string_descriptor % sizeof (ecma_char_t) == 0);
+  JERRY_ASSERT (length > 0);
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
-  string_desc_p->length = length;
-
-  if (bytes_needed_for_current_string <= bytes_for_chars_in_string_descriptor)
-  {
-    string_desc_p->container = ECMA_STRING_CONTAINER_CHARS_IN_DESC;
-    __memcpy (string_desc_p->u.chars, string_p, bytes_needed_for_current_string);
-
-    return string_desc_p;
-  }
-
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
 
-  const ecma_char_t* src_p = string_p;
-
-  ecma_length_t chars_left = length;
-  JERRY_ASSERT (chars_left > 0);
-
-  ecma_collection_chunk_t *string_chunk_p = ecma_alloc_collection_chunk ();
-
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.chunk_cp, string_chunk_p);
-
-  const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
-  while (chars_left > 0)
-  {
-    ecma_length_t chars_to_copy = JERRY_MIN(chars_left, max_chars_in_chunk);
-
-    __memcpy (string_chunk_p->data, src_p, chars_to_copy * sizeof (ecma_char_t));
-    chars_left = (ecma_length_t) (chars_left - chars_to_copy);
-    src_p += chars_to_copy;
-
-    ecma_collection_chunk_t* next_string_chunk_p = ecma_alloc_collection_chunk ();
-    ECMA_SET_NON_NULL_POINTER (string_chunk_p->next_chunk_cp, next_string_chunk_p);
-    string_chunk_p = next_string_chunk_p;
-  }
-
-  string_chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
+  ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
 
   return string_desc_p;
 } /* ecma_new_ecma_string */
@@ -227,29 +384,6 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   string_desc_p->container = ECMA_STRING_CONTAINER_UINT32_IN_DESC;
   string_desc_p->u.uint32_number = uint32_number;
 
-  const uint32_t max_uint32_len = 10;
-  const uint32_t nums_with_ascending_length[10] =
-  {
-    1u,
-    10u,
-    100u,
-    1000u,
-    10000u,
-    100000u,
-    1000000u,
-    10000000u,
-    100000000u,
-    1000000000u
-  };
-
-  string_desc_p->length = 1;
-
-  while (string_desc_p->length < max_uint32_len
-         && uint32_number >= nums_with_ascending_length [string_desc_p->length])
-  {
-    string_desc_p->length++;
-  }
-
   return string_desc_p;
 } /* ecma_new_ecma_string_from_uint32 */
 
@@ -267,15 +401,9 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
     return ecma_new_ecma_string_from_uint32 (uint32_num);
   }
 
-  ecma_char_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
-  ecma_length_t length = ecma_number_to_zt_string (num,
-                                                   buffer,
-                                                   sizeof (buffer));
-
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
-  string_desc_p->length = length;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -363,15 +491,6 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     jerry_exit (ERR_OUT_OF_MEMORY);
   }
 
-  if ((int64_t) ((ecma_length_t) length) != length)
-  {
-    string_desc_p->length = ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED;
-  }
-  else
-  {
-    string_desc_p->length = (ecma_length_t) length;
-  }
-
   string1_p = ecma_copy_or_ref_ecma_string (string1_p);
   string2_p = ecma_copy_or_ref_ecma_string (string2_p);
 
@@ -396,7 +515,6 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
   switch ((ecma_string_container_t) string_desc_p->container)
   {
-    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
@@ -432,35 +550,14 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_chunk_t *str_heap_chunk_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.chunk_cp);
-      JERRY_ASSERT (str_heap_chunk_p != NULL);
-
       new_str_p = ecma_alloc_string ();
       *new_str_p = *string_desc_p;
 
-      ecma_collection_chunk_t *new_str_heap_chunk_p = ecma_alloc_collection_chunk ();
-      ECMA_SET_NON_NULL_POINTER (new_str_p->u.chunk_cp, new_str_heap_chunk_p);
+      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.collection_cp);
+      JERRY_ASSERT (chars_collection_p != NULL);
+      ecma_collection_header_t *new_chars_collection_p = ecma_copy_chars_collection (chars_collection_p);
 
-      while (true)
-      {
-        __memcpy (new_str_heap_chunk_p->data, str_heap_chunk_p->data, sizeof (new_str_heap_chunk_p->data));
-
-        str_heap_chunk_p = ECMA_GET_POINTER (str_heap_chunk_p->next_chunk_cp);
-
-        if (str_heap_chunk_p != NULL)
-        {
-          ecma_collection_chunk_t *new_str_next_heap_chunk_p = ecma_alloc_collection_chunk ();
-
-          ECMA_SET_NON_NULL_POINTER (new_str_heap_chunk_p->next_chunk_cp, new_str_next_heap_chunk_p);
-          new_str_heap_chunk_p = new_str_next_heap_chunk_p;
-        }
-        else
-        {
-          break;
-        }
-      }
-
-      new_str_heap_chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
+      ECMA_SET_NON_NULL_POINTER (new_str_p->u.collection_cp, new_chars_collection_p);
 
       break;
     }
@@ -548,18 +645,9 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
   {
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (string_p->u.chunk_cp);
+      ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_p->u.collection_cp);
 
-      JERRY_ASSERT (chunk_p != NULL);
-
-      while (chunk_p != NULL)
-      {
-        ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
-
-        ecma_dealloc_collection_chunk (chunk_p);
-
-        chunk_p = next_chunk_p;
-      }
+      ecma_free_chars_collection (chars_collection_p);
 
       break;
     }
@@ -583,7 +671,6 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
       break;
     }
-    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
@@ -621,8 +708,7 @@ ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p) /*
 
   JERRY_ASSERT (container_type == ECMA_STRING_CONTAINER_LIT_TABLE ||
                 container_type == ECMA_STRING_CONTAINER_MAGIC_STRING ||
-                container_type == ECMA_STRING_CONTAINER_UINT32_IN_DESC ||
-                container_type == ECMA_STRING_CONTAINER_CHARS_IN_DESC);
+                container_type == ECMA_STRING_CONTAINER_UINT32_IN_DESC);
 #endif /* !JERRY_NDEBUG */
 } /* ecma_check_that_ecma_string_need_not_be_freed */
 
@@ -650,41 +736,30 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
       return *num_p;
     }
 
-    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     case ECMA_STRING_CONTAINER_CONCATENATION:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
-      ecma_char_t zt_string_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+      const int32_t string_len = ecma_string_get_length (str_p);
+      const size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
+
+      ecma_char_t *str_buffer_p = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      if (str_buffer_p == NULL)
+      {
+        jerry_exit (ERR_OUT_OF_MEMORY);
+      }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
-                                                       zt_string_buffer,
-                                                       (ssize_t) sizeof (zt_string_buffer));
-      if (bytes_copied < 0)
-      {
-        ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -bytes_copied, MEM_HEAP_ALLOC_SHORT_TERM);
-        if (heap_buffer_p == NULL)
-        {
-          jerry_exit (ERR_OUT_OF_MEMORY);
-        }
+                                                       str_buffer_p,
+                                                       (ssize_t) string_buf_size);
+      JERRY_ASSERT (bytes_copied > 0);
 
-        bytes_copied = ecma_string_to_zt_string (str_p,
-                                                 heap_buffer_p,
-                                                 -bytes_copied);
+      ecma_number_t num = ecma_zt_string_to_number (str_buffer_p);
 
-        JERRY_ASSERT (bytes_copied > 0);
+      mem_heap_free_block (str_buffer_p);
 
-        ecma_number_t num = ecma_zt_string_to_number (heap_buffer_p);
-
-        mem_heap_free_block (heap_buffer_p);
-
-        return num;
-      }
-      else
-      {
-        return ecma_zt_string_to_number (zt_string_buffer);
-      }
+      return num;
     }
   }
 
@@ -711,51 +786,19 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
   JERRY_ASSERT (buffer_size > 0);
 
   ssize_t required_buffer_size = ((ecma_string_get_length (string_desc_p) + 1) * ((ssize_t) sizeof (ecma_char_t)));
-  ssize_t bytes_copied = 0;
 
   if (required_buffer_size > buffer_size)
   {
     return -required_buffer_size;
   }
 
-  ecma_char_t *dest_p = buffer_p;
-
   switch ((ecma_string_container_t)string_desc_p->container)
   {
-    case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
-    {
-      ecma_length_t string_length = string_desc_p->length;
-
-      __memcpy (dest_p, string_desc_p->u.chars, string_length * sizeof (ecma_char_t));
-      dest_p += string_length;
-      *dest_p++ = '\0';
-      bytes_copied = (dest_p - buffer_p) * ((ssize_t) sizeof (ecma_char_t));
-
-      break;
-    }
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_length_t string_length = string_desc_p->length;
+      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.collection_cp);
 
-      ecma_collection_chunk_t *string_chunk_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.chunk_cp);
-
-      const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
-
-      ecma_length_t chars_left = string_length;
-      while (chars_left > 0)
-      {
-        JERRY_ASSERT(chars_left <= string_length);
-
-        ecma_length_t chars_to_copy = JERRY_MIN(max_chars_in_chunk, chars_left);
-
-        __memcpy (dest_p, string_chunk_p->data, chars_to_copy * sizeof (ecma_char_t));
-        dest_p += chars_to_copy;
-        chars_left = (ecma_length_t) (chars_left - chars_to_copy);
-
-        string_chunk_p = ECMA_GET_POINTER(string_chunk_p->next_chunk_cp);
-      }
-      *dest_p++ = '\0';
-      bytes_copied = (dest_p - buffer_p) * ((ssize_t) sizeof (ecma_char_t));
+      ecma_copy_chars_collection_to_buffer (chars_collection_p, buffer_p, (size_t) buffer_size);
 
       break;
     }
@@ -767,15 +810,15 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       JERRY_ASSERT (str_p != NULL);
 
       ecma_copy_zt_string_to_buffer (str_p, buffer_p, required_buffer_size);
-      JERRY_ASSERT (__strlen ((char*)buffer_p) == (size_t) ecma_string_get_length (string_desc_p));
 
-      bytes_copied = (ssize_t) ((ecma_string_get_length (string_desc_p) + 1) * ((ssize_t) sizeof (ecma_char_t)));
       break;
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     {
       uint32_t uint32_number = string_desc_p->u.uint32_number;
-      bytes_copied = ecma_uint32_to_string (uint32_number, buffer_p, required_buffer_size);
+      ssize_t bytes_copied = ecma_uint32_to_string (uint32_number, buffer_p, required_buffer_size);
+
+      JERRY_ASSERT (bytes_copied == required_buffer_size);
 
       break;
     }
@@ -785,9 +828,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
 
       ecma_length_t length = ecma_number_to_zt_string (*num_p, buffer_p, buffer_size);
 
-      JERRY_ASSERT (ecma_string_get_length (string_desc_p) == length);
-
-      bytes_copied = (length + 1) * ((ssize_t) sizeof (ecma_char_t));
+      JERRY_ASSERT (required_buffer_size == (length + 1) * ((ssize_t) sizeof (ecma_char_t)));
 
       break;
     }
@@ -812,7 +853,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
                                                 buffer_size - bytes_copied1);
       JERRY_ASSERT (bytes_copied2 > 0);
 
-      bytes_copied = bytes_copied1 + bytes_copied2;
+      JERRY_ASSERT (required_buffer_size == bytes_copied1 + bytes_copied2);
 
       break;
     }
@@ -821,107 +862,18 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
       const ecma_magic_string_id_t id = string_desc_p->u.magic_string_id;
       const size_t length = ecma_magic_string_lengths [id];
 
-      JERRY_ASSERT (length == (size_t) ecma_string_get_length (string_desc_p));
-
       size_t bytes_to_copy = (length + 1) * sizeof (ecma_char_t);
 
       __memcpy (buffer_p, ecma_get_magic_string_zt (id), bytes_to_copy);
 
-      bytes_copied = (ssize_t) bytes_to_copy;
+      JERRY_ASSERT (required_buffer_size == (ssize_t) bytes_to_copy);
+
+      break;
     }
   }
 
-  JERRY_ASSERT (bytes_copied > 0 && bytes_copied <= required_buffer_size);
-
-  return bytes_copied;
+  return required_buffer_size;
 } /* ecma_string_to_zt_string */
-
-/**
- * Compare two ecma-strings stored in string chunk chains
- *
- * @return true - if strings are equal;
- *         false - otherwise.
- */
-static bool __noinline
-ecma_compare_strings_in_heap_chunks (const ecma_string_t *string1_p, /* ecma-string */
-                                     const ecma_string_t *string2_p) /* ecma-string */
-{
-  JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS
-                && string2_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-  JERRY_ASSERT (ecma_string_get_length (string1_p) == ecma_string_get_length (string2_p));
-
-  ecma_collection_chunk_t *string1_chunk_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.chunk_cp);
-  ecma_collection_chunk_t *string2_chunk_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.chunk_cp);
-
-  ecma_length_t chars_left = string1_p->length;
-  const ecma_length_t max_chars_in_chunk = sizeof (string1_chunk_p->data) / sizeof (ecma_char_t);
-
-  while (chars_left > 0)
-  {
-    JERRY_ASSERT (string1_chunk_p != NULL);
-    JERRY_ASSERT (string2_chunk_p != NULL);
-
-    ecma_length_t chars_to_compare = JERRY_MIN (chars_left, max_chars_in_chunk);
-    size_t size_to_compare = chars_to_compare * sizeof (ecma_char_t);
-
-    if (__memcmp (string1_chunk_p->data, string2_chunk_p->data, size_to_compare) != 0)
-    {
-      return false;
-    }
-
-    JERRY_ASSERT (chars_left >= chars_to_compare);
-    chars_left = (ecma_length_t) (chars_left - chars_to_compare);
-
-    string1_chunk_p = ECMA_GET_POINTER (string1_chunk_p->next_chunk_cp);
-    string2_chunk_p = ECMA_GET_POINTER (string2_chunk_p->next_chunk_cp);
-  }
-
-  return true;
-} /* ecma_compare_strings_in_heap_chunks */
-
-/**
- * Compare zt-string to ecma-string stored in heap chunks
- *
- * @return true - if strings are equal;
- *         false - otherwise.
- */
-static bool __noinline
-ecma_compare_ecma_string_to_zt_string (const ecma_string_t *string_p, /**< ecma-string */
-                                       const ecma_char_t *zt_string_p) /**< zt-string */
-{
-  JERRY_ASSERT (string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-
-  ecma_collection_chunk_t *string_chunk_p = ECMA_GET_NON_NULL_POINTER (string_p->u.chunk_cp);
-
-  ecma_length_t chars_left = string_p->length;
-  const ecma_length_t max_chars_in_chunk = sizeof (string_chunk_p->data) / sizeof (ecma_char_t);
-
-  const ecma_char_t *zt_string_iter_p = zt_string_p;
-  const ecma_char_t *string_chunk_iter_p = string_chunk_p->data;
-  const ecma_char_t *string_chunk_end_p = string_chunk_iter_p + max_chars_in_chunk;
-
-  while (chars_left > 0)
-  {
-    JERRY_ASSERT (string_chunk_p != NULL);
-
-    if (unlikely (string_chunk_iter_p == string_chunk_end_p))
-    {
-      string_chunk_p = ECMA_GET_POINTER (string_chunk_p->next_chunk_cp);
-      string_chunk_iter_p = string_chunk_p->data;
-      string_chunk_end_p = string_chunk_iter_p + max_chars_in_chunk;
-    }
-
-    if (*string_chunk_iter_p++ != *zt_string_iter_p++)
-    {
-      return false;
-    }
-
-    JERRY_ASSERT (chars_left >= 1);
-    chars_left = (ecma_length_t) (chars_left - 1);
-  }
-
-  return true;
-} /* ecma_compare_ecma_string_to_zt_string */
 
 /**
  * Long path part of ecma-string to ecma-string comparison routine
@@ -936,9 +888,19 @@ static bool __noinline
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
                                     const ecma_string_t *string2_p) /* ecma-string */
 {
-  if (likely (ecma_string_get_length (string1_p) != ecma_string_get_length (string2_p)))
+  const int32_t string1_len = ecma_string_get_length (string1_p);
+  const int32_t string2_len = ecma_string_get_length (string2_p);
+
+  if (string1_len != string2_len)
   {
     return false;
+  }
+
+  const int32_t strings_len = string1_len;
+
+  if (strings_len == 0)
+  {
+    return true;
   }
 
   if (string1_p->container == string2_p->container)
@@ -959,17 +921,12 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 
         return (*num1_p == *num2_p);
       }
-      case ECMA_STRING_CONTAINER_CHARS_IN_DESC:
-      {
-        JERRY_ASSERT (ecma_string_get_length (string1_p) == ecma_string_get_length (string2_p));
-
-        return (__memcmp (string1_p->u.chars,
-                          string2_p->u.chars,
-                          (size_t) (ecma_string_get_length (string1_p) * ((ssize_t) sizeof (ecma_char_t)))) == 0);
-      }
       case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
       {
-        return ecma_compare_strings_in_heap_chunks (string1_p, string2_p);
+        const ecma_collection_header_t *chars_collection1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.collection_cp);
+        const ecma_collection_header_t *chars_collection2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.collection_cp);
+
+        return ecma_compare_chars_collection (chars_collection1_p, chars_collection2_p);
       }
       case ECMA_STRING_CONTAINER_CONCATENATION:
       {
@@ -985,114 +942,30 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     }
   }
 
-  if (string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
+  JERRY_ASSERT (strings_len != 0);
+
+  const size_t string_buf_size = (size_t) (strings_len + 1) * sizeof (ecma_char_t);
+
+  ecma_char_t *string1_buf = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_char_t *string2_buf = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+  if (string1_buf == NULL
+      || string2_buf == NULL)
   {
-    const ecma_string_t *tmp_string_p = string1_p;
-    string1_p = string2_p;
-    string2_p = tmp_string_p;
-  }
-  JERRY_ASSERT (string1_p->container != ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-
-  const ecma_char_t *zt_string1_p;
-  bool is_zt_string1_on_heap = false;
-  ecma_char_t zt_string1_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
-
-  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    FIXME (uint8_t -> literal_index_t);
-    const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR);
-    zt_string1_p = literal_to_zt (lit);
-  }
-  else
-  {
-    ssize_t req_size = ecma_string_to_zt_string (string1_p,
-                                                 zt_string1_buffer,
-                                                 sizeof (zt_string1_buffer));
-
-    if (req_size < 0)
-    {
-      ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
-      if (heap_buffer_p == NULL)
-      {
-        jerry_exit (ERR_OUT_OF_MEMORY);
-      }
-
-      ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
-                                                       heap_buffer_p,
-                                                       -req_size);
-
-      JERRY_ASSERT (bytes_copied > 0);
-
-      zt_string1_p = heap_buffer_p;
-      is_zt_string1_on_heap = true;
-    }
-    else
-    {
-      zt_string1_p = zt_string1_buffer;
-    }
+    jerry_exit (ERR_OUT_OF_MEMORY);
   }
 
-  bool is_equal;
+  ssize_t req_size;
 
-  if (string2_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
-  {
-    is_equal = ecma_compare_ecma_string_to_zt_string (string2_p, zt_string1_p);
-  }
-  else
-  {
-    const ecma_char_t *zt_string2_p;
-    bool is_zt_string2_on_heap = false;
-    ecma_char_t zt_string2_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  req_size = ecma_string_to_zt_string (string1_p, string1_buf, (ssize_t) string_buf_size);
+  JERRY_ASSERT (req_size > 0);
+  req_size = ecma_string_to_zt_string (string2_p, string2_buf, (ssize_t) string_buf_size);
+  JERRY_ASSERT (req_size > 0);
 
-    if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
-    {
-      FIXME (uint8_t -> literal_index_t);
-      const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
-      JERRY_ASSERT (lit.type == LIT_STR);
-      zt_string2_p = literal_to_zt (lit);
-    }
-    else
-    {
-      ssize_t req_size = ecma_string_to_zt_string (string2_p,
-                                                   zt_string2_buffer,
-                                                   sizeof (zt_string2_buffer));
+  bool is_equal = (__memcmp (string1_buf, string2_buf, string_buf_size) == 0);
 
-      if (req_size < 0)
-      {
-        ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
-        if (heap_buffer_p == NULL)
-        {
-          jerry_exit (ERR_OUT_OF_MEMORY);
-        }
-
-        ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
-                                                         heap_buffer_p,
-                                                         -req_size);
-
-        JERRY_ASSERT (bytes_copied > 0);
-
-        zt_string2_p = heap_buffer_p;
-        is_zt_string2_on_heap = true;
-      }
-      else
-      {
-        zt_string2_p = zt_string2_buffer;
-      }
-    }
-
-    is_equal = ecma_compare_zt_strings (zt_string1_p, zt_string2_p);
-
-    if (is_zt_string2_on_heap)
-    {
-      mem_heap_free_block ((void*) zt_string2_p);
-    }
-  }
-
-  if (is_zt_string1_on_heap)
-  {
-    mem_heap_free_block ((void*) zt_string1_p);
-  }
+  mem_heap_free_block (string1_buf);
+  mem_heap_free_block (string2_buf);
 
   return is_equal;
 } /* ecma_compare_ecma_strings_longpath */
@@ -1255,16 +1128,66 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 int32_t
 ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
-  if (likely (string_p->length != ECMA_STRING_LENGTH_SHOULD_BE_CALCULATED))
+  ecma_string_container_t container = string_p->container;
+
+  if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    return string_p->length;
+    const literal lit = deserialize_literal_by_id ((idx_t) string_p->u.lit_index);
+
+    return lit.data.lp.length;
   }
-  else if (string_p->container != ECMA_STRING_CONTAINER_CONCATENATION)
+  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
-    return string_p->length;
+    return ecma_magic_string_lengths [string_p->u.magic_string_id];
+  }
+  else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  {
+    const uint32_t uint32_number = string_p->u.uint32_number;
+    const int32_t max_uint32_len = 10;
+    const uint32_t nums_with_ascending_length[10] =
+    {
+      1u,
+      10u,
+      100u,
+      1000u,
+      10000u,
+      100000u,
+      1000000u,
+      10000000u,
+      100000000u,
+      1000000000u
+    };
+
+    int32_t length = 1;
+
+    while (length < max_uint32_len
+           && uint32_number >= nums_with_ascending_length [length])
+    {
+      length++;
+    }
+
+    return length;
+  }
+  else if (container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
+  {
+    const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_p->u.number_cp);
+
+    ecma_char_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+
+    return ecma_number_to_zt_string (*num_p,
+                                     buffer,
+                                     sizeof (buffer));
+  }
+  else if (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
+  {
+    const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (string_p->u.collection_cp);
+
+    return collection_header_p->unit_number;
   }
   else
   {
+    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_CONCATENATION);
+
     const ecma_string_t *string1_p, *string2_p;
 
     string1_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string1_cp);
@@ -1576,7 +1499,6 @@ static bool
 ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
                                ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
 {
-  JERRY_ASSERT (ecma_string_get_length (string_p) <= ecma_magic_string_max_length);
   ecma_char_t zt_string_buffer [ecma_magic_string_max_length + 1];
 
   ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));

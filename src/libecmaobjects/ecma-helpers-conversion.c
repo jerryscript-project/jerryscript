@@ -330,9 +330,6 @@
  * See also:
  *          ECMA-262 v5, 9.3.1
  *
- * Warning:
- *         the conversion routine may be not precise for some cases
- *
  * @return ecma-number
  */
 ecma_number_t
@@ -1114,9 +1111,6 @@ ecma_number_to_zt_string_calc_number_params (ecma_number_t num, /**< ecma-number
  * See also:
  *          ECMA-262 v5, 9.8.1
  *
- * Warning:
- *         the conversion is not precise for all cases
- *         For example, 12345.123f converts to "12345.12209".
  *
  * @return length of zt-string
  */

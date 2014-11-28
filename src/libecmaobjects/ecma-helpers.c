@@ -568,12 +568,19 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
  */
 ecma_property_t*
 ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                          const ecma_string_t *name_p) /**< property's name */
+                          ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
 
-  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
+  ecma_property_t *property_p;
+
+  if (ecma_lcache_lookup (obj_p, name_p, &property_p))
+  {
+    return property_p;
+  }
+
+  for (property_p = ecma_get_property_list (obj_p);
        property_p != NULL;
        property_p = ECMA_GET_POINTER(property_p->next_property_p))
   {
@@ -596,11 +603,13 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     if (ecma_compare_ecma_strings (name_p, property_name_p))
     {
-      return property_p;
+      break;
     }
   }
 
-  return NULL;
+  ecma_lcache_insert (obj_p, name_p, property_p);
+
+  return property_p;
 } /* ecma_find_named_property */
 
 /**
@@ -614,7 +623,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
  */
 ecma_property_t*
 ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in */
-                         const ecma_string_t *name_p) /**< property's name */
+                         ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT(obj_p != NULL);
   JERRY_ASSERT(name_p != NULL);
@@ -637,7 +646,7 @@ ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in *
  */
 ecma_property_t*
 ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property in */
-                              const ecma_string_t *name_p) /**< property's name */
+                              ecma_string_t *name_p) /**< property's name */
 {
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);

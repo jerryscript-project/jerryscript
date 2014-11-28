@@ -264,11 +264,11 @@ extern ecma_property_t *ecma_create_named_accessor_property (ecma_object_t *obj_
                                                              ecma_property_enumerable_value_t enumerable,
                                                              ecma_property_configurable_value_t configurable);
 extern ecma_property_t *ecma_find_named_property (ecma_object_t *obj_p,
-                                                  const ecma_string_t *name_p);
+                                                  ecma_string_t *name_p);
 extern ecma_property_t *ecma_get_named_property (ecma_object_t *obj_p,
-                                                 const ecma_string_t *name_p);
+                                                 ecma_string_t *name_p);
 extern ecma_property_t *ecma_get_named_data_property (ecma_object_t *obj_p,
-                                                      const ecma_string_t *name_p);
+                                                      ecma_string_t *name_p);
 
 extern void ecma_free_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 

@@ -118,12 +118,6 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
     }
   }
 
-  /*
-   * Property name should be the same as the value passed to ecma_lcache_lookup above,
-   * or at least hash for the two strings should be either non-computable or the same (see also: ecma_string_try_hash).
-   */
-  ecma_lcache_insert (obj_p, property_name_p, prop_p);
-
   return prop_p;
 } /* ecma_op_object_get_own_property */
 

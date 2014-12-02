@@ -212,7 +212,7 @@ CFLAGS_WERROR ?= -Werror
 CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
 # Optimizations
-CFLAGS_OPTIMIZE ?= -Os -flto
+CFLAGS_OPTIMIZE ?= -Os -fomit-frame-pointer -flto
 CFLAGS_NO_OPTIMIZE ?= -O0
 LDFLAGS_OPTIMIZE ?=
 LDFLAGS_NO_OPTIMIZE ?=
@@ -366,7 +366,7 @@ ifeq ($(OPTION_MCU),disable)
   endif
  endif
  DEFINES_JERRY += -D__TARGET_HOST -DJERRY_SOURCE_BUFFER_SIZE=$$((1024*1024))
- CFLAGS_COMMON += -fomit-frame-pointer -fno-stack-protector
+ CFLAGS_COMMON += -fno-stack-protector
 else
  CFLAGS_COMMON += -ffunction-sections -fdata-sections -nostdlib
  DEFINES_JERRY += -D__TARGET_MCU

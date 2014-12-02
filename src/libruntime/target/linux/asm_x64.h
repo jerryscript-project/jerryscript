@@ -17,43 +17,43 @@
 #define ASM_X64_H
 
 /*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
+ * mov syscall_no (%rdi) -> %rax
+ * mov arg1 (%rsi) -> %rdi
  * syscall
- * mov %rax -> ret
  */
-#define SYSCALL_1(syscall_no, arg1, ret) \
-    __asm volatile ("syscall" \
-                   : "=a" (ret) \
-                   : "a" (syscall_no), "D" (arg1) \
-                   : "rcx", "r11");
+#define SYSCALL_1 \
+  mov %rdi, %rax; \
+  mov %rsi, %rdi; \
+  syscall; \
+  ret;
 
 /*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
- * mov arg2 -> %rsi
+ * mov syscall_no (%rdi) -> %rax
+ * mov arg1 (%rsi) -> %rdi
+ * mov arg2 (%rdx) -> %rsi
  * syscall
- * mov %rax -> ret
  */
-#define SYSCALL_2(syscall_no, arg1, arg2, ret) \
-    __asm volatile ("syscall" \
-                   : "=a" (ret) \
-                   : "a" (syscall_no), "D" (arg1), "S" (arg2) \
-                   : "rcx", "r11");
+#define SYSCALL_2 \
+  mov %rdi, %rax; \
+  mov %rsi, %rdi; \
+  mov %rdx, %rsi; \
+  syscall; \
+  ret;
 
 /*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
- * mov arg2 -> %rsi
- * mov arg3 -> %rdx
+ * mov syscall_no (%rdi) -> %rax
+ * mov arg1 (%rsi) -> %rdi
+ * mov arg2 (%rdx) -> %rsi
+ * mov arg3 (%rcx) -> %rdx
  * syscall
- * mov %rax -> ret
  */
-#define SYSCALL_3(syscall_no, arg1, arg2, arg3, ret) \
-    __asm volatile ("syscall" \
-                   : "=a" (ret) \
-                   : "a" (syscall_no), "D" (arg1), "S" (arg2), "d" (arg3) \
-                   : "rcx", "r11");
+#define SYSCALL_3 \
+  mov %rdi, %rax; \
+  mov %rsi, %rdi; \
+  mov %rdx, %rsi; \
+  mov %rcx, %rdx; \
+  syscall; \
+  ret;
 
 #define _START            \
    mov (%rsp), %rdi;      \

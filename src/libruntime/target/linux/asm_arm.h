@@ -17,55 +17,55 @@
 #define ASM_ARM_H
 
 /*
- * mov syscall_no -> %r7
- * mov arg1 -> %r0
- * svc
- * mov %r0 -> ret
+ * mov syscall_no (%r0) -> %r7
+ * mov arg1 (%r1) -> %r0
+ * svc #0
  */
-#define SYSCALL_1(syscall_no, arg1, ret) \
-  __asm volatile ("mov r0, %[arg1]\n" \
-                  "mov r7, %[syscall_no]\n" \
-                  "svc #0\n" \
-                  "mov %[ret], r0\n" \
-                  : [ret] "=r" (ret) \
-                  : [syscall_no] "r" (syscall_no), [arg1] "r" (arg1) \
-                  : "r0", "r1", "r2", "r3", "r7", "r9", "memory");
+#define SYSCALL_1 \
+  push {r4-r12, lr}; \
+  \
+  mov r7, r0; \
+  mov r0, r1; \
+  \
+  svc #0; \
+  \
+  pop {r4-r12, pc};
 
 /*
- * mov syscall_no -> %r7
- * mov arg1 -> %r0
- * mov arg2 -> %r1
- * syscall
- * mov %r0 -> ret
+ * mov syscall_no (%r0) -> %r7
+ * mov arg1 (%r1) -> %r0
+ * mov arg2 (%r2) -> %r1
+ * svc #0
  */
-#define SYSCALL_2(syscall_no, arg1, arg2, ret) \
-  __asm volatile ("mov r0, %[arg1]\n" \
-                  "mov r1, %[arg2]\n" \
-                  "mov r7, %[syscall_no]\n" \
-                  "svc #0\n" \
-                  "mov %[ret], r0\n" \
-                  : [ret] "=r" (ret) \
-                  : [syscall_no] "r" (syscall_no), [arg1] "r" (arg1), [arg2] "r" (arg2) \
-                  : "r0", "r1", "r2", "r3", "r7", "r9", "memory");
+#define SYSCALL_2 \
+  push {r4-r12, lr}; \
+  \
+  mov r7, r0; \
+  mov r0, r1; \
+  mov r1, r2; \
+  \
+  svc #0; \
+  \
+  pop {r4-r12, pc};
 
 /*
- * mov syscall_no -> %r7
- * mov arg1 -> %r0
- * mov arg2 -> %r1
- * mov arg3 -> %r2
- * syscall
- * mov %r0 -> ret
+ * mov syscall_no (%r0) -> %r7
+ * mov arg1 (%r1) -> %r0
+ * mov arg2 (%r2) -> %r1
+ * mov arg3 (%r3) -> %r2
+ * svc #0
  */
-#define SYSCALL_3(syscall_no, arg1, arg2, arg3, ret) \
-  __asm volatile ("mov r0, %[arg1]\n" \
-                  "mov r1, %[arg2]\n" \
-                  "mov r2, %[arg3]\n" \
-                  "mov r7, %[syscall_no]\n" \
-                  "svc #0\n" \
-                  "mov %[ret], r0\n" \
-                  : [ret] "=r" (ret) \
-                  : [syscall_no] "r" (syscall_no), [arg1] "r" (arg1), [arg2] "r" (arg2), [arg3] "r" (arg3) \
-                  : "r0", "r1", "r2", "r3", "r7", "r9", "memory");
+#define SYSCALL_3 \
+  push {r4-r12, lr}; \
+  \
+  mov r7, r0; \
+  mov r0, r1; \
+  mov r1, r2; \
+  mov r2, r3; \
+  \
+  svc #0; \
+  \
+  pop {r4-r12, pc};
 
 #define _START            \
    ldr r0, [sp, #0];      \

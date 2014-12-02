@@ -60,6 +60,10 @@ static long int syscall_1 (long int syscall_no, long int arg1);
 static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
 static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
+extern long int syscall_1_asm (long int syscall_no, long int arg1);
+extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
+extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
+
 /**
  * System call with one argument.
  *
@@ -69,9 +73,7 @@ static __noinline long int
 syscall_1 (long int syscall_no, /**< syscall number */
            long int arg1) /**< argument */
 {
-  long int ret;
-
-  SYSCALL_1 (syscall_no, arg1, ret);
+  long int ret = syscall_1_asm (syscall_no, arg1);
 
   LIBC_EXIT_ON_ERROR(ret);
 
@@ -88,9 +90,7 @@ syscall_2 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2) /**< second argument */
 {
-  long int ret;
-
-  SYSCALL_2 (syscall_no, arg1, arg2, ret);
+  long int ret = syscall_2_asm (syscall_no, arg1, arg2);
 
   LIBC_EXIT_ON_ERROR(ret);
 
@@ -108,9 +108,7 @@ syscall_3 (long int syscall_no, /**< syscall number */
            long int arg2, /**< second argument */
            long int arg3) /**< third argument */
 {
-  long int ret;
-
-  SYSCALL_3 (syscall_no, arg1, arg2, arg3, ret);
+  long int ret = syscall_3_asm (syscall_no, arg1, arg2, arg3);
 
   LIBC_EXIT_ON_ERROR(ret);
 

@@ -67,6 +67,47 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_object_get */
 
 /**
+ * Long path for ecma_op_object_get_own_property
+ *
+ * @return pointer to a property - if it exists,
+ *         NULL (i.e. ecma-undefined) - otherwise.
+ */
+static __noinline ecma_property_t*
+ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object */
+                                          ecma_string_t *property_name_p) /**< property name */
+{
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
+  JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
+
+  const bool is_builtin = ecma_get_object_is_builtin (obj_p);
+
+  typedef ecma_property_t* (*get_own_property_ptr_t) (ecma_object_t *, ecma_string_t *);
+  static const get_own_property_ptr_t get_own_property [ECMA_OBJECT_TYPE__COUNT] =
+  {
+    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_own_property,
+    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_own_property,
+    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get_own_property,
+    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_own_property,
+    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get_own_property,
+    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_get_own_property,
+    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_string_object_get_own_property
+  };
+
+  ecma_property_t *prop_p = get_own_property[type] (obj_p, property_name_p);
+
+  if (unlikely (prop_p == NULL))
+  {
+    if (is_builtin
+        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+    {
+      prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
+    }
+  }
+
+  return prop_p;
+} /* ecma_op_object_get_own_property_longpath */
+
+/**
  * [[GetOwnProperty]] ecma object's operation
  *
  * See also:
@@ -89,36 +130,10 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
   {
     return prop_p;
   }
-
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
-
-  const bool is_builtin = ecma_get_object_is_builtin (obj_p);
-
-  typedef ecma_property_t* (*get_own_property_ptr_t) (ecma_object_t *, ecma_string_t *);
-  static const get_own_property_ptr_t get_own_property [ECMA_OBJECT_TYPE__COUNT] =
+  else
   {
-    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_get_own_property,
-    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_string_object_get_own_property
-  };
-
-  prop_p = get_own_property[type] (obj_p, property_name_p);
-
-  if (unlikely (prop_p == NULL))
-  {
-    if (is_builtin
-        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
-    {
-      prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
-    }
+    return ecma_op_object_get_own_property_longpath (obj_p, property_name_p);
   }
-
-  return prop_p;
 } /* ecma_op_object_get_own_property */
 
 /**

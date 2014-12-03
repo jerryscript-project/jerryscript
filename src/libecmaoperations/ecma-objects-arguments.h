@@ -37,7 +37,7 @@ extern ecma_completion_value_t ecma_op_arguments_object_delete (ecma_object_t *o
 extern ecma_completion_value_t
 ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p,
                                               ecma_string_t *property_name_p,
-                                              ecma_property_descriptor_t property_desc,
+                                              const ecma_property_descriptor_t* property_desc_p,
                                               bool is_throw);
 
 #endif /* !ECMA_OBJECTS_ARGUMENTS_H */

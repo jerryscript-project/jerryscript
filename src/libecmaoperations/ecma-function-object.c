@@ -195,7 +195,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
                                                                            magic_string_length_p,
-                                                                           length_prop_desc,
+                                                                           &length_prop_desc,
                                                                            false);
   ecma_deref_ecma_string (magic_string_length_p);
 
@@ -227,7 +227,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONSTRUCTOR);
   ecma_op_object_define_own_property (proto_p,
                                       magic_string_constructor_p,
-                                      prop_desc,
+                                      &prop_desc,
                                       false);
   ecma_deref_ecma_string (magic_string_constructor_p);
 
@@ -237,7 +237,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
   ecma_op_object_define_own_property (f,
                                       magic_string_prototype_p,
-                                      prop_desc,
+                                      &prop_desc,
                                       false);
   ecma_deref_ecma_string (magic_string_prototype_p);
 
@@ -266,14 +266,14 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
     ecma_string_t *magic_string_caller_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER);
     ecma_op_object_define_own_property (f,
                                         magic_string_caller_p,
-                                        prop_desc,
+                                        &prop_desc,
                                         false);
     ecma_deref_ecma_string (magic_string_caller_p);
 
     ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
     ecma_op_object_define_own_property (f,
                                         magic_string_arguments_p,
-                                        prop_desc,
+                                        &prop_desc,
                                         false);
     ecma_deref_ecma_string (magic_string_arguments_p);
 
@@ -713,7 +713,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
 
       completion = ecma_op_object_define_own_property (glob_obj_p,
                                                        function_name_p,
-                                                       property_desc,
+                                                       &property_desc,
                                                        true);
     }
     else if (existing_prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)

@@ -380,7 +380,8 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                     ecma_string_t *property_name_p, /**< property name */
-                                    ecma_property_descriptor_t property_desc, /**< property descriptor */
+                                    const ecma_property_descriptor_t* property_desc_p, /**< property
+                                                                                        *   descriptor */
                                     bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT(obj_p != NULL
@@ -392,7 +393,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   typedef ecma_completion_value_t (*define_own_property_ptr_t) (ecma_object_t *,
                                                                 ecma_string_t *,
-                                                                ecma_property_descriptor_t,
+                                                                const ecma_property_descriptor_t*,
                                                                 bool);
   static const define_own_property_ptr_t define_own_property [ECMA_OBJECT_TYPE__COUNT] =
   {
@@ -407,7 +408,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   return define_own_property[type] (obj_p,
                                     property_name_p,
-                                    property_desc,
+                                    property_desc_p,
                                     is_throw);
 } /* ecma_op_object_define_own_property */
 

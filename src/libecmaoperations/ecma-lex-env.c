@@ -116,7 +116,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
       ecma_completion_value_t completion = ecma_op_object_define_own_property (binding_obj_p,
                                                                                name_p,
-                                                                               prop_desc,
+                                                                               &prop_desc,
                                                                                true);
 
       if (!(ecma_is_completion_value_normal_true (completion)

@@ -33,7 +33,7 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p,
 extern ecma_completion_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *obj_p,
                                           ecma_string_t *property_name_p,
-                                          ecma_property_descriptor_t property_desc,
+                                          const ecma_property_descriptor_t* property_desc_p,
                                           bool is_throw);
 
 /**

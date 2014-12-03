@@ -930,7 +930,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
         ecma_completion_value_t define_prop_completion = ecma_op_object_define_own_property (obj_p,
                                                                                              prop_name_string_p,
-                                                                                             prop_desc,
+                                                                                             &prop_desc,
                                                                                              false);
         JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
                       || ecma_is_completion_value_normal_false (define_prop_completion));

@@ -273,7 +273,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     // b., c.
     return ecma_op_object_define_own_property (obj_p,
                                                property_name_p,
-                                               value_desc,
+                                               &value_desc,
                                                is_throw);
   }
 
@@ -326,7 +326,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     // b.
     return ecma_op_object_define_own_property (obj_p,
                                                property_name_p,
-                                               new_desc,
+                                               &new_desc,
                                                is_throw);
   }
 
@@ -612,21 +612,22 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                             ecma_string_t *property_name_p, /**< property name */
-                                            ecma_property_descriptor_t property_desc, /**< property descriptor */
+                                            const ecma_property_descriptor_t* property_desc_p, /**< property
+                                                                                                *   descriptor */
                                             bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT(obj_p != NULL
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
-  const bool is_property_desc_generic_descriptor = (!property_desc.is_value_defined
-                                                    && !property_desc.is_writable_defined
-                                                    && !property_desc.is_get_defined
-                                                    && !property_desc.is_set_defined);
-  const bool is_property_desc_data_descriptor = (property_desc.is_value_defined
-                                                 || property_desc.is_writable_defined);
-  const bool is_property_desc_accessor_descriptor = (property_desc.is_get_defined
-                                                     || property_desc.is_set_defined);
+  const bool is_property_desc_generic_descriptor = (!property_desc_p->is_value_defined
+                                                    && !property_desc_p->is_writable_defined
+                                                    && !property_desc_p->is_get_defined
+                                                    && !property_desc_p->is_set_defined);
+  const bool is_property_desc_data_descriptor = (property_desc_p->is_value_defined
+                                                 || property_desc_p->is_writable_defined);
+  const bool is_property_desc_accessor_descriptor = (property_desc_p->is_get_defined
+                                                     || property_desc_p->is_set_defined);
 
   // 1.
   ecma_property_t *current_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -650,11 +651,11 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
     {
       ecma_property_t *new_prop_p = ecma_create_named_data_property (obj_p,
                                                                      property_name_p,
-                                                                     property_desc.is_writable,
-                                                                     property_desc.is_enumerable,
-                                                                     property_desc.is_configurable);
+                                                                     property_desc_p->is_writable,
+                                                                     property_desc_p->is_enumerable,
+                                                                     property_desc_p->is_configurable);
 
-      ecma_named_data_property_assign_value (obj_p, new_prop_p, property_desc.value);
+      ecma_named_data_property_assign_value (obj_p, new_prop_p, property_desc_p->value);
     }
     else
     {
@@ -663,10 +664,10 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
       ecma_create_named_accessor_property (obj_p,
                                            property_name_p,
-                                           property_desc.get_p,
-                                           property_desc.set_p,
-                                           property_desc.is_enumerable,
-                                           property_desc.is_configurable);
+                                           property_desc_p->get_p,
+                                           property_desc_p->set_p,
+                                           property_desc_p->is_enumerable,
+                                           property_desc_p->is_configurable);
 
     }
 
@@ -675,8 +676,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
   // 5.
   if (is_property_desc_generic_descriptor
-      && !property_desc.is_enumerable_defined
-      && !property_desc.is_configurable_defined)
+      && !property_desc_p->is_enumerable_defined
+      && !property_desc_p->is_configurable_defined)
   {
     return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
@@ -688,54 +689,54 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   JERRY_ASSERT(is_current_data_descriptor || is_current_accessor_descriptor);
 
   bool is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = true;
-  if (property_desc.is_value_defined)
+  if (property_desc_p->is_value_defined)
   {
     if (!is_current_data_descriptor
-        || !ecma_op_same_value (property_desc.value,
+        || !ecma_op_same_value (property_desc_p->value,
                                 ecma_get_named_data_property_value (current_p)))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
   }
 
-  if (property_desc.is_writable_defined)
+  if (property_desc_p->is_writable_defined)
   {
     if (!is_current_data_descriptor
-        || property_desc.is_writable != ecma_is_property_writable (current_p))
+        || property_desc_p->is_writable != ecma_is_property_writable (current_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
   }
 
-  if (property_desc.is_get_defined)
+  if (property_desc_p->is_get_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc.get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
+        || property_desc_p->get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
   }
 
-  if (property_desc.is_set_defined)
+  if (property_desc_p->is_set_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc.set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p))
+        || property_desc_p->set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
   }
 
-  if (property_desc.is_enumerable_defined)
+  if (property_desc_p->is_enumerable_defined)
   {
-    if (property_desc.is_enumerable != ecma_is_property_enumerable (current_p))
+    if (property_desc_p->is_enumerable != ecma_is_property_enumerable (current_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
   }
 
-  if (property_desc.is_configurable_defined)
+  if (property_desc_p->is_configurable_defined)
   {
-    if (property_desc.is_configurable != ecma_is_property_configurable (current_p))
+    if (property_desc_p->is_configurable != ecma_is_property_configurable (current_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -749,9 +750,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   // 7.
   if (!ecma_is_property_configurable (current_p))
   {
-    if (property_desc.is_configurable
-        || (property_desc.is_enumerable_defined
-            && property_desc.is_enumerable != ecma_is_property_enumerable (current_p)))
+    if (property_desc_p->is_configurable
+        || (property_desc_p->is_enumerable_defined
+            && property_desc_p->is_enumerable != ecma_is_property_enumerable (current_p)))
     {
       // a., b.
       return ecma_reject (is_throw);
@@ -805,14 +806,14 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       if (!ecma_is_property_writable (current_p))
       {
         // i.
-        if (property_desc.is_writable)
+        if (property_desc_p->is_writable)
         {
           return ecma_reject (is_throw);
         }
 
         // ii.
-        if (property_desc.is_value_defined
-            && !ecma_op_same_value (property_desc.value,
+        if (property_desc_p->is_value_defined
+            && !ecma_op_same_value (property_desc_p->value,
                                     ecma_get_named_data_property_value (current_p)))
         {
           return ecma_reject (is_throw);
@@ -830,10 +831,10 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
     {
       // a.
 
-      if ((property_desc.is_get_defined
-           && property_desc.get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
-          || (property_desc.is_set_defined
-              && property_desc.set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p)))
+      if ((property_desc_p->is_get_defined
+           && property_desc_p->get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
+          || (property_desc_p->is_set_defined
+              && property_desc_p->set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p)))
       {
         // i., ii.
         return ecma_reject (is_throw);
@@ -842,44 +843,48 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
 
   // 12.
-  if (property_desc.is_value_defined)
+  if (property_desc_p->is_value_defined)
   {
     JERRY_ASSERT(is_current_data_descriptor);
 
-    ecma_named_data_property_assign_value (obj_p, current_p, property_desc.value);
+    ecma_named_data_property_assign_value (obj_p, current_p, property_desc_p->value);
   }
 
-  if (property_desc.is_writable_defined)
+  if (property_desc_p->is_writable_defined)
   {
     JERRY_ASSERT(is_current_data_descriptor);
 
-    ecma_set_property_writable_attr (current_p, property_desc.is_writable);
+    ecma_set_property_writable_attr (current_p, property_desc_p->is_writable);
   }
 
-  if (property_desc.is_get_defined)
+  if (property_desc_p->is_get_defined)
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.get_p, property_desc.get_p);
-    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, property_desc.get_p);
+    ecma_object_t *get_p = property_desc_p->get_p;
+
+    ECMA_SET_POINTER(current_p->u.named_accessor_property.get_p, get_p);
+    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_p);
   }
 
-  if (property_desc.is_set_defined)
+  if (property_desc_p->is_set_defined)
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.set_p, property_desc.set_p);
-    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, property_desc.set_p);
+    ecma_object_t *set_p = property_desc_p->set_p;
+
+    ECMA_SET_POINTER(current_p->u.named_accessor_property.set_p, set_p);
+    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, set_p);
   }
 
-  if (property_desc.is_enumerable_defined)
+  if (property_desc_p->is_enumerable_defined)
   {
-    ecma_set_property_enumerable_attr (current_p, property_desc.is_enumerable);
+    ecma_set_property_enumerable_attr (current_p, property_desc_p->is_enumerable);
   }
 
-  if (property_desc.is_configurable_defined)
+  if (property_desc_p->is_configurable_defined)
   {
-    ecma_set_property_configurable_attr (current_p, property_desc.is_configurable);
+    ecma_set_property_configurable_attr (current_p, property_desc_p->is_configurable);
   }
 
   return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);

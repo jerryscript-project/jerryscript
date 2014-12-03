@@ -336,7 +336,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __unused, /**<
     ECMA_TRY_CATCH (define_own_prop_ret,
                     ecma_op_object_define_own_property (obj_p,
                                                         name_str_p,
-                                                        prop_desc,
+                                                        &prop_desc,
                                                         true),
                     ret_value);
 

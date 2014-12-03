@@ -39,7 +39,12 @@ typedef struct
 
   /** Compressed pointer to a property of the object */
   uint16_t prop_cp;
+
+  /** Padding structure to 8 bytes size */
+  uint16_t padding;
 } ecma_lcache_hash_entry_t;
+
+JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t));
 
 /**
  * LCache hash value length, in bits

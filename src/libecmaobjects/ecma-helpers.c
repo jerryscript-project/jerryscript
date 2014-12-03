@@ -883,10 +883,21 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (prop_iter_p != NULL);
 #endif /* !JERRY_NDEBUG */
 
-  ecma_free_value (ecma_get_named_data_property_value (prop_p), false);
-  prop_p->u.named_data_property.value = ecma_copy_value (value, false);
-  ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
-                                                       prop_p->u.named_data_property.value);
+  if (ecma_is_value_number (value)
+      && ecma_is_value_number (prop_p->u.named_data_property.value))
+  {
+    const ecma_number_t *num_src_p = ecma_get_number_from_value (value);
+    ecma_number_t *num_dst_p = ecma_get_number_from_value (prop_p->u.named_data_property.value);
+
+    *num_dst_p = *num_src_p;
+  }
+  else
+  {
+    ecma_free_value (ecma_get_named_data_property_value (prop_p), false);
+    prop_p->u.named_data_property.value = ecma_copy_value (value, false);
+    ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
+                                                         prop_p->u.named_data_property.value);
+  }
 } /* ecma_named_data_property_assign_value */
 
 /**

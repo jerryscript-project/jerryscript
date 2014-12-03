@@ -76,25 +76,32 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       ecma_number_t x_num = *ecma_get_number_from_value (x);
       ecma_number_t y_num = *ecma_get_number_from_value (y);
 
-      bool is_equal;
+      bool is_x_equal_to_y = (x_num == y_num);
+
+#ifndef JERRY_NDEBUG
+      bool is_x_equal_to_y_check;
 
       if (ecma_number_is_nan (x_num)
           || ecma_number_is_nan (y_num))
       {
-        is_equal = false;
+        is_x_equal_to_y_check = false;
       }
       else if (x_num == y_num
                || (ecma_number_is_zero (x_num)
                    && ecma_number_is_zero (y_num)))
       {
-        is_equal = true;
+        is_x_equal_to_y_check = true;
       }
       else
       {
-        is_equal = false;
+        is_x_equal_to_y_check = false;
       }
 
-      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
+#endif /* !JERRY_NDEBUG */
+
+      ret_value = ecma_make_simple_completion_value (is_x_equal_to_y ?
+                                                     ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else if (is_x_string)
     { // d.
@@ -270,21 +277,31 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     ecma_number_t x_num = *ecma_get_number_from_value (x);
     ecma_number_t y_num = *ecma_get_number_from_value (y);
 
+    bool is_x_equal_to_y = (x_num == y_num);
+
+#ifndef JERRY_NDEBUG
+    bool is_x_equal_to_y_check;
+
     if (ecma_number_is_nan (x_num)
         || ecma_number_is_nan (y_num))
     {
-      return false;
+      is_x_equal_to_y_check = false;
     }
     else if (x_num == y_num
              || (ecma_number_is_zero (x_num)
                  && ecma_number_is_zero (y_num)))
     {
-      return true;
+      is_x_equal_to_y_check = true;
     }
     else
     {
-      return false;
+      is_x_equal_to_y_check = false;
     }
+
+    JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
+#endif /* !JERRY_NDEBUG */
+
+    return is_x_equal_to_y;
   }
 
   // 5. If Type (x) is String, then return true if x and y are exactly the same sequence of characters
@@ -362,55 +379,69 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       // c., d.
       ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
-    else if (*num_x_p == *num_y_p
-             || (ecma_number_is_zero (*num_x_p)
-                 && ecma_number_is_zero (*num_y_p)))
-    {
-      // e., f., g.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    else if (ecma_number_is_infinity (*num_x_p)
-             && !ecma_number_is_negative (*num_x_p))
-    {
-      // h.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    else if (ecma_number_is_infinity (*num_y_p)
-             && !ecma_number_is_negative (*num_y_p))
-    {
-      // i.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    else if (ecma_number_is_infinity (*num_y_p)
-             && ecma_number_is_negative (*num_y_p))
-    {
-      // j.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    else if (ecma_number_is_infinity (*num_x_p)
-             && ecma_number_is_negative (*num_x_p))
-    {
-      // k.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
     else
     {
-      // l.
-      JERRY_ASSERT (!ecma_number_is_nan (*num_x_p)
-                    && !ecma_number_is_infinity (*num_x_p));
-      JERRY_ASSERT (!ecma_number_is_nan (*num_y_p)
-                    && !ecma_number_is_infinity (*num_y_p));
-      JERRY_ASSERT (!(ecma_number_is_zero (*num_x_p)
-                      && ecma_number_is_zero (*num_y_p)));
+      bool is_x_less_than_y = (*num_x_p < *num_y_p);
 
-      if (*num_x_p < *num_y_p)
+#ifndef JERRY_NDEBUG
+      bool is_x_less_than_y_check;
+
+      if (*num_x_p == *num_y_p
+          || (ecma_number_is_zero (*num_x_p)
+              && ecma_number_is_zero (*num_y_p)))
       {
-        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+        // e., f., g.
+        is_x_less_than_y_check = false;
+      }
+      else if (ecma_number_is_infinity (*num_x_p)
+               && !ecma_number_is_negative (*num_x_p))
+      {
+        // h.
+        is_x_less_than_y_check = false;
+      }
+      else if (ecma_number_is_infinity (*num_y_p)
+               && !ecma_number_is_negative (*num_y_p))
+      {
+        // i.
+        is_x_less_than_y_check = true;
+      }
+      else if (ecma_number_is_infinity (*num_y_p)
+               && ecma_number_is_negative (*num_y_p))
+      {
+        // j.
+        is_x_less_than_y_check = false;
+      }
+      else if (ecma_number_is_infinity (*num_x_p)
+               && ecma_number_is_negative (*num_x_p))
+      {
+        // k.
+        is_x_less_than_y_check = true;
       }
       else
       {
-        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+        // l.
+        JERRY_ASSERT (!ecma_number_is_nan (*num_x_p)
+                      && !ecma_number_is_infinity (*num_x_p));
+        JERRY_ASSERT (!ecma_number_is_nan (*num_y_p)
+                      && !ecma_number_is_infinity (*num_y_p));
+        JERRY_ASSERT (!(ecma_number_is_zero (*num_x_p)
+                        && ecma_number_is_zero (*num_y_p)));
+
+        if (*num_x_p < *num_y_p)
+        {
+          is_x_less_than_y_check = true;
+        }
+        else
+        {
+          is_x_less_than_y_check = false;
+        }
       }
+
+      JERRY_ASSERT (is_x_less_than_y_check == is_x_less_than_y);
+#endif /* !JERRY_NDEBUG */
+
+      ret_value = ecma_make_simple_completion_value (is_x_less_than_y ?
+                                                     ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
 
     ECMA_FINALIZE(ny);

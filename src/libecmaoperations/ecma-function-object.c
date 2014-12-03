@@ -191,12 +191,6 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
   length_prop_desc.is_value_defined = true;
   length_prop_desc.value = ecma_make_number_value (len_p);
-  length_prop_desc.is_writable_defined = false;
-  length_prop_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
-  length_prop_desc.is_enumerable_defined = false;
-  length_prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
-  length_prop_desc.is_configurable_defined = false;
-  length_prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
 
   ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
@@ -221,13 +215,13 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
     prop_desc.value = ecma_make_object_value (f);
 
     prop_desc.is_writable_defined = true;
-    prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+    prop_desc.is_writable = true;
 
     prop_desc.is_enumerable_defined = true;
-    prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+    prop_desc.is_enumerable = false;
 
     prop_desc.is_configurable_defined = true;
-    prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+    prop_desc.is_configurable = true;
   }
 
   ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONSTRUCTOR);
@@ -239,7 +233,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   // 18.
   prop_desc.value = ecma_make_object_value (proto_p);
-  prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+  prop_desc.is_configurable = false;
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
   ecma_op_object_define_own_property (f,
                                       magic_string_prototype_p,
@@ -257,10 +251,10 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_enumerable_defined = true;
-      prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+      prop_desc.is_enumerable = false;
 
       prop_desc.is_configurable_defined = true;
-      prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+      prop_desc.is_configurable = false;
 
       prop_desc.is_get_defined = true;
       prop_desc.get_p = thrower_p;
@@ -708,15 +702,13 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
         property_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         property_desc.is_writable_defined = true;
-        property_desc.writable = ECMA_PROPERTY_WRITABLE;
+        property_desc.is_writable = true;
 
         property_desc.is_enumerable_defined = true;
-        property_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+        property_desc.is_enumerable = true;
 
         property_desc.is_configurable_defined = true;
-        property_desc.configurable = (is_configurable_bindings ?
-                                      ECMA_PROPERTY_CONFIGURABLE :
-                                      ECMA_PROPERTY_NOT_CONFIGURABLE);
+        property_desc.is_configurable = is_configurable_bindings;
       }
 
       completion = ecma_op_object_define_own_property (glob_obj_p,
@@ -732,8 +724,8 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
     {
       JERRY_ASSERT (existing_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-      if (existing_prop_p->u.named_data_property.writable != ECMA_PROPERTY_WRITABLE
-          || existing_prop_p->u.named_data_property.enumerable != ECMA_PROPERTY_ENUMERABLE)
+      if (!ecma_is_property_writable (existing_prop_p)
+          || !ecma_is_property_enumerable (existing_prop_p))
       {
         completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
       }

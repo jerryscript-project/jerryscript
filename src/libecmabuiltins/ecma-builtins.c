@@ -341,16 +341,14 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_create_named_data_property (func_obj_p,
                                                                  magic_string_length_p,
-                                                                 ECMA_PROPERTY_NOT_WRITABLE,
-                                                                 ECMA_PROPERTY_NOT_ENUMERABLE,
-                                                                 ECMA_PROPERTY_NOT_CONFIGURABLE);
+                                                                 false, false, false);
 
   ecma_deref_ecma_string (magic_string_length_p);
 
   ecma_number_t* len_p = ecma_alloc_number ();
   *len_p = length_prop_num_value;
 
-  len_prop_p->u.named_data_property.value = ecma_make_number_value (len_p);
+  ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (len_p));
 
   return func_obj_p;
 } /* ecma_builtin_make_function_object_for_routine */

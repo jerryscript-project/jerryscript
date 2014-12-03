@@ -121,12 +121,10 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
   ecma_string_t *message_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MESSAGE);
   ecma_property_t *prop_p = ecma_create_named_data_property (new_error_obj_p,
                                                              message_magic_string_p,
-                                                             ECMA_PROPERTY_WRITABLE,
-                                                             ECMA_PROPERTY_NOT_ENUMERABLE,
-                                                             ECMA_PROPERTY_CONFIGURABLE);
+                                                             true, false, true);
 
-  ecma_string_t *msg_string_p = ecma_copy_or_ref_ecma_string (message_string_p);
-  prop_p->u.named_data_property.value = ecma_make_string_value (msg_string_p);
+  ecma_set_named_data_property_value (prop_p,
+                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (message_string_p)));
   ecma_deref_ecma_string (message_magic_string_p);
 
   return new_error_obj_p;

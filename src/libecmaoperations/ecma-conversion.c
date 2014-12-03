@@ -439,13 +439,13 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t src_prop_desc
     prop_desc.is_value_defined = true;
 
     prop_desc.is_writable_defined = true;
-    prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+    prop_desc.is_writable = true;
 
     prop_desc.is_enumerable_defined = true;
-    prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+    prop_desc.is_enumerable = true;
 
     prop_desc.is_configurable_defined = true;
-    prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+    prop_desc.is_configurable = true;
   }
 
   // 3.
@@ -466,7 +466,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t src_prop_desc
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
     // b.
-    const bool is_writable = (src_prop_desc.writable == ECMA_PROPERTY_WRITABLE);
+    const bool is_writable = (src_prop_desc.is_writable);
     prop_desc.value = ecma_make_simple_value (is_writable ? ECMA_SIMPLE_VALUE_TRUE
                                                           : ECMA_SIMPLE_VALUE_FALSE);
 
@@ -520,7 +520,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t src_prop_desc
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
   }
 
-  const bool is_enumerable = (src_prop_desc.enumerable == ECMA_PROPERTY_ENUMERABLE);
+  const bool is_enumerable = src_prop_desc.is_enumerable;
   prop_desc.value = ecma_make_simple_value (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
                                             : ECMA_SIMPLE_VALUE_FALSE);
 
@@ -532,7 +532,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t src_prop_desc
   ecma_deref_ecma_string (enumerable_magic_string_p);
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
-  const bool is_configurable = (src_prop_desc.configurable == ECMA_PROPERTY_CONFIGURABLE);
+  const bool is_configurable = src_prop_desc.is_configurable;
   prop_desc.value = ecma_make_simple_value (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
                                             : ECMA_SIMPLE_VALUE_FALSE);
 
@@ -591,13 +591,13 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       prop_desc.is_enumerable_defined = true;
       if (ecma_is_completion_value_normal_true (boolean_enumerable_prop_value))
       {
-        prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+        prop_desc.is_enumerable = true;
       }
       else
       {
         JERRY_ASSERT (ecma_is_completion_value_normal_false (boolean_enumerable_prop_value));
 
-        prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+        prop_desc.is_enumerable = false;
       }
 
       ECMA_FINALIZE (boolean_enumerable_prop_value);
@@ -625,13 +625,13 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         prop_desc.is_configurable_defined = true;
         if (ecma_is_completion_value_normal_true (boolean_configurable_prop_value))
         {
-          prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+          prop_desc.is_configurable = true;
         }
         else
         {
           JERRY_ASSERT (ecma_is_completion_value_normal_false (boolean_configurable_prop_value));
 
-          prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+          prop_desc.is_configurable = false;
         }
 
         ECMA_FINALIZE (boolean_configurable_prop_value);
@@ -682,13 +682,13 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         prop_desc.is_writable_defined = true;
         if (ecma_is_completion_value_normal_true (boolean_writable_prop_value))
         {
-          prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+          prop_desc.is_writable = true;
         }
         else
         {
           JERRY_ASSERT (ecma_is_completion_value_normal_false (boolean_writable_prop_value));
 
-          prop_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
+          prop_desc.is_writable = false;
         }
 
         ECMA_FINALIZE (boolean_writable_prop_value);

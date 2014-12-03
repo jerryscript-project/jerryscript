@@ -527,13 +527,13 @@ typedef struct
   ecma_object_t* set_p;
 
   /** [[Writable]] */
-  ecma_property_writable_value_t writable;
+  bool is_writable;
 
   /** [[Enumerable]] */
-  ecma_property_enumerable_value_t enumerable;
+  bool is_enumerable;
 
   /** [[Configurable]] */
-  ecma_property_configurable_value_t configurable;
+  bool is_configurable;
 } ecma_property_descriptor_t;
 
 #if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII

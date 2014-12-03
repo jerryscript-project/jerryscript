@@ -72,13 +72,13 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     prop_desc.value = ecma_make_number_value (len_p);
 
     prop_desc.is_writable_defined = true;
-    prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+    prop_desc.is_writable = true;
 
     prop_desc.is_enumerable_defined = true;
-    prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+    prop_desc.is_enumerable = false;
 
     prop_desc.is_configurable_defined = true;
-    prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+    prop_desc.is_configurable = true;
   }
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (obj_p,
@@ -101,13 +101,13 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       prop_desc.value = arguments_list_p[indx];
 
       prop_desc.is_writable_defined = true;
-      prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+      prop_desc.is_writable = true;
 
       prop_desc.is_enumerable_defined = true;
-      prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+      prop_desc.is_enumerable = true;
 
       prop_desc.is_configurable_defined = true;
-      prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+      prop_desc.is_configurable = true;
     }
 
     ecma_string_t *indx_string_p = ecma_new_ecma_string_from_number (ecma_uint32_to_number (indx));
@@ -210,13 +210,13 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       prop_desc.value = ecma_make_object_value (func_obj_p);
 
       prop_desc.is_writable_defined = true;
-      prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+      prop_desc.is_writable = true;
 
       prop_desc.is_enumerable_defined = true;
-      prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+      prop_desc.is_enumerable = false;
 
       prop_desc.is_configurable_defined = true;
-      prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+      prop_desc.is_configurable = true;
     }
 
     ecma_string_t *callee_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLEE);
@@ -243,10 +243,10 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       prop_desc.set_p = thrower_p;
 
       prop_desc.is_enumerable_defined = true;
-      prop_desc.enumerable = ECMA_PROPERTY_NOT_ENUMERABLE;
+      prop_desc.is_enumerable = false;
 
       prop_desc.is_configurable_defined = true;
-      prop_desc.configurable = ECMA_PROPERTY_NOT_CONFIGURABLE;
+      prop_desc.is_configurable = false;
     }
 
     ecma_string_t *callee_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLEE);
@@ -283,7 +283,7 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
-  ecma_value_t arg_name_prop_value = arg_name_prop_p->u.named_data_property.value;
+  ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (arg_name_prop_p);
 
   ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
 
@@ -367,9 +367,7 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
     // a.
     ecma_completion_value_t completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
 
-    ecma_free_value (desc_p->u.named_data_property.value, false);
-    desc_p->u.named_data_property.value = ecma_copy_value (ecma_get_completion_value_value (completion), false);
-    ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p, desc_p->u.named_data_property.value);
+    ecma_named_data_property_assign_value (obj_p, desc_p, ecma_get_completion_value_value (completion));
 
     ecma_free_completion_value (completion);
   }
@@ -448,7 +446,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
       {
         // ii.
         if (property_desc.is_writable_defined
-            && property_desc.writable == ECMA_PROPERTY_NOT_WRITABLE)
+            && !property_desc.is_writable)
         {
           completion = ecma_op_object_delete (map_p,
                                               property_name_p,

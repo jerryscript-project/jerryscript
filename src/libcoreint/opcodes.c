@@ -880,10 +880,10 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
         {
           prop_desc.is_enumerable_defined = true;
-          prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+          prop_desc.is_enumerable = true;
 
           prop_desc.is_configurable_defined = true;
-          prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+          prop_desc.is_configurable = true;
         }
 
         if (type == OPCODE_META_TYPE_VARG_PROP_DATA)
@@ -892,7 +892,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           prop_desc.value = ecma_get_completion_value_value (value_for_prop_desc);
           
           prop_desc.is_writable_defined = true;
-          prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+          prop_desc.is_writable = true;
 
           if (!is_previous_undefined
               && ((is_previous_data_desc

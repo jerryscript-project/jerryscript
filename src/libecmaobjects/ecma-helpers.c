@@ -486,9 +486,9 @@ ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
 ecma_property_t*
 ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
                                  ecma_string_t *name_p, /**< property name */
-                                 ecma_property_writable_value_t writable, /**< 'writable' attribute */
-                                 ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
-                                 ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+                                 bool is_writable, /**< 'Writable' attribute */
+                                 bool is_enumerable, /**< 'Enumerable' attribute */
+                                 bool is_configurable) /**< 'Configurable' attribute */
 {
   JERRY_ASSERT(obj_p != NULL && name_p != NULL);
   JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
@@ -500,9 +500,10 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
   name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER(prop_p->u.named_data_property.name_p, name_p);
 
-  prop_p->u.named_data_property.writable = writable;
-  prop_p->u.named_data_property.enumerable = enumerable;
-  prop_p->u.named_data_property.configurable = configurable;
+  prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
+  prop_p->u.named_data_property.enumerable = is_enumerable ? ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE;
+  prop_p->u.named_data_property.configurable = (is_configurable ?
+                                                ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
 
   prop_p->u.named_data_property.is_lcached = false;
 
@@ -527,8 +528,8 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
                                      ecma_string_t *name_p, /**< property name */
                                      ecma_object_t *get_p, /**< getter */
                                      ecma_object_t *set_p, /**< setter */
-                                     ecma_property_enumerable_value_t enumerable, /**< 'enumerable' attribute */
-                                     ecma_property_configurable_value_t configurable) /**< 'configurable' attribute */
+                                     bool is_enumerable, /**< 'enumerable' attribute */
+                                     bool is_configurable) /**< 'configurable' attribute */
 {
   JERRY_ASSERT(obj_p != NULL && name_p != NULL);
   JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
@@ -546,8 +547,10 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   ECMA_SET_POINTER(prop_p->u.named_accessor_property.set_p, set_p);
   ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, set_p);
 
-  prop_p->u.named_accessor_property.enumerable = enumerable;
-  prop_p->u.named_accessor_property.configurable = configurable;
+  prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
+                                                  ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
+  prop_p->u.named_accessor_property.configurable = (is_configurable ?
+                                                    ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
 
   prop_p->u.named_accessor_property.is_lcached = false;
 
@@ -826,6 +829,94 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 } /* ecma_delete_property */
 
 /**
+ * Get value field of named data property
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  return prop_p->u.named_data_property.value;
+} /* ecma_get_named_data_property_value */
+
+/**
+ * Set value field of named data property
+ */
+void
+ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
+                                    ecma_value_t value) /**< value to set */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  /* 'May ref younger' flag should be updated upon assignment of object value */
+  JERRY_ASSERT (!ecma_is_value_object (value));
+
+  prop_p->u.named_data_property.value = value;
+} /* ecma_set_named_data_property_value */
+
+/**
+ * Assign value to named data property
+ *
+ * Note:
+ *      value previously stored in the property is freed
+ */
+void
+ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
+                                       ecma_property_t *prop_p, /**< property */
+                                       ecma_value_t value) /**< value to assign */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+#ifndef JERRY_NDEBUG
+  ecma_property_t *prop_iter_p;
+  for (prop_iter_p = ecma_get_property_list (obj_p);
+       prop_iter_p != NULL;
+       prop_iter_p = ECMA_GET_POINTER(prop_iter_p->next_property_p))
+  {
+    if (prop_iter_p == prop_p)
+    {
+      break;
+    }
+  }
+
+  JERRY_ASSERT (prop_iter_p != NULL);
+#endif /* !JERRY_NDEBUG */
+
+  ecma_free_value (ecma_get_named_data_property_value (prop_p), false);
+  prop_p->u.named_data_property.value = ecma_copy_value (value, false);
+  ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
+                                                       prop_p->u.named_data_property.value);
+} /* ecma_named_data_property_assign_value */
+
+/**
+ * Get property's 'Writable' attribute value
+ *
+ * @return true - property is writable,
+ *         false - otherwise.
+ */
+bool
+ecma_is_property_writable (ecma_property_t* prop_p) /**< property */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  return (prop_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE);
+} /* ecma_is_property_writable */
+
+/**
+ * Set property's 'Writable' attribute value
+ */
+void
+ecma_set_property_writable_attr (ecma_property_t* prop_p, /**< property */
+                                 bool is_writable) /**< should the property
+                                                    *  be writable? */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+
+  prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
+} /* ecma_set_property_writable_attr */
+
+/**
  * Get property's 'Enumerable' attribute value
  *
  * @return true - property is enumerable,
@@ -847,6 +938,28 @@ ecma_is_property_enumerable (ecma_property_t* prop_p) /**< property */
 } /* ecma_is_property_enumerable */
 
 /**
+ * Set property's 'Enumerable' attribute value
+ */
+void
+ecma_set_property_enumerable_attr (ecma_property_t* prop_p, /**< property */
+                                   bool is_enumerable) /**< should the property
+                                                        *  be enumerable? */
+{
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    prop_p->u.named_data_property.enumerable = (is_enumerable ?
+                                                ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
+  }
+  else
+  {
+    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+    prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
+                                                    ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
+  }
+} /* ecma_set_property_enumerable_attr */
+
+/**
  * Get property's 'Configurable' attribute value
  *
  * @return true - property is configurable,
@@ -866,6 +979,28 @@ ecma_is_property_configurable (ecma_property_t* prop_p) /**< property */
     return (prop_p->u.named_accessor_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
   }
 } /* ecma_is_property_configurable */
+
+/**
+ * Set property's 'Configurable' attribute value
+ */
+void
+ecma_set_property_configurable_attr (ecma_property_t* prop_p, /**< property */
+                                     bool is_configurable) /**< should the property
+                                                            *  be configurable? */
+{
+  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  {
+    prop_p->u.named_data_property.configurable = (is_configurable ?
+                                                  ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
+  }
+  else
+  {
+    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+    prop_p->u.named_accessor_property.configurable = (is_configurable ?
+                                                      ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
+  }
+} /* ecma_set_property_configurable_attr */
 
 /**
  * Check whether the property is registered in LCache
@@ -921,13 +1056,13 @@ ecma_make_empty_property_descriptor (void)
     .value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
 
     .is_writable_defined = false,
-    .writable = ECMA_PROPERTY_NOT_WRITABLE,
+    .is_writable = false,
 
     .is_enumerable_defined = false,
-    .enumerable = ECMA_PROPERTY_NOT_ENUMERABLE,
+    .is_enumerable = false,
 
     .is_configurable_defined = false,
-    .configurable = ECMA_PROPERTY_NOT_CONFIGURABLE,
+    .is_configurable = false,
 
     .is_get_defined = false,
     .get_p = NULL,

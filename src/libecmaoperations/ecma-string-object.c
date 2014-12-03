@@ -99,12 +99,10 @@ ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of argum
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
-                                                                    false,
-                                                                    false,
-                                                                    false);
+                                                                    false, false, false);
   ecma_number_t *length_prop_value_p = ecma_alloc_number ();
   *length_prop_value_p = length_value;
-  length_prop_p->u.named_data_property.value = ecma_make_number_value (length_prop_value_p);
+  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_prop_value_p));
   ecma_deref_ecma_string (length_magic_string_p);
 
   return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
@@ -188,16 +186,15 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
     ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
 
     // 9.
-    new_prop_p = ecma_create_named_data_property (obj_p,
-                                                  new_prop_name_p,
-                                                  false,
-                                                  true,
-                                                  false);
-
     ecma_char_t new_prop_zt_str_p [2] = { c, ECMA_CHAR_NULL };
     ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string (new_prop_zt_str_p);
-    ecma_value_t new_prop_str_value = ecma_make_string_value (new_prop_str_value_p);
-    new_prop_p->u.named_data_property.value = new_prop_str_value;
+
+    new_prop_p = ecma_create_named_data_property (obj_p,
+                                                  new_prop_name_p,
+                                                  false, true, false);
+
+    ecma_set_named_data_property_value (new_prop_p,
+                                        ecma_make_string_value (new_prop_str_value_p));
   }
 
   ecma_deref_ecma_string (new_prop_name_p);

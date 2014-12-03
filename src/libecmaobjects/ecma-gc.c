@@ -348,7 +348,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
       {
         case ECMA_PROPERTY_NAMEDDATA:
         {
-          ecma_value_t value = property_p->u.named_data_property.value;
+          ecma_value_t value = ecma_get_named_data_property_value (property_p);
 
           if (ecma_is_value_object (value))
           {

@@ -258,9 +258,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
                                                              enumerable,
                                                              configurable);
 
-  prop_p->u.named_data_property.value = ecma_copy_value (value, false);
-  ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
-                                                       prop_p->u.named_data_property.value);
+  ecma_named_data_property_assign_value (obj_p, prop_p, value);
 
   ecma_free_value (value, true);
 

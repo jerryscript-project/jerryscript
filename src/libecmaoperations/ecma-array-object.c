@@ -119,10 +119,8 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
 
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
-                                                                    true,
-                                                                    false,
-                                                                    false);
-  length_prop_p->u.named_data_property.value = ecma_make_number_value (length_num_p);
+                                                                    true, false, false);
+  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_num_p));
 
   ecma_deref_ecma_string (length_magic_string_p);
 
@@ -138,13 +136,13 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
       item_prop_desc.value = array_items_p [index];
 
       item_prop_desc.is_writable_defined = true;
-      item_prop_desc.writable = ECMA_PROPERTY_WRITABLE;
+      item_prop_desc.is_writable = true;
 
       item_prop_desc.is_enumerable_defined = true;
-      item_prop_desc.enumerable = ECMA_PROPERTY_ENUMERABLE;
+      item_prop_desc.is_enumerable = true;
 
       item_prop_desc.is_configurable_defined = true;
-      item_prop_desc.configurable = ECMA_PROPERTY_CONFIGURABLE;
+      item_prop_desc.is_configurable = true;
     }
 
     ecma_op_object_define_own_property (obj_p,
@@ -183,7 +181,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
   // 2.
-  ecma_value_t old_len_value = len_prop_p->u.named_data_property.value;
+  ecma_value_t old_len_value = ecma_get_named_data_property_value (len_prop_p);
 
   ecma_number_t *num_p = ecma_get_number_from_value (old_len_value);
   uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
@@ -251,7 +249,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       else
       {
         // g.
-        if (len_prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE)
+        if (!ecma_is_property_writable (len_prop_p))
         {
           ret_value = ecma_reject (is_throw);
         }
@@ -260,7 +258,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
           // h.
           bool new_writable;
           if (!new_len_property_desc.is_writable_defined
-              || new_len_property_desc.writable == ECMA_PROPERTY_WRITABLE)
+              || new_len_property_desc.is_writable)
           {
             new_writable = true;
           }
@@ -271,7 +269,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
             // iii.
             new_len_property_desc.is_writable_defined = true;
-            new_len_property_desc.writable = ECMA_PROPERTY_WRITABLE;
+            new_len_property_desc.is_writable = true;
           }
 
           // j.
@@ -324,7 +322,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 if (!new_writable)
                 {
                   new_len_property_desc.is_writable_defined = true;
-                  new_len_property_desc.writable = ECMA_PROPERTY_NOT_WRITABLE;
+                  new_len_property_desc.is_writable = false;
                 }
 
                 // 3.
@@ -356,7 +354,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 ecma_property_descriptor_t prop_desc_not_writable = ecma_make_empty_property_descriptor ();
 
                 prop_desc_not_writable.is_writable_defined = true;
-                prop_desc_not_writable.writable = ECMA_PROPERTY_NOT_WRITABLE;
+                prop_desc_not_writable.is_writable = false;
 
                 ecma_completion_value_t completion_set_not_writable;
                 magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
@@ -420,7 +418,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
     // b.
     if (index >= old_len_uint32
-        && len_prop_p->u.named_data_property.writable == ECMA_PROPERTY_NOT_WRITABLE)
+        && !ecma_is_property_writable (len_prop_p))
     {
       return ecma_reject (is_throw);
     }
@@ -446,8 +444,8 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = ecma_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
 
-      ecma_free_value (len_prop_p->u.named_data_property.value, false);
-      len_prop_p->u.named_data_property.value = ecma_make_number_value (num_p);
+      ecma_free_value (ecma_get_named_data_property_value (len_prop_p), false);
+      ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (num_p));
     }
 
     // f.

@@ -256,45 +256,6 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_object_can_put */
 
 /**
- * [[HasProperty]] ecma object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *
- * @return true - if the object already has a property with the given property name;
- *         false - otherwise.
- */
-bool
-ecma_op_object_has_property (ecma_object_t *obj_p, /**< the object */
-                             ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
-
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
-
-  /*
-   * typedef ecma_property_t* (*has_property_ptr_t) (ecma_object_t *, ecma_string_t *);
-   * static const has_property_ptr_t has_property [ECMA_OBJECT_TYPE__COUNT] =
-   * {
-   *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_has_property,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_has_property
-   * };
-   *
-   * return has_property[type] (obj_p, property_name_p);
-   */
-
-  return ecma_op_general_object_has_property (obj_p, property_name_p);
-} /* ecma_op_object_has_property */
-
-/**
  * [[Delete]] ecma object's operation
  *
  * See also:

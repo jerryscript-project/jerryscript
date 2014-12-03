@@ -58,7 +58,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      return ecma_op_object_has_property (binding_obj_p, name_p);
+      return (ecma_op_object_get_property (binding_obj_p, name_p) != NULL);
     }
   }
 
@@ -96,8 +96,6 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     case ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND:
     {
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-
-      JERRY_ASSERT(!ecma_op_object_has_property (binding_obj_p, name_p));
 
       ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
       {
@@ -278,9 +276,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      bool has_prop = ecma_op_object_has_property (binding_obj_p, name_p);
-
-      if (!has_prop)
+      if (ecma_op_object_get_property (binding_obj_p, name_p) == NULL)
       {
         if (is_strict)
         {

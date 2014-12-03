@@ -312,7 +312,7 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
     ecma_string_t *left_value_prop_name_p = ecma_get_string_from_completion_value (str_left_value);
     ecma_object_t *right_value_obj_p = ecma_get_object_from_completion_value (right_value);
 
-    if (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p))
+    if (ecma_op_object_get_property (right_value_obj_p, left_value_prop_name_p) != NULL)
     {
       is_in = ECMA_SIMPLE_VALUE_TRUE;
     }

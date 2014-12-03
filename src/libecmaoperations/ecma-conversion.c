@@ -579,7 +579,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     // 3.
     ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ENUMERABLE);
 
-    if (ecma_op_object_has_property (obj_p, enumerable_magic_string_p))
+    if (ecma_op_object_get_property (obj_p, enumerable_magic_string_p) != NULL)
     {
       ECMA_TRY_CATCH (enumerable_prop_value,
                       ecma_op_object_get (obj_p, enumerable_magic_string_p),
@@ -613,7 +613,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 4.
       ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONFIGURABLE);
 
-      if (ecma_op_object_has_property (obj_p, configurable_magic_string_p))
+      if (ecma_op_object_get_property (obj_p, configurable_magic_string_p) != NULL)
       {
         ECMA_TRY_CATCH (configurable_prop_value,
                         ecma_op_object_get (obj_p, configurable_magic_string_p),
@@ -648,7 +648,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 5.
       ecma_string_t *value_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_VALUE);
 
-      if (ecma_op_object_has_property (obj_p, value_magic_string_p))
+      if (ecma_op_object_get_property (obj_p, value_magic_string_p) != NULL)
       {
         ECMA_TRY_CATCH (value_prop_value,
                         ecma_op_object_get (obj_p, value_magic_string_p),
@@ -670,7 +670,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 6.
       ecma_string_t *writable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_WRITABLE);
 
-      if (ecma_op_object_has_property (obj_p, writable_magic_string_p))
+      if (ecma_op_object_get_property (obj_p, writable_magic_string_p) != NULL)
       {
         ECMA_TRY_CATCH (writable_prop_value,
                         ecma_op_object_get (obj_p, writable_magic_string_p),
@@ -705,7 +705,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 7.
       ecma_string_t *get_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GET);
 
-      if (ecma_op_object_has_property (obj_p, get_magic_string_p))
+      if (ecma_op_object_get_property (obj_p, get_magic_string_p) != NULL)
       {
         ECMA_TRY_CATCH (get_prop_value,
                         ecma_op_object_get (obj_p, get_magic_string_p),
@@ -749,7 +749,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
       ecma_string_t *set_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SET);
 
-      if (ecma_op_object_has_property (obj_p, set_magic_string_p))
+      if (ecma_op_object_get_property (obj_p, set_magic_string_p) != NULL)
       {
         ECMA_TRY_CATCH (set_prop_value,
                         ecma_op_object_get (obj_p, set_magic_string_p),

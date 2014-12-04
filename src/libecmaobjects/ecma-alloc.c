@@ -80,7 +80,8 @@ JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
       return p ## ecma_type; \
     } \
   } \
-  JERRY_UNREACHABLE(); \
+  \
+  jerry_exit (ERR_OUT_OF_MEMORY); \
 }
 
 /**

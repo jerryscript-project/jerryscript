@@ -19,6 +19,7 @@ ENGINE=$1
 function run ()
 {
     echo "Running test: $1.js"
+        ./tools/perf.sh 5 $ENGINE ./benchmarks/$1.js
         ./tools/rss_measure.sh $ENGINE ./benchmarks/$1.js
 }
 

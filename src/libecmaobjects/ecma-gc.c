@@ -288,21 +288,26 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
   ecma_gc_set_object_visited (object_p, true);
 
-  bool does_reference_object_to_traverse = false;
+  bool does_ref_a_younger_object = false;
   bool traverse_properties = true;
 
   if (ecma_is_lexical_environment (object_p))
   {
     ecma_object_t *lex_env_p = ecma_get_lex_env_outer_reference (object_p);
-    if (lex_env_p != NULL
-        && ecma_gc_get_object_generation (lex_env_p) <= maximum_gen_to_traverse)
+    if (lex_env_p != NULL)
     {
-      if (!ecma_gc_is_object_visited (lex_env_p))
+      if (ecma_gc_get_object_generation (lex_env_p) <= maximum_gen_to_traverse)
       {
-        ecma_gc_mark (lex_env_p, ECMA_GC_GEN_COUNT);
+        if (!ecma_gc_is_object_visited (lex_env_p))
+        {
+          ecma_gc_mark (lex_env_p, ECMA_GC_GEN_COUNT);
+        }
       }
 
-      does_reference_object_to_traverse = true;
+      if (ecma_gc_get_object_generation (lex_env_p) < ecma_gc_get_object_generation (object_p))
+      {
+        does_ref_a_younger_object = true;
+      }
     }
 
     if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
@@ -314,8 +319,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
         {
           ecma_gc_mark (binding_object_p, ECMA_GC_GEN_COUNT);
         }
+      }
 
-        does_reference_object_to_traverse = true;
+      if (ecma_gc_get_object_generation (binding_object_p) < ecma_gc_get_object_generation (object_p))
+      {
+        does_ref_a_younger_object = true;
       }
 
       traverse_properties = false;
@@ -324,15 +332,20 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
   else
   {
     ecma_object_t *proto_p = ecma_get_object_prototype (object_p);
-    if (proto_p != NULL
-        && ecma_gc_get_object_generation (proto_p) <= maximum_gen_to_traverse)
+    if (proto_p != NULL)
     {
-      if (!ecma_gc_is_object_visited (proto_p))
+      if (ecma_gc_get_object_generation (proto_p) <= maximum_gen_to_traverse)
       {
-        ecma_gc_mark (proto_p, ECMA_GC_GEN_COUNT);
+        if (!ecma_gc_is_object_visited (proto_p))
+        {
+          ecma_gc_mark (proto_p, ECMA_GC_GEN_COUNT);
+        }
       }
 
-      does_reference_object_to_traverse = true;
+      if (ecma_gc_get_object_generation (proto_p) < ecma_gc_get_object_generation (object_p))
+      {
+        does_ref_a_younger_object = true;
+      }
     }
   }
 
@@ -360,8 +373,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
               {
                 ecma_gc_mark (value_obj_p, ECMA_GC_GEN_COUNT);
               }
+            }
 
-              does_reference_object_to_traverse = true;
+            if (ecma_gc_get_object_generation (value_obj_p) < ecma_gc_get_object_generation (object_p))
+            {
+              does_ref_a_younger_object = true;
             }
           }
 
@@ -381,8 +397,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
               {
                 ecma_gc_mark (getter_obj_p, ECMA_GC_GEN_COUNT);
               }
+            }
 
-              does_reference_object_to_traverse = true;
+            if (ecma_gc_get_object_generation (getter_obj_p) < ecma_gc_get_object_generation (object_p))
+            {
+              does_ref_a_younger_object = true;
             }
           }
 
@@ -394,8 +413,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
               {
                 ecma_gc_mark (setter_obj_p, ECMA_GC_GEN_COUNT);
               }
+            }
 
-              does_reference_object_to_traverse = true;
+            if (ecma_gc_get_object_generation (setter_obj_p) < ecma_gc_get_object_generation (object_p))
+            {
+              does_ref_a_younger_object = true;
             }
           }
 
@@ -448,8 +470,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
                 {
                   ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
                 }
+              }
 
-                does_reference_object_to_traverse = true;
+              if (ecma_gc_get_object_generation (obj_p) < ecma_gc_get_object_generation (object_p))
+              {
+                does_ref_a_younger_object = true;
               }
 
               break;
@@ -462,7 +487,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
     }
   }
 
-  if (!does_reference_object_to_traverse)
+  if (!does_ref_a_younger_object)
   {
     ecma_gc_set_object_may_ref_younger_objects (object_p, false);
   }
@@ -543,10 +568,10 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
         ecma_gc_mark (obj_iter_p, max_gen_to_collect);
       }
 #ifndef JERRY_NDEBUG
-      else
+      else if (gen_id > ECMA_GC_GEN_0)
       {
         ecma_gc_set_object_may_ref_younger_objects (obj_iter_p, true);
-        ecma_gc_mark (obj_iter_p, max_gen_to_collect);
+        ecma_gc_mark (obj_iter_p, gen_id - 1);
         JERRY_ASSERT (!ecma_gc_is_object_may_ref_younger_objects (obj_iter_p));
       }
 #endif /* !JERRY_NDEBUG */

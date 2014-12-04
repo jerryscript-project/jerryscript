@@ -28,6 +28,7 @@
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-lcache.h"
 #include "globals.h"
 #include "jerry-libc.h"
 #include "jrt-bit-fields.h"
@@ -525,6 +526,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run collection on */
 {
+  ecma_lcache_invalidate_all ();
+
   JERRY_ASSERT(max_gen_to_collect < ECMA_GC_GEN_COUNT);
 
   /* clearing visited flags for all objects of generations to be processed */

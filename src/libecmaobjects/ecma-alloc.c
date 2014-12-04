@@ -16,7 +16,6 @@
 #include "ecma-alloc.h"
 #include "ecma-globals.h"
 #include "ecma-gc.h"
-#include "ecma-lcache.h"
 #include "globals.h"
 #include "mem-poolman.h"
 
@@ -64,8 +63,6 @@ JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
   { \
     return p ## ecma_type; \
   } \
-  \
-  ecma_lcache_invalidate_all (); \
   \
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; \
        gen_id < ECMA_GC_GEN_COUNT; \

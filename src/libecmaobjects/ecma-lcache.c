@@ -147,6 +147,8 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
 
+  prop_name_p = ecma_copy_or_ref_ecma_string (prop_name_p);
+
   ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   if (prop_p != NULL)
@@ -159,8 +161,14 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
       int32_t entry_index;
       for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
       {
-        if (ecma_lcache_hash_table[hash_key][entry_index].prop_cp == prop_cp)
+        if (ecma_lcache_hash_table[hash_key][entry_index].object_cp != ECMA_NULL_POINTER
+            && ecma_lcache_hash_table[hash_key][entry_index].prop_cp == prop_cp)
         {
+#ifndef JERRY_NDEBUG
+          ecma_object_t* obj_in_entry_p;
+          obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_lcache_hash_table[hash_key][entry_index].object_cp);
+          JERRY_ASSERT (obj_in_entry_p == object_p);
+#endif /* !JERRY_NDEBUG */
           break;
         }
       }
@@ -195,8 +203,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 
   ecma_ref_object (object_p);
   ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].object_cp, object_p);
-  ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_name_cp,
-                             ecma_copy_or_ref_ecma_string (prop_name_p));
+  ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_name_cp, prop_name_p);
   ECMA_SET_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_cp, prop_p);
 } /* ecma_lcache_insert */
 

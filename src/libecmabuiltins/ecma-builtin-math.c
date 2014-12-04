@@ -175,10 +175,66 @@ ecma_builtin_math_object_ceil (ecma_value_t this_arg, /**< 'this' argument */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_cos (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_math_object_cos (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+
+  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
+
+  if (ecma_number_is_nan (arg_num)
+      || ecma_number_is_infinity (arg_num))
+  {
+    *num_p = ecma_number_make_nan ();
+  }
+  else if (ecma_number_is_zero (arg_num))
+  {
+    *num_p = ECMA_NUMBER_ONE;
+  }
+  else
+  {
+    /* Taylor series of cos (x) around x = 0 is 1 - x^2/2! + x^4/4! - x^6/6! + ... */
+
+    ecma_number_t x = ecma_op_number_remainder (arg_num, 2 * ECMA_NUMBER_PI);
+    ecma_number_t neg_sqr_x = ecma_number_negate (ecma_number_multiply (x, x));
+
+    ecma_number_t sum = ECMA_NUMBER_ZERO;
+    ecma_number_t next_addendum = ECMA_NUMBER_ONE;
+    ecma_number_t next_factorial_factor = ECMA_NUMBER_ZERO;
+
+    ecma_number_t diff = ecma_number_make_infinity (false);
+
+    while ((ecma_number_is_zero (sum) && !ecma_number_is_zero (diff))
+           || (!ecma_number_is_zero (sum)
+               && ecma_number_abs (ecma_number_divide (diff, sum)) > ecma_number_relative_eps))
+    {
+      ecma_number_t next_sum = ecma_number_add (sum, next_addendum);
+
+      next_addendum = ecma_number_multiply (next_addendum, neg_sqr_x);
+      next_factorial_factor = ecma_number_add (next_factorial_factor, ECMA_NUMBER_ONE);
+      next_addendum = ecma_number_divide (next_addendum, next_factorial_factor);
+      next_factorial_factor = ecma_number_add (next_factorial_factor, ECMA_NUMBER_ONE);
+      next_addendum = ecma_number_divide (next_addendum, next_factorial_factor);
+
+      diff = ecma_number_abs (ecma_number_substract (sum, next_sum));
+
+      sum = next_sum;
+    }
+
+    *num_p = sum;
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_cos */
 
 /**
@@ -834,10 +890,66 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __unused, /**< 'this' argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_sin (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_math_object_sin (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (arg_num_value,
+                  ecma_op_to_number (arg),
+                  ret_value);
+
+  ecma_number_t *num_p = ecma_alloc_number ();
+
+  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
+
+  if (ecma_number_is_nan (arg_num)
+      || ecma_number_is_infinity (arg_num))
+  {
+    *num_p = ecma_number_make_nan ();
+  }
+  else if (ecma_number_is_zero (arg_num))
+  {
+    *num_p = arg_num;
+  }
+  else
+  {
+    /* Taylor series of sin (x) around x = 0 is x - x^3/3! + x^5/5! - x^7/7! + ... */
+
+    ecma_number_t x = ecma_op_number_remainder (arg_num, 2 * ECMA_NUMBER_PI);
+    ecma_number_t neg_sqr_x = ecma_number_negate (ecma_number_multiply (x, x));
+
+    ecma_number_t sum = ECMA_NUMBER_ZERO;
+    ecma_number_t next_addendum = ecma_number_divide (x, ECMA_NUMBER_ONE);
+    ecma_number_t next_factorial_factor = ECMA_NUMBER_ONE;
+
+    ecma_number_t diff = ecma_number_make_infinity (false);
+
+    while ((ecma_number_is_zero (sum) && !ecma_number_is_zero (diff))
+           || (!ecma_number_is_zero (sum)
+               && ecma_number_abs (ecma_number_divide (diff, sum)) > ecma_number_relative_eps))
+    {
+      ecma_number_t next_sum = ecma_number_add (sum, next_addendum);
+
+      next_addendum = ecma_number_multiply (next_addendum, neg_sqr_x);
+      next_factorial_factor = ecma_number_add (next_factorial_factor, ECMA_NUMBER_ONE);
+      next_addendum = ecma_number_divide (next_addendum, next_factorial_factor);
+      next_factorial_factor = ecma_number_add (next_factorial_factor, ECMA_NUMBER_ONE);
+      next_addendum = ecma_number_divide (next_addendum, next_factorial_factor);
+
+      diff = ecma_number_abs (ecma_number_substract (sum, next_sum));
+
+      sum = next_sum;
+    }
+
+    *num_p = sum;
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+
+  ECMA_FINALIZE (arg_num_value);
+
+  return ret_value;
 } /* ecma_builtin_math_object_sin */
 
 /**

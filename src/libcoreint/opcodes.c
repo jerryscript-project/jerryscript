@@ -89,66 +89,61 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t get_value_completion = 0;
-
-  switch (type_value_right)
+  if (type_value_right == OPCODE_ARG_TYPE_SIMPLE)
   {
-    case OPCODE_ARG_TYPE_SIMPLE:
-    {
-      get_value_completion = ecma_make_simple_completion_value (src_val_descr);
-      break;
-    }
-    case OPCODE_ARG_TYPE_STRING:
-    {
-      ecma_string_t *ecma_string_p = ecma_new_ecma_string_from_lit_index (src_val_descr);
-
-      get_value_completion = ecma_make_normal_completion_value (ecma_make_string_value (ecma_string_p));
-      break;
-    }
-    case OPCODE_ARG_TYPE_VARIABLE:
-    {
-      get_value_completion = get_variable_value (int_data,
-                                                 src_val_descr,
-                                                 false);
-
-      break;
-    }
-    case OPCODE_ARG_TYPE_NUMBER:
-    {
-      ecma_number_t *num_p = ecma_alloc_number ();
-      const literal lit = deserialize_literal_by_id (src_val_descr);
-      JERRY_ASSERT (lit.type == LIT_NUMBER);
-      *num_p = lit.data.num;
-
-      get_value_completion = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-      break;
-    }
-    case OPCODE_ARG_TYPE_SMALLINT:
-    {
-      ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = src_val_descr;
-
-      get_value_completion = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-      break;
-    }
+    return set_variable_value (int_data,
+                               dst_var_idx,
+                               ecma_make_simple_value (src_val_descr));
   }
-
-  if (unlikely (ecma_is_completion_value_throw (get_value_completion)))
+  else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
-    return get_value_completion;
+    ecma_string_t *string_p = ecma_new_ecma_string_from_lit_index (src_val_descr);
+
+    ecma_completion_value_t completion = set_variable_value (int_data,
+                                                             dst_var_idx,
+                                                             ecma_make_string_value (string_p));
+
+    ecma_deref_ecma_string (string_p);
+
+    return completion;
+  }
+  else if (type_value_right == OPCODE_ARG_TYPE_VARIABLE)
+  {
+    ecma_completion_value_t ret_value;
+
+    ECMA_TRY_CATCH (get_value_completion,
+                    get_variable_value (int_data,
+                                        src_val_descr,
+                                        false),
+                    ret_value);
+
+    ret_value = set_variable_value (int_data,
+                                    dst_var_idx,
+                                    ecma_get_completion_value_value (get_value_completion));
+
+    ECMA_FINALIZE (get_value_completion);
+
+    return ret_value;
+  }
+  else if (type_value_right == OPCODE_ARG_TYPE_NUMBER)
+  {
+    ecma_number_t *num_p = int_data->tmp_num_p;
+
+    const literal lit = deserialize_literal_by_id (src_val_descr);
+    JERRY_ASSERT (lit.type == LIT_NUMBER);
+
+    *num_p = lit.data.num;
+
+    return set_variable_value (int_data, dst_var_idx, ecma_make_number_value (num_p));
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_normal (get_value_completion));
+    JERRY_ASSERT (type_value_right == OPCODE_ARG_TYPE_SMALLINT);
+    ecma_number_t *num_p = int_data->tmp_num_p;
 
-    ecma_value_t value_to_assign = ecma_get_completion_value_value (get_value_completion);
-    ecma_completion_value_t assignment_completion_value = set_variable_value (int_data,
-                                                                              dst_var_idx,
-                                                                              value_to_assign);
+    *num_p = src_val_descr;
 
-    ecma_free_completion_value (get_value_completion);
-
-    return assignment_completion_value;
+    return set_variable_value (int_data, dst_var_idx, ecma_make_number_value (num_p));
   }
 } /* opfunc_assignment */
 
@@ -176,7 +171,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
 
   // 4.
-  ecma_number_t* new_num_p = ecma_alloc_number ();
+  ecma_number_t* new_num_p = int_data->tmp_num_p;
 
   ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
   *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
@@ -193,8 +188,6 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
                                                                    dst_var_idx,
                                                                    new_num_value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
-
-  ecma_dealloc_number (new_num_p);
 
   ECMA_FINALIZE (old_num_value);
   ECMA_FINALIZE (old_value);
@@ -226,7 +219,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
 
   // 4.
-  ecma_number_t* new_num_p = ecma_alloc_number ();
+  ecma_number_t* new_num_p = int_data->tmp_num_p;
 
   ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
   *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
@@ -243,8 +236,6 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
                                                                    dst_var_idx,
                                                                    new_num_value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
-
-  ecma_dealloc_number (new_num_p);
 
   ECMA_FINALIZE (old_num_value);
   ECMA_FINALIZE (old_value);
@@ -276,7 +267,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
 
   // 4.
-  ecma_number_t* new_num_p = ecma_alloc_number ();
+  ecma_number_t* new_num_p = int_data->tmp_num_p;
 
   ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
   *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
@@ -285,8 +276,6 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data,
                                   incr_var_idx,
                                   ecma_make_number_value (new_num_p));
-
-  ecma_dealloc_number (new_num_p);
 
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,
@@ -324,7 +313,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
 
   // 4.
-  ecma_number_t* new_num_p = ecma_alloc_number ();
+  ecma_number_t* new_num_p = int_data->tmp_num_p;
 
   ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
   *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
@@ -333,8 +322,6 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data,
                                   decr_var_idx,
                                   ecma_make_number_value (new_num_p));
-
-  ecma_dealloc_number (new_num_p);
 
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data,

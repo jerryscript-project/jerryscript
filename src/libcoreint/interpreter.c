@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -469,6 +470,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.min_reg_num = min_reg_num;
   int_data.max_reg_num = max_reg_num;
   int_data.regs_p = regs;
+  int_data.tmp_num_p = ecma_alloc_number ();
 
 #ifdef MEM_STATS
   interp_mem_stats_context_enter (&int_data, start_pos);
@@ -480,6 +482,8 @@ run_int_from_pos (opcode_counter_t start_pos,
                 || ecma_is_completion_value_throw (completion)
                 || ecma_is_completion_value_return (completion)
                 || ecma_is_completion_value_exit (completion));
+
+  ecma_dealloc_number (int_data.tmp_num_p);
 
   for (uint32_t reg_index = 0;
        reg_index < regs_num;

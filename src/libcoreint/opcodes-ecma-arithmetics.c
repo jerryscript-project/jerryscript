@@ -57,7 +57,7 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
   left_p = ecma_get_number_from_completion_value (num_left_value);
   right_p = ecma_get_number_from_completion_value (num_right_value);
 
-  res_p = ecma_alloc_number ();
+  res_p = int_data->tmp_num_p;
 
   switch (op)
   {
@@ -91,8 +91,6 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
-
-  ecma_dealloc_number (res_p);
 
   ECMA_FINALIZE (num_right_value);
   ECMA_FINALIZE (num_left_value);
@@ -364,13 +362,12 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   ecma_number_t *var_p, *res_p;
   var_p = ecma_get_number_from_completion_value (num_value);
 
-  res_p = ecma_alloc_number ();
+  res_p = int_data->tmp_num_p;
+
   *res_p = ecma_number_negate (*var_p);
   ret_value = set_variable_value (int_data,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
-
-  ecma_dealloc_number (res_p);
 
   ECMA_FINALIZE (num_value);
   ECMA_FINALIZE (var_value);

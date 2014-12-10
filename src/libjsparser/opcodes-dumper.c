@@ -617,7 +617,7 @@ create_operand_from_tmp_and_lit (idx_t tmp, literal_index_t lit_id)
 {
   if (tmp != LITERAL_TO_REWRITE)
   {
-    JERRY_ASSERT (lit_id != NOT_A_LITERAL);
+    JERRY_ASSERT (lit_id == NOT_A_LITERAL);
     return (operand)
     {
       .type = OPERAND_TMP,
@@ -626,7 +626,7 @@ create_operand_from_tmp_and_lit (idx_t tmp, literal_index_t lit_id)
   }
   else
   {
-    JERRY_ASSERT (lit_id == NOT_A_LITERAL);
+    JERRY_ASSERT (lit_id != NOT_A_LITERAL);
     return (operand)
     {
       .type = OPERAND_LITERAL,

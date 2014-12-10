@@ -77,3 +77,7 @@ assert (c[0] === 0);
 assert (c[1] === undefined);
 assert (c[2] === undefined);
 assert (c[3] === '3');
+
+b[0] = 1;
+c[0] += b[0];
+assert (c[0] == 1);

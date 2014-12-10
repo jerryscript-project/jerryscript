@@ -27,93 +27,14 @@
 #define HASH_TABLE_H
 
 #include "linked-list.h"
+#include "mem-heap.h"
 
-#define DEFINE_BACKET_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
-typedef struct \
-{ \
-  KEY_TYPE key; \
-  VALUE_TYPE value; \
-} \
-NAME##_backet;
+typedef void* hash_table;
+#define null_hash NULL
 
-TODO (/*Rewrite to NAME##_backet **backets when neccesary*/)
-#define DEFINE_HASH_TYPE(NAME, KEY_TYPE, VALUE_TYPE) \
-typedef struct \
-{ \
-  NAME##_backet *backets; \
-  uint8_t *lens; \
-  uint8_t size; \
-  uint8_t max_lens; \
-} \
-NAME##_hash_table;
-
-#define HASH_INIT(NAME, SIZE) \
-do { \
-  NAME.size = SIZE; \
-  size_t backets_size = mem_heap_recommend_allocation_size (SIZE * sizeof (NAME##_backet)); \
-  size_t lens_size = mem_heap_recommend_allocation_size (SIZE); \
-  NAME.backets = (NAME##_backet *) mem_heap_alloc_block (backets_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  NAME.lens = mem_heap_alloc_block (lens_size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  __memset (NAME.backets, 0, SIZE); \
-  __memset (NAME.lens, 0, SIZE); \
-  NAME.max_lens = 1; \
-} while (0);
-
-#define HASH_FREE(NAME) \
-do { \
-  mem_heap_free_block ((uint8_t *) NAME.backets); \
-  mem_heap_free_block (NAME.lens); \
-} while (0)
-
-#define DEFINE_HASH_INSERT(NAME, KEY_TYPE, VALUE_TYPE) \
-static void hash_insert_##NAME (KEY_TYPE key, VALUE_TYPE value) __unused; \
-static void hash_insert_##NAME (KEY_TYPE key, VALUE_TYPE value) { \
-  NAME##_backet backet = (NAME##_backet) { .key = key, .value = value }; \
-  uint8_t hash = KEY_TYPE##_hash (key); \
-  JERRY_ASSERT (hash < NAME.size); \
-  JERRY_ASSERT (NAME.backets != NULL); \
-  JERRY_ASSERT (NAME.lens[hash] == 0); \
-  NAME.backets[hash] = backet; \
-  NAME.lens[hash] = 1; \
-}
-
-#define HASH_INSERT(NAME, KEY, VALUE) \
-do { \
-  hash_insert_##NAME (KEY, VALUE); \
-} while (0)
-
-#define DEFINE_HASH_LOOKUP(NAME, KEY_TYPE, VALUE_TYPE) \
-static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) __unused; \
-static VALUE_TYPE *lookup_##NAME (KEY_TYPE key) \
-{ \
-  uint8_t hash = KEY_TYPE##_hash (key); \
-  JERRY_ASSERT (hash < NAME.size); \
-  if (NAME.lens[hash] == 0) \
-  { \
-    return NULL; \
-  } \
-  if (KEY_TYPE##_equal (NAME.backets[hash].key, key)) \
-  { \
-    return &NAME.backets[hash].value; \
-  } \
-  return NULL; \
-}
-
-#define HASH_LOOKUP(NAME, KEY) \
-lookup_##NAME (KEY)
-
-#define HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-NAME##_hash_table NAME; \
-DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_LOOKUP (NAME, KEY_TYPE, VALUE_TYPE)
-
-#define STATIC_HASH_TABLE(NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_BACKET_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_TYPE (NAME, KEY_TYPE, VALUE_TYPE) \
-static NAME##_hash_table NAME; \
-DEFINE_HASH_INSERT (NAME, KEY_TYPE, VALUE_TYPE) \
-DEFINE_HASH_LOOKUP (NAME, KEY_TYPE, VALUE_TYPE)
+hash_table hash_table_init (uint8_t, uint8_t, uint16_t, uint16_t (*hash) (void *), mem_heap_alloc_term_t);
+void hash_table_free (hash_table);
+void hash_table_insert (hash_table, void *, void *);
+void *hash_table_lookup (hash_table, void *);
 
 #endif /* HASH_TABLE_H */

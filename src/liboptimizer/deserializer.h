@@ -19,13 +19,16 @@
 #include "globals.h"
 #include "ecma-globals.h"
 #include "opcodes.h"
+#include "scopes-tree.h"
 #include "literal.h"
 
 void deserializer_init (void);
 void deserializer_set_strings_buffer (const ecma_char_t *);
-literal deserialize_literal_by_id (uint8_t);
+literal deserialize_literal_by_id (literal_index_t);
+literal_index_t deserialize_lit_id_by_uid (uint8_t, opcode_counter_t);
 const void *deserialize_bytecode (void);
 opcode_t deserialize_opcode (opcode_counter_t);
+op_meta deserialize_op_meta (opcode_counter_t);
 uint8_t deserialize_min_temp (void);
 void deserializer_free (void);
 

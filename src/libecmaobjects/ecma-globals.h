@@ -721,7 +721,7 @@ typedef enum
   ECMA_STRING_CONTAINER_MAGIC_STRING /**< the ecma-string is equal to one of ECMA magic strings */
 } ecma_string_container_t;
 
-FIXME (Move to library that should define the type (libserializer /* ? */))
+FIXME (Move to library that should define the type (literal.h /* ? */))
 /**
  * Index in literal table
  */

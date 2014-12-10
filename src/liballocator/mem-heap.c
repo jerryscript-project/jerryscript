@@ -428,6 +428,8 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
   }
   else
   {
+    JERRY_ASSERT (alloc_term == MEM_HEAP_ALLOC_SHORT_TERM);
+    
     block_p = mem_heap.last_block_p;
     direction = MEM_DIRECTION_PREV;
   }

@@ -58,11 +58,14 @@ opfunc_try (opcode_t opdata, /**< operation data */
 
     if (ecma_is_completion_value_throw (try_completion))
     {
-      next_opcode = read_opcode (int_data->pos++);
+      next_opcode = read_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
-      const idx_t catch_exc_val_var_name_lit_idx = next_opcode.data.meta.data_1;
+      const literal_index_t catch_exc_val_var_name_lit_idx = deserialize_lit_id_by_uid (next_opcode.data.meta.data_1,
+                                                                                        int_data->pos);
+      int_data->pos++;
+
       ecma_string_t *catch_exc_var_name_str_p = ecma_new_ecma_string_from_lit_index (catch_exc_val_var_name_lit_idx);
 
       ecma_object_t *old_env_p = int_data->lex_env_p;

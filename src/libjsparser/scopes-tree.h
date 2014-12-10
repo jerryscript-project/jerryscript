@@ -18,7 +18,19 @@
 
 #include "tree.h"
 #include "linked-list.h"
+#include "lexer.h"
+#include "ecma-globals.h"
+#include "hash-table.h"
 #include "opcodes.h"
+
+#define NOT_A_LITERAL (INVALID_LITERAL - 1)
+
+typedef struct
+{
+  literal_index_t lit_id[3];
+  opcode_t op;
+}
+op_meta;
 
 typedef struct
 {
@@ -34,12 +46,12 @@ typedef scopes_tree_int * scopes_tree;
 scopes_tree scopes_tree_init (scopes_tree);
 void scopes_tree_free (scopes_tree);
 opcode_counter_t scopes_tree_opcodes_num (scopes_tree);
-void scopes_tree_add_opcode (scopes_tree, opcode_t);
-void scopes_tree_set_opcode (scopes_tree, opcode_counter_t, opcode_t);
+void scopes_tree_add_op_meta (scopes_tree, op_meta);
+void scopes_tree_set_op_meta (scopes_tree, opcode_counter_t, op_meta);
 void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
-opcode_t scopes_tree_opcode (scopes_tree, opcode_counter_t);
+op_meta scopes_tree_op_meta (scopes_tree, opcode_counter_t);
 opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
-opcode_t *scopes_tree_raw_data (scopes_tree, opcode_counter_t *);
+opcode_t *scopes_tree_raw_data (scopes_tree, hash_table);
 void scopes_tree_set_strict_mode (scopes_tree, bool);
 bool scopes_tree_strict_mode (scopes_tree);
 

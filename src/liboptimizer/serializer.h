@@ -17,18 +17,21 @@
 #define SERIALIZER_H
 
 #include "globals.h"
+#include "ecma-globals.h"
 #include "opcodes.h"
 #include "interpreter.h"
 #include "literal.h"
 #include "scopes-tree.h"
 
 void serializer_init (bool show_opcodes);
-void serializer_dump_literals (const literal *, uint8_t);
+void serializer_dump_literals (const literal *, literal_index_t);
 void serializer_set_scope (scopes_tree);
 void serializer_merge_scopes_into_bytecode (void);
-void serializer_dump_opcode (opcode_t);
+void serializer_dump_op_meta (op_meta);
+opcode_counter_t serializer_get_current_opcode_counter (void);
+opcode_counter_t serializer_count_opcodes_in_subscopes (void);
 void serializer_set_writing_position (opcode_counter_t);
-void serializer_rewrite_opcode (const opcode_counter_t, opcode_t);
+void serializer_rewrite_op_meta (opcode_counter_t, op_meta);
 void serializer_print_opcodes (void);
 void serializer_free (void);
 

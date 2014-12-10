@@ -72,6 +72,11 @@
 #define CONFIG_MEM_HEAP_OFFSET_LOG 16
 
 /**
+ * Number of lower bits in key of literal hash table.
+ */
+#define CONFIG_LITERAL_HASH_TABLE_KEY_BITS 7
+
+/**
  * Width of fields used for holding counter of references to ecma-strings and ecma-objects
  *
  * The option affects maximum number of simultaneously existing:

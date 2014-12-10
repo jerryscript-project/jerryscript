@@ -164,9 +164,7 @@ literal_equal (literal lit1, literal lit2)
     }
     case LIT_NUMBER:
     {
-      ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-      ecma_number_to_zt_string (lit2.data.num, buff, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
-      return literal_equal_zt (lit1, buff);
+      return literal_equal_num (lit1, lit2.data.num);
     }
     default:
     {

@@ -104,7 +104,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
     }
   }
 
-  ret_value = set_variable_value (int_data,
+  ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
 
@@ -130,8 +130,6 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_and.var_left;
   const idx_t right_var_idx = opdata.data.b_and.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -145,6 +143,8 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_and */
@@ -165,8 +165,6 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_or.var_left;
   const idx_t right_var_idx = opdata.data.b_or.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -180,6 +178,8 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_or */
@@ -200,8 +200,6 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_xor.var_left;
   const idx_t right_var_idx = opdata.data.b_xor.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -215,6 +213,8 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_xor */
@@ -235,8 +235,6 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_left.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -250,6 +248,8 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_left */
@@ -270,8 +270,6 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_right.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -285,6 +283,8 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_right */
@@ -305,8 +305,6 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_uright.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
@@ -320,6 +318,8 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_uright */
@@ -339,8 +339,6 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.b_not.dst;
   const idx_t right_var_idx = opdata.data.b_not.var_right;
 
-  int_data->pos++;
-
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -352,6 +350,8 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
                                        ecma_get_completion_value_value (right_value));
 
   ECMA_FINALIZE (right_value);
+
+  int_data->pos++;
 
   return ret_value;
 } /* opfunc_b_not */

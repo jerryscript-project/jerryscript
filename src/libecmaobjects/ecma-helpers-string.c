@@ -291,7 +291,7 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
   JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
 #endif /* !JERRY_NDEBUG */
 
-  const literal lit = deserialize_literal_by_id ((idx_t) lit_index);
+  const literal lit = deserialize_literal_by_id (lit_index);
   if (lit.type == LIT_MAGIC_STR)
   {
     ecma_init_ecma_string_from_magic_string_id (string_p,
@@ -878,7 +878,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      const literal lit = deserialize_literal_by_id ((idx_t) string_desc_p->u.lit_index);
+      const literal lit = deserialize_literal_by_id (string_desc_p->u.lit_index);
       JERRY_ASSERT (lit.type == LIT_STR);
       const ecma_char_t *str_p = literal_to_zt (lit);
       JERRY_ASSERT (str_p != NULL);
@@ -1159,8 +1159,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    FIXME (uint8_t -> literal_index_t);
-    const literal lit = deserialize_literal_by_id ((uint8_t) string1_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id (string1_p->u.lit_index);
     JERRY_ASSERT (lit.type == LIT_STR);
     zt_string1_p = literal_to_zt (lit);
   }
@@ -1195,8 +1194,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
   if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    FIXME (uint8_t -> literal_index_t);
-    const literal lit = deserialize_literal_by_id ((uint8_t) string2_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id (string2_p->u.lit_index);
     JERRY_ASSERT (lit.type == LIT_STR);
     zt_string2_p = literal_to_zt (lit);
   }
@@ -1258,7 +1256,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
   if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    const literal lit = deserialize_literal_by_id ((idx_t) string_p->u.lit_index);
+    const literal lit = deserialize_literal_by_id (string_p->u.lit_index);
 
     return lit.data.lp.length;
   }

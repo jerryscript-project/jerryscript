@@ -22,25 +22,27 @@
 #include "literal.h"
 #include "scopes-tree.h"
 
-/* bytecode_data contains identifiers, string and num literals.
-   Memory map if the following.
+#define BLOCK_SIZE 64
 
-   bytecode_data {
-      U8 strs_count;
-      U8 string_offsets[str_count];
-      U8* strings[str_count];
+typedef struct
+{
+  opcode_counter_t oc;
+  idx_t uid;
+  uint8_t reserved;
+}
+lit_id_table_key;
 
-      U8 nums_count;
-      U32 nums[nums_count];
-   } */
 struct
 {
   const literal *literals;
   const opcode_t *opcodes;
-  uint8_t literals_count;
+  literal_index_t literals_count;
   opcode_counter_t opcodes_count;
+  hash_table lit_id_hash;
 }
 bytecode_data;
+
+lit_id_table_key create_lit_id_table_key (idx_t, opcode_counter_t);
 
 scopes_tree current_scope;
 

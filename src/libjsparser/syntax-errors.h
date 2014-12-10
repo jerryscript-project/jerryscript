@@ -13,8 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef PARSE_ERROR_H
-#define PARSE_ERROR_H
+#ifndef SYNTAX_ERRORS_H
+#define SYNTAX_ERRORS_H
+
+#include "literal.h"
+#include "opcodes-dumper.h"
+#include "lexer.h"
 
 #define PARSE_ERROR(MESSAGE, LOCUS) do { \
   size_t line, column; \
@@ -60,4 +64,27 @@
   __exit (-1); \
 } while (0)
 
-#endif /* PARSE_ERROR_H */
+typedef enum
+{
+  PROP_DATA,
+  PROP_SET,
+  PROP_GET,
+  VARG
+}
+prop_type;
+
+void syntax_init (void);
+void syntax_free (void);
+
+void syntax_start_checking_of_prop_names (void);
+void syntax_add_prop_name (operand, prop_type);
+void syntax_check_for_duplication_of_prop_names (bool, locus);
+
+void syntax_start_checking_of_vargs (void);
+void syntax_add_varg (operand);
+void syntax_check_for_eval_and_arguments_in_strict_mode (operand, bool, locus);
+void syntax_check_for_syntax_errors_in_formal_param_list (bool, locus);
+
+void syntax_check_delete (bool, locus);
+
+#endif /* SYNTAX_ERRORS_H */

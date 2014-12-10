@@ -19,6 +19,17 @@
 
 const ecma_char_t *strings_buffer;
 
+lit_id_table_key
+create_lit_id_table_key (idx_t id, opcode_counter_t oc)
+{
+  return (lit_id_table_key)
+  {
+    .uid = id,
+    .oc = oc / BLOCK_SIZE,
+    .reserved = 0
+  };
+}
+
 void
 deserializer_set_strings_buffer (const ecma_char_t *s)
 {
@@ -26,10 +37,29 @@ deserializer_set_strings_buffer (const ecma_char_t *s)
 }
 
 literal
-deserialize_literal_by_id (uint8_t id)
+deserialize_literal_by_id (literal_index_t id)
 {
+  JERRY_ASSERT (id != INVALID_LITERAL);
   JERRY_ASSERT (id < bytecode_data.literals_count);
   return bytecode_data.literals[id];
+}
+
+literal_index_t
+deserialize_lit_id_by_uid (uint8_t id, opcode_counter_t oc)
+{
+  // __printf ("uid: %d, oc: %d\n", id, oc);
+  // if (id == 2 && oc == 64)
+  // {
+  //   __printf ("HIT!\n");
+  // }
+  if (bytecode_data.lit_id_hash == null_hash)
+  {
+    return INVALID_LITERAL;
+  }
+  lit_id_table_key key = create_lit_id_table_key (id, oc);
+  void *res = hash_table_lookup (bytecode_data.lit_id_hash, &key);
+  JERRY_ASSERT (res != NULL);
+  return *(literal_index_t *) res;
 }
 
 const void *
@@ -42,18 +72,25 @@ deserialize_bytecode (void)
 opcode_t
 deserialize_opcode (opcode_counter_t oc)
 {
-  if (bytecode_data.opcodes)
+  if (bytecode_data.opcodes == NULL)
   {
-    JERRY_ASSERT (oc < bytecode_data.opcodes_count);
-    return bytecode_data.opcodes[oc];
+    return deserialize_op_meta (oc).op;
   }
-  return scopes_tree_opcode (current_scope, oc);
+  JERRY_ASSERT (oc < bytecode_data.opcodes_count);
+  return bytecode_data.opcodes[oc];
+}
+
+op_meta
+deserialize_op_meta (opcode_counter_t oc)
+{
+  JERRY_ASSERT (current_scope);
+  return scopes_tree_op_meta (current_scope, oc);
 }
 
 uint8_t
 deserialize_min_temp (void)
 {
-  return bytecode_data.literals_count;
+  return 128;
 }
 
 void
@@ -71,6 +108,13 @@ deserializer_free (void)
   {
     mem_heap_free_block ((uint8_t *) strings_buffer);
   }
-  mem_heap_free_block ((uint8_t *) bytecode_data.literals);
+  if (bytecode_data.lit_id_hash != null_hash)
+  {
+    hash_table_free (bytecode_data.lit_id_hash);
+  }
+  if (bytecode_data.literals != NULL)
+  {
+    mem_heap_free_block ((uint8_t *) bytecode_data.literals);
+  }
   mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);
 }

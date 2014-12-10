@@ -16,14 +16,37 @@
 #include "scopes-tree.h"
 #include "mem-heap.h"
 #include "jerry-libc.h"
+#include "lexer.h"
+#include "bytecode-data.h"
 
-#define NAME_TO_ID(op) (__op__idx_##op)
+#define OPCODE(op) (__op__idx_##op)
+#define HASH_SIZE 128
+
+static hash_table lit_id_to_uid = null_hash;
+static opcode_counter_t global_oc = 0;
+static idx_t next_uid;
 
 static void
 assert_tree (scopes_tree t)
 {
   JERRY_ASSERT (t != NULL);
   JERRY_ASSERT (t->t.magic == TREE_MAGIC);
+}
+
+static idx_t
+get_uid (op_meta *op, uint8_t i)
+{
+  JERRY_ASSERT (i < 4);
+  raw_opcode *raw = (raw_opcode *) &op->op;
+  return raw->uids[i + 1];
+}
+
+static void
+set_uid (op_meta *op, uint8_t i, idx_t uid)
+{
+  JERRY_ASSERT (i < 4);
+  raw_opcode *raw = (raw_opcode *) &op->op;
+  raw->uids[i + 1] = uid;
 }
 
 opcode_counter_t
@@ -34,18 +57,18 @@ scopes_tree_opcodes_num (scopes_tree t)
 }
 
 void
-scopes_tree_add_opcode (scopes_tree tree, opcode_t op)
+scopes_tree_add_op_meta (scopes_tree tree, op_meta op)
 {
   assert_tree (tree);
-  linked_list_set_element (tree->opcodes, sizeof (opcode_t), tree->opcodes_num++, &op);
+  linked_list_set_element (tree->opcodes, tree->opcodes_num++, &op);
 }
 
 void
-scopes_tree_set_opcode (scopes_tree tree, opcode_counter_t oc, opcode_t op)
+scopes_tree_set_op_meta (scopes_tree tree, opcode_counter_t oc, op_meta op)
 {
   assert_tree (tree);
   JERRY_ASSERT (oc < tree->opcodes_num);
-  linked_list_set_element (tree->opcodes, sizeof (opcode_t), oc, &op);
+  linked_list_set_element (tree->opcodes, oc, &op);
 }
 
 void
@@ -56,12 +79,12 @@ scopes_tree_set_opcodes_num (scopes_tree tree, opcode_counter_t oc)
   tree->opcodes_num = oc;
 }
 
-opcode_t
-scopes_tree_opcode (scopes_tree tree, opcode_counter_t oc)
+op_meta
+scopes_tree_op_meta (scopes_tree tree, opcode_counter_t oc)
 {
   assert_tree (tree);
   JERRY_ASSERT (oc < tree->opcodes_num);
-  return *(opcode_t *) linked_list_element (tree->opcodes, sizeof (opcode_t), oc);
+  return *(op_meta *) linked_list_element (tree->opcodes, oc);
 }
 
 opcode_counter_t
@@ -71,64 +94,295 @@ scopes_tree_count_opcodes (scopes_tree t)
   opcode_counter_t res = t->opcodes_num;
   for (uint8_t i = 0; i < t->t.children_num; i++)
   {
-    res = (opcode_counter_t) (res
-                              + scopes_tree_count_opcodes (*(scopes_tree *) linked_list_element (t->t.children,
-                                                                                             sizeof (scopes_tree),
-                                                                                             i)));
+    res = (opcode_counter_t) (
+      res + scopes_tree_count_opcodes (
+        *(scopes_tree *) linked_list_element (t->t.children, i)));
   }
   return res;
 }
 
-static opcode_counter_t
-merge_subscopes (scopes_tree tree, opcode_t *data)
+static uint16_t
+lit_id_hash (void * lit_id)
+{
+  return *(literal_index_t *) lit_id % HASH_SIZE;
+}
+
+static void
+start_new_block_if_necessary (void)
+{
+  if (global_oc % BLOCK_SIZE == 0)
+  {
+    next_uid = 0;
+    if (lit_id_to_uid != null_hash)
+    {
+      hash_table_free (lit_id_to_uid);
+      lit_id_to_uid = null_hash;
+    }
+    lit_id_to_uid = hash_table_init (sizeof (literal_index_t), sizeof (idx_t), HASH_SIZE, lit_id_hash,
+                                     MEM_HEAP_ALLOC_SHORT_TERM);
+  }
+}
+
+static bool
+is_possible_literal (uint16_t mask, uint8_t index)
+{
+  int res;
+  switch (index)
+  {
+    case 0:
+    {
+      res = mask >> 8;
+      break;
+    }
+    case 1:
+    {
+      res = (mask & 0xF0) >> 4;
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (index = 2);
+      res = mask & 0x0F;
+    }
+  }
+  JERRY_ASSERT (res == 0 || res == 1);
+  return res == 1;
+}
+
+static void
+change_uid (op_meta *om, hash_table lit_ids, uint16_t mask)
+{
+  for (uint8_t i = 0; i < 3; i++)
+  {
+    if (is_possible_literal (mask, i))
+    {
+      if (get_uid (om, i) == LITERAL_TO_REWRITE)
+      {
+        JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
+        literal_index_t lit_id = om->lit_id[i];
+        idx_t *uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+        if (uid == NULL)
+        {
+          hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
+          lit_id_table_key key = create_lit_id_table_key (next_uid, global_oc);
+          hash_table_insert (lit_ids, &key, &lit_id);
+          uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+          JERRY_ASSERT (uid != NULL);
+          JERRY_ASSERT (*uid == next_uid);
+          next_uid++;
+        }
+        set_uid (om, i, *uid);
+      }
+      else
+      {
+        JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+    }
+  }
+}
+
+static op_meta *
+extract_op_meta (scopes_tree tree, opcode_counter_t opc_index)
+{
+  return (op_meta *) linked_list_element (tree->opcodes, opc_index);
+}
+
+static opcode_t
+generate_opcode (scopes_tree tree, opcode_counter_t opc_index, hash_table lit_ids)
+{
+  start_new_block_if_necessary ();
+  op_meta *om = extract_op_meta (tree, opc_index);
+  /* Now we should change uids of opcodes.
+     Since different opcodes has different literals/tmps in different places,
+     we should change only them.
+     For each case possible literal positions are shown as 0xYYY literal,
+     where Y is set to '1' when there is a possible literal in this position,
+     and '0' otherwise.  */
+  switch (om->op.op_idx)
+  {
+    case OPCODE (prop_getter):
+    case OPCODE (prop_setter):
+    case OPCODE (delete_prop):
+    case OPCODE (b_shift_left):
+    case OPCODE (b_shift_right):
+    case OPCODE (b_shift_uright):
+    case OPCODE (b_and):
+    case OPCODE (b_or):
+    case OPCODE (b_xor):
+    case OPCODE (equal_value):
+    case OPCODE (not_equal_value):
+    case OPCODE (equal_value_type):
+    case OPCODE (not_equal_value_type):
+    case OPCODE (less_than):
+    case OPCODE (greater_than):
+    case OPCODE (less_or_equal_than):
+    case OPCODE (greater_or_equal_than):
+    case OPCODE (instanceof):
+    case OPCODE (in):
+    case OPCODE (addition):
+    case OPCODE (substraction):
+    case OPCODE (division):
+    case OPCODE (multiplication):
+    case OPCODE (remainder):
+    {
+      change_uid (om, lit_ids, 0x111);
+      break;
+    }
+    case OPCODE (call_n):
+    case OPCODE (native_call):
+    case OPCODE (construct_n):
+    case OPCODE (func_expr_n):
+    case OPCODE (delete_var):
+    case OPCODE (typeof):
+    case OPCODE (b_not):
+    case OPCODE (logical_not):
+    case OPCODE (post_incr):
+    case OPCODE (post_decr):
+    case OPCODE (pre_incr):
+    case OPCODE (pre_decr):
+    case OPCODE (unary_plus):
+    case OPCODE (unary_minus):
+    {
+      change_uid (om, lit_ids, 0x110);
+      break;
+    }
+    case OPCODE (assignment):
+    {
+      switch (om->op.data.assignment.type_value_right)
+      {
+        case OPCODE_ARG_TYPE_SIMPLE:
+        case OPCODE_ARG_TYPE_SMALLINT:
+        case OPCODE_ARG_TYPE_SMALLINT_NEGATE:
+        {
+          change_uid (om, lit_ids, 0x100);
+          break;
+        }
+        case OPCODE_ARG_TYPE_NUMBER:
+        case OPCODE_ARG_TYPE_NUMBER_NEGATE:
+        case OPCODE_ARG_TYPE_STRING:
+        case OPCODE_ARG_TYPE_VARIABLE:
+        {
+          change_uid (om, lit_ids, 0x101);
+          break;
+        }
+      }
+      break;
+    }
+    case OPCODE (func_decl_n):
+    case OPCODE (array_decl):
+    case OPCODE (obj_decl):
+    case OPCODE (this):
+    case OPCODE (with):
+    case OPCODE (throw):
+    case OPCODE (is_true_jmp_up):
+    case OPCODE (is_true_jmp_down):
+    case OPCODE (is_false_jmp_up):
+    case OPCODE (is_false_jmp_down):
+    case OPCODE (var_decl):
+    case OPCODE (retval):
+    {
+      change_uid (om, lit_ids, 0x100);
+      break;
+    }
+    case OPCODE (exitval):
+    case OPCODE (ret):
+    case OPCODE (try):
+    case OPCODE (jmp_up):
+    case OPCODE (jmp_down):
+    case OPCODE (nop):
+    case OPCODE (reg_var_decl):
+    {
+      change_uid (om, lit_ids, 0x000);
+      break;
+    }
+    case OPCODE (meta):
+    {
+      switch (om->op.data.meta.type)
+      {
+        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        case OPCODE_META_TYPE_VARG_PROP_GETTER:
+        case OPCODE_META_TYPE_VARG_PROP_SETTER:
+        {
+          change_uid (om, lit_ids, 0x011);
+          break;
+        }
+        case OPCODE_META_TYPE_THIS_ARG:
+        case OPCODE_META_TYPE_VARG:
+        case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
+        {
+          change_uid (om, lit_ids, 0x010);
+          break;
+        }
+        case OPCODE_META_TYPE_UNDEFINED:
+        case OPCODE_META_TYPE_END_WITH:
+        case OPCODE_META_TYPE_FUNCTION_END:
+        case OPCODE_META_TYPE_CATCH:
+        case OPCODE_META_TYPE_FINALLY:
+        case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+        case OPCODE_META_TYPE_STRICT_CODE:
+        {
+          change_uid (om, lit_ids, 0x000);
+          break;
+        }
+      }
+      break;
+    }
+  }
+  return om->op;
+}
+
+static void
+merge_subscopes (scopes_tree tree, opcode_t *data, hash_table lit_ids)
 {
   assert_tree (tree);
   JERRY_ASSERT (data);
-  opcode_counter_t opc_index, data_index;
+  opcode_counter_t opc_index;
   bool header = true;
-  for (opc_index = 0, data_index = 0; opc_index < tree->opcodes_num; opc_index++, data_index++)
+  for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
   {
-    opcode_t *op = (opcode_t *) linked_list_element (tree->opcodes, sizeof (opcode_t), opc_index);
-    JERRY_ASSERT (op);
-    if (op->op_idx != NAME_TO_ID (var_decl)
-        && op->op_idx != NAME_TO_ID (nop)
-        && op->op_idx != NAME_TO_ID (meta) && !header)
+    op_meta *om = extract_op_meta (tree, opc_index);
+    if (om->op.op_idx != OPCODE (var_decl)
+        && om->op.op_idx != OPCODE (meta) && !header)
     {
       break;
     }
-    if (op->op_idx == NAME_TO_ID (reg_var_decl))
+    if (om->op.op_idx == OPCODE (reg_var_decl))
     {
       header = false;
     }
-    data[data_index] = *op;
+    data[global_oc] = generate_opcode (tree, opc_index, lit_ids);
+    global_oc++;
   }
   for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
   {
-    data_index = (opcode_counter_t) (data_index
-                                     + merge_subscopes (*(scopes_tree *) linked_list_element (tree->t.children,
-                                                                                              sizeof (scopes_tree),
-                                                                                              child_id),
-                                                        data + data_index));
+    merge_subscopes (*(scopes_tree *) linked_list_element (tree->t.children, child_id),
+                     data, lit_ids);
   }
-  for (; opc_index < tree->opcodes_num; opc_index++, data_index++)
+  for (; opc_index < tree->opcodes_num; opc_index++)
   {
-    opcode_t *op = (opcode_t *) linked_list_element (tree->opcodes, sizeof (opcode_t), opc_index);
-    data[data_index] = *op;
+    data[global_oc] = generate_opcode (tree, opc_index, lit_ids);
+    global_oc++;
   }
-  return data_index;
 }
 
 opcode_t *
-scopes_tree_raw_data (scopes_tree tree, opcode_counter_t *num)
+scopes_tree_raw_data (scopes_tree tree, hash_table lit_ids)
 {
   assert_tree (tree);
-  opcode_counter_t res = scopes_tree_count_opcodes (tree);
-  size_t size = ((size_t) (res + 1) * sizeof (opcode_t)); // +1 for valgrind
+  opcode_counter_t opcodes_count = scopes_tree_count_opcodes (tree);
+  size_t size = ((size_t) (opcodes_count + 1) * sizeof (opcode_t)); // +1 for valgrind
   opcode_t *opcodes = (opcode_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
   __memset (opcodes, 0, size);
-  opcode_counter_t merged = merge_subscopes (tree, opcodes);
-  JERRY_ASSERT (merged == res);
-  *num = res;
+  merge_subscopes (tree, opcodes, lit_ids);
+  if (lit_id_to_uid != null_hash)
+  {
+    hash_table_free (lit_id_to_uid);
+    lit_id_to_uid = null_hash;
+  }
   return opcodes;
 }
 
@@ -150,7 +404,7 @@ scopes_tree
 scopes_tree_init (scopes_tree parent)
 {
   scopes_tree tree = (scopes_tree) mem_heap_alloc_block (sizeof (scopes_tree_int), MEM_HEAP_ALLOC_SHORT_TERM);
-  __memset (tree, 0, sizeof (scopes_tree));
+  __memset (tree, 0, sizeof (scopes_tree_int));
   tree->t.magic = TREE_MAGIC;
   tree->t.parent = (tree_header *) parent;
   tree->t.children = null_list;
@@ -161,14 +415,14 @@ scopes_tree_init (scopes_tree parent)
     {
       parent->t.children = linked_list_init (sizeof (scopes_tree));
     }
-    linked_list_set_element (parent->t.children, sizeof (scopes_tree), parent->t.children_num, &tree);
-    void *added = linked_list_element (parent->t.children, sizeof (scopes_tree), parent->t.children_num);
+    linked_list_set_element (parent->t.children, parent->t.children_num, &tree);
+    void *added = linked_list_element (parent->t.children, parent->t.children_num);
     JERRY_ASSERT (*(scopes_tree *) added == tree);
     parent->t.children_num++;
   }
   tree->opcodes_num = 0;
   tree->strict_mode = 0;
-  tree->opcodes = linked_list_init (sizeof (opcode_t));
+  tree->opcodes = linked_list_init (sizeof (op_meta));
   return tree;
 }
 
@@ -180,7 +434,7 @@ scopes_tree_free (scopes_tree tree)
   {
     for (uint8_t i = 0; i < tree->t.children_num; ++i)
     {
-      scopes_tree_free (*(scopes_tree *) linked_list_element (tree->t.children, sizeof (scopes_tree), i));
+      scopes_tree_free (*(scopes_tree *) linked_list_element (tree->t.children, i));
     }
     linked_list_free (tree->t.children);
   }

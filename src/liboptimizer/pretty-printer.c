@@ -21,11 +21,10 @@
 #include "deserializer.h"
 #include "opcodes-native-call.h"
 #include "ecma-helpers.h"
+#include "ecma-globals.h"
 #include <stdarg.h>
 
 #define NAME_TO_ID(op) (__op__idx_##op)
-
-#define FIELD(op, field) (opcode.data.op.field)
 
 #define __OPCODE_STR(name, arg1, arg2, arg3) \
   #name,
@@ -52,7 +51,14 @@ dump_literal (literal lit)
   {
     case LIT_NUMBER:
     {
-      __printf ("%d : NUMBER", lit.data.num);
+      if (ecma_number_is_nan (lit.data.num))
+      {
+        __printf ("%s : NUMBER", "NaN");
+      }
+      else
+      {
+        __printf ("%d : NUMBER", lit.data.num);
+      }
       break;
     }
     case LIT_MAGIC_STR:
@@ -73,10 +79,10 @@ dump_literal (literal lit)
 }
 
 void
-pp_literals (const literal lits[], uint8_t size)
+pp_literals (const literal lits[], literal_index_t size)
 {
   __printf ("LITERALS %d:\n", size);
-  for (uint8_t i = 0; i < size; i++)
+  for (literal_index_t i = 0; i < size; i++)
   {
     __printf ("%3d ", i);
     dump_literal (lits[i]);
@@ -84,52 +90,84 @@ pp_literals (const literal lits[], uint8_t size)
   }
 }
 
-static const char *
-var_id_to_string (char *res, idx_t id)
+static char buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+
+static void
+clear_temp_buffer (void)
 {
-  if (id >= lexer_get_literals_count ())
-  {
-    __strncpy (res, "tmp", 3);
-    if (id / 100 != 0)
-    {
-      res[3] = (char) (id / 100 + '0');
-      res[4] = (char) ((id % 100) / 10 + '0');
-      res[5] = (char) (id % 10 + '0');
-      return res;
-    }
-    else if (id / 10 != 0)
-    {
-      res[3] = (char) (id / 10 + '0');
-      res[4] = (char) (id % 10 + '0');
-      return res;
-    }
-    else
-    {
-      res[3] = (char) (id + '0');
-      return res;
-    }
-  }
+  __memset (buff, 0, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+}
+
+static const char *
+lit_id_to_str (literal_index_t id)
+{
   literal lit = lexer_get_literal_by_id (id);
   if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
   {
     return (char *) literal_to_zt (lit);
   }
-  else if (lit.type == LIT_NUMBER)
+  else
   {
-    ecma_number_to_zt_string (lit.data.num, (ecma_char_t *) res, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
-    return res;
+    JERRY_ASSERT (lit.type == LIT_NUMBER);
+    clear_temp_buffer ();
+    ecma_number_to_zt_string (lit.data.num, (ecma_char_t *) buff, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+    return buff;
+  }
+}
+
+static const char *
+tmp_id_to_str (idx_t id)
+{
+  JERRY_ASSERT (id != LITERAL_TO_REWRITE);
+  JERRY_ASSERT (id >= 128);
+  clear_temp_buffer ();
+  __strncpy (buff, "tmp", 3);
+  if (id / 100 != 0)
+  {
+    buff[3] = (char) (id / 100 + '0');
+    buff[4] = (char) ((id % 100) / 10 + '0');
+    buff[5] = (char) (id % 10 + '0');
+  }
+  else if (id / 10 != 0)
+  {
+    buff[3] = (char) (id / 10 + '0');
+    buff[4] = (char) (id % 10 + '0');
   }
   else
   {
-    JERRY_UNREACHABLE ();
+    buff[3] = (char) (id + '0');
+  }
+  return buff;
+}
+
+static const char *
+var_to_str (opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc, uint8_t current_arg)
+{
+  raw_opcode raw = *(raw_opcode*) &opcode;
+  if (raw.uids[current_arg] == LITERAL_TO_REWRITE)
+  {
+    if (lit_ids == NULL)
+    {
+      return "hz";
+    }
+    JERRY_ASSERT (lit_ids[current_arg - 1] != NOT_A_LITERAL
+                  && lit_ids[current_arg - 1] != INVALID_LITERAL);
+    return lit_id_to_str (lit_ids[current_arg - 1]);
+  }
+  else if (raw.uids[current_arg] >= 128)
+  {
+    return tmp_id_to_str (raw.uids[current_arg]);
+  }
+  else
+  {
+    return lit_id_to_str (deserialize_lit_id_by_uid (raw.uids[current_arg], oc));
   }
 }
 
 static void
-pp_printf (const char *format, ...)
+pp_printf (const char *format, opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc)
 {
-  va_list args;
-  va_start (args, format);
+  uint8_t current_arg = 1;
   while (*format)
   {
     if (*format != '%')
@@ -144,57 +182,46 @@ pp_printf (const char *format, ...)
     {
       case 'd':
       {
-        __printf ("%d", va_arg (args, int));
+        raw_opcode raw = *(raw_opcode*) &opcode;
+        __printf ("%d", raw.uids[current_arg]);
         break;
       }
       case 's':
       {
-        char res[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER] = {'\0'};
-        __printf ("%s", var_id_to_string (res, (idx_t) va_arg (args, int)));
-        break;
-      }
-      case '%':
-      {
-        __printf ("%%");
+        __printf ("%s", var_to_str (opcode, lit_ids, oc, current_arg));
         break;
       }
       default:
       {
-        JERRY_UNREACHABLE ();
+        __putchar ('%');
+        continue;
       }
     }
+    current_arg++;
     format++;
   }
-  va_end (args);
 }
 
-#define PP_OP_0(op, format) \
-  case NAME_TO_ID(op): pp_printf (format); break;
-
-#define PP_OP_1(op, format, field1) \
-  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1); break;
-
-#define PP_OP_2(op, format, field1, field2) \
-  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1, opcode.data.op.field2); break;
-
-#define PP_OP_3(op, format, field1, field2, field3) \
-  case NAME_TO_ID(op): pp_printf (format, opcode.data.op.field1, opcode.data.op.field2, opcode.data.op.field3); break;
+#define PP_OP(op_name, format) \
+  case NAME_TO_ID(op_name): pp_printf (format, opm.op, opm.lit_id, oc); break;
+#define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
+#define OC(i, j) __extension__({ raw_opcode* raw = (raw_opcode *) &opm.op; \
+                                 calc_opcode_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
 
 static int vargs_num = 0;
 static int seen_vargs = 0;
 
-void
-pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
+static void
+dump_asm (opcode_counter_t oc, opcode_t opcode)
 {
-  uint8_t i = 1;
+  uint8_t i = 0;
   uint8_t opcode_id = opcode.op_idx;
-
   __printf ("%3d: %20s ", oc, opcode_names[opcode_id]);
   if (opcode_id != NAME_TO_ID (nop) && opcode_id != NAME_TO_ID (ret))
   {
     for (i = 1; i < opcode_sizes[opcode_id]; i++)
     {
-      __printf ("%4d ", ((uint8_t*) & opcode)[i]);
+      __printf ("%4d ", ((raw_opcode *) &opcode)->uids[i]);
     }
   }
 
@@ -202,255 +229,208 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
   {
     __printf ("     ");
   }
+}
 
+void
+pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
+{
+  dump_asm (oc, opm.op);
   __printf ("    // ");
 
-  switch (opcode_id)
+  switch (opm.op.op_idx)
   {
-    PP_OP_3 (addition, "%s = %s + %s;", dst, var_left, var_right);
-    PP_OP_3 (substraction, "%s = %s - %s;", dst, var_left, var_right);
-    PP_OP_3 (division, "%s = %s - %s;", dst, var_left, var_right);
-    PP_OP_3 (multiplication, "%s = %s * %s;", dst, var_left, var_right);
-    PP_OP_3 (remainder, "%s = %s %% %s;", dst, var_left, var_right);
-    PP_OP_2 (unary_minus, "%s = -%s;", dst, var);
-    PP_OP_2 (unary_plus, "%s = +%s;", dst, var);
-    PP_OP_3 (b_shift_left, "%s = %s << %s;", dst, var_left, var_right);
-    PP_OP_3 (b_shift_right, "%s = %s >> %s;", dst, var_left, var_right);
-    PP_OP_3 (b_shift_uright, "%s = %s >>> %s;", dst, var_left, var_right);
-    PP_OP_3 (b_and, "%s = %s & %s;", dst, var_left, var_right);
-    PP_OP_3 (b_or, "%s = %s | %s;", dst, var_left, var_right);
-    PP_OP_3 (b_xor, "%s = %s ^ %s;", dst, var_left, var_right);
-    PP_OP_2 (b_not, "%s = ~ %s;", dst, var_right);
-    PP_OP_2 (logical_not, "%s = ! %s;", dst, var_right);
-    PP_OP_3 (equal_value, "%s = %s == %s;", dst, var_left, var_right);
-    PP_OP_3 (not_equal_value, "%s = %s != %s;", dst, var_left, var_right);
-    PP_OP_3 (equal_value_type, "%s = %s === %s;", dst, var_left, var_right);
-    PP_OP_3 (not_equal_value_type, "%s = %s !== %s;", dst, var_left, var_right);
-    PP_OP_3 (less_than, "%s = %s < %s;", dst, var_left, var_right);
-    PP_OP_3 (greater_than, "%s = %s > %s;", dst, var_left, var_right);
-    PP_OP_3 (less_or_equal_than, "%s = %s <= %s;", dst, var_left, var_right);
-    PP_OP_3 (greater_or_equal_than, "%s = %s >= %s;", dst, var_left, var_right);
-    PP_OP_3 (instanceof, "%s = %s instanceof %s;", dst, var_left, var_right);
-    PP_OP_3 (in, "%s = %s in %s;", dst, var_left, var_right);
-    PP_OP_2 (post_incr, "%s = %s++;", dst, var_right);
-    PP_OP_2 (post_decr, "%s = %s--;", dst, var_right);
-    PP_OP_2 (pre_incr, "%s = ++%s;", dst, var_right);
-    PP_OP_2 (pre_decr, "%s = --%s;", dst, var_right);
-    PP_OP_1 (throw, "throw %s;", var);
-    PP_OP_2 (reg_var_decl, "var %s .. %s;", min, max);
-    PP_OP_1 (var_decl, "var %s;", variable_name);
-    PP_OP_0 (nop, ";");
-    PP_OP_1 (exitval, "exit %d;", status_code);
-    PP_OP_1 (retval, "return %s;", ret_value);
-    PP_OP_0 (ret, "ret;");
-    PP_OP_3 (prop_getter, "%s = %s[%s];", lhs, obj, prop);
-    PP_OP_3 (prop_setter, "%s[%s] = %s;", obj, prop, rhs);
-    PP_OP_1 (this, "%s = this;", lhs);
-    PP_OP_2 (delete_var, "%s = delete %s;", lhs, name);
-    PP_OP_3 (delete_prop, "%s = delete %s.%s;", lhs, base, name);
-    PP_OP_2 (typeof, "%s = typeof %s;", lhs, obj);
-    PP_OP_1 (with, "with (%s);", expr);
-    case NAME_TO_ID (is_true_jmp_up):
-    {
-      pp_printf ("if (%s) goto %d;", opcode.data.is_true_jmp_up.value,
-                 oc - calc_opcode_counter_from_idx_idx (opcode.data.is_true_jmp_up.opcode_1,
-                                                        opcode.data.is_true_jmp_up.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (is_false_jmp_up):
-    {
-      pp_printf ("if (%s) goto %d;", opcode.data.is_false_jmp_up.value,
-                 oc - calc_opcode_counter_from_idx_idx (opcode.data.is_false_jmp_up.opcode_1,
-                                                        opcode.data.is_false_jmp_up.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (is_true_jmp_down):
-    {
-      pp_printf ("if (%s) goto %d;", opcode.data.is_true_jmp_down.value,
-                 oc + calc_opcode_counter_from_idx_idx (opcode.data.is_true_jmp_down.opcode_1,
-                                                        opcode.data.is_true_jmp_down.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (is_false_jmp_down):
-    {
-      pp_printf ("if (%s == false) goto %d;", opcode.data.is_false_jmp_down.value,
-                 oc + calc_opcode_counter_from_idx_idx (opcode.data.is_false_jmp_down.opcode_1,
-                                                        opcode.data.is_false_jmp_down.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (jmp_up):
-    {
-      pp_printf ("goto %d;",
-                 oc - calc_opcode_counter_from_idx_idx (opcode.data.jmp_up.opcode_1,
-                                                        opcode.data.jmp_up.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (jmp_down):
-    {
-      pp_printf ("goto %d;",
-                 oc + calc_opcode_counter_from_idx_idx (opcode.data.jmp_down.opcode_1,
-                                                        opcode.data.jmp_down.opcode_2));
-      break;
-    }
-    case NAME_TO_ID (try):
-    {
-      pp_printf ("try (end: %d);", oc + calc_opcode_counter_from_idx_idx (opcode.data.try.oc_idx_1,
-                                                                          opcode.data.try.oc_idx_2));
-      break;
-    }
+    PP_OP (addition, "%s = %s + %s;");
+    PP_OP (substraction, "%s = %s - %s;");
+    PP_OP (division, "%s = %s - %s;");
+    PP_OP (multiplication, "%s = %s * %s;");
+    PP_OP (remainder, "%s = %s %% %s;");
+    PP_OP (unary_minus, "%s = -%s;");
+    PP_OP (unary_plus, "%s = +%s;");
+    PP_OP (b_shift_left, "%s = %s << %s;");
+    PP_OP (b_shift_right, "%s = %s >> %s;");
+    PP_OP (b_shift_uright, "%s = %s >>> %s;");
+    PP_OP (b_and, "%s = %s & %s;");
+    PP_OP (b_or, "%s = %s | %s;");
+    PP_OP (b_xor, "%s = %s ^ %s;");
+    PP_OP (b_not, "%s = ~ %s;");
+    PP_OP (logical_not, "%s = ! %s;");
+    PP_OP (equal_value, "%s = %s == %s;");
+    PP_OP (not_equal_value, "%s = %s != %s;");
+    PP_OP (equal_value_type, "%s = %s === %s;");
+    PP_OP (not_equal_value_type, "%s = %s !== %s;");
+    PP_OP (less_than, "%s = %s < %s;");
+    PP_OP (greater_than, "%s = %s > %s;");
+    PP_OP (less_or_equal_than, "%s = %s <= %s;");
+    PP_OP (greater_or_equal_than, "%s = %s >= %s;");
+    PP_OP (instanceof, "%s = %s instanceof %s;");
+    PP_OP (in, "%s = %s in %s;");
+    PP_OP (post_incr, "%s = %s++;");
+    PP_OP (post_decr, "%s = %s--;");
+    PP_OP (pre_incr, "%s = ++%s;");
+    PP_OP (pre_decr, "%s = --%s;");
+    PP_OP (throw, "throw %s;");
+    PP_OP (reg_var_decl, "var %s .. %s;");
+    PP_OP (var_decl, "var %s;");
+    PP_OP (nop, ";");
+    PP_OP (exitval, "exit %d;");
+    PP_OP (retval, "return %s;");
+    PP_OP (ret, "ret;");
+    PP_OP (prop_getter, "%s = %s[%s];");
+    PP_OP (prop_setter, "%s[%s] = %s;");
+    PP_OP (this, "%s = this;");
+    PP_OP (delete_var, "%s = delete %s;");
+    PP_OP (delete_prop, "%s = delete %s.%s;");
+    PP_OP (typeof, "%s = typeof %s;");
+    PP_OP (with, "with (%s);");
+    case NAME_TO_ID (is_true_jmp_up): __printf ("if (%s) goto %d;", VAR (1), oc - OC (2, 3)); break;
+    case NAME_TO_ID (is_false_jmp_up): __printf ("if (%s == false) goto %d;", VAR (1), oc - OC (2, 3)); break;
+    case NAME_TO_ID (is_true_jmp_down): __printf ("if (%s) goto %d;", VAR (1), oc + OC (2, 3)); break;
+    case NAME_TO_ID (is_false_jmp_down): __printf ("if (%s == false) goto %d;", VAR (1), oc + OC (2, 3)); break;
+    case NAME_TO_ID (jmp_up): __printf ("goto %d;", oc - OC (1, 2)); break;
+    case NAME_TO_ID (jmp_down): __printf ("goto %d;", oc + OC (1, 2)); break;
+    case NAME_TO_ID (try): __printf ("try (end: %d);", oc + OC (1, 2)); break;
     case NAME_TO_ID (assignment):
     {
-      pp_printf ("%s = ", opcode.data.assignment.var_left);
-      switch (opcode.data.assignment.type_value_right)
+      __printf ("%s = ", VAR (1));
+      switch (opm.op.data.assignment.type_value_right)
       {
+        case OPCODE_ARG_TYPE_STRING: __printf ("'%s': STRING;", VAR (3)); break;
+        case OPCODE_ARG_TYPE_NUMBER: __printf ("%s: NUMBER;", VAR (3)); break;
+        case OPCODE_ARG_TYPE_NUMBER_NEGATE: __printf ("-%s: NUMBER;", VAR (3)); break;
+        case OPCODE_ARG_TYPE_SMALLINT: __printf ("%d: SMALLINT;", opm.op.data.assignment.value_right); break;
+        case OPCODE_ARG_TYPE_SMALLINT_NEGATE: __printf ("-%d: SMALLINT;", opm.op.data.assignment.value_right); break;
+        case OPCODE_ARG_TYPE_VARIABLE: __printf ("%s : TYPEOF(%s);", VAR (3), VAR (3)); break;
         case OPCODE_ARG_TYPE_SIMPLE:
         {
-          switch (opcode.data.assignment.value_right)
+          switch (opm.op.data.assignment.value_right)
           {
-            case ECMA_SIMPLE_VALUE_NULL: pp_printf ("null"); break;
-            case ECMA_SIMPLE_VALUE_FALSE: pp_printf ("false"); break;
-            case ECMA_SIMPLE_VALUE_TRUE: pp_printf ("true"); break;
-            case ECMA_SIMPLE_VALUE_UNDEFINED: pp_printf ("undefined"); break;
+            case ECMA_SIMPLE_VALUE_NULL: __printf ("null"); break;
+            case ECMA_SIMPLE_VALUE_FALSE: __printf ("false"); break;
+            case ECMA_SIMPLE_VALUE_TRUE: __printf ("true"); break;
+            case ECMA_SIMPLE_VALUE_UNDEFINED: __printf ("undefined"); break;
             default: JERRY_UNREACHABLE ();
           }
-          pp_printf (": SIMPLE;");
+          __printf (": SIMPLE;");
           break;
-        }
-        case OPCODE_ARG_TYPE_STRING:
-        {
-          pp_printf ("'%s': STRING;", opcode.data.assignment.value_right);
-          break;
-        }
-        case OPCODE_ARG_TYPE_NUMBER:
-        {
-          pp_printf ("%s: NUMBER;", opcode.data.assignment.value_right);
-          break;
-        }
-        case OPCODE_ARG_TYPE_SMALLINT:
-        {
-          pp_printf ("%d: SMALLINT;", opcode.data.assignment.value_right);
-          break;
-        }
-        case OPCODE_ARG_TYPE_VARIABLE:
-        {
-          pp_printf ("%s : TYPEOF(%s);", opcode.data.assignment.value_right, opcode.data.assignment.value_right);
-          break;
-        }
-        default:
-        {
-          JERRY_UNREACHABLE ();
         }
       }
       break;
     }
     case NAME_TO_ID (call_n):
     {
-      if (opcode.data.call_n.arg_list == 0)
+      if (opm.op.data.call_n.arg_list == 0)
       {
-        pp_printf ("%s = %s ();", opcode.data.call_n.lhs, opcode.data.call_n.name_lit_idx);
+        __printf ("%s = %s ();", VAR (1), VAR (2));
       }
       else
       {
-        vargs_num = opcode.data.call_n.arg_list;
+        vargs_num = opm.op.data.call_n.arg_list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (native_call):
     {
-      if (opcode.data.native_call.arg_list == 0)
+      if (opm.op.data.native_call.arg_list == 0)
       {
-        pp_printf ("%s = ", opcode.data.native_call.lhs);
-        switch (opcode.data.native_call.name)
+        __printf ("%s = ", VAR (1));
+        switch (opm.op.data.native_call.name)
         {
-          case OPCODE_NATIVE_CALL_LED_TOGGLE: pp_printf ("LEDToggle ();"); break;
-          case OPCODE_NATIVE_CALL_LED_ON: pp_printf ("LEDOn ();"); break;
-          case OPCODE_NATIVE_CALL_LED_OFF: pp_printf ("LEDOff ();"); break;
-          case OPCODE_NATIVE_CALL_LED_ONCE: pp_printf ("LEDOnce ();"); break;
-          case OPCODE_NATIVE_CALL_WAIT: pp_printf ("wait ();"); break;
-          case OPCODE_NATIVE_CALL_PRINT: pp_printf ("print ();"); break;
+          case OPCODE_NATIVE_CALL_LED_TOGGLE: __printf ("LEDToggle ();"); break;
+          case OPCODE_NATIVE_CALL_LED_ON: __printf ("LEDOn ();"); break;
+          case OPCODE_NATIVE_CALL_LED_OFF: __printf ("LEDOff ();"); break;
+          case OPCODE_NATIVE_CALL_LED_ONCE: __printf ("LEDOnce ();"); break;
+          case OPCODE_NATIVE_CALL_WAIT: __printf ("wait ();"); break;
+          case OPCODE_NATIVE_CALL_PRINT: __printf ("print ();"); break;
           default: JERRY_UNREACHABLE ();
         }
       }
       else
       {
-        vargs_num = opcode.data.native_call.arg_list;
+        vargs_num = opm.op.data.native_call.arg_list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (construct_n):
     {
-      if (opcode.data.construct_n.arg_list == 0)
+      if (opm.op.data.construct_n.arg_list == 0)
       {
-        pp_printf ("%s = new %s;", opcode.data.construct_n.lhs, opcode.data.construct_n.name_lit_idx);
+        __printf ("%s = new %s;", VAR (1), VAR (2));
       }
       else
       {
-        vargs_num = opcode.data.construct_n.arg_list;
+        vargs_num = opm.op.data.construct_n.arg_list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (func_decl_n):
     {
-      if (opcode.data.func_decl_n.arg_list == 0)
+      if (opm.op.data.func_decl_n.arg_list == 0)
       {
-        pp_printf ("function %s ();", opcode.data.func_decl_n.name_lit_idx);
+        __printf ("function %s ();", VAR (1));
       }
       else
       {
-        vargs_num = opcode.data.func_decl_n.arg_list;
+        vargs_num = opm.op.data.func_decl_n.arg_list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (func_expr_n):
     {
-      if (opcode.data.func_expr_n.arg_list == 0)
+      if (opm.op.data.func_expr_n.arg_list == 0)
       {
-        pp_printf ("%s = function %s ();", opcode.data.func_expr_n.lhs, opcode.data.func_expr_n.name_lit_idx);
+        if (opm.op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
+        {
+          __printf ("%s = function ();", VAR (1));
+        }
+        else
+        {
+          __printf ("%s = function %s ();", VAR (1), VAR (2));
+        }
       }
       else
       {
-        vargs_num = opcode.data.func_expr_n.arg_list;
+        vargs_num = opm.op.data.func_expr_n.arg_list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (array_decl):
     {
-      if (opcode.data.array_decl.list == 0)
+      if (opm.op.data.array_decl.list == 0)
       {
-        pp_printf ("%s = [];", opcode.data.array_decl.lhs);
+        __printf ("%s = [];", VAR (1));
       }
       else
       {
-        vargs_num = opcode.data.array_decl.list;
+        vargs_num = opm.op.data.array_decl.list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (obj_decl):
     {
-      if (opcode.data.obj_decl.list == 0)
+      if (opm.op.data.obj_decl.list == 0)
       {
-        pp_printf ("%s = {};", opcode.data.obj_decl.lhs);
+        __printf ("%s = {};", VAR (1));
       }
       else
       {
-        vargs_num = opcode.data.obj_decl.list;
+        vargs_num = opm.op.data.obj_decl.list;
         seen_vargs = 0;
       }
       break;
     }
     case NAME_TO_ID (meta):
     {
-      switch (opcode.data.meta.type)
+      switch (opm.op.data.meta.type)
       {
         case OPCODE_META_TYPE_UNDEFINED:
         {
-          pp_printf ("unknown meta;");
+          __printf ("unknown meta;");
           break;
         }
         case OPCODE_META_TYPE_THIS_ARG:
@@ -487,48 +467,57 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
             {
               case NAME_TO_ID (call_n):
               {
-                pp_printf ("%s = %s (", start_op.data.call_n.lhs, start_op.data.call_n.name_lit_idx);
+                __printf ("%s = %s (", var_to_str (start_op, NULL, start, 1),
+                          var_to_str (start_op, NULL, start, 2));
                 break;
               }
               case NAME_TO_ID (native_call):
               {
-                pp_printf ("%s = ", start_op.data.native_call.lhs);
+                __printf ("%s = ", var_to_str (start_op, NULL, start, 1));
                 switch (start_op.data.native_call.name)
                 {
-                  case OPCODE_NATIVE_CALL_LED_TOGGLE: pp_printf ("LEDToggle ("); break;
-                  case OPCODE_NATIVE_CALL_LED_ON: pp_printf ("LEDOn ("); break;
-                  case OPCODE_NATIVE_CALL_LED_OFF: pp_printf ("LEDOff ("); break;
-                  case OPCODE_NATIVE_CALL_LED_ONCE: pp_printf ("LEDOnce ("); break;
-                  case OPCODE_NATIVE_CALL_WAIT: pp_printf ("wait ("); break;
-                  case OPCODE_NATIVE_CALL_PRINT: pp_printf ("print ("); break;
+                  case OPCODE_NATIVE_CALL_LED_TOGGLE: __printf ("LEDToggle ("); break;
+                  case OPCODE_NATIVE_CALL_LED_ON: __printf ("LEDOn ("); break;
+                  case OPCODE_NATIVE_CALL_LED_OFF: __printf ("LEDOff ("); break;
+                  case OPCODE_NATIVE_CALL_LED_ONCE: __printf ("LEDOnce ("); break;
+                  case OPCODE_NATIVE_CALL_WAIT: __printf ("wait ("); break;
+                  case OPCODE_NATIVE_CALL_PRINT: __printf ("print ("); break;
                   default: JERRY_UNREACHABLE ();
                 }
                 break;
               }
               case NAME_TO_ID (construct_n):
               {
-                pp_printf ("%s = new %s (", start_op.data.construct_n.lhs, start_op.data.construct_n.name_lit_idx);
+                __printf ("%s = new %s (", var_to_str (start_op, NULL, start, 1),
+                          var_to_str (start_op, NULL, start, 2));
                 break;
               }
               case NAME_TO_ID (func_decl_n):
               {
-                pp_printf ("function %s (", start_op.data.func_decl_n.name_lit_idx);
+                __printf ("function %s (", var_to_str (start_op, NULL, start, 1));
                 break;
               }
               case NAME_TO_ID (func_expr_n):
               {
-                pp_printf ("%s = function %s (", start_op.data.func_expr_n.lhs,
-                           start_op.data.func_expr_n.name_lit_idx);
+                if (start_op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
+                {
+                  __printf ("%s = function (", var_to_str (start_op, NULL, start, 1));
+                }
+                else
+                {
+                  __printf ("%s = function %s (", var_to_str (start_op, NULL, start, 1),
+                            var_to_str (start_op, NULL, start, 2));
+                }
                 break;
               }
               case NAME_TO_ID (array_decl):
               {
-                pp_printf ("%s = [", start_op.data.array_decl.lhs);
+                __printf ("%s = [", var_to_str (start_op, NULL, start, 1));
                 break;
               }
               case NAME_TO_ID (obj_decl):
               {
-                pp_printf ("%s = {", start_op.data.obj_decl.lhs);
+                __printf ("%s = {", var_to_str (start_op, NULL, start, 1));
                 break;
               }
               default:
@@ -543,41 +532,44 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
               {
                 case NAME_TO_ID (meta):
                 {
-                  switch (opcode.data.meta.type)
+                  switch (meta_op.data.meta.type)
                   {
                     case OPCODE_META_TYPE_THIS_ARG:
                     {
-                      pp_printf ("this_arg = %s", meta_op.data.meta.data_1);
+                      __printf ("this_arg = %s", var_to_str (meta_op, NULL, counter, 2));
                       break;
                     }
                     case OPCODE_META_TYPE_VARG:
                     {
-                      pp_printf ("%s", meta_op.data.meta.data_1);
+                      __printf ("%s", var_to_str (meta_op, NULL, counter, 2));
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_DATA:
                     {
-                      pp_printf ("%s:%s", meta_op.data.meta.data_1, meta_op.data.meta.data_2);
+                      __printf ("%s:%s", var_to_str (meta_op, NULL, counter, 2),
+                                var_to_str (meta_op, NULL, counter, 3));
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_GETTER:
                     {
-                      pp_printf ("%s = get ();", meta_op.data.meta.data_1);
+                      __printf ("%s = get %s ();", var_to_str (meta_op, NULL, counter, 2),
+                                var_to_str (meta_op, NULL, counter, 3));
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_SETTER:
                     {
-                      pp_printf ("%s = set (%s);", meta_op.data.meta.data_1, meta_op.data.meta.data_2);
+                      __printf ("%s = set (%s);", var_to_str (meta_op, NULL, counter, 2),
+                                var_to_str (meta_op, NULL, counter, 3));
                       break;
                     }
                     default:
                     {
-                      JERRY_UNREACHABLE ();
+                      continue;
                     }
                   }
                   if (counter != oc)
                   {
-                    pp_printf (", ");
+                    __printf (", ");
                   }
                   break;
                 }
@@ -587,17 +579,17 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
             {
               case NAME_TO_ID (array_decl):
               {
-                pp_printf ("];");
+                __printf ("];");
                 break;
               }
               case NAME_TO_ID (obj_decl):
               {
-                pp_printf ("};");
+                __printf ("};");
                 break;
               }
               default:
               {
-                pp_printf (");");
+                __printf (");");
               }
             }
           }
@@ -605,40 +597,37 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
         }
         case OPCODE_META_TYPE_END_WITH:
         {
-          pp_printf ("end with;");
+          __printf ("end with;");
           break;
         }
         case OPCODE_META_TYPE_FUNCTION_END:
         {
-          pp_printf ("function end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                                 opcode.data.meta.data_2));
+          __printf ("function end: %d;", oc + OC (2, 3));
           break;
         }
         case OPCODE_META_TYPE_CATCH:
         {
-          pp_printf ("catch end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                              opcode.data.meta.data_2));
+          __printf ("catch end: %d;", oc + OC (2, 3));
           break;
         }
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
         {
-          pp_printf ("catch (%s);", opcode.data.meta.data_1);
+          __printf ("catch (%s);", VAR (2));
           break;
         }
         case OPCODE_META_TYPE_FINALLY:
         {
-          pp_printf ("finally end: %d;", oc + calc_opcode_counter_from_idx_idx (opcode.data.meta.data_1,
-                                                                                opcode.data.meta.data_2));
+          __printf ("finally end: %d;", oc + OC (2, 3));
           break;
         }
         case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
         {
-          pp_printf ("end try");
+          __printf ("end try");
           break;
         }
         case OPCODE_META_TYPE_STRICT_CODE:
         {
-          pp_printf ("use strict;");
+          __printf ("use strict;");
           break;
         }
         default:
@@ -654,7 +643,7 @@ pp_opcode (opcode_counter_t oc, opcode_t opcode, bool is_rewrite)
     }
   }
 
-  if (is_rewrite)
+  if (rewrite)
   {
     __printf (" // REWRITE");
   }

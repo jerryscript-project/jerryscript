@@ -22,6 +22,8 @@
 #include "opcodes.h"
 
 #define INVALID_VALUE 255
+#define INVALID_LITERAL UINT32_MAX
+
 /* Keywords.  */
 typedef enum
 {
@@ -163,7 +165,7 @@ typedef struct
 {
   locus loc;
   token_type type;
-  idx_t uid;
+  literal_index_t uid;
 }
 token;
 
@@ -177,14 +179,16 @@ token lexer_prev_token (void);
 const literal *lexer_get_literals (void);
 const ecma_char_t *lexer_get_strings_cache (void);
 void lexer_add_literal_if_not_present (literal);
-uint8_t lexer_get_literals_count (void);
-literal lexer_get_literal_by_id (uint8_t);
-idx_t lexer_lookup_literal_uid (literal lit);
+literal_index_t lexer_get_literals_count (void);
+literal lexer_get_literal_by_id (literal_index_t);
+literal_index_t lexer_lookup_literal_uid (literal lit);
 
 void lexer_seek (locus);
 void lexer_locus_to_line_and_column (locus, size_t *, size_t *);
 void lexer_dump_line (size_t);
 const char *lexer_keyword_to_string (keyword);
 const char *lexer_token_type_to_string (token_type);
+
+void lexer_set_strict_mode (bool);
 
 #endif

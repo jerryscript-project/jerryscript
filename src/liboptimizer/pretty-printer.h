@@ -20,9 +20,11 @@
 #ifdef JERRY_ENABLE_PP
 #include "interpreter.h"
 #include "literal.h"
+#include "scopes-tree.h"
 
 void pp_opcode (opcode_counter_t, opcode_t, bool);
-void pp_literals (const literal *, uint8_t);
+void pp_op_meta (opcode_counter_t, op_meta, bool);
+void pp_literals (const literal *, literal_index_t);
 #endif // JERRY_ENABLE_PP
 
 #endif // PRETTY_PRINTER

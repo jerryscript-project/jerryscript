@@ -42,6 +42,8 @@ typedef struct
 }
 literal;
 
+#define LITERAL_TO_REWRITE (INVALID_VALUE - 1)
+
 literal create_empty_literal (void);
 literal create_literal_from_num (ecma_number_t);
 literal create_literal_from_str (const char *, ecma_length_t);

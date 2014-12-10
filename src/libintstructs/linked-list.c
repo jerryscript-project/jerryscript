@@ -19,6 +19,18 @@
 #include "mem-heap.h"
 #include "lp-string.h"
 
+#define LINKED_LIST_MAGIC 0x42
+
+typedef struct linked_list_header
+{
+  struct linked_list_header *next;
+  struct linked_list_header *prev;
+  uint16_t block_size;
+  uint16_t element_size;
+  uint8_t magic;
+}
+linked_list_header;
+
 #define ASSERT_LIST(list) \
 do { \
   linked_list_header *header = (linked_list_header *) list; \
@@ -27,7 +39,7 @@ do { \
 } while (0);
 
 linked_list
-linked_list_init (size_t element_size)
+linked_list_init (uint16_t element_size)
 {
   size_t size = mem_heap_recommend_allocation_size (element_size);
   linked_list list = mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
@@ -40,6 +52,7 @@ linked_list_init (size_t element_size)
   linked_list_header* header = (linked_list_header *) list;
   header->magic = LINKED_LIST_MAGIC;
   header->prev = header->next = null_list;
+  header->element_size = element_size;
   header->block_size = (uint8_t) (size - sizeof (linked_list_header));
   return list;
 }
@@ -57,42 +70,42 @@ linked_list_free (linked_list list)
 }
 
 void *
-linked_list_element (linked_list list, size_t element_size, size_t element_num)
+linked_list_element (linked_list list, uint16_t element_num)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
   linked_list raw = list + sizeof (linked_list_header);
-  if (header->block_size < element_size * (element_num + 1))
+  if (header->block_size < header->element_size * (element_num + 1))
   {
     if (header->next)
     {
-      return linked_list_element ((linked_list) header->next, element_size,
-                                  element_num - (header->block_size / element_size));
+      return linked_list_element ((linked_list) header->next,
+                                  (uint16_t) (element_num - (header->block_size / header->element_size)));
     }
     else
     {
       return NULL;
     }
   }
-  raw += element_size * element_num;
+  raw += header->element_size * element_num;
   return raw;
 }
 
 void
-linked_list_set_element (linked_list list, size_t element_size, size_t element_num, void *element)
+linked_list_set_element (linked_list list, uint16_t element_num, void *element)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
-  linked_list raw = list + sizeof (linked_list_header);
-  if (header->block_size < element_size * (element_num + 1))
+  uint8_t *raw = (uint8_t *) (header + 1);
+  if (header->block_size < header->element_size * (element_num + 1))
   {
     if (header->next == null_list)
     {
-      header->next = (linked_list_header *) linked_list_init (element_size);
+      header->next = (linked_list_header *) linked_list_init (header->element_size);
       header->next->prev = header;
     }
-    linked_list_set_element ((linked_list) header->next, element_size,
-                             element_num - (header->block_size / element_size),
+    linked_list_set_element ((linked_list) header->next,
+                             (uint16_t) (element_num - (header->block_size / header->element_size)),
                              element);
     return;
   }
@@ -100,32 +113,5 @@ linked_list_set_element (linked_list list, size_t element_size, size_t element_n
   {
     return;
   }
-  switch (element_size)
-  {
-    case 1:
-    {
-      ((uint8_t *) raw)[element_num] = *((uint8_t *) element);
-      break;
-    }
-    case 2:
-    {
-      ((uint16_t *) raw)[element_num] = *((uint16_t *) element);
-      break;
-    }
-    case 4:
-    {
-      ((uint32_t *) raw)[element_num] = *((uint32_t *) element);
-      break;
-    }
-    case 8:
-    {
-      ((uint64_t *) raw)[element_num] = *((uint64_t *) element);
-      break;
-    }
-    default:
-    {
-      __memcpy ((uint8_t*) raw + element_num * element_size, element, element_size);
-      break;
-    }
-  }
+  __memcpy (raw + element_num * header->element_size, element, header->element_size);
 }

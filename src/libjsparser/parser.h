@@ -21,6 +21,5 @@
 void parser_init (const char *, size_t, bool);
 void parser_parse_program (void);
 void parser_free (void);
-bool parser_strict_mode (void);
 
 #endif

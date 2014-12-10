@@ -18,23 +18,12 @@
 
 #include "globals.h"
 
-#define LINKED_LIST_MAGIC 0x42
-
-typedef struct linked_list_header
-{
-  struct linked_list_header *next;
-  struct linked_list_header *prev;
-  uint8_t magic;
-  uint8_t block_size;
-}
-linked_list_header;
-
 typedef uint8_t* linked_list;
 #define null_list NULL
 
-linked_list linked_list_init (size_t);
+linked_list linked_list_init (uint16_t);
 void linked_list_free (linked_list);
-void *linked_list_element (linked_list, size_t, size_t);
-void linked_list_set_element (linked_list, size_t, size_t, void *);
+void *linked_list_element (linked_list, uint16_t);
+void linked_list_set_element (linked_list, uint16_t, void *);
 
 #endif /* LINKED_LIST_H */

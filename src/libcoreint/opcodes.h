@@ -44,8 +44,10 @@ typedef uint8_t idx_t; /** index values */
 typedef enum
 {
   OPCODE_ARG_TYPE_SIMPLE, /**< ecma_simple_value_t */
-  OPCODE_ARG_TYPE_SMALLINT, /**< small integer: from -128 to 127 */
+  OPCODE_ARG_TYPE_SMALLINT, /**< small integer: from 0 to 255 */
+  OPCODE_ARG_TYPE_SMALLINT_NEGATE, /**< small integer: from -255 to -0 */
   OPCODE_ARG_TYPE_NUMBER, /**< index of number literal */
+  OPCODE_ARG_TYPE_NUMBER_NEGATE, /**< index of number literal with negation */
   OPCODE_ARG_TYPE_STRING, /**< index of string literal */
   OPCODE_ARG_TYPE_VARIABLE /**< index of variable name */
 } opcode_arg_type_operand;
@@ -270,5 +272,10 @@ OP_ARGS_LIST (GETOP_DECL)
 #undef GETOP_DECL_2
 #undef GETOP_DECL_3
 
+typedef struct
+{
+  uint8_t uids[4];
+}
+raw_opcode;
 
 #endif /* OPCODES_H */

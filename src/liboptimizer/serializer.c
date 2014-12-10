@@ -29,15 +29,27 @@ serializer_set_scope (scopes_tree new_scope)
   current_scope = new_scope;
 }
 
+static uint16_t
+hash_function (void *raw_key)
+{
+  lit_id_table_key *key = (lit_id_table_key *) raw_key;
+  JERRY_ASSERT (bytecode_data.opcodes_count > 0);
+  return (uint16_t) (key->oc + key->uid) & ((1u << CONFIG_LITERAL_HASH_TABLE_KEY_BITS) - 1);
+}
+
 void
 serializer_merge_scopes_into_bytecode (void)
 {
-  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, &bytecode_data.opcodes_count);
+  JERRY_ASSERT (bytecode_data.lit_id_hash == null_hash);
+  bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
+  bytecode_data.lit_id_hash = hash_table_init (sizeof (lit_id_table_key), sizeof (literal_index_t),
+                                               1u << CONFIG_LITERAL_HASH_TABLE_KEY_BITS, hash_function,
+                                               MEM_HEAP_ALLOC_LONG_TERM);
+  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, bytecode_data.lit_id_hash);
 }
 
-
 void
-serializer_dump_literals (const literal literals[], uint8_t literals_count)
+serializer_dump_literals (const literal literals[], literal_index_t literals_count)
 {
 #ifdef JERRY_ENABLE_PP
   if (print_opcodes)
@@ -51,18 +63,30 @@ serializer_dump_literals (const literal literals[], uint8_t literals_count)
 }
 
 void
-serializer_dump_opcode (opcode_t opcode)
+serializer_dump_op_meta (op_meta op)
 {
   JERRY_ASSERT (scopes_tree_opcodes_num (current_scope) < MAX_OPCODES);
 
-  scopes_tree_add_opcode (current_scope, opcode);
+  scopes_tree_add_op_meta (current_scope, op);
 
 #ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
-    pp_opcode ((opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), opcode, false);
+    pp_op_meta ((opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), op, false);
   }
 #endif
+}
+
+opcode_counter_t
+serializer_get_current_opcode_counter (void)
+{
+  return scopes_tree_opcodes_num (current_scope);
+}
+
+opcode_counter_t
+serializer_count_opcodes_in_subscopes (void)
+{
+  return (opcode_counter_t) (scopes_tree_count_opcodes (current_scope) - scopes_tree_opcodes_num (current_scope));
 }
 
 void
@@ -72,14 +96,14 @@ serializer_set_writing_position (opcode_counter_t oc)
 }
 
 void
-serializer_rewrite_opcode (const opcode_counter_t loc, opcode_t opcode)
+serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 {
-  scopes_tree_set_opcode (current_scope, loc, opcode);
+  scopes_tree_set_op_meta (current_scope, loc, op);
 
 #ifdef JERRY_ENABLE_PP
   if (print_opcodes)
   {
-    pp_opcode (loc, opcode, true);
+    pp_op_meta (loc, op, true);
   }
 #endif
 }
@@ -99,7 +123,15 @@ serializer_print_opcodes (void)
 
   for (loc = 0; loc < bytecode_data.opcodes_count; loc++)
   {
-    pp_opcode (loc, bytecode_data.opcodes[loc], false);
+    const op_meta opm = (op_meta)
+    {
+      .op = bytecode_data.opcodes[loc],
+      .lit_id =
+      {
+        NOT_A_LITERAL
+      }
+    };
+    pp_op_meta (loc, opm, false);
   }
 #endif
 }

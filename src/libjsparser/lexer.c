@@ -19,7 +19,7 @@
 #include "parser.h"
 #include "stack.h"
 #include "opcodes.h"
-#include "parse-error.h"
+#include "syntax-errors.h"
 #include "parser.h"
 #include "ecma-helpers.h"
 
@@ -31,7 +31,7 @@ static token empty_token =
   .loc = 0
 };
 
-static bool allow_dump_lines = false;
+static bool allow_dump_lines = false, strict_mode;
 static size_t buffer_size = 0;
 
 /* Represents the contents of a script.  */
@@ -48,7 +48,7 @@ enum
 {
   literals_global_size
 };
-STATIC_STACK (literals, uint8_t, literal)
+STATIC_STACK (literals, literal)
 
 static bool
 is_empty (token tok)
@@ -61,7 +61,7 @@ current_locus (void)
 {
   if (token_start == NULL)
   {
-    return (locus) (buffer - buffer_start - 1);
+    return (locus) (buffer - buffer_start);
   }
   else
   {
@@ -99,7 +99,7 @@ dump_current_line (void)
 }
 
 static token
-create_token (token_type type, uint8_t uid)
+create_token (token_type type, literal_index_t uid)
 {
   return (token)
   {
@@ -140,7 +140,7 @@ current_token_equals_to_literal (literal lit)
   else if (lit.type == LIT_MAGIC_STR)
   {
     const char *str = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
-    if (__strlen (str) != /* Fucking [-Werror=sign-compare] */ (size_t) (buffer - token_start))
+    if (__strlen (str) != (size_t) (buffer - token_start))
     {
       return false;
     }
@@ -201,26 +201,13 @@ convert_current_token_to_token (token_type tt)
 {
   JERRY_ASSERT (token_start);
 
-  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
+  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     const literal lit = STACK_ELEMENT (literals, i);
     if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
         && current_token_equals_to_literal (lit))
     {
-      if (tt == TOK_STRING)
-      {
-        // locus must point to the first '"'
-        return (token)
-        {
-          .type = tt,
-          .loc = current_locus () - 1,
-          .uid = i
-        };
-      }
-      else
-      {
-        return create_token (tt, i);
-      }
+      return create_token (tt, i);
     }
   }
 
@@ -233,7 +220,7 @@ convert_current_token_to_token (token_type tt)
 
   STACK_PUSH (literals, lit);
 
-  return create_token (tt, (idx_t) (STACK_SIZE (literals) - 1));
+  return create_token (tt, (literal_index_t) (STACK_SIZE (literals) - 1));
 }
 
 /* If TOKEN represents a keyword, return decoded keyword,
@@ -328,7 +315,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("interface"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_INTERFACE);
     }
@@ -343,7 +330,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("implements"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_IMPLEMENTS);
     }
@@ -354,7 +341,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("let"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_LET);
     }
@@ -373,7 +360,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("package"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_PACKAGE);
     }
@@ -384,7 +371,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("private"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_PRIVATE);
     }
@@ -395,7 +382,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("protected"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_PROTECTED);
     }
@@ -406,7 +393,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("public"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_PUBLIC);
     }
@@ -421,7 +408,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("static"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_STATIC);
     }
@@ -476,7 +463,7 @@ decode_keyword (void)
   }
   if (current_token_equals_to ("yield"))
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       return create_token (TOK_KEYWORD, KW_YIELD);
     }
@@ -491,7 +478,7 @@ decode_keyword (void)
 static token
 convert_seen_num_to_token (ecma_number_t num)
 {
-  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
+  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     const literal lit = STACK_ELEMENT (literals, i);
     if (lit.type != LIT_NUMBER)
@@ -506,27 +493,30 @@ convert_seen_num_to_token (ecma_number_t num)
 
   STACK_PUSH (literals, create_literal_from_num (num));
 
-  return create_token (TOK_NUMBER, (idx_t) (STACK_SIZE (literals) - 1));
+  return create_token (TOK_NUMBER, (literal_index_t) (STACK_SIZE (literals) - 1));
 }
 
 const literal *
 lexer_get_literals (void)
 {
   literal *data = NULL;
-  STACK_CONVERT_TO_RAW_DATA (literals, data);
+  if (STACK_SIZE (literals) > 0)
+  {
+    STACK_CONVERT_TO_RAW_DATA (literals, data);
+  }
   return data;
 }
 
-uint8_t
+literal_index_t
 lexer_get_literals_count (void)
 {
-  return STACK_SIZE (literals);
+  return (literal_index_t) STACK_SIZE (literals);
 }
 
-idx_t
+literal_index_t
 lexer_lookup_literal_uid (literal lit)
 {
-  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
+  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
     {
@@ -537,8 +527,9 @@ lexer_lookup_literal_uid (literal lit)
 }
 
 literal
-lexer_get_literal_by_id (uint8_t id)
+lexer_get_literal_by_id (literal_index_t id)
 {
+  JERRY_ASSERT (id != INVALID_LITERAL);
   JERRY_ASSERT (id < STACK_SIZE (literals));
   return STACK_ELEMENT (literals, id);
 }
@@ -552,7 +543,7 @@ lexer_get_strings_cache (void)
 void
 lexer_add_literal_if_not_present (literal lit)
 {
-  for (uint8_t i = 0; i < STACK_SIZE (literals); i++)
+  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
     {
@@ -579,8 +570,9 @@ consume_char (void)
 #define RETURN_PUNC_EX(TOK, NUM) \
   do \
   { \
+    token tok = create_token (TOK, 0); \
     buffer += NUM; \
-    return create_token (TOK, 0); \
+    return tok; \
   } \
   while (0)
 
@@ -865,7 +857,7 @@ parse_number (void)
 
   if (*token_start == '0' && tok_length != 1)
   {
-    if (parser_strict_mode ())
+    if (strict_mode)
     {
       PARSE_ERROR ("Octal tnteger literals are not allowed in strict mode", token_start - buffer_start);
     }
@@ -1431,6 +1423,12 @@ lexer_token_type_to_string (token_type tt)
 }
 
 void
+lexer_set_strict_mode (bool is_strict)
+{
+  strict_mode = is_strict;
+}
+
+void
 lexer_init (const char *source, size_t source_size, bool show_opcodes)
 {
   saved_token = prev_token = sent_token = empty_token;
@@ -1439,6 +1437,7 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   lexer_set_source (source);
   strings_cache = NULL;
   strings_cache_used_size = strings_cache_size = 0;
+  lexer_set_strict_mode (false);
 
   STACK_INIT (literals);
 }

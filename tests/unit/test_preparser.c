@@ -28,21 +28,21 @@ int
 main( int __unused argc,
       char __unused **argv)
 {
-  char program[] = {'a','=','1',';','v','a','r',' ','a',';','\0'};
+  char program[] = "a=1;var a;";
   bool is_ok;
 
-  mem_init();
+  mem_init ();
   deserializer_init ();
   parser_init (program, __strlen (program), true);
   parser_parse_program ();
   parser_free ();
 
   if (!opcodes_equal(deserialize_bytecode (), (opcode_t[]) {
-    [0] = getop_reg_var_decl (1, 2),    // var tmp1 .. tmp2;
-    [1] =     getop_var_decl (0),       // var a;
-    [2] =   getop_assignment (1, 1, 1), // tmp1 = 1: SMALLINT;
-    [3] =   getop_assignment (0, 4, 1), // a = tmp1: TYPEOF(tmp1);
-    [4] =      getop_exitval (0)        // exit 0;
+    [0] = getop_reg_var_decl (128, 129),  // var tmp128 .. tmp129;
+    [1] =     getop_var_decl (0),         // var a;
+    [2] =   getop_assignment (129, 1, 1), // tmp129 = 1: SMALLINT;
+    [3] =   getop_assignment (0, 6, 129), // a = tmp129 : TYPEOF(tmp129);
+    [4] =      getop_exitval (0)          // exit 0;
   }, 5))
   {
     is_ok = false;

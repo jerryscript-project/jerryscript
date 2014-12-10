@@ -66,104 +66,73 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "linked-list.h"
+#include "array-list.h"
 
-#define DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
+#define DEFINE_STACK_TYPE(NAME, TYPE) \
 typedef TYPE      NAME##_stack_value_type; \
-typedef DATA_TYPE NAME##_stack_data_type; \
 typedef struct \
 { \
-  linked_list blocks; \
-  DATA_TYPE length; \
-  DATA_TYPE current; \
-  DATA_TYPE block_len; \
+  array_list data; \
 } \
 NAME##_stack;
 
 #define STACK_INIT(NAME) \
 do { \
-  NAME.blocks = linked_list_init (sizeof (NAME##_stack_value_type)); \
-  NAME.current = NAME##_global_size; \
-  NAME.length = NAME.block_len = ((linked_list_header *) NAME.blocks)->block_size / sizeof (NAME##_stack_value_type); \
+  NAME.data = array_list_init (sizeof (NAME##_stack_value_type)); \
 } while (0)
 
 #define STACK_FREE(NAME) \
 do { \
-  linked_list_free (NAME.blocks); \
-  NAME.length = NAME.current = 0; \
-  NAME.blocks = NULL; \
+  array_list_free (NAME.data); \
+  NAME.data = null_list; \
 } while (0)
 
-#define DEFINE_INCREASE_STACK_SIZE(NAME, TYPE) \
-static void increase_##NAME##_stack_size (void) __unused; \
-static void \
-increase_##NAME##_stack_size (void) { \
-  linked_list_set_element (NAME.blocks, sizeof (TYPE), NAME.current, NULL); \
-  if (NAME.current >= NAME.length) \
-  { \
-    NAME.length = (NAME##_stack_data_type) (NAME.length + NAME.block_len); \
-  } \
-  NAME.current = (NAME##_stack_data_type) (NAME.current + 1); \
-}
-
-#define DEFINE_DECREASE_STACE_SIZE(NAME, TYPE) \
-static void decrease_##NAME##_stack_size (void) __unused; \
-static void \
-decrease_##NAME##_stack_size (void) { \
-  JERRY_ASSERT (NAME.current > NAME##_global_size); \
-  NAME.current = (NAME##_stack_data_type) (NAME.current - 1); \
-}
-
 #define DEFINE_STACK_ELEMENT(NAME, TYPE) \
-static TYPE NAME##_stack_element (NAME##_stack_data_type) __unused; \
-static TYPE NAME##_stack_element (NAME##_stack_data_type elem) { \
-  JERRY_ASSERT (elem < NAME.current); \
-  return *((TYPE *) linked_list_element (NAME.blocks, sizeof (TYPE), elem)); \
+static TYPE NAME##_stack_element (size_t) __unused; \
+static TYPE NAME##_stack_element (size_t elem) { \
+  return *((TYPE *) array_list_element (NAME.data, elem)); \
 }
 
 #define DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
-static void set_##NAME##_stack_element (NAME##_stack_data_type, TYPE) __unused; \
-static void set_##NAME##_stack_element (NAME##_stack_data_type elem, TYPE value) { \
-  JERRY_ASSERT (elem < NAME.current); \
-  linked_list_set_element (NAME.blocks, sizeof (TYPE), elem, &value); \
+static void set_##NAME##_stack_element (size_t, TYPE) __unused; \
+static void set_##NAME##_stack_element (size_t elem, TYPE value) { \
+  array_list_set_element (NAME.data, elem, &value); \
 }
 
 #define DEFINE_STACK_HEAD(NAME, TYPE) \
-static TYPE NAME##_stack_head (NAME##_stack_data_type) __unused; \
-static TYPE NAME##_stack_head (NAME##_stack_data_type elem) { \
-  JERRY_ASSERT (elem <= NAME.current); \
-  return *((TYPE *) linked_list_element (NAME.blocks, sizeof (TYPE), (size_t) (NAME.current - elem))); \
+static TYPE NAME##_stack_head (size_t) __unused; \
+static TYPE NAME##_stack_head (size_t elem) { \
+  return *((TYPE *) array_list_last_element (NAME.data, elem)); \
 }
 
-#define DEFINE_SET_STACK_HEAD(NAME, DATA_TYPE, TYPE) \
-static void set_##NAME##_stack_head (DATA_TYPE, TYPE) __unused; \
-static void set_##NAME##_stack_head (DATA_TYPE elem, TYPE value) { \
-  JERRY_ASSERT (elem <= NAME.current); \
-  linked_list_set_element (NAME.blocks, sizeof (TYPE), (size_t) (NAME.current - elem), &value); \
+#define DEFINE_SET_STACK_HEAD(NAME, TYPE) \
+static void set_##NAME##_stack_head (size_t, TYPE) __unused; \
+static void set_##NAME##_stack_head (size_t elem, TYPE value) { \
+  array_list_set_last_element (NAME.data, elem, &value); \
 }
 
 #define DEFINE_STACK_PUSH(NAME, TYPE) \
 static void NAME##_stack_push (TYPE) __unused; \
 static void NAME##_stack_push (TYPE value) { \
-  linked_list_set_element (NAME.blocks, sizeof (TYPE), NAME.current, &value); \
-  increase_##NAME##_stack_size (); \
+  NAME.data = array_list_append (NAME.data, &value); \
 }
 
 #define DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
 static TYPE *convert_##NAME##_to_raw_data (void) __unused; \
 static TYPE *convert_##NAME##_to_raw_data (void) { \
+  if (array_list_len (NAME.data) == 0) \
+  { \
+    return NULL; \
+  } \
   size_t size = mem_heap_recommend_allocation_size ( \
-      ((size_t) (NAME.current + 1) * sizeof (NAME##_stack_value_type))); \
+      array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
   TYPE *DATA = (TYPE *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM); \
   if (DATA == NULL) \
   { \
     __printf ("Out of memory\n"); \
     JERRY_UNREACHABLE (); \
   } \
-  __memset (DATA, 0, size); \
-  for (NAME##_stack_data_type i = 0; i < NAME.current; i++) { \
-    DATA[i] = STACK_ELEMENT (NAME, i); \
-  } \
+  __memcpy (DATA, array_list_element (NAME.data, 0), array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
   return DATA; \
 }
 
@@ -173,16 +142,16 @@ do { NAME##_stack_push (VALUE); } while (0)
 #define STACK_DROP(NAME, I) \
 do { \
   for (size_t i = 0, till = (size_t) (I); i < till; i++) { \
-    decrease_##NAME##_stack_size (); } } while (0)
+    array_list_drop_last (NAME.data); } } while (0)
 
 #define STACK_CLEAN(NAME) \
 STACK_DROP (NAME, NAME.current - NAME##_global_size);
 
 #define STACK_HEAD(NAME, I) \
-NAME##_stack_head ((NAME##_stack_data_type) (I))
+NAME##_stack_head ((size_t) (I))
 
 #define STACK_SET_HEAD(NAME, I, VALUE) \
-do { set_##NAME##_stack_head ((NAME##_stack_data_type) (I), VALUE); } while (0)
+do { set_##NAME##_stack_head ((size_t) (I), VALUE); } while (0)
 
 #define STACK_INCR_HEAD(NAME, I) \
 do { STACK_SET_HEAD (NAME, I, (NAME##_stack_value_type) (STACK_HEAD (NAME, I) + 1)); } while (0)
@@ -201,13 +170,13 @@ do { \
 } while (0)
 
 #define STACK_SIZE(NAME) \
-NAME.current
+array_list_len (NAME.data)
 
 #define STACK_ELEMENT(NAME, I) \
-NAME##_stack_element ((NAME##_stack_data_type) (I))
+NAME##_stack_element ((size_t) (I))
 
 #define STACK_SET_ELEMENT(NAME, I, VALUE) \
-do { set_##NAME##_stack_element ((NAME##_stack_data_type) I, VALUE); } while (0)
+do { set_##NAME##_stack_element ((size_t) I, VALUE); } while (0)
 
 #define STACK_CONVERT_TO_RAW_DATA(NAME, DATA) \
 do { DATA = convert_##NAME##_to_raw_data (); } while (0)
@@ -218,52 +187,48 @@ do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, 
 #define STACK_DECR_ELEMENT(NAME, I) \
 do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, I) - 1)); } while (0)
 
-#define STACK_ITERATE(NAME, FUNC, FROM) \
-do { for (NAME##_stack_data_type i = FROM; i < NAME.current; i++) { \
-  FUNC (STACK_ELEMENT (NAME, i)); \
-} } while (0)
+#define STACK_ITERATE(NAME, VAL, FROM) \
+for (size_t NAME##_i = FROM; \
+     NAME##_i < array_list_len (NAME.data); \
+     NAME##_i++) \
+{ \
+  NAME##_stack_value_type VAL = STACK_ELEMENT (NAME, NAME##_i);
 
-#define STACK_ITERATE_VARG(NAME, FUNC, FROM, ...) \
-do { for (NAME##_stack_data_type i = FROM; i < NAME.current; i++) { \
-  FUNC (STACK_ELEMENT (NAME, i), __VA_ARGS__); \
-} } while (0)
+#define STACK_ITERATE_END() \
+}
 
 #define STACK_ITERATE_VARG_SET(NAME, FUNC, FROM, ...) \
-do { for (NAME##_stack_data_type i = FROM; i < NAME.current; i++) { \
+do { for (size_t i = FROM; i < array_list_len (NAME.data); i++) { \
   STACK_SET_ELEMENT (NAME, i, FUNC (STACK_ELEMENT (NAME, i), __VA_ARGS__)); \
 } } while (0)
 
-#define STACK(NAME, DATA_TYPE, TYPE) \
-DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
+#define STACK(NAME, TYPE) \
+DEFINE_STACK_TYPE(NAME, TYPE) \
 NAME##_stack NAME; \
-DEFINE_DECREASE_STACE_SIZE (NAME, TYPE) \
-DEFINE_INCREASE_STACK_SIZE (NAME, TYPE) \
 DEFINE_STACK_ELEMENT(NAME, TYPE) \
 DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
 DEFINE_STACK_HEAD(NAME, TYPE) \
 DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-DEFINE_SET_STACK_HEAD(NAME, DATA_TYPE, TYPE) \
+DEFINE_SET_STACK_HEAD(NAME, TYPE) \
 DEFINE_STACK_PUSH(NAME, TYPE)
 
-#define STATIC_STACK(NAME, DATA_TYPE, TYPE) \
-DEFINE_STACK_TYPE(NAME, DATA_TYPE, TYPE) \
+#define STATIC_STACK(NAME, TYPE) \
+DEFINE_STACK_TYPE(NAME, TYPE) \
 static NAME##_stack NAME; \
-DEFINE_DECREASE_STACE_SIZE (NAME, TYPE) \
-DEFINE_INCREASE_STACK_SIZE (NAME, TYPE) \
 DEFINE_STACK_ELEMENT(NAME, TYPE) \
 DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
 DEFINE_STACK_HEAD(NAME, TYPE) \
 DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-DEFINE_SET_STACK_HEAD(NAME, DATA_TYPE, TYPE) \
+DEFINE_SET_STACK_HEAD(NAME, TYPE) \
 DEFINE_STACK_PUSH(NAME, TYPE)
 
 #ifndef JERRY_NDEBUG
 #define STACK_DECLARE_USAGE(NAME) \
-NAME##_stack_data_type NAME##_current = NAME.current;
+size_t NAME##_current = array_list_len (NAME.data);
 #define STACK_CHECK_USAGE(NAME) \
 do { \
-  JERRY_ASSERT (NAME.current == NAME##_current); \
-} while (0);
+  JERRY_ASSERT (array_list_len (NAME.data) == NAME##_current); \
+} while (0)
 #else
 #define STACK_DECLARE_USAGE(NAME) ;
 #define STACK_CHECK_USAGE(NAME) ;

@@ -96,7 +96,7 @@ fill_params_list (int_data_t *int_data, /**< interpreter context */
     JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
     JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 
-    const idx_t param_name_lit_idx = next_opcode.data.meta.data_1;
+    const literal_index_t param_name_lit_idx = deserialize_lit_id_by_uid (next_opcode.data.meta.data_1, int_data->pos);
 
     params_names [param_index] = ecma_new_ecma_string_from_lit_index (param_name_lit_idx);
 

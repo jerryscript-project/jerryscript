@@ -14,14 +14,13 @@
  */
 
 /**
-  This file contains macros to create and manipulate hash-tables.
-  In order to define a hash use HASH_TABLE or STATIC_HASH_TABLE macro.
-  DO NOT FORGET to define KEY_TYPE##_hash and KEY_TYPE##_equal functions, they will be used
-  for internal purposes.
-  Before using the hash initialize it by calling HASH_INIT macro.
-  To insert a key-value pair, use HASH_INSERT macro.
-  To lookup a value by the key, use HASH_LOOKUP macro.
-  After using the hash, delete it by calling HASH_FREE macro.
+  This file contains functions to create and manipulate hash-tables.
+  Before using the hash initialize it by calling hash_table_init function.
+  The function takes pointer to hash function as the last parameter.
+  URGENT: the result of the hash function must not be greater than size of the hash table.
+  To insert a key-value pair, use hash_table_insert function.
+  To lookup a value by the key, use hash_table_lookup function.
+  After using the hash, delete it by calling hash_table_free function.
 */
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H

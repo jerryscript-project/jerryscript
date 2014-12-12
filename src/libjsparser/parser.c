@@ -2417,6 +2417,11 @@ parse_statement (void)
   else
   {
     parse_expression (true);
+    skip_newlines ();
+    if (!token_is (TOK_SEMICOLON))
+    {
+      lexer_save_token (tok);
+    }
     return;
   }
 }

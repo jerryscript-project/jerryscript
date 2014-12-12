@@ -54,7 +54,12 @@ b = 'property1';
 a = { 
   'property1' : 'value1', 
   get property2 () { return 1; }, 
-  set property2 (a) { this.property3 = a * 10; }, 
+  set property2 (a) {
+    if (true)
+      this.property3 = a * 10;
+    else
+      this.property3 = a;
+  },
   set property3 (b) { this.property1 = b; }
 }; 
 assert (a.property1 === 'value1'); 

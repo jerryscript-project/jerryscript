@@ -343,6 +343,29 @@ create_op_meta_for_obj (opcode_t (*getop) (idx_t, idx_t), operand *obj)
 }
 
 static op_meta
+create_op_meta_for_native_call (operand res, operand obj)
+{
+  JERRY_ASSERT (is_native_call (obj));
+  op_meta ret;
+  switch (res.type)
+  {
+    case OPERAND_TMP:
+    {
+      const opcode_t opcode = getop_native_call (res.data.uid, name_to_native_call_id (obj), INVALID_VALUE);
+      ret = create_op_meta_000 (opcode);
+      break;
+    }
+    case OPERAND_LITERAL:
+    {
+      const opcode_t opcode = getop_native_call (LITERAL_TO_REWRITE, name_to_native_call_id (obj), INVALID_VALUE);
+      ret = create_op_meta_100 (opcode, res.data.lit_id);
+      break;
+    }
+  }
+  return ret;
+}
+
+static op_meta
 create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
 {
   op_meta ret;
@@ -355,7 +378,7 @@ create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
       JERRY_ASSERT (obj != NULL);
       if (is_native_call (*obj))
       {
-        ret = create_op_meta_for_res_and_obj (getop_native_call, res, obj);
+        ret = create_op_meta_for_native_call (*res, *obj);
       }
       else
       {

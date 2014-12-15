@@ -13,36 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef BYTECODE_DATA_H
-#define BYTECODE_DATA_H
+#ifndef LIT_ID_HASH_TABLE
+#define LIT_ID_HASH_TABLE
 
+#include "globals.h"
+#include "ecma-globals.h"
 #include "opcodes.h"
-#include "stack.h"
-#include "jerry-libc.h"
-#include "literal.h"
-#include "scopes-tree.h"
-#include "lit-id-hash-table.h"
-
-#define BLOCK_SIZE 64
 
 typedef struct
 {
-  opcode_counter_t oc;
-  idx_t uid;
-  uint8_t reserved;
+  size_t current_bucket_pos;
+  literal_index_t *raw_buckets;
+  literal_index_t **buckets;
 }
-lit_id_table_key;
+lit_id_hash_table;
 
-struct
-{
-  const literal *literals;
-  const opcode_t *opcodes;
-  lit_id_hash_table *lit_id_hash;
-  literal_index_t literals_count;
-  opcode_counter_t opcodes_count;
-}
-bytecode_data;
+lit_id_hash_table *lit_id_hash_table_init (size_t, size_t);
+void lit_id_hash_table_free (lit_id_hash_table *);
+void lit_id_hash_table_insert (lit_id_hash_table *, idx_t, opcode_counter_t, literal_index_t);
+literal_index_t lit_id_hash_table_lookup (lit_id_hash_table *, idx_t, opcode_counter_t);
 
-scopes_tree current_scope;
-
-#endif // BYTECODE_DATA_H
+#endif /* LIT_ID_HASH_TABLE */

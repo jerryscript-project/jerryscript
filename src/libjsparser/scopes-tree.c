@@ -23,7 +23,7 @@
 #define HASH_SIZE 128
 
 static hash_table lit_id_to_uid = null_hash;
-static opcode_counter_t global_oc = 0;
+static opcode_counter_t global_oc;
 static idx_t next_uid;
 
 static void
@@ -150,7 +150,7 @@ is_possible_literal (uint16_t mask, uint8_t index)
 }
 
 static void
-change_uid (op_meta *om, hash_table lit_ids, uint16_t mask)
+change_uid (op_meta *om, lit_id_hash_table *lit_ids, uint16_t mask)
 {
   for (uint8_t i = 0; i < 3; i++)
   {
@@ -164,14 +164,46 @@ change_uid (op_meta *om, hash_table lit_ids, uint16_t mask)
         if (uid == NULL)
         {
           hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
-          lit_id_table_key key = create_lit_id_table_key (next_uid, global_oc);
-          hash_table_insert (lit_ids, &key, &lit_id);
+          lit_id_hash_table_insert (lit_ids, next_uid, global_oc, lit_id);
           uid = hash_table_lookup (lit_id_to_uid, &lit_id);
           JERRY_ASSERT (uid != NULL);
           JERRY_ASSERT (*uid == next_uid);
           next_uid++;
         }
         set_uid (om, i, *uid);
+      }
+      else
+      {
+        JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+    }
+  }
+}
+
+static void
+insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
+{
+  for (uint8_t i = 0; i < 3; i++)
+  {
+    if (is_possible_literal (mask, i))
+    {
+      if (get_uid (om, i) == LITERAL_TO_REWRITE)
+      {
+        JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
+        literal_index_t lit_id = om->lit_id[i];
+        idx_t *uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+        if (uid == NULL)
+        {
+          hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
+          uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+          JERRY_ASSERT (uid != NULL);
+          JERRY_ASSERT (*uid == next_uid);
+          next_uid++;
+        }
       }
       else
       {
@@ -192,7 +224,7 @@ extract_op_meta (scopes_tree tree, opcode_counter_t opc_index)
 }
 
 static opcode_t
-generate_opcode (scopes_tree tree, opcode_counter_t opc_index, hash_table lit_ids)
+generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table *lit_ids)
 {
   start_new_block_if_necessary ();
   op_meta *om = extract_op_meta (tree, opc_index);
@@ -335,8 +367,206 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, hash_table lit_id
   return om->op;
 }
 
+static idx_t
+count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
+{
+  start_new_block_if_necessary ();
+  idx_t current_uid = next_uid;
+  op_meta *om = extract_op_meta (tree, opc_index);
+  switch (om->op.op_idx)
+  {
+    case OPCODE (prop_getter):
+    case OPCODE (prop_setter):
+    case OPCODE (delete_prop):
+    case OPCODE (b_shift_left):
+    case OPCODE (b_shift_right):
+    case OPCODE (b_shift_uright):
+    case OPCODE (b_and):
+    case OPCODE (b_or):
+    case OPCODE (b_xor):
+    case OPCODE (equal_value):
+    case OPCODE (not_equal_value):
+    case OPCODE (equal_value_type):
+    case OPCODE (not_equal_value_type):
+    case OPCODE (less_than):
+    case OPCODE (greater_than):
+    case OPCODE (less_or_equal_than):
+    case OPCODE (greater_or_equal_than):
+    case OPCODE (instanceof):
+    case OPCODE (in):
+    case OPCODE (addition):
+    case OPCODE (substraction):
+    case OPCODE (division):
+    case OPCODE (multiplication):
+    case OPCODE (remainder):
+    {
+      insert_uids_to_lit_id_map (om, 0x111);
+      break;
+    }
+    case OPCODE (call_n):
+    case OPCODE (native_call):
+    case OPCODE (construct_n):
+    case OPCODE (func_expr_n):
+    case OPCODE (delete_var):
+    case OPCODE (typeof):
+    case OPCODE (b_not):
+    case OPCODE (logical_not):
+    case OPCODE (post_incr):
+    case OPCODE (post_decr):
+    case OPCODE (pre_incr):
+    case OPCODE (pre_decr):
+    case OPCODE (unary_plus):
+    case OPCODE (unary_minus):
+    {
+      insert_uids_to_lit_id_map (om, 0x110);
+      break;
+    }
+    case OPCODE (assignment):
+    {
+      switch (om->op.data.assignment.type_value_right)
+      {
+        case OPCODE_ARG_TYPE_SIMPLE:
+        case OPCODE_ARG_TYPE_SMALLINT:
+        case OPCODE_ARG_TYPE_SMALLINT_NEGATE:
+        {
+          insert_uids_to_lit_id_map (om, 0x100);
+          break;
+        }
+        case OPCODE_ARG_TYPE_NUMBER:
+        case OPCODE_ARG_TYPE_NUMBER_NEGATE:
+        case OPCODE_ARG_TYPE_STRING:
+        case OPCODE_ARG_TYPE_VARIABLE:
+        {
+          insert_uids_to_lit_id_map (om, 0x101);
+          break;
+        }
+      }
+      break;
+    }
+    case OPCODE (func_decl_n):
+    case OPCODE (array_decl):
+    case OPCODE (obj_decl):
+    case OPCODE (this):
+    case OPCODE (with):
+    case OPCODE (throw):
+    case OPCODE (is_true_jmp_up):
+    case OPCODE (is_true_jmp_down):
+    case OPCODE (is_false_jmp_up):
+    case OPCODE (is_false_jmp_down):
+    case OPCODE (var_decl):
+    case OPCODE (retval):
+    {
+      insert_uids_to_lit_id_map (om, 0x100);
+      break;
+    }
+    case OPCODE (exitval):
+    case OPCODE (ret):
+    case OPCODE (try):
+    case OPCODE (jmp_up):
+    case OPCODE (jmp_down):
+    case OPCODE (nop):
+    case OPCODE (reg_var_decl):
+    {
+      insert_uids_to_lit_id_map (om, 0x000);
+      break;
+    }
+    case OPCODE (meta):
+    {
+      switch (om->op.data.meta.type)
+      {
+        case OPCODE_META_TYPE_VARG_PROP_DATA:
+        case OPCODE_META_TYPE_VARG_PROP_GETTER:
+        case OPCODE_META_TYPE_VARG_PROP_SETTER:
+        {
+          insert_uids_to_lit_id_map (om, 0x011);
+          break;
+        }
+        case OPCODE_META_TYPE_THIS_ARG:
+        case OPCODE_META_TYPE_VARG:
+        case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
+        {
+          insert_uids_to_lit_id_map (om, 0x010);
+          break;
+        }
+        case OPCODE_META_TYPE_UNDEFINED:
+        case OPCODE_META_TYPE_END_WITH:
+        case OPCODE_META_TYPE_FUNCTION_END:
+        case OPCODE_META_TYPE_CATCH:
+        case OPCODE_META_TYPE_FINALLY:
+        case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+        case OPCODE_META_TYPE_STRICT_CODE:
+        {
+          insert_uids_to_lit_id_map (om, 0x000);
+          break;
+        }
+      }
+      break;
+    }
+  }
+  return (idx_t) (next_uid - current_uid);
+}
+
+/* Before filling literal indexes 'hash' table we shall initiate it with number of neccesary literal indexes.
+   Since bytecode is divided into blocks and id of the block is a part of hash key, we shall divide bytecode
+   into blocks and count unique literal indexes used in each block. */
+size_t
+scopes_tree_count_literals_in_blocks (scopes_tree tree)
+{
+  assert_tree (tree);
+  size_t result = 0;
+  if (lit_id_to_uid != null_hash)
+  {
+    hash_table_free (lit_id_to_uid);
+    lit_id_to_uid = null_hash;
+  }
+  next_uid = 0;
+  global_oc = 0;
+
+  assert_tree (tree);
+  opcode_counter_t opc_index;
+  bool header = true;
+  for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
+  {
+    op_meta *om = extract_op_meta (tree, opc_index);
+    if (om->op.op_idx != OPCODE (var_decl)
+        && om->op.op_idx != OPCODE (meta) && !header)
+    {
+      break;
+    }
+    if (om->op.op_idx == OPCODE (reg_var_decl))
+    {
+      header = false;
+    }
+    result += count_new_literals_in_opcode (tree, opc_index);
+  }
+  for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
+  {
+    result += scopes_tree_count_literals_in_blocks (*(scopes_tree *) linked_list_element (tree->t.children, child_id));
+  }
+  for (; opc_index < tree->opcodes_num; opc_index++)
+  {
+    result += count_new_literals_in_opcode (tree, opc_index);
+  }
+
+  return result;
+}
+
+/* This function performs functions hoisting.
+
+   Each scope consists of four parts:
+   1) Header with 'use strict' marker and reg_var_decl opcode
+   2) Variable declarations, dumped by the preparser
+   3) Function declarations
+   4) Computational code
+
+   Header and var_decls are dumped first,
+   then we shall recursively dump function declaration,
+   and finally, other opcodes.
+
+   For each opcodes block (size of block is defined in bytecode-data.h)
+   literal indexes 'hash' table is filled. */
 static void
-merge_subscopes (scopes_tree tree, opcode_t *data, hash_table lit_ids)
+merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
 {
   assert_tree (tree);
   JERRY_ASSERT (data);
@@ -369,12 +599,25 @@ merge_subscopes (scopes_tree tree, opcode_t *data, hash_table lit_ids)
   }
 }
 
+/* Postparser.
+   Init literal indexes 'hash' table.
+   Reorder function declarations.
+   Rewrite opcodes' temporary uids with their keys in literal indexes 'hash' table. */
 opcode_t *
-scopes_tree_raw_data (scopes_tree tree, hash_table lit_ids)
+scopes_tree_raw_data (scopes_tree tree, lit_id_hash_table *lit_ids)
 {
+  JERRY_ASSERT (lit_ids);
   assert_tree (tree);
-  opcode_counter_t opcodes_count = scopes_tree_count_opcodes (tree);
-  size_t size = ((size_t) (opcodes_count + 1) * sizeof (opcode_t)); // +1 for valgrind
+  if (lit_id_to_uid != null_hash)
+  {
+    hash_table_free (lit_id_to_uid);
+    lit_id_to_uid = null_hash;
+  }
+  next_uid = 0;
+  global_oc = 0;
+
+  /* Dump bytecode and fill literal indexes 'hash' table. */
+  size_t size = ((size_t) (scopes_tree_count_opcodes (tree) + 1) * sizeof (opcode_t)); // +1 for valgrind
   opcode_t *opcodes = (opcode_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
   __memset (opcodes, 0, size);
   merge_subscopes (tree, opcodes, lit_ids);

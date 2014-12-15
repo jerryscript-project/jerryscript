@@ -19,17 +19,6 @@
 
 const ecma_char_t *strings_buffer;
 
-lit_id_table_key
-create_lit_id_table_key (idx_t id, opcode_counter_t oc)
-{
-  return (lit_id_table_key)
-  {
-    .uid = id,
-    .oc = oc / BLOCK_SIZE,
-    .reserved = 0
-  };
-}
-
 void
 deserializer_set_strings_buffer (const ecma_char_t *s)
 {
@@ -47,19 +36,11 @@ deserialize_literal_by_id (literal_index_t id)
 literal_index_t
 deserialize_lit_id_by_uid (uint8_t id, opcode_counter_t oc)
 {
-  // __printf ("uid: %d, oc: %d\n", id, oc);
-  // if (id == 2 && oc == 64)
-  // {
-  //   __printf ("HIT!\n");
-  // }
   if (bytecode_data.lit_id_hash == null_hash)
   {
     return INVALID_LITERAL;
   }
-  lit_id_table_key key = create_lit_id_table_key (id, oc);
-  void *res = hash_table_lookup (bytecode_data.lit_id_hash, &key);
-  JERRY_ASSERT (res != NULL);
-  return *(literal_index_t *) res;
+  return lit_id_hash_table_lookup (bytecode_data.lit_id_hash, id, oc);
 }
 
 const void *
@@ -108,9 +89,9 @@ deserializer_free (void)
   {
     mem_heap_free_block ((uint8_t *) strings_buffer);
   }
-  if (bytecode_data.lit_id_hash != null_hash)
+  if (bytecode_data.lit_id_hash != NULL)
   {
-    hash_table_free (bytecode_data.lit_id_hash);
+    lit_id_hash_table_free (bytecode_data.lit_id_hash);
   }
   if (bytecode_data.literals != NULL)
   {

@@ -29,22 +29,13 @@ serializer_set_scope (scopes_tree new_scope)
   current_scope = new_scope;
 }
 
-static uint16_t
-hash_function (void *raw_key)
-{
-  lit_id_table_key *key = (lit_id_table_key *) raw_key;
-  JERRY_ASSERT (bytecode_data.opcodes_count > 0);
-  return (uint16_t) (key->oc + key->uid) & ((1u << CONFIG_LITERAL_HASH_TABLE_KEY_BITS) - 1);
-}
-
 void
 serializer_merge_scopes_into_bytecode (void)
 {
   JERRY_ASSERT (bytecode_data.lit_id_hash == null_hash);
   bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
-  bytecode_data.lit_id_hash = hash_table_init (sizeof (lit_id_table_key), sizeof (literal_index_t),
-                                               1u << CONFIG_LITERAL_HASH_TABLE_KEY_BITS, hash_function,
-                                               MEM_HEAP_ALLOC_LONG_TERM);
+  bytecode_data.lit_id_hash = lit_id_hash_table_init (scopes_tree_count_literals_in_blocks (current_scope),
+                                                      bytecode_data.opcodes_count);
   bytecode_data.opcodes = scopes_tree_raw_data (current_scope, bytecode_data.lit_id_hash);
 }
 

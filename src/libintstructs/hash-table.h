@@ -25,7 +25,6 @@
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
-#include "linked-list.h"
 #include "mem-heap.h"
 
 typedef void* hash_table;

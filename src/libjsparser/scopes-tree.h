@@ -22,6 +22,7 @@
 #include "ecma-globals.h"
 #include "hash-table.h"
 #include "opcodes.h"
+#include "lit-id-hash-table.h"
 
 #define NOT_A_LITERAL (INVALID_LITERAL - 1)
 
@@ -50,8 +51,9 @@ void scopes_tree_add_op_meta (scopes_tree, op_meta);
 void scopes_tree_set_op_meta (scopes_tree, opcode_counter_t, op_meta);
 void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
 op_meta scopes_tree_op_meta (scopes_tree, opcode_counter_t);
+size_t scopes_tree_count_literals_in_blocks (scopes_tree);
 opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
-opcode_t *scopes_tree_raw_data (scopes_tree, hash_table);
+opcode_t *scopes_tree_raw_data (scopes_tree, lit_id_hash_table *);
 void scopes_tree_set_strict_mode (scopes_tree, bool);
 bool scopes_tree_strict_mode (scopes_tree);
 

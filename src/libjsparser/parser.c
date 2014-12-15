@@ -2662,7 +2662,14 @@ preparse_scope (bool is_global)
     skip_newlines ();
   }
 
-  lexer_seek (start_loc);
+  if (start_loc != tok.loc)
+  {
+    lexer_seek (start_loc);
+  }
+  else
+  {
+    lexer_save_token (tok);
+  }
 }
 
 /* source_element_list

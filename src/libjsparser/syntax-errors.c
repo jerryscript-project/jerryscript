@@ -63,7 +63,7 @@ syntax_add_prop_name (operand op, prop_type pt)
 }
 
 void
-syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc)
+syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __unused)
 {
   if (STACK_SIZE (props) - STACK_TOP (U8) < 2)
   {
@@ -144,7 +144,7 @@ void syntax_add_varg (operand op)
 }
 
 static void
-emit_error_on_eval_and_arguments (operand op, locus loc)
+emit_error_on_eval_and_arguments (operand op, locus loc __unused)
 {
   if (op.type == OPERAND_LITERAL)
   {
@@ -169,7 +169,7 @@ syntax_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, 
 
 /* 13.1, 15.3.2 */
 void
-syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc)
+syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __unused)
 {
   if (STACK_SIZE (props) - STACK_TOP (U8) < 2 || !is_strict)
   {
@@ -199,7 +199,7 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc)
 }
 
 void
-syntax_check_delete (bool is_strict, locus loc)
+syntax_check_delete (bool is_strict, locus loc __unused)
 {
   if (is_strict)
   {

@@ -20,6 +20,7 @@
 #include "opcodes-dumper.h"
 #include "lexer.h"
 
+#ifndef JERRY_NDEBUG
 #define PARSE_ERROR(MESSAGE, LOCUS) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
@@ -63,6 +64,19 @@
   __printf ("SORRY, Unimplemented: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
   __exit (-1); \
 } while (0)
+#else /* JERRY_NDEBUG */
+#define PARSE_ERROR(MESSAGE, LOCUS) do { \
+  __exit (-1); \
+} while (0)
+#define PARSE_WARN(MESSAGE, LOCUS) do { \
+} while (0)
+#define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
+  __exit (-1); \
+} while (0)
+#define PARSE_SORRY(MESSAGE, LOCUS) do { \
+  __exit (-1); \
+} while (0)
+#endif /* JERRY_NDEBUG */
 
 typedef enum
 {

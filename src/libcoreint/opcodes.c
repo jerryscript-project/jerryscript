@@ -933,7 +933,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         {
           prop_desc.is_value_defined = true;
           prop_desc.value = ecma_get_completion_value_value (value_for_prop_desc);
-          
+
           prop_desc.is_writable_defined = true;
           prop_desc.is_writable = true;
 
@@ -1665,7 +1665,7 @@ calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, /**< first idx */
   counter = oc_idx_1;
   counter = (opcode_counter_t) (counter << (sizeof (idx_t) * JERRY_BITSINBYTE));
   counter = (opcode_counter_t) (counter | oc_idx_2);
-  
+
   return counter;
 } /* calc_meta_opcode_counter_from_meta_data */
 

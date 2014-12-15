@@ -48,22 +48,18 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
                          ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /** right value */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (num_left_value, ecma_op_to_number (left_value), ret_value);
-  ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
-
-  ecma_number_t *left_p, *right_p;
-  left_p = ecma_get_number_from_completion_value (num_left_value);
-  right_p = ecma_get_number_from_completion_value (num_right_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
   ecma_number_t* res_p = int_data->tmp_num_p;
 
-  int32_t left_int32 = ecma_number_to_int32 (*left_p);
-  // int32_t right_int32 = ecma_number_to_int32 (*right_p);
+  int32_t left_int32 = ecma_number_to_int32 (num_left);
+  // int32_t right_int32 = ecma_number_to_int32 (num_right);
 
-  uint32_t left_uint32 = ecma_number_to_uint32 (*left_p);
-  uint32_t right_uint32 = ecma_number_to_uint32 (*right_p);
+  uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
+  uint32_t right_uint32 = ecma_number_to_uint32 (num_right);
 
   switch (op)
   {
@@ -108,8 +104,8 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
 
-  ECMA_FINALIZE (num_right_value);
-  ECMA_FINALIZE (num_left_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_right);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_left);
 
   return ret_value;
 } /* do_number_bitwise_logic */

@@ -58,15 +58,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_abs (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -79,7 +75,7 @@ ecma_builtin_math_object_abs (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_abs */
@@ -178,15 +174,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_cos (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_infinity (arg_num))
@@ -232,7 +224,7 @@ ecma_builtin_math_object_cos (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_cos */
@@ -250,15 +242,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_exp (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -286,7 +274,7 @@ ecma_builtin_math_object_exp (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_exp */
@@ -320,15 +308,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_log (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num))
   {
@@ -353,7 +337,7 @@ ecma_builtin_math_object_log (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_log */
@@ -382,14 +366,10 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __unused, /**< 'this' argume
        arg_index < args_number;
        arg_index++)
   {
-    ECMA_TRY_CATCH (arg_num_value,
-                    ecma_op_to_number (args[arg_index]),
-                    ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
     if (!is_just_convert)
     {
-      ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
-
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
         ret_num = arg_num;
@@ -431,7 +411,7 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __unused, /**< 'this' argume
       }
     }
 
-    ECMA_FINALIZE (arg_num_value);
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
     if (ecma_is_completion_value_throw (ret_value))
     {
@@ -473,14 +453,10 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __unused, /**< 'this' argume
        arg_index < args_number;
        arg_index++)
   {
-    ECMA_TRY_CATCH (arg_num_value,
-                    ecma_op_to_number (args[arg_index]),
-                    ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
     if (!is_just_convert)
     {
-      ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
-
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
         ret_num = arg_num;
@@ -522,7 +498,7 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __unused, /**< 'this' argume
       }
     }
 
-    ECMA_FINALIZE (arg_num_value);
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
     if (ecma_is_completion_value_throw (ret_value))
     {
@@ -554,19 +530,12 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __unused, /**< 'this' argume
                               ecma_value_t arg1, /**< first routine's argument */
                               ecma_value_t arg2) /**< second routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg1_num_value,
-                  ecma_op_to_number (arg1),
-                  ret_value);
-  ECMA_TRY_CATCH (arg2_num_value,
-                  ecma_op_to_number (arg2),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t x = *ecma_get_number_from_completion_value (arg1_num_value);
-  const ecma_number_t y = *ecma_get_number_from_completion_value (arg2_num_value);
 
   if (ecma_number_is_nan (y)
       || (ecma_number_is_nan (x)
@@ -775,8 +744,8 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg2_num_value);
-  ECMA_FINALIZE (arg1_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (y);
+  ECMA_OP_TO_NUMBER_FINALIZE (x);
 
   return ret_value;
 } /* ecma_builtin_math_object_pow */
@@ -835,15 +804,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_round (ecma_value_t this_arg __unused, /**< 'this' argument */
                                 ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_zero (arg_num)
@@ -875,7 +840,7 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __unused, /**< 'this' argu
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_round */
@@ -893,15 +858,11 @@ static ecma_completion_value_t
 ecma_builtin_math_object_sin (ecma_value_t this_arg __unused, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
 
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_infinity (arg_num))
@@ -947,7 +908,7 @@ ecma_builtin_math_object_sin (ecma_value_t this_arg __unused, /**< 'this' argume
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_sin */
@@ -965,13 +926,10 @@ static ecma_completion_value_t
 ecma_builtin_math_object_sqrt (ecma_value_t this_arg __unused, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (arg_num_value,
-                  ecma_op_to_number (arg),
-                  ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  const ecma_number_t arg_num = *ecma_get_number_from_completion_value (arg_num_value);
   ecma_number_t ret_num;
 
   if (ecma_number_is_nan (arg_num)
@@ -1000,7 +958,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t this_arg __unused, /**< 'this' argum
 
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
-  ECMA_FINALIZE (arg_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_math_object_sqrt */

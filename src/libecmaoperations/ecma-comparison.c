@@ -59,7 +59,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                || (is_x_string && is_y_string)
                                || (is_x_object && is_y_object));
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (is_types_equal)
   {
@@ -339,7 +339,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                      ecma_value_t y, /**< second operand */
                                      bool left_first) /**< 'LeftFirst' flag */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ecma_value_t first_converted_value = left_first ? x : y;
   ecma_value_t second_converted_value = left_first ? y : x;
@@ -365,54 +365,54 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     // 3.
 
     // a.
-    ECMA_TRY_CATCH(nx, ecma_op_to_number (ecma_get_completion_value_value (px)), ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (nx,
+                                 ecma_get_completion_value_value (px),
+                                 ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (ny,
+                                 ecma_get_completion_value_value (py),
+                                 ret_value);
 
     // b.
-    ECMA_TRY_CATCH(ny, ecma_op_to_number (ecma_get_completion_value_value (py)), ret_value);
-
-    ecma_number_t* num_x_p = ecma_get_number_from_completion_value (nx);
-    ecma_number_t* num_y_p = ecma_get_number_from_completion_value (ny);
-
-    if (ecma_number_is_nan (*num_x_p)
-        || ecma_number_is_nan (*num_y_p))
+    if (ecma_number_is_nan (nx)
+        || ecma_number_is_nan (ny))
     {
       // c., d.
       ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
-      bool is_x_less_than_y = (*num_x_p < *num_y_p);
+      bool is_x_less_than_y = (nx < ny);
 
 #ifndef JERRY_NDEBUG
       bool is_x_less_than_y_check;
 
-      if (*num_x_p == *num_y_p
-          || (ecma_number_is_zero (*num_x_p)
-              && ecma_number_is_zero (*num_y_p)))
+      if (nx == ny
+          || (ecma_number_is_zero (nx)
+              && ecma_number_is_zero (ny)))
       {
         // e., f., g.
         is_x_less_than_y_check = false;
       }
-      else if (ecma_number_is_infinity (*num_x_p)
-               && !ecma_number_is_negative (*num_x_p))
+      else if (ecma_number_is_infinity (nx)
+               && !ecma_number_is_negative (nx))
       {
         // h.
         is_x_less_than_y_check = false;
       }
-      else if (ecma_number_is_infinity (*num_y_p)
-               && !ecma_number_is_negative (*num_y_p))
+      else if (ecma_number_is_infinity (ny)
+               && !ecma_number_is_negative (ny))
       {
         // i.
         is_x_less_than_y_check = true;
       }
-      else if (ecma_number_is_infinity (*num_y_p)
-               && ecma_number_is_negative (*num_y_p))
+      else if (ecma_number_is_infinity (ny)
+               && ecma_number_is_negative (ny))
       {
         // j.
         is_x_less_than_y_check = false;
       }
-      else if (ecma_number_is_infinity (*num_x_p)
-               && ecma_number_is_negative (*num_x_p))
+      else if (ecma_number_is_infinity (nx)
+               && ecma_number_is_negative (nx))
       {
         // k.
         is_x_less_than_y_check = true;
@@ -420,14 +420,14 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       else
       {
         // l.
-        JERRY_ASSERT (!ecma_number_is_nan (*num_x_p)
-                      && !ecma_number_is_infinity (*num_x_p));
-        JERRY_ASSERT (!ecma_number_is_nan (*num_y_p)
-                      && !ecma_number_is_infinity (*num_y_p));
-        JERRY_ASSERT (!(ecma_number_is_zero (*num_x_p)
-                        && ecma_number_is_zero (*num_y_p)));
+        JERRY_ASSERT (!ecma_number_is_nan (nx)
+                      && !ecma_number_is_infinity (nx));
+        JERRY_ASSERT (!ecma_number_is_nan (ny)
+                      && !ecma_number_is_infinity (ny));
+        JERRY_ASSERT (!(ecma_number_is_zero (nx)
+                        && ecma_number_is_zero (ny)));
 
-        if (*num_x_p < *num_y_p)
+        if (nx < ny)
         {
           is_x_less_than_y_check = true;
         }
@@ -444,8 +444,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                                      ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
 
-    ECMA_FINALIZE(ny);
-    ECMA_FINALIZE(nx);
+    ECMA_OP_TO_NUMBER_FINALIZE (ny);
+    ECMA_OP_TO_NUMBER_FINALIZE (nx);
   }
   else
   { // 4.

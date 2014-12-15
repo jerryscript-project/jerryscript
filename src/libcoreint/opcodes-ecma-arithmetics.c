@@ -48,42 +48,38 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /** right value */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (num_left_value, ecma_op_to_number (left_value), ret_value);
-  ECMA_TRY_CATCH (num_right_value, ecma_op_to_number (right_value), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-  ecma_number_t *left_p, *right_p, *res_p;
-  left_p = ecma_get_number_from_completion_value (num_left_value);
-  right_p = ecma_get_number_from_completion_value (num_right_value);
-
-  res_p = int_data->tmp_num_p;
+  ecma_number_t *res_p = int_data->tmp_num_p;
 
   switch (op)
   {
     case number_arithmetic_addition:
     {
-      *res_p = ecma_number_add (*left_p, *right_p);
+      *res_p = ecma_number_add (num_left, num_right);
       break;
     }
     case number_arithmetic_substraction:
     {
-      *res_p = ecma_number_substract (*left_p, *right_p);
+      *res_p = ecma_number_substract (num_left, num_right);
       break;
     }
     case number_arithmetic_multiplication:
     {
-      *res_p = ecma_number_multiply (*left_p, *right_p);
+      *res_p = ecma_number_multiply (num_left, num_right);
       break;
     }
     case number_arithmetic_division:
     {
-      *res_p = ecma_number_divide (*left_p, *right_p);
+      *res_p = ecma_number_divide (num_left, num_right);
       break;
     }
     case number_arithmetic_remainder:
     {
-      *res_p = ecma_op_number_remainder (*left_p, *right_p);
+      *res_p = ecma_op_number_remainder (num_left, num_right);
       break;
     }
   }
@@ -92,8 +88,8 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
 
-  ECMA_FINALIZE (num_right_value);
-  ECMA_FINALIZE (num_left_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_right);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_left);
 
   return ret_value;
 } /* do_number_arithmetic */
@@ -319,17 +315,21 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t var_idx = opdata.data.remainder.var_left;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
-  ECMA_TRY_CATCH (num_value, ecma_op_to_number (ecma_get_completion_value_value (var_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
+                               ecma_get_completion_value_value (var_value),
+                               ret_value);
 
-  ecma_number_t *var_p = ecma_get_number_from_completion_value (num_value);
+  ecma_number_t *tmp_p = int_data->tmp_num_p;
+
+  *tmp_p = num_var_value;
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (var_p));
+                                  ecma_make_number_value (tmp_p));
 
-  ECMA_FINALIZE (num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);
 
   int_data->pos++;
@@ -352,22 +352,21 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t var_idx = opdata.data.remainder.var_left;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
-  ECMA_TRY_CATCH (num_value, ecma_op_to_number (ecma_get_completion_value_value (var_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
+                               ecma_get_completion_value_value (var_value),
+                               ret_value);
 
-  ecma_number_t *var_p, *res_p;
-  var_p = ecma_get_number_from_completion_value (num_value);
+  ecma_number_t *tmp_p = int_data->tmp_num_p;
 
-  res_p = int_data->tmp_num_p;
-
-  *res_p = ecma_number_negate (*var_p);
+  *tmp_p = ecma_number_negate (num_var_value);
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (res_p));
+                                  ecma_make_number_value (tmp_p));
 
-  ECMA_FINALIZE (num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);
 
   int_data->pos++;

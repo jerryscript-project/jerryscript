@@ -101,18 +101,16 @@ static ecma_completion_value_t
 ecma_builtin_global_object_is_nan (ecma_value_t this_arg __unused, /**< this argument */
                                    ecma_value_t arg) /**< routine's first argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (num_value, ecma_op_to_number (arg), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_get_number_from_completion_value (num_value);
-
-  bool is_nan = ecma_number_is_nan (*num_p);
+  bool is_nan = ecma_number_is_nan (arg_num);
 
   ret_value = ecma_make_simple_completion_value (is_nan ? ECMA_SIMPLE_VALUE_TRUE
                                                         : ECMA_SIMPLE_VALUE_FALSE);
 
-  ECMA_FINALIZE (num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_global_object_is_nan */
@@ -130,19 +128,17 @@ static ecma_completion_value_t
 ecma_builtin_global_object_is_finite (ecma_value_t this_arg __unused, /**< this argument */
                                       ecma_value_t arg) /**< routine's first argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (num_value, ecma_op_to_number (arg), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_get_number_from_completion_value (num_value);
-
-  bool is_finite = !(ecma_number_is_nan (*num_p)
-                     || ecma_number_is_infinity (*num_p));
+  bool is_finite = !(ecma_number_is_nan (arg_num)
+                     || ecma_number_is_infinity (arg_num));
 
   ret_value = ecma_make_simple_completion_value (is_finite ? ECMA_SIMPLE_VALUE_TRUE
                                                            : ECMA_SIMPLE_VALUE_FALSE);
 
-  ECMA_FINALIZE (num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
   return ret_value;
 } /* ecma_builtin_global_object_is_finite */

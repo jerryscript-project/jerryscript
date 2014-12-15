@@ -70,14 +70,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 
        arg_index < args_number;
        arg_index++)
   {
-    ECMA_TRY_CATCH (arg_num_value,
-                    ecma_op_to_number (args[arg_index]),
-                    ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
-    JERRY_ASSERT (ecma_is_value_number (ecma_get_completion_value_value (arg_num_value)));
-    ecma_number_t *arg_num_p = ecma_get_number_from_completion_value (arg_num_value);
-
-    uint32_t uint32_char_code = ecma_number_to_uint32 (*arg_num_p);
+    uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
     uint16_t uint16_char_code = (uint16_t) uint32_char_code;
 
 #if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
@@ -93,7 +88,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 
     ret_zt_str_p [arg_index] = (ecma_char_t) uint16_char_code;
 #endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
-    ECMA_FINALIZE (arg_num_value);
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
     if (ecma_is_completion_value_throw (ret_value))
     {

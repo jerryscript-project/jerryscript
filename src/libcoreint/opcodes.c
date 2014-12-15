@@ -197,17 +197,18 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.pre_incr.dst;
   const idx_t incr_var_idx = opdata.data.pre_incr.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, incr_var_idx, true), ret_value);
-  ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
+                               ecma_get_completion_value_value (old_value),
+                               ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
 
-  ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
-  *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_add (old_num, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
 
@@ -222,7 +223,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
                                                                    new_num_value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
-  ECMA_FINALIZE (old_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (old_num);
   ECMA_FINALIZE (old_value);
 
   int_data->pos++;
@@ -245,17 +246,18 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.pre_decr.dst;
   const idx_t decr_var_idx = opdata.data.pre_decr.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, decr_var_idx, true), ret_value);
-  ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
+                               ecma_get_completion_value_value (old_value),
+                               ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
 
-  ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
-  *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_substract (old_num, ECMA_NUMBER_ONE);
 
   ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
 
@@ -270,7 +272,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
                                                                    new_num_value);
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
-  ECMA_FINALIZE (old_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (old_num);
   ECMA_FINALIZE (old_value);
 
   int_data->pos++;
@@ -293,30 +295,34 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.post_incr.dst;
   const idx_t incr_var_idx = opdata.data.post_incr.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, incr_var_idx, true), ret_value);
-  ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
+                               ecma_get_completion_value_value (old_value),
+                               ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
 
-  ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
-  *new_num_p = ecma_number_add (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_add (old_num, ECMA_NUMBER_ONE);
 
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
                                   incr_var_idx,
                                   ecma_make_number_value (new_num_p));
 
+  ecma_number_t *tmp_p = int_data->tmp_num_p;
+  *tmp_p = old_num;
+
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data, int_data->pos,
                                                                    dst_var_idx,
-                                                                   ecma_get_completion_value_value (old_num_value));
+                                                                   ecma_make_number_value (tmp_p));
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
-  ECMA_FINALIZE (old_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (old_num);
   ECMA_FINALIZE (old_value);
 
   int_data->pos++;
@@ -339,30 +345,34 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.post_decr.dst;
   const idx_t decr_var_idx = opdata.data.post_decr.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, decr_var_idx, true), ret_value);
-  ECMA_TRY_CATCH (old_num_value, ecma_op_to_number (ecma_get_completion_value_value (old_value)), ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
+                               ecma_get_completion_value_value (old_value),
+                               ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
 
-  ecma_number_t* old_num_p = ecma_get_number_from_completion_value (old_num_value);
-  *new_num_p = ecma_number_substract (*old_num_p, ECMA_NUMBER_ONE);
+  *new_num_p = ecma_number_substract (old_num, ECMA_NUMBER_ONE);
 
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
                                   decr_var_idx,
                                   ecma_make_number_value (new_num_p));
 
+  ecma_number_t *tmp_p = int_data->tmp_num_p;
+  *tmp_p = old_num;
+
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data, int_data->pos,
                                                                    dst_var_idx,
-                                                                   ecma_get_completion_value_value (old_num_value));
+                                                                   ecma_make_number_value (tmp_p));
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
-  ECMA_FINALIZE (old_num_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (old_num);
   ECMA_FINALIZE (old_value);
 
   int_data->pos++;

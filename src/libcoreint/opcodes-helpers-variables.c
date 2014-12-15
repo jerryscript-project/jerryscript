@@ -132,16 +132,24 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
 
   if (is_reg_variable (int_data, var_idx))
   {
+    ret_value = ecma_make_empty_completion_value ();
+
     ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
 
-    if (!ecma_is_value_empty (reg_value))
+    if (ecma_is_value_number (reg_value)
+        && ecma_is_value_number (value))
     {
-      ecma_free_value (reg_value, true);
+      *ecma_get_number_from_value (reg_value) = *ecma_get_number_from_value (value);
     }
+    else
+    {
+      if (!ecma_is_value_empty (reg_value))
+      {
+        ecma_free_value (reg_value, true);
+      }
 
-    int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value (value, true);
-
-    ret_value = ecma_make_empty_completion_value ();
+      int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value (value, true);
+    }
   }
   else
   {

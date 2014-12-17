@@ -412,7 +412,7 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
  * @return pointer to allocated memory block - if allocation is successful,\n
  *         NULL - if there is not enough memory.
  */
-uint8_t*
+void*
 mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to allocate in bytes */
                       mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
@@ -429,7 +429,7 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
   else
   {
     JERRY_ASSERT (alloc_term == MEM_HEAP_ALLOC_SHORT_TERM);
-    
+
     block_p = mem_heap.last_block_p;
     direction = MEM_DIRECTION_PREV;
   }
@@ -566,16 +566,18 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
  *         false - if there is not enough memory in front of the block.
  */
 bool
-mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space of the block to resize */
+mem_heap_try_resize_block (void *ptr, /**< pointer to beginning of data space of the block to resize */
                            size_t size_in_bytes) /**< new block size */
 {
-  /* checking that ptr points to the heap */
-  JERRY_ASSERT(ptr >= mem_heap.heap_start
-               && ptr <= mem_heap.heap_start + mem_heap.heap_size);
+  uint8_t *uint8_ptr = (uint8_t*) ptr;
+
+  /* checking that uint8_ptr points to the heap */
+  JERRY_ASSERT(uint8_ptr >= mem_heap.heap_start
+               && uint8_ptr <= mem_heap.heap_start + mem_heap.heap_size);
 
   mem_check_heap ();
 
-  mem_block_header_t *block_p = (mem_block_header_t*) ptr - 1;
+  mem_block_header_t *block_p = (mem_block_header_t*) uint8_ptr - 1;
 
   VALGRIND_DEFINED_STRUCT(block_p);
 
@@ -681,7 +683,7 @@ mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space
 
     if (size_in_bytes >= block_p->allocated_bytes)
     {
-      VALGRIND_UNDEFINED_SPACE (ptr + block_p->allocated_bytes, size_in_bytes - block_p->allocated_bytes);
+      VALGRIND_UNDEFINED_SPACE (uint8_ptr + block_p->allocated_bytes, size_in_bytes - block_p->allocated_bytes);
     }
 
     block_p->allocated_bytes = (mem_heap_offset_t) size_in_bytes;
@@ -700,15 +702,17 @@ mem_heap_try_resize_block (uint8_t *ptr, /**< pointer to beginning of data space
  * Free the memory block.
  */
 void
-mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of the block */
+mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the block */
 {
-  /* checking that ptr points to the heap */
-  JERRY_ASSERT(ptr >= mem_heap.heap_start
-               && ptr <= mem_heap.heap_start + mem_heap.heap_size);
+  uint8_t *uint8_ptr = (uint8_t*) ptr;
+
+  /* checking that uint8_ptr points to the heap */
+  JERRY_ASSERT(uint8_ptr >= mem_heap.heap_start
+               && uint8_ptr <= mem_heap.heap_start + mem_heap.heap_size);
 
   mem_check_heap ();
 
-  mem_block_header_t *block_p = (mem_block_header_t*) ptr - 1;
+  mem_block_header_t *block_p = (mem_block_header_t*) uint8_ptr - 1;
 
   VALGRIND_DEFINED_STRUCT(block_p);
 
@@ -717,7 +721,7 @@ mem_heap_free_block (uint8_t *ptr) /**< pointer to beginning of data space of th
 
   MEM_HEAP_STAT_FREE_BLOCK (block_p);
 
-  VALGRIND_NOACCESS_SPACE(ptr, block_p->allocated_bytes);
+  VALGRIND_NOACCESS_SPACE(uint8_ptr, block_p->allocated_bytes);
 
   /* checking magic nums that are neighbour to data space */
   JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);

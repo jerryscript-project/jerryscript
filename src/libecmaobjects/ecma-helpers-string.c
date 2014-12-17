@@ -35,6 +35,11 @@
 #define ECMA_STRING_MAX_CONCATENATION_LENGTH (CONFIG_ECMA_STRING_MAX_CONCATENATION_LENGTH)
 
 /**
+ * Limit for magic string length
+ */
+#define ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT 32
+
+/**
  * The length should be representable with int32_t.
  */
 JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH) ==
@@ -45,10 +50,12 @@ JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH)
  */
 static ecma_length_t ecma_magic_string_lengths [ECMA_MAGIC_STRING__COUNT];
 
+#ifndef JERRY_NDEBUG
 /**
  * Maximum length among lengths of magic strings
  */
 static ecma_length_t ecma_magic_string_max_length;
+#endif /* !JERRY_NDEBUG */
 
 static void
 ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p,
@@ -266,7 +273,9 @@ ecma_strings_init (void)
 {
   /* Initializing magic strings information */
 
+#ifndef JERRY_NDEBUG
   ecma_magic_string_max_length = 0;
+#endif /* !JERRY_NDEBUG */
 
   for (ecma_magic_string_id_t id = 0;
        id < ECMA_MAGIC_STRING__COUNT;
@@ -274,7 +283,11 @@ ecma_strings_init (void)
   {
     ecma_magic_string_lengths [id] = ecma_zt_string_length (ecma_get_magic_string_zt (id));
 
+#ifndef JERRY_NDEBUG
     ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_lengths [id]);
+
+    JERRY_ASSERT (ecma_magic_string_max_length <= ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT);
+#endif /* !JERRY_NDEBUG */
   }
 } /* ecma_strings_init */
 
@@ -1600,7 +1613,7 @@ ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, /**< zero-terminated st
     if (ecma_compare_zt_strings (zt_string_p, ecma_get_magic_string_zt (id)))
     {
       *out_id_p = id;
-      
+
       return true;
     }
   }
@@ -1623,7 +1636,7 @@ static bool
 ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
                                ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
 {
-  ecma_char_t zt_string_buffer [ecma_magic_string_max_length + 1];
+  ecma_char_t zt_string_buffer [ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT + 1];
 
   ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
   JERRY_ASSERT (copied > 0);
@@ -1651,7 +1664,7 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
     return true;
   }
   else if (string_p->container == ECMA_STRING_CONTAINER_CONCATENATION
-           && ecma_string_get_length (string_p) <= ecma_magic_string_max_length)
+           && ecma_string_get_length (string_p) <= ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT)
   {
     return ecma_is_string_magic_longpath (string_p, out_id_p);
   }
@@ -1662,7 +1675,7 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
      * should return ecma-string with ECMA_STRING_CONTAINER_MAGIC_STRING
      * container type if new ecma-string's content is equal to one of magic strings.
      */
-    JERRY_ASSERT (ecma_string_get_length (string_p) > ecma_magic_string_max_length
+    JERRY_ASSERT (ecma_string_get_length (string_p) > ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT
                   || !ecma_is_string_magic_longpath (string_p, out_id_p));
 
     return false;

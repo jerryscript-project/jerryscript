@@ -154,4 +154,9 @@
 // #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
+/**
+ * Maximum number of arguments in the engine's command line (i.e. maximum argc value)
+ */
+#define CONFIG_JERRY_MAX_COMMAND_LINE_ARGS 64
+
 #endif /* !CONFIG_H */

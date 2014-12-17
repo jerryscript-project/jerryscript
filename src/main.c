@@ -138,7 +138,12 @@ int
 main (int argc __unused,
       char **argv __unused)
 {
-  const char *file_names[argc];
+  if (argc > CONFIG_JERRY_MAX_COMMAND_LINE_ARGS)
+  {
+    jerry_exit (ERR_OUT_OF_MEMORY);
+  }
+
+  const char *file_names[CONFIG_JERRY_MAX_COMMAND_LINE_ARGS];
   bool parse_only = false, show_opcodes = false;
   bool print_mem_stats = false;
   int i;

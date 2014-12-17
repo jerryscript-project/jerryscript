@@ -79,6 +79,36 @@ extern void mem_heap_stats_reset_peak (void);
 #endif /* MEM_STATS */
 
 /**
+ * Define a local array variable and allocate memory for the array on the heap.
+ *
+ * If requested number of elements is zero, assign NULL to the variable.
+ *
+ * Warning:
+ *         if there is not enough memory on the heap, shutdown engine with ERR_OUT_OF_MEMORY.
+ */
+#define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
+{ \
+  type *var_name = ((number > 0) \
+                    ? mem_heap_alloc_block ((number) * sizeof (type), MEM_HEAP_ALLOC_SHORT_TERM) \
+                    : NULL); \
+  \
+  if (var_name == NULL) \
+  { \
+    jerry_exit (ERR_OUT_OF_MEMORY); \
+  } \
+
+/**
+ * Free the previously defined local array variable, freeing corresponding block on the heap,
+ * if it was allocated (i.e. if the array's size was non-zero).
+ */
+#define MEM_FINALIZE_LOCAL_ARRAY(var_name) \
+  if (var_name != NULL) \
+  { \
+    mem_heap_free_block (var_name); \
+  } \
+}
+
+/**
  * @}
  * @}
  */

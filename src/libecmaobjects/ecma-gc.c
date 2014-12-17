@@ -581,7 +581,8 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
     }
   }
 
-  ecma_object_t *gen_last_obj_p[ max_gen_to_collect + 1 ];
+  JERRY_ASSERT (max_gen_to_collect <= ECMA_GC_GEN_COUNT);
+  ecma_object_t *gen_last_obj_p[ ECMA_GC_GEN_COUNT ];
 #ifndef JERRY_NDEBUG
   __memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
 #endif /* !JERRY_NDEBUG */

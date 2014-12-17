@@ -517,25 +517,21 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
     }
   }
 
-  const uint32_t tries_num = 2;
-  ecma_magic_string_id_t function_names [tries_num];
-
-  if (hint == ECMA_PREFERRED_TYPE_STRING)
+  for (uint32_t i = 1; i <= 2; i++)
   {
-    function_names[0] = ECMA_MAGIC_STRING_TO_STRING_UL;
-    function_names[1] = ECMA_MAGIC_STRING_VALUE_OF_UL;
-  }
-  else
-  {
-    JERRY_ASSERT (hint == ECMA_PREFERRED_TYPE_NUMBER);
+    ecma_magic_string_id_t function_name_magic_string_id;
 
-    function_names[0] = ECMA_MAGIC_STRING_VALUE_OF_UL;
-    function_names[1] = ECMA_MAGIC_STRING_TO_STRING_UL;
-  }
+    if ((i == 1 && hint == ECMA_PREFERRED_TYPE_STRING)
+        || (i == 2 && hint == ECMA_PREFERRED_TYPE_NUMBER))
+    {
+      function_name_magic_string_id = ECMA_MAGIC_STRING_TO_STRING_UL;
+    }
+    else
+    {
+      function_name_magic_string_id = ECMA_MAGIC_STRING_VALUE_OF_UL;
+    }
 
-  for (uint32_t i = 0; i < tries_num; i++)
-  {
-    ecma_string_t *function_name_p = ecma_get_magic_string (function_names [i]);
+    ecma_string_t *function_name_p = ecma_get_magic_string (function_name_magic_string_id);
 
     ecma_completion_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
 

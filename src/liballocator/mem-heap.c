@@ -409,8 +409,8 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
  * It is supposed, that all short-term allocation is used during relatively short discrete sessions.
  * After end of the session all short-term allocated regions are supposed to be freed.
  *
- * @return pointer to allocated memory block - if allocation is successful,\n
- *         NULL - if there is not enough memory.
+ * @return pointer to allocated memory block - if allocation is successful,
+ *         NULL - if requested region size is zero or if there is not enough memory.
  */
 void*
 mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to allocate in bytes */
@@ -420,6 +420,11 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
   mem_direction_t direction;
 
   mem_check_heap ();
+
+  if (size_in_bytes == 0)
+  {
+    return NULL;
+  }
 
   if (alloc_term == MEM_HEAP_ALLOC_LONG_TERM)
   {

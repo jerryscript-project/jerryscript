@@ -54,7 +54,7 @@
 #ifdef __TARGET_HOST
 # define CONFIG_MEM_HEAP_AREA_SIZE (64 * 1024)
 #elif defined (__TARGET_MCU)
-# define CONFIG_MEM_HEAP_AREA_SIZE (8 * 1024)
+# define CONFIG_MEM_HEAP_AREA_SIZE (16 * 1024)
 #else /* !__TARGET_HOST && !__TARGET_MCU */
 # error "!__TARGET_HOST && !__TARGET_MCU"
 #endif /* !__TARGET_HOST && !__TARGET_MCU */

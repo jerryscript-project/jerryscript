@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#pragma GCC optimize "O0"
+
 #include "actuators.h"
 #include "common-io.h"
 #include "jerry-libc.h"

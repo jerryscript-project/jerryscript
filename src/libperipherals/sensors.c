@@ -13,4 +13,6 @@
  * limitations under the License.
  */
 
+#pragma GCC optimize "O0"
+
 #include "sensors.h"

@@ -23,15 +23,24 @@
 #include "mem-heap.h"
 #include "mem-poolman.h"
 
+#define MEM_ALLOCATOR_INTERNAL
+
+#include "mem-allocator-internal.h"
+
+/**
+ * Check that heap area is less or equal than 64K.
+ */
+JERRY_STATIC_ASSERT(MEM_HEAP_AREA_SIZE <= 64 * 1024);
+
 /**
  * Area for heap
  */
 static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__ ((aligned (MEM_ALIGNMENT)));
 
 /**
- * Check that heap area is less or equal than 64K.
+ * The 'try to give memory back' callback
  */
-JERRY_STATIC_ASSERT(MEM_HEAP_AREA_SIZE <= 64 * 1024);
+static mem_try_give_memory_back_callback_t mem_try_give_memory_back_callback = NULL;
 
 /**
  * Initialize memory allocators.
@@ -125,6 +134,42 @@ mem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress
 
   return (void*) int_ptr;
 } /* mem_decompress_pointer */
+
+/**
+ * Register specified 'try to give memory back' callback routine
+ */
+void
+mem_register_a_try_give_memory_back_callback (mem_try_give_memory_back_callback_t callback) /* callback routine */
+{
+  /* Currently only one callback is supported */
+  JERRY_ASSERT (mem_try_give_memory_back_callback == NULL);
+
+  mem_try_give_memory_back_callback = callback;
+} /* mem_register_a_try_give_memory_back_callback */
+
+/**
+ * Unregister specified 'try to give memory back' callback routine
+ */
+void
+mem_unregister_a_try_give_memory_back_callback (mem_try_give_memory_back_callback_t callback) /* callback routine */
+{
+  /* Currently only one callback is supported */
+  JERRY_ASSERT (mem_try_give_memory_back_callback == callback);
+
+  mem_try_give_memory_back_callback = NULL;
+} /* mem_unregister_a_try_give_memory_back_callback */
+
+/**
+ * Run 'try to give memory back' callbacks with specified severity
+ */
+void
+mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t severity) /**< severity of
+                                                                                              the request */
+{
+  JERRY_ASSERT (mem_try_give_memory_back_callback != NULL);
+
+  mem_try_give_memory_back_callback (severity);
+} /* mem_run_try_to_give_memory_back_callbacks */
 
 #ifndef JERRY_NDEBUG
 /**

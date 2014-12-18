@@ -89,13 +89,7 @@ extern void mem_heap_stats_reset_peak (void);
 #define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM); \
-  \
-  if (number > 0 \
-      && var_name == NULL) \
-  { \
-    jerry_exit (ERR_OUT_OF_MEMORY); \
-  }
+  type *var_name = mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM);
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,

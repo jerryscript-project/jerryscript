@@ -15,8 +15,10 @@
 
 #include "ecma-builtins.h"
 #include "ecma-helpers.h"
+#include "ecma-gc.h"
 #include "ecma-lcache.h"
 #include "ecma-operations.h"
+#include "mem-allocator.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -34,6 +36,8 @@ ecma_init (void)
   ecma_strings_init ();
   ecma_init_builtins ();
   ecma_lcache_init ();
+
+  mem_register_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
 } /* ecma_init */
 
 /**
@@ -42,8 +46,11 @@ ecma_init (void)
 void
 ecma_finalize (void)
 {
-  ecma_lcache_invalidate_all ();
+  mem_unregister_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
+
   ecma_finalize_builtins ();
+  ecma_lcache_invalidate_all ();
+  ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 } /* ecma_finalize */
 
 /**

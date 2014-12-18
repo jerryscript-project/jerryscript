@@ -106,13 +106,7 @@ mem_pools_alloc_longpath (void)
   {
     mem_pool_state_t *pool_state = (mem_pool_state_t*) mem_heap_alloc_block (MEM_POOL_SIZE, MEM_HEAP_ALLOC_LONG_TERM);
 
-    if (pool_state == NULL)
-    {
-      /**
-       * Not enough space for new pool.
-       */
-      return NULL;
-    }
+    JERRY_ASSERT (pool_state != NULL);
 
     mem_pool_init (pool_state, MEM_POOL_SIZE);
 

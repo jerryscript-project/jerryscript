@@ -79,7 +79,8 @@ interp_mem_get_stats (mem_heap_stats_t *out_heap_stats_p,
     return;
   }
 
-  ecma_gc_run (ECMA_GC_GEN_2);
+  /* Requesting to free as much memory as we currently can */
+  ecma_try_to_give_back_some_memory (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
 
   if (reset_peak_before)
   {
@@ -367,7 +368,6 @@ run_int (void)
     ecma_deref_object (glob_obj_p);
     ecma_deref_object (lex_env_p);
     ecma_finalize ();
-    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
 
     return ecma_is_value_true (ecma_get_completion_value_value (completion));
   }

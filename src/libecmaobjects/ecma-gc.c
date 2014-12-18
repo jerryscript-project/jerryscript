@@ -526,8 +526,6 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run collection on */
 {
-  ecma_lcache_invalidate_all ();
-
   JERRY_ASSERT(max_gen_to_collect < ECMA_GC_GEN_COUNT);
 
   /* clearing visited flags for all objects of generations to be processed */
@@ -663,6 +661,36 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   }
 #endif /* !JERRY_NDEBUG */
 } /* ecma_gc_run */
+
+/**
+ * Try to free some memory (depending on severity).
+ */
+void
+ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity) /**< severity of
+                                                                                  *   the request */
+{
+  if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
+  {
+    ecma_gc_run (ECMA_GC_GEN_0);
+  }
+  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM)
+  {
+    ecma_gc_run (ECMA_GC_GEN_1);
+  }
+  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
+  {
+    ecma_gc_run (ECMA_GC_GEN_2);
+  }
+  else
+  {
+    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+
+    /* Freeing as much memory as we currently can */
+    ecma_lcache_invalidate_all ();
+
+    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+  }
+} /* ecma_try_to_give_back_some_memory */
 
 /**
  * @}

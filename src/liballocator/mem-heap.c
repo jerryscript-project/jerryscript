@@ -30,6 +30,10 @@
 #include "mem-config.h"
 #include "mem-heap.h"
 
+#define MEM_ALLOCATOR_INTERNAL
+
+#include "mem-allocator-internal.h"
+
 /*
  * Valgrind-related options and headers
  */
@@ -402,29 +406,22 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
 /**
  * Allocation of memory region.
  *
- * To reduce heap fragmentation there are two allocation modes - short-term and long-term.
- *
- * If allocation is short-term then the beginning of the heap is preferred, else - the end of the heap.
- *
- * It is supposed, that all short-term allocation is used during relatively short discrete sessions.
- * After end of the session all short-term allocated regions are supposed to be freed.
+ * See also:
+ *          mem_heap_alloc_block
  *
  * @return pointer to allocated memory block - if allocation is successful,
- *         NULL - if requested region size is zero or if there is not enough memory.
+ *         NULL - if there is not enough memory.
  */
-void*
-mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to allocate in bytes */
-                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+static
+void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size of region to allocate in bytes */
+                                     mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   mem_block_header_t *block_p;
   mem_direction_t direction;
 
-  mem_check_heap ();
+  JERRY_ASSERT (size_in_bytes != 0);
 
-  if (size_in_bytes == 0)
-  {
-    return NULL;
-  }
+  mem_check_heap ();
 
   if (alloc_term == MEM_HEAP_ALLOC_LONG_TERM)
   {
@@ -553,15 +550,65 @@ mem_heap_alloc_block (size_t size_in_bytes,           /**< size of region to all
 
   VALGRIND_NOACCESS_STRUCT(block_p);
 
-  mem_check_heap ();
-
   /* return data space beginning address */
   uint8_t *data_space_p = (uint8_t*) (block_p + 1);
   JERRY_ASSERT((uintptr_t) data_space_p % MEM_ALIGNMENT == 0);
 
   VALGRIND_UNDEFINED_SPACE(data_space_p, size_in_bytes);
 
+  mem_check_heap ();
+
   return data_space_p;
+} /* mem_heap_alloc_block_internal */
+
+/**
+ * Allocation of memory region.
+ *
+ * To reduce heap fragmentation there are two allocation modes - short-term and long-term.
+ *
+ * If allocation is short-term then the beginning of the heap is preferred, else - the end of the heap.
+ *
+ * It is supposed, that all short-term allocation is used during relatively short discrete sessions.
+ * After end of the session all short-term allocated regions are supposed to be freed.
+ *
+ * @return pointer to allocated memory block - if allocation is successful,
+ *         NULL - if requested region size is zero or if there is not enough memory.
+ */
+void*
+mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to allocate in bytes */
+                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+{
+  if (unlikely (size_in_bytes == 0))
+  {
+    return NULL;
+  }
+  else
+  {
+    void *data_space_p = mem_heap_alloc_block_internal (size_in_bytes, alloc_term);
+
+    if (likely (data_space_p != NULL))
+    {
+      return data_space_p;
+    }
+
+    for (mem_try_give_memory_back_severity_t severity = MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
+         severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL;
+         severity++)
+    {
+      mem_run_try_to_give_memory_back_callbacks (severity);
+
+      data_space_p = mem_heap_alloc_block_internal (size_in_bytes, alloc_term);
+
+      if (data_space_p != NULL)
+      {
+        return data_space_p;
+      }
+    }
+
+    JERRY_ASSERT (data_space_p == NULL);
+
+    jerry_exit (ERR_OUT_OF_MEMORY);
+  }
 } /* mem_heap_alloc_block */
 
 /**

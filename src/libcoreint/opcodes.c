@@ -643,7 +643,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   int_data->pos++;
 
   bool this_arg_var_idx_set = false;
-  idx_t this_arg_var_idx;
+  idx_t this_arg_var_idx = INVALID_VALUE;
   idx_t args_number;
 
   opcode_t next_opcode = read_opcode (int_data->pos);

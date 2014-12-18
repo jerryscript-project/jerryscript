@@ -130,7 +130,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     ecma_object_t *map_p = ecma_op_create_object_object_noarg ();
 
     // 11.c
-    ecma_string_t *formal_params[formal_params_number];
+    MEM_DEFINE_LOCAL_ARRAY (formal_params, formal_params_number, ecma_string_t *);
 
     JERRY_ASSERT (formal_params_iter_p->current_value_p == NULL);
     uint32_t param_index;
@@ -184,6 +184,8 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
         ecma_deref_ecma_string (indx_string_p);
       }
     }
+
+    MEM_FINALIZE_LOCAL_ARRAY (formal_params);
 
     // 12.
     ecma_set_object_type (obj_p, ECMA_OBJECT_TYPE_ARGUMENTS);

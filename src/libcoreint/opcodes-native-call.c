@@ -43,9 +43,9 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
   JERRY_STATIC_ASSERT (OPCODE_NATIVE_CALL__COUNT < (1u << (sizeof (native_call_id_idx) * JERRY_BITSINBYTE)));
 
-  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
-
   ecma_completion_value_t ret_value = 0;
+
+  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
@@ -167,6 +167,8 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
   {
     ecma_free_value (arg_values[arg_index], true);
   }
+
+  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
   return ret_value;
 } /* opfunc_native_call */

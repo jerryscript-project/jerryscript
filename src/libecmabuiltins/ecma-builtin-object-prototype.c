@@ -84,11 +84,13 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
     ecma_free_completion_value (obj_this);
   }
 
+  ecma_string_t *ret_string_p;
+
   /* Building string "[object #type#]" where type is 'Undefined',
      'Null' or one of possible object's classes.
      The string with null character is maximum 19 characters long. */
   const ssize_t buffer_size = 19;
-  ecma_char_t str_buffer[buffer_size];
+  MEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, ecma_char_t);
 
   const ecma_char_t *left_square_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_LEFT_SQUARE_CHAR);
   const ecma_char_t *object_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_OBJECT);
@@ -121,7 +123,9 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
 
   JERRY_ASSERT (buffer_size_left >= 0);
 
-  ecma_string_t *ret_string_p = ecma_new_ecma_string (str_buffer);
+  ret_string_p = ecma_new_ecma_string (str_buffer);
+
+  MEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 
   return ecma_make_normal_completion_value (ecma_make_string_value (ret_string_p));
 } /* ecma_builtin_object_prototype_object_to_string */

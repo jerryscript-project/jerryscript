@@ -123,7 +123,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
         ecma_string_t *msg_string_p = ecma_get_string_from_completion_value (msg_to_str_completion);
 
         ecma_string_t *ret_str_p;
-        
+
         if (ecma_string_get_length (name_string_p) == 0)
         {
           ret_str_p = ecma_copy_or_ref_ecma_string (msg_string_p);
@@ -143,12 +143,12 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
                                ecma_zt_string_length (space_zt_magic_string_p));
 
           const ssize_t buffer_size = (len + 1) * (ssize_t) sizeof (ecma_char_t);
-          ssize_t bytes, buffer_size_left = buffer_size;
+          ssize_t buffer_size_left = buffer_size;
 
-          ecma_char_t ret_str_buffer [buffer_size];
+          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, buffer_size, ecma_char_t);
           ecma_char_t *ret_str_buffer_p = ret_str_buffer;
 
-          bytes = ecma_string_to_zt_string (name_string_p, ret_str_buffer_p, buffer_size_left);
+          ssize_t bytes = ecma_string_to_zt_string (name_string_p, ret_str_buffer_p, buffer_size_left);
           JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
 
           buffer_size_left -= bytes - 1 /* null character */;
@@ -176,6 +176,8 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
           *ret_str_buffer_p = ECMA_CHAR_NULL;
 
           ret_str_p = ecma_new_ecma_string (ret_str_buffer);
+
+          MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }
 
         ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
@@ -184,7 +186,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argu
       ecma_free_completion_value (msg_to_str_completion);
 
       ECMA_FINALIZE (msg_get_completion);
-      
+
       ecma_deref_ecma_string (message_magic_string_p);
     }
 

@@ -500,13 +500,16 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_string_t *params_names[params_number + 1 /* length of array should not be zero */];
+  ecma_completion_value_t ret_value;
+
+  MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
+
   fill_params_list (int_data, params_number, params_names);
 
-  ecma_completion_value_t ret_value = function_declaration (int_data,
-                                                            function_name_lit_id,
-                                                            params_names,
-                                                            params_number);
+  ret_value = function_declaration (int_data,
+                                    function_name_lit_id,
+                                    params_names,
+                                    params_number);
 
   for (uint32_t param_index = 0;
        param_index < params_number;
@@ -514,6 +517,8 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
   {
     ecma_deref_ecma_string (params_names[param_index]);
   }
+
+  MEM_FINALIZE_LOCAL_ARRAY (params_names);
 
   return ret_value;
 } /* opfunc_func_decl_n */
@@ -537,13 +542,18 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   const ecma_length_t params_number = opdata.data.func_expr_n.arg_list;
   const bool is_named_func_expr = (function_name_lit_idx != INVALID_VALUE);
 
-  ecma_string_t *params_names[params_number + 1 /* length of array should not be zero */];
+  ecma_completion_value_t ret_value;
+
+  opcode_counter_t function_code_end_oc;
+
+  MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
+
   fill_params_list (int_data, params_number, params_names);
 
   bool is_strict = int_data->is_strict;
 
-  const opcode_counter_t function_code_end_oc = (opcode_counter_t) (
-    read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data) + int_data->pos);
+  function_code_end_oc = (opcode_counter_t) (read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END,
+                                                                       int_data) + int_data->pos);
   int_data->pos++;
 
   opcode_t next_opcode = read_opcode (int_data->pos);
@@ -580,9 +590,9 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                               is_strict,
                                                               int_data->pos);
 
-  ecma_completion_value_t ret_value = set_variable_value (int_data, lit_oc,
-                                                          dst_var_idx,
-                                                          ecma_make_object_value (func_obj_p));
+  ret_value = set_variable_value (int_data, lit_oc,
+                                  dst_var_idx,
+                                  ecma_make_object_value (func_obj_p));
 
   if (is_named_func_expr)
   {
@@ -601,6 +611,8 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   {
     ecma_deref_ecma_string (params_names[param_index]);
   }
+
+  MEM_FINALIZE_LOCAL_ARRAY (params_names);
 
   int_data->pos = function_code_end_oc;
 
@@ -653,7 +665,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     args_number = args_number_idx;
   }
 
-  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
+  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
@@ -716,6 +728,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     ecma_free_value (arg_values[arg_index], true);
   }
 
+  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+
   ECMA_FINALIZE (func_value);
 
   return ret_value;
@@ -743,7 +757,7 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
                   get_variable_value (int_data, constructor_name_lit_idx, false),
                   ret_value);
 
-  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
+  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   int_data->pos++;
 
@@ -791,6 +805,8 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
     ecma_free_value (arg_values[arg_index], true);
   }
 
+  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+
   ECMA_FINALIZE (constructor_value);
 
   return ret_value;
@@ -816,7 +832,7 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ecma_value_t arg_values[args_number + 1 /* length of array should not be zero */];
+  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
@@ -853,6 +869,8 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
   {
     ecma_free_value (arg_values[arg_index], true);
   }
+
+  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
   return ret_value;
 } /* opfunc_array_decl */

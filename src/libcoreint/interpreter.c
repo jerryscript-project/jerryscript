@@ -110,7 +110,7 @@ interp_mem_stats_context_enter (int_data_t *int_data_p,
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
   indent_prefix [interp_mem_stats_print_indentation] = '|';
   indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
-  
+
   int_data_p->context_peak_allocated_heap_bytes = 0;
   int_data_p->context_peak_waste_heap_bytes = 0;
   int_data_p->context_peak_pools_count = 0;
@@ -145,7 +145,7 @@ interp_mem_stats_context_exit (int_data_t *int_data_p,
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
   indent_prefix [interp_mem_stats_print_indentation] = '|';
   indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
-  
+
   mem_heap_stats_t heap_stats_context_exit;
   mem_pools_stats_t pools_stats_context_exit;
 
@@ -212,7 +212,7 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
   indent_prefix [interp_mem_stats_print_indentation] = '|';
   indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
-  
+
   interp_mem_get_stats (out_heap_stats_p,
                         out_pools_stats_p,
                         true, false);
@@ -242,7 +242,7 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
   indent_prefix [interp_mem_stats_print_indentation] = '|';
   indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
-  
+
   mem_heap_stats_t heap_stats_after;
   mem_pools_stats_t pools_stats_after;
 
@@ -455,10 +455,10 @@ run_int_from_pos (opcode_counter_t start_pos,
 
   const uint32_t regs_num = (uint32_t) (max_reg_num - min_reg_num + 1);
 
-  ecma_value_t regs[ regs_num ];
+  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
   /* memseting with zero initializes each 'register' to empty value */
-  __memset (regs, 0, sizeof (regs));
+  __memset (regs, 0, regs_num * sizeof (ecma_value_t));
   JERRY_ASSERT (ecma_is_value_empty (regs[0]));
 
   int_data_t int_data;
@@ -495,6 +495,8 @@ run_int_from_pos (opcode_counter_t start_pos,
 #ifdef MEM_STATS
   interp_mem_stats_context_exit (&int_data, start_pos);
 #endif /* MEM_STATS */
+
+  MEM_FINALIZE_LOCAL_ARRAY (regs);
 
   return completion;
 }

@@ -781,7 +781,7 @@ typedef struct
 
     /** Compressed pointer to an ecma_number_t */
     unsigned int number_cp : ECMA_POINTER_FIELD_WIDTH;
-    
+
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;
 

@@ -43,7 +43,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
 {
   ecma_object_t *object_p = ecma_alloc_object ();
   object_p->container = 0;
-  
+
   ecma_init_gc_info (object_p);
 
   object_p->container = jrt_set_bit_field_value (object_p->container,

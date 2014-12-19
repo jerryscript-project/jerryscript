@@ -1679,7 +1679,7 @@ parse_plain_for (void)
   is_true_jmp_up %body
 
   */
-  
+
   dump_jump_to_end_for_rewrite ();
 
   // Skip till body
@@ -1967,7 +1967,7 @@ parse_while_statement (void)
   lexer_seek (cond_loc);
   const operand cond = parse_expression_inside_parens ();
   dump_continue_iterations_check (cond);
-  
+
   dumper_set_break_target ();
 
   rewrite_breaks ();

@@ -193,7 +193,7 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
       }
     }
   }
-  
+
   STACK_DROP (props, (uint8_t) (STACK_SIZE (props) - STACK_TOP (U8)));
   STACK_DROP (U8, 1);
 }

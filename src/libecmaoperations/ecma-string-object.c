@@ -147,7 +147,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
   {
     ecma_number_t index = ecma_string_to_number (property_name_p);
     uint32_index = ecma_number_to_uint32 (index);
-    
+
     ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (uint32_index);
 
     bool are_equal = ecma_compare_ecma_strings (to_str_p, property_name_p);

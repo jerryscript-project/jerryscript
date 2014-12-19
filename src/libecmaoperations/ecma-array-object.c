@@ -341,7 +341,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 break;
               }
             }
-            
+
             if (!reduce_succeeded)
             {
               ret_value = ecma_reject (is_throw);

@@ -2188,7 +2188,7 @@ rewrite_continues (void)
     serializer_rewrite_op_meta (continue_oc, continue_op_meta);
   }
   STACK_ITERATE_END();
-  
+
   STACK_DROP (continue_targets, 1);
   STACK_DROP (continues, STACK_SIZE (continues) - STACK_TOP (U8));
   STACK_DROP (U8, 1);

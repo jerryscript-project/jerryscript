@@ -941,7 +941,7 @@ ecma_number_to_zt_string_calc_number_params (ecma_number_t num, /**< ecma-number
   JERRY_ASSERT (!ecma_number_is_nan (num));
   JERRY_ASSERT (!ecma_number_is_zero (num));
   JERRY_ASSERT (!ecma_number_is_infinity (num));
-  
+
   ecma_number_t num_m1 = ecma_number_get_prev (num);
   ecma_number_t num_p1 = ecma_number_get_next (num);
 

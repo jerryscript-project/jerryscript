@@ -63,7 +63,7 @@ typedef enum
   KW_PRIVATE,
   KW_PROTECTED,
   KW_PUBLIC,
-  
+
   KW_RETURN,
   KW_STATIC,
   KW_SUPER,

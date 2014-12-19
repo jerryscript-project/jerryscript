@@ -580,7 +580,7 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
 
   int32_t min = 0;
   int32_t max = array_length - 1;
-  
+
   while (min <= max)
   {
     int32_t mid = (min + max) / 2;

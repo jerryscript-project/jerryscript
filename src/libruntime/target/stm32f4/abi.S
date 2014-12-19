@@ -24,7 +24,7 @@ __aeabi_llsl:
   mov r0, #0
 
   bx lr
-  
+
   1:
   // r1 <<= r2;
   lsl r1, r2
@@ -76,7 +76,7 @@ __aeabi_llsr:
   mov r1, #0
 
   bx lr
-  
+
   1:
   // r0 >>= r2
   lsr r0, r2
@@ -90,7 +90,7 @@ __aeabi_llsr:
 
   // r1 >>= r2
   lsr r1, r2
-  
+
   bx lr
 
   2:

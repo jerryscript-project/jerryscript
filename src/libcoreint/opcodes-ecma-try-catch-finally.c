@@ -90,7 +90,7 @@ opfunc_try (opcode_t opdata, /**< operation data */
       int_data->lex_env_p = old_env_p;
 
       ecma_deref_object (catch_env_p);
-      
+
       JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos <= catch_end_oc)
                     || (ecma_is_completion_value_empty (try_completion) && int_data->pos == catch_end_oc));
     }

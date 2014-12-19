@@ -333,7 +333,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
 
     ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
     ecma_string_t *formal_parameter_name_string_p = ecma_get_string_from_value (formal_parameter_name_value);
-    
+
     bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
     if (!arg_already_declared)
     {

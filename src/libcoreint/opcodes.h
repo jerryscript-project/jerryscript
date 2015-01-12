@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #define OPCODES_H
 
 #include "ecma-globals.h"
+#include "ecma-stack.h"
 #include "globals.h"
 
 /* Maximum opcodes number in bytecode.  */
@@ -83,6 +84,7 @@ typedef struct
   idx_t max_reg_num; /**< maximum idx used for register identification */
   ecma_value_t *regs_p; /**< register variables */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
+  ecma_stack_frame_t *stack_frame_p; /**< ecma-stack frame associated with the context */
 
 #ifdef MEM_STATS
   size_t context_peak_allocated_heap_bytes;

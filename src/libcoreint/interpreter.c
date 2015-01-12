@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-operations.h"
+#include "ecma-stack.h"
 #include "globals.h"
 #include "interpreter.h"
 #include "jerry-libc.h"
@@ -461,6 +462,9 @@ run_int_from_pos (opcode_counter_t start_pos,
   __memset (regs, 0, regs_num * sizeof (ecma_value_t));
   JERRY_ASSERT (ecma_is_value_empty (regs[0]));
 
+  ecma_stack_frame_t frame;
+  ecma_stack_add_frame (&frame);
+
   int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
   int_data.this_binding = this_binding_value;
@@ -471,6 +475,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.max_reg_num = max_reg_num;
   int_data.regs_p = regs;
   int_data.tmp_num_p = ecma_alloc_number ();
+  int_data.stack_frame_p = &frame;
 
 #ifdef MEM_STATS
   interp_mem_stats_context_enter (&int_data, start_pos);
@@ -482,6 +487,8 @@ run_int_from_pos (opcode_counter_t start_pos,
                 || ecma_is_completion_value_throw (completion)
                 || ecma_is_completion_value_return (completion)
                 || ecma_is_completion_value_exit (completion));
+
+  ecma_stack_free_frame (&frame);
 
   ecma_dealloc_number (int_data.tmp_num_p);
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,9 +166,10 @@ void
 mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t severity) /**< severity of
                                                                                               the request */
 {
-  JERRY_ASSERT (mem_try_give_memory_back_callback != NULL);
-
-  mem_try_give_memory_back_callback (severity);
+  if (mem_try_give_memory_back_callback != NULL)
+  {
+    mem_try_give_memory_back_callback (severity);
+  }
 } /* mem_run_try_to_give_memory_back_callbacks */
 
 #ifndef JERRY_NDEBUG

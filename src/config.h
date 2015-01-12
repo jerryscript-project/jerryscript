@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,6 +125,11 @@
 # endif /* CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII
            && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16 */
 #endif /* CONFIG_ECMA_CHAR_ENCODING */
+
+/**
+ * Number of ecma-values inlined into stack frame
+ */
+#define CONFIG_ECMA_STACK_FRAME_INLINED_VALUES_NUMBER 16
 
 /**
  * Enable ecma-exception support

@@ -28,6 +28,9 @@
  * Note:
  *      Each ECMA_TRY_CATCH should have it's own corresponding ECMA_FINALIZE
  *      statement with same argument as corresponding ECMA_TRY_CATCH's first argument.
+ *
+ * See also:
+ *          ECMA_TRY_CATCH_STACKED
  */
 #define ECMA_TRY_CATCH(var, op, return_value) \
   ecma_completion_value_t var = op; \
@@ -46,9 +49,35 @@
  * Note:
  *      Each ECMA_TRY_CATCH should be followed by ECMA_FINALIZE with same argument
  *      as corresponding ECMA_TRY_CATCH's first argument.
+ *
+ * See also:
+ *          ECMA_FINALIZE_STACKED
  */
 #define ECMA_FINALIZE(var) ecma_free_completion_value (var); \
   }
+
+/**
+ * ECMA_TRY_CATCH for stack convention
+ */
+#define ECMA_TRY_CATCH_STACKED(var, op, return_value, frame_p) \
+  ecma_completion_type_t var ## completion_type = op; \
+  if (unlikely (var ## completion_type != ECMA_COMPLETION_TYPE_NORMAL)) \
+  { \
+    JERRY_ASSERT (var ## completion_type == ECMA_COMPLETION_TYPE_THROW); \
+    return_value = ecma_make_completion_value (var ## completion_type, \
+                                               ecma_copy_value (ecma_stack_top_value (frame_p), true)); \
+  } \
+  else \
+  { \
+    ecma_value_t var = ecma_stack_top_value (frame_p); \
+
+/**
+ * ECMA_FINALIZE for stack convention
+ */
+#define ECMA_FINALIZE_STACKED(var, frame_p) (void) var; \
+  } \
+  (void) var ## completion_type; \
+  ecma_stack_pop (frame_p) \
 
 /**
  * The macro defines try-block that tries to perform ToNumber operation on given value

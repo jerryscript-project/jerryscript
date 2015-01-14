@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,8 @@ extern ecma_completion_value_t ecma_make_empty_completion_value (void);
 extern ecma_completion_value_t ecma_make_return_completion_value (ecma_value_t value);
 extern ecma_completion_value_t ecma_make_exit_completion_value (bool is_successful);
 extern ecma_completion_value_t ecma_make_meta_completion_value (void);
+extern ecma_completion_type_t __attribute_const__
+ecma_get_completion_value_type (ecma_completion_value_t completion_value);
 extern ecma_value_t ecma_get_completion_value_value (ecma_completion_value_t completion_value);
 extern ecma_number_t* __attribute_const__
 ecma_get_number_from_completion_value (ecma_completion_value_t completion_value);

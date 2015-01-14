@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,17 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (ecma_get_completion_value_value (left_value),
-                                                       ecma_get_completion_value_value (right_value),
+                  ecma_op_abstract_relational_compare (left_value,
+                                                       right_value,
                                                        true),
                   ret_value);
 
@@ -58,8 +64,8 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -84,11 +90,17 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (ecma_get_completion_value_value (right_value),
-                                                       ecma_get_completion_value_value (left_value),
+                  ecma_op_abstract_relational_compare (right_value,
+                                                       left_value,
                                                        false),
                   ret_value);
 
@@ -108,8 +120,8 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -134,11 +146,17 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (ecma_get_completion_value_value (right_value),
-                                                       ecma_get_completion_value_value (left_value),
+                  ecma_op_abstract_relational_compare (right_value,
+                                                       left_value,
                                                        false),
                   ret_value);
 
@@ -165,8 +183,8 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -191,11 +209,17 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (ecma_get_completion_value_value (left_value),
-                                                       ecma_get_completion_value_value (right_value),
+                  ecma_op_abstract_relational_compare (left_value,
+                                                       right_value,
                                                        true),
                   ret_value);
 
@@ -222,8 +246,8 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -248,20 +272,26 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
-  if (!ecma_is_value_object (ecma_get_completion_value_value (right_value)))
+  if (!ecma_is_value_object (right_value))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_completion_value (right_value);
+    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
 
     ECMA_TRY_CATCH (is_instance_of,
                     ecma_op_object_has_instance (right_value_obj_p,
-                                                 ecma_get_completion_value_value (left_value)),
+                                                 left_value),
                     ret_value);
 
     ret_value = set_variable_value (int_data, int_data->pos, dst_idx, ecma_get_completion_value_value (is_instance_of));
@@ -269,8 +299,8 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
     ECMA_FINALIZE (is_instance_of);
   }
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -295,20 +325,26 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
-  if (!ecma_is_value_object (ecma_get_completion_value_value (right_value)))
+  if (!ecma_is_value_object (right_value))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (ecma_get_completion_value_value (left_value)), ret_value);
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value), ret_value);
 
     ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
     ecma_string_t *left_value_prop_name_p = ecma_get_string_from_completion_value (str_left_value);
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_completion_value (right_value);
+    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
 
     if (ecma_op_object_get_property (right_value_obj_p, left_value_prop_name_p) != NULL)
     {
@@ -326,8 +362,8 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
     ECMA_FINALIZE (str_left_value);
   }
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 

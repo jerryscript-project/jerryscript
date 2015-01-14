@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,17 +128,23 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_and,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -163,17 +169,23 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_or,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -198,17 +210,23 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_logic_xor,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -233,17 +251,23 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_left,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -268,17 +292,23 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_right,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -303,17 +333,23 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (left_value,
+                          get_variable_value (int_data, left_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_shift_uright,
-                                       ecma_get_completion_value_value (left_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       left_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
+  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
 
   int_data->pos++;
 
@@ -337,15 +373,18 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH_STACKED (right_value,
+                          get_variable_value (int_data, right_var_idx, false),
+                          ret_value,
+                          int_data->stack_frame_p);
 
   ret_value = do_number_bitwise_logic (int_data,
                                        dst_var_idx,
                                        number_bitwise_not,
-                                       ecma_get_completion_value_value (right_value),
-                                       ecma_get_completion_value_value (right_value));
+                                       right_value,
+                                       right_value);
 
-  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
 
   int_data->pos++;
 

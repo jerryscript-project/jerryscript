@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
                 ecma_length_t args_number, /**< number of arguments */
                 ecma_value_t arg_values[], /**< out: arguments' values */
                 ecma_length_t *out_arg_number_p) /**< out: number of arguments
-                                                      successfully read */
+                                                           successfully read */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -50,16 +50,14 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
       const idx_t varg_var_idx = next_opcode.data.meta.data_1;
 
-      ecma_completion_value_t get_arg_completion = get_variable_value (int_data, varg_var_idx, false);
+      ECMA_TRY_CATCH_STACKED (arg,
+                              get_variable_value (int_data, varg_var_idx, false),
+                              ret_value,
+                              int_data->stack_frame_p);
 
-      if (ecma_is_completion_value_normal (get_arg_completion))
-      {
-        arg_values[arg_index] = ecma_get_completion_value_value (get_arg_completion);
-      }
-      else
-      {
-        ret_value = get_arg_completion;
-      }
+      arg_values[arg_index] = ecma_copy_value (arg, true);
+
+      ECMA_FINALIZE_STACKED (arg, int_data->stack_frame_p);
     }
     else
     {

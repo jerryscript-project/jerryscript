@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -436,13 +436,13 @@ ecma_free_value (ecma_value_t value, /**< value description */
  *
  * @return type field
  */
-static ecma_completion_type_t __attribute_const__
-ecma_get_completion_value_type_field (ecma_completion_value_t completion_value) /**< completion value */
+ecma_completion_type_t __attribute_const__
+ecma_get_completion_value_type (ecma_completion_value_t completion_value) /**< completion value */
 {
   return jrt_extract_bit_field (completion_value,
                                 ECMA_COMPLETION_VALUE_TYPE_POS,
                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH);
-} /* ecma_get_completion_value_type_field */
+} /* ecma_get_completion_value_type */
 
 /**
  * Get value field of completion value
@@ -702,7 +702,7 @@ ecma_make_meta_completion_value (void)
 inline ecma_value_t __attribute_const__ __attribute_always_inline__
 ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< completion value */
 {
-  const ecma_completion_type_t type = ecma_get_completion_value_type_field (completion_value);
+  const ecma_completion_type_t type = ecma_get_completion_value_type (completion_value);
 
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -757,7 +757,7 @@ ecma_get_object_from_completion_value (ecma_completion_value_t completion_value)
 ecma_completion_value_t
 ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value */
 {
-  const ecma_completion_type_t type = ecma_get_completion_value_type_field (value);
+  const ecma_completion_type_t type = ecma_get_completion_value_type (value);
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
                            || type == ECMA_COMPLETION_TYPE_THROW
@@ -778,7 +778,7 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
 void
 ecma_free_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
-  switch (ecma_get_completion_value_type_field (completion_value))
+  switch (ecma_get_completion_value_type (completion_value))
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -816,7 +816,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_NORMAL);
+  return (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_NORMAL);
 } /* ecma_is_completion_value_normal */
 
 /**
@@ -829,7 +829,7 @@ inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_THROW);
+  return (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_THROW);
 #else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
   (void) value;
 
@@ -846,7 +846,7 @@ ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion v
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_RETURN);
+  return (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_RETURN);
 } /* ecma_is_completion_value_return */
 
 /**
@@ -858,7 +858,7 @@ ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion 
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion value */
 {
-  if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_EXIT)
+  if (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_EXIT)
   {
     JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value_field (value)));
 
@@ -879,7 +879,7 @@ ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion va
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion value */
 {
-  if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_META)
+  if (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_META)
   {
     JERRY_ASSERT (ecma_is_value_empty (ecma_get_completion_value_value_field (value)));
 
@@ -900,7 +900,7 @@ ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion va
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_BREAK);
+  return (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_BREAK);
 } /* ecma_is_completion_value_break */
 
 /**
@@ -912,7 +912,7 @@ ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion v
 inline bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_continue (ecma_completion_value_t value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_CONTINUE);
+  return (ecma_get_completion_value_type (value) == ECMA_COMPLETION_TYPE_CONTINUE);
 } /* ecma_is_completion_value_continue */
 
 /**

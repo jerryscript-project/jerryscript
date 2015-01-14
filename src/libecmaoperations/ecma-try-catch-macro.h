@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
   ecma_completion_value_t var = op; \
   if (unlikely (ecma_is_completion_value_throw (var))) \
   { \
-    return_value = ecma_copy_completion_value (var); \
+    return_value = var; \
   } \
   else \
   { \
@@ -47,8 +47,8 @@
  *      Each ECMA_TRY_CATCH should be followed by ECMA_FINALIZE with same argument
  *      as corresponding ECMA_TRY_CATCH's first argument.
  */
-#define ECMA_FINALIZE(var) } \
-  ecma_free_completion_value (var)
+#define ECMA_FINALIZE(var) ecma_free_completion_value (var); \
+  }
 
 /**
  * The macro defines try-block that tries to perform ToNumber operation on given value

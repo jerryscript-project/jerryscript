@@ -33,12 +33,9 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (cond_value,
-                          get_variable_value (int_data, cond_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
@@ -53,7 +50,7 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_FINALIZE_STACKED (cond_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (cond_value);
 
   return ret_value;
 }
@@ -69,12 +66,9 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (cond_value,
-                          get_variable_value (int_data, cond_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
@@ -89,7 +83,7 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_FINALIZE_STACKED (cond_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (cond_value);
 
   return ret_value;
 }
@@ -111,12 +105,9 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (cond_value,
-                          get_variable_value (int_data, cond_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
@@ -131,7 +122,7 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_FINALIZE_STACKED (cond_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (cond_value);
 
   return ret_value;
 }
@@ -147,12 +138,9 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (cond_value,
-                          get_variable_value (int_data, cond_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
-  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (ecma_get_completion_value_value (cond_value));
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_value_true (ecma_get_completion_value_value (to_bool_completion)))
@@ -167,7 +155,7 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
 
   ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_FINALIZE_STACKED (cond_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (cond_value);
 
   return ret_value;
 }

@@ -34,17 +34,11 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (left_value,
-                                                     right_value),
+                  ecma_op_abstract_equality_compare (ecma_get_completion_value_value (left_value),
+                                                     ecma_get_completion_value_value (right_value)),
                   ret_value);
 
   JERRY_ASSERT (ecma_is_completion_value_normal_true (compare_result)
@@ -54,8 +48,8 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
                                   ecma_get_completion_value_value (compare_result));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -80,17 +74,11 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (left_value,
-                                                     right_value),
+                  ecma_op_abstract_equality_compare (ecma_get_completion_value_value (left_value),
+                                                     ecma_get_completion_value_value (right_value)),
                   ret_value);
 
   JERRY_ASSERT (ecma_is_completion_value_normal_true (compare_result)
@@ -103,8 +91,8 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
                                                           : ECMA_SIMPLE_VALUE_TRUE));
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -129,24 +117,18 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (left_value,
-                                                   right_value);
+  bool is_equal = ecma_op_strict_equality_compare (ecma_get_completion_value_value (left_value),
+                                                   ecma_get_completion_value_value (right_value));
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
                                                           : ECMA_SIMPLE_VALUE_FALSE));
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -171,25 +153,19 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (left_value,
-                                                   right_value);
+  bool is_equal = ecma_op_strict_equality_compare (ecma_get_completion_value_value (left_value),
+                                                   ecma_get_completion_value_value (right_value));
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
                                                           : ECMA_SIMPLE_VALUE_TRUE));
 
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 

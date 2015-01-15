@@ -70,10 +70,6 @@ ecma_stack_add_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
   frame_p->top_chunk_p = NULL;
   frame_p->dynamically_allocated_value_slots_p = frame_p->inlined_values;
   frame_p->current_slot_index = 0;
-
-#ifndef JERRY_NDEBUG
-  frame_p->items_number = 0;
-#endif /* !JERRY_NDEBUG */
 } /* ecma_stack_add_frame */
 
 /**
@@ -138,10 +134,6 @@ void
 ecma_stack_push_value (ecma_stack_frame_t *frame_p, /**< ecma-stack frame */
                        ecma_value_t value) /**< ecma-value */
 {
-#ifndef JERRY_NDEBUG
-  frame_p->items_number++;
-#endif /* !JERRY_NDEBUG */
-
   frame_p->current_slot_index++;
 
   if (frame_p->current_slot_index >= JERRY_MIN (ECMA_STACK_FRAME_INLINED_VALUES_NUMBER,
@@ -158,13 +150,9 @@ ecma_stack_push_value (ecma_stack_frame_t *frame_p, /**< ecma-stack frame */
 /**
  * Get top value from ecma-stack
  */
-ecma_value_t
+inline ecma_value_t __attribute_always_inline__
 ecma_stack_top_value (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
-#ifndef JERRY_NDEBUG
-  JERRY_ASSERT (frame_p->items_number > 0);
-#endif /* !JERRY_NDEBUG */
-
   const size_t slots_in_top_chunk = ecma_stack_slots_in_top_chunk (frame_p);
 
   JERRY_ASSERT (frame_p->current_slot_index < slots_in_top_chunk);
@@ -216,12 +204,6 @@ ecma_stack_pop (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
   {
     frame_p->current_slot_index--;
   }
-
-#ifndef JERRY_NDEBUG
-  JERRY_ASSERT (frame_p->items_number > 0);
-
-  frame_p->items_number--;
-#endif /* !JERRY_NDEBUG */
 
   ecma_free_value (value, true);
 } /* ecma_stack_pop */

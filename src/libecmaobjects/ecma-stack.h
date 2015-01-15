@@ -52,10 +52,6 @@ typedef struct ecma_stack_frame_t
   ecma_value_t inlined_values [ECMA_STACK_FRAME_INLINED_VALUES_NUMBER]; /**< place for values inlined in stack frame
                                                                          *   (instead of being dynamically allocated
                                                                          *   on the heap) */
-
-#ifndef JERRY_NDEBUG
-  uint32_t items_number; /**< number of items pushed on the current frame */
-#endif /* !JERRY_NDEBUG */
 } ecma_stack_frame_t;
 
 extern void ecma_stack_init (void);

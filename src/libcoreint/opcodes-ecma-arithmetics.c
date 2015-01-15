@@ -112,20 +112,14 @@ opfunc_addition (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (prim_left_value,
-                  ecma_op_to_primitive (left_value,
+                  ecma_op_to_primitive (ecma_get_completion_value_value (left_value),
                                         ECMA_PREFERRED_TYPE_NO),
                   ret_value);
   ECMA_TRY_CATCH (prim_right_value,
-                  ecma_op_to_primitive (right_value,
+                  ecma_op_to_primitive (ecma_get_completion_value_value (right_value),
                                         ECMA_PREFERRED_TYPE_NO),
                   ret_value);
 
@@ -158,8 +152,8 @@ opfunc_addition (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (prim_right_value);
   ECMA_FINALIZE (prim_left_value);
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -184,23 +178,17 @@ opfunc_substraction (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_substraction,
-                                    left_value,
-                                    right_value);
+                                    ecma_get_completion_value_value (left_value),
+                                    ecma_get_completion_value_value (right_value));
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -225,23 +213,17 @@ opfunc_multiplication (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_multiplication,
-                                    left_value,
-                                    right_value);
+                                    ecma_get_completion_value_value (left_value),
+                                    ecma_get_completion_value_value (right_value));
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -266,23 +248,17 @@ opfunc_division (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_division,
-                                    left_value,
-                                    right_value);
+                                    ecma_get_completion_value_value (left_value),
+                                    ecma_get_completion_value_value (right_value));
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -307,23 +283,17 @@ opfunc_remainder (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH_STACKED (left_value,
-                          get_variable_value (int_data, left_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
-  ECMA_TRY_CATCH_STACKED (right_value,
-                          get_variable_value (int_data, right_var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   ret_value = do_number_arithmetic (int_data,
                                     dst_var_idx,
                                     number_arithmetic_remainder,
-                                    left_value,
-                                    right_value);
+                                    ecma_get_completion_value_value (left_value),
+                                    ecma_get_completion_value_value (right_value));
 
-  ECMA_FINALIZE_STACKED (right_value, int_data->stack_frame_p);
-  ECMA_FINALIZE_STACKED (left_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (right_value);
+  ECMA_FINALIZE (left_value);
 
   int_data->pos++;
 
@@ -347,12 +317,9 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH_STACKED (var_value,
-                          get_variable_value (int_data, var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
-                               var_value,
+                               ecma_get_completion_value_value (var_value),
                                ret_value);
 
   ecma_number_t *tmp_p = int_data->tmp_num_p;
@@ -363,7 +330,7 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
                                   ecma_make_number_value (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
-  ECMA_FINALIZE_STACKED (var_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (var_value);
 
   int_data->pos++;
 
@@ -387,12 +354,9 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH_STACKED (var_value,
-                          get_variable_value (int_data, var_idx, false),
-                          ret_value,
-                          int_data->stack_frame_p);
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
-                               var_value,
+                               ecma_get_completion_value_value (var_value),
                                ret_value);
 
   ecma_number_t *tmp_p = int_data->tmp_num_p;
@@ -403,7 +367,7 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
                                   ecma_make_number_value (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
-  ECMA_FINALIZE_STACKED (var_value, int_data->stack_frame_p);
+  ECMA_FINALIZE (var_value);
 
   int_data->pos++;
 

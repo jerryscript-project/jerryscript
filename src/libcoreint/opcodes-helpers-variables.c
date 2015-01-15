@@ -68,15 +68,16 @@ is_reg_variable (int_data_t *int_data, /**< interpreter context */
 /**
  * Get variable's value.
  *
- * @return /stack convention/
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_type_t
+ecma_completion_value_t
 get_variable_value (int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                           See also: do_strict_eval_arguments_check */
 {
-  ecma_completion_type_t completion_type;
+  ecma_completion_value_t ret_value;
 
   if (is_reg_variable (int_data, var_idx))
   {
@@ -84,10 +85,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
-    ecma_stack_push_value (int_data->stack_frame_p,
-                           ecma_copy_value (reg_value, true));
-
-    completion_type = ECMA_COMPLETION_TYPE_NORMAL;
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (reg_value, true));
   }
   else
   {
@@ -108,19 +106,14 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 #endif /* !JERRY_NDEBUG */
     }
 
-    ecma_completion_value_t completion = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                                         &var_name_string,
-                                                                         int_data->is_strict);
-
-    ecma_stack_push_value (int_data->stack_frame_p,
-                           ecma_get_completion_value_value (completion));
+    ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
+                                                &var_name_string,
+                                                int_data->is_strict);
 
     ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
-
-    completion_type = ecma_get_completion_value_type (completion);
   }
 
-  return completion_type;
+  return ret_value;
 } /* get_variable_value */
 
 /**

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
+#include "ecma-stack.h"
 #include "globals.h"
 #include "jerry-libc.h"
 #include "jrt-bit-fields.h"
@@ -551,6 +552,28 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
           && !ecma_gc_is_object_visited (obj_iter_p))
       {
         ecma_gc_mark (obj_iter_p, ECMA_GC_GEN_COUNT);
+      }
+    }
+  }
+
+  /* if some object is referenced from a register variable (i.e. it is root),
+   * start recursive marking traverse from the object */
+  for (ecma_stack_frame_t *frame_iter_p = ecma_stack_get_top_frame ();
+       frame_iter_p != NULL;
+       frame_iter_p = frame_iter_p->prev_frame_p)
+  {
+    for (int32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
+    {
+      ecma_value_t reg_value = ecma_stack_frame_get_reg_value (frame_iter_p, reg_index);
+
+      if (ecma_is_value_object (reg_value))
+      {
+        ecma_object_t *obj_p = ecma_get_object_from_value (reg_value);
+
+        if (!ecma_gc_is_object_visited (obj_p))
+        {
+          ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
+        }
       }
     }
   }

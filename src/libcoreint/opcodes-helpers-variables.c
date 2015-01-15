@@ -81,7 +81,8 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 
   if (is_reg_variable (int_data, var_idx))
   {
-    ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
+    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&int_data->stack_frame,
+                                                             var_idx - int_data->min_reg_num);
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
@@ -134,7 +135,8 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   {
     ret_value = ecma_make_empty_completion_value ();
 
-    ecma_value_t reg_value = int_data->regs_p[ var_idx - int_data->min_reg_num ];
+    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&int_data->stack_frame,
+                                                             var_idx - int_data->min_reg_num);
 
     if (ecma_is_value_number (reg_value)
         && ecma_is_value_number (value))
@@ -145,10 +147,12 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
     {
       if (!ecma_is_value_empty (reg_value))
       {
-        ecma_free_value (reg_value, true);
+        ecma_free_value (reg_value, false);
       }
 
-      int_data->regs_p[ var_idx - int_data->min_reg_num ] = ecma_copy_value (value, true);
+      ecma_stack_frame_set_reg_value (&int_data->stack_frame,
+                                      var_idx - int_data->min_reg_num,
+                                      ecma_copy_value (value, false));
     }
   }
   else

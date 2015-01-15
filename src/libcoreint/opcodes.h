@@ -82,9 +82,8 @@ typedef struct
   bool is_eval_code; /**< is current code executed with eval */
   idx_t min_reg_num; /**< minimum idx used for register identification */
   idx_t max_reg_num; /**< maximum idx used for register identification */
-  ecma_value_t *regs_p; /**< register variables */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
-  ecma_stack_frame_t *stack_frame_p; /**< ecma-stack frame associated with the context */
+  ecma_stack_frame_t stack_frame; /**< ecma-stack frame associated with the context */
 
 #ifdef MEM_STATS
   size_t context_peak_allocated_heap_bytes;

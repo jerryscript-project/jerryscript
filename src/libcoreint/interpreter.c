@@ -454,16 +454,9 @@ run_int_from_pos (opcode_counter_t start_pos,
   const idx_t max_reg_num = curr->data.reg_var_decl.max;
   JERRY_ASSERT (max_reg_num >= min_reg_num);
 
-  const uint32_t regs_num = (uint32_t) (max_reg_num - min_reg_num + 1);
+  const int32_t regs_num = max_reg_num - min_reg_num + 1;
 
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
-
-  /* memseting with zero initializes each 'register' to empty value */
-  __memset (regs, 0, regs_num * sizeof (ecma_value_t));
-  JERRY_ASSERT (ecma_is_value_empty (regs[0]));
-
-  ecma_stack_frame_t frame;
-  ecma_stack_add_frame (&frame);
 
   int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
@@ -473,9 +466,8 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.is_eval_code = is_eval_code;
   int_data.min_reg_num = min_reg_num;
   int_data.max_reg_num = max_reg_num;
-  int_data.regs_p = regs;
   int_data.tmp_num_p = ecma_alloc_number ();
-  int_data.stack_frame_p = &frame;
+  ecma_stack_add_frame (&int_data.stack_frame, regs, regs_num);
 
 #ifdef MEM_STATS
   interp_mem_stats_context_enter (&int_data, start_pos);
@@ -488,16 +480,9 @@ run_int_from_pos (opcode_counter_t start_pos,
                 || ecma_is_completion_value_return (completion)
                 || ecma_is_completion_value_exit (completion));
 
-  ecma_stack_free_frame (&frame);
+  ecma_stack_free_frame (&int_data.stack_frame);
 
   ecma_dealloc_number (int_data.tmp_num_p);
-
-  for (uint32_t reg_index = 0;
-       reg_index < regs_num;
-       reg_index++)
-  {
-    ecma_free_value (regs[ reg_index ], true);
-  }
 
 #ifdef MEM_STATS
   interp_mem_stats_context_exit (&int_data, start_pos);

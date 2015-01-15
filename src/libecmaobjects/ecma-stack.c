@@ -59,10 +59,23 @@ ecma_stack_finalize ()
 } /* ecma_stack_finalize */
 
 /**
+ * Get ecma-stack's top frame
+ *
+ * @return pointer to the top frame descriptor
+ */
+ecma_stack_frame_t*
+ecma_stack_get_top_frame (void)
+{
+  return ecma_stack_top_frame_p;
+} /* ecma_stack_get_top_frame */
+
+/**
  * Add the frame to ecma-stack
  */
 void
-ecma_stack_add_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
+ecma_stack_add_frame (ecma_stack_frame_t *frame_p, /**< frame to initialize */
+                      ecma_value_t *regs_p, /**< array of register variables' values */
+                      int32_t regs_num) /**< number of register variables */
 {
   frame_p->prev_frame_p = ecma_stack_top_frame_p;
   ecma_stack_top_frame_p = frame_p;
@@ -70,6 +83,13 @@ ecma_stack_add_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
   frame_p->top_chunk_p = NULL;
   frame_p->dynamically_allocated_value_slots_p = frame_p->inlined_values;
   frame_p->current_slot_index = 0;
+  frame_p->regs_p = regs_p;
+  frame_p->regs_number = regs_num;
+
+  for (int32_t i = 0; i < regs_num; i++)
+  {
+    regs_p [i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  }
 } /* ecma_stack_add_frame */
 
 /**
@@ -90,7 +110,41 @@ ecma_stack_free_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
   {
     ecma_stack_pop (frame_p);
   }
+
+  for (int32_t reg_index = 0;
+       reg_index < frame_p->regs_number;
+       reg_index++)
+  {
+    ecma_free_value (frame_p->regs_p [reg_index], false);
+  }
 } /* ecma_stack_free_frame */
+
+/**
+ * Get value of specified register variable
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_stack_frame_get_reg_value (ecma_stack_frame_t *frame_p, /**< frame */
+                                int32_t reg_index) /**< index of register variable */
+{
+  JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
+
+  return frame_p->regs_p [reg_index];
+} /* ecma_stack_frame_get_reg_value */
+
+/**
+ * Set value of specified register variable
+ */
+void
+ecma_stack_frame_set_reg_value (ecma_stack_frame_t *frame_p, /**< frame */
+                                int32_t reg_index, /**< index of register variable */
+                                ecma_value_t value) /**< ecma-value */
+{
+  JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
+
+  frame_p->regs_p [reg_index] = value;
+} /* ecma_stack_frame_set_reg_value */
 
 /**
  * Calculate number of value slots in the top-most chunk of the frame

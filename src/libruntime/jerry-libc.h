@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ extern void* __memcpy (void *s1, const void *s2, size_t n);
 extern void* __memmove (void *dest, const void *src, size_t n);
 extern int __printf (const char *format, ...);
 extern int __putchar (int);
-extern void __noreturn __exit (int);
+extern "C" void __noreturn __exit (int);
 
 extern int __strcmp (const char *, const char *);
 extern int __strncmp (const char *, const char *, size_t);

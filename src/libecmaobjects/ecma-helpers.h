@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@
 /**
  * Get value of pointer from specified non-null compressed pointer field.
  */
-#define ECMA_GET_NON_NULL_POINTER(field) \
-  (mem_decompress_pointer (field))
+#define ECMA_GET_NON_NULL_POINTER(type, field) \
+  ((type *) mem_decompress_pointer (field))
 
 /**
  * Get value of pointer from specified compressed pointer field.
  */
-#define ECMA_GET_POINTER(field) \
-  ((unlikely (field == ECMA_NULL_POINTER)) ? NULL : ECMA_GET_NON_NULL_POINTER (field))
+#define ECMA_GET_POINTER(type, field) \
+  (((unlikely (field == ECMA_NULL_POINTER)) ? NULL : ECMA_GET_NON_NULL_POINTER (type, field)))
 
 /**
  * Set value of non-null compressed pointer field so that it will correspond
@@ -52,7 +52,7 @@
 #define ECMA_SET_POINTER(field, non_compressed_pointer) \
   do \
   { \
-    void *__temp_pointer = non_compressed_pointer; \
+    auto __temp_pointer = non_compressed_pointer; \
     non_compressed_pointer = __temp_pointer; \
   } while (0); \
   \

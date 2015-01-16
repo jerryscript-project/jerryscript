@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,8 +146,8 @@ ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< f
     {
       JERRY_ASSERT (cur_char_buf2_iter_p == cur_char_buf2_end_p);
 
-      const ecma_collection_chunk_t *chunk1_p = ECMA_GET_NON_NULL_POINTER (next_chunk1_cp);
-      const ecma_collection_chunk_t *chunk2_p = ECMA_GET_NON_NULL_POINTER (next_chunk2_cp);
+      const ecma_collection_chunk_t *chunk1_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, next_chunk1_cp);
+      const ecma_collection_chunk_t *chunk2_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, next_chunk2_cp);
 
       cur_char_buf1_iter_p = (ecma_char_t*) chunk1_p->data;
       cur_char_buf1_end_p = cur_char_buf1_iter_p + sizeof (chunk1_p->data) / sizeof (ecma_char_t);
@@ -185,7 +185,8 @@ ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< c
 
   uint16_t* next_chunk_cp_p = &new_header_p->next_chunk_cp;
 
-  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (collection_p->next_chunk_cp);
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                       collection_p->next_chunk_cp);
 
   while (chunk_p != NULL)
   {
@@ -195,7 +196,8 @@ ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< c
     ECMA_SET_NON_NULL_POINTER (*next_chunk_cp_p, new_chunk_p);
     next_chunk_cp_p = &new_chunk_p->next_chunk_cp;
 
-    chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+    chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                chunk_p->next_chunk_cp);
   }
 
   *next_chunk_cp_p = ECMA_NULL_POINTER;
@@ -227,7 +229,7 @@ ecma_copy_chars_collection_to_buffer (const ecma_collection_header_t *collection
   {
     if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
     {
-      const ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (next_chunk_cp);
+      const ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, next_chunk_cp);
 
       cur_char_buf_iter_p = (ecma_char_t*) chunk_p->data;
       cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (chunk_p->data) / sizeof (ecma_char_t);
@@ -253,11 +255,13 @@ ecma_free_chars_collection (ecma_collection_header_t* collection_p) /**< collect
 {
   JERRY_ASSERT (collection_p != NULL);
 
-  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (collection_p->next_chunk_cp);
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                       collection_p->next_chunk_cp);
 
   while (chunk_p != NULL)
   {
-    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                              chunk_p->next_chunk_cp);
     ecma_dealloc_collection_chunk (chunk_p);
 
     chunk_p = next_chunk_p;
@@ -278,9 +282,9 @@ ecma_strings_init (void)
   ecma_magic_string_max_length = 0;
 #endif /* !JERRY_NDEBUG */
 
-  for (ecma_magic_string_id_t id = 0;
+  for (ecma_magic_string_id_t id = (ecma_magic_string_id_t) 0;
        id < ECMA_MAGIC_STRING__COUNT;
-       id++)
+       id = (ecma_magic_string_id_t) (id + 1))
   {
     ecma_magic_string_lengths [id] = ecma_zt_string_length (ecma_get_magic_string_zt (id));
 
@@ -619,8 +623,8 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_CONCATENATION:
     {
-      ecma_string_t *part1_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp);
-      ecma_string_t *part2_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp);
+      ecma_string_t *part1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_desc_p->u.concatenation.string1_cp);
+      ecma_string_t *part2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_desc_p->u.concatenation.string2_cp);
 
       new_str_p = ecma_concat_ecma_strings (part1_p, part2_p);
 
@@ -629,7 +633,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, string_desc_p->u.number_cp);
 
       new_str_p = ecma_new_ecma_string_from_number (*num_p);
 
@@ -641,7 +645,8 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
       new_str_p = ecma_alloc_string ();
       *new_str_p = *string_desc_p;
 
-      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.collection_cp);
+      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                      string_desc_p->u.collection_cp);
       JERRY_ASSERT (chars_collection_p != NULL);
       ecma_collection_header_t *new_chars_collection_p = ecma_copy_chars_collection (chars_collection_p);
 
@@ -690,7 +695,7 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
 
       /* First trying to free unreachable objects that maybe refer to the string */
       ecma_lcache_invalidate_all ();
-      ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+      ecma_gc_run ((ecma_gc_gen_t) (ECMA_GC_GEN_COUNT - 1));
 
       if (current_refs == string_desc_p->refs)
       {
@@ -734,7 +739,8 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
   {
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_p->u.collection_cp);
+      ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                string_p->u.collection_cp);
 
       ecma_free_chars_collection (chars_collection_p);
 
@@ -742,7 +748,8 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                        string_p->u.number_cp);
 
       ecma_dealloc_number (num_p);
 
@@ -752,8 +759,10 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     {
       ecma_string_t *string1_p, *string2_p;
 
-      string1_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string1_cp);
-      string2_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string2_cp);
+      string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                             string_p->u.concatenation.string1_cp);
+      string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                             string_p->u.concatenation.string2_cp);
 
       ecma_deref_ecma_string (string1_p);
       ecma_deref_ecma_string (string2_p);
@@ -793,7 +802,7 @@ ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p) /*
    */
   JERRY_ASSERT (string_p->refs == 1);
 
-  ecma_string_container_t container_type = string_p->container;
+  ecma_string_container_t container_type = (ecma_string_container_t) string_p->container;
 
   JERRY_ASSERT (container_type == ECMA_STRING_CONTAINER_LIT_TABLE ||
                 container_type == ECMA_STRING_CONTAINER_MAGIC_STRING ||
@@ -820,7 +829,8 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (str_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                        str_p->u.number_cp);
 
       return *num_p;
     }
@@ -833,7 +843,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
       const int32_t string_len = ecma_string_get_length (str_p);
       const size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
 
-      ecma_char_t *str_buffer_p = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      ecma_char_t *str_buffer_p = (ecma_char_t*) mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (str_buffer_p == NULL)
       {
         jerry_exit (ERR_OUT_OF_MEMORY);
@@ -885,7 +895,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
   {
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     {
-      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.collection_cp);
+      const ecma_collection_header_t *chars_collection_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                      string_desc_p->u.collection_cp);
 
       ecma_copy_chars_collection_to_buffer (chars_collection_p, buffer_p, (size_t) buffer_size);
 
@@ -913,7 +924,8 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.number_cp);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                        string_desc_p->u.number_cp);
 
       ecma_length_t length = ecma_number_to_zt_string (*num_p, buffer_p, buffer_size);
 
@@ -923,8 +935,10 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_CONCATENATION:
     {
-      const ecma_string_t *string1_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp);
-      const ecma_string_t *string2_p = ECMA_GET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp);
+      const ecma_string_t *string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  string_desc_p->u.concatenation.string1_cp);
+      const ecma_string_t *string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  string_desc_p->u.concatenation.string2_cp);
 
       ecma_char_t *dest_p = buffer_p;
 
@@ -1021,8 +1035,8 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       case ECMA_STRING_CONTAINER_HEAP_NUMBER:
       {
         ecma_number_t *num1_p, *num2_p;
-        num1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.number_cp);
-        num2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.number_cp);
+        num1_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, string1_p->u.number_cp);
+        num2_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, string2_p->u.number_cp);
 
         if (ecma_number_is_nan (*num1_p)
             && ecma_number_is_nan (*num2_p))
@@ -1034,8 +1048,10 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       }
       case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
       {
-        const ecma_collection_header_t *chars_collection1_p = ECMA_GET_NON_NULL_POINTER (string1_p->u.collection_cp);
-        const ecma_collection_header_t *chars_collection2_p = ECMA_GET_NON_NULL_POINTER (string2_p->u.collection_cp);
+        const ecma_collection_header_t *chars_collection1_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                         string1_p->u.collection_cp);
+        const ecma_collection_header_t *chars_collection2_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                         string2_p->u.collection_cp);
 
         return ecma_compare_chars_collection (chars_collection1_p, chars_collection2_p);
       }
@@ -1069,8 +1085,8 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 
   const size_t string_buf_size = (size_t) (strings_len + 1) * sizeof (ecma_char_t);
 
-  ecma_char_t *string1_buf = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
-  ecma_char_t *string2_buf = mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_char_t *string1_buf = (ecma_char_t*) mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_char_t *string2_buf = (ecma_char_t*) mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
 
   if (string1_buf == NULL
       || string2_buf == NULL)
@@ -1186,7 +1202,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
     if (req_size < 0)
     {
-      ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
         jerry_exit (ERR_OUT_OF_MEMORY);
@@ -1221,7 +1237,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
     if (req_size < 0)
     {
-      ecma_char_t *heap_buffer_p = mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+      ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
         jerry_exit (ERR_OUT_OF_MEMORY);
@@ -1267,7 +1283,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 int32_t
 ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
-  ecma_string_container_t container = string_p->container;
+  ecma_string_container_t container = (ecma_string_container_t) string_p->container;
 
   if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
@@ -1309,7 +1325,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   }
   else if (container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
   {
-    const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (string_p->u.number_cp);
+    const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                            string_p->u.number_cp);
 
     ecma_char_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
@@ -1319,7 +1336,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   }
   else if (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
-    const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (string_p->u.collection_cp);
+    const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                     string_p->u.collection_cp);
 
     return collection_header_p->unit_number;
   }
@@ -1329,8 +1347,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
     const ecma_string_t *string1_p, *string2_p;
 
-    string1_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string1_cp);
-    string2_p = ECMA_GET_NON_NULL_POINTER (string_p->u.concatenation.string2_cp);
+    string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string1_cp);
+    string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string2_cp);
 
     return ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p);
   }
@@ -1349,8 +1367,8 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
   JERRY_ASSERT (index < (uint32_t) length);
 
   size_t buffer_size = sizeof (ecma_char_t) * (length + 1);
-  ecma_char_t *zt_str_p = mem_heap_alloc_block (buffer_size,
-                                                MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block (buffer_size,
+                                                               MEM_HEAP_ALLOC_SHORT_TERM);
 
   if (zt_str_p == NULL)
   {
@@ -1608,9 +1626,9 @@ ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, /**< zero-terminated st
 {
   TODO (Improve performance of search);
 
-  for (ecma_magic_string_id_t id = 0;
+  for (ecma_magic_string_id_t id = (ecma_magic_string_id_t) 0;
        id < ECMA_MAGIC_STRING__COUNT;
-       id++)
+       id = (ecma_magic_string_id_t) (id + 1))
   {
     if (ecma_compare_zt_strings (zt_string_p, ecma_get_magic_string_zt (id)))
     {

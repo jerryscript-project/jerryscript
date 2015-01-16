@@ -53,7 +53,7 @@ ecma_finalize (void)
   ecma_stack_finalize ();
   ecma_finalize_builtins ();
   ecma_lcache_invalidate_all ();
-  ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+  ecma_gc_run ((ecma_gc_gen_t) (ECMA_GC_GEN_COUNT - 1));
 } /* ecma_finalize */
 
 /**

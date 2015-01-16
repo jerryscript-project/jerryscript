@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,7 @@
 #include "parser.h"
 #include "ecma-helpers.h"
 
-static token saved_token, prev_token, sent_token;
-static token empty_token =
-{
-  .type = TOK_EMPTY,
-  .uid = 0,
-  .loc = 0
-};
+static token saved_token, prev_token, sent_token, empty_token;
 
 static bool allow_dump_lines = false, strict_mode;
 static size_t buffer_size = 0;
@@ -101,12 +95,13 @@ dump_current_line (void)
 static token
 create_token (token_type type, literal_index_t uid)
 {
-  return (token)
-  {
-    .type = type,
-    .loc = current_locus () - (type == TOK_STRING ? 1 : 0),
-    .uid = uid
-  };
+  token ret;
+
+  ret.type = type;
+  ret.loc = current_locus () - (type == TOK_STRING ? 1 : 0);
+  ret.uid = uid;
+
+  return ret;
 }
 
 static bool
@@ -159,16 +154,15 @@ adjust_string_ptrs (literal lit, size_t diff)
   {
     return lit;
   }
-  return (literal)
-  {
-    .type = LIT_STR,
-    .data.lp = (lp_string)
-    {
-      .length = lit.data.lp.length,
-      .hash = lit.data.lp.hash,
-      .str = lit.data.lp.str + diff
-    }
-  };
+
+  literal ret;
+
+  ret.type = LIT_STR;
+  ret.data.lp.length = lit.data.lp.length;
+  ret.data.lp.hash = lit.data.lp.hash;
+  ret.data.lp.str = lit.data.lp.str + diff;
+
+  return ret;
 }
 
 static literal
@@ -844,7 +838,8 @@ parse_number (void)
   tok_length = (size_t) (buffer - token_start);;
   if (is_fp || is_exp)
   {
-    ecma_char_t *temp = mem_heap_alloc_block ((size_t) (tok_length + 1), MEM_HEAP_ALLOC_SHORT_TERM);
+    ecma_char_t *temp = (ecma_char_t*) mem_heap_alloc_block ((size_t) (tok_length + 1),
+                                                             MEM_HEAP_ALLOC_SHORT_TERM);
     __strncpy ((char *) temp, token_start, (size_t) (tok_length));
     temp[tok_length] = '\0';
     ecma_number_t res = ecma_zt_string_to_number (temp);
@@ -1087,11 +1082,12 @@ lexer_next_token_private (void)
   {
     if (replace_comment_by_newline ())
     {
-      return (token)
-      {
-        .type = TOK_NEWLINE,
-        .uid = 0
-      };
+      token ret;
+
+      ret.type = TOK_NEWLINE;
+      ret.uid = 0;
+
+      return ret;
     }
     else
     {
@@ -1431,6 +1427,10 @@ lexer_set_strict_mode (bool is_strict)
 void
 lexer_init (const char *source, size_t source_size, bool show_opcodes)
 {
+  empty_token.type = TOK_EMPTY;
+  empty_token.uid = 0;
+  empty_token.loc = 0;
+
   saved_token = prev_token = sent_token = empty_token;
   allow_dump_lines = show_opcodes;
   buffer_size = source_size;

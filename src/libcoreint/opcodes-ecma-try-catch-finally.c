@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_try (opcode_t opdata, /**< operation data */
-            int_data_t *int_data) /**< interpreter context */
+opfunc_try_block (opcode_t opdata, /**< operation data */
+                  int_data_t *int_data) /**< interpreter context */
 {
-  const idx_t block_end_oc_idx_1 = opdata.data.try.oc_idx_1;
-  const idx_t block_end_oc_idx_2 = opdata.data.try.oc_idx_2;
+  const idx_t block_end_oc_idx_1 = opdata.data.try_block.oc_idx_1;
+  const idx_t block_end_oc_idx_2 = opdata.data.try_block.oc_idx_2;
   const opcode_counter_t try_end_oc = (opcode_counter_t) (
     calc_opcode_counter_from_idx_idx (block_end_oc_idx_1, block_end_oc_idx_2) + int_data->pos);
 
@@ -129,4 +129,4 @@ opfunc_try (opcode_t opdata, /**< operation data */
   JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_END_TRY_CATCH_FINALLY);
 
   return try_completion;
-} /* opfunc_try */
+} /* opfunc_try_block */

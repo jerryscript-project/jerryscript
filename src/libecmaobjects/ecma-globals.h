@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -231,7 +231,12 @@ typedef enum
   /**
    * Bit-mask of non-instantiated built-in's properties (bits 32-63)
    */
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63,
+
+  /**
+   * Number of internal properties' types
+   */
+  ECMA_INTERNAL_PROPERTY__COUNT
 } ecma_internal_property_id_t;
 
 /**
@@ -260,6 +265,11 @@ typedef enum
   ECMA_PROPERTY_NOT_CONFIGURABLE, /**< property's 'Configurable' attribute is false */
   ECMA_PROPERTY_CONFIGURABLE /**< property's 'Configurable' attribute is true */
 } ecma_property_configurable_value_t;
+
+/**
+ * Width of internal property type field's width
+ */
+#define ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH   (5)
 
 /**
  * Description of ecma-property
@@ -323,7 +333,7 @@ typedef struct ecma_property_t
     struct __packed ecma_internal_property_t
     {
       /** Internal property's type */
-      unsigned int type : 5;
+      unsigned int type : ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH;
 
       /** Value (may be a compressed pointer) */
       uint32_t value;
@@ -342,6 +352,9 @@ typedef enum
 
 /**
  * Internal object types
+ *
+ * Warning:
+ *         definition order is significant (see also dispatch tables in libecmaobjects/ecma-objects.c)
  */
 typedef enum
 {

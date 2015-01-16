@@ -7,7 +7,7 @@ endif
 ENGINE_NAME ?= jerry
 
 CROSS_COMPILE ?= arm-none-eabi-
-CC  = gcc
+CC  = g++
 LD  = ld
 OBJDUMP = objdump
 OBJCOPY = objcopy
@@ -206,8 +206,7 @@ TARGET_CPU = $(strip $(if $(filter linux,$(TARGET_SYSTEM)), x64, \
 # Warnings
 CFLAGS_WARNINGS ?= -Wall -Wextra -Wpedantic -Wlogical-op -Winline \
                    -Wformat-nonliteral -Winit-self -Wstack-protector \
-                   -Wconversion -Wsign-conversion -Wformat-security \
-                   -Wstrict-prototypes -Wmissing-prototypes
+                   -Wconversion -Wsign-conversion -Wformat-security
 CFLAGS_WERROR ?= -Werror
 CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 
@@ -235,7 +234,7 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 # Common
 #
 
-CFLAGS_COMMON ?= $(INCLUDES) -std=c99 -nostdlib
+CFLAGS_COMMON ?= $(INCLUDES) -std=c++11 -nostdlib -fno-exceptions -fno-rtti
 LDFLAGS ?= -lgcc
 
 ifeq ($(OPTION_OPTIMIZE),enable)

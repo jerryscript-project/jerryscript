@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ hash_table_insert (hash_table ht, void *key, void *value)
   {
     list = array_list_init (bucket_size (hti));
   }
-  uint8_t *bucket = mem_heap_alloc_block (bucket_size (hti), hti->alloc_term);
+  uint8_t *bucket = (uint8_t*) mem_heap_alloc_block (bucket_size (hti), hti->alloc_term);
   __memcpy (bucket, key, hti->key_size);
   __memcpy (bucket + hti->key_size, value, hti->value_size);
   list = array_list_append (list, bucket);
@@ -91,7 +91,7 @@ hash_table_lookup (hash_table ht, void *key)
   }
   for (uint16_t i = 0; i < array_list_len (al); i++)
   {
-    uint8_t *bucket = array_list_element (al, i);
+    uint8_t *bucket = (uint8_t*) array_list_element (al, i);
     JERRY_ASSERT (bucket != NULL);
     if (!__memcmp (bucket, key, h->key_size))
     {

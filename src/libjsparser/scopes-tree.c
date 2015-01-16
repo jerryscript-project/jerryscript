@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,12 +160,12 @@ change_uid (op_meta *om, lit_id_hash_table *lit_ids, uint16_t mask)
       {
         JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
         literal_index_t lit_id = om->lit_id[i];
-        idx_t *uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+        idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
           hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
           lit_id_hash_table_insert (lit_ids, next_uid, global_oc, lit_id);
-          uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+          uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
           JERRY_ASSERT (uid != NULL);
           JERRY_ASSERT (*uid == next_uid);
           next_uid++;
@@ -195,11 +195,11 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
       {
         JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
         literal_index_t lit_id = om->lit_id[i];
-        idx_t *uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+        idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
           hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
-          uid = hash_table_lookup (lit_id_to_uid, &lit_id);
+          uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
           JERRY_ASSERT (uid != NULL);
           JERRY_ASSERT (*uid == next_uid);
           next_uid++;
@@ -307,9 +307,9 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
     case OPCODE (func_decl_n):
     case OPCODE (array_decl):
     case OPCODE (obj_decl):
-    case OPCODE (this):
+    case OPCODE (this_binding):
     case OPCODE (with):
-    case OPCODE (throw):
+    case OPCODE (throw_value):
     case OPCODE (is_true_jmp_up):
     case OPCODE (is_true_jmp_down):
     case OPCODE (is_false_jmp_up):
@@ -322,7 +322,7 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
     }
     case OPCODE (exitval):
     case OPCODE (ret):
-    case OPCODE (try):
+    case OPCODE (try_block):
     case OPCODE (jmp_up):
     case OPCODE (jmp_down):
     case OPCODE (nop):
@@ -446,9 +446,9 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
     case OPCODE (func_decl_n):
     case OPCODE (array_decl):
     case OPCODE (obj_decl):
-    case OPCODE (this):
+    case OPCODE (this_binding):
     case OPCODE (with):
-    case OPCODE (throw):
+    case OPCODE (throw_value):
     case OPCODE (is_true_jmp_up):
     case OPCODE (is_true_jmp_down):
     case OPCODE (is_false_jmp_up):
@@ -461,7 +461,7 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
     }
     case OPCODE (exitval):
     case OPCODE (ret):
-    case OPCODE (try):
+    case OPCODE (try_block):
     case OPCODE (jmp_up):
     case OPCODE (jmp_down):
     case OPCODE (nop):

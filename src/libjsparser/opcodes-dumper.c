@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,13 +162,14 @@ next_temp_name (void)
 static op_meta
 create_op_meta (opcode_t op, literal_index_t lit_id1, literal_index_t lit_id2, literal_index_t lit_id3)
 {
-  return (op_meta)
-  {
-    .op = op,
-    .lit_id[0] = lit_id1,
-    .lit_id[1] = lit_id2,
-    .lit_id[2] = lit_id3
-  };
+  op_meta ret;
+
+  ret.op = op;
+  ret.lit_id[0] = lit_id1;
+  ret.lit_id[1] = lit_id2;
+  ret.lit_id[2] = lit_id3;
+
+  return ret;
 }
 
 static op_meta
@@ -222,11 +223,12 @@ create_op_meta_111 (opcode_t op, literal_index_t lit_id1, literal_index_t lit_id
 static operand
 tmp_operand (void)
 {
-  return (operand)
-  {
-    .type = OPERAND_TMP,
-    .data.uid = next_temp_name ()
-  };
+  operand ret;
+
+  ret.type = OPERAND_TMP;
+  ret.data.uid = next_temp_name ();
+
+  return ret;
 }
 
 static uint8_t
@@ -641,20 +643,24 @@ create_operand_from_tmp_and_lit (idx_t tmp, literal_index_t lit_id)
   if (tmp != LITERAL_TO_REWRITE)
   {
     JERRY_ASSERT (lit_id == NOT_A_LITERAL);
-    return (operand)
-    {
-      .type = OPERAND_TMP,
-      .data.uid = tmp
-    };
+
+    operand ret;
+
+    ret.type = OPERAND_TMP;
+    ret.data.uid = tmp;
+
+    return ret;
   }
   else
   {
     JERRY_ASSERT (lit_id != NOT_A_LITERAL);
-    return (operand)
-    {
-      .type = OPERAND_LITERAL,
-      .data.lit_id = lit_id
-    };
+
+    operand ret;
+
+    ret.type = OPERAND_LITERAL;
+    ret.data.lit_id = lit_id;
+
+    return ret;
   }
 }
 
@@ -697,21 +703,23 @@ get_diff_from (opcode_counter_t oc)
 operand
 empty_operand (void)
 {
-  return (operand)
-  {
-    .type = OPERAND_TMP,
-    .data.uid = INVALID_VALUE
-  };
+  operand ret;
+
+  ret.type = OPERAND_TMP;
+  ret.data.uid = INVALID_VALUE;
+
+  return ret;
 }
 
 operand
 literal_operand (literal_index_t lit_id)
 {
-  return (operand)
-  {
-    .type = OPERAND_LITERAL,
-    .data.lit_id = lit_id
-  };
+  operand ret;
+
+  ret.type = OPERAND_LITERAL;
+  ret.data.lit_id = lit_id;
+
+  return ret;
 }
 
 bool
@@ -1233,7 +1241,7 @@ rewrite_function_end (varg_list_type vlt)
 void
 dump_this (operand op)
 {
-  dump_single_address (getop_this, op);
+  dump_single_address (getop_this_binding, op);
 }
 
 operand
@@ -2271,7 +2279,7 @@ void
 dump_try_for_rewrite (void)
 {
   STACK_PUSH (tries, serializer_get_current_opcode_counter ());
-  const opcode_t opcode = getop_try (INVALID_VALUE, INVALID_VALUE);
+  const opcode_t opcode = getop_try_block (INVALID_VALUE, INVALID_VALUE);
   serializer_dump_op_meta (create_op_meta_000 (opcode));
 }
 
@@ -2279,11 +2287,11 @@ void
 rewrite_try (void)
 {
   op_meta try_op_meta = deserialize_op_meta (STACK_TOP (tries));
-  JERRY_ASSERT (try_op_meta.op.op_idx == OPCODE (try));
+  JERRY_ASSERT (try_op_meta.op.op_idx == OPCODE (try_block));
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (tries)), &id1, &id2);
-  try_op_meta.op.data.try.oc_idx_1 = id1;
-  try_op_meta.op.data.try.oc_idx_2 = id2;
+  try_op_meta.op.data.try_block.oc_idx_1 = id1;
+  try_op_meta.op.data.try_block.oc_idx_2 = id2;
   serializer_rewrite_op_meta (STACK_TOP (tries), try_op_meta);
   STACK_DROP (tries, 1);
 }
@@ -2346,7 +2354,7 @@ dump_end_try_catch_finally (void)
 void
 dump_throw (operand op)
 {
-  dump_single_address (getop_throw, op);
+  dump_single_address (getop_throw_value, op);
 }
 
 bool

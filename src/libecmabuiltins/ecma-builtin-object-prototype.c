@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,21 +52,21 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_object_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   ecma_magic_string_id_t type_string;
 
-  if (ecma_is_value_undefined (this))
+  if (ecma_is_value_undefined (this_arg))
   {
     type_string = ECMA_MAGIC_STRING_UNDEFINED_UL;
   }
-  else if (ecma_is_value_null (this))
+  else if (ecma_is_value_null (this_arg))
   {
     type_string = ECMA_MAGIC_STRING_NULL_UL;
   }
   else
   {
-    ecma_completion_value_t obj_this = ecma_op_to_object (this);
+    ecma_completion_value_t obj_this = ecma_op_to_object (this_arg);
 
     if (!ecma_is_completion_value_normal (obj_this))
     {
@@ -140,9 +140,9 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this) /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_value_of (ecma_value_t this) /**< this argument */
+ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_to_object (this);
+  return ecma_op_to_object (this_arg);
 } /* ecma_builtin_object_prototype_object_value_of */
 
 /**
@@ -155,9 +155,9 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this) /**< this argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this) /**< this argument */
+ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_object_prototype_object_to_locale_string */
 
 /**
@@ -170,10 +170,10 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this) /**< t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this, /**< this argument */
+ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /**< this argument */
                                                        ecma_value_t arg) /**< first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**
@@ -186,10 +186,10 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this, /**< t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this, /**< this argument */
+ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**< this argument */
                                                       ecma_value_t arg) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_prototype_object_is_prototype_of */
 
 /**
@@ -202,10 +202,10 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this, /**< th
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this, /**< this argument */
+ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_arg, /**< this argument */
                                                              ecma_value_t arg) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
 /**

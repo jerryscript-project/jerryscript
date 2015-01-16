@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -281,7 +281,8 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
                                                                             equal to mapped argument's name */
 {
   ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER (scope_prop_p->u.internal_property.value);
+  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                        scope_prop_p->u.internal_property.value);
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
@@ -313,7 +314,8 @@ ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (map_prop_p->u.internal_property.value);
+  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                    map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -358,7 +360,8 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
 
   // 3.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (map_prop_p->u.internal_property.value);
+  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                    map_prop_p->u.internal_property.value);
 
   // 4.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -397,7 +400,8 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (map_prop_p->u.internal_property.value);
+  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                    map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -490,7 +494,8 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (map_prop_p->u.internal_property.value);
+  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                    map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);

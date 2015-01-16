@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,14 +84,18 @@ ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to i
   JERRY_ASSERT (entry_p != NULL);
   JERRY_ASSERT (entry_p->object_cp != ECMA_NULL_POINTER);
 
-  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (entry_p->object_cp));
+  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                entry_p->object_cp));
 
   entry_p->object_cp = ECMA_NULL_POINTER;
-  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (entry_p->prop_name_cp));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                     entry_p->prop_name_cp));
 
   if (entry_p->prop_cp != ECMA_NULL_POINTER)
   {
-    ecma_set_property_lcached (ECMA_GET_NON_NULL_POINTER (entry_p->prop_cp), false);
+    ecma_set_property_lcached (ECMA_GET_NON_NULL_POINTER (ecma_property_t,
+                                                          entry_p->prop_cp),
+                               false);
   }
 } /* ecma_lcache_invalidate_entry */
 
@@ -166,7 +170,8 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
         {
 #ifndef JERRY_NDEBUG
           ecma_object_t* obj_in_entry_p;
-          obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_lcache_hash_table[hash_key][entry_index].object_cp);
+          obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                      ecma_lcache_hash_table[hash_key][entry_index].object_cp);
           JERRY_ASSERT (obj_in_entry_p == object_p);
 #endif /* !JERRY_NDEBUG */
           break;
@@ -232,11 +237,12 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
   {
     if (ecma_lcache_hash_table[hash_key][i].object_cp == object_cp)
     {
-      ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_lcache_hash_table[hash_key][i].prop_name_cp);
+      ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                    ecma_lcache_hash_table[hash_key][i].prop_name_cp);
 
       if (ecma_compare_ecma_strings_equal_hashes (prop_name_p, entry_prop_name_p))
       {
-        ecma_property_t *prop_p = ECMA_GET_POINTER (ecma_lcache_hash_table[hash_key][i].prop_cp);
+        ecma_property_t *prop_p = ECMA_GET_POINTER (ecma_property_t, ecma_lcache_hash_table[hash_key][i].prop_cp);
         JERRY_ASSERT (prop_p == NULL || ecma_is_property_lcached (prop_p));
 
         *prop_p_p = prop_p;
@@ -288,11 +294,13 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
 
     if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
-      prop_name_p = ECMA_GET_NON_NULL_POINTER (prop_p->u.named_data_property.name_p);
+      prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                               prop_p->u.named_data_property.name_p);
     }
     else
     {
-      prop_name_p = ECMA_GET_NON_NULL_POINTER (prop_p->u.named_accessor_property.name_p);
+      prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                               prop_p->u.named_accessor_property.name_p);
     }
   }
   else

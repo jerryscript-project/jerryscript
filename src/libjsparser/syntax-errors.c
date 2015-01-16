@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,12 @@ STATIC_STACK (U8, uint8_t)
 static prop_literal
 create_prop_literal (literal lit, prop_type type)
 {
-  return (prop_literal)
-  {
-    .type = type,
-    .lit = lit
-  };
+  prop_literal ret;
+
+  ret.type = type;
+  ret.lit = lit;
+
+  return ret;
 }
 
 void

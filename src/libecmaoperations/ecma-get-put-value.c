@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,8 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     JERRY_ASSERT(obj_p != NULL
                  && !ecma_is_lexical_environment (obj_p));
 
-    return ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp));
+    return ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                 ref.referenced_name_cp));
   }
   else
   {
@@ -111,7 +112,8 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ret_value = ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp));
+    ret_value = ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                      ref.referenced_name_cp));
 
     ECMA_FINALIZE (obj_base);
 
@@ -229,7 +231,8 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
 
     ECMA_TRY_CATCH (put_completion,
                     ecma_op_object_put (obj_p,
-                                        ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp),
+                                        ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                   ref.referenced_name_cp),
                                         value,
                                         ref.is_strict),
                     ret_value);
@@ -252,7 +255,8 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp);
+    ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  ref.referenced_name_cp);
 
     // sub_2.
     if (!ecma_op_object_can_put (obj_p, referenced_name_p))
@@ -280,7 +284,8 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
         // sub_6.
         JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-        ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(prop_p->u.named_accessor_property.set_p);
+        ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t,
+                                                            prop_p->u.named_accessor_property.set_p);
         JERRY_ASSERT (setter_p != NULL);
 
         ECMA_TRY_CATCH (call_completion,

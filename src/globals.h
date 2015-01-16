@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <sys/types.h>
 #include <float.h>
 
 /**
  * Types
  */
 typedef unsigned long mword_t;
-typedef signed long ssize_t;
 
 /**
  * Attributes
@@ -35,8 +35,9 @@ typedef signed long ssize_t;
 #define __packed __attribute__((packed))
 #define __noreturn __attribute__((noreturn))
 #define __noinline __attribute__((noinline))
+#define __used __attribute__((used))
 #ifndef __attribute_always_inline__
-# define __attribute_always_inline__ __attribute__((always_inline))
+# define __attribute_always_inline__ __attribute__((always_inline)) __used
 #endif /* !__attribute_always_inline__ */
 #ifndef __attribute_const__
 # define __attribute_const__ __attribute__((const))

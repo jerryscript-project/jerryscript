@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,9 +226,9 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_OBJ_TYPE_POS,
-                                ECMA_OBJECT_OBJ_TYPE_WIDTH);
+  return (ecma_object_type_t) jrt_extract_bit_field (object_p->container,
+                                                     ECMA_OBJECT_OBJ_TYPE_POS,
+                                                     ECMA_OBJECT_OBJ_TYPE_WIDTH);
 } /* ecma_get_object_type */
 
 /**
@@ -260,7 +260,8 @@ ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
   uintptr_t prototype_object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
-  return ECMA_GET_POINTER (prototype_object_cp);
+  return ECMA_GET_POINTER (ecma_object_t,
+                           prototype_object_cp);
 } /* ecma_get_object_prototype */
 
 /**
@@ -314,9 +315,9 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 
-  return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_LEX_ENV_TYPE_POS,
-                                ECMA_OBJECT_LEX_ENV_TYPE_WIDTH);
+  return (ecma_lexical_environment_type_t) jrt_extract_bit_field (object_p->container,
+                                                                  ECMA_OBJECT_LEX_ENV_TYPE_POS,
+                                                                  ECMA_OBJECT_LEX_ENV_TYPE_WIDTH);
 } /* ecma_get_lex_env_type */
 
 /**
@@ -332,7 +333,8 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
   uintptr_t outer_reference_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
-  return ECMA_GET_POINTER (outer_reference_cp);
+  return ECMA_GET_POINTER (ecma_object_t,
+                           outer_reference_cp);
 } /* ecma_get_lex_env_outer_reference */
 
 /**
@@ -349,7 +351,8 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
   uintptr_t properties_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  return ECMA_GET_POINTER (properties_cp);
+  return ECMA_GET_POINTER (ecma_property_t,
+                           properties_cp);
 } /* ecma_get_property_list */
 
 /**
@@ -404,7 +407,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
   uintptr_t object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
                                                            ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                            ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  return ECMA_GET_NON_NULL_POINTER (object_cp);
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_cp);
 } /* ecma_get_lex_env_binding_object */
 
 /**
@@ -427,7 +430,10 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
   ECMA_SET_POINTER(new_property_p->next_property_p, list_head_p);
   ecma_set_property_list (object_p, new_property_p);
 
-  new_property_p->u.internal_property.type = property_id;
+  JERRY_STATIC_ASSERT (ECMA_INTERNAL_PROPERTY__COUNT <= (1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH));
+  JERRY_ASSERT (property_id < ECMA_INTERNAL_PROPERTY__COUNT);
+
+  new_property_p->u.internal_property.type = property_id & ((1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH) - 1);
   new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
 
   return new_property_p;
@@ -450,7 +456,7 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
 
   for (ecma_property_t *property_p = ecma_get_property_list (object_p);
        property_p != NULL;
-       property_p = ECMA_GET_POINTER(property_p->next_property_p))
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
     if (property_p->type == ECMA_PROPERTY_INTERNAL)
     {
@@ -591,17 +597,19 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
   for (property_p = ecma_get_property_list (obj_p);
        property_p != NULL;
-       property_p = ECMA_GET_POINTER(property_p->next_property_p))
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
     ecma_string_t *property_name_p;
 
     if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
-      property_name_p = ECMA_GET_NON_NULL_POINTER(property_p->u.named_data_property.name_p);
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
     }
     else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      property_name_p = ECMA_GET_NON_NULL_POINTER(property_p->u.named_accessor_property.name_p);
+      property_name_p = ECMA_GET_NON_NULL_POINTER(ecma_string_t,
+                                                  property_p->u.named_accessor_property.name_p);
     }
     else
     {
@@ -679,7 +687,8 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
 
   ecma_lcache_invalidate (object_p, NULL, property_p);
 
-  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_data_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                     property_p->u.named_data_property.name_p));
   ecma_free_value (property_p->u.named_data_property.value, false);
 
   ecma_dealloc_property (property_p);
@@ -697,7 +706,8 @@ ecma_free_named_accessor_property (ecma_object_t *object_p, /**< object the prop
 
   ecma_lcache_invalidate (object_p, NULL, property_p);
 
-  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (property_p->u.named_accessor_property.name_p));
+  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                     property_p->u.named_accessor_property.name_p));
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */
@@ -710,7 +720,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_INTERNAL);
 
-  ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
+  ecma_internal_property_id_t property_id = (ecma_internal_property_id_t) property_p->u.internal_property.type;
   uint32_t property_value = property_p->u.internal_property.value;
 
   switch (property_id)
@@ -718,7 +728,9 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
     {
-      ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER(property_value), true);
+      ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                              property_value),
+                                   true);
 
       break;
     }
@@ -727,14 +739,17 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     {
       if (property_value != ECMA_NULL_POINTER)
       {
-        ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER(property_value), false);
+        ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                property_value),
+                                     false);
       }
       break;
     }
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
     {
-      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (property_value);
+      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                        property_value);
       ecma_deref_ecma_string (str_p);
 
       break;
@@ -742,7 +757,8 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* pointer to a ecma_number_t */
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (property_value);
+      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                        property_value);
       ecma_dealloc_number (num_p);
 
       break;
@@ -761,6 +777,12 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
     {
       break;
+    }
+
+    case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
+                                         * but number of the real internal property types */
+    {
+      JERRY_UNREACHABLE ();
     }
   }
 
@@ -812,7 +834,8 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
        cur_prop_p != NULL;
        prev_prop_p = cur_prop_p, cur_prop_p = next_prop_p)
   {
-    next_prop_p = ECMA_GET_POINTER(cur_prop_p->next_property_p);
+    next_prop_p = ECMA_GET_POINTER (ecma_property_t,
+                                    cur_prop_p->next_property_p);
 
     if (cur_prop_p == prop_p)
     {
@@ -878,7 +901,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   ecma_property_t *prop_iter_p;
   for (prop_iter_p = ecma_get_property_list (obj_p);
        prop_iter_p != NULL;
-       prop_iter_p = ECMA_GET_POINTER(prop_iter_p->next_property_p))
+       prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
   {
     if (prop_iter_p == prop_p)
     {
@@ -1067,26 +1090,20 @@ ecma_set_property_lcached (ecma_property_t *prop_p, /**< property */
 ecma_property_descriptor_t
 ecma_make_empty_property_descriptor (void)
 {
-  ecma_property_descriptor_t prop_desc = (ecma_property_descriptor_t)
-  {
-    .is_value_defined = false,
-    .value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+  ecma_property_descriptor_t prop_desc;
 
-    .is_writable_defined = false,
-    .is_writable = false,
-
-    .is_enumerable_defined = false,
-    .is_enumerable = false,
-
-    .is_configurable_defined = false,
-    .is_configurable = false,
-
-    .is_get_defined = false,
-    .get_p = NULL,
-
-    .is_set_defined = false,
-    .set_p = NULL
-  };
+  prop_desc.is_value_defined = false;
+  prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc.is_writable_defined = false;
+  prop_desc.is_writable = false;
+  prop_desc.is_enumerable_defined = false;
+  prop_desc.is_enumerable = false;
+  prop_desc.is_configurable_defined = false;
+  prop_desc.is_configurable = false;
+  prop_desc.is_get_defined = false;
+  prop_desc.get_p = NULL;
+  prop_desc.is_set_defined = false;
+  prop_desc.set_p = NULL;
 
   return prop_desc;
 } /* ecma_make_empty_property_descriptor */

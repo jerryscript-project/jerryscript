@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,9 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_array_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_array_prototype_object_to_string */
 
 /**

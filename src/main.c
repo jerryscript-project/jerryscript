@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ jerry_run (const char *script_source, size_t script_source_size,
   parser_init (script_source, script_source_size, is_show_opcodes);
   parser_parse_program ();
 
-  opcodes = deserialize_bytecode ();
+  opcodes = (const opcode_t*) deserialize_bytecode ();
 
   optimizer_run_passes ((opcode_t *) opcodes);
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,19 +51,30 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
 
-  typedef ecma_completion_value_t (*get_ptr_t) (ecma_object_t *, ecma_string_t *);
-  static const get_ptr_t get [ECMA_OBJECT_TYPE__COUNT] =
+  switch (type)
   {
-    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_get,
-    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_get
-  };
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      return ecma_op_general_object_get (obj_p, property_name_p);
+    }
 
-  return get[type] (obj_p, property_name_p);
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_get (obj_p, property_name_p);
+    }
+
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_empty_completion_value ();
+    }
+  }
 } /* ecma_op_object_get */
 
 /**
@@ -81,19 +92,42 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
   const bool is_builtin = ecma_get_object_is_builtin (obj_p);
 
-  typedef ecma_property_t* (*get_own_property_ptr_t) (ecma_object_t *, ecma_string_t *);
-  static const get_own_property_ptr_t get_own_property [ECMA_OBJECT_TYPE__COUNT] =
-  {
-    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get_own_property,
-    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_get_own_property,
-    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_string_object_get_own_property
-  };
+  ecma_property_t *prop_p;
 
-  ecma_property_t *prop_p = get_own_property[type] (obj_p, property_name_p);
+  switch (type)
+  {
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    {
+      prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
+
+      break;
+    }
+
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      prop_p = ecma_op_string_object_get_own_property (obj_p, property_name_p);
+
+      break;
+    }
+
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      prop_p = ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
+
+      break;
+    }
+
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return NULL;
+    }
+  }
 
   if (unlikely (prop_p == NULL))
   {
@@ -276,19 +310,34 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
 
-  typedef ecma_completion_value_t (*delete_ptr_t) (ecma_object_t *, ecma_string_t *, bool);
-  static const delete_ptr_t delete [ECMA_OBJECT_TYPE__COUNT] =
+  switch (type)
   {
-    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_delete,
-    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_delete
-  };
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      return ecma_op_general_object_delete (obj_p,
+                                            property_name_p,
+                                            is_throw);
+    }
 
-  return delete[type] (obj_p, property_name_p, is_throw);
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_delete (obj_p,
+                                              property_name_p,
+                                              is_throw);
+    }
+
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_empty_completion_value ();
+    }
+  }
 } /* ecma_op_object_delete */
 
 /**
@@ -352,25 +401,43 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   JERRY_ASSERT (type < ECMA_OBJECT_TYPE__COUNT);
 
-  typedef ecma_completion_value_t (*define_own_property_ptr_t) (ecma_object_t *,
-                                                                ecma_string_t *,
-                                                                const ecma_property_descriptor_t*,
-                                                                bool);
-  static const define_own_property_ptr_t define_own_property [ECMA_OBJECT_TYPE__COUNT] =
+  switch (type)
   {
-    [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_define_own_property,
-    [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_define_own_property,
-    [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_define_own_property,
-    [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_define_own_property,
-    [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_define_own_property,
-    [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_array_object_define_own_property,
-    [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_arguments_object_define_own_property
-  };
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      return ecma_op_general_object_define_own_property (obj_p,
+                                                         property_name_p,
+                                                         property_desc_p,
+                                                         is_throw);
+    }
 
-  return define_own_property[type] (obj_p,
-                                    property_name_p,
-                                    property_desc_p,
-                                    is_throw);
+    case ECMA_OBJECT_TYPE_ARRAY:
+    {
+      return ecma_op_array_object_define_own_property (obj_p,
+                                                       property_name_p,
+                                                       property_desc_p,
+                                                       is_throw);
+    }
+
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_define_own_property (obj_p,
+                                                           property_name_p,
+                                                           property_desc_p,
+                                                           is_throw);
+    }
+
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_empty_completion_value ();
+    }
+  }
 } /* ecma_op_object_define_own_property */
 
 /**

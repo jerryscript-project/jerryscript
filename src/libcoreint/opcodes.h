@@ -114,13 +114,13 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_3 (a, prop_getter, lhs, obj, prop)                               \
         p##_3 (a, prop_setter, obj, prop, rhs)                               \
         p##_2 (a, obj_decl, lhs, list)                                       \
-        p##_1 (a, this, lhs)                                                 \
+        p##_1 (a, this_binding, lhs)                                         \
         p##_2 (a, delete_var, lhs, name)                                     \
         p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
         p##_1 (a, with, expr)                                                \
-        p##_2 (a, try, oc_idx_1, oc_idx_2)                                   \
-        p##_1 (a, throw, var)
+        p##_2 (a, try_block, oc_idx_1, oc_idx_2)                             \
+        p##_1 (a, throw_value, var)
 
 #define OP_ASSIGNMENTS(p, a)                                                 \
         p##_3 (a, assignment, var_left, type_value_right, value_right)

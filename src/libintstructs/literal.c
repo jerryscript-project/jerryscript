@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,23 @@
 literal
 create_empty_literal (void)
 {
-  return (literal)
-  {
-    .type = LIT_UNKNOWN,
-    .data.none = NULL
-  };
+  literal ret;
+
+  ret.type = LIT_UNKNOWN;
+  ret.data.none = NULL;
+
+  return ret;
 }
 
 literal
 create_literal_from_num (ecma_number_t num)
 {
-  return (literal)
-  {
-    .type = LIT_NUMBER,
-    .data.num = num
-  };
+  literal ret;
+
+  ret.type = LIT_NUMBER;
+  ret.data.num = num;
+
+  return ret;
 }
 
 literal
@@ -52,7 +54,9 @@ create_literal_from_str_compute_len (const char *s)
 literal
 create_literal_from_zt (const ecma_char_t *s, ecma_length_t len)
 {
-  for (ecma_magic_string_id_t msi = 0; msi < ECMA_MAGIC_STRING__COUNT; msi++)
+  for (ecma_magic_string_id_t msi = (ecma_magic_string_id_t) 0;
+       msi < ECMA_MAGIC_STRING__COUNT;
+       msi = (ecma_magic_string_id_t) (msi + 1))
   {
     if (ecma_zt_string_length (ecma_get_magic_string_zt (msi)) != len)
     {
@@ -60,23 +64,23 @@ create_literal_from_zt (const ecma_char_t *s, ecma_length_t len)
     }
     if (!__strncmp ((const char *) s, (const char *) ecma_get_magic_string_zt (msi), len))
     {
-      return (literal)
-      {
-        .type = LIT_MAGIC_STR,
-        .data.magic_str_id = msi
-      };
+      literal ret;
+
+      ret.type = LIT_MAGIC_STR;
+      ret.data.magic_str_id = msi;
+
+      return ret;
     }
   }
-  return (literal)
-  {
-    .type = LIT_STR,
-    .data.lp = (lp_string)
-    {
-      .length = len,
-      .str = s,
-      .hash = ecma_chars_buffer_calc_hash_last_chars (s, len)
-    }
-  };
+
+  literal ret;
+
+  ret.type = LIT_STR;
+  ret.data.lp.length = len;
+  ret.data.lp.str = s;
+  ret.data.lp.hash = ecma_chars_buffer_calc_hash_last_chars (s, len);
+
+  return ret;
 }
 
 bool

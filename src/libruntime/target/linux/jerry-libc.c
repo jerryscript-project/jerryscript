@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,9 +60,12 @@ static long int syscall_1 (long int syscall_no, long int arg1);
 static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
 static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
-extern long int syscall_1_asm (long int syscall_no, long int arg1);
-extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
-extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
+extern "C"
+{
+  extern long int syscall_1_asm (long int syscall_no, long int arg1);
+  extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
+  extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
+}
 
 /**
  * System call with one argument.

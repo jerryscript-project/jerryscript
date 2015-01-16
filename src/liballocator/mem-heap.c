@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -593,7 +593,7 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
 
     for (mem_try_give_memory_back_severity_t severity = MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
          severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL;
-         severity++)
+         severity = (mem_try_give_memory_back_severity_t) (severity + 1))
     {
       mem_run_try_to_give_memory_back_callbacks (severity);
 

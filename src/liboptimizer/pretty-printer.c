@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 #define __OPCODE_SIZE(name, arg1, arg2, arg3) \
   sizeof (__op_##name) + 1,
 
-static char* opcode_names[] =
+static const char* opcode_names[] =
 {
   OP_LIST (OPCODE_STR)
   ""
@@ -268,7 +268,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     PP_OP (post_decr, "%s = %s--;");
     PP_OP (pre_incr, "%s = ++%s;");
     PP_OP (pre_decr, "%s = --%s;");
-    PP_OP (throw, "throw %s;");
+    PP_OP (throw_value, "throw %s;");
     PP_OP (reg_var_decl, "var %s .. %s;");
     PP_OP (var_decl, "var %s;");
     PP_OP (nop, ";");
@@ -277,7 +277,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     PP_OP (ret, "ret;");
     PP_OP (prop_getter, "%s = %s[%s];");
     PP_OP (prop_setter, "%s[%s] = %s;");
-    PP_OP (this, "%s = this;");
+    PP_OP (this_binding, "%s = this;");
     PP_OP (delete_var, "%s = delete %s;");
     PP_OP (delete_prop, "%s = delete %s.%s;");
     PP_OP (typeof, "%s = typeof %s;");
@@ -288,7 +288,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     case NAME_TO_ID (is_false_jmp_down): __printf ("if (%s == false) goto %d;", VAR (1), oc + OC (2, 3)); break;
     case NAME_TO_ID (jmp_up): __printf ("goto %d;", oc - OC (1, 2)); break;
     case NAME_TO_ID (jmp_down): __printf ("goto %d;", oc + OC (1, 2)); break;
-    case NAME_TO_ID (try): __printf ("try (end: %d);", oc + OC (1, 2)); break;
+    case NAME_TO_ID (try_block): __printf ("try (end: %d);", oc + OC (1, 2)); break;
     case NAME_TO_ID (assignment):
     {
       __printf ("%s = ", VAR (1));

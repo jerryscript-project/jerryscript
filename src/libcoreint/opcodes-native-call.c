@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,8 +124,8 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         JERRY_ASSERT (chars >= 0);
 
         ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-        ecma_char_t *zt_str_p = mem_heap_alloc_block ((size_t) zt_str_size,
-                                                      MEM_HEAP_ALLOC_SHORT_TERM);
+        ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) zt_str_size,
+                                                                     MEM_HEAP_ALLOC_SHORT_TERM);
         if (zt_str_p == NULL)
         {
           jerry_exit (ERR_OUT_OF_MEMORY);

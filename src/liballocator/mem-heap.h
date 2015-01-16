@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ extern void mem_heap_stats_reset_peak (void);
 #define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM);
+  type *var_name = (type *) mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM);
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,

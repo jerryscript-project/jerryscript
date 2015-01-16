@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,20 @@
 #include "mem-pool.h"
 #include "mem-poolman.h"
 
-extern void srand (unsigned int __seed);
-extern int rand (void);
-extern long int time (long int *__timer);
+extern "C"
+{
+  extern void srand (unsigned int __seed);
+  extern int rand (void);
+  extern long int time (long int *__timer);
+}
 
 // Iterations count
 const uint32_t test_iters = 16384;
 
 // Subiterations count
 const uint32_t test_max_sub_iters = 32;
+
+uint8_t *ptrs[test_max_sub_iters];
 
 int
 main( int __unused argc,
@@ -50,7 +55,6 @@ main( int __unused argc,
     {
       const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
 
-      uint8_t *ptrs[subiters];
       for ( size_t j = 0; j < subiters; j++ )
         {
           ptrs[j] = mem_pools_alloc();

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,9 +165,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 void
 ecma_init_builtins (void)
 {
-  for (ecma_builtin_id_t id = 0;
+  for (ecma_builtin_id_t id = (ecma_builtin_id_t) 0;
        id < ECMA_BUILTIN_ID__COUNT;
-       id++)
+       id = (ecma_builtin_id_t) (id + 1))
   {
     ecma_builtin_objects [id] = NULL;
   }
@@ -233,9 +233,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 void
 ecma_finalize_builtins (void)
 {
-  for (ecma_builtin_id_t id = 0;
+  for (ecma_builtin_id_t id = (ecma_builtin_id_t) 0;
        id < ECMA_BUILTIN_ID__COUNT;
-       id++)
+       id = (ecma_builtin_id_t) (id + 1))
   {
     if (ecma_builtin_objects [id] != NULL)
     {

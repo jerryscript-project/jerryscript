@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,12 +54,12 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   ecma_completion_value_t ret_value;
 
   ECMA_TRY_CATCH (completion_value_of,
-                  ecma_builtin_boolean_prototype_object_value_of (this),
+                  ecma_builtin_boolean_prototype_object_value_of (this_arg),
                   ret_value);
 
   ecma_string_t *ret_str_p;
@@ -92,15 +92,15 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this) /**< this ar
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this) /**< this argument */
+ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  if (ecma_is_value_boolean (this))
+  if (ecma_is_value_boolean (this_arg))
   {
-    return ecma_make_normal_completion_value (this);
+    return ecma_make_normal_completion_value (this_arg);
   }
-  else if (ecma_is_value_object (this))
+  else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -111,7 +111,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this) /**< this arg
 
       JERRY_ASSERT (prim_value_prop_p->u.internal_property.value < ECMA_SIMPLE_VALUE__COUNT);
 
-      ecma_simple_value_t prim_simple_value = prim_value_prop_p->u.internal_property.value;
+      ecma_simple_value_t prim_simple_value = (ecma_simple_value_t) prim_value_prop_p->u.internal_property.value;
 
       ecma_value_t ret_boolean_value = ecma_make_simple_value (prim_simple_value);
 

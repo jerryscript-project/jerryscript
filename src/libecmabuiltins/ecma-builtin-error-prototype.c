@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,18 +54,18 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_error_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   ecma_completion_value_t ret_value;
 
   // 2.
-  if (!ecma_is_value_object (this))
+  if (!ecma_is_value_object (this_arg))
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
     ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
 
     ECMA_TRY_CATCH (name_get_completion,

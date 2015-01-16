@@ -170,8 +170,9 @@ ecma_stack_push_value_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack fra
 
   if (frame_p->current_slot_index == slots_in_top_chunk)
   {
-    ecma_stack_chunk_header_t *chunk_p = mem_heap_alloc_block (ECMA_STACK_DYNAMIC_CHUNK_SIZE,
-                                                               MEM_HEAP_ALLOC_SHORT_TERM);
+    ecma_stack_chunk_header_t *chunk_p;
+    chunk_p = (ecma_stack_chunk_header_t *) mem_heap_alloc_block (ECMA_STACK_DYNAMIC_CHUNK_SIZE,
+                                                                  MEM_HEAP_ALLOC_SHORT_TERM);
 
     ECMA_SET_POINTER (chunk_p->prev_chunk_p, frame_p->top_chunk_p);
 
@@ -223,7 +224,8 @@ ecma_stack_pop_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
   JERRY_ASSERT (frame_p->current_slot_index == 0 && frame_p->top_chunk_p != NULL);
 
   ecma_stack_chunk_header_t *chunk_to_free_p = frame_p->top_chunk_p;
-  frame_p->top_chunk_p = ECMA_GET_POINTER (frame_p->top_chunk_p->prev_chunk_p);
+  frame_p->top_chunk_p = ECMA_GET_POINTER (ecma_stack_chunk_header_t,
+                                           frame_p->top_chunk_p->prev_chunk_p);
 
   if (frame_p->top_chunk_p != NULL)
   {

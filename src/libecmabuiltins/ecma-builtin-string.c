@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,8 +62,8 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 
 
   size_t zt_str_buffer_size = sizeof (ecma_char_t) * (args_number + 1u);
 
-  ecma_char_t *ret_zt_str_p = mem_heap_alloc_block (zt_str_buffer_size,
-                                                    MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_char_t *ret_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_buffer_size,
+                                                                   MEM_HEAP_ALLOC_SHORT_TERM);
   ret_zt_str_p [args_number] = ECMA_CHAR_NULL;
 
   for (ecma_length_t arg_index = 0;

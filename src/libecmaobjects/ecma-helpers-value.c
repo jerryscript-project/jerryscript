@@ -37,9 +37,9 @@ JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE == ECMA_VALUE_SIZE
 static ecma_type_t __attribute_const__
 ecma_get_value_type_field (ecma_value_t value) /**< ecma-value */
 {
-  return jrt_extract_bit_field (value,
-                                ECMA_VALUE_TYPE_POS,
-                                ECMA_VALUE_TYPE_WIDTH);
+  return (ecma_type_t) jrt_extract_bit_field (value,
+                                              ECMA_VALUE_TYPE_POS,
+                                              ECMA_VALUE_TYPE_WIDTH);
 } /* ecma_get_value_type_field */
 
 /**
@@ -286,7 +286,8 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
 
-  return (ecma_number_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
+  return ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                    ecma_get_value_value_field (value));
 } /* ecma_get_number_from_value */
 
 /**
@@ -299,7 +300,8 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
 
-  return (ecma_string_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
+  return ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                    ecma_get_value_value_field (value));
 } /* ecma_get_string_from_value */
 
 /**
@@ -312,7 +314,8 @@ ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
 
-  return (ecma_object_t*) ECMA_GET_NON_NULL_POINTER (ecma_get_value_value_field (value));
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                    ecma_get_value_value_field (value));
 } /* ecma_get_object_from_value */
 
 /**
@@ -439,9 +442,9 @@ ecma_free_value (ecma_value_t value, /**< value description */
 static ecma_completion_type_t __attribute_const__
 ecma_get_completion_value_type_field (ecma_completion_value_t completion_value) /**< completion value */
 {
-  return jrt_extract_bit_field (completion_value,
-                                ECMA_COMPLETION_VALUE_TYPE_POS,
-                                ECMA_COMPLETION_VALUE_TYPE_WIDTH);
+  return (ecma_completion_type_t) jrt_extract_bit_field (completion_value,
+                                                         ECMA_COMPLETION_VALUE_TYPE_POS,
+                                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH);
 } /* ecma_get_completion_value_type_field */
 
 /**
@@ -465,7 +468,8 @@ ecma_get_completion_value_value_field (ecma_completion_value_t completion_value)
 static ecma_label_descriptor_t* __attribute_const__
 ecma_get_completion_value_label_descriptor (ecma_completion_value_t completion_value) /**< completion value */
 {
-  return ECMA_GET_NON_NULL_POINTER ((uintptr_t) jrt_extract_bit_field (completion_value,
+  return ECMA_GET_NON_NULL_POINTER (ecma_label_descriptor_t,
+                                    (uintptr_t) jrt_extract_bit_field (completion_value,
                                                                        ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS,
                                                                        ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH));
 } /* ecma_get_completion_value_label_descriptor */
@@ -567,11 +571,8 @@ ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
                 || type == ECMA_COMPLETION_TYPE_CONTINUE);
 
   ecma_label_descriptor_t *label_desc_p = ecma_alloc_label_descriptor ();
-  *label_desc_p = (ecma_label_descriptor_t)
-  {
-    .offset = offset,
-    .depth = depth_level
-  };
+  label_desc_p->offset = offset;
+  label_desc_p->depth = depth_level;
 
   ecma_completion_value_t completion_value = 0;
 

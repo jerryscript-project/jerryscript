@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,15 +54,15 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  if (ecma_is_value_string (this))
+  if (ecma_is_value_string (this_arg))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this, true));
+    return ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
   }
-  else if (ecma_is_value_object (this))
+  else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -71,7 +71,8 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
 
-      ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
+      ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                   prim_value_prop_p->u.internal_property.value);
 
       prim_value_str_p = ecma_copy_or_ref_ecma_string (prim_value_str_p);
 
@@ -92,9 +93,9 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this) /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_value_of (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_builtin_string_prototype_object_to_string (this);
+  return ecma_builtin_string_prototype_object_to_string (this_arg);
 } /* ecma_builtin_string_prototype_object_value_of */
 
 /**
@@ -107,10 +108,10 @@ ecma_builtin_string_prototype_object_value_of (ecma_value_t this) /**< this argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_char_at (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_char_at (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_string_prototype_object_char_at */
 
 /**
@@ -123,10 +124,10 @@ ecma_builtin_string_prototype_object_char_at (ecma_value_t this, /**< this argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_string_prototype_object_char_code_at */
 
 /**
@@ -139,11 +140,11 @@ ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this, /**< this 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_concat (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this argument */
                                              ecma_value_t* argument_list_p, /**< arguments list */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, argument_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, argument_list_p, arguments_number);
 } /* ecma_builtin_string_prototype_object_concat */
 
 /**
@@ -156,11 +157,11 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this, /**< this argume
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_index_of (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
                                                ecma_value_t arg1, /**< routine's first argument */
                                                ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_index_of */
 
 /**
@@ -173,11 +174,11 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this, /**< this argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this_arg, /**< this argument */
                                                     ecma_value_t arg1, /**< routine's first argument */
                                                     ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_last_index_of */
 
 /**
@@ -190,10 +191,10 @@ ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this, /**< this
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
 /**
@@ -206,10 +207,10 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this, /**< thi
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_match (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_string_prototype_object_match */
 
 /**
@@ -222,11 +223,11 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this, /**< this argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_replace (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_replace */
 
 /**
@@ -239,10 +240,10 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this, /**< this argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_search (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this argument */
                                              ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_string_prototype_object_search */
 
 /**
@@ -255,11 +256,11 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this, /**< this argume
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_slice (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_slice */
 
 /**
@@ -272,11 +273,11 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this, /**< this argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_split (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_split */
 
 /**
@@ -289,11 +290,11 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this, /**< this argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_substring (ecma_value_t this, /**< this argument */
+ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this argument */
                                                 ecma_value_t arg1, /**< routine's first argument */
                                                 ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_string_prototype_object_substring */
 
 /**
@@ -306,9 +307,9 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this, /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_string_prototype_object_to_lower_case */
 
 /**
@@ -321,9 +322,9 @@ ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this) /**< this
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_string_prototype_object_to_locale_lower_case */
 
 /**
@@ -336,9 +337,9 @@ ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this) /*
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_string_prototype_object_to_upper_case */
 
 /**
@@ -351,9 +352,9 @@ ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this) /**< this
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_string_prototype_object_to_locale_upper_case */
 
 /**
@@ -366,9 +367,9 @@ ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this) /*
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_prototype_object_trim (ecma_value_t this) /**< this argument */
+ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_string_prototype_object_trim */
 
 /**

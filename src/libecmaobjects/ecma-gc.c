@@ -116,7 +116,8 @@ ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
                                                          ECMA_OBJECT_GC_NEXT_CP_POS,
                                                          ECMA_OBJECT_GC_NEXT_CP_WIDTH);
 
-  return ECMA_GET_POINTER (next_cp);
+  return ECMA_GET_POINTER (ecma_object_t,
+                           next_cp);
 } /* ecma_gc_get_object_next */
 
 /**
@@ -357,7 +358,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
          property_p != NULL;
          property_p = next_property_p)
     {
-      next_property_p = ECMA_GET_POINTER(property_p->next_property_p);
+      next_property_p = ECMA_GET_POINTER (ecma_property_t,
+                                          property_p->next_property_p);
 
       switch ((ecma_property_type_t) property_p->type)
       {
@@ -388,8 +390,10 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         case ECMA_PROPERTY_NAMEDACCESSOR:
         {
-          ecma_object_t *getter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.get_p);
-          ecma_object_t *setter_obj_p = ECMA_GET_POINTER(property_p->u.named_accessor_property.set_p);
+          ecma_object_t *getter_obj_p = ECMA_GET_POINTER (ecma_object_t,
+                                                          property_p->u.named_accessor_property.get_p);
+          ecma_object_t *setter_obj_p = ECMA_GET_POINTER (ecma_object_t,
+                                                          property_p->u.named_accessor_property.set_p);
 
           if (getter_obj_p != NULL)
           {
@@ -428,7 +432,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         case ECMA_PROPERTY_INTERNAL:
         {
-          ecma_internal_property_id_t property_id = property_p->u.internal_property.type;
+          ecma_internal_property_id_t property_id = (ecma_internal_property_id_t) property_p->u.internal_property.type;
           uint32_t property_value = property_p->u.internal_property.value;
 
           switch (property_id)
@@ -443,6 +447,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
                                                         (see above in the routine) */
             case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
                                                          (see above in the routine) */
+            case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
+                                                 * but number of the real internal property types */
             {
               JERRY_UNREACHABLE();
             }
@@ -464,7 +470,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
             case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
             case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
             {
-              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(property_value);
+              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t, property_value);
 
               if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
               {
@@ -512,7 +518,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
          property != NULL;
          property = next_property_p)
     {
-      next_property_p = ECMA_GET_POINTER(property->next_property_p);
+      next_property_p = ECMA_GET_POINTER (ecma_property_t,
+                                          property->next_property_p);
 
       ecma_free_property (object_p, property);
     }
@@ -530,7 +537,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   JERRY_ASSERT(max_gen_to_collect < ECMA_GC_GEN_COUNT);
 
   /* clearing visited flags for all objects of generations to be processed */
-  for (ecma_gc_gen_t gen_id = 0; gen_id <= max_gen_to_collect; gen_id++)
+  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
     for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
          obj_iter_p != NULL;
@@ -542,7 +549,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 
   /* if some object is referenced from stack or globals (i.e. it is root),
    * start recursive marking traverse from the object */
-  for (ecma_gc_gen_t gen_id = 0; gen_id <= max_gen_to_collect; gen_id++)
+  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
     for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
          obj_iter_p != NULL;
@@ -581,7 +588,9 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   /* if some object from generations that are not processed during current session may reference
    * younger generations, start recursive marking traverse from the object, but one the first level
    * consider only references to object of at most max_gen_to_collect generation */
-  for (ecma_gc_gen_t gen_id = max_gen_to_collect + 1; gen_id < ECMA_GC_GEN_COUNT; gen_id++)
+  for (ecma_gc_gen_t gen_id = (ecma_gc_gen_t) (max_gen_to_collect + 1);
+       gen_id < ECMA_GC_GEN_COUNT;
+       gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
     for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
          obj_iter_p != NULL;
@@ -595,7 +604,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
       else if (gen_id > ECMA_GC_GEN_0)
       {
         ecma_gc_set_object_may_ref_younger_objects (obj_iter_p, true);
-        ecma_gc_mark (obj_iter_p, gen_id - 1);
+        ecma_gc_mark (obj_iter_p, (ecma_gc_gen_t) (gen_id - 1));
         JERRY_ASSERT (!ecma_gc_is_object_may_ref_younger_objects (obj_iter_p));
       }
 #endif /* !JERRY_NDEBUG */
@@ -608,7 +617,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   __memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
 #endif /* !JERRY_NDEBUG */
 
-  for (ecma_gc_gen_t gen_id = 0; gen_id <= max_gen_to_collect; gen_id++)
+  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
     ecma_object_t *obj_prev_p = NULL;
 
@@ -639,7 +648,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
         if (ecma_gc_get_object_generation (obj_iter_p) != ECMA_GC_GEN_COUNT - 1)
         {
           /* the object will be promoted to next generation */
-          ecma_gc_set_object_generation (obj_iter_p, ecma_gc_get_object_generation (obj_iter_p) + 1);
+          ecma_gc_set_object_generation (obj_iter_p, (ecma_gc_gen_t) (ecma_gc_get_object_generation (obj_iter_p) + 1));
         }
       }
     }
@@ -651,7 +660,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   if (unlikely (gen_to_promote == ECMA_GC_GEN_COUNT - 1))
   {
     /* not promoting last generation */
-    gen_to_promote--;
+    gen_to_promote = (ecma_gc_gen_t) (gen_to_promote - 1);
   }
 
   /* promoting to next generation */
@@ -673,7 +682,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 #ifndef JERRY_NDEBUG
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0;
        gen_id < ECMA_GC_GEN_COUNT;
-       gen_id++)
+       gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
     for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
          obj_iter_p != NULL;
@@ -711,7 +720,7 @@ ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity)
     /* Freeing as much memory as we currently can */
     ecma_lcache_invalidate_all ();
 
-    ecma_gc_run (ECMA_GC_GEN_COUNT - 1);
+    ecma_gc_run ((ecma_gc_gen_t) (ECMA_GC_GEN_COUNT - 1));
   }
 } /* ecma_try_to_give_back_some_memory */
 

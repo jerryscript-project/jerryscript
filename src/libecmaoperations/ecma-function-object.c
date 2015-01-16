@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -302,7 +302,8 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
   ecma_property_t *formal_parameters_prop_p = ecma_get_internal_property (func_obj_p,
                                                                           ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
   ecma_collection_header_t *formal_parameters_p;
-  formal_parameters_p = ECMA_GET_POINTER (formal_parameters_prop_p->u.internal_property.value);
+  formal_parameters_p = ECMA_GET_POINTER (ecma_collection_header_t,
+                                          formal_parameters_prop_p->u.internal_property.value);
 
   if (formal_parameters_p == NULL)
   {
@@ -479,7 +480,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
     ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
 
-    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER(scope_prop_p->u.internal_property.value);
+    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                        scope_prop_p->u.internal_property.value);
     uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
     bool is_strict;

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
   PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _dispatch_routine)
 
 #define ROUTINE_ARG(n) , ecma_value_t arg ## n
-#define ROUTINE_ARG_LIST_0 ecma_value_t this
+#define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
 #define ROUTINE_ARG_LIST_1 ROUTINE_ARG_LIST_0 ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1 ROUTINE_ARG(2)
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2 ROUTINE_ARG(3)
@@ -59,9 +59,6 @@ static ecma_magic_string_id_t ecma_builtin_property_names[] =
 #include BUILTIN_INC_HEADER_NAME
 };
 
-static const ecma_length_t ecma_builtin_property_number = (sizeof (ecma_builtin_property_names) /
-                                                           sizeof (ecma_builtin_property_names [0]));
-
 /**
  * Sort builtin's property names array
  */
@@ -74,7 +71,9 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
   {
     swapped = false;
 
-    for (ecma_length_t i = 1; i < ecma_builtin_property_number; i++)
+    for (ecma_length_t i = 1;
+         i < (sizeof (ecma_builtin_property_names) / sizeof (ecma_builtin_property_names [0]));
+         i++)
     {
       if (ecma_builtin_property_names [i] < ecma_builtin_property_names [i - 1])
       {
@@ -114,10 +113,11 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     return NULL;
   }
 
+  const ecma_length_t property_numbers = (ecma_length_t) (sizeof (ecma_builtin_property_names) /
+                                                          sizeof (ecma_builtin_property_names [0]));
   int32_t index;
   index = ecma_builtin_bin_search_for_magic_string_id_in_array (ecma_builtin_property_names,
-                                                                sizeof (ecma_builtin_property_names) /
-                                                                sizeof (ecma_builtin_property_names [0]),
+                                                                property_numbers,
                                                                 id);
 
   if (index == -1)

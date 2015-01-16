@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,17 @@
 /**
  * memcpy alias to __memcpy (for compiler usage)
  */
-extern void *memcpy (void *s1, const void*s2, size_t n);
+extern "C" void *memcpy (void *s1, const void*s2, size_t n);
 
 /**
  * memset alias to __memset (for compiler usage)
  */
-extern void *memset (void *s, int c, size_t n);
+extern "C" void *memset (void *s, int c, size_t n);
 
 /**
  * memmove alias to __memmove (for compiler usage)
  */
-extern void *memmove (void *s1, const void*s2, size_t n);
+extern "C" void *memmove (void *s1, const void*s2, size_t n);
 
 #ifdef __GNUC__
 /*
@@ -50,9 +50,10 @@ CALL_PRAGMA(GCC optimize ("-fno-tree-loop-distribute-patterns"))
 /**
  * memcpy alias to __memcpy (for compiler usage)
  */
-void* memcpy (void *s1, /**< destination */
-              const void* s2, /**< source */
-              size_t n) /**< bytes number */
+void* __used
+memcpy (void *s1, /**< destination */
+        const void* s2, /**< source */
+        size_t n) /**< bytes number */
 {
   return __memcpy (s1, s2, n);
 } /* memcpy */
@@ -60,9 +61,10 @@ void* memcpy (void *s1, /**< destination */
 /**
  * memset alias to __memset (for compiler usage)
  */
-void* memset (void *s,  /**< area to set values in */
-              int c,    /**< value to set */
-              size_t n) /**< area size */
+void* __used
+memset (void *s,  /**< area to set values in */
+        int c,    /**< value to set */
+        size_t n) /**< area size */
 {
   return __memset (s, c, n);
 } /* memset */
@@ -70,9 +72,10 @@ void* memset (void *s,  /**< area to set values in */
 /**
  * memmove alias to __memmove (for compiler usage)
  */
-void* memmove (void *s1, /**< destination*/
-               const void*s2, /**< source */
-               size_t n) /**< area size */
+void* __used
+memmove (void *s1, /**< destination*/
+         const void*s2, /**< source */
+         size_t n) /**< area size */
 {
   return __memmove (s1, s2, n);
 } /* memmove */
@@ -87,16 +90,14 @@ CALL_PRAGMA(GCC diagnostic pop)
  * but referenced from third-party libraries.
  */
 #define JRT_UNREACHABLE_STUB_FOR(...) \
-  extern __VA_ARGS__; \
+  extern "C" __VA_ARGS__; \
   __used __VA_ARGS__ \
   { \
     JERRY_UNREACHABLE (); \
   }
 
+JRT_UNREACHABLE_STUB_FOR(void abort (void))
 JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
-#ifdef __TARGET_HOST_ARMv7
-JRT_UNREACHABLE_STUB_FOR(void __aeabi_unwind_cpp_pr0 (void))
-#endif /* __TARGET_HOST_ARMv7 */
 
 #undef JRT_UNREACHABLE_STUB_FOR
 
@@ -110,10 +111,10 @@ __memset (void *s,  /**< area to set values in */
           int c,    /**< value to set */
           size_t n) /**< area size */
 {
-  uint8_t *area_p = s;
+  uint8_t *area_p = (uint8_t *) s;
   for (size_t index = 0; index < n; index++)
   {
-    area_p[ index ] = (uint8_t)c;
+    area_p[ index ] = (uint8_t) c;
   }
 
   return s;
@@ -131,7 +132,7 @@ __memcmp (const void *s1, /**< first area */
           const void *s2, /**< second area */
           size_t n) /**< area size */
 {
-  const uint8_t *area1_p = s1, *area2_p = s2;
+  const uint8_t *area1_p = (uint8_t *) s1, *area2_p = (uint8_t *) s2;
   for (size_t index = 0; index < n; index++)
   {
     if (area1_p[ index ] < area2_p[ index ])
@@ -155,8 +156,8 @@ __memcpy (void *s1, /**< destination */
           const void *s2, /**< source */
           size_t n) /**< bytes number */
 {
-  uint8_t *area1_p = s1;
-  const uint8_t *area2_p = s2;
+  uint8_t *area1_p = (uint8_t *) s1;
+  const uint8_t *area2_p = (const uint8_t *) s2;
 
   for (size_t index = 0; index < n; index++)
   {
@@ -176,8 +177,8 @@ __memmove (void *s1, /**< destination */
            const void *s2, /**< source */
            size_t n) /**< bytes number */
 {
-  uint8_t *dest_p = s1;
-  const uint8_t *src_p = s2;
+  uint8_t *dest_p = (uint8_t *) s1;
+  const uint8_t *src_p = (const uint8_t *) s2;
 
   if (dest_p < src_p)
   { /* from begin to end */

@@ -84,7 +84,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.assignment.var_left;
-  const opcode_arg_type_operand type_value_right = opdata.data.assignment.type_value_right;
+  const opcode_arg_type_operand type_value_right = (opcode_arg_type_operand) opdata.data.assignment.type_value_right;
   const idx_t src_val_descr = opdata.data.assignment.value_right;
 
   ecma_completion_value_t ret_value;
@@ -94,7 +94,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_simple_value (src_val_descr));
+                                    ecma_make_simple_value ((ecma_simple_value_t) src_val_descr));
   }
   else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
@@ -911,7 +911,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
       opcode_t next_opcode = read_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
-      const opcode_meta_type type = next_opcode.data.meta.type;
+      const opcode_meta_type type = (opcode_meta_type) next_opcode.data.meta.type;
       JERRY_ASSERT (type == OPCODE_META_TYPE_VARG_PROP_DATA
                     || type == OPCODE_META_TYPE_VARG_PROP_GETTER
                     || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
@@ -1261,10 +1261,10 @@ opfunc_logical_not (opcode_t opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_this (opcode_t opdata, /**< operation data */
-             int_data_t *int_data) /**< interpreter context */
+opfunc_this_binding (opcode_t opdata, /**< operation data */
+                     int_data_t *int_data) /**< interpreter context */
 {
-  const idx_t dst_var_idx = opdata.data.this.lhs;
+  const idx_t dst_var_idx = opdata.data.this_binding.lhs;
   const opcode_counter_t lit_oc = int_data->pos;
 
   int_data->pos++;
@@ -1276,7 +1276,7 @@ opfunc_this (opcode_t opdata, /**< operation data */
                                   int_data->this_binding);
 
   return ret_value;
-} /* opfunc_this */
+} /* opfunc_this_binding */
 
 /**
  * 'With' opcode handler.
@@ -1351,10 +1351,10 @@ opfunc_with (opcode_t opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_throw (opcode_t opdata, /**< operation data */
-              int_data_t *int_data) /**< interpreter context */
+opfunc_throw_value (opcode_t opdata, /**< operation data */
+                    int_data_t *int_data) /**< interpreter context */
 {
-  const idx_t var_idx = opdata.data.throw.var;
+  const idx_t var_idx = opdata.data.throw_value.var;
 
   ecma_completion_value_t ret_value;
 
@@ -1371,7 +1371,7 @@ opfunc_throw (opcode_t opdata, /**< operation data */
   int_data->pos++;
 
   return ret_value;
-} /* opfunc_throw */
+} /* opfunc_throw_value */
 
 /**
  * Evaluate argument of typeof.
@@ -1543,7 +1543,8 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
       ECMA_TRY_CATCH (delete_completion,
                       ecma_op_delete_binding (bindings_p,
-                                              ECMA_GET_NON_NULL_POINTER (ref.referenced_name_cp)),
+                                              ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                         ref.referenced_name_cp)),
                       ret_value);
 
       ret_value = set_variable_value (int_data, lit_oc, dst_var_idx,
@@ -1645,7 +1646,7 @@ ecma_completion_value_t
 opfunc_meta (opcode_t opdata, /**< operation data */
              int_data_t *int_data __unused) /**< interpreter context */
 {
-  const opcode_meta_type type = opdata.data.meta.type;
+  const opcode_meta_type type = (opcode_meta_type) opdata.data.meta.type;
 
   switch (type)
   {

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ linked_list
 linked_list_init (uint16_t element_size)
 {
   size_t size = mem_heap_recommend_allocation_size (element_size);
-  linked_list list = mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
+  linked_list list = (linked_list) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
   if (list == null_list)
   {
     __printf ("Out of memory");

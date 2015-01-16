@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,7 +167,8 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
   // 4.
   ecma_property_t* prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
-  ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
+  ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                               prim_value_prop_p->u.internal_property.value);
 
   // 6.
   int32_t length = ecma_string_get_length (prim_value_str_p);

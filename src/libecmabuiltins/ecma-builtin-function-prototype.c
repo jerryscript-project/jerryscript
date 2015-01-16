@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,9 +52,9 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_to_string (ecma_value_t this) /**< this argument */
+ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_function_prototype_object_to_string */
 
 /**
@@ -67,11 +67,11 @@ ecma_builtin_function_prototype_object_to_string (ecma_value_t this) /**< this a
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_apply (ecma_value_t this, /**< this argument */
+ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg1, /**< first argument */
                                               ecma_value_t arg2) /**< second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_function_prototype_object_apply */
 
 /**
@@ -84,11 +84,11 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this, /**< this argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_call (ecma_value_t this, /**< this argument */
+ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this argument */
                                              ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arguments_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arguments_list_p, arguments_number);
 } /* ecma_builtin_function_prototype_object_call */
 
 /**
@@ -101,11 +101,11 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this, /**< this argume
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_bind (ecma_value_t this, /**< this argument */
+ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this argument */
                                              ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arguments_list_p, arguments_number);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arguments_list_p, arguments_number);
 } /* ecma_builtin_function_prototype_object_bind */
 
 /**

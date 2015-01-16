@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,21 +54,21 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this argument */
+ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this argument */
                                                 ecma_value_t* arguments_list_p, /**< arguments list */
                                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
   ecma_number_t this_arg_number;
 
-  if (ecma_is_value_number (this))
+  if (ecma_is_value_number (this_arg))
   {
-    ecma_number_t *this_arg_number_p = ecma_get_number_from_value (this);
+    ecma_number_t *this_arg_number_p = ecma_get_number_from_value (this_arg);
 
     this_arg_number = *this_arg_number_p;
   }
-  else if (ecma_is_value_object (this))
+  else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -77,7 +77,8 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
+      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                   prim_value_prop_p->u.internal_property.value);
       this_arg_number = *prim_value_num_p;
     }
     else
@@ -111,9 +112,9 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this, /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this) /**< this argument */
+ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_builtin_number_prototype_object_to_string (this, NULL, 0);
+  return ecma_builtin_number_prototype_object_to_string (this_arg, NULL, 0);
 } /* ecma_builtin_number_prototype_object_to_locale_string */
 
 /**
@@ -126,15 +127,15 @@ ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this) /**< t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argument */
+ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  if (ecma_is_value_number (this))
+  if (ecma_is_value_number (this_arg))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this, true));
+    return ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
   }
-  else if (ecma_is_value_object (this))
+  else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -143,7 +144,8 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argu
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (prim_value_prop_p->u.internal_property.value);
+      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                   prim_value_prop_p->u.internal_property.value);
 
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;
@@ -165,10 +167,10 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this) /**< this argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this, /**< this argument */
+ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_fixed */
 
 /**
@@ -181,10 +183,10 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this, /**< this argu
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this, /**< this argument */
+ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_exponential */
 
 /**
@@ -197,10 +199,10 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this, /**< thi
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_precision (ecma_value_t this, /**< this argument */
+ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_precision */
 
 /**

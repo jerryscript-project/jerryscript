@@ -45,6 +45,8 @@ static const char *__op_names[LAST_OP] =
 };
 #undef __OP_FUNC_NAME
 
+#define INTERP_MEM_PRINT_INDENTATION_STEP (5)
+#define INTERP_MEM_PRINT_INDENTATION_MAX  (125)
 static uint32_t interp_mem_stats_print_indentation = 0;
 static bool interp_mem_stats_enabled = false;
 
@@ -108,10 +110,13 @@ interp_mem_stats_context_enter (int_data_t *int_data_p,
     return;
   }
 
-  char indent_prefix[interp_mem_stats_print_indentation + 2];
+  const uint32_t indentation = JERRY_MIN (interp_mem_stats_print_indentation,
+                                          INTERP_MEM_PRINT_INDENTATION_MAX);
+
+  char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [interp_mem_stats_print_indentation] = '|';
-  indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
+  indent_prefix [indentation] = '|';
+  indent_prefix [indentation + 1] = '\0';
 
   int_data_p->context_peak_allocated_heap_bytes = 0;
   int_data_p->context_peak_waste_heap_bytes = 0;
@@ -143,10 +148,13 @@ interp_mem_stats_context_exit (int_data_t *int_data_p,
     return;
   }
 
-  char indent_prefix[interp_mem_stats_print_indentation + 2];
+  const uint32_t indentation = JERRY_MIN (interp_mem_stats_print_indentation,
+                                          INTERP_MEM_PRINT_INDENTATION_MAX);
+
+  char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [interp_mem_stats_print_indentation] = '|';
-  indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
+  indent_prefix [indentation] = '|';
+  indent_prefix [indentation + 1] = '\0';
 
   mem_heap_stats_t heap_stats_context_exit;
   mem_pools_stats_t pools_stats_context_exit;
@@ -210,10 +218,13 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
     return;
   }
 
-  char indent_prefix[interp_mem_stats_print_indentation + 2];
+  const uint32_t indentation = JERRY_MIN (interp_mem_stats_print_indentation,
+                                          INTERP_MEM_PRINT_INDENTATION_MAX);
+
+  char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [interp_mem_stats_print_indentation] = '|';
-  indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
+  indent_prefix [indentation] = '|';
+  indent_prefix [indentation + 1] = '\0';
 
   interp_mem_get_stats (out_heap_stats_p,
                         out_pools_stats_p,
@@ -224,7 +235,7 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
   __printf ("%s-- Opcode: %s (position %u) --\n",
             indent_prefix, __op_names [opcode.op_idx], (uint32_t) opcode_position);
 
-  interp_mem_stats_print_indentation += 5;
+  interp_mem_stats_print_indentation += INTERP_MEM_PRINT_INDENTATION_STEP;
 }
 
 static void
@@ -238,12 +249,15 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
     return;
   }
 
-  interp_mem_stats_print_indentation -= 5;
+  interp_mem_stats_print_indentation -= INTERP_MEM_PRINT_INDENTATION_STEP;
 
-  char indent_prefix[interp_mem_stats_print_indentation + 2];
+  const uint32_t indentation = JERRY_MIN (interp_mem_stats_print_indentation,
+                                          INTERP_MEM_PRINT_INDENTATION_MAX);
+
+  char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   __memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [interp_mem_stats_print_indentation] = '|';
-  indent_prefix [interp_mem_stats_print_indentation + 1] = '\0';
+  indent_prefix [indentation] = '|';
+  indent_prefix [indentation + 1] = '\0';
 
   mem_heap_stats_t heap_stats_after;
   mem_pools_stats_t pools_stats_after;

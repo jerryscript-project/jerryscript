@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,16 +33,16 @@ typedef struct
 }
 lit_id_table_key;
 
-struct
+typedef struct
 {
   const literal *literals;
   const opcode_t *opcodes;
   lit_id_hash_table *lit_id_hash;
   literal_index_t literals_count;
   opcode_counter_t opcodes_count;
-}
-bytecode_data;
+} bytecode_data_t;
 
-scopes_tree current_scope;
+extern bytecode_data_t bytecode_data;
+extern scopes_tree current_scope;
 
 #endif // BYTECODE_DATA_H

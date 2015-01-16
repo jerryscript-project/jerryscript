@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ mem_pools_alloc_longpath (void)
     while (pool_state->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
     {
       prev_pool_state_p = pool_state;
-      pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+      pool_state = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
 
       JERRY_ASSERT(pool_state != NULL);
     }
@@ -195,7 +195,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
   while (!mem_pool_is_chunk_inside (pool_state, chunk_p))
   {
     prev_pool_state_p = pool_state;
-    pool_state = mem_decompress_pointer (pool_state->next_pool_cp);
+    pool_state = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
 
     JERRY_ASSERT(pool_state != NULL);
   }
@@ -225,7 +225,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
       }
       else
       {
-        mem_pools = mem_decompress_pointer (pool_state->next_pool_cp);
+        mem_pools = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
       }
     }
 

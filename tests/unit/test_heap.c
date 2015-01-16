@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 #include "globals.h"
 #include "mem-allocator.h"
 
-extern void srand (unsigned int __seed);
-extern int rand (void);
-extern long int time (long int *__timer);
-extern int printf (__const char *__restrict __format, ...);
-extern void *memset (void *__s, int __c, size_t __n);
+extern "C"
+{
+  extern void srand (unsigned int __seed);
+  extern int rand (void);
+  extern long int time (long int *__timer);
+  extern int printf (__const char *__restrict __format, ...);
+  extern void *memset (void *__s, int __c, size_t __n);
+}
 
 // Heap size is 32K
 #define test_heap_size (32 * 1024)
@@ -101,7 +104,9 @@ main( int __unused argc,
       for ( uint32_t j = 0; j < test_sub_iters; j++ )
       {
         size_t size = (unsigned int) rand() % ( test_threshold_block_size );
-        ptrs[j] = mem_heap_alloc_block( size, ( rand() % 2 ) ? MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+        ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
+                                                   (rand() % 2) ?
+                                                   MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
         sizes[j] = size;
 
         JERRY_ASSERT(size == 0 || ptrs[j] != NULL);

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
   }
 
   va_start (insides_list, insides_count);
-  uint8_t *insides = mem_heap_alloc_block (insides_count, MEM_HEAP_ALLOC_SHORT_TERM);
+  uint8_t *insides = (uint8_t*) mem_heap_alloc_block (insides_count, MEM_HEAP_ALLOC_SHORT_TERM);
   for (uint8_t i = 0; i < insides_count; i++)
   {
     insides[i] = (uint8_t) va_arg (insides_list, int);
@@ -232,7 +232,7 @@ parse_property_name (void)
     }
     case TOK_KEYWORD:
     {
-      const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string (token_data ()));
+      const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string ((keyword) token_data ()));
       lexer_add_literal_if_not_present (lit);
       const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
       return literal_operand (lit_id);
@@ -268,70 +268,72 @@ parse_property_assignment (void)
 {
   STACK_DECLARE_USAGE (nestings);
 
-  if (!token_is (TOK_NAME))
+  if (token_is (TOK_NAME))
+  {
+    bool is_setter;
+
+    if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get"))
+    {
+      is_setter = false;
+    }
+    else if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
+    {
+      is_setter = true;
+    }
+    else
+    {
+      parse_property_name_and_value ();
+
+      goto cleanup;
+    }
+
+    const token temp = tok;
+    skip_newlines ();
+    if (token_is (TOK_COLON))
+    {
+      lexer_save_token (tok);
+      tok = temp;
+
+      parse_property_name_and_value ();
+
+      goto cleanup;
+    }
+
+    const operand name = parse_property_name ();
+    syntax_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
+
+    skip_newlines ();
+    const operand func = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
+
+    dump_function_end_for_rewrite ();
+
+    const bool is_strict = scopes_tree_strict_mode (STACK_TOP (scopes));
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
+
+    token_after_newlines_must_be (TOK_OPEN_BRACE);
+    skip_newlines ();
+    push_nesting (NESTING_FUNCTION);
+    parse_source_element_list (false);
+    pop_nesting (NESTING_FUNCTION);
+    token_after_newlines_must_be (TOK_CLOSE_BRACE);
+
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
+
+    dump_ret ();
+    rewrite_function_end (VARG_FUNC_EXPR);
+    if (is_setter)
+    {
+      dump_prop_setter_decl (name, func);
+    }
+    else
+    {
+      dump_prop_getter_decl (name, func);
+    }
+  }
+  else
   {
     parse_property_name_and_value ();
-    goto cleanup;
   }
-
-  bool is_setter;
-
-  if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get"))
-  {
-    is_setter = false;
-  }
-  else if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
-  {
-    is_setter = true;
-  }
-  else
-  {
-    goto simple_prop;
-  }
-
-  const token temp = tok;
-  skip_newlines ();
-  if (token_is (TOK_COLON))
-  {
-    lexer_save_token (tok);
-    tok = temp;
-    goto simple_prop;
-  }
-
-  const operand name = parse_property_name ();
-  syntax_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
-
-  skip_newlines ();
-  const operand func = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
-
-  dump_function_end_for_rewrite ();
-
-  const bool is_strict = scopes_tree_strict_mode (STACK_TOP (scopes));
-  scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
-
-  token_after_newlines_must_be (TOK_OPEN_BRACE);
-  skip_newlines ();
-  push_nesting (NESTING_FUNCTION);
-  parse_source_element_list (false);
-  pop_nesting (NESTING_FUNCTION);
-  token_after_newlines_must_be (TOK_CLOSE_BRACE);
-
-  scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
-
-  dump_ret ();
-  rewrite_function_end (VARG_FUNC_EXPR);
-  if (is_setter)
-  {
-    dump_prop_setter_decl (name, func);
-  }
-  else
-  {
-    dump_prop_getter_decl (name, func);
-  }
-  goto cleanup;
-
-simple_prop:
-  parse_property_name_and_value ();
 
 cleanup:
   STACK_CHECK_USAGE (nestings);
@@ -744,7 +746,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
       }
       else if (token_is (TOK_KEYWORD))
       {
-        const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string (token_data ()));
+        const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string ((keyword) token_data ()));
         const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
         if (lit_id == INVALID_LITERAL)
         {

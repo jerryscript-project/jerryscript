@@ -185,7 +185,7 @@ mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t s
 bool
 mem_is_heap_pointer (void *pointer) /**< pointer */
 {
-  uint8_t *uint8_pointer = pointer;
+  uint8_t *uint8_pointer = (uint8_t*) pointer;
 
   return (uint8_pointer >= mem_heap_area && uint8_pointer <= (mem_heap_area + MEM_HEAP_AREA_SIZE));
 } /* mem_is_heap_pointer */

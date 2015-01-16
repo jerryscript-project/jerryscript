@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,7 +96,8 @@ ecma_free_values_collection (ecma_collection_header_t* header_p, /**< collection
     string_index++;
   }
 
-  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (header_p->next_chunk_cp);
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                       header_p->next_chunk_cp);
 
   while (chunk_p != NULL)
   {
@@ -116,7 +117,8 @@ ecma_free_values_collection (ecma_collection_header_t* header_p, /**< collection
       string_index++;
     }
 
-    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (chunk_p->next_chunk_cp);
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                              chunk_p->next_chunk_cp);
     ecma_dealloc_collection_chunk (chunk_p);
     chunk_p = next_chunk_p;
   }
@@ -205,7 +207,8 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
 
   if (iterator_p->current_value_p == iterator_p->current_chunk_end_p)
   {
-    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (iterator_p->next_chunk_cp);
+    ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                              iterator_p->next_chunk_cp);
     JERRY_ASSERT (next_chunk_p != NULL);
 
     iterator_p->next_chunk_cp = next_chunk_p->next_chunk_cp;

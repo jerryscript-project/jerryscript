@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,7 +140,8 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 4.
-    ecma_object_t *getter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.get_p);
+    ecma_object_t *getter_p = ECMA_GET_POINTER (ecma_object_t,
+                                                prop_p->u.named_accessor_property.get_p);
 
     // 5.
     if (getter_p == NULL)
@@ -285,7 +286,8 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
       && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     // a.
-    ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(desc_p->u.named_accessor_property.set_p);
+    ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                         desc_p->u.named_accessor_property.set_p);
     JERRY_ASSERT(setter_p != NULL);
 
     ecma_completion_value_t ret_value;
@@ -360,7 +362,8 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
     // a.
     if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      ecma_object_t *setter_p = ECMA_GET_POINTER(prop_p->u.named_accessor_property.set_p);
+      ecma_object_t *setter_p = ECMA_GET_POINTER (ecma_object_t,
+                                                  prop_p->u.named_accessor_property.set_p);
 
       // i.
       if (setter_p == NULL)
@@ -402,7 +405,8 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   // 7.
   if (inherited_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
-    ecma_object_t *setter_p = ECMA_GET_POINTER(inherited_p->u.named_accessor_property.set_p);
+    ecma_object_t *setter_p = ECMA_GET_POINTER (ecma_object_t,
+                                                inherited_p->u.named_accessor_property.set_p);
 
     // a.
     if (setter_p == NULL)
@@ -684,7 +688,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   if (property_desc_p->is_get_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc_p->get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
+        || property_desc_p->get_p != ECMA_GET_POINTER (ecma_object_t,
+                                                       current_p->u.named_accessor_property.get_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -693,7 +698,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   if (property_desc_p->is_set_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc_p->set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p))
+        || property_desc_p->set_p != ECMA_GET_POINTER (ecma_object_t,
+                                                       current_p->u.named_accessor_property.set_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -805,9 +811,11 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       // a.
 
       if ((property_desc_p->is_get_defined
-           && property_desc_p->get_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.get_p))
+           && property_desc_p->get_p != ECMA_GET_POINTER (ecma_object_t,
+                                                          current_p->u.named_accessor_property.get_p))
           || (property_desc_p->is_set_defined
-              && property_desc_p->set_p != ECMA_GET_POINTER(current_p->u.named_accessor_property.set_p)))
+              && property_desc_p->set_p != ECMA_GET_POINTER (ecma_object_t,
+                                                             current_p->u.named_accessor_property.set_p)))
       {
         // i., ii.
         return ecma_reject (is_throw);

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@
 #include "bytecode-data.h"
 #include "deserializer.h"
 #include "pretty-printer.h"
+
+bytecode_data_t bytecode_data;
+scopes_tree current_scope;
 
 static bool print_opcodes;
 
@@ -114,14 +117,14 @@ serializer_print_opcodes (void)
 
   for (loc = 0; loc < bytecode_data.opcodes_count; loc++)
   {
-    const op_meta opm = (op_meta)
+    op_meta opm;
+
+    opm.op = bytecode_data.opcodes[loc];
+    for (int i = 0; i < 3; i++)
     {
-      .op = bytecode_data.opcodes[loc],
-      .lit_id =
-      {
-        NOT_A_LITERAL
-      }
-    };
+      opm.lit_id [i] = NOT_A_LITERAL;
+    }
+
     pp_op_meta (loc, opm, false);
   }
 #endif

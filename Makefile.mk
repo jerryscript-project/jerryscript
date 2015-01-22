@@ -482,7 +482,7 @@ $(JERRY_TARGETS):
      cpp_check_file_list=$$(echo "$$cpp_check_file_list" | grep -v "\.h$$"); \
 	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$cpp_check_file_list" == "" ]] || \
           ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) $$cpp_check_file_list $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null || exit $$?; \
+          --error-exitcode=1 --language=c++ --std=c++11 --enable=all 1>/dev/null || exit $$?; \
 	 [[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || [[ "$$changed_sources_and_headers_list" == "" ]] || \
           vera++ -r ./tools/vera++ -p jerry $$changed_sources_and_headers_list \
           -e --no-duplicate 1>$(TARGET_DIR)/vera.log || exit $$?;
@@ -518,7 +518,7 @@ $(TESTS_TARGET):
 	@mkdir -p $(TARGET_DIR)/obj
 	@[[ "$(OPTION_DISABLE_STATIC_ANALYSIS)" == "enable" ]] || \
           ./tools/cppcheck.sh -j8 $(DEFINES_JERRY) `find $(UNITTESTS_SRC_DIR) -name *.[c]` $(SOURCES_JERRY_C) $(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) \
-          --error-exitcode=1 --std=c99 --enable=all 1>/dev/null
+          --error-exitcode=1 --language=c++ --std=c++11 --enable=all 1>/dev/null
 	@source_index=0; \
 	for jerry_src in $(SOURCES_JERRY); \
         do \

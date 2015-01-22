@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ extern void ecma_finalize_builtins (void);
 
 extern ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p,
-                            ecma_value_t this_arg,
-                            ecma_value_t *arguments_list_p,
+                            const ecma_value_t& this_arg,
+                            const ecma_value_t *arguments_list_p,
                             ecma_length_t arguments_list_len);
 extern ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
-                                 ecma_value_t *arguments_list_p,
+                                 const ecma_value_t *arguments_list_p,
                                  ecma_length_t arguments_list_len);
 extern ecma_property_t*
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p,

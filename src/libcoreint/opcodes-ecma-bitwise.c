@@ -45,8 +45,8 @@ static ecma_completion_value_t
 do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
                          idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
-                         ecma_value_t left_value, /**< left value */
-                         ecma_value_t right_value) /** right value */
+                         const ecma_value_t& left_value, /**< left value */
+                         const ecma_value_t& right_value) /** right value */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,8 +60,8 @@ ecma_reject (bool is_throw) /**< Throw flag */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                  are passed to Array constructor */
+ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
+                                                                        are passed to Array constructor */
                              ecma_length_t arguments_list_len, /**< length of the arguments' list */
                              bool is_treat_single_arg_as_length) /**< if the value is true,
                                                                       arguments_list_len is 1
@@ -74,7 +74,7 @@ ecma_op_create_array_object (ecma_value_t *arguments_list_p, /**< list of argume
                 || arguments_list_p != NULL);
 
   uint32_t length;
-  ecma_value_t *array_items_p;
+  const ecma_value_t *array_items_p;
   ecma_length_t array_items_count;
 
   if (is_treat_single_arg_as_length
@@ -444,8 +444,9 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = ecma_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
 
-      ecma_free_value (ecma_get_named_data_property_value (len_prop_p), false);
-      ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (num_p));
+      ecma_named_data_property_assign_value (obj_p, len_prop_p, ecma_make_number_value (num_p));
+
+      ecma_dealloc_number (num_p);
     }
 
     // f.

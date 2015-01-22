@@ -54,7 +54,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
 {
   ecma_completion_value_t ret_value;
 

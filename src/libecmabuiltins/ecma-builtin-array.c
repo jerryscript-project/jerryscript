@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_array_object_is_array (ecma_value_t this_arg __unused, /**< 'this' argument */
-                                    ecma_value_t arg) /**< first argument */
+ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+                                    const ecma_value_t& arg) /**< first argument */
 {
   ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;
 
@@ -81,8 +81,8 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg __unused, /**< 'this' 
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_array_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                  ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -95,7 +95,7 @@ ecma_builtin_array_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_array_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                        ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

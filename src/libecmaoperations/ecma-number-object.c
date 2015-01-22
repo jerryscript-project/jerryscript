@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Number constructor */
+ecma_op_create_number_object (const ecma_value_t& arg) /**< argument passed to the Number constructor */
 {
   ecma_completion_value_t conv_to_num_completion = ecma_op_to_number (arg);
 

@@ -61,39 +61,39 @@
                                                             & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1)))
 
 /* ecma-helpers-value.c */
-extern bool ecma_is_value_empty (ecma_value_t value);
-extern bool ecma_is_value_undefined (ecma_value_t value);
-extern bool ecma_is_value_null (ecma_value_t value);
-extern bool ecma_is_value_boolean (ecma_value_t value);
-extern bool ecma_is_value_true (ecma_value_t value);
+extern bool ecma_is_value_empty (const ecma_value_t& value);
+extern bool ecma_is_value_undefined (const ecma_value_t& value);
+extern bool ecma_is_value_null (const ecma_value_t& value);
+extern bool ecma_is_value_boolean (const ecma_value_t& value);
+extern bool ecma_is_value_true (const ecma_value_t& value);
 
-extern bool ecma_is_value_number (ecma_value_t value);
-extern bool ecma_is_value_string (ecma_value_t value);
-extern bool ecma_is_value_object (ecma_value_t value);
+extern bool ecma_is_value_number (const ecma_value_t& value);
+extern bool ecma_is_value_string (const ecma_value_t& value);
+extern bool ecma_is_value_object (const ecma_value_t& value);
 
-extern void ecma_check_value_type_is_spec_defined (ecma_value_t value);
+extern void ecma_check_value_type_is_spec_defined (const ecma_value_t& value);
 
 extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
 extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
 extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);
 extern ecma_value_t ecma_make_object_value (ecma_object_t* object_p);
-extern ecma_number_t* __attribute_const__ ecma_get_number_from_value (ecma_value_t value);
-extern ecma_string_t* __attribute_const__ ecma_get_string_from_value (ecma_value_t value);
-extern ecma_object_t* __attribute_const__ ecma_get_object_from_value (ecma_value_t value);
-extern ecma_value_t ecma_copy_value (const ecma_value_t value, bool do_ref_if_object);
-extern void ecma_free_value (const ecma_value_t value, bool do_deref_if_object);
+extern ecma_number_t* __attribute_pure__ ecma_get_number_from_value (const ecma_value_t& value);
+extern ecma_string_t* __attribute_pure__ ecma_get_string_from_value (const ecma_value_t& value);
+extern ecma_object_t* __attribute_pure__ ecma_get_object_from_value (const ecma_value_t& value);
+extern ecma_value_t ecma_copy_value (const ecma_value_t& value, bool do_ref_if_object);
+extern void ecma_free_value (ecma_value_t& value, bool do_deref_if_object);
 
 extern ecma_completion_value_t ecma_make_completion_value (ecma_completion_type_t type,
-                                                           ecma_value_t value);
+                                                           const ecma_value_t& value);
 extern ecma_completion_value_t ecma_make_label_completion_value (ecma_completion_type_t type,
                                                                  uint8_t depth_level,
                                                                  uint16_t offset);
 extern ecma_completion_value_t ecma_make_simple_completion_value (ecma_simple_value_t simple_value);
-extern ecma_completion_value_t ecma_make_normal_completion_value (ecma_value_t value);
-extern ecma_completion_value_t ecma_make_throw_completion_value (ecma_value_t value);
+extern ecma_completion_value_t ecma_make_normal_completion_value (const ecma_value_t& value);
+extern ecma_completion_value_t ecma_make_throw_completion_value (const ecma_value_t& value);
 extern ecma_completion_value_t ecma_make_throw_obj_completion_value (ecma_object_t *exception_p);
 extern ecma_completion_value_t ecma_make_empty_completion_value (void);
-extern ecma_completion_value_t ecma_make_return_completion_value (ecma_value_t value);
+extern ecma_completion_value_t ecma_make_return_completion_value (const ecma_value_t& value);
 extern ecma_completion_value_t ecma_make_exit_completion_value (bool is_successful);
 extern ecma_completion_value_t ecma_make_meta_completion_value (void);
 extern ecma_value_t ecma_get_completion_value_value (ecma_completion_value_t completion_value);
@@ -196,7 +196,7 @@ extern ecma_number_t ecma_number_exp (ecma_number_t num);
 
 /* ecma-helpers-values-collection.c */
 
-extern ecma_collection_header_t *ecma_new_values_collection (ecma_value_t values_buffer[],
+extern ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t values_buffer[],
                                                              ecma_length_t values_number,
                                                              bool do_ref_if_object);
 extern void ecma_free_values_collection (ecma_collection_header_t* header_p, bool do_deref_if_object);
@@ -211,9 +211,9 @@ typedef struct
   ecma_collection_header_t *header_p; /**< collection header */
   uint16_t next_chunk_cp; /**< compressed pointer to next chunk */
   ecma_length_t current_index; /**< index of current element */
-  ecma_value_t *current_value_p; /**< pointer to current element */
-  ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */
-  ecma_value_t *current_chunk_end_p; /**< pointer to place right after the end of current chunk's data */
+  const ecma_value_t *current_value_p; /**< pointer to current element */
+  const ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */
+  const ecma_value_t *current_chunk_end_p; /**< pointer to place right after the end of current chunk's data */
 } ecma_collection_iterator_t;
 
 extern void
@@ -275,10 +275,10 @@ extern void ecma_free_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 extern void ecma_delete_property (ecma_object_t *obj_p, ecma_property_t *prop_p);
 
 extern ecma_value_t ecma_get_named_data_property_value (const ecma_property_t *prop_p);
-extern void ecma_set_named_data_property_value (ecma_property_t *prop_p, ecma_value_t value);
+extern void ecma_set_named_data_property_value (ecma_property_t *prop_p, const ecma_value_t& value);
 extern void ecma_named_data_property_assign_value (ecma_object_t *obj_p,
                                                    ecma_property_t *prop_p,
-                                                   ecma_value_t value);
+                                                   const ecma_value_t& value);
 
 extern bool ecma_is_property_writable (ecma_property_t* prop_p);
 extern void ecma_set_property_writable_attr (ecma_property_t* prop_p, bool is_writable);

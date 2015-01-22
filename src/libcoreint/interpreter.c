@@ -454,7 +454,7 @@ run_int_loop (int_data_t *int_data)
 
 ecma_completion_value_t
 run_int_from_pos (opcode_counter_t start_pos,
-                  ecma_value_t this_binding_value,
+                  const ecma_value_t& this_binding_value,
                   ecma_object_t *lex_env_p,
                   bool is_strict,
                   bool is_eval_code)

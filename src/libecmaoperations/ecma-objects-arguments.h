@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ extern ecma_object_t*
 ecma_create_arguments_object (ecma_object_t *func_obj_p,
                               ecma_object_t *lex_env_p,
                               ecma_collection_iterator_t *formal_params_iter_p,
-                              ecma_value_t *arguments_list_p,
+                              const ecma_value_t *arguments_list_p,
                               ecma_length_t arguments_list_length,
                               bool is_strict);
 

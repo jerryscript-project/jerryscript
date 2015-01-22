@@ -34,8 +34,8 @@
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                ecma_magic_string_id_t builtin_routine_id,
-                               ecma_value_t this_arg_value,
-                               ecma_value_t arguments_list [],
+                               const ecma_value_t& this_arg_value,
+                               const ecma_value_t arguments_list [],
                                ecma_length_t arguments_number);
 static void ecma_instantiate_builtin (ecma_builtin_id_t id);
 
@@ -360,8 +360,8 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
-                            ecma_value_t this_arg_value, /**< 'this' argument value */
-                            ecma_value_t *arguments_list_p, /**< arguments list */
+                            const ecma_value_t& this_arg_value, /**< 'this' argument value */
+                            const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of the arguments list */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
@@ -450,7 +450,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
-                                 ecma_value_t *arguments_list_p, /**< arguments list */
+                                 const ecma_value_t *arguments_list_p, /**< arguments list */
                                  ecma_length_t arguments_list_len) /**< length of the arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
@@ -514,8 +514,8 @@ static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
                                ecma_magic_string_id_t builtin_routine_id, /**< name of the built-in object's
                                                                                routine property */
-                               ecma_value_t this_arg_value, /**< 'this' argument value */
-                               ecma_value_t arguments_list [], /**< list of arguments passed to routine */
+                               const ecma_value_t& this_arg_value, /**< 'this' argument value */
+                               const ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
 {
   switch (builtin_object_id)

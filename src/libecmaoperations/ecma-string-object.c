@@ -39,8 +39,8 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_string_object (ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                   are passed to String constructor */
+ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
+                                                                         are passed to String constructor */
                               ecma_length_t arguments_list_len) /**< length of the arguments' list */
 {
   JERRY_ASSERT (arguments_list_len == 0

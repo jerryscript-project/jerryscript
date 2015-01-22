@@ -34,8 +34,8 @@ JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE == ECMA_VALUE_SIZE
  *
  * @return type field
  */
-static ecma_type_t __attribute_const__
-ecma_get_value_type_field (ecma_value_t value) /**< ecma-value */
+static ecma_type_t __attribute_pure__
+ecma_get_value_type_field (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_type_t) jrt_extract_bit_field (value,
                                               ECMA_VALUE_TYPE_POS,
@@ -47,8 +47,8 @@ ecma_get_value_type_field (ecma_value_t value) /**< ecma-value */
  *
  * @return value field
  */
-static uintptr_t __attribute_const__
-ecma_get_value_value_field (ecma_value_t value) /**< ecma-value */
+static uintptr_t __attribute_pure__
+ecma_get_value_value_field (const ecma_value_t& value) /**< ecma-value */
 {
   return (uintptr_t) jrt_extract_bit_field (value,
                                             ECMA_VALUE_VALUE_POS,
@@ -60,8 +60,8 @@ ecma_get_value_value_field (ecma_value_t value) /**< ecma-value */
  *
  * @return ecma-value with updated field
  */
-static ecma_value_t __attribute_const__
-ecma_set_value_type_field (ecma_value_t value, /**< ecma-value to set field in */
+static ecma_value_t __attribute_pure__
+ecma_set_value_type_field (const ecma_value_t& value, /**< ecma-value to set field in */
                            ecma_type_t type_field) /**< new field value */
 {
   return (ecma_value_t) jrt_set_bit_field_value (value,
@@ -75,8 +75,8 @@ ecma_set_value_type_field (ecma_value_t value, /**< ecma-value to set field in *
  *
  * @return ecma-value with updated field
  */
-static ecma_value_t __attribute_const__
-ecma_set_value_value_field (ecma_value_t value, /**< ecma-value to set field in */
+static ecma_value_t __attribute_pure__
+ecma_set_value_value_field (const ecma_value_t& value, /**< ecma-value to set field in */
                             uintptr_t value_field) /**< new field value */
 {
   return (ecma_value_t) jrt_set_bit_field_value (value,
@@ -91,8 +91,8 @@ ecma_set_value_value_field (ecma_value_t value, /**< ecma-value to set field in 
  * @return true - if the value contains implementation-defined empty simple value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_empty (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
           && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_EMPTY);
@@ -104,8 +104,8 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-undefined simple value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_undefined (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
           && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_UNDEFINED);
@@ -117,8 +117,8 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-null simple value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_null (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_null (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
           && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_NULL);
@@ -130,8 +130,8 @@ ecma_is_value_null (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-true or ecma-false simple values,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_boolean (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
           && (ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE
@@ -147,8 +147,8 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-true simple value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_true (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_true (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
           && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE);
@@ -160,8 +160,8 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-number value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_number (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_number (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
 } /* ecma_is_value_number */
@@ -172,8 +172,8 @@ ecma_is_value_number (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains ecma-string value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_string (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_string (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
@@ -184,8 +184,8 @@ ecma_is_value_string (ecma_value_t value) /**< ecma-value */
  * @return true - if the value contains object value,
  *         false - otherwise.
  */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_value_object (ecma_value_t value) /**< ecma-value */
+inline bool __attribute_pure__ __attribute_always_inline__
+ecma_is_value_object (const ecma_value_t& value) /**< ecma-value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
 } /* ecma_is_value_object */
@@ -195,7 +195,7 @@ ecma_is_value_object (ecma_value_t value) /**< ecma-value */
  * script-visible types, i.e.: undefined, null, boolean, number, string, object.
  */
 void
-ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma-value */
+ecma_check_value_type_is_spec_defined (const ecma_value_t& value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_is_value_undefined (value)
                 || ecma_is_value_null (value)
@@ -281,8 +281,8 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
  *
  * @return the pointer
  */
-ecma_number_t* __attribute_const__
-ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
+ecma_number_t* __attribute_pure__
+ecma_get_number_from_value (const ecma_value_t& value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
 
@@ -295,8 +295,8 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
  *
  * @return the pointer
  */
-ecma_string_t* __attribute_const__
-ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
+ecma_string_t* __attribute_pure__
+ecma_get_string_from_value (const ecma_value_t& value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
 
@@ -309,8 +309,8 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
  *
  * @return the pointer
  */
-ecma_object_t* __attribute_const__
-ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
+ecma_object_t* __attribute_pure__
+ecma_get_object_from_value (const ecma_value_t& value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
 
@@ -340,7 +340,7 @@ ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
  * @return See note.
  */
 ecma_value_t
-ecma_copy_value (const ecma_value_t value, /**< ecma-value */
+ecma_copy_value (const ecma_value_t& value, /**< ecma-value */
                  bool do_ref_if_object) /**< if the value is object value,
                                              increment reference counter of the object */
 {
@@ -397,7 +397,7 @@ ecma_copy_value (const ecma_value_t value, /**< ecma-value */
  * Free the ecma-value
  */
 void
-ecma_free_value (ecma_value_t value, /**< value description */
+ecma_free_value (ecma_value_t& value, /**< value description */
                  bool do_deref_if_object) /**< if the value is object value,
                                                decrement reference counter of the object */
 {
@@ -495,10 +495,10 @@ ecma_set_completion_value_type_field (ecma_completion_value_t completion_value, 
  *
  * @return completion value with updated field
  */
-static ecma_completion_value_t __attribute_const__
+static ecma_completion_value_t __attribute_pure__
 ecma_set_completion_value_value_field (ecma_completion_value_t completion_value, /**< completion value
                                                                                   * to set field in */
-                                       ecma_value_t value_field) /**< new field value */
+                                       const ecma_value_t& value_field) /**< new field value */
 {
   return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
                                                             value_field,
@@ -531,9 +531,9 @@ ecma_set_completion_value_label_descriptor (ecma_completion_value_t completion_v
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
+inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
 ecma_make_completion_value (ecma_completion_type_t type, /**< type */
-                            ecma_value_t value) /**< value */
+                            const ecma_value_t& value) /**< value */
 {
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -606,8 +606,8 @@ ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_normal_completion_value (ecma_value_t value) /**< value */
+inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
+ecma_make_normal_completion_value (const ecma_value_t& value) /**< value */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, value);
 } /* ecma_make_normal_completion_value */
@@ -617,8 +617,8 @@ ecma_make_normal_completion_value (ecma_value_t value) /**< value */
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_throw_completion_value (ecma_value_t value) /**< value */
+inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
+ecma_make_throw_completion_value (const ecma_value_t& value) /**< value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW, value);
@@ -662,8 +662,8 @@ ecma_make_empty_completion_value (void)
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_return_completion_value (ecma_value_t value) /**< value */
+inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
+ecma_make_return_completion_value (const ecma_value_t& value) /**< value */
 {
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN, value);
 } /* ecma_make_return_completion_value */
@@ -787,12 +787,14 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
 #endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
     case ECMA_COMPLETION_TYPE_RETURN:
     {
-      ecma_free_value (ecma_get_completion_value_value_field (completion_value), true);
+      ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
+      ecma_free_value (v, true);
       break;
     }
     case ECMA_COMPLETION_TYPE_EXIT:
     {
-      JERRY_ASSERT(ecma_get_value_type_field (ecma_get_completion_value_value (completion_value)) == ECMA_TYPE_SIMPLE);
+      ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
+      JERRY_ASSERT(ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
       break;
     }
     case ECMA_COMPLETION_TYPE_CONTINUE:

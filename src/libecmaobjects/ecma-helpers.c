@@ -689,7 +689,9 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                      property_p->u.named_data_property.name_p));
-  ecma_free_value (property_p->u.named_data_property.value, false);
+
+  ecma_value_t v = property_p->u.named_data_property.value;
+  ecma_free_value (v, false);
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_data_property */
@@ -875,7 +877,7 @@ ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property
  */
 void
 ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
-                                    ecma_value_t value) /**< value to set */
+                                    const ecma_value_t& value) /**< value to set */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
@@ -894,7 +896,7 @@ ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
 void
 ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        ecma_property_t *prop_p, /**< property */
-                                       ecma_value_t value) /**< value to assign */
+                                       const ecma_value_t& value) /**< value to assign */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 #ifndef JERRY_NDEBUG
@@ -922,7 +924,9 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   }
   else
   {
-    ecma_free_value (ecma_get_named_data_property_value (prop_p), false);
+    ecma_value_t v = ecma_get_named_data_property_value (prop_p);
+    ecma_free_value (v, false);
+
     prop_p->u.named_data_property.value = ecma_copy_value (value, false);
     ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
                                                          prop_p->u.named_data_property.value);

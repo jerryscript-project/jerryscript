@@ -239,7 +239,7 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
  */
 void
 ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< object */
-                                                     ecma_value_t value) /**< value */
+                                                     const ecma_value_t& value) /**< value */
 {
   if (!ecma_is_value_object (value))
   {

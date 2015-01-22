@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@
  * @{
  */
 
-extern bool ecma_op_is_callable (ecma_value_t value);
-extern bool ecma_is_constructor (ecma_value_t value);
+extern bool ecma_op_is_callable (const ecma_value_t& value);
+extern bool ecma_is_constructor (const ecma_value_t& value);
 
 extern ecma_object_t*
 ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
@@ -38,18 +38,18 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
 
 extern ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p,
-                       ecma_value_t this_arg_value,
-                       ecma_value_t* arguments_list_p,
+                       const ecma_value_t& this_arg_value,
+                       const ecma_value_t* arguments_list_p,
                        ecma_length_t arguments_list_len);
 
 extern ecma_completion_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p,
-                            ecma_value_t* arguments_list_p,
+                            const ecma_value_t* arguments_list_p,
                             ecma_length_t arguments_list_len);
 
 extern ecma_completion_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p,
-                               ecma_value_t value);
+                               const ecma_value_t& value);
 
 extern ecma_completion_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p,

@@ -45,8 +45,8 @@ static ecma_completion_value_t
 do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
                       idx_t dst_var_idx, /**< destination variable identifier */
                       number_arithmetic_op op, /**< number arithmetic operation */
-                      ecma_value_t left_value, /**< left value */
-                      ecma_value_t right_value) /** right value */
+                      const ecma_value_t& left_value, /**< left value */
+                      const ecma_value_t& right_value) /** right value */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

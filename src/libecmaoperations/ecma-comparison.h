@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,13 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_abstract_equality_compare (ecma_value_t x, ecma_value_t y);
-extern bool ecma_op_strict_equality_compare (ecma_value_t x, ecma_value_t y);
-extern ecma_completion_value_t ecma_op_abstract_relational_compare (ecma_value_t x, ecma_value_t y, bool left_first);
+extern ecma_completion_value_t ecma_op_abstract_equality_compare (const ecma_value_t& x,
+                                                                  const ecma_value_t& y);
+extern bool ecma_op_strict_equality_compare (const ecma_value_t& x,
+                                             const ecma_value_t& y);
+extern ecma_completion_value_t ecma_op_abstract_relational_compare (const ecma_value_t& x,
+                                                                    const ecma_value_t& y,
+                                                                    bool left_first);
 
 /**
  * @}

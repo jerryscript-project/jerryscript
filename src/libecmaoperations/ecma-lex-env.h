@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,9 @@ extern ecma_completion_value_t ecma_op_get_value_object_base (ecma_reference_t r
 extern ecma_completion_value_t ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
                                                                ecma_string_t *var_name_string_p,
                                                                bool is_strict,
-                                                               ecma_value_t value);
+                                                               const ecma_value_t& value);
 extern ecma_completion_value_t ecma_op_put_value_object_base (ecma_reference_t ref,
-                                                              ecma_value_t value);
+                                                              const ecma_value_t& value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
 extern bool ecma_op_has_binding (ecma_object_t *lex_env_p,
@@ -48,7 +48,7 @@ extern ecma_completion_value_t ecma_op_create_mutable_binding (ecma_object_t *le
                                                                bool is_deletable);
 extern ecma_completion_value_t ecma_op_set_mutable_binding (ecma_object_t *lex_env_p,
                                                             ecma_string_t *name_p,
-                                                            ecma_value_t value,
+                                                            const ecma_value_t& value,
                                                             bool is_strict);
 extern ecma_completion_value_t ecma_op_get_binding_value (ecma_object_t *lex_env_p,
                                                           ecma_string_t *name_p,
@@ -62,7 +62,7 @@ extern void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p,
                                               ecma_string_t *name_p);
 extern void ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p,
                                                   ecma_string_t *name_p,
-                                                  ecma_value_t value);
+                                                  const ecma_value_t& value);
 
 extern ecma_object_t* ecma_op_create_global_environment (ecma_object_t *glob_obj_p);
 extern bool ecma_is_lexical_environment_global (ecma_object_t *lex_env_p);

@@ -93,7 +93,7 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
  *         Returned value must be freed through ecma_free_reference.
  */
 ecma_reference_t
-ecma_make_reference (ecma_value_t base, /**< base value */
+ecma_make_reference (const ecma_value_t& base, /**< base value */
                      ecma_string_t *name_p, /**< referenced name */
                      bool is_strict) /**< strict reference flag */
 {

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,15 +62,15 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
                 is_extensible, \
                 lowercase_name) \
 extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_call (ecma_value_t *arguments_list_p, \
+ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *arguments_list_p, \
                                                    ecma_length_t arguments_list_len); \
 extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_construct (ecma_value_t *arguments_list_p, \
+ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *arguments_list_p, \
                                                         ecma_length_t arguments_list_len); \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t builtin_routine_id, \
-                                                      ecma_value_t this_arg_value, \
-                                                      ecma_value_t arguments_list [], \
+                                                      const ecma_value_t& this_arg_value, \
+                                                      const ecma_value_t arguments_list [], \
                                                       ecma_length_t arguments_number); \
 extern ecma_property_t* \
 ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \

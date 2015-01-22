@@ -127,7 +127,7 @@ ecma_completion_value_t
 set_variable_value (int_data_t *int_data, /**< interpreter context */
                     opcode_counter_t lit_oc, /**< opcode counter for literal */
                     idx_t var_idx, /**< variable identifier */
-                    ecma_value_t value) /**< value to set */
+                    const ecma_value_t& value) /**< value to set */
 {
   ecma_completion_value_t ret_value;
 

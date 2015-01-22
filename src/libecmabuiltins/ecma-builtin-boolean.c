@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_boolean_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
@@ -75,7 +75,7 @@ ecma_builtin_boolean_dispatch_call (ecma_value_t *arguments_list_p, /**< argumen
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_boolean_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_boolean_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                          ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

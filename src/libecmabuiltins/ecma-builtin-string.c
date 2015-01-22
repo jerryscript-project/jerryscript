@@ -54,8 +54,8 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 'this' argument */
-                                           ecma_value_t args[], /**< arguments list */
+ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+                                           const ecma_value_t args[], /**< arguments list */
                                            ecma_length_t args_number) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -113,7 +113,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __unused, /**< 
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_string_dispatch_call (ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
@@ -141,7 +141,7 @@ ecma_builtin_string_dispatch_call (ecma_value_t *arguments_list_p, /**< argument
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_string_dispatch_construct (ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_string_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

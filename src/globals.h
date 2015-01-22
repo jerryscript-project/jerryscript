@@ -16,11 +16,11 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
+#include <float.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <sys/types.h>
-#include <float.h>
 
 /**
  * Types
@@ -126,7 +126,8 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
 /**
  * Mark for unreachable points and unimplemented cases
  */
-extern void jerry_ref_unused_variables (int unused_variables_follow, ...);
+template<typename... values> extern void jerry_ref_unused_variables (values... unused);
+
 #if !defined (JERRY_NDEBUG) && defined (__TARGET_HOST)
 #define JERRY_UNREACHABLE() \
   do \

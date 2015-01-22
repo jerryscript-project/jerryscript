@@ -32,12 +32,13 @@
 #define DISPATCH_ROUTINE_ROUTINE_NAME(builtin_underscored_id) \
   PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _dispatch_routine)
 
-#define ROUTINE_ARG(n) , ecma_value_t arg ## n
-#define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
+#define ROUTINE_ARG(n) , const ecma_value_t& arg ## n
+#define ROUTINE_ARG_LIST_0 const ecma_value_t& this_arg
 #define ROUTINE_ARG_LIST_1 ROUTINE_ARG_LIST_0 ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1 ROUTINE_ARG(2)
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2 ROUTINE_ARG(3)
-#define ROUTINE_ARG_LIST_NON_FIXED ROUTINE_ARG_LIST_0, ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
+#define ROUTINE_ARG_LIST_NON_FIXED ROUTINE_ARG_LIST_0, \
+  const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   static ecma_completion_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
 #include BUILTIN_INC_HEADER_NAME
@@ -275,10 +276,10 @@ ecma_completion_value_t
 DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t builtin_routine_id, /**< built-in's
                                                                                                         routine's
                                                                                                         name */
-                                                        ecma_value_t this_arg_value, /**< 'this' argument
-                                                                                          value */
-                                                        ecma_value_t arguments_list [], /**< list of arguments
-                                                                                             passed to routine */
+                                                        const ecma_value_t& this_arg_value, /**< 'this' argument
+                                                                                                 value */
+                                                        const ecma_value_t arguments_list [], /**< list of arguments
+                                                                                                   passed to routine */
                                                         ecma_length_t arguments_number) /**< length of
                                                                                              arguments' list */
 {

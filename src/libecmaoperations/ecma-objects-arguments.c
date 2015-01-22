@@ -46,7 +46,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
                                                              object is created for */
                               ecma_collection_iterator_t *formal_params_iter_p, /**< formal parameters
                                                                                      collection iterator */
-                              ecma_value_t *arguments_list_p, /**< list of arguments */
+                              const ecma_value_t *arguments_list_p, /**< list of arguments */
                               ecma_length_t arguments_list_length, /**< length of arguments' list */
                               bool is_strict) /**< flag indicating whether strict mode is enabled */
 {

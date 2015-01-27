@@ -37,15 +37,14 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (ecma_get_completion_value_value (left_value),
-                                                     ecma_get_completion_value_value (right_value)),
+                  ecma_op_abstract_equality_compare (left_value,
+                                                     right_value),
                   ret_value);
 
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (compare_result)
-                || ecma_is_completion_value_normal_false (compare_result));
+  JERRY_ASSERT (ecma_is_value_boolean (compare_result));
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
-                                  ecma_get_completion_value_value (compare_result));
+                                  compare_result);
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -77,14 +76,12 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (ecma_get_completion_value_value (left_value),
-                                                     ecma_get_completion_value_value (right_value)),
+                  ecma_op_abstract_equality_compare (left_value, right_value),
                   ret_value);
 
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (compare_result)
-                || ecma_is_completion_value_normal_false (compare_result));
+  JERRY_ASSERT (ecma_is_value_boolean (compare_result));
 
-  bool is_equal = ecma_is_completion_value_normal_true (compare_result);
+  bool is_equal = ecma_is_value_true (compare_result);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
@@ -120,8 +117,7 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (ecma_get_completion_value_value (left_value),
-                                                   ecma_get_completion_value_value (right_value));
+  bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
@@ -156,8 +152,7 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
-  bool is_equal = ecma_op_strict_equality_compare (ecma_get_completion_value_value (left_value),
-                                                   ecma_get_completion_value_value (right_value));
+  bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE

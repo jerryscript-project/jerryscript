@@ -503,13 +503,13 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
   // 3.
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (delete_in_args_completion,
+  ECMA_TRY_CATCH (delete_in_args_ret,
                   ecma_op_general_object_delete (obj_p,
                                                  property_name_p,
                                                  is_throw),
                   ret_value);
 
-  if (ecma_is_completion_value_normal_true (delete_in_args_completion))
+  if (ecma_is_value_true (delete_in_args_ret))
   {
     if (mapped_prop_p != NULL)
     {
@@ -523,12 +523,12 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_normal_false (delete_in_args_completion));
+    JERRY_ASSERT (ecma_is_value_boolean (delete_in_args_ret));
 
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ECMA_FINALIZE (delete_in_args_completion);
+  ECMA_FINALIZE (delete_in_args_ret);
 
   return ret_value;
 } /* ecma_op_arguments_object_delete */

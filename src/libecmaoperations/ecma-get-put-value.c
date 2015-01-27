@@ -108,7 +108,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
 
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_base);
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
@@ -229,7 +229,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
 
     ecma_completion_value_t ret_value;
 
-    ECMA_TRY_CATCH (put_completion,
+    ECMA_TRY_CATCH (put_ret_value,
                     ecma_op_object_put (obj_p,
                                         ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                    ref.referenced_name_cp),
@@ -239,7 +239,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
 
     ret_value = ecma_make_empty_completion_value ();
 
-    ECMA_FINALIZE (put_completion);
+    ECMA_FINALIZE (put_ret_value);
 
     return ret_value;
   }
@@ -251,7 +251,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     // sub_1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
-    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_base);
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
@@ -288,13 +288,13 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                                                             prop_p->u.named_accessor_property.set_p);
         JERRY_ASSERT (setter_p != NULL);
 
-        ECMA_TRY_CATCH (call_completion,
+        ECMA_TRY_CATCH (call_ret,
                         ecma_op_function_call (setter_p, base, &value, 1),
                         ret_value);
 
         ret_value = ecma_make_empty_completion_value ();
 
-        ECMA_FINALIZE (call_completion);
+        ECMA_FINALIZE (call_ret);
       }
     }
 

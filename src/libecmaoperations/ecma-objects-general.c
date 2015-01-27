@@ -292,7 +292,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
 
     ecma_completion_value_t ret_value;
 
-    ECMA_TRY_CATCH (call_completion,
+    ECMA_TRY_CATCH (call_ret,
                     ecma_op_function_call (setter_p,
                                            ecma_make_object_value (obj_p),
                                            &value,
@@ -301,7 +301,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
 
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
 
-    ECMA_FINALIZE (call_completion);
+    ECMA_FINALIZE (call_ret);
 
     return ret_value;
   }

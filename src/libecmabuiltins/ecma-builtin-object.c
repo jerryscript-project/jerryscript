@@ -325,7 +325,7 @@ ecma_builtin_object_object_define_property (const ecma_value_t& this_arg __unuse
                     ecma_op_to_string (arg2),
                     ret_value);
 
-    ecma_string_t *name_str_p = ecma_get_string_from_completion_value (name_str_value);
+    ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
 
     ecma_property_descriptor_t prop_desc;
 

@@ -59,16 +59,16 @@ ecma_builtin_eval_error_dispatch_call (const ecma_value_t *arguments_list_p, /**
   {
     ecma_completion_value_t ret_value;
 
-    ECMA_TRY_CATCH (msg_to_str_completion,
+    ECMA_TRY_CATCH (msg_str_value,
                     ecma_op_to_string (arguments_list_p[0]),
                     ret_value);
 
-    ecma_string_t *message_string_p = ecma_get_string_from_completion_value (msg_to_str_completion);
+    ecma_string_t *message_string_p = ecma_get_string_from_value (msg_str_value);
     ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_EVAL,
                                                                               message_string_p);
     ret_value = ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));
 
-    ECMA_FINALIZE (msg_to_str_completion);
+    ECMA_FINALIZE (msg_str_value);
 
     return ret_value;
   }

@@ -118,7 +118,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
                         ecma_op_to_string (arg_values[0]),
                         ret_value);
 
-        ecma_string_t *str_p = ecma_get_string_from_completion_value (str_value);
+        ecma_string_t *str_p = ecma_get_string_from_value (str_value);
 
         int32_t chars = ecma_string_get_length (str_p);
         JERRY_ASSERT (chars >= 0);

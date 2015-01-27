@@ -110,7 +110,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   }
   else if (type_value_right == OPCODE_ARG_TYPE_VARIABLE)
   {
-    ECMA_TRY_CATCH (get_value_completion,
+    ECMA_TRY_CATCH (var_value,
                     get_variable_value (int_data,
                                         src_val_descr,
                                         false),
@@ -119,9 +119,9 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_get_completion_value_value (get_value_completion));
+                                    var_value);
 
-    ECMA_FINALIZE (get_value_completion);
+    ECMA_FINALIZE (var_value);
   }
   else if (type_value_right == OPCODE_ARG_TYPE_NUMBER)
   {
@@ -201,9 +201,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, incr_var_idx, true), ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
-                               ecma_get_completion_value_value (old_value),
-                               ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num, old_value, ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
@@ -250,9 +248,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, decr_var_idx, true), ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
-                               ecma_get_completion_value_value (old_value),
-                               ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num, old_value, ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
@@ -299,9 +295,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, incr_var_idx, true), ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
-                               ecma_get_completion_value_value (old_value),
-                               ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num, old_value, ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
@@ -349,9 +343,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
 
   // 1., 2., 3.
   ECMA_TRY_CATCH (old_value, get_variable_value (int_data, decr_var_idx, true), ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num,
-                               ecma_get_completion_value_value (old_value),
-                               ret_value);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (old_num, old_value, ret_value);
 
   // 4.
   ecma_number_t* new_num_p = int_data->tmp_num_p;
@@ -677,42 +669,44 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (args_read == args_number);
 
-    ecma_completion_value_t this_value;
+    ecma_completion_value_t get_this_completion_value;
 
     if (this_arg_var_idx_set)
     {
-      this_value = get_variable_value (int_data, this_arg_var_idx, false);
+      get_this_completion_value = get_variable_value (int_data, this_arg_var_idx, false);
     }
     else
     {
-      this_value = ecma_op_implicit_this_value (int_data->lex_env_p);
+      get_this_completion_value = ecma_op_implicit_this_value (int_data->lex_env_p);
     }
-    JERRY_ASSERT (ecma_is_completion_value_normal (this_value));
+    JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
 
-    if (!ecma_op_is_callable (ecma_get_completion_value_value (func_value)))
+    ecma_value_t this_value = ecma_get_completion_value_value (get_this_completion_value);
+
+    if (!ecma_op_is_callable (func_value))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_completion_value (func_value);
+      ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
 
-      ECMA_TRY_CATCH (call_completion,
+      ECMA_TRY_CATCH (call_ret_value,
                       ecma_op_function_call (func_obj_p,
-                                             ecma_get_completion_value_value (this_value),
+                                             this_value,
                                              arg_values,
                                              args_number),
                       ret_value);
 
       ret_value = set_variable_value (int_data, lit_oc,
                                       lhs_var_idx,
-                                      ecma_get_completion_value_value (call_completion));
+                                      call_ret_value);
 
-      ECMA_FINALIZE (call_completion);
+      ECMA_FINALIZE (call_ret_value);
 
     }
 
-    ecma_free_completion_value (this_value);
+    ecma_free_completion_value (get_this_completion_value);
   }
   else
   {
@@ -771,24 +765,24 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
   {
     JERRY_ASSERT (args_read == args_number);
 
-    if (!ecma_is_constructor (ecma_get_completion_value_value (constructor_value)))
+    if (!ecma_is_constructor (constructor_value))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
-      ecma_object_t *constructor_obj_p = ecma_get_object_from_completion_value (constructor_value);
+      ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
 
-      ECMA_TRY_CATCH (construction_completion,
+      ECMA_TRY_CATCH (construction_ret_value,
                       ecma_op_function_construct (constructor_obj_p,
                                                   arg_values,
                                                   args_number),
                       ret_value);
 
       ret_value = set_variable_value (int_data, lit_oc, lhs_var_idx,
-                                      ecma_get_completion_value_value (construction_completion));
+                                      construction_ret_value);
 
-      ECMA_FINALIZE (construction_completion);
+      ECMA_FINALIZE (construction_ret_value);
     }
   }
   else
@@ -852,7 +846,7 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
 
     ret_value = set_variable_value (int_data, lit_oc,
                                     lhs_var_idx,
-                                    ecma_get_completion_value_value (array_obj_value));
+                                    array_obj_value);
 
     ECMA_FINALIZE (array_obj_value);
   }
@@ -933,12 +927,12 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
                                             false),
                         ret_value);
         ECMA_TRY_CATCH (prop_name_str_value,
-                        ecma_op_to_string (ecma_get_completion_value_value (prop_name_value)),
+                        ecma_op_to_string (prop_name_value),
                         ret_value);
 
         bool is_throw_syntax_error = false;
 
-        ecma_string_t *prop_name_string_p = ecma_get_string_from_completion_value (prop_name_str_value);
+        ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
         ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
 
         const bool is_previous_undefined = (previous_p == NULL);
@@ -1076,7 +1070,7 @@ opfunc_retval (opcode_t opdata __unused, /**< operation data */
 
   ECMA_TRY_CATCH (expr_val, get_variable_value (int_data, opdata.data.retval.ret_value, false), ret_value);
 
-  ret_value = ecma_make_return_completion_value (ecma_copy_value (ecma_get_completion_value_value (expr_val), true));
+  ret_value = ecma_make_return_completion_value (ecma_copy_value (expr_val, true));
 
   ECMA_FINALIZE (expr_val);
 
@@ -1109,20 +1103,18 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
                   get_variable_value (int_data, prop_name_var_idx, false),
                   ret_value);
   ECMA_TRY_CATCH (check_coercible_ret,
-                  ecma_op_check_object_coercible (ecma_get_completion_value_value (base_value)),
+                  ecma_op_check_object_coercible (base_value),
                   ret_value);
   ECMA_TRY_CATCH (prop_name_str_value,
-                  ecma_op_to_string (ecma_get_completion_value_value (prop_name_value)),
+                  ecma_op_to_string (prop_name_value),
                   ret_value);
 
-  ecma_string_t *prop_name_string_p = ecma_get_string_from_completion_value (prop_name_str_value);
-  ecma_reference_t ref = ecma_make_reference (ecma_get_completion_value_value (base_value),
-                                              prop_name_string_p,
-                                              int_data->is_strict);
+  ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
+  ecma_reference_t ref = ecma_make_reference (base_value, prop_name_string_p, int_data->is_strict);
 
   ECMA_TRY_CATCH (prop_value, ecma_op_get_value_object_base (ref), ret_value);
 
-  ret_value = set_variable_value (int_data, int_data->pos, lhs_var_idx, ecma_get_completion_value_value (prop_value));
+  ret_value = set_variable_value (int_data, int_data->pos, lhs_var_idx, prop_value);
 
   ECMA_FINALIZE (prop_value);
 
@@ -1164,19 +1156,19 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
                   get_variable_value (int_data, prop_name_var_idx, false),
                   ret_value);
   ECMA_TRY_CATCH (check_coercible_ret,
-                  ecma_op_check_object_coercible (ecma_get_completion_value_value (base_value)),
+                  ecma_op_check_object_coercible (base_value),
                   ret_value);
   ECMA_TRY_CATCH (prop_name_str_value,
-                  ecma_op_to_string (ecma_get_completion_value_value (prop_name_value)),
+                  ecma_op_to_string (prop_name_value),
                   ret_value);
 
-  ecma_string_t *prop_name_string_p = ecma_get_string_from_completion_value (prop_name_str_value);
-  ecma_reference_t ref = ecma_make_reference (ecma_get_completion_value_value (base_value),
+  ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
+  ecma_reference_t ref = ecma_make_reference (base_value,
                                               prop_name_string_p,
                                               int_data->is_strict);
 
   ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
-  ret_value = ecma_op_put_value_object_base (ref, ecma_get_completion_value_value (rhs_value));
+  ret_value = ecma_op_put_value_object_base (ref, rhs_value);
   ECMA_FINALIZE (rhs_value);
 
   ecma_free_reference (ref);
@@ -1234,7 +1226,7 @@ opfunc_logical_not (opcode_t opdata, /**< operation data */
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
   ecma_simple_value_t old_value = ECMA_SIMPLE_VALUE_TRUE;
-  ecma_completion_value_t to_bool_value = ecma_op_to_boolean (ecma_get_completion_value_value (right_value));
+  ecma_completion_value_t to_bool_value = ecma_op_to_boolean (right_value);
 
   if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_value)))
   {
@@ -1300,12 +1292,12 @@ opfunc_with (opcode_t opdata, /**< operation data */
                                       false),
                   ret_value);
   ECMA_TRY_CATCH (obj_expr_value,
-                  ecma_op_to_object (ecma_get_completion_value_value (expr_value)),
+                  ecma_op_to_object (expr_value),
                   ret_value);
 
   int_data->pos++;
 
-  ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_expr_value);
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
 
   ecma_object_t *old_env_p = int_data->lex_env_p;
   ecma_object_t *new_env_p = ecma_create_object_lex_env (old_env_p,
@@ -1364,7 +1356,7 @@ opfunc_throw_value (opcode_t opdata, /**< operation data */
                                       false),
                   ret_value);
 
-  ret_value = ecma_make_throw_completion_value (ecma_copy_value (ecma_get_completion_value_value (var_value), true));
+  ret_value = ecma_make_throw_completion_value (ecma_copy_value (var_value, true));
 
   ECMA_FINALIZE (var_value);
 
@@ -1438,12 +1430,11 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (typeof_evaluate_arg_completion,
+  ECMA_TRY_CATCH (typeof_arg,
                   evaluate_arg_for_typeof (int_data,
                                            obj_var_idx),
                   ret_value);
 
-  ecma_value_t typeof_arg = ecma_get_completion_value_value (typeof_evaluate_arg_completion);
 
   ecma_string_t *type_str_p = NULL;
 
@@ -1487,7 +1478,7 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   ecma_deref_ecma_string (type_str_p);
 
-  ECMA_FINALIZE (typeof_evaluate_arg_completion);
+  ECMA_FINALIZE (typeof_arg);
 
   int_data->pos++;
 
@@ -1547,8 +1538,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
                                                                          ref.referenced_name_cp)),
                       ret_value);
 
-      ret_value = set_variable_value (int_data, lit_oc, dst_var_idx,
-                                      ecma_get_completion_value_value (delete_completion));
+      ret_value = set_variable_value (int_data, lit_oc, dst_var_idx, delete_completion);
 
       ECMA_FINALIZE (delete_completion);
     }
@@ -1587,16 +1577,16 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
                   get_variable_value (int_data, name_var_idx, false),
                   ret_value);
   ECMA_TRY_CATCH (check_coercible_ret,
-                  ecma_op_check_object_coercible (ecma_get_completion_value_value (base_value)),
+                  ecma_op_check_object_coercible (base_value),
                   ret_value);
   ECMA_TRY_CATCH (str_name_value,
-                  ecma_op_to_string (ecma_get_completion_value_value (name_value)),
+                  ecma_op_to_string (name_value),
                   ret_value);
 
-  JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (str_name_value)));
-  ecma_string_t *name_string_p = ecma_get_string_from_completion_value (str_name_value);
+  JERRY_ASSERT (ecma_is_value_string (str_name_value));
+  ecma_string_t *name_string_p = ecma_get_string_from_value (str_name_value);
 
-  if (ecma_is_value_undefined (ecma_get_completion_value_value (base_value)))
+  if (ecma_is_value_undefined (base_value))
   {
     if (int_data->is_strict)
     {
@@ -1610,20 +1600,19 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   }
   else
   {
-    ECMA_TRY_CATCH (obj_value, ecma_op_to_object (ecma_get_completion_value_value (base_value)), ret_value);
+    ECMA_TRY_CATCH (obj_value, ecma_op_to_object (base_value), ret_value);
 
-    JERRY_ASSERT (ecma_is_value_object (ecma_get_completion_value_value (obj_value)));
-    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_value);
+    JERRY_ASSERT (ecma_is_value_object (obj_value));
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
     JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
-    ECMA_TRY_CATCH (delete_op_completion,
+    ECMA_TRY_CATCH (delete_op_ret_val,
                     ecma_op_object_delete (obj_p, name_string_p, int_data->is_strict),
                     ret_value);
 
-    ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
-                                    ecma_get_completion_value_value (delete_op_completion));
+    ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, delete_op_ret_val);
 
-    ECMA_FINALIZE (delete_op_completion);
+    ECMA_FINALIZE (delete_op_ret_val);
     ECMA_FINALIZE (obj_value);
   }
 

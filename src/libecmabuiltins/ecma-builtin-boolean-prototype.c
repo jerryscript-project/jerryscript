@@ -58,26 +58,26 @@ ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /
 {
   ecma_completion_value_t ret_value;
 
-  ECMA_TRY_CATCH (completion_value_of,
+  ECMA_TRY_CATCH (value_of_ret,
                   ecma_builtin_boolean_prototype_object_value_of (this_arg),
                   ret_value);
 
   ecma_string_t *ret_str_p;
 
-  if (ecma_is_completion_value_normal_true (completion_value_of))
+  if (ecma_is_value_true (value_of_ret))
   {
     ret_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_normal_false (completion_value_of));
+    JERRY_ASSERT (ecma_is_value_boolean (value_of_ret));
 
     ret_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
   }
 
   ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
 
-  ECMA_FINALIZE (completion_value_of);
+  ECMA_FINALIZE (value_of_ret);
 
   return ret_value;
 } /* ecma_builtin_boolean_prototype_object_to_string */

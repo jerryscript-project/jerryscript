@@ -17,6 +17,7 @@
 #define ECMA_LEX_ENV_H
 
 #include "ecma-globals.h"
+#include "ecma-reference.h"
 #include "globals.h"
 
 /** \addtogroup ecma ECMA

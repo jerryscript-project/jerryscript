@@ -814,26 +814,6 @@ typedef struct
 } ecma_string_t;
 
 /**
- * \addtogroup reference ECMA-reference
- * @{
- */
-
-/**
- * ECMA-reference (see also: ECMA-262 v5, 8.7).
- */
-typedef struct
-{
-  /** base value */
-  ecma_value_t base;
-
-  /** referenced name */
-  unsigned int referenced_name_cp : ECMA_POINTER_FIELD_WIDTH;
-
-  /** strict reference flag */
-  unsigned int is_strict : 1;
-} ecma_reference_t;
-
-/**
  * @}
  */
 

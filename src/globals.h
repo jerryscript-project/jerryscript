@@ -126,7 +126,7 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
 /**
  * Mark for unreachable points and unimplemented cases
  */
-template<typename... values> extern void jerry_ref_unused_variables (values... unused);
+template<typename... values> extern void jerry_ref_unused_variables (const values & ... unused);
 
 #if !defined (JERRY_NDEBUG) && defined (__TARGET_HOST)
 #define JERRY_UNREACHABLE() \

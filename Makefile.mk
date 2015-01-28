@@ -356,6 +356,7 @@ endif
 ifeq ($(OPTION_MCU),disable)
  MACHINE_TYPE=$(shell uname -m)
  ifeq ($(MACHINE_TYPE),x86_64)
+   CFLAGS_COMMON += -ffixed-rbp
    DEFINES_JERRY += -D__TARGET_HOST_x64
  else
   ifeq ($(MACHINE_TYPE),armv7l)

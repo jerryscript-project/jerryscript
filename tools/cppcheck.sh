@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
 
 #!/bin/bash
 
-if [ ! -x ./third-party/tools/cppcheck/$(uname -m)/cppcheck ]
+BASE=./third-party/tools/cppcheck
+
+if [ ! -x $BASE/$(uname -m)/cppcheck ]
 then
   exit 1;
 fi
 
-./third-party/tools/cppcheck/$(uname -m)/cppcheck "$@"
+$BASE/$(uname -m)/cppcheck "$@" "--exitcode-suppressions=$BASE/cfg/suppressions-list"
 status_code=$?
 
 exit $status_code

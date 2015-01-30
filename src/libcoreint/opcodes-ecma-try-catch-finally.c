@@ -26,8 +26,9 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_try_block (opcode_t opdata, /**< operation data */
+void
+opfunc_try_block (ecma_completion_value_t &try_completion, /**< out: completion value */
+                  opcode_t opdata, /**< operation data */
                   int_data_t *int_data) /**< interpreter context */
 {
   const idx_t block_end_oc_idx_1 = opdata.data.try_block.oc_idx_1;
@@ -37,7 +38,8 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t try_completion = run_int_loop (int_data);
+  run_int_loop (try_completion, int_data);
+
   JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos <= try_end_oc)
                 || (ecma_is_completion_value_empty (try_completion) && int_data->pos == try_end_oc));
   int_data->pos = try_end_oc;
@@ -47,7 +49,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_exit (try_completion))
   {
-    return try_completion;
+    return;
   }
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH)
@@ -70,18 +72,22 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
       ecma_object_t *old_env_p = int_data->lex_env_p;
       ecma_object_t *catch_env_p = ecma_create_decl_lex_env (old_env_p);
-      ecma_completion_value_t completion = ecma_op_create_mutable_binding (catch_env_p,
-                                                                           catch_exc_var_name_str_p,
-                                                                           false);
+
+      ecma_completion_value_t completion;
+      ecma_op_create_mutable_binding (completion,
+                                      catch_env_p,
+                                      catch_exc_var_name_str_p,
+                                      false);
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 
       ecma_value_t catched_exc_value;
       ecma_get_completion_value_value (catched_exc_value, try_completion);
 
-      completion = ecma_op_set_mutable_binding (catch_env_p,
-                                                catch_exc_var_name_str_p,
-                                                catched_exc_value,
-                                                false);
+      ecma_op_set_mutable_binding (completion,
+                                   catch_env_p,
+                                   catch_exc_var_name_str_p,
+                                   catched_exc_value,
+                                   false);
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 
       ecma_deref_ecma_string (catch_exc_var_name_str_p);
@@ -89,7 +95,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
       int_data->lex_env_p = catch_env_p;
 
       ecma_free_completion_value (try_completion);
-      try_completion = run_int_loop (int_data);
+      run_int_loop (try_completion, int_data);
 
       int_data->lex_env_p = old_env_p;
 
@@ -107,7 +113,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_exit (try_completion))
   {
-    return try_completion;
+    return;
   }
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_FINALLY)
@@ -116,7 +122,8 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
       read_meta_opcode_counter (OPCODE_META_TYPE_FINALLY, int_data) + int_data->pos);
     int_data->pos++;
 
-    ecma_completion_value_t finally_completion = run_int_loop (int_data);
+    ecma_completion_value_t finally_completion;
+    run_int_loop (finally_completion, int_data);
     JERRY_ASSERT ((!ecma_is_completion_value_empty (finally_completion) && int_data->pos <= finally_end_oc)
                   || (ecma_is_completion_value_empty (finally_completion) && int_data->pos == finally_end_oc));
     int_data->pos = finally_end_oc;
@@ -131,6 +138,4 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
   next_opcode = read_opcode (int_data->pos++);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
   JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_END_TRY_CATCH_FINALLY);
-
-  return try_completion;
 } /* opfunc_try_block */

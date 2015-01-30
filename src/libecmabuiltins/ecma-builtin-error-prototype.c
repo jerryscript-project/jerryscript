@@ -53,24 +53,21 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
+static void
+ecma_builtin_error_prototype_object_to_string (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                               const ecma_value_t& this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value;
-
   // 2.
   if (!ecma_is_value_object (this_arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
     ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
 
-    ECMA_TRY_CATCH (name_get_ret_value,
-                    ecma_op_object_get (obj_p, name_magic_string_p),
-                    ret_value);
+    ECMA_TRY_CATCH (ret_value, ecma_op_object_get, name_get_ret_value, obj_p, name_magic_string_p);
 
     ecma_completion_value_t name_to_str_completion;
 
@@ -78,24 +75,22 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
     {
       ecma_string_t *error_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ERROR_UL);
 
-      name_to_str_completion = ecma_make_normal_completion_value (ecma_value_t (error_magic_string_p));
+      ecma_make_normal_completion_value (name_to_str_completion, ecma_value_t (error_magic_string_p));
     }
     else
     {
-      name_to_str_completion = ecma_op_to_string (name_get_ret_value);
+      ecma_op_to_string (name_to_str_completion, name_get_ret_value);
     }
 
     if (unlikely (!ecma_is_completion_value_normal (name_to_str_completion)))
     {
-      ret_value = ecma_copy_completion_value (name_to_str_completion);
+      ecma_copy_completion_value (ret_value, name_to_str_completion);
     }
     else
     {
       ecma_string_t *message_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MESSAGE);
 
-      ECMA_TRY_CATCH (msg_get_ret_value,
-                      ecma_op_object_get (obj_p, message_magic_string_p),
-                      ret_value);
+      ECMA_TRY_CATCH (ret_value, ecma_op_object_get, msg_get_ret_value, obj_p, message_magic_string_p);
 
       ecma_completion_value_t msg_to_str_completion;
 
@@ -103,16 +98,16 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
       {
         ecma_string_t *empty_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
 
-        msg_to_str_completion = ecma_make_normal_completion_value (ecma_value_t (empty_magic_string_p));
+        ecma_make_normal_completion_value (msg_to_str_completion, ecma_value_t (empty_magic_string_p));
       }
       else
       {
-        msg_to_str_completion = ecma_op_to_string (msg_get_ret_value);
+        ecma_op_to_string (msg_to_str_completion, msg_get_ret_value);
       }
 
       if (unlikely (!ecma_is_completion_value_normal (msg_to_str_completion)))
       {
-        ret_value = ecma_copy_completion_value (msg_to_str_completion);
+        ecma_copy_completion_value (ret_value, msg_to_str_completion);
       }
       else
       {
@@ -182,7 +177,7 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
           MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }
 
-        ret_value = ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
+        ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_str_p));
       }
 
       ecma_free_completion_value (msg_to_str_completion);
@@ -198,8 +193,6 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
 
     ecma_deref_ecma_string (name_magic_string_p);
   }
-
-  return ret_value;
 } /* ecma_builtin_error_prototype_object_to_string */
 
 /**

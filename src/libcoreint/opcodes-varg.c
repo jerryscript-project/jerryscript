@@ -26,21 +26,23 @@
  *         otherwise - not normal completion value indicating completion type
  *         of last expression evaluated
  */
-ecma_completion_value_t
-fill_varg_list (int_data_t *int_data, /**< interpreter context */
+void
+fill_varg_list (ecma_completion_value_t &ret_value, /**< out: completion value */
+                int_data_t *int_data, /**< interpreter context */
                 ecma_length_t args_number, /**< number of arguments */
                 ecma_value_t arg_values[], /**< out: arguments' values */
                 ecma_length_t *out_arg_number_p) /**< out: number of arguments
                                                       successfully read */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_make_empty_completion_value (ret_value);
 
   ecma_length_t arg_index;
   for (arg_index = 0;
        arg_index < args_number;
        arg_index++)
   {
-    ecma_completion_value_t evaluate_arg_completion = run_int_loop (int_data);
+    ecma_completion_value_t evaluate_arg_completion;
+    run_int_loop (evaluate_arg_completion, int_data);
 
     if (ecma_is_completion_value_normal (evaluate_arg_completion))
     {
@@ -50,7 +52,8 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
       const idx_t varg_var_idx = next_opcode.data.meta.data_1;
 
-      ecma_completion_value_t get_arg_completion = get_variable_value (int_data, varg_var_idx, false);
+      ecma_completion_value_t get_arg_completion;
+      get_variable_value (get_arg_completion, int_data, varg_var_idx, false);
 
       if (ecma_is_completion_value_normal (get_arg_completion))
       {
@@ -75,8 +78,6 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
   }
 
   *out_arg_number_p = arg_index;
-
-  return ret_value;
 } /* fill_varg_list */
 
 /**

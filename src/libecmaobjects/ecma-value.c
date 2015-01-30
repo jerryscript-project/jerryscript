@@ -183,15 +183,16 @@ ecma_free_value (ecma_value_t& value, /**< value description */
  *
  * @return 'throw' completion value
  */
-ecma_completion_value_t __attribute_const__
-ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object */
+void
+ecma_make_throw_obj_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                      ecma_object_t *exception_p) /**< an object */
 {
   JERRY_ASSERT(exception_p != NULL
                && !ecma_is_lexical_environment (exception_p));
 
   ecma_value_t exception (exception_p);
 
-  return ecma_make_throw_completion_value (exception);
+  ecma_make_throw_completion_value (ret_value, exception);
 } /* ecma_make_throw_obj_completion_value */
 
 /**
@@ -199,10 +200,11 @@ ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object
  *
  * @return (source.type, ecma_copy_value (source.value), source.target).
  */
-ecma_completion_value_t
-ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value */
+void
+ecma_copy_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                            const ecma_completion_value_t& value) /**< completion value */
 {
-  const ecma_completion_type_t type = ecma_get_completion_value_type_field (value);
+  const ecma_completion_type_t type = (ecma_completion_type_t) (value);
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
                            || type == ECMA_COMPLETION_TYPE_THROW
@@ -212,22 +214,21 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
 
   JERRY_ASSERT (is_type_ok);
 
-  ecma_value_t v;
-  ecma_get_completion_value_value_field (v, value);
+  ecma_value_t v ((ecma_value_packed_t) value);
 
   ecma_value_t value_copy;
   ecma_copy_value (value_copy, v, true);
 
-  return ecma_make_completion_value (type, value_copy);
+  ecma_make_completion_value (ret_value, type, value_copy);
 } /* ecma_copy_completion_value */
 
 /**
  * Free the completion value.
  */
 void
-ecma_free_completion_value (ecma_completion_value_t completion_value) /**< completion value */
+ecma_free_completion_value (ecma_completion_value_t& completion_value) /**< completion value */
 {
-  switch (ecma_get_completion_value_type_field (completion_value))
+  switch ((ecma_completion_type_t) (completion_value))
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -235,17 +236,15 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
 #endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
     case ECMA_COMPLETION_TYPE_RETURN:
     {
-      ecma_value_t v;
-      ecma_get_completion_value_value_field (v, completion_value);
+      ecma_value_t v ((ecma_value_packed_t) completion_value);
 
       ecma_free_value (v, true);
       break;
     }
     case ECMA_COMPLETION_TYPE_EXIT:
     {
-      ecma_value_t v;
+      ecma_value_t v ((ecma_value_packed_t) completion_value);
 
-      ecma_get_completion_value_value_field (v, completion_value);
       JERRY_ASSERT(ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
 
       break;
@@ -255,6 +254,8 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
       JERRY_UNREACHABLE ();
     }
   }
+
+  ecma_make_empty_completion_value (completion_value);
 } /* ecma_free_completion_value */
 
 /**

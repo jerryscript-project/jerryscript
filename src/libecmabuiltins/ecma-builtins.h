@@ -39,13 +39,15 @@ typedef enum
 extern void ecma_init_builtins (void);
 extern void ecma_finalize_builtins (void);
 
-extern ecma_completion_value_t
-ecma_builtin_dispatch_call (ecma_object_t *obj_p,
+extern void
+ecma_builtin_dispatch_call (ecma_completion_value_t &ret_value,
+                            ecma_object_t *obj_p,
                             const ecma_value_t& this_arg,
                             const ecma_value_t *arguments_list_p,
                             ecma_length_t arguments_list_len);
-extern ecma_completion_value_t
-ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
+extern void
+ecma_builtin_dispatch_construct (ecma_completion_value_t &ret_value,
+                                 ecma_object_t *obj_p,
                                  const ecma_value_t *arguments_list_p,
                                  ecma_length_t arguments_list_len);
 extern ecma_property_t*

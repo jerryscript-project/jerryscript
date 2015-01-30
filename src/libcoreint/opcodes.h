@@ -242,11 +242,11 @@ enum __opcode_idx
 };
 #undef __OP_ENUM_FIELD
 
-#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (opcode_t, int_data_t*);
+#define __OP_FUNC_DECL(name, arg1, arg2, arg3) void opfunc_##name (ecma_completion_value_t &, opcode_t, int_data_t*);
 OP_LIST (OP_FUNC_DECL)
 #undef __OP_FUNC_DECL
 
-typedef ecma_completion_value_t (*opfunc) (opcode_t, int_data_t *);
+typedef void (*opfunc) (ecma_completion_value_t &, opcode_t, int_data_t *);
 
 #define GETOP_DECL_0(a, name) \
         opcode_t getop_##name (void);

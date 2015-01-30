@@ -71,14 +71,13 @@ is_reg_variable (int_data_t *int_data, /**< interpreter context */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-get_variable_value (int_data_t *int_data, /**< interpreter context */
+void
+get_variable_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                    int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                           See also: do_strict_eval_arguments_check */
 {
-  ecma_completion_value_t ret_value;
-
   if (is_reg_variable (int_data, var_idx))
   {
     ecma_value_t reg_value;
@@ -91,7 +90,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
     ecma_value_t value_copy;
     ecma_copy_value (value_copy, reg_value, true);
 
-    ret_value = ecma_make_normal_completion_value (value_copy);
+    ecma_make_normal_completion_value (ret_value, value_copy);
   }
   else
   {
@@ -112,14 +111,13 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 #endif /* !JERRY_NDEBUG */
     }
 
-    ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                &var_name_string,
-                                                int_data->is_strict);
+    ecma_op_get_value_lex_env_base (ret_value,
+                                    ref_base_lex_env_p,
+                                    &var_name_string,
+                                    int_data->is_strict);
 
     ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
   }
-
-  return ret_value;
 } /* get_variable_value */
 
 /**
@@ -128,18 +126,17 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-set_variable_value (int_data_t *int_data, /**< interpreter context */
+void
+set_variable_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                    int_data_t *int_data, /**< interpreter context */
                     opcode_counter_t lit_oc, /**< opcode counter for literal */
                     idx_t var_idx, /**< variable identifier */
                     const ecma_value_t& value) /**< value to set */
 {
-  ecma_completion_value_t ret_value;
+  ecma_make_empty_completion_value (ret_value);
 
   if (is_reg_variable (int_data, var_idx))
   {
-    ret_value = ecma_make_empty_completion_value ();
-
     ecma_value_t reg_value;
     ecma_stack_frame_get_reg_value (reg_value,
                                     &int_data->stack_frame,
@@ -181,13 +178,12 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
                                     int_data->is_strict);
 #endif /* !JERRY_NDEBUG */
 
-    ret_value = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                                &var_name_string,
-                                                int_data->is_strict,
-                                                value);
+    ecma_op_put_value_lex_env_base (ret_value,
+                                    ref_base_lex_env_p,
+                                    &var_name_string,
+                                    int_data->is_strict,
+                                    value);
 
     ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
   }
-
-  return ret_value;
 } /* set_variable_value */

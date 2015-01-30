@@ -372,24 +372,26 @@ run_int (void)
   ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
   ecma_value_t this_binding_value (glob_obj_p);
 
-  ecma_completion_value_t completion = run_int_from_pos (start_pos,
-                                                         this_binding_value,
-                                                         lex_env_p,
-                                                         is_strict,
-                                                         false);
+  ecma_completion_value_t run_completion;
+  run_int_from_pos (run_completion,
+                    start_pos,
+                    this_binding_value,
+                    lex_env_p,
+                    is_strict,
+                    false);
 
-  if (ecma_is_completion_value_exit (completion))
+  if (ecma_is_completion_value_exit (run_completion))
   {
     ecma_deref_object (glob_obj_p);
     ecma_deref_object (lex_env_p);
     ecma_finalize ();
 
     ecma_value_t value_ret;
-    ecma_get_completion_value_value (value_ret, completion);
+    ecma_get_completion_value_value (value_ret, run_completion);
 
     return ecma_is_value_true (value_ret);
   }
-  else if (ecma_is_completion_value_throw (completion))
+  else if (ecma_is_completion_value_throw (run_completion))
   {
     jerry_exit (ERR_UNHANDLED_EXCEPTION);
   }
@@ -397,11 +399,10 @@ run_int (void)
   JERRY_UNREACHABLE ();
 }
 
-ecma_completion_value_t
-run_int_loop (int_data_t *int_data)
+void
+run_int_loop (ecma_completion_value_t &completion, /**< out: completion value */
+              int_data_t *int_data /**< interpretation context */)
 {
-  ecma_completion_value_t completion;
-
 #ifdef MEM_STATS
   mem_heap_stats_t heap_stats_before;
   mem_pools_stats_t pools_stats_before;
@@ -424,7 +425,7 @@ run_int_loop (int_data_t *int_data)
                                      &pools_stats_before);
 #endif /* MEM_STATS */
 
-      completion = __opfuncs[curr->op_idx] (*curr, int_data);
+      __opfuncs[curr->op_idx] (completion, *curr, int_data);
 
 #ifdef MEM_STATS
       interp_mem_stats_opcode_exit (int_data,
@@ -440,22 +441,21 @@ run_int_loop (int_data_t *int_data)
 
     if (ecma_is_completion_value_meta (completion))
     {
-      completion = ecma_make_empty_completion_value ();
+      ecma_make_empty_completion_value (completion);
     }
 
-    return completion;
+    return;
   }
 }
 
-ecma_completion_value_t
-run_int_from_pos (opcode_counter_t start_pos,
-                  const ecma_value_t& this_binding_value,
-                  ecma_object_t *lex_env_p,
-                  bool is_strict,
-                  bool is_eval_code)
+void
+run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion value */
+                  opcode_counter_t start_pos, /**< position to start interpretation at */
+                  const ecma_value_t& this_binding_value, /**< value of 'this' binding */
+                  ecma_object_t *lex_env_p, /**< starting lexical environment */
+                  bool is_strict, /**< is execution mode strict? */
+                  bool is_eval_code) /**< is current code executed with eval? */
 {
-  ecma_completion_value_t completion;
-
   const opcode_t *curr = &__program[start_pos];
   JERRY_ASSERT (curr->op_idx == __op__idx_reg_var_decl);
 
@@ -482,7 +482,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   interp_mem_stats_context_enter (&int_data, start_pos);
 #endif /* MEM_STATS */
 
-  completion = run_int_loop (&int_data);
+  run_int_loop (completion, &int_data);
 
   JERRY_ASSERT (ecma_is_completion_value_normal (completion)
                 || ecma_is_completion_value_throw (completion)
@@ -498,8 +498,6 @@ run_int_from_pos (opcode_counter_t start_pos,
 #endif /* MEM_STATS */
 
   MEM_FINALIZE_LOCAL_ARRAY (regs);
-
-  return completion;
 }
 
 /**

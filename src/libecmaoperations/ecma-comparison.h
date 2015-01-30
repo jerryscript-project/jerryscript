@@ -27,13 +27,18 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_abstract_equality_compare (const ecma_value_t& x,
-                                                                  const ecma_value_t& y);
-extern bool ecma_op_strict_equality_compare (const ecma_value_t& x,
-                                             const ecma_value_t& y);
-extern ecma_completion_value_t ecma_op_abstract_relational_compare (const ecma_value_t& x,
-                                                                    const ecma_value_t& y,
-                                                                    bool left_first);
+extern void
+ecma_op_abstract_equality_compare (ecma_completion_value_t &ret_value,
+                                   const ecma_value_t& x,
+                                   const ecma_value_t& y);
+extern bool
+ecma_op_strict_equality_compare (const ecma_value_t& x,
+                                 const ecma_value_t& y);
+extern void
+ecma_op_abstract_relational_compare (ecma_completion_value_t &ret_value,
+                                     const ecma_value_t& x,
+                                     const ecma_value_t& y,
+                                     bool left_first);
 
 /**
  * @}

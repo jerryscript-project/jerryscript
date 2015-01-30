@@ -53,8 +53,9 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_string (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_number_prototype_object_to_string (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                const ecma_value_t& this_arg, /**< this argument */
                                                 const ecma_value_t* arguments_list_p, /**< arguments list */
                                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
@@ -83,22 +84,25 @@ ecma_builtin_number_prototype_object_to_string (const ecma_value_t& this_arg, /*
     }
     else
     {
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return;
     }
   }
   else
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return;
   }
 
   if (arguments_list_len == 0)
   {
     ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
 
-    return ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
+    ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_str_p));
   }
+  else
   {
-    ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p);
+    ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, arguments_list_p);
   }
 } /* ecma_builtin_number_prototype_object_to_string */
 
@@ -111,10 +115,11 @@ ecma_builtin_number_prototype_object_to_string (const ecma_value_t& this_arg, /*
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_locale_string (const ecma_value_t& this_arg) /**< this argument */
+static void
+ecma_builtin_number_prototype_object_to_locale_string (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                       const ecma_value_t& this_arg) /**< this argument */
 {
-  return ecma_builtin_number_prototype_object_to_string (this_arg, NULL, 0);
+  ecma_builtin_number_prototype_object_to_string (ret_value, this_arg, NULL, 0);
 } /* ecma_builtin_number_prototype_object_to_locale_string */
 
 /**
@@ -126,15 +131,17 @@ ecma_builtin_number_prototype_object_to_locale_string (const ecma_value_t& this_
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_value_of (const ecma_value_t& this_arg) /**< this argument */
+static void
+ecma_builtin_number_prototype_object_value_of (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                               const ecma_value_t& this_arg) /**< this argument */
 {
   if (ecma_is_value_number (this_arg))
   {
     ecma_value_t this_arg_copy;
     ecma_copy_value (this_arg_copy, this_arg, true);
 
-    return ecma_make_normal_completion_value (this_arg_copy);
+    ecma_make_normal_completion_value (ret_value, this_arg_copy);
+    return;
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -153,11 +160,12 @@ ecma_builtin_number_prototype_object_value_of (const ecma_value_t& this_arg) /**
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;
 
-      return ecma_make_normal_completion_value (ecma_value_t (ret_num_p));
+      ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_num_p));
+      return;
     }
   }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_number_prototype_object_value_of */
 
 /**
@@ -169,11 +177,12 @@ ecma_builtin_number_prototype_object_value_of (const ecma_value_t& this_arg) /**
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_fixed (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_number_prototype_object_to_fixed (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                               const ecma_value_t& this_arg, /**< this argument */
                                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_fixed */
 
 /**
@@ -185,11 +194,12 @@ ecma_builtin_number_prototype_object_to_fixed (const ecma_value_t& this_arg, /**
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_exponential (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_number_prototype_object_to_exponential (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                     const ecma_value_t& this_arg, /**< this argument */
                                                      const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_exponential */
 
 /**
@@ -201,11 +211,12 @@ ecma_builtin_number_prototype_object_to_exponential (const ecma_value_t& this_ar
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_number_prototype_object_to_precision (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_number_prototype_object_to_precision (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                   const ecma_value_t& this_arg, /**< this argument */
                                                    const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_number_prototype_object_to_precision */
 
 /**

@@ -40,8 +40,9 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_get (ecma_completion_value_t &ret_value, /**< out: completion value */
+                    ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT(obj_p != NULL
@@ -60,19 +61,21 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
-      return ecma_op_general_object_get (obj_p, property_name_p);
+      ecma_op_general_object_get (ret_value, obj_p, property_name_p);
+      return;
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_op_arguments_object_get (obj_p, property_name_p);
+      ecma_op_arguments_object_get (ret_value, obj_p, property_name_p);
+      return;
     }
 
     default:
     {
       JERRY_ASSERT (false);
 
-      return ecma_make_empty_completion_value ();
+      ecma_make_empty_completion_value (ret_value);
     }
   }
 } /* ecma_op_object_get */
@@ -218,8 +221,9 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_put (ecma_completion_value_t &ret_value, /**< out: completion value */
+                    ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p, /**< property name */
                     const ecma_value_t& value, /**< ecma-value */
                     bool is_throw) /**< flag that controls failure handling */
@@ -247,7 +251,7 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
    * return put[type] (obj_p, property_name_p);
    */
 
-  return ecma_op_general_object_put (obj_p, property_name_p, value, is_throw);
+  ecma_op_general_object_put (ret_value, obj_p, property_name_p, value, is_throw);
 } /* ecma_op_object_put */
 
 /**
@@ -298,8 +302,9 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_delete (ecma_completion_value_t &ret_value, /**< out: completion value */
+                       ecma_object_t *obj_p, /**< the object */
                        ecma_string_t *property_name_p, /**< property name */
                        bool is_throw) /**< flag that controls failure handling */
 {
@@ -319,23 +324,27 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
-      return ecma_op_general_object_delete (obj_p,
-                                            property_name_p,
-                                            is_throw);
+      ecma_op_general_object_delete (ret_value,
+                                     obj_p,
+                                     property_name_p,
+                                     is_throw);
+      return;
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_op_arguments_object_delete (obj_p,
-                                              property_name_p,
-                                              is_throw);
+      ecma_op_arguments_object_delete (ret_value,
+                                       obj_p,
+                                       property_name_p,
+                                       is_throw);
+      return;
     }
 
     default:
     {
       JERRY_ASSERT (false);
 
-      return ecma_make_empty_completion_value ();
+      ecma_make_empty_completion_value (ret_value);
     }
   }
 } /* ecma_op_object_delete */
@@ -349,8 +358,9 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_default_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              ecma_object_t *obj_p, /**< the object */
                               ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
   JERRY_ASSERT(obj_p != NULL
@@ -375,7 +385,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
    * return default_value[type] (obj_p, property_name_p);
    */
 
-  return ecma_op_general_object_default_value (obj_p, hint);
+  ecma_op_general_object_default_value (ret_value, obj_p, hint);
 } /* ecma_op_object_default_value */
 
 /**
@@ -387,8 +397,9 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_define_own_property (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                    ecma_object_t *obj_p, /**< the object */
                                     ecma_string_t *property_name_p, /**< property name */
                                     const ecma_property_descriptor_t* property_desc_p, /**< property
                                                                                         *   descriptor */
@@ -409,33 +420,39 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
     {
-      return ecma_op_general_object_define_own_property (obj_p,
-                                                         property_name_p,
-                                                         property_desc_p,
-                                                         is_throw);
+      ecma_op_general_object_define_own_property (ret_value,
+                                                  obj_p,
+                                                  property_name_p,
+                                                  property_desc_p,
+                                                  is_throw);
+      return;
     }
 
     case ECMA_OBJECT_TYPE_ARRAY:
     {
-      return ecma_op_array_object_define_own_property (obj_p,
-                                                       property_name_p,
-                                                       property_desc_p,
-                                                       is_throw);
+      ecma_op_array_object_define_own_property (ret_value,
+                                                obj_p,
+                                                property_name_p,
+                                                property_desc_p,
+                                                is_throw);
+      return;
     }
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_op_arguments_object_define_own_property (obj_p,
-                                                           property_name_p,
-                                                           property_desc_p,
-                                                           is_throw);
+      ecma_op_arguments_object_define_own_property (ret_value,
+                                                    obj_p,
+                                                    property_name_p,
+                                                    property_desc_p,
+                                                    is_throw);
+      return;
     }
 
     default:
     {
       JERRY_ASSERT (false);
 
-      return ecma_make_empty_completion_value ();
+      ecma_make_empty_completion_value (ret_value);
     }
   }
 } /* ecma_op_object_define_own_property */
@@ -446,8 +463,9 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 9
  */
-ecma_completion_value_t
-ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
+void
+ecma_op_object_has_instance (ecma_completion_value_t &ret_value, /**< out: completion value */
+                             ecma_object_t *obj_p, /**< the object */
                              const ecma_value_t& value) /**< argument 'V' */
 {
   JERRY_ASSERT(obj_p != NULL
@@ -462,14 +480,16 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return;
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
-      return ecma_op_function_has_instance (obj_p, value);
+      ecma_op_function_has_instance (ret_value, obj_p, value);
+      return;
     }
 
     case ECMA_OBJECT_TYPE__COUNT:

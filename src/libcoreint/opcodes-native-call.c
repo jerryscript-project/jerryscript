@@ -29,8 +29,9 @@
 /**
  * 'Native call' opcode handler.
  */
-ecma_completion_value_t
-opfunc_native_call (opcode_t opdata, /**< operation data */
+void
+opfunc_native_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                    opcode_t opdata, /**< operation data */
                     int_data_t *int_data) /**< interpreter context */
 {
   // const idx_t dst_var_idx = opdata.data.native_call.lhs;
@@ -43,15 +44,15 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
   JERRY_STATIC_ASSERT (OPCODE_NATIVE_CALL__COUNT < (1u << (sizeof (native_call_id_idx) * JERRY_BITSINBYTE)));
 
-  ecma_completion_value_t ret_value = 0;
-
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   ecma_length_t args_read;
-  ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
-                                                               args_number,
-                                                               arg_values,
-                                                               &args_read);
+  ecma_completion_value_t get_arg_completion;
+  fill_varg_list (get_arg_completion,
+                  int_data,
+                  args_number,
+                  arg_values,
+                  &args_read);
 
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
@@ -66,7 +67,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_toggle (int_num);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
         break;
       }
       case OPCODE_NATIVE_CALL_LED_ON:
@@ -76,7 +77,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_on (int_num);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
         break;
       }
       case OPCODE_NATIVE_CALL_LED_OFF:
@@ -86,7 +87,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_off (int_num);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
         break;
       }
       case OPCODE_NATIVE_CALL_LED_ONCE:
@@ -96,7 +97,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         led_blink_once (int_num);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
         break;
       }
       case OPCODE_NATIVE_CALL_WAIT:
@@ -106,7 +107,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
         uint32_t int_num = ecma_number_to_uint32 (*num_p);
         wait_ms (int_num);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
         break;
       }
 
@@ -114,9 +115,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       {
         JERRY_ASSERT (args_number == 1);
 
-        ECMA_TRY_CATCH (str_value,
-                        ecma_op_to_string (arg_values[0]),
-                        ret_value);
+        ECMA_TRY_CATCH (ret_value, ecma_op_to_string, str_value, arg_values[0]);
 
         ecma_string_t *str_p = ecma_get_string_from_value (str_value);
 
@@ -141,7 +140,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
         mem_heap_free_block (zt_str_p);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ecma_make_empty_completion_value (ret_value);
 
         ECMA_FINALIZE (str_value);
 
@@ -169,6 +168,4 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (arg_values);
-
-  return ret_value;
 } /* opfunc_native_call */

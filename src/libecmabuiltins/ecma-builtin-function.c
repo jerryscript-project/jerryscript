@@ -47,13 +47,14 @@
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_function_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_function_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                     const ecma_value_t *arguments_list_p, /**< arguments list */
                                      ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_builtin_function_dispatch_construct (arguments_list_p, arguments_list_len);
+  ecma_builtin_function_dispatch_construct (ret_value, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_function_dispatch_call */
 
 /**
@@ -61,13 +62,14 @@ ecma_builtin_function_dispatch_call (const ecma_value_t *arguments_list_p, /**< 
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_function_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                          const ecma_value_t *arguments_list_p, /**< arguments list */
                                           ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p, arguments_list_len);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_function_dispatch_construct */
 
 /**

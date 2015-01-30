@@ -31,8 +31,9 @@
  * @{
  */
 
-static ecma_completion_value_t
-ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
+static void
+ecma_builtin_dispatch_routine (ecma_completion_value_t &ret_value,
+                               ecma_builtin_id_t builtin_object_id,
                                ecma_magic_string_id_t builtin_routine_id,
                                const ecma_value_t& this_arg_value,
                                const ecma_value_t arguments_list [],
@@ -358,8 +359,9 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
+void
+ecma_builtin_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                            ecma_object_t *obj_p, /**< built-in object */
                             const ecma_value_t& this_arg_value, /**< 'this' argument value */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of the arguments list */
@@ -386,11 +388,13 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
     ecma_builtin_id_t built_in_id = (ecma_builtin_id_t) built_in_id_field;
     ecma_magic_string_id_t routine_id = (ecma_magic_string_id_t) routine_id_field;
 
-    return ecma_builtin_dispatch_routine (built_in_id,
-                                          routine_id,
-                                          this_arg_value,
-                                          arguments_list_p,
-                                          arguments_list_len);
+    ecma_builtin_dispatch_routine (ret_value,
+                                   built_in_id,
+                                   routine_id,
+                                   this_arg_value,
+                                   arguments_list_p,
+                                   arguments_list_len);
+    return;
   }
   else
   {
@@ -414,8 +418,10 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
       { \
         if (object_type == ECMA_OBJECT_TYPE_FUNCTION) \
         { \
-          return ecma_builtin_ ## lowercase_name ## _dispatch_call (arguments_list_p, \
-                                                                    arguments_list_len); \
+          ecma_builtin_ ## lowercase_name ## _dispatch_call (ret_value, \
+                                                             arguments_list_p, \
+                                                             arguments_list_len); \
+          return; \
         } \
         else \
         { \
@@ -448,8 +454,9 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
+void
+ecma_builtin_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                 ecma_object_t *obj_p, /**< built-in object */
                                  const ecma_value_t *arguments_list_p, /**< arguments list */
                                  ecma_length_t arguments_list_len) /**< length of the arguments list */
 {
@@ -476,8 +483,10 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
       { \
         if (object_type == ECMA_OBJECT_TYPE_FUNCTION) \
         { \
-          return ecma_builtin_ ## lowercase_name ## _dispatch_construct (arguments_list_p, \
-                                                                         arguments_list_len); \
+          ecma_builtin_ ## lowercase_name ## _dispatch_construct (ret_value, \
+                                                                  arguments_list_p, \
+                                                                  arguments_list_len); \
+          return; \
         } \
         else \
         { \
@@ -510,8 +519,9 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
  * @return completion-value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
+static void
+ecma_builtin_dispatch_routine (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
                                ecma_magic_string_id_t builtin_routine_id, /**< name of the built-in object's
                                                                                routine property */
                                const ecma_value_t& this_arg_value, /**< 'this' argument value */
@@ -528,10 +538,12 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                 lowercase_name) \
     case builtin_id: \
       { \
-        return ecma_builtin_ ## lowercase_name ## _dispatch_routine (builtin_routine_id, \
-                                                                     this_arg_value, \
-                                                                     arguments_list, \
-                                                                     arguments_number); \
+        ecma_builtin_ ## lowercase_name ## _dispatch_routine (ret_value, \
+                                                              builtin_routine_id, \
+                                                              this_arg_value, \
+                                                              arguments_list, \
+                                                              arguments_number); \
+        return; \
       }
 #include "ecma-builtins.inc.h"
 

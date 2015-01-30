@@ -38,8 +38,9 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
+void
+ecma_op_create_string_object (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                          are passed to String constructor */
                               ecma_length_t arguments_list_len) /**< length of the arguments' list */
 {
@@ -57,11 +58,13 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   }
   else
   {
-    ecma_completion_value_t to_str_arg_completion = ecma_op_to_string (arguments_list_p [0]);
+    ecma_completion_value_t to_str_arg_completion;
+    ecma_op_to_string (to_str_arg_completion, arguments_list_p [0]);
 
     if (ecma_is_completion_value_throw (to_str_arg_completion))
     {
-      return to_str_arg_completion;
+      ret_value = to_str_arg_completion;
+      return;
     }
     else
     {
@@ -108,7 +111,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_set_named_data_property_value (length_prop_p, ecma_value_t (length_prop_value_p));
   ecma_deref_ecma_string (length_magic_string_p);
 
-  return ecma_make_normal_completion_value (ecma_value_t (obj_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (obj_p));
 } /* ecma_op_create_string_object */
 
 /**

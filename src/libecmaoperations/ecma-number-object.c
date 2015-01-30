@@ -38,14 +38,17 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_create_number_object (const ecma_value_t& arg) /**< argument passed to the Number constructor */
+void
+ecma_op_create_number_object (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& arg) /**< argument passed to the Number constructor */
 {
-  ecma_completion_value_t to_num_completion = ecma_op_to_number (arg);
+  ecma_completion_value_t to_num_completion;
+  ecma_op_to_number (to_num_completion, arg);
 
   if (!ecma_is_completion_value_normal (to_num_completion))
   {
-    return to_num_completion;
+    ret_value = to_num_completion;
+    return;
   }
 
   ecma_value_t num_value;
@@ -71,5 +74,5 @@ ecma_op_create_number_object (const ecma_value_t& arg) /**< argument passed to t
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
   ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_p);
 
-  return ecma_make_normal_completion_value (ecma_value_t (obj_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (obj_p));
 } /* ecma_op_create_number_object */

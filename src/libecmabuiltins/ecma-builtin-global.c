@@ -48,11 +48,12 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_eval (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_eval (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                 const ecma_value_t& this_arg, /**< this argument */
                                  const ecma_value_t& x) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, x);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, x);
 } /* ecma_builtin_global_object_eval */
 
 /**
@@ -64,12 +65,13 @@ ecma_builtin_global_object_eval (const ecma_value_t& this_arg, /**< this argumen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_parse_int (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_parse_int (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                      const ecma_value_t& this_arg, /**< this argument */
                                       const ecma_value_t& string, /**< routine's first argument */
                                       const ecma_value_t& radix) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, string, radix);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, string, radix);
 } /* ecma_builtin_global_object_parse_int */
 
 /**
@@ -81,11 +83,12 @@ ecma_builtin_global_object_parse_int (const ecma_value_t& this_arg, /**< this ar
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_parse_float (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_parse_float (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                        const ecma_value_t& this_arg, /**< this argument */
                                         const ecma_value_t& string) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, string);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, string);
 } /* ecma_builtin_global_object_parse_float */
 
 /**
@@ -97,22 +100,21 @@ ecma_builtin_global_object_parse_float (const ecma_value_t& this_arg, /**< this 
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __unused, /**< this argument */
+static void
+ecma_builtin_global_object_is_nan (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                   const ecma_value_t& this_arg __unused, /**< this argument */
                                    const ecma_value_t& arg) /**< routine's first argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_make_empty_completion_value (ret_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   bool is_nan = ecma_number_is_nan (arg_num);
 
-  ret_value = ecma_make_simple_completion_value (is_nan ? ECMA_SIMPLE_VALUE_TRUE
-                                                        : ECMA_SIMPLE_VALUE_FALSE);
+  ecma_make_simple_completion_value (ret_value,
+                                     is_nan ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_global_object_is_nan */
 
 /**
@@ -124,23 +126,22 @@ ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __unused, /**< t
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __unused, /**< this argument */
+static void
+ecma_builtin_global_object_is_finite (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                      const ecma_value_t& this_arg __unused, /**< this argument */
                                       const ecma_value_t& arg) /**< routine's first argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_make_empty_completion_value (ret_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   bool is_finite = !(ecma_number_is_nan (arg_num)
                      || ecma_number_is_infinity (arg_num));
 
-  ret_value = ecma_make_simple_completion_value (is_finite ? ECMA_SIMPLE_VALUE_TRUE
-                                                           : ECMA_SIMPLE_VALUE_FALSE);
+  ecma_make_simple_completion_value (ret_value,
+                                     is_finite ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_global_object_is_finite */
 
 /**
@@ -152,11 +153,12 @@ ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __unused, /**
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_decode_uri (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_decode_uri (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                       const ecma_value_t& this_arg, /**< this argument */
                                        const ecma_value_t& encoded_uri) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, encoded_uri);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, encoded_uri);
 } /* ecma_builtin_global_object_decode_uri */
 
 /**
@@ -168,12 +170,13 @@ ecma_builtin_global_object_decode_uri (const ecma_value_t& this_arg, /**< this a
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_decode_uri_component (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_decode_uri_component (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                 const ecma_value_t& this_arg, /**< this argument */
                                                  const ecma_value_t& encoded_uri_component) /**< routine's
                                                                                              *   first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, encoded_uri_component);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, encoded_uri_component);
 } /* ecma_builtin_global_object_decode_uri_component */
 
 /**
@@ -185,11 +188,12 @@ ecma_builtin_global_object_decode_uri_component (const ecma_value_t& this_arg, /
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_encode_uri (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_encode_uri (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                       const ecma_value_t& this_arg, /**< this argument */
                                        const ecma_value_t& uri) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, uri);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, uri);
 } /* ecma_builtin_global_object_encode_uri */
 
 /**
@@ -201,11 +205,12 @@ ecma_builtin_global_object_encode_uri (const ecma_value_t& this_arg, /**< this a
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_global_object_encode_uri_component (const ecma_value_t& this_arg, /**< this argument */
+static void
+ecma_builtin_global_object_encode_uri_component (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                 const ecma_value_t& this_arg, /**< this argument */
                                                  const ecma_value_t& uri_component) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, uri_component);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, uri_component);
 } /* ecma_builtin_global_object_encode_uri_component */
 
 /**

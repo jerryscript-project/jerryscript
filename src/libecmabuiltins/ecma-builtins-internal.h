@@ -62,14 +62,17 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
                 object_prototype_builtin_id, \
                 is_extensible, \
                 lowercase_name) \
-extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *arguments_list_p, \
+extern void \
+ecma_builtin_ ## lowercase_name ## _dispatch_call (ecma_completion_value_t &ret_value, \
+                                                   const ecma_value_t *arguments_list_p, \
                                                    ecma_length_t arguments_list_len); \
-extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *arguments_list_p, \
+extern void \
+ecma_builtin_ ## lowercase_name ## _dispatch_construct (ecma_completion_value_t &ret_value, \
+                                                        const ecma_value_t *arguments_list_p, \
                                                         ecma_length_t arguments_list_len); \
-extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t builtin_routine_id, \
+extern void \
+ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_completion_value_t &ret_value, \
+                                                      ecma_magic_string_id_t builtin_routine_id, \
                                                       const ecma_value_t& this_arg_value, \
                                                       const ecma_value_t arguments_list [], \
                                                       ecma_length_t arguments_number); \
@@ -92,7 +95,8 @@ ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
     jerry_ref_unused_variables (0, __VA_ARGS__); \
   } \
   ecma_object_t *cp_error_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
-  return ecma_make_throw_obj_completion_value (cp_error_p); \
+  ecma_make_throw_obj_completion_value (ret_value, cp_error_p); \
+  return; \
 }
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 

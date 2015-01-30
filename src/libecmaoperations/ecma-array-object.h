@@ -26,13 +26,15 @@
  * @{
  */
 
-extern ecma_completion_value_t
-ecma_op_create_array_object (const ecma_value_t *arguments_list_p,
+extern void
+ecma_op_create_array_object (ecma_completion_value_t &ret_value,
+                             const ecma_value_t *arguments_list_p,
                              ecma_length_t arguments_list_len,
                              bool is_treat_single_arg_as_length);
 
-extern ecma_completion_value_t
-ecma_op_array_object_define_own_property (ecma_object_t *obj_p,
+extern void
+ecma_op_array_object_define_own_property (ecma_completion_value_t &ret_value,
+                                          ecma_object_t *obj_p,
                                           ecma_string_t *property_name_p,
                                           const ecma_property_descriptor_t* property_desc_p,
                                           bool is_throw);

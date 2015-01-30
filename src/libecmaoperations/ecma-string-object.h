@@ -26,8 +26,9 @@
  * @{
  */
 
-extern ecma_completion_value_t
-ecma_op_create_string_object (const ecma_value_t *arguments_list_p,
+extern void
+ecma_op_create_string_object (ecma_completion_value_t &ret_value,
+                              const ecma_value_t *arguments_list_p,
                               ecma_length_t arguments_list_len);
 
 extern ecma_property_t*

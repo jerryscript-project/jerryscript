@@ -38,19 +38,34 @@ typedef enum
   ECMA_PREFERRED_TYPE_STRING /**< String */
 } ecma_preferred_type_hint_t;
 
-extern ecma_completion_value_t ecma_op_check_object_coercible (const ecma_value_t& value);
+extern void
+ecma_op_check_object_coercible (ecma_completion_value_t &ret_value,
+                                const ecma_value_t& value);
 extern bool ecma_op_same_value (const ecma_value_t& x,
                                 const ecma_value_t& y);
-extern ecma_completion_value_t ecma_op_to_primitive (const ecma_value_t& value,
-                                                     ecma_preferred_type_hint_t preferred_type);
-extern ecma_completion_value_t ecma_op_to_boolean (const ecma_value_t& value);
-extern ecma_completion_value_t ecma_op_to_number (const ecma_value_t& value);
-extern ecma_completion_value_t ecma_op_to_string (const ecma_value_t& value);
-extern ecma_completion_value_t ecma_op_to_object (const ecma_value_t& value);
+extern void
+ecma_op_to_primitive (ecma_completion_value_t &ret_value,
+                      const ecma_value_t& value,
+                      ecma_preferred_type_hint_t preferred_type);
+extern void
+ecma_op_to_boolean (ecma_completion_value_t &ret_value,
+                    const ecma_value_t& value);
+extern void
+ecma_op_to_number (ecma_completion_value_t &ret_value,
+                   const ecma_value_t& value);
+extern void
+ecma_op_to_string (ecma_completion_value_t &ret_value,
+                   const ecma_value_t& value);
+extern void
+ecma_op_to_object (ecma_completion_value_t &ret_value,
+                   const ecma_value_t& value);
 
-extern ecma_object_t* ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_desc_p);
-extern ecma_completion_value_t ecma_op_to_property_descriptor (const ecma_value_t& obj_value,
-                                                               ecma_property_descriptor_t *out_prop_desc_p);
+extern ecma_object_t*
+ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_desc_p);
+extern void
+ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value,
+                                const ecma_value_t& obj_value,
+                                ecma_property_descriptor_t *out_prop_desc_p);
 
 /**
  * @}

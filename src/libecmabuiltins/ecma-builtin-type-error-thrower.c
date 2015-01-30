@@ -49,14 +49,15 @@
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_type_error_thrower_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                               const ecma_value_t *arguments_list_p, /**< arguments list */
                                                ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object should throw TypeError */
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_type_error_thrower_dispatch_call */
 
 /**
@@ -67,14 +68,15 @@ ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_lis
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_type_error_thrower_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_type_error_thrower_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                    const ecma_value_t *arguments_list_p, /**< arguments list */
                                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object is not a constructor */
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_type_error_thrower_dispatch_construct */
 
 /**

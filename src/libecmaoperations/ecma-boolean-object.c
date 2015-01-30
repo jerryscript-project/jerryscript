@@ -38,14 +38,17 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-ecma_op_create_boolean_object (const ecma_value_t& arg) /**< argument passed to the Boolean constructor */
+void
+ecma_op_create_boolean_object (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& arg) /**< argument passed to the Boolean constructor */
 {
-  ecma_completion_value_t conv_to_boolean_completion = ecma_op_to_boolean (arg);
+  ecma_completion_value_t conv_to_boolean_completion;
+  ecma_op_to_boolean (conv_to_boolean_completion, arg);
 
   if (!ecma_is_completion_value_normal (conv_to_boolean_completion))
   {
-    return conv_to_boolean_completion;
+    ret_value = conv_to_boolean_completion;
+    return;
   }
 
   ecma_simple_value_t bool_value = (ecma_is_completion_value_normal_true (conv_to_boolean_completion) ?
@@ -69,5 +72,5 @@ ecma_op_create_boolean_object (const ecma_value_t& arg) /**< argument passed to 
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE);
   prim_value_prop_p->u.internal_property.value = bool_value;
 
-  return ecma_make_normal_completion_value (ecma_value_t (obj_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (obj_p));
 } /* ecma_op_create_boolean_object */

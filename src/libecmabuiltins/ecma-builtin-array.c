@@ -53,8 +53,9 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_array_object_is_array (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                    const ecma_value_t& this_arg __unused, /**< 'this' argument */
                                     const ecma_value_t& arg) /**< first argument */
 {
   ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;
@@ -72,7 +73,7 @@ ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __unused, /**< 
     }
   }
 
-  return ecma_make_simple_completion_value (is_array);
+  ecma_make_simple_completion_value (ret_value, is_array);
 } /* ecma_builtin_array_object_is_array */
 
 /**
@@ -80,13 +81,14 @@ ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __unused, /**< 
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_array_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                  const ecma_value_t *arguments_list_p, /**< arguments list */
                                   ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_builtin_array_dispatch_construct (arguments_list_p, arguments_list_len);
+  ecma_builtin_array_dispatch_construct (ret_value, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_array_dispatch_call */
 
 /**
@@ -94,13 +96,14 @@ ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arg
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_array_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                       const ecma_value_t *arguments_list_p, /**< arguments list */
                                        ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_op_create_array_object (arguments_list_p, arguments_list_len, true);
+  ecma_op_create_array_object (ret_value, arguments_list_p, arguments_list_len, true);
 } /* ecma_builtin_array_dispatch_construct */
 
 /**

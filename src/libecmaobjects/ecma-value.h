@@ -173,33 +173,44 @@ class ecma_value_t
  * Description of a block completion value
  *
  * See also: ECMA-262 v5, 8.9.
- *
- *
- * Bit-field structure: type (8) | padding (8) | value (16)
- *
  */
-typedef uint32_t ecma_completion_value_t;
+class ecma_completion_value_t : public ecma_value_t
+{
+  public:
+    /* Constructors */
+    ecma_completion_value_t ()
+      : ecma_value_t (),
+        _type (ECMA_COMPLETION_TYPE_NORMAL) { }
 
-/**
- * Type (ecma_completion_type_t)
- */
-#define ECMA_COMPLETION_VALUE_TYPE_POS (0)
-#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
+    ecma_completion_value_t (ecma_completion_type_t type,
+                             const ecma_value_t &value)
+      : ecma_value_t ((ecma_value_packed_t) value),
+      _type (type) { }
 
-/**
- * Padding (1 byte)
- */
-#define ECMA_COMPLETION_VALUE_PADDING_WIDTH (8)
+    /* Assignment operators */
+    ecma_completion_value_t & operator = (ecma_completion_type_t type)
+    {
+      _type = type;
 
-/**
- * Value
- *
- * Used for normal, return, throw and exit completion types.
- */
-#define ECMA_COMPLETION_VALUE_VALUE_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                         ECMA_COMPLETION_VALUE_PADDING_WIDTH)
-#define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
+      return *this;
+    }
+
+    ecma_completion_value_t & operator = (const ecma_value_t& value)
+    {
+      *static_cast<ecma_value_t*> (this) = (ecma_value_packed_t) value;
+
+      return *this;
+    }
+
+    /* Completion type extraction */
+    explicit operator ecma_completion_type_t () const
+    {
+      return _type;
+    }
+
+  private:
+    ecma_completion_type_t _type; /**< completion type */
+};
 
 /**
  * Get type field of ecma-value
@@ -339,71 +350,13 @@ extern void ecma_copy_value (ecma_value_t &ret, const ecma_value_t& value, bool 
 extern void ecma_free_value (ecma_value_t& value, bool do_deref_if_object);
 
 /**
- * Get type field of completion value
- *
- * @return type field
- */
-inline ecma_completion_type_t __attribute_const__ __attribute_always_inline__
-ecma_get_completion_value_type_field (ecma_completion_value_t completion_value) /**< completion value */
-{
-  return (ecma_completion_type_t) jrt_extract_bit_field (completion_value,
-                                                         ECMA_COMPLETION_VALUE_TYPE_POS,
-                                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH);
-} /* ecma_get_completion_value_type_field */
-
-/**
- * Get value field of completion value
- *
- * @return value field
- */
-inline void __attribute_always_inline__
-ecma_get_completion_value_value_field (ecma_value_t &ret, /**< out: ecma-value */
-                                       ecma_completion_value_t completion_value) /**< completion value */
-{
-  ret = (ecma_value_packed_t) jrt_extract_bit_field (completion_value,
-                                                     ECMA_COMPLETION_VALUE_VALUE_POS,
-                                                     ECMA_COMPLETION_VALUE_VALUE_WIDTH);
-} /* ecma_get_completion_value_value_field */
-
-/**
- * Set type field of completion value
- *
- * @return completion value with updated field
- */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_set_completion_value_type_field (ecma_completion_value_t completion_value, /**< completion value
-                                                                                 * to set field in */
-                                      ecma_completion_type_t type_field) /**< new field value */
-{
-  return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
-                                                            type_field,
-                                                            ECMA_COMPLETION_VALUE_TYPE_POS,
-                                                            ECMA_COMPLETION_VALUE_TYPE_WIDTH);
-} /* ecma_set_completion_value_type_field */
-
-/**
- * Set value field of completion value
- *
- * @return completion value with updated field
- */
-inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
-ecma_set_completion_value_value_field (ecma_completion_value_t completion_value, /**< completion value
-                                                                                  * to set field in */
-                                       const ecma_value_t& value_field) /**< new field value */
-{
-  return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
-                                                            (ecma_value_packed_t) value_field,
-                                                            ECMA_COMPLETION_VALUE_VALUE_POS,
-                                                            ECMA_COMPLETION_VALUE_VALUE_WIDTH);
-} /* ecma_set_completion_value_value_field */
-
-/**
  * Normal, throw, return, exit and meta completion values constructor
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
-ecma_make_completion_value (ecma_completion_type_t type, /**< type */
+inline void __attribute_always_inline__
+ecma_make_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                            ecma_completion_type_t type, /**< type */
                             const ecma_value_t& value) /**< value */
 {
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
@@ -417,14 +370,8 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
 
   JERRY_ASSERT (is_type_ok);
 
-  ecma_completion_value_t completion_value = 0;
-
-  completion_value = ecma_set_completion_value_type_field (completion_value,
-                                                           type);
-  completion_value = ecma_set_completion_value_value_field (completion_value,
-                                                            value);
-
-  return completion_value;
+  ret_value = type;
+  ret_value = value;
 } /* ecma_make_completion_value */
 
 /**
@@ -432,16 +379,18 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple ecma-value */
+inline void __attribute_always_inline__
+ecma_make_simple_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                   ecma_simple_value_t simple_value) /**< simple ecma-value */
 {
   JERRY_ASSERT(simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
                || simple_value == ECMA_SIMPLE_VALUE_NULL
                || simple_value == ECMA_SIMPLE_VALUE_FALSE
                || simple_value == ECMA_SIMPLE_VALUE_TRUE);
 
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_value_t (simple_value));
+  ecma_make_completion_value (ret_value,
+                              ECMA_COMPLETION_TYPE_NORMAL,
+                              ecma_value_t (simple_value));
 } /* ecma_make_simple_completion_value */
 
 /**
@@ -449,10 +398,11 @@ ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
-ecma_make_normal_completion_value (const ecma_value_t& value) /**< value */
+inline void __attribute_always_inline__
+ecma_make_normal_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                   const ecma_value_t& value) /**< value */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, value);
+  ecma_make_completion_value (ret_value, ECMA_COMPLETION_TYPE_NORMAL, value);
 } /* ecma_make_normal_completion_value */
 
 /**
@@ -460,11 +410,12 @@ ecma_make_normal_completion_value (const ecma_value_t& value) /**< value */
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
-ecma_make_throw_completion_value (const ecma_value_t& value) /**< value */
+inline void __attribute_always_inline__
+ecma_make_throw_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                  const ecma_value_t& value) /**< value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW, value);
+  ecma_make_completion_value (ret_value, ECMA_COMPLETION_TYPE_THROW, value);
 #else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
   (void) value;
 
@@ -472,18 +423,19 @@ ecma_make_throw_completion_value (const ecma_value_t& value) /**< value */
 #endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_make_throw_completion_value */
 
-extern ecma_completion_value_t ecma_make_throw_obj_completion_value (ecma_object_t *exception_p);
+extern void ecma_make_throw_obj_completion_value (ecma_completion_value_t &ret_value, ecma_object_t *exception_p);
 
 /**
  * Empty completion value constructor.
  *
  * @return (normal, empty, reserved) completion value.
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_empty_completion_value (void)
+inline void __attribute_always_inline__
+ecma_make_empty_completion_value (ecma_completion_value_t &ret_value) /**< out: completion value */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
-                                     ecma_value_t ());
+  ecma_make_completion_value (ret_value,
+                              ECMA_COMPLETION_TYPE_NORMAL,
+                              ecma_value_t ());
 } /* ecma_make_empty_completion_value */
 
 /**
@@ -491,10 +443,11 @@ ecma_make_empty_completion_value (void)
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
-ecma_make_return_completion_value (const ecma_value_t& value) /**< value */
+inline void __attribute_always_inline__
+ecma_make_return_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                   const ecma_value_t& value) /**< value */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_RETURN, value);
+  ecma_make_completion_value (ret_value, ECMA_COMPLETION_TYPE_RETURN, value);
 } /* ecma_make_return_completion_value */
 
 /**
@@ -502,14 +455,16 @@ ecma_make_return_completion_value (const ecma_value_t& value) /**< value */
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_exit_completion_value (bool is_successful) /**< does completion value indicate
+inline void __attribute_always_inline__
+ecma_make_exit_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                 bool is_successful) /**< does completion value indicate
                                                           successfulness completion
                                                           of script execution (true) or not (false) */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
-                                     ecma_value_t (is_successful ? ECMA_SIMPLE_VALUE_TRUE
-                                                   : ECMA_SIMPLE_VALUE_FALSE));
+  ecma_make_completion_value (ret_value,
+                              ECMA_COMPLETION_TYPE_EXIT,
+                              ecma_value_t (is_successful ? ECMA_SIMPLE_VALUE_TRUE
+                                            : ECMA_SIMPLE_VALUE_FALSE));
 } /* ecma_make_exit_completion_value */
 
 /**
@@ -517,11 +472,12 @@ ecma_make_exit_completion_value (bool is_successful) /**< does completion value 
  *
  * @return completion value
  */
-inline ecma_completion_value_t __attribute_const__ __attribute_always_inline__
-ecma_make_meta_completion_value (void)
+inline void __attribute_always_inline__
+ecma_make_meta_completion_value (ecma_completion_value_t &ret_value) /**< out: completion value */
 {
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_META,
-                                     ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY));
+  ecma_make_completion_value (ret_value,
+                              ECMA_COMPLETION_TYPE_META,
+                              ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_make_meta_completion_value */
 
 /**
@@ -531,9 +487,9 @@ ecma_make_meta_completion_value (void)
  */
 inline void __attribute_always_inline__
 ecma_get_completion_value_value (ecma_value_t &ret, /**< out: ecma-value */
-                                 ecma_completion_value_t completion_value) /**< completion value */
+                                 const ecma_completion_value_t& completion_value) /**< completion value */
 {
-  const ecma_completion_type_t type = ecma_get_completion_value_type_field (completion_value);
+  const ecma_completion_type_t type = (ecma_completion_type_t) completion_value;
 
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
@@ -544,11 +500,11 @@ ecma_get_completion_value_value (ecma_value_t &ret, /**< out: ecma-value */
 
   JERRY_ASSERT (is_type_ok);
 
-  ecma_get_completion_value_value_field (ret, completion_value);
+  ret = (ecma_value_packed_t) completion_value;
 } /* ecma_get_completion_value_value */
 
-extern ecma_completion_value_t ecma_copy_completion_value (ecma_completion_value_t value);
-extern void ecma_free_completion_value (ecma_completion_value_t completion_value);
+extern void ecma_copy_completion_value (ecma_completion_value_t& ret_value, const ecma_completion_value_t& value);
+extern void ecma_free_completion_value (ecma_completion_value_t& completion_value);
 
 /**
  * Check if the completion value is normal value.
@@ -557,9 +513,9 @@ extern void ecma_free_completion_value (ecma_completion_value_t completion_value
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_normal (const ecma_completion_value_t& value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_NORMAL);
+  return ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_NORMAL);
 } /* ecma_is_completion_value_normal */
 
 /**
@@ -569,10 +525,10 @@ ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion 
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_throw (const ecma_completion_value_t& value) /**< completion value */
 {
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_THROW);
+  return ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_THROW);
 #else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
   (void) value;
 
@@ -587,9 +543,9 @@ ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion v
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_return (const ecma_completion_value_t& value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_RETURN);
+  return ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_RETURN);
 } /* ecma_is_completion_value_return */
 
 /**
@@ -599,14 +555,12 @@ ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion 
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_exit (const ecma_completion_value_t& value) /**< completion value */
 {
-  if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_EXIT)
+  if ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_EXIT)
   {
 #ifndef JERRY_NDEBUG
-    ecma_value_t v;
-
-    ecma_get_completion_value_value_field (v, value);
+    ecma_value_t v ((ecma_value_packed_t) value);
 
     JERRY_ASSERT (ecma_is_value_boolean (v));
 #endif /* !JERRY_NDEBUG */
@@ -626,14 +580,12 @@ ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion va
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_meta (const ecma_completion_value_t& value) /**< completion value */
 {
-  if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_META)
+  if ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_META)
   {
 #ifndef JERRY_NDEBUG
-    ecma_value_t v;
-
-    ecma_get_completion_value_value_field (v, value);
+    ecma_value_t v ((ecma_value_packed_t) value);
 
     JERRY_ASSERT (ecma_is_value_empty (v));
 #endif /* !JERRY_NDEBUG */
@@ -654,11 +606,13 @@ ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion va
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**< completion value */
+ecma_is_completion_value_normal_simple_value (const ecma_completion_value_t& value, /**< completion value */
                                               ecma_simple_value_t simple_value) /**< simple value to check
                                                                                      for equality with */
 {
-  return (value == ecma_make_simple_completion_value (simple_value));
+  return (ecma_is_completion_value_normal (value)
+          && ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == simple_value);
 } /* ecma_is_completion_value_normal_simple_value */
 
 /**
@@ -669,7 +623,7 @@ ecma_is_completion_value_normal_simple_value (ecma_completion_value_t value, /**
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_normal_true (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_normal_true (const ecma_completion_value_t& value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value (value, ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_is_completion_value_normal_true */
@@ -682,7 +636,7 @@ ecma_is_completion_value_normal_true (ecma_completion_value_t value) /**< comple
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_normal_false (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_normal_false (const ecma_completion_value_t& value) /**< completion value */
 {
   return ecma_is_completion_value_normal_simple_value (value, ECMA_SIMPLE_VALUE_FALSE);
 } /* ecma_is_completion_value_normal_false */
@@ -695,13 +649,11 @@ ecma_is_completion_value_normal_false (ecma_completion_value_t value) /**< compl
  *         false - otherwise.
  */
 inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_empty (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_empty (const ecma_completion_value_t& value) /**< completion value */
 {
   if (ecma_is_completion_value_normal (value))
   {
-    ecma_value_t v;
-
-    ecma_get_completion_value_value_field (v, value);
+    ecma_value_t v ((ecma_value_packed_t) value);
 
     return ecma_is_value_empty (v);
   }

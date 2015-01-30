@@ -49,8 +49,9 @@
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_boolean_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                    const ecma_value_t *arguments_list_p, /**< arguments list */
                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
@@ -59,13 +60,12 @@ ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
   {
     ecma_value_t value_undefined (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-    return ecma_op_to_boolean (value_undefined);
+    ecma_op_to_boolean (ret_value, value_undefined);
   }
   else
   {
-    return ecma_op_to_boolean (arguments_list_p [0]);
+    ecma_op_to_boolean (ret_value, arguments_list_p [0]);
   }
-
 } /* ecma_builtin_boolean_dispatch_call */
 
 /**
@@ -73,19 +73,20 @@ ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_boolean_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_boolean_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                         const ecma_value_t *arguments_list_p, /**< arguments list */
                                          ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   if (arguments_list_len == 0)
   {
-    return ecma_op_create_boolean_object (ecma_value_t (ECMA_SIMPLE_VALUE_FALSE));
+    ecma_op_create_boolean_object (ret_value, ecma_value_t (ECMA_SIMPLE_VALUE_FALSE));
   }
   else
   {
-    return ecma_op_create_boolean_object (arguments_list_p[0]);
+    ecma_op_create_boolean_object (ret_value, arguments_list_p[0]);
   }
 } /* ecma_builtin_boolean_dispatch_construct */
 

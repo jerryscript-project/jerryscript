@@ -48,13 +48,14 @@
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_compact_profile_error_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_compact_profile_error_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                  const ecma_value_t *arguments_list_p, /**< arguments list */
                                                   ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
 } /* ecma_builtin_compact_profile_error_dispatch_call */
 
 /**
@@ -62,13 +63,14 @@ ecma_builtin_compact_profile_error_dispatch_call (const ecma_value_t *arguments_
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_compact_profile_error_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_compact_profile_error_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                       const ecma_value_t *arguments_list_p, /**< arguments list */
                                                        ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
 } /* ecma_builtin_compact_profile_error_dispatch_construct */
 
 /**

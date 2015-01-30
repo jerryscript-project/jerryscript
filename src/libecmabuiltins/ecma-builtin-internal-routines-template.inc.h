@@ -40,7 +40,8 @@
 #define ROUTINE_ARG_LIST_NON_FIXED ROUTINE_ARG_LIST_0, \
   const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
-  static ecma_completion_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
+  static void c_function_name (ecma_completion_value_t &ret_value, \
+                               ROUTINE_ARG_LIST_ ## args_number);
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_NON_FIXED
 #undef ROUTINE_ARG_LIST_3
@@ -272,8 +273,10 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
  * @return completion-value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-ecma_completion_value_t
-DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t builtin_routine_id, /**< built-in's
+void
+DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_completion_value_t &ret_value, /**< out: completion
+                                                                                             *        value */
+                                                        ecma_magic_string_id_t builtin_routine_id, /**< built-in's
                                                                                                         routine's
                                                                                                         name */
                                                         const ecma_value_t& this_arg_value, /**< 'this' argument
@@ -288,6 +291,8 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t b
   (void) arguments_list;
   (void) arguments_number;
 
+  ecma_make_empty_completion_value (ret_value);
+
   ecma_value_t value_undefined (ECMA_SIMPLE_VALUE_UNDEFINED);
   switch (builtin_routine_id)
   {
@@ -301,7 +306,8 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t b
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
        case name: \
        { \
-         return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
+         c_function_name (ret_value, this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
+         return; \
        }
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_0

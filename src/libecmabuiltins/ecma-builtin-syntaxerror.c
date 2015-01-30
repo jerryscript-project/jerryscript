@@ -48,8 +48,9 @@
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_syntax_error_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_syntax_error_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                         const ecma_value_t *arguments_list_p, /**< arguments list */
                                          ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
@@ -57,26 +58,20 @@ ecma_builtin_syntax_error_dispatch_call (const ecma_value_t *arguments_list_p, /
   if (arguments_list_len != 0
       && !ecma_is_value_undefined (arguments_list_p [0]))
   {
-    ecma_completion_value_t ret_value;
-
-    ECMA_TRY_CATCH (msg_str_value,
-                    ecma_op_to_string (arguments_list_p[0]),
-                    ret_value);
+    ECMA_TRY_CATCH (ret_value, ecma_op_to_string, msg_str_value, arguments_list_p[0]);
 
     ecma_string_t *message_string_p = ecma_get_string_from_value (msg_str_value);
     ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_SYNTAX,
                                                                               message_string_p);
-    ret_value = ecma_make_normal_completion_value (ecma_value_t (new_error_object_p));
+    ecma_make_normal_completion_value (ret_value, ecma_value_t (new_error_object_p));
 
     ECMA_FINALIZE (msg_str_value);
-
-    return ret_value;
   }
   else
   {
     ecma_object_t *new_error_object_p = ecma_new_standard_error (ECMA_ERROR_SYNTAX);
 
-    return ecma_make_normal_completion_value (ecma_value_t (new_error_object_p));
+    ecma_make_normal_completion_value (ret_value, ecma_value_t (new_error_object_p));
   }
 } /* ecma_builtin_syntax_error_dispatch_call */
 
@@ -85,11 +80,12 @@ ecma_builtin_syntax_error_dispatch_call (const ecma_value_t *arguments_list_p, /
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_syntax_error_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_syntax_error_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                              const ecma_value_t *arguments_list_p, /**< arguments list */
                                               ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_builtin_syntax_error_dispatch_call (arguments_list_p, arguments_list_len);
+  ecma_builtin_syntax_error_dispatch_call (ret_value, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_syntax_error_dispatch_construct */
 
 /**

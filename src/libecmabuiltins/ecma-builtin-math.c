@@ -54,12 +54,11 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_abs (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_abs (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -73,11 +72,9 @@ ecma_builtin_math_object_abs (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_abs (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_abs */
 
 /**
@@ -89,11 +86,12 @@ ecma_builtin_math_object_abs (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_acos (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_acos (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& this_arg, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_acos */
 
 /**
@@ -105,11 +103,12 @@ ecma_builtin_math_object_acos (const ecma_value_t& this_arg, /**< 'this' argumen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_asin (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_asin (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& this_arg, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_asin */
 
 /**
@@ -121,11 +120,12 @@ ecma_builtin_math_object_asin (const ecma_value_t& this_arg, /**< 'this' argumen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_atan (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_atan (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& this_arg, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_atan */
 
 /**
@@ -137,12 +137,13 @@ ecma_builtin_math_object_atan (const ecma_value_t& this_arg, /**< 'this' argumen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_atan2 (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_atan2 (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                const ecma_value_t& this_arg, /**< 'this' argument */
                                 const ecma_value_t& arg1, /**< first routine's argument */
                                 const ecma_value_t& arg2) /**< second routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg1, arg2);
 } /* ecma_builtin_math_object_atan2 */
 
 /**
@@ -154,11 +155,12 @@ ecma_builtin_math_object_atan2 (const ecma_value_t& this_arg, /**< 'this' argume
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_ceil (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_ceil (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& this_arg, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_ceil */
 
 /**
@@ -170,12 +172,11 @@ ecma_builtin_math_object_ceil (const ecma_value_t& this_arg, /**< 'this' argumen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_cos (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -222,11 +223,9 @@ ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = sum;
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_cos */
 
 /**
@@ -238,12 +237,11 @@ ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_exp (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_exp (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -272,11 +270,9 @@ ecma_builtin_math_object_exp (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_exp (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_exp */
 
 /**
@@ -288,11 +284,12 @@ ecma_builtin_math_object_exp (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_floor (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_floor (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                const ecma_value_t& this_arg, /**< 'this' argument */
                                 const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_floor */
 
 /**
@@ -304,12 +301,11 @@ ecma_builtin_math_object_floor (const ecma_value_t& this_arg, /**< 'this' argume
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_log (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -335,11 +331,9 @@ ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_ln (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_log */
 
 /**
@@ -351,13 +345,12 @@ ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_max (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ecma_number_t ret_num = ecma_number_make_infinity (true);
 
   bool is_just_convert = false;
@@ -415,7 +408,7 @@ ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this'
 
     if (ecma_is_completion_value_throw (ret_value))
     {
-      return ret_value;
+      return;
     }
 
     JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
@@ -426,7 +419,7 @@ ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this'
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 } /* ecma_builtin_math_object_max */
 
 /**
@@ -438,13 +431,12 @@ ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_min (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ecma_number_t ret_num = ecma_number_make_infinity (false);
 
   bool is_just_convert = false;
@@ -502,7 +494,7 @@ ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this'
 
     if (ecma_is_completion_value_throw (ret_value))
     {
-      return ret_value;
+      return;
     }
 
     JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
@@ -513,7 +505,7 @@ ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this'
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 } /* ecma_builtin_math_object_min */
 
 /**
@@ -525,13 +517,12 @@ ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_pow (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg1, /**< first routine's argument */
                               const ecma_value_t& arg2) /**< second routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
 
@@ -742,12 +733,10 @@ ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this'
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (y);
   ECMA_OP_TO_NUMBER_FINALIZE (x);
-
-  return ret_value;
 } /* ecma_builtin_math_object_pow */
 
 /**
@@ -759,8 +748,9 @@ ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'this' argument */
+static void
+ecma_builtin_math_object_random (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                 const ecma_value_t& this_arg __unused) /**< 'this' argument */
 {
   /* Implementation of George Marsaglia's XorShift random number generator */
   TODO (/* Check for license issues */);
@@ -788,7 +778,7 @@ ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'th
   ecma_number_t *rand_p = ecma_alloc_number ();
   *rand_p = rand;
 
-  return ecma_make_normal_completion_value (ecma_value_t (rand_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (rand_p));
 } /* ecma_builtin_math_object_random */
 
 /**
@@ -800,12 +790,11 @@ ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'th
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_round (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                const ecma_value_t& this_arg __unused, /**< 'this' argument */
                                 const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -838,11 +827,9 @@ ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'thi
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_round */
 
 /**
@@ -854,12 +841,11 @@ ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'thi
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_sin (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg __unused, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -906,11 +892,9 @@ ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = sum;
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_sin */
 
 /**
@@ -922,12 +906,11 @@ ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this'
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_math_object_sqrt (ecma_completion_value_t &ret_value, /**< out: completion value */
+                               const ecma_value_t& this_arg __unused, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
   ecma_number_t ret_num;
@@ -956,11 +939,9 @@ ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __unused, /**< 'this
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
 } /* ecma_builtin_math_object_sqrt */
 
 /**
@@ -972,11 +953,12 @@ ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __unused, /**< 'this
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_math_object_tan (const ecma_value_t& this_arg, /**< 'this' argument */
+static void
+ecma_builtin_math_object_tan (ecma_completion_value_t &ret_value, /**< out: completion value */
+                              const ecma_value_t& this_arg, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg, arg);
 } /* ecma_builtin_math_object_tan */
 
 /**

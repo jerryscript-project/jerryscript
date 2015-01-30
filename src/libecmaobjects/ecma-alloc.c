@@ -30,7 +30,6 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_LEX_ENV_TYPE_SIZE <= sizeof (uint64_t) * JERRY_
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
 
 /** \addtogroup ecma ECMA

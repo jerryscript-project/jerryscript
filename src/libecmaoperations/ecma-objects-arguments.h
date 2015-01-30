@@ -28,15 +28,21 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p,
                               ecma_length_t arguments_list_length,
                               bool is_strict);
 
-extern ecma_completion_value_t ecma_op_arguments_object_get (ecma_object_t *obj_p,
-                                                             ecma_string_t *property_name_p);
-extern ecma_property_t *ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p,
-                                                                   ecma_string_t *property_name_p);
-extern ecma_completion_value_t ecma_op_arguments_object_delete (ecma_object_t *obj_p,
-                                                                ecma_string_t *property_name_p,
-                                                                bool is_throw);
-extern ecma_completion_value_t
-ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p,
+extern void
+ecma_op_arguments_object_get (ecma_completion_value_t &ret_value,
+                              ecma_object_t *obj_p,
+                              ecma_string_t *property_name_p);
+extern ecma_property_t*
+ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p,
+                                           ecma_string_t *property_name_p);
+extern void
+ecma_op_arguments_object_delete (ecma_completion_value_t &ret_value,
+                                 ecma_object_t *obj_p,
+                                 ecma_string_t *property_name_p,
+                                 bool is_throw);
+extern void
+ecma_op_arguments_object_define_own_property (ecma_completion_value_t &ret_value,
+                                              ecma_object_t *obj_p,
                                               ecma_string_t *property_name_p,
                                               const ecma_property_descriptor_t* property_desc_p,
                                               bool is_throw);

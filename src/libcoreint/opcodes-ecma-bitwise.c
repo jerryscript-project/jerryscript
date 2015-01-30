@@ -41,15 +41,14 @@ typedef enum
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-static ecma_completion_value_t
-do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
+static void
+do_number_bitwise_logic (ecma_completion_value_t &ret_value, /**< out: completion value */
+                         int_data_t *int_data, /**< interpreter context */
                          idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
                          const ecma_value_t& left_value, /**< left value */
                          const ecma_value_t& right_value) /** right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
@@ -100,14 +99,10 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos,
-                                  dst_var_idx,
-                                  ecma_value_t (res_p));
+  set_variable_value (ret_value, int_data, int_data->pos, dst_var_idx, ecma_value_t (res_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);
-
-  return ret_value;
 } /* do_number_bitwise_logic */
 
 /**
@@ -118,31 +113,29 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_and (opcode_t opdata, /**< operation data */
+void
+opfunc_b_and (ecma_completion_value_t &ret_value, /**< out: completion value */
+              opcode_t opdata, /**< operation data */
               int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_and.dst;
   const idx_t left_var_idx = opdata.data.b_and.var_left;
   const idx_t right_var_idx = opdata.data.b_and.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_logic_and,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_logic_and,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_and */
 
 /**
@@ -153,31 +146,29 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_or (opcode_t opdata, /**< operation data */
+void
+opfunc_b_or (ecma_completion_value_t &ret_value, /**< out: completion value */
+             opcode_t opdata, /**< operation data */
              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_or.dst;
   const idx_t left_var_idx = opdata.data.b_or.var_left;
   const idx_t right_var_idx = opdata.data.b_or.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_logic_or,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_logic_or,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_or */
 
 /**
@@ -188,31 +179,29 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_xor (opcode_t opdata, /**< operation data */
+void
+opfunc_b_xor (ecma_completion_value_t &ret_value, /**< out: completion value */
+              opcode_t opdata, /**< operation data */
               int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_xor.dst;
   const idx_t left_var_idx = opdata.data.b_xor.var_left;
   const idx_t right_var_idx = opdata.data.b_xor.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_logic_xor,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_logic_xor,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_xor */
 
 /**
@@ -223,31 +212,29 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_shift_left (opcode_t opdata, /**< operation data */
+void
+opfunc_b_shift_left (ecma_completion_value_t &ret_value, /**< out: completion value */
+                     opcode_t opdata, /**< operation data */
                      int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_left.dst;
   const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_left.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_shift_left,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_shift_left,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_shift_left */
 
 /**
@@ -258,31 +245,29 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_shift_right (opcode_t opdata, /**< operation data */
+void
+opfunc_b_shift_right (ecma_completion_value_t &ret_value, /**< out: completion value */
+                      opcode_t opdata, /**< operation data */
                       int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_right.dst;
   const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_right.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_shift_right,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_shift_right,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_shift_right */
 
 /**
@@ -293,31 +278,29 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
-                      int_data_t *int_data) /**< interpreter context */
+void
+opfunc_b_shift_uright (ecma_completion_value_t &ret_value, /**< out: completion value */
+                       opcode_t opdata, /**< operation data */
+                       int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_uright.dst;
   const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_uright.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_shift_uright,
-                                       left_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_shift_uright,
+                           left_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_shift_uright */
 
 /**
@@ -328,26 +311,24 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-ecma_completion_value_t
-opfunc_b_not (opcode_t opdata, /**< operation data */
+void
+opfunc_b_not (ecma_completion_value_t &ret_value, /**< out: completion value */
+              opcode_t opdata, /**< operation data */
               int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_not.dst;
   const idx_t right_var_idx = opdata.data.b_not.var_right;
 
-  ecma_completion_value_t ret_value;
+  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
 
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
-
-  ret_value = do_number_bitwise_logic (int_data,
-                                       dst_var_idx,
-                                       number_bitwise_not,
-                                       right_value,
-                                       right_value);
+  do_number_bitwise_logic (ret_value,
+                           int_data,
+                           dst_var_idx,
+                           number_bitwise_not,
+                           right_value,
+                           right_value);
 
   ECMA_FINALIZE (right_value);
 
   int_data->pos++;
-
-  return ret_value;
 } /* opfunc_b_not */

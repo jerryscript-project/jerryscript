@@ -53,13 +53,12 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+static void
+ecma_builtin_string_object_from_char_code (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                           const ecma_value_t& this_arg __unused, /**< 'this' argument */
                                            const ecma_value_t args[], /**< arguments list */
                                            ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   size_t zt_str_buffer_size = sizeof (ecma_char_t) * (args_number + 1u);
 
   ecma_char_t *ret_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_buffer_size,
@@ -78,7 +77,7 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused
 #if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
     if ((uint16_char_code >> JERRY_BITSINBYTE) != 0)
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
@@ -94,7 +93,7 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused
     {
       mem_heap_free_block (ret_zt_str_p);
 
-      return ret_value;
+      return;
     }
 
     JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
@@ -104,7 +103,7 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused
 
   mem_heap_free_block (ret_zt_str_p);
 
-  return ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_str_p));
 } /* ecma_builtin_string_object_from_char_code */
 
 /**
@@ -112,27 +111,24 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_string_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                   const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
-
-  ecma_completion_value_t ret_value;
 
   if (arguments_list_len == 0)
   {
     ecma_string_t *str_p = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING__EMPTY);
     ecma_value_t str_value (str_p);
 
-    ret_value = ecma_make_normal_completion_value (str_value);
+    ecma_make_normal_completion_value (ret_value, str_value);
   }
   else
   {
-    ret_value = ecma_op_to_string (arguments_list_p [0]);
+    ecma_op_to_string (ret_value, arguments_list_p [0]);
   }
-
-  return ret_value;
 } /* ecma_builtin_string_dispatch_call */
 
 /**
@@ -140,13 +136,14 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
  *
  * @return completion-value
  */
-ecma_completion_value_t
-ecma_builtin_string_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+void
+ecma_builtin_string_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                        const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_op_create_string_object (arguments_list_p, arguments_list_len);
+  ecma_op_create_string_object (ret_value, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_string_dispatch_construct */
 
 /**

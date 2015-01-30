@@ -53,14 +53,11 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
+static void
+ecma_builtin_boolean_prototype_object_to_string (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                 const ecma_value_t& this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value;
-
-  ECMA_TRY_CATCH (value_of_ret,
-                  ecma_builtin_boolean_prototype_object_value_of (this_arg),
-                  ret_value);
+  ECMA_TRY_CATCH (ret_value, ecma_builtin_boolean_prototype_object_value_of, value_of_ret, this_arg);
 
   ecma_string_t *ret_str_p;
 
@@ -75,11 +72,9 @@ ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /
     ret_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
+  ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_str_p));
 
   ECMA_FINALIZE (value_of_ret);
-
-  return ret_value;
 } /* ecma_builtin_boolean_prototype_object_to_string */
 
 /**
@@ -91,12 +86,14 @@ ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_value_of (const ecma_value_t& this_arg) /**< this argument */
+static void
+ecma_builtin_boolean_prototype_object_value_of (ecma_completion_value_t &ret_value, /**< out: completion value */
+                                                const ecma_value_t& this_arg) /**< this argument */
 {
   if (ecma_is_value_boolean (this_arg))
   {
-    return ecma_make_normal_completion_value (this_arg);
+    ecma_make_normal_completion_value (ret_value, this_arg);
+    return;
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -117,11 +114,12 @@ ecma_builtin_boolean_prototype_object_value_of (const ecma_value_t& this_arg) /*
 
       JERRY_ASSERT (ecma_is_value_boolean (ret_boolean_value));
 
-      return ecma_make_normal_completion_value (ret_boolean_value);
+      ecma_make_normal_completion_value (ret_value, ret_boolean_value);
+      return;
     }
   }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

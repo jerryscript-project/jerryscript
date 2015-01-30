@@ -174,9 +174,9 @@ class ecma_value_t
  *
  * See also: ECMA-262 v5, 8.9.
  *
- *                                               value (16)
- * Bit-field structure: type (8) | padding (8) <
- *                                               label_desc_cp (16)
+ *
+ * Bit-field structure: type (8) | padding (8) | value (16)
+ *
  */
 typedef uint32_t ecma_completion_value_t;
 
@@ -200,16 +200,6 @@ typedef uint32_t ecma_completion_value_t;
                                          ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
                                          ECMA_COMPLETION_VALUE_PADDING_WIDTH)
 #define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
-
-/**
- * Label
- *
- * Used for break and continue completion types.
- */
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                                 ECMA_COMPLETION_VALUE_PADDING_WIDTH)
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Get type field of ecma-value
@@ -437,9 +427,6 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
   return completion_value;
 } /* ecma_make_completion_value */
 
-extern ecma_completion_value_t ecma_make_label_completion_value (ecma_completion_type_t type,
-                                                                 uint8_t depth_level,
-                                                                 uint16_t offset);
 /**
  * Simple normal completion value constructor
  *
@@ -658,30 +645,6 @@ ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion va
     return false;
   }
 } /* ecma_is_completion_value_meta */
-
-/**
- * Check if the completion value is break value.
- *
- * @return true - if the completion type is break,
- *         false - otherwise.
- */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion value */
-{
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_BREAK);
-} /* ecma_is_completion_value_break */
-
-/**
- * Check if the completion value is continue value.
- *
- * @return true - if the completion type is continue,
- *         false - otherwise.
- */
-inline bool __attribute_const__ __attribute_always_inline__
-ecma_is_completion_value_continue (ecma_completion_value_t value) /**< completion value */
-{
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_CONTINUE);
-} /* ecma_is_completion_value_continue */
 
 /**
  * Check if the completion value is specified normal simple value.

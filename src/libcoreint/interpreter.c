@@ -438,14 +438,6 @@ run_int_loop (int_data_t *int_data)
     }
     while (ecma_is_completion_value_normal (completion));
 
-    if (ecma_is_completion_value_break (completion)
-        || ecma_is_completion_value_continue (completion))
-    {
-      JERRY_UNIMPLEMENTED ("break and continue on labels are not supported.");
-
-      continue;
-    }
-
     if (ecma_is_completion_value_meta (completion))
     {
       completion = ecma_make_empty_completion_value ();

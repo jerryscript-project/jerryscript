@@ -179,68 +179,6 @@ ecma_free_value (ecma_value_t& value, /**< value description */
 } /* ecma_free_value */
 
 /**
- * Get pointer to label descriptor from completion value
- *
- * @return pointer to label descriptor
- */
-static ecma_label_descriptor_t* __attribute_const__
-ecma_get_completion_value_label_descriptor (ecma_completion_value_t completion_value) /**< completion value */
-{
-  return ECMA_GET_NON_NULL_POINTER (ecma_label_descriptor_t,
-                                    (uintptr_t) jrt_extract_bit_field (completion_value,
-                                                                       ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS,
-                                                                       ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH));
-} /* ecma_get_completion_value_label_descriptor */
-
-/**
- * Set label descriptor of completion value
- *
- * @return completion value with updated field
- */
-static ecma_completion_value_t __attribute_const__
-ecma_set_completion_value_label_descriptor (ecma_completion_value_t completion_value, /**< completion value
-                                                                                       * to set field in */
-                                            ecma_label_descriptor_t* label_desc_p) /**< pointer to the
-                                                                                    *   label descriptor */
-{
-  uintptr_t label_desc_cp;
-  ECMA_SET_NON_NULL_POINTER (label_desc_cp, label_desc_p);
-
-  return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
-                                                            label_desc_cp,
-                                                            ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS,
-                                                            ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH);
-} /* ecma_set_completion_value_label_descriptor */
-
-/**
- * Break and continue completion values constructor
- *
- * @return completion value
- */
-ecma_completion_value_t __attribute_const__
-ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
-                                  uint8_t depth_level, /**< depth level (in try constructions,
-                                                            with blocks, etc.) */
-                                  uint16_t offset) /**< offset to label from end of last block */
-{
-  JERRY_ASSERT (type == ECMA_COMPLETION_TYPE_BREAK
-                || type == ECMA_COMPLETION_TYPE_CONTINUE);
-
-  ecma_label_descriptor_t *label_desc_p = ecma_alloc_label_descriptor ();
-  label_desc_p->offset = offset;
-  label_desc_p->depth = depth_level;
-
-  ecma_completion_value_t completion_value = 0;
-
-  completion_value = ecma_set_completion_value_type_field (completion_value,
-                                                           type);
-  completion_value = ecma_set_completion_value_label_descriptor (completion_value,
-                                                                 label_desc_p);
-
-  return completion_value;
-} /* ecma_make_label_completion_value */
-
-/**
  * Throw completion value constructor.
  *
  * @return 'throw' completion value
@@ -310,12 +248,6 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
       ecma_get_completion_value_value_field (v, completion_value);
       JERRY_ASSERT(ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
 
-      break;
-    }
-    case ECMA_COMPLETION_TYPE_CONTINUE:
-    case ECMA_COMPLETION_TYPE_BREAK:
-    {
-      ecma_dealloc_label_descriptor (ecma_get_completion_value_label_descriptor (completion_value));
       break;
     }
     case ECMA_COMPLETION_TYPE_META:

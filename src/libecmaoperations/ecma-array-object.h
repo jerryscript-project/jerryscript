@@ -17,6 +17,7 @@
 #define ECMA_ARRAY_OBJECT_H
 
 #include "ecma-globals.h"
+#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{

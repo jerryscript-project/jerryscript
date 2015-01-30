@@ -75,9 +75,9 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
+ecma_op_get_value_object_base (const ecma_reference_t& ref) /**< ECMA-reference */
 {
-  const ecma_value_t base = ref.base;
+  const ecma_value_t& base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined (base);
   const bool has_primitive_base = (ecma_is_value_boolean (base)
                                    || ecma_is_value_number (base)
@@ -203,10 +203,10 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
+ecma_op_put_value_object_base (const ecma_reference_t& ref, /**< ECMA-reference */
                                const ecma_value_t& value) /**< ECMA-value */
 {
-  const ecma_value_t base = ref.base;
+  const ecma_value_t& base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined (base);
   const bool has_primitive_base = (ecma_is_value_boolean (base)
                                    || ecma_is_value_number (base)

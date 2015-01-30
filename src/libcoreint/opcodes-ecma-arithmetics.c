@@ -86,7 +86,7 @@ do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
 
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (res_p));
+                                  ecma_value_t (res_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);
@@ -134,7 +134,7 @@ opfunc_addition (opcode_t opdata, /**< operation data */
 
     ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
 
-    ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_string_value (concat_str_p));
+    ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_value_t (concat_str_p));
 
     ecma_deref_ecma_string (concat_str_p);
 
@@ -327,7 +327,7 @@ opfunc_unary_plus (opcode_t opdata, /**< operation data */
   *tmp_p = num_var_value;
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (tmp_p));
+                                  ecma_value_t (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);
@@ -364,7 +364,7 @@ opfunc_unary_minus (opcode_t opdata, /**< operation data */
   *tmp_p = ecma_number_negate (num_var_value);
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (tmp_p));
+                                  ecma_value_t (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);

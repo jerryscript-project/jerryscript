@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-value.h"
 
 extern ecma_object_t*
 ecma_create_arguments_object (ecma_object_t *func_obj_p,

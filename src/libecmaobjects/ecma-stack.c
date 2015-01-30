@@ -74,7 +74,7 @@ ecma_stack_get_top_frame (void)
  */
 void
 ecma_stack_add_frame (ecma_stack_frame_t *frame_p, /**< frame to initialize */
-                      ecma_value_t *regs_p, /**< array of register variables' values */
+                      ecma_value_packed_t *regs_p, /**< array of register variables' values */
                       int32_t regs_num) /**< number of register variables */
 {
   frame_p->prev_frame_p = ecma_stack_top_frame_p;
@@ -88,7 +88,7 @@ ecma_stack_add_frame (ecma_stack_frame_t *frame_p, /**< frame to initialize */
 
   for (int32_t i = 0; i < regs_num; i++)
   {
-    regs_p [i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    regs_p [i] = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY);
   }
 } /* ecma_stack_add_frame */
 
@@ -115,7 +115,8 @@ ecma_stack_free_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
        reg_index < frame_p->regs_number;
        reg_index++)
   {
-    ecma_free_value (frame_p->regs_p [reg_index], false);
+    ecma_value_t value_to_free (frame_p->regs_p [reg_index]);
+    ecma_free_value (value_to_free, false);
   }
 } /* ecma_stack_free_frame */
 
@@ -124,13 +125,14 @@ ecma_stack_free_frame (ecma_stack_frame_t *frame_p) /**< frame to initialize */
  *
  * @return ecma-value
  */
-ecma_value_t
-ecma_stack_frame_get_reg_value (ecma_stack_frame_t *frame_p, /**< frame */
+void
+ecma_stack_frame_get_reg_value (ecma_value_t &ret, /**< out: ecma-value */
+                                ecma_stack_frame_t *frame_p, /**< frame */
                                 int32_t reg_index) /**< index of register variable */
 {
   JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
 
-  return frame_p->regs_p [reg_index];
+  ret = frame_p->regs_p [reg_index];
 } /* ecma_stack_frame_get_reg_value */
 
 /**
@@ -139,11 +141,11 @@ ecma_stack_frame_get_reg_value (ecma_stack_frame_t *frame_p, /**< frame */
 void
 ecma_stack_frame_set_reg_value (ecma_stack_frame_t *frame_p, /**< frame */
                                 int32_t reg_index, /**< index of register variable */
-                                ecma_value_t value) /**< ecma-value */
+                                const ecma_value_t& value) /**< ecma-value */
 {
   JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
 
-  frame_p->regs_p [reg_index] = value;
+  frame_p->regs_p [reg_index] = (ecma_value_packed_t) value;
 } /* ecma_stack_frame_set_reg_value */
 
 /**
@@ -177,7 +179,7 @@ ecma_stack_push_value_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack fra
     ECMA_SET_POINTER (chunk_p->prev_chunk_p, frame_p->top_chunk_p);
 
     frame_p->top_chunk_p = chunk_p;
-    frame_p->dynamically_allocated_value_slots_p = (ecma_value_t*) (frame_p->top_chunk_p + 1);
+    frame_p->dynamically_allocated_value_slots_p = (ecma_value_packed_t*) (frame_p->top_chunk_p + 1);
     frame_p->current_slot_index = 0;
   }
 } /* ecma_stack_push_value_longpath */
@@ -199,20 +201,21 @@ ecma_stack_push_value (ecma_stack_frame_t *frame_p, /**< ecma-stack frame */
 
   JERRY_ASSERT (frame_p->current_slot_index < ecma_stack_slots_in_top_chunk (frame_p));
 
-  frame_p->dynamically_allocated_value_slots_p [frame_p->current_slot_index] = value;
+  frame_p->dynamically_allocated_value_slots_p [frame_p->current_slot_index] = (ecma_value_packed_t) value;
 } /* ecma_stack_push_value */
 
 /**
  * Get top value from ecma-stack
  */
-inline ecma_value_t __attribute_always_inline__
-ecma_stack_top_value (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
+inline void __attribute_always_inline__
+ecma_stack_top_value (ecma_value_t &ret, /**< out: ecma-value */
+                      ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
   const size_t slots_in_top_chunk = ecma_stack_slots_in_top_chunk (frame_p);
 
   JERRY_ASSERT (frame_p->current_slot_index < slots_in_top_chunk);
 
-  return frame_p->dynamically_allocated_value_slots_p [frame_p->current_slot_index];
+  ret = frame_p->dynamically_allocated_value_slots_p [frame_p->current_slot_index];
 } /* ecma_stack_top_value */
 
 /**
@@ -229,7 +232,7 @@ ecma_stack_pop_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 
   if (frame_p->top_chunk_p != NULL)
   {
-    frame_p->dynamically_allocated_value_slots_p = (ecma_value_t*) (frame_p->top_chunk_p + 1);
+    frame_p->dynamically_allocated_value_slots_p = (ecma_value_packed_t*) (frame_p->top_chunk_p + 1);
     frame_p->current_slot_index = (uint32_t) (ECMA_STACK_SLOTS_IN_DYNAMIC_CHUNK - 1u);
   }
   else
@@ -249,7 +252,8 @@ ecma_stack_pop (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
   JERRY_ASSERT (frame_p->current_slot_index < ecma_stack_slots_in_top_chunk (frame_p));
 
-  ecma_value_t value = ecma_stack_top_value (frame_p);
+  ecma_value_t value;
+  ecma_stack_top_value (value, frame_p);
 
   if (unlikely (frame_p->current_slot_index == 0
                 && frame_p->top_chunk_p != NULL))

@@ -84,8 +84,8 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
   bool is_equal = ecma_is_value_true (compare_result);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
-                                  ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                                          : ECMA_SIMPLE_VALUE_TRUE));
+                                  ecma_value_t (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                                : ECMA_SIMPLE_VALUE_TRUE));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -120,8 +120,8 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
-                                  ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
-                                                          : ECMA_SIMPLE_VALUE_FALSE));
+                                  ecma_value_t (is_equal ? ECMA_SIMPLE_VALUE_TRUE
+                                                : ECMA_SIMPLE_VALUE_FALSE));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
@@ -155,8 +155,8 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
   ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
-                                  ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                                          : ECMA_SIMPLE_VALUE_TRUE));
+                                  ecma_value_t (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                                : ECMA_SIMPLE_VALUE_TRUE));
 
 
   ECMA_FINALIZE (right_value);

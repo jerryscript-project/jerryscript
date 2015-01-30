@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-reference.h"
+#include "ecma-value.h"
 #include "globals.h"
 
 /** \addtogroup ecma ECMA
@@ -33,12 +34,12 @@
 extern ecma_completion_value_t ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
                                                                ecma_string_t *var_name_string_p,
                                                                bool is_strict);
-extern ecma_completion_value_t ecma_op_get_value_object_base (ecma_reference_t ref);
+extern ecma_completion_value_t ecma_op_get_value_object_base (const ecma_reference_t& ref);
 extern ecma_completion_value_t ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
                                                                ecma_string_t *var_name_string_p,
                                                                bool is_strict,
                                                                const ecma_value_t& value);
-extern ecma_completion_value_t ecma_op_put_value_object_base (ecma_reference_t ref,
+extern ecma_completion_value_t ecma_op_put_value_object_base (const ecma_reference_t& ref,
                                                               const ecma_value_t& value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */

@@ -22,6 +22,7 @@
 
 #include "ecma-builtins.h"
 #include "ecma-globals.h"
+#include "ecma-value.h"
 
 /**
  * Position of built-in object's id field in [[Built-in routine ID]] internal property

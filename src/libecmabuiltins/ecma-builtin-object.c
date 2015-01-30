@@ -84,19 +84,22 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   {
     ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+    return ecma_make_normal_completion_value (ecma_value_t (obj_p));
   }
   else
   {
-    ecma_completion_value_t new_obj_value = ecma_op_create_object_object_arg (arguments_list_p [0]);
+    ecma_completion_value_t new_obj_completion = ecma_op_create_object_object_arg (arguments_list_p [0]);
 
-    if (!ecma_is_completion_value_normal (new_obj_value))
+    if (!ecma_is_completion_value_normal (new_obj_completion))
     {
-      return new_obj_value;
+      return new_obj_completion;
     }
     else
     {
-      return ecma_make_normal_completion_value (ecma_get_completion_value_value (new_obj_value));
+      ecma_value_t new_obj_value;
+      ecma_get_completion_value_value (new_obj_value, new_obj_completion);
+
+      return ecma_make_normal_completion_value (new_obj_value);
     }
   }
 } /* ecma_builtin_object_dispatch_construct */
@@ -340,7 +343,10 @@ ecma_builtin_object_object_define_property (const ecma_value_t& this_arg __unuse
                                                         true),
                     ret_value);
 
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg1, true));
+    ecma_value_t arg1_copy;
+    ecma_copy_value (arg1_copy, arg1, true);
+
+    ret_value = ecma_make_normal_completion_value (arg1_copy);
 
     ECMA_FINALIZE (define_own_prop_ret);
     ecma_free_property_descriptor (&prop_desc);

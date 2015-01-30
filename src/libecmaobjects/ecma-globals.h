@@ -113,11 +113,11 @@ typedef enum
 } ecma_completion_type_t;
 
 /**
- * Description of an ecma-value
+ * Description of an packed ecma-value representation
  *
  * Bit-field structure: type (2) | value (ECMA_POINTER_FIELD_WIDTH)
  */
-typedef uint16_t ecma_value_t;
+typedef uint16_t ecma_value_packed_t;
 
 /**
  * Value type (ecma_type_t)
@@ -133,51 +133,9 @@ typedef uint16_t ecma_value_t;
 #define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
- * ecma_value_t size
+ * ecma_value_packed_t size
  */
 #define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
-
-/**
- * Description of a block completion value
- *
- * See also: ECMA-262 v5, 8.9.
- *
- *                                               value (16)
- * Bit-field structure: type (8) | padding (8) <
- *                                               label_desc_cp (16)
- */
-typedef uint32_t ecma_completion_value_t;
-
-/**
- * Type (ecma_completion_type_t)
- */
-#define ECMA_COMPLETION_VALUE_TYPE_POS (0)
-#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
-
-/**
- * Padding (1 byte)
- */
-#define ECMA_COMPLETION_VALUE_PADDING_WIDTH (8)
-
-/**
- * Value
- *
- * Used for normal, return, throw and exit completion types.
- */
-#define ECMA_COMPLETION_VALUE_VALUE_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                         ECMA_COMPLETION_VALUE_PADDING_WIDTH)
-#define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
-
-/**
- * Label
- *
- * Used for break and continue completion types.
- */
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                                 ECMA_COMPLETION_VALUE_PADDING_WIDTH)
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Label
@@ -304,7 +262,7 @@ typedef struct ecma_property_t
       unsigned int is_lcached : 1;
 
       /** Value */
-      ecma_value_t value;
+      ecma_value_packed_t value;
     } named_data_property;
 
     /** Description of named accessor property */
@@ -531,7 +489,7 @@ typedef struct
   unsigned int is_configurable_defined : 1;
 
   /** [[Value]] */
-  ecma_value_t value;
+  ecma_value_packed_t value;
 
   /** [[Get]] */
   ecma_object_t* get_p;

@@ -170,7 +170,10 @@ ecma_op_to_primitive (const ecma_value_t& value, /**< ecma-value */
   }
   else
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    ecma_value_t value_copy;
+    ecma_copy_value (value_copy, value, true);
+
+    return ecma_make_normal_completion_value (value_copy);
   }
 } /* ecma_op_to_primitive */
 
@@ -254,7 +257,10 @@ ecma_op_to_number (const ecma_value_t& value) /**< ecma-value */
 
   if (ecma_is_value_number (value))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    ecma_value_t value_copy;
+    ecma_copy_value (value_copy, value, true);
+
+    return ecma_make_normal_completion_value (value_copy);
   }
   else if (ecma_is_value_string (value))
   {
@@ -263,7 +269,7 @@ ecma_op_to_number (const ecma_value_t& value) /**< ecma-value */
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = ecma_string_to_number (str_p);
 
-    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    return ecma_make_normal_completion_value (ecma_value_t (num_p));
   }
   else if (ecma_is_value_object (value))
   {
@@ -305,7 +311,7 @@ ecma_op_to_number (const ecma_value_t& value) /**< ecma-value */
       }
     }
 
-    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    return ecma_make_normal_completion_value (ecma_value_t (num_p));
   }
 } /* ecma_op_to_number */
 
@@ -373,7 +379,7 @@ ecma_op_to_string (const ecma_value_t& value) /**< ecma-value */
       }
     }
 
-    return ecma_make_normal_completion_value (ecma_make_string_value (res_p));
+    return ecma_make_normal_completion_value (ecma_value_t (res_p));
   }
 } /* ecma_op_to_string */
 
@@ -401,7 +407,10 @@ ecma_op_to_object (const ecma_value_t& value) /**< ecma-value */
   }
   else if (ecma_is_value_object (value))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    ecma_value_t value_copy;
+    ecma_copy_value (value_copy, value, true);
+
+    return ecma_make_normal_completion_value (value_copy);
   }
   else
   {
@@ -467,7 +476,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
 
     // b.
     const bool is_writable = (src_prop_desc_p->is_writable);
-    prop_desc.value = ecma_make_simple_value (is_writable ? ECMA_SIMPLE_VALUE_TRUE
+    prop_desc.value = (ecma_value_packed_t) ecma_value_t (is_writable ? ECMA_SIMPLE_VALUE_TRUE
                                                           : ECMA_SIMPLE_VALUE_FALSE);
 
     ecma_string_t *writable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_WRITABLE);
@@ -486,11 +495,11 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
     // a.
     if (src_prop_desc_p->get_p == NULL)
     {
-      prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
-      prop_desc.value = ecma_make_object_value (src_prop_desc_p->get_p);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (src_prop_desc_p->get_p);
     }
 
     ecma_string_t *get_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GET);
@@ -504,11 +513,11 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
     // b.
     if (src_prop_desc_p->set_p == NULL)
     {
-      prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
-      prop_desc.value = ecma_make_object_value (src_prop_desc_p->set_p);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (src_prop_desc_p->set_p);
     }
 
     ecma_string_t *set_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SET);
@@ -521,8 +530,8 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   }
 
   const bool is_enumerable = src_prop_desc_p->is_enumerable;
-  prop_desc.value = ecma_make_simple_value (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
-                                            : ECMA_SIMPLE_VALUE_FALSE);
+  prop_desc.value = (ecma_value_packed_t) ecma_value_t (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
+                                                        : ECMA_SIMPLE_VALUE_FALSE);
 
   ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ENUMERABLE);
   completion = ecma_op_object_define_own_property (obj_p,
@@ -533,8 +542,8 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
   const bool is_configurable = src_prop_desc_p->is_configurable;
-  prop_desc.value = ecma_make_simple_value (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
-                                            : ECMA_SIMPLE_VALUE_FALSE);
+  prop_desc.value = (ecma_value_packed_t) ecma_value_t (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
+                                                                  : ECMA_SIMPLE_VALUE_FALSE);
 
   ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONFIGURABLE);
   completion = ecma_op_object_define_own_property (obj_p,
@@ -654,8 +663,11 @@ ecma_op_to_property_descriptor (const ecma_value_t& obj_value, /**< object value
                         ecma_op_object_get (obj_p, value_magic_string_p),
                         ret_value);
 
+        ecma_value_t value_copy;
+        ecma_copy_value (value_copy, value_prop_value, true);
+
         prop_desc.is_value_defined = true;
-        prop_desc.value = ecma_copy_value (value_prop_value, true);
+        prop_desc.value = (ecma_value_packed_t) value_copy;
 
         ECMA_FINALIZE (value_prop_value);
       }

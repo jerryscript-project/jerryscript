@@ -58,7 +58,10 @@ ecma_builtin_string_prototype_object_to_string (const ecma_value_t& this_arg) /*
 {
   if (ecma_is_value_string (this_arg))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
+    ecma_value_t this_arg_copy;
+    ecma_copy_value (this_arg_copy, this_arg, true);
+
+    return ecma_make_normal_completion_value (this_arg_copy);
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -76,7 +79,7 @@ ecma_builtin_string_prototype_object_to_string (const ecma_value_t& this_arg) /*
 
       prim_value_str_p = ecma_copy_or_ref_ecma_string (prim_value_str_p);
 
-      return ecma_make_normal_completion_value (ecma_make_string_value (prim_value_str_p));
+      return ecma_make_normal_completion_value (ecma_value_t (prim_value_str_p));
     }
   }
 

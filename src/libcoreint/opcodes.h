@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-stack.h"
+#include "ecma-value.h"
 #include "globals.h"
 
 /* Maximum opcodes number in bytecode.  */
@@ -76,7 +77,7 @@ typedef enum
 typedef struct
 {
   opcode_counter_t pos; /**< current opcode to execute */
-  ecma_value_t this_binding; /**< this binding for current context */
+  const ecma_value_t* this_binding_p; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   bool is_eval_code; /**< is current code executed with eval */

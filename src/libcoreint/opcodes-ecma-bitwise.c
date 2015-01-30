@@ -102,7 +102,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
 
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_number_value (res_p));
+                                  ecma_value_t (res_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);

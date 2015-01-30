@@ -31,6 +31,7 @@
 #include "ecma-operations.h"
 #include "ecma-reference.h"
 #include "ecma-try-catch-macro.h"
+#include "ecma-value.h"
 #include "deserializer.h"
 
 bool is_reg_variable (int_data_t *int_data, idx_t var_idx);

@@ -48,7 +48,7 @@ ecma_op_create_boolean_object (const ecma_value_t& arg) /**< argument passed to 
     return conv_to_boolean_completion;
   }
 
-  ecma_simple_value_t bool_value = (ecma_is_value_true (ecma_get_completion_value_value (conv_to_boolean_completion)) ?
+  ecma_simple_value_t bool_value = (ecma_is_completion_value_normal_true (conv_to_boolean_completion) ?
                                     ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
@@ -69,5 +69,5 @@ ecma_op_create_boolean_object (const ecma_value_t& arg) /**< argument passed to 
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE);
   prim_value_prop_p->u.internal_property.value = bool_value;
 
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  return ecma_make_normal_completion_value (ecma_value_t (obj_p));
 } /* ecma_op_create_boolean_object */

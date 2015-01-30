@@ -75,9 +75,12 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
                                                                            false);
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 
+      ecma_value_t catched_exc_value;
+      ecma_get_completion_value_value (catched_exc_value, try_completion);
+
       completion = ecma_op_set_mutable_binding (catch_env_p,
                                                 catch_exc_var_name_str_p,
-                                                ecma_get_completion_value_value (try_completion),
+                                                catched_exc_value,
                                                 false);
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 

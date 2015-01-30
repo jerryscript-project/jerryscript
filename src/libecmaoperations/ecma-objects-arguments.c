@@ -69,7 +69,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
   {
     prop_desc.is_value_defined = true;
-    prop_desc.value = ecma_make_number_value (len_p);
+    prop_desc.value = (ecma_value_packed_t) ecma_value_t (len_p);
 
     prop_desc.is_writable_defined = true;
     prop_desc.is_writable = true;
@@ -98,7 +98,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_value_defined = true;
-      prop_desc.value = arguments_list_p[indx];
+      prop_desc.value = (ecma_value_packed_t) arguments_list_p[indx];
 
       prop_desc.is_writable_defined = true;
       prop_desc.is_writable = true;
@@ -141,8 +141,9 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       JERRY_ASSERT (formal_params_iter_p->current_value_p != NULL);
       JERRY_ASSERT (param_index < formal_params_number);
 
-      JERRY_ASSERT (ecma_is_value_string (*formal_params_iter_p->current_value_p));
-      formal_params[param_index] = ecma_get_string_from_value (*formal_params_iter_p->current_value_p);
+      ecma_value_t string_value (*formal_params_iter_p->current_value_p);
+      JERRY_ASSERT (ecma_is_value_string (string_value));
+      formal_params[param_index] = ecma_get_string_from_value (string_value);
     }
     JERRY_ASSERT (param_index == formal_params_number);
 
@@ -172,7 +173,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
         prop_desc = ecma_make_empty_property_descriptor ();
         {
           prop_desc.is_value_defined = true;
-          prop_desc.value = ecma_make_string_value (name_p);
+          prop_desc.value = (ecma_value_packed_t) ecma_value_t (name_p);
         }
 
         completion = ecma_op_object_define_own_property (map_p,
@@ -209,7 +210,7 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_value_defined = true;
-      prop_desc.value = ecma_make_object_value (func_obj_p);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (func_obj_p);
 
       prop_desc.is_writable_defined = true;
       prop_desc.is_writable = true;
@@ -286,7 +287,8 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
-  ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (arg_name_prop_p);
+  ecma_value_t arg_name_prop_value;
+  ecma_get_named_data_property_value (arg_name_prop_value, arg_name_prop_p);
 
   ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
 
@@ -370,11 +372,14 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
   if (mapped_prop_p != NULL)
   {
     // a.
-    ecma_completion_value_t completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
+    ecma_completion_value_t get_mapped_arg_completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
 
-    ecma_named_data_property_assign_value (obj_p, desc_p, ecma_get_completion_value_value (completion));
+    ecma_value_t value_to_assign;
+    ecma_get_completion_value_value (value_to_assign, get_mapped_arg_completion);
 
-    ecma_free_completion_value (completion);
+    ecma_named_data_property_assign_value (obj_p, desc_p, value_to_assign);
+
+    ecma_free_completion_value (get_mapped_arg_completion);
   }
 
   // 6.
@@ -441,7 +446,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
       {
         completion = ecma_op_object_put (map_p,
                                          property_name_p,
-                                         property_desc_p->value,
+                                         ecma_value_t (property_desc_p->value),
                                          is_throw);
       }
 

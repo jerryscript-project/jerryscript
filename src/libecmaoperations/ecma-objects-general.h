@@ -18,6 +18,7 @@
 
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
+#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{

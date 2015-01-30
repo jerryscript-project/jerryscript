@@ -348,7 +348,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_number_t* len_p = ecma_alloc_number ();
   *len_p = length_prop_num_value;
 
-  ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (len_p));
+  ecma_set_named_data_property_value (len_prop_p, ecma_value_t (len_p));
 
   return func_obj_p;
 } /* ecma_builtin_make_function_object_for_routine */

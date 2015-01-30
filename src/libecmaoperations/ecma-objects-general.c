@@ -100,7 +100,7 @@ ecma_op_create_object_object_arg (const ecma_value_t& value) /**< argument of co
 
     ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+    return ecma_make_normal_completion_value (ecma_value_t (obj_p));
   }
 } /* ecma_op_create_object_object_arg */
 
@@ -134,8 +134,13 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   // 3.
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (ecma_get_named_data_property_value (prop_p),
-                                                               true));
+    ecma_value_t prop_value;
+    ecma_get_named_data_property_value (prop_value, prop_p);
+
+    ecma_value_t prop_value_copy;
+    ecma_copy_value (prop_value_copy, prop_value, true);
+
+    return ecma_make_normal_completion_value (prop_value_copy);
   }
   else
   {
@@ -151,7 +156,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
     else
     {
       return ecma_op_function_call (getter_p,
-                                    ecma_make_object_value (obj_p),
+                                    ecma_value_t (obj_p),
                                     NULL,
                                     0);
     }
@@ -268,7 +273,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor ();
     {
       value_desc.is_value_defined = true;
-      value_desc.value = value;
+      value_desc.value = (ecma_value_packed_t) value;
     }
 
     // b., c.
@@ -294,7 +299,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
 
     ECMA_TRY_CATCH (call_ret,
                     ecma_op_function_call (setter_p,
-                                           ecma_make_object_value (obj_p),
+                                           ecma_value_t (obj_p),
                                            &value,
                                            1),
                     ret_value);
@@ -313,7 +318,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     ecma_property_descriptor_t new_desc = ecma_make_empty_property_descriptor ();
     {
       new_desc.is_value_defined = true;
-      new_desc.value = value;
+      new_desc.value = (ecma_value_packed_t) value;
 
       new_desc.is_writable_defined = true;
       new_desc.is_writable = true;
@@ -548,12 +553,15 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_completion_value_t call_completion = ecma_make_empty_completion_value ();
 
-    if (ecma_op_is_callable (ecma_get_completion_value_value (function_value_get_completion)))
+    ecma_value_t function_value_get;
+    ecma_get_completion_value_value (function_value_get, function_value_get_completion);
+
+    if (ecma_op_is_callable (function_value_get))
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_completion_value (function_value_get_completion);
+      ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value_get);
 
       call_completion = ecma_op_function_call (func_obj_p,
-                                               ecma_make_object_value (obj_p),
+                                               ecma_value_t (obj_p),
                                                NULL, 0);
     }
 
@@ -564,10 +572,15 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
       return call_completion;
     }
 
-    if (!ecma_is_completion_value_empty (call_completion)
-        && !ecma_is_value_object (ecma_get_completion_value_value (call_completion)))
+    if (!ecma_is_completion_value_empty (call_completion))
     {
-      return call_completion;
+      ecma_value_t call_ret_value;
+      ecma_get_completion_value_value (call_ret_value, call_completion);
+
+      if (!ecma_is_value_object (call_ret_value))
+      {
+        return call_completion;
+      }
     }
 
     ecma_free_completion_value (call_completion);
@@ -632,7 +645,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
                                                                      property_desc_p->is_enumerable,
                                                                      property_desc_p->is_configurable);
 
-      ecma_named_data_property_assign_value (obj_p, new_prop_p, property_desc_p->value);
+      ecma_named_data_property_assign_value (obj_p, new_prop_p, ecma_value_t (property_desc_p->value));
     }
     else
     {
@@ -668,9 +681,12 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   bool is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = true;
   if (property_desc_p->is_value_defined)
   {
+    ecma_value_t prop_value;
+    ecma_get_named_data_property_value (prop_value, current_p);
+
     if (!is_current_data_descriptor
-        || !ecma_op_same_value (property_desc_p->value,
-                                ecma_get_named_data_property_value (current_p)))
+        || !ecma_op_same_value (ecma_value_t (property_desc_p->value),
+                                prop_value))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -791,9 +807,12 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
         }
 
         // ii.
+        ecma_value_t prop_value;
+        ecma_get_named_data_property_value (prop_value, current_p);
+
         if (property_desc_p->is_value_defined
-            && !ecma_op_same_value (property_desc_p->value,
-                                    ecma_get_named_data_property_value (current_p)))
+            && !ecma_op_same_value (ecma_value_t (property_desc_p->value),
+                                    prop_value))
         {
           return ecma_reject (is_throw);
         }
@@ -828,7 +847,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   {
     JERRY_ASSERT(is_current_data_descriptor);
 
-    ecma_named_data_property_assign_value (obj_p, current_p, property_desc_p->value);
+    ecma_named_data_property_assign_value (obj_p, current_p, ecma_value_t (property_desc_p->value));
   }
 
   if (property_desc_p->is_writable_defined)

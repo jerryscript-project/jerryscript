@@ -370,7 +370,7 @@ run_int (void)
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
   ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
-  ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);
+  ecma_value_t this_binding_value (glob_obj_p);
 
   ecma_completion_value_t completion = run_int_from_pos (start_pos,
                                                          this_binding_value,
@@ -384,7 +384,10 @@ run_int (void)
     ecma_deref_object (lex_env_p);
     ecma_finalize ();
 
-    return ecma_is_value_true (ecma_get_completion_value_value (completion));
+    ecma_value_t value_ret;
+    ecma_get_completion_value_value (value_ret, completion);
+
+    return ecma_is_value_true (value_ret);
   }
   else if (ecma_is_completion_value_throw (completion))
   {
@@ -470,11 +473,11 @@ run_int_from_pos (opcode_counter_t start_pos,
 
   const int32_t regs_num = max_reg_num - min_reg_num + 1;
 
-  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
+  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_packed_t);
 
   int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
-  int_data.this_binding = this_binding_value;
+  int_data.this_binding_p = &this_binding_value;
   int_data.lex_env_p = lex_env_p;
   int_data.is_strict = is_strict;
   int_data.is_eval_code = is_eval_code;

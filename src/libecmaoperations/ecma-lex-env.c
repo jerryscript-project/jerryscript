@@ -93,7 +93,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_value_defined = true;
-      prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      prop_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
 
       prop_desc.is_writable_defined = true;
       prop_desc.is_writable = true;
@@ -241,7 +241,8 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 
-    ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);
+    ecma_value_t prop_value;
+    ecma_get_named_data_property_value (prop_value, property_p);
 
     /* is the binding mutable? */
     if (!ecma_is_property_writable (property_p)
@@ -258,7 +259,10 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
       }
     }
 
-    return ecma_make_normal_completion_value (ecma_copy_value (prop_value, true));
+    ecma_value_t prop_value_copy;
+    ecma_copy_value (prop_value_copy, prop_value, true);
+
+    return ecma_make_normal_completion_value (prop_value_copy);
   }
   else
   {
@@ -364,7 +368,7 @@ ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment 
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
       ecma_ref_object (binding_obj_p);
 
-      return ecma_make_normal_completion_value (ecma_make_object_value (binding_obj_p));
+      return ecma_make_normal_completion_value (ecma_value_t (binding_obj_p));
     }
     else
     {
@@ -394,10 +398,15 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
                                                              name_p,
                                                              false, false, false);
 
-  JERRY_ASSERT(ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
+#ifndef JERRY_NDEBUG
+  ecma_value_t prop_value;
+  ecma_get_named_data_property_value (prop_value, prop_p);
+
+  JERRY_ASSERT(ecma_is_value_undefined (prop_value));
+#endif /* !JERRY_NDEBUG */
 
   ecma_set_named_data_property_value (prop_p,
-                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
+                                      ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_op_create_immutable_binding */
 
 /**
@@ -416,9 +425,12 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
 
   ecma_property_t *prop_p = ecma_get_named_data_property (lex_env_p, name_p);
 
+  ecma_value_t prop_value;
+  ecma_get_named_data_property_value (prop_value, prop_p);
+
   /* The binding must be unitialized immutable binding */
-  JERRY_ASSERT(!ecma_is_property_writable (prop_p)
-               && ecma_is_value_empty (ecma_get_named_data_property_value (prop_p)));
+  JERRY_ASSERT (!ecma_is_property_writable (prop_p)
+                && ecma_is_value_empty (prop_value));
 
   ecma_named_data_property_assign_value (lex_env_p, prop_p, value);
 } /* ecma_op_initialize_immutable_binding */

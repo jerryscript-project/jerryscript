@@ -17,6 +17,7 @@
 #define ECMA_BUILTINS_H
 
 #include "ecma-globals.h"
+#include "ecma-value.h"
 
 /**
  * A built-in object's identifier

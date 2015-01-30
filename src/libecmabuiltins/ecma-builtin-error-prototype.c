@@ -78,7 +78,7 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
     {
       ecma_string_t *error_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ERROR_UL);
 
-      name_to_str_completion = ecma_make_normal_completion_value (ecma_make_string_value (error_magic_string_p));
+      name_to_str_completion = ecma_make_normal_completion_value (ecma_value_t (error_magic_string_p));
     }
     else
     {
@@ -103,7 +103,7 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
       {
         ecma_string_t *empty_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
 
-        msg_to_str_completion = ecma_make_normal_completion_value (ecma_make_string_value (empty_magic_string_p));
+        msg_to_str_completion = ecma_make_normal_completion_value (ecma_value_t (empty_magic_string_p));
       }
       else
       {
@@ -116,8 +116,13 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
       }
       else
       {
-        ecma_string_t *name_string_p = ecma_get_string_from_completion_value (name_to_str_completion);
-        ecma_string_t *msg_string_p = ecma_get_string_from_completion_value (msg_to_str_completion);
+        ecma_value_t name_to_str_value, msg_to_str_value;
+
+        ecma_get_completion_value_value (name_to_str_value, name_to_str_completion);
+        ecma_get_completion_value_value (msg_to_str_value, msg_to_str_completion);
+
+        ecma_string_t *name_string_p = ecma_get_string_from_value (name_to_str_value);
+        ecma_string_t *msg_string_p = ecma_get_string_from_value (msg_to_str_value);
 
         ecma_string_t *ret_str_p;
 
@@ -177,7 +182,7 @@ ecma_builtin_error_prototype_object_to_string (const ecma_value_t& this_arg) /**
           MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }
 
-        ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+        ret_value = ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
       }
 
       ecma_free_completion_value (msg_to_str_completion);

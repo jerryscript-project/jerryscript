@@ -73,7 +73,7 @@ ecma_builtin_math_object_abs (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_abs (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -222,7 +222,7 @@ ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = sum;
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -272,7 +272,7 @@ ecma_builtin_math_object_exp (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_exp (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -335,7 +335,7 @@ ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = ecma_number_ln (arg_num);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -426,7 +426,7 @@ ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this'
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  return ecma_make_normal_completion_value (ecma_value_t (num_p));
 } /* ecma_builtin_math_object_max */
 
 /**
@@ -513,7 +513,7 @@ ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this'
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  return ecma_make_normal_completion_value (ecma_value_t (num_p));
 } /* ecma_builtin_math_object_min */
 
 /**
@@ -742,7 +742,7 @@ ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this'
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (y);
   ECMA_OP_TO_NUMBER_FINALIZE (x);
@@ -788,7 +788,7 @@ ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'th
   ecma_number_t *rand_p = ecma_alloc_number ();
   *rand_p = rand;
 
-  return ecma_make_normal_completion_value (ecma_make_number_value (rand_p));
+  return ecma_make_normal_completion_value (ecma_value_t (rand_p));
 } /* ecma_builtin_math_object_random */
 
 /**
@@ -838,7 +838,7 @@ ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'thi
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -906,7 +906,7 @@ ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this'
     *num_p = sum;
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -956,7 +956,7 @@ ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __unused, /**< 'this
   ecma_number_t *num_p = ecma_alloc_number ();
   *num_p = ret_num;
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (num_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 

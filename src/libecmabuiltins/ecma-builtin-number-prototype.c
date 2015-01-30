@@ -95,7 +95,7 @@ ecma_builtin_number_prototype_object_to_string (const ecma_value_t& this_arg, /*
   {
     ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
 
-    return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+    return ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
   }
   {
     ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p);
@@ -131,7 +131,10 @@ ecma_builtin_number_prototype_object_value_of (const ecma_value_t& this_arg) /**
 {
   if (ecma_is_value_number (this_arg))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
+    ecma_value_t this_arg_copy;
+    ecma_copy_value (this_arg_copy, this_arg, true);
+
+    return ecma_make_normal_completion_value (this_arg_copy);
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -150,7 +153,7 @@ ecma_builtin_number_prototype_object_value_of (const ecma_value_t& this_arg) /**
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;
 
-      return ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+      return ecma_make_normal_completion_value (ecma_value_t (ret_num_p));
     }
   }
 

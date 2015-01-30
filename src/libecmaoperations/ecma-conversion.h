@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{

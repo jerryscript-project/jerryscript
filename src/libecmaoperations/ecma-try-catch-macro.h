@@ -39,7 +39,8 @@
   { \
     JERRY_ASSERT(ecma_is_completion_value_normal (var ## _completion)); \
     \
-    ecma_value_t var __unused = ecma_get_completion_value_value (var ## _completion)
+    ecma_value_t var; \
+    ecma_get_completion_value_value (var, var ## _completion)
 
 /**
  * The macro marks end of code block that is defined by corresponding

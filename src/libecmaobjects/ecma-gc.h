@@ -24,6 +24,7 @@
 #define ECMA_GC_H
 
 #include "ecma-globals.h"
+#include "ecma-value.h"
 #include "mem-allocator.h"
 
 /**

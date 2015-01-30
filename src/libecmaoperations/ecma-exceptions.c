@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
                                                              true, false, true);
 
   ecma_set_named_data_property_value (prop_p,
-                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (message_string_p)));
+                                      ecma_value_t (ecma_copy_or_ref_ecma_string (message_string_p)));
   ecma_deref_ecma_string (message_magic_string_p);
 
   return new_error_obj_p;

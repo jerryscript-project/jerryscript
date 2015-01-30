@@ -57,18 +57,21 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   }
   else
   {
-    ecma_completion_value_t to_str_arg_value = ecma_op_to_string (arguments_list_p [0]);
+    ecma_completion_value_t to_str_arg_completion = ecma_op_to_string (arguments_list_p [0]);
 
-    if (ecma_is_completion_value_throw (to_str_arg_value))
+    if (ecma_is_completion_value_throw (to_str_arg_completion))
     {
-      return to_str_arg_value;
+      return to_str_arg_completion;
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_normal (to_str_arg_value));
+      JERRY_ASSERT (ecma_is_completion_value_normal (to_str_arg_completion));
 
-      JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (to_str_arg_value)));
-      prim_prop_str_value_p = ecma_get_string_from_completion_value (to_str_arg_value);
+      ecma_value_t to_str_arg_value;
+      ecma_get_completion_value_value (to_str_arg_value, to_str_arg_completion);
+
+      JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
+      prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);
 
       int32_t string_len = ecma_string_get_length (prim_prop_str_value_p);
       JERRY_ASSERT (string_len >= 0);
@@ -102,10 +105,10 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
                                                                     false, false, false);
   ecma_number_t *length_prop_value_p = ecma_alloc_number ();
   *length_prop_value_p = length_value;
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_prop_value_p));
+  ecma_set_named_data_property_value (length_prop_p, ecma_value_t (length_prop_value_p));
   ecma_deref_ecma_string (length_magic_string_p);
 
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  return ecma_make_normal_completion_value (ecma_value_t (obj_p));
 } /* ecma_op_create_string_object */
 
 /**
@@ -195,7 +198,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array obj
                                                   false, true, false);
 
     ecma_set_named_data_property_value (new_prop_p,
-                                        ecma_make_string_value (new_prop_str_value_p));
+                                        ecma_value_t (new_prop_str_value_p));
   }
 
   ecma_deref_ecma_string (new_prop_name_p);

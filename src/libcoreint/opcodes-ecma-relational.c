@@ -53,7 +53,7 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_value_t (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -101,7 +101,7 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_value_t (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -156,7 +156,7 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_value_t (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -211,7 +211,7 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_value_t (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
@@ -312,7 +312,7 @@ opfunc_in (opcode_t opdata __unused, /**< operation data */
 
     ret_value = set_variable_value (int_data, int_data->pos,
                                     dst_idx,
-                                    ecma_make_simple_value (is_in));
+                                    ecma_value_t (is_in));
 
     ECMA_FINALIZE (str_left_value);
   }

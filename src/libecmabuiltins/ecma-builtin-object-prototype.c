@@ -66,22 +66,22 @@ ecma_builtin_object_prototype_object_to_string (const ecma_value_t& this_arg) /*
   }
   else
   {
-    ecma_completion_value_t obj_this = ecma_op_to_object (this_arg);
+    ecma_completion_value_t this_to_obj_completion = ecma_op_to_object (this_arg);
 
-    if (!ecma_is_completion_value_normal (obj_this))
+    if (!ecma_is_completion_value_normal (this_to_obj_completion))
     {
-      return obj_this;
+      return this_to_obj_completion;
     }
 
-    JERRY_ASSERT (ecma_is_value_object (ecma_get_completion_value_value (obj_this)));
+    ecma_value_t obj_this_value;
+    ecma_get_completion_value_value (obj_this_value, this_to_obj_completion);
 
-    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
-
-    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
+    JERRY_ASSERT (ecma_is_value_object (obj_this_value));
+    ecma_property_t *class_prop_p = ecma_get_internal_property (ecma_get_object_from_value (obj_this_value),
                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
     type_string = (ecma_magic_string_id_t) class_prop_p->u.internal_property.value;
 
-    ecma_free_completion_value (obj_this);
+    ecma_free_completion_value (this_to_obj_completion);
   }
 
   ecma_string_t *ret_string_p;
@@ -127,7 +127,7 @@ ecma_builtin_object_prototype_object_to_string (const ecma_value_t& this_arg) /*
 
   MEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (ret_string_p));
+  return ecma_make_normal_completion_value (ecma_value_t (ret_string_p));
 } /* ecma_builtin_object_prototype_object_to_string */
 
 /**

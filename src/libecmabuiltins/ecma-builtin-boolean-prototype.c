@@ -75,7 +75,7 @@ ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /
     ret_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+  ret_value = ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
 
   ECMA_FINALIZE (value_of_ret);
 
@@ -113,7 +113,7 @@ ecma_builtin_boolean_prototype_object_value_of (const ecma_value_t& this_arg) /*
 
       ecma_simple_value_t prim_simple_value = (ecma_simple_value_t) prim_value_prop_p->u.internal_property.value;
 
-      ecma_value_t ret_boolean_value = ecma_make_simple_value (prim_simple_value);
+      ecma_value_t ret_boolean_value (prim_simple_value);
 
       JERRY_ASSERT (ecma_is_value_boolean (ret_boolean_value));
 

@@ -17,6 +17,7 @@
 #define INTERPRETER_H
 
 #include "ecma-globals.h"
+#include "ecma-value.h"
 #include "globals.h"
 #include "opcodes.h"
 

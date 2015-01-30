@@ -104,7 +104,7 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __unused
 
   mem_heap_free_block (ret_zt_str_p);
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+  return ecma_make_normal_completion_value (ecma_value_t (ret_str_p));
 } /* ecma_builtin_string_object_from_char_code */
 
 /**
@@ -123,7 +123,7 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   if (arguments_list_len == 0)
   {
     ecma_string_t *str_p = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING__EMPTY);
-    ecma_value_t str_value = ecma_make_string_value (str_p);
+    ecma_value_t str_value (str_p);
 
     ret_value = ecma_make_normal_completion_value (str_value);
   }

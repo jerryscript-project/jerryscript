@@ -66,7 +66,7 @@ ecma_builtin_reference_error_dispatch_call (const ecma_value_t *arguments_list_p
     ecma_string_t *message_string_p = ecma_get_string_from_value (msg_str_value);
     ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_REFERENCE,
                                                                               message_string_p);
-    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));
+    ret_value = ecma_make_normal_completion_value (ecma_value_t (new_error_object_p));
 
     ECMA_FINALIZE (msg_str_value);
 
@@ -76,7 +76,7 @@ ecma_builtin_reference_error_dispatch_call (const ecma_value_t *arguments_list_p
   {
     ecma_object_t *new_error_object_p = ecma_new_standard_error (ECMA_ERROR_REFERENCE);
 
-    return ecma_make_normal_completion_value (ecma_make_object_value (new_error_object_p));
+    return ecma_make_normal_completion_value (ecma_value_t (new_error_object_p));
   }
 } /* ecma_builtin_reference_error_dispatch_call */
 

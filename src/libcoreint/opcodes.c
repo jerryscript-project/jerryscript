@@ -94,7 +94,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_simple_value ((ecma_simple_value_t) src_val_descr));
+                                    ecma_value_t ((ecma_simple_value_t) src_val_descr));
   }
   else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
@@ -104,7 +104,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_string_value (string_p));
+                                    ecma_value_t (string_p));
 
     ecma_deref_ecma_string (string_p);
   }
@@ -136,7 +136,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_number_value (num_p));
+                                    ecma_value_t (num_p));
   }
   else if (type_value_right == OPCODE_ARG_TYPE_NUMBER_NEGATE)
   {
@@ -151,7 +151,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_number_value (num_p));
+                                    ecma_value_t (num_p));
   }
   else if (type_value_right == OPCODE_ARG_TYPE_SMALLINT)
   {
@@ -162,7 +162,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_number_value (num_p));
+                                    ecma_value_t (num_p));
   }
   else
   {
@@ -174,7 +174,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     ret_value = set_variable_value (int_data,
                                     int_data->pos,
                                     dst_var_idx,
-                                    ecma_make_number_value (num_p));
+                                    ecma_value_t (num_p));
   }
 
   int_data->pos++;
@@ -208,7 +208,7 @@ opfunc_pre_incr (opcode_t opdata, /**< operation data */
 
   *new_num_p = ecma_number_add (old_num, ECMA_NUMBER_ONE);
 
-  ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
+  ecma_value_t new_num_value (new_num_p);
 
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
@@ -255,7 +255,7 @@ opfunc_pre_decr (opcode_t opdata, /**< operation data */
 
   *new_num_p = ecma_number_substract (old_num, ECMA_NUMBER_ONE);
 
-  ecma_value_t new_num_value = ecma_make_number_value (new_num_p);
+  ecma_value_t new_num_value (new_num_p);
 
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
@@ -305,7 +305,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
                                   incr_var_idx,
-                                  ecma_make_number_value (new_num_p));
+                                  ecma_value_t (new_num_p));
 
   ecma_number_t *tmp_p = int_data->tmp_num_p;
   *tmp_p = old_num;
@@ -313,7 +313,7 @@ opfunc_post_incr (opcode_t opdata, /**< operation data */
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data, int_data->pos,
                                                                    dst_var_idx,
-                                                                   ecma_make_number_value (tmp_p));
+                                                                   ecma_value_t (tmp_p));
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_OP_TO_NUMBER_FINALIZE (old_num);
@@ -353,7 +353,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   // 5.
   ret_value = set_variable_value (int_data, int_data->pos,
                                   decr_var_idx,
-                                  ecma_make_number_value (new_num_p));
+                                  ecma_value_t (new_num_p));
 
   ecma_number_t *tmp_p = int_data->tmp_num_p;
   *tmp_p = old_num;
@@ -361,7 +361,7 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
   // assignment of operator result to register variable
   ecma_completion_value_t reg_assignment_res = set_variable_value (int_data, int_data->pos,
                                                                    dst_var_idx,
-                                                                   ecma_make_number_value (tmp_p));
+                                                                   ecma_value_t (tmp_p));
   JERRY_ASSERT (ecma_is_completion_value_empty (reg_assignment_res));
 
   ECMA_OP_TO_NUMBER_FINALIZE (old_num);
@@ -584,13 +584,13 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 
   ret_value = set_variable_value (int_data, lit_oc,
                                   dst_var_idx,
-                                  ecma_make_object_value (func_obj_p));
+                                  ecma_value_t (func_obj_p));
 
   if (is_named_func_expr)
   {
     ecma_op_initialize_immutable_binding (scope_p,
                                           function_name_string_p,
-                                          ecma_make_object_value (func_obj_p));
+                                          ecma_value_t (func_obj_p));
     ecma_deref_ecma_string (function_name_string_p);
   }
 
@@ -681,7 +681,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     }
     JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
 
-    ecma_value_t this_value = ecma_get_completion_value_value (get_this_completion_value);
+    ecma_value_t this_value;
+    ecma_get_completion_value_value (this_value, get_this_completion_value);
 
     if (!ecma_op_is_callable (func_value))
     {
@@ -913,11 +914,11 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
       const idx_t prop_name_var_idx = next_opcode.data.meta.data_1;
       const idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
 
-      ecma_completion_value_t value_for_prop_desc = get_variable_value (int_data,
-                                                                        value_for_prop_desc_var_idx,
-                                                                        false);
+      ecma_completion_value_t value_for_prop_desc_completion = get_variable_value (int_data,
+                                                                                   value_for_prop_desc_var_idx,
+                                                                                   false);
 
-      if (ecma_is_completion_value_normal (value_for_prop_desc))
+      if (ecma_is_completion_value_normal (value_for_prop_desc_completion))
       {
         JERRY_ASSERT (is_reg_variable (int_data, prop_name_var_idx));
 
@@ -951,10 +952,14 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
           prop_desc.is_configurable = true;
         }
 
+        ecma_value_t value_for_prop_desc;
+        ecma_get_completion_value_value (value_for_prop_desc, value_for_prop_desc_completion);
+
         if (type == OPCODE_META_TYPE_VARG_PROP_DATA)
         {
           prop_desc.is_value_defined = true;
-          prop_desc.value = ecma_get_completion_value_value (value_for_prop_desc);
+
+          prop_desc.value = (ecma_value_packed_t) value_for_prop_desc;
 
           prop_desc.is_writable_defined = true;
           prop_desc.is_writable = true;
@@ -970,7 +975,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
         {
           prop_desc.is_get_defined = true;
-          prop_desc.get_p = ecma_get_object_from_completion_value (value_for_prop_desc);
+          prop_desc.get_p = ecma_get_object_from_value (value_for_prop_desc);
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -981,7 +986,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         else
         {
           prop_desc.is_set_defined = true;
-          prop_desc.set_p = ecma_get_object_from_completion_value (value_for_prop_desc);
+          prop_desc.set_p = ecma_get_object_from_value (value_for_prop_desc);
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -1000,14 +1005,14 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
         JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
                       || ecma_is_completion_value_normal_false (define_prop_completion));
 
-        ecma_free_completion_value (value_for_prop_desc);
+        ecma_free_completion_value (value_for_prop_desc_completion);
 
         ECMA_FINALIZE (prop_name_str_value);
         ECMA_FINALIZE (prop_name_value);
       }
       else
       {
-        completion = value_for_prop_desc;
+        completion = value_for_prop_desc_completion;
 
         break;
       }
@@ -1026,7 +1031,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_empty (completion))
   {
-    ret_value = set_variable_value (int_data, obj_lit_oc, lhs_var_idx, ecma_make_object_value (obj_p));
+    ret_value = set_variable_value (int_data, obj_lit_oc, lhs_var_idx, ecma_value_t (obj_p));
   }
   else
   {
@@ -1050,7 +1055,7 @@ ecma_completion_value_t
 opfunc_ret (opcode_t opdata __unused, /**< operation data */
             int_data_t *int_data __unused) /**< interpreter context */
 {
-  return ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  return ecma_make_return_completion_value (ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED));
 } /* opfunc_ret */
 
 /**
@@ -1070,7 +1075,10 @@ opfunc_retval (opcode_t opdata __unused, /**< operation data */
 
   ECMA_TRY_CATCH (expr_val, get_variable_value (int_data, opdata.data.retval.ret_value, false), ret_value);
 
-  ret_value = ecma_make_return_completion_value (ecma_copy_value (expr_val, true));
+  ecma_value_t value_copy;
+  ecma_copy_value (value_copy, expr_val, true);
+
+  ret_value = ecma_make_return_completion_value (value_copy);
 
   ECMA_FINALIZE (expr_val);
 
@@ -1110,7 +1118,9 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
                   ret_value);
 
   ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
-  ecma_reference_t ref = ecma_make_reference (base_value, prop_name_string_p, int_data->is_strict);
+
+  ecma_reference_t ref;
+  ecma_make_reference (ref, base_value, prop_name_string_p, int_data->is_strict);
 
   ECMA_TRY_CATCH (prop_value, ecma_op_get_value_object_base (ref), ret_value);
 
@@ -1163,9 +1173,12 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
                   ret_value);
 
   ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
-  ecma_reference_t ref = ecma_make_reference (base_value,
-                                              prop_name_string_p,
-                                              int_data->is_strict);
+
+  ecma_reference_t ref;
+  ecma_make_reference (ref,
+                       base_value,
+                       prop_name_string_p,
+                       int_data->is_strict);
 
   ECMA_TRY_CATCH (rhs_value, get_variable_value (int_data, rhs_var_idx, false), ret_value);
   ret_value = ecma_op_put_value_object_base (ref, rhs_value);
@@ -1228,14 +1241,14 @@ opfunc_logical_not (opcode_t opdata, /**< operation data */
   ecma_simple_value_t old_value = ECMA_SIMPLE_VALUE_TRUE;
   ecma_completion_value_t to_bool_value = ecma_op_to_boolean (right_value);
 
-  if (ecma_is_value_true (ecma_get_completion_value_value (to_bool_value)))
+  if (ecma_is_completion_value_normal_true (to_bool_value))
   {
     old_value = ECMA_SIMPLE_VALUE_FALSE;
   }
 
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_simple_value (old_value));
+                                  ecma_value_t (old_value));
 
   ECMA_FINALIZE (right_value);
 
@@ -1265,7 +1278,7 @@ opfunc_this_binding (opcode_t opdata, /**< operation data */
 
   ret_value = set_variable_value (int_data, lit_oc,
                                   dst_var_idx,
-                                  int_data->this_binding);
+                                  *int_data->this_binding_p);
 
   return ret_value;
 } /* opfunc_this_binding */
@@ -1356,7 +1369,10 @@ opfunc_throw_value (opcode_t opdata, /**< operation data */
                                       false),
                   ret_value);
 
-  ret_value = ecma_make_throw_completion_value (ecma_copy_value (var_value, true));
+  ecma_value_t var_value_copy;
+  ecma_copy_value (var_value_copy, var_value, true);
+
+  ret_value = ecma_make_throw_completion_value (var_value_copy);
 
   ECMA_FINALIZE (var_value);
 
@@ -1474,7 +1490,7 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   ret_value = set_variable_value (int_data, int_data->pos,
                                   dst_var_idx,
-                                  ecma_make_string_value (type_str_p));
+                                  ecma_value_t (type_str_p));
 
   ecma_deref_ecma_string (type_str_p);
 
@@ -1510,9 +1526,11 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   ecma_string_t *name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
 
-  ecma_reference_t ref = ecma_op_get_identifier_reference (int_data->lex_env_p,
-                                                           name_string_p,
-                                                           int_data->is_strict);
+  ecma_reference_t ref;
+  ecma_op_get_identifier_reference (ref,
+                                    int_data->lex_env_p,
+                                    name_string_p,
+                                    int_data->is_strict);
 
   if (ref.is_strict)
   {
@@ -1525,7 +1543,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
     {
       ret_value = set_variable_value (int_data, lit_oc,
                                       dst_var_idx,
-                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE));
+                                      ecma_value_t (ECMA_SIMPLE_VALUE_TRUE));
     }
     else
     {

@@ -160,7 +160,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
 
   mask_prop_p->u.internal_property.value = bit_mask;
 
-  ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_property_writable_value_t writable;
   ecma_property_enumerable_value_t enumerable;
   ecma_property_configurable_value_t configurable;
@@ -177,13 +177,13 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
       enumerable = ECMA_PROPERTY_NOT_ENUMERABLE; \
       configurable = ECMA_PROPERTY_CONFIGURABLE; \
       \
-      value = ecma_make_object_value (func_obj_p); \
+      value = func_obj_p; \
       \
       break; \
     }
 #define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      value = ecma_make_object_value (obj_getter); \
+      value = obj_getter; \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
       configurable = prop_configurable; \
@@ -191,7 +191,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     }
 #define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      value = ecma_make_simple_value (simple_value); \
+      value = simple_value; \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -204,7 +204,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
       ecma_number_t *num_p = ecma_alloc_number (); \
       *num_p = number_value; \
       \
-      value = ecma_make_number_value (num_p); \
+      value = num_p; \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -216,7 +216,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     { \
       ecma_string_t *magic_string_p = ecma_get_magic_string (magic_string_id); \
       \
-      value = ecma_make_string_value (magic_string_p); \
+      value = magic_string_p; \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -288,10 +288,11 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t b
   (void) arguments_list;
   (void) arguments_number;
 
+  ecma_value_t value_undefined (ECMA_SIMPLE_VALUE_UNDEFINED);
   switch (builtin_routine_id)
   {
 #define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] \
-                                              : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED))
+                                              : value_undefined)
 #define ROUTINE_ARG_LIST_0
 #define ROUTINE_ARG_LIST_1 , ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)

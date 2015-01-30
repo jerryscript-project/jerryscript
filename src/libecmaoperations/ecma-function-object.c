@@ -190,7 +190,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 15.
   ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
   length_prop_desc.is_value_defined = true;
-  length_prop_desc.value = ecma_make_number_value (len_p);
+  length_prop_desc.value = (ecma_value_packed_t) ecma_value_t (len_p);
 
   ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
@@ -212,7 +212,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
   {
     prop_desc.is_value_defined = true;
-    prop_desc.value = ecma_make_object_value (f);
+    prop_desc.value = (ecma_value_packed_t) ecma_value_t (f);
 
     prop_desc.is_writable_defined = true;
     prop_desc.is_writable = true;
@@ -232,7 +232,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   ecma_deref_ecma_string (magic_string_constructor_p);
 
   // 18.
-  prop_desc.value = ecma_make_object_value (proto_p);
+  prop_desc.value = (ecma_value_packed_t) ecma_value_t (proto_p);
   prop_desc.is_configurable = false;
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
   ecma_op_object_define_own_property (f,
@@ -319,12 +319,8 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
        n < formal_parameters_count;
        n++)
   {
-    ecma_value_t v;
-    if (n >= arguments_list_len)
-    {
-      v = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-    }
-    else
+    ecma_value_t v (ECMA_SIMPLE_VALUE_UNDEFINED);
+    if (n < arguments_list_len)
     {
       v = arguments_list_p[n];
     }
@@ -332,7 +328,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
     bool is_moved = ecma_collection_iterator_next (&formal_params_iterator);
     JERRY_ASSERT (is_moved);
 
-    ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
+    ecma_value_t formal_parameter_name_value (*formal_params_iterator.current_value_p);
     ecma_string_t *formal_parameter_name_string_p = ecma_get_string_from_value (formal_parameter_name_value);
 
     bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
@@ -463,7 +459,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT(func_obj_p != NULL
                && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
+  JERRY_ASSERT(ecma_op_is_callable (ecma_value_t (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
@@ -492,21 +488,21 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     // 1.
     if (is_strict)
     {
-      this_binding = ecma_copy_value (this_arg_value, true);
+      ecma_copy_value (this_binding, this_arg_value, true);
     }
     else if (ecma_is_value_undefined (this_arg_value)
              || ecma_is_value_null (this_arg_value))
     {
       // 2.
-      this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+      this_binding = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
     }
     else
     {
       // 3., 4.
-      ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+      ecma_completion_value_t to_obj_completion = ecma_op_to_object (this_arg_value);
+      JERRY_ASSERT (ecma_is_completion_value_normal (to_obj_completion));
 
-      this_binding = ecma_get_completion_value_value (completion);
+      ecma_get_completion_value_value (this_binding, to_obj_completion);
     }
 
     // 5.
@@ -521,18 +517,21 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                              is_strict),
                     ret_value);
 
-    ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
-                                                           this_binding,
-                                                           local_env_p,
-                                                           is_strict,
-                                                           false);
-    if (ecma_is_completion_value_return (completion))
+    ecma_completion_value_t run_completion = run_int_from_pos (code_first_opcode_idx,
+                                                               this_binding,
+                                                               local_env_p,
+                                                               is_strict,
+                                                               false);
+    if (ecma_is_completion_value_return (run_completion))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
+      ecma_value_t value_to_ret;
+      ecma_get_completion_value_value (value_to_ret, run_completion);
+
+      ret_value = ecma_make_normal_completion_value (value_to_ret);
     }
     else
     {
-      ret_value = completion;
+      ret_value = run_completion;
     }
 
     ECMA_FINALIZE (args_var_declaration_ret);
@@ -569,7 +568,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT(func_obj_p != NULL
                && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT(ecma_is_constructor (ecma_make_object_value (func_obj_p)));
+  JERRY_ASSERT(ecma_is_constructor (ecma_value_t (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
@@ -614,7 +613,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     // 8.
     ECMA_TRY_CATCH (call_completion,
                     ecma_op_function_call (func_obj_p,
-                                           ecma_make_object_value (obj_p),
+                                           ecma_value_t (obj_p),
                                            arguments_list_p,
                                            arguments_list_len),
                     ret_value);
@@ -626,12 +625,12 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     {
       ecma_deref_object (obj_p);
 
-      obj_value = ecma_copy_value (call_completion, true);
+      ecma_copy_value (obj_value, call_completion, true);
     }
     else
     {
       // 10.
-      obj_value = ecma_make_object_value (obj_p);
+      obj_value = obj_p;
     }
 
     ret_value = ecma_make_normal_completion_value (obj_value);
@@ -701,7 +700,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
       ecma_property_descriptor_t property_desc = ecma_make_empty_property_descriptor ();
       {
         property_desc.is_value_defined = true;
-        property_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        property_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         property_desc.is_writable_defined = true;
         property_desc.is_writable = true;
@@ -749,7 +748,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
     // f.
     ret_value = ecma_op_set_mutable_binding (lex_env_p,
                                              function_name_p,
-                                             ecma_make_object_value (func_obj_p),
+                                             ecma_value_t (func_obj_p),
                                              is_strict);
   }
 

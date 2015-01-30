@@ -365,7 +365,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
       {
         case ECMA_PROPERTY_NAMEDDATA:
         {
-          ecma_value_t value = ecma_get_named_data_property_value (property_p);
+          ecma_value_t value;
+          ecma_get_named_data_property_value (value, property_p);
 
           if (ecma_is_value_object (value))
           {
@@ -571,7 +572,8 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   {
     for (int32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
     {
-      ecma_value_t reg_value = ecma_stack_frame_get_reg_value (frame_iter_p, reg_index);
+      ecma_value_t reg_value;
+      ecma_stack_frame_get_reg_value (reg_value, frame_iter_p, reg_index);
 
       if (ecma_is_value_object (reg_value))
       {

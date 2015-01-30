@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_value_t) <= sizeof (uint16_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_value_packed_t) <= sizeof (uint16_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t));
 
 JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t));

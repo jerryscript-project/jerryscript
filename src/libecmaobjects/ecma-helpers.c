@@ -519,7 +519,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_data_property.is_lcached = false;
 
-  prop_p->u.named_data_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_p->u.named_data_property.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
 
   ecma_lcache_invalidate (obj_p, name_p, NULL);
 
@@ -690,8 +690,8 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                      property_p->u.named_data_property.name_p));
 
-  ecma_value_t v = property_p->u.named_data_property.value;
-  ecma_free_value (v, false);
+  ecma_value_t value_to_free (property_p->u.named_data_property.value);
+  ecma_free_value (value_to_free, false);
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_data_property */
@@ -864,12 +864,13 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
  *
  * @return ecma-value
  */
-ecma_value_t
-ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property */
+void
+ecma_get_named_data_property_value (ecma_value_t &ret, /**< out: value */
+                                    const ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-  return prop_p->u.named_data_property.value;
+  ret = prop_p->u.named_data_property.value;
 } /* ecma_get_named_data_property_value */
 
 /**
@@ -884,7 +885,7 @@ ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
   /* 'May ref younger' flag should be updated upon assignment of object value */
   JERRY_ASSERT (!ecma_is_value_object (value));
 
-  prop_p->u.named_data_property.value = value;
+  prop_p->u.named_data_property.value = (ecma_value_packed_t) value;
 } /* ecma_set_named_data_property_value */
 
 /**
@@ -914,23 +915,29 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (prop_iter_p != NULL);
 #endif /* !JERRY_NDEBUG */
 
-  if (ecma_is_value_number (value)
-      && ecma_is_value_number (prop_p->u.named_data_property.value))
+  if (ecma_is_value_number (value))
   {
-    const ecma_number_t *num_src_p = ecma_get_number_from_value (value);
-    ecma_number_t *num_dst_p = ecma_get_number_from_value (prop_p->u.named_data_property.value);
+    ecma_value_t num_value (prop_p->u.named_data_property.value);
 
-    *num_dst_p = *num_src_p;
-  }
-  else
-  {
-    ecma_value_t v = ecma_get_named_data_property_value (prop_p);
-    ecma_free_value (v, false);
+    if (ecma_is_value_number (num_value))
+    {
+      const ecma_number_t *num_src_p = ecma_get_number_from_value (value);
+      ecma_number_t *num_dst_p = ecma_get_number_from_value (num_value);
 
-    prop_p->u.named_data_property.value = ecma_copy_value (value, false);
-    ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
-                                                         prop_p->u.named_data_property.value);
+      *num_dst_p = *num_src_p;
+
+      return;
+    }
   }
+
+  ecma_value_t v;
+  ecma_get_named_data_property_value (v, prop_p);
+  ecma_free_value (v, false);
+
+  ecma_value_t value_copy;
+  ecma_copy_value (value_copy, value, false);
+  prop_p->u.named_data_property.value = (ecma_value_packed_t) value_copy;
+  ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p, value_copy);
 } /* ecma_named_data_property_assign_value */
 
 /**
@@ -1097,7 +1104,7 @@ ecma_make_empty_property_descriptor (void)
   ecma_property_descriptor_t prop_desc;
 
   prop_desc.is_value_defined = false;
-  prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
   prop_desc.is_writable_defined = false;
   prop_desc.is_writable = false;
   prop_desc.is_enumerable_defined = false;
@@ -1121,7 +1128,9 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 {
   if (prop_desc_p->is_value_defined)
   {
-    ecma_free_value (prop_desc_p->value, true);
+    ecma_value_t value_to_free (prop_desc_p->value);
+
+    ecma_free_value (value_to_free, true);
   }
 
   if (prop_desc_p->is_get_defined

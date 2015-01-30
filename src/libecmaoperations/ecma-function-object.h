@@ -17,6 +17,7 @@
 #define ECMA_FUNCTION_OBJECT_H
 
 #include "ecma-globals.h"
+#include "ecma-value.h"
 #include "interpreter.h"
 
 /** \addtogroup ecma ECMA

@@ -24,30 +24,9 @@
 #define JERRY_ECMA_GLOBALS_H
 
 #include "config.h"
+#include "ecma-compressed-pointers.h"
 #include "globals.h"
 #include "mem-allocator.h"
-
-/** \addtogroup compressedpointer Compressed pointer
- * @{
- */
-
-/**
- * Ecma-pointer field is used to calculate ecma-value's address.
- *
- * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
- * The offset is shifted right by MEM_ALIGNMENT_LOG.
- * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
- */
-#define ECMA_POINTER_FIELD_WIDTH MEM_COMPRESSED_POINTER_WIDTH
-
-/**
- * The NULL value for compressed pointers
- */
-#define ECMA_NULL_POINTER MEM_COMPRESSED_POINTER_NULL
-
-/**
- * @}
- */
 
 /**
  * Type of ecma-value
@@ -768,6 +747,112 @@ typedef struct
     uint32_t common_field;
   } u;
 } ecma_string_t;
+
+/** \addtogroup ecmamanagedpointers ECMA managed on-stack pointers
+ * @{
+ */
+
+/**
+ * ECMA managed on-stack pointer
+ */
+class ecma_pointer_t
+{
+  public:
+    /* Constructors */
+    __attribute_always_inline__
+    ecma_pointer_t () : _ptr (NULL) {}
+
+    ecma_pointer_t (const ecma_pointer_t&) = delete;
+    ecma_pointer_t (ecma_pointer_t&) = delete;
+    ecma_pointer_t (ecma_pointer_t&&) = delete;
+
+    /* Getter */
+    template<typename T>
+    __attribute_always_inline__
+    explicit operator T* () const
+    {
+      return static_cast<T*> (_ptr);
+    }
+
+    /* Member access */
+    template<typename T>
+    __attribute_always_inline__
+    T* operator -> () const
+    {
+      return (T*) _ptr;
+    }
+
+    /* Dereference */
+    template<typename T>
+    __attribute_always_inline__
+    T operator * () const
+    {
+      return *static_cast<T*> (_ptr);
+    }
+
+    /* Assignment operators */
+    template<typename T>
+    __attribute_always_inline__
+    ecma_pointer_t& operator = (T* ptr) /**< new pointer value */
+    {
+      _ptr = ptr;
+
+      return *this;
+    }
+
+    template<typename T>
+    __attribute_always_inline__
+    ecma_pointer_t& operator = (const T& value) /**< value to assign to variable
+                                                 *   under the pointer */
+    {
+      *static_cast<T*> (_ptr) = value;
+
+      return *this;
+    }
+
+    __attribute_always_inline__
+    ecma_pointer_t& operator = (const ecma_pointer_t& ptr) /**< managed pointer
+                                                            *   to take value from */
+    {
+      _ptr = ptr._ptr;
+
+      return *this;
+    }
+
+    ecma_pointer_t& operator = (ecma_pointer_t &) = delete;
+    ecma_pointer_t& operator = (ecma_pointer_t &&) = delete;
+
+    /* Packing to compressed pointer */
+    __attribute_always_inline__
+    void pack_to (uintptr_t& compressed_pointer) const /**< reference to compressed pointer */
+    {
+      ECMA_SET_NON_NULL_POINTER (compressed_pointer, _ptr);
+    }
+
+    /* Unpacking from compressed pointer */
+    __attribute_always_inline__
+    void unpack_from (uintptr_t compressed_pointer) /**< compressed pointer */
+    {
+      _ptr = ECMA_GET_NON_NULL_POINTER (void, compressed_pointer);
+    }
+
+  protected: /* accessible to ecma_pointer_t */
+    void *_ptr; /* pointer storage */
+};
+
+#define ECMA_DECLARE_POINTER_OPERATORS_FOR(type) \
+  template ecma_pointer_t::operator type* () const; \
+  template type* ecma_pointer_t::operator -> () const; \
+  template type ecma_pointer_t::operator * () const; \
+  template ecma_pointer_t& ecma_pointer_t::operator = (type *); \
+  template ecma_pointer_t& ecma_pointer_t::operator = (const type &);
+
+/**
+ * ECMA managed pointers' operators explicit instantiation
+ */
+ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_number_t)
+ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_string_t)
+ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_object_t)
 
 /**
  * @}

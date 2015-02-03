@@ -112,7 +112,7 @@ class ecma_value_t
                       || _type == ECMA_TYPE_STRING
                       || _type == ECMA_TYPE_OBJECT);
 
-        ECMA_SET_NON_NULL_POINTER (value, _value_p);
+        _value_p.pack_to (value);
       }
 
       return pack (_type, value);
@@ -178,7 +178,7 @@ class ecma_value_t
                       || _type == ECMA_TYPE_STRING
                       || _type == ECMA_TYPE_OBJECT);
 
-        _value_p = ECMA_GET_NON_NULL_POINTER (void, value);
+        _value_p.unpack_from (value);
       }
 
       return *this;
@@ -320,12 +320,8 @@ class ecma_value_t
     }
 
     ecma_type_t _type;
-
-    union
-    {
-      ecma_simple_value_t _simple_value;
-      void* _value_p;
-    };
+    ecma_simple_value_t _simple_value;
+    ecma_pointer_t _value_p;
 };
 
 /**

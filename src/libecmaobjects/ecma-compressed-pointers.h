@@ -20,8 +20,31 @@
 
 /** \addtogroup ecma ECMA
  * @{
+ */
+
+/** \addtogroup compressedpointer Compressed pointer
+ * @{
+ */
+
+/**
+ * Ecma-pointer field is used to calculate ecma-value's address.
  *
- * \addtogroup ecmacompressedpointers Helpers for operations with compressed heap pointers
+ * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
+ * The offset is shifted right by MEM_ALIGNMENT_LOG.
+ * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
+ */
+#define ECMA_POINTER_FIELD_WIDTH MEM_COMPRESSED_POINTER_WIDTH
+
+/**
+ * The NULL value for compressed pointers
+ */
+#define ECMA_NULL_POINTER MEM_COMPRESSED_POINTER_NULL
+
+/**
+ * @}
+ */
+
+/** \addtogroup ecmacompressedpointers Helpers for operations with compressed heap pointers
  * @{
  */
 

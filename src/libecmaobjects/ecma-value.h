@@ -28,6 +28,32 @@
  */
 
 /**
+ * Get type field of ecma-value
+ *
+ * @return type field
+ */
+inline ecma_type_t __attribute_pure__ __attribute_always_inline__
+ecma_get_value_type_field (ecma_value_packed_t packed_value) /**< packed ecma-value */
+{
+  return (ecma_type_t) jrt_extract_bit_field (packed_value,
+                                              ECMA_VALUE_TYPE_POS,
+                                              ECMA_VALUE_TYPE_WIDTH);
+} /* ecma_get_value_type_field */
+
+/**
+ * Get value field of ecma-value
+ *
+ * @return value field
+ */
+inline uintptr_t __attribute_pure__ __attribute_always_inline__
+ecma_get_value_value_field (ecma_value_packed_t packed_value) /**< packed ecma-value */
+{
+  return (uintptr_t) jrt_extract_bit_field (packed_value,
+                                            ECMA_VALUE_VALUE_POS,
+                                            ECMA_VALUE_VALUE_WIDTH);
+} /* ecma_get_value_value_field */
+
+/**
  * Description of ecma-value on-stack storage
  */
 class ecma_value_t
@@ -35,16 +61,8 @@ class ecma_value_t
   public:
     /* Constructors */
     __attribute_always_inline__
-    ecma_value_t (ecma_type_t type, /**< ecma-value type */
-                  uintptr_t value) /**< compressed pointer
-                                    *   or simple value */
-    {
-      _packed = pack (type, value);
-    } /* ecma_value_t */
-
-    __attribute_always_inline__
     ecma_value_t (ecma_simple_value_t simple_value)
-      : ecma_value_t (ECMA_TYPE_SIMPLE, simple_value) { }
+      : _type (ECMA_TYPE_SIMPLE), _simple_value (simple_value) { }
 
     __attribute_always_inline__
     ecma_value_t () : ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY) { }
@@ -80,74 +98,209 @@ class ecma_value_t
     ecma_value_t& operator = (ecma_value_t &&) = delete;
 
     /* Extraction of packed representation */
-    __attribute_always_inline__
-    explicit operator ecma_value_packed_t () const { return _packed; }
+    explicit operator ecma_value_packed_t () const
+    {
+      uintptr_t value;
+
+      if (_type == ECMA_TYPE_SIMPLE)
+      {
+        value = _simple_value;
+      }
+      else
+      {
+        JERRY_ASSERT (_type == ECMA_TYPE_NUMBER
+                      || _type == ECMA_TYPE_STRING
+                      || _type == ECMA_TYPE_OBJECT);
+
+        ECMA_SET_NON_NULL_POINTER (value, _value_p);
+      }
+
+      return pack (_type, value);
+    }
 
     /* Assignment operators */
     __attribute_always_inline__
     ecma_value_t& operator = (ecma_simple_value_t v)
     {
-      _packed = pack (ECMA_TYPE_SIMPLE, v);
+      _type = ECMA_TYPE_SIMPLE;
+      _simple_value = v;
 
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_value_t& operator = (ecma_number_t* num_p)
     {
       JERRY_ASSERT(num_p != NULL);
 
-      uint16_t num_cp;
-      ECMA_SET_NON_NULL_POINTER (num_cp, num_p);
-
-      _packed = pack (ECMA_TYPE_NUMBER, num_cp);
+      _type = ECMA_TYPE_NUMBER;
+      _value_p = num_p;
 
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_value_t& operator = (ecma_string_t* str_p)
     {
       JERRY_ASSERT(str_p != NULL);
 
-      uint16_t str_cp;
-      ECMA_SET_NON_NULL_POINTER (str_cp, str_p);
-
-      _packed = pack (ECMA_TYPE_STRING, str_cp);
+      _type = ECMA_TYPE_STRING;
+      _value_p = str_p;
 
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_value_t& operator = (ecma_object_t *obj_p)
     {
       JERRY_ASSERT(obj_p != NULL);
 
-      uint16_t obj_cp;
-      ECMA_SET_NON_NULL_POINTER (obj_cp, obj_p);
-
-      _packed = pack (ECMA_TYPE_OBJECT, obj_cp);
+      _type = ECMA_TYPE_OBJECT;
+      _value_p = obj_p;
 
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_value_t& operator = (ecma_value_packed_t packed)
     {
-      _packed = packed;
+      _type = ecma_get_value_type_field (packed);
+
+      uintptr_t value = ecma_get_value_value_field (packed);
+
+      if (_type == ECMA_TYPE_SIMPLE)
+      {
+        _simple_value = (ecma_simple_value_t) value;
+      }
+      else
+      {
+        JERRY_ASSERT (_type == ECMA_TYPE_NUMBER
+                      || _type == ECMA_TYPE_STRING
+                      || _type == ECMA_TYPE_OBJECT);
+
+        _value_p = ECMA_GET_NON_NULL_POINTER (void, value);
+      }
 
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_value_t& operator = (const ecma_value_t &v)
     {
-      this->_packed = v._packed;
+      _type = v._type;
+      if (_type == ECMA_TYPE_SIMPLE)
+      {
+        _simple_value = v._simple_value;
+      }
+      else
+      {
+        JERRY_ASSERT (_type == ECMA_TYPE_NUMBER
+                      || _type == ECMA_TYPE_STRING
+                      || _type == ECMA_TYPE_OBJECT);
+
+        _value_p = v._value_p;
+      }
 
       return *this;
     }
-  private:
+
+    /* Getters */
+    __attribute_always_inline__
+    ecma_type_t get_type (void) const
+    {
+      return _type;
+    }
+
+    __attribute_always_inline__
+    bool is_simple (void) const
+    {
+      return (_type == ECMA_TYPE_SIMPLE);
+    }
+
+    __attribute_always_inline__
+    bool is_simple (ecma_simple_value_t simple_value) const
+    {
+      return (is_simple () && _simple_value == simple_value);
+    }
+
+    __attribute_always_inline__
+    bool is_empty () const
+    {
+      return is_simple (ECMA_SIMPLE_VALUE_EMPTY);
+    }
+
+    __attribute_always_inline__
+    bool is_undefined () const
+    {
+      return is_simple (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+
+    __attribute_always_inline__
+    bool is_null () const
+    {
+      return is_simple (ECMA_SIMPLE_VALUE_NULL);
+    }
+
+    __attribute_always_inline__
+    bool is_boolean () const
+    {
+      return (is_simple (ECMA_SIMPLE_VALUE_TRUE) || is_simple (ECMA_SIMPLE_VALUE_FALSE));
+    }
+
+    __attribute_always_inline__
+    bool is_true () const
+    {
+      return is_simple (ECMA_SIMPLE_VALUE_TRUE);
+    }
+
+    __attribute_always_inline__
+    bool is_number () const
+    {
+      return (_type == ECMA_TYPE_NUMBER);
+    }
+
+    __attribute_always_inline__
+    bool is_string () const
+    {
+      return (_type == ECMA_TYPE_STRING);
+    }
+
+    __attribute_always_inline__
+    bool is_object () const
+    {
+      return (_type == ECMA_TYPE_OBJECT);
+    }
+
+    __attribute_always_inline__
+    ecma_number_t* get_number () const
+    {
+      JERRY_ASSERT (_type == ECMA_TYPE_NUMBER);
+
+      return static_cast<ecma_number_t*> (_value_p);
+    }
+
+    __attribute_always_inline__
+    ecma_string_t* get_string () const
+    {
+      JERRY_ASSERT (_type == ECMA_TYPE_STRING);
+
+      return static_cast<ecma_string_t*> (_value_p);
+    }
+
+    __attribute_always_inline__
+    ecma_object_t* get_object () const
+    {
+      JERRY_ASSERT (_type == ECMA_TYPE_OBJECT);
+
+      return static_cast<ecma_object_t*> (_value_p);
+    }
+   private:
     /**
      * Combining type and value fields to packed representation
      *
      * @return packed ecma-value representation
      */
-    __attribute_always_inline__
+    static __attribute_always_inline__
     ecma_value_packed_t pack (ecma_type_t type,
                               uintptr_t value)
     {
@@ -166,7 +319,13 @@ class ecma_value_t
       return packed;
     }
 
-    ecma_value_packed_t _packed; /**< packed value representation */
+    ecma_type_t _type;
+
+    union
+    {
+      ecma_simple_value_t _simple_value;
+      void* _value_p;
+    };
 };
 
 /**
@@ -178,16 +337,19 @@ class ecma_completion_value_t : public ecma_value_t
 {
   public:
     /* Constructors */
+    __attribute_always_inline__
     ecma_completion_value_t ()
       : ecma_value_t (),
         _type (ECMA_COMPLETION_TYPE_NORMAL) { }
 
+    __attribute_always_inline__
     ecma_completion_value_t (ecma_completion_type_t type,
                              const ecma_value_t &value)
-      : ecma_value_t ((ecma_value_packed_t) value),
-      _type (type) { }
+      :
+      _type (type) { *this = value; }
 
     /* Assignment operators */
+    __attribute_always_inline__
     ecma_completion_value_t & operator = (ecma_completion_type_t type)
     {
       _type = type;
@@ -195,19 +357,28 @@ class ecma_completion_value_t : public ecma_value_t
       return *this;
     }
 
+    __attribute_always_inline__
     ecma_completion_value_t & operator = (const ecma_value_t& value)
     {
-      *static_cast<ecma_value_t*> (this) = (ecma_value_packed_t) value;
+      *static_cast<ecma_value_t*> (this) = value;
 
       return *this;
     }
 
     /* Completion type extraction */
+    __attribute_always_inline__
     explicit operator ecma_completion_type_t () const
     {
       return _type;
     }
 
+    __attribute_always_inline__
+    ecma_completion_value_t& operator = (const ecma_completion_value_t &) = default;
+
+    ecma_completion_value_t (const ecma_completion_value_t&) = delete;
+    ecma_completion_value_t (ecma_completion_value_t&) = delete;
+    ecma_completion_value_t (ecma_completion_value_t&&) = delete;
+    ecma_completion_value_t& operator = (ecma_completion_value_t &&) = delete;
   private:
     ecma_completion_type_t _type; /**< completion type */
 };
@@ -220,23 +391,8 @@ class ecma_completion_value_t : public ecma_value_t
 inline ecma_type_t __attribute_pure__ __attribute_always_inline__
 ecma_get_value_type_field (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_type_t) jrt_extract_bit_field ((ecma_value_packed_t) value,
-                                              ECMA_VALUE_TYPE_POS,
-                                              ECMA_VALUE_TYPE_WIDTH);
+  return value.get_type ();
 } /* ecma_get_value_type_field */
-
-/**
- * Get value field of ecma-value
- *
- * @return value field
- */
-inline uintptr_t __attribute_pure__ __attribute_always_inline__
-ecma_get_value_value_field (const ecma_value_t& value) /**< ecma-value */
-{
-  return (uintptr_t) jrt_extract_bit_field ((ecma_value_packed_t) value,
-                                            ECMA_VALUE_VALUE_POS,
-                                            ECMA_VALUE_VALUE_WIDTH);
-} /* ecma_get_value_value_field */
 
 /**
  * Check if the value is empty.
@@ -247,8 +403,7 @@ ecma_get_value_value_field (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_empty (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_EMPTY);
+  return value.is_empty ();
 } /* ecma_is_value_empty */
 
 /**
@@ -260,8 +415,7 @@ ecma_is_value_empty (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_undefined (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_UNDEFINED);
+  return value.is_undefined ();
 } /* ecma_is_value_undefined */
 
 /**
@@ -273,8 +427,7 @@ ecma_is_value_undefined (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_null (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_NULL);
+  return value.is_null ();
 } /* ecma_is_value_null */
 
 /**
@@ -286,9 +439,7 @@ ecma_is_value_null (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_boolean (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && (ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE
-              || ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_FALSE));
+  return value.is_boolean ();
 } /* ecma_is_value_boolean */
 
 /**
@@ -303,8 +454,7 @@ ecma_is_value_boolean (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_true (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_TRUE);
+  return value.is_true ();
 } /* ecma_is_value_true */
 
 /**
@@ -316,7 +466,7 @@ ecma_is_value_true (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_number (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
+  return value.is_number ();
 } /* ecma_is_value_number */
 
 /**
@@ -328,7 +478,7 @@ ecma_is_value_number (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_string (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
+  return value.is_string ();
 } /* ecma_is_value_string */
 
 /**
@@ -340,7 +490,7 @@ ecma_is_value_string (const ecma_value_t& value) /**< ecma-value */
 inline bool __attribute_pure__ __attribute_always_inline__
 ecma_is_value_object (const ecma_value_t& value) /**< ecma-value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
+  return value.is_object ();
 } /* ecma_is_value_object */
 
 extern ecma_number_t* __attribute_pure__ ecma_get_number_from_value (const ecma_value_t& value);
@@ -500,7 +650,7 @@ ecma_get_completion_value_value (ecma_value_t &ret, /**< out: ecma-value */
 
   JERRY_ASSERT (is_type_ok);
 
-  ret = (ecma_value_packed_t) completion_value;
+  ret = completion_value;
 } /* ecma_get_completion_value_value */
 
 extern void ecma_copy_completion_value (ecma_completion_value_t& ret_value, const ecma_completion_value_t& value);
@@ -560,7 +710,7 @@ ecma_is_completion_value_exit (const ecma_completion_value_t& value) /**< comple
   if ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_EXIT)
   {
 #ifndef JERRY_NDEBUG
-    ecma_value_t v ((ecma_value_packed_t) value);
+    const ecma_value_t& v = value;
 
     JERRY_ASSERT (ecma_is_value_boolean (v));
 #endif /* !JERRY_NDEBUG */
@@ -585,7 +735,7 @@ ecma_is_completion_value_meta (const ecma_completion_value_t& value) /**< comple
   if ((ecma_completion_type_t) value == ECMA_COMPLETION_TYPE_META)
   {
 #ifndef JERRY_NDEBUG
-    ecma_value_t v ((ecma_value_packed_t) value);
+    const ecma_value_t& v = value;
 
     JERRY_ASSERT (ecma_is_value_empty (v));
 #endif /* !JERRY_NDEBUG */
@@ -610,9 +760,7 @@ ecma_is_completion_value_normal_simple_value (const ecma_completion_value_t& val
                                               ecma_simple_value_t simple_value) /**< simple value to check
                                                                                      for equality with */
 {
-  return (ecma_is_completion_value_normal (value)
-          && ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
-          && ecma_get_value_value_field (value) == simple_value);
+  return (ecma_is_completion_value_normal (value) && value.is_simple (simple_value));
 } /* ecma_is_completion_value_normal_simple_value */
 
 /**
@@ -653,7 +801,7 @@ ecma_is_completion_value_empty (const ecma_completion_value_t& value) /**< compl
 {
   if (ecma_is_completion_value_normal (value))
   {
-    ecma_value_t v ((ecma_value_packed_t) value);
+    const ecma_value_t& v = value;
 
     return ecma_is_value_empty (v);
   }

@@ -31,10 +31,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_value_packed_t) * JERRY_BITSINBYTE == ECMA_VAL
 ecma_number_t* __attribute_pure__
 ecma_get_number_from_value (const ecma_value_t& value) /**< ecma-value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
-
-  return ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                    ecma_get_value_value_field (value));
+  return value.get_number ();
 } /* ecma_get_number_from_value */
 
 /**
@@ -45,10 +42,7 @@ ecma_get_number_from_value (const ecma_value_t& value) /**< ecma-value */
 ecma_string_t* __attribute_pure__
 ecma_get_string_from_value (const ecma_value_t& value) /**< ecma-value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
-
-  return ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                    ecma_get_value_value_field (value));
+  return value.get_string ();
 } /* ecma_get_string_from_value */
 
 /**
@@ -59,10 +53,7 @@ ecma_get_string_from_value (const ecma_value_t& value) /**< ecma-value */
 ecma_object_t* __attribute_pure__
 ecma_get_object_from_value (const ecma_value_t& value) /**< ecma-value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
-
-  return ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                    ecma_get_value_value_field (value));
+  return value.get_object ();
 } /* ecma_get_object_from_value */
 
 /**
@@ -243,9 +234,9 @@ ecma_free_completion_value (ecma_completion_value_t& completion_value) /**< comp
     }
     case ECMA_COMPLETION_TYPE_EXIT:
     {
-      ecma_value_t v ((ecma_value_packed_t) completion_value);
+      const ecma_value_t& v = completion_value;
 
-      JERRY_ASSERT(ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
+      JERRY_ASSERT (v.is_simple ());
 
       break;
     }

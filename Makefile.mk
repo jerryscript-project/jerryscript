@@ -206,7 +206,8 @@ TARGET_CPU = $(strip $(if $(filter linux,$(TARGET_SYSTEM)), x64, \
 # Warnings
 CFLAGS_WARNINGS ?= -Wall -Wextra -Wpedantic -Wlogical-op -Winline \
                    -Wformat-nonliteral -Winit-self -Wstack-protector \
-                   -Wconversion -Wsign-conversion -Wformat-security
+                   -Wconversion -Wsign-conversion -Wformat-security \
+                   -Wno-attributes
 CFLAGS_WERROR ?= -Werror
 CFLAGS_WFATAL_ERRORS ?= -Wfatal-errors
 

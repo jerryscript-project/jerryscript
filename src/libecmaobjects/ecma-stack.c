@@ -207,7 +207,7 @@ ecma_stack_push_value (ecma_stack_frame_t *frame_p, /**< ecma-stack frame */
 /**
  * Get top value from ecma-stack
  */
-inline void __attribute_always_inline__
+void __attribute_always_inline__
 ecma_stack_top_value (ecma_value_t &ret, /**< out: ecma-value */
                       ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {

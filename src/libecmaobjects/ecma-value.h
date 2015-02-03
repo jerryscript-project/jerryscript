@@ -15,7 +15,6 @@
 
 #include "ecma-compressed-pointers.h"
 #include "ecma-globals.h"
-#include "ecma-managed-pointer.h"
 #include "jrt-bit-fields.h"
 
 #ifndef ECMA_VALUE_H
@@ -113,7 +112,7 @@ class ecma_value_t
                       || _type == ECMA_TYPE_STRING
                       || _type == ECMA_TYPE_OBJECT);
 
-        _value_p.pack_to (value);
+        ECMA_SET_NON_NULL_POINTER (value, _value_p);
       }
 
       return pack (_type, value);
@@ -179,7 +178,7 @@ class ecma_value_t
                       || _type == ECMA_TYPE_STRING
                       || _type == ECMA_TYPE_OBJECT);
 
-        _value_p.unpack_from (value);
+        _value_p = ECMA_GET_NON_NULL_POINTER (void, value);
       }
 
       return *this;
@@ -325,7 +324,7 @@ class ecma_value_t
     union
     {
       ecma_simple_value_t _simple_value;
-      ecma_generic_ptr_t _value_p;
+      void* _value_p;
     };
 };
 

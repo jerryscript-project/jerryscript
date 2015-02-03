@@ -24,9 +24,30 @@
 #define JERRY_ECMA_GLOBALS_H
 
 #include "config.h"
-#include "ecma-managed-pointer.h"
 #include "globals.h"
 #include "mem-allocator.h"
+
+/** \addtogroup compressedpointer Compressed pointer
+ * @{
+ */
+
+/**
+ * Ecma-pointer field is used to calculate ecma-value's address.
+ *
+ * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
+ * The offset is shifted right by MEM_ALIGNMENT_LOG.
+ * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
+ */
+#define ECMA_POINTER_FIELD_WIDTH MEM_COMPRESSED_POINTER_WIDTH
+
+/**
+ * The NULL value for compressed pointers
+ */
+#define ECMA_NULL_POINTER MEM_COMPRESSED_POINTER_NULL
+
+/**
+ * @}
+ */
 
 /**
  * Type of ecma-value
@@ -747,13 +768,6 @@ typedef struct
     uint32_t common_field;
   } u;
 } ecma_string_t;
-
-/**
- * Managed pointers definition
- */
-typedef ecma_pointer_t<ecma_number_t> ecma_number_ptr_t;
-typedef ecma_pointer_t<ecma_string_t> ecma_string_ptr_t;
-typedef ecma_pointer_t<ecma_object_t> ecma_object_ptr_t;
 
 /**
  * @}

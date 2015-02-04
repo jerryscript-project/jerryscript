@@ -31,7 +31,7 @@
  * @return pointer to the collection's header
  */
 ecma_collection_header_t*
-ecma_new_values_collection (ecma_value_t values_buffer[], /**< ecma-values */
+ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values */
                             ecma_length_t values_number, /**< number of ecma-values */
                             bool do_ref_if_object) /**< if the value is object value,
                                                         increase reference counter of the object */

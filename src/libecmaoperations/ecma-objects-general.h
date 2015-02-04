@@ -27,43 +27,43 @@
  * @{
  */
 
-extern ecma_object_t*
-ecma_op_create_object_object_noarg (void);
+extern void
+ecma_op_create_object_object_noarg (ecma_object_ptr_t &ret_val);
 extern void
 ecma_op_create_object_object_arg (ecma_completion_value_t &ret_value,
                                   const ecma_value_t& value);
 
 extern void
 ecma_op_general_object_get (ecma_completion_value_t &ret_value,
-                            ecma_object_t *obj_p,
+                            const ecma_object_ptr_t& obj_p,
                             ecma_string_t *property_name_p);
 extern ecma_property_t*
-ecma_op_general_object_get_own_property (ecma_object_t *obj_p,
+ecma_op_general_object_get_own_property (const ecma_object_ptr_t& obj_p,
                                          ecma_string_t *property_name_p);
 extern ecma_property_t*
-ecma_op_general_object_get_property (ecma_object_t *obj_p,
+ecma_op_general_object_get_property (const ecma_object_ptr_t& obj_p,
                                      ecma_string_t *property_name_p);
 extern void
 ecma_op_general_object_put (ecma_completion_value_t &ret_value,
-                            ecma_object_t *obj_p,
+                            const ecma_object_ptr_t& obj_p,
                             ecma_string_t *property_name_p,
                             const ecma_value_t& value,
                             bool is_throw);
 extern bool
-ecma_op_general_object_can_put (ecma_object_t *obj_p,
+ecma_op_general_object_can_put (const ecma_object_ptr_t& obj_p,
                                 ecma_string_t *property_name_p);
 extern void
 ecma_op_general_object_delete (ecma_completion_value_t &ret_value,
-                               ecma_object_t *obj_p,
+                               const ecma_object_ptr_t& obj_p,
                                ecma_string_t *property_name_p,
                                bool is_throw);
 extern void
 ecma_op_general_object_default_value (ecma_completion_value_t &ret_value,
-                                      ecma_object_t *obj_p,
+                                      const ecma_object_ptr_t& obj_p,
                                       ecma_preferred_type_hint_t hint);
 extern void
 ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value,
-                                            ecma_object_t *obj_p,
+                                            const ecma_object_ptr_t& obj_p,
                                             ecma_string_t *property_name_p,
                                             const ecma_property_descriptor_t* property_desc_p,
                                             bool is_throw);

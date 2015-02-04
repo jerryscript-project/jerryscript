@@ -60,11 +60,14 @@ ecma_builtin_error_prototype_object_to_string (ecma_completion_value_t &ret_valu
   // 2.
   if (!ecma_is_value_object (this_arg))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, this_arg);
     ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
 
     ECMA_TRY_CATCH (ret_value, ecma_op_object_get, name_get_ret_value, obj_p, name_magic_string_p);

@@ -84,14 +84,15 @@ ecma_op_create_string_object (ecma_completion_value_t &ret_value, /**< out: comp
   }
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_STRING_PROTOTYPE);
+  ecma_object_ptr_t prototype_obj_p;
+  ecma_builtin_get (prototype_obj_p, ECMA_BUILTIN_ID_STRING_PROTOTYPE);
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_ptr_t prototype_obj_p;
+  ecma_builtin_get (prototype_obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             true,
-                                             ECMA_OBJECT_TYPE_STRING);
+  ecma_object_ptr_t obj_p;
+  ecma_create_object (obj_p, prototype_obj_p, true, ECMA_OBJECT_TYPE_STRING);
   ecma_deref_object (prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
@@ -125,7 +126,7 @@ ecma_op_create_string_object (ecma_completion_value_t &ret_value, /**< out: comp
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_property_t*
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array object */
+ecma_op_string_object_get_own_property (const ecma_object_ptr_t& obj_p, /**< the array object */
                                         ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);

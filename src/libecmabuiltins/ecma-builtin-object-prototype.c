@@ -80,8 +80,9 @@ ecma_builtin_object_prototype_object_to_string (ecma_completion_value_t &ret_val
     ecma_get_completion_value_value (obj_this_value, this_to_obj_completion);
 
     JERRY_ASSERT (ecma_is_value_object (obj_this_value));
-    ecma_property_t *class_prop_p = ecma_get_internal_property (ecma_get_object_from_value (obj_this_value),
-                                                                ECMA_INTERNAL_PROPERTY_CLASS);
+    ecma_object_ptr_t obj_this_p;
+    ecma_get_object_from_value (obj_this_p, obj_this_value);
+    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_this_p, ECMA_INTERNAL_PROPERTY_CLASS);
     type_string = (ecma_magic_string_id_t) class_prop_p->u.internal_property.value;
 
     ecma_free_completion_value (this_to_obj_completion);

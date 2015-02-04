@@ -99,7 +99,7 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
  *         NULL - otherwise.
  */
 ecma_property_t*
-TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *obj_p, /**< object */
+TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_object_ptr_t& obj_p, /**< object */
                                                                    ecma_string_t *prop_name_p) /**< property's name */
 {
 #define OBJECT_ID(builtin_id) const ecma_builtin_id_t builtin_object_id = builtin_id;
@@ -170,9 +170,11 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
   {
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) case name: \
     { \
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_object_id, \
-                                                                                 id, \
-                                                                                 length_prop_value); \
+      ecma_object_ptr_t func_obj_p; \
+      ecma_builtin_make_function_object_for_routine (func_obj_p, \
+                                                     builtin_object_id, \
+                                                     id, \
+                                                     length_prop_value); \
       \
       writable = ECMA_PROPERTY_WRITABLE; \
       enumerable = ECMA_PROPERTY_NOT_ENUMERABLE; \
@@ -184,7 +186,9 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     }
 #define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      value = obj_getter; \
+      ecma_object_ptr_t object_out_p; \
+      obj_getter; \
+      value = object_out_p; \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
       configurable = prop_configurable; \
@@ -229,7 +233,8 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
 #define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
       /* The object throws CompactProfileError upon invocation */ \
-      ecma_object_t *get_set_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
+      ecma_object_ptr_t get_set_p; \
+      ecma_builtin_get (get_set_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
       ecma_property_t *compact_profile_thrower_property_p = ecma_create_named_accessor_property (obj_p, \
                                                                                                  prop_name_p, \
                                                                                                  get_set_p, \

@@ -36,25 +36,24 @@
  *          pointer to lexical environment - reference's base,
  *         else - NULL.
  */
-ecma_object_t*
-ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
+void
+ecma_op_resolve_reference_base (ecma_object_ptr_t &lex_env_iter_p, /**< out: object pointer */
+                                const ecma_object_ptr_t &lex_env_p, /**< starting lexical environment */
                                 ecma_string_t *name_p) /**< identifier's name */
 {
-  JERRY_ASSERT(lex_env_p != NULL);
+  JERRY_ASSERT(lex_env_p.is_not_null ());
 
-  ecma_object_t *lex_env_iter_p = lex_env_p;
+  lex_env_iter_p = lex_env_p;
 
-  while (lex_env_iter_p != NULL)
+  while (lex_env_iter_p.is_not_null ())
   {
     if (ecma_op_has_binding (lex_env_iter_p, name_p))
     {
-      return lex_env_iter_p;
+      return;
     }
 
-    lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
+    ecma_get_lex_env_outer_reference (lex_env_iter_p, lex_env_iter_p);
   }
-
-  return NULL;
 } /* ecma_op_resolve_reference_base */
 
 /**
@@ -65,15 +64,16 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
  */
 void
 ecma_op_get_identifier_reference (ecma_reference_t &ret, /**< out: reference */
-                                  ecma_object_t *lex_env_p, /**< lexical environment */
+                                  const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
                                   ecma_string_t *name_p, /**< identifier's name */
                                   bool is_strict) /**< strict reference flag */
 {
-  JERRY_ASSERT(lex_env_p != NULL);
+  JERRY_ASSERT(lex_env_p.is_not_null ());
 
-  ecma_object_t *base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, name_p);
+  ecma_object_ptr_t base_lex_env_p;
+  ecma_op_resolve_reference_base (base_lex_env_p, lex_env_p, name_p);
 
-  if (base_lex_env_p != NULL)
+  if (base_lex_env_p.is_not_null ())
   {
     ecma_make_reference (ret,
                          ecma_value_t (base_lex_env_p),

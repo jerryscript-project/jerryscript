@@ -41,21 +41,22 @@ extern void ecma_finalize_builtins (void);
 
 extern void
 ecma_builtin_dispatch_call (ecma_completion_value_t &ret_value,
-                            ecma_object_t *obj_p,
+                            const ecma_object_ptr_t& obj_p,
                             const ecma_value_t& this_arg,
                             const ecma_value_t *arguments_list_p,
                             ecma_length_t arguments_list_len);
 extern void
 ecma_builtin_dispatch_construct (ecma_completion_value_t &ret_value,
-                                 ecma_object_t *obj_p,
+                                 const ecma_object_ptr_t& obj_p,
                                  const ecma_value_t *arguments_list_p,
                                  ecma_length_t arguments_list_len);
 extern ecma_property_t*
-ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p,
+ecma_builtin_try_to_instantiate_property (const ecma_object_ptr_t& object_p,
                                           ecma_string_t *string_p);
 extern bool
-ecma_builtin_is (ecma_object_t *obj_p,
+ecma_builtin_is (const ecma_object_ptr_t& obj_p,
                  ecma_builtin_id_t builtin_id);
-extern ecma_object_t*
-ecma_builtin_get (ecma_builtin_id_t builtin_id);
+extern void
+ecma_builtin_get (ecma_object_ptr_t &ret_val,
+                  ecma_builtin_id_t builtin_id);
 #endif /* !ECMA_BUILTINS_H */

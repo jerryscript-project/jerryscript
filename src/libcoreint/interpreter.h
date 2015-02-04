@@ -28,7 +28,7 @@ void run_int_loop (ecma_completion_value_t &ret_value,
 void run_int_from_pos (ecma_completion_value_t &ret_value,
                        opcode_counter_t start_pos,
                        const ecma_value_t& this_binding_value,
-                       ecma_object_t *lex_env_p,
+                       const ecma_object_ptr_t& lex_env_p,
                        bool is_strict,
                        bool is_eval_code);
 

@@ -55,7 +55,9 @@ ecma_builtin_compact_profile_error_dispatch_call (ecma_completion_value_t &ret_v
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_make_throw_obj_completion_value (ret_value, ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+  ecma_object_ptr_t cp_error_obj_p;
+  ecma_builtin_get (cp_error_obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+  ecma_make_throw_obj_completion_value (ret_value, cp_error_obj_p);
 } /* ecma_builtin_compact_profile_error_dispatch_call */
 
 /**
@@ -70,7 +72,9 @@ ecma_builtin_compact_profile_error_dispatch_construct (ecma_completion_value_t &
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_make_throw_obj_completion_value (ret_value, ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
+  ecma_object_ptr_t cp_error_obj_p;
+  ecma_builtin_get (cp_error_obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+  ecma_make_throw_obj_completion_value (ret_value, cp_error_obj_p);
 } /* ecma_builtin_compact_profile_error_dispatch_construct */
 
 /**

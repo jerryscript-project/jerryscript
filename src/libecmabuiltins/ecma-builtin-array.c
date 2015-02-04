@@ -62,7 +62,8 @@ ecma_builtin_array_object_is_array (ecma_completion_value_t &ret_value, /**< out
 
   if (ecma_is_value_object (arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
                                                                 ECMA_INTERNAL_PROPERTY_CLASS);

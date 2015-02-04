@@ -758,13 +758,41 @@ typedef struct
 class ecma_pointer_t
 {
   public:
+    /**
+     * Argument specifying should the pointer
+     * be linked into managed pointers list
+     */
+    enum class is_linked_arg
+    {
+      linked, /**< perform link */
+      not_linked /**< do not perform link */
+    };
+
     /* Constructors */
     __attribute_always_inline__
-    ecma_pointer_t () : _ptr (NULL) {}
+    ecma_pointer_t () : ecma_pointer_t (is_linked_arg::linked) { }
+
+    __attribute_always_inline__
+    ecma_pointer_t (is_linked_arg is_linked) /**< should the pointer
+                                              *   be linked into managed
+                                              *   pointers list? */
+      : _ptr (NULL)
+    {
+      if (is_linked == is_linked_arg::linked)
+      {
+        // TODO
+      }
+    }
 
     ecma_pointer_t (const ecma_pointer_t&) = delete;
     ecma_pointer_t (ecma_pointer_t&) = delete;
     ecma_pointer_t (ecma_pointer_t&&) = delete;
+
+    /* Destructor */
+    ~ecma_pointer_t ()
+    {
+      // TODO
+    }
 
     /* Getter */
     template<typename T>
@@ -772,22 +800,6 @@ class ecma_pointer_t
     explicit operator T* () const
     {
       return static_cast<T*> (_ptr);
-    }
-
-    /* Member access */
-    template<typename T>
-    __attribute_always_inline__
-    T* operator -> () const
-    {
-      return (T*) _ptr;
-    }
-
-    /* Dereference */
-    template<typename T>
-    __attribute_always_inline__
-    T operator * () const
-    {
-      return *static_cast<T*> (_ptr);
     }
 
     /* Assignment operators */
@@ -819,40 +831,84 @@ class ecma_pointer_t
       return *this;
     }
 
-    ecma_pointer_t& operator = (ecma_pointer_t &) = delete;
+    __attribute_always_inline__
+    ecma_pointer_t& operator = (ecma_pointer_t& ptr) /**< managed pointer
+                                                      *   to take value from */
+    {
+      const ecma_pointer_t &ptr_const = ptr;
+      *this = ptr_const;
+
+      return *this;
+    }
+
     ecma_pointer_t& operator = (ecma_pointer_t &&) = delete;
+
+    /* Comparison */
+    __attribute_always_inline__
+    bool operator == (const ecma_pointer_t &ptr) const /**< raw pointer */
+    {
+      return (_ptr == ptr._ptr);
+    }
+
+    __attribute_always_inline__
+    bool is_null (void) const
+    {
+      return (_ptr == NULL);
+    }
+
+    __attribute_always_inline__
+    bool is_not_null (void) const
+    {
+      return (_ptr != NULL);
+    }
 
     /* Packing to compressed pointer */
     __attribute_always_inline__
-    void pack_to (uintptr_t& compressed_pointer) const /**< reference to compressed pointer */
+    void pack_to (uintptr_t& compressed_pointer, /**< reference to compressed pointer */
+                  bool may_be_null = false) const /**< flag indicating the pointer can be NULL */
     {
-      ECMA_SET_NON_NULL_POINTER (compressed_pointer, _ptr);
+      void *ptr = _ptr;
+
+      if (may_be_null)
+      {
+        ECMA_SET_POINTER (compressed_pointer, ptr);
+      }
+      else
+      {
+        ECMA_SET_NON_NULL_POINTER (compressed_pointer, ptr);
+      }
     }
 
     /* Unpacking from compressed pointer */
     __attribute_always_inline__
-    void unpack_from (uintptr_t compressed_pointer) /**< compressed pointer */
+    void unpack_from (uintptr_t compressed_pointer, /**< compressed pointer */
+                      bool may_be_null = false) /**< flag indicating the pointer can be NULL */
     {
-      _ptr = ECMA_GET_NON_NULL_POINTER (void, compressed_pointer);
+      if (may_be_null)
+      {
+        _ptr = ECMA_GET_POINTER (void, compressed_pointer);
+      }
+      else
+      {
+        _ptr = ECMA_GET_NON_NULL_POINTER (void, compressed_pointer);
+      }
     }
-
   protected: /* accessible to ecma_pointer_t */
     void *_ptr; /* pointer storage */
 };
 
-#define ECMA_DECLARE_POINTER_OPERATORS_FOR(type) \
-  template ecma_pointer_t::operator type* () const; \
-  template type* ecma_pointer_t::operator -> () const; \
-  template type ecma_pointer_t::operator * () const; \
-  template ecma_pointer_t& ecma_pointer_t::operator = (type *); \
-  template ecma_pointer_t& ecma_pointer_t::operator = (const type &);
+#define ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR(type_name) \
+  typedef ecma_pointer_t ecma_ ## type_name ## _ptr_t; \
+  template ecma_pointer_t::operator ecma_ ## type_name ## _t * () const; \
+  template ecma_pointer_t& ecma_pointer_t::operator = (ecma_ ## type_name ## _t *); \
+  template ecma_pointer_t& ecma_pointer_t::operator = (const ecma_ ## type_name ## _t &);
 
 /**
  * ECMA managed pointers' operators explicit instantiation
  */
-ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_number_t)
-ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_string_t)
-ECMA_DECLARE_POINTER_OPERATORS_FOR (ecma_object_t)
+ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (number)
+ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (string)
+ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (object)
 
 /**
  * @}

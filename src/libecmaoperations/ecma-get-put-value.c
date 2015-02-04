@@ -45,21 +45,24 @@
  */
 void
 ecma_op_get_value_lex_env_base (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
+                                const ecma_object_ptr_t& ref_base_lex_env_p, /**< reference's base
+                                                                              *   (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict) /**< flag indicating strict mode */
 {
-  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
+  const bool is_unresolvable_reference = (ref_base_lex_env_p.is_null ());
 
   // 3.
   if (unlikely (is_unresolvable_reference))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_REFERENCE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
     return;
   }
 
   // 5.
-  JERRY_ASSERT(ref_base_lex_env_p != NULL
+  JERRY_ASSERT(ref_base_lex_env_p.is_not_null ()
                && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
@@ -86,8 +89,14 @@ ecma_op_get_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
   const bool has_primitive_base = (ecma_is_value_boolean (base)
                                    || ecma_is_value_number (base)
                                    || ecma_is_value_string (base));
-  const bool has_object_base = (ecma_is_value_object (base)
-                                && !(ecma_is_lexical_environment (ecma_get_object_from_value (base))));
+  bool has_object_base = false;
+  if (ecma_is_value_object (base))
+  {
+    ecma_object_ptr_t base_obj_p;
+    ecma_get_object_from_value (base_obj_p, base);
+
+    has_object_base = !ecma_is_lexical_environment (base_obj_p);
+  }
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -98,8 +107,9 @@ ecma_op_get_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
   {
     // 4.b case 1
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (base);
-    JERRY_ASSERT(obj_p != NULL
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, base);
+    JERRY_ASSERT(obj_p.is_not_null ()
                  && !ecma_is_lexical_environment (obj_p));
 
     ecma_op_object_get (ret_value, obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
@@ -110,8 +120,9 @@ ecma_op_get_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
     // 4.b case 2
     ECMA_TRY_CATCH (ret_value, ecma_op_to_object, obj_base, base);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
-    JERRY_ASSERT (obj_p != NULL
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, obj_base);
+    JERRY_ASSERT (obj_p.is_not_null ()
                   && !ecma_is_lexical_environment (obj_p));
 
     ecma_op_object_get (ret_value, obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
@@ -131,12 +142,13 @@ ecma_op_get_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
  */
 void
 ecma_op_put_value_lex_env_base (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
+                                const ecma_object_ptr_t& ref_base_lex_env_p, /**< reference's base
+                                                                              *   (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict, /**< flag indicating strict mode */
                                 const ecma_value_t& value) /**< ECMA-value */
 {
-  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
+  const bool is_unresolvable_reference = (ref_base_lex_env_p.is_null ());
 
   // 3.
   if (unlikely (is_unresolvable_reference))
@@ -144,13 +156,16 @@ ecma_op_put_value_lex_env_base (ecma_completion_value_t &ret_value, /**< out: co
     // 3.a.
     if (is_strict)
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_REFERENCE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
       return;
     }
     else
     {
       // 3.b.
-      ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+      ecma_object_ptr_t global_object_p;
+      ecma_builtin_get (global_object_p, ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_completion_value_t completion;
       ecma_op_object_put (completion,
@@ -170,7 +185,7 @@ ecma_op_put_value_lex_env_base (ecma_completion_value_t &ret_value, /**< out: co
   }
 
   // 5.
-  JERRY_ASSERT(ref_base_lex_env_p != NULL
+  JERRY_ASSERT(ref_base_lex_env_p.is_not_null ()
                && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
@@ -193,7 +208,9 @@ ecma_reject_put (ecma_completion_value_t &ret_value, /**< out: completion value 
 {
   if (is_throw)
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -219,8 +236,14 @@ ecma_op_put_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
   const bool has_primitive_base = (ecma_is_value_boolean (base)
                                    || ecma_is_value_number (base)
                                    || ecma_is_value_string (base));
-  const bool has_object_base = (ecma_is_value_object (base)
-                                && !(ecma_is_lexical_environment (ecma_get_object_from_value (base))));
+  bool has_object_base = false;
+  if (ecma_is_value_object (base))
+  {
+    ecma_object_ptr_t base_obj_p;
+    ecma_get_object_from_value (base_obj_p, base);
+
+    has_object_base = !ecma_is_lexical_environment (base_obj_p);
+  }
   const bool is_property_reference = has_primitive_base || has_object_base;
 
   JERRY_ASSERT (!is_unresolvable_reference);
@@ -231,8 +254,9 @@ ecma_op_put_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
   {
     // 4.b case 1
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (base);
-    JERRY_ASSERT (obj_p != NULL
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, base);
+    JERRY_ASSERT (obj_p.is_not_null ()
                   && !ecma_is_lexical_environment (obj_p));
 
     ECMA_TRY_CATCH (ret_value, ecma_op_object_put, put_ret_value, obj_p,
@@ -251,8 +275,9 @@ ecma_op_put_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
     // sub_1.
     ECMA_TRY_CATCH (ret_value, ecma_op_to_object, obj_base, base);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
-    JERRY_ASSERT (obj_p != NULL
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, obj_base);
+    JERRY_ASSERT (obj_p.is_not_null ()
                   && !ecma_is_lexical_environment (obj_p));
 
     ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
@@ -284,9 +309,9 @@ ecma_op_put_value_object_base (ecma_completion_value_t &ret_value, /**< out: com
         // sub_6.
         JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-        ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t,
-                                                            prop_p->u.named_accessor_property.set_p);
-        JERRY_ASSERT (setter_p != NULL);
+        ecma_object_ptr_t setter_p;
+        setter_p.unpack_from (prop_p->u.named_accessor_property.set_p);
+        JERRY_ASSERT (setter_p.is_not_null ());
 
         ECMA_TRY_CATCH (ret_value, ecma_op_function_call, call_ret, setter_p, base, &value, 1);
 

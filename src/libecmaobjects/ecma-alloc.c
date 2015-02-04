@@ -74,13 +74,40 @@ JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
 }
 
 /**
+ * Template of an allocation routine.
+ */
+#define ALLOC_MANAGED_PTR(ecma_type) void \
+  ecma_alloc_ ## ecma_type (ecma_ ## ecma_type ## _ptr_t &ret_ ## ecma_type ## _p) \
+{ \
+  ret_ ## ecma_type ## _p = (ecma_ ## ecma_type ## _t *) mem_pools_alloc (); \
+  \
+  JERRY_ASSERT (ret_ ## ecma_type ## _p.is_not_null ()); \
+}
+
+/**
+ * Deallocation routine template
+ */
+#define DEALLOC_MANAGED_PTR(ecma_type) void \
+  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _ptr_t& ecma_type ## _p) \
+{ \
+  ecma_ ## ecma_type ## _t* ecma_type ## _tmp_p = (ecma_ ## ecma_type ## _t*) ecma_type ## _p; \
+  ecma_type ## _p = (ecma_ ## ecma_type ## _t *) NULL; \
+  \
+  mem_pools_free ((uint8_t*) ecma_type ## _tmp_p); \
+}
+
+/**
  * Declaration of alloc/free routine for specified ecma-type.
  */
 #define DECLARE_ROUTINES_FOR(ecma_type) \
   ALLOC(ecma_type) \
   DEALLOC(ecma_type)
+#define DECLARE_MANAGED_PTR_ROUTINES_FOR(ecma_type) \
+  ALLOC_MANAGED_PTR(ecma_type) \
+  DEALLOC_MANAGED_PTR(ecma_type)
 
-DECLARE_ROUTINES_FOR (object)
+DECLARE_MANAGED_PTR_ROUTINES_FOR (object)
+
 DECLARE_ROUTINES_FOR (property)
 DECLARE_ROUTINES_FOR (number)
 DECLARE_ROUTINES_FOR (collection_header)

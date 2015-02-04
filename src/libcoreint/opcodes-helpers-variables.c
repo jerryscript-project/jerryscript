@@ -22,8 +22,8 @@
  * but has no ECMA-defined name.
  */
 static void
-do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of ECMA-reference
-                                                                        (lexical environment) */
+do_strict_eval_arguments_check (const ecma_object_ptr_t &ref_base_lex_env_p, /**< base of ECMA-reference
+                                                                                  (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict) /**< flag indicating strict mode */
 {
@@ -31,7 +31,7 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
 
   if (is_strict)
   {
-    if (ref_base_lex_env_p != NULL)
+    if (ref_base_lex_env_p.is_not_null ())
     {
       JERRY_ASSERT (ecma_is_lexical_environment (ref_base_lex_env_p));
 
@@ -99,8 +99,8 @@ get_variable_value (ecma_completion_value_t &ret_value, /**< out: completion val
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
     ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
 
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
-                                                                        &var_name_string);
+    ecma_object_ptr_t ref_base_lex_env_p;
+    ecma_op_resolve_reference_base (ref_base_lex_env_p, *int_data->lex_env_p, &var_name_string);
 
     if (do_eval_or_arguments_check)
     {
@@ -169,8 +169,8 @@ set_variable_value (ecma_completion_value_t &ret_value, /**< out: completion val
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
     ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
 
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
-                                                                        &var_name_string);
+    ecma_object_ptr_t ref_base_lex_env_p;
+    ecma_op_resolve_reference_base (ref_base_lex_env_p, *int_data->lex_env_p, &var_name_string);
 
 #ifndef JERRY_NDEBUG
     do_strict_eval_arguments_check (ref_base_lex_env_p,

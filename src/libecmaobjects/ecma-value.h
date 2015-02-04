@@ -80,12 +80,18 @@ class ecma_value_t
     }
 
     __attribute_always_inline__
-    explicit ecma_value_t (ecma_object_t *obj_p)
+    explicit ecma_value_t (ecma_object_t* obj_p)
     {
       *this = obj_p;
     }
 
     __attribute_always_inline__
+    explicit ecma_value_t (const ecma_object_ptr_t& obj_p)
+    {
+      *this = obj_p;
+    }
+
+     __attribute_always_inline__
     explicit ecma_value_t (ecma_value_packed_t v)
     {
       *this = v;
@@ -151,9 +157,20 @@ class ecma_value_t
     }
 
     __attribute_always_inline__
-    ecma_value_t& operator = (ecma_object_t *obj_p)
+    ecma_value_t& operator = (ecma_object_t* obj_p)
     {
       JERRY_ASSERT(obj_p != NULL);
+
+      _type = ECMA_TYPE_OBJECT;
+      _value_p = obj_p;
+
+      return *this;
+    }
+
+    __attribute_always_inline__
+    ecma_value_t& operator = (const ecma_object_ptr_t& obj_p)
+    {
+      JERRY_ASSERT (obj_p.is_not_null ());
 
       _type = ECMA_TYPE_OBJECT;
       _value_p = obj_p;
@@ -491,7 +508,9 @@ ecma_is_value_object (const ecma_value_t& value) /**< ecma-value */
 
 extern ecma_number_t* __attribute_pure__ ecma_get_number_from_value (const ecma_value_t& value);
 extern ecma_string_t* __attribute_pure__ ecma_get_string_from_value (const ecma_value_t& value);
-extern ecma_object_t* __attribute_pure__ ecma_get_object_from_value (const ecma_value_t& value);
+extern void
+ecma_get_object_from_value (ecma_object_ptr_t &ret_val,
+                            const ecma_value_t& value);
 extern void ecma_copy_value (ecma_value_t &ret, const ecma_value_t& value, bool do_ref_if_object);
 extern void ecma_free_value (ecma_value_t& value, bool do_deref_if_object);
 
@@ -569,7 +588,9 @@ ecma_make_throw_completion_value (ecma_completion_value_t &ret_value, /**< out: 
 #endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_make_throw_completion_value */
 
-extern void ecma_make_throw_obj_completion_value (ecma_completion_value_t &ret_value, ecma_object_t *exception_p);
+extern void
+ecma_make_throw_obj_completion_value (ecma_completion_value_t &ret_value,
+                                      const ecma_object_ptr_t& exception_p);
 
 /**
  * Empty completion value constructor.

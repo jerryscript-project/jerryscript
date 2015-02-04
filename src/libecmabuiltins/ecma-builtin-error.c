@@ -61,15 +61,16 @@ ecma_builtin_error_dispatch_call (ecma_completion_value_t &ret_value, /**< out: 
     ECMA_TRY_CATCH (ret_value, ecma_op_to_string, msg_str_value, arguments_list_p[0]);
 
     ecma_string_t *message_string_p = ecma_get_string_from_value (msg_str_value);
-    ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_COMMON,
-                                                                              message_string_p);
+    ecma_object_ptr_t new_error_object_p;
+    ecma_new_standard_error_with_message (new_error_object_p, ECMA_ERROR_COMMON, message_string_p);
     ecma_make_normal_completion_value (ret_value, ecma_value_t (new_error_object_p));
 
     ECMA_FINALIZE (msg_str_value);
   }
   else
   {
-    ecma_object_t *new_error_object_p = ecma_new_standard_error (ECMA_ERROR_COMMON);
+    ecma_object_ptr_t new_error_object_p;
+    ecma_new_standard_error (new_error_object_p, ECMA_ERROR_COMMON);
 
     ecma_make_normal_completion_value (ret_value, ecma_value_t (new_error_object_p));
   }

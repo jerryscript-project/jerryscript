@@ -139,7 +139,9 @@ ecma_builtin_function_prototype_dispatch_construct (ecma_completion_value_t &ret
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_object_ptr_t exception_obj_p;
+  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
 } /* ecma_builtin_function_prototype_dispatch_construct */
 
 /**

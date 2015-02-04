@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_BOOLEAN)
 
 // 15.6.3.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
-              ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE),
+              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)

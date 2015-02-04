@@ -48,11 +48,13 @@ typedef struct ecma_reference_t
   unsigned int is_strict : 1;
 } ecma_reference_t;
 
-extern ecma_object_t* ecma_op_resolve_reference_base (ecma_object_t *lex_env_p,
-                                                      ecma_string_t *name_p);
+extern void
+ecma_op_resolve_reference_base (ecma_object_ptr_t &ret_val,
+                                const ecma_object_ptr_t& lex_env_p,
+                                ecma_string_t *name_p);
 
 extern void ecma_op_get_identifier_reference (ecma_reference_t &ret,
-                                              ecma_object_t *lex_env_p,
+                                              const ecma_object_ptr_t& lex_env_p,
                                               ecma_string_t *name_p,
                                               bool is_strict);
 extern void ecma_make_reference (ecma_reference_t &ret,

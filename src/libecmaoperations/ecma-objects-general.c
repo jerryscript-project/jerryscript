@@ -42,7 +42,9 @@ ecma_reject (ecma_completion_value_t &ret_value, /**< out: completion value */
 {
   if (is_throw)
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -57,20 +59,19 @@ ecma_reject (ecma_completion_value_t &ret_value, /**< out: completion value */
  *
  * @return pointer to newly created 'Object' object
  */
-ecma_object_t*
-ecma_op_create_object_object_noarg (void)
+void
+ecma_op_create_object_object_noarg (ecma_object_ptr_t &obj_p) /**< out: object pointer */
 {
-  ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_ptr_t object_prototype_p;
+  ecma_builtin_get (object_prototype_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
   // 3., 4., 6., 7.
-  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_create_object (obj_p, object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_deref_object (object_prototype_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_OBJECT_UL;
-
-  return obj_p;
 } /* ecma_op_create_object_object_noarg */
 
 /**
@@ -100,7 +101,8 @@ ecma_op_create_object_object_arg (ecma_completion_value_t &ret_value, /**< out: 
     JERRY_ASSERT (ecma_is_value_undefined (value)
                   || ecma_is_value_null (value));
 
-    ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+    ecma_object_ptr_t obj_p;
+    ecma_op_create_object_object_noarg (obj_p);
 
     ecma_make_normal_completion_value (ret_value, ecma_value_t (obj_p));
   }
@@ -118,10 +120,10 @@ ecma_op_create_object_object_arg (ecma_completion_value_t &ret_value, /**< out: 
  */
 void
 ecma_op_general_object_get (ecma_completion_value_t &ret_value, /**< out: completion value */
-                            ecma_object_t *obj_p, /**< the object */
+                            const ecma_object_ptr_t& obj_p, /**< the object */
                             ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -149,11 +151,11 @@ ecma_op_general_object_get (ecma_completion_value_t &ret_value, /**< out: comple
   else
   {
     // 4.
-    ecma_object_t *getter_p = ECMA_GET_POINTER (ecma_object_t,
-                                                prop_p->u.named_accessor_property.get_p);
+    ecma_object_ptr_t getter_p;
+    getter_p.unpack_from (prop_p->u.named_accessor_property.get_p, true);
 
     // 5.
-    if (getter_p == NULL)
+    if (getter_p.is_null ())
     {
       ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
     }
@@ -179,10 +181,10 @@ ecma_op_general_object_get (ecma_completion_value_t &ret_value, /**< out: comple
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t*
-ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_get_own_property (const ecma_object_ptr_t& obj_p, /**< the object */
                                          ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -200,10 +202,10 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t*
-ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_get_property (const ecma_object_ptr_t& obj_p, /**< the object */
                                      ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -217,10 +219,11 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
   }
 
   // 3.
-  ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
+  ecma_object_ptr_t prototype_p;
+  ecma_get_object_prototype (prototype_p, obj_p);
 
   // 4., 5.
-  if (prototype_p != NULL)
+  if (prototype_p.is_not_null ())
   {
     return ecma_op_object_get_property (prototype_p, property_name_p);
   }
@@ -242,12 +245,12 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
  */
 void
 ecma_op_general_object_put (ecma_completion_value_t &ret_value, /**< out: completion value */
-                            ecma_object_t *obj_p, /**< the object */
+                            const ecma_object_ptr_t& obj_p, /**< the object */
                             ecma_string_t *property_name_p, /**< property name */
                             const ecma_value_t& value, /**< ecma-value */
                             bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -257,7 +260,9 @@ ecma_op_general_object_put (ecma_completion_value_t &ret_value, /**< out: comple
     if (is_throw)
     {
       // a.
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
       return;
     }
     else
@@ -299,9 +304,9 @@ ecma_op_general_object_put (ecma_completion_value_t &ret_value, /**< out: comple
       && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     // a.
-    ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                         desc_p->u.named_accessor_property.set_p);
-    JERRY_ASSERT(setter_p != NULL);
+    ecma_object_ptr_t setter_p;
+    setter_p.unpack_from (desc_p->u.named_accessor_property.set_p);
+    JERRY_ASSERT(setter_p.is_not_null ());
 
     ECMA_TRY_CATCH (ret_value, ecma_op_function_call, call_ret, setter_p, ecma_value_t (obj_p), &value, 1);
 
@@ -349,10 +354,10 @@ ecma_op_general_object_put (ecma_completion_value_t &ret_value, /**< out: comple
  *         false - otherwise.
  */
 bool
-ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_can_put (const ecma_object_ptr_t& obj_p, /**< the object */
                                 ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -388,10 +393,11 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   }
 
   // 3.
-  ecma_object_t *proto_p = ecma_get_object_prototype (obj_p);
+  ecma_object_ptr_t proto_p;
+  ecma_get_object_prototype (proto_p, obj_p);
 
   // 4.
-  if (proto_p == NULL)
+  if (proto_p.is_null ())
   {
     return ecma_get_object_extensible (obj_p);
   }
@@ -408,11 +414,11 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   // 7.
   if (inherited_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
-    ecma_object_t *setter_p = ECMA_GET_POINTER (ecma_object_t,
-                                                inherited_p->u.named_accessor_property.set_p);
+    ecma_object_ptr_t setter_p;
+    setter_p.unpack_from (inherited_p->u.named_accessor_property.set_p, true);
 
     // a.
-    if (setter_p == NULL)
+    if (setter_p.is_null ())
     {
       return false;
     }
@@ -452,11 +458,11 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
  */
 void
 ecma_op_general_object_delete (ecma_completion_value_t &ret_value, /**< out: completion value */
-                               ecma_object_t *obj_p, /**< the object */
+                               const ecma_object_ptr_t& obj_p, /**< the object */
                                ecma_string_t *property_name_p, /**< property name */
                                bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -482,7 +488,9 @@ ecma_op_general_object_delete (ecma_completion_value_t &ret_value, /**< out: com
   else if (is_throw)
   {
     // 4.
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -503,10 +511,10 @@ ecma_op_general_object_delete (ecma_completion_value_t &ret_value, /**< out: com
  */
 void
 ecma_op_general_object_default_value (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                      ecma_object_t *obj_p, /**< the object */
+                                      const ecma_object_ptr_t& obj_p, /**< the object */
                                       ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
 
   if (hint == ECMA_PREFERRED_TYPE_NO)
@@ -559,7 +567,8 @@ ecma_op_general_object_default_value (ecma_completion_value_t &ret_value, /**< o
 
     if (ecma_op_is_callable (function_value_get))
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value_get);
+      ecma_object_ptr_t func_obj_p;
+      ecma_get_object_from_value (func_obj_p, function_value_get);
 
       ecma_op_function_call (call_completion,
                              func_obj_p,
@@ -590,7 +599,9 @@ ecma_op_general_object_default_value (ecma_completion_value_t &ret_value, /**< o
     ecma_free_completion_value (call_completion);
   }
 
-  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_object_ptr_t exception_obj_p;
+  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
 } /* ecma_op_general_object_default_value */
 
 /**
@@ -605,13 +616,13 @@ ecma_op_general_object_default_value (ecma_completion_value_t &ret_value, /**< o
  */
 void
 ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                            ecma_object_t *obj_p, /**< the object */
+                                            const ecma_object_ptr_t& obj_p, /**< the object */
                                             ecma_string_t *property_name_p, /**< property name */
                                             const ecma_property_descriptor_t* property_desc_p, /**< property
                                                                                                 *   descriptor */
                                             bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
+  JERRY_ASSERT(obj_p.is_not_null ()
                && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT(property_name_p != NULL);
 
@@ -658,10 +669,15 @@ ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value, 
       // b.
       JERRY_ASSERT(is_property_desc_accessor_descriptor);
 
+      ecma_object_ptr_t get_p, set_p;
+
+      get_p = property_desc_p->get_p;
+      set_p = property_desc_p->set_p;
+
       ecma_create_named_accessor_property (obj_p,
                                            property_name_p,
-                                           property_desc_p->get_p,
-                                           property_desc_p->set_p,
+                                           get_p,
+                                           set_p,
                                            property_desc_p->is_enumerable,
                                            property_desc_p->is_configurable);
 
@@ -784,11 +800,12 @@ ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value, 
     if (is_current_data_descriptor)
     {
       // b.
+      ecma_object_ptr_t null_pointer;
 
       current_p = ecma_create_named_accessor_property (obj_p,
                                                        property_name_p,
-                                                       NULL,
-                                                       NULL,
+                                                       null_pointer,
+                                                       null_pointer,
                                                        ecma_is_property_enumerable (current_p),
                                                        ecma_is_property_configurable (current_p));
     }
@@ -875,9 +892,13 @@ ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value, 
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ecma_object_t *get_p = property_desc_p->get_p;
+    ecma_object_ptr_t get_p;
+    get_p = property_desc_p->get_p;
 
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.get_p, get_p);
+    {
+      ecma_object_t *get_tmp_p = (ecma_object_t*) get_p;
+      ECMA_SET_POINTER(current_p->u.named_accessor_property.get_p, get_tmp_p);
+    }
     ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_p);
   }
 
@@ -885,9 +906,13 @@ ecma_op_general_object_define_own_property (ecma_completion_value_t &ret_value, 
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ecma_object_t *set_p = property_desc_p->set_p;
+    ecma_object_ptr_t set_p;
+    set_p = property_desc_p->set_p;
 
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.set_p, set_p);
+    {
+      ecma_object_t *set_tmp_p = (ecma_object_t*) set_p;
+      ECMA_SET_POINTER(current_p->u.named_accessor_property.set_p, set_tmp_p);
+    }
     ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, set_p);
   }
 

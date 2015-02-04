@@ -78,7 +78,7 @@ typedef struct
 {
   opcode_counter_t pos; /**< current opcode to execute */
   const ecma_value_t* this_binding_p; /**< this binding for current context */
-  ecma_object_t *lex_env_p; /**< current lexical environment */
+  const ecma_object_ptr_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   bool is_eval_code; /**< is current code executed with eval */
   idx_t min_reg_num; /**< minimum idx used for register identification */

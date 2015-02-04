@@ -97,7 +97,8 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_completion_value_t &ret_val
   }
   else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -119,7 +120,9 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_completion_value_t &ret_val
     }
   }
 
-  ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+  ecma_object_ptr_t exception_obj_p;
+  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

@@ -84,8 +84,9 @@ ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to i
   JERRY_ASSERT (entry_p != NULL);
   JERRY_ASSERT (entry_p->object_cp != ECMA_NULL_POINTER);
 
-  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                entry_p->object_cp));
+  ecma_object_ptr_t entry_object_p;
+  entry_object_p.unpack_from (entry_p->object_cp);
+  ecma_deref_object (entry_object_p);
 
   entry_p->object_cp = ECMA_NULL_POINTER;
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
@@ -122,11 +123,11 @@ ecma_lcache_invalidate_all (void)
  */
 static void
 ecma_lcache_invalidate_row_for_object_property_pair (uint32_t row_index, /**< index of the row */
-                                                     unsigned int object_cp, /**< compressed pointer
-                                                                              *   to an object */
-                                                     unsigned property_cp) /**< compressed pointer
-                                                                            *   to the object's
-                                                                            *   property */
+                                                     uintptr_t object_cp, /**< compressed pointer
+                                                                           *   to an object */
+                                                     uintptr_t property_cp) /**< compressed pointer
+                                                                             *   to the object's
+                                                                             *   property */
 {
   for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
   {
@@ -142,13 +143,13 @@ ecma_lcache_invalidate_row_for_object_property_pair (uint32_t row_index, /**< in
  * Insert an entry into LCache
  */
 void
-ecma_lcache_insert (ecma_object_t *object_p, /**< object */
+ecma_lcache_insert (const ecma_object_ptr_t& object_p, /**< object */
                     ecma_string_t *prop_name_p, /**< property's name */
                     ecma_property_t *prop_p) /**< pointer to associated property or NULL
                                               *   (NULL indicates that the object doesn't have property
                                               *   with the name specified) */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
   JERRY_ASSERT (prop_name_p != NULL);
 
   prop_name_p = ecma_copy_or_ref_ecma_string (prop_name_p);
@@ -169,9 +170,9 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
             && ecma_lcache_hash_table[hash_key][entry_index].prop_cp == prop_cp)
         {
 #ifndef JERRY_NDEBUG
-          ecma_object_t* obj_in_entry_p;
-          obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                      ecma_lcache_hash_table[hash_key][entry_index].object_cp);
+          ecma_object_ptr_t obj_in_entry_p;
+          obj_in_entry_p.unpack_from (ecma_lcache_hash_table[hash_key][entry_index].object_cp);
+
           JERRY_ASSERT (obj_in_entry_p == object_p);
 #endif /* !JERRY_NDEBUG */
           break;
@@ -207,7 +208,10 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   }
 
   ecma_ref_object (object_p);
-  ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].object_cp, object_p);
+  {
+    ecma_object_t *object_tmp_p = (ecma_object_t*) object_p;
+    ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].object_cp, object_tmp_p);
+  }
   ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_name_cp, prop_name_p);
   ECMA_SET_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_cp, prop_p);
 } /* ecma_lcache_insert */
@@ -219,7 +223,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
  *         false - probably, not registered.
  */
 bool __attribute_always_inline__
-ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
+ecma_lcache_lookup (const ecma_object_ptr_t& object_p, /**< object */
                     const ecma_string_t *prop_name_p, /**< property's name */
                     ecma_property_t **prop_p_p) /**< out: if return value is true,
                                                  *         then here will be pointer to property,
@@ -230,8 +234,8 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
 {
   ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
-  unsigned int object_cp;
-  ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
+  uintptr_t object_cp;
+  object_p.pack_to (object_cp);
 
   for (uint32_t i = 0; i < ECMA_LCACHE_HASH_ROW_LENGTH; i++)
   {
@@ -269,11 +273,11 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
  *      from property's description.
  */
 void
-ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
+ecma_lcache_invalidate (const ecma_object_ptr_t& object_p, /**< object */
                         ecma_string_t *prop_name_arg_p, /**< property's name (See also: Note) */
                         ecma_property_t *prop_p) /**< property (See also: Note) */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
   JERRY_ASSERT (prop_p != NULL || prop_name_arg_p != NULL);
 
   ecma_string_t *prop_name_p = NULL;
@@ -308,8 +312,8 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
     prop_name_p = prop_name_arg_p;
   }
 
-  unsigned int object_cp, prop_cp;
-  ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
+  uintptr_t object_cp, prop_cp;
+  object_p.pack_to (object_cp);
   ECMA_SET_POINTER (prop_cp, prop_p);
 
   ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);

@@ -367,9 +367,11 @@ run_int (void)
 
   ecma_init ();
 
-  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+  ecma_object_ptr_t glob_obj_p;
+  ecma_builtin_get (glob_obj_p, ECMA_BUILTIN_ID_GLOBAL);
 
-  ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
+  ecma_object_ptr_t lex_env_p;
+  ecma_op_create_global_environment (lex_env_p, glob_obj_p);
   ecma_value_t this_binding_value (glob_obj_p);
 
   ecma_completion_value_t run_completion;
@@ -452,7 +454,7 @@ void
 run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion value */
                   opcode_counter_t start_pos, /**< position to start interpretation at */
                   const ecma_value_t& this_binding_value, /**< value of 'this' binding */
-                  ecma_object_t *lex_env_p, /**< starting lexical environment */
+                  const ecma_object_ptr_t& lex_env_p, /**< starting lexical environment */
                   bool is_strict, /**< is execution mode strict? */
                   bool is_eval_code) /**< is current code executed with eval? */
 {
@@ -470,7 +472,7 @@ run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion valu
   int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
   int_data.this_binding_p = &this_binding_value;
-  int_data.lex_env_p = lex_env_p;
+  int_data.lex_env_p = &lex_env_p;
   int_data.is_strict = is_strict;
   int_data.is_eval_code = is_eval_code;
   int_data.min_reg_num = min_reg_num;

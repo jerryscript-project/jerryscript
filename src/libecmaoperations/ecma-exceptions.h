@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,9 +44,13 @@ typedef enum
   ECMA_ERROR_URI /**< URIError */
 } ecma_standard_error_t;
 
-extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
-extern ecma_object_t* ecma_new_standard_error_with_message (ecma_standard_error_t error_type,
-                                                            ecma_string_t *message_string_p);
+extern void
+ecma_new_standard_error (ecma_object_ptr_t &ret_val,
+                         ecma_standard_error_t error_type);
+extern void
+ecma_new_standard_error_with_message (ecma_object_ptr_t &ret_val,
+                                      ecma_standard_error_t error_type,
+                                      ecma_string_t *message_string_p);
 
 /**
  * @}

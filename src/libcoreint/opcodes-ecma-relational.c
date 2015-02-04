@@ -224,11 +224,14 @@ opfunc_instanceof (ecma_completion_value_t &ret_value, /**< out: completion valu
 
   if (!ecma_is_value_object (right_value))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
+    ecma_object_ptr_t right_value_obj_p;
+    ecma_get_object_from_value (right_value_obj_p, right_value);
 
     ECMA_TRY_CATCH (ret_value, ecma_op_object_has_instance, is_instance_of, right_value_obj_p, left_value);
 
@@ -265,7 +268,9 @@ opfunc_in (ecma_completion_value_t &ret_value, /**< out: completion value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -273,7 +278,8 @@ opfunc_in (ecma_completion_value_t &ret_value, /**< out: completion value */
 
     ecma_simple_value_t is_in = ECMA_SIMPLE_VALUE_UNDEFINED;
     ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (str_left_value);
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
+    ecma_object_ptr_t right_value_obj_p;
+    ecma_get_object_from_value (right_value_obj_p, right_value);
 
     if (ecma_op_object_get_property (right_value_obj_p, left_value_prop_name_p) != NULL)
     {

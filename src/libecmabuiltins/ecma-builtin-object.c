@@ -80,7 +80,8 @@ ecma_builtin_object_dispatch_construct (ecma_completion_value_t &ret_value, /**<
 
   if (arguments_list_len == 0)
   {
-    ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+    ecma_object_ptr_t obj_p;
+    ecma_op_create_object_object_noarg (obj_p);
 
     ecma_make_normal_completion_value (ret_value, ecma_value_t (obj_p));
   }
@@ -329,11 +330,14 @@ ecma_builtin_object_object_define_property (ecma_completion_value_t &ret_value, 
 {
   if (!ecma_is_value_object (arg1))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, arg1);
 
     ECMA_TRY_CATCH (ret_value, ecma_op_to_string, name_str_value, arg2);
 

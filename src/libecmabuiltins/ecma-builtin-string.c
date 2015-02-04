@@ -77,7 +77,9 @@ ecma_builtin_string_object_from_char_code (ecma_completion_value_t &ret_value, /
 #if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
     if ((uint16_char_code >> JERRY_BITSINBYTE) != 0)
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
     }
     else
     {

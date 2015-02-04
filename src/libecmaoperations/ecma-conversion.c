@@ -57,7 +57,9 @@ ecma_op_check_object_coercible (ecma_completion_value_t &ret_value, /**< out: co
   if (ecma_is_value_undefined (value)
       || ecma_is_value_null (value))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -145,7 +147,11 @@ ecma_op_same_value (const ecma_value_t& x, /**< ecma-value */
 
   JERRY_ASSERT(is_x_object);
 
-  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+  ecma_object_ptr_t x_obj_p, y_obj_p;
+  ecma_get_object_from_value (x_obj_p, x);
+  ecma_get_object_from_value (y_obj_p, y);
+
+  return (x_obj_p == y_obj_p);
 } /* ecma_op_same_value */
 
 /**
@@ -166,7 +172,8 @@ ecma_op_to_primitive (ecma_completion_value_t &ret_value, /**< out: completion v
 
   if (ecma_is_value_object (value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, value);
 
     ecma_op_object_default_value (ret_value, obj_p, preferred_type);
   }
@@ -413,7 +420,9 @@ ecma_op_to_object (ecma_completion_value_t &ret_value, /**< out: completion valu
     if (ecma_is_value_undefined (value)
         || ecma_is_value_null (value))
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
     }
     else
     {
@@ -432,11 +441,12 @@ ecma_op_to_object (ecma_completion_value_t &ret_value, /**< out: completion valu
  *
  * @return constructed object
  */
-ecma_object_t*
-ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_desc_p) /**< property descriptor */
+void
+ecma_op_from_property_descriptor (ecma_object_ptr_t &obj_p, /**< out: object pointer */
+                                  const ecma_property_descriptor_t* src_prop_desc_p) /**< property descriptor */
 {
   // 2.
-  ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+  ecma_op_create_object_object_noarg (obj_p);
 
   ecma_completion_value_t completion;
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
@@ -554,8 +564,6 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
                                       false);
   ecma_deref_ecma_string (configurable_magic_string_p);
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
-
-  return obj_p;
 } /* ecma_op_from_property_descriptor */
 
 /**
@@ -579,11 +587,14 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
   // 1.
   if (!ecma_is_value_object (obj_value))
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, obj_value);
 
     // 2.
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
@@ -713,7 +724,9 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
         if (!ecma_op_is_callable (get_prop_value)
             && !ecma_is_value_undefined (get_prop_value))
         {
-          ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ecma_object_ptr_t exception_obj_p;
+          ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+          ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
         }
         else
         {
@@ -727,10 +740,11 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
           {
             JERRY_ASSERT (ecma_is_value_object (get_prop_value));
 
-            ecma_object_t *get_p = ecma_get_object_from_value (get_prop_value);
+            ecma_object_ptr_t get_p;
+            ecma_get_object_from_value (get_p, get_prop_value);
             ecma_ref_object (get_p);
 
-            prop_desc.get_p = get_p;
+            prop_desc.get_p = (ecma_object_t*) get_p;
           }
         }
 
@@ -755,7 +769,9 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
         if (!ecma_op_is_callable (set_prop_value)
             && !ecma_is_value_undefined (set_prop_value))
         {
-          ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ecma_object_ptr_t exception_obj_p;
+          ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+          ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
         }
         else
         {
@@ -769,10 +785,11 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
           {
             JERRY_ASSERT (ecma_is_value_object (set_prop_value));
 
-            ecma_object_t *set_p = ecma_get_object_from_value (set_prop_value);
+            ecma_object_ptr_t set_p;
+            ecma_get_object_from_value (set_p, set_prop_value);
             ecma_ref_object (set_p);
 
-            prop_desc.set_p = set_p;
+            prop_desc.set_p = (ecma_object_t*) set_p;
           }
         }
 
@@ -793,7 +810,9 @@ ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value, /**< out: co
         if (prop_desc.is_value_defined
             || prop_desc.is_writable_defined)
         {
-          ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ecma_object_ptr_t exception_obj_p;
+          ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+          ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
         }
       }
     }

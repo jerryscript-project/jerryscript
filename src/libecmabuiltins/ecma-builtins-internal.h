@@ -47,8 +47,9 @@
 #define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH (16)
 
 /* ecma-builtins.c */
-extern ecma_object_t*
-ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
+extern void
+ecma_builtin_make_function_object_for_routine (ecma_object_ptr_t &ret_val,
+                                               ecma_builtin_id_t builtin_id,
                                                ecma_magic_string_id_t routine_id,
                                                ecma_number_t length_prop_num_value);
 extern int32_t
@@ -77,7 +78,7 @@ ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_completion_value_t &r
                                                       const ecma_value_t arguments_list [], \
                                                       ecma_length_t arguments_number); \
 extern ecma_property_t* \
-ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \
+ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (const ecma_object_ptr_t& obj_p, \
                                                                  ecma_string_t *prop_name_p); \
 extern void \
 ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
@@ -94,7 +95,8 @@ ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
   { \
     jerry_ref_unused_variables (0, __VA_ARGS__); \
   } \
-  ecma_object_t *cp_error_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
+  ecma_object_ptr_t cp_error_p; \
+  ecma_builtin_get (cp_error_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
   ecma_make_throw_obj_completion_value (ret_value, cp_error_p); \
   return; \
 }

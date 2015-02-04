@@ -57,14 +57,15 @@ ecma_op_create_number_object (ecma_completion_value_t &ret_value, /**< out: comp
   ecma_number_t *prim_value_p = ecma_get_number_from_value (num_value);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
+  ecma_object_ptr_t prototype_obj_p;
+  ecma_builtin_get (prototype_obj_p, ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_ptr_t prototype_obj_p;
+  ecma_builtin_get (prototype_obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             true,
-                                             ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_ptr_t obj_p;
+  ecma_create_object (obj_p, prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);

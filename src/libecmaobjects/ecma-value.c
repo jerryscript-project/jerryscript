@@ -50,10 +50,11 @@ ecma_get_string_from_value (const ecma_value_t& value) /**< ecma-value */
  *
  * @return the pointer
  */
-ecma_object_t* __attribute_pure__
-ecma_get_object_from_value (const ecma_value_t& value) /**< ecma-value */
+void
+ecma_get_object_from_value (ecma_object_ptr_t &ret_val, /**< out: object pointer */
+                            const ecma_value_t& value) /**< ecma-value */
 {
-  return value.get_object ();
+  ret_val = value.get_object ();
 } /* ecma_get_object_from_value */
 
 /**
@@ -114,7 +115,8 @@ ecma_copy_value (ecma_value_t &ret, /**< out: ecma-value */
     }
     case ECMA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = ecma_get_object_from_value (value);
+      ecma_object_ptr_t obj_p;
+      ecma_get_object_from_value (obj_p, value);
 
       if (do_ref_if_object)
       {
@@ -162,7 +164,9 @@ ecma_free_value (ecma_value_t& value, /**< value description */
     {
       if (do_deref_if_object)
       {
-        ecma_deref_object (ecma_get_object_from_value (value));
+        ecma_object_ptr_t obj_p;
+        ecma_get_object_from_value (obj_p, value);
+        ecma_deref_object (obj_p);
       }
       break;
     }
@@ -176,9 +180,9 @@ ecma_free_value (ecma_value_t& value, /**< value description */
  */
 void
 ecma_make_throw_obj_completion_value (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                      ecma_object_t *exception_p) /**< an object */
+                                      const ecma_object_ptr_t& exception_p) /**< an object */
 {
-  JERRY_ASSERT(exception_p != NULL
+  JERRY_ASSERT(exception_p.is_not_null ()
                && !ecma_is_lexical_environment (exception_p));
 
   ecma_value_t exception (exception_p);

@@ -37,20 +37,20 @@
 /**
  * Global lists of objects sorted by generation identifier.
  */
-static ecma_object_t *ecma_gc_objects_lists[ ECMA_GC_GEN_COUNT ];
+static ecma_object_t* ecma_gc_objects_lists[ ECMA_GC_GEN_COUNT ];
 
-static void ecma_gc_mark (ecma_object_t *object_p, ecma_gc_gen_t maximum_gen_to_traverse);
-static void ecma_gc_sweep (ecma_object_t *object_p);
+static void ecma_gc_mark (const ecma_object_ptr_t &object_p, ecma_gc_gen_t maximum_gen_to_traverse);
+static void ecma_gc_sweep (ecma_object_ptr_t &object_p);
 
 /**
  * Get GC reference counter of the object.
  */
 static uint32_t
-ecma_gc_get_object_refs (ecma_object_t *object_p) /**< object */
+ecma_gc_get_object_refs (const ecma_object_ptr_t &object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
-  return (uint32_t) jrt_extract_bit_field (object_p->container,
+  return (uint32_t) jrt_extract_bit_field (((ecma_object_t*) object_p)->container,
                                            ECMA_OBJECT_GC_REFS_POS,
                                            ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_get_object_refs */
@@ -59,26 +59,26 @@ ecma_gc_get_object_refs (ecma_object_t *object_p) /**< object */
  * Set GC reference counter of the object.
  */
 static void
-ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
+ecma_gc_set_object_refs (const ecma_object_ptr_t &object_p, /**< object */
                          uint32_t refs) /**< new reference counter */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 refs,
-                                                 ECMA_OBJECT_GC_REFS_POS,
-                                                 ECMA_OBJECT_GC_REFS_WIDTH);
+  ((ecma_object_t*) object_p)->container = jrt_set_bit_field_value (((ecma_object_t*) object_p)->container,
+                                                                    refs,
+                                                                    ECMA_OBJECT_GC_REFS_POS,
+                                                                    ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_set_object_refs */
 
 /**
  * Get GC generation of the object.
  */
 static ecma_gc_gen_t
-ecma_gc_get_object_generation (ecma_object_t *object_p) /**< object */
+ecma_gc_get_object_generation (const ecma_object_ptr_t &object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
-  ecma_gc_gen_t ret = (ecma_gc_gen_t) jrt_extract_bit_field (object_p->container,
+  ecma_gc_gen_t ret = (ecma_gc_gen_t) jrt_extract_bit_field (((ecma_object_t*) object_p)->container,
                                                              ECMA_OBJECT_GC_GENERATION_POS,
                                                              ECMA_OBJECT_GC_GENERATION_WIDTH);
 
@@ -91,48 +91,50 @@ ecma_gc_get_object_generation (ecma_object_t *object_p) /**< object */
  * Set GC generation of the object.
  */
 static void
-ecma_gc_set_object_generation (ecma_object_t *object_p, /**< object */
+ecma_gc_set_object_generation (const ecma_object_ptr_t &object_p, /**< object */
                                ecma_gc_gen_t generation) /**< generation */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
   JERRY_ASSERT (generation < ECMA_GC_GEN_COUNT);
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 generation,
-                                                 ECMA_OBJECT_GC_GENERATION_POS,
-                                                 ECMA_OBJECT_GC_GENERATION_WIDTH);
+  ((ecma_object_t*) object_p)->container = jrt_set_bit_field_value (((ecma_object_t*) object_p)->container,
+                                                                    generation,
+                                                                    ECMA_OBJECT_GC_GENERATION_POS,
+                                                                    ECMA_OBJECT_GC_GENERATION_WIDTH);
 } /* ecma_gc_set_object_generation */
 
 /**
  * Get next object in list of objects with same generation.
  */
-static ecma_object_t*
-ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
+static void
+ecma_gc_get_object_next (ecma_object_ptr_t & ret_val, /**< out: object pointer */
+                         const ecma_object_ptr_t &object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-  uintptr_t next_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t next_cp = (uintptr_t) jrt_extract_bit_field (((ecma_object_t*) object_p)->container,
                                                          ECMA_OBJECT_GC_NEXT_CP_POS,
                                                          ECMA_OBJECT_GC_NEXT_CP_WIDTH);
 
-  return ECMA_GET_POINTER (ecma_object_t,
-                           next_cp);
+  ret_val.unpack_from (next_cp, true);
 } /* ecma_gc_get_object_next */
 
 /**
  * Set next object in list of objects with same generation.
  */
 static void
-ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
-                         ecma_object_t *next_object_p) /**< next object */
+ecma_gc_set_object_next (const ecma_object_ptr_t &object_mp, /**< object */
+                         const ecma_object_ptr_t &next_object_p) /**< next object */
 {
-  JERRY_ASSERT (object_p != NULL);
-
-  uintptr_t next_cp;
-  ECMA_SET_POINTER (next_cp, next_object_p);
+  JERRY_ASSERT (object_mp.is_not_null ());
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
+
+  uintptr_t next_cp;
+  next_object_p.pack_to (next_cp, true);
+
+  ecma_object_t *object_p = (ecma_object_t*) object_mp;
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  next_cp,
                                                  ECMA_OBJECT_GC_NEXT_CP_POS,
@@ -143,11 +145,11 @@ ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
  * Get visited flag of the object.
  */
 static bool
-ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
+ecma_gc_is_object_visited (const ecma_object_ptr_t &object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
-  return jrt_extract_bit_field (object_p->container,
+  return jrt_extract_bit_field (((ecma_object_t*) object_p)->container,
                                 ECMA_OBJECT_GC_VISITED_POS,
                                 ECMA_OBJECT_GC_VISITED_WIDTH);
 } /* ecma_gc_is_object_visited */
@@ -156,11 +158,12 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
  * Set visited flag of the object.
  */
 static void
-ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
+ecma_gc_set_object_visited (const ecma_object_ptr_t &object_mp, /**< object */
                             bool is_visited) /**< flag value */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_mp.is_not_null ());
 
+  ecma_object_t *object_p = (ecma_object_t*) object_mp;
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  is_visited,
                                                  ECMA_OBJECT_GC_VISITED_POS,
@@ -171,11 +174,11 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
  * Get may_ref_younger_objects flag of the object.
  */
 static bool
-ecma_gc_is_object_may_ref_younger_objects (ecma_object_t *object_p) /**< object */
+ecma_gc_is_object_may_ref_younger_objects (const ecma_object_ptr_t &object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_p.is_not_null ());
 
-  return jrt_extract_bit_field (object_p->container,
+  return jrt_extract_bit_field (((ecma_object_t*) object_p)->container,
                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH);
 } /* ecma_gc_is_object_may_ref_younger_objects */
@@ -184,11 +187,12 @@ ecma_gc_is_object_may_ref_younger_objects (ecma_object_t *object_p) /**< object 
  * Set may_ref_younger_objects flag of the object.
  */
 static void
-ecma_gc_set_object_may_ref_younger_objects (ecma_object_t *object_p, /**< object */
+ecma_gc_set_object_may_ref_younger_objects (const ecma_object_ptr_t &object_mp, /**< object */
                                             bool is_may_ref_younger_objects) /**< flag value */
 {
-  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (object_mp.is_not_null ());
 
+  ecma_object_t *object_p = (ecma_object_t*) object_mp;
   object_p->container = jrt_set_bit_field_value (object_p->container,
                                                  is_may_ref_younger_objects,
                                                  ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
@@ -199,37 +203,41 @@ ecma_gc_set_object_may_ref_younger_objects (ecma_object_t *object_p, /**< object
  * Initialize GC information for the object
  */
 void
-ecma_init_gc_info (ecma_object_t *object_p) /**< object */
+ecma_init_gc_info (const ecma_object_ptr_t& object_mp) /**< object */
 {
-  ecma_gc_set_object_refs (object_p, 1);
+  ecma_gc_set_object_refs (object_mp, 1);
 
-  ecma_gc_set_object_generation (object_p, ECMA_GC_GEN_0);
-  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ ECMA_GC_GEN_0 ]);
-  ecma_gc_objects_lists[ ECMA_GC_GEN_0 ] = object_p;
+  ecma_object_ptr_t next_object_mp;
+  next_object_mp = ecma_gc_objects_lists[ ECMA_GC_GEN_0 ];
+
+  ecma_gc_set_object_generation (object_mp, ECMA_GC_GEN_0);
+  ecma_gc_set_object_next (object_mp, next_object_mp);
+  ecma_gc_objects_lists[ ECMA_GC_GEN_0 ] = (ecma_object_t*) object_mp;
 
   /* Should be set to false at the beginning of garbage collection */
-  ecma_gc_set_object_visited (object_p, true);
+  ecma_gc_set_object_visited (object_mp, true);
 
-  ecma_gc_set_object_may_ref_younger_objects (object_p, false);
+  ecma_gc_set_object_may_ref_younger_objects (object_mp, false);
 } /* ecma_init_gc_info */
 
 /**
  * Increase reference counter of an object
  */
 void
-ecma_ref_object (ecma_object_t *object_p) /**< object */
+ecma_ref_object (const ecma_object_ptr_t& object_mp) /**< object */
 {
-  ecma_gc_set_object_refs (object_p, ecma_gc_get_object_refs (object_p) + 1);
+  ecma_gc_set_object_refs (object_mp, ecma_gc_get_object_refs (object_mp) + 1);
 } /* ecma_ref_object */
 
 /**
  * Decrease reference counter of an object
  */
 void
-ecma_deref_object (ecma_object_t *object_p) /**< object */
+ecma_deref_object (const ecma_object_ptr_t& object_mp) /**< object */
 {
-  JERRY_ASSERT(ecma_gc_get_object_refs (object_p) > 0);
-  ecma_gc_set_object_refs (object_p, ecma_gc_get_object_refs (object_p) - 1);
+  JERRY_ASSERT(ecma_gc_get_object_refs (object_mp) > 0);
+
+  ecma_gc_set_object_refs (object_mp, ecma_gc_get_object_refs (object_mp) - 1);
 } /* ecma_deref_object */
 
 /**
@@ -238,7 +246,7 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
  * is less than generation of object specified by obj_p.
  */
 void
-ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< object */
+ecma_gc_update_may_ref_younger_object_flag_by_value (const ecma_object_ptr_t& obj_mp, /**< object */
                                                      const ecma_value_t& value) /**< value */
 {
   if (!ecma_is_value_object (value))
@@ -246,25 +254,26 @@ ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< 
     return;
   }
 
-  ecma_object_t *ref_obj_p = ecma_get_object_from_value (value);
-  JERRY_ASSERT(ref_obj_p != NULL);
+  ecma_object_ptr_t ref_obj_p;
+  ecma_get_object_from_value (ref_obj_p, value);
+  JERRY_ASSERT(ref_obj_p.is_not_null ());
 
-  ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, ref_obj_p);
+  ecma_gc_update_may_ref_younger_object_flag_by_object (obj_mp, ref_obj_p);
 } /* ecma_gc_update_may_ref_younger_object_flag_by_value */
 
 void
-ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, /**< object */
-                                                      ecma_object_t *ref_obj_p) /**< referenced object
-                                                                                     or NULL */
+ecma_gc_update_may_ref_younger_object_flag_by_object (const ecma_object_ptr_t& obj_mp, /**< object */
+                                                      const ecma_object_ptr_t& ref_obj_mp) /**< referenced object
+                                                                                            *   or NULL */
 {
-  if (ref_obj_p == NULL)
+  if (ref_obj_mp.is_null ())
   {
     return;
   }
 
-  if (ecma_gc_get_object_generation (ref_obj_p) < ecma_gc_get_object_generation (obj_p))
+  if (ecma_gc_get_object_generation (ref_obj_mp) < ecma_gc_get_object_generation (obj_mp))
   {
-    ecma_gc_set_object_may_ref_younger_objects (obj_p, true);
+    ecma_gc_set_object_may_ref_younger_objects (obj_mp, true);
   }
 } /* ecma_gc_update_may_ref_younger_object_flag_by_object */
 
@@ -274,7 +283,10 @@ ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, /**<
 void
 ecma_gc_init (void)
 {
-  __memset (ecma_gc_objects_lists, 0, sizeof (ecma_gc_objects_lists));
+  for (uint32_t i = 0; i < ECMA_GC_GEN_COUNT; i++)
+  {
+    ecma_gc_objects_lists [i] = NULL;
+  }
 } /* ecma_gc_init */
 
 /**
@@ -282,12 +294,12 @@ ecma_gc_init (void)
  * if referenced object's generation is less or equal to maximum_gen_to_traverse.
  */
 void
-ecma_gc_mark (ecma_object_t *object_p, /**< start object */
+ecma_gc_mark (const ecma_object_ptr_t& object_p, /**< start object */
               ecma_gc_gen_t maximum_gen_to_traverse) /**< start recursive traverse
                                                           if referenced object generation
                                                           is less or equal to maximum_gen_to_traverse */
 {
-  JERRY_ASSERT(object_p != NULL);
+  JERRY_ASSERT(object_p.is_not_null ());
 
   ecma_gc_set_object_visited (object_p, true);
 
@@ -296,8 +308,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
   if (ecma_is_lexical_environment (object_p))
   {
-    ecma_object_t *lex_env_p = ecma_get_lex_env_outer_reference (object_p);
-    if (lex_env_p != NULL)
+    ecma_object_ptr_t lex_env_p (ecma_pointer_t::is_linked_arg::not_linked);
+    ecma_get_lex_env_outer_reference (lex_env_p, object_p);
+    if (lex_env_p.is_not_null ())
     {
       if (ecma_gc_get_object_generation (lex_env_p) <= maximum_gen_to_traverse)
       {
@@ -315,7 +328,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
     if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
     {
-      ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
+      ecma_object_ptr_t binding_object_p;
+      ecma_get_lex_env_binding_object (binding_object_p, object_p);
       if (ecma_gc_get_object_generation (binding_object_p) <= maximum_gen_to_traverse)
       {
         if (!ecma_gc_is_object_visited (binding_object_p))
@@ -334,8 +348,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
   }
   else
   {
-    ecma_object_t *proto_p = ecma_get_object_prototype (object_p);
-    if (proto_p != NULL)
+    ecma_object_ptr_t proto_p (ecma_pointer_t::is_linked_arg::not_linked);
+    ecma_get_object_prototype (proto_p, object_p);
+    if (proto_p.is_not_null ())
     {
       if (ecma_gc_get_object_generation (proto_p) <= maximum_gen_to_traverse)
       {
@@ -370,7 +385,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
           if (ecma_is_value_object (value))
           {
-            ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
+            ecma_object_ptr_t value_obj_p;
+            ecma_get_object_from_value (value_obj_p, value);
 
             if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
             {
@@ -391,12 +407,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         case ECMA_PROPERTY_NAMEDACCESSOR:
         {
-          ecma_object_t *getter_obj_p = ECMA_GET_POINTER (ecma_object_t,
-                                                          property_p->u.named_accessor_property.get_p);
-          ecma_object_t *setter_obj_p = ECMA_GET_POINTER (ecma_object_t,
-                                                          property_p->u.named_accessor_property.set_p);
+          ecma_object_ptr_t getter_obj_p, setter_obj_p;
+          getter_obj_p.unpack_from (property_p->u.named_accessor_property.get_p, true);
+          setter_obj_p.unpack_from (property_p->u.named_accessor_property.set_p, true);
 
-          if (getter_obj_p != NULL)
+          if (getter_obj_p.is_not_null ())
           {
             if (ecma_gc_get_object_generation (getter_obj_p) <= maximum_gen_to_traverse)
             {
@@ -412,7 +427,7 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
             }
           }
 
-          if (setter_obj_p != NULL)
+          if (setter_obj_p.is_not_null ())
           {
             if (ecma_gc_get_object_generation (setter_obj_p) <= maximum_gen_to_traverse)
             {
@@ -471,7 +486,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
             case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
             case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
             {
-              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t, property_value);
+              ecma_object_ptr_t obj_p;
+              obj_p.unpack_from (property_value);
 
               if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
               {
@@ -506,11 +522,11 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
  * Free specified object
  */
 void
-ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
+ecma_gc_sweep (ecma_object_ptr_t &object_p) /**< object to free */
 {
-  JERRY_ASSERT(object_p != NULL
-               && !ecma_gc_is_object_visited (object_p)
-               && ecma_gc_get_object_refs (object_p) == 0);
+  JERRY_ASSERT (object_p.is_not_null ()
+                && !ecma_gc_is_object_visited (object_p)
+                && ecma_gc_get_object_refs (object_p) == 0);
 
   if (!ecma_is_lexical_environment (object_p) ||
       ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
@@ -540,9 +556,10 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   /* clearing visited flags for all objects of generations to be processed */
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    ecma_object_ptr_t obj_iter_p, obj_iter_next_p;
+    for (obj_iter_p = ecma_gc_objects_lists[ gen_id ];
+         obj_iter_p.is_not_null ();
+         ecma_gc_get_object_next (obj_iter_next_p, obj_iter_p), obj_iter_p = obj_iter_next_p)
     {
       ecma_gc_set_object_visited (obj_iter_p, false);
     }
@@ -552,9 +569,11 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
    * start recursive marking traverse from the object */
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    ecma_object_ptr_t obj_iter_p, obj_iter_next_p;
+
+    for (obj_iter_p = ecma_gc_objects_lists[ gen_id ];
+         obj_iter_p.is_not_null ();
+         ecma_gc_get_object_next (obj_iter_next_p, obj_iter_p), obj_iter_p = obj_iter_next_p)
     {
       if (ecma_gc_get_object_refs (obj_iter_p) > 0
           && !ecma_gc_is_object_visited (obj_iter_p))
@@ -577,7 +596,8 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 
       if (ecma_is_value_object (reg_value))
       {
-        ecma_object_t *obj_p = ecma_get_object_from_value (reg_value);
+        ecma_object_ptr_t obj_p;
+        ecma_get_object_from_value (obj_p, reg_value);
 
         if (!ecma_gc_is_object_visited (obj_p))
         {
@@ -594,9 +614,11 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
        gen_id < ECMA_GC_GEN_COUNT;
        gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    ecma_object_ptr_t obj_iter_p, obj_iter_next_p;
+
+    for (obj_iter_p = ecma_gc_objects_lists[ gen_id ];
+         obj_iter_p.is_not_null ();
+         ecma_gc_get_object_next (obj_iter_next_p, obj_iter_p), obj_iter_p = obj_iter_next_p)
     {
       if (ecma_gc_is_object_may_ref_younger_objects (obj_iter_p))
       {
@@ -614,33 +636,31 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   }
 
   JERRY_ASSERT (max_gen_to_collect <= ECMA_GC_GEN_COUNT);
-  ecma_object_t *gen_last_obj_p[ ECMA_GC_GEN_COUNT ];
-#ifndef JERRY_NDEBUG
-  __memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
-#endif /* !JERRY_NDEBUG */
+  ecma_object_ptr_t gen_last_obj_p[ ECMA_GC_GEN_COUNT ];
 
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
-    ecma_object_t *obj_prev_p = NULL;
+    ecma_object_ptr_t obj_prev_p;
 
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ],
-         *obj_next_p;
-         obj_iter_p != NULL;
-         obj_iter_p = obj_next_p)
+    ecma_object_ptr_t obj_iter_p, obj_iter_next_p;
+
+    for (obj_iter_p = ecma_gc_objects_lists[ gen_id ];
+         obj_iter_p.is_not_null ();
+         obj_iter_p = obj_iter_next_p)
     {
-      obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+      ecma_gc_get_object_next (obj_iter_next_p, obj_iter_p);
 
       if (!ecma_gc_is_object_visited (obj_iter_p))
       {
         ecma_gc_sweep (obj_iter_p);
 
-        if (likely (obj_prev_p != NULL))
+        if (likely (obj_prev_p.is_not_null ()))
         {
-          ecma_gc_set_object_next (obj_prev_p, obj_next_p);
+          ecma_gc_set_object_next (obj_prev_p, obj_iter_next_p);
         }
         else
         {
-          ecma_gc_objects_lists[ gen_id ] = obj_next_p;
+          ecma_gc_objects_lists[ gen_id ] = (ecma_object_t*) obj_iter_next_p;
         }
       }
       else
@@ -666,9 +686,11 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   }
 
   /* promoting to next generation */
-  if (gen_last_obj_p[ gen_to_promote ] != NULL)
+  if (gen_last_obj_p[ gen_to_promote ].is_not_null ())
   {
-    ecma_gc_set_object_next (gen_last_obj_p [gen_to_promote], ecma_gc_objects_lists[ gen_to_promote + 1 ]);
+    ecma_object_ptr_t next_object_mp;
+    next_object_mp = ecma_gc_objects_lists[ gen_to_promote + 1 ];
+    ecma_gc_set_object_next (gen_last_obj_p [gen_to_promote], next_object_mp);
     ecma_gc_objects_lists[ gen_to_promote + 1 ] = ecma_gc_objects_lists[ gen_to_promote ];
     ecma_gc_objects_lists[ gen_to_promote ] = NULL;
   }
@@ -686,9 +708,10 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
        gen_id < ECMA_GC_GEN_COUNT;
        gen_id = (ecma_gc_gen_t) (gen_id + 1))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    ecma_object_ptr_t obj_iter_p, obj_iter_next_p;
+    for (obj_iter_p = ecma_gc_objects_lists[ gen_id ];
+         obj_iter_p.is_not_null ();
+         ecma_gc_get_object_next (obj_iter_next_p, obj_iter_p), obj_iter_p = obj_iter_next_p)
     {
       JERRY_ASSERT(ecma_gc_get_object_generation (obj_iter_p) == gen_id);
     }

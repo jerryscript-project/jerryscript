@@ -43,7 +43,9 @@ ecma_reject (ecma_completion_value_t &ret_value, /**< out: completion value */
 {
   if (is_throw)
   {
-    ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ecma_object_ptr_t exception_obj_p;
+    ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+    ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
   }
   else
   {
@@ -87,7 +89,9 @@ ecma_op_create_array_object (ecma_completion_value_t &ret_value, /**< out: compl
     uint32_t num_uint32 = ecma_number_to_uint32 (*num_p);
     if (*num_p != ecma_uint32_to_number (num_uint32))
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_RANGE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_RANGE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
       return;
     }
     else
@@ -105,12 +109,15 @@ ecma_op_create_array_object (ecma_completion_value_t &ret_value, /**< out: compl
   }
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
-  ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
+  ecma_object_ptr_t array_prototype_obj_p;
+  ecma_builtin_get (array_prototype_obj_p, ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
-  ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_ptr_t array_prototype_obj_p;
+  ecma_builtin_get (array_prototype_obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (array_prototype_obj_p, true, ECMA_OBJECT_TYPE_ARRAY);
+  ecma_object_ptr_t obj_p;
+  ecma_create_object (obj_p, array_prototype_obj_p, true, ECMA_OBJECT_TYPE_ARRAY);
   ecma_deref_object (array_prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
@@ -174,7 +181,7 @@ ecma_op_create_array_object (ecma_completion_value_t &ret_value, /**< out: compl
  */
 void
 ecma_op_array_object_define_own_property (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                          ecma_object_t *obj_p, /**< the array object */
+                                          const ecma_object_ptr_t& obj_p, /**< the array object */
                                           ecma_string_t *property_name_p, /**< property name */
                                           const ecma_property_descriptor_t* property_desc_p, /**< property descriptor */
                                           bool is_throw) /**< flag that controls failure handling */
@@ -235,7 +242,9 @@ ecma_op_array_object_define_own_property (ecma_completion_value_t &ret_value, /*
     // d.
     if (ecma_uint32_to_number (new_len_uint32) != new_len_num)
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_RANGE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_RANGE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
       return;
     }
     else

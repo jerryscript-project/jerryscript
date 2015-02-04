@@ -60,8 +60,9 @@ extern void
 ecma_op_to_object (ecma_completion_value_t &ret_value,
                    const ecma_value_t& value);
 
-extern ecma_object_t*
-ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_desc_p);
+extern void
+ecma_op_from_property_descriptor (ecma_object_ptr_t &ret_val,
+                                  const ecma_property_descriptor_t* src_prop_desc_p);
 extern void
 ecma_op_to_property_descriptor (ecma_completion_value_t &ret_value,
                                 const ecma_value_t& obj_value,

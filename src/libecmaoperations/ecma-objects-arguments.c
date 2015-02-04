@@ -40,9 +40,10 @@
  *
  * @return pointer to newly created Arguments object
  */
-ecma_object_t*
-ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
-                              ecma_object_t *lex_env_p, /**< lexical environment the Arguments
+void
+ecma_create_arguments_object (ecma_object_ptr_t &obj_p, /**< out: object pointer */
+                              const ecma_object_ptr_t& func_obj_p, /**< callee function */
+                              const ecma_object_ptr_t& lex_env_p, /**< lexical environment the Arguments
                                                              object is created for */
                               ecma_collection_iterator_t *formal_params_iter_p, /**< formal parameters
                                                                                      collection iterator */
@@ -55,9 +56,10 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
   *len_p = ecma_uint32_to_number (arguments_list_length);
 
   // 2., 3., 6.
-  ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_ptr_t prototype_p;
+  ecma_builtin_get (prototype_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_create_object (obj_p, prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_deref_object (prototype_p);
 
@@ -130,7 +132,8 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
       && formal_params_number > 0)
   {
     // 8.
-    ecma_object_t *map_p = ecma_op_create_object_object_noarg ();
+    ecma_object_ptr_t map_p;
+    ecma_op_create_object_object_noarg (map_p);
 
     // 11.c
     MEM_DEFINE_LOCAL_ARRAY (formal_params, formal_params_number, ecma_string_t *);
@@ -197,12 +200,18 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
 
     ecma_property_t *parameters_map_prop_p = ecma_create_internal_property (obj_p,
                                                                             ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-    ECMA_SET_POINTER(parameters_map_prop_p->u.internal_property.value, map_p);
+    {
+      ecma_object_t *map_tmp_p = (ecma_object_t*) map_p;
+      ECMA_SET_POINTER(parameters_map_prop_p->u.internal_property.value, map_tmp_p);
+    }
     ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, map_p);
 
     ecma_property_t *scope_prop_p = ecma_create_internal_property (map_p,
                                                                    ECMA_INTERNAL_PROPERTY_SCOPE);
-    ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, lex_env_p);
+    {
+      ecma_object_t *lex_env_tmp_p = (ecma_object_t *) lex_env_p;
+      ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, lex_env_tmp_p);
+    }
     ecma_gc_update_may_ref_younger_object_flag_by_object (map_p, lex_env_p);
 
     ecma_deref_object (map_p);
@@ -239,16 +248,17 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
   }
   else
   {
-    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+    ecma_object_ptr_t thrower_p;
+    ecma_builtin_get (thrower_p, ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
     // 14.
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_get_defined = true;
-      prop_desc.get_p = thrower_p;
+      prop_desc.get_p = (ecma_object_t*) thrower_p;
 
       prop_desc.is_set_defined = true;
-      prop_desc.set_p = thrower_p;
+      prop_desc.set_p = (ecma_object_t*) thrower_p;
 
       prop_desc.is_enumerable_defined = true;
       prop_desc.is_enumerable = false;
@@ -271,8 +281,6 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
     ecma_deref_ecma_string (caller_magic_string_p);
     ecma_deref_object (thrower_p);
   }
-
-  return obj_p;
 } /* ecma_create_arguments_object */
 
 /**
@@ -283,15 +291,15 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
  */
 static void
 ecma_arguments_get_mapped_arg_value (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                     ecma_object_t *map_p, /**< [[ParametersMap]] object */
+                                     const ecma_object_ptr_t& map_p, /**< [[ParametersMap]] object */
                                      ecma_property_t *arg_name_prop_p) /**< property of [[ParametersMap]]
                                                                             corresponding to index and value
                                                                             equal to mapped argument's name */
 {
   ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                        scope_prop_p->u.internal_property.value);
-  JERRY_ASSERT(lex_env_p != NULL
+  ecma_object_ptr_t lex_env_p;
+  lex_env_p.unpack_from (scope_prop_p->u.internal_property.value);
+  JERRY_ASSERT(lex_env_p.is_not_null ()
                && ecma_is_lexical_environment (lex_env_p));
 
   ecma_value_t arg_name_prop_value;
@@ -315,13 +323,13 @@ ecma_arguments_get_mapped_arg_value (ecma_completion_value_t &ret_value, /**< ou
  */
 void
 ecma_op_arguments_object_get (ecma_completion_value_t &ret_value, /**< out: completion value */
-                              ecma_object_t *obj_p, /**< the object */
+                              const ecma_object_ptr_t& obj_p, /**< the object */
                               ecma_string_t *property_name_p) /**< property name */
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                    map_prop_p->u.internal_property.value);
+  ecma_object_ptr_t map_p;
+  map_p.unpack_from (map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -352,7 +360,7 @@ ecma_op_arguments_object_get (ecma_completion_value_t &ret_value, /**< out: comp
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_property_t*
-ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_arguments_object_get_own_property (const ecma_object_ptr_t& obj_p, /**< the object */
                                            ecma_string_t *property_name_p) /**< property name */
 {
   // 1.
@@ -366,8 +374,8 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
 
   // 3.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                    map_prop_p->u.internal_property.value);
+  ecma_object_ptr_t map_p;
+  map_p.unpack_from (map_prop_p->u.internal_property.value);
 
   // 4.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -403,7 +411,7 @@ ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object
  */
 void
 ecma_op_arguments_object_define_own_property (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                              ecma_object_t *obj_p, /**< the object */
+                                              const ecma_object_ptr_t& obj_p, /**< the object */
                                               ecma_string_t *property_name_p, /**< property name */
                                               const ecma_property_descriptor_t* property_desc_p, /**< property
                                                                                                   *   descriptor */
@@ -411,8 +419,8 @@ ecma_op_arguments_object_define_own_property (ecma_completion_value_t &ret_value
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                    map_prop_p->u.internal_property.value);
+  ecma_object_ptr_t map_p;
+  map_p.unpack_from (map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
@@ -494,14 +502,14 @@ ecma_op_arguments_object_define_own_property (ecma_completion_value_t &ret_value
  */
 void
 ecma_op_arguments_object_delete (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                 ecma_object_t *obj_p, /**< the object */
+                                 const ecma_object_ptr_t& obj_p, /**< the object */
                                  ecma_string_t *property_name_p, /**< property name */
                                  bool is_throw) /**< flag that controls failure handling */
 {
   // 1.
   ecma_property_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                    map_prop_p->u.internal_property.value);
+  ecma_object_ptr_t map_p;
+  map_p.unpack_from (map_prop_p->u.internal_property.value);
 
   // 2.
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);

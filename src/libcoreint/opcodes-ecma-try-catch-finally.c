@@ -70,8 +70,9 @@ opfunc_try_block (ecma_completion_value_t &try_completion, /**< out: completion 
 
       ecma_string_t *catch_exc_var_name_str_p = ecma_new_ecma_string_from_lit_index (catch_exc_val_var_name_lit_idx);
 
-      ecma_object_t *old_env_p = int_data->lex_env_p;
-      ecma_object_t *catch_env_p = ecma_create_decl_lex_env (old_env_p);
+      const ecma_object_ptr_t* old_env_p = int_data->lex_env_p;
+      ecma_object_ptr_t catch_env_p;
+      ecma_create_decl_lex_env (catch_env_p, *old_env_p);
 
       ecma_completion_value_t completion;
       ecma_op_create_mutable_binding (completion,
@@ -92,7 +93,7 @@ opfunc_try_block (ecma_completion_value_t &try_completion, /**< out: completion 
 
       ecma_deref_ecma_string (catch_exc_var_name_str_p);
 
-      int_data->lex_env_p = catch_env_p;
+      int_data->lex_env_p = &catch_env_p;
 
       ecma_free_completion_value (try_completion);
       run_int_loop (try_completion, int_data);

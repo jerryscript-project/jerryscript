@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@
  *
  * @return pointer to allocated memory
  */
-extern ecma_object_t *ecma_alloc_object (void);
+extern void ecma_alloc_object (ecma_object_ptr_t &ret_obj_p);
 
 /**
  * Dealloc memory from an ecma-object
  */
-extern void ecma_dealloc_object (ecma_object_t *object_p);
+extern void ecma_dealloc_object (ecma_object_ptr_t &object_p);
 
 /**
  * Allocate memory for ecma-property

@@ -383,13 +383,13 @@ opfunc_var_decl (ecma_completion_value_t &ret_value, /**< out: completion value 
 
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
 
-  if (!ecma_op_has_binding (int_data->lex_env_p, var_name_string_p))
+  if (!ecma_op_has_binding (*int_data->lex_env_p, var_name_string_p))
   {
     const bool is_configurable_bindings = int_data->is_eval_code;
 
     ecma_completion_value_t completion;
     ecma_op_create_mutable_binding (completion,
-                                    int_data->lex_env_p,
+                                    *int_data->lex_env_p,
                                     var_name_string_p,
                                     is_configurable_bindings);
 
@@ -399,7 +399,7 @@ opfunc_var_decl (ecma_completion_value_t &ret_value, /**< out: completion value 
      * any binding with specified name in current lexical environment
      * and CreateMutableBinding sets the created binding's value to undefined */
     ecma_op_get_binding_value (completion,
-                               int_data->lex_env_p,
+                               *int_data->lex_env_p,
                                var_name_string_p,
                                true);
     JERRY_ASSERT (ecma_is_completion_value_normal_simple_value (completion, ECMA_SIMPLE_VALUE_UNDEFINED));
@@ -445,7 +445,7 @@ function_declaration (ecma_completion_value_t &ret_value, /**< out: completion v
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_id);
 
   ecma_op_function_declaration (ret_value,
-                                int_data->lex_env_p,
+                                *int_data->lex_env_p,
                                 function_name_string_p,
                                 int_data->pos,
                                 args_names,
@@ -537,11 +537,11 @@ opfunc_func_expr_n (ecma_completion_value_t &ret_value, /**< out: completion val
     int_data->pos++;
   }
 
-  ecma_object_t *scope_p;
+  ecma_object_ptr_t scope_p;
   ecma_string_t *function_name_string_p = NULL;
   if (is_named_func_expr)
   {
-    scope_p = ecma_create_decl_lex_env (int_data->lex_env_p);
+    ecma_create_decl_lex_env (scope_p, *int_data->lex_env_p);
 
     const literal_index_t lit_id = deserialize_lit_id_by_uid (function_name_lit_idx, lit_oc);
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
@@ -552,15 +552,17 @@ opfunc_func_expr_n (ecma_completion_value_t &ret_value, /**< out: completion val
   }
   else
   {
-    scope_p = int_data->lex_env_p;
+    scope_p = *int_data->lex_env_p;
     ecma_ref_object (scope_p);
   }
 
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (params_names,
-                                                              params_number,
-                                                              scope_p,
-                                                              is_strict,
-                                                              int_data->pos);
+  ecma_object_ptr_t func_obj_p;
+  ecma_op_create_function_object (func_obj_p,
+                                  params_names,
+                                  params_number,
+                                  scope_p,
+                                  is_strict,
+                                  int_data->pos);
 
   set_variable_value (ret_value, int_data, lit_oc, dst_var_idx, ecma_value_t (func_obj_p));
 
@@ -654,7 +656,7 @@ opfunc_call_n (ecma_completion_value_t &ret_value, /**< out: completion value */
     }
     else
     {
-      ecma_op_implicit_this_value (get_this_completion_value, int_data->lex_env_p);
+      ecma_op_implicit_this_value (get_this_completion_value, *int_data->lex_env_p);
     }
     JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
 
@@ -663,11 +665,14 @@ opfunc_call_n (ecma_completion_value_t &ret_value, /**< out: completion value */
 
     if (!ecma_op_is_callable (func_value))
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
     }
     else
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
+      ecma_object_ptr_t func_obj_p;
+      ecma_get_object_from_value (func_obj_p, func_value);
 
       ECMA_TRY_CATCH (ret_value,
                       ecma_op_function_call, call_ret_value, func_obj_p, this_value, arg_values, args_number);
@@ -736,11 +741,14 @@ opfunc_construct_n (ecma_completion_value_t &ret_value, /**< out: completion val
 
     if (!ecma_is_constructor (constructor_value))
     {
-      ecma_make_throw_obj_completion_value (ret_value, ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ecma_object_ptr_t exception_obj_p;
+      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
+      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
     }
     else
     {
-      ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
+      ecma_object_ptr_t constructor_obj_p;
+      ecma_get_object_from_value (constructor_obj_p, constructor_value);
 
       ECMA_TRY_CATCH (ret_value,
                       ecma_op_function_construct, construction_ret_value, constructor_obj_p, arg_values, args_number);
@@ -846,7 +854,8 @@ opfunc_obj_decl (ecma_completion_value_t &ret_value, /**< out: completion value 
   int_data->pos++;
 
   ecma_completion_value_t completion;
-  ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+  ecma_object_ptr_t obj_p;
+  ecma_op_create_object_object_noarg (obj_p);
 
   for (uint32_t prop_index = 0;
        prop_index < args_number;
@@ -927,7 +936,9 @@ opfunc_obj_decl (ecma_completion_value_t &ret_value, /**< out: completion value 
         else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
         {
           prop_desc.is_get_defined = true;
-          prop_desc.get_p = ecma_get_object_from_value (value_for_prop_desc);
+          ecma_object_ptr_t get_p;
+          ecma_get_object_from_value (get_p, value_for_prop_desc);
+          prop_desc.get_p = (ecma_object_t*) get_p;
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -938,7 +949,9 @@ opfunc_obj_decl (ecma_completion_value_t &ret_value, /**< out: completion value 
         else
         {
           prop_desc.is_set_defined = true;
-          prop_desc.set_p = ecma_get_object_from_value (value_for_prop_desc);
+          ecma_object_ptr_t set_p;
+          ecma_get_object_from_value (set_p, value_for_prop_desc);
+          prop_desc.set_p = (ecma_object_t*) set_p;
 
           if (!is_previous_undefined
               && is_previous_data_desc)
@@ -1223,13 +1236,16 @@ opfunc_with (ecma_completion_value_t &ret_value, /**< out: completion value */
 
   int_data->pos++;
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
+  ecma_object_ptr_t obj_p;
+  ecma_get_object_from_value (obj_p, obj_expr_value);
 
-  ecma_object_t *old_env_p = int_data->lex_env_p;
-  ecma_object_t *new_env_p = ecma_create_object_lex_env (old_env_p,
-                                                         obj_p,
-                                                         true);
-  int_data->lex_env_p = new_env_p;
+  const ecma_object_ptr_t* old_env_p = int_data->lex_env_p;
+  ecma_object_ptr_t new_env_p;
+  ecma_create_object_lex_env (new_env_p,
+                              *old_env_p,
+                              obj_p,
+                              true);
+  int_data->lex_env_p = &new_env_p;
 
   ecma_completion_value_t evaluation_completion;
   run_int_loop (evaluation_completion, int_data);
@@ -1315,9 +1331,9 @@ evaluate_arg_for_typeof (ecma_completion_value_t &ret_value, /**< out: completio
 
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
 
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
-                                                                        var_name_string_p);
-    if (ref_base_lex_env_p == NULL)
+    ecma_object_ptr_t ref_base_lex_env_p;
+    ecma_op_resolve_reference_base (ref_base_lex_env_p, *int_data->lex_env_p, var_name_string_p);
+    if (ref_base_lex_env_p.is_null ())
     {
       ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
     }
@@ -1422,7 +1438,7 @@ opfunc_delete_var (ecma_completion_value_t &ret_value, /**< out: completion valu
 
   ecma_reference_t ref;
   ecma_op_get_identifier_reference (ref,
-                                    int_data->lex_env_p,
+                                    *int_data->lex_env_p,
                                     name_string_p,
                                     int_data->is_strict);
 
@@ -1439,7 +1455,8 @@ opfunc_delete_var (ecma_completion_value_t &ret_value, /**< out: completion valu
     }
     else
     {
-      ecma_object_t *bindings_p = ecma_get_object_from_value (ref.base);
+      ecma_object_ptr_t bindings_p;
+      ecma_get_object_from_value (bindings_p, ref.base);
       JERRY_ASSERT (ecma_is_lexical_environment (bindings_p));
 
       ECMA_TRY_CATCH (ret_value, ecma_op_delete_binding, delete_completion, bindings_p,
@@ -1500,7 +1517,8 @@ opfunc_delete_prop (ecma_completion_value_t &ret_value, /**< out: completion val
     ECMA_TRY_CATCH (ret_value, ecma_op_to_object, obj_value, base_value);
 
     JERRY_ASSERT (ecma_is_value_object (obj_value));
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+    ecma_object_ptr_t obj_p;
+    ecma_get_object_from_value (obj_p, obj_value);
     JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
     ECMA_TRY_CATCH (ret_value, ecma_op_object_delete, delete_op_ret_val, obj_p, name_string_p, int_data->is_strict);

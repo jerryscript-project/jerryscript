@@ -34,7 +34,7 @@ ecma_op_create_array_object (ecma_completion_value_t &ret_value,
 
 extern void
 ecma_op_array_object_define_own_property (ecma_completion_value_t &ret_value,
-                                          ecma_object_t *obj_p,
+                                          const ecma_object_ptr_t& obj_p,
                                           ecma_string_t *property_name_p,
                                           const ecma_property_descriptor_t* property_desc_p,
                                           bool is_throw);

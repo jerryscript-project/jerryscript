@@ -121,7 +121,11 @@ ecma_op_abstract_equality_compare (ecma_completion_value_t &ret_value, /**< out:
     { // f.
       JERRY_ASSERT(is_x_object);
 
-      bool is_equal = (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+      ecma_object_ptr_t x_obj_p, y_obj_p;
+      ecma_get_object_from_value (x_obj_p, x);
+      ecma_get_object_from_value (y_obj_p, y);
+
+      bool is_equal = (x_obj_p == y_obj_p);
 
       ecma_make_simple_completion_value (ret_value, is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
@@ -302,7 +306,11 @@ ecma_op_strict_equality_compare (const ecma_value_t& x, /**< first operand */
   // 7. Return true if x and y refer to the same object. Otherwise, return false.
   JERRY_ASSERT (is_x_object);
 
-  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+  ecma_object_ptr_t x_obj_p, y_obj_p;
+  ecma_get_object_from_value (x_obj_p, x);
+  ecma_get_object_from_value (y_obj_p, y);
+
+  return (x_obj_p == y_obj_p);
 } /* ecma_op_strict_equality_compare */
 
 /**

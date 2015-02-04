@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,21 @@
 #include "jerry-libc.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
+
+/*
+ * Valgrind-related options and headers
+ */
+#ifndef JERRY_NVALGRIND
+# include "memcheck.h"
+
+# define VALGRIND_NOACCESS_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
+# define VALGRIND_UNDEFINED_SPACE(p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
+# define VALGRIND_DEFINED_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
+#else /* !JERRRY_NVALGRIND */
+# define VALGRIND_NOACCESS_SPACE(p, s)
+# define VALGRIND_UNDEFINED_SPACE(p, s)
+# define VALGRIND_DEFINED_SPACE(p, s)
+#endif /* !JERRY_NVALGRIND */
 
 static void mem_check_pool (mem_pool_state_t *pool_p);
 
@@ -100,6 +115,8 @@ mem_pool_init (mem_pool_state_t *pool_p, /**< pool */
                                                                                                        chunk_index);
 
     *next_free_chunk_index_p = (mem_pool_chunk_index_t) (chunk_index + 1u);
+
+    VALGRIND_NOACCESS_SPACE (next_free_chunk_index_p, MEM_POOL_CHUNK_SIZE);
   }
 
   mem_check_pool (pool_p);
@@ -119,9 +136,13 @@ mem_pool_alloc_chunk (mem_pool_state_t *pool_p) /**< pool */
   mem_pool_chunk_index_t chunk_index = pool_p->first_free_chunk;
   uint8_t *chunk_p = MEM_POOL_CHUNK_ADDRESS(pool_p, chunk_index);
 
+  VALGRIND_DEFINED_SPACE (chunk_p, MEM_POOL_CHUNK_SIZE);
+
   mem_pool_chunk_index_t *next_free_chunk_index_p = (mem_pool_chunk_index_t*) chunk_p;
   pool_p->first_free_chunk = *next_free_chunk_index_p;
   pool_p->free_chunks_number--;
+
+  VALGRIND_UNDEFINED_SPACE (chunk_p, MEM_POOL_CHUNK_SIZE);
 
   mem_check_pool (pool_p);
 
@@ -151,6 +172,8 @@ mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
   pool_p->first_free_chunk = chunk_index;
   pool_p->free_chunks_number++;
 
+  VALGRIND_NOACCESS_SPACE (next_free_chunk_index_p, MEM_POOL_CHUNK_SIZE);
+
   mem_check_pool (pool_p);
 } /* mem_pool_free_chunk */
 
@@ -173,7 +196,11 @@ mem_check_pool (mem_pool_state_t __unused *pool_p) /**< pool (unused #ifdef JERR
 
     met_free_chunks_number++;
 
+    VALGRIND_DEFINED_SPACE (next_free_chunk_index_p, MEM_POOL_CHUNK_SIZE);
+
     chunk_index = *next_free_chunk_index_p;
+
+    VALGRIND_NOACCESS_SPACE (next_free_chunk_index_p, MEM_POOL_CHUNK_SIZE);
   }
 
   JERRY_ASSERT(met_free_chunks_number == pool_p->free_chunks_number);

@@ -42,7 +42,6 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
                     ecma_object_type_t type) /**< object type */
 {
   ecma_object_t *object_p = ecma_alloc_object ();
-  object_p->container = 0;
 
   ecma_init_gc_info (object_p);
 
@@ -90,7 +89,6 @@ ecma_object_t*
 ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer lexical environment */
 {
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
-  new_lexical_environment_p->container = 0;
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -137,7 +135,6 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
-  new_lexical_environment_p->container = 0;
 
   ecma_init_gc_info (new_lexical_environment_p);
 

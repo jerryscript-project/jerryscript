@@ -235,7 +235,8 @@ CFLAGS_CORTEXM4 ?= -mlittle-endian -mcpu=cortex-m4 -march=armv7e-m -mthumb \
 # Common
 #
 
-CFLAGS_COMMON ?= $(INCLUDES) -std=c++11 -nostdlib -fno-exceptions -fno-rtti
+CFLAGS_COMMON ?= $(INCLUDES) -std=c++11 -nostdlib -fno-exceptions -fno-rtti \
+                 -fno-implicit-templates -fno-implicit-inline-templates
 LDFLAGS ?= -lgcc
 
 ifeq ($(OPTION_OPTIMIZE),enable)

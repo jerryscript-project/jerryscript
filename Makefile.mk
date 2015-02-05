@@ -394,9 +394,9 @@ endif
 ifeq ($(OPTION_VALGRIND),enable)
  VALGRIND_CMD := "valgrind --error-exitcode=254 --track-origins=yes"
  VALGRIND_TIMEOUT := 60
+ DEFINES_JERRY += -DJERRY_VALGRIND
 else
  VALGRIND_CMD :=
- DEFINES_JERRY += -DJERRY_NVALGRIND
  VALGRIND_TIMEOUT :=
 endif
 

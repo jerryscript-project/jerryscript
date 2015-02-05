@@ -37,7 +37,7 @@
 /*
  * Valgrind-related options and headers
  */
-#ifndef JERRY_NVALGRIND
+#ifdef JERRY_VALGRIND
 # include "memcheck.h"
 
 # define VALGRIND_NOACCESS_STRUCT(s)    (void)VALGRIND_MAKE_MEM_NOACCESS((s), sizeof (*(s)))
@@ -46,14 +46,14 @@
 # define VALGRIND_NOACCESS_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
 # define VALGRIND_UNDEFINED_SPACE(p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
 # define VALGRIND_DEFINED_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
-#else /* !JERRRY_NVALGRIND */
+#else /* JERRY_VALGRIND */
 # define VALGRIND_NOACCESS_STRUCT(s)
 # define VALGRIND_UNDEFINED_STRUCT(s)
 # define VALGRIND_DEFINED_STRUCT(s)
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
-#endif /* !JERRY_NVALGRIND */
+#endif /* JERRY_VALGRIND */
 
 /**
  * Magic numbers for heap memory blocks

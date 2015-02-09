@@ -23,19 +23,19 @@
  *      current opcode's position changes by adding specified offset
  *      if argument evaluates to true.
  */
-void
-opfunc_is_true_jmp_down (ecma_completion_value_t &ret_value, /**< out: completion value */
-                         opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
                          int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_true_jmp_down.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_down.opcode_1,
                                                                     opdata.data.is_true_jmp_down.opcode_2);
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, cond_value, int_data, cond_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  ecma_completion_value_t to_bool_completion;
-  ecma_op_to_boolean (to_bool_completion, cond_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
@@ -48,25 +48,27 @@ opfunc_is_true_jmp_down (ecma_completion_value_t &ret_value, /**< out: completio
     int_data->pos++;
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  ret_value = ecma_make_empty_completion_value ();
 
   ECMA_FINALIZE (cond_value);
+
+  return ret_value;
 }
 
 /* Likewise to opfunc_is_true_jmp_down, but jumps up.  */
-void
-opfunc_is_true_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion value */
-                       opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
                        int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_true_jmp_up.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_up.opcode_1,
                                                                     opdata.data.is_true_jmp_up.opcode_2);
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, cond_value, int_data, cond_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  ecma_completion_value_t to_bool_completion;
-  ecma_op_to_boolean (to_bool_completion, cond_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
@@ -79,9 +81,11 @@ opfunc_is_true_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion 
     int_data->pos++;
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  ret_value = ecma_make_empty_completion_value ();
 
   ECMA_FINALIZE (cond_value);
+
+  return ret_value;
 }
 
 /**
@@ -91,19 +95,19 @@ opfunc_is_true_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion 
  *      current opcode's position changes by adding specified offset
  *      if argument evaluates to false.
  */
-void
-opfunc_is_false_jmp_down (ecma_completion_value_t &ret_value, /**< out: completion value */
-                          opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
                           int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_false_jmp_down.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_down.opcode_1,
                                                                     opdata.data.is_false_jmp_down.opcode_2);
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, cond_value, int_data, cond_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  ecma_completion_value_t to_bool_completion;
-  ecma_op_to_boolean (to_bool_completion, cond_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
@@ -116,25 +120,27 @@ opfunc_is_false_jmp_down (ecma_completion_value_t &ret_value, /**< out: completi
     int_data->pos++;
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  ret_value = ecma_make_empty_completion_value ();
 
   ECMA_FINALIZE (cond_value);
+
+  return ret_value;
 }
 
 /* Likewise to opfunc_is_false_jmp_down, but jumps up.  */
-void
-opfunc_is_false_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion value */
-                        opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
                         int_data_t *int_data) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_false_jmp_up.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_up.opcode_1,
                                                                     opdata.data.is_false_jmp_up.opcode_2);
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, cond_value, int_data, cond_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  ecma_completion_value_t to_bool_completion;
-  ecma_op_to_boolean (to_bool_completion, cond_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+
+  ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
@@ -147,9 +153,11 @@ opfunc_is_false_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion
     int_data->pos++;
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  ret_value = ecma_make_empty_completion_value ();
 
   ECMA_FINALIZE (cond_value);
+
+  return ret_value;
 }
 
 /**
@@ -158,9 +166,8 @@ opfunc_is_false_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion
  * Note:
  *      the opcode changes adds specified value to current opcode position
  */
-void
-opfunc_jmp_down (ecma_completion_value_t &ret_value, /**< out: completion value */
-                 opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_jmp_down (opcode_t opdata, /**< operation data */
                  int_data_t *int_data) /**< interpreter context */
 {
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
@@ -170,7 +177,7 @@ opfunc_jmp_down (ecma_completion_value_t &ret_value, /**< out: completion value 
 
   int_data->pos = (opcode_counter_t) (int_data->pos + offset);
 
-  ecma_make_empty_completion_value (ret_value);
+  return ecma_make_empty_completion_value ();
 }
 
 /**
@@ -179,9 +186,8 @@ opfunc_jmp_down (ecma_completion_value_t &ret_value, /**< out: completion value 
  * Note:
  *      the opcode changes substracts specified value from current opcode position
  */
-void
-opfunc_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion value */
-               opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_jmp_up (opcode_t opdata, /**< operation data */
                int_data_t *int_data) /**< interpreter context */
 {
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_up.opcode_1,
@@ -190,5 +196,5 @@ opfunc_jmp_up (ecma_completion_value_t &ret_value, /**< out: completion value */
 
   int_data->pos = (opcode_counter_t) (int_data->pos - offset);
 
-  ecma_make_empty_completion_value (ret_value);
+  return ecma_make_empty_completion_value ();
 }

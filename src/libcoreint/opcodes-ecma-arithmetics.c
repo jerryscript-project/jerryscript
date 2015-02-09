@@ -41,14 +41,15 @@ typedef enum
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-static void
-do_number_arithmetic (ecma_completion_value_t &ret_value, /**< out: completion value */
-                      int_data_t *int_data, /**< interpreter context */
+static ecma_completion_value_t
+do_number_arithmetic (int_data_t *int_data, /**< interpreter context */
                       idx_t dst_var_idx, /**< destination variable identifier */
                       number_arithmetic_op op, /**< number arithmetic operation */
                       const ecma_value_t& left_value, /**< left value */
                       const ecma_value_t& right_value) /** right value */
 {
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
@@ -83,13 +84,14 @@ do_number_arithmetic (ecma_completion_value_t &ret_value, /**< out: completion v
     }
   }
 
-  set_variable_value (ret_value,
-                      int_data, int_data->pos,
-                      dst_var_idx,
-                      ecma_value_t (res_p));
+  ret_value = set_variable_value (int_data, int_data->pos,
+                                  dst_var_idx,
+                                  ecma_make_number_value (res_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);
+
+  return ret_value;
 } /* do_number_arithmetic */
 
 /**
@@ -100,32 +102,39 @@ do_number_arithmetic (ecma_completion_value_t &ret_value, /**< out: completion v
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_addition (ecma_completion_value_t &ret_value, /**< out: completion value */
-                 opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_addition (opcode_t opdata, /**< operation data */
                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.addition.dst;
   const idx_t left_var_idx = opdata.data.addition.var_left;
   const idx_t right_var_idx = opdata.data.addition.var_right;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, ecma_op_to_primitive, prim_left_value, left_value, ECMA_PREFERRED_TYPE_NO);
-  ECMA_TRY_CATCH (ret_value, ecma_op_to_primitive, prim_right_value, right_value, ECMA_PREFERRED_TYPE_NO);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (prim_left_value,
+                  ecma_op_to_primitive (left_value,
+                                        ECMA_PREFERRED_TYPE_NO),
+                  ret_value);
+  ECMA_TRY_CATCH (prim_right_value,
+                  ecma_op_to_primitive (right_value,
+                                        ECMA_PREFERRED_TYPE_NO),
+                  ret_value);
 
   if (ecma_is_value_string (prim_left_value)
       || ecma_is_value_string (prim_right_value))
   {
-    ECMA_TRY_CATCH (ret_value, ecma_op_to_string, str_left_value, prim_left_value);
-    ECMA_TRY_CATCH (ret_value, ecma_op_to_string, str_right_value, prim_right_value);
+    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (prim_left_value), ret_value);
+    ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (prim_right_value), ret_value);
 
     ecma_string_t *string1_p = ecma_get_string_from_value (str_left_value);
     ecma_string_t *string2_p = ecma_get_string_from_value (str_right_value);
 
     ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
 
-    set_variable_value (ret_value, int_data, int_data->pos, dst_var_idx, ecma_value_t (concat_str_p));
+    ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_string_value (concat_str_p));
 
     ecma_deref_ecma_string (concat_str_p);
 
@@ -134,12 +143,11 @@ opfunc_addition (ecma_completion_value_t &ret_value, /**< out: completion value 
   }
   else
   {
-    do_number_arithmetic (ret_value,
-                          int_data,
-                          dst_var_idx,
-                          number_arithmetic_addition,
-                          prim_left_value,
-                          prim_right_value);
+    ret_value = do_number_arithmetic (int_data,
+                                      dst_var_idx,
+                                      number_arithmetic_addition,
+                                      prim_left_value,
+                                      prim_right_value);
   }
 
   ECMA_FINALIZE (prim_right_value);
@@ -148,6 +156,8 @@ opfunc_addition (ecma_completion_value_t &ret_value, /**< out: completion value 
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_addition */
 
 /**
@@ -158,29 +168,31 @@ opfunc_addition (ecma_completion_value_t &ret_value, /**< out: completion value 
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_substraction (ecma_completion_value_t &ret_value, /**< out: completion value */
-                     opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_substraction (opcode_t opdata, /**< operation data */
                      int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.substraction.dst;
   const idx_t left_var_idx = opdata.data.substraction.var_left;
   const idx_t right_var_idx = opdata.data.substraction.var_right;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  do_number_arithmetic (ret_value,
-                        int_data,
-                        dst_var_idx,
-                        number_arithmetic_substraction,
-                        left_value,
-                        right_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic (int_data,
+                                    dst_var_idx,
+                                    number_arithmetic_substraction,
+                                    left_value,
+                                    right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_substraction */
 
 /**
@@ -191,29 +203,31 @@ opfunc_substraction (ecma_completion_value_t &ret_value, /**< out: completion va
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_multiplication (ecma_completion_value_t &ret_value, /**< out: completion value */
-                       opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_multiplication (opcode_t opdata, /**< operation data */
                        int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.multiplication.dst;
   const idx_t left_var_idx = opdata.data.multiplication.var_left;
   const idx_t right_var_idx = opdata.data.multiplication.var_right;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  do_number_arithmetic (ret_value,
-                        int_data,
-                        dst_var_idx,
-                        number_arithmetic_multiplication,
-                        left_value,
-                        right_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic (int_data,
+                                    dst_var_idx,
+                                    number_arithmetic_multiplication,
+                                    left_value,
+                                    right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_multiplication */
 
 /**
@@ -224,29 +238,31 @@ opfunc_multiplication (ecma_completion_value_t &ret_value, /**< out: completion 
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_division (ecma_completion_value_t &ret_value, /**< out: completion value */
-                 opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_division (opcode_t opdata, /**< operation data */
                  int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.division.dst;
   const idx_t left_var_idx = opdata.data.division.var_left;
   const idx_t right_var_idx = opdata.data.division.var_right;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  do_number_arithmetic (ret_value,
-                        int_data,
-                        dst_var_idx,
-                        number_arithmetic_division,
-                        left_value,
-                        right_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic (int_data,
+                                    dst_var_idx,
+                                    number_arithmetic_division,
+                                    left_value,
+                                    right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_division */
 
 /**
@@ -257,29 +273,31 @@ opfunc_division (ecma_completion_value_t &ret_value, /**< out: completion value 
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_remainder (ecma_completion_value_t &ret_value, /**< out: completion value */
-                  opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_remainder (opcode_t opdata, /**< operation data */
                   int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t left_var_idx = opdata.data.remainder.var_left;
   const idx_t right_var_idx = opdata.data.remainder.var_right;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, left_value, int_data, left_var_idx, false);
-  ECMA_TRY_CATCH (ret_value, get_variable_value, right_value, int_data, right_var_idx, false);
+  ecma_completion_value_t ret_value;
 
-  do_number_arithmetic (ret_value,
-                        int_data,
-                        dst_var_idx,
-                        number_arithmetic_remainder,
-                        left_value,
-                        right_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+
+  ret_value = do_number_arithmetic (int_data,
+                                    dst_var_idx,
+                                    number_arithmetic_remainder,
+                                    left_value,
+                                    right_value);
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_remainder */
 
 /**
@@ -290,15 +308,16 @@ opfunc_remainder (ecma_completion_value_t &ret_value, /**< out: completion value
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_unary_plus (ecma_completion_value_t &ret_value, /**< out: completion value */
-                   opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_unary_plus (opcode_t opdata, /**< operation data */
                    int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t var_idx = opdata.data.remainder.var_left;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, var_value, int_data, var_idx, false);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
                                var_value,
                                ret_value);
@@ -306,12 +325,16 @@ opfunc_unary_plus (ecma_completion_value_t &ret_value, /**< out: completion valu
   ecma_number_t *tmp_p = int_data->tmp_num_p;
 
   *tmp_p = num_var_value;
-  set_variable_value (ret_value, int_data, int_data->pos, dst_var_idx, ecma_value_t (tmp_p));
+  ret_value = set_variable_value (int_data, int_data->pos,
+                                  dst_var_idx,
+                                  ecma_make_number_value (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_unary_plus */
 
 /**
@@ -322,15 +345,16 @@ opfunc_unary_plus (ecma_completion_value_t &ret_value, /**< out: completion valu
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-opfunc_unary_minus (ecma_completion_value_t &ret_value, /**< out: completion value */
-                    opcode_t opdata, /**< operation data */
+ecma_completion_value_t
+opfunc_unary_minus (opcode_t opdata, /**< operation data */
                     int_data_t *int_data) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.remainder.dst;
   const idx_t var_idx = opdata.data.remainder.var_left;
 
-  ECMA_TRY_CATCH (ret_value, get_variable_value, var_value, int_data, var_idx, false);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (var_value, get_variable_value (int_data, var_idx, false), ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
                                var_value,
                                ret_value);
@@ -338,10 +362,14 @@ opfunc_unary_minus (ecma_completion_value_t &ret_value, /**< out: completion val
   ecma_number_t *tmp_p = int_data->tmp_num_p;
 
   *tmp_p = ecma_number_negate (num_var_value);
-  set_variable_value (ret_value, int_data, int_data->pos, dst_var_idx, ecma_value_t (tmp_p));
+  ret_value = set_variable_value (int_data, int_data->pos,
+                                  dst_var_idx,
+                                  ecma_make_number_value (tmp_p));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
   ECMA_FINALIZE (var_value);
 
   int_data->pos++;
+
+  return ret_value;
 } /* opfunc_unary_minus */

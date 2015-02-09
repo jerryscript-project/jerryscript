@@ -36,24 +36,25 @@
  *          pointer to lexical environment - reference's base,
  *         else - NULL.
  */
-void
-ecma_op_resolve_reference_base (ecma_object_ptr_t &lex_env_iter_p, /**< out: object pointer */
-                                const ecma_object_ptr_t &lex_env_p, /**< starting lexical environment */
+ecma_object_t*
+ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
                                 ecma_string_t *name_p) /**< identifier's name */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ());
+  JERRY_ASSERT(lex_env_p != NULL);
 
-  lex_env_iter_p = lex_env_p;
+  ecma_object_t *lex_env_iter_p = lex_env_p;
 
-  while (lex_env_iter_p.is_not_null ())
+  while (lex_env_iter_p != NULL)
   {
     if (ecma_op_has_binding (lex_env_iter_p, name_p))
     {
-      return;
+      return lex_env_iter_p;
     }
 
-    ecma_get_lex_env_outer_reference (lex_env_iter_p, lex_env_iter_p);
+    lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
   }
+
+  return NULL;
 } /* ecma_op_resolve_reference_base */
 
 /**
@@ -62,30 +63,26 @@ ecma_op_resolve_reference_base (ecma_object_ptr_t &lex_env_iter_p, /**< out: obj
  * @return ECMA-reference
  *         Returned value must be freed through ecma_free_reference.
  */
-void
-ecma_op_get_identifier_reference (ecma_reference_t &ret, /**< out: reference */
-                                  const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_reference_t
+ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environment */
                                   ecma_string_t *name_p, /**< identifier's name */
                                   bool is_strict) /**< strict reference flag */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ());
+  JERRY_ASSERT(lex_env_p != NULL);
 
-  ecma_object_ptr_t base_lex_env_p;
-  ecma_op_resolve_reference_base (base_lex_env_p, lex_env_p, name_p);
+  ecma_object_t *base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, name_p);
 
-  if (base_lex_env_p.is_not_null ())
+  if (base_lex_env_p != NULL)
   {
-    ecma_make_reference (ret,
-                         ecma_value_t (base_lex_env_p),
-                         name_p,
-                         is_strict);
+    return ecma_make_reference (ecma_make_object_value (base_lex_env_p),
+                                name_p,
+                                is_strict);
   }
   else
   {
-    ecma_make_reference (ret,
-                         ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED),
-                         name_p,
-                         is_strict);
+    return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                name_p,
+                                is_strict);
   }
 } /* ecma_op_get_identifier_reference */
 
@@ -95,18 +92,20 @@ ecma_op_get_identifier_reference (ecma_reference_t &ret, /**< out: reference */
  * @return ECMA-reference
  *         Returned value must be freed through ecma_free_reference.
  */
-void
-ecma_make_reference (ecma_reference_t &ret, /**< out: reference */
-                     const ecma_value_t& base, /**< base value */
+ecma_reference_t
+ecma_make_reference (const ecma_value_t& base, /**< base value */
                      ecma_string_t *name_p, /**< referenced name */
                      bool is_strict) /**< strict reference flag */
 {
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  ecma_copy_value (ret.base, base, true);
-  ret.is_strict = is_strict;
+  ecma_reference_t ref;
+  ref.base = ecma_copy_value (base, true);
+  ref.is_strict = is_strict;
 
-  ECMA_SET_POINTER (ret.referenced_name_cp, name_p);
+  ECMA_SET_POINTER (ref.referenced_name_cp, name_p);
+
+  return ref;
 } /* ecma_make_reference */
 
 /**
@@ -116,7 +115,7 @@ ecma_make_reference (ecma_reference_t &ret, /**< out: reference */
  *         freeing invalidates all copies of the reference.
  */
 void
-ecma_free_reference (ecma_reference_t& ref) /**< reference */
+ecma_free_reference (ecma_reference_t ref) /**< reference */
 {
   ecma_free_value (ref.base, true);
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,

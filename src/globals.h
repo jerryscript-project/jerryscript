@@ -37,11 +37,7 @@ typedef unsigned long mword_t;
 #define __noinline __attribute__((noinline))
 #define __used __attribute__((used))
 #ifndef __attribute_always_inline__
-# ifdef JERRY_NDEBUG
-#  define __attribute_always_inline__ __attribute__((always_inline))
-# else /* !JERRY_NDEBUG */
-#  define __attribute_always_inline__
-# endif /* !JERRY_NDEBUG */
+# define __attribute_always_inline__ __attribute__((always_inline))
 #endif /* !__attribute_always_inline__ */
 #ifndef __attribute_const__
 # define __attribute_const__ __attribute__((const))

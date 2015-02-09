@@ -53,11 +53,14 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static void
-ecma_builtin_boolean_prototype_object_to_string (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                                 const ecma_value_t& this_arg) /**< this argument */
+static ecma_completion_value_t
+ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
 {
-  ECMA_TRY_CATCH (ret_value, ecma_builtin_boolean_prototype_object_value_of, value_of_ret, this_arg);
+  ecma_completion_value_t ret_value;
+
+  ECMA_TRY_CATCH (value_of_ret,
+                  ecma_builtin_boolean_prototype_object_value_of (this_arg),
+                  ret_value);
 
   ecma_string_t *ret_str_p;
 
@@ -72,9 +75,11 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_completion_value_t &ret_va
     ret_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
   }
 
-  ecma_make_normal_completion_value (ret_value, ecma_value_t (ret_str_p));
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
 
   ECMA_FINALIZE (value_of_ret);
+
+  return ret_value;
 } /* ecma_builtin_boolean_prototype_object_to_string */
 
 /**
@@ -86,19 +91,16 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_completion_value_t &ret_va
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static void
-ecma_builtin_boolean_prototype_object_value_of (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                                const ecma_value_t& this_arg) /**< this argument */
+static ecma_completion_value_t
+ecma_builtin_boolean_prototype_object_value_of (const ecma_value_t& this_arg) /**< this argument */
 {
   if (ecma_is_value_boolean (this_arg))
   {
-    ecma_make_normal_completion_value (ret_value, this_arg);
-    return;
+    return ecma_make_normal_completion_value (this_arg);
   }
   else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_ptr_t obj_p;
-    ecma_get_object_from_value (obj_p, this_arg);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
 
@@ -111,18 +113,15 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_completion_value_t &ret_val
 
       ecma_simple_value_t prim_simple_value = (ecma_simple_value_t) prim_value_prop_p->u.internal_property.value;
 
-      ecma_value_t ret_boolean_value (prim_simple_value);
+      ecma_value_t ret_boolean_value = ecma_make_simple_value (prim_simple_value);
 
       JERRY_ASSERT (ecma_is_value_boolean (ret_boolean_value));
 
-      ecma_make_normal_completion_value (ret_value, ret_boolean_value);
-      return;
+      return ecma_make_normal_completion_value (ret_boolean_value);
     }
   }
 
-  ecma_object_ptr_t exception_obj_p;
-  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
-  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

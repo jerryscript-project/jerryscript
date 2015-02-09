@@ -18,32 +18,24 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-value.h"
 
-extern void
-ecma_create_arguments_object (ecma_object_ptr_t &ret_val,
-                              const ecma_object_ptr_t& func_obj_p,
-                              const ecma_object_ptr_t& lex_env_p,
+extern ecma_object_t*
+ecma_create_arguments_object (ecma_object_t *func_obj_p,
+                              ecma_object_t *lex_env_p,
                               ecma_collection_iterator_t *formal_params_iter_p,
                               const ecma_value_t *arguments_list_p,
                               ecma_length_t arguments_list_length,
                               bool is_strict);
 
-extern void
-ecma_op_arguments_object_get (ecma_completion_value_t &ret_value,
-                              const ecma_object_ptr_t& obj_p,
-                              ecma_string_t *property_name_p);
-extern ecma_property_t*
-ecma_op_arguments_object_get_own_property (const ecma_object_ptr_t& obj_p,
-                                           ecma_string_t *property_name_p);
-extern void
-ecma_op_arguments_object_delete (ecma_completion_value_t &ret_value,
-                                 const ecma_object_ptr_t& obj_p,
-                                 ecma_string_t *property_name_p,
-                                 bool is_throw);
-extern void
-ecma_op_arguments_object_define_own_property (ecma_completion_value_t &ret_value,
-                                              const ecma_object_ptr_t& obj_p,
+extern ecma_completion_value_t ecma_op_arguments_object_get (ecma_object_t *obj_p,
+                                                             ecma_string_t *property_name_p);
+extern ecma_property_t *ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p,
+                                                                   ecma_string_t *property_name_p);
+extern ecma_completion_value_t ecma_op_arguments_object_delete (ecma_object_t *obj_p,
+                                                                ecma_string_t *property_name_p,
+                                                                bool is_throw);
+extern ecma_completion_value_t
+ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p,
                                               ecma_string_t *property_name_p,
                                               const ecma_property_descriptor_t* property_desc_p,
                                               bool is_throw);

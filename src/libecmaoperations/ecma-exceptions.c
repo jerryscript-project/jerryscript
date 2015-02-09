@@ -35,9 +35,8 @@
  * @return pointer to ecma-object representing specified error
  *         with reference counter set to one.
  */
-void
-ecma_new_standard_error (ecma_object_ptr_t &new_error_obj_p, /**< out: object pointer */
-                         ecma_standard_error_t error_type) /**< native error type */
+ecma_object_t*
+ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
 {
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
@@ -87,20 +86,23 @@ ecma_new_standard_error (ecma_object_ptr_t &new_error_obj_p, /**< out: object po
     }
   }
 
-  ecma_object_ptr_t prototype_obj_p;
-  ecma_builtin_get (prototype_obj_p, prototype_id);
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
-  ecma_create_object (new_error_obj_p, prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *new_error_obj_p = ecma_create_object (prototype_obj_p,
+                                                       true,
+                                                       ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_deref_object (prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (new_error_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ERROR_UL;
+
+  return new_error_obj_p;
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
   (void) error_type;
 
-  ecma_builtin_get (new_error_obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
+  return ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 } /* ecma_new_standard_error */
 
@@ -110,12 +112,11 @@ ecma_new_standard_error (ecma_object_ptr_t &new_error_obj_p, /**< out: object po
  * @return pointer to ecma-object representing specified error
  *         with reference counter set to one.
  */
-void
-ecma_new_standard_error_with_message (ecma_object_ptr_t &new_error_obj_p, /**< out: object pointer */
-                                      ecma_standard_error_t error_type, /**< native error type */
+ecma_object_t*
+ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< native error type */
                                       ecma_string_t* message_string_p) /**< message string */
 {
-  ecma_new_standard_error (new_error_obj_p, error_type);
+  ecma_object_t *new_error_obj_p = ecma_new_standard_error (error_type);
 
   ecma_string_t *message_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MESSAGE);
   ecma_property_t *prop_p = ecma_create_named_data_property (new_error_obj_p,
@@ -123,8 +124,10 @@ ecma_new_standard_error_with_message (ecma_object_ptr_t &new_error_obj_p, /**< o
                                                              true, false, true);
 
   ecma_set_named_data_property_value (prop_p,
-                                      ecma_value_t (ecma_copy_or_ref_ecma_string (message_string_p)));
+                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (message_string_p)));
   ecma_deref_ecma_string (message_magic_string_p);
+
+  return new_error_obj_p;
 } /* ecma_new_standard_error_with_message */
 
 /**

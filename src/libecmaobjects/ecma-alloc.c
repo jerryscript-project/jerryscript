@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_value_packed_t) <= sizeof (uint16_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_value_t) <= sizeof (uint16_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t));
 
 JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t));
@@ -30,6 +30,7 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_LEX_ENV_TYPE_SIZE <= sizeof (uint64_t) * JERRY_
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_completion_value_t) == sizeof (uint32_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
 
 /** \addtogroup ecma ECMA
@@ -74,40 +75,13 @@ JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
 }
 
 /**
- * Template of an allocation routine.
- */
-#define ALLOC_MANAGED_PTR(ecma_type) void \
-  ecma_alloc_ ## ecma_type (ecma_ ## ecma_type ## _ptr_t &ret_ ## ecma_type ## _p) \
-{ \
-  ret_ ## ecma_type ## _p = (ecma_ ## ecma_type ## _t *) mem_pools_alloc (); \
-  \
-  JERRY_ASSERT (ret_ ## ecma_type ## _p.is_not_null ()); \
-}
-
-/**
- * Deallocation routine template
- */
-#define DEALLOC_MANAGED_PTR(ecma_type) void \
-  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _ptr_t& ecma_type ## _p) \
-{ \
-  ecma_ ## ecma_type ## _t* ecma_type ## _tmp_p = (ecma_ ## ecma_type ## _t*) ecma_type ## _p; \
-  ecma_type ## _p = (ecma_ ## ecma_type ## _t *) NULL; \
-  \
-  mem_pools_free ((uint8_t*) ecma_type ## _tmp_p); \
-}
-
-/**
  * Declaration of alloc/free routine for specified ecma-type.
  */
 #define DECLARE_ROUTINES_FOR(ecma_type) \
   ALLOC(ecma_type) \
   DEALLOC(ecma_type)
-#define DECLARE_MANAGED_PTR_ROUTINES_FOR(ecma_type) \
-  ALLOC_MANAGED_PTR(ecma_type) \
-  DEALLOC_MANAGED_PTR(ecma_type)
 
-DECLARE_MANAGED_PTR_ROUTINES_FOR (object)
-
+DECLARE_ROUTINES_FOR (object)
 DECLARE_ROUTINES_FOR (property)
 DECLARE_ROUTINES_FOR (number)
 DECLARE_ROUTINES_FOR (collection_header)

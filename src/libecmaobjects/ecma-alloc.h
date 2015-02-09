@@ -30,12 +30,12 @@
  *
  * @return pointer to allocated memory
  */
-extern void ecma_alloc_object (ecma_object_ptr_t &ret_obj_p);
+extern ecma_object_t *ecma_alloc_object (void);
 
 /**
  * Dealloc memory from an ecma-object
  */
-extern void ecma_dealloc_object (ecma_object_ptr_t &object_p);
+extern void ecma_dealloc_object (ecma_object_t *object_p);
 
 /**
  * Allocate memory for ecma-property

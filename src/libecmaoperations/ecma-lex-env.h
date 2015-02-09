@@ -18,7 +18,6 @@
 
 #include "ecma-globals.h"
 #include "ecma-reference.h"
-#include "ecma-value.h"
 #include "globals.h"
 
 /** \addtogroup ecma ECMA
@@ -31,61 +30,43 @@
  */
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
-extern void
-ecma_op_get_value_lex_env_base (ecma_completion_value_t &ret_value,
-                                const ecma_object_ptr_t& ref_base_lex_env_p,
-                                ecma_string_t *var_name_string_p,
-                                bool is_strict);
-extern void
-ecma_op_get_value_object_base (ecma_completion_value_t &ret_value,
-                                const ecma_reference_t& ref);
-extern void
-ecma_op_put_value_lex_env_base (ecma_completion_value_t &ret_value,
-                                const ecma_object_ptr_t& ref_base_lex_env_p,
-                                ecma_string_t *var_name_string_p,
-                                bool is_strict,
-                                const ecma_value_t& value);
-extern void
-ecma_op_put_value_object_base (ecma_completion_value_t &ret_value,
-                               const ecma_reference_t& ref,
-                               const ecma_value_t& value);
+extern ecma_completion_value_t ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
+                                                               ecma_string_t *var_name_string_p,
+                                                               bool is_strict);
+extern ecma_completion_value_t ecma_op_get_value_object_base (ecma_reference_t ref);
+extern ecma_completion_value_t ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
+                                                               ecma_string_t *var_name_string_p,
+                                                               bool is_strict,
+                                                               const ecma_value_t& value);
+extern ecma_completion_value_t ecma_op_put_value_object_base (ecma_reference_t ref,
+                                                              const ecma_value_t& value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
-extern bool ecma_op_has_binding (const ecma_object_ptr_t& lex_env_p,
+extern bool ecma_op_has_binding (ecma_object_t *lex_env_p,
                                  ecma_string_t *name_p);
-extern void
-ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value,
-                                const ecma_object_ptr_t& lex_env_p,
-                                ecma_string_t *name_p,
-                                bool is_deletable);
-extern void
-ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value,
-                             const ecma_object_ptr_t& lex_env_p,
-                             ecma_string_t *name_p,
-                             const ecma_value_t& value,
-                             bool is_strict);
-extern void
-ecma_op_get_binding_value (ecma_completion_value_t &ret_value,
-                           const ecma_object_ptr_t& lex_env_p,
-                           ecma_string_t *name_p,
-                           bool is_strict);
-extern void
-ecma_op_delete_binding (ecma_completion_value_t &ret_value,
-                        const ecma_object_ptr_t& lex_env_p,
-                        ecma_string_t *name_p);
-extern void
-ecma_op_implicit_this_value (ecma_completion_value_t &ret_value,
-                             const ecma_object_ptr_t& lex_env_p);
+extern ecma_completion_value_t ecma_op_create_mutable_binding (ecma_object_t *lex_env_p,
+                                                               ecma_string_t *name_p,
+                                                               bool is_deletable);
+extern ecma_completion_value_t ecma_op_set_mutable_binding (ecma_object_t *lex_env_p,
+                                                            ecma_string_t *name_p,
+                                                            const ecma_value_t& value,
+                                                            bool is_strict);
+extern ecma_completion_value_t ecma_op_get_binding_value (ecma_object_t *lex_env_p,
+                                                          ecma_string_t *name_p,
+                                                          bool is_strict);
+extern ecma_completion_value_t ecma_op_delete_binding (ecma_object_t *lex_env_p,
+                                                       ecma_string_t *name_p);
+extern ecma_completion_value_t ecma_op_implicit_this_value (ecma_object_t *lex_env_p);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern void ecma_op_create_immutable_binding (const ecma_object_ptr_t& lex_env_p,
+extern void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p,
                                               ecma_string_t *name_p);
-extern void ecma_op_initialize_immutable_binding (const ecma_object_ptr_t& lex_env_p,
+extern void ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p,
                                                   ecma_string_t *name_p,
                                                   const ecma_value_t& value);
 
-extern void ecma_op_create_global_environment (ecma_object_ptr_t &ret_val, const ecma_object_ptr_t& glob_obj_p);
-extern bool ecma_is_lexical_environment_global (const ecma_object_ptr_t& lex_env_p);
+extern ecma_object_t* ecma_op_create_global_environment (ecma_object_t *glob_obj_p);
+extern bool ecma_is_lexical_environment_global (ecma_object_t *lex_env_p);
 
 /**
  * @}

@@ -17,7 +17,6 @@
 #define ECMA_NUMBER_OBJECT_H
 
 #include "ecma-globals.h"
-#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -26,9 +25,7 @@
  * @{
  */
 
-extern void
-ecma_op_create_number_object (ecma_completion_value_t &ret_value,
-                              const ecma_value_t& arg);
+extern ecma_completion_value_t ecma_op_create_number_object (const ecma_value_t& arg);
 
 /**
  * @}

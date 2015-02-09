@@ -39,10 +39,10 @@
  * @return true / false
  */
 bool
-ecma_op_has_binding (const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                      ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
@@ -55,8 +55,7 @@ ecma_op_has_binding (const ecma_object_ptr_t& lex_env_p, /**< lexical environmen
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
     return (ecma_op_object_get_property (binding_obj_p, name_p) != NULL);
   }
@@ -70,13 +69,12 @@ ecma_op_has_binding (const ecma_object_ptr_t& lex_env_p, /**< lexical environmen
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
  */
-void
-ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_completion_value_t
+ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                 ecma_string_t *name_p, /**< argument N */
                                 bool is_deletable) /**< argument D */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
@@ -90,13 +88,12 @@ ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value, /**< out: co
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_value_defined = true;
-      prop_desc.value = (ecma_value_packed_t) ecma_value_t (ECMA_SIMPLE_VALUE_UNDEFINED);
+      prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
       prop_desc.is_writable_defined = true;
       prop_desc.is_writable = true;
@@ -108,17 +105,14 @@ ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value, /**< out: co
       prop_desc.is_configurable = is_deletable;
     }
 
-    ecma_completion_value_t completion;
-    ecma_op_object_define_own_property (completion,
-                                        binding_obj_p,
-                                        name_p,
-                                        &prop_desc,
-                                        true);
+    ecma_completion_value_t completion = ecma_op_object_define_own_property (binding_obj_p,
+                                                                             name_p,
+                                                                             &prop_desc,
+                                                                             true);
 
     if (ecma_is_completion_value_throw (completion))
     {
-      ret_value = completion;
-      return;
+      return completion;
     }
     else
     {
@@ -127,7 +121,7 @@ ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value, /**< out: co
     }
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  return ecma_make_empty_completion_value ();
 } /* ecma_op_create_mutable_binding */
 
 /**
@@ -138,14 +132,13 @@ ecma_op_create_mutable_binding (ecma_completion_value_t &ret_value, /**< out: co
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-void
-ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value, /**< out: completion value */
-                             const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_completion_value_t
+ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                              ecma_string_t *name_p, /**< argument N */
                              const ecma_value_t& value, /**< argument V */
                              bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
@@ -166,10 +159,7 @@ ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value, /**< out: compl
 
     if (is_equal)
     {
-      ecma_object_ptr_t cp_error_obj_p;
-      ecma_builtin_get (cp_error_obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
-      ecma_make_throw_obj_completion_value (ret_value, cp_error_obj_p);
-      return;
+      return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
     }
 # endif /* CONFIG_ECMA_COMPACT_PROFILE */
 #endif /* !JERRY_NDEBUG */
@@ -182,30 +172,23 @@ ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value, /**< out: compl
     }
     else if (is_strict)
     {
-      ecma_object_ptr_t exception_obj_p;
-      ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
-      ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
-      return;
+      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
   }
   else
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    ecma_completion_value_t completion;
-    ecma_op_object_put (completion,
-                        binding_obj_p,
-                        name_p,
-                        value,
-                        is_strict);
+    ecma_completion_value_t completion = ecma_op_object_put (binding_obj_p,
+                                                             name_p,
+                                                             value,
+                                                             is_strict);
 
     if (ecma_is_completion_value_throw (completion))
     {
-      ret_value = completion;
-      return;
+      return completion;
     }
     else
     {
@@ -214,7 +197,7 @@ ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value, /**< out: compl
     }
   }
 
-  ecma_make_empty_completion_value (ret_value);
+  return ecma_make_empty_completion_value ();
 } /* ecma_op_set_mutable_binding */
 
 /**
@@ -225,13 +208,12 @@ ecma_op_set_mutable_binding (ecma_completion_value_t &ret_value, /**< out: compl
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-void
-ecma_op_get_binding_value (ecma_completion_value_t &ret_value, /**< out: completion value */
-                           const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_completion_value_t
+ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
                            ecma_string_t *name_p, /**< argument N */
                            bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
@@ -252,18 +234,14 @@ ecma_op_get_binding_value (ecma_completion_value_t &ret_value, /**< out: complet
 
     if (is_equal)
     {
-      ecma_object_ptr_t cp_error_obj_p;
-      ecma_builtin_get (cp_error_obj_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
-      ecma_make_throw_obj_completion_value (ret_value, cp_error_obj_p);
-      return;
+      return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
     }
 # endif /* CONFIG_ECMA_COMPACT_PROFILE */
 #endif /* !JERRY_NDEBUG */
 
     ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 
-    ecma_value_t prop_value;
-    ecma_get_named_data_property_value (prop_value, property_p);
+    ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);
 
     /* is the binding mutable? */
     if (!ecma_is_property_writable (property_p)
@@ -272,47 +250,35 @@ ecma_op_get_binding_value (ecma_completion_value_t &ret_value, /**< out: complet
       /* unitialized immutable binding */
       if (is_strict)
       {
-        ecma_object_ptr_t exception_obj_p;
-        ecma_new_standard_error (exception_obj_p, ECMA_ERROR_REFERENCE);
-        ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
-        return;
+        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
       }
       else
       {
-        ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
-        return;
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }
     }
 
-    ecma_value_t prop_value_copy;
-    ecma_copy_value (prop_value_copy, prop_value, true);
-
-    ecma_make_normal_completion_value (ret_value, prop_value_copy);
+    return ecma_make_normal_completion_value (ecma_copy_value (prop_value, true));
   }
   else
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
     if (ecma_op_object_get_property (binding_obj_p, name_p) == NULL)
     {
       if (is_strict)
       {
-        ecma_object_ptr_t exception_obj_p;
-        ecma_new_standard_error (exception_obj_p, ECMA_ERROR_REFERENCE);
-        ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
-        return;
+        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
       }
       else
       {
-        ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
-        return;
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }
     }
 
-    ecma_op_object_get (ret_value, binding_obj_p, name_p);
+    return ecma_op_object_get (binding_obj_p, name_p);
   }
 } /* ecma_op_get_binding_value */
 
@@ -325,12 +291,11 @@ ecma_op_get_binding_value (ecma_completion_value_t &ret_value, /**< out: complet
  *         Return value is simple and so need not be freed.
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
-void
-ecma_op_delete_binding (ecma_completion_value_t &ret_value, /**< out: completion value */
-                        const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_completion_value_t
+ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                         ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT(name_p != NULL);
 
@@ -360,16 +325,15 @@ ecma_op_delete_binding (ecma_completion_value_t &ret_value, /**< out: completion
       }
     }
 
-    ecma_make_simple_completion_value (ret_value, ret_val);
+    return ecma_make_simple_completion_value (ret_val);
   }
   else
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    ecma_op_object_delete (ret_value, binding_obj_p, name_p, false);
+    return ecma_op_object_delete (binding_obj_p, name_p, false);
   }
 } /* ecma_op_delete_binding */
 
@@ -381,16 +345,15 @@ ecma_op_delete_binding (ecma_completion_value_t &ret_value, /**< out: completion
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-void
-ecma_op_implicit_this_value (ecma_completion_value_t &ret_value, /**< out: completion value */
-                             const ecma_object_ptr_t& lex_env_p) /**< lexical environment */
+ecma_completion_value_t
+ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
-    ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
   else
   {
@@ -398,15 +361,14 @@ ecma_op_implicit_this_value (ecma_completion_value_t &ret_value, /**< out: compl
 
     if (ecma_get_lex_env_provide_this (lex_env_p))
     {
-      ecma_object_ptr_t binding_obj_p;
-      ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+      ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
       ecma_ref_object (binding_obj_p);
 
-      ecma_make_normal_completion_value (ret_value, ecma_value_t (binding_obj_p));
+      return ecma_make_normal_completion_value (ecma_make_object_value (binding_obj_p));
     }
     else
     {
-      ecma_make_simple_completion_value (ret_value, ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
   }
 } /* ecma_op_implicit_this_value */
@@ -417,10 +379,10 @@ ecma_op_implicit_this_value (ecma_completion_value_t &ret_value, /**< out: compl
  * See also: ECMA-262 v5, 10.2.1
  */
 void
-ecma_op_create_immutable_binding (const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                   ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
@@ -432,15 +394,10 @@ ecma_op_create_immutable_binding (const ecma_object_ptr_t& lex_env_p, /**< lexic
                                                              name_p,
                                                              false, false, false);
 
-#ifndef JERRY_NDEBUG
-  ecma_value_t prop_value;
-  ecma_get_named_data_property_value (prop_value, prop_p);
-
-  JERRY_ASSERT(ecma_is_value_undefined (prop_value));
-#endif /* !JERRY_NDEBUG */
+  JERRY_ASSERT(ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
 
   ecma_set_named_data_property_value (prop_p,
-                                      ecma_value_t (ECMA_SIMPLE_VALUE_EMPTY));
+                                      ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
 } /* ecma_op_create_immutable_binding */
 
 /**
@@ -449,22 +406,19 @@ ecma_op_create_immutable_binding (const ecma_object_ptr_t& lex_env_p, /**< lexic
  * See also: ECMA-262 v5, 10.2.1
  */
 void
-ecma_op_initialize_immutable_binding (const ecma_object_ptr_t& lex_env_p, /**< lexical environment */
+ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                       ecma_string_t *name_p, /**< argument N */
                                       const ecma_value_t& value) /**< argument V */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   ecma_property_t *prop_p = ecma_get_named_data_property (lex_env_p, name_p);
 
-  ecma_value_t prop_value;
-  ecma_get_named_data_property_value (prop_value, prop_p);
-
   /* The binding must be unitialized immutable binding */
-  JERRY_ASSERT (!ecma_is_property_writable (prop_p)
-                && ecma_is_value_empty (prop_value));
+  JERRY_ASSERT(!ecma_is_property_writable (prop_p)
+               && ecma_is_value_empty (ecma_get_named_data_property_value (prop_p)));
 
   ecma_named_data_property_assign_value (lex_env_p, prop_p, value);
 } /* ecma_op_initialize_immutable_binding */
@@ -476,18 +430,17 @@ ecma_op_initialize_immutable_binding (const ecma_object_ptr_t& lex_env_p, /**< l
  *
  * @return pointer to created lexical environment
  */
-void
-ecma_op_create_global_environment (ecma_object_ptr_t &glob_env_p, /**< out: object pointer */
-                                   const ecma_object_ptr_t& glob_obj_p) /**< the Global object */
+ecma_object_t*
+ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global object */
 {
-  ecma_object_ptr_t null_pointer;
-
 #ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
   (void) glob_obj_p;
-  ecma_create_decl_lex_env (glob_env_p, null_pointer);
+  ecma_object_t *glob_env_p = ecma_create_decl_lex_env (NULL);
 #else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
-  ecma_create_object_lex_env (glob_env_p, null_pointer, glob_obj_p, false);
+  ecma_object_t *glob_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
 #endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
+
+  return glob_env_p;
 } /* ecma_op_create_global_environment */
 
 /**
@@ -497,17 +450,16 @@ ecma_op_create_global_environment (ecma_object_ptr_t &glob_env_p, /**< out: obje
  *         false - otherwise.
  */
 bool
-ecma_is_lexical_environment_global (const ecma_object_ptr_t& lex_env_p) /**< lexical environment */
+ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT(lex_env_p.is_not_null ()
+  JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));
 
   ecma_lexical_environment_type_t type = ecma_get_lex_env_type (lex_env_p);
 
   if (type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
   {
-    ecma_object_ptr_t binding_obj_p;
-    ecma_get_lex_env_binding_object (binding_obj_p, lex_env_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
     return ecma_builtin_is (binding_obj_p, ECMA_BUILTIN_ID_GLOBAL);
   }

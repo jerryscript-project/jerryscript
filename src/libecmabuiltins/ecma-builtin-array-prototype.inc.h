@@ -41,7 +41,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE)
 
 // 15.4.4.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_ARRAY),
+              ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)

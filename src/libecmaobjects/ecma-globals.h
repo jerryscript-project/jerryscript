@@ -24,9 +24,30 @@
 #define JERRY_ECMA_GLOBALS_H
 
 #include "config.h"
-#include "ecma-compressed-pointers.h"
 #include "globals.h"
 #include "mem-allocator.h"
+
+/** \addtogroup compressedpointer Compressed pointer
+ * @{
+ */
+
+/**
+ * Ecma-pointer field is used to calculate ecma-value's address.
+ *
+ * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
+ * The offset is shifted right by MEM_ALIGNMENT_LOG.
+ * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
+ */
+#define ECMA_POINTER_FIELD_WIDTH MEM_COMPRESSED_POINTER_WIDTH
+
+/**
+ * The NULL value for compressed pointers
+ */
+#define ECMA_NULL_POINTER MEM_COMPRESSED_POINTER_NULL
+
+/**
+ * @}
+ */
 
 /**
  * Type of ecma-value
@@ -80,6 +101,8 @@ typedef enum
 {
   ECMA_COMPLETION_TYPE_NORMAL, /**< default block completion */
   ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
+  ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
+  ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
 #ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
 #endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
@@ -90,11 +113,11 @@ typedef enum
 } ecma_completion_type_t;
 
 /**
- * Description of an packed ecma-value representation
+ * Description of an ecma-value
  *
  * Bit-field structure: type (2) | value (ECMA_POINTER_FIELD_WIDTH)
  */
-typedef uint16_t ecma_value_packed_t;
+typedef uint16_t ecma_value_t;
 
 /**
  * Value type (ecma_type_t)
@@ -110,9 +133,51 @@ typedef uint16_t ecma_value_packed_t;
 #define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
- * ecma_value_packed_t size
+ * ecma_value_t size
  */
 #define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
+
+/**
+ * Description of a block completion value
+ *
+ * See also: ECMA-262 v5, 8.9.
+ *
+ *                                               value (16)
+ * Bit-field structure: type (8) | padding (8) <
+ *                                               label_desc_cp (16)
+ */
+typedef uint32_t ecma_completion_value_t;
+
+/**
+ * Type (ecma_completion_type_t)
+ */
+#define ECMA_COMPLETION_VALUE_TYPE_POS (0)
+#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
+
+/**
+ * Padding (1 byte)
+ */
+#define ECMA_COMPLETION_VALUE_PADDING_WIDTH (8)
+
+/**
+ * Value
+ *
+ * Used for normal, return, throw and exit completion types.
+ */
+#define ECMA_COMPLETION_VALUE_VALUE_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
+                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
+                                         ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
+
+/**
+ * Label
+ *
+ * Used for break and continue completion types.
+ */
+#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
+                                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
+                                                 ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Label
@@ -239,7 +304,7 @@ typedef struct ecma_property_t
       unsigned int is_lcached : 1;
 
       /** Value */
-      ecma_value_packed_t value;
+      ecma_value_t value;
     } named_data_property;
 
     /** Description of named accessor property */
@@ -466,7 +531,7 @@ typedef struct
   unsigned int is_configurable_defined : 1;
 
   /** [[Value]] */
-  ecma_value_packed_t value;
+  ecma_value_t value;
 
   /** [[Get]] */
   ecma_object_t* get_p;
@@ -747,168 +812,6 @@ typedef struct
     uint32_t common_field;
   } u;
 } ecma_string_t;
-
-/** \addtogroup ecmamanagedpointers ECMA managed on-stack pointers
- * @{
- */
-
-/**
- * ECMA managed on-stack pointer
- */
-class ecma_pointer_t
-{
-  public:
-    /**
-     * Argument specifying should the pointer
-     * be linked into managed pointers list
-     */
-    enum class is_linked_arg
-    {
-      linked, /**< perform link */
-      not_linked /**< do not perform link */
-    };
-
-    /* Constructors */
-    __attribute_always_inline__
-    ecma_pointer_t () : ecma_pointer_t (is_linked_arg::linked) { }
-
-    __attribute_always_inline__
-    ecma_pointer_t (is_linked_arg is_linked) /**< should the pointer
-                                              *   be linked into managed
-                                              *   pointers list? */
-      : _ptr (NULL)
-    {
-      if (is_linked == is_linked_arg::linked)
-      {
-        // TODO
-      }
-    }
-
-    ecma_pointer_t (const ecma_pointer_t&) = delete;
-    ecma_pointer_t (ecma_pointer_t&) = delete;
-    ecma_pointer_t (ecma_pointer_t&&) = delete;
-
-    /* Destructor */
-    ~ecma_pointer_t ()
-    {
-      // TODO
-    }
-
-    /* Getter */
-    template<typename T>
-    __attribute_always_inline__
-    explicit operator T* () const
-    {
-      return static_cast<T*> (_ptr);
-    }
-
-    /* Assignment operators */
-    template<typename T>
-    __attribute_always_inline__
-    ecma_pointer_t& operator = (T* ptr) /**< new pointer value */
-    {
-      _ptr = ptr;
-
-      return *this;
-    }
-
-    template<typename T>
-    __attribute_always_inline__
-    ecma_pointer_t& operator = (const T& value) /**< value to assign to variable
-                                                 *   under the pointer */
-    {
-      *static_cast<T*> (_ptr) = value;
-
-      return *this;
-    }
-
-    __attribute_always_inline__
-    ecma_pointer_t& operator = (const ecma_pointer_t& ptr) /**< managed pointer
-                                                            *   to take value from */
-    {
-      _ptr = ptr._ptr;
-
-      return *this;
-    }
-
-    __attribute_always_inline__
-    ecma_pointer_t& operator = (ecma_pointer_t& ptr) /**< managed pointer
-                                                      *   to take value from */
-    {
-      const ecma_pointer_t &ptr_const = ptr;
-      *this = ptr_const;
-
-      return *this;
-    }
-
-    ecma_pointer_t& operator = (ecma_pointer_t &&) = delete;
-
-    /* Comparison */
-    __attribute_always_inline__
-    bool operator == (const ecma_pointer_t &ptr) const /**< raw pointer */
-    {
-      return (_ptr == ptr._ptr);
-    }
-
-    __attribute_always_inline__
-    bool is_null (void) const
-    {
-      return (_ptr == NULL);
-    }
-
-    __attribute_always_inline__
-    bool is_not_null (void) const
-    {
-      return (_ptr != NULL);
-    }
-
-    /* Packing to compressed pointer */
-    __attribute_always_inline__
-    void pack_to (uintptr_t& compressed_pointer, /**< reference to compressed pointer */
-                  bool may_be_null = false) const /**< flag indicating the pointer can be NULL */
-    {
-      void *ptr = _ptr;
-
-      if (may_be_null)
-      {
-        ECMA_SET_POINTER (compressed_pointer, ptr);
-      }
-      else
-      {
-        ECMA_SET_NON_NULL_POINTER (compressed_pointer, ptr);
-      }
-    }
-
-    /* Unpacking from compressed pointer */
-    __attribute_always_inline__
-    void unpack_from (uintptr_t compressed_pointer, /**< compressed pointer */
-                      bool may_be_null = false) /**< flag indicating the pointer can be NULL */
-    {
-      if (may_be_null)
-      {
-        _ptr = ECMA_GET_POINTER (void, compressed_pointer);
-      }
-      else
-      {
-        _ptr = ECMA_GET_NON_NULL_POINTER (void, compressed_pointer);
-      }
-    }
-  protected: /* accessible to ecma_pointer_t */
-    void *_ptr; /* pointer storage */
-};
-
-#define ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR(type_name) \
-  typedef ecma_pointer_t ecma_ ## type_name ## _ptr_t; \
-  template ecma_pointer_t::operator ecma_ ## type_name ## _t * () const; \
-  template ecma_pointer_t& ecma_pointer_t::operator = (ecma_ ## type_name ## _t *); \
-  template ecma_pointer_t& ecma_pointer_t::operator = (const ecma_ ## type_name ## _t &);
-
-/**
- * ECMA managed pointers' operators explicit instantiation
- */
-ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (number)
-ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (string)
-ECMA_DECLARE_PTR_TYPE_AND_POINTER_OPERATORS_FOR (object)
 
 /**
  * @}

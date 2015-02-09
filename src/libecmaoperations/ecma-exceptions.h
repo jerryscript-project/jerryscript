@@ -44,13 +44,9 @@ typedef enum
   ECMA_ERROR_URI /**< URIError */
 } ecma_standard_error_t;
 
-extern void
-ecma_new_standard_error (ecma_object_ptr_t &ret_val,
-                         ecma_standard_error_t error_type);
-extern void
-ecma_new_standard_error_with_message (ecma_object_ptr_t &ret_val,
-                                      ecma_standard_error_t error_type,
-                                      ecma_string_t *message_string_p);
+extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
+extern ecma_object_t* ecma_new_standard_error_with_message (ecma_standard_error_t error_type,
+                                                            ecma_string_t *message_string_p);
 
 /**
  * @}

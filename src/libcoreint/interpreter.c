@@ -367,33 +367,26 @@ run_int (void)
 
   ecma_init ();
 
-  ecma_object_ptr_t glob_obj_p;
-  ecma_builtin_get (glob_obj_p, ECMA_BUILTIN_ID_GLOBAL);
+  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
-  ecma_object_ptr_t lex_env_p;
-  ecma_op_create_global_environment (lex_env_p, glob_obj_p);
-  ecma_value_t this_binding_value (glob_obj_p);
+  ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
+  ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);
 
-  ecma_completion_value_t run_completion;
-  run_int_from_pos (run_completion,
-                    start_pos,
-                    this_binding_value,
-                    lex_env_p,
-                    is_strict,
-                    false);
+  ecma_completion_value_t completion = run_int_from_pos (start_pos,
+                                                         this_binding_value,
+                                                         lex_env_p,
+                                                         is_strict,
+                                                         false);
 
-  if (ecma_is_completion_value_exit (run_completion))
+  if (ecma_is_completion_value_exit (completion))
   {
     ecma_deref_object (glob_obj_p);
     ecma_deref_object (lex_env_p);
     ecma_finalize ();
 
-    ecma_value_t value_ret;
-    ecma_get_completion_value_value (value_ret, run_completion);
-
-    return ecma_is_value_true (value_ret);
+    return ecma_is_value_true (ecma_get_completion_value_value (completion));
   }
-  else if (ecma_is_completion_value_throw (run_completion))
+  else if (ecma_is_completion_value_throw (completion))
   {
     jerry_exit (ERR_UNHANDLED_EXCEPTION);
   }
@@ -401,10 +394,11 @@ run_int (void)
   JERRY_UNREACHABLE ();
 }
 
-void
-run_int_loop (ecma_completion_value_t &completion, /**< out: completion value */
-              int_data_t *int_data /**< interpretation context */)
+ecma_completion_value_t
+run_int_loop (int_data_t *int_data)
 {
+  ecma_completion_value_t completion;
+
 #ifdef MEM_STATS
   mem_heap_stats_t heap_stats_before;
   mem_pools_stats_t pools_stats_before;
@@ -427,7 +421,7 @@ run_int_loop (ecma_completion_value_t &completion, /**< out: completion value */
                                      &pools_stats_before);
 #endif /* MEM_STATS */
 
-      __opfuncs[curr->op_idx] (completion, *curr, int_data);
+      completion = __opfuncs[curr->op_idx] (*curr, int_data);
 
 #ifdef MEM_STATS
       interp_mem_stats_opcode_exit (int_data,
@@ -441,23 +435,32 @@ run_int_loop (ecma_completion_value_t &completion, /**< out: completion value */
     }
     while (ecma_is_completion_value_normal (completion));
 
-    if (ecma_is_completion_value_meta (completion))
+    if (ecma_is_completion_value_break (completion)
+        || ecma_is_completion_value_continue (completion))
     {
-      ecma_make_empty_completion_value (completion);
+      JERRY_UNIMPLEMENTED ("break and continue on labels are not supported.");
+
+      continue;
     }
 
-    return;
+    if (ecma_is_completion_value_meta (completion))
+    {
+      completion = ecma_make_empty_completion_value ();
+    }
+
+    return completion;
   }
 }
 
-void
-run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion value */
-                  opcode_counter_t start_pos, /**< position to start interpretation at */
-                  const ecma_value_t& this_binding_value, /**< value of 'this' binding */
-                  const ecma_object_ptr_t& lex_env_p, /**< starting lexical environment */
-                  bool is_strict, /**< is execution mode strict? */
-                  bool is_eval_code) /**< is current code executed with eval? */
+ecma_completion_value_t
+run_int_from_pos (opcode_counter_t start_pos,
+                  const ecma_value_t& this_binding_value,
+                  ecma_object_t *lex_env_p,
+                  bool is_strict,
+                  bool is_eval_code)
 {
+  ecma_completion_value_t completion;
+
   const opcode_t *curr = &__program[start_pos];
   JERRY_ASSERT (curr->op_idx == __op__idx_reg_var_decl);
 
@@ -467,12 +470,12 @@ run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion valu
 
   const int32_t regs_num = max_reg_num - min_reg_num + 1;
 
-  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_packed_t);
+  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
   int_data_t int_data;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
-  int_data.this_binding_p = &this_binding_value;
-  int_data.lex_env_p = &lex_env_p;
+  int_data.this_binding = this_binding_value;
+  int_data.lex_env_p = lex_env_p;
   int_data.is_strict = is_strict;
   int_data.is_eval_code = is_eval_code;
   int_data.min_reg_num = min_reg_num;
@@ -484,7 +487,7 @@ run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion valu
   interp_mem_stats_context_enter (&int_data, start_pos);
 #endif /* MEM_STATS */
 
-  run_int_loop (completion, &int_data);
+  completion = run_int_loop (&int_data);
 
   JERRY_ASSERT (ecma_is_completion_value_normal (completion)
                 || ecma_is_completion_value_throw (completion)
@@ -500,6 +503,8 @@ run_int_from_pos (ecma_completion_value_t &completion, /**< out: completion valu
 #endif /* MEM_STATS */
 
   MEM_FINALIZE_LOCAL_ARRAY (regs);
+
+  return completion;
 }
 
 /**

@@ -76,14 +76,14 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_INFINITY_UL,
 
 // ECMA-262 v5, 15.1.4.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_OBJECT_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_OBJECT),
+              ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.2
 OBJECT_VALUE (ECMA_MAGIC_STRING_FUNCTION_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_FUNCTION),
+              ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -91,7 +91,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_FUNCTION_UL,
 // ECMA-262 v5, 15.1.4.3
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
 OBJECT_VALUE (ECMA_MAGIC_STRING_ARRAY_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_ARRAY),
+              ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -100,7 +100,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_ARRAY_UL,
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
 // ECMA-262 v5, 15.1.4.4
 OBJECT_VALUE (ECMA_MAGIC_STRING_STRING_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_STRING),
+              ecma_builtin_get (ECMA_BUILTIN_ID_STRING),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -109,7 +109,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_STRING_UL,
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
 // ECMA-262 v5, 15.1.4.5
 OBJECT_VALUE (ECMA_MAGIC_STRING_BOOLEAN_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_BOOLEAN),
+              ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -118,7 +118,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_BOOLEAN_UL,
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
 // ECMA-262 v5, 15.1.4.6
 OBJECT_VALUE (ECMA_MAGIC_STRING_NUMBER_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_NUMBER),
+              ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -126,14 +126,14 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_NUMBER_UL,
 
 // ECMA-262 v5, 15.1.4.7
 CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_DATE_UL,
-                        ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_DATE),
+                        ecma_builtin_get (ECMA_BUILTIN_ID_DATE),
                         ECMA_PROPERTY_WRITABLE,
                         ECMA_PROPERTY_NOT_ENUMERABLE,
                         ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.8
 CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_REG_EXP_UL,
-                        ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_REGEXP),
+                        ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),
                         ECMA_PROPERTY_WRITABLE,
                         ECMA_PROPERTY_NOT_ENUMERABLE,
                         ECMA_PROPERTY_CONFIGURABLE)
@@ -141,49 +141,49 @@ CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_REG_EXP_UL,
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
 // ECMA-262 v5, 15.1.4.9
 OBJECT_VALUE (ECMA_MAGIC_STRING_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.10
 OBJECT_VALUE (ECMA_MAGIC_STRING_EVAL_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_EVAL_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_EVAL_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.11
 OBJECT_VALUE (ECMA_MAGIC_STRING_RANGE_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_RANGE_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_RANGE_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.12
 OBJECT_VALUE (ECMA_MAGIC_STRING_REFERENCE_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_REFERENCE_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_REFERENCE_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.13
 OBJECT_VALUE (ECMA_MAGIC_STRING_SYNTAX_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_SYNTAX_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_SYNTAX_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.14
 OBJECT_VALUE (ECMA_MAGIC_STRING_TYPE_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_TYPE_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
 // ECMA-262 v5, 15.1.4.15
 OBJECT_VALUE (ECMA_MAGIC_STRING_URI_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_URI_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_URI_ERROR),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -192,7 +192,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_URI_ERROR_UL,
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
 // ECMA-262 v5, 15.1.5.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_MATH_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_MATH),
+              ecma_builtin_get (ECMA_BUILTIN_ID_MATH),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
@@ -200,14 +200,14 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_MATH_UL,
 
 // ECMA-262 v5, 15.1.5.2
 CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_JSON_U,
-                        ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_JSON),
+                        ecma_builtin_get (ECMA_BUILTIN_ID_JSON),
                         ECMA_PROPERTY_WRITABLE,
                         ECMA_PROPERTY_NOT_ENUMERABLE,
                         ECMA_PROPERTY_CONFIGURABLE)
 
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
 OBJECT_VALUE (ECMA_MAGIC_STRING_COMPACT_PROFILE_ERROR_UL,
-              ecma_builtin_get (object_out_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR),
+              ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)

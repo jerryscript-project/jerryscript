@@ -17,7 +17,6 @@
 #define ECMA_FUNCTION_OBJECT_H
 
 #include "ecma-globals.h"
-#include "ecma-value.h"
 #include "interpreter.h"
 
 /** \addtogroup ecma ECMA
@@ -30,35 +29,30 @@
 extern bool ecma_op_is_callable (const ecma_value_t& value);
 extern bool ecma_is_constructor (const ecma_value_t& value);
 
-extern void
-ecma_op_create_function_object (ecma_object_ptr_t &ret_val,
-                                ecma_string_t* formal_parameter_list_p[],
+extern ecma_object_t*
+ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 ecma_length_t formal_parameters_number,
-                                const ecma_object_ptr_t& scope_p,
+                                ecma_object_t *scope_p,
                                 bool is_strict,
                                 opcode_counter_t first_opcode_idx);
 
-extern void
-ecma_op_function_call (ecma_completion_value_t &ret_value,
-                       const ecma_object_ptr_t& func_obj_p,
+extern ecma_completion_value_t
+ecma_op_function_call (ecma_object_t *func_obj_p,
                        const ecma_value_t& this_arg_value,
                        const ecma_value_t* arguments_list_p,
                        ecma_length_t arguments_list_len);
 
-extern void
-ecma_op_function_construct (ecma_completion_value_t &ret_value,
-                            const ecma_object_ptr_t& func_obj_p,
+extern ecma_completion_value_t
+ecma_op_function_construct (ecma_object_t *func_obj_p,
                             const ecma_value_t* arguments_list_p,
                             ecma_length_t arguments_list_len);
 
-extern void
-ecma_op_function_has_instance (ecma_completion_value_t &ret_value,
-                               const ecma_object_ptr_t& func_obj_p,
+extern ecma_completion_value_t
+ecma_op_function_has_instance (ecma_object_t *func_obj_p,
                                const ecma_value_t& value);
 
-extern void
-ecma_op_function_declaration (ecma_completion_value_t &ret_value,
-                              const ecma_object_ptr_t& lex_env_p,
+extern ecma_completion_value_t
+ecma_op_function_declaration (ecma_object_t *lex_env_p,
                               ecma_string_t *function_name_p,
                               opcode_counter_t function_code_opcode_idx,
                               ecma_string_t* formal_parameter_list_p[],

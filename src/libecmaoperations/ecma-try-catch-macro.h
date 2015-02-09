@@ -29,9 +29,8 @@
  *      Each ECMA_TRY_CATCH should have it's own corresponding ECMA_FINALIZE
  *      statement with same argument as corresponding ECMA_TRY_CATCH's first argument.
  */
-#define ECMA_TRY_CATCH(return_value, op, var, ...) \
-  ecma_completion_value_t var ## _completion; \
-  op (var ## _completion, __VA_ARGS__); \
+#define ECMA_TRY_CATCH(var, op, return_value) \
+  ecma_completion_value_t var ## _completion = op; \
   if (unlikely (ecma_is_completion_value_throw (var ## _completion))) \
   { \
     return_value = var ## _completion; \
@@ -40,8 +39,7 @@
   { \
     JERRY_ASSERT(ecma_is_completion_value_normal (var ## _completion)); \
     \
-    ecma_value_t var; \
-    ecma_get_completion_value_value (var, var ## _completion)
+    ecma_value_t var __unused = ecma_get_completion_value_value (var ## _completion)
 
 /**
  * The macro marks end of code block that is defined by corresponding
@@ -66,7 +64,7 @@
  *      statement with same argument as corresponding ECMA_OP_TO_NUMBER_TRY_CATCH's first argument.
  */
 #define ECMA_OP_TO_NUMBER_TRY_CATCH(num_var, value, return_value) \
-  ecma_make_empty_completion_value (return_value); \
+  JERRY_ASSERT (ecma_is_completion_value_empty (return_value)); \
   ecma_number_t num_var = ecma_number_make_nan (); \
   if (ecma_is_value_number (value)) \
   { \
@@ -74,7 +72,9 @@
   } \
   else \
   { \
-    ECMA_TRY_CATCH (return_value, ecma_op_to_number, to_number_value, value); \
+    ECMA_TRY_CATCH (to_number_value, \
+                    ecma_op_to_number (value), \
+                    return_value); \
     \
     num_var = *ecma_get_number_from_value (to_number_value); \
     \

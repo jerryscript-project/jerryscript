@@ -53,11 +53,10 @@
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static void
-ecma_builtin_array_prototype_object_to_string (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                               const ecma_value_t& this_arg) /**< this argument */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (ret_value, this_arg);
+  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_array_prototype_object_to_string */
 
 /**

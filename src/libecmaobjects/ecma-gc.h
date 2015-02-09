@@ -24,7 +24,6 @@
 #define ECMA_GC_H
 
 #include "ecma-globals.h"
-#include "ecma-value.h"
 #include "mem-allocator.h"
 
 /**
@@ -39,15 +38,11 @@ typedef enum
 } ecma_gc_gen_t;
 
 extern void ecma_gc_init (void);
-extern void ecma_init_gc_info (const ecma_object_ptr_t& object_p);
-extern void ecma_ref_object (const ecma_object_ptr_t& object_p);
-extern void ecma_deref_object (const ecma_object_ptr_t& object_p);
-extern void
-ecma_gc_update_may_ref_younger_object_flag_by_value (const ecma_object_ptr_t& obj_p,
-                                                     const ecma_value_t& value);
-extern void
-ecma_gc_update_may_ref_younger_object_flag_by_object (const ecma_object_ptr_t& obj_p,
-                                                      const ecma_object_ptr_t& ref_obj_p);
+extern void ecma_init_gc_info (ecma_object_t *object_p);
+extern void ecma_ref_object (ecma_object_t *object_p);
+extern void ecma_deref_object (ecma_object_t *object_p);
+extern void ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, const ecma_value_t& value);
+extern void ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, ecma_object_t *ref_obj_p);
 extern void ecma_gc_run (ecma_gc_gen_t max_gen_to_collect);
 extern void ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity);
 

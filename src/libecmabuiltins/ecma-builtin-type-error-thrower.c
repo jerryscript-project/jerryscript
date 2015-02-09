@@ -49,17 +49,14 @@
  *
  * @return completion-value
  */
-void
-ecma_builtin_type_error_thrower_dispatch_call (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                               const ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_completion_value_t
+ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object should throw TypeError */
-  ecma_object_ptr_t exception_obj_p;
-  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
-  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_type_error_thrower_dispatch_call */
 
 /**
@@ -70,17 +67,14 @@ ecma_builtin_type_error_thrower_dispatch_call (ecma_completion_value_t &ret_valu
  *
  * @return completion-value
  */
-void
-ecma_builtin_type_error_thrower_dispatch_construct (ecma_completion_value_t &ret_value, /**< out: completion value */
-                                                    const ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_completion_value_t
+ecma_builtin_type_error_thrower_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object is not a constructor */
-  ecma_object_ptr_t exception_obj_p;
-  ecma_new_standard_error (exception_obj_p, ECMA_ERROR_TYPE);
-  ecma_make_throw_obj_completion_value (ret_value, exception_obj_p);
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_type_error_thrower_dispatch_construct */
 
 /**

@@ -17,7 +17,6 @@
 #define ECMA_STRING_OBJECT_H
 
 #include "ecma-globals.h"
-#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -26,13 +25,12 @@
  * @{
  */
 
-extern void
-ecma_op_create_string_object (ecma_completion_value_t &ret_value,
-                              const ecma_value_t *arguments_list_p,
+extern ecma_completion_value_t
+ecma_op_create_string_object (const ecma_value_t *arguments_list_p,
                               ecma_length_t arguments_list_len);
 
 extern ecma_property_t*
-ecma_op_string_object_get_own_property (const ecma_object_ptr_t& obj_p,
+ecma_op_string_object_get_own_property (ecma_object_t *obj_p,
                                         ecma_string_t *property_name_p);
 
 /**

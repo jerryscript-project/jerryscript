@@ -40,8 +40,7 @@
 #define ROUTINE_ARG_LIST_NON_FIXED ROUTINE_ARG_LIST_0, \
   const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
-  static void c_function_name (ecma_completion_value_t &ret_value, \
-                               ROUTINE_ARG_LIST_ ## args_number);
+  static ecma_completion_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_NON_FIXED
 #undef ROUTINE_ARG_LIST_3
@@ -99,7 +98,7 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
  *         NULL - otherwise.
  */
 ecma_property_t*
-TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_object_ptr_t& obj_p, /**< object */
+TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *obj_p, /**< object */
                                                                    ecma_string_t *prop_name_p) /**< property's name */
 {
 #define OBJECT_ID(builtin_id) const ecma_builtin_id_t builtin_object_id = builtin_id;
@@ -161,7 +160,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
 
   mask_prop_p->u.internal_property.value = bit_mask;
 
-  ecma_value_t value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_property_writable_value_t writable;
   ecma_property_enumerable_value_t enumerable;
   ecma_property_configurable_value_t configurable;
@@ -170,25 +169,21 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
   {
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) case name: \
     { \
-      ecma_object_ptr_t func_obj_p; \
-      ecma_builtin_make_function_object_for_routine (func_obj_p, \
-                                                     builtin_object_id, \
-                                                     id, \
-                                                     length_prop_value); \
+      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_object_id, \
+                                                                                 id, \
+                                                                                 length_prop_value); \
       \
       writable = ECMA_PROPERTY_WRITABLE; \
       enumerable = ECMA_PROPERTY_NOT_ENUMERABLE; \
       configurable = ECMA_PROPERTY_CONFIGURABLE; \
       \
-      value = func_obj_p; \
+      value = ecma_make_object_value (func_obj_p); \
       \
       break; \
     }
 #define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      ecma_object_ptr_t object_out_p; \
-      obj_getter; \
-      value = object_out_p; \
+      value = ecma_make_object_value (obj_getter); \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
       configurable = prop_configurable; \
@@ -196,7 +191,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
     }
 #define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      value = simple_value; \
+      value = ecma_make_simple_value (simple_value); \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -209,7 +204,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
       ecma_number_t *num_p = ecma_alloc_number (); \
       *num_p = number_value; \
       \
-      value = num_p; \
+      value = ecma_make_number_value (num_p); \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -221,7 +216,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
     { \
       ecma_string_t *magic_string_p = ecma_get_magic_string (magic_string_id); \
       \
-      value = magic_string_p; \
+      value = ecma_make_string_value (magic_string_p); \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \
@@ -233,8 +228,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
 #define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
       /* The object throws CompactProfileError upon invocation */ \
-      ecma_object_ptr_t get_set_p; \
-      ecma_builtin_get (get_set_p, ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
+      ecma_object_t *get_set_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
       ecma_property_t *compact_profile_thrower_property_p = ecma_create_named_accessor_property (obj_p, \
                                                                                                  prop_name_p, \
                                                                                                  get_set_p, \
@@ -278,10 +272,8 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (const ecma_ob
  * @return completion-value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-void
-DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_completion_value_t &ret_value, /**< out: completion
-                                                                                             *        value */
-                                                        ecma_magic_string_id_t builtin_routine_id, /**< built-in's
+ecma_completion_value_t
+DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t builtin_routine_id, /**< built-in's
                                                                                                         routine's
                                                                                                         name */
                                                         const ecma_value_t& this_arg_value, /**< 'this' argument
@@ -296,13 +288,10 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_completion_value_t 
   (void) arguments_list;
   (void) arguments_number;
 
-  ecma_make_empty_completion_value (ret_value);
-
-  ecma_value_t value_undefined (ECMA_SIMPLE_VALUE_UNDEFINED);
   switch (builtin_routine_id)
   {
 #define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] \
-                                              : value_undefined)
+                                              : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED))
 #define ROUTINE_ARG_LIST_0
 #define ROUTINE_ARG_LIST_1 , ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)
@@ -311,8 +300,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_completion_value_t 
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
        case name: \
        { \
-         c_function_name (ret_value, this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
-         return; \
+         return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
        }
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_0

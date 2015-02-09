@@ -18,7 +18,6 @@
 
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
-#include "ecma-value.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -27,44 +26,25 @@
  * @{
  */
 
-extern void
-ecma_op_object_get (ecma_completion_value_t &ret_value,
-                    const ecma_object_ptr_t& obj_p,
-                    ecma_string_t *property_name_p);
-extern ecma_property_t*
-ecma_op_object_get_own_property (const ecma_object_ptr_t& obj_p,
-                                 ecma_string_t *property_name_p);
-extern ecma_property_t*
-ecma_op_object_get_property (const ecma_object_ptr_t& obj_p,
-                             ecma_string_t *property_name_p);
-extern void
-ecma_op_object_put (ecma_completion_value_t &ret_value,
-                    const ecma_object_ptr_t& obj_p,
-                    ecma_string_t *property_name_p,
-                    const ecma_value_t& value,
-                    bool is_throw);
-extern bool
-ecma_op_object_can_put (const ecma_object_ptr_t& obj_p,
-                        ecma_string_t *property_name_p);
-extern void
-ecma_op_object_delete (ecma_completion_value_t &ret_value,
-                       const ecma_object_ptr_t& obj_p,
-                       ecma_string_t *property_name_p,
-                       bool is_throw);
-extern void
-ecma_op_object_default_value (ecma_completion_value_t &ret_value,
-                              const ecma_object_ptr_t& obj_p,
-                              ecma_preferred_type_hint_t hint);
-extern void
-ecma_op_object_define_own_property (ecma_completion_value_t &ret_value,
-                                    const ecma_object_ptr_t& obj_p,
+extern ecma_completion_value_t ecma_op_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+extern ecma_property_t *ecma_op_object_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+extern ecma_property_t *ecma_op_object_get_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+extern ecma_completion_value_t ecma_op_object_put (ecma_object_t *obj_p,
+                                                   ecma_string_t *property_name_p,
+                                                   const ecma_value_t& value,
+                                                   bool is_throw);
+extern bool ecma_op_object_can_put (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+extern ecma_completion_value_t ecma_op_object_delete (ecma_object_t *obj_p,
+                                                      ecma_string_t *property_name_p,
+                                                      bool is_throw);
+extern ecma_completion_value_t ecma_op_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
+extern ecma_completion_value_t
+ecma_op_object_define_own_property (ecma_object_t *obj_p,
                                     ecma_string_t *property_name_p,
                                     const ecma_property_descriptor_t* property_desc_p,
                                     bool is_throw);
-extern void
-ecma_op_object_has_instance (ecma_completion_value_t &ret_value,
-                             const ecma_object_ptr_t& obj_p,
-                             const ecma_value_t& value);
+extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *obj_p,
+                                                            const ecma_value_t& value);
 /**
  * @}
  * @}

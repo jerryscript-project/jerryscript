@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ done
 
 rm -f $DIR/unit_tests_run.log
 
-UNITTESTS=$(ls $DIR)
+UNITTESTS=$(ls $DIR/unit_*)
 
 for unit_test in $UNITTESTS;
 do
   [ $OPTION_SILENT = "enable" ] || echo -n "Running $unit_test... ";
 
-  $VALGRIND $DIR/$unit_test >&$DIR/unit_tests_run.log.tmp;
+  $VALGRIND $unit_test >&$DIR/unit_tests_run.log.tmp;
   status_code=$?
   cat $DIR/unit_tests_run.log.tmp >> $DIR/unit_tests_run.log
   rm $DIR/unit_tests_run.log.tmp

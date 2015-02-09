@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,11 +33,7 @@
 #       flash - flash specified mcu target binary
 #
 #
-#   Unit test target: unittests
-#
-# Options
-#
-#   dwarf4=1 - use DWARF v4 format for debug information
+#   Unit test target: unittests_run
 #
 
 export TARGET_DEBUG_MODES = debug
@@ -45,42 +41,57 @@ export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
 export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
-export TARGET_PC_MODS = sanitize valgrind cp cp_minimal mem_stats \
-                        cp-valgrind
+export TARGET_PC_MODS = valgrind cp cp_minimal mem_stats cp-valgrind
 
-export TARGET_MCU_MODS = cp_minimal
+export TARGET_MCU_MODS = cp cp_minimal
 
 export TARGET_PC_SYSTEMS_MODS = $(TARGET_PC_SYSTEMS) \
                                 $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD)))
-export TARGET_MCU_SYSTEMS_MODS = $(TARGET_MCU_SYSTEMS) \
-                                 $(foreach __MOD,$(TARGET_MCU_MODS),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+export TARGET_MCU_SYSTEMS_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__SYSTEM)-$(__MOD)))
 
 # Target list
-export JERRY_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
-                       $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
-                       $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+export JERRY_LINUX_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
+                             $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+export JERRY_MCU_TARGETS = $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+export JERRY_TARGETS = $(JERRY_LINUX_TARGETS) $(JERRY_MCU_TARGETS)
 
-export TESTS_TARGET = unittests
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
 export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
 export OUT_DIR = ./out
-export UNITTESTS_SRC_DIR = ./tests/unit
+export BUILD_DIR = ./build
 
 export SHELL=/bin/bash
 
-export dwarf4
-export echo
-export todo
-export fixme
-export color
-export dbgsyms
-export noopt
-export nostaticcheck
-
-build: clean $(JERRY_TARGETS)
-
 all: precommit
+
+$(BUILD_DIR)/native:
+	@ mkdir -p $(BUILD_DIR)/native
+	@ cd $(BUILD_DIR)/native; cmake ../.. &>cmake.log
+
+$(BUILD_DIR)/mcu:
+	@ mkdir -p $(BUILD_DIR)/mcu
+	@ cd $(BUILD_DIR)/mcu; cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_mcu_armv7l.cmake ../.. &>cmake.log
+
+$(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
+	@ mkdir -p out/$@
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>out/$@/make.log
+	@ cp $(BUILD_DIR)/native/$@ out/$@/jerry
+
+unittests: $(BUILD_DIR)/native
+	@ mkdir -p out/$@
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>out/$@/make.log
+	@ cp $(BUILD_DIR)/native/unit_test_* out/$@
+
+$(JERRY_MCU_TARGETS): $(BUILD_DIR)/mcu
+	@ mkdir -p out/$@
+	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ &>out/$@/make.log
+	@ cp $(BUILD_DIR)/mcu/$@ out/$@/jerry
+
+build: $(JERRY_TARGETS) unittests
+
+$(FLASH_TARGETS): $(BUILD_DIR)/mcu
+	@$(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
 
 PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
                                           release.linux.check
@@ -97,13 +108,12 @@ pull: ./tools/pull.sh
 log: ./tools/log.sh
 	@ ./tools/log.sh
 
-
 precommit: clean
 	@ echo -e "\nBuilding...\n\n"
 	@ $(MAKE) build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
-	@ echo -e "All targets were built successfully. Starting unit tests' build and run.\n"
-	@ $(MAKE) unittests TESTS_OPTS="--silent"
+	@ echo -e "All targets were built successfully. Starting unit tests' run.\n"
+	@ $(MAKE) unittests_run TESTS_OPTS="--silent"
 	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
 	@ # Parse-only testing
 	@ for path in "./tests/jerry" "./benchmarks/jerry"; \
@@ -155,8 +165,10 @@ precommit: clean
             done
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 
-$(JERRY_TARGETS) $(TESTS_TARGET) $(FLASH_TARGETS):
+unittests_run: unittests
 	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
 
 clean:
-	@ rm -rf $(OUT_DIR)
+	@ rm -rf $(BUILD_DIR) $(OUT_DIR)
+
+.PHONY: clean build unittests_run

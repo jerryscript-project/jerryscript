@@ -1,6 +1,7 @@
 # Produced files
 
 out/
+build/
 
 # IDE related files
 nbproject

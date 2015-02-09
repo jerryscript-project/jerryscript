@@ -72,6 +72,7 @@ ecma_create_object (ecma_object_ptr_t &object_mp, /**< out: object pointer */
                                                  prototype_object_cp,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
+  ecma_gc_update_may_ref_younger_object_flag_by_object (object_mp, prototype_object_p);
 
   ecma_set_object_is_builtin (object_mp, false);
 } /* ecma_create_object */
@@ -117,6 +118,16 @@ ecma_create_decl_lex_env (ecma_object_ptr_t &new_lexical_environment_mp, /**< ou
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
+  ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_mp, outer_lexical_environment_p);
+
+  /*
+   * Declarative lexical environments do not really have the flag,
+   * but to not leave the value initialized, setting the flag to false.
+   */
+  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+                                                                  false,
+                                                                  ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
+                                                                  ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH);
 } /* ecma_create_decl_lex_env */
 
 /**
@@ -160,6 +171,7 @@ ecma_create_object_lex_env (ecma_object_ptr_t &new_lexical_environment_mp, /**< 
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
+  ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_mp, outer_lexical_environment_p);
 
   new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
                                                                   provide_this,

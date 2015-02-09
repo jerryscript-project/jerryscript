@@ -14,7 +14,7 @@ OBJCOPY = objcopy
 SIZE = size
 STRIP = strip
 
-MAIN_MODULE_SRC = src/main.c
+MAIN_MODULE_SRC = src/main.cpp
 
 LNK_SCRIPT_STM32F3 = third-party/stm32f3.ld
 LNK_SCRIPT_STM32F4 = third-party/stm32f4.ld
@@ -282,17 +282,17 @@ DEFINES_JERRY += -DJERRY_BUILD_DATE="\"$(BUILD_DATE)\"" \
 
 SOURCES_JERRY_C = \
  $(sort \
- $(wildcard src/libruntime/*.c) \
- $(wildcard src/libperipherals/*.c) \
- $(wildcard src/libjsparser/*.c) \
- $(wildcard src/libecmaobjects/*.c) \
- $(wildcard src/libecmaoperations/*.c) \
- $(wildcard src/libecmabuiltins/*.c) \
- $(wildcard src/liballocator/*.c) \
- $(wildcard src/libcoreint/*.c) \
- $(wildcard src/libintstructs/*.c) \
- $(wildcard src/liboptimizer/*.c ) \
- $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.c) )
+ $(wildcard src/libruntime/*.cpp) \
+ $(wildcard src/libperipherals/*.cpp) \
+ $(wildcard src/libjsparser/*.cpp) \
+ $(wildcard src/libecmaobjects/*.cpp) \
+ $(wildcard src/libecmaoperations/*.cpp) \
+ $(wildcard src/libecmabuiltins/*.cpp) \
+ $(wildcard src/liballocator/*.cpp) \
+ $(wildcard src/libcoreint/*.cpp) \
+ $(wildcard src/libintstructs/*.cpp) \
+ $(wildcard src/liboptimizer/*.cpp) \
+ $(wildcard src/libruntime/target/$(TARGET_SYSTEM)/*.cpp) )
 
 SOURCES_JERRY_H = \
  $(sort \
@@ -446,8 +446,8 @@ endif
 
 SOURCES_UNITTESTS = \
  	 $(sort \
- 	 $(patsubst %.c,%,$(notdir \
- 	 $(wildcard $(UNITTESTS_SRC_DIR)/*.c))))
+ 	 $(patsubst %.cpp,%,$(notdir \
+ 	 $(wildcard $(UNITTESTS_SRC_DIR)/*.cpp))))
 
 .PHONY: all clean check install $(JERRY_TARGETS) $(TESTS_TARGET)
 
@@ -543,7 +543,7 @@ $(TESTS_TARGET):
         for unit_test in $(SOURCES_UNITTESTS); \
 	do \
 		cmd="$(CC) $(DEFINES_JERRY) $(CFLAGS_COMMON) $(CFLAGS_JERRY) \
-		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.c -lc -o $(TARGET_DIR)/$$unit_test"; \
+		$(INCLUDES_JERRY) $(INCLUDES_THIRDPARTY) $(TARGET_DIR)/obj/*.o $(UNITTESTS_SRC_DIR)/$$unit_test.cpp -lc -o $(TARGET_DIR)/$$unit_test"; \
                 if [ "$(OPTION_ECHO)" = "enable" ]; then echo $$cmd; echo; fi; \
 		$$cmd & \
                 ids[$$unit_test_index]=$$!; \

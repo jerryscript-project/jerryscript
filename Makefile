@@ -74,19 +74,19 @@ $(BUILD_DIR)/mcu:
 	@ cd $(BUILD_DIR)/mcu; cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_mcu_armv7l.cmake ../.. &>cmake.log
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
-	@ mkdir -p out/$@
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>out/$@/make.log
-	@ cp $(BUILD_DIR)/native/$@ out/$@/jerry
+	@ mkdir -p $(OUT_DIR)/$@
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
 
 unittests: $(BUILD_DIR)/native
-	@ mkdir -p out/$@
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>out/$@/make.log
-	@ cp $(BUILD_DIR)/native/unit_test_* out/$@
+	@ mkdir -p $(OUT_DIR)/$@
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ cp $(BUILD_DIR)/native/unit_test_* $(OUT_DIR)/$@
 
 $(JERRY_MCU_TARGETS): $(BUILD_DIR)/mcu
-	@ mkdir -p out/$@
-	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ &>out/$@/make.log
-	@ cp $(BUILD_DIR)/mcu/$@ out/$@/jerry
+	@ mkdir -p $(OUT_DIR)/$@
+	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ cp $(BUILD_DIR)/mcu/$@ $(OUT_DIR)/$@/jerry
 
 build: $(JERRY_TARGETS) unittests
 

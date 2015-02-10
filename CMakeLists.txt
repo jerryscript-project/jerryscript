@@ -29,8 +29,13 @@ project (Jerry CXX C ASM)
  endif()
 
 # Use gcc-ar and gcc-ranlib to support LTO
- set(CMAKE_AR ${CMAKE_C_COMPILER}-ar)
- set(CMAKE_RANLIB ${CMAKE_C_COMPILER}-ranlib)
+ get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
+ get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
+ get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
+ string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
+ string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
+ set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
+ set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
 
 # Remove rdynamic option
  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
@@ -159,7 +164,7 @@ project (Jerry CXX C ASM)
 
  # Unit tests
   set(LINKER_FLAGS_UNIT_TEST
-      "${LINKER_FLAGS_COMMON_RELEASE} -lc")
+      "${LINKER_FLAGS_COMMON_RELEASE}")
 
 # Definitions
  # Common
@@ -463,6 +468,22 @@ project (Jerry CXX C ASM)
       tests/unit/test_preparser.cpp
       tests/unit/test_string_to_number.cpp)
 
+# Imported libraries
+ # libc
+  add_library(imported_libc SHARED IMPORTED)
+  execute_process(COMMAND gcc -print-file-name=libc.so
+                  OUTPUT_VARIABLE IMPORTED_LIBC_LOCATION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set_property(TARGET imported_libc
+               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBC_LOCATION})
+ # libgcc
+  add_library(imported_libgcc STATIC IMPORTED)
+  execute_process(COMMAND gcc -print-file-name=libgcc.a
+                  OUTPUT_VARIABLE IMPORTED_LIBGCC_LOCATION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set_property(TARGET imported_libgcc
+               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
+
 # Architecture-specific configuration
  if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
   set(CXX_FLAGS_COMMON_ARCH ${CXX_FLAGS_JERRY_X86_64})
@@ -509,7 +530,7 @@ project (Jerry CXX C ASM)
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_STATIC}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORIES_JERRY})
-    target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.lib)
+    target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.lib imported_libgcc)
 
     if(${STRIP_LINUX_RELEASE_BINARY} STREQUAL "ON")
      add_custom_command(TARGET ${TARGET_NAME}
@@ -557,7 +578,7 @@ project (Jerry CXX C ASM)
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_UNIT_TEST}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORIES_JERRY} ${INCLUDE_DIRECTORIES_UNIT_TEST})
-    target_link_libraries(${TARGET_NAME} unit_tests.lib)
+    target_link_libraries(${TARGET_NAME} unit_tests.lib imported_libc imported_libgcc)
 
     add_dependencies(unittests ${TARGET_NAME})
    endforeach()
@@ -615,7 +636,7 @@ project (Jerry CXX C ASM)
                                 ${INCLUDE_DIRECTORIES_JERRY}
                                 ${INCLUDE_DIRECTORIES_JERRY_MCU_${PLATFORM}}
                                 ${INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_${PLATFORM}})
-     target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.jerry.lib ${TARGET_NAME}.third_party.lib)
+     target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.jerry.lib ${TARGET_NAME}.third_party.lib imported_libgcc)
 
      add_custom_target(${TARGET_NAME}.flash
                        COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET_NAME}> $<TARGET_FILE:${TARGET_NAME}>.bin

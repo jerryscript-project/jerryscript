@@ -1,34 +1,19 @@
 # Produced files
 
-out/
-build/
+build/bin
+build/obj
+build/tests
 
 # IDE related files
 nbproject
 **.sublime-project
 **.sublime-workspace
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+.idea
 
 # Random Trash
 *.swp
+*.swo
 *~
-js.files
-js.fail.files
-jerry.error
-jerry.passed
 core
 vgcore.*
 **.orig

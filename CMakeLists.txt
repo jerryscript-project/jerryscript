@@ -536,11 +536,12 @@ project (Jerry CXX C ASM)
      target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.jerry.lib ${TARGET_NAME}.third_party.lib imported_libgcc)
      add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
 
-     add_custom_target(${TARGET_NAME}.flash
+     add_custom_target(${TARGET_NAME}.bin
                        COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET_NAME}> $<TARGET_FILE:${TARGET_NAME}>.bin
-                       # Flash, ignoring failures to remove temporary flashable binary any way
-                       COMMAND st-flash write $<TARGET_FILE:${TARGET_NAME}>.bin 0x08000000 || /bin/true
-                       COMMAND rm $<TARGET_FILE:${TARGET_NAME}>.bin)
+                       DEPENDS ${TARGET_NAME})
+     add_custom_target(${TARGET_NAME}.flash
+                       COMMAND st-flash write $<TARGET_FILE:${TARGET_NAME}>.bin 0x08000000
+                       DEPENDS ${TARGET_NAME}.bin)
     endfunction()
 
     declare_target_with_modifiers(COMPACT_PROFILE)

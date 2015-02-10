@@ -58,8 +58,8 @@ export JERRY_TARGETS = $(JERRY_LINUX_TARGETS) $(JERRY_MCU_TARGETS)
 export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
 export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
 
-export OUT_DIR = ./out
-export BUILD_DIR = ./build
+export OUT_DIR = ./build/bin
+export BUILD_DIR = ./build/obj
 
 export SHELL=/bin/bash
 
@@ -67,11 +67,11 @@ all: precommit
 
 $(BUILD_DIR)/native:
 	@ mkdir -p $(BUILD_DIR)/native
-	@ cd $(BUILD_DIR)/native; cmake ../.. &>cmake.log
+	@ cd $(BUILD_DIR)/native; cmake ../../.. &>cmake.log
 
 $(BUILD_DIR)/mcu:
 	@ mkdir -p $(BUILD_DIR)/mcu
-	@ cd $(BUILD_DIR)/mcu; cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_mcu_armv7l.cmake ../.. &>cmake.log
+	@ cd $(BUILD_DIR)/mcu; cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_armv7l.cmake ../../.. &>cmake.log
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
@@ -85,8 +85,9 @@ unittests: $(BUILD_DIR)/native
 
 $(JERRY_MCU_TARGETS): $(BUILD_DIR)/mcu
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
 	@ cp $(BUILD_DIR)/mcu/$@ $(OUT_DIR)/$@/jerry
+	@ cp $(BUILD_DIR)/mcu/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 build: $(JERRY_TARGETS) unittests
 

@@ -116,7 +116,7 @@ precommit: clean
 	@ $(MAKE) unittests_run TESTS_OPTS="--silent"
 	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
 	@ # Parse-only testing
-	@ for path in "./tests/jerry" "./benchmarks/jerry"; \
+	@ for path in "./tests/jerry" "./tests/benchmarks/jerry"; \
           do \
             run_ids=""; \
             for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST) $(PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST); \

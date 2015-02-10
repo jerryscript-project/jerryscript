@@ -15,7 +15,7 @@
 
 #define JERRY_MEM_POOL_INTERNAL
 
-#include "globals.h"
+#include "jrt.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
 #include "mem-poolman.h"

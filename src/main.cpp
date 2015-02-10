@@ -17,11 +17,14 @@
 #include "common-io.h"
 #include "actuators.h"
 #include "sensors.h"
-#include "generated.h"
+
+#include JERRY_MCU_SCRIPT_HEADER
+static const char generated_source [] = JERRY_MCU_SCRIPT;
+
 #endif
 
-#include "globals.h"
-#include "interpreter.h"
+#include "jrt.h"
+#include "vm.h"
 #include "jerry-libc.h"
 #include "lexer.h"
 #include "parser.h"

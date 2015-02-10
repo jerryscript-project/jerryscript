@@ -43,6 +43,11 @@ project (Jerry CXX C ASM)
 
 # Options
  option(STRIP_LINUX_RELEASE_BINARY "Strip symbols from Linux-targeted release binaries" ON)
+ set(MCU_SCRIPT_FILE "tests/blinky.js" CACHE STRING "Script to run on MCU")
+
+# Intermediate files
+ # Script to run on MCU
+  set(MCU_SCRIPT_GENERATED_HEADER ${CMAKE_BINARY_DIR}/generated.h)
 
 # Build modes
  set(BUILD_MODES DEBUG RELEASE)
@@ -65,27 +70,27 @@ project (Jerry CXX C ASM)
   # Full profile (default, so - no suffix)
    set(MODIFIER_SUFFIX_FULL_PROFILE )
    set(MODIFIER_DEFINES_FULL_PROFILE DEFINES_JERRY_FULL_PROFILE)
-   set(MODIFIER_INCLUDE_DIRECTORIES_FULL_PROFILE )
+   set(MODIFIER_INCLUDE_FULL_PROFILE )
 
   # Compact profile
    set(MODIFIER_SUFFIX_COMPACT_PROFILE -cp)
    set(MODIFIER_DEFINES_COMPACT_PROFILE DEFINES_JERRY_COMPACT_PROFILE)
-   set(MODIFIER_INCLUDE_DIRECTORIES_COMPACT_PROFILE )
+   set(MODIFIER_INCLUDE_COMPACT_PROFILE )
 
   # Minimal compact profile
    set(MODIFIER_SUFFIX_COMPACT_PROFILE_MINIMAL -cp_minimal)
    set(MODIFIER_DEFINES_COMPACT_PROFILE_MINIMAL DEFINES_JERRY_COMPACT_PROFILE_MINIMAL)
-   set(MODIFIER_INCLUDE_DIRECTORIES_COMPACT_PROFILE_MINIMAL )
+   set(MODIFIER_INCLUDE_COMPACT_PROFILE_MINIMAL )
 
  # Memory statistics
   set(MODIFIER_SUFFIX_MEMORY_STATISTICS -mem_stats)
   set(MODIFIER_DEFINES_MEMORY_STATISTICS DEFINES_JERRY_MEMORY_STATS)
-   set(MODIFIER_INCLUDE_DIRECTORIES_MEMORY_STATISTICS )
+   set(MODIFIER_INCLUDE_MEMORY_STATISTICS )
 
  # Valgrind
   set(MODIFIER_SUFFIX_VALGRIND -valgrind)
   set(MODIFIER_DEFINES_VALGRIND DEFINES_JERRY_VALGRIND)
-  set(MODIFIER_INCLUDE_DIRECTORIES_VALGRIND INCLUDE_DIRECTORIES_THIRD_PARTY_VALGRIND)
+  set(MODIFIER_INCLUDE_VALGRIND INCLUDE_THIRD_PARTY_VALGRIND)
 
 # Compiler flags
  set(CXX_FLAGS_JERRY -std=c++11 -fno-exceptions -fno-rtti)
@@ -242,204 +247,90 @@ project (Jerry CXX C ASM)
       ${DEFINES_JERRY_VALGRIND})
 
 # Include directories
- set(INCLUDE_DIRECTORIES_JERRY
+ set(INCLUDE_CORE
      src
-     src/liballocator
-     src/libcoreint
-     src/libecmabuiltins
-     src/libecmaobjects
-     src/libecmaoperations
-     src/libintstructs
-     src/libjsparser
-     src/liboptimizer
-     src/libperipherals
-     src/libruntime)
+     src/mem
+     src/vm
+     src/ecma/builtin-objects
+     src/ecma/base
+     src/ecma/operations
+     src/parser/collections
+     src/parser/js
+     plugins/lib-device-stm
+     src/jrt)
 
  # Platform-specific
   # Linux
-   set(INCLUDE_DIRECTORIES_JERRY_LINUX
-       src/libruntime/target/linux)
+   set(INCLUDE_CORE_LINUX
+       src/jrt/target/linux)
   # MCU
    # STM32F3
-    set(INCLUDE_DIRECTORIES_JERRY_MCU_STM32F3
-        src/libruntime/target/stm32f3)
+    set(INCLUDE_CORE_MCU_STM32F3
+        src/jrt/target/stm32f3)
    # STM32F4
-    set(INCLUDE_DIRECTORIES_JERRY_MCU_STM32F4
-        src/libruntime/target/stm32f4)
+    set(INCLUDE_CORE_MCU_STM32F4
+        src/jrt/target/stm32f4)
 
  # Third-party
   # Valgrind
-   set(INCLUDE_DIRECTORIES_THIRD_PARTY_VALGRIND third-party/valgrind)
+   set(INCLUDE_THIRD_PARTY_VALGRIND third-party/valgrind)
 
   # Platform-specific
    # MCU
     # STM32F3
-     set(INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_STM32F3
+     set(INCLUDE_THIRD_PARTY_MCU_STM32F3
          third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include
          third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc
          third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
          third-party/STM32F3-Discovery_FW_V1.1.0)
     # STM32F4
-     set(INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_STM32F4
+     set(INCLUDE_THIRD_PARTY_MCU_STM32F4
  	 third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Include
  	 third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/inc
  	 third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
  	 third-party/STM32F4-Discovery_FW_V1.1.0)
 
  # Unit tests
-  set(INCLUDE_DIRECTORIES_UNIT_TEST
+  set(INCLUDE_UNIT_TEST
       tests/unit
-      ${INCLUDE_DIRECTORIES_THIRD_PARTY_VALGRIND})
+      ${INCLUDE_THIRD_PARTY_VALGRIND})
 
 # Sources
- # Jerry
-  set(SOURCE_JERRY_LIB_ALLOCATOR # liballocator
-      src/liballocator/mem-allocator.cpp
-      src/liballocator/mem-heap.cpp
-      src/liballocator/mem-pool.cpp
-      src/liballocator/mem-poolman.cpp)
- 
-  set(SOURCE_JERRY_LIB_COREINT # libcoreint
-      src/libcoreint/interpreter.cpp
-      src/libcoreint/opcodes-agnostic.cpp
-      src/libcoreint/opcodes.cpp
-      src/libcoreint/opcodes-ecma-arithmetics.cpp
-      src/libcoreint/opcodes-ecma-bitwise.cpp
-      src/libcoreint/opcodes-ecma-equality.cpp
-      src/libcoreint/opcodes-ecma-relational.cpp
-      src/libcoreint/opcodes-ecma-try-catch-finally.cpp
-      src/libcoreint/opcodes-helpers-variables.cpp
-      src/libcoreint/opcodes-native-call.cpp
-      src/libcoreint/opcodes-varg.cpp)
- 
-  set(SOURCE_JERRY_LIB_ECMABUILTINS # libecmabuiltins
-      src/libecmabuiltins/ecma-builtin-array.cpp
-      src/libecmabuiltins/ecma-builtin-array-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-boolean.cpp
-      src/libecmabuiltins/ecma-builtin-boolean-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-compact-profile-error.cpp
-      src/libecmabuiltins/ecma-builtin-error.cpp
-      src/libecmabuiltins/ecma-builtin-error-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-evalerror.cpp
-      src/libecmabuiltins/ecma-builtin-evalerror-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-function.cpp
-      src/libecmabuiltins/ecma-builtin-function-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-global.cpp
-      src/libecmabuiltins/ecma-builtin-math.cpp
-      src/libecmabuiltins/ecma-builtin-number.cpp
-      src/libecmabuiltins/ecma-builtin-number-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-object.cpp
-      src/libecmabuiltins/ecma-builtin-object-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-rangeerror.cpp
-      src/libecmabuiltins/ecma-builtin-rangeerror-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-referenceerror.cpp
-      src/libecmabuiltins/ecma-builtin-referenceerror-prototype.cpp
-      src/libecmabuiltins/ecma-builtins.cpp
-      src/libecmabuiltins/ecma-builtin-string.cpp
-      src/libecmabuiltins/ecma-builtin-string-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-syntaxerror.cpp
-      src/libecmabuiltins/ecma-builtin-syntaxerror-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-typeerror.cpp
-      src/libecmabuiltins/ecma-builtin-typeerror-prototype.cpp
-      src/libecmabuiltins/ecma-builtin-type-error-thrower.cpp
-      src/libecmabuiltins/ecma-builtin-urierror.cpp
-      src/libecmabuiltins/ecma-builtin-urierror-prototype.cpp)
- 
-  set(SOURCE_JERRY_LIB_ECMAOBJECTS # libecmaobjects
-      src/libecmaobjects/ecma-alloc.cpp
-      src/libecmaobjects/ecma-gc.cpp
-      src/libecmaobjects/ecma-helpers.cpp
-      src/libecmaobjects/ecma-helpers-conversion.cpp
-      src/libecmaobjects/ecma-helpers-number.cpp
-      src/libecmaobjects/ecma-helpers-string.cpp
-      src/libecmaobjects/ecma-helpers-value.cpp
-      src/libecmaobjects/ecma-helpers-values-collection.cpp
-      src/libecmaobjects/ecma-lcache.cpp
-      src/libecmaobjects/ecma-stack.cpp)
- 
-  set(SOURCE_JERRY_LIB_ECMAOPERATIONS # libecmaoperations
-      src/libecmaoperations/ecma-array-object.cpp
-      src/libecmaoperations/ecma-boolean-object.cpp
-      src/libecmaoperations/ecma-comparison.cpp
-      src/libecmaoperations/ecma-conversion.cpp
-      src/libecmaoperations/ecma-exceptions.cpp
-      src/libecmaoperations/ecma-function-object.cpp
-      src/libecmaoperations/ecma-get-put-value.cpp
-      src/libecmaoperations/ecma-init-finalize.cpp
-      src/libecmaoperations/ecma-lex-env.cpp
-      src/libecmaoperations/ecma-number-arithmetic.cpp
-      src/libecmaoperations/ecma-number-object.cpp
-      src/libecmaoperations/ecma-objects-arguments.cpp
-      src/libecmaoperations/ecma-objects.cpp
-      src/libecmaoperations/ecma-objects-general.cpp
-      src/libecmaoperations/ecma-reference.cpp
-      src/libecmaoperations/ecma-string-object.cpp)
- 
-  set(SOURCE_JERRY_LIB_INTSTRUCTS # libintstructs
-      src/libintstructs/array-list.cpp
-      src/libintstructs/hash-table.cpp
-      src/libintstructs/linked-list.cpp
-      src/libintstructs/literal.cpp
-      src/libintstructs/lp-string.cpp)
- 
-  set(SOURCE_JERRY_LIB_JSPARSER # libjsparser
-      src/libjsparser/lexer.cpp
-      src/libjsparser/opcodes-dumper.cpp
-      src/libjsparser/parser.cpp
-      src/libjsparser/scopes-tree.cpp
-      src/libjsparser/syntax-errors.cpp)
- 
-  set(SOURCE_JERRY_LIB_OPTIMIZER # liboptimizer
-      src/liboptimizer/deserializer.cpp
-      src/liboptimizer/lit-id-hash-table.cpp
-      src/liboptimizer/optimizer-passes.cpp
-      src/liboptimizer/pretty-printer.cpp
-      src/liboptimizer/serializer.cpp)
- 
-  set(SOURCE_JERRY_LIB_PERIPHERALS # libperipherals
-      src/libperipherals/actuators.cpp
-      src/libperipherals/common-io.cpp
-      src/libperipherals/sensors.cpp)
- 
-  set(SOURCE_JERRY_LIB_RUNTIME # libruntime
-      src/libruntime/jerry-exit.cpp
-      src/libruntime/jerry-libc.cpp
-      src/libruntime/jerry-libc-printf.cpp
-      src/libruntime/jrt-bit-fields.cpp)
+ # Jerry core
+  file(GLOB SOURCE_CORE_MEM src/mem/*.cpp)
+  file(GLOB SOURCE_CORE_VM src/vm/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_BUILTINS src/ecma/builtin-objects/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_BASE src/ecma/base/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_OPERATIONS src/ecma/operations/*.cpp)
+  file(GLOB SOURCE_CORE_PARSER_COLLECTIONS src/parser/collections/*.cpp)
+  file(GLOB SOURCE_CORE_PARSER_JS src/parser/js/*.cpp)
+  file(GLOB SOURCE_CORE_JRT src/jrt/*.cpp)
 
-  set(SOURCE_JERRY_LIB # all Jerry library's source
-                       # that is not platform-specific
-      ${SOURCE_JERRY_LIB_ALLOCATOR}
-      ${SOURCE_JERRY_LIB_COREINT}
-      ${SOURCE_JERRY_LIB_ECMABUILTINS}
-      ${SOURCE_JERRY_LIB_ECMAOBJECTS}
-      ${SOURCE_JERRY_LIB_ECMAOPERATIONS}
-      ${SOURCE_JERRY_LIB_INTSTRUCTS}
-      ${SOURCE_JERRY_LIB_JSPARSER}
-      ${SOURCE_JERRY_LIB_OPTIMIZER}
-      ${SOURCE_JERRY_LIB_PERIPHERALS}
-      ${SOURCE_JERRY_LIB_RUNTIME})
+ # Plugins
+  file(GLOB SOURCE_PLUGINS_LIB_DEVICE_STM plugins/lib-device-stm/*.cpp)
+
+  set(SOURCE_CORE
+      ${SOURCE_CORE_MEM}
+      ${SOURCE_CORE_VM}
+      ${SOURCE_CORE_ECMA_BUILTINS}
+      ${SOURCE_CORE_ECMA_BASE}
+      ${SOURCE_CORE_ECMA_OPERATIONS}
+      ${SOURCE_CORE_PARSER_COLLECTIONS}
+      ${SOURCE_CORE_PARSER_JS}
+      ${SOURCE_CORE_JRT}
+      ${SOURCE_PLUGINS_LIB_DEVICE_STM})
   
-  set(SOURCE_JERRY_MAIN # main Jerry module
-      src/main.cpp)
+ # Jerry standalone
+  set(SOURCE_JERRY_STANDALONE_MAIN src/main.cpp)
 
-  # Platform-specific
-   # Linux
-    set(SOURCE_JERRY_LIB_RUNTIME_LINUX
-        src/libruntime/target/linux/jerry-libc.cpp
-        src/libruntime/target/linux/jerry-assert.cpp
-        src/libruntime/target/linux/jerry-asm.S)
-   # MCU
-    # stm32f3
-     set(SOURCE_JERRY_LIB_RUNTIME_STM32F3
-         src/libruntime/target/stm32f3/jerry-libc.cpp
-         src/libruntime/target/stm32f3/jerry-assert.cpp
-         src/libruntime/target/stm32f3/abi.S)
-    # stm32f4
-     set(SOURCE_JERRY_LIB_RUNTIME_STM32F4
-         src/libruntime/target/stm32f4/jerry-libc.cpp
-         src/libruntime/target/stm32f4/jerry-assert.cpp
-         src/libruntime/target/stm32f4/abi.S)
+ # Platform-specific
+  # Linux
+   file(GLOB SOURCE_CORE_JRT_LINUX src/jrt/target/linux/*.cpp src/jrt/target/linux/*.S)
+  # MCU
+   # stm32f3
+    file(GLOB SOURCE_CORE_JRT_STM32F3 src/jrt/target/stm32f3/*.cpp src/jrt/target/stm32f3/*.S)
+   # stm32f4
+    file(GLOB SOURCE_CORE_JRT_STM32F4 src/jrt/target/stm32f4/*.cpp src/jrt/target/stm32f4/*.S)
 
  # Third-party
   # Platform-specific
@@ -460,13 +351,7 @@ project (Jerry CXX C ASM)
          third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c)
 
  # Unit tests main modules
-  set(SOURCE_UNIT_TEST_MAIN_MODULES
-      tests/unit/test_heap.cpp
-      tests/unit/test_number_to_string.cpp
-      tests/unit/test_pool.cpp
-      tests/unit/test_poolman.cpp
-      tests/unit/test_preparser.cpp
-      tests/unit/test_string_to_number.cpp)
+  file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
 
 # Imported libraries
  # libc
@@ -517,19 +402,19 @@ project (Jerry CXX C ASM)
     foreach(MODIFIER ${ARGN})
      set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
      set(DEFINES_JERRY ${DEFINES_JERRY} ${${MODIFIER_DEFINES_${MODIFIER}}})
-     set(INCLUDE_DIRECTORIES_JERRY ${INCLUDE_DIRECTORIES_JERRY} ${${MODIFIER_INCLUDE_DIRECTORIES_${MODIFIER}}})
+     set(INCLUDE_CORE ${INCLUDE_CORE} ${${MODIFIER_INCLUDE_${MODIFIER}}})
     endforeach()
 
-    add_library(${TARGET_NAME}.lib STATIC ${SOURCE_JERRY_LIB} ${SOURCE_JERRY_LIB_RUNTIME_LINUX})
+    add_library(${TARGET_NAME}.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_LINUX})
     target_compile_options(${TARGET_NAME}.lib PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_COMMON_${BUILD_MODE}})
     target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_JERRY})
-    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_DIRECTORIES_JERRY})
+    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_CORE})
 
-    add_executable(${TARGET_NAME} ${SOURCE_JERRY_MAIN})
+    add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
     target_compile_options(${TARGET_NAME} PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_COMMON_${BUILD_MODE}})
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_STATIC}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
-    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORIES_JERRY})
+    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE})
     target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.lib imported_libgcc)
 
     if(${STRIP_LINUX_RELEASE_BINARY} STREQUAL "ON")
@@ -561,10 +446,10 @@ project (Jerry CXX C ASM)
   # Unit tests declaration
    add_custom_target(unittests)
 
-   add_library(unit_tests.lib STATIC ${SOURCE_JERRY_LIB} ${SOURCE_JERRY_LIB_RUNTIME_LINUX})
+   add_library(unit_tests.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_LINUX})
    target_compile_options(unit_tests.lib PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_UNIT_TEST})
    target_compile_definitions(unit_tests.lib PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
-   target_include_directories(unit_tests.lib PRIVATE ${INCLUDE_DIRECTORIES_JERRY} ${INCLUDE_DIRECTORIES_UNIT_TEST})
+   target_include_directories(unit_tests.lib PRIVATE ${INCLUDE_CORE} ${INCLUDE_UNIT_TEST})
 
    foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
     get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
@@ -577,7 +462,7 @@ project (Jerry CXX C ASM)
                            ${CXX_FLAGS_UNIT_TEST})
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_UNIT_TEST}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
-    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORIES_JERRY} ${INCLUDE_DIRECTORIES_UNIT_TEST})
+    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE} ${INCLUDE_UNIT_TEST})
     target_link_libraries(${TARGET_NAME} unit_tests.lib imported_libc imported_libgcc)
 
     add_dependencies(unittests ${TARGET_NAME})
@@ -597,21 +482,30 @@ project (Jerry CXX C ASM)
      foreach(MODIFIER ${ARGN})
       set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
       set(DEFINES_JERRY ${DEFINES_JERRY} ${${MODIFIER_DEFINES_${MODIFIER}}})
-      set(INCLUDE_DIRECTORIES_JERRY ${INCLUDE_DIRECTORIES_JERRY} ${${MODIFIER_INCLUDE_DIRECTORIES_${MODIFIER}}})
+      set(INCLUDE_CORE ${INCLUDE_CORE} ${${MODIFIER_INCLUDE_${MODIFIER}}})
      endforeach()
 
+     set(MCU_SCRIPT_GENERATED_HEADER ${MCU_SCRIPT_GENERATED_HEADER}.${TARGET_NAME})
+     add_custom_command(OUTPUT ${MCU_SCRIPT_GENERATED_HEADER}
+                        COMMAND ${CMAKE_SOURCE_DIR}/tools/generator.sh "${CMAKE_SOURCE_DIR}/${MCU_SCRIPT_FILE}" ${MCU_SCRIPT_GENERATED_HEADER}
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+     add_custom_target(mcu_header_with_script_to_run.${TARGET_NAME} DEPENDS ${MCU_SCRIPT_GENERATED_HEADER})
+     set(DEFINES_JERRY_MCU_SCRIPT JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
+
      # Jerry library
-      add_library(${TARGET_NAME}.jerry.lib STATIC ${SOURCE_JERRY_LIB} ${SOURCE_JERRY_LIB_RUNTIME_${PLATFORM}})
+      add_library(${TARGET_NAME}.jerry.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_${PLATFORM}})
       target_compile_options(${TARGET_NAME}.jerry.lib PRIVATE
                              ${CXX_FLAGS_JERRY}
                              ${CXX_FLAGS_COMMON_${BUILD_MODE}}
                              ${CXX_FLAGS_COMMON_ARCH}
                              ${CXX_FLAGS_COMMON_MCU_${PLATFORM}})
-      target_compile_definitions(${TARGET_NAME}.jerry.lib PRIVATE ${DEFINES_JERRY} ${DEFINES_JERRY_MCU_${PLATFORM}})
+      target_compile_definitions(${TARGET_NAME}.jerry.lib PRIVATE
+                                 ${DEFINES_JERRY}
+                                 ${DEFINES_JERRY_MCU_${PLATFORM}})
       target_include_directories(${TARGET_NAME}.jerry.lib PRIVATE
-                                 ${INCLUDE_DIRECTORIES_JERRY}
-                                 ${INCLUDE_DIRECTORIES_JERRY_MCU_${PLATFORM}}
-                                 ${INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_${PLATFORM}})
+                                 ${INCLUDE_CORE}
+                                 ${INCLUDE_CORE_MCU_${PLATFORM}}
+                                 ${INCLUDE_THIRD_PARTY_MCU_${PLATFORM}})
    
      # Third-party MCU library
       add_library(${TARGET_NAME}.third_party.lib STATIC
@@ -621,9 +515,9 @@ project (Jerry CXX C ASM)
                              ${CXX_FLAGS_COMMON_ARCH}
                              ${CXX_FLAGS_COMMON_MCU_${PLATFORM}})
       target_include_directories(${TARGET_NAME}.third_party.lib PRIVATE
-                                 ${INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_${PLATFORM}})
+                                 ${INCLUDE_THIRD_PARTY_MCU_${PLATFORM}})
 
-     add_executable(${TARGET_NAME} ${SOURCE_JERRY_MAIN})
+     add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
      target_compile_options(${TARGET_NAME} PRIVATE
                             ${CXX_FLAGS_JERRY}
                             ${CXX_FLAGS_COMMON_${BUILD_MODE}}
@@ -631,12 +525,16 @@ project (Jerry CXX C ASM)
                             ${CXX_FLAGS_COMMON_MCU_${PLATFORM}})
      set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS
                   "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_STATIC} ${LINKER_FLAGS_JERRY_MCU_${PLATFORM}}")
-     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY} ${DEFINES_JERRY_MCU_${PLATFORM}})
+     target_compile_definitions(${TARGET_NAME} PRIVATE
+                                ${DEFINES_JERRY}
+                                ${DEFINES_JERRY_MCU_${PLATFORM}}
+                                ${DEFINES_JERRY_MCU_SCRIPT})
      target_include_directories(${TARGET_NAME} PRIVATE
-                                ${INCLUDE_DIRECTORIES_JERRY}
-                                ${INCLUDE_DIRECTORIES_JERRY_MCU_${PLATFORM}}
-                                ${INCLUDE_DIRECTORIES_THIRD_PARTY_MCU_${PLATFORM}})
+                                ${INCLUDE_CORE}
+                                ${INCLUDE_CORE_MCU_${PLATFORM}}
+                                ${INCLUDE_THIRD_PARTY_MCU_${PLATFORM}})
      target_link_libraries(${TARGET_NAME} ${TARGET_NAME}.jerry.lib ${TARGET_NAME}.third_party.lib imported_libgcc)
+     add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
 
      add_custom_target(${TARGET_NAME}.flash
                        COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET_NAME}> $<TARGET_FILE:${TARGET_NAME}>.bin

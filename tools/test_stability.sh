@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #!/bin/bash
 
 NUM_COMMITS=$1
-BENCH=./benchmarks/jerry/loop_arithmetics_1kk.js
+BENCH=./tests/benchmarks/jerry/loop_arithmetics_1kk.js
 TARGET=release.linux
 
 trap ctrl_c INT

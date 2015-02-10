@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "globals.h"
+#include "jrt.h"
 #include "mem-allocator.h"
 
 extern "C"

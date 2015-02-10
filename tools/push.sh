@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ do
 #  echo
 
 #  BENCH_ENGINE="./out/release.linux/jerry"
-#  BENCH_SCRIPT="./benchmarks/jerry/loop_arithmetics_1kk.js"
+#  BENCH_SCRIPT="./tests/benchmarks/jerry/loop_arithmetics_1kk.js"
 #  PERF_ITERS="5"
 #  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
 #  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss_measure.sh $BENCH_ENGINE $BENCH_SCRIPT`

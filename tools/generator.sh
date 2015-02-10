@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
 
 #!/bin/bash
 
-echo "#include \"globals.h\"" > $2
-echo "" >> $2
-echo "static char generated_source [] =" >> $2
+echo "#define JERRY_MCU_SCRIPT \\" > $2
 cat $1 | while read line
 do
-  echo "\"$line\n\"" >> $2
+  echo "\"$line\n\" \\" >> $2
 done
-echo ";" >> $2
+echo >> $2

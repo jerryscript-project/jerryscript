@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ ENGINE=$1
 function run ()
 {
     echo "Running test: $1.js"
-        ./tools/perf.sh 5 $ENGINE ./benchmarks/$1.js
-        ./tools/rss_measure.sh $ENGINE ./benchmarks/$1.js
+        ./tools/perf.sh 5 $ENGINE ./tests/benchmarks/$1.js
+        ./tools/rss_measure.sh $ENGINE ./tests/benchmarks/$1.js
 }
 
 echo "Running Sunspider:"

@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ find $TEST_SUITE_PATH/suite -name *.js -printf "%p %D%i\0" | xargs -0 -n 1 -P $M
      echo $output;
      echo;) >> $tmp_dir/jerry.error."$chapter"."$test_id";
   fi;
-' "./out/$TARGET/jerry $PARSE" $STA_JS $TIMEOUT $TMP_DIR 2>/dev/null;
+' "$TARGET $PARSE" $STA_JS $TIMEOUT $TMP_DIR 2>/dev/null;
 
 for CHAPTER in `ls $TEST_SUITE_PATH/suite`;
 do

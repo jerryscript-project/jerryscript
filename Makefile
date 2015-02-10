@@ -100,14 +100,14 @@ PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
                                        release.linux-valgrind.check \
                                        release.linux-cp-valgrind.check
 
-push: ./tools/push.sh
-	@ ./tools/push.sh
+push: ./tools/git-scripts/push.sh
+	@ ./tools/git-scripts/push.sh
 
-pull: ./tools/pull.sh
-	@ ./tools/pull.sh
+pull: ./tools/git-scripts/pull.sh
+	@ ./tools/git-scripts/pull.sh
 
-log: ./tools/log.sh
-	@ ./tools/log.sh
+log: ./tools/git-scripts/log.sh
+	@ ./tools/git-scripts/log.sh
 
 precommit: clean
 	@ echo -e "\nBuilding...\n\n"

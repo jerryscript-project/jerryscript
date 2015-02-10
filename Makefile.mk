@@ -58,7 +58,7 @@ endif
 .PHONY: unittests_run $(CHECK_TARGETS)
 
 unittests_run:
-	@ VALGRIND=$(VALGRIND_CMD) ./tools/jerry_unittest.sh $(TARGET_DIR) $(TESTS_OPTS)
+	@ VALGRIND=$(VALGRIND_CMD) ./tools/runners/run-unittests.sh $(TARGET_DIR) $(TESTS_OPTS)
 
 $(CHECK_TARGETS):
 	@ if [ ! -f $(TARGET_DIR)/$(ENGINE_NAME) ]; then echo $(TARGET_OF_ACTION) is not built yet; exit 1; fi;
@@ -69,7 +69,7 @@ $(CHECK_TARGETS):
           then \
             ADD_OPTS="--output-to-log"; \
           fi; \
-          VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS) $(TESTS_OPTS) $$ADD_OPTS; \
+          VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/runners/run-test-pass.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(TESTS) $(TESTS_OPTS) $$ADD_OPTS; \
           status_code=$$?; \
           if [ $$status_code -ne 0 ]; \
           then \
@@ -83,7 +83,7 @@ $(CHECK_TARGETS):
           fi; \
           if [ -d $(TESTS_DIR)/fail/ ]; \
           then \
-            VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/jerry_test_fail.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(PARSER_ERROR_CODE) $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
+            VALGRIND=$(VALGRIND_CMD) TIMEOUT=$(VALGRIND_TIMEOUT) ./tools/runners/run-test-xfail.sh $(TARGET_DIR)/$(ENGINE_NAME) $(TARGET_DIR)/check $(PARSER_ERROR_CODE) $(TESTS_DIR) $(TESTS_OPTS) $$ADD_OPTS; \
             status_code=$$?; \
             if [ $$status_code -ne 0 ]; \
             then \

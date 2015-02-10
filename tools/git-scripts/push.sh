@@ -121,11 +121,11 @@ do
 #  echo "Starting pre-commit performance measurement for '$commit_hash'"
 #  echo
 
-#  BENCH_ENGINE="./out/release.linux/jerry"
+#  BENCH_ENGINE="./build/bin/release.linux/jerry"
 #  BENCH_SCRIPT="./tests/benchmarks/jerry/loop_arithmetics_1kk.js"
 #  PERF_ITERS="5"
 #  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
-#  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss_measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
+#  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss-measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
 
 #  echo "Pre-commit performance measurement for '$commit_hash' completed"
 #  echo

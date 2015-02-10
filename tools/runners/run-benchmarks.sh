@@ -20,7 +20,7 @@ function run ()
 {
     echo "Running test: $1.js"
         ./tools/perf.sh 5 $ENGINE ./tests/benchmarks/$1.js
-        ./tools/rss_measure.sh $ENGINE ./tests/benchmarks/$1.js
+        ./tools/rss-measure.sh $ENGINE ./tests/benchmarks/$1.js
 }
 
 echo "Running Sunspider:"

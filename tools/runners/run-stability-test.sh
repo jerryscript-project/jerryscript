@@ -34,7 +34,7 @@ do
   echo -e -n " > Testing...\n >  "
   echo `git log --format=%B -n 1 $commit_hash`
   make -s $TARGET
-  ./tools/rss_measure.sh ./out/$TARGET/jerry $BENCH
+  ./tools/rss-measure.sh $TARGET $BENCH
   echo
 done
 

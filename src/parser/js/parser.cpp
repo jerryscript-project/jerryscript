@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "optimizer-passes.h"
 #include "jerry-libc.h"
 #include "parser.h"
 #include "opcodes.h"

@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "jrt.h"
-#include "ecma-globals.h"
 #include "literal.h"
-#include "opcodes.h"
 
 #define INVALID_VALUE 255
 #define INVALID_LITERAL UINT32_MAX

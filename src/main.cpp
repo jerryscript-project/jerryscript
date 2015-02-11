@@ -30,7 +30,6 @@ static const char generated_source [] = JERRY_MCU_SCRIPT;
 #include "parser.h"
 #include "serializer.h"
 #include "deserializer.h"
-#include "optimizer-passes.h"
 
 #define MAX_STRINGS 100
 #define MAX_NUMS 25
@@ -48,8 +47,6 @@ jerry_run (const char *script_source, size_t script_source_size,
   parser_parse_program ();
 
   opcodes = (const opcode_t*) deserialize_bytecode ();
-
-  optimizer_run_passes ((opcode_t *) opcodes);
 
 #ifdef __TARGET_HOST
   serializer_print_opcodes ();

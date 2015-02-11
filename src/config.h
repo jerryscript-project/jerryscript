@@ -19,34 +19,34 @@
 /**
  * Limit of data (system heap, engine's data except engine's own heap)
  */
-#define CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE 1024
+#define CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE (1024)
 
 /**
  * Limit of stack size
  */
-#define CONFIG_MEM_STACK_LIMIT 4096
+#define CONFIG_MEM_STACK_LIMIT (4096)
 
 /**
  * Log2 of maximum number of chunks in a pool
  */
-#define CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG 8
+#define CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG (8)
 
 /**
  * Size of pool chunk
  *
  * Should not be less than size of any of ECMA Object Model's data types.
  */
-#define CONFIG_MEM_POOL_CHUNK_SIZE 8
+#define CONFIG_MEM_POOL_CHUNK_SIZE (8)
 
 /**
  * Minimum number of chunks in a pool allocated by pools' manager.
  */
-#define CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL 32
+#define CONFIG_MEM_LEAST_CHUNK_NUMBER_IN_POOL (32)
 
 /**
  * Size of heap chunk
  */
-#define CONFIG_MEM_HEAP_CHUNK_SIZE 64
+#define CONFIG_MEM_HEAP_CHUNK_SIZE (64)
 
 /**
  * Size of heap
@@ -65,12 +65,12 @@
  *
  * On the other hand, value 2 ^ CONFIG_MEM_HEAP_OFFSET_LOG should not be less than CONFIG_MEM_HEAP_AREA_SIZE.
  */
-#define CONFIG_MEM_HEAP_OFFSET_LOG 16
+#define CONFIG_MEM_HEAP_OFFSET_LOG (16)
 
 /**
  * Number of lower bits in key of literal hash table.
  */
-#define CONFIG_LITERAL_HASH_TABLE_KEY_BITS 7
+#define CONFIG_LITERAL_HASH_TABLE_KEY_BITS (7)
 
 /**
  * Width of fields used for holding counter of references to ecma-strings and ecma-objects
@@ -83,7 +83,7 @@
  * Also the option affects size of ECMA Object Model's data types.
  * In any case size of any of the types should not exceed CONFIG_MEM_POOL_CHUNK_SIZE.
  */
-#define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH 10
+#define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH (10)
 
 /**
  * Maximum length of strings' concatenation
@@ -125,7 +125,7 @@
 /**
  * Number of ecma-values inlined into stack frame
  */
-#define CONFIG_ECMA_STACK_FRAME_INLINED_VALUES_NUMBER 16
+#define CONFIG_ECMA_STACK_FRAME_INLINED_VALUES_NUMBER (16)
 
 /**
  * Link Global Environment to an empty declarative lexical environment
@@ -149,10 +149,5 @@
 // #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN
 // #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
-
-/**
- * Maximum number of arguments in the engine's command line (i.e. maximum argc value)
- */
-#define CONFIG_JERRY_MAX_COMMAND_LINE_ARGS 64
 
 #endif /* !CONFIG_H */

@@ -555,7 +555,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   if (length > ECMA_STRING_MAX_CONCATENATION_LENGTH)
   {
-    jerry_exit (ERR_OUT_OF_MEMORY);
+    jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 
   ecma_string_t* string_desc_p = ecma_alloc_string ();
@@ -846,7 +846,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
       ecma_char_t *str_buffer_p = (ecma_char_t*) mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (str_buffer_p == NULL)
       {
-        jerry_exit (ERR_OUT_OF_MEMORY);
+        jerry_fatal (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (str_p,
@@ -1091,7 +1091,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   if (string1_buf == NULL
       || string2_buf == NULL)
   {
-    jerry_exit (ERR_OUT_OF_MEMORY);
+    jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 
   ssize_t req_size;
@@ -1205,7 +1205,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
-        jerry_exit (ERR_OUT_OF_MEMORY);
+        jerry_fatal (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
@@ -1240,7 +1240,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
       if (heap_buffer_p == NULL)
       {
-        jerry_exit (ERR_OUT_OF_MEMORY);
+        jerry_fatal (ERR_OUT_OF_MEMORY);
       }
 
       ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
@@ -1372,7 +1372,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   if (zt_str_p == NULL)
   {
-    jerry_exit (ERR_OUT_OF_MEMORY);
+    jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 
   ecma_string_to_zt_string (string_p, zt_str_p, (ssize_t) buffer_size);

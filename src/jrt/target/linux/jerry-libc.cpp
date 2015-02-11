@@ -53,7 +53,7 @@ FIXME (/* Include linux/fs.h */)
 #define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
   if (unlikely ((syscall_ret_val) < 0)) \
 { \
-  __exit (-ERR_SYSCALL); \
+  jerry_fatal (ERR_SYSCALL); \
 }
 
 static long int syscall_1 (long int syscall_no, long int arg1);

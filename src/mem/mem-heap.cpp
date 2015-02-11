@@ -607,7 +607,7 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
 
     JERRY_ASSERT (data_space_p == NULL);
 
-    jerry_exit (ERR_OUT_OF_MEMORY);
+    jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 } /* mem_heap_alloc_block */
 

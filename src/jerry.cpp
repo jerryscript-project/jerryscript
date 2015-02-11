@@ -21,6 +21,21 @@
 #include "vm.h"
 
 /**
+ * Jerry engine build date
+ */
+const char *jerry_build_date = JERRY_BUILD_DATE;
+
+/**
+ * Jerry engine build commit hash
+ */
+const char *jerry_commit_hash = JERRY_COMMIT_HASH;
+
+/**
+ * Jerry engine build branch name
+ */
+const char *jerry_branch_name = JERRY_BRANCH_NAME;
+
+/**
  * Jerry run-time configuration flags
  */
 static jerry_flag_t jerry_flags;
@@ -122,37 +137,31 @@ jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
 /**
  * Run Jerry in specified run context
  */
-jerry_err_t
+jerry_completion_code_t
 jerry_run (jerry_ctx_t* ctx_p) /**< run context */
 {
   /* FIXME: Remove after implementation of run contexts */
   (void) ctx_p;
 
-  if (run_int())
-  {
-    return ERR_OK;
-  }
-  else
-  {
-    return ERR_FAILED_ASSERTION_IN_SCRIPT;
-  }
+  return run_int();
 } /* jerry_run */
 
 /**
  * Simple jerry runner
  */
-jerry_err_t
+jerry_completion_code_t
 jerry_run_simple (const char *script_source, /**< script source */
                   size_t script_source_size, /**< script source size */
                   jerry_flag_t flags) /**< combination of Jerry flags */
 {
   jerry_init (flags);
 
-  jerry_err_t ret_code = ERR_OK;
+  jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
   
   if (!jerry_parse (NULL, script_source, script_source_size))
   {
-    ret_code = ERR_PARSER;
+    /* unhandled SyntaxError */
+    ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
   else
   {

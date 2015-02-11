@@ -18,9 +18,6 @@
 
 #include "jrt_types.h"
 
-/* FIXME: Remove when jerry_err_t will be in this header */
-#include "jrt.h"
-
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
@@ -35,8 +32,29 @@ typedef uint32_t jerry_flag_t;
 #define JERRY_FLAG_MEM_STATS    (1 << 1) /**< dump per-opcode memory statistics during execution
                                           *   (in the mode full GC is performed after each opcode handler) */
 #define JERRY_FLAG_PARSE_ONLY   (1 << 2) /**< parse only, prevents script execution (only for testing)
-                                          *   FIXME: Remove.
-                                          */
+                                          *   FIXME: Remove. */
+
+/**
+ * Jerry completion codes
+ */
+typedef enum
+{
+  JERRY_COMPLETION_CODE_OK                         = 0, /**< successful completion */
+  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION        = 1, /**< exception occured and it was not handled */
+  JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT = 2  /**< assertion, performed by script, failed */
+} jerry_completion_code_t;
+
+/**
+ * Error codes
+ */
+typedef enum
+{
+  ERR_OUT_OF_MEMORY = 10,
+  ERR_SYSCALL = 11,
+  ERR_PARSER = 12,
+  ERR_UNIMPLEMENTED_CASE = 118,
+  ERR_FAILED_INTERNAL_ASSERTION = 120
+} jerry_fatal_code_t;
 
 /**
  * Jerry run context
@@ -44,9 +62,24 @@ typedef uint32_t jerry_flag_t;
 typedef struct jerry_ctx_t jerry_ctx_t;
 
 /**
+ * Jerry engine build date
+ */
+extern const char *jerry_build_date;
+
+/**
+ * Jerry engine build commit hash
+ */
+extern const char *jerry_commit_hash;
+
+/**
+ * Jerry engine build branch name
+ */
+extern const char *jerry_branch_name;
+
+/**
  * Jerry error callback type
  */
-typedef void (*jerry_error_callback_t) (jerry_err_t);
+typedef void (*jerry_error_callback_t) (jerry_fatal_code_t);
 
 extern void jerry_init (jerry_flag_t flags);
 extern void jerry_cleanup (void);
@@ -58,9 +91,9 @@ extern jerry_ctx_t* jerry_new_ctx (void);
 extern void jerry_cleanup_ctx (jerry_ctx_t*);
 
 extern bool jerry_parse (jerry_ctx_t*, const char* source_p, size_t source_size);
-extern jerry_err_t jerry_run (jerry_ctx_t *);
+extern jerry_completion_code_t jerry_run (jerry_ctx_t *);
 
-extern jerry_err_t
+extern jerry_completion_code_t
 jerry_run_simple (const char *script_source,
                   size_t script_source_size,
                   jerry_flag_t flags);

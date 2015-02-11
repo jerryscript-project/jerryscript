@@ -39,6 +39,17 @@ main (void)
 
   set_sys_tick_counter ((uint32_t) - 1);
   start = get_sys_tick_counter ();
-  jerry_run_simple (source_p, source_size, JERRY_FLAG_EMPTY);
+
+  jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, JERRY_FLAG_EMPTY);
+
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
+
+  if (ret_code == JERRY_COMPLETION_CODE_OK)
+  {
+    return JERRY_STANDALONE_EXIT_CODE_OK;
+  }
+  else
+  {
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
 }

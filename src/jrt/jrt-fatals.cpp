@@ -13,8 +13,57 @@
  * limitations under the License.
  */
 
+/**
+ * Implementation of exit with specified status code.
+ */
+
 #include "jrt.h"
 #include "jerry-libc.h"
+
+/*
+ * Exit with specified status code.
+ *
+ * If !JERRY_NDEBUG and code != 0, print status code with description
+ * and call assertion fail handler.
+ */
+void __noreturn
+jerry_fatal (jerry_fatal_code_t code) /**< status code */
+{
+#ifndef JERRY_NDEBUG
+  __printf ("Error: ");
+
+  switch (code)
+  {
+    case ERR_OUT_OF_MEMORY:
+    {
+      __printf ("ERR_OUT_OF_MEMORY\n");
+      break;
+    }
+    case ERR_SYSCALL:
+    {
+      /* print nothing as it may invoke syscall recursively */
+      break;
+    }
+    case ERR_PARSER:
+    {
+      __printf ("ERR_PARSER\n");
+      break;
+    }
+    case ERR_UNIMPLEMENTED_CASE:
+    {
+      __printf ("ERR_UNIMPLEMENTED_CASE\n");
+      break;
+    }
+    case ERR_FAILED_INTERNAL_ASSERTION:
+    {
+      __printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
+      break;
+    }
+  }
+#endif /* !JERRY_NDEBUG */
+
+  __exit (code);
+} /* jerry_fatal */
 
 /**
  * Handle failed assertion
@@ -35,7 +84,7 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
   (void) line;
 #endif /* JERRY_NDEBUG */
 
-  __exit (-ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
 
 /**
@@ -62,7 +111,7 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
   }
   __printf (".\n");
 
-  __exit (-ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
 
 /**
@@ -89,5 +138,5 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
   }
   __printf (".\n");
 
-  __exit (-ERR_UNIMPLEMENTED_CASE);
+  jerry_fatal (ERR_UNIMPLEMENTED_CASE);
 } /* jerry_unimplemented */

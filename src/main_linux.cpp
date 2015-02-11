@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerry.h"
 #include "jerry-libc.h"
+
+/**
+ * Maximum command line arguments number
+ */
+#define JERRY_MAX_COMMAND_LINE_ARGS (64)
 
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
@@ -24,6 +28,8 @@ read_sources (const char *script_file_names[],
               size_t files_count,
               size_t *out_source_size_p)
 {
+  JERRY_ASSERT (files_count > 0);
+
   size_t i;
   uint8_t *source_buffer_tail = source_buffer;
 
@@ -35,21 +41,21 @@ read_sources (const char *script_file_names[],
 
     if (file == NULL)
     {
-      jerry_exit (ERR_IO);
+      break;
     }
 
     int fseek_status = __fseek (file, 0, __SEEK_END);
 
     if (fseek_status != 0)
     {
-      jerry_exit (ERR_IO);
+      break;
     }
 
     long script_len = __ftell (file);
 
     if (script_len < 0)
     {
-      jerry_exit (ERR_IO);
+      break;
     }
 
     __rewind (file);
@@ -58,13 +64,13 @@ read_sources (const char *script_file_names[],
 
     if (source_buffer_tail + current_source_size >= source_buffer + sizeof (source_buffer))
     {
-      jerry_exit (ERR_OUT_OF_MEMORY);
+      break;
     }
 
     size_t bytes_read = __fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
-      jerry_exit (ERR_IO);
+      break;
     }
 
     __fclose (file);
@@ -72,29 +78,42 @@ read_sources (const char *script_file_names[],
     source_buffer_tail += current_source_size;
   }
 
-  const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
-  JERRY_ASSERT(source_size < sizeof (source_buffer));
+  if (i < files_count)
+  {
+    __printf ("Failed to read script N%d\n", i + 1);
 
-  *out_source_size_p = source_size;
+    return NULL;
+  }
+  else
+  {
+    const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
+    JERRY_ASSERT(source_size < sizeof (source_buffer));
 
-  return (const char*)source_buffer;
+    *out_source_size_p = source_size;
+
+    return (const char*)source_buffer;
+  }
 }
 
 int
 main (int argc __unused,
       char **argv __unused)
 {
-  if (argc > CONFIG_JERRY_MAX_COMMAND_LINE_ARGS)
+  if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    jerry_exit (ERR_OUT_OF_MEMORY);
+    __printf ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
+
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  const char *file_names[CONFIG_JERRY_MAX_COMMAND_LINE_ARGS];
+  const char *file_names[JERRY_MAX_COMMAND_LINE_ARGS];
   int i;
   size_t files_counter = 0;
 
-  jrt_set_mem_limits (CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE,
-                      CONFIG_MEM_STACK_LIMIT);
+  size_t max_data_bss_size, max_stack_size;
+  jerry_get_memory_limits (&max_data_bss_size, &max_stack_size);
+
+  jrt_set_mem_limits (max_data_bss_size, max_stack_size);
 
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
 
@@ -102,9 +121,9 @@ main (int argc __unused,
   {
     if (!__strcmp ("-v", argv[i]))
     {
-      __printf ("Build date: \t%s\n", JERRY_BUILD_DATE);
-      __printf ("Commit hash:\t%s\n", JERRY_COMMIT_HASH);
-      __printf ("Branch name:\t%s\n", JERRY_BRANCH_NAME);
+      __printf ("Build date: \t%s\n", jerry_build_date);
+      __printf ("Commit hash:\t%s\n", jerry_commit_hash);
+      __printf ("Branch name:\t%s\n", jerry_branch_name);
       __printf ("\n");
     }
     if (!__strcmp ("--mem-stats", argv[i]))
@@ -131,13 +150,29 @@ main (int argc __unused,
 
   if (files_counter == 0)
   {
-    jerry_exit (ERR_NO_FILES);
+    return JERRY_STANDALONE_EXIT_CODE_OK;
   }
+  else
+  {
+    size_t source_size;
+    const char *source_p = read_sources (file_names, files_counter, &source_size);
 
-  size_t source_size;
-  const char *source_p = read_sources (file_names, files_counter, &source_size);
+    if (source_p == NULL)
+    {
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+    else
+    {
+      jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, flags);
 
-  jerry_err_t ret_code = jerry_run_simple (source_p, source_size, flags);
-
-  jerry_exit (ret_code);
+      if (ret_code == JERRY_COMPLETION_CODE_OK)
+      {
+        return JERRY_STANDALONE_EXIT_CODE_OK;
+      }
+      else
+      {
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+    }
+  }
 }

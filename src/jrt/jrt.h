@@ -16,6 +16,7 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
+#include "jerry.h"
 #include "jrt_types.h"
 
 /**
@@ -43,29 +44,10 @@
 #define JERRY_BITSINBYTE 8
 
 /**
- * Error codes
- *
- * TODO: Move to jerry.h
+ * Standalone Jerry exit codes
  */
-typedef enum
-{
-  ERR_OK = 0,
-  ERR_IO = -1,
-  ERR_BUFFER_SIZE = -2,
-  ERR_SEVERAL_FILES = -3,
-  ERR_NO_FILES = -4,
-  ERR_NON_CHAR = -5,
-  ERR_UNCLOSED = -6,
-  ERR_INT_LITERAL = -7,
-  ERR_STRING = -8,
-  ERR_PARSER = -9,
-  ERR_OUT_OF_MEMORY = -10,
-  ERR_SYSCALL = -11,
-  ERR_UNHANDLED_EXCEPTION = -12,
-  ERR_UNIMPLEMENTED_CASE = -118,
-  ERR_FAILED_ASSERTION_IN_SCRIPT = -119,
-  ERR_FAILED_INTERNAL_ASSERTION = -120,
-} jerry_err_t;
+#define JERRY_STANDALONE_EXIT_CODE_OK   (0)
+#define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 /**
  * Asserts
@@ -175,7 +157,7 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 /**
  * Exit
  */
-extern void __noreturn jerry_exit (jerry_err_t code);
+extern void __noreturn jerry_fatal (jerry_fatal_code_t code);
 
 /**
  * sizeof, offsetof, ...

@@ -345,7 +345,7 @@ init_int (const opcode_t *program_p, /**< pointer to byte-code program */
   __program = program_p;
 } /* init_int */
 
-bool
+jerry_completion_code_t
 run_int (void)
 {
   JERRY_ASSERT (__program != NULL);
@@ -378,20 +378,31 @@ run_int (void)
                                                          is_strict,
                                                          false);
 
+  jerry_completion_code_t ret_code;
+
   if (ecma_is_completion_value_exit (completion))
   {
-    ecma_deref_object (glob_obj_p);
-    ecma_deref_object (lex_env_p);
-    ecma_finalize ();
-
-    return ecma_is_value_true (ecma_get_completion_value_value (completion));
+    if (ecma_is_value_true (ecma_get_completion_value_value (completion)))
+    {
+      ret_code = JERRY_COMPLETION_CODE_OK;
+    }
+    else
+    {
+      ret_code = JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT;
+    }
   }
-  else if (ecma_is_completion_value_throw (completion))
+  else
   {
-    jerry_exit (ERR_UNHANDLED_EXCEPTION);
+    JERRY_ASSERT (ecma_is_completion_value_throw (completion));
+
+    ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
 
-  JERRY_UNREACHABLE ();
+  ecma_deref_object (glob_obj_p);
+  ecma_deref_object (lex_env_p);
+  ecma_finalize ();
+
+  return ret_code;
 }
 
 ecma_completion_value_t

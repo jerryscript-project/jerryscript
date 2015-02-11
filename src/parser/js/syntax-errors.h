@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
   } \
   __printf ("^\n"); \
   __printf ("ERROR: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
-  __exit (-1); \
+  jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_WARN(MESSAGE, LOCUS) do { \
   size_t line, column; \
@@ -50,7 +50,7 @@
   __printf ("ERROR: Ln %d, Col %d: ", line + 1, column + 1); \
   __printf (MESSAGE, __VA_ARGS__); \
   __printf ("\n"); \
-  __exit (-1); \
+  jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
   size_t line, column; \
@@ -62,19 +62,19 @@
   } \
     __printf ("^\n"); \
   __printf ("SORRY, Unimplemented: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
-  __exit (-1); \
+  JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #else /* JERRY_NDEBUG */
 #define PARSE_ERROR(MESSAGE, LOCUS) do { \
-  __exit (-1); \
+  jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_WARN(MESSAGE, LOCUS) do { \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
-  __exit (-1); \
+  jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
-  __exit (-1); \
+  JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #endif /* JERRY_NDEBUG */
 

@@ -27,7 +27,7 @@
  * and call assertion fail handler.
  */
 void __noreturn
-jerry_exit (jerry_status_t code) /**< status code */
+jerry_exit (jerry_err_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
   if (code != ERR_OK)

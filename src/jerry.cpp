@@ -20,36 +20,149 @@
 #include "serializer.h"
 #include "vm.h"
 
-bool
-jerry_run (const char *script_source, size_t script_source_size,
-           bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
+/**
+ * Jerry run-time configuration flags
+ */
+static jerry_flag_t jerry_flags;
+
+/**
+ * Jerry engine initialization
+ */
+void
+jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 {
-  const opcode_t *opcodes;
+  jerry_flags = flags;
 
   mem_init ();
   deserializer_init ();
+} /* jerry_init */
 
-  parser_init (script_source, script_source_size, is_show_opcodes);
+/**
+ * Terminate Jerry engine
+ *
+ * Warning:
+ *  All contexts should be freed with jerry_cleanup_ctx
+ *  before calling the cleanup routine.
+ */
+void
+jerry_cleanup (void)
+{
+  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
+
+  deserializer_free ();
+  mem_finalize (is_show_mem_stats);
+} /* jerry_cleanup */
+
+/**
+ * Get Jerry configured memory limits
+ */
+void
+jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< out: Jerry's maximum usage of
+                                                            *        data + bss + brk sections */
+                         size_t *out_stack_limit_p) /**< out: Jerry's maximum usage of stack */
+{
+  *out_data_bss_brk_limit_p = CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE;
+  *out_stack_limit_p = CONFIG_MEM_STACK_LIMIT;
+} /* jerry_get_memory_limits */
+
+/**
+ * Register Jerry's fatal error callback
+ */
+void
+jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callback function */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Error callback is not implemented", callback);
+} /* jerry_reg_err_callback */
+
+/**
+ * Allocate new run context
+ */
+jerry_ctx_t*
+jerry_new_ctx (void)
+{
+  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
+} /* jerry_new_ctx */
+
+/**
+ * Cleanup resources associated with specified run context
+ */
+void
+jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
+} /* jerry_cleanup_ctx */
+
+/**
+ * Parse script for specified context
+ */
+bool
+jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
+             const char* source_p, /**< script source */
+             size_t source_size) /**< script source size */
+{
+  /* FIXME: Remove after implementation of run contexts */
+  (void) ctx_p;
+
+  bool is_show_opcodes = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
+
+  parser_init (source_p, source_size, is_show_opcodes);
   parser_parse_program ();
 
-  opcodes = (const opcode_t*) deserialize_bytecode ();
+  const opcode_t* opcodes = (const opcode_t*) deserialize_bytecode ();
 
   serializer_print_opcodes ();
   parser_free ();
 
-  if (is_parse_only)
-  {
-    deserializer_free ();
-    mem_finalize (is_show_mem_stats);
-    return true;
-  }
-
+  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
   init_int (opcodes, is_show_mem_stats);
 
-  bool is_success = run_int ();
+  return true;
+} /* jerry_parse */
 
-  deserializer_free ();
-  mem_finalize (is_show_mem_stats);
+/**
+ * Run Jerry in specified run context
+ */
+jerry_err_t
+jerry_run (jerry_ctx_t* ctx_p) /**< run context */
+{
+  /* FIXME: Remove after implementation of run contexts */
+  (void) ctx_p;
 
-  return is_success;
+  if (run_int())
+  {
+    return ERR_OK;
+  }
+  else
+  {
+    return ERR_FAILED_ASSERTION_IN_SCRIPT;
+  }
 } /* jerry_run */
+
+/**
+ * Simple jerry runner
+ */
+jerry_err_t
+jerry_run_simple (const char *script_source, /**< script source */
+                  size_t script_source_size, /**< script source size */
+                  jerry_flag_t flags) /**< combination of Jerry flags */
+{
+  jerry_init (flags);
+
+  jerry_err_t ret_code = ERR_OK;
+  
+  if (!jerry_parse (NULL, script_source, script_source_size))
+  {
+    ret_code = ERR_PARSER;
+  }
+  else
+  {
+    if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
+    {
+      ret_code = jerry_run (NULL);
+    }
+  }
+
+  jerry_cleanup ();
+
+  return ret_code;
+} /* jerry_run_simple */

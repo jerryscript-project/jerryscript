@@ -39,7 +39,6 @@ main (void)
 
   set_sys_tick_counter ((uint32_t) - 1);
   start = get_sys_tick_counter ();
-  jerry_run (source_p,
-             source_size, false, false, false);
+  jerry_run_simple (source_p, source_size, JERRY_FLAG_EMPTY);
   finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
 }

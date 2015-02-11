@@ -90,13 +90,13 @@ main (int argc __unused,
   }
 
   const char *file_names[CONFIG_JERRY_MAX_COMMAND_LINE_ARGS];
-  bool parse_only = false, show_opcodes = false;
-  bool print_mem_stats = false;
   int i;
   size_t files_counter = 0;
 
   jrt_set_mem_limits (CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE,
                       CONFIG_MEM_STACK_LIMIT);
+
+  jerry_flag_t flags = JERRY_FLAG_EMPTY;
 
   for (i = 1; i < argc; i++)
   {
@@ -110,20 +110,18 @@ main (int argc __unused,
     if (!__strcmp ("--mem-stats", argv[i]))
     {
 #ifdef MEM_STATS
-      print_mem_stats = true;
+      flags |= JERRY_FLAG_MEM_STATS;
 #else /* MEM_STATS */
       __printf ("Ignoring --mem-stats because of '!MEM_STATS' build configuration.\n");
-
-      print_mem_stats = false;
 #endif /* !MEM_STATS */
     }
     else if (!__strcmp ("--parse-only", argv[i]))
     {
-      parse_only = true;
+      flags |= JERRY_FLAG_PARSE_ONLY;
     }
     else if (!__strcmp ("--show-opcodes", argv[i]))
     {
-      show_opcodes = true;
+      flags |= JERRY_FLAG_SHOW_OPCODES;
     }
     else
     {
@@ -139,7 +137,7 @@ main (int argc __unused,
   size_t source_size;
   const char *source_p = read_sources (file_names, files_counter, &source_size);
 
-  bool is_success = jerry_run (source_p, source_size, parse_only, show_opcodes, print_mem_stats);
+  jerry_err_t ret_code = jerry_run_simple (source_p, source_size, flags);
 
-  jerry_exit (is_success ? ERR_OK : ERR_FAILED_ASSERTION_IN_SCRIPT);
+  jerry_exit (ret_code);
 }

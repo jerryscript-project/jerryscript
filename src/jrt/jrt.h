@@ -44,6 +44,8 @@
 
 /**
  * Error codes
+ *
+ * TODO: Move to jerry.h
  */
 typedef enum
 {
@@ -63,7 +65,7 @@ typedef enum
   ERR_UNIMPLEMENTED_CASE = -118,
   ERR_FAILED_ASSERTION_IN_SCRIPT = -119,
   ERR_FAILED_INTERNAL_ASSERTION = -120,
-} jerry_status_t;
+} jerry_err_t;
 
 /**
  * Asserts
@@ -173,7 +175,7 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 /**
  * Exit
  */
-extern void __noreturn jerry_exit (jerry_status_t code);
+extern void __noreturn jerry_exit (jerry_err_t code);
 
 /**
  * sizeof, offsetof, ...

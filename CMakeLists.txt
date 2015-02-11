@@ -257,20 +257,21 @@ project (Jerry CXX C ASM)
      src/ecma/operations
      src/parser/collections
      src/parser/js
-     plugins/lib-device-stm
-     src/jrt)
+     src/jrt
+     jerry-libc
+     plugins/lib-device-stm)
 
  # Platform-specific
   # Linux
    set(INCLUDE_CORE_LINUX
-       src/jrt/target/linux)
+       jerry-libc/target/linux)
   # MCU
    # STM32F3
     set(INCLUDE_CORE_MCU_STM32F3
-        src/jrt/target/stm32f3)
+        jerry-libc/target/stm32f3)
    # STM32F4
     set(INCLUDE_CORE_MCU_STM32F4
-        src/jrt/target/stm32f4)
+        jerry-libc/target/stm32f4)
 
  # Third-party
   # Valgrind
@@ -307,6 +308,9 @@ project (Jerry CXX C ASM)
   file(GLOB SOURCE_CORE_PARSER_JS src/parser/js/*.cpp)
   file(GLOB SOURCE_CORE_JRT src/jrt/*.cpp)
 
+ # libc
+  file(GLOB SOURCE_JERRY_LIBC jerry-libc/*.cpp)
+
  # Plugins
   file(GLOB SOURCE_PLUGINS_LIB_DEVICE_STM plugins/lib-device-stm/*.cpp)
 
@@ -320,6 +324,7 @@ project (Jerry CXX C ASM)
       ${SOURCE_CORE_PARSER_COLLECTIONS}
       ${SOURCE_CORE_PARSER_JS}
       ${SOURCE_CORE_JRT}
+      ${SOURCE_JERRY_LIBC}
       ${SOURCE_PLUGINS_LIB_DEVICE_STM})
   
  # Platform-specific
@@ -327,15 +332,15 @@ project (Jerry CXX C ASM)
    # Jerry standalone
     set(SOURCE_JERRY_STANDALONE_MAIN_LINUX src/main_linux.cpp)
 
-   file(GLOB SOURCE_CORE_JRT_LINUX src/jrt/target/linux/*.cpp src/jrt/target/linux/*.S)
+   file(GLOB SOURCE_JERRY_LIBC_LINUX jerry-libc/target/linux/*.cpp jerry-libc/target/linux/*.S)
   # MCU
    # Jerry standalone
     set(SOURCE_JERRY_STANDALONE_MAIN_MCU src/main_mcu.cpp)
 
    # stm32f3
-    file(GLOB SOURCE_CORE_JRT_STM32F3 src/jrt/target/stm32f3/*.cpp src/jrt/target/stm32f3/*.S)
+    file(GLOB SOURCE_JERRY_LIBC_STM32F3 jerry-libc/target/stm32f3/*.cpp jerry-libc/target/stm32f3/*.S)
    # stm32f4
-    file(GLOB SOURCE_CORE_JRT_STM32F4 src/jrt/target/stm32f4/*.cpp src/jrt/target/stm32f4/*.S)
+    file(GLOB SOURCE_JERRY_LIBC_STM32F4 jerry-libc/target/stm32f4/*.cpp jerry-libc/target/stm32f4/*.S)
 
  # Third-party
   # Platform-specific
@@ -410,7 +415,7 @@ project (Jerry CXX C ASM)
      set(INCLUDE_CORE ${INCLUDE_CORE} ${${MODIFIER_INCLUDE_${MODIFIER}}})
     endforeach()
 
-    add_library(${TARGET_NAME}.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_LINUX})
+    add_library(${TARGET_NAME}.lib STATIC ${SOURCE_CORE} ${SOURCE_JERRY_LIBC_LINUX})
     target_compile_options(${TARGET_NAME}.lib PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_COMMON_${BUILD_MODE}})
     target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_CORE})
@@ -451,7 +456,7 @@ project (Jerry CXX C ASM)
   # Unit tests declaration
    add_custom_target(unittests)
 
-   add_library(unit_tests.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_LINUX})
+   add_library(unit_tests.lib STATIC ${SOURCE_CORE} ${SOURCE_JERRY_LIBC_LINUX})
    target_compile_options(unit_tests.lib PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_UNIT_TEST})
    target_compile_definitions(unit_tests.lib PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
    target_include_directories(unit_tests.lib PRIVATE ${INCLUDE_CORE} ${INCLUDE_UNIT_TEST})
@@ -498,7 +503,7 @@ project (Jerry CXX C ASM)
      set(DEFINES_JERRY_MCU_SCRIPT JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
 
      # Jerry library
-      add_library(${TARGET_NAME}.jerry.lib STATIC ${SOURCE_CORE} ${SOURCE_CORE_JRT_${PLATFORM}})
+      add_library(${TARGET_NAME}.jerry.lib STATIC ${SOURCE_CORE} ${SOURCE_JERRY_LIBC_${PLATFORM}})
       target_compile_options(${TARGET_NAME}.jerry.lib PRIVATE
                              ${CXX_FLAGS_JERRY}
                              ${CXX_FLAGS_COMMON_${BUILD_MODE}}

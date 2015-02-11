@@ -45,7 +45,7 @@ serializer_merge_scopes_into_bytecode (void)
 void
 serializer_dump_literals (const literal literals[], literal_index_t literals_count)
 {
-#ifdef JERRY_ENABLE_PP
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
     pp_literals (literals, literals_count);
@@ -63,7 +63,7 @@ serializer_dump_op_meta (op_meta op)
 
   scopes_tree_add_op_meta (current_scope, op);
 
-#ifdef JERRY_ENABLE_PP
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
     pp_op_meta ((opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), op, false);
@@ -94,7 +94,7 @@ serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 {
   scopes_tree_set_op_meta (current_scope, loc, op);
 
-#ifdef JERRY_ENABLE_PP
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
     pp_op_meta (loc, op, true);
@@ -105,7 +105,7 @@ serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 void
 serializer_print_opcodes (void)
 {
-#ifdef JERRY_ENABLE_PP
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
   opcode_counter_t loc;
 
   if (!print_opcodes)

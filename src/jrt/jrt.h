@@ -16,16 +16,7 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
-#include <float.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <sys/types.h>
-
-/**
- * Types
- */
-typedef unsigned long mword_t;
+#include "jrt_types.h"
 
 /**
  * Attributes
@@ -212,12 +203,5 @@ extern void __noreturn jerry_exit (jerry_status_t code);
  */
 #define JERRY_MIN(v1, v2) ((v1 < v2) ? v1 : v2)
 #define JERRY_MAX(v1, v2) ((v1 < v2) ? v2 : v1)
-
-/**
- * Enable --show-opcodes key.
- */
-#if defined (__TARGET_HOST) && !defined (JERRY_NDEBUG)
-# define JERRY_ENABLE_PP
-#endif
 
 #endif /* !JERRY_GLOBALS_H */

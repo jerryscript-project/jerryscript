@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef PRETTY_PRINTER
-#define PRETTY_PRINTER
+#ifndef JERRY_H
+#define JERRY_H
 
-#include "jrt.h"
-#ifdef JERRY_ENABLE_PRETTY_PRINTER
-#include "vm.h"
-#include "literal.h"
-#include "scopes-tree.h"
+#include "jrt_types.h"
 
-void pp_opcode (opcode_counter_t, opcode_t, bool);
-void pp_op_meta (opcode_counter_t, op_meta, bool);
-void pp_literals (const literal *, literal_index_t);
-#endif // JERRY_ENABLE_PRETTY_PRINTER
+/** \addtogroup jerry Jerry engine interface
+ * @{
+ */
 
-#endif // PRETTY_PRINTER
+extern bool
+jerry_run (const char *script_source,
+           size_t script_source_size,
+           bool is_parse_only,
+           bool is_show_opcodes,
+           bool is_show_mem_stats);
+
+/**
+ * @}
+ */
+
+#endif /* !JERRY_H */

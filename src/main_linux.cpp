@@ -13,64 +13,10 @@
  * limitations under the License.
  */
 
-#ifdef __TARGET_MCU
-#include "common-io.h"
-#include "actuators.h"
-#include "sensors.h"
-
-#include JERRY_MCU_SCRIPT_HEADER
-static const char generated_source [] = JERRY_MCU_SCRIPT;
-
-#endif
-
-#include "jrt.h"
-#include "vm.h"
+#include "config.h"
+#include "jerry.h"
 #include "jerry-libc.h"
-#include "lexer.h"
-#include "parser.h"
-#include "serializer.h"
-#include "deserializer.h"
 
-#define MAX_STRINGS 100
-#define MAX_NUMS 25
-
-static bool
-jerry_run (const char *script_source, size_t script_source_size,
-           bool is_parse_only, bool is_show_opcodes, bool is_show_mem_stats)
-{
-  const opcode_t *opcodes;
-
-  mem_init ();
-  deserializer_init ();
-
-  parser_init (script_source, script_source_size, is_show_opcodes);
-  parser_parse_program ();
-
-  opcodes = (const opcode_t*) deserialize_bytecode ();
-
-#ifdef __TARGET_HOST
-  serializer_print_opcodes ();
-#endif /* __TARGET_HOST */
-  parser_free ();
-
-  if (is_parse_only)
-  {
-    deserializer_free ();
-    mem_finalize (is_show_mem_stats);
-    return true;
-  }
-
-  init_int (opcodes, is_show_mem_stats);
-
-  bool is_success = run_int ();
-
-  deserializer_free ();
-  mem_finalize (is_show_mem_stats);
-
-  return is_success;
-} /* jerry_run */
-
-#ifdef __TARGET_HOST
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
 static const char*
@@ -149,7 +95,7 @@ main (int argc __unused,
   int i;
   size_t files_counter = 0;
 
-  jrt_set_mem_limits (MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE,
+  jrt_set_mem_limits (CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE,
                       CONFIG_MEM_STACK_LIMIT);
 
   for (i = 1; i < argc; i++)
@@ -177,12 +123,7 @@ main (int argc __unused,
     }
     else if (!__strcmp ("--show-opcodes", argv[i]))
     {
-#ifdef JERRY_ENABLE_PP
       show_opcodes = true;
-#else /* !JERRY_ENABLE_PP */
-      __printf ("Ignoring --show-opcodes since target is not x86_64 or debug is not enabled.\n");
-      show_opcodes = false;
-#endif /* JERRY_ENABLE_PP */
     }
     else
     {
@@ -202,28 +143,3 @@ main (int argc __unused,
 
   jerry_exit (is_success ? ERR_OK : ERR_FAILED_ASSERTION_IN_SCRIPT);
 }
-#endif /* __TARGET_HOST */
-
-#ifdef __TARGET_MCU
-static uint32_t start __unused;
-static uint32_t finish_native_ms __unused;
-static uint32_t finish_parse_ms __unused;
-static uint32_t finish_int_ms __unused;
-
-int
-main (void)
-{
-  initialize_sys_tick ();
-  initialize_leds ();
-  initialize_timer ();
-
-  const char *source_p = generated_source;
-  const size_t source_size = sizeof (generated_source);
-
-  set_sys_tick_counter ((uint32_t) - 1);
-  start = get_sys_tick_counter ();
-  jerry_run (source_p,
-             source_size, false, false, false);
-  finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
-}
-#endif /* __TARGET_MCU */

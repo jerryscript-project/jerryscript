@@ -51,13 +51,9 @@
 /**
  * Size of heap
  */
-#ifdef __TARGET_HOST
+#ifndef CONFIG_MEM_HEAP_AREA_SIZE
 # define CONFIG_MEM_HEAP_AREA_SIZE (64 * 1024)
-#elif defined (__TARGET_MCU)
-# define CONFIG_MEM_HEAP_AREA_SIZE (16 * 1024)
-#else /* !__TARGET_HOST && !__TARGET_MCU */
-# error "!__TARGET_HOST && !__TARGET_MCU"
-#endif /* !__TARGET_HOST && !__TARGET_MCU */
+#endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
  * Log2 of maximum possible offset in the heap

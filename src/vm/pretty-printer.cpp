@@ -14,7 +14,7 @@
  */
 
 #include "jrt.h"
-#ifdef JERRY_ENABLE_PP
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
 #include "pretty-printer.h"
 #include "jerry-libc.h"
 #include "lexer.h"
@@ -650,4 +650,4 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
 
   __printf ("\n");
 }
-#endif /* JERRY_ENABLE_PP */
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */

@@ -193,7 +193,7 @@ project (Jerry CXX C ASM)
        JERRY_BRANCH_NAME="${JERRY_GIT_BRANCH}")
 
   # Debug
-   set(DEFINES_JERRY_DEBUG )
+   set(DEFINES_JERRY_DEBUG JERRY_ENABLE_PRETTY_PRINTER)
 
   # Release
    set(DEFINES_JERRY_RELEASE JERRY_NDEBUG)
@@ -234,7 +234,8 @@ project (Jerry CXX C ASM)
   # Linux
    set(DEFINES_JERRY_LINUX __TARGET_HOST JERRY_SOURCE_BUFFER_SIZE=1048576)
   # MCU
-   set(DEFINES_JERRY_MCU __TARGET_MCU)
+   math(EXPR MEM_HEAP_AREA_SIZE_16K "16 * 1024")
+   set(DEFINES_JERRY_MCU CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE_16K} __TARGET_MCU)
    # stm32f3
     set(DEFINES_JERRY_MCU_STM32F3 __TARGET_MCU_STM32F3)
    # stm32f4
@@ -310,6 +311,7 @@ project (Jerry CXX C ASM)
   file(GLOB SOURCE_PLUGINS_LIB_DEVICE_STM plugins/lib-device-stm/*.cpp)
 
   set(SOURCE_CORE
+      src/jerry.cpp
       ${SOURCE_CORE_MEM}
       ${SOURCE_CORE_VM}
       ${SOURCE_CORE_ECMA_BUILTINS}
@@ -320,13 +322,16 @@ project (Jerry CXX C ASM)
       ${SOURCE_CORE_JRT}
       ${SOURCE_PLUGINS_LIB_DEVICE_STM})
   
- # Jerry standalone
-  set(SOURCE_JERRY_STANDALONE_MAIN src/main.cpp)
-
  # Platform-specific
   # Linux
+   # Jerry standalone
+    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX src/main_linux.cpp)
+
    file(GLOB SOURCE_CORE_JRT_LINUX src/jrt/target/linux/*.cpp src/jrt/target/linux/*.S)
   # MCU
+   # Jerry standalone
+    set(SOURCE_JERRY_STANDALONE_MAIN_MCU src/main_mcu.cpp)
+
    # stm32f3
     file(GLOB SOURCE_CORE_JRT_STM32F3 src/jrt/target/stm32f3/*.cpp src/jrt/target/stm32f3/*.S)
    # stm32f4
@@ -410,7 +415,7 @@ project (Jerry CXX C ASM)
     target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_CORE})
 
-    add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
+    add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN_LINUX})
     target_compile_options(${TARGET_NAME} PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_COMMON_${BUILD_MODE}})
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_JERRY} ${LINKER_FLAGS_STATIC}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
@@ -517,7 +522,7 @@ project (Jerry CXX C ASM)
       target_include_directories(${TARGET_NAME}.third_party.lib PRIVATE
                                  ${INCLUDE_THIRD_PARTY_MCU_${PLATFORM}})
 
-     add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
+     add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN_MCU})
      target_compile_options(${TARGET_NAME} PRIVATE
                             ${CXX_FLAGS_JERRY}
                             ${CXX_FLAGS_COMMON_${BUILD_MODE}}

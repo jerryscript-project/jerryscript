@@ -103,9 +103,7 @@ typedef enum
   ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
   ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
   ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
   ECMA_COMPLETION_TYPE_EXIT, /**< implementation-defined completion type
                                   for finishing script execution */
   ECMA_COMPLETION_TYPE_META /**< implementation-defined completion type

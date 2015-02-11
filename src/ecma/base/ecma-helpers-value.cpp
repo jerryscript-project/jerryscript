@@ -536,9 +536,7 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
                             const ecma_value_t& value) /**< value */
 {
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
                      || type == ECMA_COMPLETION_TYPE_THROW
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
                      || type == ECMA_COMPLETION_TYPE_RETURN
                      || type == ECMA_COMPLETION_TYPE_EXIT
                      || (type == ECMA_COMPLETION_TYPE_META
@@ -620,13 +618,7 @@ ecma_make_normal_completion_value (const ecma_value_t& value) /**< value */
 ecma_completion_value_t __attribute_pure__ __attribute_always_inline__
 ecma_make_throw_completion_value (const ecma_value_t& value) /**< value */
 {
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_THROW, value);
-#else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
-  (void) value;
-
-  jerry_exit (ERR_UNHANDLED_EXCEPTION);
-#endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_make_throw_completion_value */
 
 /**
@@ -706,9 +698,7 @@ ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< 
   const ecma_completion_type_t type = ecma_get_completion_value_type_field (completion_value);
 
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
                            || type == ECMA_COMPLETION_TYPE_THROW
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
                            || type == ECMA_COMPLETION_TYPE_RETURN
                            || type == ECMA_COMPLETION_TYPE_EXIT);
 
@@ -760,9 +750,7 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
 {
   const ecma_completion_type_t type = ecma_get_completion_value_type_field (value);
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
                            || type == ECMA_COMPLETION_TYPE_THROW
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
                            || type == ECMA_COMPLETION_TYPE_RETURN
                            || type == ECMA_COMPLETION_TYPE_EXIT);
 
@@ -782,9 +770,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
   switch (ecma_get_completion_value_type_field (completion_value))
   {
     case ECMA_COMPLETION_TYPE_NORMAL:
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
     case ECMA_COMPLETION_TYPE_THROW:
-#endif /* CONFIG_ECMA_EXCEPTION_SUPPORT */
     case ECMA_COMPLETION_TYPE_RETURN:
     {
       ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
@@ -831,13 +817,7 @@ ecma_is_completion_value_normal (ecma_completion_value_t value) /**< completion 
 bool __attribute_const__ __attribute_always_inline__
 ecma_is_completion_value_throw (ecma_completion_value_t value) /**< completion value */
 {
-#ifdef CONFIG_ECMA_EXCEPTION_SUPPORT
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_THROW);
-#else /* CONFIG_ECMA_EXCEPTION_SUPPORT */
-  (void) value;
-
-  return false;
-#endif /* !CONFIG_ECMA_EXCEPTION_SUPPORT */
 } /* ecma_is_completion_value_throw */
 
 /**

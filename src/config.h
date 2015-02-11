@@ -128,11 +128,6 @@
 #define CONFIG_ECMA_STACK_FRAME_INLINED_VALUES_NUMBER 16
 
 /**
- * Enable ecma-exception support
- */
-#define CONFIG_ECMA_EXCEPTION_SUPPORT
-
-/**
  * Link Global Environment to an empty declarative lexical environment
  * instead of lexical environment bound to Global Object.
  */

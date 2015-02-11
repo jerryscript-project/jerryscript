@@ -361,14 +361,14 @@ project (Jerry CXX C ASM)
 # Imported libraries
  # libc
   add_library(imported_libc SHARED IMPORTED)
-  execute_process(COMMAND gcc -print-file-name=libc.so
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libc.so
                   OUTPUT_VARIABLE IMPORTED_LIBC_LOCATION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   set_property(TARGET imported_libc
                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBC_LOCATION})
  # libgcc
   add_library(imported_libgcc STATIC IMPORTED)
-  execute_process(COMMAND gcc -print-file-name=libgcc.a
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libgcc.a
                   OUTPUT_VARIABLE IMPORTED_LIBGCC_LOCATION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   set_property(TARGET imported_libgcc

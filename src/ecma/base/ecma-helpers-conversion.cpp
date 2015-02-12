@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -790,7 +790,7 @@ ecma_uint32_to_string (uint32_t value, /**< value to convert */
   if (likely (p != out_buffer_p))
   {
     ssize_t bytes_to_move = ((uint8_t*) out_buffer_p + buffer_size) - (uint8_t*) p;
-    __memmove (out_buffer_p, p, (size_t) bytes_to_move);
+    memmove (out_buffer_p, p, (size_t) bytes_to_move);
   }
 
   return (ssize_t) bytes_copied;

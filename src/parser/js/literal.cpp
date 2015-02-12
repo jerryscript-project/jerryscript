@@ -48,7 +48,7 @@ create_literal_from_str (const char *s, ecma_length_t len)
 literal
 create_literal_from_str_compute_len (const char *s)
 {
-  return create_literal_from_zt ((const ecma_char_t *) s, (ecma_length_t) __strlen (s));
+  return create_literal_from_zt ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
 }
 
 literal
@@ -62,7 +62,7 @@ create_literal_from_zt (const ecma_char_t *s, ecma_length_t len)
     {
       continue;
     }
-    if (!__strncmp ((const char *) s, (const char *) ecma_get_magic_string_zt (msi), len))
+    if (!strncmp ((const char *) s, (const char *) ecma_get_magic_string_zt (msi), len))
     {
       literal ret;
 

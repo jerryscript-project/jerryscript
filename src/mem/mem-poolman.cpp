@@ -273,7 +273,7 @@ mem_pools_stats_reset_peak (void)
 static void
 mem_pools_stat_init (void)
 {
-  __memset (&mem_pools_stats, 0, sizeof (mem_pools_stats));
+  memset (&mem_pools_stats, 0, sizeof (mem_pools_stats));
 } /* mem_pools_stat_init */
 
 /**

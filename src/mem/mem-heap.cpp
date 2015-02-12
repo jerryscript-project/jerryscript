@@ -364,7 +364,7 @@ mem_heap_finalize (void)
 
   VALGRIND_NOACCESS_SPACE(mem_heap.heap_start, mem_heap.heap_size);
 
-  __memset (&mem_heap, 0, sizeof (mem_heap));
+  memset (&mem_heap, 0, sizeof (mem_heap));
 } /* mem_heap_finalize */
 
 /**
@@ -883,11 +883,11 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
 
   if (dump_block_headers)
   {
-    __printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
-              mem_heap.heap_start,
-              mem_heap.heap_size,
-              (void*) mem_heap.first_block_p,
-              (void*) mem_heap.last_block_p);
+    printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
+            mem_heap.heap_start,
+            mem_heap.heap_size,
+            (void*) mem_heap.first_block_p,
+            (void*) mem_heap.last_block_p);
 
     for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
          block_p != NULL;
@@ -895,12 +895,12 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
     {
       VALGRIND_DEFINED_STRUCT(block_p);
 
-      __printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
-                (void*) block_p,
-                block_p->magic_num,
-                mem_get_block_chunks_count (block_p),
-                (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
-                (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
+      printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
+              (void*) block_p,
+              block_p->magic_num,
+              mem_get_block_chunks_count (block_p),
+              (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
+              (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
 
       if (dump_block_data)
       {
@@ -909,9 +909,9 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
              offset < mem_get_block_data_space_size (block_p);
              offset++)
         {
-          __printf ("%02x ", block_data_p[ offset ]);
+          printf ("%02x ", block_data_p[ offset ]);
         }
-        __printf ("\n");
+        printf ("\n");
       }
 
       next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
@@ -923,35 +923,35 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
 #ifdef MEM_STATS
   if (dump_stats)
   {
-    __printf ("Heap stats:\n");
-    __printf ("  Heap size = %lu bytes\n"
-              "  Chunk size = %lu bytes\n"
-              "  Blocks count = %lu\n"
-              "  Allocated blocks count = %lu\n"
-              "  Allocated chunks count = %lu\n"
-              "  Allocated = %lu bytes\n"
-              "  Waste = %lu bytes\n"
-              "  Peak allocated blocks count = %lu\n"
-              "  Peak allocated chunks count = %lu\n"
-              "  Peak allocated= %lu bytes\n"
-              "  Peak waste = %lu bytes\n",
-              mem_heap_stats.size,
-              MEM_HEAP_CHUNK_SIZE,
-              mem_heap_stats.blocks,
-              mem_heap_stats.allocated_blocks,
-              mem_heap_stats.allocated_chunks,
-              mem_heap_stats.allocated_bytes,
-              mem_heap_stats.waste_bytes,
-              mem_heap_stats.peak_allocated_blocks,
-              mem_heap_stats.peak_allocated_chunks,
-              mem_heap_stats.peak_allocated_bytes,
-              mem_heap_stats.peak_waste_bytes);
+    printf ("Heap stats:\n");
+    printf ("  Heap size = %lu bytes\n"
+            "  Chunk size = %lu bytes\n"
+            "  Blocks count = %lu\n"
+            "  Allocated blocks count = %lu\n"
+            "  Allocated chunks count = %lu\n"
+            "  Allocated = %lu bytes\n"
+            "  Waste = %lu bytes\n"
+            "  Peak allocated blocks count = %lu\n"
+            "  Peak allocated chunks count = %lu\n"
+            "  Peak allocated= %lu bytes\n"
+            "  Peak waste = %lu bytes\n",
+            mem_heap_stats.size,
+            MEM_HEAP_CHUNK_SIZE,
+            mem_heap_stats.blocks,
+            mem_heap_stats.allocated_blocks,
+            mem_heap_stats.allocated_chunks,
+            mem_heap_stats.allocated_bytes,
+            mem_heap_stats.waste_bytes,
+            mem_heap_stats.peak_allocated_blocks,
+            mem_heap_stats.peak_allocated_chunks,
+            mem_heap_stats.peak_allocated_bytes,
+            mem_heap_stats.peak_waste_bytes);
   }
 #else /* MEM_STATS */
   (void) dump_stats;
 #endif /* !MEM_STATS */
 
-  __printf ("\n");
+  printf ("\n");
 } /* mem_heap_print */
 
 /**
@@ -1058,7 +1058,7 @@ mem_heap_stats_reset_peak (void)
 static void
 mem_heap_stat_init ()
 {
-  __memset (&mem_heap_stats, 0, sizeof (mem_heap_stats));
+  memset (&mem_heap_stats, 0, sizeof (mem_heap_stats));
 
   mem_heap_stats.size = mem_heap.heap_size;
   mem_heap_stats.blocks = 1;

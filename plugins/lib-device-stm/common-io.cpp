@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ analog_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
 void
 wait_ms (uint32_t time_ms)
 {
-  __printf ("wait_ms: %d\n", time_ms);
+  printf ("wait_ms: %d\n", time_ms);
 }
 #else /* !__TARGET_HOST */
 

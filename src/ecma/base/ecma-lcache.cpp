@@ -72,7 +72,7 @@ static ecma_lcache_hash_entry_t ecma_lcache_hash_table[ ECMA_LCACHE_HASH_ROWS_CO
 void
 ecma_lcache_init (void)
 {
-  __memset (ecma_lcache_hash_table, 0, sizeof (ecma_lcache_hash_table));
+  memset (ecma_lcache_hash_table, 0, sizeof (ecma_lcache_hash_table));
 } /* ecma_lcache_init */
 
 /**

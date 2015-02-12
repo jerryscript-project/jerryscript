@@ -20,26 +20,27 @@
 #include "jerry-libc.h"
 
 /**
- * memcpy alias to __memcpy (for compiler usage)
+ * Unreachable stubs for routines that are never called,
+ * but referenced from third-party libraries.
  */
-extern "C" void *memcpy (void *s1, const void*s2, size_t n);
+#define JRT_UNREACHABLE_STUB_FOR(...) \
+  extern "C" __VA_ARGS__; \
+__used __VA_ARGS__ \
+{ \
+  JERRY_UNREACHABLE (); \
+}
 
-/**
- * memset alias to __memset (for compiler usage)
- */
-extern "C" void *memset (void *s, int c, size_t n);
+JRT_UNREACHABLE_STUB_FOR(void abort (void))
+JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
 
-/**
- * memmove alias to __memmove (for compiler usage)
- */
-extern "C" void *memmove (void *s1, const void*s2, size_t n);
+#undef JRT_UNREACHABLE_STUB_FOR
 
 #ifdef __GNUC__
 /*
  * Making GCC not to replace:
- *   - __memcpy  -> call to memcpy;
- *   - __memset  -> call to memset;
- *   - __memmove -> call to memmove.
+ *   - memcpy  -> call to memcpy;
+ *   - memset  -> call to memset;
+ *   - memmove -> call to memmove.
  */
 CALL_PRAGMA(GCC diagnostic push)
 CALL_PRAGMA(GCC diagnostic ignored "-Wpragmas")
@@ -48,68 +49,14 @@ CALL_PRAGMA(GCC optimize ("-fno-tree-loop-distribute-patterns"))
 #endif /* __GNUC__ */
 
 /**
- * memcpy alias to __memcpy (for compiler usage)
- */
-void* __used
-memcpy (void *s1, /**< destination */
-        const void* s2, /**< source */
-        size_t n) /**< bytes number */
-{
-  return __memcpy (s1, s2, n);
-} /* memcpy */
-
-/**
- * memset alias to __memset (for compiler usage)
- */
-void* __used
-memset (void *s,  /**< area to set values in */
-        int c,    /**< value to set */
-        size_t n) /**< area size */
-{
-  return __memset (s, c, n);
-} /* memset */
-
-/**
- * memmove alias to __memmove (for compiler usage)
- */
-void* __used
-memmove (void *s1, /**< destination*/
-         const void*s2, /**< source */
-         size_t n) /**< area size */
-{
-  return __memmove (s1, s2, n);
-} /* memmove */
-
-#ifdef __GNUC__
-CALL_PRAGMA(GCC pop_options)
-CALL_PRAGMA(GCC diagnostic pop)
-#endif /* __GNUC__ */
-
-/**
- * Unreachable stubs for routines that are never called,
- * but referenced from third-party libraries.
- */
-#define JRT_UNREACHABLE_STUB_FOR(...) \
-  extern "C" __VA_ARGS__; \
-  __used __VA_ARGS__ \
-  { \
-    JERRY_UNREACHABLE (); \
-  }
-
-JRT_UNREACHABLE_STUB_FOR(void abort (void))
-JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
-
-#undef JRT_UNREACHABLE_STUB_FOR
-
-/**
  * memset
  *
  * @return @s
  */
 void*
-__memset (void *s,  /**< area to set values in */
-          int c,    /**< value to set */
-          size_t n) /**< area size */
+memset (void *s,  /**< area to set values in */
+        int c,    /**< value to set */
+        size_t n) /**< area size */
 {
   uint8_t *area_p = (uint8_t *) s;
   for (size_t index = 0; index < n; index++)
@@ -118,7 +65,7 @@ __memset (void *s,  /**< area to set values in */
   }
 
   return s;
-} /* __memset */
+} /* memset */
 
 /**
  * memcmp
@@ -128,9 +75,9 @@ __memset (void *s,  /**< area to set values in */
  *         1, otherwise
  */
 int
-__memcmp (const void *s1, /**< first area */
-          const void *s2, /**< second area */
-          size_t n) /**< area size */
+memcmp (const void *s1, /**< first area */
+        const void *s2, /**< second area */
+        size_t n) /**< area size */
 {
   const uint8_t *area1_p = (uint8_t *) s1, *area2_p = (uint8_t *) s2;
   for (size_t index = 0; index < n; index++)
@@ -146,15 +93,15 @@ __memcmp (const void *s1, /**< first area */
   }
 
   return 0;
-} /* __memcmp */
+} /* memcmp */
 
 /**
  * memcpy
  */
 void *
-__memcpy (void *s1, /**< destination */
-          const void *s2, /**< source */
-          size_t n) /**< bytes number */
+memcpy (void *s1, /**< destination */
+        const void *s2, /**< source */
+        size_t n) /**< bytes number */
 {
   uint8_t *area1_p = (uint8_t *) s1;
   const uint8_t *area2_p = (const uint8_t *) s2;
@@ -165,7 +112,7 @@ __memcpy (void *s1, /**< destination */
   }
 
   return s1;
-} /* __memcpy */
+} /* memcpy */
 
 /**
  * memmove
@@ -173,9 +120,9 @@ __memcpy (void *s1, /**< destination */
  * @return the dest pointer's value
  */
 void *
-__memmove (void *s1, /**< destination */
-           const void *s2, /**< source */
-           size_t n) /**< bytes number */
+memmove (void *s1, /**< destination */
+         const void *s2, /**< source */
+         size_t n) /**< bytes number */
 {
   uint8_t *dest_p = (uint8_t *) s1;
   const uint8_t *src_p = (const uint8_t *) s2;
@@ -196,12 +143,17 @@ __memmove (void *s1, /**< destination */
   }
 
   return s1;
-} /* __memmove */
+} /* memmove */
+
+#ifdef __GNUC__
+CALL_PRAGMA(GCC pop_options)
+CALL_PRAGMA(GCC diagnostic pop)
+#endif /* __GNUC__ */
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero
      if s1 is found, respectively, to be less than, to match, or be greater than s2.  */
 int
-__strcmp (const char *s1, const char *s2)
+strcmp (const char *s1, const char *s2)
 {
   size_t i;
   if (s1 == NULL)
@@ -244,7 +196,7 @@ __strcmp (const char *s1, const char *s2)
      if the first n character of s1 is found, respectively, to be less than, to match,
      or be greater than the first n character of s2.  */
 int
-__strncmp (const char *s1, const char *s2, size_t n)
+strncmp (const char *s1, const char *s2, size_t n)
 {
   size_t i;
   if (s1 == NULL)
@@ -282,7 +234,7 @@ __strncmp (const char *s1, const char *s2, size_t n)
      null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
      @return a pointer to the destination string dest.  */
 char *
-__strncpy (char *dest, const char *src, size_t n)
+strncpy (char *dest, const char *src, size_t n)
 {
   size_t i;
 
@@ -300,7 +252,7 @@ __strncpy (char *dest, const char *src, size_t n)
 
 /** Calculate the length of a string.  */
 size_t
-__strlen (const char *s)
+strlen (const char *s)
 {
   size_t i;
   for (i = 0; s[i]; i++)
@@ -314,7 +266,7 @@ __strlen (const char *s)
 /** Checks  for  white-space  characters.   In  the "C" and "POSIX" locales, these are: space,
      form-feed ('\f'), newline ('\n'), carriage return ('\r'), horizontal tab ('\t'), and vertical tab ('\v').  */
 int
-__isspace (int c)
+isspace (int c)
 {
   switch (c)
   {
@@ -336,14 +288,14 @@ __isspace (int c)
 
 /** Checks for an uppercase letter.  */
 int
-__isupper (int c)
+isupper (int c)
 {
   return c >= 'A' && c <= 'Z';
 }
 
 /** Checks for an lowercase letter.  */
 int
-__islower (int c)
+islower (int c)
 {
   return c >= 'a' && c <= 'z';
 }
@@ -351,14 +303,14 @@ __islower (int c)
 /** Checks for an alphabetic character.
      In the standard "C" locale, it is equivalent to (isupper (c) || islower (c)).  */
 int
-__isalpha (int c)
+isalpha (int c)
 {
-  return __isupper (c) || __islower (c);
+  return isupper (c) || islower (c);
 }
 
 /** Checks for a digit (0 through 9).  */
 int
-__isdigit (int c)
+isdigit (int c)
 {
   return c >= '0' && c <= '9';
 }
@@ -366,7 +318,7 @@ __isdigit (int c)
 /** checks for a hexadecimal digits, that is, one of
      0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F.  */
 int
-__isxdigit (int c)
+isxdigit (int c)
 {
-  return __isdigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  return isdigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }

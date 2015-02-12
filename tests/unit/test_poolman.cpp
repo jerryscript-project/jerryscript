@@ -48,7 +48,7 @@ main( int __unused argc,
 
   srand((unsigned int) time(NULL));
   unsigned int seed = (unsigned int)rand();
-  __printf("seed=%u\n", seed);
+  printf("seed=%u\n", seed);
   srand(seed);
 
   for ( uint32_t i = 0; i < test_iters; i++ )
@@ -62,7 +62,7 @@ main( int __unused argc,
 
           if ( ptrs[j] != NULL )
             {
-              __memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+              memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
             }
         }
 
@@ -86,8 +86,8 @@ main( int __unused argc,
   mem_pools_stats_t stats;
   mem_pools_get_stats( &stats);
 
-  __printf("Pools stats:\n");
-  __printf(" Chunk size: %u\n"
+  printf("Pools stats:\n");
+  printf(" Chunk size: %u\n"
            "  Pools: %lu\n"
            "  Allocated chunks: %lu\n"
            "  Free chunks: %lu\n"

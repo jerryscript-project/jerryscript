@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,14 +51,14 @@ array_list_append (array_list al, void *element)
   {
     size_t size = mem_heap_recommend_allocation_size (h->size + h->element_size);
     array_list_header *temp = (array_list_header *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
-    __memset (temp, 0, size);
-    __memcpy (temp, h, h->size);
+    memset (temp, 0, size);
+    memcpy (temp, h, h->size);
     temp->size = size;
     mem_heap_free_block ((uint8_t *) h);
     h = temp;
     al = (array_list) h;
   }
-  __memcpy (data (al) + (h->len * h->element_size), element, h->element_size);
+  memcpy (data (al) + (h->len * h->element_size), element, h->element_size);
   h->len++;
   return al;
 }
@@ -87,7 +87,7 @@ array_list_set_element (array_list al, size_t index, void *elem)
 {
   array_list_header *h = extract_header (al);
   JERRY_ASSERT (index < h->len);
-  __memcpy (data (al) + (index * h->element_size), elem, h->element_size);
+  memcpy (data (al) + (index * h->element_size), elem, h->element_size);
 }
 
 void *
@@ -114,7 +114,7 @@ array_list_init (uint8_t element_size)
 {
   size_t size = mem_heap_recommend_allocation_size (sizeof (array_list_header));
   array_list_header *header = (array_list_header *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
-  __memset (header, 0, size);
+  memset (header, 0, size);
   header->magic = ARRAY_LIST_MAGIC;
   header->element_size = element_size;
   header->len = 0;

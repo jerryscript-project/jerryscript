@@ -113,7 +113,7 @@ serializer_print_opcodes (void)
     return;
   }
 
-  __printf ("AFTER OPTIMIZER:\n");
+  printf ("AFTER OPTIMIZER:\n");
 
   for (loc = 0; loc < bytecode_data.opcodes_count; loc++)
   {

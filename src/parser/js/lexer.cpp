@@ -83,13 +83,13 @@ dump_current_line (void)
     return;
   }
 
-  __printf ("// ");
+  printf ("// ");
 
   for (i = buffer; *i != '\n' && *i != 0; i++)
   {
-    __putchar (*i);
+    putchar (*i);
   }
-  __putchar ('\n');
+  putchar ('\n');
 }
 
 static token
@@ -107,11 +107,11 @@ create_token (token_type type, literal_index_t uid)
 static bool
 current_token_equals_to (const char *str)
 {
-  if (__strlen (str) != (size_t) (buffer - token_start))
+  if (strlen (str) != (size_t) (buffer - token_start))
   {
     return false;
   }
-  if (!__strncmp (str, token_start, (size_t) (buffer - token_start)))
+  if (!strncmp (str, token_start, (size_t) (buffer - token_start)))
   {
     return true;
   }
@@ -127,7 +127,7 @@ current_token_equals_to_literal (literal lit)
     {
       return false;
     }
-    if (!__strncmp ((const char *) lit.data.lp.str, token_start, lit.data.lp.length))
+    if (!strncmp ((const char *) lit.data.lp.str, token_start, lit.data.lp.length))
     {
       return true;
     }
@@ -135,11 +135,11 @@ current_token_equals_to_literal (literal lit)
   else if (lit.type == LIT_MAGIC_STR)
   {
     const char *str = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
-    if (__strlen (str) != (size_t) (buffer - token_start))
+    if (strlen (str) != (size_t) (buffer - token_start))
     {
       return false;
     }
-    if (!__strncmp (str, token_start, __strlen (str)))
+    if (!strncmp (str, token_start, strlen (str)))
     {
       return true;
     }
@@ -175,7 +175,7 @@ add_current_token_to_string_cache (void)
                                                              + ((size_t) length + 1) * sizeof (ecma_char_t));
     ecma_char_t *temp = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size,
                                                               MEM_HEAP_ALLOC_SHORT_TERM);
-    __memcpy (temp, strings_cache, strings_cache_used_size);
+    memcpy (temp, strings_cache, strings_cache_used_size);
     STACK_ITERATE_VARG_SET (literals, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
     if (strings_cache)
     {
@@ -183,7 +183,7 @@ add_current_token_to_string_cache (void)
     }
     strings_cache = temp;
   }
-  __strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, length);
+  strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, length);
   (strings_cache + strings_cache_used_size)[length] = '\0';
   const literal res = create_literal_from_zt (strings_cache + strings_cache_used_size, length);
   strings_cache_used_size = (size_t) (((size_t) length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
@@ -611,10 +611,10 @@ static token
 parse_name (void)
 {
   char c = LA (0);
-  bool every_char_islower = __islower (c);
+  bool every_char_islower = islower (c);
   token known_token = empty_token;
 
-  JERRY_ASSERT (__isalpha (c) || c == '$' || c == '_');
+  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_');
 
   new_token ();
   consume_char ();
@@ -625,11 +625,11 @@ parse_name (void)
     {
       break;
     }
-    if (!__isalpha (c) && !__isdigit (c) && c != '$' && c != '_')
+    if (!isalpha (c) && !isdigit (c) && c != '$' && c != '_')
     {
       break;
     }
-    if (every_char_islower && (!__islower (c)))
+    if (every_char_islower && (!islower (c)))
     {
       every_char_islower = false;
     }
@@ -698,7 +698,7 @@ parse_number (void)
   uint32_t res = 0;
   token known_token;
 
-  JERRY_ASSERT (__isdigit (c) || c == '.');
+  JERRY_ASSERT (isdigit (c) || c == '.');
 
   if (c == '0')
   {
@@ -710,7 +710,7 @@ parse_number (void)
 
   if (c == '.')
   {
-    JERRY_ASSERT (!__isalpha (LA (1)));
+    JERRY_ASSERT (!isalpha (LA (1)));
     is_fp = true;
   }
 
@@ -723,14 +723,14 @@ parse_number (void)
     while (true)
     {
       c = LA (0);
-      if (!__isxdigit (c))
+      if (!isxdigit (c))
       {
         break;
       }
       consume_char ();
     }
 
-    if (__isalpha (c) || c == '_' || c == '$')
+    if (isalpha (c) || c == '_' || c == '$')
     {
       PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
     }
@@ -796,7 +796,7 @@ parse_number (void)
 
     if (c == '.')
     {
-      if (__isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
+      if (isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
       {
         PARSE_ERROR ("Integer literal shall not contain non-digit character after got character",
                      buffer - buffer_start);
@@ -812,7 +812,7 @@ parse_number (void)
       {
         consume_char ();
       }
-      if (!__isdigit (LA (1)))
+      if (!isdigit (LA (1)))
       {
         PARSE_ERROR ("Integer literal shall not contain non-digit character after exponential marker ('e' or 'E')",
                      buffer - buffer_start);
@@ -822,12 +822,12 @@ parse_number (void)
       continue;
     }
 
-    if (__isalpha (c) || c == '_' || c == '$')
+    if (isalpha (c) || c == '_' || c == '$')
     {
       PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
     }
 
-    if (!__isdigit (c))
+    if (!isdigit (c))
     {
       break;
     }
@@ -840,7 +840,7 @@ parse_number (void)
   {
     ecma_char_t *temp = (ecma_char_t*) mem_heap_alloc_block ((size_t) (tok_length + 1),
                                                              MEM_HEAP_ALLOC_SHORT_TERM);
-    __strncpy ((char *) temp, token_start, (size_t) (tok_length));
+    strncpy ((char *) temp, token_start, (size_t) (tok_length));
     temp[tok_length] = '\0';
     ecma_number_t res = ecma_zt_string_to_number (temp);
     JERRY_ASSERT (!ecma_number_is_nan (res));
@@ -938,7 +938,7 @@ parse_string (void)
     if (c == '\\')
     {
       /* Only single escape character is allowed.  */
-      if (LA (1) == 'x' || LA (1) == 'u' || __isdigit (LA (1)))
+      if (LA (1) == 'x' || LA (1) == 'u' || isdigit (LA (1)))
       {
         // PARSE_WARN ("Escape sequences are ignored yet", token_start - buffer_start);
         consume_char ();
@@ -977,7 +977,7 @@ grobble_whitespaces (void)
 {
   char c = LA (0);
 
-  while ((__isspace (c) && c != '\n'))
+  while ((isspace (c) && c != '\n'))
   {
     consume_char ();
     c = LA (0);
@@ -1046,12 +1046,12 @@ lexer_next_token_private (void)
 
   JERRY_ASSERT (token_start == NULL);
 
-  if (__isalpha (c) || c == '$' || c == '_')
+  if (isalpha (c) || c == '$' || c == '_')
   {
     return parse_name ();
   }
 
-  if (__isdigit (c) || (c == '.' && __isdigit (LA (1))))
+  if (isdigit (c) || (c == '.' && isdigit (LA (1))))
   {
     return parse_number ();
   }
@@ -1072,7 +1072,7 @@ lexer_next_token_private (void)
     return parse_string ();
   }
 
-  if (__isspace (c))
+  if (isspace (c))
   {
     grobble_whitespaces ();
     return lexer_next_token_private ();
@@ -1271,7 +1271,7 @@ lexer_dump_line (size_t line)
     {
       for (; *buf != '\n' && *buf != '\0'; buf++)
       {
-        __putchar (*buf);
+        putchar (*buf);
       }
       return;
     }

@@ -25,43 +25,43 @@
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
-  __printf ("\n"); \
+  printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
-    __putchar (' '); \
+    putchar (' '); \
   } \
-  __printf ("^\n"); \
-  __printf ("ERROR: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+  printf ("^\n"); \
+  printf ("ERROR: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
   jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_WARN(MESSAGE, LOCUS) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
-  __printf ("WARNING: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+  printf ("WARNING: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
-  __printf ("\n"); \
+  printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
-    __putchar (' '); \
+    putchar (' '); \
   } \
-  __printf ("^\n"); \
-  __printf ("ERROR: Ln %d, Col %d: ", line + 1, column + 1); \
-  __printf (MESSAGE, __VA_ARGS__); \
-  __printf ("\n"); \
+  printf ("^\n"); \
+  printf ("ERROR: Ln %d, Col %d: ", line + 1, column + 1); \
+  printf (MESSAGE, __VA_ARGS__); \
+  printf ("\n"); \
   jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
-  __printf ("\n"); \
+  printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
-    __putchar (' '); \
+    putchar (' '); \
   } \
-    __printf ("^\n"); \
-  __printf ("SORRY, Unimplemented: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+    printf ("^\n"); \
+  printf ("SORRY, Unimplemented: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
   JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #else /* JERRY_NDEBUG */

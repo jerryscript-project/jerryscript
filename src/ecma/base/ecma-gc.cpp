@@ -274,7 +274,7 @@ ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, /**<
 void
 ecma_gc_init (void)
 {
-  __memset (ecma_gc_objects_lists, 0, sizeof (ecma_gc_objects_lists));
+  memset (ecma_gc_objects_lists, 0, sizeof (ecma_gc_objects_lists));
 } /* ecma_gc_init */
 
 /**
@@ -614,7 +614,7 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
   JERRY_ASSERT (max_gen_to_collect <= ECMA_GC_GEN_COUNT);
   ecma_object_t *gen_last_obj_p[ ECMA_GC_GEN_COUNT ];
 #ifndef JERRY_NDEBUG
-  __memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
+  memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
 #endif /* !JERRY_NDEBUG */
 
   for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))

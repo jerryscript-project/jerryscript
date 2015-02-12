@@ -30,13 +30,13 @@ void __noreturn
 jerry_fatal (jerry_fatal_code_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  __printf ("Error: ");
+  printf ("Error: ");
 
   switch (code)
   {
     case ERR_OUT_OF_MEMORY:
     {
-      __printf ("ERR_OUT_OF_MEMORY\n");
+      printf ("ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -46,23 +46,23 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_PARSER:
     {
-      __printf ("ERR_PARSER\n");
+      printf ("ERR_PARSER\n");
       break;
     }
     case ERR_UNIMPLEMENTED_CASE:
     {
-      __printf ("ERR_UNIMPLEMENTED_CASE\n");
+      printf ("ERR_UNIMPLEMENTED_CASE\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      __printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
+      printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }
 #endif /* !JERRY_NDEBUG */
 
-  __exit (code);
+  exit (code);
 } /* jerry_fatal */
 
 /**
@@ -75,8 +75,8 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const uint32_t line) /** line */
 {
 #ifndef JERRY_NDEBUG
-  __printf ("ICE: Assertion '%s' failed at %s(%s):%u.\n",
-            assertion, file, function, line);
+  printf ("ICE: Assertion '%s' failed at %s(%s):%u.\n",
+          assertion, file, function, line);
 #else /* !JERRY_NDEBUG */
   (void) assertion;
   (void) file;
@@ -98,7 +98,7 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
                    const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  __printf ("ICE: Unreachable control path at %s(%s):%u was executed", file, function, line);
+  printf ("ICE: Unreachable control path at %s(%s):%u was executed", file, function, line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -107,9 +107,9 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
 
   if (comment != NULL)
   {
-    __printf ("(%s)", comment);
+    printf ("(%s)", comment);
   }
-  __printf (".\n");
+  printf (".\n");
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
@@ -125,7 +125,7 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
                      const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  __printf ("SORRY: Unimplemented case at %s(%s):%u was executed", file, function, line);
+  printf ("SORRY: Unimplemented case at %s(%s):%u was executed", file, function, line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -134,9 +134,9 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
 
   if (comment != NULL)
   {
-    __printf ("(%s)", comment);
+    printf ("(%s)", comment);
   }
-  __printf (".\n");
+  printf (".\n");
 
   jerry_fatal (ERR_UNIMPLEMENTED_CASE);
 } /* jerry_unimplemented */

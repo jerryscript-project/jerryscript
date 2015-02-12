@@ -71,8 +71,8 @@ hash_table_insert (hash_table ht, void *key, void *value)
     list = array_list_init (bucket_size (hti));
   }
   uint8_t *bucket = (uint8_t*) mem_heap_alloc_block (bucket_size (hti), hti->alloc_term);
-  __memcpy (bucket, key, hti->key_size);
-  __memcpy (bucket + hti->key_size, value, hti->value_size);
+  memcpy (bucket, key, hti->key_size);
+  memcpy (bucket + hti->key_size, value, hti->value_size);
   list = array_list_append (list, bucket);
   hti->data[index] = list;
   mem_heap_free_block (bucket);
@@ -93,7 +93,7 @@ hash_table_lookup (hash_table ht, void *key)
   {
     uint8_t *bucket = (uint8_t*) array_list_element (al, i);
     JERRY_ASSERT (bucket != NULL);
-    if (!__memcmp (bucket, key, h->key_size))
+    if (!memcmp (bucket, key, h->key_size))
     {
       return bucket + h->key_size;
     }
@@ -106,14 +106,14 @@ hash_table_init (uint8_t key_size, uint8_t value_size, uint16_t size,
                  uint16_t (*hash) (void *), mem_heap_alloc_term_t alloc_term)
 {
   hash_table_int *res = (hash_table_int *) mem_heap_alloc_block (sizeof (hash_table_int), alloc_term);
-  __memset (res, 0, sizeof (hash_table_int));
+  memset (res, 0, sizeof (hash_table_int));
   res->magic = HASH_MAP_MAGIC;
   res->key_size = key_size;
   res->value_size = value_size;
   res->size = size;
   res->alloc_term = alloc_term;
   res->data = (array_list *) mem_heap_alloc_block (size * sizeof (array_list), alloc_term);
-  __memset (res->data, 0, size * sizeof (array_list));
+  memset (res->data, 0, size * sizeof (array_list));
   res->hash = hash;
   return res;
 }

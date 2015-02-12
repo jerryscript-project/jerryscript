@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,10 +129,10 @@ static TYPE *convert_##NAME##_to_raw_data (void) { \
   TYPE *DATA = (TYPE *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM); \
   if (DATA == NULL) \
   { \
-    __printf ("Out of memory\n"); \
+    printf ("Out of memory\n"); \
     JERRY_UNREACHABLE (); \
   } \
-  __memcpy (DATA, array_list_element (NAME.data, 0), array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
+  memcpy (DATA, array_list_element (NAME.data, 0), array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
   return DATA; \
 }
 

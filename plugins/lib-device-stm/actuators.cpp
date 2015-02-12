@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 void
 led_toggle (uint32_t led_id) /**< index of LED */
 {
-  __printf ("led_toggle: %d\n", led_id);
+  printf ("led_toggle: %d\n", led_id);
 }
 
 /**
@@ -35,7 +35,7 @@ led_toggle (uint32_t led_id) /**< index of LED */
 void
 led_on (uint32_t led_id) /**< index of LED */
 {
-  __printf ("led_on: %d\n", led_id);
+  printf ("led_on: %d\n", led_id);
 }
 
 /**
@@ -44,7 +44,7 @@ led_on (uint32_t led_id) /**< index of LED */
 void
 led_off (uint32_t led_id) /**< index of LED */
 {
-  __printf ("led_off: %d\n", led_id);
+  printf ("led_off: %d\n", led_id);
 }
 
 /**
@@ -53,7 +53,7 @@ led_off (uint32_t led_id) /**< index of LED */
 void
 led_blink_once (uint32_t led_id) /**< index of LED */
 {
-  __printf ("led_blink_once: %d\n", led_id);
+  printf ("led_blink_once: %d\n", led_id);
 }
 #else /* !__TARGET_HOST */
 #ifndef __TARGET_MCU

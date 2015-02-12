@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ lit_id_hash_table_init (size_t buckets_count, size_t blocks_count)
 {
   size_t size = mem_heap_recommend_allocation_size (sizeof (lit_id_hash_table));
   lit_id_hash_table *table = (lit_id_hash_table *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  __memset (table, 0, size);
+  memset (table, 0, size);
   size = mem_heap_recommend_allocation_size (sizeof (literal_index_t) * buckets_count);
   table->raw_buckets = (literal_index_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  __memset (table->raw_buckets, 0, size);
+  memset (table->raw_buckets, 0, size);
   size = mem_heap_recommend_allocation_size (sizeof (literal_index_t *) * blocks_count);
   table->buckets = (literal_index_t **) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  __memset (table->buckets, 0, size);
+  memset (table->buckets, 0, size);
   table->current_bucket_pos = 0;
   return table;
 }

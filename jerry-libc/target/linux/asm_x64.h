@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@
    callq main;            \
                           \
    mov %rax, %rdi;        \
-   callq __exit;          \
+   callq exit;          \
    1:                     \
    jmp 1b
 

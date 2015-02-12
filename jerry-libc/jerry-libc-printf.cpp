@@ -75,7 +75,7 @@ static void
 libc_printf_putchar (_FILE *stream, /**< stream pointer */
                      char character) /**< character */
 {
-  __fwrite (&character, 1, sizeof (character), stream);
+  fwrite (&character, 1, sizeof (character), stream);
 } /* libc_printf_putchar */
 
 /**
@@ -88,7 +88,7 @@ libc_printf_justified_string_output (_FILE *stream, /**< stream pointer */
                                      bool is_left_justify, /**< justify to left (true) or right (false) */
                                      bool is_zero_padding) /**< left-pad with zeroes (true) or spaces (false) */
 {
-  const size_t str_length = __strlen (string_p);
+  const size_t str_length = strlen (string_p);
 
   size_t outputted_length = 0;
 
@@ -103,7 +103,7 @@ libc_printf_justified_string_output (_FILE *stream, /**< stream pointer */
     }
   }
 
-  __fwrite (string_p, 1, str_length * sizeof (*string_p), stream);
+  fwrite (string_p, 1, str_length * sizeof (*string_p), stream);
   outputted_length += str_length;
 
   if (is_left_justify)
@@ -476,7 +476,7 @@ libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
  * @return number of characters printed
  */
 static int
-__vfprintf (_FILE *stream, /**< stream pointer */
+vfprintf (_FILE *stream, /**< stream pointer */
             const char *format, /**< format string */
             va_list args) /**< arguments */
 {
@@ -696,7 +696,7 @@ __vfprintf (_FILE *stream, /**< stream pointer */
 
           if (value == NULL)
           {
-            __printf ("(nil)");
+            printf ("(nil)");
           }
           else
           {
@@ -725,7 +725,7 @@ __vfprintf (_FILE *stream, /**< stream pointer */
   va_end (args_copy);
 
   return 0;
-} /* __vfprintf */
+} /* vfprintf */
 
 /**
  * fprintf
@@ -733,7 +733,7 @@ __vfprintf (_FILE *stream, /**< stream pointer */
  * @return number of characters printed
  */
 int
-__fprintf (_FILE *stream,      /**< stream pointer */
+fprintf (_FILE *stream,      /**< stream pointer */
            const char *format, /**< format string */
            ...)                /**< parameters' values */
 {
@@ -741,12 +741,12 @@ __fprintf (_FILE *stream,      /**< stream pointer */
 
   va_start (args, format);
 
-  int ret = __vfprintf (stream, format, args);
+  int ret = vfprintf (stream, format, args);
 
   va_end (args);
 
   return ret;
-} /* __fprintf */
+} /* fprintf */
 
 /**
  * printf
@@ -754,17 +754,17 @@ __fprintf (_FILE *stream,      /**< stream pointer */
  * @return number of characters printed
  */
 int
-__printf (const char *format, /**< format string */
+printf (const char *format, /**< format string */
           ...)                /**< parameters' values */
 {
   va_list args;
 
   va_start (args, format);
 
-  int ret = __vfprintf (LIBC_STDOUT, format, args);
+  int ret = vfprintf (LIBC_STDOUT, format, args);
 
   va_end (args);
 
   return ret;
-} /* __printf */
+} /* printf */
 

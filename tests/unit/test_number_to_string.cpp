@@ -65,7 +65,7 @@ main( int __unused argc,
 
     ecma_number_to_zt_string (nums[i], zt_str, sizeof (zt_str));
 
-    if (__strcmp ((char*)zt_str, (char*)zt_strings [i]) != 0)
+    if (strcmp ((char*)zt_str, (char*)zt_strings [i]) != 0)
     {
       return 1;
     }

@@ -619,7 +619,7 @@ scopes_tree_raw_data (scopes_tree tree, lit_id_hash_table *lit_ids)
   /* Dump bytecode and fill literal indexes 'hash' table. */
   size_t size = ((size_t) (scopes_tree_count_opcodes (tree) + 1) * sizeof (opcode_t)); // +1 for valgrind
   opcode_t *opcodes = (opcode_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  __memset (opcodes, 0, size);
+  memset (opcodes, 0, size);
   merge_subscopes (tree, opcodes, lit_ids);
   if (lit_id_to_uid != null_hash)
   {
@@ -647,7 +647,7 @@ scopes_tree
 scopes_tree_init (scopes_tree parent)
 {
   scopes_tree tree = (scopes_tree) mem_heap_alloc_block (sizeof (scopes_tree_int), MEM_HEAP_ALLOC_SHORT_TERM);
-  __memset (tree, 0, sizeof (scopes_tree_int));
+  memset (tree, 0, sizeof (scopes_tree_int));
   tree->t.magic = TREE_MAGIC;
   tree->t.parent = (tree_header *) parent;
   tree->t.children = null_list;

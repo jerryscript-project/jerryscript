@@ -120,18 +120,18 @@ syscall_3 (long int syscall_no, /**< syscall number */
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
-__putchar (int c)
+putchar (int c)
 {
-  __fwrite (&c, 1, sizeof (char), LIBC_STDOUT);
+  fwrite (&c, 1, sizeof (char), LIBC_STDOUT);
 
   return c;
-} /* __putchar */
+} /* putchar */
 
 /**
  * Exit - cause normal process termination with specified status code
  */
-void __noreturn
-__exit (int status) /**< status code */
+void __noreturn __used
+exit (int status) /**< status code */
 {
   syscall_1 (__NR_close, (long int)LIBC_STDIN);
   syscall_1 (__NR_close, (long int)LIBC_STDOUT);
@@ -143,7 +143,7 @@ __exit (int status) /**< status code */
   {
     /* unreachable */
   }
-} /* __exit */
+} /* exit */
 
 /**
  * fopen
@@ -152,7 +152,7 @@ __exit (int status) /**< status code */
  *         NULL - otherwise
  */
 _FILE*
-__fopen (const char *path, /**< file path */
+fopen (const char *path, /**< file path */
          const char *mode) /**< file open mode */
 {
   bool may_read = false;
@@ -233,17 +233,17 @@ __fopen (const char *path, /**< file path */
   long int ret = syscall_3 (__NR_open, (long int) path, flags, access);
 
   return (void*) (uintptr_t) (ret);
-} /* __fopen */
+} /* fopen */
 
 /**
  * The rewind () function sets the file position indicator
  * for the stream pointed to by STREAM to the beginning of the file.
  */
 void
-__rewind (_FILE *stream) /**< stream pointer */
+rewind (_FILE *stream) /**< stream pointer */
 {
   syscall_3 (__NR_lseek, (long int) stream, 0, SEEK_SET);
-} /* __rewind */
+} /* rewind */
 
 /**
  * fclose
@@ -252,18 +252,18 @@ __rewind (_FILE *stream) /**< stream pointer */
  *         non-zero value - otherwise.
  */
 int
-__fclose (_FILE *fp) /**< stream pointer */
+fclose (_FILE *fp) /**< stream pointer */
 {
   syscall_2 (__NR_close, (long int)fp, 0);
 
   return 0;
-} /* __fclose */
+} /* fclose */
 
 /**
  * fseek
  */
 int
-__fseek (_FILE * fp, /**< stream pointer */
+fseek (_FILE * fp, /**< stream pointer */
          long offset, /**< offset */
          _whence_t whence) /**< specifies position type
                                 to add offset to */
@@ -291,18 +291,18 @@ __fseek (_FILE * fp, /**< stream pointer */
   syscall_3 (__NR_lseek, (long int)fp, offset, whence_real);
 
   return 0;
-} /* __fseek */
+} /* fseek */
 
 /**
  * ftell
  */
 long
-__ftell (_FILE * fp) /**< stream pointer */
+ftell (_FILE * fp) /**< stream pointer */
 {
   long int ret = syscall_3 (__NR_lseek, (long int)fp, 0, SEEK_CUR);
 
   return ret;
-} /* __ftell */
+} /* ftell */
 
 /**
  * fread
@@ -310,7 +310,7 @@ __ftell (_FILE * fp) /**< stream pointer */
  * @return number of bytes read
  */
 size_t
-__fread (void *ptr, /**< address of buffer to read to */
+fread (void *ptr, /**< address of buffer to read to */
          size_t size, /**< size of elements to read */
          size_t nmemb, /**< number of elements to read */
          _FILE *stream) /**< stream pointer */
@@ -330,7 +330,7 @@ __fread (void *ptr, /**< address of buffer to read to */
   while (bytes_read != size * nmemb && ret != 0);
 
   return bytes_read;
-} /* __fread */
+} /* fread */
 
 /**
  * fwrite
@@ -338,7 +338,7 @@ __fread (void *ptr, /**< address of buffer to read to */
  * @return number of bytes written
  */
 size_t
-__fwrite (const void *ptr, /**< data to write */
+fwrite (const void *ptr, /**< data to write */
           size_t size, /**< size of elements to write */
           size_t nmemb, /**< number of elements */
           _FILE *stream) /**< stream pointer */
@@ -357,7 +357,7 @@ __fwrite (const void *ptr, /**< data to write */
   while (bytes_written != size * nmemb);
 
   return bytes_written;
-} /* __fwrite */
+} /* fwrite */
 
 /**
  * Setup new memory limits

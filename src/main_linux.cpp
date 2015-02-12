@@ -37,28 +37,28 @@ read_sources (const char *script_file_names[],
   {
     const char *script_file_name = script_file_names[i];
 
-    _FILE *file = __fopen (script_file_name, "r");
+    _FILE *file = fopen (script_file_name, "r");
 
     if (file == NULL)
     {
       break;
     }
 
-    int fseek_status = __fseek (file, 0, __SEEK_END);
+    int fseek_status = fseek (file, 0, __SEEK_END);
 
     if (fseek_status != 0)
     {
       break;
     }
 
-    long script_len = __ftell (file);
+    long script_len = ftell (file);
 
     if (script_len < 0)
     {
       break;
     }
 
-    __rewind (file);
+    rewind (file);
 
     const size_t current_source_size = (size_t)script_len;
 
@@ -67,20 +67,20 @@ read_sources (const char *script_file_names[],
       break;
     }
 
-    size_t bytes_read = __fread (source_buffer_tail, 1, current_source_size, file);
+    size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
       break;
     }
 
-    __fclose (file);
+    fclose (file);
 
     source_buffer_tail += current_source_size;
   }
 
   if (i < files_count)
   {
-    __printf ("Failed to read script N%d\n", i + 1);
+    printf ("Failed to read script N%d\n", i + 1);
 
     return NULL;
   }
@@ -101,7 +101,7 @@ main (int argc __unused,
 {
   if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    __printf ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
+    printf ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -119,26 +119,26 @@ main (int argc __unused,
 
   for (i = 1; i < argc; i++)
   {
-    if (!__strcmp ("-v", argv[i]))
+    if (!strcmp ("-v", argv[i]))
     {
-      __printf ("Build date: \t%s\n", jerry_build_date);
-      __printf ("Commit hash:\t%s\n", jerry_commit_hash);
-      __printf ("Branch name:\t%s\n", jerry_branch_name);
-      __printf ("\n");
+      printf ("Build date: \t%s\n", jerry_build_date);
+      printf ("Commit hash:\t%s\n", jerry_commit_hash);
+      printf ("Branch name:\t%s\n", jerry_branch_name);
+      printf ("\n");
     }
-    if (!__strcmp ("--mem-stats", argv[i]))
+    if (!strcmp ("--mem-stats", argv[i]))
     {
 #ifdef MEM_STATS
       flags |= JERRY_FLAG_MEM_STATS;
 #else /* MEM_STATS */
-      __printf ("Ignoring --mem-stats because of '!MEM_STATS' build configuration.\n");
+      printf ("Ignoring --mem-stats because of '!MEM_STATS' build configuration.\n");
 #endif /* !MEM_STATS */
     }
-    else if (!__strcmp ("--parse-only", argv[i]))
+    else if (!strcmp ("--parse-only", argv[i]))
     {
       flags |= JERRY_FLAG_PARSE_ONLY;
     }
-    else if (!__strcmp ("--show-opcodes", argv[i]))
+    else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_FLAG_SHOW_OPCODES;
     }

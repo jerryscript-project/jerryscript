@@ -45,10 +45,10 @@ linked_list_init (uint16_t element_size)
   linked_list list = (linked_list) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
   if (list == null_list)
   {
-    __printf ("Out of memory");
+    printf ("Out of memory");
     JERRY_UNREACHABLE ();
   }
-  __memset (list, 0, size);
+  memset (list, 0, size);
   linked_list_header* header = (linked_list_header *) list;
   header->magic = LINKED_LIST_MAGIC;
   header->prev = header->next = null_list;
@@ -113,5 +113,5 @@ linked_list_set_element (linked_list list, uint16_t element_num, void *element)
   {
     return;
   }
-  __memcpy (raw + element_num * header->element_size, element, header->element_size);
+  memcpy (raw + element_num * header->element_size, element, header->element_size);
 }

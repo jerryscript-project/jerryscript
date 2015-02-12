@@ -967,7 +967,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
 
       size_t bytes_to_copy = (length + 1) * sizeof (ecma_char_t);
 
-      __memcpy (buffer_p, ecma_get_magic_string_zt (id), bytes_to_copy);
+      memcpy (buffer_p, ecma_get_magic_string_zt (id), bytes_to_copy);
 
       JERRY_ASSERT (required_buffer_size == (ssize_t) bytes_to_copy);
 
@@ -1101,7 +1101,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   req_size = ecma_string_to_zt_string (string2_p, string2_buf, (ssize_t) string_buf_size);
   JERRY_ASSERT (req_size > 0);
 
-  bool is_equal = (__memcmp (string1_buf, string2_buf, string_buf_size) == 0);
+  bool is_equal = (memcmp (string1_buf, string2_buf, string_buf_size) == 0);
 
   mem_heap_free_block (string1_buf);
   mem_heap_free_block (string2_buf);

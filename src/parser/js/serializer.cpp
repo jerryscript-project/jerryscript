@@ -16,7 +16,7 @@
 #include "jrt.h"
 #include "serializer.h"
 #include "parser.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "bytecode-data.h"
 #include "deserializer.h"
 #include "pretty-printer.h"

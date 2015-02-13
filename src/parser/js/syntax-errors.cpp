@@ -17,7 +17,7 @@
 #include "stack.h"
 #include "jrt.h"
 #include "parser.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "ecma-helpers.h"
 
 typedef struct
@@ -64,7 +64,7 @@ syntax_add_prop_name (operand op, prop_type pt)
 }
 
 void
-syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __unused)
+syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unused___)
 {
   if (STACK_SIZE (props) - STACK_TOP (U8) < 2)
   {
@@ -145,7 +145,7 @@ void syntax_add_varg (operand op)
 }
 
 static void
-emit_error_on_eval_and_arguments (operand op, locus loc __unused)
+emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
 {
   if (op.type == OPERAND_LITERAL)
   {
@@ -170,7 +170,7 @@ syntax_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, 
 
 /* 13.1, 15.3.2 */
 void
-syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __unused)
+syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
 {
   if (STACK_SIZE (props) - STACK_TOP (U8) < 2 || !is_strict)
   {
@@ -200,7 +200,7 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
 }
 
 void
-syntax_check_delete (bool is_strict, locus loc __unused)
+syntax_check_delete (bool is_strict, locus loc __attr_unused___)
 {
   if (is_strict)
   {

@@ -55,7 +55,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_abs (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_abs (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -171,7 +171,7 @@ ecma_builtin_math_object_ceil (const ecma_value_t& this_arg, /**< 'this' argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_cos (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -239,7 +239,7 @@ ecma_builtin_math_object_cos (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_exp (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_exp (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -305,7 +305,7 @@ ecma_builtin_math_object_floor (const ecma_value_t& this_arg, /**< 'this' argume
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_log (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -352,7 +352,7 @@ ecma_builtin_math_object_log (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_max (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
@@ -439,7 +439,7 @@ ecma_builtin_math_object_max (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_min (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
@@ -526,7 +526,7 @@ ecma_builtin_math_object_min (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_pow (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg1, /**< first routine's argument */
                               const ecma_value_t& arg2) /**< second routine's argument */
 {
@@ -760,7 +760,7 @@ ecma_builtin_math_object_pow (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'this' argument */
+ecma_builtin_math_object_random (const ecma_value_t& this_arg __attr_unused___) /**< 'this' argument */
 {
   /* Implementation of George Marsaglia's XorShift random number generator */
   TODO (/* Check for license issues */);
@@ -801,7 +801,7 @@ ecma_builtin_math_object_random (const ecma_value_t& this_arg __unused) /**< 'th
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_round (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                                 const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -855,7 +855,7 @@ ecma_builtin_math_object_round (const ecma_value_t& this_arg __unused, /**< 'thi
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_sin (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                               const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -923,7 +923,7 @@ ecma_builtin_math_object_sin (const ecma_value_t& this_arg __unused, /**< 'this'
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_math_object_sqrt (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                                const ecma_value_t& arg) /**< routine's argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();

@@ -16,7 +16,7 @@
 #include "hash-table.h"
 #include "array-list.h"
 #include "mem-heap.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 #define HASH_MAP_MAGIC 0x67
 

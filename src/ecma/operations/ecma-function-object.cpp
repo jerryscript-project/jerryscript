@@ -44,7 +44,7 @@ ecma_pack_code_internal_property_value (bool is_strict, /**< is code strict? */
                                         opcode_counter_t opcode_idx) /**< index of first opcode */
 {
   uint32_t value = opcode_idx;
-  const uint32_t is_strict_bit_offset = sizeof (value) * JERRY_BITSINBYTE - 1;
+  const uint32_t is_strict_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 1);
 
   JERRY_ASSERT(((value) & (1u << is_strict_bit_offset)) == 0);
 
@@ -68,7 +68,7 @@ ecma_unpack_code_internal_property_value (uint32_t value, /**< packed value */
 {
   JERRY_ASSERT(out_is_strict_p != NULL);
 
-  const uint32_t is_strict_bit_offset = sizeof (value) * JERRY_BITSINBYTE - 1;
+  const uint32_t is_strict_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 1);
 
   bool is_strict = ((value & (1u << is_strict_bit_offset)) != 0);
   *out_is_strict_p = is_strict;

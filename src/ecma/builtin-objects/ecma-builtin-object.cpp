@@ -306,7 +306,7 @@ ecma_builtin_object_object_define_properties (const ecma_value_t& this_arg, /**<
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_define_property (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_object_object_define_property (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                                             const ecma_value_t& arg1, /**< routine's first argument */
                                             const ecma_value_t& arg2, /**< routine's second argument */
                                             const ecma_value_t& arg3) /**< routine's third argument */

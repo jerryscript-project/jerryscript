@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
-#pragma GCC optimize "O0"
+#ifndef INIT_H
+#define INIT_H
 
-#include "sensors.h"
+extern void plugin_device_stm_init (void);
+
+#endif /* INIT_H */

@@ -14,7 +14,7 @@
  */
 
 #include "linked-list.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "jrt.h"
 #include "mem-heap.h"
 #include "lp-string.h"

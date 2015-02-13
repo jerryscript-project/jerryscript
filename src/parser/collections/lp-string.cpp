@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  */
 
 #include "lp-string.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 bool
 lp_string_equal (lp_string s1, lp_string s2)

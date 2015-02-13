@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "parser.h"
 #include "opcodes.h"
 #include "serializer.h"

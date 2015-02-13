@@ -20,7 +20,7 @@
 #include "lexer.h"
 #include "stack.h"
 #include "syntax-errors.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "opcodes-native-call.h"
 
 #define MIN_TEMP_NAME 128

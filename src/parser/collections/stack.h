@@ -88,37 +88,37 @@ do { \
 } while (0)
 
 #define DEFINE_STACK_ELEMENT(NAME, TYPE) \
-static TYPE NAME##_stack_element (size_t) __unused; \
+static TYPE NAME##_stack_element (size_t) __attr_unused___; \
 static TYPE NAME##_stack_element (size_t elem) { \
   return *((TYPE *) array_list_element (NAME.data, elem)); \
 }
 
 #define DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
-static void set_##NAME##_stack_element (size_t, TYPE) __unused; \
+static void set_##NAME##_stack_element (size_t, TYPE) __attr_unused___; \
 static void set_##NAME##_stack_element (size_t elem, TYPE value) { \
   array_list_set_element (NAME.data, elem, &value); \
 }
 
 #define DEFINE_STACK_HEAD(NAME, TYPE) \
-static TYPE NAME##_stack_head (size_t) __unused; \
+static TYPE NAME##_stack_head (size_t) __attr_unused___; \
 static TYPE NAME##_stack_head (size_t elem) { \
   return *((TYPE *) array_list_last_element (NAME.data, elem)); \
 }
 
 #define DEFINE_SET_STACK_HEAD(NAME, TYPE) \
-static void set_##NAME##_stack_head (size_t, TYPE) __unused; \
+static void set_##NAME##_stack_head (size_t, TYPE) __attr_unused___; \
 static void set_##NAME##_stack_head (size_t elem, TYPE value) { \
   array_list_set_last_element (NAME.data, elem, &value); \
 }
 
 #define DEFINE_STACK_PUSH(NAME, TYPE) \
-static void NAME##_stack_push (TYPE) __unused; \
+static void NAME##_stack_push (TYPE) __attr_unused___; \
 static void NAME##_stack_push (TYPE value) { \
   NAME.data = array_list_append (NAME.data, &value); \
 }
 
 #define DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-static TYPE *convert_##NAME##_to_raw_data (void) __unused; \
+static TYPE *convert_##NAME##_to_raw_data (void) __attr_unused___; \
 static TYPE *convert_##NAME##_to_raw_data (void) { \
   if (array_list_len (NAME.data) == 0) \
   { \

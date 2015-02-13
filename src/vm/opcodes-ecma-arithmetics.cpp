@@ -16,7 +16,7 @@
 #include "opcodes.h"
 #include "opcodes-ecma-support.h"
 #include "ecma-number-arithmetic.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 /**
  * Number arithmetic operations.

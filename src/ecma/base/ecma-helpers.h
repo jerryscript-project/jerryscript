@@ -77,9 +77,9 @@ extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
 extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
 extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);
 extern ecma_value_t ecma_make_object_value (ecma_object_t* object_p);
-extern ecma_number_t* __attribute_pure__ ecma_get_number_from_value (const ecma_value_t& value);
-extern ecma_string_t* __attribute_pure__ ecma_get_string_from_value (const ecma_value_t& value);
-extern ecma_object_t* __attribute_pure__ ecma_get_object_from_value (const ecma_value_t& value);
+extern ecma_number_t* __attr_pure___ ecma_get_number_from_value (const ecma_value_t& value);
+extern ecma_string_t* __attr_pure___ ecma_get_string_from_value (const ecma_value_t& value);
+extern ecma_object_t* __attr_pure___ ecma_get_object_from_value (const ecma_value_t& value);
 extern ecma_value_t ecma_copy_value (const ecma_value_t& value, bool do_ref_if_object);
 extern void ecma_free_value (ecma_value_t& value, bool do_deref_if_object);
 
@@ -97,11 +97,11 @@ extern ecma_completion_value_t ecma_make_return_completion_value (const ecma_val
 extern ecma_completion_value_t ecma_make_exit_completion_value (bool is_successful);
 extern ecma_completion_value_t ecma_make_meta_completion_value (void);
 extern ecma_value_t ecma_get_completion_value_value (ecma_completion_value_t completion_value);
-extern ecma_number_t* __attribute_const__
+extern ecma_number_t* __attr_const___
 ecma_get_number_from_completion_value (ecma_completion_value_t completion_value);
-extern ecma_string_t* __attribute_const__
+extern ecma_string_t* __attr_const___
 ecma_get_string_from_completion_value (ecma_completion_value_t completion_value);
-extern ecma_object_t* __attribute_const__
+extern ecma_object_t* __attr_const___
 ecma_get_object_from_completion_value (ecma_completion_value_t completion_value);
 extern ecma_completion_value_t ecma_copy_completion_value (ecma_completion_value_t value);
 extern void ecma_free_completion_value (ecma_completion_value_t completion_value);
@@ -230,20 +230,20 @@ extern ecma_object_t* ecma_create_decl_lex_env (ecma_object_t *outer_lexical_env
 extern ecma_object_t* ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p,
                                                   ecma_object_t *binding_obj_p,
                                                   bool provide_this);
-extern bool __attribute_pure__ ecma_is_lexical_environment (const ecma_object_t *object_p);
-extern bool __attribute_pure__ ecma_get_object_extensible (const ecma_object_t *object_p);
+extern bool __attr_pure___ ecma_is_lexical_environment (const ecma_object_t *object_p);
+extern bool __attr_pure___ ecma_get_object_extensible (const ecma_object_t *object_p);
 extern void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
-extern ecma_object_type_t __attribute_pure__ ecma_get_object_type (const ecma_object_t *object_p);
+extern ecma_object_type_t __attr_pure___ ecma_get_object_type (const ecma_object_t *object_p);
 extern void ecma_set_object_type (ecma_object_t *object_p, ecma_object_type_t type);
-extern ecma_object_t* __attribute_pure__ ecma_get_object_prototype (const ecma_object_t *object_p);
-extern bool __attribute_pure__ ecma_get_object_is_builtin (const ecma_object_t *object_p);
+extern ecma_object_t* __attr_pure___ ecma_get_object_prototype (const ecma_object_t *object_p);
+extern bool __attr_pure___ ecma_get_object_is_builtin (const ecma_object_t *object_p);
 extern void ecma_set_object_is_builtin (ecma_object_t *object_p,
                                         bool is_builtin);
-extern ecma_lexical_environment_type_t __attribute_pure__ ecma_get_lex_env_type (const ecma_object_t *object_p);
-extern ecma_object_t* __attribute_pure__ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
-extern ecma_property_t* __attribute_pure__ ecma_get_property_list (const ecma_object_t *object_p);
-extern ecma_object_t* __attribute_pure__ ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
-extern bool __attribute_pure__ ecma_get_lex_env_provide_this (const ecma_object_t *object_p);
+extern ecma_lexical_environment_type_t __attr_pure___ ecma_get_lex_env_type (const ecma_object_t *object_p);
+extern ecma_object_t* __attr_pure___ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
+extern ecma_property_t* __attr_pure___ ecma_get_property_list (const ecma_object_t *object_p);
+extern ecma_object_t* __attr_pure___ ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
+extern bool __attr_pure___ ecma_get_lex_env_provide_this (const ecma_object_t *object_p);
 
 extern ecma_property_t* ecma_create_internal_property (ecma_object_t *object_p,
                                                        ecma_internal_property_id_t property_id);

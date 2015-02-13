@@ -160,7 +160,7 @@ ecma_stack_slots_in_top_chunk (ecma_stack_frame_t *frame_p) /**< ecma-stack fram
 /**
  * Longpath for ecma_stack_push_value (for case current chunk may be doesn't have free slots)
  */
-static void __noinline
+static void __attr_noinline___
 ecma_stack_push_value_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
   JERRY_ASSERT (frame_p->current_slot_index >= JERRY_MIN (ECMA_STACK_FRAME_INLINED_VALUES_NUMBER,
@@ -205,7 +205,7 @@ ecma_stack_push_value (ecma_stack_frame_t *frame_p, /**< ecma-stack frame */
 /**
  * Get top value from ecma-stack
  */
-ecma_value_t __attribute_always_inline__
+ecma_value_t __attr_always_inline___
 ecma_stack_top_value (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
   const size_t slots_in_top_chunk = ecma_stack_slots_in_top_chunk (frame_p);
@@ -218,7 +218,7 @@ ecma_stack_top_value (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 /**
  * Longpath for ecma_stack_pop (for case a dynamically allocated chunk needs to be deallocated)
  */
-static void __noinline
+static void __attr_noinline___
 ecma_stack_pop_longpath (ecma_stack_frame_t *frame_p) /**< ecma-stack frame */
 {
   JERRY_ASSERT (frame_p->current_slot_index == 0 && frame_p->top_chunk_p != NULL);

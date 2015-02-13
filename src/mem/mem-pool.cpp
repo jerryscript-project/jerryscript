@@ -27,7 +27,7 @@
 #define JERRY_MEM_POOL_INTERNAL
 
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
 
@@ -59,7 +59,7 @@ static void mem_check_pool (mem_pool_state_t *pool_p);
  *
  * @return true / false
  */
-bool __attribute_const__
+bool __attr_const___
 mem_pool_is_chunk_inside (mem_pool_state_t *pool_p, /**< pool */
                           uint8_t *chunk_p) /**< chunk */
 {
@@ -181,7 +181,7 @@ mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
  * Check pool state consistency
  */
 static void
-mem_check_pool (mem_pool_state_t __unused *pool_p) /**< pool (unused #ifdef JERRY_NDEBUG) */
+mem_check_pool (mem_pool_state_t __attr_unused___ *pool_p) /**< pool (unused #ifdef JERRY_NDEBUG) */
 {
 #ifndef JERRY_NDEBUG
   JERRY_ASSERT(pool_p->free_chunks_number <= MEM_POOL_CHUNKS_NUMBER);

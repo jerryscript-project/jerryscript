@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ static uint8_t opcode_sizes[] = {
   0
 };
 
-static bool opcodes_equal (const opcode_t *, opcode_t *, uint16_t) __unused;
+static bool opcodes_equal (const opcode_t *, opcode_t *, uint16_t) __attr_unused___;
 
 static bool
 opcodes_equal (const opcode_t *opcodes1, opcode_t *opcodes2, uint16_t size)

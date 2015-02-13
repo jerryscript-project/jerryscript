@@ -15,7 +15,7 @@
 
 #include "literal.h"
 #include "ecma-helpers.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 literal
 create_empty_literal (void)

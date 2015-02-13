@@ -43,7 +43,7 @@
  */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
-    static char __unused unimplemented_list_end
+    static char __attr_unused___ unimplemented_list_end
 
 #define DEFINE_UNIMPLEMENTED_OP(op) \
   ecma_completion_value_t opfunc_ ## op (opcode_t opdata, int_data_t *int_data) \
@@ -58,7 +58,7 @@ OP_UNIMPLEMENTED_LIST (DEFINE_UNIMPLEMENTED_OP);
  * 'Nop' opcode handler.
  */
 ecma_completion_value_t
-opfunc_nop (opcode_t opdata __unused, /**< operation data */
+opfunc_nop (opcode_t opdata __attr_unused___, /**< operation data */
             int_data_t *int_data) /**< interpreter context */
 {
   int_data->pos++;
@@ -378,8 +378,8 @@ opfunc_post_decr (opcode_t opdata, /**< operation data */
  * The opcode is meta-opcode that is not supposed to be executed.
  */
 ecma_completion_value_t
-opfunc_reg_var_decl (opcode_t opdata __unused, /**< operation data */
-                     int_data_t *int_data __unused) /**< interpreter context */
+opfunc_reg_var_decl (opcode_t opdata __attr_unused___, /**< operation data */
+                     int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   JERRY_UNREACHABLE ();
 } /* opfunc_reg_var_decl */
@@ -1047,8 +1047,8 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_ret (opcode_t opdata __unused, /**< operation data */
-            int_data_t *int_data __unused) /**< interpreter context */
+opfunc_ret (opcode_t opdata __attr_unused___, /**< operation data */
+            int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   return ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 } /* opfunc_ret */
@@ -1063,8 +1063,8 @@ opfunc_ret (opcode_t opdata __unused, /**< operation data */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-opfunc_retval (opcode_t opdata __unused, /**< operation data */
-               int_data_t *int_data __unused) /**< interpreter context */
+opfunc_retval (opcode_t opdata __attr_unused___, /**< operation data */
+               int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   ecma_completion_value_t ret_value;
 
@@ -1087,8 +1087,8 @@ opfunc_retval (opcode_t opdata __unused, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
-                    int_data_t *int_data __unused) /**< interpreter context */
+opfunc_prop_getter (opcode_t opdata __attr_unused___, /**< operation data */
+                    int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   const idx_t lhs_var_idx = opdata.data.prop_getter.lhs;
   const idx_t base_var_idx = opdata.data.prop_getter.obj;
@@ -1140,8 +1140,8 @@ opfunc_prop_getter (opcode_t opdata __unused, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
-                    int_data_t *int_data __unused) /**< interpreter context */
+opfunc_prop_setter (opcode_t opdata __attr_unused___, /**< operation data */
+                    int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   const idx_t base_var_idx = opdata.data.prop_setter.obj;
   const idx_t prop_name_var_idx = opdata.data.prop_setter.prop;
@@ -1198,7 +1198,7 @@ opfunc_prop_setter (opcode_t opdata __unused, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_exitval (opcode_t opdata, /**< operation data */
-                int_data_t *int_data __unused) /**< interpreter context */
+                int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   JERRY_ASSERT (opdata.data.exitval.status_code == 0
                 || opdata.data.exitval.status_code == 1);
@@ -1633,7 +1633,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_meta (opcode_t opdata, /**< operation data */
-             int_data_t *int_data __unused) /**< interpreter context */
+             int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   const opcode_meta_type type = (opcode_meta_type) opdata.data.meta.type;
 

@@ -17,3 +17,5 @@ set(CMAKE_SYSTEM_PROCESSOR armv7l)
 
 set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
 set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
+
+set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb)

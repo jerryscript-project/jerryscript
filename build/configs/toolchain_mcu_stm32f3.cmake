@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR x86_64)
+include(CMakeForceCompiler)
 
-set(CMAKE_C_COMPILER x86_64-linux-gnu-gcc)
-set(CMAKE_CXX_COMPILER x86_64-linux-gnu-g++)
+set(CMAKE_SYSTEM_NAME MCU)
+set(CMAKE_SYSTEM_PROCESSOR armv7l)
+set(CMAKE_SYSTEM_VERSION STM32F3)
 
-set(FLAGS_COMMON_ARCH -ffixed-rbp)
+set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb -mcpu=cortex-m4 -march=armv7e-m -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
+
+CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
+CMAKE_FORCE_CXX_COMPILER(arm-none-eabi-g++ GNU)

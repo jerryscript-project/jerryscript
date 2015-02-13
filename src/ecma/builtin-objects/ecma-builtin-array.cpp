@@ -54,7 +54,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __unused, /**< 'this' argument */
+ecma_builtin_array_object_is_array (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
                                     const ecma_value_t& arg) /**< first argument */
 {
   ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;

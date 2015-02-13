@@ -17,10 +17,11 @@
  * Jerry printf implementation
  */
 
-#include "jrt.h"
-#include "jerry-libc.h"
-
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "jerry-libc-defs.h"
 
 /**
  * printf's length type
@@ -72,7 +73,7 @@ typedef uint8_t libc_printf_arg_flags_mask_t;
  * printf helper function that outputs a char
  */
 static void
-libc_printf_putchar (_FILE *stream, /**< stream pointer */
+libc_printf_putchar (FILE *stream, /**< stream pointer */
                      char character) /**< character */
 {
   fwrite (&character, 1, sizeof (character), stream);
@@ -82,7 +83,7 @@ libc_printf_putchar (_FILE *stream, /**< stream pointer */
  * printf helper function that outputs justified string
  */
 static void
-libc_printf_justified_string_output (_FILE *stream, /**< stream pointer */
+libc_printf_justified_string_output (FILE *stream, /**< stream pointer */
                                      const char *string_p, /**< string */
                                      size_t width, /**< minimum field width */
                                      bool is_left_justify, /**< justify to left (true) or right (false) */
@@ -130,20 +131,20 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
   char *str_p = str_buffer_end;
   *--str_p = '\0';
 
-  JERRY_ASSERT(radix >= 2);
+  LIBC_ASSERT(radix >= 2);
 
   if ((radix & (radix - 1)) != 0)
   {
     /*
      * Radix is not power of 2. Only 32-bit numbers are supported in this mode.
      */
-    JERRY_ASSERT((value >> 32) == 0);
+    LIBC_ASSERT((value >> 32) == 0);
 
     uint32_t value_lo = (uint32_t) value;
 
     while (value_lo != 0)
     {
-      JERRY_ASSERT (str_p != buffer_p);
+      LIBC_ASSERT (str_p != buffer_p);
 
       *--str_p = alphabet[ value_lo % radix ];
       value_lo /= radix;
@@ -156,7 +157,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     {
       shift++;
 
-      JERRY_ASSERT(shift <= 32);
+      LIBC_ASSERT(shift <= 32);
     }
 
     uint32_t value_lo = (uint32_t) value;
@@ -165,7 +166,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     while (value_lo != 0
            || value_hi != 0)
     {
-      JERRY_ASSERT (str_p != buffer_p);
+      LIBC_ASSERT (str_p != buffer_p);
 
       *--str_p = alphabet[ value_lo & (radix - 1) ];
       value_lo >>= shift;
@@ -179,7 +180,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     *--str_p = '0';
   }
 
-  JERRY_ASSERT(str_p >= buffer_p && str_p < str_buffer_end);
+  LIBC_ASSERT(str_p >= buffer_p && str_p < str_buffer_end);
 
   return str_p;
 } /* libc_printf_uint_to_string */
@@ -190,20 +191,21 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
  * @return updated va_list
  */
 static void
-libc_printf_write_d_i (_FILE *stream, /**< stream pointer */
+libc_printf_write_d_i (FILE *stream, /**< stream pointer */
                        va_list* args_list_p, /**< args' list */
                        libc_printf_arg_flags_mask_t flags, /**< field's flags */
                        libc_printf_arg_length_type_t length, /**< field's length type */
                        uint32_t width) /**< minimum field width to output */
 {
-  JERRY_ASSERT((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
+  LIBC_ASSERT((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
 
   bool is_signed = true;
   uintmax_t value = 0;
 
   /* true - positive, false - negative */
   bool sign = true;
-  const uintmax_t value_sign_mask = ((uintmax_t)1) << (sizeof (value) * JERRY_BITSINBYTE - 1);
+  const size_t bits_in_byte = 8;
+  const uintmax_t value_sign_mask = ((uintmax_t)1) << (sizeof (value) * bits_in_byte - 1);
 
   switch (length)
   {
@@ -259,7 +261,7 @@ libc_printf_write_d_i (_FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      JERRY_UNREACHABLE();
+      LIBC_UNREACHABLE();
     }
   }
 
@@ -283,7 +285,7 @@ libc_printf_write_d_i (_FILE *stream, /**< stream pointer */
   if (!sign
       || (flags & LIBC_PRINTF_ARG_FLAG_PRINT_SIGN))
   {
-    JERRY_ASSERT (string_p > str_buffer);
+    LIBC_ASSERT (string_p > str_buffer);
     *--string_p = (sign ? '+' : '-');
   }
   else if (flags & LIBC_PRINTF_ARG_FLAG_SPACE)
@@ -310,7 +312,7 @@ libc_printf_write_d_i (_FILE *stream, /**< stream pointer */
  * @return updated va_list
  */
 static void
-libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
+libc_printf_write_u_o_x_X(FILE *stream, /**< stream pointer */
                           char specifier, /**< specifier (u, o, x, X) */
                           va_list* args_list_p, /**< args' list */
                           libc_printf_arg_flags_mask_t flags, /**< field's flags */
@@ -371,7 +373,7 @@ libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      JERRY_UNREACHABLE();
+      LIBC_UNREACHABLE();
     }
   }
 
@@ -391,7 +393,7 @@ libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
       }
       else
       {
-        JERRY_ASSERT(specifier == 'o');
+        LIBC_ASSERT(specifier == 'o');
       }
     }
   }
@@ -431,7 +433,7 @@ libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
 
     default:
     {
-      JERRY_UNREACHABLE();
+      LIBC_UNREACHABLE();
     }
   }
 
@@ -475,10 +477,10 @@ libc_printf_write_u_o_x_X(_FILE *stream, /**< stream pointer */
  *
  * @return number of characters printed
  */
-static int
-vfprintf (_FILE *stream, /**< stream pointer */
-            const char *format, /**< format string */
-            va_list args) /**< arguments */
+int
+vfprintf (FILE *stream, /**< stream pointer */
+          const char *format, /**< format string */
+          va_list args) /**< arguments */
 {
   va_list args_copy;
 
@@ -531,7 +533,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
       if (*format_iter_p == '*')
       {
         /* Not supported */
-        JERRY_UNREACHABLE ();
+        LIBC_UNREACHABLE ();
       }
 
       // If there is a number, recognize it as field width
@@ -545,7 +547,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
       if (*format_iter_p == '.')
       {
         /* Not supported */
-        JERRY_UNREACHABLE ();
+        LIBC_UNREACHABLE ();
       }
 
       switch (*format_iter_p)
@@ -639,7 +641,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
         case 'A':
         {
           /* Not supported */
-          JERRY_UNREACHABLE ();
+          LIBC_UNREACHABLE ();
           break;
         }
 
@@ -648,7 +650,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
             /* Not supported */
-            JERRY_UNREACHABLE ();
+            LIBC_UNREACHABLE ();
           }
           else
           {
@@ -672,7 +674,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
             /* Not supported */
-            JERRY_UNREACHABLE ();
+            LIBC_UNREACHABLE ();
           }
           else
           {
@@ -713,7 +715,7 @@ vfprintf (_FILE *stream, /**< stream pointer */
         case 'n':
         {
           /* Not supported */
-          JERRY_UNREACHABLE ();
+          LIBC_UNREACHABLE ();
           break;
         }
       }
@@ -733,9 +735,9 @@ vfprintf (_FILE *stream, /**< stream pointer */
  * @return number of characters printed
  */
 int
-fprintf (_FILE *stream,      /**< stream pointer */
-           const char *format, /**< format string */
-           ...)                /**< parameters' values */
+fprintf (FILE *stream,      /**< stream pointer */
+         const char *format, /**< format string */
+         ...)                /**< parameters' values */
 {
   va_list args;
 
@@ -755,13 +757,13 @@ fprintf (_FILE *stream,      /**< stream pointer */
  */
 int
 printf (const char *format, /**< format string */
-          ...)                /**< parameters' values */
+        ...)                /**< parameters' values */
 {
   va_list args;
 
   va_start (args, format);
 
-  int ret = vfprintf (LIBC_STDOUT, format, args);
+  int ret = vfprintf (stdout, format, args);
 
   va_end (args);
 

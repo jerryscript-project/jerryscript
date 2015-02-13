@@ -25,7 +25,7 @@
  */
 
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-config.h"
 #include "mem-heap.h"
@@ -858,7 +858,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
  *
  * @return recommended allocation size
  */
-size_t __attribute_pure__
+size_t __attr_pure___
 mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum allocation size */
 {
   size_t minimum_allocation_size_with_block_header = minimum_allocation_size + sizeof (mem_block_header_t);
@@ -885,7 +885,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
   {
     printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
             mem_heap.heap_start,
-            mem_heap.heap_size,
+            (unsigned long) mem_heap.heap_size,
             (void*) mem_heap.first_block_p,
             (void*) mem_heap.last_block_p);
 
@@ -898,7 +898,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
       printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
               (void*) block_p,
               block_p->magic_num,
-              mem_get_block_chunks_count (block_p),
+              (unsigned long) mem_get_block_chunks_count (block_p),
               (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
               (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
 
@@ -936,7 +936,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
             "  Peak allocated= %lu bytes\n"
             "  Peak waste = %lu bytes\n",
             mem_heap_stats.size,
-            MEM_HEAP_CHUNK_SIZE,
+            (uint64_t) MEM_HEAP_CHUNK_SIZE,
             mem_heap_stats.blocks,
             mem_heap_stats.allocated_blocks,
             mem_heap_stats.allocated_chunks,

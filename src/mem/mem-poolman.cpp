@@ -27,7 +27,7 @@
 #define JERRY_MEM_POOL_INTERNAL
 
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-heap.h"
 #include "mem-pool.h"
@@ -96,7 +96,7 @@ mem_pools_finalize (void)
  * @return true - if there is a free chunk in mem_pools,
  *         false - otherwise (not enough memory).
  */
-static bool __noinline
+static bool __attr_noinline___
 mem_pools_alloc_longpath (void)
 {
   /**

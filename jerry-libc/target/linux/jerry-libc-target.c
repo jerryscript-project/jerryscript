@@ -17,12 +17,17 @@
  * Jerry libc platform-specific functions linux implementation
  */
 
-#include "jrt.h"
-#include "jerry-libc.h"
-
+#include <ctype.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <stdarg.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syscall.h>
 #include <sys/resource.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef __TARGET_HOST_x64
 # include "asm_x64.h"
@@ -33,46 +38,33 @@
 #else /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
 # error "!__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 "
 #endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
+#include "jerry-libc-defs.h"
 
-FIXME(Rename __unused)
-#undef __unused
-
-#include <syscall.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-FIXME (/* Include linux/fs.h */)
-
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
+LIBC_UNREACHABLE_STUB_FOR(int raise (int sig_no __attr_unused___))
 
 /**
  * Exit program with ERR_SYSCALL if syscall_ret_val is negative
  */
 #define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
-  if (unlikely ((syscall_ret_val) < 0)) \
+  if ((syscall_ret_val) < 0) \
 { \
-  jerry_fatal (ERR_SYSCALL); \
+  libc_fatal ("Syscall successful", __FILE__, __FUNCTION__, __LINE__); \
 }
 
 static long int syscall_1 (long int syscall_no, long int arg1);
 static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
 static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
-extern "C"
-{
-  extern long int syscall_1_asm (long int syscall_no, long int arg1);
-  extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
-  extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
-}
+extern long int syscall_1_asm (long int syscall_no, long int arg1);
+extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
+extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
 /**
  * System call with one argument.
  *
  * @return syscall's return value
  */
-static __noinline long int
+static __attr_noinline___ long int
 syscall_1 (long int syscall_no, /**< syscall number */
            long int arg1) /**< argument */
 {
@@ -88,7 +80,7 @@ syscall_1 (long int syscall_no, /**< syscall number */
  *
  * @return syscall's return value
  */
-static __noinline long int
+static __attr_noinline___ long int
 syscall_2 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2) /**< second argument */
@@ -105,7 +97,7 @@ syscall_2 (long int syscall_no, /**< syscall number */
  *
  * @return syscall's return value
  */
-static __noinline long int
+static __attr_noinline___ long int
 syscall_3 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2, /**< second argument */
@@ -122,20 +114,36 @@ syscall_3 (long int syscall_no, /**< syscall number */
 int
 putchar (int c)
 {
-  fwrite (&c, 1, sizeof (char), LIBC_STDOUT);
+  fwrite (&c, 1, sizeof (char), stdout);
 
   return c;
 } /* putchar */
 
 /**
+ * Output specified string
+ */
+int
+puts(const char *s) /**< string to print */
+{
+  while (*s)
+  {
+    putchar (*s);
+
+    s++;
+  }
+
+  return 0;
+} /* puts */
+
+/**
  * Exit - cause normal process termination with specified status code
  */
-void __noreturn __used
+void __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
-  syscall_1 (__NR_close, (long int)LIBC_STDIN);
-  syscall_1 (__NR_close, (long int)LIBC_STDOUT);
-  syscall_1 (__NR_close, (long int)LIBC_STDERR);
+  syscall_1 (__NR_close, (long int)stdin);
+  syscall_1 (__NR_close, (long int)stdout);
+  syscall_1 (__NR_close, (long int)stderr);
 
   syscall_1 (__NR_exit_group, status);
 
@@ -148,12 +156,12 @@ exit (int status) /**< status code */
 /**
  * fopen
  *
- * @return _FILE pointer - upon successful completion,
+ * @return FILE pointer - upon successful completion,
  *         NULL - otherwise
  */
-_FILE*
+FILE*
 fopen (const char *path, /**< file path */
-         const char *mode) /**< file open mode */
+       const char *mode) /**< file open mode */
 {
   bool may_read = false;
   bool may_write = false;
@@ -161,8 +169,8 @@ fopen (const char *path, /**< file path */
   bool create_if_not_exist = false;
   bool position_at_end = false;
 
-  JERRY_ASSERT(path != NULL && mode != NULL);
-  JERRY_ASSERT(mode[1] == '+' || mode[1] == '\0');
+  LIBC_ASSERT(path != NULL && mode != NULL);
+  LIBC_ASSERT(mode[1] == '+' || mode[1] == '\0');
 
   switch (mode[0])
   {
@@ -188,13 +196,13 @@ fopen (const char *path, /**< file path */
       if (mode[1] == '+')
       {
         /* Not supported */
-        JERRY_UNREACHABLE();
+        LIBC_UNREACHABLE();
       }
       break;
     }
     default:
     {
-      JERRY_UNREACHABLE();
+      LIBC_UNREACHABLE();
     }
   }
 
@@ -210,7 +218,7 @@ fopen (const char *path, /**< file path */
   }
   else
   {
-    JERRY_ASSERT(may_read && may_write);
+    LIBC_ASSERT(may_read && may_write);
 
     flags = O_RDWR;
   }
@@ -240,7 +248,7 @@ fopen (const char *path, /**< file path */
  * for the stream pointed to by STREAM to the beginning of the file.
  */
 void
-rewind (_FILE *stream) /**< stream pointer */
+rewind (FILE *stream) /**< stream pointer */
 {
   syscall_3 (__NR_lseek, (long int) stream, 0, SEEK_SET);
 } /* rewind */
@@ -252,7 +260,7 @@ rewind (_FILE *stream) /**< stream pointer */
  *         non-zero value - otherwise.
  */
 int
-fclose (_FILE *fp) /**< stream pointer */
+fclose (FILE *fp) /**< stream pointer */
 {
   syscall_2 (__NR_close, (long int)fp, 0);
 
@@ -263,32 +271,12 @@ fclose (_FILE *fp) /**< stream pointer */
  * fseek
  */
 int
-fseek (_FILE * fp, /**< stream pointer */
-         long offset, /**< offset */
-         _whence_t whence) /**< specifies position type
-                                to add offset to */
+fseek (FILE * fp, /**< stream pointer */
+       long offset, /**< offset */
+       int whence) /**< specifies position type
+                    *   to add offset to */
 {
-  int whence_real = SEEK_CUR;
-  switch (whence)
-  {
-    case __SEEK_SET:
-    {
-      whence_real = SEEK_SET;
-      break;
-    }
-    case __SEEK_CUR:
-    {
-      whence_real = SEEK_CUR;
-      break;
-    }
-    case __SEEK_END:
-    {
-      whence_real = SEEK_END;
-      break;
-    }
-  }
-
-  syscall_3 (__NR_lseek, (long int)fp, offset, whence_real);
+  syscall_3 (__NR_lseek, (long int)fp, offset, whence);
 
   return 0;
 } /* fseek */
@@ -297,7 +285,7 @@ fseek (_FILE * fp, /**< stream pointer */
  * ftell
  */
 long
-ftell (_FILE * fp) /**< stream pointer */
+ftell (FILE * fp) /**< stream pointer */
 {
   long int ret = syscall_3 (__NR_lseek, (long int)fp, 0, SEEK_CUR);
 
@@ -311,9 +299,9 @@ ftell (_FILE * fp) /**< stream pointer */
  */
 size_t
 fread (void *ptr, /**< address of buffer to read to */
-         size_t size, /**< size of elements to read */
-         size_t nmemb, /**< number of elements to read */
-         _FILE *stream) /**< stream pointer */
+       size_t size, /**< size of elements to read */
+       size_t nmemb, /**< number of elements to read */
+       FILE *stream) /**< stream pointer */
 {
   long int ret;
   size_t bytes_read = 0;
@@ -339,9 +327,9 @@ fread (void *ptr, /**< address of buffer to read to */
  */
 size_t
 fwrite (const void *ptr, /**< data to write */
-          size_t size, /**< size of elements to write */
-          size_t nmemb, /**< number of elements */
-          _FILE *stream) /**< stream pointer */
+        size_t size, /**< size of elements to write */
+        size_t nmemb, /**< number of elements */
+        FILE *stream) /**< stream pointer */
 {
   size_t bytes_written = 0;
 
@@ -359,6 +347,8 @@ fwrite (const void *ptr, /**< data to write */
   return bytes_written;
 } /* fwrite */
 
+// FIXME
+#if 0
 /**
  * Setup new memory limits
  */
@@ -382,19 +372,20 @@ jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
 
 #ifdef __TARGET_HOST_x64
   ret = syscall_2 (__NR_setrlimit, RLIMIT_DATA, (intptr_t) &data_limit);
-  JERRY_ASSERT (ret == 0);
+  LIBC_ASSERT (ret == 0);
 
   ret = syscall_2 (__NR_setrlimit, RLIMIT_STACK, (intptr_t) &stack_limit);
-  JERRY_ASSERT (ret == 0);
+  LIBC_ASSERT (ret == 0);
 #elif defined (__TARGET_HOST_ARMv7)
   ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_DATA, (intptr_t) &data_limit);
-  JERRY_ASSERT (ret == 0);
+  LIBC_ASSERT (ret == 0);
 
   ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_STACK, (intptr_t) &stack_limit);
-  JERRY_ASSERT (ret == 0);
+  LIBC_ASSERT (ret == 0);
 #elif defined (__TARGET_HOST_x86)
 # error "__TARGET_HOST_x86 case is not implemented"
 #else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
 # error "!__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86"
 #endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
 } /* jrt_set_mem_limits */
+#endif // FIXME

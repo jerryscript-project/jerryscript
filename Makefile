@@ -39,24 +39,29 @@
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
-export TARGET_MCU_SYSTEMS = $(addprefix stm32f,3 4)
 
-export TARGET_PC_MODS = valgrind cp cp_minimal mem_stats cp-valgrind
+export TARGET_PC_MODS = cp cp_minimal mem_stats
 
 export TARGET_MCU_MODS = cp cp_minimal
 
 export TARGET_PC_SYSTEMS_MODS = $(TARGET_PC_SYSTEMS) \
                                 $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD)))
-export TARGET_MCU_SYSTEMS_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+export TARGET_STM32F3_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f3-$(__MOD))
+export TARGET_STM32F4_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f4-$(__MOD))
 
 # Target list
 export JERRY_LINUX_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
                              $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
-export JERRY_MCU_TARGETS = $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
-export JERRY_TARGETS = $(JERRY_LINUX_TARGETS) $(JERRY_MCU_TARGETS)
 
-export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_TARGETS),$(__TARGET).check)
-export FLASH_TARGETS = $(foreach __TARGET,$(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_MCU_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))),$(__TARGET).flash)
+export JERRY_STM32F3_TARGETS = $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F3_MODS),$(__MODE).$(__SYSTEM)))
+
+export JERRY_STM32F4_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM))) \
+                               $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM)))
+
+export JERRY_TARGETS = $(JERRY_LINUX_TARGETS) $(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS)
+
+export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_LINUX_TARGETS),$(__TARGET).check)
+export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS),$(__TARGET).flash)
 
 export OUT_DIR = ./build/bin
 export BUILD_DIR = ./build/obj
@@ -66,12 +71,14 @@ export SHELL=/bin/bash
 all: precommit
 
 $(BUILD_DIR)/native:
-	@ mkdir -p $(BUILD_DIR)/native
-	@ cd $(BUILD_DIR)/native; cmake ../../.. &>cmake.log
+	@ arch=`uname -p`; if [ "$$arch" == "armv7l" ]; then readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el"; fi; \
+	  mkdir -p $(BUILD_DIR)/native && cd $(BUILD_DIR)/native && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log
 
-$(BUILD_DIR)/mcu:
-	@ mkdir -p $(BUILD_DIR)/mcu
-	@ cd $(BUILD_DIR)/mcu; cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_armv7l.cmake ../../.. &>cmake.log
+$(BUILD_DIR)/stm32f3:
+	@ mkdir -p $(BUILD_DIR)/stm32f3 && cd $(BUILD_DIR)/stm32f3 && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log
+
+$(BUILD_DIR)/stm32f4:
+	@ mkdir -p $(BUILD_DIR)/stm32f4 && cd $(BUILD_DIR)/stm32f4 && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
@@ -83,20 +90,27 @@ unittests: $(BUILD_DIR)/native
 	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
 	@ cp $(BUILD_DIR)/native/unit_test_* $(OUT_DIR)/$@
 
-$(JERRY_MCU_TARGETS): $(BUILD_DIR)/mcu
+$(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
-	@ cp $(BUILD_DIR)/mcu/$@ $(OUT_DIR)/$@/jerry
-	@ cp $(BUILD_DIR)/mcu/$@.bin $(OUT_DIR)/$@/jerry.bin
+	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
+	@ cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
+	@ cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
 
-build: $(JERRY_TARGETS) unittests
+$(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
+	@ mkdir -p $(OUT_DIR)/$@
+	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
+	@ cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
+	@ cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
+
+build: $(JERRY_TARGETS) # unittests
 
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
 	@$(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
 
 PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
                                           release.linux.check
-PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= debug.linux-valgrind.check \
+
+PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= #debug.linux-valgrind.check \
                                        release.linux-valgrind.check \
                                        release.linux-cp-valgrind.check
 
@@ -113,9 +127,10 @@ precommit: clean
 	@ echo -e "\nBuilding...\n\n"
 	@ $(MAKE) build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
-	@ echo -e "All targets were built successfully. Starting unit tests' run.\n"
-	@ $(MAKE) unittests_run TESTS_OPTS="--silent"
-	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
+	@ #echo -e "All targets were built successfully. Starting unit tests' run.\n"
+	@ #$(MAKE) unittests_run TESTS_OPTS="--silent"
+	@ #echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
+	@ #echo -e "All targets were built successfully. Starting parse-only testing.\n"
 	@ # Parse-only testing
 	@ for path in "./tests/jerry" "./tests/benchmarks/jerry"; \
           do \
@@ -166,8 +181,8 @@ precommit: clean
             done
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 
-unittests_run: unittests
-	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
+#unittests_run: unittests
+#	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
 
 clean:
 	@ rm -rf $(BUILD_DIR) $(OUT_DIR)

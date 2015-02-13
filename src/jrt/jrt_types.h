@@ -17,9 +17,9 @@
 #define JRT_TYPES_H
 
 #include <float.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 #endif /* !JRT_TYPES_H */

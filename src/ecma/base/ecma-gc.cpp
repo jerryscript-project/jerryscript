@@ -31,7 +31,7 @@
 #include "ecma-lcache.h"
 #include "ecma-stack.h"
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
 
 /**

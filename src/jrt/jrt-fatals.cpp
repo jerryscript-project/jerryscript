@@ -18,7 +18,7 @@
  */
 
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 /*
  * Exit with specified status code.
@@ -75,8 +75,8 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const uint32_t line) /** line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("ICE: Assertion '%s' failed at %s(%s):%u.\n",
-          assertion, file, function, line);
+  printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
+          assertion, file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG */
   (void) assertion;
   (void) file;
@@ -98,7 +98,7 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
                    const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("ICE: Unreachable control path at %s(%s):%u was executed", file, function, line);
+  printf ("ICE: Unreachable control path at %s(%s):%lu was executed", file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -125,7 +125,7 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
                      const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("SORRY: Unimplemented case at %s(%s):%u was executed", file, function, line);
+  printf ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;

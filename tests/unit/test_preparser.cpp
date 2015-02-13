@@ -25,8 +25,8 @@
  * Unit test's main function.
  */
 int
-main( int __unused argc,
-      char __unused **argv)
+main( int __attr_unused___ argc,
+      char __attr_unused___ **argv)
 {
   char program[] = "a=1;var a;";
   bool is_ok;

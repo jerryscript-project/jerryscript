@@ -16,7 +16,7 @@
 #include "jrt.h"
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
 #include "pretty-printer.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "lexer.h"
 #include "deserializer.h"
 #include "opcodes-native-call.h"
@@ -30,7 +30,7 @@
   #name,
 
 #define __OPCODE_SIZE(name, arg1, arg2, arg3) \
-  sizeof (__op_##name) + 1,
+  (uint8_t) (sizeof (__op_##name) + 1),
 
 static const char* opcode_names[] =
 {
@@ -57,7 +57,7 @@ dump_literal (literal lit)
       }
       else
       {
-        printf ("%d : NUMBER", lit.data.num);
+        printf ("%d : Truncated NUMBER", (int) lit.data.num);
       }
       break;
     }
@@ -81,10 +81,10 @@ dump_literal (literal lit)
 void
 pp_literals (const literal lits[], literal_index_t size)
 {
-  printf ("LITERALS %d:\n", size);
+  printf ("LITERALS %lu:\n", (unsigned long) size);
   for (literal_index_t i = 0; i < size; i++)
   {
-    printf ("%3d ", i);
+    printf ("%3lu ", (unsigned long) i);
     dump_literal (lits[i]);
     putchar ('\n');
   }

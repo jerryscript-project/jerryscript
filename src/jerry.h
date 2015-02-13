@@ -16,7 +16,8 @@
 #ifndef JERRY_H
 #define JERRY_H
 
-#include "jrt_types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 /** \addtogroup jerry Jerry engine interface
  * @{

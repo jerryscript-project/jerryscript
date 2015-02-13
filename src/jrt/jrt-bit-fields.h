@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 #ifndef JERRY_BIT_FIELDS_H
 #define JERRY_BIT_FIELDS_H
 
-extern uint64_t __attribute_const__ jrt_extract_bit_field (uint64_t value, uint32_t lsb,
+extern uint64_t __attr_const___ jrt_extract_bit_field (uint64_t value, uint32_t lsb,
                                                            uint32_t width);
-extern uint64_t __attribute_const__ jrt_set_bit_field_value (uint64_t value, uint64_t bit_field_value,
+extern uint64_t __attr_const___ jrt_set_bit_field_value (uint64_t value, uint64_t bit_field_value,
                                                              uint32_t lsb, uint32_t width);
 
 #endif /* !JERRY_BIT_FIELDS_H */

@@ -41,8 +41,8 @@ uint8_t test_pool [TEST_POOL_SPACE_SIZE] __attribute__((aligned(MEM_ALIGNMENT)))
 uint8_t* ptrs[test_max_sub_iters];
 
 int
-main( int __unused argc,
-      char __unused **argv)
+main( int __attr_unused___ argc,
+      char __attr_unused___ **argv)
 {
     srand((unsigned int) time(NULL));
     int k = rand();

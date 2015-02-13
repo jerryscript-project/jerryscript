@@ -14,7 +14,7 @@
  */
 
 #include "mem-allocator.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "lexer.h"
 #include "parser.h"
 #include "stack.h"

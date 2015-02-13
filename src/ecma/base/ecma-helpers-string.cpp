@@ -27,7 +27,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "vm.h"
 
 /**
@@ -987,7 +987,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
  * @return true - if strings are equal;
  *         false - otherwise.
  */
-static bool __noinline
+static bool __attr_noinline___
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
                                     const ecma_string_t *string2_p) /* ecma-string */
 {

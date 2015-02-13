@@ -24,8 +24,8 @@
  * Unit test's main function.
  */
 int
-main( int __unused argc,
-      char __unused **argv)
+main( int __attr_unused___ argc,
+      char __attr_unused___ **argv)
 {
   const ecma_char_t* zt_strings[] =
   {

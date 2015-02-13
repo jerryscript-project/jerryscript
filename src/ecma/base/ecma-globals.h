@@ -284,7 +284,7 @@ typedef struct ecma_property_t
   union
   {
     /** Description of named data property */
-    struct __packed ecma_named_data_property_t
+    struct __attr_packed___ ecma_named_data_property_t
     {
       /** Compressed pointer to property's name (pointer to String) */
       unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
@@ -306,7 +306,7 @@ typedef struct ecma_property_t
     } named_data_property;
 
     /** Description of named accessor property */
-    struct __packed ecma_named_accessor_property_t
+    struct __attr_packed___ ecma_named_accessor_property_t
     {
       /** Compressed pointer to property's name (pointer to String) */
       unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
@@ -328,7 +328,7 @@ typedef struct ecma_property_t
     } named_accessor_property;
 
     /** Description of internal property */
-    struct __packed ecma_internal_property_t
+    struct __attr_packed___ ecma_internal_property_t
     {
       /** Internal property's type */
       unsigned int type : ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH;

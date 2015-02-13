@@ -15,7 +15,7 @@
 
 #include "lit-id-hash-table.h"
 #include "mem-heap.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "bytecode-data.h"
 
 lit_id_hash_table *

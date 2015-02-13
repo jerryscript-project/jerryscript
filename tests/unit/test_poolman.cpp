@@ -41,8 +41,8 @@ const uint32_t test_max_sub_iters = 32;
 uint8_t *ptrs[test_max_sub_iters];
 
 int
-main( int __unused argc,
-      char __unused **argv)
+main( int __attr_unused___ argc,
+      char __attr_unused___ **argv)
 {
   mem_init();
 

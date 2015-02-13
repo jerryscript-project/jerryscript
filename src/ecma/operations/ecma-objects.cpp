@@ -83,7 +83,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-static __noinline ecma_property_t*
+static __attr_noinline___ ecma_property_t*
 ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object */
                                           ecma_string_t *property_name_p) /**< property name */
 {

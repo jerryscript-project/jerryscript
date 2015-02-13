@@ -18,7 +18,7 @@
 
 #include "opcodes.h"
 #include "stack.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "literal.h"
 #include "scopes-tree.h"
 #include "lit-id-hash-table.h"

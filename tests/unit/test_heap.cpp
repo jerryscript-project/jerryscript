@@ -83,8 +83,8 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
 } /* test_heap_give_some_memory_back */
 
 int
-main( int __unused argc,
-      char __unused **argv)
+main( int __attr_unused___ argc,
+      char __attr_unused___ **argv)
 {
     uint8_t test_native_heap[test_heap_size];
 

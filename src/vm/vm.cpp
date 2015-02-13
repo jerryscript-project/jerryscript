@@ -23,7 +23,7 @@
 #include "ecma-stack.h"
 #include "jrt.h"
 #include "vm.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 
 #define __INIT_OP_FUNC(name, arg1, arg2, arg3) [ __op__idx_##name ] = opfunc_##name,
@@ -133,10 +133,10 @@ interp_mem_stats_context_enter (int_data_t *int_data_p,
           "%s Pools:                 %5u\n"
           "%s Allocated pool chunks: %5u\n\n",
           indent_prefix, (uint32_t) block_position,
-          indent_prefix, int_data_p->heap_stats_context_enter.allocated_bytes,
-          indent_prefix, int_data_p->heap_stats_context_enter.waste_bytes,
-          indent_prefix, int_data_p->pools_stats_context_enter.pools_count,
-          indent_prefix, int_data_p->pools_stats_context_enter.allocated_chunks);
+          indent_prefix, (uint32_t) int_data_p->heap_stats_context_enter.allocated_bytes,
+          indent_prefix, (uint32_t) int_data_p->heap_stats_context_enter.waste_bytes,
+          indent_prefix, (uint32_t) int_data_p->pools_stats_context_enter.pools_count,
+          indent_prefix, (uint32_t) int_data_p->pools_stats_context_enter.allocated_chunks);
 }
 
 static void
@@ -174,35 +174,36 @@ interp_mem_stats_context_exit (int_data_t *int_data_p,
 
   printf ("%sAllocated heap bytes in the context:  %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
-          int_data_p->heap_stats_context_enter.allocated_bytes,
-          heap_stats_context_exit.allocated_bytes,
-          heap_stats_context_exit.allocated_bytes - int_data_p->heap_stats_context_enter.allocated_bytes,
-          int_data_p->context_peak_allocated_heap_bytes,
-          heap_stats_context_exit.global_peak_allocated_bytes);
+          (uint32_t) int_data_p->heap_stats_context_enter.allocated_bytes,
+          (uint32_t) heap_stats_context_exit.allocated_bytes,
+          (uint32_t) (heap_stats_context_exit.allocated_bytes - int_data_p->heap_stats_context_enter.allocated_bytes),
+          (uint32_t) int_data_p->context_peak_allocated_heap_bytes,
+          (uint32_t) heap_stats_context_exit.global_peak_allocated_bytes);
 
   printf ("%sWaste heap bytes in the context:      %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
-          int_data_p->heap_stats_context_enter.waste_bytes,
-          heap_stats_context_exit.waste_bytes,
-          heap_stats_context_exit.waste_bytes - int_data_p->heap_stats_context_enter.waste_bytes,
-          int_data_p->context_peak_waste_heap_bytes,
-          heap_stats_context_exit.global_peak_waste_bytes);
+          (uint32_t) int_data_p->heap_stats_context_enter.waste_bytes,
+          (uint32_t) heap_stats_context_exit.waste_bytes,
+          (uint32_t) (heap_stats_context_exit.waste_bytes - int_data_p->heap_stats_context_enter.waste_bytes),
+          (uint32_t) int_data_p->context_peak_waste_heap_bytes,
+          (uint32_t) heap_stats_context_exit.global_peak_waste_bytes);
 
   printf ("%sPools count in the context:           %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
-          int_data_p->pools_stats_context_enter.pools_count,
-          pools_stats_context_exit.pools_count,
-          pools_stats_context_exit.pools_count - int_data_p->pools_stats_context_enter.pools_count,
-          int_data_p->context_peak_pools_count,
-          pools_stats_context_exit.global_peak_pools_count);
+          (uint32_t) int_data_p->pools_stats_context_enter.pools_count,
+          (uint32_t) pools_stats_context_exit.pools_count,
+          (uint32_t) (pools_stats_context_exit.pools_count - int_data_p->pools_stats_context_enter.pools_count),
+          (uint32_t) int_data_p->context_peak_pools_count,
+          (uint32_t) pools_stats_context_exit.global_peak_pools_count);
 
   printf ("%sAllocated pool chunks in the context: %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
-          int_data_p->pools_stats_context_enter.allocated_chunks,
-          pools_stats_context_exit.allocated_chunks,
-          pools_stats_context_exit.allocated_chunks - int_data_p->pools_stats_context_enter.allocated_chunks,
-          int_data_p->context_peak_allocated_pool_chunks,
-          pools_stats_context_exit.global_peak_allocated_chunks);
+          (uint32_t) int_data_p->pools_stats_context_enter.allocated_chunks,
+          (uint32_t) pools_stats_context_exit.allocated_chunks,
+          (uint32_t) (pools_stats_context_exit.allocated_chunks -
+                      int_data_p->pools_stats_context_enter.allocated_chunks),
+          (uint32_t) int_data_p->context_peak_allocated_pool_chunks,
+          (uint32_t) pools_stats_context_exit.global_peak_allocated_chunks);
 
   printf ("\n%s--- End of interpretation of a block at position %u ---\n\n",
           indent_prefix, (uint32_t) block_position);
@@ -279,47 +280,47 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
 
   printf ("%s Allocated heap bytes:  %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
-          heap_stats_before_p->allocated_bytes,
-          heap_stats_after.allocated_bytes,
-          heap_stats_after.allocated_bytes - heap_stats_before_p->allocated_bytes,
-          heap_stats_after.peak_allocated_bytes - JERRY_MAX (heap_stats_before_p->allocated_bytes,
-                                                             heap_stats_after.allocated_bytes),
-          heap_stats_after.global_peak_allocated_bytes);
+          (uint32_t) heap_stats_before_p->allocated_bytes,
+          (uint32_t) heap_stats_after.allocated_bytes,
+          (uint32_t) (heap_stats_after.allocated_bytes - heap_stats_before_p->allocated_bytes),
+          (uint32_t) (heap_stats_after.peak_allocated_bytes - JERRY_MAX (heap_stats_before_p->allocated_bytes,
+                                                                         heap_stats_after.allocated_bytes)),
+          (uint32_t) heap_stats_after.global_peak_allocated_bytes);
 
   if (heap_stats_before_p->waste_bytes != heap_stats_after.waste_bytes)
   {
     printf ("%s Waste heap bytes:      %5u -> %5u (%+5d, local %5u, peak %5u)\n",
             indent_prefix,
-            heap_stats_before_p->waste_bytes,
-            heap_stats_after.waste_bytes,
-            heap_stats_after.waste_bytes - heap_stats_before_p->waste_bytes,
-            heap_stats_after.peak_waste_bytes - JERRY_MAX (heap_stats_before_p->waste_bytes,
-                                                           heap_stats_after.waste_bytes),
-            heap_stats_after.global_peak_waste_bytes);
+            (uint32_t) heap_stats_before_p->waste_bytes,
+            (uint32_t) heap_stats_after.waste_bytes,
+            (uint32_t) (heap_stats_after.waste_bytes - heap_stats_before_p->waste_bytes),
+            (uint32_t) (heap_stats_after.peak_waste_bytes - JERRY_MAX (heap_stats_before_p->waste_bytes,
+                                                                       heap_stats_after.waste_bytes)),
+            (uint32_t) heap_stats_after.global_peak_waste_bytes);
   }
 
   if (pools_stats_before_p->pools_count != pools_stats_after.pools_count)
   {
     printf ("%s Pools:                 %5u -> %5u (%+5d, local %5u, peak %5u)\n",
             indent_prefix,
-            pools_stats_before_p->pools_count,
-            pools_stats_after.pools_count,
-            pools_stats_after.pools_count - pools_stats_before_p->pools_count,
-            pools_stats_after.peak_pools_count - JERRY_MAX (pools_stats_before_p->pools_count,
-                                                            pools_stats_after.pools_count),
-            pools_stats_after.global_peak_pools_count);
+            (uint32_t) pools_stats_before_p->pools_count,
+            (uint32_t) pools_stats_after.pools_count,
+            (uint32_t) (pools_stats_after.pools_count - pools_stats_before_p->pools_count),
+            (uint32_t) (pools_stats_after.peak_pools_count - JERRY_MAX (pools_stats_before_p->pools_count,
+                                                                        pools_stats_after.pools_count)),
+            (uint32_t) pools_stats_after.global_peak_pools_count);
   }
 
   if (pools_stats_before_p->allocated_chunks != pools_stats_after.allocated_chunks)
   {
     printf ("%s Allocated pool chunks: %5u -> %5u (%+5d, local %5u, peak %5u)\n",
             indent_prefix,
-            pools_stats_before_p->allocated_chunks,
-            pools_stats_after.allocated_chunks,
-            pools_stats_after.allocated_chunks - pools_stats_before_p->allocated_chunks,
-            pools_stats_after.peak_allocated_chunks - JERRY_MAX (pools_stats_before_p->allocated_chunks,
-                                                                 pools_stats_after.allocated_chunks),
-            pools_stats_after.global_peak_allocated_chunks);
+            (uint32_t) pools_stats_before_p->allocated_chunks,
+            (uint32_t) pools_stats_after.allocated_chunks,
+            (uint32_t) (pools_stats_after.allocated_chunks - pools_stats_before_p->allocated_chunks),
+            (uint32_t) (pools_stats_after.peak_allocated_chunks - JERRY_MAX (pools_stats_before_p->allocated_chunks,
+                                                                             pools_stats_after.allocated_chunks)),
+            (uint32_t) pools_stats_after.global_peak_allocated_chunks);
   }
 
   printf ("%s-- End of execution of opcode %s (position %u) --\n\n",

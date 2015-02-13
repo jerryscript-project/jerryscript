@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,22 @@
  * Jerry libc platform-specific functions stm32f4 implementation
  */
 
-#include "jerry-libc.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <stdarg.h>
-
-extern void __noreturn exit (int status);
+#include "jerry-libc-defs.h"
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int
-putchar (int c)
+putchar (int c __attr_unused___)
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS("putchar is not implemented for STM32F3.", c);
+  return 1;
 } /* putchar */
 
 /** exit - cause normal process termination  */
-void __noreturn __used
-exit (int status __unused)
+void __attr_noreturn___ __attr_used___
+exit (int status __attr_unused___)
 {
-  /**
-   * TODO: Blink LEDs? status -> binary -> LEDs?
-   */
-
   while (true)
   {
   }
@@ -49,11 +44,11 @@ exit (int status __unused)
  * @return number of bytes written
  */
 size_t
-fwrite (const void *ptr, /**< data to write */
-         size_t size, /**< size of elements to write */
-         size_t nmemb, /**< number of elements */
-         _FILE *stream) /**< stream pointer */
+fwrite (const void *ptr __attr_unused___, /**< data to write */
+        size_t size, /**< size of elements to write */
+        size_t nmemb, /**< number of elements */
+        FILE *stream __attr_unused___) /**< stream pointer */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS("fwrite is not implemented for STM32F3.", ptr, size, nmemb, stream);
+  return size * nmemb;
 } /* fwrite */
 

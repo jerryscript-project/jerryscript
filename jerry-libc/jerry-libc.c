@@ -17,23 +17,21 @@
  * Jerry libc's common functions implementation
  */
 
-#include "jerry-libc.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "jerry-libc-defs.h"
 
 /**
- * Unreachable stubs for routines that are never called,
- * but referenced from third-party libraries.
+ * Standard file descriptors
  */
-#define JRT_UNREACHABLE_STUB_FOR(...) \
-  extern "C" __VA_ARGS__; \
-__used __VA_ARGS__ \
-{ \
-  JERRY_UNREACHABLE (); \
-}
+FILE *stdin  = (FILE*) 0;
+FILE *stdout = (FILE*) 1;
+FILE *stderr = (FILE*) 2;
 
-JRT_UNREACHABLE_STUB_FOR(void abort (void))
-JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
-
-#undef JRT_UNREACHABLE_STUB_FOR
+LIBC_UNREACHABLE_STUB_FOR(void abort (void))
 
 #ifdef __GNUC__
 /*
@@ -42,6 +40,8 @@ JRT_UNREACHABLE_STUB_FOR(int raise (int sig_no __unused))
  *   - memset  -> call to memset;
  *   - memmove -> call to memmove.
  */
+#define CALL_PRAGMA(x) _Pragma (#x)
+
 CALL_PRAGMA(GCC diagnostic push)
 CALL_PRAGMA(GCC diagnostic ignored "-Wpragmas")
 CALL_PRAGMA(GCC push_options)
@@ -53,7 +53,7 @@ CALL_PRAGMA(GCC optimize ("-fno-tree-loop-distribute-patterns"))
  *
  * @return @s
  */
-void*
+void* __attr_used___ // FIXME
 memset (void *s,  /**< area to set values in */
         int c,    /**< value to set */
         size_t n) /**< area size */
@@ -119,7 +119,7 @@ memcpy (void *s1, /**< destination */
  *
  * @return the dest pointer's value
  */
-void *
+void * __attr_used___ // FIXME
 memmove (void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
@@ -233,7 +233,7 @@ strncmp (const char *s1, const char *s2, size_t n)
 /** Copy a string. At most n bytes of src are copied.  Warning: If there is no
      null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
      @return a pointer to the destination string dest.  */
-char *
+char * __attr_used___ // FIXME
 strncpy (char *dest, const char *src, size_t n)
 {
   size_t i;

@@ -22,7 +22,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 /*
  * \addtogroup ecmahelpersbigintegers Helpers for operations intermediate 128-bit integers

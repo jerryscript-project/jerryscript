@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef SENSORS_H
-#define SENSORS_H
+#include "actuators.h"
+#include "common-io.h"
+#include "init.h"
 
-#include "jrt.h"
-
-#endif /* SENSORS_H */
+void
+plugin_device_stm_init (void)
+{
+#if defined (__TARGET_MCU_STM32F3) || defined (__TARGET_MCU_STM32F4)
+  initialize_sys_tick ();
+  initialize_leds ();
+  initialize_timer ();
+#endif /* __TARGET_MCU_STM32F3 || __TARGET_MCU_STM32F4 */
+} /* plugin_device_stm_init */

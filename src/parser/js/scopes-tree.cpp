@@ -15,7 +15,7 @@
 
 #include "scopes-tree.h"
 #include "mem-heap.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "lexer.h"
 #include "bytecode-data.h"
 

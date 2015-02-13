@@ -15,7 +15,7 @@
 
 #include "array-list.h"
 #include "mem-heap.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 #define ARRAY_LIST_MAGIC 0x39
 

@@ -22,32 +22,26 @@
 /**
  * Attributes
  */
-#define __unused __attribute__((unused))
-#define __used __attribute__((used))
-#define __packed __attribute__((packed))
+#define __attr_unused___ __attribute__((unused))
+#define __attr_used___ __attribute__((used))
+#define __attr_packed___ __attribute__((packed))
 #define __noreturn __attribute__((noreturn))
-#define __noinline __attribute__((noinline))
-#define __used __attribute__((used))
-#ifndef __attribute_always_inline__
-# define __attribute_always_inline__ __attribute__((always_inline))
-#endif /* !__attribute_always_inline__ */
-#ifndef __attribute_const__
-# define __attribute_const__ __attribute__((const))
-#endif /* !__attribute_const__ */
-#ifndef __attribute_pure__
-# define __attribute_pure__ __attribute__((pure))
-#endif /* !__attribute_pure__ */
+#define __attr_noinline___ __attribute__((noinline))
+#define __attr_used___ __attribute__((used))
+#ifndef __attr_always_inline___
+# define __attr_always_inline___ __attribute__((always_inline))
+#endif /* !__attr_always_inline___ */
+#ifndef __attr_const___
+# define __attr_const___ __attribute__((const))
+#endif /* !__attr_const___ */
+#ifndef __attr_pure___
+# define __attr_pure___ __attribute__((pure))
+#endif /* !__attr_pure___ */
 
 /**
  * Constants
  */
 #define JERRY_BITSINBYTE 8
-
-/**
- * Standalone Jerry exit codes
- */
-#define JERRY_STANDALONE_EXIT_CODE_OK   (0)
-#define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 /**
  * Asserts
@@ -61,7 +55,7 @@
 #define JERRY_STATIC_ASSERT_GLUE(a, b) JERRY_STATIC_ASSERT_GLUE_ (a, b)
 #define JERRY_STATIC_ASSERT(x) \
   typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__) \
-  [ (x) ? 1 : -1 ] __unused
+  [ (x) ? 1 : -1 ] __attr_unused___
 
 #define CALL_PRAGMA(x) _Pragma (#x)
 

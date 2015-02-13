@@ -15,34 +15,43 @@
 
 #pragma GCC optimize "O0"
 
+#include <stdio.h>
+
 #include "actuators.h"
 #include "common-io.h"
-#include "jerry-libc.h"
 
 #include "mcu-headers.h"
 
 int
-digital_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
+digital_read (uint32_t arg1, uint32_t arg2)
 {
-  JERRY_UNIMPLEMENTED ("Digital read operation is not implemented.");
+  (void) arg1;
+  (void) arg2;
+
+  return 0;
 }
 
 void
-digital_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
+digital_write (uint32_t arg1, uint32_t arg2)
 {
-  JERRY_UNIMPLEMENTED ("Digital write operation is not implemented.");
+  (void) arg1;
+  (void) arg2;
 }
 
 int
-analog_read (uint32_t arg1 __unused, uint32_t arg2 __unused)
+analog_read (uint32_t arg1, uint32_t arg2)
 {
-  JERRY_UNIMPLEMENTED ("Analog read operation is not implemented.");
+  (void) arg1;
+  (void) arg2;
+
+  return 0;
 }
 
 void
-analog_write (uint32_t arg1 __unused, uint32_t arg2 __unused)
+analog_write (uint32_t arg1, uint32_t arg2)
 {
-  JERRY_UNIMPLEMENTED ("Analog write operation is not implemented.");
+  (void) arg1;
+  (void) arg2;
 }
 
 #ifdef __TARGET_HOST

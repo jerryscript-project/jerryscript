@@ -15,34 +15,22 @@
 
 #include "jerry.h"
 
-#include "common-io.h"
-#include "actuators.h"
-#include "sensors.h"
+/**
+ * Standalone Jerry exit codes
+ */
+#define JERRY_STANDALONE_EXIT_CODE_OK   (0)
+#define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 #include JERRY_MCU_SCRIPT_HEADER
 static const char generated_source [] = JERRY_MCU_SCRIPT;
 
-static uint32_t start __unused;
-static uint32_t finish_native_ms __unused;
-static uint32_t finish_parse_ms __unused;
-static uint32_t finish_int_ms __unused;
-
 int
 main (void)
 {
-  initialize_sys_tick ();
-  initialize_leds ();
-  initialize_timer ();
-
   const char *source_p = generated_source;
   const size_t source_size = sizeof (generated_source);
 
-  set_sys_tick_counter ((uint32_t) - 1);
-  start = get_sys_tick_counter ();
-
   jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, JERRY_FLAG_EMPTY);
-
-  finish_parse_ms = (start - get_sys_tick_counter ()) / 1000;
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {

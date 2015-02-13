@@ -231,8 +231,8 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
-                   int_data_t *int_data __unused) /**< interpreter context */
+opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
+                   int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.instanceof.dst;
   const idx_t left_var_idx = opdata.data.instanceof.var_left;
@@ -277,8 +277,8 @@ opfunc_instanceof (opcode_t opdata __unused, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_in (opcode_t opdata __unused, /**< operation data */
-           int_data_t *int_data __unused) /**< interpreter context */
+opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
+           int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.in.dst;
   const idx_t left_var_idx = opdata.data.in.var_left;

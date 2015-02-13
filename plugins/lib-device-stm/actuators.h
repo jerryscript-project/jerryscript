@@ -16,7 +16,7 @@
 #ifndef ACTUATORS_H
 #define ACTUATORS_H
 
-#include "jrt.h"
+#include <stdint.h>
 
 void led_toggle (uint32_t);
 void led_on (uint32_t);

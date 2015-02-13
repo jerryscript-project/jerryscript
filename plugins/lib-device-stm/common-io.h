@@ -16,7 +16,7 @@
 #ifndef COMMON_IO_H
 #define COMMON_IO_H
 
-#include "jrt.h"
+#include <stdint.h>
 
 int digital_read (uint32_t, uint32_t);
 void digital_write (uint32_t, uint32_t);

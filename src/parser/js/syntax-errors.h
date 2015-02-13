@@ -30,13 +30,13 @@
     putchar (' '); \
   } \
   printf ("^\n"); \
-  printf ("ERROR: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+  printf ("ERROR: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
   jerry_fatal (ERR_PARSER); \
 } while (0)
 #define PARSE_WARN(MESSAGE, LOCUS) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
-  printf ("WARNING: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+  printf ("WARNING: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
   size_t line, column; \
@@ -47,7 +47,7 @@
     putchar (' '); \
   } \
   printf ("^\n"); \
-  printf ("ERROR: Ln %d, Col %d: ", line + 1, column + 1); \
+  printf ("ERROR: Ln %lu, Col %lu: ", (unsigned long) (line + 1), (unsigned long) (column + 1)); \
   printf (MESSAGE, __VA_ARGS__); \
   printf ("\n"); \
   jerry_fatal (ERR_PARSER); \
@@ -61,7 +61,7 @@
     putchar (' '); \
   } \
     printf ("^\n"); \
-  printf ("SORRY, Unimplemented: Ln %d, Col %d: %s\n", line + 1, column + 1, MESSAGE); \
+  printf ("SORRY, Unimplemented: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
   JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #else /* JERRY_NDEBUG */

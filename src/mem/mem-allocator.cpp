@@ -18,7 +18,7 @@
  */
 
 #include "jrt.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-heap.h"
 #include "mem-poolman.h"

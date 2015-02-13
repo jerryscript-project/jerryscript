@@ -21,10 +21,7 @@
 
 #include "opcodes-native-call.h"
 
-#include "actuators.h"
-#include "common-io.h"
-#include "sensors.h"
-#include "jerry-libc.h"
+#include "jrt-libc-includes.h"
 
 /**
  * 'Native call' opcode handler.
@@ -60,54 +57,12 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
     switch ((opcode_native_call_t)native_call_id_idx)
     {
       case OPCODE_NATIVE_CALL_LED_TOGGLE:
-      {
-        JERRY_ASSERT (args_number == 1);
-        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
-        uint32_t int_num = ecma_number_to_uint32 (*num_p);
-        led_toggle (int_num);
-
-        ret_value = ecma_make_empty_completion_value ();
-        break;
-      }
       case OPCODE_NATIVE_CALL_LED_ON:
-      {
-        JERRY_ASSERT (args_number == 1);
-        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
-        uint32_t int_num = ecma_number_to_uint32 (*num_p);
-        led_on (int_num);
-
-        ret_value = ecma_make_empty_completion_value ();
-        break;
-      }
       case OPCODE_NATIVE_CALL_LED_OFF:
-      {
-        JERRY_ASSERT (args_number == 1);
-        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
-        uint32_t int_num = ecma_number_to_uint32 (*num_p);
-        led_off (int_num);
-
-        ret_value = ecma_make_empty_completion_value ();
-        break;
-      }
       case OPCODE_NATIVE_CALL_LED_ONCE:
-      {
-        JERRY_ASSERT (args_number == 1);
-        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
-        uint32_t int_num = ecma_number_to_uint32 (*num_p);
-        led_blink_once (int_num);
-
-        ret_value = ecma_make_empty_completion_value ();
-        break;
-      }
       case OPCODE_NATIVE_CALL_WAIT:
       {
-        JERRY_ASSERT (args_number == 1);
-        ecma_number_t* num_p = ecma_get_number_from_value (arg_values[0]);
-        uint32_t int_num = ecma_number_to_uint32 (*num_p);
-        wait_ms (int_num);
-
-        ret_value = ecma_make_empty_completion_value ();
-        break;
+        JERRY_UNIMPLEMENTED ("Device operations are not implemented.");
       }
 
       case OPCODE_NATIVE_CALL_PRINT:

@@ -98,7 +98,7 @@ ecma_builtin_global_object_parse_float (const ecma_value_t& this_arg, /**< this 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __unused, /**< this argument */
+ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __attr_unused___, /**< this argument */
                                    const ecma_value_t& arg) /**< routine's first argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -125,7 +125,7 @@ ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __unused, /**< t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __unused, /**< this argument */
+ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __attr_unused___, /**< this argument */
                                       const ecma_value_t& arg) /**< routine's first argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();

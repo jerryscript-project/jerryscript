@@ -175,10 +175,10 @@ add_current_token_to_string_cache (void)
                                                              + ((size_t) length + 1) * sizeof (ecma_char_t));
     ecma_char_t *temp = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size,
                                                               MEM_HEAP_ALLOC_SHORT_TERM);
-    memcpy (temp, strings_cache, strings_cache_used_size);
-    STACK_ITERATE_VARG_SET (literals, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
     if (strings_cache)
     {
+      memcpy (temp, strings_cache, strings_cache_used_size);
+      STACK_ITERATE_VARG_SET (literals, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
       mem_heap_free_block ((uint8_t *) strings_cache);
     }
     strings_cache = temp;

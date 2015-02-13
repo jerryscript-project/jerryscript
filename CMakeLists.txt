@@ -273,10 +273,12 @@ project (Jerry CXX C ASM)
                       DEPENDS ${TARGET_NAME}.bin)
    endif()
 
-   if(${STRIP_RELEASE_BINARY} STREQUAL "ON")
-    add_custom_command(TARGET ${TARGET_NAME}
-                       POST_BUILD
-                       COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>)
+   if("${BUILD_MODE}" STREQUAL "RELEASE")
+    if(${STRIP_RELEASE_BINARY} STREQUAL "ON")
+     add_custom_command(TARGET ${TARGET_NAME}
+                        POST_BUILD
+                        COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>)
+    endif()
    endif()
   endfunction()
 

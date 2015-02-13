@@ -183,14 +183,14 @@ project (Jerry CXX C ASM)
  # Platform-specific
   # Jerry standalone
    # Linux
-    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main_linux.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-linux.cpp)
 
    # MCU
     # stm32f3
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main_mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main-mcu.cpp)
 
     # stm32f4
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main_mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main-mcu.cpp)
 
  # Unit tests main modules
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)

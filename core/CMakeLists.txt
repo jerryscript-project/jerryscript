@@ -77,15 +77,15 @@ project (JerryCore CXX C ASM)
 
 # Include directories
  set(INCLUDE_CORE
-     ${CMAKE_SOURCE_DIR}/src
-     ${CMAKE_SOURCE_DIR}/src/mem
-     ${CMAKE_SOURCE_DIR}/src/vm
-     ${CMAKE_SOURCE_DIR}/src/ecma/builtin-objects
-     ${CMAKE_SOURCE_DIR}/src/ecma/base
-     ${CMAKE_SOURCE_DIR}/src/ecma/operations
-     ${CMAKE_SOURCE_DIR}/src/parser/collections
-     ${CMAKE_SOURCE_DIR}/src/parser/js
-     ${CMAKE_SOURCE_DIR}/src/jrt)
+     ${CMAKE_SOURCE_DIR}/core
+     ${CMAKE_SOURCE_DIR}/core/mem
+     ${CMAKE_SOURCE_DIR}/core/vm
+     ${CMAKE_SOURCE_DIR}/core/ecma/builtin-objects
+     ${CMAKE_SOURCE_DIR}/core/ecma/base
+     ${CMAKE_SOURCE_DIR}/core/ecma/operations
+     ${CMAKE_SOURCE_DIR}/core/parser/collections
+     ${CMAKE_SOURCE_DIR}/core/parser/js
+     ${CMAKE_SOURCE_DIR}/core/jrt)
 
  # Third-party
   # Valgrind

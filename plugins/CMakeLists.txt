@@ -36,7 +36,6 @@ project (Jerry_Plugins CXX ASM)
 
 # Include directories
  set(INCLUDE_PLUGINS
-     ${CMAKE_SOURCE_DIR}/src
      lib-device-stm)
 
  # Third-party

@@ -177,20 +177,20 @@ project (Jerry CXX C ASM)
 
 # Include directories
  set(INCLUDE_CORE
-     ${CMAKE_SOURCE_DIR}/src)
+     ${CMAKE_SOURCE_DIR}/core)
 
 # Sources
  # Platform-specific
   # Jerry standalone
    # Linux
-    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX src/main_linux.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main_linux.cpp)
 
    # MCU
     # stm32f3
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 src/main_mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main_mcu.cpp)
 
     # stm32f4
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 src/main_mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main_mcu.cpp)
 
  # Unit tests main modules
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
@@ -218,7 +218,7 @@ project (Jerry CXX C ASM)
 
 # Component targets
  # Jerry's Core
-  add_subdirectory(src)
+  add_subdirectory(core)
 
  # Jerry's libc
   add_subdirectory(jerry-libc)

@@ -137,7 +137,7 @@ main (int argc,
       printf ("Branch name:\t%s\n", jerry_branch_name);
       printf ("\n");
     }
-    if (!strcmp ("--mem-stats", argv[i]))
+    else if (!strcmp ("--mem-stats", argv[i]))
     {
 #ifdef MEM_STATS
       flags |= JERRY_FLAG_MEM_STATS;

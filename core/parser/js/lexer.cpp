@@ -1432,7 +1432,14 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   empty_token.loc = 0;
 
   saved_token = prev_token = sent_token = empty_token;
+
+#ifndef JERRY_NDEBUG
   allow_dump_lines = show_opcodes;
+#else /* JERRY_NDEBUG */
+  (void) show_opcodes;
+  allow_dump_lines = false;
+#endif /* JERRY_NDEBUG */
+
   buffer_size = source_size;
   lexer_set_source (source);
   strings_cache = NULL;

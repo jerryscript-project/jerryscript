@@ -17,7 +17,7 @@
 #define JERRY_GLOBALS_H
 
 #include "jerry.h"
-#include "jrt_types.h"
+#include "jrt-types.h"
 
 /**
  * Attributes

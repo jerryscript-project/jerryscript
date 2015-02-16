@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+#include <string.h>
+
 #include "jrt.h"
 #include "mem-allocator.h"
 #include "opcodes.h"
 #include "deserializer.h"
 #include "common.h"
 #include "parser.h"
-#include "jerry-libc.h"
 
 /**
  * Unit test's main function.

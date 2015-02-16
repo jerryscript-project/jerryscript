@@ -41,6 +41,9 @@ project (JerryCore CXX C ASM)
  
   # Release
    set(DEFINES_JERRY_RELEASE JERRY_NDEBUG)
+
+  # Unit tests
+   set(DEFINES_JERRY_UNITTESTS )
  
  # Modifiers
   # Full profile
@@ -139,6 +142,11 @@ project (JerryCore CXX C ASM)
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
    target_compile_definitions(${TARGET_NAME}.jerry-core PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_CORE})
+
+   if("${BUILD_MODE}" STREQUAL "UNITTESTS")
+    target_compile_definitions(${TARGET_NAME}.jerry-core INTERFACE ${DEFINES_JERRY})
+    target_include_directories(${TARGET_NAME}.jerry-core INTERFACE ${INCLUDE_CORE})
+   endif()
   endfunction()
 
   foreach(MODIFIERS_LIST ${MODIFIERS_LISTS})
@@ -148,6 +156,7 @@ project (JerryCore CXX C ASM)
   endforeach()
  endfunction()
 
- foreach(BUILD_MODE ${BUILD_MODES})
-  declare_targets_for_build_mode(${BUILD_MODE})
- endforeach()
+ declare_targets_for_build_mode(DEBUG)
+ declare_targets_for_build_mode(RELEASE)
+ declare_targets_for_build_mode(UNITTESTS)
+

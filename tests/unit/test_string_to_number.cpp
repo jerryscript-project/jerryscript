@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt.h"
-#include "jerry-libc.h"
-
-#include <math.h>
 
 /**
  * Unit test's main function.
@@ -51,24 +50,24 @@ main( int __attr_unused___ argc,
 
   const ecma_number_t nums[] =
   {
-    1.0,
-    0.5,
-    12345.0,
-    1.0e-45,
-    -2.5e+38,
-    -2.5e+38,
-    NAN,
-    NAN,
-    NAN,
-    NAN,
-    NAN,
-    NAN,
-    NAN,
-    NAN,
-    INFINITY,
-    -INFINITY,
-    +0.0,
-    -0.0
+    (ecma_number_t) 1.0,
+    (ecma_number_t) 0.5,
+    (ecma_number_t) 12345.0,
+    (ecma_number_t) 1.0e-45,
+    (ecma_number_t) -2.5e+38,
+    (ecma_number_t) -2.5e+38,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) NAN,
+    (ecma_number_t) INFINITY,
+    (ecma_number_t) -INFINITY,
+    (ecma_number_t) +0.0,
+    (ecma_number_t) -0.0
   };
 
   for (uint32_t i = 0;

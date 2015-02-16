@@ -146,6 +146,5 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
   endforeach()
  endfunction()
 
- foreach(BUILD_MODE ${BUILD_MODES})
-  declare_targets_for_build_mode(${BUILD_MODE})
- endforeach()
+ declare_targets_for_build_mode(DEBUG)
+ declare_targets_for_build_mode(RELEASE)

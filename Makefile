@@ -29,9 +29,7 @@
 #        For list of modifiers for PC target - see TARGET_PC_MODS, for MCU target - TARGET_MCU_MODS.
 #
 #    Target action part (optional, after second dot):
-#       check - run cppcheck on src folder, unit and other tests
 #       flash - flash specified mcu target binary
-#
 #
 #   Unit test target: unittests_run
 #
@@ -93,7 +91,7 @@ export SHELL=/bin/bash
   BUILD_DIRS_STM32F4 := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/stm32f4)
 
  # All together
- BUILD_DIRS_ALL := $(BUILD_DIRS_NATIVE) $(BUILD_DIRS_STM32F3) $(BUILD_DIRS_STM32F4)
+  BUILD_DIRS_ALL := $(BUILD_DIRS_NATIVE) $(BUILD_DIRS_STM32F3) $(BUILD_DIRS_STM32F4)
 
  # Current
   BUILD_DIR := ./build/obj$(OPTIONS_STRING)
@@ -142,7 +140,7 @@ $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 	@ cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
 	@ cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
 
-build: $(JERRY_TARGETS) # unittests
+build: $(JERRY_TARGETS) unittests
 
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
 	@$(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
@@ -167,10 +165,10 @@ precommit: clean
 	@ echo -e "\nBuilding...\n\n"
 	@ $(MAKE) build
 	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
-	@ #echo -e "All targets were built successfully. Starting unit tests' run.\n"
-	@ #$(MAKE) unittests_run TESTS_OPTS="--silent"
-	@ #echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
-	@ #echo -e "All targets were built successfully. Starting parse-only testing.\n"
+	@ echo -e "All targets were built successfully. Starting unit tests' run.\n"
+	@ $(MAKE) unittests_run TESTS_OPTS="--silent"
+	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
+	@ echo -e "All targets were built successfully. Starting parse-only testing.\n"
 	@ # Parse-only testing
 	@ for path in "./tests/jerry" "./tests/benchmarks/jerry"; \
           do \
@@ -221,10 +219,10 @@ precommit: clean
             done
 	@ echo -e "Full testing completed successfully\n\n================\n\n"
 
-#unittests_run: unittests
-#	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
+unittests_run: unittests
+	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
 
 clean:
-	@ rm -rf $(BUILD_DIRS_ALL) $(OUT_DIR)
+	@ rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
 .PHONY: clean build unittests_run $(JERRY_TARGETS) $(FLASH_TARGETS)

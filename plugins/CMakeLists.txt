@@ -106,6 +106,5 @@ project (Jerry_Plugins CXX ASM)
    endif()
  endfunction()
 
- foreach(BUILD_MODE ${BUILD_MODES})
-  declare_targets_for_build_mode(${BUILD_MODE})
- endforeach()
+ declare_targets_for_build_mode(DEBUG)
+ declare_targets_for_build_mode(RELEASE)

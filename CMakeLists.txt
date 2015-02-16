@@ -76,13 +76,14 @@ project (Jerry CXX C ASM)
   set(MCU_SCRIPT_GENERATED_HEADER ${CMAKE_BINARY_DIR}/generated.h)
 
 # Build modes
- set(BUILD_MODES DEBUG RELEASE)
-
  # Debug
   set(BUILD_MODE_PREFIX_DEBUG debug)
 
  # Release
   set(BUILD_MODE_PREFIX_RELEASE release)
+
+ # Unit tests
+  set(BUILD_MODE_PREFIX_UNITTESTS unittests)
 
 # Modifiers
  set(MODIFIERS
@@ -128,7 +129,7 @@ project (Jerry CXX C ASM)
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
- set(LINKER_FLAGS_COMMON "-nostdlib")
+ set(LINKER_FLAGS_COMMON "")
 
  # Turn off stack protector
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -fno-stack-protector")
@@ -163,17 +164,20 @@ project (Jerry CXX C ASM)
     set(LINKER_FLAGS_COMMON_MCU_STM32F4 "-T${CMAKE_SOURCE_DIR}/third-party/stm32f4.ld")
 
  # Debug
-  set(FLAGS_COMMON_DEBUG "")
+  set(FLAGS_COMMON_DEBUG "-nostdlib")
+  set(LINKER_FLAGS_COMMON_DEBUG "-nostdlib")
 
  # Release
-  set(FLAGS_COMMON_RELEASE "-Os -flto")
+  set(FLAGS_COMMON_RELEASE "-Os -flto -nostdlib")
+  set(LINKER_FLAGS_COMMON_RELEASE "-nostdlib")
 
  # Unit tests
-  set(FLAGS_UNIT_TEST "${FLAGS_COMMON_RELEASE}")
+  set(FLAGS_COMMON_UNITTESTS "-O3 -flto -nodefaultlibs")
 
 # Include directories
- set(INCLUDE_CORE
-     ${CMAKE_SOURCE_DIR}/core)
+ # Core interface
+  set(INCLUDE_CORE_INTERFACE
+      ${CMAKE_SOURCE_DIR}/core)
 
 # Sources
  # Platform-specific
@@ -256,7 +260,7 @@ project (Jerry CXX C ASM)
    set_property(TARGET ${TARGET_NAME}
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
-   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE})
+   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} imported_libgcc)
 
    if("${PLATFORM}" STREQUAL "MCU")
@@ -285,31 +289,26 @@ project (Jerry CXX C ASM)
   endforeach()
  endfunction()
 
- foreach(BUILD_MODE ${BUILD_MODES})
-  declare_targets_for_build_mode(${BUILD_MODE})
- endforeach()
+ declare_targets_for_build_mode(DEBUG)
+ declare_targets_for_build_mode(RELEASE)
 
  # Unit tests declaration
-# ---   add_custom_target(unittests)
-# ---
-# ---   add_library(unit_tests.lib STATIC ${SOURCE_CORE} ${SOURCE_JERRY_LIBC_LINUX})
-# ---   target_compile_options(unit_tests.lib PRIVATE ${CXX_FLAGS_JERRY} ${CXX_FLAGS_COMMON_ARCH} ${CXX_FLAGS_UNIT_TEST})
-# ---   target_compile_definitions(unit_tests.lib PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
-# ---   target_include_directories(unit_tests.lib PRIVATE ${INCLUDE_CORE} ${INCLUDE_UNIT_TEST})
-# ---
-# ---   foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
-# ---    get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
-# ---    set(TARGET_NAME unit_${TARGET_NAME})
-# ---
-# ---    add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
-# ---    target_compile_options(${TARGET_NAME} PRIVATE
-# ---                           ${CXX_FLAGS_JERRY}
-# ---                           ${CXX_FLAGS_COMMON_ARCH}
-# ---                           ${CXX_FLAGS_UNIT_TEST})
-# ---    set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_UNIT_TEST}")
-# ---    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY} ${DEFINES_UNIT_TEST})
-# ---    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE} ${INCLUDE_UNIT_TEST})
-# ---    target_link_libraries(${TARGET_NAME} unit_tests.lib imported_libc imported_libgcc)
-# ---
-# ---    add_dependencies(unittests ${TARGET_NAME})
-# ---   endforeach()
+  add_custom_target(unittests)
+
+  foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
+   get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
+   set(TARGET_NAME unit_${TARGET_NAME})
+
+   set(CORE_TARGET_NAME unittests.jerry-core)
+
+   add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
+   set_property(TARGET ${TARGET_NAME}
+                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_UNIT_TEST}")
+   set_property(TARGET ${TARGET_NAME}
+                PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
+   target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_UNIT_TEST})
+   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE})
+   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} imported_libc imported_libgcc)
+ 
+   add_dependencies(unittests ${TARGET_NAME})
+  endforeach()

@@ -36,6 +36,14 @@
 #   Unit test target: unittests_run
 #
 
+# Options
+ # Valgrind
+  VALGRIND ?= OFF
+
+  ifneq ($(VALGRIND),ON)
+   VALGRIND := OFF
+  endif
+
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
 export TARGET_PC_SYSTEMS = linux
@@ -64,21 +72,53 @@ export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_LINUX_TARGETS),$(__TARGET).che
 export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS),$(__TARGET).flash)
 
 export OUT_DIR = ./build/bin
-export BUILD_DIR = ./build/obj
 
 export SHELL=/bin/bash
 
+# Building all options combinations
+ OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
+ # OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-{ANOTHER_OPTION}-$(__OPTION)))
+
+# Building current options string
+ OPTIONS_STRING := -VALGRIND-$(VALGRIND)
+
+# Build directories
+ BUILD_DIR_PREFIX := ./build/obj
+
+ # Native
+  BUILD_DIRS_NATIVE := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/native)
+ # stm32f3
+  BUILD_DIRS_STM32F3 := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/stm32f3)
+ # stm32f4
+  BUILD_DIRS_STM32F4 := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/stm32f4)
+
+ # All together
+ BUILD_DIRS_ALL := $(BUILD_DIRS_NATIVE) $(BUILD_DIRS_STM32F3) $(BUILD_DIRS_STM32F4)
+
+ # Current
+  BUILD_DIR := ./build/obj$(OPTIONS_STRING)
+
 all: precommit
 
-$(BUILD_DIR)/native:
-	@ arch=`uname -p`; if [ "$$arch" == "armv7l" ]; then readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el"; fi; \
-	  mkdir -p $(BUILD_DIR)/native && cd $(BUILD_DIR)/native && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log
+$(BUILD_DIRS_NATIVE):
+	@ arch=`uname -p`; \
+          if [ "$$arch" == "armv7l" ]; \
+          then \
+           readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el";\
+          fi; \
+	  mkdir -p $@ && \
+          cd $@ && \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log
 
-$(BUILD_DIR)/stm32f3:
-	@ mkdir -p $(BUILD_DIR)/stm32f3 && cd $(BUILD_DIR)/stm32f3 && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log
+$(BUILD_DIRS_STM32F3):
+	@ mkdir -p $@ && \
+          cd $@ && \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log
 
-$(BUILD_DIR)/stm32f4:
-	@ mkdir -p $(BUILD_DIR)/stm32f4 && cd $(BUILD_DIR)/stm32f4 && cmake -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log
+$(BUILD_DIRS_STM32F4):
+	@ mkdir -p $@ && \
+          cd $@ && \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
@@ -185,6 +225,6 @@ precommit: clean
 #	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
 
 clean:
-	@ rm -rf $(BUILD_DIR) $(OUT_DIR)
+	@ rm -rf $(BUILD_DIRS_ALL) $(OUT_DIR)
 
-.PHONY: clean build unittests_run
+.PHONY: clean build unittests_run $(JERRY_TARGETS) $(FLASH_TARGETS)

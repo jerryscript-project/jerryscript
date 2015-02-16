@@ -112,7 +112,14 @@ project (JerryCore CXX C ASM)
       ${SOURCE_CORE_PARSER_COLLECTIONS}
       ${SOURCE_CORE_PARSER_JS}
       ${SOURCE_CORE_JRT})
-  
+
+# Per-option configuration
+ # Valgrind
+ if("${ENABLE_VALGRIND}" STREQUAL "ON")
+  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_VALGRIND})
+  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+ endif()
+
 # Platform-specific configuration
  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_${PLATFORM}})
 

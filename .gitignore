@@ -1,7 +1,7 @@
 # Produced files
 
 build/bin
-build/obj
+build/obj-*
 build/tests
 
 # IDE related files

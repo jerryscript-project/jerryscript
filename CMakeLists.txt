@@ -53,6 +53,8 @@ project (Jerry CXX C ASM)
  set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 
 # Determining platform and defining options
+ option(ENABLE_VALGRIND "Enable valgrind helpers in memory allocators" OFF)
+
  set(PLATFORM "${CMAKE_SYSTEM_NAME}")
  string(TOUPPER "${PLATFORM}" PLATFORM)
 
@@ -87,8 +89,7 @@ project (Jerry CXX C ASM)
      COMPACT_PROFILE
      COMPACT_PROFILE_MINIMAL
      FULL_PROFILE
-     MEMORY_STATISTICS
-     VALGRIND)
+     MEMORY_STATISTICS)
 
  # Profiles
   # Full profile (default, so - no suffix)
@@ -102,11 +103,6 @@ project (Jerry CXX C ASM)
 
  # Memory statistics
   set(MODIFIER_SUFFIX_MEMORY_STATISTICS -mem_stats)
-
- # Valgrind (TODO: make option)
-# set(MODIFIER_SUFFIX_VALGRIND -valgrind)
-# set(MODIFIER_DEFINES_VALGRIND DEFINES_JERRY_VALGRIND)
-#  set(MODIFIER_INCLUDE_VALGRIND INCLUDE_THIRD_PARTY_VALGRIND)
 
 # Modifier lists
  # Linux

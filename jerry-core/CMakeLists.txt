@@ -38,13 +38,13 @@ project (JerryCore CXX C ASM)
  # Build modes
   # Debug
    set(DEFINES_JERRY_DEBUG JERRY_ENABLE_PRETTY_PRINTER)
- 
+
   # Release
    set(DEFINES_JERRY_RELEASE JERRY_NDEBUG)
 
   # Unit tests
    set(DEFINES_JERRY_UNITTESTS )
- 
+
  # Modifiers
   # Full profile
    set(DEFINES_FULL_PROFILE CONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64)
@@ -80,15 +80,15 @@ project (JerryCore CXX C ASM)
 
 # Include directories
  set(INCLUDE_CORE
-     ${CMAKE_SOURCE_DIR}/core
-     ${CMAKE_SOURCE_DIR}/core/mem
-     ${CMAKE_SOURCE_DIR}/core/vm
-     ${CMAKE_SOURCE_DIR}/core/ecma/builtin-objects
-     ${CMAKE_SOURCE_DIR}/core/ecma/base
-     ${CMAKE_SOURCE_DIR}/core/ecma/operations
-     ${CMAKE_SOURCE_DIR}/core/parser/collections
-     ${CMAKE_SOURCE_DIR}/core/parser/js
-     ${CMAKE_SOURCE_DIR}/core/jrt)
+     ${CMAKE_SOURCE_DIR}/jerry-core
+     ${CMAKE_SOURCE_DIR}/jerry-core/mem
+     ${CMAKE_SOURCE_DIR}/jerry-core/vm
+     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
+     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/base
+     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/operations
+     ${CMAKE_SOURCE_DIR}/jerry-core/parser/collections
+     ${CMAKE_SOURCE_DIR}/jerry-core/parser/js
+     ${CMAKE_SOURCE_DIR}/jerry-core/jrt)
 
  # Third-party
   # Valgrind

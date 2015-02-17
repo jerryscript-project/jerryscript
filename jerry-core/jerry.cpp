@@ -157,7 +157,7 @@ jerry_run_simple (const char *script_source, /**< script source */
   jerry_init (flags);
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
-  
+
   if (!jerry_parse (NULL, script_source, script_source_size))
   {
     /* unhandled SyntaxError */

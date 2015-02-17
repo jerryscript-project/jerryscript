@@ -185,7 +185,7 @@ project (Jerry CXX C ASM)
 # Include directories
  # Core interface
   set(INCLUDE_CORE_INTERFACE
-      ${CMAKE_SOURCE_DIR}/core)
+      ${CMAKE_SOURCE_DIR}/jerry-core)
 
 # Sources
  # Platform-specific
@@ -226,7 +226,7 @@ project (Jerry CXX C ASM)
 
 # Component targets
  # Jerry's Core
-  add_subdirectory(core)
+  add_subdirectory(jerry-core)
 
  # Jerry's libc
   add_subdirectory(jerry-libc)

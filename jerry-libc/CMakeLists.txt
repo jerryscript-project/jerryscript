@@ -51,9 +51,9 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
    set(INCLUDE_LIBC_LINUX target/linux)
   # MCU
    # STM32F3
-    set(INCLUDE_LIBC_MCU_STM32F3 target/stm32f3)
+    set(INCLUDE_LIBC_MCU_STM32F3 target/mcu-stubs)
    # STM32F4
-    set(INCLUDE_LIBC_MCU_STM32F4 target/stm32f4)
+    set(INCLUDE_LIBC_MCU_STM32F4 target/mcu-stubs)
 
  # Third-party
   # Platform-specific
@@ -130,12 +130,12 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
  
    # Third-party MCU library
     if(DEFINED SOURCE_THIRD_PARTY_${PLATFORM_EXT})
-     add_library(${TARGET_NAME}.third_party.lib STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
-     set_property(TARGET ${TARGET_NAME}.third_party.lib
+     add_library(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
+     set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
                   PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
-    target_include_directories(${TARGET_NAME}.third_party.lib PRIVATE ${INCLUDE_THIRD_PARTY_${PLATFORM_EXT}})
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_THIRD_PARTY_${PLATFORM_EXT}})
  
-     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}.third_party.lib)
+     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
     endif()
   endfunction()
 

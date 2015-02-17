@@ -27,11 +27,11 @@ PARSE_ONLY_TESTING_PATHS="./tests/benchmarks/jerry"
 FULL_TESTING_PATHS="./tests/jerry ./tests/jerry-test-suite/precommit_test_list"
 
 echo -e "\nBuilding...\n\n"
-$MAKE build || exit 1
+$MAKE STATIC_CHECK=ON build || exit 1
 echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
 echo -e "All targets were built successfully. Starting unit tests' run.\n"
 $MAKE unittests_run || exit 1
-echo -e "Unit tests completed successfully. Starting full testing.\n"
+echo -e "\nUnit tests completed successfully. Starting full testing.\n"
 
 RUN_IDS=""
 

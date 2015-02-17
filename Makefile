@@ -41,6 +41,12 @@
   ifneq ($(VALGRIND),ON)
    VALGRIND := OFF
   endif
+ # Static checkers
+  STATIC_CHECK ?= OFF
+
+  ifneq ($(STATIC_CHECK),ON)
+   STATIC_CHECK := OFF
+  endif
 
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
@@ -126,23 +132,35 @@ $(BUILD_DIRS_STM32F4):
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
 
 unittests: $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log
+	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
+	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ cp $(BUILD_DIR)/native/unit_test_* $(OUT_DIR)/$@
 
 $(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
+	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
+	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
 	@ cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log
+	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
+	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
 	@ cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
 

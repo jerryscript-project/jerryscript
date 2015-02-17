@@ -14,7 +14,7 @@
 
 #!/bin/bash
 
-BASE=./third-party/tools/cppcheck
+BASE=$(dirname $0)/../third-party/tools/cppcheck
 
 if [ ! -x $BASE/$(uname -m)/cppcheck ]
 then

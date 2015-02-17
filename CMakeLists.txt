@@ -37,9 +37,19 @@ project (Jerry CXX C ASM)
  set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
  set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
 
+# Imported and third-party targets prefix
+ set(PREFIX_IMPORTED_LIB imported_)
+ set(SUFFIX_THIRD_PARTY_LIB .third_party.lib)
+
+# Static checkers
+ include(build/static-checkers/add_cppcheck_for_target.cmake)
+
+ add_custom_target(static_check)
+ add_dependencies(static_check cppcheck)
+
 # Disable _FORTIFY_SOURCE
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U_FORTIFY_SOURCE")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U_FORTIFY_SOURCE")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE")
 
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
@@ -195,18 +205,18 @@ project (Jerry CXX C ASM)
 
 # Imported libraries
  # libc
-  add_library(imported_libc SHARED IMPORTED)
+  add_library(${PREFIX_IMPORTED_LIB}libc SHARED IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libc.so
                   OUTPUT_VARIABLE IMPORTED_LIBC_LOCATION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set_property(TARGET imported_libc
+  set_property(TARGET ${PREFIX_IMPORTED_LIB}libc
                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBC_LOCATION})
  # libgcc
-  add_library(imported_libgcc STATIC IMPORTED)
+  add_library(${PREFIX_IMPORTED_LIB}libgcc STATIC IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc.a
                   OUTPUT_VARIABLE IMPORTED_LIBGCC_LOCATION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set_property(TARGET imported_libgcc
+  set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc
                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
 
 # Platform-specific configuration
@@ -259,7 +269,9 @@ project (Jerry CXX C ASM)
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} imported_libgcc)
+   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
+
+   add_cppcheck_target(${TARGET_NAME})
 
    if("${PLATFORM}" STREQUAL "MCU")
     add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
@@ -292,6 +304,7 @@ project (Jerry CXX C ASM)
 
  # Unit tests declaration
   add_custom_target(unittests)
+  add_custom_target(cppcheck.unittests)
 
   foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
    get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
@@ -305,7 +318,10 @@ project (Jerry CXX C ASM)
    set_property(TARGET ${TARGET_NAME}
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} imported_libc imported_libgcc)
- 
+   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc ${PREFIX_IMPORTED_LIB}libgcc)
+
+   add_cppcheck_target(${TARGET_NAME})
+
    add_dependencies(unittests ${TARGET_NAME})
+   add_dependencies(cppcheck.unittests cppcheck.${TARGET_NAME})
   endforeach()

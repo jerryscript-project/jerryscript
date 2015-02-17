@@ -97,12 +97,12 @@ project (Jerry_Plugins CXX ASM)
 
   # Third-party MCU library
    if(DEFINED SOURCE_THIRD_PARTY_${PLATFORM_EXT})
-    add_library(${TARGET_NAME}.third_party.lib STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
-    set_property(TARGET ${TARGET_NAME}.third_party.lib
+    add_library(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
+    set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
                  PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
-    target_include_directories(${TARGET_NAME}.third_party.lib PRIVATE ${INCLUDE_PLUGINS})
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_PLUGINS})
 
-    target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}.third_party.lib)
+    target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
    endif()
  endfunction()
 

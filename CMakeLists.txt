@@ -145,7 +145,7 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wfatal-errors")
 
  # Static build
-   set(LINKER_FLAGS_STATIC "-static")
+  set(LINKER_FLAGS_STATIC "-static")
 
  # C++
   set(CXX_FLAGS_JERRY "-std=c++11 -fno-exceptions -fno-rtti")
@@ -165,11 +165,9 @@ project (Jerry CXX C ASM)
 
  # Debug
   set(FLAGS_COMMON_DEBUG "-nostdlib")
-  set(LINKER_FLAGS_COMMON_DEBUG "-nostdlib")
 
  # Release
   set(FLAGS_COMMON_RELEASE "-Os -flto -nostdlib")
-  set(LINKER_FLAGS_COMMON_RELEASE "-nostdlib")
 
  # Unit tests
   set(FLAGS_COMMON_UNITTESTS "-O3 -flto -nodefaultlibs")
@@ -234,7 +232,7 @@ project (Jerry CXX C ASM)
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
    set(CORE_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
-   foreach(MODIFIER ${ARGN}) # FIXME
+   foreach(MODIFIER ${ARGN})
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
 
     set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
@@ -306,8 +304,7 @@ project (Jerry CXX C ASM)
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS}")
    set_property(TARGET ${TARGET_NAME}
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
-   target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_UNIT_TEST})
-   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE})
+   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} imported_libc imported_libgcc)
  
    add_dependencies(unittests ${TARGET_NAME})

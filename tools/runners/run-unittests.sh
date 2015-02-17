@@ -36,7 +36,7 @@ for unit_test in $UNITTESTS;
 do
   [ $OPTION_SILENT = "enable" ] || echo -n "Running $unit_test... ";
 
-  $VALGRIND $unit_test >&$DIR/unit_tests_run.log.tmp;
+  $unit_test >&$DIR/unit_tests_run.log.tmp;
   status_code=$?
   cat $DIR/unit_tests_run.log.tmp >> $DIR/unit_tests_run.log
   rm $DIR/unit_tests_run.log.tmp
@@ -49,4 +49,3 @@ do
     exit 1;
   fi;
 done
-

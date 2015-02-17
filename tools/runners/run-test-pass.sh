@@ -74,15 +74,13 @@ passed=0
 
 JERRY_TEMP=jerry.tmp
 
-exec 2>/dev/null
-
 echo "  Passed / Failed / Tested / Total / Percent"
 
 for test in `cat $JS_FILES`
 do
     percent=$(echo $tested*100/$total | bc)
 
-    ( ulimit -t $TIMEOUT; $VALGRIND ${ENGINE} ${JERRY_ARGS} ${test} >&$JERRY_TEMP; exit $? );
+    ( ulimit -t $TIMEOUT; ${ENGINE} ${JERRY_ARGS} ${test} &>$JERRY_TEMP; exit $? );
     status_code=$?
 
     if [ $ECHO_PROGRESS -eq 1 ]
@@ -108,7 +106,7 @@ do
     tested=$((tested+1))
 done
 
-rm $JERRY_TEMP
+rm -f $JERRY_TEMP
 
 printf "\r\e[2K[ %6d / %6d / %6d / %5d / %3d%%    ]\n" ${passed} ${failed} ${tested} ${total} ${percent}
 

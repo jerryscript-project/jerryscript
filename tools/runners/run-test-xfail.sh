@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -82,15 +82,13 @@ passed=0
 
 JERRY_TEMP=jerry.tmp
 
-exec 2>/dev/null
-
 echo "  Passed / Failed / Tested / Total / Percent"
 
 for test in `cat $JS_FILES`
 do
     percent=$(echo $tested*100/$total | bc)
 
-    ( ulimit -t $TIMEOUT; $VALGRIND ${ENGINE} ${test} ${JERRY_ARGS} >&$JERRY_TEMP; exit $? );
+    ( ulimit -t $TIMEOUT; ${ENGINE} ${test} ${JERRY_ARGS} >&$JERRY_TEMP; exit $? );
     status_code=$?
 
     if [ $ECHO_PROGRESS -eq 1 ]

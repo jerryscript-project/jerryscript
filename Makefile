@@ -73,6 +73,9 @@ export OUT_DIR = ./build/bin
 
 export SHELL=/bin/bash
 
+# Precommit check targets
+ PRECOMMIT_CHECK_TARGETS_LIST := debug.linux release.linux
+
 # Building all options combinations
  OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
  # OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-{ANOTHER_OPTION}-$(__OPTION)))
@@ -106,17 +109,20 @@ $(BUILD_DIRS_NATIVE):
           fi; \
 	  mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
+          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F3):
 	@ mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
+          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F4):
 	@ mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
+          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	@ mkdir -p $(OUT_DIR)/$@
@@ -145,13 +151,6 @@ build: $(JERRY_TARGETS) unittests
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
 	@$(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
 
-PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST= debug.linux.check \
-                                          release.linux.check
-
-PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST= #debug.linux-valgrind.check \
-                                       release.linux-valgrind.check \
-                                       release.linux-cp-valgrind.check
-
 push: ./tools/git-scripts/push.sh
 	@ ./tools/git-scripts/push.sh
 
@@ -162,65 +161,13 @@ log: ./tools/git-scripts/log.sh
 	@ ./tools/git-scripts/log.sh
 
 precommit: clean
-	@ echo -e "\nBuilding...\n\n"
-	@ $(MAKE) build
-	@ echo -e "\n================ Build completed successfully. Running precommit tests ================\n"
-	@ echo -e "All targets were built successfully. Starting unit tests' run.\n"
-	@ $(MAKE) unittests_run TESTS_OPTS="--silent"
-	@ echo -e "Unit tests completed successfully. Starting parse-only testing.\n"
-	@ echo -e "All targets were built successfully. Starting parse-only testing.\n"
-	@ # Parse-only testing
-	@ for path in "./tests/jerry" "./tests/benchmarks/jerry"; \
-          do \
-            run_ids=""; \
-            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST) $(PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST); \
-            do \
-              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="--parse-only" OUTPUT_TO_LOG=enable & \
-              run_ids="$$run_ids $$!"; \
-            done; \
-            result_ok=1; \
-            for run_id in $$run_ids; \
-            do \
-              wait $$run_id || result_ok=0; \
-            done; \
-            [ $$result_ok -eq 1 ] || exit 1; \
-          done
-	@ echo -e "Parse-only testing completed successfully. Starting full tests run.\n"
-	@ # Full testing
-	@ for path in "./tests/jerry"; \
-          do \
-            run_ids=""; \
-            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST) $(PRECOMMIT_CHECK_TARGETS_VALGRIND_LIST); \
-            do \
-              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
-              run_ids="$$run_ids $$!"; \
-            done; \
-            result_ok=1; \
-            for run_id in $$run_ids; \
-            do \
-              wait $$run_id || result_ok=0; \
-            done; \
-            [ $$result_ok -eq 1 ] || exit 1; \
-            done
-	@ for path in "./tests/jerry-test-suite/precommit_test_list"; \
-          do \
-            run_ids=""; \
-            for check_target in $(PRECOMMIT_CHECK_TARGETS_NO_VALGRIND_LIST); \
-            do \
-              $(MAKE) -s -f Makefile.mk TARGET=$$check_target $$check_target TESTS="$$path" TESTS_OPTS="" OUTPUT_TO_LOG=enable & \
-              run_ids="$$run_ids $$!"; \
-            done; \
-            result_ok=1; \
-            for run_id in $$run_ids; \
-            do \
-              wait $$run_id || result_ok=0; \
-            done; \
-            [ $$result_ok -eq 1 ] || exit 1; \
-            done
-	@ echo -e "Full testing completed successfully\n\n================\n\n"
+	@ ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
 
 unittests_run: unittests
-	@$(MAKE) -s -f Makefile.mk TARGET=$@ $@
+	@rm -rf $(OUT_DIR)/unittests/check
+	@mkdir -p $(OUT_DIR)/unittests/check
+	@./tools/runners/run-unittests.sh $(OUT_DIR)/unittests || \
+         (echo "Unit tests run failed. See $(OUT_DIR)/unittests/unit_tests_run.log for details."; exit 1;)
 
 clean:
 	@ rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)

@@ -50,12 +50,16 @@ array_list_append (array_list al, void *element)
   if ((h->len + 1) * h->element_size + sizeof (array_list_header) > h->size)
   {
     size_t size = mem_heap_recommend_allocation_size (h->size + h->element_size);
-    array_list_header *temp = (array_list_header *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
-    memset (temp, 0, size);
-    memcpy (temp, h, h->size);
-    temp->size = size;
+    JERRY_ASSERT (size > h->size);
+
+    uint8_t* new_block_p = (uint8_t*) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
+    memcpy (new_block_p, h, h->size);
+    memset (new_block_p + h->size, 0, size - h->size);
+
     mem_heap_free_block ((uint8_t *) h);
-    h = temp;
+
+    h = (array_list_header *) new_block_p;
+    h->size = size;
     al = (array_list) h;
   }
   memcpy (data (al) + (h->len * h->element_size), element, h->element_size);

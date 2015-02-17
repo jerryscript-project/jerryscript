@@ -41,7 +41,7 @@ extern void __attr_noreturn___
 libc_fatal (const char *msg,
             const char *file_name,
             const char *function_name,
-            const int line_number);
+            const unsigned int line_number);
 
 #ifndef LIBC_NDEBUG
 # define LIBC_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \

@@ -30,7 +30,7 @@ void __attr_noreturn___
 libc_fatal (const char *msg, /**< fatal error description */
             const char *file_name, /**< file name */
             const char *function_name, /**< function name */
-            const int line_number) /**< line number */
+            const unsigned int line_number) /**< line number */
 {
   if (msg != NULL
       && file_name != NULL

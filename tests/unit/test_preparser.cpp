@@ -26,7 +26,7 @@
  * Unit test's main function.
  */
 int
-main( int __attr_unused___ argc,
+main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
   char program[] = "a=1;var a;";
@@ -38,15 +38,16 @@ main( int __attr_unused___ argc,
   parser_parse_program ();
   parser_free ();
 
-  opcode_t opcodes[] = {
+  opcode_t opcodes[] =
+  {
     getop_reg_var_decl (128, 129),  // var tmp128 .. tmp129;
-        getop_var_decl (0),         // var a;
-      getop_assignment (129, 1, 1), // tmp129 = 1: SMALLINT;
-      getop_assignment (0, 6, 129), // a = tmp129 : TYPEOF(tmp129);
-         getop_exitval (0)          // exit 0;
+    getop_var_decl (0),             // var a;
+    getop_assignment (129, 1, 1),   // tmp129 = 1: SMALLINT;
+    getop_assignment (0, 6, 129),   // a = tmp129 : TYPEOF(tmp129);
+    getop_exitval (0)               // exit 0;
   };
 
-  if (!opcodes_equal((const opcode_t *) deserialize_bytecode (), opcodes, 5))
+  if (!opcodes_equal ((const opcode_t *) deserialize_bytecode (), opcodes, 5))
   {
     is_ok = false;
   }

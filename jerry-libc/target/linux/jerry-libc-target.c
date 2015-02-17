@@ -123,7 +123,7 @@ putchar (int c)
  * Output specified string
  */
 int
-puts(const char *s) /**< string to print */
+puts (const char *s) /**< string to print */
 {
   while (*s)
   {

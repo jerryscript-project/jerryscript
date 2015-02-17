@@ -143,7 +143,7 @@ jerry_run (jerry_ctx_t* ctx_p) /**< run context */
   /* FIXME: Remove after implementation of run contexts */
   (void) ctx_p;
 
-  return run_int();
+  return run_int ();
 } /* jerry_run */
 
 /**

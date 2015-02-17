@@ -35,61 +35,62 @@ const uint32_t test_iters = 64;
 // Subiterations count
 const uint32_t test_max_sub_iters = 1024;
 
-#define TEST_POOL_SPACE_SIZE (sizeof (mem_pool_state_t) + (1ull << MEM_POOL_MAX_CHUNKS_NUMBER_LOG) * MEM_POOL_CHUNK_SIZE)
-uint8_t test_pool [TEST_POOL_SPACE_SIZE] __attribute__((aligned(MEM_ALIGNMENT)));
+#define TEST_POOL_SPACE_SIZE (sizeof (mem_pool_state_t) + \
+                              (1ull << MEM_POOL_MAX_CHUNKS_NUMBER_LOG) * MEM_POOL_CHUNK_SIZE)
+uint8_t test_pool [TEST_POOL_SPACE_SIZE] __attribute__ ((aligned (MEM_ALIGNMENT)));
 
 uint8_t* ptrs[test_max_sub_iters];
 
 int
-main( int __attr_unused___ argc,
+main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-    srand((unsigned int) time(NULL));
-    int k = rand();
-    printf("seed=%d\n", k);
-    srand((unsigned int) k);
+  srand ((unsigned int) time (NULL));
+  int k = rand ();
+  printf ("seed=%d\n", k);
+  srand ((unsigned int) k);
 
-    for ( uint32_t i = 0; i < test_iters; i++ )
+  for (uint32_t i = 0; i < test_iters; i++)
+  {
+    mem_pool_state_t* pool_p = (mem_pool_state_t*) test_pool;
+
+    JERRY_ASSERT (MEM_POOL_SIZE <= TEST_POOL_SPACE_SIZE);
+
+    mem_pool_init (pool_p, MEM_POOL_SIZE);
+
+    const size_t subiters = ((size_t) rand () % test_max_sub_iters) + 1;
+
+    for (size_t j = 0; j < subiters; j++)
     {
-	mem_pool_state_t* pool_p = (mem_pool_state_t*) test_pool;
+      if (pool_p->free_chunks_number != 0)
+      {
+        ptrs[j] = mem_pool_alloc_chunk (pool_p);
 
-        JERRY_ASSERT (MEM_POOL_SIZE <= TEST_POOL_SPACE_SIZE);
+        memset (ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+      }
+      else
+      {
+        JERRY_ASSERT (j >= MEM_POOL_CHUNKS_NUMBER);
 
-	mem_pool_init (pool_p, MEM_POOL_SIZE);
-
-        const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
-
-        for ( size_t j = 0; j < subiters; j++ )
-        {
-            if (pool_p->free_chunks_number != 0)
-            {
-              ptrs[j] = mem_pool_alloc_chunk( pool_p);
-
-              memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
-            }
-            else
-            {
-              JERRY_ASSERT (j >= MEM_POOL_CHUNKS_NUMBER);
-
-              ptrs[j] = NULL;
-            }
-        }
-
-        // mem_heap_print( true);
-
-        for ( size_t j = 0; j < subiters; j++ )
-        {
-            if ( ptrs[j] != NULL )
-            {
-                for ( size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++ )
-                {
-                    JERRY_ASSERT( ((uint8_t*)ptrs[j])[k] == 0 );
-                }
-
-                mem_pool_free_chunk( pool_p, ptrs[j]);
-            }
-        }
+        ptrs[j] = NULL;
+      }
     }
 
-    return 0;
+    // mem_heap_print (true);
+
+    for (size_t j = 0; j < subiters; j++)
+    {
+      if (ptrs[j] != NULL)
+      {
+        for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
+        {
+          JERRY_ASSERT(((uint8_t*)ptrs[j])[k] == 0);
+        }
+
+        mem_pool_free_chunk (pool_p, ptrs[j]);
+      }
+    }
+  }
+
+  return 0;
 } /* main */

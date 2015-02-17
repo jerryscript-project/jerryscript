@@ -36,8 +36,8 @@ libc_fatal (const char *msg, /**< fatal error description */
       && file_name != NULL
       && function_name != NULL)
   {
-    printf("Assertion '%s' failed at %s (%s:%u).\n",
-           msg, function_name, file_name, line_number);
+    printf ("Assertion '%s' failed at %s (%s:%u).\n",
+            msg, function_name, file_name, line_number);
   }
 
   exit (LIBC_FATAL_ERROR_EXIT_CODE);

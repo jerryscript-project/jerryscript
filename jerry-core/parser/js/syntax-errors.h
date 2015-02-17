@@ -61,7 +61,8 @@
     putchar (' '); \
   } \
     printf ("^\n"); \
-  printf ("SORRY, Unimplemented: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
+  printf ("SORRY, Unimplemented: Ln %lu, Col %lu: %s\n", \
+          (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
   JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #else /* JERRY_NDEBUG */

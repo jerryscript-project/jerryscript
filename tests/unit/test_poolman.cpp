@@ -38,64 +38,64 @@ const uint32_t test_max_sub_iters = 32;
 uint8_t *ptrs[test_max_sub_iters];
 
 int
-main( int __attr_unused___ argc,
+main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  mem_init();
+  mem_init ();
 
-  srand((unsigned int) time(NULL));
-  unsigned int seed = (unsigned int)rand();
-  printf("seed=%u\n", seed);
-  srand(seed);
+  srand ((unsigned int) time (NULL));
+  unsigned int seed = (unsigned int) rand ();
+  printf ("seed=%u\n", seed);
+  srand (seed);
 
-  for ( uint32_t i = 0; i < test_iters; i++ )
+  for (uint32_t i = 0; i < test_iters; i++)
+  {
+    const size_t subiters = ((size_t) rand () % test_max_sub_iters) + 1;
+
+    for (size_t j = 0; j < subiters; j++)
     {
-      const size_t subiters = ( (size_t) rand() % test_max_sub_iters ) + 1;
+      ptrs[j] = mem_pools_alloc ();
+      // JERRY_ASSERT(ptrs[j] != NULL);
 
-      for ( size_t j = 0; j < subiters; j++ )
-        {
-          ptrs[j] = mem_pools_alloc();
-          // JERRY_ASSERT(ptrs[j] != NULL);
-
-          if ( ptrs[j] != NULL )
-            {
-              memset(ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
-            }
-        }
-
-      // mem_heap_print( false);
-
-      for ( size_t j = 0; j < subiters; j++ )
-        {
-          if ( ptrs[j] != NULL )
-            {
-              for ( size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++ )
-                {
-                  JERRY_ASSERT( ((uint8_t*) ptrs[j])[k] == 0 );
-                }
-
-              mem_pools_free( ptrs[j]);
-            }
-        }
+      if (ptrs[j] != NULL)
+      {
+        memset (ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+      }
     }
+
+    // mem_heap_print (false);
+
+    for (size_t j = 0; j < subiters; j++)
+    {
+      if (ptrs[j] != NULL)
+      {
+        for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
+        {
+          JERRY_ASSERT(((uint8_t*) ptrs[j])[k] == 0);
+        }
+
+        mem_pools_free (ptrs[j]);
+      }
+    }
+  }
 
 #ifdef MEM_STATS
   mem_pools_stats_t stats;
-  mem_pools_get_stats( &stats);
+  mem_pools_get_stats (&stats);
 
-  printf("Pools stats:\n");
-  printf(" Chunk size: %u\n"
-           "  Pools: %lu\n"
-           "  Allocated chunks: %lu\n"
-           "  Free chunks: %lu\n"
-           "  Peak pools: %lu\n"
-           "  Peak allocated chunks: %lu\n\n",
-           MEM_POOL_CHUNK_SIZE,
-           stats.pools_count,
-           stats.allocated_chunks,
-           stats.free_chunks,
-           stats.peak_pools_count,
-           stats.peak_allocated_chunks);
+  printf ("Pools stats:\n");
+  printf (" Chunk size: %u\n"
+          "  Pools: %lu\n"
+          "  Allocated chunks: %lu\n"
+          "  Free chunks: %lu\n"
+          "  Peak pools: %lu\n"
+          "  Peak allocated chunks: %lu\n\n",
+          MEM_POOL_CHUNK_SIZE,
+          stats.pools_count,
+          stats.allocated_chunks,
+          stats.free_chunks,
+          stats.peak_pools_count,
+          stats.peak_allocated_chunks);
 #endif /* MEM_STATS */
 
   return 0;

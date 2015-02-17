@@ -66,13 +66,13 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
 
   for (int i = 0; i < test_sub_iters; i++)
   {
-    if (rand() % p == 0)
+    if (rand () % p == 0)
     {
       if (ptrs[i] != NULL)
       {
-        for( size_t k = 0; k < sizes[i]; k++ )
+        for (size_t k = 0; k < sizes[i]; k++)
         {
-          JERRY_ASSERT( ptrs[i][k] == 0 );
+          JERRY_ASSERT (ptrs[i][k] == 0);
         }
 
         mem_heap_free_block (ptrs[i]);
@@ -83,72 +83,72 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
 } /* test_heap_give_some_memory_back */
 
 int
-main( int __attr_unused___ argc,
+main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-    uint8_t test_native_heap[test_heap_size];
+  uint8_t test_native_heap[test_heap_size];
 
-    mem_heap_init( test_native_heap, sizeof (test_native_heap));
+  mem_heap_init (test_native_heap, sizeof (test_native_heap));
 
-    srand((unsigned int) time(NULL));
-    int k = rand();
-    printf("seed=%d\n", k);
-    srand((unsigned int) k);
+  srand ((unsigned int) time (NULL));
+  int k = rand ();
+  printf ("seed=%d\n", k);
+  srand ((unsigned int) k);
 
-    mem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
+  mem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
 
-    mem_heap_print (true, false, true);
+  mem_heap_print (true, false, true);
 
-    for ( uint32_t i = 0; i < test_iters; i++ )
+  for (uint32_t i = 0; i < test_iters; i++)
+  {
+    for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      for ( uint32_t j = 0; j < test_sub_iters; j++ )
+      size_t size = (size_t) rand () % test_threshold_block_size;
+      ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
+                                                 (rand () % 2) ?
+                                                 MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+      sizes[j] = size;
+
+      JERRY_ASSERT (size == 0 || ptrs[j] != NULL);
+      memset (ptrs[j], 0, sizes[j]);
+    }
+
+    // mem_heap_print (true);
+
+    for (uint32_t j = 0; j < test_sub_iters; j++)
+    {
+      if (ptrs[j] != NULL && (rand () % 2) == 0)
       {
-        size_t size = (unsigned int) rand() % ( test_threshold_block_size );
-        ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
-                                                   (rand() % 2) ?
-                                                   MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
-        sizes[j] = size;
-
-        JERRY_ASSERT(size == 0 || ptrs[j] != NULL);
-        memset(ptrs[j], 0, sizes[j]);
-      }
-
-      // mem_heap_print( true);
-
-      for ( uint32_t j = 0; j < test_sub_iters; j++ )
-      {
-        if ( ptrs[j] != NULL && (rand () % 2) == 0 )
+        for (size_t k = 0; k < sizes[j]; k++)
         {
-          for( size_t k = 0; k < sizes[j]; k++ )
-          {
-            JERRY_ASSERT(ptrs[j][k] == 0);
-          }
-
-          size_t new_size = (unsigned int) rand() % ( test_threshold_block_size );
-
-          if (mem_heap_try_resize_block (ptrs[j], new_size))
-          {
-            sizes[j] = new_size;
-            memset (ptrs[j], 0, sizes[j]);
-          }
+          JERRY_ASSERT(ptrs[j][k] == 0);
         }
-      }
 
-      for ( uint32_t j = 0; j < test_sub_iters; j++ )
-      {
-        if ( ptrs[j] != NULL )
+        size_t new_size = (size_t) rand () % (test_threshold_block_size);
+
+        if (mem_heap_try_resize_block (ptrs[j], new_size))
         {
-          for( size_t k = 0; k < sizes[j]; k++ )
-          {
-            JERRY_ASSERT( ptrs[j][k] == 0 );
-          }
-          mem_heap_free_block (ptrs[j]);
-          ptrs[j] = NULL;
+          sizes[j] = new_size;
+          memset (ptrs[j], 0, sizes[j]);
         }
       }
     }
 
-    mem_heap_print( true, false, true);
+    for (uint32_t j = 0; j < test_sub_iters; j++)
+    {
+      if (ptrs[j] != NULL)
+      {
+        for (size_t k = 0; k < sizes[j]; k++)
+        {
+          JERRY_ASSERT(ptrs[j][k] == 0);
+        }
+        mem_heap_free_block (ptrs[j]);
+        ptrs[j] = NULL;
+      }
+    }
+  }
 
-    return 0;
+  mem_heap_print (true, false, true);
+
+  return 0;
 } /* main */

@@ -390,10 +390,8 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
         case ECMA_PROPERTY_NAMEDACCESSOR:
         {
-          ecma_object_t *getter_obj_p = ECMA_GET_POINTER (ecma_object_t,
-                                                          property_p->u.named_accessor_property.get_p);
-          ecma_object_t *setter_obj_p = ECMA_GET_POINTER (ecma_object_t,
-                                                          property_p->u.named_accessor_property.set_p);
+          ecma_object_t *getter_obj_p = ecma_get_named_accessor_property_getter (property_p);
+          ecma_object_t *setter_obj_p = ecma_get_named_accessor_property_setter (property_p);
 
           if (getter_obj_p != NULL)
           {

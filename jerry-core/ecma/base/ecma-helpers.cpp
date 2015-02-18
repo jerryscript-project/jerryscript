@@ -562,12 +562,6 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER(prop_p->u.named_accessor_property.name_p, name_p);
 
-  ECMA_SET_POINTER(prop_p->u.named_accessor_property.get_p, get_p);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_p);
-
-  ECMA_SET_POINTER(prop_p->u.named_accessor_property.set_p, set_p);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, set_p);
-
   prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
                                                   ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
   prop_p->u.named_accessor_property.configurable = (is_configurable ?
@@ -580,6 +574,12 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
+
+  /*
+   * Should be performed after linking the property into object's property list, because the setters assert that.
+   */
+  ecma_set_named_accessor_property_getter (obj_p, prop_p, get_p);
+  ecma_set_named_accessor_property_setter (obj_p, prop_p, set_p);
 
   return prop_p;
 } /* ecma_create_named_accessor_property */
@@ -869,6 +869,32 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
 } /* ecma_delete_property */
 
 /**
+ * Check that
+ */
+static void
+ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ecma-object */
+                                          const ecma_property_t *prop_p) /**< ecma-property */
+{
+#ifndef JERRY_NDEBUG
+  ecma_property_t *prop_iter_p;
+  for (prop_iter_p = ecma_get_property_list (object_p);
+       prop_iter_p != NULL;
+       prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
+  {
+    if (prop_iter_p == prop_p)
+    {
+      break;
+    }
+  }
+
+  JERRY_ASSERT (prop_iter_p != NULL);
+#else /* JERRY_NDEBUG */
+  (void) object_p;
+  (void) prop_p;
+#endif /* JERRY_NDEBUG */
+} /* ecma_assert_object_contains_the_property */
+
+/**
  * Get value field of named data property
  *
  * @return ecma-value
@@ -908,20 +934,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        const ecma_value_t& value) /**< value to assign */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
-#ifndef JERRY_NDEBUG
-  ecma_property_t *prop_iter_p;
-  for (prop_iter_p = ecma_get_property_list (obj_p);
-       prop_iter_p != NULL;
-       prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
-  {
-    if (prop_iter_p == prop_p)
-    {
-      break;
-    }
-  }
-
-  JERRY_ASSERT (prop_iter_p != NULL);
-#endif /* !JERRY_NDEBUG */
+  ecma_assert_object_contains_the_property (obj_p, prop_p);
 
   if (ecma_is_value_number (value)
       && ecma_is_value_number (prop_p->u.named_data_property.value))
@@ -941,6 +954,64 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                                          prop_p->u.named_data_property.value);
   }
 } /* ecma_named_data_property_assign_value */
+
+/**
+ * Get getter of named accessor property
+ *
+ * @return pointer to object - getter of the property
+ */
+ecma_object_t*
+ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< named accessor property */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+  return ECMA_GET_POINTER (ecma_object_t, prop_p->u.named_accessor_property.get_p);
+} /* ecma_named_accessor_property_get_getter */
+
+/**
+ * Get setter of named accessor property
+ *
+ * @return pointer to object - setter of the property
+ */
+ecma_object_t*
+ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< named accessor property */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+  return ECMA_GET_POINTER (ecma_object_t, prop_p->u.named_accessor_property.set_p);
+} /* ecma_named_accessor_property_get_setter */
+
+/**
+ * Set getter of named accessor property
+ */
+void
+ecma_set_named_accessor_property_getter (ecma_object_t* object_p, /**< the property's container */
+                                         ecma_property_t *prop_p, /**< named accessor property */
+                                         ecma_object_t *getter_p) /**< getter object */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  ecma_assert_object_contains_the_property (object_p, prop_p);
+
+  ECMA_SET_POINTER (prop_p->u.named_accessor_property.get_p, getter_p);
+
+  ecma_gc_update_may_ref_younger_object_flag_by_object (object_p, getter_p);
+} /* ecma_named_accessor_property_set_getter */
+
+/**
+ * Set setter of named accessor property
+ */
+void
+ecma_set_named_accessor_property_setter (ecma_object_t* object_p, /**< the property's container */
+                                         ecma_property_t *prop_p, /**< named accessor property */
+                                         ecma_object_t *setter_p) /**< setter object */
+{
+  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  ecma_assert_object_contains_the_property (object_p, prop_p);
+
+  ECMA_SET_POINTER (prop_p->u.named_accessor_property.set_p, setter_p);
+
+  ecma_gc_update_may_ref_younger_object_flag_by_object (object_p, setter_p);
+} /* ecma_named_accessor_property_set_setter */
 
 /**
  * Get property's 'Writable' attribute value

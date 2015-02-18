@@ -140,8 +140,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 4.
-    ecma_object_t *getter_p = ECMA_GET_POINTER (ecma_object_t,
-                                                prop_p->u.named_accessor_property.get_p);
+    ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (prop_p);
 
     // 5.
     if (getter_p == NULL)
@@ -286,8 +285,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
       && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     // a.
-    ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                         desc_p->u.named_accessor_property.set_p);
+    ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (desc_p);
     JERRY_ASSERT(setter_p != NULL);
 
     ecma_completion_value_t ret_value;
@@ -362,8 +360,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
     // a.
     if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      ecma_object_t *setter_p = ECMA_GET_POINTER (ecma_object_t,
-                                                  prop_p->u.named_accessor_property.set_p);
+      ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (prop_p);
 
       // i.
       if (setter_p == NULL)
@@ -405,8 +402,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   // 7.
   if (inherited_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
-    ecma_object_t *setter_p = ECMA_GET_POINTER (ecma_object_t,
-                                                inherited_p->u.named_accessor_property.set_p);
+    ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (inherited_p);
 
     // a.
     if (setter_p == NULL)
@@ -688,8 +684,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   if (property_desc_p->is_get_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc_p->get_p != ECMA_GET_POINTER (ecma_object_t,
-                                                       current_p->u.named_accessor_property.get_p))
+        || property_desc_p->get_p != ecma_get_named_accessor_property_getter (current_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -698,8 +693,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   if (property_desc_p->is_set_defined)
   {
     if (!is_current_accessor_descriptor
-        || property_desc_p->set_p != ECMA_GET_POINTER (ecma_object_t,
-                                                       current_p->u.named_accessor_property.set_p))
+        || property_desc_p->set_p != ecma_get_named_accessor_property_setter (current_p))
     {
       is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = false;
     }
@@ -811,11 +805,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       // a.
 
       if ((property_desc_p->is_get_defined
-           && property_desc_p->get_p != ECMA_GET_POINTER (ecma_object_t,
-                                                          current_p->u.named_accessor_property.get_p))
+           && property_desc_p->get_p != ecma_get_named_accessor_property_getter (current_p))
           || (property_desc_p->is_set_defined
-              && property_desc_p->set_p != ECMA_GET_POINTER (ecma_object_t,
-                                                             current_p->u.named_accessor_property.set_p)))
+              && property_desc_p->set_p != ecma_get_named_accessor_property_setter (current_p)))
       {
         // i., ii.
         return ecma_reject (is_throw);
@@ -842,20 +834,14 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ecma_object_t *get_p = property_desc_p->get_p;
-
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.get_p, get_p);
-    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, get_p);
+    ecma_set_named_accessor_property_getter (obj_p, current_p, property_desc_p->get_p);
   }
 
   if (property_desc_p->is_set_defined)
   {
     JERRY_ASSERT(is_current_accessor_descriptor);
 
-    ecma_object_t *set_p = property_desc_p->set_p;
-
-    ECMA_SET_POINTER(current_p->u.named_accessor_property.set_p, set_p);
-    ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, set_p);
+    ecma_set_named_accessor_property_setter (obj_p, current_p, property_desc_p->set_p);
   }
 
   if (property_desc_p->is_enumerable_defined)

@@ -280,6 +280,14 @@ extern void ecma_named_data_property_assign_value (ecma_object_t *obj_p,
                                                    ecma_property_t *prop_p,
                                                    const ecma_value_t& value);
 
+extern ecma_object_t* ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p);
+extern ecma_object_t* ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p);
+extern void ecma_set_named_accessor_property_getter (ecma_object_t* object_p,
+                                                     ecma_property_t *prop_p,
+                                                     ecma_object_t *getter_p);
+extern void ecma_set_named_accessor_property_setter (ecma_object_t* object_p,
+                                                     ecma_property_t *prop_p,
+                                                     ecma_object_t *setter_p);
 extern bool ecma_is_property_writable (ecma_property_t* prop_p);
 extern void ecma_set_property_writable_attr (ecma_property_t* prop_p, bool is_writable);
 extern bool ecma_is_property_enumerable (ecma_property_t* prop_p);

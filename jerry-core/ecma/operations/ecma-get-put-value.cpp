@@ -284,8 +284,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
         // sub_6.
         JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-        ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t,
-                                                            prop_p->u.named_accessor_property.set_p);
+        ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (prop_p);
         JERRY_ASSERT (setter_p != NULL);
 
         ECMA_TRY_CATCH (call_ret,

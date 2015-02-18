@@ -695,7 +695,7 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
 
       /* First trying to free unreachable objects that maybe refer to the string */
       ecma_lcache_invalidate_all ();
-      ecma_gc_run ((ecma_gc_gen_t) (ECMA_GC_GEN_COUNT - 1));
+      ecma_gc_run ();
 
       if (current_refs == string_desc_p->refs)
       {

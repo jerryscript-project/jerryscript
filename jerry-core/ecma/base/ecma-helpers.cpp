@@ -69,7 +69,6 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
                                                  prototype_object_cp,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (object_p, prototype_object_p);
 
   ecma_set_object_is_builtin (object_p, false);
 
@@ -113,7 +112,6 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_p, outer_lexical_environment_p);
 
   /*
    * Declarative lexical environments do not really have the flag,
@@ -165,7 +163,6 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_p, outer_lexical_environment_p);
 
   new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
                                                                   provide_this,
@@ -178,7 +175,6 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                                                                   bound_object_cp,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  ecma_gc_update_may_ref_younger_object_flag_by_object (new_lexical_environment_p, binding_obj_p);
 
   return new_lexical_environment_p;
 } /* ecma_create_object_lex_env */
@@ -950,8 +946,6 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
     ecma_free_value (v, false);
 
     prop_p->u.named_data_property.value = ecma_copy_value (value, false);
-    ecma_gc_update_may_ref_younger_object_flag_by_value (obj_p,
-                                                         prop_p->u.named_data_property.value);
   }
 } /* ecma_named_data_property_assign_value */
 
@@ -993,8 +987,6 @@ ecma_set_named_accessor_property_getter (ecma_object_t* object_p, /**< the prope
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
   ECMA_SET_POINTER (prop_p->u.named_accessor_property.get_p, getter_p);
-
-  ecma_gc_update_may_ref_younger_object_flag_by_object (object_p, getter_p);
 } /* ecma_named_accessor_property_set_getter */
 
 /**
@@ -1009,8 +1001,6 @@ ecma_set_named_accessor_property_setter (ecma_object_t* object_p, /**< the prope
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
   ECMA_SET_POINTER (prop_p->u.named_accessor_property.set_p, setter_p);
-
-  ecma_gc_update_may_ref_younger_object_flag_by_object (object_p, setter_p);
 } /* ecma_named_accessor_property_set_setter */
 
 /**

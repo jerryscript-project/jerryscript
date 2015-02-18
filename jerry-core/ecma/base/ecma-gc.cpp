@@ -37,9 +37,9 @@
 /**
  * Global lists of objects sorted by generation identifier.
  */
-static ecma_object_t *ecma_gc_objects_lists[ ECMA_GC_GEN_COUNT ];
+static ecma_object_t *ecma_gc_objects_lists;
 
-static void ecma_gc_mark (ecma_object_t *object_p, ecma_gc_gen_t maximum_gen_to_traverse);
+static void ecma_gc_mark (ecma_object_t *object_p);
 static void ecma_gc_sweep (ecma_object_t *object_p);
 
 /**
@@ -69,39 +69,6 @@ ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
                                                  ECMA_OBJECT_GC_REFS_POS,
                                                  ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_set_object_refs */
-
-/**
- * Get GC generation of the object.
- */
-static ecma_gc_gen_t
-ecma_gc_get_object_generation (ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  ecma_gc_gen_t ret = (ecma_gc_gen_t) jrt_extract_bit_field (object_p->container,
-                                                             ECMA_OBJECT_GC_GENERATION_POS,
-                                                             ECMA_OBJECT_GC_GENERATION_WIDTH);
-
-  JERRY_ASSERT (ret < ECMA_GC_GEN_COUNT);
-
-  return ret;
-} /* ecma_gc_get_object_generation */
-
-/**
- * Set GC generation of the object.
- */
-static void
-ecma_gc_set_object_generation (ecma_object_t *object_p, /**< object */
-                               ecma_gc_gen_t generation) /**< generation */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (generation < ECMA_GC_GEN_COUNT);
-
-  object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 generation,
-                                                 ECMA_OBJECT_GC_GENERATION_POS,
-                                                 ECMA_OBJECT_GC_GENERATION_WIDTH);
-} /* ecma_gc_set_object_generation */
 
 /**
  * Get next object in list of objects with same generation.
@@ -168,34 +135,6 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
 } /* ecma_gc_set_object_visited */
 
 /**
- * Get may_ref_younger_objects flag of the object.
- */
-static bool
-ecma_gc_is_object_may_ref_younger_objects (ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
-                                ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH);
-} /* ecma_gc_is_object_may_ref_younger_objects */
-
-/**
- * Set may_ref_younger_objects flag of the object.
- */
-static void
-ecma_gc_set_object_may_ref_younger_objects (ecma_object_t *object_p, /**< object */
-                                            bool is_may_ref_younger_objects) /**< flag value */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 is_may_ref_younger_objects,
-                                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS,
-                                                 ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH);
-} /* ecma_gc_set_object_may_ref_younger_objects */
-
-/**
  * Initialize GC information for the object
  */
 void
@@ -203,14 +142,11 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
   ecma_gc_set_object_refs (object_p, 1);
 
-  ecma_gc_set_object_generation (object_p, ECMA_GC_GEN_0);
-  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ ECMA_GC_GEN_0 ]);
-  ecma_gc_objects_lists[ ECMA_GC_GEN_0 ] = object_p;
+  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists);
+  ecma_gc_objects_lists = object_p;
 
   /* Should be set to false at the beginning of garbage collection */
   ecma_gc_set_object_visited (object_p, true);
-
-  ecma_gc_set_object_may_ref_younger_objects (object_p, false);
 } /* ecma_init_gc_info */
 
 /**
@@ -233,65 +169,24 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 } /* ecma_deref_object */
 
 /**
- * Set may_ref_younger_objects of specified object to true,
- * if value is object-value and it's object's generation
- * is less than generation of object specified by obj_p.
- */
-void
-ecma_gc_update_may_ref_younger_object_flag_by_value (ecma_object_t *obj_p, /**< object */
-                                                     const ecma_value_t& value) /**< value */
-{
-  if (!ecma_is_value_object (value))
-  {
-    return;
-  }
-
-  ecma_object_t *ref_obj_p = ecma_get_object_from_value (value);
-  JERRY_ASSERT(ref_obj_p != NULL);
-
-  ecma_gc_update_may_ref_younger_object_flag_by_object (obj_p, ref_obj_p);
-} /* ecma_gc_update_may_ref_younger_object_flag_by_value */
-
-void
-ecma_gc_update_may_ref_younger_object_flag_by_object (ecma_object_t *obj_p, /**< object */
-                                                      ecma_object_t *ref_obj_p) /**< referenced object
-                                                                                     or NULL */
-{
-  if (ref_obj_p == NULL)
-  {
-    return;
-  }
-
-  if (ecma_gc_get_object_generation (ref_obj_p) < ecma_gc_get_object_generation (obj_p))
-  {
-    ecma_gc_set_object_may_ref_younger_objects (obj_p, true);
-  }
-} /* ecma_gc_update_may_ref_younger_object_flag_by_object */
-
-/**
  * Initialize garbage collector
  */
 void
 ecma_gc_init (void)
 {
-  memset (ecma_gc_objects_lists, 0, sizeof (ecma_gc_objects_lists));
+  ecma_gc_objects_lists = NULL;
 } /* ecma_gc_init */
 
 /**
  * Mark objects as visited starting from specified object as root
- * if referenced object's generation is less or equal to maximum_gen_to_traverse.
  */
 void
-ecma_gc_mark (ecma_object_t *object_p, /**< start object */
-              ecma_gc_gen_t maximum_gen_to_traverse) /**< start recursive traverse
-                                                          if referenced object generation
-                                                          is less or equal to maximum_gen_to_traverse */
+ecma_gc_mark (ecma_object_t *object_p) /**< start object */
 {
   JERRY_ASSERT(object_p != NULL);
 
   ecma_gc_set_object_visited (object_p, true);
 
-  bool does_ref_a_younger_object = false;
   bool traverse_properties = true;
 
   if (ecma_is_lexical_environment (object_p))
@@ -299,34 +194,18 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
     ecma_object_t *lex_env_p = ecma_get_lex_env_outer_reference (object_p);
     if (lex_env_p != NULL)
     {
-      if (ecma_gc_get_object_generation (lex_env_p) <= maximum_gen_to_traverse)
+      if (!ecma_gc_is_object_visited (lex_env_p))
       {
-        if (!ecma_gc_is_object_visited (lex_env_p))
-        {
-          ecma_gc_mark (lex_env_p, ECMA_GC_GEN_COUNT);
-        }
-      }
-
-      if (ecma_gc_get_object_generation (lex_env_p) < ecma_gc_get_object_generation (object_p))
-      {
-        does_ref_a_younger_object = true;
+        ecma_gc_mark (lex_env_p);
       }
     }
 
     if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
     {
       ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
-      if (ecma_gc_get_object_generation (binding_object_p) <= maximum_gen_to_traverse)
+      if (!ecma_gc_is_object_visited (binding_object_p))
       {
-        if (!ecma_gc_is_object_visited (binding_object_p))
-        {
-          ecma_gc_mark (binding_object_p, ECMA_GC_GEN_COUNT);
-        }
-      }
-
-      if (ecma_gc_get_object_generation (binding_object_p) < ecma_gc_get_object_generation (object_p))
-      {
-        does_ref_a_younger_object = true;
+        ecma_gc_mark (binding_object_p);
       }
 
       traverse_properties = false;
@@ -337,17 +216,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
     ecma_object_t *proto_p = ecma_get_object_prototype (object_p);
     if (proto_p != NULL)
     {
-      if (ecma_gc_get_object_generation (proto_p) <= maximum_gen_to_traverse)
+      if (!ecma_gc_is_object_visited (proto_p))
       {
-        if (!ecma_gc_is_object_visited (proto_p))
-        {
-          ecma_gc_mark (proto_p, ECMA_GC_GEN_COUNT);
-        }
-      }
-
-      if (ecma_gc_get_object_generation (proto_p) < ecma_gc_get_object_generation (object_p))
-      {
-        does_ref_a_younger_object = true;
+        ecma_gc_mark (proto_p);
       }
     }
   }
@@ -371,17 +242,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
           {
             ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
 
-            if (ecma_gc_get_object_generation (value_obj_p) <= maximum_gen_to_traverse)
+            if (!ecma_gc_is_object_visited (value_obj_p))
             {
-              if (!ecma_gc_is_object_visited (value_obj_p))
-              {
-                ecma_gc_mark (value_obj_p, ECMA_GC_GEN_COUNT);
-              }
-            }
-
-            if (ecma_gc_get_object_generation (value_obj_p) < ecma_gc_get_object_generation (object_p))
-            {
-              does_ref_a_younger_object = true;
+              ecma_gc_mark (value_obj_p);
             }
           }
 
@@ -395,33 +258,17 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
 
           if (getter_obj_p != NULL)
           {
-            if (ecma_gc_get_object_generation (getter_obj_p) <= maximum_gen_to_traverse)
+            if (!ecma_gc_is_object_visited (getter_obj_p))
             {
-              if (!ecma_gc_is_object_visited (getter_obj_p))
-              {
-                ecma_gc_mark (getter_obj_p, ECMA_GC_GEN_COUNT);
-              }
-            }
-
-            if (ecma_gc_get_object_generation (getter_obj_p) < ecma_gc_get_object_generation (object_p))
-            {
-              does_ref_a_younger_object = true;
+              ecma_gc_mark (getter_obj_p);
             }
           }
 
           if (setter_obj_p != NULL)
           {
-            if (ecma_gc_get_object_generation (setter_obj_p) <= maximum_gen_to_traverse)
+            if (!ecma_gc_is_object_visited (setter_obj_p))
             {
-              if (!ecma_gc_is_object_visited (setter_obj_p))
-              {
-                ecma_gc_mark (setter_obj_p, ECMA_GC_GEN_COUNT);
-              }
-            }
-
-            if (ecma_gc_get_object_generation (setter_obj_p) < ecma_gc_get_object_generation (object_p))
-            {
-              does_ref_a_younger_object = true;
+              ecma_gc_mark (setter_obj_p);
             }
           }
 
@@ -470,17 +317,9 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
             {
               ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t, property_value);
 
-              if (ecma_gc_get_object_generation (obj_p) <= maximum_gen_to_traverse)
+              if (!ecma_gc_is_object_visited (obj_p))
               {
-                if (!ecma_gc_is_object_visited (obj_p))
-                {
-                  ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
-                }
-              }
-
-              if (ecma_gc_get_object_generation (obj_p) < ecma_gc_get_object_generation (object_p))
-              {
-                does_ref_a_younger_object = true;
+                ecma_gc_mark (obj_p);
               }
 
               break;
@@ -491,11 +330,6 @@ ecma_gc_mark (ecma_object_t *object_p, /**< start object */
         }
       }
     }
-  }
-
-  if (!does_ref_a_younger_object)
-  {
-    ecma_gc_set_object_may_ref_younger_objects (object_p, false);
   }
 } /* ecma_gc_mark */
 
@@ -530,34 +364,26 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
  * Run garbage collecting
  */
 void
-ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run collection on */
+ecma_gc_run (void)
 {
-  JERRY_ASSERT(max_gen_to_collect < ECMA_GC_GEN_COUNT);
-
   /* clearing visited flags for all objects of generations to be processed */
-  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
+  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists;
+       obj_iter_p != NULL;
+       obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
-    {
-      ecma_gc_set_object_visited (obj_iter_p, false);
-    }
+    ecma_gc_set_object_visited (obj_iter_p, false);
   }
 
   /* if some object is referenced from stack or globals (i.e. it is root),
    * start recursive marking traverse from the object */
-  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
+  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists;
+       obj_iter_p != NULL;
+       obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    if (ecma_gc_get_object_refs (obj_iter_p) > 0
+        && !ecma_gc_is_object_visited (obj_iter_p))
     {
-      if (ecma_gc_get_object_refs (obj_iter_p) > 0
-          && !ecma_gc_is_object_visited (obj_iter_p))
-      {
-        ecma_gc_mark (obj_iter_p, ECMA_GC_GEN_COUNT);
-      }
+      ecma_gc_mark (obj_iter_p);
     }
   }
 
@@ -577,119 +403,36 @@ ecma_gc_run (ecma_gc_gen_t max_gen_to_collect) /**< maximum generation to run co
 
         if (!ecma_gc_is_object_visited (obj_p))
         {
-          ecma_gc_mark (obj_p, ECMA_GC_GEN_COUNT);
+          ecma_gc_mark (obj_p);
         }
       }
     }
   }
 
-  /* if some object from generations that are not processed during current session may reference
-   * younger generations, start recursive marking traverse from the object, but one the first level
-   * consider only references to object of at most max_gen_to_collect generation */
-  for (ecma_gc_gen_t gen_id = (ecma_gc_gen_t) (max_gen_to_collect + 1);
-       gen_id < ECMA_GC_GEN_COUNT;
-       gen_id = (ecma_gc_gen_t) (gen_id + 1))
+  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists, *obj_prev_p = NULL, *obj_next_p;
+       obj_iter_p != NULL;
+       obj_iter_p = obj_next_p)
   {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+
+    if (!ecma_gc_is_object_visited (obj_iter_p))
     {
-      if (ecma_gc_is_object_may_ref_younger_objects (obj_iter_p))
+      ecma_gc_sweep (obj_iter_p);
+
+      if (likely (obj_prev_p != NULL))
       {
-        ecma_gc_mark (obj_iter_p, max_gen_to_collect);
-      }
-#ifndef JERRY_NDEBUG
-      else if (gen_id > ECMA_GC_GEN_0)
-      {
-        ecma_gc_set_object_may_ref_younger_objects (obj_iter_p, true);
-        ecma_gc_mark (obj_iter_p, (ecma_gc_gen_t) (gen_id - 1));
-        JERRY_ASSERT (!ecma_gc_is_object_may_ref_younger_objects (obj_iter_p));
-      }
-#endif /* !JERRY_NDEBUG */
-    }
-  }
-
-  JERRY_ASSERT (max_gen_to_collect <= ECMA_GC_GEN_COUNT);
-  ecma_object_t *gen_last_obj_p[ ECMA_GC_GEN_COUNT ];
-#ifndef JERRY_NDEBUG
-  memset (gen_last_obj_p, 0, sizeof (gen_last_obj_p));
-#endif /* !JERRY_NDEBUG */
-
-  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0; gen_id <= max_gen_to_collect; gen_id = (ecma_gc_gen_t) (gen_id + 1))
-  {
-    ecma_object_t *obj_prev_p = NULL;
-
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ],
-         *obj_next_p;
-         obj_iter_p != NULL;
-         obj_iter_p = obj_next_p)
-    {
-      obj_next_p = ecma_gc_get_object_next (obj_iter_p);
-
-      if (!ecma_gc_is_object_visited (obj_iter_p))
-      {
-        ecma_gc_sweep (obj_iter_p);
-
-        if (likely (obj_prev_p != NULL))
-        {
-          ecma_gc_set_object_next (obj_prev_p, obj_next_p);
-        }
-        else
-        {
-          ecma_gc_objects_lists[ gen_id ] = obj_next_p;
-        }
+        ecma_gc_set_object_next (obj_prev_p, obj_next_p);
       }
       else
       {
-        obj_prev_p = obj_iter_p;
-
-        if (ecma_gc_get_object_generation (obj_iter_p) != ECMA_GC_GEN_COUNT - 1)
-        {
-          /* the object will be promoted to next generation */
-          ecma_gc_set_object_generation (obj_iter_p, (ecma_gc_gen_t) (ecma_gc_get_object_generation (obj_iter_p) + 1));
-        }
+        ecma_gc_objects_lists = obj_next_p;
       }
     }
-
-    gen_last_obj_p[ gen_id ] = obj_prev_p;
-  }
-
-  ecma_gc_gen_t gen_to_promote = max_gen_to_collect;
-  if (unlikely (gen_to_promote == ECMA_GC_GEN_COUNT - 1))
-  {
-    /* not promoting last generation */
-    gen_to_promote = (ecma_gc_gen_t) (gen_to_promote - 1);
-  }
-
-  /* promoting to next generation */
-  if (gen_last_obj_p[ gen_to_promote ] != NULL)
-  {
-    ecma_gc_set_object_next (gen_last_obj_p [gen_to_promote], ecma_gc_objects_lists[ gen_to_promote + 1 ]);
-    ecma_gc_objects_lists[ gen_to_promote + 1 ] = ecma_gc_objects_lists[ gen_to_promote ];
-    ecma_gc_objects_lists[ gen_to_promote ] = NULL;
-  }
-
-  for (int32_t gen_id = (int32_t)gen_to_promote - 1;
-       gen_id >= 0;
-       gen_id--)
-  {
-    ecma_gc_objects_lists[ gen_id + 1 ] = ecma_gc_objects_lists[ gen_id ];
-    ecma_gc_objects_lists[ gen_id ] = NULL;
-  }
-
-#ifndef JERRY_NDEBUG
-  for (ecma_gc_gen_t gen_id = ECMA_GC_GEN_0;
-       gen_id < ECMA_GC_GEN_COUNT;
-       gen_id = (ecma_gc_gen_t) (gen_id + 1))
-  {
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ gen_id ];
-         obj_iter_p != NULL;
-         obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+    else
     {
-      JERRY_ASSERT(ecma_gc_get_object_generation (obj_iter_p) == gen_id);
+      obj_prev_p = obj_iter_p;
     }
   }
-#endif /* !JERRY_NDEBUG */
 } /* ecma_gc_run */
 
 /**
@@ -701,15 +444,12 @@ ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity)
 {
   if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
   {
-    ecma_gc_run (ECMA_GC_GEN_0);
+    ecma_gc_run ();
   }
-  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM)
+  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM
+           || severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
   {
-    ecma_gc_run (ECMA_GC_GEN_1);
-  }
-  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
-  {
-    ecma_gc_run (ECMA_GC_GEN_2);
+    /* we have already done simple GC as requests come in ascending severity order */
   }
   else
   {
@@ -718,7 +458,7 @@ ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity)
     /* Freeing as much memory as we currently can */
     ecma_lcache_invalidate_all ();
 
-    ecma_gc_run ((ecma_gc_gen_t) (ECMA_GC_GEN_COUNT - 1));
+    ecma_gc_run ();
   }
 } /* ecma_try_to_give_back_some_memory */
 

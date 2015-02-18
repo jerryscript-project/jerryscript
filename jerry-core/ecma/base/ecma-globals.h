@@ -401,17 +401,10 @@ typedef struct
 #define ECMA_OBJECT_GC_REFS_WIDTH (CONFIG_ECMA_REFERENCE_COUNTER_WIDTH)
 
 /**
- * Identifier of GC generation.
- */
-#define ECMA_OBJECT_GC_GENERATION_POS (ECMA_OBJECT_GC_REFS_POS + \
-                                       ECMA_OBJECT_GC_REFS_WIDTH)
-#define ECMA_OBJECT_GC_GENERATION_WIDTH (2)
-
-/**
  * Compressed pointer to next object in the global list of objects with same generation.
  */
-#define ECMA_OBJECT_GC_NEXT_CP_POS (ECMA_OBJECT_GC_GENERATION_POS + \
-                                    ECMA_OBJECT_GC_GENERATION_WIDTH)
+#define ECMA_OBJECT_GC_NEXT_CP_POS (ECMA_OBJECT_GC_REFS_POS + \
+                                    ECMA_OBJECT_GC_REFS_WIDTH)
 #define ECMA_OBJECT_GC_NEXT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
@@ -434,8 +427,8 @@ typedef struct
 /**
  * Attribute 'Extensible'
  */
-#define ECMA_OBJECT_OBJ_EXTENSIBLE_POS (ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS + \
-                                        ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH)
+#define ECMA_OBJECT_OBJ_EXTENSIBLE_POS (ECMA_OBJECT_GC_VISITED_POS + \
+                                        ECMA_OBJECT_GC_VISITED_WIDTH)
 #define ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH (1)
 
 /**
@@ -471,8 +464,8 @@ typedef struct
 /**
  * Type of lexical environment (ecma_lexical_environment_type_t).
  */
-#define ECMA_OBJECT_LEX_ENV_TYPE_POS (ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS + \
-                                      ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH)
+#define ECMA_OBJECT_LEX_ENV_TYPE_POS (ECMA_OBJECT_GC_VISITED_POS + \
+                                        ECMA_OBJECT_GC_VISITED_WIDTH)
 #define ECMA_OBJECT_LEX_ENV_TYPE_WIDTH (1)
 
 /**

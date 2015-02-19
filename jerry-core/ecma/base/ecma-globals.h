@@ -270,6 +270,15 @@ typedef enum
 #define ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH   (5)
 
 /**
+ * Pair of pointers - to property's getter and setter
+ */
+typedef struct
+{
+  uintptr_t getter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to getter object */
+  uintptr_t setter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to setter object */
+} ecma_getter_setter_pointers_t;
+
+/**
  * Description of ecma-property
  */
 typedef struct ecma_property_t
@@ -320,11 +329,8 @@ typedef struct ecma_property_t
       /** Flag indicating whether the property is registered in LCache */
       unsigned int is_lcached : 1;
 
-      /** Compressed pointer to property's getter */
-      unsigned int get_p : ECMA_POINTER_FIELD_WIDTH;
-
-      /** Compressed pointer to property's setter */
-      unsigned int set_p : ECMA_POINTER_FIELD_WIDTH;
+      /** Compressed pointer to pair of pointers - to property's getter and setter */
+      unsigned int getter_setter_pair_cp : ECMA_POINTER_FIELD_WIDTH;
     } named_accessor_property;
 
     /** Description of internal property */

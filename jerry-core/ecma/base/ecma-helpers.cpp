@@ -571,6 +571,9 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
 
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p = ecma_alloc_getter_setter_pointers ();
+  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
+
   /*
    * Should be performed after linking the property into object's property list, because the setters assert that.
    */
@@ -716,6 +719,10 @@ ecma_free_named_accessor_property (ecma_object_t *object_p, /**< object the prop
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                      property_p->u.named_accessor_property.name_p));
 
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p;
+  getter_setter_pointers_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
+                                                        property_p->u.named_accessor_property.getter_setter_pair_cp);
+  ecma_dealloc_getter_setter_pointers (getter_setter_pointers_p);
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */
 
@@ -959,7 +966,11 @@ ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< nam
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  return ECMA_GET_POINTER (ecma_object_t, prop_p->u.named_accessor_property.get_p);
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p;
+  getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+
+  return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->getter_p);
 } /* ecma_named_accessor_property_get_getter */
 
 /**
@@ -972,7 +983,11 @@ ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< nam
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  return ECMA_GET_POINTER (ecma_object_t, prop_p->u.named_accessor_property.set_p);
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p;
+  getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+
+  return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->setter_p);
 } /* ecma_named_accessor_property_get_setter */
 
 /**
@@ -986,7 +1001,11 @@ ecma_set_named_accessor_property_getter (ecma_object_t* object_p, /**< the prope
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
-  ECMA_SET_POINTER (prop_p->u.named_accessor_property.get_p, getter_p);
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p;
+  getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+
+  ECMA_SET_POINTER (getter_setter_pointers_p->getter_p, getter_p);
 } /* ecma_named_accessor_property_set_getter */
 
 /**
@@ -1000,7 +1019,11 @@ ecma_set_named_accessor_property_setter (ecma_object_t* object_p, /**< the prope
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
-  ECMA_SET_POINTER (prop_p->u.named_accessor_property.set_p, setter_p);
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p;
+  getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+
+  ECMA_SET_POINTER (getter_setter_pointers_p->setter_p, setter_p);
 } /* ecma_named_accessor_property_set_setter */
 
 /**

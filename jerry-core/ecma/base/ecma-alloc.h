@@ -109,6 +109,19 @@ extern ecma_label_descriptor_t *ecma_alloc_label_descriptor (void);
  */
 extern void ecma_dealloc_label_descriptor (ecma_label_descriptor_t *label_desc_p);
 
+/**
+ * Allocate memory for getter-setter pointer pair
+ *
+ * @return pointer to allocated memory
+ */
+extern ecma_getter_setter_pointers_t *ecma_alloc_getter_setter_pointers (void);
+
+/**
+ * Dealloc memory from getter-setter pointer pair
+ */
+extern void ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *pointer_pair_p);
+
+
 #endif /* JERRY_ECMA_ALLOC_H */
 
 /**

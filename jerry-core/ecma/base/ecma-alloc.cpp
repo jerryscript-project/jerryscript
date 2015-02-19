@@ -20,7 +20,6 @@
 #include "jrt.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_value_t) <= sizeof (uint16_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t));
 
 JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t));

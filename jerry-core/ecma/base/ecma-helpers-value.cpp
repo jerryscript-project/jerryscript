@@ -27,7 +27,8 @@
 #include "jrt.h"
 #include "jrt-bit-fields.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE == ECMA_VALUE_SIZE);
+JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE >= ECMA_VALUE_SIZE);
+JERRY_STATIC_ASSERT (sizeof (ecma_completion_value_t) * JERRY_BITSINBYTE >= ECMA_COMPLETION_VALUE_SIZE);
 
 /**
  * Get type field of ecma-value

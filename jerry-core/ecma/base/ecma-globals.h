@@ -115,7 +115,7 @@ typedef enum
  *
  * Bit-field structure: type (2) | value (ECMA_POINTER_FIELD_WIDTH)
  */
-typedef uint16_t ecma_value_t;
+typedef uint32_t ecma_value_t;
 
 /**
  * Value type (ecma_type_t)
@@ -131,7 +131,7 @@ typedef uint16_t ecma_value_t;
 #define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
- * ecma_value_t size
+ * Size of ecma value description, in bits
  */
 #define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
 
@@ -147,24 +147,11 @@ typedef uint16_t ecma_value_t;
 typedef uint32_t ecma_completion_value_t;
 
 /**
- * Type (ecma_completion_type_t)
- */
-#define ECMA_COMPLETION_VALUE_TYPE_POS (0)
-#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
-
-/**
- * Padding (1 byte)
- */
-#define ECMA_COMPLETION_VALUE_PADDING_WIDTH (8)
-
-/**
  * Value
  *
  * Used for normal, return, throw and exit completion types.
  */
-#define ECMA_COMPLETION_VALUE_VALUE_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                         ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                         ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_VALUE_POS (0)
 #define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
 
 /**
@@ -172,10 +159,25 @@ typedef uint32_t ecma_completion_value_t;
  *
  * Used for break and continue completion types.
  */
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                                 ECMA_COMPLETION_VALUE_TYPE_WIDTH + \
-                                                 ECMA_COMPLETION_VALUE_PADDING_WIDTH)
+#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (0)
 #define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+
+/**
+ * Type (ecma_completion_type_t)
+ */
+#define ECMA_COMPLETION_VALUE_TYPE_POS (JERRY_MAX (JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_VALUE_POS + \
+                                                                  ECMA_COMPLETION_VALUE_VALUE_WIDTH, \
+                                                                  JERRY_BITSINBYTE), \
+                                                   JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS + \
+                                                                  ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH, \
+                                                                  JERRY_BITSINBYTE)))
+#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
+
+/**
+ * Size of ecma completion value description, in bits
+ */
+#define ECMA_COMPLETION_VALUE_SIZE (ECMA_COMPLETION_VALUE_TYPE_POS + \
+                                    ECMA_COMPLETION_VALUE_TYPE_WIDTH)
 
 /**
  * Label
@@ -295,8 +297,14 @@ typedef struct ecma_property_t
     /** Description of named data property */
     struct __attr_packed___ ecma_named_data_property_t
     {
+      /** Value */
+      ecma_value_t value : ECMA_VALUE_SIZE;
+
       /** Compressed pointer to property's name (pointer to String) */
       unsigned int name_p : ECMA_POINTER_FIELD_WIDTH;
+
+      /** Flag indicating whether the property is registered in LCache */
+      unsigned int is_lcached : 1;
 
       /** Attribute 'Writable' (ecma_property_writable_value_t) */
       unsigned int writable : 1;
@@ -306,12 +314,6 @@ typedef struct ecma_property_t
 
       /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
       unsigned int configurable : 1;
-
-      /** Flag indicating whether the property is registered in LCache */
-      unsigned int is_lcached : 1;
-
-      /** Value */
-      ecma_value_t value;
     } named_data_property;
 
     /** Description of named accessor property */

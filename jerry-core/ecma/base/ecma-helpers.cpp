@@ -524,7 +524,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_data_property.is_lcached = false;
 
-  prop_p->u.named_data_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
   ecma_lcache_invalidate (obj_p, name_p, NULL);
 
@@ -698,7 +698,7 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                      property_p->u.named_data_property.name_p));
 
-  ecma_value_t v = property_p->u.named_data_property.value;
+  ecma_value_t v = ecma_get_named_data_property_value (property_p);
   ecma_free_value (v, false);
 
   ecma_dealloc_property (property_p);
@@ -919,10 +919,7 @@ ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
-  /* 'May ref younger' flag should be updated upon assignment of object value */
-  JERRY_ASSERT (!ecma_is_value_object (value));
-
-  prop_p->u.named_data_property.value = value;
+  prop_p->u.named_data_property.value = value & ((1ull << ECMA_VALUE_SIZE) - 1);
 } /* ecma_set_named_data_property_value */
 
 /**
@@ -940,10 +937,10 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   ecma_assert_object_contains_the_property (obj_p, prop_p);
 
   if (ecma_is_value_number (value)
-      && ecma_is_value_number (prop_p->u.named_data_property.value))
+      && ecma_is_value_number (ecma_get_named_data_property_value (prop_p)))
   {
     const ecma_number_t *num_src_p = ecma_get_number_from_value (value);
-    ecma_number_t *num_dst_p = ecma_get_number_from_value (prop_p->u.named_data_property.value);
+    ecma_number_t *num_dst_p = ecma_get_number_from_value (ecma_get_named_data_property_value (prop_p));
 
     *num_dst_p = *num_src_p;
   }
@@ -952,7 +949,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
     ecma_value_t v = ecma_get_named_data_property_value (prop_p);
     ecma_free_value (v, false);
 
-    prop_p->u.named_data_property.value = ecma_copy_value (value, false);
+    ecma_set_named_data_property_value (prop_p, ecma_copy_value (value, false));
   }
 } /* ecma_named_data_property_assign_value */
 

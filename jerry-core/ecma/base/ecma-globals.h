@@ -414,13 +414,6 @@ typedef struct
                                     ECMA_OBJECT_GC_NEXT_CP_WIDTH)
 #define ECMA_OBJECT_GC_VISITED_WIDTH (1)
 
-/**
- * Flag indicating that the object may reference objects of younger generations in its properties.
- */
-#define ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_POS (ECMA_OBJECT_GC_VISITED_POS + \
-                                                    ECMA_OBJECT_GC_VISITED_WIDTH)
-#define ECMA_OBJECT_GC_MAY_REF_YOUNGER_OBJECTS_WIDTH (1)
-
 
 /* Objects' only part */
 

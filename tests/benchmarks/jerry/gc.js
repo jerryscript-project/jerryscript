@@ -12,15 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var obj = {}, obj_l;
-obj_l = obj;
-
-for (var k = 0; k < 1500; k++)
-{
-  obj_l.prop = {};
-  obj_l = obj_l.prop;
-}
-
 function f (o, i) {
   if (--i > 0) {
     f ({a:o, b:o}, i);
@@ -30,4 +21,16 @@ function f (o, i) {
 for (var i = 0; i < 100; i++)
 {
   ({} + f ({}, 12));
+}
+
+for(var i = 0; i < 100; i++)
+{
+  var obj = {}, obj_l;
+  obj_l = obj;
+
+  for (var k = 0; k < 1500; k++)
+  {
+    obj_l.prop = {};
+    obj_l = obj_l.prop;
+  }
 }

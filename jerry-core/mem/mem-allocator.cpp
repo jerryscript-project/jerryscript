@@ -28,11 +28,6 @@
 #include "mem-allocator-internal.h"
 
 /**
- * Check that heap area is less or equal than 64K.
- */
-JERRY_STATIC_ASSERT(MEM_HEAP_AREA_SIZE <= 64 * 1024);
-
-/**
  * Area for heap
  */
 static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__ ((aligned (MEM_ALIGNMENT)));

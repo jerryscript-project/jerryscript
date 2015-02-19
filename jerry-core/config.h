@@ -52,7 +52,7 @@
  * Size of heap
  */
 #ifndef CONFIG_MEM_HEAP_AREA_SIZE
-# define CONFIG_MEM_HEAP_AREA_SIZE (64 * 1024)
+# define CONFIG_MEM_HEAP_AREA_SIZE (256 * 1024)
 #endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
@@ -65,7 +65,7 @@
  *
  * On the other hand, value 2 ^ CONFIG_MEM_HEAP_OFFSET_LOG should not be less than CONFIG_MEM_HEAP_AREA_SIZE.
  */
-#define CONFIG_MEM_HEAP_OFFSET_LOG (16)
+#define CONFIG_MEM_HEAP_OFFSET_LOG (18)
 
 /**
  * Number of lower bits in key of literal hash table.

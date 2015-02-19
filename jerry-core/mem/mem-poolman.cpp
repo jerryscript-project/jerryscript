@@ -116,7 +116,7 @@ mem_pools_alloc_longpath (void)
     }
     else
     {
-      pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+      pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
     }
 
     mem_pools = pool_state;
@@ -145,7 +145,7 @@ mem_pools_alloc_longpath (void)
     JERRY_ASSERT (prev_pool_state_p != NULL && pool_state != mem_pools);
 
     prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
-    pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+    pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
     mem_pools = pool_state;
   }
 
@@ -231,7 +231,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 
     mem_free_chunks_number -= MEM_POOL_CHUNKS_NUMBER;
 
-    mem_heap_free_block ((uint8_t*)pool_state);
+    mem_heap_free_block ((uint8_t*) pool_state);
 
     MEM_POOLS_STAT_FREE_POOL ();
   }
@@ -240,7 +240,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
     JERRY_ASSERT (prev_pool_state_p != NULL);
 
     prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
-    pool_state->next_pool_cp = (uint16_t) mem_compress_pointer (mem_pools);
+    pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
     mem_pools = pool_state;
   }
 } /* mem_pools_free */

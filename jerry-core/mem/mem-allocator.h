@@ -44,6 +44,16 @@
 #define MEM_COMPRESSED_POINTER_WIDTH (MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG)
 
 /**
+ * Compressed pointer value mask
+ */
+#define MEM_COMPRESSED_POINTER_MASK ((1ull << MEM_COMPRESSED_POINTER_WIDTH) - 1)
+
+/**
+ * Heap offset value mask
+ */
+#define MEM_HEAP_OFFSET_MASK ((1ull << MEM_HEAP_OFFSET_LOG) - 1)
+
+/**
  * Severity of a 'try give memory back' request
  *
  * The request are posted sequentially beginning from

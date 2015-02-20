@@ -23,6 +23,8 @@
  * @{
  */
 
+#include "jerry-extension.h"
+
 /**
  * Jerry flags
  */

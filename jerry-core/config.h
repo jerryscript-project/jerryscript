@@ -150,4 +150,9 @@
 // #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
+/**
+ * Size of character buffer used to exchange character data between core and extensions' routine
+ */
+#define CONFIG_EXTENSION_CHAR_BUFFER_SIZE 2048
+
 #endif /* !CONFIG_H */

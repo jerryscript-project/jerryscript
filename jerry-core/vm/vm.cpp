@@ -366,8 +366,6 @@ run_int (void)
     start_pos++;
   }
 
-  ecma_init ();
-
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
   ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
@@ -401,7 +399,6 @@ run_int (void)
 
   ecma_deref_object (glob_obj_p);
   ecma_deref_object (lex_env_p);
-  ecma_finalize ();
 
   return ret_code;
 }

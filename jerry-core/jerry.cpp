@@ -14,6 +14,7 @@
  */
 
 #include "deserializer.h"
+#include "ecma-operations.h"
 #include "jerry.h"
 #include "jrt.h"
 #include "parser.h"
@@ -50,6 +51,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 
   mem_init ();
   deserializer_init ();
+  ecma_init ();
 } /* jerry_init */
 
 /**
@@ -64,6 +66,7 @@ jerry_cleanup (void)
 {
   bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
 
+  ecma_finalize ();
   deserializer_free ();
   mem_finalize (is_show_mem_stats);
 } /* jerry_cleanup */

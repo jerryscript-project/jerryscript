@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 /*
  * List of ECMA magic strings
  */
-
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_ARGUMENTS, "arguments")
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_EVAL, "eval")
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_PROTOTYPE, "prototype")
@@ -208,3 +207,8 @@ ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_RIGHT_SQUARE_CHAR, "]")
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_COLON_CHAR, ":")
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_SPACE_CHAR, " ")
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING__EMPTY, "")
+
+/*
+ * Implementation-defined magic strings
+ */
+ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_JERRY_UL, "Jerry")

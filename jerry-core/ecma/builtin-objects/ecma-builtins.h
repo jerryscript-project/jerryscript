@@ -28,6 +28,7 @@ typedef enum
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
   builtin_id,
 #include "ecma-builtins.inc.h"

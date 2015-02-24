@@ -787,6 +787,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
+    case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
     {

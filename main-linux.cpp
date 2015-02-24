@@ -18,6 +18,8 @@
 
 #include "jerry.h"
 
+#include "plugins/io/init.h"
+
 /**
  * Maximum command line arguments number
  */
@@ -174,7 +176,26 @@ main (int argc,
     }
     else
     {
-      jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, flags);
+      jerry_init (flags);
+
+      plugin_io_init ();
+
+      jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
+
+      if (!jerry_parse (NULL, source_p, source_size))
+      {
+        /* unhandled SyntaxError */
+        ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+      }
+      else
+      {
+        if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
+        {
+          ret_code = jerry_run (NULL);
+        }
+      }
+
+      jerry_cleanup ();
 
       if (ret_code == JERRY_COMPLETION_CODE_OK)
       {

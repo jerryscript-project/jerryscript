@@ -28,7 +28,6 @@
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "ecma-operations.h"
 #include "ecma-reference.h"
 #include "ecma-try-catch-macro.h"
 #include "deserializer.h"

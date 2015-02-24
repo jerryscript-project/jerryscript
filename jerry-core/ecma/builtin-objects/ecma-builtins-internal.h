@@ -48,7 +48,7 @@
 /* ecma-builtins.c */
 extern ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
-                                               ecma_magic_string_id_t routine_id,
+                                               uint16_t routine_id,
                                                ecma_number_t length_prop_num_value);
 extern int32_t
 ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
@@ -60,6 +60,7 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *arguments_list_p, \
@@ -68,7 +69,7 @@ extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *arguments_list_p, \
                                                         ecma_length_t arguments_list_len); \
 extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_routine (ecma_magic_string_id_t builtin_routine_id, \
+ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       const ecma_value_t& this_arg_value, \
                                                       const ecma_value_t arguments_list [], \
                                                       ecma_length_t arguments_number); \

@@ -167,6 +167,8 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
 
   switch (id)
   {
+    JERRY_ASSERT ((uint16_t) id == id);
+
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) case name: \
     { \
       ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_object_id, \
@@ -273,9 +275,8 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_magic_string_id_t builtin_routine_id, /**< built-in's
-                                                                                                        routine's
-                                                                                                        name */
+DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                                          identifier */
                                                         const ecma_value_t& this_arg_value, /**< 'this' argument
                                                                                                  value */
                                                         const ecma_value_t arguments_list [], /**< list of arguments

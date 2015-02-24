@@ -33,7 +33,7 @@
 
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
-                               ecma_magic_string_id_t builtin_routine_id,
+                               uint16_t builtin_routine_id,
                                const ecma_value_t& this_arg_value,
                                const ecma_value_t arguments_list [],
                                ecma_length_t arguments_number);
@@ -186,11 +186,15 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
     case builtin_id: \
     { \
       JERRY_ASSERT (ecma_builtin_objects [builtin_id] == NULL); \
-      ecma_builtin_ ## lowercase_name ## _sort_property_names (); \
+      if (is_static) \
+      { \
+        ecma_builtin_ ## lowercase_name ## _sort_property_names (); \
+      } \
       \
       ecma_object_t *prototype_obj_p; \
       if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
@@ -273,6 +277,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
     case builtin_id: \
     { \
@@ -310,8 +315,8 @@ ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
                                                                                   that initially contains property
                                                                                   with the routine */
-                                               ecma_magic_string_id_t routine_id, /**< name of the built-in
-                                                                                       object's routine property */
+                                               uint16_t routine_id, /**< builtin-wide identifier of the built-in
+                                                                         object's routine property */
                                                ecma_number_t length_prop_num_value) /**< ecma-number - value
                                                                                          of 'length' property
                                                                                          of function object to create */
@@ -381,10 +386,10 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
     uint64_t routine_id_field = jrt_extract_bit_field (packed_built_in_and_routine_id,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
-    JERRY_ASSERT (routine_id_field < ECMA_MAGIC_STRING__COUNT);
+    JERRY_ASSERT ((uint16_t) routine_id_field == routine_id_field);
 
     ecma_builtin_id_t built_in_id = (ecma_builtin_id_t) built_in_id_field;
-    ecma_magic_string_id_t routine_id = (ecma_magic_string_id_t) routine_id_field;
+    uint16_t routine_id = (uint16_t) routine_id_field;
 
     return ecma_builtin_dispatch_routine (built_in_id,
                                           routine_id,
@@ -409,6 +414,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
       case builtin_id: \
       { \
@@ -471,6 +477,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
     case builtin_id: \
       { \
@@ -512,8 +519,9 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
  */
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
-                               ecma_magic_string_id_t builtin_routine_id, /**< name of the built-in object's
-                                                                               routine property */
+                               uint16_t builtin_routine_id, /**< builtin-wide identifier
+                                                             *   of the built-in object's
+                                                             *   routine property */
                                const ecma_value_t& this_arg_value, /**< 'this' argument value */
                                const ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
@@ -525,6 +533,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                 object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
+                is_static, \
                 lowercase_name) \
     case builtin_id: \
       { \

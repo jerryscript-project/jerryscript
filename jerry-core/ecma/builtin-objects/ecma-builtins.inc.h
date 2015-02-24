@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          ECMA_MAGIC_STRING_OBJECT_UL,
          ECMA_BUILTIN_ID__COUNT /* no prototype */,
          true,
+         true,
          object_prototype)
 
 /* The Object object (15.2.1) */
@@ -29,6 +30,7 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_OBJECT_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
          true,
          object)
 
@@ -39,6 +41,7 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
          ECMA_MAGIC_STRING_ARRAY_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          array_prototype)
 
 /* The Array object (15.4.1) */
@@ -46,6 +49,7 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ARRAY_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
          true,
          array)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN*/
@@ -57,6 +61,7 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
          ECMA_MAGIC_STRING_STRING_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          string_prototype)
 
 /* The String object (15.5.1) */
@@ -64,6 +69,7 @@ BUILTIN (ECMA_BUILTIN_ID_STRING,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_STRING_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
          true,
          string)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
@@ -75,6 +81,7 @@ BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
          ECMA_MAGIC_STRING_BOOLEAN_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          boolean_prototype)
 
 /* The Boolean object (15.6.1) */
@@ -82,6 +89,7 @@ BUILTIN (ECMA_BUILTIN_ID_BOOLEAN,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_BOOLEAN_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
          true,
          boolean)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
@@ -93,6 +101,7 @@ BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
          ECMA_MAGIC_STRING_NUMBER_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          number_prototype)
 
 /* The Number object (15.7.1) */
@@ -100,6 +109,7 @@ BUILTIN (ECMA_BUILTIN_ID_NUMBER,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_NUMBER_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
          true,
          number)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
@@ -110,6 +120,7 @@ BUILTIN (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          ECMA_MAGIC_STRING_FUNCTION_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          function_prototype)
 
 /* The Function object (15.3.1) */
@@ -117,6 +128,7 @@ BUILTIN (ECMA_BUILTIN_ID_FUNCTION,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_FUNCTION_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
          true,
          function)
 
@@ -126,6 +138,7 @@ BUILTIN (ECMA_BUILTIN_ID_MATH,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_MAGIC_STRING_MATH_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
          true,
          math)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN */
@@ -137,6 +150,7 @@ BUILTIN (ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
+         true,
          error_prototype)
 
 /* The Error object (15.11.1) */
@@ -144,6 +158,7 @@ BUILTIN (ECMA_BUILTIN_ID_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
+         true,
          true,
          error)
 
@@ -153,6 +168,7 @@ BUILTIN (ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          eval_error_prototype)
 
 /* The EvalError object (15.11.6.1) */
@@ -160,6 +176,7 @@ BUILTIN (ECMA_BUILTIN_ID_EVAL_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE,
+         true,
          true,
          eval_error)
 
@@ -169,6 +186,7 @@ BUILTIN (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          range_error_prototype)
 
 /* The RangeError object (15.11.6.2) */
@@ -176,6 +194,7 @@ BUILTIN (ECMA_BUILTIN_ID_RANGE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE,
+         true,
          true,
          range_error)
 
@@ -185,6 +204,7 @@ BUILTIN (ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          reference_error_prototype)
 
 /* The ReferenceError object (15.11.6.3) */
@@ -192,6 +212,7 @@ BUILTIN (ECMA_BUILTIN_ID_REFERENCE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
+         true,
          true,
          reference_error)
 
@@ -201,6 +222,7 @@ BUILTIN (ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          syntax_error_prototype)
 
 /* The SyntaxError object (15.11.6.4) */
@@ -208,6 +230,7 @@ BUILTIN (ECMA_BUILTIN_ID_SYNTAX_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE,
+         true,
          true,
          syntax_error)
 
@@ -217,6 +240,7 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          type_error_prototype)
 
 /* The TypeError object (15.11.6.5) */
@@ -224,6 +248,7 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE,
+         true,
          true,
          type_error)
 
@@ -233,6 +258,7 @@ BUILTIN (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
+         true,
          uri_error_prototype)
 
 /* The URIError object (15.11.6.6) */
@@ -240,6 +266,7 @@ BUILTIN (ECMA_BUILTIN_ID_URI_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_MAGIC_STRING_ERROR_UL,
          ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
+         true,
          true,
          uri_error)
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
@@ -250,6 +277,7 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
          ECMA_MAGIC_STRING_FUNCTION_UL,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          false,
+         true,
          type_error_thrower)
 
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
@@ -259,6 +287,7 @@ BUILTIN (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR,
          ECMA_MAGIC_STRING_COMPACT_PROFILE_ERROR_UL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          false,
+         true,
          compact_profile_error)
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
@@ -268,6 +297,16 @@ BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_MAGIC_STRING_OBJECT_UL,
          ECMA_BUILTIN_ID__COUNT /* no prototype */,
          true,
+         true,
          global)
+
+/* Jerry's dynamic extension proxy object */
+BUILTIN (ECMA_BUILTIN_ID_JERRY,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_MAGIC_STRING_OBJECT_UL,
+         ECMA_BUILTIN_ID__COUNT, /* no prototype */
+         false,
+         false,
+         jerry)
 
 #undef BUILTIN

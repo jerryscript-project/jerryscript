@@ -14,10 +14,10 @@
  */
 
 #include "ecma-builtins.h"
-#include "ecma-helpers.h"
 #include "ecma-gc.h"
+#include "ecma-helpers.h"
+#include "ecma-init-finalize.h"
 #include "ecma-lcache.h"
-#include "ecma-operations.h"
 #include "ecma-stack.h"
 #include "mem-allocator.h"
 

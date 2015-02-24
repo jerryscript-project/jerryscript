@@ -25,7 +25,6 @@
 #include "ecma-objects.h"
 #include "ecma-function-object.h"
 #include "ecma-objects-general.h"
-#include "ecma-operations.h"
 #include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ECMA

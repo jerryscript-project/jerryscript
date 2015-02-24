@@ -223,6 +223,9 @@ typedef enum
       ([[Built-in routine ID]]) */
   ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID,
 
+  /** Identifier of implementation-defined extension object */
+  ECMA_INTERNAL_PROPERTY_EXTENSION_ID,
+
   /**
    * Bit-mask of non-instantiated built-in's properties (bits 0-31)
    */
@@ -374,6 +377,8 @@ typedef enum
                                           of ECMA-262 v5 specification */
   ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
   ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_EXTENSION, /**< Extension (implementation-defined) object
+                               *   See also: ecma_extension_instantiate */
   // ECMA_OBJECT_TYPE_HOST, /**< Host object */
   ECMA_OBJECT_TYPE__COUNT /**< number of object types */
 } ecma_object_type_t;
@@ -733,7 +738,7 @@ FIXME (Move to library that should define the type (literal.h /* ? */))
 typedef uint32_t literal_index_t;
 
 /**
- * Identifiers of ECMA magic string constants
+ * Identifiers of ECMA and implementation-defined magic string constants
  */
 typedef enum
 {

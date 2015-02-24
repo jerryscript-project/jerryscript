@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_OPERATIONS_H
-#define JERRY_ECMA_OPERATIONS_H
+#include <stdio.h>
 
-#include "jrt.h"
+#include "init.h"
+#include "jerry.h"
 
-/** \addtogroup ecma ECMA
- * @{
- */
+static void plugin_io_print_uint32 (uint32_t);
 
-/**
- * \addtogroup ecmainitfinalize Initialization and finalization of ECMA components
- * @{
- */
+#include "io-extension-description.inc.h"
 
-extern void ecma_init (void);
-extern void ecma_finalize (void);
+void
+plugin_io_init (void)
+{
+  jerry_extend_with (&jerry_extension);
+} /* plugin_io_init */
 
 /**
- * @}
- * @}
+ * Print an uint32 number without new-line to standard output
  */
-
-#endif /* JERRY_ECMA_OPERATIONS_H */
+static void
+plugin_io_print_uint32 (uint32_t num) /**< uint32 to print */
+{
+  printf ("%lu", num);
+} /* print_uint32 */

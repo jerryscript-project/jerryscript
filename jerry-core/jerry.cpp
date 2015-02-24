@@ -14,7 +14,8 @@
  */
 
 #include "deserializer.h"
-#include "ecma-operations.h"
+#include "ecma-extension.h"
+#include "ecma-init-finalize.h"
 #include "jerry.h"
 #include "jrt.h"
 #include "parser.h"
@@ -40,6 +41,31 @@ const char *jerry_branch_name = JERRY_BRANCH_NAME;
  * Jerry run-time configuration flags
  */
 static jerry_flag_t jerry_flags;
+
+/** \addtogroup jerry Jerry engine extension interface
+ * @{
+ */
+
+/**
+ * Buffer of character data (used for exchange between core and extensions' routines)
+ */
+char jerry_extension_characters_buffer [CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
+
+/**
+ * Extend Global scope with specified extension object
+ *
+ * After extension the object is accessible through non-configurable property
+ * with name equal to builtin_object_name converted to ecma chars.
+ */
+bool
+jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the extension object */
+{
+  return ecma_extension_register (desc_p);
+} /* jerry_extend_with */
+
+/**
+ * @}
+ */
 
 /**
  * Jerry engine initialization

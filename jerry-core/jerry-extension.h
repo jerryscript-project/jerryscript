@@ -29,7 +29,9 @@
 typedef enum
 {
   JERRY_EXTENSION_FIELD_TYPE_BOOLEAN, /**< bool */
-  JERRY_EXTENSION_FIELD_TYPE_FLOAT, /**< float */
+  JERRY_EXTENSION_FIELD_TYPE_FLOAT32, /**< 32-bit float */
+  JERRY_EXTENSION_FIELD_TYPE_FLOAT64, /**< 64-bit float */
+  JERRY_EXTENSION_FIELD_TYPE_UINT32, /**< number converted to 32-bit unsigned integer*/
   JERRY_EXTENSION_FIELD_TYPE_STRING /**< chars buffer */
 } jerry_extension_data_type_t;
 
@@ -38,6 +40,8 @@ typedef enum
  */
 typedef struct
 {
+  const char *field_name_p; /**< field name */
+
   jerry_extension_data_type_t type; /**< field data type */
 
   /**
@@ -45,12 +49,17 @@ typedef struct
    */
   union
   {
-    bool v_boolean; /**< boolean */
-    float v_float; /**< number */
     const char* v_string; /**< string */
+    bool v_bool; /**< boolean */
+    float v_float32; /**< 32-bit float */
+    double v_float64; /**< 64-bit float */
+    uint32_t v_uint32; /**< 32-bit unsigned integer */
   };
 } jerry_extension_field_t;
 
+/**
+ * Description of an extension function's argument
+ */
 typedef struct
 {
   jerry_extension_data_type_t type; /**< argument data type */
@@ -59,7 +68,10 @@ typedef struct
   {
     bool v_bool; /**< boolean */
 
-    float v_float; /**< number converted to float */
+    float v_float32; /**< 32-bit float */
+    double v_float64; /**< 64-bit float */
+
+    uint32_t v_uint32; /**< number converted 32-bit unsigned integer */
 
     /** String copied to external characters buffer (not zero-terminated) */
     struct
@@ -71,11 +83,18 @@ typedef struct
 } jerry_extension_function_arg_t;
 
 /**
+ * Pointer to extension function implementation
+ */
+typedef void (*jerry_extension_function_pointer_t) (const struct jerry_extension_function_t *function_block_p);
+
+/**
  * Description of an extension object's function
  */
-typedef struct
+typedef struct jerry_extension_function_t
 {
   const char* function_name_p; /**< name of function */
+
+  jerry_extension_function_pointer_t function_wrapper_p; /**< pointer to function implementation */
 
   jerry_extension_function_arg_t *args_p; /**< arrays of the function's arguments */
   uint32_t args_number; /**< number of arguments */
@@ -84,18 +103,21 @@ typedef struct
 /**
  * Description of an extention object
  */
-typedef struct
+typedef struct jerry_extension_descriptor_t
 {
-  uint32_t fields_count; /**< number of fields */
-  uint32_t functions_count; /**< number of functions */
+  const uint32_t fields_count; /**< number of fields */
+  const uint32_t functions_count; /**< number of functions */
 
-  const jerry_extension_field_t *fields_p; /**< array of field descriptor */
-  const jerry_extension_function_t *functions_p; /**< array of function descriptors */
+  const jerry_extension_field_t* const fields_p; /**< array of field descriptor */
+  const jerry_extension_function_t* const functions_p; /**< array of function descriptors */
+
+  const char* const name_p; /**< name of the extension */
+  struct jerry_extension_descriptor_t *next_p; /**< next descriptor in list of registered extensions */
+  uint32_t index; /**< global index of the extension among registered exceptions */
 } jerry_extension_descriptor_t;
 
-extern void
-jerry_extend_with (const char *builtin_object_name,
-                   const jerry_extension_descriptor_t *desc_p);
+extern bool
+jerry_extend_with (jerry_extension_descriptor_t *desc_p);
 
 /**
  * @}

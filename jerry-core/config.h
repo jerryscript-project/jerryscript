@@ -155,4 +155,19 @@
  */
 #define CONFIG_EXTENSION_CHAR_BUFFER_SIZE 2048
 
+/**
+ * Maximum number of registered extensions
+ */
+#define CONFIG_EXTENSION_MAX_NUMBER_OF_EXTENSIONS 32
+
+/**
+ * Maximum number of functions in an extension
+ */
+#define CONFIG_EXTENSION_MAX_FUNCTIONS_IN_EXTENSION 1024
+
+/**
+ * Maximum number of arguments in a function
+ */
+#define CONFIG_EXTENSION_MAX_ARGUMENTS_IN_FUNCTION 16
+
 #endif /* !CONFIG_H */

@@ -876,17 +876,18 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
  */
 ssize_t
 ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
-                          ecma_char_t *buffer_p, /**< destination buffer */
+                          ecma_char_t *buffer_p, /**< destination buffer pointer (can be NULL if buffer_size == 0) */
                           ssize_t buffer_size) /**< size of buffer */
 {
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs > 0);
-  JERRY_ASSERT (buffer_p != NULL);
-  JERRY_ASSERT (buffer_size > 0);
+  JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
+  JERRY_ASSERT (buffer_size >= 0);
 
   ssize_t required_buffer_size = ((ecma_string_get_length (string_desc_p) + 1) * ((ssize_t) sizeof (ecma_char_t)));
 
-  if (required_buffer_size > buffer_size)
+  if (required_buffer_size > buffer_size
+      || buffer_size == 0)
   {
     return -required_buffer_size;
   }

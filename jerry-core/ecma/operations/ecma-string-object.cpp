@@ -119,7 +119,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_property_t*
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the array object */
+ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the string object */
                                         ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);

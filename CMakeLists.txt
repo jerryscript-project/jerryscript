@@ -238,6 +238,7 @@ project (Jerry CXX C ASM)
  function(declare_targets_for_build_mode BUILD_MODE)
   string(TOLOWER "${PLATFORM_EXT}" PLATFORM_L)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${PLATFORM_L})
+  set(PLUGINS_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.plugins.${PLATFORM_L})
   set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L})
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
@@ -245,11 +246,13 @@ project (Jerry CXX C ASM)
    foreach(MODIFIER ${ARGN})
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
 
-    set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
+    set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
+    set(PLUGINS_TARGET_NAME ${PLUGINS_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
    set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}.lib)
+   set(PLUGINS_TARGET_NAME ${PLUGINS_TARGET_NAME}.lib)
 
    set(DEFINES_JERRY )
 
@@ -269,7 +272,7 @@ project (Jerry CXX C ASM)
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
+   target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
 
    add_cppcheck_target(${TARGET_NAME})
 

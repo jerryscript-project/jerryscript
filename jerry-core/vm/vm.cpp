@@ -19,7 +19,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "ecma-operations.h"
 #include "ecma-stack.h"
 #include "jrt.h"
 #include "vm.h"
@@ -396,6 +395,8 @@ run_int (void)
 
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
+
+  ecma_free_completion_value (completion);
 
   ecma_deref_object (glob_obj_p);
   ecma_deref_object (lex_env_p);

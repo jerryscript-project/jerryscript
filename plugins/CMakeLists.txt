@@ -84,6 +84,8 @@ project (Jerry_Plugins CXX ASM)
  set(INCLUDE_PLUGINS ${INCLUDE_PLUGINS} ${INCLUDE_THIRD_PARTY_${PLATFORM_EXT}})
 
 # Targets declaration
+ add_custom_target (plugins-all)
+
  string(TOLOWER ${PLATFORM_EXT} PLATFORM_L)
  set(TARGET_NAME plugins.${PLATFORM_L})
 
@@ -91,34 +93,23 @@ project (Jerry_Plugins CXX ASM)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${TARGET_NAME})
   set(DEFINES_PLUGINS ${DEFINES_PLUGINS} ${DEFINES_PLUGINS_${BUILD_MODE}})
 
-  function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
-   foreach(MODIFIER ${ARGN})
-    set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
-   endforeach()
+  # Jerry
+   add_library(${TARGET_NAME}.lib STATIC ${SOURCE_PLUGINS})
+   set_property(TARGET ${TARGET_NAME}.lib
+                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_PLUGINS} ${FLAGS_COMMON_${BUILD_MODE}}")
+   target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_PLUGINS})
+   target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_PLUGINS} ${INCLUDE_CORE_INTERFACE})
+   add_dependencies(plugins-all ${TARGET_NAME}.lib)
 
-   # Jerry
-    add_library(${TARGET_NAME}.lib STATIC ${SOURCE_PLUGINS})
-    set_property(TARGET ${TARGET_NAME}.lib
-                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_PLUGINS} ${FLAGS_COMMON_${BUILD_MODE}}")
-    target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_PLUGINS})
-    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_PLUGINS} ${INCLUDE_CORE_INTERFACE})
+  # Third-party MCU library
+   if(DEFINED SOURCE_THIRD_PARTY_${PLATFORM_EXT})
+    add_library(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
+    set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
+                 PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_PLUGINS})
 
-   # Third-party MCU library
-    if(DEFINED SOURCE_THIRD_PARTY_${PLATFORM_EXT})
-     add_library(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_THIRD_PARTY_${PLATFORM_EXT}})
-     set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
-                  PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
-     target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_PLUGINS})
-
-     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
-    endif()
-  endfunction()
-
-  foreach(MODIFIERS_LIST ${MODIFIERS_LISTS})
-   separate_arguments(MODIFIERS_LIST)
-
-   declare_target_with_modifiers(${MODIFIERS_LIST})
-  endforeach()
+    target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
+   endif()
  endfunction()
 
  declare_targets_for_build_mode(DEBUG)

@@ -146,7 +146,7 @@ project (Jerry CXX C ASM)
 
  # Debug information
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
- 
+
  # Warnings
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -Wpedantic -Wlogical-op")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
@@ -238,8 +238,8 @@ project (Jerry CXX C ASM)
  function(declare_targets_for_build_mode BUILD_MODE)
   string(TOLOWER "${PLATFORM_EXT}" PLATFORM_L)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${PLATFORM_L})
-  set(PLUGINS_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.plugins.${PLATFORM_L})
-  set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L})
+  set(PLUGINS_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.plugins.${PLATFORM_L}.lib)
+  set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
    set(CORE_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
@@ -247,12 +247,8 @@ project (Jerry CXX C ASM)
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
 
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
-    set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
-    set(PLUGINS_TARGET_NAME ${PLUGINS_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
-   set(LIBC_TARGET_NAME ${LIBC_TARGET_NAME}.lib)
-   set(PLUGINS_TARGET_NAME ${PLUGINS_TARGET_NAME}.lib)
 
    set(DEFINES_JERRY )
 
@@ -306,25 +302,27 @@ project (Jerry CXX C ASM)
  declare_targets_for_build_mode(RELEASE)
 
  # Unit tests declaration
-  add_custom_target(unittests)
-  add_custom_target(cppcheck.unittests)
+  if("${PLATFORM}" STREQUAL "LINUX")
+   add_custom_target(unittests)
+   add_custom_target(cppcheck.unittests)
 
-  foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
-   get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
-   set(TARGET_NAME unit_${TARGET_NAME})
+   foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
+    get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
+    set(TARGET_NAME unit_${TARGET_NAME})
 
-   set(CORE_TARGET_NAME unittests.jerry-core)
+    set(CORE_TARGET_NAME unittests.jerry-core)
 
-   add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
-   set_property(TARGET ${TARGET_NAME}
-                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS}")
-   set_property(TARGET ${TARGET_NAME}
-                PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
-   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-   target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc ${PREFIX_IMPORTED_LIB}libgcc)
+    add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
+    set_property(TARGET ${TARGET_NAME}
+                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS}")
+    set_property(TARGET ${TARGET_NAME}
+                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
+    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
+    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc ${PREFIX_IMPORTED_LIB}libgcc)
 
-   add_cppcheck_target(${TARGET_NAME})
+    add_cppcheck_target(${TARGET_NAME})
 
-   add_dependencies(unittests ${TARGET_NAME})
-   add_dependencies(cppcheck.unittests cppcheck.${TARGET_NAME})
-  endforeach()
+    add_dependencies(unittests ${TARGET_NAME})
+    add_dependencies(cppcheck.unittests cppcheck.${TARGET_NAME})
+   endforeach()
+  endif()

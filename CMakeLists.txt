@@ -138,8 +138,8 @@ project (Jerry CXX C ASM)
       "COMPACT_PROFILE_MINIMAL")
 
 # Compiler / Linker flags
- set(COMPILE_FLAGS_JERRY "-fno-builtin")
- set(LINKER_FLAGS_COMMON "")
+ set(COMPILE_FLAGS_JERRY "-flto -fno-fat-lto-objects -fno-builtin")
+ set(LINKER_FLAGS_COMMON "-flto")
 
  # Turn off stack protector
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -fno-stack-protector")
@@ -177,10 +177,10 @@ project (Jerry CXX C ASM)
   set(FLAGS_COMMON_DEBUG "-nostdlib")
 
  # Release
-  set(FLAGS_COMMON_RELEASE "-Os -flto -nostdlib")
+  set(FLAGS_COMMON_RELEASE "-Os -nostdlib")
 
  # Unit tests
-  set(FLAGS_COMMON_UNITTESTS "-O3 -flto -nodefaultlibs")
+  set(FLAGS_COMMON_UNITTESTS "-O3 -nodefaultlibs")
 
 # Include directories
  # Core interface

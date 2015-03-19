@@ -13,12 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef JRT_LIBC_INCLUDES_H
-#define JRT_LIBC_INCLUDES_H
+#ifndef JERRY_LIBC_CTYPE_H
+#define JERRY_LIBC_CTYPE_H
 
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef __cplusplus
+# define EXTERN_C "C"
+#else /* !__cplusplus */
+# define EXTERN_C
+#endif /* !__cplusplus */
 
-#endif /* !JRT_LIBC_INCLUDES_H */
+extern EXTERN_C int isxdigit (int c);
+extern EXTERN_C int isalpha (int c);
+extern EXTERN_C int isdigit (int c);
+extern EXTERN_C int islower (int c);
+extern EXTERN_C int isspace (int c);
+extern EXTERN_C int isupper (int c);
+
+#endif /* !JERRY_LIBC_CTYPE_H */

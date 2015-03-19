@@ -47,10 +47,6 @@ project (Jerry CXX C ASM)
  add_custom_target(static_check)
  add_dependencies(static_check cppcheck)
 
-# Disable _FORTIFY_SOURCE
- set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U_FORTIFY_SOURCE")
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_FORTIFY_SOURCE")
-
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
@@ -77,6 +73,11 @@ project (Jerry CXX C ASM)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" OFF)
   set(MCU_SCRIPT_FILE "tests/blinky.js" CACHE STRING "Script to run on MCU")
+ elseif("${PLATFORM}" STREQUAL "EXTERNAL")
+  set(PLATFORM_EXT "EXTERNAL")
+  set(EXTERNAL_BUILD TRUE)
+
+  set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc's include directory")
  else()
   message(FATAL_ERROR "Platform is not supported")
  endif()
@@ -84,6 +85,13 @@ project (Jerry CXX C ASM)
 # Intermediate files
  # Script to run on MCU
   set(MCU_SCRIPT_GENERATED_HEADER ${CMAKE_BINARY_DIR}/generated.h)
+
+# Should we use external libc?
+ if(NOT DEFINED EXTERNAL_LIBC_INTERFACE AND NOT EXTERNAL_LIBC_INTERFACE EQUAL "UNDEFINED")
+  set(USE_EXTERNAL_LIBC FALSE)
+ else()
+  set(USE_EXTERNAL_LIBC TRUE)
+ endif()
 
 # Build modes
  # Debug
@@ -225,11 +233,15 @@ project (Jerry CXX C ASM)
  set(SOURCE_JERRY_STANDALONE_MAIN ${SOURCE_JERRY_STANDALONE_MAIN_${PLATFORM_EXT}})
 
 # Component targets
+ # Jerry's libc
+  if(NOT ${USE_EXTERNAL_LIBC})
+   add_subdirectory(jerry-libc)
+  else()
+   set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
+  endif()
+
  # Jerry's Core
   add_subdirectory(jerry-core)
-
- # Jerry's libc
-  add_subdirectory(jerry-libc)
 
  # Plugins
   add_subdirectory(plugins)
@@ -268,6 +280,7 @@ project (Jerry CXX C ASM)
                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
+   target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
    target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
 
    add_cppcheck_target(${TARGET_NAME})

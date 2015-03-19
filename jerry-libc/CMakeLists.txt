@@ -44,7 +44,9 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
     set(DEFINES_LIBC_MCU_STM32F4 __TARGET_MCU_STM32F4)
 
 # Include directories
- set(INCLUDE_LIBC .)
+ set(INCLUDE_LIBC ${CMAKE_SOURCE_DIR}/jerry-libc)
+ set(INCLUDE_LIBC_INTERFACE ${CMAKE_SOURCE_DIR}/jerry-libc/include)
+ set(INCLUDE_LIBC_INTERFACE ${INCLUDE_LIBC_INTERFACE} PARENT_SCOPE)
 
  # Platform-specific
   # Linux
@@ -124,6 +126,7 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_LIBC} ${FLAGS_COMMON_${BUILD_MODE}}")
    target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_LIBC})
    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_LIBC})
+   target_include_directories(${TARGET_NAME}.lib SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
    add_dependencies(jerry-libc-all ${TARGET_NAME}.lib)
 
   # Third-party MCU library
@@ -132,6 +135,8 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
     set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
                  PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
     target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_THIRD_PARTY_${PLATFORM_EXT}})
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
 
     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
    endif()

@@ -99,6 +99,7 @@ project (Jerry_Plugins CXX ASM)
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_PLUGINS} ${FLAGS_COMMON_${BUILD_MODE}}")
    target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_PLUGINS})
    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_PLUGINS} ${INCLUDE_CORE_INTERFACE})
+   target_include_directories(${TARGET_NAME}.lib SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
    add_dependencies(plugins-all ${TARGET_NAME}.lib)
 
   # Third-party MCU library
@@ -107,6 +108,7 @@ project (Jerry_Plugins CXX ASM)
     set_property(TARGET ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB}
                  PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
     target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_PLUGINS})
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
 
     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
    endif()

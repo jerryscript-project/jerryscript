@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 
 /**
  * Attributes
@@ -69,49 +68,10 @@ libc_fatal (const char *msg,
  * but referenced from third-party libraries.
  */
 #define LIBC_UNREACHABLE_STUB_FOR(...) \
+extern __VA_ARGS__; \
 __attr_used___ __VA_ARGS__ \
 { \
   LIBC_UNREACHABLE (); \
 }
-
-/**
- * Libc redefinitions
- */
-
-/* Ensuring no macro implementation of variables / functions are in effect */
-#undef vfprintf
-#undef fprintf
-#undef printf
-#undef isspace
-#undef isalpha
-#undef islower
-#undef isupper
-#undef isdigit
-#undef isxdigit
-#undef memset
-#undef memcmp
-#undef memcpy
-#undef memmove
-#undef strcmp
-#undef strncmp
-#undef strncpy
-#undef strlen
-#undef putchar
-#undef puts
-#undef exit
-#undef fopen
-#undef rewind
-#undef fclose
-#undef fseek
-#undef ftell
-#undef fread
-#undef fwrite
-#undef stdin
-#undef stdout
-#undef stderr
-
-extern FILE* stdin;
-extern FILE* stdout;
-extern FILE* stderr;
 
 #endif /* !DEFS_H */

@@ -139,9 +139,9 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  bool flag_value = jrt_extract_bit_field (object_p->container,
-                                           ECMA_OBJECT_GC_VISITED_POS,
-                                           ECMA_OBJECT_GC_VISITED_WIDTH);
+  bool flag_value = (bool) jrt_extract_bit_field (object_p->container,
+                                                  ECMA_OBJECT_GC_VISITED_POS,
+                                                  ECMA_OBJECT_GC_VISITED_WIDTH);
 
   return (flag_value != ecma_gc_visited_flip_flag);
 } /* ecma_gc_is_object_visited */

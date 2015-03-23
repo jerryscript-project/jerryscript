@@ -38,19 +38,28 @@
     set(CPPCHECK_INCLUDES_LIST ${CPPCHECK_INCLUDES_LIST} -I${INCLUDE})
    endforeach()
 
+   set(ADD_CPPCHECK_COMMAND FALSE)
+
    foreach(SOURCE ${TARGET_SOURCES})
     # Add to list if it is C or C++ source
     get_filename_component(SOURCE_EXTENSION ${SOURCE} EXT)
     if("${SOURCE_EXTENSION}" STREQUAL ".c" OR "${SOURCE_EXTENSION}" STREQUAL ".cpp")
      set(CPPCHECK_SOURCES_LIST ${CPPCHECK_SOURCES_LIST} ${SOURCE})
+
+     set(ADD_CPPCHECK_COMMAND true)
     endif()
    endforeach()
 
-  add_custom_target(cppcheck.${TARGET_NAME}
-                    COMMAND ${CMAKE_CPPCHECK} -j8 --error-exitcode=1 --language=c++ --std=c++11
-                                              --enable=warning,style,performance,portability,information
-                                              ${CPPCHECK_DEFINES_LIST} ${CPPCHECK_SOURCES_LIST} ${CPPCHECK_INCLUDES_LIST}
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  if(ADD_CPPCHECK_COMMAND)
+   add_custom_target(cppcheck.${TARGET_NAME}
+                     COMMAND ${CMAKE_CPPCHECK} -j8 --error-exitcode=1 --language=c++ --std=c++11
+                                               --enable=warning,style,performance,portability,information
+                                               ${CPPCHECK_DEFINES_LIST} ${CPPCHECK_SOURCES_LIST} ${CPPCHECK_INCLUDES_LIST}
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  else()
+   add_custom_target(cppcheck.${TARGET_NAME})
+  endif()
+
   if(NOT "${TARGET_LIBRARIES}" STREQUAL "TARGET_LIBRARIES-NOTFOUND")
    foreach(LIBRARY ${TARGET_LIBRARIES})
     string(REGEX MATCH "^${PREFIX_IMPORTED_LIB}.*|.*${SUFFIX_THIRD_PARTY_LIB}$" MATCHED ${LIBRARY})

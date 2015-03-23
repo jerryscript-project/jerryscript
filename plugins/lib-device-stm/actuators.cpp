@@ -20,14 +20,14 @@
 #include "actuators.h"
 #include "common-io.h"
 
-#ifdef __TARGET_HOST
+#if defined (__TARGET_HOST) || defined (__TARGET_NUTTX)
 /**
  * Host stub for LEDToggle operation
  */
 void
 led_toggle (uint32_t led_id) /**< index of LED */
 {
-  printf ("led_toggle: %d\n", led_id);
+  printf ("led_toggle: %lu\n", led_id);
 }
 
 /**
@@ -36,7 +36,7 @@ led_toggle (uint32_t led_id) /**< index of LED */
 void
 led_on (uint32_t led_id) /**< index of LED */
 {
-  printf ("led_on: %d\n", led_id);
+  printf ("led_on: %lu\n", led_id);
 }
 
 /**
@@ -45,7 +45,7 @@ led_on (uint32_t led_id) /**< index of LED */
 void
 led_off (uint32_t led_id) /**< index of LED */
 {
-  printf ("led_off: %d\n", led_id);
+  printf ("led_off: %lu\n", led_id);
 }
 
 /**
@@ -54,11 +54,11 @@ led_off (uint32_t led_id) /**< index of LED */
 void
 led_blink_once (uint32_t led_id) /**< index of LED */
 {
-  printf ("led_blink_once: %d\n", led_id);
+  printf ("led_blink_once: %lu\n", led_id);
 }
-#else /* !__TARGET_HOST */
+#else /* !__TARGET_HOST && !__TARGET_NUTTX */
 #ifndef __TARGET_MCU
-# error "!__TARGET_HOST && !__TARGET_MCU"
+# error "!__TARGET_HOST && && !__TARGET_NUTTX !__TARGET_MCU"
 #endif /* !__TARGET_MCU */
 
 #include "mcu-headers.h"
@@ -230,4 +230,4 @@ led_blink_once (uint32_t led_id) /**< index of LED */
   led_off (led_id);
 } /* led_blink_once */
 
-#endif /* !__TARGET_HOST && __TARGET_MCU */
+#endif /* !__TARGET_HOST && !__TARGET_NUTTX && __TARGET_MCU */

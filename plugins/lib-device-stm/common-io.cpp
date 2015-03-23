@@ -54,16 +54,16 @@ analog_write (uint32_t arg1, uint32_t arg2)
   (void) arg2;
 }
 
-#ifdef __TARGET_HOST
+#if defined (__TARGET_HOST) || defined (__TARGET_NUTTX)
 void
 wait_ms (uint32_t time_ms)
 {
-  printf ("wait_ms: %d\n", time_ms);
+  printf ("wait_ms: %lu\n", time_ms);
 }
 #else /* !__TARGET_HOST */
 
 #ifndef __TARGET_MCU
-# error "!__TARGET_HOST && !__TARGET_MCU"
+# error "!__TARGET_HOST && && !__TARGET_NUTTX !__TARGET_MCU"
 #endif /* !__TARGET_MCU */
 
 static __IO uint32_t sys_tick_counter;
@@ -162,4 +162,4 @@ initialize_timer ()
   TIM_TimeBaseInit (TIM2, &timerInitStructure);
   TIM_Cmd (TIM2, ENABLE);
 }
-#endif /* !__TARGET_HOST && __TARGET_MCU */
+#endif /* !__TARGET_HOST && !__TARGET_NUTTX && __TARGET_MCU */

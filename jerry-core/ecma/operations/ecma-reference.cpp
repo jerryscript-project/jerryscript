@@ -101,7 +101,7 @@ ecma_make_reference (const ecma_value_t& base, /**< base value */
 
   ecma_reference_t ref;
   ref.base = ecma_copy_value (base, true);
-  ref.is_strict = is_strict;
+  ref.is_strict = (is_strict != 0);
 
   ECMA_SET_POINTER (ref.referenced_name_cp, name_p);
 

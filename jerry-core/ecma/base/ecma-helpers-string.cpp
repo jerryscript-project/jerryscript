@@ -322,7 +322,7 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
   JERRY_ASSERT (lit.type == LIT_STR);
 
   string_p->refs = 1;
-  string_p->is_stack_var = is_stack_var;
+  string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
   string_p->hash = lit.data.lp.hash;
 
@@ -345,7 +345,7 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
 #endif /* !JERRY_NDEBUG */
 
   string_p->refs = 1;
-  string_p->is_stack_var = is_stack_var;
+  string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
   string_p->hash = ecma_chars_buffer_calc_hash_last_chars (ecma_get_magic_string_zt (magic_string_id),
                                                            ecma_magic_string_lengths [magic_string_id]);

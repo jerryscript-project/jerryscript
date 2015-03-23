@@ -66,15 +66,17 @@ project (Jerry CXX C ASM)
 
  if("${PLATFORM}" STREQUAL "LINUX")
   set(PLATFORM_EXT "LINUX")
+  set(EXTERNAL_BUILD FALSE)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" ON)
  elseif("${PLATFORM}" STREQUAL "MCU")
   set(PLATFORM_EXT "MCU_${CMAKE_SYSTEM_VERSION}")
+  set(EXTERNAL_BUILD FALSE)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" OFF)
   set(MCU_SCRIPT_FILE "tests/blinky.js" CACHE STRING "Script to run on MCU")
- elseif("${PLATFORM}" STREQUAL "EXTERNAL")
-  set(PLATFORM_EXT "EXTERNAL")
+ elseif("${PLATFORM}" STREQUAL "NUTTX")
+  set(PLATFORM_EXT "NUTTX")
   set(EXTERNAL_BUILD TRUE)
 
   set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc's include directory")
@@ -87,8 +89,12 @@ project (Jerry CXX C ASM)
   set(MCU_SCRIPT_GENERATED_HEADER ${CMAKE_BINARY_DIR}/generated.h)
 
 # Should we use external libc?
- if(NOT DEFINED EXTERNAL_LIBC_INTERFACE AND NOT EXTERNAL_LIBC_INTERFACE EQUAL "UNDEFINED")
+ if(NOT DEFINED EXTERNAL_LIBC_INTERFACE OR EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
   set(USE_EXTERNAL_LIBC FALSE)
+
+  if(${EXTERNAL_BUILD})
+   message(FATAL_ERROR "Currently, external build with Jerry's libc is not supported")
+  endif()
  else()
   set(USE_EXTERNAL_LIBC TRUE)
  endif()
@@ -144,6 +150,10 @@ project (Jerry CXX C ASM)
       "FULL_PROFILE"
       "COMPACT_PROFILE"
       "COMPACT_PROFILE_MINIMAL")
+
+  # Nuttx
+   set(MODIFIERS_LISTS_NUTTX
+       ${MODIFIERS_LISTS_LINUX})
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-flto -fno-fat-lto-objects -fno-builtin")
@@ -208,6 +218,9 @@ project (Jerry CXX C ASM)
     # stm32f4
      set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main-mcu.cpp)
 
+   # Nuttx
+    set(SOURCE_JERRY_STANDALONE_MAIN_NUTTX main-nuttx.cpp)
+
  # Unit tests main modules
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
 
@@ -264,43 +277,75 @@ project (Jerry CXX C ASM)
 
    set(DEFINES_JERRY )
 
-   if("${PLATFORM}" STREQUAL "MCU")
-    set(MCU_SCRIPT_GENERATED_HEADER ${MCU_SCRIPT_GENERATED_HEADER}.${TARGET_NAME})
-    add_custom_command(OUTPUT ${MCU_SCRIPT_GENERATED_HEADER}
-                       COMMAND ${CMAKE_SOURCE_DIR}/tools/generator.sh "${CMAKE_SOURCE_DIR}/${MCU_SCRIPT_FILE}" ${MCU_SCRIPT_GENERATED_HEADER}
-                       WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-    add_custom_target(mcu_header_with_script_to_run.${TARGET_NAME} DEPENDS ${MCU_SCRIPT_GENERATED_HEADER})
-    set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
-   endif()
+   if(NOT ${EXTERNAL_BUILD})
+    add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
 
-   add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
-   set_property(TARGET ${TARGET_NAME}
-                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
-   set_property(TARGET ${TARGET_NAME}
-                PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
-   target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
-   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-   target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
-   target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
-
-   add_cppcheck_target(${TARGET_NAME})
-
-   if("${PLATFORM}" STREQUAL "MCU")
-    add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
-    add_custom_target(${TARGET_NAME}.bin
-                      COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET_NAME}> $<TARGET_FILE:${TARGET_NAME}>.bin
-                      DEPENDS ${TARGET_NAME})
-    add_custom_target(${TARGET_NAME}.flash
-                      COMMAND st-flash write $<TARGET_FILE:${TARGET_NAME}>.bin 0x08000000
-                      DEPENDS ${TARGET_NAME}.bin)
-   endif()
-
-   if("${BUILD_MODE}" STREQUAL "RELEASE")
-    if(${STRIP_RELEASE_BINARY} STREQUAL "ON")
-     add_custom_command(TARGET ${TARGET_NAME}
-                        POST_BUILD
-                        COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>)
+    if("${PLATFORM}" STREQUAL "MCU")
+     set(MCU_SCRIPT_GENERATED_HEADER ${MCU_SCRIPT_GENERATED_HEADER}.${TARGET_NAME})
+     add_custom_command(OUTPUT ${MCU_SCRIPT_GENERATED_HEADER}
+                        COMMAND ${CMAKE_SOURCE_DIR}/tools/generator.sh "${CMAKE_SOURCE_DIR}/${MCU_SCRIPT_FILE}" ${MCU_SCRIPT_GENERATED_HEADER}
+                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+     add_custom_target(mcu_header_with_script_to_run.${TARGET_NAME} DEPENDS ${MCU_SCRIPT_GENERATED_HEADER})
+     set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
     endif()
+
+    set_property(TARGET ${TARGET_NAME}
+                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+    set_property(TARGET ${TARGET_NAME}
+                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
+    target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
+    target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
+
+    add_cppcheck_target(${TARGET_NAME})
+
+    if("${PLATFORM}" STREQUAL "MCU")
+     add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
+     add_custom_target(${TARGET_NAME}.bin
+                       COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET_NAME}> $<TARGET_FILE:${TARGET_NAME}>.bin
+                       DEPENDS ${TARGET_NAME})
+     add_custom_target(${TARGET_NAME}.flash
+                       COMMAND st-flash write $<TARGET_FILE:${TARGET_NAME}>.bin 0x08000000
+                       DEPENDS ${TARGET_NAME}.bin)
+    endif()
+
+    if("${BUILD_MODE}" STREQUAL "RELEASE")
+     if(${STRIP_RELEASE_BINARY} STREQUAL "ON")
+      add_custom_command(TARGET ${TARGET_NAME}
+                         POST_BUILD
+                         COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>)
+     endif()
+    endif()
+   else()
+    set(MAIN_MODULE_TARGET_NAME ${TARGET_NAME}.${PLATFORM_L}.main)
+    add_library(${MAIN_MODULE_TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
+    set_property(TARGET ${MAIN_MODULE_TARGET_NAME}
+                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+    target_compile_definitions(${MAIN_MODULE_TARGET_NAME} PRIVATE ${DEFINES_JERRY})
+    target_include_directories(${MAIN_MODULE_TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
+    target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+
+    add_custom_target(${TARGET_NAME} ALL)
+    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME})
+
+    add_custom_command(TARGET ${TARGET_NAME}
+                       POST_BUILD
+                       COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
+                       COMMAND echo
+                       $<TARGET_FILE:${MAIN_MODULE_TARGET_NAME}>
+                       $<TARGET_FILE:${PLUGINS_TARGET_NAME}>
+                       $<TARGET_FILE:${CORE_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
+
+    if(NOT ${USE_EXTERNAL_LIBC})
+     if(${PLATFORM} STREQUAL "NUTTX")
+      message(Nuttx build doesn't support Jerry's libc implementation)
+     endif()
+
+     add_dependencies(${TARGET_NAME} ${LIBC_TARGET_NAME})
+    endif()
+
+    add_cppcheck_target(${TARGET_NAME})
    endif()
   endfunction()
 

@@ -33,6 +33,8 @@ project (Jerry_Plugins CXX ASM)
     set(DEFINES_PLUGINS_MCU_STM32F3 __TARGET_MCU __TARGET_MCU_STM32F3)
    # stm32f4
     set(DEFINES_PLUGINS_MCU_STM32F4 __TARGET_MCU __TARGET_MCU_STM32F4)
+  # Nuttx
+   set(DEFINES_PLUGINS_NUTTX __TARGET_NUTTX)
 
 # Include directories
  set(INCLUDE_PLUGINS
@@ -58,10 +60,14 @@ project (Jerry_Plugins CXX ASM)
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0)
 
+   # Nuttx
+    set(INCLUDE_THIRD_PARTY_NUTTX
+        ${EXTERNAL_LIBC_INTERFACE})
+
 # Sources
  file(GLOB SOURCE_PLUGINS
-      lib-device-stm/*.cpp
-      io/*.cpp)
+      io/*.cpp
+      lib-device-stm/*.cpp)
 
  # Third-party
   # Platform-specific

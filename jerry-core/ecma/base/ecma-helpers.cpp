@@ -187,9 +187,9 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
-                                ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
+  return (bool) jrt_extract_bit_field (object_p->container,
+                                       ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
+                                       ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
 } /* ecma_is_lexical_environment */
 
 /**
@@ -201,9 +201,9 @@ ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  return jrt_extract_bit_field (object_p->container,
-                                ECMA_OBJECT_OBJ_EXTENSIBLE_POS,
-                                ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH);
+  return (bool) jrt_extract_bit_field (object_p->container,
+                                       ECMA_OBJECT_OBJ_EXTENSIBLE_POS,
+                                       ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH);
 } /* ecma_get_object_extensible */
 
 /**
@@ -1170,11 +1170,11 @@ ecma_set_property_lcached (ecma_property_t *prop_p, /**< property */
 
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
-    prop_p->u.named_data_property.is_lcached = is_lcached;
+    prop_p->u.named_data_property.is_lcached = (is_lcached != 0);
   }
   else
   {
-    prop_p->u.named_accessor_property.is_lcached = is_lcached;
+    prop_p->u.named_accessor_property.is_lcached = (is_lcached != 0);
   }
 } /* ecma_set_property_lcached */
 

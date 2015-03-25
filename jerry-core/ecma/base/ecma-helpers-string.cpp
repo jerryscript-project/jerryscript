@@ -866,9 +866,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 } /* ecma_string_to_number */
 
 /**
- * Copy ecma-string's contents to a buffer.
- *
- * Buffer will contain length of string, in characters, followed by string's characters.
+ * Convert ecma-string's contents to a zero-terminated string and put it to the buffer.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
  *         otherwise (in case size of buffer is insuficcient) - negative number, which is calculated

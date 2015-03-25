@@ -193,25 +193,64 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
           }
         }
       }
+      else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_STRING)
+      {
+        if (!ecma_is_value_string (arg_value))
+        {
+          break;
+        }
+        else
+        {
+          arg_p->v_string = ecma_get_string_from_value (arg_value);
+        }
+      }
       else
       {
-        JERRY_ASSERT (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_STRING);
+        JERRY_ASSERT (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_OBJECT);
 
-#if CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII
-        JERRY_UNIMPLEMENTED ("Only ASCII encoding support is implemented.");
-#else /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII */
-        JERRY_UNIMPLEMENTED ("String arguments are not implemented");
-#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII */
+        if (!ecma_is_value_object (arg_value))
+        {
+          break;
+        }
+        else
+        {
+          arg_p->v_object = ecma_get_object_from_value (arg_value);
+        }
       }
     }
 
-    if (arg_index != function_p->args_number)
+    uint32_t initialized_args_count = arg_index;
+
+    if (initialized_args_count != function_p->args_number)
     {
       throw_type_error = true;
     }
     else
     {
       function_p->function_wrapper_p (function_p);
+    }
+
+    for (arg_index = 0;
+         arg_index < initialized_args_count;
+         arg_index++)
+    {
+      jerry_extension_function_arg_t *arg_p = &function_p->args_p [arg_index];
+
+      if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_STRING)
+      {
+        arg_p->v_string = NULL;
+      }
+      else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_OBJECT)
+      {
+        arg_p->v_object = NULL;
+      }
+      else
+      {
+        JERRY_ASSERT (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_BOOLEAN
+                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT32
+                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64
+                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_UINT32);
+      }
     }
   }
 
@@ -443,6 +482,10 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
         value = ecma_make_string_value (str_p);
 
         break;
+      }
+      case JERRY_EXTENSION_FIELD_TYPE_OBJECT:
+      {
+        JERRY_UNREACHABLE ();
       }
     }
 

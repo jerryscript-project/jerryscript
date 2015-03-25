@@ -27,12 +27,15 @@
 EXTENSION_FUNCTION (print_uint32, plugin_io_print_uint32,
                     1,
                     EXTENSION_ARG (0, UINT32))
+EXTENSION_FUNCTION (print_string, plugin_io_print_string,
+                    1,
+                    EXTENSION_ARG (0, STRING))
 #elif defined (EXTENSION_FIELD)
 #if defined (__TARGET_HOST)
 EXTENSION_FIELD (platform, STRING, "linux")
 #elif defined (__TARGET_MCU_STM32F3)
 EXTENSION_FIELD (platform, STRING, "mcu_stm32f3")
-#elif defined (__TARGET_MCU_STM32F3)
+#elif defined (__TARGET_MCU_STM32F4)
 EXTENSION_FIELD (platform, STRING, "mcu_stm32f4")
 #endif /* !__TARGET_MCU_STM32F3 && __TARGET_MCU_STM32F4 */
 #endif /* !EXTENSION_FUNCTION && !EXTENSION_FIELD */

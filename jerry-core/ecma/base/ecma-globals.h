@@ -387,7 +387,7 @@ typedef enum
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
-typedef struct
+typedef struct ecma_object_t
 {
 /* Common part for objects and lexical environments */
 
@@ -763,7 +763,7 @@ typedef uint8_t ecma_string_hash_t;
 /**
  * ECMA string-value descriptor
  */
-typedef struct
+typedef struct ecma_string_t
 {
   /** Reference counter for the string */
   unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;

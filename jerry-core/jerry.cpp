@@ -15,6 +15,8 @@
 
 #include "deserializer.h"
 #include "ecma-extension.h"
+#include "ecma-gc.h"
+#include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
 #include "jerry.h"
 #include "jrt.h"
@@ -62,6 +64,70 @@ jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the
 {
   return ecma_extension_register (desc_p);
 } /* jerry_extend_with */
+
+/**
+ * Copy string characters to specified buffer, append zero character at end of the buffer.
+ *
+ * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
+ *         otherwise (in case size of buffer is insuficcient) - negative number, which is calculated
+ *         as negation of buffer size, that is required to hold the string's content.
+ */
+ssize_t
+jerry_string_to_char_buffer (const jerry_string_t *string_p, /**< string descriptor */
+                             char *buffer_p, /**< output characters buffer */
+                             ssize_t buffer_size) /**< size of output buffer */
+{
+  return ecma_string_to_zt_string (string_p, (ecma_char_t*) buffer_p, buffer_size);
+} /* jerry_string_to_char_buffer */
+
+/**
+ * Acquire string pointer for usage outside of the engine
+ *
+ * Warning:
+ *         acquired pointer should be released with jerry_release_string
+ *
+ * @return pointer that may be used outside of the engine
+ */
+jerry_string_t*
+jerry_acquire_string (jerry_string_t *string_p) /**< pointer passed to function */
+{
+  return ecma_copy_or_ref_ecma_string (string_p);
+} /* jerry_acquire_string */
+
+/**
+ * Release string pointer acquired through jerry_acquire_string.
+ */
+void
+jerry_release_string (jerry_string_t *string_p) /**< pointer acquired through jerry_acquire_string */
+{
+  ecma_deref_ecma_string (string_p);
+} /* jerry_release_string */
+
+/**
+ * Acquire object pointer for usage outside of the engine
+ *
+ * Warning:
+ *         acquired pointer should be released with jerry_release_object
+ *
+ * @return pointer that may be used outside of the engine
+ */
+jerry_object_t*
+jerry_acquire_object (jerry_object_t *object_p) /**< pointer passed to function */
+{
+  ecma_ref_object (object_p);
+
+  return object_p;
+} /* jerry_acquire_object */
+
+/**
+ * Release object pointer acquired through jerry_acquire_object.
+ */
+void
+jerry_release_object (jerry_object_t *object_p) /**< pointer acquired through jerry_acquire_object */
+{
+  ecma_deref_object (object_p);
+} /* jerry_release_object */
+
 
 /**
  * @}

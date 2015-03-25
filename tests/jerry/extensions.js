@@ -18,11 +18,24 @@
 assert(Jerry.io.platform === "linux");
 
 Jerry.io.print_uint32 (1);
+Jerry.io.print_string (Jerry.io.platform);
 
 try
 {
   // Argument type mismatch
   Jerry.io.print_uint32 ('1');
+
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+}
+
+try
+{
+  // Argument type mismatch
+  Jerry.io.print_string (1);
 
   assert (false);
 }

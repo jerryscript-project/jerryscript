@@ -19,6 +19,7 @@
 #include "jerry.h"
 
 static void plugin_io_print_uint32 (uint32_t);
+static void plugin_io_print_string (jerry_string_t *string_p);
 
 #include "io-extension-description.inc.h"
 
@@ -35,4 +36,29 @@ static void
 plugin_io_print_uint32 (uint32_t num) /**< uint32 to print */
 {
   printf ("%lu", num);
-} /* print_uint32 */
+} /* plugin_io_print_uint32 */
+
+/**
+ * Print a string without new-line to standard output
+ *
+ * Note:
+ *      Currently, only strings that require up to 32 bytes with zero character at the end, are supported.
+ *      If string is too long for the function, then nothing will be printed.
+ */
+static void
+plugin_io_print_string (jerry_string_t *string_p) /**< string to print */
+{
+  char buffer [32];
+
+  ssize_t req_size = jerry_string_to_char_buffer (string_p, buffer, (ssize_t) sizeof (buffer));
+
+  if (req_size < 0)
+  {
+    /* not enough buffer size */
+    return;
+  }
+  else
+  {
+    printf ("%s", buffer);
+  }
+} /* plugin_io_print_string */

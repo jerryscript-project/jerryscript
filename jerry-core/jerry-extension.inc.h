@@ -54,8 +54,9 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 #define EXTENSION_ARG_PASS_UINT32(_arg_index) \
   args_p [_arg_index].v_uint32
 #define EXTENSION_ARG_PASS_STRING(_arg_index) \
-  (const char*) args_p [_arg_index].v_string.chars_p, \
-  args_p [_arg_index].v_string.length
+  args_p [_arg_index].v_string
+#define EXTENSION_ARG_PASS_OBJECT(_arg_index) \
+  args_p [_arg_index].v_object
 #define EXTENSION_ARG(_arg_index, _type) EXTENSION_ARG_PASS_ ## _type(_arg_index)
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _args_number, ...) \
   static void jerry_extension_ ## _function_name ## _wrapper (const jerry_extension_function_t *function_block_p) \
@@ -66,6 +67,7 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FUNCTION
 #undef EXTENSION_ARG
+#undef EXTENSION_ARG_PASS_OBJECT
 #undef EXTENSION_ARG_PASS_STRING
 #undef EXTENSION_ARG_PASS_UINT32
 #undef EXTENSION_ARG_PASS_FLOAT64

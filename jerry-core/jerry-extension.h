@@ -19,6 +19,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
+
+#ifdef __cplusplus
+# define EXTERN_C "C"
+#else /* !__cplusplus */
+# define EXTERN_C
+#endif /* !__cplusplus */
 
 /** \addtogroup jerry Jerry engine extension interface
  * @{
@@ -33,8 +40,19 @@ typedef enum
   JERRY_EXTENSION_FIELD_TYPE_FLOAT32, /**< 32-bit float */
   JERRY_EXTENSION_FIELD_TYPE_FLOAT64, /**< 64-bit float */
   JERRY_EXTENSION_FIELD_TYPE_UINT32, /**< number converted to 32-bit unsigned integer*/
-  JERRY_EXTENSION_FIELD_TYPE_STRING /**< chars buffer */
+  JERRY_EXTENSION_FIELD_TYPE_STRING, /**< string */
+  JERRY_EXTENSION_FIELD_TYPE_OBJECT  /**< object */
 } jerry_extension_data_type_t;
+
+/**
+ * An interface for Jerry's string value
+ */
+typedef struct ecma_string_t jerry_string_t;
+
+/**
+ * An interface for Jerry's object value
+ */
+typedef struct ecma_object_t jerry_object_t;
 
 /**
  * Description of an extension object's fields
@@ -43,7 +61,7 @@ typedef struct
 {
   const char *field_name_p; /**< field name */
 
-  jerry_extension_data_type_t type; /**< field data type */
+  const jerry_extension_data_type_t type; /**< field data type */
 
   /**
    * Value description
@@ -63,7 +81,7 @@ typedef struct
  */
 typedef struct
 {
-  jerry_extension_data_type_t type; /**< argument data type */
+  const jerry_extension_data_type_t type; /**< argument data type */
 
   union
   {
@@ -74,12 +92,11 @@ typedef struct
 
     uint32_t v_uint32; /**< number converted 32-bit unsigned integer */
 
-    /** String copied to external characters buffer (not zero-terminated) */
-    struct
+    union
     {
-      char* chars_p; /**< pointer to the string's chars in characters buffer */
-      size_t length; /**< number of characters */
-    } v_string;
+      jerry_string_t *v_string; /**< pointer to a JS string */
+      jerry_object_t *v_object; /**< pointer to a JS object */
+    };
   };
 } jerry_extension_function_arg_t;
 
@@ -117,8 +134,17 @@ typedef struct jerry_extension_descriptor_t
   uint32_t index; /**< global index of the extension among registered exceptions */
 } jerry_extension_descriptor_t;
 
-extern bool
+extern EXTERN_C bool
 jerry_extend_with (jerry_extension_descriptor_t *desc_p);
+
+extern EXTERN_C ssize_t
+jerry_string_to_char_buffer (const jerry_string_t *string_p,
+                             char *buffer_p,
+                             ssize_t buffer_size);
+extern EXTERN_C jerry_string_t* jerry_acquire_string (jerry_string_t *string_p);
+extern EXTERN_C void jerry_release_string (jerry_string_t *string_p);
+extern EXTERN_C jerry_object_t* jerry_acquire_object (jerry_object_t *object_p);
+extern EXTERN_C void jerry_release_object (jerry_object_t *object_p);
 
 /**
  * @}

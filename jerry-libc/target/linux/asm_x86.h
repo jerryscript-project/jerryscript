@@ -16,57 +16,78 @@
 #ifndef ASM_X86_H
 #define ASM_X86_H
 
-FIXME(Implement x86 ABI);
-#error "Not implemented"
+/*
+ * mov syscall_no -> %eax
+ * mov arg1 -> %ebx
+ * int $0x80
+ * mov %eax -> ret
+ */
+#define SYSCALL_1 \
+  push %edi;               \
+  push %esi;               \
+  push %ebx;               \
+  mov 0x10 (%esp), %eax;   \
+  mov 0x14 (%esp), %ebx;   \
+  int $0x80;               \
+  pop %ebx;                \
+  pop %esi;                \
+  pop %edi;                \
+  ret;
 
 /*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
- * syscall
- * mov %rax -> ret
+ * mov syscall_no -> %eax
+ * mov arg1 -> %ebx
+ * mov arg2 -> %ecx
+ * int $0x80
+ * mov %eax -> ret
  */
-#define SYSCALL_1 (syscall_no, arg1, ret) \
-    __asm ("syscall" \
-          : "=a" (ret) \
-          : "a" (syscall_no), "D" (arg1) \
-          : "rcx", "r11");
+#define SYSCALL_2 \
+  push %edi;               \
+  push %esi;               \
+  push %ebx;               \
+  mov 0x10 (%esp), %eax;   \
+  mov 0x14 (%esp), %ebx;   \
+  mov 0x18 (%esp), %ecx;   \
+  int $0x80;               \
+  pop %ebx;                \
+  pop %esi;                \
+  pop %edi;                \
+  ret;
 
 /*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
- * mov arg2 -> %rsi
- * syscall
- * mov %rax -> ret
+ * mov syscall_no -> %eax
+ * mov arg1 -> %ebx
+ * mov arg2 -> %ecx
+ * mov arg3 -> %edx
+ * int $0x80
+ * mov %eax -> ret
  */
-#define SYSCALL_2 (syscall_no, arg1, arg2, ret) \
-    __asm ("syscall" \
-          : "=a" (ret) \
-          : "a" (syscall_no), "D" (arg1), "S" (arg2) \
-          : "rcx", "r11");
+#define SYSCALL_3 \
+  push %edi;               \
+  push %esi;               \
+  push %ebx;               \
+  mov 0x10 (%esp), %eax;   \
+  mov 0x14 (%esp), %ebx;   \
+  mov 0x18 (%esp), %ecx;   \
+  mov 0x1c (%esp), %edx;   \
+  int $0x80;               \
+  pop %ebx;                \
+  pop %esi;                \
+  pop %edi;               \
+  ret;
 
-/*
- * mov syscall_no -> %rax
- * mov arg1 -> %rdi
- * mov arg2 -> %rsi
- * mov arg3 -> %rdx
- * syscall
- * mov %rax -> ret
- */
-#define SYSCALL_3 (syscall_no, arg1, arg2, arg3, ret) \
-    __asm ("syscall" \
-          : "=a" (ret) \
-          : "a" (syscall_no), "D" (arg1), "S" (arg2), "d" (arg3) \
-          : "rcx", "r11");
-
-#define _START            \
-   mov (%rsp), %rdi;      \
-   mov %rsp, %rsi;        \
-   add $8, %rsi;          \
-   callq main;            \
-                          \
-   mov %rax, %rdi;        \
-   callq exit;          \
-   1:                     \
+#define _START             \
+   mov %esp, %eax;         \
+   add $4, %eax;           \
+   push %eax;              \
+   mov 0x4 (%esp), %eax;   \
+   push %eax;              \
+                           \
+   call main;              \
+                           \
+   push %eax;              \
+   call exit;              \
+   1:                      \
    jmp 1b
 
 #endif /* !ASM_X86_H */

@@ -24,6 +24,18 @@ BUILD_INFO=`echo -e "$CPPCHECK_INFO\n$VERA_INFO\n$GCC_INFO"`
 
 clear
 
+gitignore_files_list=`find . -name .gitignore`
+
+if [ "$gitignore_files_list" != "./.gitignore" ]
+then
+  echo -e "\n\e[1;33mInvalid .gitignore configuration\e[0m\n"
+  echo -e -n ".gitignore files list:\t"
+  echo $gitignore_files_list
+  echo
+
+  exit 1
+fi
+
 if [ "`git status --porcelain 2>&1 | wc -l`" != "0" ]
 then
   echo -e "\n  \e[1;90m$GIT_STATUS_NOT_CLEAN_MSG:\n"

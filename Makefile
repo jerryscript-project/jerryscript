@@ -55,7 +55,7 @@
   endif
 
 # External build configuration
- EXTERNAL_LIBS_INTERFACE ?= ./third-party/nuttx/include
+ EXTERNAL_LIBS_INTERFACE ?= $(shell pwd)/third-party/nuttx/include
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
  EXTERNAL_CXX_COMPILER ?= arm-none-eabi-g++
 

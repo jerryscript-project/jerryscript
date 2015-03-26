@@ -283,4 +283,4 @@ unittests_run: unittests
 clean:
 	@ rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
-.PHONY: clean build unittests_run $(JERRY_TARGETS) $(FLASH_TARGETS)
+.PHONY: clean build unittests_run $(BUILD_DIRS_ALL) $(JERRY_TARGETS) $(FLASH_TARGETS)

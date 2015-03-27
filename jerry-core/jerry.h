@@ -84,19 +84,25 @@ extern const char *jerry_branch_name;
  */
 typedef void (*jerry_error_callback_t) (jerry_fatal_code_t);
 
-extern void jerry_init (jerry_flag_t flags);
-extern void jerry_cleanup (void);
+#ifdef __cplusplus
+# define EXTERN_C "C"
+#else /* !__cplusplus */
+# define EXTERN_C
+#endif /* !__cplusplus */
 
-extern void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
-extern void jerry_reg_err_callback (jerry_error_callback_t callback);
+extern EXTERN_C void jerry_init (jerry_flag_t flags);
+extern EXTERN_C void jerry_cleanup (void);
 
-extern jerry_ctx_t* jerry_new_ctx (void);
-extern void jerry_cleanup_ctx (jerry_ctx_t*);
+extern EXTERN_C void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
+extern EXTERN_C void jerry_reg_err_callback (jerry_error_callback_t callback);
 
-extern bool jerry_parse (jerry_ctx_t*, const char* source_p, size_t source_size);
-extern jerry_completion_code_t jerry_run (jerry_ctx_t *);
+extern EXTERN_C jerry_ctx_t* jerry_new_ctx (void);
+extern EXTERN_C void jerry_cleanup_ctx (jerry_ctx_t*);
 
-extern jerry_completion_code_t
+extern EXTERN_C bool jerry_parse (jerry_ctx_t*, const char* source_p, size_t source_size);
+extern EXTERN_C jerry_completion_code_t jerry_run (jerry_ctx_t *);
+
+extern EXTERN_C jerry_completion_code_t
 jerry_run_simple (const char *script_source,
                   size_t script_source_size,
                   jerry_flag_t flags);

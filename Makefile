@@ -47,11 +47,19 @@
   ifneq ($(VALGRIND),ON)
    VALGRIND := OFF
   endif
+
  # Static checkers
   STATIC_CHECK ?= OFF
 
   ifneq ($(STATIC_CHECK),ON)
    STATIC_CHECK := OFF
+  endif
+
+ # LTO
+  LTO ?= ON
+
+  ifneq ($(LTO),ON)
+   LTO := OFF
   endif
 
 # External build configuration
@@ -102,10 +110,10 @@ export SHELL=/bin/bash
 
 # Building all options combinations
  OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
- # OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-{ANOTHER_OPTION}-$(__OPTION)))
+ OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-LTO-$(__OPTION)))
 
 # Building current options string
- OPTIONS_STRING := -VALGRIND-$(VALGRIND)
+ OPTIONS_STRING := -VALGRIND-$(VALGRIND)-LTO-$(LTO)
 
 # Build directories
  BUILD_DIR_PREFIX := ./build/obj
@@ -138,7 +146,7 @@ $(BUILD_DIRS_NATIVE):
           fi; \
 	  mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_NUTTX):
@@ -151,7 +159,7 @@ $(BUILD_DIRS_NUTTX):
 	@ mkdir -p $@ && \
           cd $@ && \
           cmake \
-          -DENABLE_VALGRIND=$(VALGRIND) \
+          -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) \
           -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
           -DEXTERNAL_LIBC_INTERFACE=${EXTERNAL_LIBS_INTERFACE} \
           -DEXTERNAL_CMAKE_C_COMPILER=${EXTERNAL_C_COMPILER} \
@@ -162,13 +170,13 @@ $(BUILD_DIRS_NUTTX):
 $(BUILD_DIRS_STM32F3):
 	@ mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F4):
 	@ mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native

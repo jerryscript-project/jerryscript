@@ -60,6 +60,7 @@ project (Jerry CXX C ASM)
 
 # Determining platform and defining options
  option(ENABLE_VALGRIND "Enable valgrind helpers in memory allocators" OFF)
+ option(ENABLE_LTO      "Enable LTO build" ON)
 
  set(PLATFORM "${CMAKE_SYSTEM_NAME}")
  string(TOUPPER "${PLATFORM}" PLATFORM)
@@ -156,8 +157,14 @@ project (Jerry CXX C ASM)
        ${MODIFIERS_LISTS_LINUX})
 
 # Compiler / Linker flags
- set(COMPILE_FLAGS_JERRY "-flto -fno-fat-lto-objects -fno-builtin")
- set(LINKER_FLAGS_COMMON "-flto")
+ set(COMPILE_FLAGS_JERRY "-fno-builtin")
+ set(LINKER_FLAGS_COMMON "")
+
+ # LTO
+  if("${ENABLE_LTO}" STREQUAL "ON")
+   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto -fno-fat-lto-objects")
+   set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -flto")
+  endif()
 
  # Turn off stack protector
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -fno-stack-protector")

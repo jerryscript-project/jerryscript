@@ -150,10 +150,10 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
     uint32_t arg_index;
     for (arg_index = 0; arg_index < function_p->args_number; arg_index++)
     {
-      jerry_extension_function_arg_t *arg_p = &function_p->args_p [arg_index];
+      jerry_api_value_t *arg_p = &function_p->args_p [arg_index];
       const ecma_value_t arg_value = arguments_list [arg_index];
 
-      if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_BOOLEAN)
+      if (arg_p->type == JERRY_API_DATA_TYPE_BOOLEAN)
       {
         if (!ecma_is_value_boolean (arg_value))
         {
@@ -164,9 +164,9 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
           arg_p->v_bool = ecma_is_value_true (arg_value);
         }
       }
-      else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT32
-               || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64
-               || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_UINT32)
+      else if (arg_p->type == JERRY_API_DATA_TYPE_FLOAT32
+               || arg_p->type == JERRY_API_DATA_TYPE_FLOAT64
+               || arg_p->type == JERRY_API_DATA_TYPE_UINT32)
       {
         if (!ecma_is_value_number (arg_value))
         {
@@ -175,11 +175,11 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
         else
         {
           ecma_number_t num_value = *ecma_get_number_from_value (arg_value);
-          if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT32)
+          if (arg_p->type == JERRY_API_DATA_TYPE_FLOAT32)
           {
             arg_p->v_float32 = (float) num_value;
           }
-          else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64)
+          else if (arg_p->type == JERRY_API_DATA_TYPE_FLOAT64)
           {
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
             JERRY_UNREACHABLE ();
@@ -187,13 +187,13 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
             arg_p->v_float64 = num_value;
 #endif /* CONFIG_ECMA_NUMBER_TYPE ==  CONFIG_ECMA_NUMBER_FLOAT64 */
           }
-          else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_UINT32)
+          else if (arg_p->type == JERRY_API_DATA_TYPE_UINT32)
           {
             arg_p->v_uint32 = ecma_number_to_uint32 (num_value);
           }
         }
       }
-      else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_STRING)
+      else if (arg_p->type == JERRY_API_DATA_TYPE_STRING)
       {
         if (!ecma_is_value_string (arg_value))
         {
@@ -206,7 +206,7 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
       }
       else
       {
-        JERRY_ASSERT (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_OBJECT);
+        JERRY_ASSERT (arg_p->type == JERRY_API_DATA_TYPE_OBJECT);
 
         if (!ecma_is_value_object (arg_value))
         {
@@ -234,22 +234,22 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
          arg_index < initialized_args_count;
          arg_index++)
     {
-      jerry_extension_function_arg_t *arg_p = &function_p->args_p [arg_index];
+      jerry_api_value_t *arg_p = &function_p->args_p [arg_index];
 
-      if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_STRING)
+      if (arg_p->type == JERRY_API_DATA_TYPE_STRING)
       {
         arg_p->v_string = NULL;
       }
-      else if (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_OBJECT)
+      else if (arg_p->type == JERRY_API_DATA_TYPE_OBJECT)
       {
         arg_p->v_object = NULL;
       }
       else
       {
-        JERRY_ASSERT (arg_p->type == JERRY_EXTENSION_FIELD_TYPE_BOOLEAN
-                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT32
-                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64
-                      || arg_p->type == JERRY_EXTENSION_FIELD_TYPE_UINT32);
+        JERRY_ASSERT (arg_p->type == JERRY_API_DATA_TYPE_BOOLEAN
+                      || arg_p->type == JERRY_API_DATA_TYPE_FLOAT32
+                      || arg_p->type == JERRY_API_DATA_TYPE_FLOAT64
+                      || arg_p->type == JERRY_API_DATA_TYPE_UINT32);
       }
     }
   }
@@ -302,7 +302,7 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
     /* Check if we can represent the arguments' values */
     for (uint32_t j = 0; j < extension_desc_p->functions_p [i].args_number; j++)
     {
-      if (extension_desc_p->functions_p[i].args_p[j].type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64)
+      if (extension_desc_p->functions_p[i].args_p[j].type == JERRY_API_DATA_TYPE_FLOAT64)
       {
         return false;
       }
@@ -325,12 +325,12 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     /* Check if we can represent the field's value */
 
-    if (extension_desc_p->fields_p[i].type == JERRY_EXTENSION_FIELD_TYPE_FLOAT64)
+    if (extension_desc_p->fields_p[i].type == JERRY_API_DATA_TYPE_FLOAT64)
     {
       return false;
     }
 
-    if (extension_desc_p->fields_p[i].type == JERRY_EXTENSION_FIELD_TYPE_UINT32
+    if (extension_desc_p->fields_p[i].type == JERRY_API_DATA_TYPE_UINT32
         && ecma_number_to_uint32 (ecma_uint32_to_number (extension_desc_p->fields_p[i].v_uint32))
            != extension_desc_p->fields_p[i].v_uint32)
     {
@@ -440,13 +440,13 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
     switch (field_p->type)
     {
-      case JERRY_EXTENSION_FIELD_TYPE_BOOLEAN:
+      case JERRY_API_DATA_TYPE_BOOLEAN:
       {
         value = ecma_make_simple_value (field_p->v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
         break;
       }
-      case JERRY_EXTENSION_FIELD_TYPE_FLOAT32:
+      case JERRY_API_DATA_TYPE_FLOAT32:
       {
         ecma_number_t *num_p = ecma_alloc_number ();
         *num_p = field_p->v_float32;
@@ -454,7 +454,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
         break;
       }
-      case JERRY_EXTENSION_FIELD_TYPE_FLOAT64:
+      case JERRY_API_DATA_TYPE_FLOAT64:
       {
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
         JERRY_UNREACHABLE ();
@@ -466,7 +466,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
         break;
       }
-      case JERRY_EXTENSION_FIELD_TYPE_UINT32:
+      case JERRY_API_DATA_TYPE_UINT32:
       {
         ecma_number_t *num_p = ecma_alloc_number ();
         *num_p = ecma_uint32_to_number (field_p->v_uint32);
@@ -475,7 +475,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
         break;
       }
-      case JERRY_EXTENSION_FIELD_TYPE_STRING:
+      case JERRY_API_DATA_TYPE_STRING:
       {
         const ecma_char_t *string_p = (const ecma_char_t*) field_p->v_string;
         ecma_string_t *str_p = ecma_new_ecma_string (string_p);
@@ -483,7 +483,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
         break;
       }
-      case JERRY_EXTENSION_FIELD_TYPE_OBJECT:
+      case JERRY_API_DATA_TYPE_OBJECT:
       {
         JERRY_UNREACHABLE ();
       }

@@ -84,12 +84,6 @@ extern const char *jerry_branch_name;
  */
 typedef void (*jerry_error_callback_t) (jerry_fatal_code_t);
 
-#ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
-#endif /* !__cplusplus */
-
 extern EXTERN_C void jerry_init (jerry_flag_t flags);
 extern EXTERN_C void jerry_cleanup (void);
 

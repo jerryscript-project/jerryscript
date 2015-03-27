@@ -18,6 +18,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
+#include "ecma-objects-general.h"
 #include "jerry.h"
 #include "jrt.h"
 #include "parser.h"
@@ -66,6 +67,10 @@ jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the
 } /* jerry_extend_with */
 
 /**
+ * @}
+ */
+
+/**
  * Copy string characters to specified buffer, append zero character at end of the buffer.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
@@ -73,65 +78,188 @@ jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
-jerry_string_to_char_buffer (const jerry_string_t *string_p, /**< string descriptor */
+jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string descriptor */
                              char *buffer_p, /**< output characters buffer */
                              ssize_t buffer_size) /**< size of output buffer */
 {
   return ecma_string_to_zt_string (string_p, (ecma_char_t*) buffer_p, buffer_size);
-} /* jerry_string_to_char_buffer */
+} /* jerry_api_string_to_char_buffer */
 
 /**
  * Acquire string pointer for usage outside of the engine
+ * from string retrieved in extension routine call from engine.
  *
  * Warning:
- *         acquired pointer should be released with jerry_release_string
+ *         acquired pointer should be released with jerry_api_release_string
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_string_t*
-jerry_acquire_string (jerry_string_t *string_p) /**< pointer passed to function */
+jerry_api_string_t*
+jerry_api_acquire_string (jerry_api_string_t *string_p) /**< pointer passed to function */
 {
   return ecma_copy_or_ref_ecma_string (string_p);
-} /* jerry_acquire_string */
+} /* jerry_api_acquire_string */
 
 /**
- * Release string pointer acquired through jerry_acquire_string.
+ * Release string pointer
+ *
+ * See also:
+ *          jerry_api_acquire_string
+ *          jerry_api_call_function
+ *
  */
 void
-jerry_release_string (jerry_string_t *string_p) /**< pointer acquired through jerry_acquire_string */
+jerry_api_release_string (jerry_api_string_t *string_p) /**< pointer acquired through jerry_api_acquire_string */
 {
   ecma_deref_ecma_string (string_p);
-} /* jerry_release_string */
+} /* jerry_api_release_string */
 
 /**
  * Acquire object pointer for usage outside of the engine
+ * from object retrieved in extension routine call from engine.
  *
  * Warning:
- *         acquired pointer should be released with jerry_release_object
+ *         acquired pointer should be released with jerry_api_release_object
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_object_t*
-jerry_acquire_object (jerry_object_t *object_p) /**< pointer passed to function */
+jerry_api_object_t*
+jerry_api_acquire_object (jerry_api_object_t *object_p) /**< pointer passed to function */
 {
   ecma_ref_object (object_p);
 
   return object_p;
-} /* jerry_acquire_object */
+} /* jerry_api_acquire_object */
 
 /**
- * Release object pointer acquired through jerry_acquire_object.
+ * Release object pointer
+ *
+ * See also:
+ *          jerry_api_acquire_object
+ *          jerry_api_call_function
+ *          jerry_api_get_object_field_value
  */
 void
-jerry_release_object (jerry_object_t *object_p) /**< pointer acquired through jerry_acquire_object */
+jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired through jerry_api_acquire_object */
 {
   ecma_deref_object (object_p);
-} /* jerry_release_object */
-
+} /* jerry_api_release_object */
 
 /**
- * @}
+ * Call function specified by a function object
+ *
+ * Note:
+ *      if call was performed successfully and returned value of type string or object, then caller
+ *      should release the string / object with corresponding jerry_api_release_string / jerry_api_release_object,
+ *      just when the value becomes unnecessary.
+ *
+ * @return true, if call was performed successfully, i.e.:
+ *                - arguments number equals to the function's length property;
+ *                - no unhandled exceptions were thrown;
+ *                - returned value type is corresponding to one of jerry_api_data_type_t (if retval_p is not NULL)
+ *                  or is 'undefined' (if retval_p is NULL);
+ *         false - otherwise.
  */
+bool
+jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
+                         jerry_api_value_t *retval_p, /**< place for function's return value (if it is required)
+                                                       *   or NULL (if it should be 'undefined') */
+                         const jerry_api_value_t args_p [], /**< function's call arguments
+                                                             *   (NULL if arguments number is zero) */
+                         uint32_t args_count) /**< number of the arguments */
+{
+  JERRY_ASSERT (args_count == 0
+                || args_p != NULL);
+
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
+                                       function_object_p, retval_p, args_p, args_count);
+} /* jerry_api_call_function */
+
+/**
+ * Create an object
+ *
+ * Note:
+ *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *
+ * @return pointer to created object
+ */
+jerry_api_object_t*
+jerry_api_create_object (void)
+{
+  return ecma_op_create_object_object_noarg ();
+} /* jerry_api_create_object */
+
+/**
+ * Create field (named data property) in the specified object
+ *
+ * @return true, if field was created successfully, i.e. upon the call:
+ *                - there is no field with same name in the object;
+ *                - the object is extensible;
+ *         false - otherwise.
+ */
+bool
+jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add field at */
+                            const char *field_name_p, /**< name of the field */
+                            const jerry_api_value_t *field_value_p, /**< value of the field */
+                            bool is_writable) /**< flag indicating whether the created field should be writable */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
+                                       object_p, field_name_p, field_value_p, is_writable);
+} /* jerry_api_add_object_field */
+
+/**
+ * Delete field in the specified object
+ *
+ * @return true, if field was deleted successfully, i.e. upon the call:
+ *                - there is field with specified name in the object;
+ *         false - otherwise.
+ */
+bool
+jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to delete field at */
+                               const char *field_name_p) /**< name of the field */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
+                                       object_p, field_name_p);
+} /* jerry_api_delete_object_field */
+
+/**
+ * Get value of field in the specified object
+ *
+ * Note:
+ *      if value was retrieved successfully and it is of type string or object, then caller
+ *      should release the string / object with corresponding jerry_api_release_string / jerry_api_release_object,
+ *      just when the value becomes unnecessary.
+ *
+ * @return true, if field value was retrieved successfully, i.e. upon the call:
+ *                - there is field with specified name in the object;
+ *                - field value is not undefined nor null;
+ *         false - otherwise.
+ */
+bool
+jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
+                                  const char *field_name_p, /**< name of the field */
+                                  jerry_api_value_t *field_value_p) /**< out: field value, if retrieved successfully */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
+                                       object_p, field_name_p, field_value_p);
+} /* jerry_api_get_object_field_value */
+
+/**
+ * Set value of field in the specified object
+ *
+ * @return true, if field value was set successfully, i.e. upon the call:
+ *                - there is field with specified name in the object;
+ *                - field value is writable;
+ *         false - otherwise.
+ */
+bool
+jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
+                                  const char *field_name_p, /**< name of the field */
+                                  const jerry_api_value_t *field_value_p) /**< field value to set */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
+                                       object_p, field_name_p, field_value_p);
+} /* jerry_api_set_object_field_value */
 
 /**
  * Jerry engine initialization
@@ -231,6 +359,8 @@ jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
 
 /**
  * Run Jerry in specified run context
+ *
+ * @return completion status
  */
 jerry_completion_code_t
 jerry_run (jerry_ctx_t* ctx_p) /**< run context */
@@ -243,6 +373,8 @@ jerry_run (jerry_ctx_t* ctx_p) /**< run context */
 
 /**
  * Simple jerry runner
+ *
+ * @return completion status
  */
 jerry_completion_code_t
 jerry_run_simple (const char *script_source, /**< script source */

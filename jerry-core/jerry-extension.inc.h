@@ -39,7 +39,7 @@ enum
 static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIELDS_NUMBER + 1] =
 {
 #define EXTENSION_FIELD(_field_name, _type, _value) \
-  { # _field_name, JERRY_EXTENSION_FIELD_TYPE_ ## _type, _value },
+  { # _field_name, JERRY_API_DATA_TYPE_ ## _type, _value },
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FIELD
 };
@@ -61,7 +61,7 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _args_number, ...) \
   static void jerry_extension_ ## _function_name ## _wrapper (const jerry_extension_function_t *function_block_p) \
   { \
-    const jerry_extension_function_arg_t *args_p = function_block_p->args_p; \
+    const jerry_api_value_t *args_p = function_block_p->args_p; \
     _function_to_call (__VA_ARGS__); \
   }
 # include EXTENSION_DESCRIPTION_HEADER
@@ -76,11 +76,11 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 
 /* Functions' arguments description */
 #define EXTENSION_ARG(_arg_index, _type) [_arg_index] = { \
-  (JERRY_EXTENSION_FIELD_TYPE_ ## _type), \
+  (JERRY_API_DATA_TYPE_ ## _type), \
   false /* just for initialization, should be overwritten upon call */ \
 }
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _args_number, ...) \
-  static jerry_extension_function_arg_t jerry_extension_function_ ## _function_name ## _args [_args_number] = { \
+  static jerry_api_value_t jerry_extension_function_ ## _function_name ## _args [_args_number] = { \
     __VA_ARGS__ \
   };
 # include EXTENSION_DESCRIPTION_HEADER

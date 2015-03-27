@@ -19,7 +19,7 @@
 #include "jerry.h"
 
 static void plugin_io_print_uint32 (uint32_t);
-static void plugin_io_print_string (jerry_string_t *string_p);
+static void plugin_io_print_string (jerry_api_string_t *string_p);
 
 #include "io-extension-description.inc.h"
 
@@ -46,11 +46,11 @@ plugin_io_print_uint32 (uint32_t num) /**< uint32 to print */
  *      If string is too long for the function, then nothing will be printed.
  */
 static void
-plugin_io_print_string (jerry_string_t *string_p) /**< string to print */
+plugin_io_print_string (jerry_api_string_t *string_p) /**< string to print */
 {
   char buffer [32];
 
-  ssize_t req_size = jerry_string_to_char_buffer (string_p, buffer, (ssize_t) sizeof (buffer));
+  ssize_t req_size = jerry_api_string_to_char_buffer (string_p, buffer, (ssize_t) sizeof (buffer));
 
   if (req_size < 0)
   {

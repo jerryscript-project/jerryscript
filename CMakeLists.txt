@@ -252,6 +252,10 @@ project (Jerry CXX C ASM)
  set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_COMMON_${PLATFORM_EXT}}")
  set(SOURCE_JERRY_STANDALONE_MAIN ${SOURCE_JERRY_STANDALONE_MAIN_${PLATFORM_EXT}})
 
+# Definitions
+ # Memory statistics
+  set(DEFINES_MEMORY_STATISTICS MEM_STATS)
+
 # Component targets
  # Jerry's libc
   if(NOT ${USE_EXTERNAL_LIBC})
@@ -274,15 +278,14 @@ project (Jerry CXX C ASM)
   set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
+   set(DEFINES_JERRY)
    set(CORE_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
    foreach(MODIFIER ${ARGN})
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
-
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
+    set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_${MODIFIER}})
    endforeach()
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
-
-   set(DEFINES_JERRY )
 
    if(NOT ${EXTERNAL_BUILD})
     add_executable(${TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})

@@ -973,17 +973,17 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
             "  Peak allocated chunks count = %lu\n"
             "  Peak allocated= %lu bytes\n"
             "  Peak waste = %lu bytes\n",
-            mem_heap_stats.size,
+            (uint64_t) mem_heap_stats.size,
             (uint64_t) MEM_HEAP_CHUNK_SIZE,
-            mem_heap_stats.blocks,
-            mem_heap_stats.allocated_blocks,
-            mem_heap_stats.allocated_chunks,
-            mem_heap_stats.allocated_bytes,
-            mem_heap_stats.waste_bytes,
-            mem_heap_stats.peak_allocated_blocks,
-            mem_heap_stats.peak_allocated_chunks,
-            mem_heap_stats.peak_allocated_bytes,
-            mem_heap_stats.peak_waste_bytes);
+            (uint64_t) mem_heap_stats.blocks,
+            (uint64_t) mem_heap_stats.allocated_blocks,
+            (uint64_t) mem_heap_stats.allocated_chunks,
+            (uint64_t) mem_heap_stats.allocated_bytes,
+            (uint64_t) mem_heap_stats.waste_bytes,
+            (uint64_t) mem_heap_stats.peak_allocated_blocks,
+            (uint64_t) mem_heap_stats.peak_allocated_chunks,
+            (uint64_t) mem_heap_stats.peak_allocated_bytes,
+            (uint64_t) mem_heap_stats.peak_waste_bytes);
   }
 #else /* MEM_STATS */
   (void) dump_stats;

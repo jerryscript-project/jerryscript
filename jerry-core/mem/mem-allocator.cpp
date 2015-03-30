@@ -72,11 +72,11 @@ mem_finalize (bool is_show_mem_stats) /**< show heap memory stats
             "  Peak pools: %lu\n"
             "  Peak allocated chunks: %lu\n\n",
             MEM_POOL_CHUNK_SIZE,
-            stats.pools_count,
-            stats.allocated_chunks,
-            stats.free_chunks,
-            stats.peak_pools_count,
-            stats.peak_allocated_chunks);
+            (unsigned long) stats.pools_count,
+            (unsigned long) stats.allocated_chunks,
+            (unsigned long) stats.free_chunks,
+            (unsigned long) stats.peak_pools_count,
+            (unsigned long) stats.peak_allocated_chunks);
 #endif /* MEM_STATS */
   }
 

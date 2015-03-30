@@ -205,7 +205,7 @@ project (Jerry CXX C ASM)
   set(FLAGS_COMMON_RELEASE "-Os -nostdlib")
 
  # Unit tests
-  set(FLAGS_COMMON_UNITTESTS "-O3 -nodefaultlibs")
+  set(FLAGS_COMMON_UNITTESTS "-O0 -nodefaultlibs")
 
 # Include directories
  # Core interface

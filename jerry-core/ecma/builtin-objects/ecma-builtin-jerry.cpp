@@ -440,12 +440,6 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
     switch (field_p->type)
     {
-      case JERRY_API_DATA_TYPE_EMPTY:
-      {
-        value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-        break;
-      }
       case JERRY_API_DATA_TYPE_UNDEFINED:
       {
         value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);

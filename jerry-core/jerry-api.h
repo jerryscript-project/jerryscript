@@ -36,6 +36,9 @@
  */
 typedef enum
 {
+  JERRY_API_DATA_TYPE_EMPTY,
+  JERRY_API_DATA_TYPE_UNDEFINED,
+  JERRY_API_DATA_TYPE_NULL,
   JERRY_API_DATA_TYPE_BOOLEAN, /**< bool */
   JERRY_API_DATA_TYPE_FLOAT32, /**< 32-bit float */
   JERRY_API_DATA_TYPE_FLOAT64, /**< 64-bit float */
@@ -59,7 +62,7 @@ typedef struct ecma_object_t jerry_api_object_t;
  */
 typedef struct
 {
-  const jerry_api_data_type_t type; /**< argument data type */
+  jerry_api_data_type_t type; /**< argument data type */
 
   union
   {
@@ -70,11 +73,8 @@ typedef struct
 
     uint32_t v_uint32; /**< number converted 32-bit unsigned integer */
 
-    union
-    {
-      jerry_api_string_t *v_string; /**< pointer to a JS string */
-      jerry_api_object_t *v_object; /**< pointer to a JS object */
-    };
+    jerry_api_string_t *v_string; /**< pointer to a JS string */
+    jerry_api_object_t *v_object; /**< pointer to a JS object */
   };
 } jerry_api_value_t;
 
@@ -97,6 +97,9 @@ bool jerry_api_call_function (jerry_api_object_t *function_object_p,
                               jerry_api_value_t *retval_p,
                               const jerry_api_value_t args_p [],
                               uint32_t args_count);
+
+extern EXTERN_C
+jerry_api_object_t* jerry_api_get_global (void);
 
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);

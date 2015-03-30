@@ -14,11 +14,17 @@
  */
 
 #include "deserializer.h"
+#include "ecma-alloc.h"
+#include "ecma-builtins.h"
 #include "ecma-extension.h"
 #include "ecma-gc.h"
+#include "ecma-function-object.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
+#include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "mem-heap.h"
 #include "jerry.h"
 #include "jrt.h"
 #include "parser.h"
@@ -53,6 +59,113 @@ static jerry_flag_t jerry_flags;
  * Buffer of character data (used for exchange between core and extensions' routines)
  */
 char jerry_extension_characters_buffer [CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
+
+
+static jerry_api_value_t
+convert_ecma_value_to_api_value (const ecma_value_t& value)
+{
+  jerry_api_value_t ret;
+  if (ecma_is_value_empty (value))
+  {
+    ret.type = JERRY_API_DATA_TYPE_EMPTY;
+  }
+  else if (ecma_is_value_undefined (value))
+  {
+    ret.type = JERRY_API_DATA_TYPE_UNDEFINED;
+  }
+  else if (ecma_is_value_boolean (value))
+  {
+    ret.type = JERRY_API_DATA_TYPE_BOOLEAN;
+    ret.v_bool = ecma_is_value_true (value);
+  }
+  else if (ecma_is_value_number (value))
+  {
+    ecma_number_t *num = ecma_get_number_from_value(value);
+
+    #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+
+    ret.type = JERRY_API_DATA_TYPE_FLOAT32;
+    ret.v_float32 = *num;
+
+    #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+
+    ret.type = JERRY_API_DATA_TYPE_FLOAT64;
+    ret.v_float64 = *num;
+
+    #endif
+  }
+  else if (ecma_is_value_string (value))
+  {
+    ecma_string_t *str = ecma_get_string_from_value(value);
+
+    ret.type = JERRY_API_DATA_TYPE_STRING;
+    ret.v_string = ecma_copy_or_ref_ecma_string(str);
+  }
+  else if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj = ecma_get_object_from_value(value);
+    ecma_ref_object(obj);
+
+    ret.type = JERRY_API_DATA_TYPE_OBJECT;
+    ret.v_object = obj;
+  } else {
+    JERRY_UNIMPLEMENTED ("Unsupported type of conversion from ecma_value to api_value");
+  }
+  return ret;
+}
+
+
+static ecma_value_t
+convert_api_value_to_ecma_value (const jerry_api_value_t& value)
+{
+  switch (value.type)
+  {
+    case JERRY_API_DATA_TYPE_EMPTY:
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    }
+    case JERRY_API_DATA_TYPE_UNDEFINED:
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    case JERRY_API_DATA_TYPE_NULL:
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+    }
+    case JERRY_API_DATA_TYPE_BOOLEAN:
+    {
+      return ecma_make_simple_value (value.v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    }
+    case JERRY_API_DATA_TYPE_FLOAT32:
+    {
+      ecma_number_t *num = ecma_alloc_number ();
+      *num = static_cast<ecma_number_t> (value.v_float32);
+      return ecma_make_number_value (num);
+    }
+    case JERRY_API_DATA_TYPE_FLOAT64:
+    {
+      ecma_number_t *num = ecma_alloc_number ();
+      *num = static_cast<ecma_number_t> (value.v_float64);
+      return ecma_make_number_value (num);
+    }
+    case JERRY_API_DATA_TYPE_UINT32:
+    {
+      ecma_number_t *num = ecma_alloc_number ();
+      *num = static_cast<ecma_number_t> (value.v_uint32);
+      return ecma_make_number_value (num);
+    }
+    case JERRY_API_DATA_TYPE_STRING:
+    {
+      return ecma_make_string_value (value.v_string);
+    }
+    case JERRY_API_DATA_TYPE_OBJECT:
+    {
+      return ecma_make_object_value (value.v_object);
+    }
+  }
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+}
+
 
 /**
  * Extend Global scope with specified extension object
@@ -160,6 +273,8 @@ jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired th
  *                  or is 'undefined' (if retval_p is NULL);
  *         false - otherwise.
  */
+#include <stdio.h>
+#include "ecma-helpers.h"
 bool
 jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
                          jerry_api_value_t *retval_p, /**< place for function's return value (if it is required)
@@ -168,12 +283,41 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
                                                              *   (NULL if arguments number is zero) */
                          uint32_t args_count) /**< number of the arguments */
 {
-  JERRY_ASSERT (args_count == 0
-                || args_p != NULL);
+  JERRY_ASSERT (args_count == 0 || args_p != NULL);
 
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
-                                       function_object_p, retval_p, args_p, args_count);
+  MEM_DEFINE_LOCAL_ARRAY(arg_values, args_count, ecma_value_t);
+
+  for (uint32_t i = 0; i < args_count; ++i) {
+    arg_values[i] = convert_api_value_to_ecma_value (args_p[i]);
+    }
+
+  ecma_completion_value_t call_result = ecma_op_function_call (
+      function_object_p,
+      ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+      arg_values,
+      static_cast<ecma_length_t> (args_count));
+
+  ecma_value_t val = ecma_get_completion_value_value (call_result);
+  *retval_p = convert_ecma_value_to_api_value (val);
+
+  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+
+  return true;
 } /* jerry_api_call_function */
+
+/**
+* Get global object
+*
+* Note:
+*       caller should release the object with jerry_api_release_objc, just when the value becomes unnecessary.
+*
+* @return pointer to the global object
+*/
+jerry_api_object_t*
+jerry_api_get_global (void)
+{
+  return jerry_api_acquire_object (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+}
 
 /**
  * Create an object
@@ -240,8 +384,12 @@ jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
                                   const char *field_name_p, /**< name of the field */
                                   jerry_api_value_t *field_value_p) /**< out: field value, if retrieved successfully */
 {
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
-                                       object_p, field_name_p, field_value_p);
+  JERRY_ASSERT(object_p != NULL);
+
+  ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*)field_name_p);
+  ecma_value_t val = ecma_get_completion_value_value (ecma_op_object_get (object_p, field_name_str_p));
+  *field_value_p = convert_ecma_value_to_api_value (val);
+  return true;
 } /* jerry_api_get_object_field_value */
 
 /**
@@ -260,6 +408,7 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("API routine is not implemented",
                                        object_p, field_name_p, field_value_p);
 } /* jerry_api_set_object_field_value */
+
 
 /**
  * Jerry engine initialization

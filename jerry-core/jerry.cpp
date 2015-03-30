@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+
 #include "deserializer.h"
 #include "ecma-extension.h"
 #include "ecma-gc.h"
@@ -268,6 +270,13 @@ void
 jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 {
   jerry_flags = flags;
+
+#ifndef MEM_STATS
+  if (flags & JERRY_FLAG_MEM_STATS)
+  {
+    printf ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
+  }
+#endif /* !MEM_STATS */
 
   mem_init ();
   deserializer_init ();

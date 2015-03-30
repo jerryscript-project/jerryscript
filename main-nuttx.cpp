@@ -148,11 +148,7 @@ int jerry_main (int argc, char *argv[])
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
-#ifdef MEM_STATS
       flags |= JERRY_FLAG_MEM_STATS;
-#else /* MEM_STATS */
-      printf ("Ignoring --mem-stats because of '!MEM_STATS' build configuration.\n");
-#endif /* !MEM_STATS */
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {

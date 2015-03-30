@@ -962,28 +962,28 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
   if (dump_stats)
   {
     printf ("Heap stats:\n");
-    printf ("  Heap size = %lu bytes\n"
-            "  Chunk size = %lu bytes\n"
-            "  Blocks count = %lu\n"
-            "  Allocated blocks count = %lu\n"
-            "  Allocated chunks count = %lu\n"
-            "  Allocated = %lu bytes\n"
-            "  Waste = %lu bytes\n"
-            "  Peak allocated blocks count = %lu\n"
-            "  Peak allocated chunks count = %lu\n"
-            "  Peak allocated= %lu bytes\n"
-            "  Peak waste = %lu bytes\n",
-            (uint64_t) mem_heap_stats.size,
-            (uint64_t) MEM_HEAP_CHUNK_SIZE,
-            (uint64_t) mem_heap_stats.blocks,
-            (uint64_t) mem_heap_stats.allocated_blocks,
-            (uint64_t) mem_heap_stats.allocated_chunks,
-            (uint64_t) mem_heap_stats.allocated_bytes,
-            (uint64_t) mem_heap_stats.waste_bytes,
-            (uint64_t) mem_heap_stats.peak_allocated_blocks,
-            (uint64_t) mem_heap_stats.peak_allocated_chunks,
-            (uint64_t) mem_heap_stats.peak_allocated_bytes,
-            (uint64_t) mem_heap_stats.peak_waste_bytes);
+    printf ("  Heap size = %zu bytes\n"
+            "  Chunk size = %zu bytes\n"
+            "  Blocks count = %zu\n"
+            "  Allocated blocks count = %zu\n"
+            "  Allocated chunks count = %zu\n"
+            "  Allocated = %zu bytes\n"
+            "  Waste = %zu bytes\n"
+            "  Peak allocated blocks count = %zu\n"
+            "  Peak allocated chunks count = %zu\n"
+            "  Peak allocated= %zu bytes\n"
+            "  Peak waste = %zu bytes\n",
+            mem_heap_stats.size,
+            MEM_HEAP_CHUNK_SIZE,
+            mem_heap_stats.blocks,
+            mem_heap_stats.allocated_blocks,
+            mem_heap_stats.allocated_chunks,
+            mem_heap_stats.allocated_bytes,
+            mem_heap_stats.waste_bytes,
+            mem_heap_stats.peak_allocated_blocks,
+            mem_heap_stats.peak_allocated_chunks,
+            mem_heap_stats.peak_allocated_bytes,
+            mem_heap_stats.peak_waste_bytes);
   }
 #else /* MEM_STATS */
   (void) dump_stats;

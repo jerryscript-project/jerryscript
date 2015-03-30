@@ -26,17 +26,17 @@
 /**
  * Size of heap
  */
-#define MEM_HEAP_AREA_SIZE (CONFIG_MEM_HEAP_AREA_SIZE)
+#define MEM_HEAP_AREA_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
 
 /**
  * Size of heap chunk
  */
-#define MEM_HEAP_CHUNK_SIZE (CONFIG_MEM_HEAP_CHUNK_SIZE)
+#define MEM_HEAP_CHUNK_SIZE ((size_t) (CONFIG_MEM_HEAP_CHUNK_SIZE))
 
 /**
  * Size of pool chunk
  */
-#define MEM_POOL_CHUNK_SIZE (CONFIG_MEM_POOL_CHUNK_SIZE)
+#define MEM_POOL_CHUNK_SIZE ((size_t) (CONFIG_MEM_POOL_CHUNK_SIZE))
 
 /**
  * Log2 of maximum number of chunks in a pool

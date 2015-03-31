@@ -1,4 +1,4 @@
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
 
 #!/bin/bash
 
-git log --show-notes=perf --show-notes=mem --show-notes=test_build_env \
+git log --graph --branches \
+        --show-notes=perf --show-notes=mem --show-notes=test_build_env \
         --show-notes=arm-linux-perf \
         --show-notes=arm-linux-binary-size \
         --show-notes=stm32f4-binary-size

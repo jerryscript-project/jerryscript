@@ -36,6 +36,8 @@
  */
 typedef enum
 {
+  JERRY_API_DATA_TYPE_UNDEFINED, /**< undefined */
+  JERRY_API_DATA_TYPE_NULL, /**< null */
   JERRY_API_DATA_TYPE_BOOLEAN, /**< bool */
   JERRY_API_DATA_TYPE_FLOAT32, /**< 32-bit float */
   JERRY_API_DATA_TYPE_FLOAT64, /**< 64-bit float */
@@ -57,9 +59,9 @@ typedef struct ecma_object_t jerry_api_object_t;
 /**
  * Description of an extension function's argument
  */
-typedef struct
+typedef struct jerry_api_value_t
 {
-  const jerry_api_data_type_t type; /**< argument data type */
+  jerry_api_data_type_t type; /**< argument data type */
 
   union
   {
@@ -93,11 +95,10 @@ extern EXTERN_C
 void jerry_api_release_object (jerry_api_object_t *object_p);
 
 extern EXTERN_C
-bool jerry_api_call_function (jerry_api_object_t *function_object_p,
-                              jerry_api_value_t *retval_p,
-                              const jerry_api_value_t args_p [],
-                              uint32_t args_count);
+void jerry_api_release_value (jerry_api_value_t *value_p);
 
+extern EXTERN_C
+jerry_api_string_t* jerry_api_create_string (const char *v);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);
 
@@ -117,6 +118,15 @@ extern EXTERN_C
 bool jerry_api_set_object_field_value (jerry_api_object_t *object_p,
                                        const char *field_name_p,
                                        const jerry_api_value_t *field_value_p);
+
+extern EXTERN_C
+bool jerry_api_call_function (jerry_api_object_t *function_object_p,
+                              jerry_api_value_t *retval_p,
+                              const jerry_api_value_t args_p [],
+                              uint16_t args_count);
+
+extern EXTERN_C
+jerry_api_object_t* jerry_api_get_global (void);
 
 /**
  * @}

@@ -43,7 +43,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values
 
   header_p->unit_number = values_number;
 
-  uint16_t* next_chunk_cp_p = &header_p->next_chunk_cp;
+  mem_cpointer_t* next_chunk_cp_p = &header_p->next_chunk_cp;
   ecma_value_t* cur_value_buf_iter_p = (ecma_value_t*) header_p->data;
   ecma_value_t* cur_value_buf_end_p = cur_value_buf_iter_p + sizeof (header_p->data) / sizeof (ecma_value_t);
 

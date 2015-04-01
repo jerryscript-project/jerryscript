@@ -83,7 +83,7 @@ ecma_new_chars_collection (const ecma_char_t chars_buffer[], /**< ecma-chars */
 
   collection_p->unit_number = chars_number;
 
-  uint16_t* next_chunk_cp_p = &collection_p->next_chunk_cp;
+  mem_cpointer_t* next_chunk_cp_p = &collection_p->next_chunk_cp;
   ecma_char_t* cur_char_buf_iter_p = (ecma_char_t*) collection_p->data;
   ecma_char_t* cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data) / sizeof (ecma_char_t);
 
@@ -135,8 +135,8 @@ ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< f
   const ecma_char_t* cur_char_buf2_iter_p = (ecma_char_t*) header2_p->data;
   const ecma_char_t* cur_char_buf2_end_p = cur_char_buf2_iter_p + sizeof (header2_p->data) / sizeof (ecma_char_t);
 
-  uint16_t next_chunk1_cp = header1_p->next_chunk_cp;
-  uint16_t next_chunk2_cp = header2_p->next_chunk_cp;
+  mem_cpointer_t next_chunk1_cp = header1_p->next_chunk_cp;
+  mem_cpointer_t next_chunk2_cp = header2_p->next_chunk_cp;
 
   for (ecma_length_t char_index = 0;
        char_index < chars_number;
@@ -183,7 +183,7 @@ ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< c
   ecma_collection_header_t *new_header_p = ecma_alloc_collection_header ();
   *new_header_p = *collection_p;
 
-  uint16_t* next_chunk_cp_p = &new_header_p->next_chunk_cp;
+  mem_cpointer_t* next_chunk_cp_p = &new_header_p->next_chunk_cp;
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
                                                        collection_p->next_chunk_cp);
@@ -219,7 +219,7 @@ ecma_copy_chars_collection_to_buffer (const ecma_collection_header_t *collection
 
   const ecma_length_t chars_number = collection_p->unit_number;
 
-  uint16_t next_chunk_cp = collection_p->next_chunk_cp;
+  mem_cpointer_t next_chunk_cp = collection_p->next_chunk_cp;
   const ecma_char_t* cur_char_buf_iter_p = (ecma_char_t*) collection_p->data;
   const ecma_char_t* cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data) / sizeof (ecma_char_t);
 

@@ -228,7 +228,7 @@ ecma_make_number_value (ecma_number_t* num_p) /**< number to reference in value 
 {
   JERRY_ASSERT(num_p != NULL);
 
-  uint16_t num_cp;
+  mem_cpointer_t num_cp;
   ECMA_SET_NON_NULL_POINTER (num_cp, num_p);
 
   ecma_value_t ret_value = 0;
@@ -247,7 +247,7 @@ ecma_make_string_value (ecma_string_t* ecma_string_p) /**< string to reference i
 {
   JERRY_ASSERT(ecma_string_p != NULL);
 
-  uint16_t string_cp;
+  mem_cpointer_t string_cp;
   ECMA_SET_NON_NULL_POINTER (string_cp, ecma_string_p);
 
   ecma_value_t ret_value = 0;
@@ -266,7 +266,7 @@ ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in val
 {
   JERRY_ASSERT(object_p != NULL);
 
-  uint16_t object_cp;
+  mem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
   ecma_value_t ret_value = 0;

@@ -32,13 +32,13 @@
 typedef struct
 {
   /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
-  uint16_t object_cp;
+  mem_cpointer_t object_cp;
 
   /** Compressed pointer to property's name */
-  uint16_t prop_name_cp;
+  mem_cpointer_t prop_name_cp;
 
   /** Compressed pointer to a property of the object */
-  uint16_t prop_cp;
+  mem_cpointer_t prop_cp;
 
   /** Padding structure to 8 bytes size */
   uint16_t padding;
@@ -159,7 +159,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   {
     if (unlikely (ecma_is_property_lcached (prop_p)))
     {
-      uint16_t prop_cp;
+      mem_cpointer_t prop_cp;
       ECMA_SET_NON_NULL_POINTER (prop_cp, prop_p);
 
       int32_t entry_index;

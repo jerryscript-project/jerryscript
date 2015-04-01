@@ -29,6 +29,11 @@
 #include "mem-poolman.h"
 
 /**
+ * Compressed pointer
+ */
+typedef uint16_t mem_cpointer_t;
+
+/**
  * Representation of NULL value for compressed pointers
  */
 #define MEM_COMPRESSED_POINTER_NULL 0

@@ -43,7 +43,8 @@
  * to specified non_compressed_pointer.
  */
 #define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) \
-  (field) = (mem_compress_pointer (non_compressed_pointer) & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1))
+  (field) = (mem_compress_pointer (non_compressed_pointer) & \
+             ((((mem_cpointer_t) 1u) << ECMA_POINTER_FIELD_WIDTH) - 1))
 
 /**
  * Set value of compressed pointer field so that it will correspond
@@ -56,9 +57,14 @@
     non_compressed_pointer = __temp_pointer; \
   } while (0); \
   \
-  (field) = (unlikely ((non_compressed_pointer) == NULL) ? ECMA_NULL_POINTER \
-                                                         : (mem_compress_pointer (non_compressed_pointer) \
-                                                            & ((1u << ECMA_POINTER_FIELD_WIDTH) - 1)))
+  if (unlikely ((non_compressed_pointer) == NULL)) \
+  { \
+    (field) = ECMA_NULL_POINTER; \
+  } \
+  else \
+  { \
+    ECMA_SET_NON_NULL_POINTER (field, non_compressed_pointer); \
+  }
 
 /* ecma-helpers-value.c */
 extern bool ecma_is_value_empty (const ecma_value_t& value);
@@ -209,7 +215,7 @@ extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t* str
 typedef struct
 {
   ecma_collection_header_t *header_p; /**< collection header */
-  uint16_t next_chunk_cp; /**< compressed pointer to next chunk */
+  mem_cpointer_t next_chunk_cp; /**< compressed pointer to next chunk */
   ecma_length_t current_index; /**< index of current element */
   const ecma_value_t *current_value_p; /**< pointer to current element */
   const ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */

@@ -21,20 +21,21 @@
 #include "jerry.h"
 #include "jerry-api.h"
 
-const char *test_source =
-  "this.t = 1; "
-  "function f () { "
-    "return this.t; "
-  "} "
-  "this.foo = f; "
-  "this.bar = function (a) { "
-    "return a + t; "
-  "} "
-  "function A () { "
-    "this.t = 12; "
-  "} "
-  "this.A = A; "
-  "this.a = new A (); ";
+const char *test_source = (
+                           "this.t = 1; "
+                           "function f () { "
+                           "return this.t; "
+                           "} "
+                           "this.foo = f; "
+                           "this.bar = function (a) { "
+                           "return a + t; "
+                           "} "
+                           "function A () { "
+                           "this.t = 12; "
+                           "} "
+                           "this.A = A; "
+                           "this.a = new A (); "
+                           );
 
 /**
  * Initialize Jerry API value with specified float64 number
@@ -48,7 +49,7 @@ test_api_init_api_value_float64 (jerry_api_value_t *out_value_p, /**< out: API v
 } /* test_api_init_api_value_float64 */
 
 /**
- * Initialize Jerry API value with specified float64 number
+ * Initialize Jerry API value with specified string
  */
 static void
 test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API value */
@@ -90,10 +91,9 @@ main (void)
   assert (is_ok
           && val_foo.type == JERRY_API_DATA_TYPE_OBJECT);
 
+  // Call foo (4, 2)
   test_api_init_api_value_float64 (&args[0], 4);
   test_api_init_api_value_float64 (&args[1], 2);
-
-  // Call foo (4, 2)
   is_ok = jerry_api_call_function (val_foo.v_object, NULL, &res, args, 2);
   assert (is_ok
           && res.type == JERRY_API_DATA_TYPE_FLOAT64
@@ -138,8 +138,8 @@ main (void)
           && val_A.type == JERRY_API_DATA_TYPE_OBJECT);
 
   // Get A.prototype
-  is_ok = jerry_api_is_function (val_A.v_object);
-  assert(is_ok);
+  is_ok = jerry_api_is_constructor (val_A.v_object);
+  assert (is_ok);
   is_ok = jerry_api_get_object_field_value (val_A.v_object,
                                             "prototype",
                                             &val_A_prototype);

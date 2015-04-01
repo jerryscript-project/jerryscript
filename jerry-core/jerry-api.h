@@ -103,7 +103,9 @@ extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);
 
 extern EXTERN_C
-bool jerry_api_is_function(const jerry_api_object_t *object_p);
+bool jerry_api_is_function (const jerry_api_object_t *object_p);
+extern EXTERN_C
+bool jerry_api_is_constructor (const jerry_api_object_t *object_p);
 
 extern EXTERN_C
 bool jerry_api_add_object_field (jerry_api_object_t *object_p,

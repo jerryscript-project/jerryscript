@@ -133,8 +133,6 @@ static void
 jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: ecma-value */
                                            const jerry_api_value_t* api_value_p) /**< value in Jerry API format */
 {
-  *out_value_p = 0;
-
   switch (api_value_p->type)
   {
     case JERRY_API_DATA_TYPE_UNDEFINED:
@@ -346,16 +344,33 @@ jerry_api_create_object (void)
 /**
  * Check if the specified object is a function object.
  *
- * @return true, if the sepcfied object is a function object.
+ * @return true - if the specified object is a function object,
  *         false - otherwise.
  */
 bool
-jerry_api_is_function(const jerry_api_object_t* object_p)
+jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION;
-}
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+} /* jerry_api_is_function */
+
+/**
+ * Check if the specified object is a constructor function object.
+ *
+ * @return true - if the specified object is a function object that implements [[Construct]],
+ *         false - otherwise.
+ */
+bool
+jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
+{
+  JERRY_ASSERT (object_p != NULL);
+
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+} /* jerry_api_is_constructor */
 
 /**
  * Create field (named data property) in the specified object
@@ -532,7 +547,7 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
 bool
 jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
                          jerry_api_object_t *this_arg_p, /**< this arg for this binding
-                                                          * or NULL (set this binding to the global object) */
+                                                          *   or NULL (set this binding to the global object) */
                          jerry_api_value_t *retval_p, /**< place for function's return value (if it is required)
                                                        *   or NULL (if it should be 'undefined') */
                          const jerry_api_value_t args_p [], /**< function's call arguments
@@ -553,14 +568,14 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
 
   ecma_completion_value_t call_completion;
 
-  ecma_value_t this_arg_val = 0;
+  ecma_value_t this_arg_val;
+
   if (this_arg_p == NULL)
   {
     this_arg_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
   else
   {
-    ecma_ref_object(this_arg_p);
     this_arg_val = ecma_make_object_value (this_arg_p);
   }
 
@@ -586,7 +601,6 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
     is_successful = false;
   }
 
-  ecma_free_value (this_arg_val, true);
   ecma_free_completion_value (call_completion);
 
   for (uint32_t i = 0; i < args_count; i++)
@@ -597,7 +611,7 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
   MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
   return is_successful;
-} /* jerry_api_call_funition */
+} /* jerry_api_call_function */
 
 /**
  * Get global object

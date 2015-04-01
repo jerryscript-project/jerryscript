@@ -42,6 +42,9 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
   { # _field_name, JERRY_API_DATA_TYPE_ ## _type, _value },
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FIELD
+  {
+    NULL, JERRY_API_DATA_TYPE_UNDEFINED, NULL
+  }
 };
 
 /* Functions wrapper definitions */
@@ -98,6 +101,9 @@ static const jerry_extension_function_t jerry_extension_functions [JERRY_EXTENSI
   },
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FUNCTION
+  {
+    NULL, NULL, NULL, 0
+  }
 };
 
 static jerry_extension_descriptor_t jerry_extension

@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include "ecma-globals.h"
 #include "lexer.h"
 
-typedef enum
+typedef enum __attr_packed___
 {
   OPERAND_LITERAL,
   OPERAND_TMP
@@ -39,7 +39,7 @@ typedef struct
 }
 operand;
 
-typedef enum
+typedef enum __attr_packed___
 {
   VARG_FUNC_DECL,
   VARG_FUNC_EXPR,

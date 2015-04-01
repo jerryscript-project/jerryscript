@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "lp-string.h"
 
-typedef enum
+typedef enum __attr_packed___
 {
   LIT_UNKNOWN,
   LIT_STR,

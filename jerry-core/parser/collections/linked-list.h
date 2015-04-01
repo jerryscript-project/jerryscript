@@ -23,7 +23,7 @@ typedef uint8_t* linked_list;
 
 linked_list linked_list_init (uint16_t);
 void linked_list_free (linked_list);
-void *linked_list_element (linked_list, uint16_t);
-void linked_list_set_element (linked_list, uint16_t, void *);
+void *linked_list_element (linked_list, size_t);
+void linked_list_set_element (linked_list, size_t, void *);
 
 #endif /* LINKED_LIST_H */

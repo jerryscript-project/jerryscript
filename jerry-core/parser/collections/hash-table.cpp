@@ -18,14 +18,11 @@
 #include "mem-heap.h"
 #include "jrt-libc-includes.h"
 
-#define HASH_MAP_MAGIC 0x67
-
 typedef struct
 {
   uint16_t (*hash) (void *);
   array_list *data;
   uint16_t size;
-  uint8_t magic;
   uint8_t key_size;
   uint8_t value_size;
   mem_heap_alloc_term_t alloc_term;
@@ -37,7 +34,6 @@ extract_header (hash_table ht)
 {
   JERRY_ASSERT (ht != null_hash);
   hash_table_int *hti = (hash_table_int *) ht;
-  JERRY_ASSERT (hti->magic == HASH_MAP_MAGIC);
   return hti;
 }
 
@@ -107,7 +103,6 @@ hash_table_init (uint8_t key_size, uint8_t value_size, uint16_t size,
 {
   hash_table_int *res = (hash_table_int *) mem_heap_alloc_block (sizeof (hash_table_int), alloc_term);
   memset (res, 0, sizeof (hash_table_int));
-  res->magic = HASH_MAP_MAGIC;
   res->key_size = key_size;
   res->value_size = value_size;
   res->size = size;

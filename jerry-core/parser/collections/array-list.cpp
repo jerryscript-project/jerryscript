@@ -17,11 +17,8 @@
 #include "mem-heap.h"
 #include "jrt-libc-includes.h"
 
-#define ARRAY_LIST_MAGIC 0x39
-
 typedef struct
 {
-  uint8_t magic;
   uint8_t element_size;
   size_t len;
   size_t size;
@@ -33,7 +30,6 @@ extract_header (array_list al)
 {
   JERRY_ASSERT (al != null_list);
   array_list_header *header = (array_list_header *) al;
-  JERRY_ASSERT (header->magic == ARRAY_LIST_MAGIC);
   return header;
 }
 
@@ -119,7 +115,6 @@ array_list_init (uint8_t element_size)
   size_t size = mem_heap_recommend_allocation_size (sizeof (array_list_header));
   array_list_header *header = (array_list_header *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
   memset (header, 0, size);
-  header->magic = ARRAY_LIST_MAGIC;
   header->element_size = element_size;
   header->len = 0;
   header->size = size;

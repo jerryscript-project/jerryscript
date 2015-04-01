@@ -79,7 +79,7 @@
 } while (0)
 #endif /* JERRY_NDEBUG */
 
-typedef enum
+typedef enum __attr_packed___
 {
   PROP_DATA,
   PROP_SET,

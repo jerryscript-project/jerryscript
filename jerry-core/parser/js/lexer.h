@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #define INVALID_LITERAL UINT32_MAX
 
 /* Keywords.  */
-typedef enum
+typedef enum __attr_packed___
 {
   /* Not a keyword.  */
   KW_NONE = 0,
@@ -81,7 +81,7 @@ keyword;
 
 
 /* Type of tokens.  */
-typedef enum
+typedef enum __attr_packed___
 {
   TOK_EOF = 0, // End of file
   TOK_NAME, // Identifier

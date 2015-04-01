@@ -30,7 +30,6 @@ static void
 assert_tree (scopes_tree t)
 {
   JERRY_ASSERT (t != NULL);
-  JERRY_ASSERT (t->t.magic == TREE_MAGIC);
 }
 
 static idx_t
@@ -648,7 +647,6 @@ scopes_tree_init (scopes_tree parent)
 {
   scopes_tree tree = (scopes_tree) mem_heap_alloc_block (sizeof (scopes_tree_int), MEM_HEAP_ALLOC_SHORT_TERM);
   memset (tree, 0, sizeof (scopes_tree_int));
-  tree->t.magic = TREE_MAGIC;
   tree->t.parent = (tree_header *) parent;
   tree->t.children = null_list;
   tree->t.children_num = 0;

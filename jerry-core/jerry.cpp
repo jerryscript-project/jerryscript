@@ -342,6 +342,37 @@ jerry_api_create_object (void)
 } /* jerry_api_create_object */
 
 /**
+ * Check if the specified object is a function object.
+ *
+ * @return true - if the specified object is a function object,
+ *         false - otherwise.
+ */
+bool
+jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
+{
+  JERRY_ASSERT (object_p != NULL);
+
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+} /* jerry_api_is_function */
+
+/**
+ * Check if the specified object is a constructor function object.
+ *
+ * @return true - if the specified object is a function object that implements [[Construct]],
+ *         false - otherwise.
+ */
+bool
+jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
+{
+  JERRY_ASSERT (object_p != NULL);
+
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+} /* jerry_api_is_constructor */
+
+/**
  * Create field (named data property) in the specified object
  *
  * @return true, if field was created successfully, i.e. upon the call:
@@ -515,6 +546,8 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
  */
 bool
 jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
+                         jerry_api_object_t *this_arg_p, /**< this arg for this binding
+                                                          *   or NULL (set this binding to the global object) */
                          jerry_api_value_t *retval_p, /**< place for function's return value (if it is required)
                                                        *   or NULL (if it should be 'undefined') */
                          const jerry_api_value_t args_p [], /**< function's call arguments
@@ -535,8 +568,19 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
 
   ecma_completion_value_t call_completion;
 
+  ecma_value_t this_arg_val;
+
+  if (this_arg_p == NULL)
+  {
+    this_arg_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+  else
+  {
+    this_arg_val = ecma_make_object_value (this_arg_p);
+  }
+
   call_completion = ecma_op_function_call (function_object_p,
-                                           ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                           this_arg_val,
                                            arg_values,
                                            args_count);
 

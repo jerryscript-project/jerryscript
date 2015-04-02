@@ -80,7 +80,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
   {
     out_value_p->type = JERRY_API_DATA_TYPE_UNDEFINED;
   }
-  if (ecma_is_value_null (value))
+  else if (ecma_is_value_null (value))
   {
     out_value_p->type = JERRY_API_DATA_TYPE_NULL;
   }

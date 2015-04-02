@@ -106,7 +106,7 @@ static const jerry_extension_function_t jerry_extension_functions [JERRY_EXTENSI
   }
 };
 
-static jerry_extension_descriptor_t jerry_extension
+static jerry_extension_descriptor_t jerry_extension =
 {
   JERRY_EXTENSION_FIELDS_NUMBER,
   JERRY_EXTENSION_FUNCTIONS_NUMBER,

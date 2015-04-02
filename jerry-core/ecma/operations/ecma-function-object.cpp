@@ -465,85 +465,90 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_ASSERT(ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
   JERRY_ASSERT(arguments_list_len == 0 || arguments_list_p != NULL);
 
+  ecma_completion_value_t ret_value;
+
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
     {
-      return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
-    }
-
-    ecma_completion_value_t ret_value;
-
-    /* Entering Function Code (ECMA-262 v5, 10.4.3) */
-
-    ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-    ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
-
-    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                        scope_prop_p->u.internal_property.value);
-    uint32_t code_prop_value = code_prop_p->u.internal_property.value;
-
-    bool is_strict;
-    // 8.
-    opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
-
-    ecma_value_t this_binding;
-    // 1.
-    if (is_strict)
-    {
-      this_binding = ecma_copy_value (this_arg_value, true);
-    }
-    else if (ecma_is_value_undefined (this_arg_value)
-             || ecma_is_value_null (this_arg_value))
-    {
-      // 2.
-      this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+      ret_value = ecma_builtin_dispatch_call (func_obj_p,
+                                              this_arg_value,
+                                              arguments_list_p,
+                                              arguments_list_len);
     }
     else
     {
-      // 3., 4.
-      ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+      /* Entering Function Code (ECMA-262 v5, 10.4.3) */
+      ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+      ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
 
-      this_binding = ecma_get_completion_value_value (completion);
-    }
+      ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                          scope_prop_p->u.internal_property.value);
+      uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
-    // 5.
-    ecma_object_t *local_env_p = ecma_create_decl_lex_env (scope_p);
+      bool is_strict;
+      // 8.
+      opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
 
-    // 9.
-    ECMA_TRY_CATCH (args_var_declaration_ret,
-                    ecma_function_call_setup_args_variables (func_obj_p,
+      ecma_value_t this_binding;
+      // 1.
+      if (is_strict)
+      {
+        this_binding = ecma_copy_value (this_arg_value, true);
+      }
+      else if (ecma_is_value_undefined (this_arg_value)
+               || ecma_is_value_null (this_arg_value))
+      {
+        // 2.
+        this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+      }
+      else
+      {
+        // 3., 4.
+        ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
+        JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+
+        this_binding = ecma_get_completion_value_value (completion);
+      }
+
+      // 5.
+      ecma_object_t *local_env_p = ecma_create_decl_lex_env (scope_p);
+
+      // 9.
+      ECMA_TRY_CATCH (args_var_declaration_ret,
+                      ecma_function_call_setup_args_variables (func_obj_p,
+                                                               local_env_p,
+                                                               arguments_list_p,
+                                                               arguments_list_len,
+                                                               is_strict),
+                      ret_value);
+
+      ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
+                                                             this_binding,
                                                              local_env_p,
-                                                             arguments_list_p,
-                                                             arguments_list_len,
-                                                             is_strict),
-                    ret_value);
+                                                             is_strict,
+                                                             false);
+      if (ecma_is_completion_value_return (completion))
+      {
+        ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
+      }
+      else
+      {
+        ret_value = completion;
+      }
 
-    ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
-                                                           this_binding,
-                                                           local_env_p,
-                                                           is_strict,
-                                                           false);
-    if (ecma_is_completion_value_return (completion))
-    {
-      ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
+      ECMA_FINALIZE (args_var_declaration_ret);
+
+      ecma_deref_object (local_env_p);
+      ecma_free_value (this_binding, true);
     }
-    else
-    {
-      ret_value = completion;
-    }
-
-    ECMA_FINALIZE (args_var_declaration_ret);
-
-    ecma_deref_object (local_env_p);
-    ecma_free_value (this_binding, true);
-
-    return ret_value;
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
-    return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+    ret_value = ecma_builtin_dispatch_call (func_obj_p,
+                                            this_arg_value,
+                                            arguments_list_p,
+                                            arguments_list_len);
   }
   else
   {
@@ -551,6 +556,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
     JERRY_UNIMPLEMENTED ("Bound functions are not implemented.");
   }
+
+  JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
+
+  return ret_value;
 } /* ecma_op_function_call */
 
 /**

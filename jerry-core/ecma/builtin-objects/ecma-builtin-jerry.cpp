@@ -260,7 +260,7 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
   }
   else
   {
-    return ecma_make_empty_completion_value ();
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 } /* ecma_builtin_jerry_dispatch_routine */
 

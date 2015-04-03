@@ -89,6 +89,7 @@ DECLARE_ROUTINES_FOR (collection_chunk)
 DECLARE_ROUTINES_FOR (string)
 DECLARE_ROUTINES_FOR (label_descriptor)
 DECLARE_ROUTINES_FOR (getter_setter_pointers)
+DECLARE_ROUTINES_FOR (external_pointer)
 
 /**
  * @}

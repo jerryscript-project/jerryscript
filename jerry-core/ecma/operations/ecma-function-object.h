@@ -35,6 +35,8 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 ecma_object_t *scope_p,
                                 bool is_strict,
                                 opcode_counter_t first_opcode_idx);
+extern ecma_object_t*
+ecma_op_create_external_function_object (ecma_external_pointer_t code_p);
 
 extern ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p,

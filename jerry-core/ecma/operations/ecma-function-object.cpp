@@ -26,6 +26,9 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
+#define JERRY_INTERNAL
+#include "jerry-internal.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -101,6 +104,7 @@ ecma_op_is_callable (const ecma_value_t& value) /**< ecma-value */
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 } /* ecma_op_is_callable */
 
@@ -124,7 +128,8 @@ ecma_is_constructor (const ecma_value_t& value) /**< ecma-value */
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 } /* ecma_is_constructor */
 
 /**
@@ -281,6 +286,56 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   return f;
 } /* ecma_op_create_function_object */
+
+/**
+ * External function object creation operation.
+ *
+ * Note:
+ *      external function object is implementation-defined object type
+ *      that represent functions implemented in native code, using Embedding API
+ *
+ * @return pointer to newly created external function object
+ */
+ecma_object_t*
+ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< pointer to external native handler */
+{
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+
+  ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_deref_object (prototype_obj_p);
+
+  ecma_property_t *class_prop_p = ecma_create_internal_property (function_obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
+
+  ecma_create_external_pointer_property (function_obj_p,
+                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
+                                         (ecma_external_pointer_t) code_p);
+
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  {
+    prop_desc.is_value_defined = true;
+    prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+    prop_desc.is_writable_defined = true;
+    prop_desc.is_writable = true;
+
+    prop_desc.is_enumerable_defined = true;
+    prop_desc.is_enumerable = false;
+
+    prop_desc.is_configurable_defined = true;
+    prop_desc.is_configurable = false;
+  }
+
+  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+  ecma_op_object_define_own_property (function_obj_p,
+                                      magic_string_prototype_p,
+                                      &prop_desc,
+                                      false);
+  ecma_deref_ecma_string (magic_string_prototype_p);
+
+  return function_obj_p;
+} /* ecma_op_create_external_function_object */
 
 /**
  * Setup variables for arguments listed in formal parameter list.
@@ -549,6 +604,17 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                             this_arg_value,
                                             arguments_list_p,
                                             arguments_list_len);
+  }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+  {
+    ecma_external_pointer_t handler_p = ecma_get_external_pointer_value (func_obj_p,
+                                                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+
+    ret_value = jerry_dispatch_external_function (func_obj_p,
+                                                  handler_p,
+                                                  this_arg_value,
+                                                  arguments_list_p,
+                                                  arguments_list_len);
   }
   else
   {

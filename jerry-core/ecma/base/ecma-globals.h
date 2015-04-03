@@ -204,6 +204,7 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
   ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
+  ECMA_INTERNAL_PROPERTY_NATIVE_CODE, /**< native handler location descriptor */
   ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE, /**< [[Primitive value]] for String objects */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE, /**< [[Primitive value]] for Number objects */
@@ -372,6 +373,7 @@ typedef enum
                                  and not host objects */
   ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
   ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION, /**< External (host) function object */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION, /** One of built-in functions described in section 15
                                           of ECMA-262 v5 specification */
@@ -379,8 +381,7 @@ typedef enum
   ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_EXTENSION, /**< Extension (implementation-defined) object
                                *   See also: ecma_extension_instantiate */
-  // ECMA_OBJECT_TYPE_HOST, /**< Host object */
-  ECMA_OBJECT_TYPE__COUNT /**< number of object types */
+  // ECMA_OBJECT_TYPE_HOST /**< Host object */
 } ecma_object_type_t;
 
 /**
@@ -442,7 +443,7 @@ typedef struct ecma_object_t
  */
 #define ECMA_OBJECT_OBJ_TYPE_POS (ECMA_OBJECT_OBJ_EXTENSIBLE_POS + \
                                   ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH)
-#define ECMA_OBJECT_OBJ_TYPE_WIDTH (3)
+#define ECMA_OBJECT_OBJ_TYPE_WIDTH (4)
 
 /**
  * Compressed pointer to prototype object (ecma_object_t)
@@ -809,6 +810,11 @@ typedef struct ecma_string_t
     uint32_t common_field;
   } u;
 } ecma_string_t;
+
+/**
+ * Representation for native external pointer
+ */
+typedef uintptr_t ecma_external_pointer_t;
 
 /**
  * @}

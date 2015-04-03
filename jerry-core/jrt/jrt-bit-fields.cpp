@@ -52,7 +52,7 @@ jrt_set_bit_field_value (uint64_t container, /**< container to insert bit-field 
   JERRY_ASSERT (lsb < JERRY_BITSINBYTE * sizeof (uint64_t));
   JERRY_ASSERT (width < JERRY_BITSINBYTE * sizeof (uint64_t));
   JERRY_ASSERT ((lsb + width) <= JERRY_BITSINBYTE * sizeof (uint64_t));
-  JERRY_ASSERT (new_bit_field_value <= (1ull << width));
+  JERRY_ASSERT (new_bit_field_value < (1ull << width));
 
   uint64_t bit_field_mask = (1ull << width) - 1;
   uint64_t shifted_bit_field_mask = bit_field_mask << lsb;

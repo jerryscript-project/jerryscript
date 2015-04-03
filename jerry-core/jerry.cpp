@@ -23,7 +23,6 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
-#include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "jerry.h"
@@ -31,6 +30,9 @@
 #include "parser.h"
 #include "serializer.h"
 #include "vm.h"
+
+#define JERRY_INTERNAL
+#include "jerry-internal.h"
 
 /**
  * Jerry engine build date
@@ -351,16 +353,76 @@ jerry_api_create_object (void)
  * @return pointer to created external function object
  */
 jerry_api_object_t*
-jerry_api_create_external_function (jerry_external_handler_t handler)
+jerry_api_create_external_function (jerry_external_handler_t handler_p) /**< pointer to native handler
+                                                                         *   for the function */
 {
-  return ecma_op_create_function_object (NULL,
-                                         0,
-                                         ecma_get_globl_lexical_environment (),
-                                         false,
-                                         0,
-                                         true,
-                                         handler);
-} /* jerry_api_create_object */
+  return ecma_op_create_external_function_object ((ecma_external_pointer_t) handler_p);
+} /* jerry_api_create_external_function */
+
+/**
+ * Dispatch call to specified external function using the native handler
+ *
+ * Note:
+ *       if called native handler returns true, then dispatcher just returns value received
+ *       through 'return value' output argument, otherwise - throws the value as an exception.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+ecma_completion_value_t
+jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< external function object */
+                                  ecma_external_pointer_t handler_p, /**< pointer to the function's native handler */
+                                  const ecma_value_t& this_arg_value, /**< 'this' argument */
+                                  const ecma_value_t args_p [], /**< arguments list */
+                                  ecma_length_t args_count) /**< number of arguments */
+{
+  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (uint16_t));
+
+  ecma_completion_value_t completion_value;
+
+  MEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_api_value_t);
+
+  for (uint32_t i = 0; i < args_count; ++i)
+  {
+    jerry_api_convert_ecma_value_to_api_value (&api_arg_values [i], args_p [i]);
+  }
+
+  jerry_api_value_t api_this_arg_value, api_ret_value;
+  jerry_api_convert_ecma_value_to_api_value (&api_this_arg_value, this_arg_value);
+
+  // default return value
+  jerry_api_convert_ecma_value_to_api_value (&api_ret_value,
+                                             ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+  bool is_successful = ((jerry_external_handler_t) handler_p) (function_object_p,
+                                                               &api_this_arg_value,
+                                                               &api_ret_value,
+                                                               api_arg_values,
+                                                               args_count);
+
+  ecma_value_t ret_value;
+  jerry_api_convert_api_value_to_ecma_value (&ret_value, &api_ret_value);
+
+  if (is_successful)
+  {
+    completion_value = ecma_make_normal_completion_value (ret_value);
+  }
+  else
+  {
+    completion_value = ecma_make_throw_completion_value (ret_value);
+  }
+
+  jerry_api_release_value (&api_ret_value);
+  jerry_api_release_value (&api_this_arg_value);
+  for (uint32_t i = 0; i < args_count; i++)
+  {
+    jerry_api_release_value (&api_arg_values [i]);
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (api_arg_values);
+
+  return completion_value;
+} /* jerry_dispatch_external_function */
 
 /**
  * Check if the specified object is a function object.

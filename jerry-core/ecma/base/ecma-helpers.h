@@ -308,6 +308,17 @@ extern void ecma_set_property_lcached (ecma_property_t *prop_p,
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
+/* ecma-helpers-external-pointers.c */
+extern void
+ecma_create_external_pointer_property (ecma_object_t *obj_p,
+                                       ecma_internal_property_id_t id,
+                                       ecma_external_pointer_t ptr_value);
+extern ecma_external_pointer_t
+ecma_get_external_pointer_value (ecma_object_t *obj_p,
+                                 ecma_internal_property_id_t id);
+extern void
+ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
+
 /* ecma-helpers-conversion.c */
 extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);
 extern ssize_t ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, ssize_t buffer_size);

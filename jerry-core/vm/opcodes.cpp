@@ -580,9 +580,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                               params_number,
                                                               scope_p,
                                                               is_strict,
-                                                              false,
-                                                              int_data->pos,
-                                                              0);
+                                                              int_data->pos);
 
   ret_value = set_variable_value (int_data, lit_oc,
                                   dst_var_idx,

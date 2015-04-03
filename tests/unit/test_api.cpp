@@ -34,7 +34,10 @@ const char *test_source = (
                            "this.t = 12; "
                            "} "
                            "this.A = A; "
-                           "this.a = new A (); "
+                           "this.a = new A ();"
+                           "function call_external () {"
+                           "  return this.external ('1', true);"
+                           "}"
                            );
 
 /**
@@ -59,15 +62,47 @@ test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API va
   out_value_p->v_string = jerry_api_create_string (v);
 } /* test_api_init_api_value_string */
 
-static bool
-handler (const jerry_api_value_t *this_p,
-         const jerry_api_value_t *args_p [],
-         const int16_t args_cnt,
-         jerry_api_value_t *ret_val_p)
+/**
+ * Initialize Jerry API value with specified object
+ */
+static void
+test_api_init_api_value_object (jerry_api_value_t *out_value_p, /**< out: API value */
+                                jerry_api_object_t* v) /**< object value to initialize with */
 {
-  printf("ok %p %p %d %p\n", this_p, args_p, args_cnt, ret_val_p);
+  jerry_api_acquire_object (v);
+
+  out_value_p->type = JERRY_API_DATA_TYPE_OBJECT;
+  out_value_p->v_object = v;
+} /* test_api_init_api_value_object */
+
+static bool
+handler (const jerry_api_object_t *function_obj_p,
+         const jerry_api_value_t *this_p,
+         jerry_api_value_t *ret_val_p,
+         const jerry_api_value_t args_p [],
+         const uint16_t args_cnt)
+{
+  char buffer [32];
+  ssize_t sz;
+
+  printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+
+  assert (args_cnt == 2);
+
+  assert (args_p [0].type == JERRY_API_DATA_TYPE_STRING);
+  sz = jerry_api_string_to_char_buffer (args_p [0].v_string, NULL, 0);
+  assert (sz == -2);
+  sz = jerry_api_string_to_char_buffer (args_p [0].v_string, buffer, -sz);
+  assert (sz == 2);
+  assert (!strcmp (buffer, "1"));
+
+  assert (args_p [1].type == JERRY_API_DATA_TYPE_BOOLEAN);
+  assert (args_p [1].v_bool == true);
+
+  test_api_init_api_value_string (ret_val_p, "string from handler");
+
   return true;
-}
+} /* handler */
 
 
 int
@@ -78,10 +113,11 @@ main (void)
   bool is_ok;
   ssize_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo;
+  jerry_api_value_t val_external, val_call_external;
   jerry_api_object_t* global_obj_p;
   jerry_api_object_t* external_func_p;
   jerry_api_value_t res, args [2];
-  char buffer [16];
+  char buffer [32];
 
   is_ok = jerry_parse (NULL, test_source, strlen (test_source));
   assert (is_ok);
@@ -192,15 +228,37 @@ main (void)
   jerry_api_release_value (&res);
   jerry_api_release_value (&val_a_foo);
 
+  jerry_api_release_value (&val_a);
+
+  // Create native handler bound function object and set it to 'external' variable
   external_func_p = jerry_api_create_external_function (handler);
   assert (external_func_p != NULL);
 
-  is_ok = jerry_api_call_function (external_func_p, global_obj_p, &res, NULL, 0);
+  test_api_init_api_value_object (&val_external, external_func_p);
+  is_ok = jerry_api_set_object_field_value (global_obj_p,
+                                            "external",
+                                            &val_external);
   assert (is_ok);
-
+  jerry_api_release_value (&val_external);
   jerry_api_release_object (external_func_p);
 
-  jerry_api_release_value (&val_a);
+  // Call 'call_external' function that should call external function created above
+  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_external", &val_call_external);
+  assert (is_ok
+          && val_call_external.type == JERRY_API_DATA_TYPE_OBJECT);
+  is_ok = jerry_api_call_function (val_call_external.v_object,
+                                   global_obj_p,
+                                   &res,
+                                   NULL, 0);
+  jerry_api_release_value (&val_call_external);
+  assert (is_ok
+          && res.type == JERRY_API_DATA_TYPE_STRING);
+  sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
+  assert (sz == -20);
+  sz = jerry_api_string_to_char_buffer (res.v_string, buffer, -sz);
+  assert (sz == 20);
+  jerry_api_release_value (&res);
+  assert (!strcmp (buffer, "string from handler"));
 
   jerry_api_release_object (global_obj_p);
 

@@ -131,7 +131,7 @@ extern ecma_external_pointer_t *ecma_alloc_external_pointer (void);
 /**
 * Dealloc memory from external pointer
 */
-extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *ptr_p);
+extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *external_pointer_p);
 
 
 #endif /* JERRY_ECMA_ALLOC_H */

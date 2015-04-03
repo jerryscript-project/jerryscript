@@ -25,7 +25,9 @@
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "jerry-api.h"
+
+#define JERRY_INTERNAL
+#include "jerry-internal.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -80,51 +82,6 @@ ecma_unpack_code_internal_property_value (uint32_t value, /**< packed value */
 } /* ecma_unpack_code_internal_property_value */
 
 /**
- * Pack the pointer to external handler to value
- * that can be stored in an [[Code]] internal property.
- *
- * @return packed value
- */
-static uint32_t
-ecma_pack_external_code_internal_property_value (jerry_external_handler_t handler)
-{
-  uint32_t value;
-  if (sizeof (jerry_external_handler_t) == sizeof (uint32_t))
-  {
-    value = static_cast <uint32_t> (reinterpret_cast <uintptr_t> (handler));
-  }
-  else
-  {
-    ecma_external_pointer_t *handler_p = ecma_alloc_external_pointer ();
-    *handler_p = reinterpret_cast <ecma_external_pointer_t> (handler);
-    ECMA_SET_POINTER (value, handler_p);
-  }
-  return value;
-} /* ecma_pack_external_code_internal_property_value */
-
-/**
- * Unpack 'is_strict' flag and opcode index from value
- * that can be stored in an [[Code]] internal property.
- *
- * @return opcode index
- */
-static jerry_external_handler_t
-ecma_unpack_external_code_internal_property_value (uint32_t value) /**< packed value */
-{
-  jerry_external_handler_t handler;
-  if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
-  {
-    handler = reinterpret_cast <jerry_external_handler_t> (static_cast <uintptr_t> (value));
-  }
-  else
-  {
-    ecma_external_pointer_t* handler_p = ECMA_GET_POINTER (ecma_external_pointer_t, value);
-    handler = reinterpret_cast <jerry_external_handler_t> (*handler_p);
-  }
-  return handler;
-} /* ecma_unpack_code_internal_property_value */
-
-/**
  * IsCallable operation.
  *
  * See also: ECMA-262 v5, 9.11
@@ -147,6 +104,7 @@ ecma_op_is_callable (const ecma_value_t& value) /**< ecma-value */
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 } /* ecma_op_is_callable */
 
@@ -170,7 +128,8 @@ ecma_is_constructor (const ecma_value_t& value) /**< ecma-value */
   JERRY_ASSERT(!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 } /* ecma_is_constructor */
 
 /**
@@ -185,21 +144,12 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
                                 ecma_length_t formal_parameters_number, /**< formal parameters list's length */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
-                                bool is_external, /**< true if the function is an external */
-                                opcode_counter_t first_opcode_idx, /**< index of first opcode of function's body */
-                                jerry_external_handler_t external_handler) /**< external handler */
+                                opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
 {
-  JERRY_ASSERT (!is_external || external_handler != NULL);
-
   // 1., 4., 13.
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_type_t object_type = ECMA_OBJECT_TYPE_FUNCTION;
-  if (is_external)
-  {
-    object_type = ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION;
-  }
-  ecma_object_t *f = ecma_create_object (prototype_obj_p, true, object_type);
+  ecma_object_t *f = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
@@ -234,16 +184,8 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   // 12.
   ecma_property_t *code_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE);
-  if (is_external)
-  {
-    code_prop_p->u.internal_property.value = ecma_pack_external_code_internal_property_value (external_handler);
-  }
-  else
-  {
-    code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
-                                                                                     first_opcode_idx);
-  }
-
+  code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
+                                                                                   first_opcode_idx);
 
   // 14.
   ecma_number_t* len_p = ecma_alloc_number ();
@@ -344,6 +286,56 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   return f;
 } /* ecma_op_create_function_object */
+
+/**
+ * External function object creation operation.
+ *
+ * Note:
+ *      external function object is implementation-defined object type
+ *      that represent functions implemented in native code, using Embedding API
+ *
+ * @return pointer to newly created external function object
+ */
+ecma_object_t*
+ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< pointer to external native handler */
+{
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+
+  ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_deref_object (prototype_obj_p);
+
+  ecma_property_t *class_prop_p = ecma_create_internal_property (function_obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
+
+  ecma_create_external_pointer_property (function_obj_p,
+                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
+                                         (ecma_external_pointer_t) code_p);
+
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  {
+    prop_desc.is_value_defined = true;
+    prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+    prop_desc.is_writable_defined = true;
+    prop_desc.is_writable = true;
+
+    prop_desc.is_enumerable_defined = true;
+    prop_desc.is_enumerable = false;
+
+    prop_desc.is_configurable_defined = true;
+    prop_desc.is_configurable = false;
+  }
+
+  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+  ecma_op_object_define_own_property (function_obj_p,
+                                      magic_string_prototype_p,
+                                      &prop_desc,
+                                      false);
+  ecma_deref_ecma_string (magic_string_prototype_p);
+
+  return function_obj_p;
+} /* ecma_op_create_external_function_object */
 
 /**
  * Setup variables for arguments listed in formal parameter list.
@@ -530,8 +522,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
   ecma_completion_value_t ret_value;
 
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-      || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
     {
@@ -544,24 +535,15 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     {
       /* Entering Function Code (ECMA-262 v5, 10.4.3) */
       ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+      ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
+
       ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                                           scope_prop_p->u.internal_property.value);
-
-      // 8.
-      bool is_strict;
-      opcode_counter_t code_first_opcode_idx = 0;
-
-      ecma_property_t *code_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE);
       uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
-      if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
-      {
-        code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
-      }
-      else /* ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION */
-      {
-        is_strict = false;
-      }
+      bool is_strict;
+      // 8.
+      opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
 
       ecma_value_t this_binding;
       // 1.
@@ -587,7 +569,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       // 5.
       ecma_object_t *local_env_p = ecma_create_decl_lex_env (scope_p);
 
-
+      // 9.
       ECMA_TRY_CATCH (args_var_declaration_ret,
                       ecma_function_call_setup_args_variables (func_obj_p,
                                                                local_env_p,
@@ -596,29 +578,18 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                is_strict),
                       ret_value);
 
-      // 9.
-      if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+      ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
+                                                             this_binding,
+                                                             local_env_p,
+                                                             is_strict,
+                                                             false);
+      if (ecma_is_completion_value_return (completion))
       {
-        ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
-                                                               this_binding,
-                                                               local_env_p,
-                                                               is_strict,
-                                                               false);
-        if (ecma_is_completion_value_return (completion))
-        {
-          ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
-        }
-        else
-        {
-          ret_value = completion;
-        }
-
+        ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
       }
       else
       {
-        jerry_external_handler_t handler = ecma_unpack_external_code_internal_property_value (code_prop_value);
-        handler (NULL, NULL, 0, NULL);
-        ret_value = 0;
+        ret_value = completion;
       }
 
       ECMA_FINALIZE (args_var_declaration_ret);
@@ -633,6 +604,17 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                             this_arg_value,
                                             arguments_list_p,
                                             arguments_list_len);
+  }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+  {
+    ecma_external_pointer_t handler_p = ecma_get_external_pointer_value (func_obj_p,
+                                                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+
+    ret_value = jerry_dispatch_external_function (func_obj_p,
+                                                  handler_p,
+                                                  this_arg_value,
+                                                  arguments_list_p,
+                                                  arguments_list_len);
   }
   else
   {
@@ -765,9 +747,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                               formal_parameter_list_length,
                                                               lex_env_p,
                                                               is_strict,
-                                                              false,
-                                                              function_code_opcode_idx,
-                                                              0);
+                                                              function_code_opcode_idx);
 
   // c.
   bool func_already_declared = ecma_op_has_binding (lex_env_p, function_name_p);

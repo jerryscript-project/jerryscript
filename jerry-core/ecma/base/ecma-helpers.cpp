@@ -778,6 +778,13 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
       break;
     }
 
+    case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
+    {
+      ecma_free_external_pointer_in_property (property_p);
+
+      break;
+    }
+
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */

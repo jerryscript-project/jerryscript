@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "vm.h"
+#include "jerry-api.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -34,7 +35,9 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 ecma_length_t formal_parameters_number,
                                 ecma_object_t *scope_p,
                                 bool is_strict,
-                                opcode_counter_t first_opcode_idx);
+                                bool is_external,
+                                opcode_counter_t first_opcode_idx,
+                                jerry_external_handler_t external_handler);
 
 extern ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p,

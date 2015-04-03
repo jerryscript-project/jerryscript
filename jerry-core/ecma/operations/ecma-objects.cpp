@@ -483,6 +483,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {

@@ -23,6 +23,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
+#include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "jerry.h"
@@ -339,6 +340,26 @@ jerry_api_object_t*
 jerry_api_create_object (void)
 {
   return ecma_op_create_object_object_noarg ();
+} /* jerry_api_create_object */
+
+/**
+ * Create an external function object
+ *
+ * Note:
+ *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *
+ * @return pointer to created external function object
+ */
+jerry_api_object_t*
+jerry_api_create_external_function (jerry_external_handler_t handler)
+{
+  return ecma_op_create_function_object (NULL,
+                                         0,
+                                         ecma_get_globl_lexical_environment (),
+                                         false,
+                                         0,
+                                         true,
+                                         handler);
 } /* jerry_api_create_object */
 
 /**

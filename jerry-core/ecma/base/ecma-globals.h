@@ -372,6 +372,8 @@ typedef enum
                                  and not host objects */
   ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
   ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION, /**< Function object (15.3), created through 13.2 routine
+                                           but [[Code]] is in external handler. */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION, /** One of built-in functions described in section 15
                                           of ECMA-262 v5 specification */
@@ -809,6 +811,9 @@ typedef struct ecma_string_t
     uint32_t common_field;
   } u;
 } ecma_string_t;
+
+
+typedef uintptr_t ecma_external_pointer_t;
 
 /**
  * @}

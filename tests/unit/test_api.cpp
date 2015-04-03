@@ -59,6 +59,17 @@ test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API va
   out_value_p->v_string = jerry_api_create_string (v);
 } /* test_api_init_api_value_string */
 
+static bool
+handler (const jerry_api_value_t *this_p,
+         const jerry_api_value_t *args_p [],
+         const int16_t args_cnt,
+         jerry_api_value_t *ret_val_p)
+{
+  printf("ok %p %p %d %p\n", this_p, args_p, args_cnt, ret_val_p);
+  return true;
+}
+
+
 int
 main (void)
 {
@@ -68,6 +79,7 @@ main (void)
   ssize_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo;
   jerry_api_object_t* global_obj_p;
+  jerry_api_object_t* external_func_p;
   jerry_api_value_t res, args [2];
   char buffer [16];
 
@@ -179,6 +191,14 @@ main (void)
           && res.v_float64 == 12.0);
   jerry_api_release_value (&res);
   jerry_api_release_value (&val_a_foo);
+
+  external_func_p = jerry_api_create_external_function (handler);
+  assert (external_func_p != NULL);
+
+  is_ok = jerry_api_call_function (external_func_p, global_obj_p, &res, NULL, 0);
+  assert (is_ok);
+
+  jerry_api_release_object (external_func_p);
 
   jerry_api_release_value (&val_a);
 

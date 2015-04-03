@@ -440,8 +440,33 @@ ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global ob
   ecma_object_t *glob_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
 #endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
 
+  ecma_property_t *scope_prop_p = ecma_create_internal_property (glob_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+  ECMA_SET_POINTER (scope_prop_p->u.internal_property.value, glob_env_p);
+
   return glob_env_p;
 } /* ecma_op_create_global_environment */
+
+/**
+ * Get global lexcial envorinment
+ *
+ * Note:
+ *       This function should called after global environment was created.
+ *
+ * @return pointer to global lexical environment
+ */
+ecma_object_t*
+ecma_get_globl_lexical_environment ()
+{
+  ecma_object_t *glob_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+
+  ecma_property_t *scope_prop_p = ecma_get_internal_property (glob_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+
+  ecma_object_t *glob_env_p = ECMA_GET_POINTER (ecma_object_t,
+                                                scope_prop_p->u.internal_property.value);
+  JERRY_ASSERT (glob_env_p != NULL);
+
+  return glob_env_p;
+}
 
 /**
  * Figure out whether the lexical environment is global.

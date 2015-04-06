@@ -629,9 +629,91 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_call */
 
 /**
- * [[Construct]] implementation for Function objects,
- * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
- * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
+ * [[Construct]] implementation for Function objects (13.2.2),
+ * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION) and
+ * externally defined (host) functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION).
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value
+ */
+static ecma_completion_value_t
+ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< Function object */
+                                               const ecma_value_t* arguments_list_p, /**< arguments list */
+                                               ecma_length_t arguments_list_len) /**< length of arguments list */
+{
+  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_completion_value_t ret_value;
+
+  ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+
+  // 5.
+  ECMA_TRY_CATCH (func_obj_prototype_prop_value,
+                  ecma_op_object_get (func_obj_p,
+                                      prototype_magic_string_p),
+                  ret_value);
+
+  //  6.
+  ecma_object_t *prototype_p;
+  if (ecma_is_value_object (func_obj_prototype_prop_value))
+  {
+    prototype_p = ecma_get_object_from_value (func_obj_prototype_prop_value);
+    ecma_ref_object (prototype_p);
+  }
+  else
+  {
+    // 7.
+    prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  }
+
+  // 1., 2., 4.
+  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  // 3.
+  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_OBJECT_UL;
+
+  ecma_deref_object (prototype_p);
+
+  // 8.
+  ECMA_TRY_CATCH (call_completion,
+                  ecma_op_function_call (func_obj_p,
+                                         ecma_make_object_value (obj_p),
+                                         arguments_list_p,
+                                         arguments_list_len),
+                  ret_value);
+
+  ecma_value_t obj_value;
+
+  // 9.
+  if (ecma_is_value_object (call_completion))
+  {
+    ecma_deref_object (obj_p);
+
+    obj_value = ecma_copy_value (call_completion, true);
+  }
+  else
+  {
+    // 10.
+    obj_value = ecma_make_object_value (obj_p);
+  }
+
+  ret_value = ecma_make_normal_completion_value (obj_value);
+
+  ECMA_FINALIZE (call_completion);
+  ECMA_FINALIZE (func_obj_prototype_prop_value);
+
+  ecma_deref_ecma_string (prototype_magic_string_p);
+
+  return ret_value;
+} /* ecma_op_function_construct_simple_or_external */
+
+/**
+ * [[Construct]] implementation:
+ *   13.2.2 - for Function objects, created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION),
+ *            and externally defined host functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+ *   15.3.4.5.1 - for Function objects, created through 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
@@ -648,74 +730,17 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
+    if (unlikely (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+                  && ecma_get_object_is_builtin (func_obj_p)))
     {
       return ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
     }
 
-    ecma_completion_value_t ret_value;
-
-    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
-
-    // 5.
-    ECMA_TRY_CATCH (func_obj_prototype_prop_value,
-                    ecma_op_object_get (func_obj_p,
-                                        prototype_magic_string_p),
-                    ret_value);
-
-    //  6.
-    ecma_object_t *prototype_p;
-    if (ecma_is_value_object (func_obj_prototype_prop_value))
-    {
-      prototype_p = ecma_get_object_from_value (func_obj_prototype_prop_value);
-      ecma_ref_object (prototype_p);
-    }
-    else
-    {
-      // 7.
-      prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-    }
-
-    // 1., 2., 4.
-    ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
-
-    // 3.
-    ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-    class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
-
-    ecma_deref_object (prototype_p);
-
-    // 8.
-    ECMA_TRY_CATCH (call_completion,
-                    ecma_op_function_call (func_obj_p,
-                                           ecma_make_object_value (obj_p),
-                                           arguments_list_p,
-                                           arguments_list_len),
-                    ret_value);
-
-    ecma_value_t obj_value;
-
-    // 9.
-    if (ecma_is_value_object (call_completion))
-    {
-      ecma_deref_object (obj_p);
-
-      obj_value = ecma_copy_value (call_completion, true);
-    }
-    else
-    {
-      // 10.
-      obj_value = ecma_make_object_value (obj_p);
-    }
-
-    ret_value = ecma_make_normal_completion_value (obj_value);
-
-    ECMA_FINALIZE (call_completion);
-    ECMA_FINALIZE (func_obj_prototype_prop_value);
-
-    ecma_deref_ecma_string (prototype_magic_string_p);
-
-    return ret_value;
+    return ecma_op_function_construct_simple_or_external (func_obj_p, arguments_list_p, arguments_list_len);
+  }
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+  {
+    return ecma_op_function_construct_simple_or_external (func_obj_p, arguments_list_p, arguments_list_len);
   }
   else
   {

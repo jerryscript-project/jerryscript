@@ -38,6 +38,9 @@ const char *test_source = (
                            "function call_external () {"
                            "  return this.external ('1', true);"
                            "}"
+                           "function call_external_construct () {"
+                           "  return new external_construct (true);"
+                           "}"
                            );
 
 /**
@@ -104,6 +107,26 @@ handler (const jerry_api_object_t *function_obj_p,
   return true;
 } /* handler */
 
+static bool
+handler_construct (const jerry_api_object_t *function_obj_p,
+                   const jerry_api_value_t *this_p,
+                   jerry_api_value_t *ret_val_p,
+                   const jerry_api_value_t args_p [],
+                   const uint16_t args_cnt)
+{
+  printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+
+  assert (this_p != NULL);
+  assert (this_p->type == JERRY_API_DATA_TYPE_OBJECT);
+
+  assert (args_cnt == 1);
+  assert (args_p [0].type == JERRY_API_DATA_TYPE_BOOLEAN);
+  assert (args_p [0].v_bool == true);
+
+  jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p [0]);
+
+  return true;
+} /* handler_construct */
 
 int
 main (void)
@@ -112,10 +135,10 @@ main (void)
 
   bool is_ok;
   ssize_t sz;
-  jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo;
-  jerry_api_value_t val_external, val_call_external;
+  jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field;
+  jerry_api_value_t val_external, val_external_construct, val_call_external, val_call_external_construct;
   jerry_api_object_t* global_obj_p;
-  jerry_api_object_t* external_func_p;
+  jerry_api_object_t* external_func_p, *external_construct_p;
   jerry_api_value_t res, args [2];
   char buffer [32];
 
@@ -232,7 +255,9 @@ main (void)
 
   // Create native handler bound function object and set it to 'external' variable
   external_func_p = jerry_api_create_external_function (handler);
-  assert (external_func_p != NULL);
+  assert (external_func_p != NULL
+          && jerry_api_is_function (external_func_p)
+          && jerry_api_is_constructor (external_func_p));
 
   test_api_init_api_value_object (&val_external, external_func_p);
   is_ok = jerry_api_set_object_field_value (global_obj_p,
@@ -261,6 +286,43 @@ main (void)
   assert (!strcmp (buffer, "string from handler"));
 
   jerry_api_release_object (global_obj_p);
+
+  // Create native handler bound function object and set it to 'external_construct' variable
+  external_construct_p = jerry_api_create_external_function (handler_construct);
+  assert (external_construct_p != NULL
+          && jerry_api_is_function (external_construct_p)
+          && jerry_api_is_constructor (external_construct_p));
+
+  test_api_init_api_value_object (&val_external_construct, external_construct_p);
+  is_ok = jerry_api_set_object_field_value (global_obj_p,
+                                            "external_construct",
+                                            &val_external_construct);
+  assert (is_ok);
+  jerry_api_release_value (&val_external_construct);
+  jerry_api_release_object (external_construct_p);
+
+  // Call 'call_external_construct' function that should call external function created above, as constructor
+  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_external_construct", &val_call_external_construct);
+  assert (is_ok
+          && val_call_external_construct.type == JERRY_API_DATA_TYPE_OBJECT);
+  is_ok = jerry_api_call_function (val_call_external_construct.v_object,
+                                   global_obj_p,
+                                   &res,
+                                   NULL, 0);
+  jerry_api_release_value (&val_call_external_construct);
+  assert (is_ok
+          && res.type == JERRY_API_DATA_TYPE_OBJECT);
+  is_ok = jerry_api_get_object_field_value (res.v_object,
+                                            "value_field",
+                                            &val_value_field);
+
+  // Get 'value_field' of constructed object
+  assert (is_ok
+          && val_value_field.type == JERRY_API_DATA_TYPE_BOOLEAN
+          && val_value_field.v_bool == true);
+  jerry_api_release_value (&val_value_field);
+
+  jerry_api_release_value (&res);
 
   jerry_cleanup ();
 

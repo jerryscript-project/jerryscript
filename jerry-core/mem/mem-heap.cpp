@@ -892,6 +892,65 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 } /* mem_heap_free_block */
 
 /**
+ * Find beginning of user data in a block from pointer,
+ * pointing into it, i.e. into [block_data_space_start; block_data_space_end) range.
+ *
+ * Note:
+ *      Pointer must point to the memory region which was previously allocated
+ *      with mem_heap_alloc_block and is currently valid.
+ *
+ * Note:
+ *      The interface should only be used for determining where the user space of heap-allocated block begins.
+ *      Caller should never rely on some specific internals of heap implementation.
+ *
+ * @return beginning of user data space of block identified by the pointer
+ */
+void*
+mem_heap_get_block_start (void *ptr) /**< pointer into a block */
+{
+  mem_check_heap ();
+
+  /*
+   * PERF: consider introducing bitmap of block beginnings
+   */
+
+  JERRY_ASSERT (mem_heap.heap_start <= ptr
+                && ptr < mem_heap.heap_start + mem_heap.heap_size);
+
+  const mem_block_header_t *block_p = mem_heap.first_block_p;
+
+  /* searching for corresponding block */
+  while (block_p != NULL)
+  {
+    VALGRIND_DEFINED_STRUCT (block_p);
+
+    const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p,
+                                                                              MEM_DIRECTION_NEXT);
+    bool is_found = (ptr > block_p
+                     && (ptr < next_block_p
+                         || next_block_p == NULL));
+
+    if (is_found)
+    {
+      JERRY_ASSERT (block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+      JERRY_ASSERT (block_p + 1 <= ptr);
+      JERRY_ASSERT (ptr < ((uint8_t*) (block_p + 1) + block_p->allocated_bytes));
+    }
+
+    VALGRIND_NOACCESS_STRUCT (block_p);
+
+    if (is_found)
+    {
+      return (void*) (block_p + 1);
+    }
+
+    block_p = next_block_p;
+  }
+
+  JERRY_UNREACHABLE ();
+} /* mem_heap_get_block_start */
+
+/**
  * Recommend allocation size based on chunk size.
  *
  * @return recommended allocation size

@@ -44,6 +44,7 @@ extern void mem_heap_finalize (void);
 extern void* mem_heap_alloc_block (size_t size_in_bytes, mem_heap_alloc_term_t alloc_term);
 extern bool mem_heap_try_resize_block (void *ptr, size_t size_in_bytes);
 extern void mem_heap_free_block (void *ptr);
+extern void* mem_heap_get_block_start (void *ptr);
 extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t minimum_allocation_size);
 extern void mem_heap_print (bool dump_block_headers, bool dump_block_data, bool dump_stats);
 

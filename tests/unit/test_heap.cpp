@@ -111,6 +111,9 @@ main (int __attr_unused___ argc,
 
       JERRY_ASSERT (size == 0 || ptrs[j] != NULL);
       memset (ptrs[j], 0, sizes[j]);
+
+      JERRY_ASSERT (ptrs[j] == NULL
+                    || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes [j]) == ptrs[j]);
     }
 
     // mem_heap_print (true);
@@ -131,6 +134,9 @@ main (int __attr_unused___ argc,
           sizes[j] = new_size;
           memset (ptrs[j], 0, sizes[j]);
         }
+
+        JERRY_ASSERT (sizes [j] == 0
+                      || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes [j]) == ptrs[j]);
       }
     }
 
@@ -142,7 +148,12 @@ main (int __attr_unused___ argc,
         {
           JERRY_ASSERT(ptrs[j][k] == 0);
         }
+
+        JERRY_ASSERT (sizes [j] == 0
+                      || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes [j]) == ptrs[j]);
+
         mem_heap_free_block (ptrs[j]);
+
         ptrs[j] = NULL;
       }
     }

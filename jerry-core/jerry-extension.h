@@ -54,6 +54,11 @@ typedef struct
 } jerry_extension_field_t;
 
 /**
+ * Forward declare to make compiler happy
+ */
+struct jerry_extension_function_t;
+
+/**
  * Pointer to extension function implementation
  */
 typedef void (*jerry_extension_function_pointer_t) (const struct jerry_extension_function_t *function_block_p);

@@ -319,6 +319,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
             case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
+            case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */

@@ -125,6 +125,8 @@ handler_construct (const jerry_api_object_t *function_obj_p,
 
   jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p [0]);
 
+  jerry_api_set_object_native_handle (this_p->v_object, (uintptr_t) 0x0012345678abcdefull);
+
   return true;
 } /* handler_construct */
 
@@ -321,6 +323,11 @@ main (void)
           && val_value_field.type == JERRY_API_DATA_TYPE_BOOLEAN
           && val_value_field.v_bool == true);
   jerry_api_release_value (&val_value_field);
+
+  uintptr_t ptr;
+  is_ok = jerry_api_get_object_native_handle (res.v_object, &ptr);
+  assert (is_ok
+          && ptr == (uintptr_t) 0x0012345678abcdefull);
 
   jerry_api_release_value (&res);
 

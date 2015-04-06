@@ -309,13 +309,14 @@ extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
 /* ecma-helpers-external-pointers.c */
-extern void
+extern bool
 ecma_create_external_pointer_property (ecma_object_t *obj_p,
                                        ecma_internal_property_id_t id,
                                        ecma_external_pointer_t ptr_value);
-extern ecma_external_pointer_t
+extern bool
 ecma_get_external_pointer_value (ecma_object_t *obj_p,
-                                 ecma_internal_property_id_t id);
+                                 ecma_internal_property_id_t id,
+                                 ecma_external_pointer_t *out_pointer_p);
 extern void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
 

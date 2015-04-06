@@ -29,17 +29,35 @@
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE.
+ *
+ * @return true - if property was just created with specified value,
+ *         false - otherwise, if property existed before the call, it's value was updated.
  */
-void
+bool
 ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to create property in */
                                        ecma_internal_property_id_t id, /**< identifier of internal
                                                                         *   property to create */
                                        ecma_external_pointer_t ptr_value) /**< value to store in the property */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+                || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE);
 
-  ecma_property_t *prop_p = ecma_create_internal_property (obj_p, id);
+  bool ret_val;
+  ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
+
+  if (prop_p == NULL)
+  {
+    prop_p = ecma_create_internal_property (obj_p, id);
+
+    ret_val = true;
+  }
+  else
+  {
+    ret_val = false;
+  }
+
   JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value));
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
@@ -53,6 +71,8 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
 
     ECMA_SET_NON_NULL_POINTER (prop_p->u.internal_property.value, handler_p);
   }
+
+  return ret_val;
 } /* ecma_create_external_pointer_property */
 
 /**
@@ -60,30 +80,44 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE.
  *
- * @return value of the external pointer
+ * @return true - if property exists and it's value is returned through out_pointer_p,
+ *         false - otherwise (value returned through out_pointer_p is NULL).
  */
-ecma_external_pointer_t
+bool
 ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
-                                 ecma_internal_property_id_t id) /**< identifier of internal property
+                                 ecma_internal_property_id_t id, /**< identifier of internal property
                                                                   *   to get value from */
+                                 ecma_external_pointer_t *out_pointer_p) /**< out: value of the external pointer */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+                || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE);
 
-  ecma_property_t* prop_p = ecma_get_internal_property (obj_p, id);
+  ecma_property_t* prop_p = ecma_find_internal_property (obj_p, id);
+
+  if (prop_p == NULL)
+  {
+    *out_pointer_p = (ecma_external_pointer_t) NULL;
+
+    return false;
+  }
+
   JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value));
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {
-    return (ecma_external_pointer_t) prop_p->u.internal_property.value;
+    *out_pointer_p = (ecma_external_pointer_t) prop_p->u.internal_property.value;
   }
   else
   {
     ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
                                                                     prop_p->u.internal_property.value);
-    return *handler_p;
+    *out_pointer_p = *handler_p;
   }
+
+  return true;
 } /* ecma_get_external_pointer_value */
 
 /**
@@ -91,12 +125,14 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
+ *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE.
  */
 void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal property */
 {
-  JERRY_ASSERT (prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+  JERRY_ASSERT (prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+                || prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE);
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {

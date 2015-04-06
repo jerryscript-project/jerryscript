@@ -308,9 +308,10 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
   ecma_property_t *class_prop_p = ecma_create_internal_property (function_obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
   class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
 
-  ecma_create_external_pointer_property (function_obj_p,
-                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
-                                         (ecma_external_pointer_t) code_p);
+  bool is_created = ecma_create_external_pointer_property (function_obj_p,
+                                                           ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
+                                                           (ecma_external_pointer_t) code_p);
+  JERRY_ASSERT (is_created);
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
   {
@@ -607,8 +608,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ecma_external_pointer_t handler_p = ecma_get_external_pointer_value (func_obj_p,
-                                                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE);
+    ecma_external_pointer_t handler_p;
+    bool is_retrieved = ecma_get_external_pointer_value (func_obj_p,
+                                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
+                                                         &handler_p);
+    JERRY_ASSERT (is_retrieved);
 
     ret_value = jerry_dispatch_external_function (func_obj_p,
                                                   handler_p,

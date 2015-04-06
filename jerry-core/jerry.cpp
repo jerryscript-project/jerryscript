@@ -617,6 +617,42 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
 } /* jerry_api_set_object_field_value */
 
 /**
+ * Get native handle, associated with specified object
+ *
+ * @return true - if there is associated handle (handle is returned through out_handle_p),
+ *         false - otherwise.
+ */
+bool
+jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to get handle from */
+                                    uintptr_t* out_handle_p) /**< out: handle value */
+{
+  uintptr_t handle_value;
+
+  bool does_exist = ecma_get_external_pointer_value (object_p,
+                                                     ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
+                                                     &handle_value);
+
+  if (does_exist)
+  {
+    *out_handle_p = handle_value;
+  }
+
+  return does_exist;
+} /* jerry_api_get_object_native_handle */
+
+/**
+ * Set native handle for the specified object
+ */
+void
+jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to set handle in */
+                                    uintptr_t handle) /**< handle value */
+{
+  ecma_create_external_pointer_property (object_p,
+                                         ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
+                                         handle);
+} /* jerry_api_set_object_native_handle */
+
+/**
  * Call function specified by a function object
  *
  * Note:

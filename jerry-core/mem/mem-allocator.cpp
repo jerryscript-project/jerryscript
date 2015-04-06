@@ -96,7 +96,7 @@ mem_get_base_pointer (void)
  * Compress pointer.
  */
 uintptr_t
-mem_compress_pointer (void *pointer) /**< pointer to compress */
+mem_compress_pointer (const void *pointer) /**< pointer to compress */
 {
   JERRY_ASSERT(pointer != NULL);
 

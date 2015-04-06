@@ -79,10 +79,10 @@ extern bool ecma_is_value_object (const ecma_value_t& value);
 
 extern void ecma_check_value_type_is_spec_defined (const ecma_value_t& value);
 
-extern ecma_value_t ecma_make_simple_value (ecma_simple_value_t value);
-extern ecma_value_t ecma_make_number_value (ecma_number_t* num_p);
-extern ecma_value_t ecma_make_string_value (ecma_string_t* ecma_string_p);
-extern ecma_value_t ecma_make_object_value (ecma_object_t* object_p);
+extern ecma_value_t ecma_make_simple_value (const ecma_simple_value_t value);
+extern ecma_value_t ecma_make_number_value (const ecma_number_t* num_p);
+extern ecma_value_t ecma_make_string_value (const ecma_string_t* ecma_string_p);
+extern ecma_value_t ecma_make_object_value (const ecma_object_t* object_p);
 extern ecma_number_t* __attr_pure___ ecma_get_number_from_value (const ecma_value_t& value);
 extern ecma_string_t* __attr_pure___ ecma_get_string_from_value (const ecma_value_t& value);
 extern ecma_object_t* __attr_pure___ ecma_get_object_from_value (const ecma_value_t& value);

@@ -83,7 +83,7 @@ typedef void (*mem_try_give_memory_back_callback_t) (mem_try_give_memory_back_se
 extern void mem_init (void);
 extern void mem_finalize (bool is_show_mem_stats);
 
-extern uintptr_t mem_compress_pointer (void *pointer);
+extern uintptr_t mem_compress_pointer (const void *pointer);
 extern void* mem_decompress_pointer (uintptr_t compressed_pointer);
 
 extern void mem_register_a_try_give_memory_back_callback (mem_try_give_memory_back_callback_t callback);

@@ -435,9 +435,9 @@ jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
-          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+  ecma_value_t obj_val = ecma_make_object_value (object_p);
+
+  return ecma_op_is_callable (obj_val);
 } /* jerry_api_is_function */
 
 /**
@@ -451,8 +451,9 @@ jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  ecma_value_t obj_val = ecma_make_object_value (object_p);
+
+  return ecma_is_constructor (obj_val);
 } /* jerry_api_is_constructor */
 
 /**

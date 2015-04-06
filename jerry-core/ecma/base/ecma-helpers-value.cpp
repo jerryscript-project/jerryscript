@@ -210,7 +210,7 @@ ecma_check_value_type_is_spec_defined (const ecma_value_t& value) /**< ecma-valu
  * Simple value constructor
  */
 ecma_value_t __attr_const___ __attr_always_inline___
-ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
+ecma_make_simple_value (const ecma_simple_value_t value) /**< simple value */
 {
   ecma_value_t ret_value = 0;
 
@@ -224,7 +224,7 @@ ecma_make_simple_value (ecma_simple_value_t value) /**< simple value */
  * Number value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_number_value (ecma_number_t* num_p) /**< number to reference in value */
+ecma_make_number_value (const ecma_number_t* num_p) /**< number to reference in value */
 {
   JERRY_ASSERT(num_p != NULL);
 
@@ -243,7 +243,7 @@ ecma_make_number_value (ecma_number_t* num_p) /**< number to reference in value 
  * String value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_string_value (ecma_string_t* ecma_string_p) /**< string to reference in value */
+ecma_make_string_value (const ecma_string_t* ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT(ecma_string_p != NULL);
 
@@ -262,7 +262,7 @@ ecma_make_string_value (ecma_string_t* ecma_string_p) /**< string to reference i
  * object value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_object_value (ecma_object_t* object_p) /**< object to reference in value */
+ecma_make_object_value (const ecma_object_t* object_p) /**< object to reference in value */
 {
   JERRY_ASSERT(object_p != NULL);
 

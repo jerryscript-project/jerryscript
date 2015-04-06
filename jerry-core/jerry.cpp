@@ -581,7 +581,6 @@ jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
  * Set value of field in the specified object
  *
  * @return true, if field value was set successfully, i.e. upon the call:
- *                - there is field with specified name in the object;
  *                - field value is writable;
  *         false - otherwise.
  */
@@ -632,8 +631,8 @@ bool
 jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
                          jerry_api_object_t *this_arg_p, /**< this arg for this binding
                                                           *   or NULL (set this binding to the global object) */
-                         jerry_api_value_t *retval_p, /**< place for function's return value (if it is required)
-                                                       *   or NULL (if it should be 'undefined') */
+                         jerry_api_value_t *retval_p, /**< pointer to place for function's return value
+                                                       *   or NULL (to ignore the return value) */
                          const jerry_api_value_t args_p [], /**< function's call arguments
                                                              *   (NULL if arguments number is zero) */
                          uint16_t args_count) /**< number of the arguments */

@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-#include "jrt.h"
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
+#include <stdarg.h>
+
 #include "pretty-printer.h"
 #include "jrt-libc-includes.h"
 #include "lexer.h"
-#include "deserializer.h"
 #include "opcodes-native-call.h"
 #include "ecma-helpers.h"
 #include "ecma-globals.h"
-#include <stdarg.h>
+#include "serializer.h"
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
@@ -79,7 +79,7 @@ dump_literal (literal lit)
 }
 
 void
-pp_literals (const literal lits[], literal_index_t size)
+pp_literals (const literal *lits, literal_index_t size)
 {
   printf ("LITERALS %lu:\n", (unsigned long) size);
   for (literal_index_t i = 0; i < size; i++)
@@ -160,7 +160,7 @@ var_to_str (opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc, uin
   }
   else
   {
-    return lit_id_to_str (deserialize_lit_id_by_uid (raw.uids[current_arg], oc));
+    return lit_id_to_str (serializer_get_literal_id_by_uid (raw.uids[current_arg], oc));
   }
 }
 
@@ -241,7 +241,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
   {
     PP_OP (addition, "%s = %s + %s;");
     PP_OP (substraction, "%s = %s - %s;");
-    PP_OP (division, "%s = %s - %s;");
+    PP_OP (division, "%s = %s / %s;");
     PP_OP (multiplication, "%s = %s * %s;");
     PP_OP (remainder, "%s = %s %% %s;");
     PP_OP (unary_minus, "%s = -%s;");
@@ -447,7 +447,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             while ((int16_t) start >= 0 && !found)
             {
               start--;
-              switch (deserialize_opcode (start).op_idx)
+              switch (serializer_get_opcode (start).op_idx)
               {
                 case NAME_TO_ID (call_n):
                 case NAME_TO_ID (native_call):
@@ -462,7 +462,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
                 }
               }
             }
-            opcode_t start_op = deserialize_opcode (start);
+            opcode_t start_op = serializer_get_opcode (start);
             switch (start_op.op_idx)
             {
               case NAME_TO_ID (call_n):
@@ -527,7 +527,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             }
             for (opcode_counter_t counter = start; counter <= oc; counter++)
             {
-              opcode_t meta_op = deserialize_opcode (counter);
+              opcode_t meta_op = serializer_get_opcode (counter);
               switch (meta_op.op_idx)
               {
                 case NAME_TO_ID (meta):

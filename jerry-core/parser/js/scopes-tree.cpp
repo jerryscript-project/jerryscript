@@ -14,10 +14,10 @@
  */
 
 #include "scopes-tree.h"
+#include "bytecode-data.h"
 #include "mem-heap.h"
 #include "jrt-libc-includes.h"
 #include "lexer.h"
-#include "bytecode-data.h"
 
 #define OPCODE(op) (__op__idx_##op)
 #define HASH_SIZE 128

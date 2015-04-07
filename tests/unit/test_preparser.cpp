@@ -18,9 +18,9 @@
 #include "jrt.h"
 #include "mem-allocator.h"
 #include "opcodes.h"
-#include "deserializer.h"
 #include "common.h"
 #include "parser.h"
+#include "serializer.h"
 
 /**
  * Unit test's main function.
@@ -33,7 +33,7 @@ main (int __attr_unused___ argc,
   bool is_ok;
 
   mem_init ();
-  deserializer_init ();
+  serializer_init ();
   parser_init (program, strlen (program), true);
   parser_parse_program ();
   parser_free ();
@@ -47,7 +47,7 @@ main (int __attr_unused___ argc,
     getop_exitval (0)               // exit 0;
   };
 
-  if (!opcodes_equal ((const opcode_t *) deserialize_bytecode (), opcodes, 5))
+  if (!opcodes_equal ((const opcode_t *) serializer_get_bytecode (), opcodes, 5))
   {
     is_ok = false;
   }
@@ -56,7 +56,7 @@ main (int __attr_unused___ argc,
     is_ok = true;
   }
 
-  deserializer_free ();
+  serializer_free ();
   mem_finalize (false);
 
   return (is_ok ? 0 : 1);

@@ -23,7 +23,14 @@
 #include "literal.h"
 #include "scopes-tree.h"
 
-void serializer_init (bool show_opcodes);
+void serializer_init ();
+void serializer_set_show_opcodes (bool show_opcodes);
+op_meta serializer_get_op_meta (opcode_counter_t);
+opcode_t serializer_get_opcode (opcode_counter_t);
+literal serializer_get_literal_by_id (literal_index_t);
+literal_index_t serializer_get_literal_id_by_uid (uint8_t, opcode_counter_t);
+const void *serializer_get_bytecode (void);
+void serializer_set_strings_buffer (const ecma_char_t *);
 void serializer_dump_literals (const literal *, literal_index_t);
 void serializer_set_scope (scopes_tree);
 void serializer_merge_scopes_into_bytecode (void);

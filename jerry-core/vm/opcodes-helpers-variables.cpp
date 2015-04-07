@@ -91,7 +91,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (var_idx, int_data->pos);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (var_idx, int_data->pos);
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
     ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
 
@@ -158,7 +158,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (var_idx, lit_oc);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (var_idx, lit_oc);
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
     ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
 

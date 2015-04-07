@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "deserializer.h"
 #include "jrt.h"
-#include "vm.h"
 #include "opcodes.h"
 #include "opcodes-ecma-support.h"
+#include "serializer.h"
+#include "vm.h"
 
 /**
  * Note:
@@ -98,7 +98,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   }
   else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (src_val_descr, int_data->pos);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (src_val_descr, int_data->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_index (lit_id);
 
     ret_value = set_variable_value (int_data,
@@ -127,8 +127,8 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   {
     ecma_number_t *num_p = int_data->tmp_num_p;
 
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (src_val_descr, int_data->pos);
-    const literal lit = deserialize_literal_by_id (lit_id);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (src_val_descr, int_data->pos);
+    const literal lit = serializer_get_literal_by_id (lit_id);
     JERRY_ASSERT (lit.type == LIT_NUMBER);
 
     *num_p = lit.data.num;
@@ -142,8 +142,8 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   {
     ecma_number_t *num_p = int_data->tmp_num_p;
 
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (src_val_descr, int_data->pos);
-    const literal lit = deserialize_literal_by_id (lit_id);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (src_val_descr, int_data->pos);
+    const literal lit = serializer_get_literal_by_id (lit_id);
     JERRY_ASSERT (lit.type == LIT_NUMBER);
 
     *num_p = ecma_number_negate (lit.data.num);
@@ -397,8 +397,8 @@ ecma_completion_value_t
 opfunc_var_decl (opcode_t opdata, /**< operation data */
                  int_data_t *int_data) /**< interpreter context */
 {
-  const literal_index_t lit_id = deserialize_lit_id_by_uid (opdata.data.var_decl.variable_name,
-                                                            int_data->pos);
+  const literal_index_t lit_id = serializer_get_literal_id_by_uid (opdata.data.var_decl.variable_name,
+                                                                   int_data->pos);
   JERRY_ASSERT (lit_id != INVALID_LITERAL);
 
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
@@ -487,8 +487,8 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
   const idx_t function_name_idx = opdata.data.func_decl_n.name_lit_idx;
   const ecma_length_t params_number = opdata.data.func_decl_n.arg_list;
 
-  literal_index_t function_name_lit_id = deserialize_lit_id_by_uid (function_name_idx,
-                                                                    int_data->pos);
+  literal_index_t function_name_lit_id = serializer_get_literal_id_by_uid (function_name_idx,
+                                                                           int_data->pos);
 
   int_data->pos++;
 
@@ -563,7 +563,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   {
     scope_p = ecma_create_decl_lex_env (int_data->lex_env_p);
 
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (function_name_lit_idx, lit_oc);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (function_name_lit_idx, lit_oc);
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
 
     function_name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
@@ -1389,7 +1389,7 @@ evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    const literal_index_t lit_id = deserialize_lit_id_by_uid (var_idx, int_data->pos);
+    const literal_index_t lit_id = serializer_get_literal_id_by_uid (var_idx, int_data->pos);
     JERRY_ASSERT (lit_id != INVALID_LITERAL);
 
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);
@@ -1505,7 +1505,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value;
 
-  const literal_index_t lit_id = deserialize_lit_id_by_uid (name_lit_idx, lit_oc);
+  const literal_index_t lit_id = serializer_get_literal_id_by_uid (name_lit_idx, lit_oc);
   JERRY_ASSERT (lit_id != INVALID_LITERAL);
 
   ecma_string_t *name_string_p = ecma_new_ecma_string_from_lit_index (lit_id);

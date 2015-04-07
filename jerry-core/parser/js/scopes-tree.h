@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 #ifndef SCOPES_TREE_H
 #define SCOPES_TREE_H
 
-#include "tree.h"
 #include "linked-list.h"
 #include "lexer.h"
 #include "ecma-globals.h"
@@ -32,6 +31,14 @@ typedef struct
   opcode_t op;
 }
 op_meta;
+
+typedef struct tree_header
+{
+  struct tree_header *parent;
+  linked_list children;
+  uint8_t children_num;
+}
+tree_header;
 
 typedef struct
 {

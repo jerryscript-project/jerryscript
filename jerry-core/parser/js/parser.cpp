@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <stdarg.h>
+
 #include "jrt-libc-includes.h"
 #include "parser.h"
 #include "opcodes.h"
@@ -20,13 +22,12 @@
 #include "vm.h"
 #include "stack.h"
 #include "hash-table.h"
-#include "deserializer.h"
 #include "opcodes-native-call.h"
 #include "scopes-tree.h"
 #include "ecma-helpers.h"
 #include "syntax-errors.h"
 #include "opcodes-dumper.h"
-#include "stdarg.h"
+#include "serializer.h"
 
 #define NESTING_ITERATIONAL 1
 #define NESTING_SWITCH      2
@@ -2713,7 +2714,7 @@ parser_parse_program (void)
   serializer_dump_literals (lexer_get_literals (), lexer_get_literals_count ());
   serializer_merge_scopes_into_bytecode ();
   serializer_set_scope (NULL);
-  deserializer_set_strings_buffer (lexer_get_strings_cache ());
+  serializer_set_strings_buffer (lexer_get_strings_cache ());
 
   scopes_tree_free (STACK_TOP (scopes));
   STACK_DROP (scopes, 1);
@@ -2723,7 +2724,7 @@ void
 parser_init (const char *source, size_t source_size, bool show_opcodes)
 {
   lexer_init (source, source_size, show_opcodes);
-  serializer_init (show_opcodes);
+  serializer_set_show_opcodes (show_opcodes);
   dumper_init ();
   syntax_init ();
 
@@ -2739,6 +2740,5 @@ parser_free (void)
 
   syntax_free ();
   dumper_free ();
-  serializer_free ();
   lexer_free ();
 }

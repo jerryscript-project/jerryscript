@@ -15,13 +15,13 @@
 
 #include "opcodes-dumper.h"
 #include "serializer.h"
-#include "deserializer.h"
 #include "jrt.h"
 #include "lexer.h"
 #include "stack.h"
 #include "syntax-errors.h"
 #include "jrt-libc-includes.h"
 #include "opcodes-native-call.h"
+#include "serializer.h"
 
 #define MIN_TEMP_NAME 128
 static idx_t temp_name, max_temp_name;
@@ -445,7 +445,7 @@ split_opcode_counter (opcode_counter_t oc, idx_t *id1, idx_t *id2)
 static op_meta
 last_dumped_op_meta (void)
 {
-  return deserialize_op_meta ((opcode_counter_t) (serializer_get_current_opcode_counter () - 1));
+  return serializer_get_op_meta ((opcode_counter_t) (serializer_get_current_opcode_counter () - 1));
 }
 
 static void
@@ -1049,7 +1049,7 @@ dump_varg_header_for_rewrite (varg_list_type vlt, operand obj)
 operand
 rewrite_varg_header_set_args_count (uint8_t args_count)
 {
-  op_meta om = deserialize_op_meta (STACK_TOP (varg_headers));
+  op_meta om = serializer_get_op_meta (STACK_TOP (varg_headers));
   switch (om.op.op_idx)
   {
     case OPCODE (func_expr_n):
@@ -1875,7 +1875,7 @@ rewrite_logical_and_checks (void)
 {
   for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (logical_and_checks); i++)
   {
-    op_meta jmp_op_meta = deserialize_op_meta (STACK_ELEMENT (logical_and_checks, i));
+    op_meta jmp_op_meta = serializer_get_op_meta (STACK_ELEMENT (logical_and_checks, i));
     JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_false_jmp_down));
     idx_t id1, id2;
     split_opcode_counter (get_diff_from (STACK_ELEMENT (logical_and_checks, i)), &id1, &id2);
@@ -1919,7 +1919,7 @@ rewrite_logical_or_checks (void)
 {
   for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (logical_or_checks); i++)
   {
-    op_meta jmp_op_meta = deserialize_op_meta (STACK_ELEMENT (logical_or_checks, i));
+    op_meta jmp_op_meta = serializer_get_op_meta (STACK_ELEMENT (logical_or_checks, i));
     JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_true_jmp_down));
     idx_t id1, id2;
     split_opcode_counter (get_diff_from (STACK_ELEMENT (logical_or_checks, i)), &id1, &id2);
@@ -1955,7 +1955,7 @@ dump_conditional_check_for_rewrite (operand op)
 void
 rewrite_conditional_check (void)
 {
-  op_meta jmp_op_meta = deserialize_op_meta (STACK_TOP (conditional_checks));
+  op_meta jmp_op_meta = serializer_get_op_meta (STACK_TOP (conditional_checks));
   JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_false_jmp_down));
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (conditional_checks)), &id1, &id2);
@@ -1976,7 +1976,7 @@ dump_jump_to_end_for_rewrite (void)
 void
 rewrite_jump_to_end (void)
 {
-  op_meta jmp_op_meta = deserialize_op_meta (STACK_TOP (jumps_to_end));
+  op_meta jmp_op_meta = serializer_get_op_meta (STACK_TOP (jumps_to_end));
   JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (jmp_down));
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (jumps_to_end)), &id1, &id2);
@@ -2167,7 +2167,7 @@ rewrite_breaks (void)
   {
     idx_t id1, id2;
     split_opcode_counter ((opcode_counter_t) (break_target - break_oc), &id1, &id2);
-    op_meta break_op_meta = deserialize_op_meta (break_oc);
+    op_meta break_op_meta = serializer_get_op_meta (break_oc);
     JERRY_ASSERT (break_op_meta.op.op_idx == OPCODE (jmp_down));
     break_op_meta.op.data.jmp_down.opcode_1 = id1;
     break_op_meta.op.data.jmp_down.opcode_2 = id2;
@@ -2189,7 +2189,7 @@ rewrite_continues (void)
   {
     idx_t id1, id2;
     split_opcode_counter ((opcode_counter_t) (continue_target - continue_oc), &id1, &id2);
-    op_meta continue_op_meta = deserialize_op_meta (continue_oc);
+    op_meta continue_op_meta = serializer_get_op_meta (continue_oc);
     JERRY_ASSERT (continue_op_meta.op.op_idx == OPCODE (jmp_down));
     continue_op_meta.op.data.jmp_down.opcode_1 = id1;
     continue_op_meta.op.data.jmp_down.opcode_2 = id2;
@@ -2233,7 +2233,7 @@ rewrite_case_clause (void)
   const opcode_counter_t jmp_oc = STACK_ELEMENT (case_clauses, STACK_HEAD (U8, 2));
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (jmp_oc), &id1, &id2);
-  op_meta jmp_op_meta = deserialize_op_meta (jmp_oc);
+  op_meta jmp_op_meta = serializer_get_op_meta (jmp_oc);
   JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_true_jmp_down));
   jmp_op_meta.op.data.is_true_jmp_down.opcode_1 = id1;
   jmp_op_meta.op.data.is_true_jmp_down.opcode_2 = id2;
@@ -2247,7 +2247,7 @@ rewrite_default_clause (void)
   const opcode_counter_t jmp_oc = STACK_TOP (case_clauses);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (jmp_oc), &id1, &id2);
-  op_meta jmp_op_meta = deserialize_op_meta (jmp_oc);
+  op_meta jmp_op_meta = serializer_get_op_meta (jmp_oc);
   JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (jmp_down));
   jmp_op_meta.op.data.jmp_down.opcode_1 = id1;
   jmp_op_meta.op.data.jmp_down.opcode_2 = id2;
@@ -2286,7 +2286,7 @@ dump_try_for_rewrite (void)
 void
 rewrite_try (void)
 {
-  op_meta try_op_meta = deserialize_op_meta (STACK_TOP (tries));
+  op_meta try_op_meta = serializer_get_op_meta (STACK_TOP (tries));
   JERRY_ASSERT (try_op_meta.op.op_idx == OPCODE (try_block));
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (tries)), &id1, &id2);
@@ -2310,7 +2310,7 @@ dump_catch_for_rewrite (operand op)
 void
 rewrite_catch (void)
 {
-  op_meta catch_op_meta = deserialize_op_meta (STACK_TOP (catches));
+  op_meta catch_op_meta = serializer_get_op_meta (STACK_TOP (catches));
   JERRY_ASSERT (catch_op_meta.op.op_idx == OPCODE (meta)
                 && catch_op_meta.op.data.meta.type == OPCODE_META_TYPE_CATCH);
   idx_t id1, id2;
@@ -2332,7 +2332,7 @@ dump_finally_for_rewrite (void)
 void
 rewrite_finally (void)
 {
-  op_meta finally_op_meta = deserialize_op_meta (STACK_TOP (finallies));
+  op_meta finally_op_meta = serializer_get_op_meta (STACK_TOP (finallies));
   JERRY_ASSERT (finally_op_meta.op.op_idx == OPCODE (meta)
                 && finally_op_meta.op.data.meta.type == OPCODE_META_TYPE_FINALLY);
   idx_t id1, id2;
@@ -2363,7 +2363,7 @@ dumper_variable_declaration_exists (literal_index_t lit_id)
   for (opcode_counter_t oc = (opcode_counter_t) (serializer_get_current_opcode_counter () - 1);
        oc > 0; oc--)
   {
-    const op_meta var_decl_op_meta = deserialize_op_meta (oc);
+    const op_meta var_decl_op_meta = serializer_get_op_meta (oc);
     if (var_decl_op_meta.op.op_idx != OPCODE (var_decl))
     {
       break;
@@ -2407,7 +2407,7 @@ void
 rewrite_reg_var_decl (void)
 {
   opcode_counter_t reg_var_decl_oc = STACK_TOP (reg_var_decls);
-  op_meta opm = deserialize_op_meta (reg_var_decl_oc);
+  op_meta opm = serializer_get_op_meta (reg_var_decl_oc);
   JERRY_ASSERT (opm.op.op_idx == OPCODE (reg_var_decl));
   opm.op.data.reg_var_decl.max = max_temp_name;
   serializer_rewrite_op_meta (reg_var_decl_oc, opm);

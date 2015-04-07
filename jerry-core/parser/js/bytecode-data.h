@@ -17,32 +17,32 @@
 #define BYTECODE_DATA_H
 
 #include "opcodes.h"
-#include "stack.h"
-#include "jrt-libc-includes.h"
 #include "literal.h"
-#include "scopes-tree.h"
 #include "lit-id-hash-table.h"
 
+/*
+ * All literals are kept in the 'literals' array.
+ * Literal structure doesn't hold real string. All program-specific strings
+ * are kept in the 'strings_buffer' and literal has pointer to this buffer.
+ *
+ * Literal id is its index in 'literals' array of bytecode_data_t structure.
+ *
+ * Bytecode, which is kept in the 'opcodes' field, is divided into blocks
+ * of 'BLOCK_SIZE' operands. Every block has its own numbering of literals.
+ * Literal uid could be in range [0, 127] in every block.
+ *
+ * To map uid to literal id 'lit_id_hash' table is used.
+ */
 #define BLOCK_SIZE 64
 
 typedef struct
 {
-  opcode_counter_t oc;
-  idx_t uid;
-  uint8_t reserved;
-}
-lit_id_table_key;
-
-typedef struct
-{
+  const ecma_char_t *strings_buffer;
   const literal *literals;
   const opcode_t *opcodes;
   lit_id_hash_table *lit_id_hash;
   literal_index_t literals_count;
   opcode_counter_t opcodes_count;
 } bytecode_data_t;
-
-extern bytecode_data_t bytecode_data;
-extern scopes_tree current_scope;
 
 #endif // BYTECODE_DATA_H

@@ -13,18 +13,66 @@
  * limitations under the License.
  */
 
-#include "jrt.h"
 #include "serializer.h"
+#include "bytecode-data.h"
+#include "jrt.h"
 #include "parser.h"
 #include "jrt-libc-includes.h"
-#include "bytecode-data.h"
-#include "deserializer.h"
 #include "pretty-printer.h"
 
-bytecode_data_t bytecode_data;
-scopes_tree current_scope;
+static bytecode_data_t bytecode_data;
+static scopes_tree current_scope;
 
 static bool print_opcodes;
+
+op_meta
+serializer_get_op_meta (opcode_counter_t oc)
+{
+  JERRY_ASSERT (current_scope);
+  return scopes_tree_op_meta (current_scope, oc);
+}
+
+opcode_t
+serializer_get_opcode (opcode_counter_t oc)
+{
+  if (bytecode_data.opcodes == NULL)
+  {
+    return serializer_get_op_meta (oc).op;
+  }
+  JERRY_ASSERT (oc < bytecode_data.opcodes_count);
+  return bytecode_data.opcodes[oc];
+}
+
+literal
+serializer_get_literal_by_id (literal_index_t id)
+{
+  JERRY_ASSERT (id != INVALID_LITERAL);
+  JERRY_ASSERT (id < bytecode_data.literals_count);
+  return bytecode_data.literals[id];
+}
+
+literal_index_t
+serializer_get_literal_id_by_uid (uint8_t id, opcode_counter_t oc)
+{
+  if (bytecode_data.lit_id_hash == null_hash)
+  {
+    return INVALID_LITERAL;
+  }
+  return lit_id_hash_table_lookup (bytecode_data.lit_id_hash, id, oc);
+}
+
+const void *
+serializer_get_bytecode (void)
+{
+  JERRY_ASSERT (bytecode_data.opcodes != NULL);
+  return bytecode_data.opcodes;
+}
+
+void
+serializer_set_strings_buffer (const ecma_char_t *s)
+{
+  bytecode_data.strings_buffer = s;
+}
 
 void
 serializer_set_scope (scopes_tree new_scope)
@@ -43,7 +91,7 @@ serializer_merge_scopes_into_bytecode (void)
 }
 
 void
-serializer_dump_literals (const literal literals[], literal_index_t literals_count)
+serializer_dump_literals (const literal *literals, literal_index_t literals_count)
 {
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
@@ -131,13 +179,36 @@ serializer_print_opcodes (void)
 }
 
 void
-serializer_init (bool show_opcodes)
+serializer_init ()
 {
   current_scope = NULL;
+  print_opcodes = false;
+
+  bytecode_data.strings_buffer = NULL;
+  bytecode_data.literals = NULL;
+  bytecode_data.opcodes = NULL;
+  bytecode_data.lit_id_hash = null_hash;
+}
+
+void serializer_set_show_opcodes (bool show_opcodes)
+{
   print_opcodes = show_opcodes;
 }
 
 void
 serializer_free (void)
 {
+  if (bytecode_data.strings_buffer)
+  {
+    mem_heap_free_block ((uint8_t *) bytecode_data.strings_buffer);
+  }
+  if (bytecode_data.lit_id_hash != null_hash)
+  {
+    lit_id_hash_table_free (bytecode_data.lit_id_hash);
+  }
+  if (bytecode_data.literals != NULL)
+  {
+    mem_heap_free_block ((uint8_t *) bytecode_data.literals);
+  }
+  mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);
 }

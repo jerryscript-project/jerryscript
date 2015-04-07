@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 
-#include "deserializer.h"
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-extension.h"
@@ -762,7 +761,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 #endif /* !MEM_STATS */
 
   mem_init ();
-  deserializer_init ();
+  serializer_init ();
   ecma_init ();
 } /* jerry_init */
 
@@ -779,7 +778,7 @@ jerry_cleanup (void)
   bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
 
   ecma_finalize ();
-  deserializer_free ();
+  serializer_free ();
   mem_finalize (is_show_mem_stats);
 } /* jerry_cleanup */
 
@@ -838,7 +837,7 @@ jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
   parser_init (source_p, source_size, is_show_opcodes);
   parser_parse_program ();
 
-  const opcode_t* opcodes = (const opcode_t*) deserialize_bytecode ();
+  const opcode_t* opcodes = (const opcode_t*) serializer_get_bytecode ();
 
   serializer_print_opcodes ();
   parser_free ();

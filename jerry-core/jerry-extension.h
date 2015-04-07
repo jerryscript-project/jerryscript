@@ -54,14 +54,14 @@ typedef struct
 } jerry_extension_field_t;
 
 /**
- * Forward declare to make compiler happy
+ * Forward declaration of description of an extension object's function
  */
 struct jerry_extension_function_t;
 
 /**
  * Pointer to extension function implementation
  */
-typedef void (*jerry_extension_function_pointer_t) (const struct jerry_extension_function_t *function_block_p);
+typedef void (*jerry_extension_function_pointer_t) (struct jerry_extension_function_t *function_block_p);
 
 /**
  * Description of an extension object's function
@@ -70,10 +70,11 @@ typedef struct jerry_extension_function_t
 {
   const char* function_name_p; /**< name of function */
 
-  jerry_extension_function_pointer_t function_wrapper_p; /**< pointer to function implementation */
+  const jerry_extension_function_pointer_t function_wrapper_p; /**< pointer to function implementation */
 
-  jerry_api_value_t *args_p; /**< arrays of the function's arguments */
-  uint32_t args_number; /**< number of arguments */
+  jerry_api_value_t ret_value; /**< function's return value */
+  jerry_api_value_t* args_p; /**< arrays of the function's arguments */
+  const uint32_t args_number; /**< number of arguments */
 } jerry_extension_function_t;
 
 /**
@@ -85,7 +86,7 @@ typedef struct jerry_extension_descriptor_t
   const uint32_t functions_count; /**< number of functions */
 
   const jerry_extension_field_t* const fields_p; /**< array of field descriptor */
-  const jerry_extension_function_t* const functions_p; /**< array of function descriptors */
+  jerry_extension_function_t* const functions_p; /**< array of function descriptors */
 
   const char* const name_p; /**< name of the extension */
   struct jerry_extension_descriptor_t *next_p; /**< next descriptor in list of registered extensions */

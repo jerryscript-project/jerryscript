@@ -25,9 +25,11 @@
 
 #if defined (EXTENSION_FUNCTION)
 EXTENSION_FUNCTION (print_uint32, plugin_io_print_uint32,
+                    VOID,
                     1,
                     EXTENSION_ARG (0, UINT32))
 EXTENSION_FUNCTION (print_string, plugin_io_print_string,
+                    VOID,
                     1,
                     EXTENSION_ARG (0, STRING))
 #elif defined (EXTENSION_FIELD)

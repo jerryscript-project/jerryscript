@@ -138,7 +138,7 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
   JERRY_ASSERT (desc_p != NULL);
 
   JERRY_ASSERT (function_index < desc_p->functions_count);
-  const jerry_extension_function_t *function_p = &desc_p->functions_p [function_index];
+  jerry_extension_function_t *function_p = &desc_p->functions_p [function_index];
 
   bool throw_type_error = false;
   if (function_p->args_number != arguments_number)
@@ -260,7 +260,85 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
   }
   else
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    jerry_api_value_t& ret_value = function_p->ret_value;
+    ecma_completion_value_t completion;
+
+    switch (ret_value.type)
+    {
+      case JERRY_API_DATA_TYPE_VOID:
+      {
+        completion = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+        break;
+      }
+
+      case JERRY_API_DATA_TYPE_UNDEFINED:
+      case JERRY_API_DATA_TYPE_NULL:
+      {
+        JERRY_UNREACHABLE ();
+      }
+
+      case JERRY_API_DATA_TYPE_BOOLEAN:
+      {
+        if (ret_value.v_bool)
+        {
+          completion = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+        }
+        else
+        {
+          completion = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+        }
+
+        break;
+      }
+
+      case JERRY_API_DATA_TYPE_UINT32:
+      case JERRY_API_DATA_TYPE_FLOAT32:
+      case JERRY_API_DATA_TYPE_FLOAT64:
+      {
+        ecma_number_t* num_value_p = ecma_alloc_number ();
+        if (ret_value.type == JERRY_API_DATA_TYPE_FLOAT32)
+        {
+          *num_value_p = ret_value.v_float32;
+        }
+        else if (ret_value.type == JERRY_API_DATA_TYPE_FLOAT64)
+        {
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+          JERRY_UNREACHABLE ();
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+          *num_value_p = ret_value.v_float64;
+#endif /* CONFIG_ECMA_NUMBER_TYPE ==  CONFIG_ECMA_NUMBER_FLOAT64 */
+        }
+        else if (ret_value.type == JERRY_API_DATA_TYPE_UINT32)
+        {
+          *num_value_p = ecma_uint32_to_number (ret_value.v_uint32);
+        }
+
+        completion = ecma_make_normal_completion_value (ecma_make_number_value (num_value_p));
+
+        break;
+      }
+
+      case JERRY_API_DATA_TYPE_STRING:
+      {
+        completion = ecma_make_normal_completion_value (ecma_make_string_value (ret_value.v_string));
+
+        ret_value.v_string = NULL;
+
+        break;
+      }
+
+      case JERRY_API_DATA_TYPE_OBJECT:
+      {
+        completion = ecma_make_normal_completion_value (ecma_make_object_value (ret_value.v_object));
+
+        ret_value.v_object = NULL;
+
+        break;
+      }
+    }
+
+    return completion;
   }
 } /* ecma_builtin_jerry_dispatch_routine */
 
@@ -440,6 +518,10 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
     switch (field_p->type)
     {
+      case JERRY_API_DATA_TYPE_VOID:
+      {
+        JERRY_UNREACHABLE ();
+      }
       case JERRY_API_DATA_TYPE_UNDEFINED:
       {
         value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);

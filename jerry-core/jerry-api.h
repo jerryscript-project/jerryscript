@@ -36,12 +36,13 @@
  */
 typedef enum
 {
+  JERRY_API_DATA_TYPE_VOID, /**< no return value */
   JERRY_API_DATA_TYPE_UNDEFINED, /**< undefined */
   JERRY_API_DATA_TYPE_NULL, /**< null */
   JERRY_API_DATA_TYPE_BOOLEAN, /**< bool */
   JERRY_API_DATA_TYPE_FLOAT32, /**< 32-bit float */
   JERRY_API_DATA_TYPE_FLOAT64, /**< 64-bit float */
-  JERRY_API_DATA_TYPE_UINT32, /**< number converted to 32-bit unsigned integer*/
+  JERRY_API_DATA_TYPE_UINT32, /**< number converted to 32-bit unsigned integer */
   JERRY_API_DATA_TYPE_STRING, /**< string */
   JERRY_API_DATA_TYPE_OBJECT  /**< object */
 } jerry_api_data_type_t;

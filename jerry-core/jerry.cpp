@@ -767,10 +767,6 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 
 /**
  * Terminate Jerry engine
- *
- * Warning:
- *  All contexts should be freed with jerry_cleanup_ctx
- *  before calling the cleanup routine.
  */
 void
 jerry_cleanup (void)
@@ -804,34 +800,12 @@ jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callbac
 } /* jerry_reg_err_callback */
 
 /**
- * Allocate new run context
- */
-jerry_ctx_t*
-jerry_new_ctx (void)
-{
-  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
-} /* jerry_new_ctx */
-
-/**
- * Cleanup resources associated with specified run context
- */
-void
-jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
-{
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
-} /* jerry_cleanup_ctx */
-
-/**
  * Parse script for specified context
  */
 bool
-jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
-             const char* source_p, /**< script source */
+jerry_parse (const char* source_p, /**< script source */
              size_t source_size) /**< script source size */
 {
-  /* FIXME: Remove after implementation of run contexts */
-  (void) ctx_p;
-
   bool is_show_opcodes = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
   parser_init (source_p, source_size, is_show_opcodes);
@@ -854,14 +828,10 @@ jerry_parse (jerry_ctx_t* ctx_p, /**< run context */
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run (jerry_ctx_t* ctx_p) /**< run context */
+jerry_run (void)
 {
-  /* FIXME: Remove after implementation of run contexts */
-  (void) ctx_p;
-
   return run_int ();
 } /* jerry_run */
-
 /**
  * Simple jerry runner
  *
@@ -876,7 +846,7 @@ jerry_run_simple (const char *script_source, /**< script source */
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 
-  if (!jerry_parse (NULL, script_source, script_source_size))
+  if (!jerry_parse (script_source, script_source_size))
   {
     /* unhandled SyntaxError */
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
@@ -885,7 +855,7 @@ jerry_run_simple (const char *script_source, /**< script source */
   {
     if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
     {
-      ret_code = jerry_run (NULL);
+      ret_code = jerry_run ();
     }
   }
 
@@ -893,3 +863,46 @@ jerry_run_simple (const char *script_source, /**< script source */
 
   return ret_code;
 } /* jerry_run_simple */
+
+#ifdef CONFIG_JERRY_ENABLE_CONTEXTS
+/**
+ * Allocate new run context
+ *
+ * @return run context
+ */
+jerry_ctx_t*
+jerry_new_ctx (void)
+{
+  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
+} /* jerry_new_ctx */
+
+/**
+ * Cleanup resources associated with specified run context
+ */
+void
+jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
+} /* jerry_cleanup_ctx */
+
+/**
+ * Activate context and push it to contexts' stack
+ */
+void
+jerry_push_ctx (jerry_ctx_t *ctx_p) /**< run context */
+{
+  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
+} /* jerry_push_ctx */
+
+/**
+ * Pop from contexts' stack and activate new stack's top
+ *
+ * Note:
+ *      default context (most placed on bottom of stack) cannot be popped
+ */
+void
+jerry_pop_ctx (void)
+{
+  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
+} /* jerry_pop_ctx */
+#endif /* CONFIG_JERRY_ENABLE_CONTEXTS */

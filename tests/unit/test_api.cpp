@@ -144,10 +144,10 @@ main (void)
   jerry_api_value_t res, args [2];
   char buffer [32];
 
-  is_ok = jerry_parse (NULL, test_source, strlen (test_source));
+  is_ok = jerry_parse (test_source, strlen (test_source));
   assert (is_ok);
 
-  is_ok = (jerry_run (NULL) == JERRY_COMPLETION_CODE_OK);
+  is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);
   assert (is_ok);
 
   global_obj_p = jerry_api_get_global ();

@@ -60,11 +60,6 @@ typedef enum
 } jerry_fatal_code_t;
 
 /**
- * Jerry run context
- */
-typedef struct jerry_ctx_t jerry_ctx_t;
-
-/**
  * Jerry engine build date
  */
 extern const char *jerry_build_date;
@@ -90,16 +85,34 @@ extern EXTERN_C void jerry_cleanup (void);
 extern EXTERN_C void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 extern EXTERN_C void jerry_reg_err_callback (jerry_error_callback_t callback);
 
-extern EXTERN_C jerry_ctx_t* jerry_new_ctx (void);
-extern EXTERN_C void jerry_cleanup_ctx (jerry_ctx_t*);
-
-extern EXTERN_C bool jerry_parse (jerry_ctx_t*, const char* source_p, size_t source_size);
-extern EXTERN_C jerry_completion_code_t jerry_run (jerry_ctx_t *);
+extern EXTERN_C bool jerry_parse (const char* source_p, size_t source_size);
+extern EXTERN_C jerry_completion_code_t jerry_run (void);
 
 extern EXTERN_C jerry_completion_code_t
 jerry_run_simple (const char *script_source,
                   size_t script_source_size,
                   jerry_flag_t flags);
+
+#ifdef CONFIG_JERRY_ENABLE_CONTEXTS
+/** \addtogroup jerry Jerry run contexts-related interface
+ * @{
+ */
+
+/**
+ * Jerry run context descriptor
+ */
+typedef struct jerry_ctx_t jerry_ctx_t;
+
+extern EXTERN_C jerry_ctx_t* jerry_new_ctx (void);
+extern EXTERN_C void jerry_cleanup_ctx (jerry_ctx_t* ctx_p);
+
+extern EXTERN_C void jerry_push_ctx (jerry_ctx_t *ctx_p);
+extern EXTERN_C void jerry_pop_ctx (void);
+
+/**
+ * @}
+ */
+#endif /* CONFIG_JERRY_ENABLE_CONTEXTS */
 
 /**
  * @}

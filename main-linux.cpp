@@ -178,7 +178,7 @@ main (int argc,
 
       jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 
-      if (!jerry_parse (NULL, source_p, source_size))
+      if (!jerry_parse (source_p, source_size))
       {
         /* unhandled SyntaxError */
         ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
@@ -187,7 +187,7 @@ main (int argc,
       {
         if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
         {
-          ret_code = jerry_run (NULL);
+          ret_code = jerry_run ();
         }
       }
 

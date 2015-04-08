@@ -14,7 +14,7 @@
 
 #!/bin/bash
 
-git log --graph --branches \
+git log --graph --branches --decorate \
         --show-notes=perf --show-notes=mem --show-notes=test_build_env \
         --show-notes=arm-linux-perf \
         --show-notes=arm-linux-binary-size \

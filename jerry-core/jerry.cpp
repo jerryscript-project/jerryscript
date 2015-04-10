@@ -652,25 +652,35 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
 } /* jerry_api_set_object_native_handle */
 
 /**
- * Call function specified by a function object
+ * Invoke function specified by a function object
  *
  * Note:
- *      if call was performed successfully, returned value should be freed
+ *      if invocation was performed successfully, returned value should be freed
  *      with jerry_api_release_value just when the value becomes unnecessary.
  *
- * @return true, if call was performed successfully, i.e.:
+ * Note:
+ *      If function is invoked as constructor, it should support [[Construct]] method,
+ *      otherwise, if function is simply called - it should support [[Call]] method.
+ *
+ * @return true, if invocation was performed successfully, i.e.:
  *                - no unhandled exceptions were thrown in connection with the call;
  *         false - otherwise.
  */
-bool
-jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
-                         jerry_api_object_t *this_arg_p, /**< this arg for this binding
-                                                          *   or NULL (set this binding to the global object) */
-                         jerry_api_value_t *retval_p, /**< pointer to place for function's return value
-                                                       *   or NULL (to ignore the return value) */
-                         const jerry_api_value_t args_p [], /**< function's call arguments
-                                                             *   (NULL if arguments number is zero) */
-                         uint16_t args_count) /**< number of the arguments */
+static bool
+jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke function as constructor
+                                                           *          (this_arg_p should be NULL, as it is ignored),
+                                                           *   false - perform function call */
+                           jerry_api_object_t *function_object_p, /**< function object to call */
+                           jerry_api_object_t *this_arg_p, /**< object for 'this' binding
+                                                            *   or NULL (set 'this' binding to newly constructed object,
+                                                            *            if function is invoked as constructor;
+                                                            *            in case of simple function call set 'this'
+                                                            *            binding to the global object) */
+                           jerry_api_value_t *retval_p, /**< pointer to place for function's return value
+                                                         *   or NULL (to ignore the return value) */
+                           const jerry_api_value_t args_p [], /**< function's call arguments
+                                                               *   (NULL if arguments number is zero) */
+                           uint16_t args_count) /**< number of the arguments */
 {
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
   JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t));
@@ -686,21 +696,35 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
 
   ecma_completion_value_t call_completion;
 
-  ecma_value_t this_arg_val;
-
-  if (this_arg_p == NULL)
+  if (is_invoke_as_constructor)
   {
-    this_arg_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    JERRY_ASSERT (this_arg_p == NULL);
+    JERRY_ASSERT (jerry_api_is_constructor (function_object_p));
+
+    call_completion = ecma_op_function_construct (function_object_p,
+                                                  arg_values,
+                                                  args_count);
   }
   else
   {
-    this_arg_val = ecma_make_object_value (this_arg_p);
-  }
+    JERRY_ASSERT (jerry_api_is_function (function_object_p));
 
-  call_completion = ecma_op_function_call (function_object_p,
-                                           this_arg_val,
-                                           arg_values,
-                                           args_count);
+    ecma_value_t this_arg_val;
+
+    if (this_arg_p == NULL)
+    {
+      this_arg_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else
+    {
+      this_arg_val = ecma_make_object_value (this_arg_p);
+    }
+
+    call_completion = ecma_op_function_call (function_object_p,
+                                             this_arg_val,
+                                             arg_values,
+                                             args_count);
+  }
 
   if (ecma_is_completion_value_normal (call_completion))
   {
@@ -716,6 +740,11 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
 
     JERRY_ASSERT (ecma_is_completion_value_throw (call_completion));
 
+    if (retval_p != NULL)
+    {
+      jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+    }
+
     is_successful = false;
   }
 
@@ -729,7 +758,68 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
   MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
   return is_successful;
+} /* jerry_api_invoke_function */
+
+/**
+ * Call function specified by a function object
+ *
+ * Note:
+ *      if call was performed successfully, returned value should be freed
+ *      with jerry_api_release_value just when the value becomes unnecessary.
+ *
+ * @return true, if call was performed successfully, i.e.:
+ *                - specified object is a function object (see also jerry_api_is_function);
+ *                - no unhandled exceptions were thrown in connection with the call;
+ *         false - otherwise.
+ */
+bool
+jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
+                         jerry_api_object_t *this_arg_p, /**< object for 'this' binding
+                                                          *   or NULL (set 'this' binding to the global object) */
+                         jerry_api_value_t *retval_p, /**< pointer to place for function's return value
+                                                       *   or NULL (to ignore the return value) */
+                         const jerry_api_value_t args_p [], /**< function's call arguments
+                                                             *   (NULL if arguments number is zero) */
+                         uint16_t args_count) /**< number of the arguments */
+{
+  if (jerry_api_is_function (function_object_p))
+  {
+    return jerry_api_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
+  }
+  {
+    return false;
+  }
 } /* jerry_api_call_function */
+
+/**
+ * Construct object invoking specified function object as a constructor
+ *
+ * Note:
+ *      if construction was performed successfully, returned value should be freed
+ *      with jerry_api_release_value just when the value becomes unnecessary.
+ *
+ * @return true, if construction was performed successfully, i.e.:
+ *                - specified object is a constructor function object (see also jerry_api_is_constructor);
+ *                - no unhandled exceptions were thrown in connection with the invocation;
+ *         false - otherwise.
+ */
+bool
+jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function object to call */
+                            jerry_api_value_t *retval_p, /**< pointer to place for function's return value
+                                                          *   or NULL (to ignore the return value) */
+                            const jerry_api_value_t args_p [], /**< function's call arguments
+                                                                *   (NULL if arguments number is zero) */
+                            uint16_t args_count) /**< number of the arguments */
+{
+  if (jerry_api_is_constructor (function_object_p))
+  {
+    return jerry_api_invoke_function (true, function_object_p, NULL, retval_p, args_p, args_count);
+  }
+  else
+  {
+    return false;
+  }
+} /* jerry_api_construct_object */
 
 /**
  * Get global object

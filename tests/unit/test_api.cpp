@@ -38,10 +38,18 @@ const char *test_source = (
                            "function call_external () {"
                            "  return this.external ('1', true);"
                            "}"
-                           "function call_external_construct () {"
-                           "  return new external_construct (true);"
-                           "}"
                            );
+
+/**
+ * Initialize Jerry API value with specified boolean value
+ */
+static void
+test_api_init_api_value_bool (jerry_api_value_t *out_value_p, /**< out: API value */
+                              bool v) /**< boolean value to initialize with */
+{
+  out_value_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
+  out_value_p->v_bool = v;
+} /* test_api_init_api_value_bool */
 
 /**
  * Initialize Jerry API value with specified float64 number
@@ -138,7 +146,7 @@ main (void)
   bool is_ok;
   ssize_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field;
-  jerry_api_value_t val_external, val_external_construct, val_call_external, val_call_external_construct;
+  jerry_api_value_t val_external, val_external_construct, val_call_external;
   jerry_api_object_t* global_obj_p;
   jerry_api_object_t* external_func_p, *external_construct_p;
   jerry_api_value_t res, args [2];
@@ -303,15 +311,9 @@ main (void)
   jerry_api_release_value (&val_external_construct);
   jerry_api_release_object (external_construct_p);
 
-  // Call 'call_external_construct' function that should call external function created above, as constructor
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_external_construct", &val_call_external_construct);
-  assert (is_ok
-          && val_call_external_construct.type == JERRY_API_DATA_TYPE_OBJECT);
-  is_ok = jerry_api_call_function (val_call_external_construct.v_object,
-                                   global_obj_p,
-                                   &res,
-                                   NULL, 0);
-  jerry_api_release_value (&val_call_external_construct);
+  // Call external function created above, as constructor
+  test_api_init_api_value_bool (&args[0], true);
+  is_ok = jerry_api_construct_object (external_construct_p, &res, args, 1);
   assert (is_ok
           && res.type == JERRY_API_DATA_TYPE_OBJECT);
   is_ok = jerry_api_get_object_field_value (res.v_object,

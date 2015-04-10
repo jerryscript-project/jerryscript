@@ -20,8 +20,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-objects.h"
-#include "ecma-string-object.h"
+#include "ecma-function-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
@@ -88,7 +87,29 @@ ecma_builtin_function_prototype_object_call (const ecma_value_t& this_arg, /**< 
                                              const ecma_value_t* arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arguments_list_p, arguments_number);
+  if (!ecma_op_is_callable (this_arg))
+  {
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *func_obj_p = ecma_get_object_from_value (this_arg);
+
+    if (arguments_number == 0)
+    {
+      return ecma_op_function_call (func_obj_p,
+                                    ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                    NULL,
+                                    0);
+    }
+    else
+    {
+      return ecma_op_function_call (func_obj_p,
+                                    arguments_list_p [0],
+                                    (arguments_number == 1u) ? NULL : (arguments_list_p + 1),
+                                    (ecma_length_t) (arguments_number - 1u));
+    }
+  }
 } /* ecma_builtin_function_prototype_object_call */
 
 /**

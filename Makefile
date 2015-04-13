@@ -139,7 +139,7 @@ export SHELL=/bin/bash
 all: precommit
 
 $(BUILD_DIRS_NATIVE):
-	@ arch=`uname -p`; \
+	@ arch=`uname -m`; \
           if [ "$$arch" == "armv7l" ]; \
           then \
            readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el";\

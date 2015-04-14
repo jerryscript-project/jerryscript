@@ -175,7 +175,7 @@ token lexer_prev_token (void);
 
 const literal *lexer_get_literals (void);
 const ecma_char_t *lexer_get_strings_cache (void);
-void lexer_add_literal_if_not_present (literal);
+void lexer_add_keyword_or_numeric_literal_if_not_present (literal);
 literal_index_t lexer_get_literals_count (void);
 literal lexer_get_literal_by_id (literal_index_t);
 literal_index_t lexer_lookup_literal_uid (literal lit);

@@ -226,14 +226,14 @@ parse_property_name (void)
     case TOK_SMALL_INT:
     {
       const literal lit = create_literal_from_num ((ecma_number_t) token_data ());
-      lexer_add_literal_if_not_present (lit);
+      lexer_add_keyword_or_numeric_literal_if_not_present (lit);
       const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
       return literal_operand (lit_id);
     }
     case TOK_KEYWORD:
     {
       const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string ((keyword) token_data ()));
-      lexer_add_literal_if_not_present (lit);
+      lexer_add_keyword_or_numeric_literal_if_not_present (lit);
       const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
       return literal_operand (lit_id);
     }
@@ -2486,7 +2486,8 @@ skip_braces (void)
       skip_newlines ();
       if (token_is (TOK_COLON))
       {
-        lexer_add_literal_if_not_present (create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+        lexer_add_keyword_or_numeric_literal_if_not_present (
+          create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
       }
       else
       {
@@ -2505,7 +2506,8 @@ skip_braces (void)
           skip_newlines ();
           if (token_is (TOK_OPEN_PAREN))
           {
-            lexer_add_literal_if_not_present (create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+            lexer_add_keyword_or_numeric_literal_if_not_present (
+              create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
           }
           else
           {

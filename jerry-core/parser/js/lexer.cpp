@@ -166,9 +166,8 @@ adjust_string_ptrs (literal lit, size_t diff)
 }
 
 static literal
-add_current_token_to_string_cache (void)
+add_string_to_string_cache (const ecma_char_t* str, ecma_length_t length)
 {
-  const ecma_length_t length = (ecma_length_t) (buffer - token_start);
   if (strings_cache_used_size + length * sizeof (ecma_char_t) >= strings_cache_size)
   {
     strings_cache_size = mem_heap_recommend_allocation_size (strings_cache_used_size
@@ -183,11 +182,17 @@ add_current_token_to_string_cache (void)
     }
     strings_cache = temp;
   }
-  strncpy ((char *) (strings_cache + strings_cache_used_size), token_start, length);
+  strncpy ((char *) (strings_cache + strings_cache_used_size), (const char*) str, length);
   (strings_cache + strings_cache_used_size)[length] = '\0';
   const literal res = create_literal_from_zt (strings_cache + strings_cache_used_size, length);
   strings_cache_used_size = (size_t) (((size_t) length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
   return res;
+}
+
+static literal
+add_current_token_to_string_cache (void)
+{
+  return add_string_to_string_cache ((ecma_char_t*) token_start, (ecma_length_t) (buffer - token_start));
 }
 
 static token
@@ -535,7 +540,7 @@ lexer_get_strings_cache (void)
 }
 
 void
-lexer_add_literal_if_not_present (literal lit)
+lexer_add_keyword_or_numeric_literal_if_not_present (literal lit)
 {
   for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
@@ -544,6 +549,12 @@ lexer_add_literal_if_not_present (literal lit)
       return;
     }
   }
+
+  if (lit.type == LIT_STR)
+  {
+    lit = add_string_to_string_cache (lit.data.lp.str, lit.data.lp.length);
+  }
+
   STACK_PUSH (literals, lit);
 }
 

@@ -111,8 +111,8 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_get_prototype_of (const ecma_value_t& this_arg, /**< 'this' argument */
-                                             const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' argument */
+                                             ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_get_prototype_of */
@@ -127,8 +127,8 @@ ecma_builtin_object_object_get_prototype_of (const ecma_value_t& this_arg, /**< 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_get_own_property_names (const ecma_value_t& this_arg, /**< 'this' argument */
-                                                   const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg, /**< 'this' argument */
+                                                   ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_get_own_property_names */
@@ -143,8 +143,8 @@ ecma_builtin_object_object_get_own_property_names (const ecma_value_t& this_arg,
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_seal (const ecma_value_t& this_arg, /**< 'this' argument */
-                                 const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_seal (ecma_value_t this_arg, /**< 'this' argument */
+                                 ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_seal */
@@ -159,8 +159,8 @@ ecma_builtin_object_object_seal (const ecma_value_t& this_arg, /**< 'this' argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_freeze (const ecma_value_t& this_arg, /**< 'this' argument */
-                                   const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument */
+                                   ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_freeze */
@@ -175,8 +175,8 @@ ecma_builtin_object_object_freeze (const ecma_value_t& this_arg, /**< 'this' arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_prevent_extensions (const ecma_value_t& this_arg, /**< 'this' argument */
-                                               const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg, /**< 'this' argument */
+                                               ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_prevent_extensions */
@@ -191,8 +191,8 @@ ecma_builtin_object_object_prevent_extensions (const ecma_value_t& this_arg, /**
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_is_sealed (const ecma_value_t& this_arg, /**< 'this' argument */
-                                      const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argument */
+                                      ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_is_sealed */
@@ -207,8 +207,8 @@ ecma_builtin_object_object_is_sealed (const ecma_value_t& this_arg, /**< 'this' 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_is_frozen (const ecma_value_t& this_arg, /**< 'this' argument */
-                                      const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argument */
+                                      ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_is_frozen */
@@ -223,8 +223,8 @@ ecma_builtin_object_object_is_frozen (const ecma_value_t& this_arg, /**< 'this' 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_is_extensible (const ecma_value_t& this_arg, /**< 'this' argument */
-                                          const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_is_extensible (ecma_value_t this_arg, /**< 'this' argument */
+                                          ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_is_extensible */
@@ -239,8 +239,8 @@ ecma_builtin_object_object_is_extensible (const ecma_value_t& this_arg, /**< 'th
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_keys (const ecma_value_t& this_arg, /**< 'this' argument */
-                                 const ecma_value_t& arg) /**< routine's argument */
+ecma_builtin_object_object_keys (ecma_value_t this_arg, /**< 'this' argument */
+                                 ecma_value_t arg) /**< routine's argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
 } /* ecma_builtin_object_object_keys */
@@ -255,9 +255,9 @@ ecma_builtin_object_object_keys (const ecma_value_t& this_arg, /**< 'this' argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_get_own_property_descriptor (const ecma_value_t& this_arg, /**< 'this' argument */
-                                                        const ecma_value_t& arg1, /**< routine's first argument */
-                                                        const ecma_value_t& arg2) /**< routine's second argument */
+ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /**< 'this' argument */
+                                                        ecma_value_t arg1, /**< routine's first argument */
+                                                        ecma_value_t arg2) /**< routine's second argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_object_object_get_own_property_descriptor */
@@ -272,9 +272,9 @@ ecma_builtin_object_object_get_own_property_descriptor (const ecma_value_t& this
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_create (const ecma_value_t& this_arg, /**< 'this' argument */
-                                   const ecma_value_t& arg1, /**< routine's first argument */
-                                   const ecma_value_t& arg2) /**< routine's second argument */
+ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument */
+                                   ecma_value_t arg1, /**< routine's first argument */
+                                   ecma_value_t arg2) /**< routine's second argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_object_object_create */
@@ -289,9 +289,9 @@ ecma_builtin_object_object_create (const ecma_value_t& this_arg, /**< 'this' arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_define_properties (const ecma_value_t& this_arg, /**< 'this' argument */
-                                              const ecma_value_t& arg1, /**< routine's first argument */
-                                              const ecma_value_t& arg2) /**< routine's second argument */
+ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this' argument */
+                                              ecma_value_t arg1, /**< routine's first argument */
+                                              ecma_value_t arg2) /**< routine's second argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_object_object_define_properties */
@@ -306,10 +306,10 @@ ecma_builtin_object_object_define_properties (const ecma_value_t& this_arg, /**<
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_define_property (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
-                                            const ecma_value_t& arg1, /**< routine's first argument */
-                                            const ecma_value_t& arg2, /**< routine's second argument */
-                                            const ecma_value_t& arg3) /**< routine's third argument */
+ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+                                            ecma_value_t arg1, /**< routine's first argument */
+                                            ecma_value_t arg2, /**< routine's second argument */
+                                            ecma_value_t arg3) /**< routine's third argument */
 {
   ecma_completion_value_t ret_value;
 

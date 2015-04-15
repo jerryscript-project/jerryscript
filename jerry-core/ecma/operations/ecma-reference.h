@@ -49,7 +49,7 @@ extern ecma_object_t* ecma_op_resolve_reference_base (ecma_object_t *lex_env_p,
 extern ecma_reference_t ecma_op_get_identifier_reference (ecma_object_t *lex_env_p,
                                                           ecma_string_t *name_p,
                                                           bool is_strict);
-extern ecma_reference_t ecma_make_reference (const ecma_value_t& base,
+extern ecma_reference_t ecma_make_reference (ecma_value_t base,
                                              ecma_string_t *name_p,
                                              bool is_strict);
 extern void ecma_free_reference (ecma_reference_t ref);

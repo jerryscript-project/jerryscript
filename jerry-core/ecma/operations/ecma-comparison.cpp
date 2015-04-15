@@ -35,8 +35,8 @@
  *         false - otherwise.
  */
 ecma_completion_value_t
-ecma_op_abstract_equality_compare (const ecma_value_t& x, /**< first operand */
-                                   const ecma_value_t& y) /**< second operand */
+ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
+                                   ecma_value_t y) /**< second operand */
 {
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
@@ -217,8 +217,8 @@ ecma_op_abstract_equality_compare (const ecma_value_t& x, /**< first operand */
  *         false - otherwise.
  */
 bool
-ecma_op_strict_equality_compare (const ecma_value_t& x, /**< first operand */
-                                 const ecma_value_t& y) /**< second operand */
+ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
+                                 ecma_value_t y) /**< second operand */
 {
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
@@ -329,14 +329,14 @@ ecma_op_strict_equality_compare (const ecma_value_t& x, /**< first operand */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_abstract_relational_compare (const ecma_value_t& x, /**< first operand */
-                                     const ecma_value_t& y, /**< second operand */
+ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
+                                     ecma_value_t y, /**< second operand */
                                      bool left_first) /**< 'LeftFirst' flag */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  const ecma_value_t& first_converted_value = left_first ? x : y;
-  const ecma_value_t& second_converted_value = left_first ? y : x;
+  ecma_value_t first_converted_value = left_first ? x : y;
+  ecma_value_t second_converted_value = left_first ? y : x;
 
   // 1., 2.
   ECMA_TRY_CATCH(prim_first_converted_value,

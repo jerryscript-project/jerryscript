@@ -80,7 +80,7 @@ ecma_op_create_object_object_noarg (void)
  * @return pointer to newly created 'Object' object
  */
 ecma_completion_value_t
-ecma_op_create_object_object_arg (const ecma_value_t& value) /**< argument of constructor */
+ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of constructor */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -234,7 +234,7 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                             ecma_string_t *property_name_p, /**< property name */
-                            const ecma_value_t& value, /**< ecma-value */
+                            ecma_value_t value, /**< ecma-value */
                             bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT(obj_p != NULL

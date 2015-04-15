@@ -51,7 +51,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
+ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
 } /* ecma_builtin_function_prototype_object_to_string */
@@ -66,9 +66,9 @@ ecma_builtin_function_prototype_object_to_string (const ecma_value_t& this_arg) 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_apply (const ecma_value_t& this_arg, /**< this argument */
-                                              const ecma_value_t& arg1, /**< first argument */
-                                              const ecma_value_t& arg2) /**< second argument */
+ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this argument */
+                                              ecma_value_t arg1, /**< first argument */
+                                              ecma_value_t arg2) /**< second argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
 } /* ecma_builtin_function_prototype_object_apply */
@@ -83,7 +83,7 @@ ecma_builtin_function_prototype_object_apply (const ecma_value_t& this_arg, /**<
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_call (const ecma_value_t& this_arg, /**< this argument */
+ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this argument */
                                              const ecma_value_t* arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
@@ -122,7 +122,7 @@ ecma_builtin_function_prototype_object_call (const ecma_value_t& this_arg, /**< 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_prototype_object_bind (const ecma_value_t& this_arg, /**< this argument */
+ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this argument */
                                              const ecma_value_t* arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {

@@ -49,7 +49,7 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_check_object_coercible (const ecma_value_t& value) /**< ecma-value */
+ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -74,8 +74,8 @@ ecma_op_check_object_coercible (const ecma_value_t& value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_op_same_value (const ecma_value_t& x, /**< ecma-value */
-                    const ecma_value_t& y) /**< ecma-value */
+ecma_op_same_value (ecma_value_t x, /**< ecma-value */
+                    ecma_value_t y) /**< ecma-value */
 {
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
@@ -157,7 +157,7 @@ ecma_op_same_value (const ecma_value_t& x, /**< ecma-value */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_primitive (const ecma_value_t& value, /**< ecma-value */
+ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
                       ecma_preferred_type_hint_t preferred_type) /**< preferred type hint */
 {
   ecma_check_value_type_is_spec_defined (value);
@@ -185,7 +185,7 @@ ecma_op_to_primitive (const ecma_value_t& value, /**< ecma-value */
  *         However, ecma_free_completion_value may be called for it, but it is a no-op.
  */
 ecma_completion_value_t
-ecma_op_to_boolean (const ecma_value_t& value) /**< ecma-value */
+ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -248,7 +248,7 @@ ecma_op_to_boolean (const ecma_value_t& value) /**< ecma-value */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_number (const ecma_value_t& value) /**< ecma-value */
+ecma_op_to_number (ecma_value_t value) /**< ecma-value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -319,7 +319,7 @@ ecma_op_to_number (const ecma_value_t& value) /**< ecma-value */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_string (const ecma_value_t& value) /**< ecma-value */
+ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -387,7 +387,7 @@ ecma_op_to_string (const ecma_value_t& value) /**< ecma-value */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_object (const ecma_value_t& value) /**< ecma-value */
+ecma_op_to_object (ecma_value_t value) /**< ecma-value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -557,7 +557,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_to_property_descriptor (const ecma_value_t& obj_value, /**< object value */
+ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
                                 ecma_property_descriptor_t *out_prop_desc_p) /**< out: filled property descriptor
                                                                                   if return value is normal
                                                                                   empty completion value */

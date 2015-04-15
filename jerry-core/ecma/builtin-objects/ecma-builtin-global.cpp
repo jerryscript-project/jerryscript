@@ -49,8 +49,8 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_eval (const ecma_value_t& this_arg, /**< this argument */
-                                 const ecma_value_t& x) /**< routine's first argument */
+ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
+                                 ecma_value_t x) /**< routine's first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, x);
 } /* ecma_builtin_global_object_eval */
@@ -65,9 +65,9 @@ ecma_builtin_global_object_eval (const ecma_value_t& this_arg, /**< this argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_parse_int (const ecma_value_t& this_arg, /**< this argument */
-                                      const ecma_value_t& string, /**< routine's first argument */
-                                      const ecma_value_t& radix) /**< routine's second argument */
+ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument */
+                                      ecma_value_t string, /**< routine's first argument */
+                                      ecma_value_t radix) /**< routine's second argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, string, radix);
 } /* ecma_builtin_global_object_parse_int */
@@ -82,8 +82,8 @@ ecma_builtin_global_object_parse_int (const ecma_value_t& this_arg, /**< this ar
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_parse_float (const ecma_value_t& this_arg, /**< this argument */
-                                        const ecma_value_t& string) /**< routine's first argument */
+ecma_builtin_global_object_parse_float (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t string) /**< routine's first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, string);
 } /* ecma_builtin_global_object_parse_float */
@@ -98,8 +98,8 @@ ecma_builtin_global_object_parse_float (const ecma_value_t& this_arg, /**< this 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __attr_unused___, /**< this argument */
-                                   const ecma_value_t& arg) /**< routine's first argument */
+ecma_builtin_global_object_is_nan (ecma_value_t this_arg __attr_unused___, /**< this argument */
+                                   ecma_value_t arg) /**< routine's first argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -125,8 +125,8 @@ ecma_builtin_global_object_is_nan (const ecma_value_t& this_arg __attr_unused___
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __attr_unused___, /**< this argument */
-                                      const ecma_value_t& arg) /**< routine's first argument */
+ecma_builtin_global_object_is_finite (ecma_value_t this_arg __attr_unused___, /**< this argument */
+                                      ecma_value_t arg) /**< routine's first argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -153,8 +153,8 @@ ecma_builtin_global_object_is_finite (const ecma_value_t& this_arg __attr_unused
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_decode_uri (const ecma_value_t& this_arg, /**< this argument */
-                                       const ecma_value_t& encoded_uri) /**< routine's first argument */
+ecma_builtin_global_object_decode_uri (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t encoded_uri) /**< routine's first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, encoded_uri);
 } /* ecma_builtin_global_object_decode_uri */
@@ -169,9 +169,9 @@ ecma_builtin_global_object_decode_uri (const ecma_value_t& this_arg, /**< this a
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_decode_uri_component (const ecma_value_t& this_arg, /**< this argument */
-                                                 const ecma_value_t& encoded_uri_component) /**< routine's
-                                                                                             *   first argument */
+ecma_builtin_global_object_decode_uri_component (ecma_value_t this_arg, /**< this argument */
+                                                 ecma_value_t encoded_uri_component) /**< routine's
+                                                                                      *   first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, encoded_uri_component);
 } /* ecma_builtin_global_object_decode_uri_component */
@@ -186,8 +186,8 @@ ecma_builtin_global_object_decode_uri_component (const ecma_value_t& this_arg, /
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_encode_uri (const ecma_value_t& this_arg, /**< this argument */
-                                       const ecma_value_t& uri) /**< routine's first argument */
+ecma_builtin_global_object_encode_uri (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t uri) /**< routine's first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, uri);
 } /* ecma_builtin_global_object_encode_uri */
@@ -202,8 +202,8 @@ ecma_builtin_global_object_encode_uri (const ecma_value_t& this_arg, /**< this a
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_encode_uri_component (const ecma_value_t& this_arg, /**< this argument */
-                                                 const ecma_value_t& uri_component) /**< routine's first argument */
+ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg, /**< this argument */
+                                                 ecma_value_t uri_component) /**< routine's first argument */
 {
   ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, uri_component);
 } /* ecma_builtin_global_object_encode_uri_component */

@@ -27,7 +27,7 @@
  */
 
 extern ecma_object_t* ecma_op_create_object_object_noarg (void);
-extern ecma_completion_value_t ecma_op_create_object_object_arg (const ecma_value_t& value);
+extern ecma_completion_value_t ecma_op_create_object_object_arg (ecma_value_t value);
 
 extern ecma_completion_value_t ecma_op_general_object_get (ecma_object_t *obj_p,
                                                            ecma_string_t *property_name_p);
@@ -37,7 +37,7 @@ extern ecma_property_t *ecma_op_general_object_get_property (ecma_object_t *obj_
                                                              ecma_string_t *property_name_p);
 extern ecma_completion_value_t ecma_op_general_object_put (ecma_object_t *obj_p,
                                                            ecma_string_t *property_name_p,
-                                                           const ecma_value_t& value,
+                                                           ecma_value_t value,
                                                            bool is_throw);
 extern bool ecma_op_general_object_can_put (ecma_object_t *obj_p,
                                             ecma_string_t *property_name_p);

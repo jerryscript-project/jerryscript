@@ -70,7 +70,7 @@ ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *argu
                                                         ecma_length_t arguments_list_len); \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
-                                                      const ecma_value_t& this_arg_value, \
+                                                      ecma_value_t this_arg_value, \
                                                       const ecma_value_t arguments_list [], \
                                                       ecma_length_t arguments_number); \
 extern ecma_property_t* \

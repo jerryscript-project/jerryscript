@@ -206,7 +206,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 ecma_completion_value_t
 ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                              ecma_string_t *name_p, /**< argument N */
-                             const ecma_value_t& value, /**< argument V */
+                             ecma_value_t value, /**< argument V */
                              bool is_strict) /**< argument S */
 {
   JERRY_ASSERT(lex_env_p != NULL
@@ -479,7 +479,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
 void
 ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                       ecma_string_t *name_p, /**< argument N */
-                                      const ecma_value_t& value) /**< argument V */
+                                      ecma_value_t value) /**< argument V */
 {
   JERRY_ASSERT(lex_env_p != NULL
                && ecma_is_lexical_environment (lex_env_p));

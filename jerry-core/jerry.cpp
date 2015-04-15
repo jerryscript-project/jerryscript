@@ -72,7 +72,7 @@ char jerry_extension_characters_buffer [CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
  */
 static void
 jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< out: api value */
-                                           const ecma_value_t& value) /**< ecma-value (undefined,
+                                           ecma_value_t value) /**< ecma-value (undefined,
                                                                        *   null, boolean, number,
                                                                        *   string or object */
 {
@@ -371,7 +371,7 @@ jerry_api_create_external_function (jerry_external_handler_t handler_p) /**< poi
 ecma_completion_value_t
 jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< external function object */
                                   ecma_external_pointer_t handler_p, /**< pointer to the function's native handler */
-                                  const ecma_value_t& this_arg_value, /**< 'this' argument */
+                                  ecma_value_t this_arg_value, /**< 'this' argument */
                                   const ecma_value_t args_p [], /**< arguments list */
                                   ecma_length_t args_count) /**< number of arguments */
 {

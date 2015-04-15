@@ -34,7 +34,7 @@
 static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                uint16_t builtin_routine_id,
-                               const ecma_value_t& this_arg_value,
+                               ecma_value_t this_arg_value,
                                const ecma_value_t arguments_list [],
                                ecma_length_t arguments_number);
 static void ecma_instantiate_builtin (ecma_builtin_id_t id);
@@ -365,7 +365,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
-                            const ecma_value_t& this_arg_value, /**< 'this' argument value */
+                            ecma_value_t this_arg_value, /**< 'this' argument value */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of the arguments list */
 {
@@ -522,7 +522,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                uint16_t builtin_routine_id, /**< builtin-wide identifier
                                                              *   of the built-in object's
                                                              *   routine property */
-                               const ecma_value_t& this_arg_value, /**< 'this' argument value */
+                               ecma_value_t this_arg_value, /**< 'this' argument value */
                                const ecma_value_t arguments_list [], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
 {

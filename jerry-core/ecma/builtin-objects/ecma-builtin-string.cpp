@@ -54,7 +54,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_string_object_from_char_code (const ecma_value_t& this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                            const ecma_value_t args[], /**< arguments list */
                                            ecma_length_t args_number) /**< number of arguments */
 {

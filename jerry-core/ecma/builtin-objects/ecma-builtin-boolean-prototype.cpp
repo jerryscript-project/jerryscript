@@ -54,7 +54,7 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /**< this argument */
+ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   ecma_completion_value_t ret_value;
 
@@ -92,7 +92,7 @@ ecma_builtin_boolean_prototype_object_to_string (const ecma_value_t& this_arg) /
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_boolean_prototype_object_value_of (const ecma_value_t& this_arg) /**< this argument */
+ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
   if (ecma_is_value_boolean (this_arg))
   {

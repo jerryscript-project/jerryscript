@@ -242,7 +242,7 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p, /**< property name */
-                    const ecma_value_t& value, /**< ecma-value */
+                    ecma_value_t value, /**< ecma-value */
                     bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT(obj_p != NULL
@@ -473,7 +473,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  */
 ecma_completion_value_t
 ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
-                             const ecma_value_t& value) /**< argument 'V' */
+                             ecma_value_t value) /**< argument 'V' */
 {
   JERRY_ASSERT(obj_p != NULL
                && !ecma_is_lexical_environment (obj_p));

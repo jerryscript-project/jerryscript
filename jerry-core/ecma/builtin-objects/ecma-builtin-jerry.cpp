@@ -117,7 +117,7 @@ ecma_builtin_jerry_try_to_instantiate_property (ecma_object_t *obj_p, /**< objec
  */
 ecma_completion_value_t
 ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide identifier of routine */
-                                     const ecma_value_t& this_arg_value __attr_unused___, /**< 'this' argument value */
+                                     ecma_value_t this_arg_value __attr_unused___, /**< 'this' argument value */
                                      const ecma_value_t arguments_list [], /**< list of arguments
                                                                             *   passed to routine */
                                      ecma_length_t arguments_number) /**< length of arguments' list */
@@ -497,71 +497,46 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
                                               ECMA_PROPERTY_NOT_ENUMERABLE,
                                               ECMA_PROPERTY_NOT_CONFIGURABLE);
 
-    switch (field_p->type)
+    if (field_p->type == JERRY_API_DATA_TYPE_UNDEFINED)
     {
-      case JERRY_API_DATA_TYPE_VOID:
-      {
-        JERRY_UNREACHABLE ();
-      }
-      case JERRY_API_DATA_TYPE_UNDEFINED:
-      {
-        value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_NULL:
-      {
-        value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_BOOLEAN:
-      {
-        value = ecma_make_simple_value (field_p->v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_FLOAT32:
-      {
-        ecma_number_t *num_p = ecma_alloc_number ();
-        *num_p = field_p->v_float32;
-        value = ecma_make_number_value (num_p);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_FLOAT64:
-      {
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-        JERRY_UNREACHABLE ();
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-        ecma_number_t *num_p = ecma_alloc_number ();
-        *num_p = field_p->v_float64;
-        value = ecma_make_number_value (num_p);
+      value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else if (field_p->type == JERRY_API_DATA_TYPE_NULL)
+    {
+      value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+    }
+    else if (field_p->type == JERRY_API_DATA_TYPE_BOOLEAN)
+    {
+      value = ecma_make_simple_value (field_p->v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    }
+    else if (field_p->type == JERRY_API_DATA_TYPE_FLOAT32)
+    {
+      ecma_number_t *num_p = ecma_alloc_number ();
+      *num_p = field_p->v_float32;
+      value = ecma_make_number_value (num_p);
+    }
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    else if (field_p->type == JERRY_API_DATA_TYPE_FLOAT64)
+    {
+      JERRY_UNREACHABLE ();
+      ecma_number_t *num_p = ecma_alloc_number ();
+      *num_p = field_p->v_float64;
+      value = ecma_make_number_value (num_p);
+    }
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_UINT32:
-      {
-        ecma_number_t *num_p = ecma_alloc_number ();
-        *num_p = ecma_uint32_to_number (field_p->v_uint32);
-        JERRY_ASSERT (ecma_number_to_uint32 (*num_p) == field_p->v_uint32);
-        value = ecma_make_number_value (num_p);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_STRING:
-      {
-        const ecma_char_t *string_p = (const ecma_char_t*) field_p->v_string;
-        ecma_string_t *str_p = ecma_new_ecma_string (string_p);
-        value = ecma_make_string_value (str_p);
-
-        break;
-      }
-      case JERRY_API_DATA_TYPE_OBJECT:
-      {
-        JERRY_UNREACHABLE ();
-      }
+    else if (field_p->type == JERRY_API_DATA_TYPE_UINT32)
+    {
+      ecma_number_t *num_p = ecma_alloc_number ();
+      *num_p = ecma_uint32_to_number (field_p->v_uint32);
+      JERRY_ASSERT (ecma_number_to_uint32 (*num_p) == field_p->v_uint32);
+      value = ecma_make_number_value (num_p);
+    }
+    else
+    {
+      JERRY_ASSERT (field_p->type == JERRY_API_DATA_TYPE_STRING);
+      const ecma_char_t *string_p = (const ecma_char_t*) field_p->v_string;
+      ecma_string_t *str_p = ecma_new_ecma_string (string_p);
+      value = ecma_make_string_value (str_p);
     }
 
     ecma_named_data_property_assign_value (obj_p, prop_p, value);

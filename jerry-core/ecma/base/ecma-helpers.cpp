@@ -924,7 +924,7 @@ ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property
  */
 void
 ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
-                                    const ecma_value_t& value) /**< value to set */
+                                    ecma_value_t value) /**< value to set */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
@@ -940,7 +940,7 @@ ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
 void
 ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        ecma_property_t *prop_p, /**< property */
-                                       const ecma_value_t& value) /**< value to assign */
+                                       ecma_value_t value) /**< value to assign */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
   ecma_assert_object_contains_the_property (obj_p, prop_p);

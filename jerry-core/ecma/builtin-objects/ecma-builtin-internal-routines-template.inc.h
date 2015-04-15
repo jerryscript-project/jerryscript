@@ -32,8 +32,8 @@
 #define DISPATCH_ROUTINE_ROUTINE_NAME(builtin_underscored_id) \
   PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _dispatch_routine)
 
-#define ROUTINE_ARG(n) , const ecma_value_t& arg ## n
-#define ROUTINE_ARG_LIST_0 const ecma_value_t& this_arg
+#define ROUTINE_ARG(n) , ecma_value_t arg ## n
+#define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
 #define ROUTINE_ARG_LIST_1 ROUTINE_ARG_LIST_0 ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1 ROUTINE_ARG(2)
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2 ROUTINE_ARG(3)
@@ -277,8 +277,8 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
 ecma_completion_value_t
 DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine_id, /**< built-in wide routine
                                                                                           identifier */
-                                                        const ecma_value_t& this_arg_value, /**< 'this' argument
-                                                                                                 value */
+                                                        ecma_value_t this_arg_value, /**< 'this' argument
+                                                                                          value */
                                                         const ecma_value_t arguments_list [], /**< list of arguments
                                                                                                    passed to routine */
                                                         ecma_length_t arguments_number) /**< length of

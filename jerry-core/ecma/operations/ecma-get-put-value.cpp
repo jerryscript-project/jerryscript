@@ -132,7 +132,7 @@ ecma_completion_value_t
 ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict, /**< flag indicating strict mode */
-                                const ecma_value_t& value) /**< ECMA-value */
+                                ecma_value_t value) /**< ECMA-value */
 {
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
@@ -203,7 +203,7 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
  */
 ecma_completion_value_t
 ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
-                               const ecma_value_t& value) /**< ECMA-value */
+                               ecma_value_t value) /**< ECMA-value */
 {
   const ecma_value_t base = ref.base;
   const bool is_unresolvable_reference = ecma_is_value_undefined (base);

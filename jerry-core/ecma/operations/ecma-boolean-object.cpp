@@ -39,7 +39,7 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_boolean_object (const ecma_value_t& arg) /**< argument passed to the Boolean constructor */
+ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boolean constructor */
 {
   ecma_completion_value_t conv_to_boolean_completion = ecma_op_to_boolean (arg);
 

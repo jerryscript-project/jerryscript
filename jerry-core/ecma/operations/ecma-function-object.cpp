@@ -90,7 +90,7 @@ ecma_unpack_code_internal_property_value (uint32_t value, /**< packed value */
  *         false - otherwise.
  */
 bool
-ecma_op_is_callable (const ecma_value_t& value) /**< ecma-value */
+ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
 {
   if (!ecma_is_value_object (value))
   {
@@ -115,7 +115,7 @@ ecma_op_is_callable (const ecma_value_t& value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_is_constructor (const ecma_value_t& value) /**< ecma-value */
+ecma_is_constructor (ecma_value_t value) /**< ecma-value */
 {
   if (!ecma_is_value_object (value))
   {
@@ -432,7 +432,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
  */
 ecma_completion_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object */
-                               const ecma_value_t& value) /**< argument 'V' */
+                               ecma_value_t value) /**< argument 'V' */
 {
   JERRY_ASSERT(func_obj_p != NULL
                && !ecma_is_lexical_environment (func_obj_p));
@@ -512,7 +512,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
  */
 ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
-                       const ecma_value_t& this_arg_value, /**< 'this' argument's value */
+                       ecma_value_t this_arg_value, /**< 'this' argument's value */
                        const ecma_value_t* arguments_list_p, /**< arguments list */
                        ecma_length_t arguments_list_len) /**< length of arguments list */
 {

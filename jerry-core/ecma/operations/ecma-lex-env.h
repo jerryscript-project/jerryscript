@@ -29,6 +29,20 @@
  * @{
  */
 
+/**
+ * \addtogroup globallexicalenvironment Global lexical environment
+ * @{
+ */
+
+extern void ecma_init_environment (void);
+extern void ecma_finalize_environment (void);
+extern ecma_object_t* ecma_get_global_environment (void);
+extern bool ecma_is_lexical_environment_global (ecma_object_t *lex_env_p);
+
+/**
+ * @}
+ */
+
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
 extern ecma_completion_value_t ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p,
                                                                ecma_string_t *var_name_string_p,
@@ -66,7 +80,6 @@ extern void ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p,
                                                   const ecma_value_t& value);
 
 extern ecma_object_t* ecma_op_create_global_environment (ecma_object_t *glob_obj_p);
-extern bool ecma_is_lexical_environment_global (ecma_object_t *lex_env_p);
 
 /**
  * @}

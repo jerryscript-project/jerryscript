@@ -32,6 +32,77 @@
  */
 
 /**
+ * \addtogroup globallexicalenvironment Global lexical environment
+ * @{
+ */
+
+/**
+ * Global lexical environment
+ *
+ * See also: ECMA-262 v5, 10.2.3
+ */
+ecma_object_t* ecma_global_lex_env_p = NULL;
+
+/**
+ * Initialize Global environment
+ */
+void
+ecma_init_environment (void)
+{
+#ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
+  ecma_global_lex_env_p = ecma_create_decl_lex_env (NULL);
+#else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
+  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+
+  ecma_global_lex_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
+
+  ecma_deref_object (glob_obj_p);
+#endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
+} /* ecma_init_environment */
+
+/**
+ * Finalize Global environment
+ */
+void
+ecma_finalize_environment (void)
+{
+  ecma_deref_object (ecma_global_lex_env_p);
+  ecma_global_lex_env_p = NULL;
+} /* ecma_finalize_environment */
+
+/**
+ * Get reference to Global lexical environment
+ *
+ * @return pointer to the object's instance
+ */
+ecma_object_t*
+ecma_get_global_environment (void)
+{
+  ecma_ref_object (ecma_global_lex_env_p);
+
+  return ecma_global_lex_env_p;
+} /* ecma_get_global_environment */
+
+/**
+ * Figure out whether the lexical environment is global.
+ *
+ * @return true - if lexical environment is object-bound and corresponding object is global object,
+ *         false - otherwise.
+ */
+bool
+ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
+{
+  JERRY_ASSERT(lex_env_p != NULL
+               && ecma_is_lexical_environment (lex_env_p));
+
+  return (lex_env_p == ecma_global_lex_env_p);
+} /* ecma_is_lexical_environment_global */
+
+/**
+ * @}
+ */
+
+/**
  * HasBinding operation.
  *
  * See also: ECMA-262 v5, 10.2.1
@@ -422,52 +493,6 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
 
   ecma_named_data_property_assign_value (lex_env_p, prop_p, value);
 } /* ecma_op_initialize_immutable_binding */
-
-/**
- * The Global Environment constructor.
- *
- * See also: ECMA-262 v5, 10.2.3
- *
- * @return pointer to created lexical environment
- */
-ecma_object_t*
-ecma_op_create_global_environment (ecma_object_t *glob_obj_p) /**< the Global object */
-{
-#ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
-  (void) glob_obj_p;
-  ecma_object_t *glob_env_p = ecma_create_decl_lex_env (NULL);
-#else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
-  ecma_object_t *glob_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
-#endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
-
-  return glob_env_p;
-} /* ecma_op_create_global_environment */
-
-/**
- * Figure out whether the lexical environment is global.
- *
- * @return true - if lexical environment is object-bound and corresponding object is global object,
- *         false - otherwise.
- */
-bool
-ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
-{
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
-
-  ecma_lexical_environment_type_t type = ecma_get_lex_env_type (lex_env_p);
-
-  if (type == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
-  {
-    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-
-    return ecma_builtin_is (binding_obj_p, ECMA_BUILTIN_ID_GLOBAL);
-  }
-  else
-  {
-    return false;
-  }
-} /* ecma_is_lexical_environment_global */
 
 /**
  * @}

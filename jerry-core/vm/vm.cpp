@@ -366,12 +366,10 @@ run_int (void)
   }
 
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
-
-  ecma_object_t *lex_env_p = ecma_op_create_global_environment (glob_obj_p);
-  ecma_value_t this_binding_value = ecma_make_object_value (glob_obj_p);
+  ecma_object_t *lex_env_p = ecma_get_global_environment ();
 
   ecma_completion_value_t completion = run_int_from_pos (start_pos,
-                                                         this_binding_value,
+                                                         ecma_make_object_value (glob_obj_p),
                                                          lex_env_p,
                                                          is_strict,
                                                          false);

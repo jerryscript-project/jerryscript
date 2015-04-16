@@ -25,6 +25,11 @@
 #include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 
+/**
+ * Top (current) interpreter context
+ */
+int_data_t *vm_top_context_p = NULL;
+
 #define __INIT_OP_FUNC(name, arg1, arg2, arg3) [ __op__idx_##name ] = opfunc_##name,
 static const opfunc __opfuncs[LAST_OP] =
 {
@@ -349,6 +354,7 @@ jerry_completion_code_t
 run_int (void)
 {
   JERRY_ASSERT (__program != NULL);
+  JERRY_ASSERT (vm_top_context_p == NULL);
 
 #ifdef MEM_STATS
   interp_mem_stats_print_legend ();
@@ -398,6 +404,8 @@ run_int (void)
 
   ecma_deref_object (glob_obj_p);
   ecma_deref_object (lex_env_p);
+
+  JERRY_ASSERT (vm_top_context_p == NULL);
 
   return ret_code;
 }
@@ -491,6 +499,9 @@ run_int_from_pos (opcode_counter_t start_pos,
   int_data.tmp_num_p = ecma_alloc_number ();
   ecma_stack_add_frame (&int_data.stack_frame, regs, regs_num);
 
+  int_data_t *prev_context_p = vm_top_context_p;
+  vm_top_context_p = &int_data;
+
 #ifdef MEM_STATS
   interp_mem_stats_context_enter (&int_data, start_pos);
 #endif /* MEM_STATS */
@@ -501,6 +512,8 @@ run_int_from_pos (opcode_counter_t start_pos,
                 || ecma_is_completion_value_throw (completion)
                 || ecma_is_completion_value_return (completion)
                 || ecma_is_completion_value_exit (completion));
+
+  vm_top_context_p = prev_context_p;
 
   ecma_stack_free_frame (&int_data.stack_frame);
 
@@ -523,3 +536,31 @@ read_opcode (opcode_counter_t counter) /**< opcode counter */
 {
   return __program[ counter ];
 } /* read_opcode */
+
+/**
+ * Get this binding of current execution context
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+vm_get_this_binding (void)
+{
+  JERRY_ASSERT (vm_top_context_p != NULL);
+
+  return ecma_copy_value (vm_top_context_p->this_binding, true);
+} /* vm_get_this_binding */
+
+/**
+ * Get top lexical environment (variable environment) of current execution context
+ *
+ * @return lexical environment
+ */
+ecma_object_t*
+vm_get_lex_env (void)
+{
+  JERRY_ASSERT (vm_top_context_p != NULL);
+
+  ecma_ref_object (vm_top_context_p->lex_env_p);
+
+  return vm_top_context_p->lex_env_p;
+} /* vm_get_lex_env */

@@ -31,5 +31,8 @@ ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
 
 opcode_t read_opcode (opcode_counter_t counter);
 
+extern ecma_value_t vm_get_this_binding (void);
+extern ecma_object_t* vm_get_lex_env (void);
+
 #endif /* VM_H */
 

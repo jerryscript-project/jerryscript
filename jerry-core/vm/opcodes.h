@@ -73,6 +73,9 @@ typedef enum
   OPCODE_META_TYPE_STRICT_CODE /**< mark of beginning of strict code */
 } opcode_meta_type;
 
+/**
+ * Interpreter context
+ */
 typedef struct
 {
   opcode_counter_t pos; /**< current opcode to execute */

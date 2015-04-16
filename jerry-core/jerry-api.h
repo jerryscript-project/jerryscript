@@ -32,6 +32,16 @@
  */
 
 /**
+ * Jerry completion codes
+ */
+typedef enum
+{
+  JERRY_COMPLETION_CODE_OK                         = 0, /**< successful completion */
+  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION        = 1, /**< exception occured and it was not handled */
+  JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT = 2  /**< assertion, performed by script, failed */
+} jerry_completion_code_t;
+
+/**
  * Jerry API data types
  */
 typedef enum
@@ -154,6 +164,13 @@ bool jerry_api_construct_object (jerry_api_object_t *function_object_p,
                                  jerry_api_value_t *retval_p,
                                  const jerry_api_value_t args_p [],
                                  uint16_t args_count);
+
+extern EXTERN_C
+jerry_completion_code_t jerry_api_eval (const char *source_p,
+                                        size_t source_size,
+                                        bool is_direct,
+                                        bool is_strict,
+                                        jerry_api_value_t *retval_p);
 
 extern EXTERN_C
 jerry_api_object_t* jerry_api_get_global (void);

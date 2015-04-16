@@ -18,6 +18,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-extension.h"
+#include "ecma-eval.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -834,6 +835,65 @@ jerry_api_get_global (void)
 {
   return ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 } /* jerry_api_get_global */
+
+/**
+ * Perform eval
+ *
+ * Note:
+ *      If current code is executed on top of interpreter, using is_direct argument,
+ *      caller can enable direct eval mode that is equivalent to calling eval from
+ *      within of current JS execution context.
+ *
+ * @return completion status
+ */
+jerry_completion_code_t
+jerry_api_eval (const char *source_p, /**< source code */
+                size_t source_size, /**< length of source code */
+                bool is_direct, /**< perform eval invocation in direct mode */
+                bool is_strict, /**< perform eval as it is called from strict mode code */
+                jerry_api_value_t *retval_p) /**< out: returned value */
+{
+  ecma_string_t *code_p = ecma_new_ecma_string ((const ecma_char_t*) source_p);
+  (void) source_size;
+
+  jerry_completion_code_t status;
+
+  ecma_completion_value_t completion = ecma_op_eval (code_p, is_direct, is_strict);
+
+  if (ecma_is_completion_value_normal (completion))
+  {
+    status = JERRY_COMPLETION_CODE_OK;
+
+    jerry_api_convert_ecma_value_to_api_value (retval_p,
+                                               ecma_get_completion_value_value (completion));
+  }
+  else
+  {
+    jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+    if (ecma_is_completion_value_throw (completion))
+    {
+      status = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_completion_value_exit (completion));
+
+      if (ecma_is_value_true (ecma_get_completion_value_value (completion)))
+      {
+        status = JERRY_COMPLETION_CODE_OK;
+      }
+      else
+      {
+        status = JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT;
+      }
+    }
+  }
+
+  ecma_deref_ecma_string (code_p);
+
+  return status;
+} /* jerry_api_eval */
 
 /**
  * Jerry engine initialization

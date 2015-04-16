@@ -19,11 +19,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jerry-api.h"
+#include "jerry-extension.h"
+
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
-
-#include "jerry-extension.h"
 
 /**
  * Jerry flags
@@ -36,16 +37,6 @@ typedef uint32_t jerry_flag_t;
                                           *   (in the mode full GC is performed after each opcode handler) */
 #define JERRY_FLAG_PARSE_ONLY   (1 << 2) /**< parse only, prevents script execution (only for testing)
                                           *   FIXME: Remove. */
-
-/**
- * Jerry completion codes
- */
-typedef enum
-{
-  JERRY_COMPLETION_CODE_OK                         = 0, /**< successful completion */
-  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION        = 1, /**< exception occured and it was not handled */
-  JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT = 2  /**< assertion, performed by script, failed */
-} jerry_completion_code_t;
 
 /**
  * Error codes

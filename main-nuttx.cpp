@@ -146,9 +146,13 @@ int jerry_main (int argc, char *argv[])
       printf ("Commit hash:\t%s\n", jerry_commit_hash);
       printf ("Branch name:\t%s\n", jerry_branch_name);
     }
-    else if (!strcmp ("--mem-stats", argv[i]))
+    else if (!strcmp ("--mem-stats-at-exit", argv[i]))
     {
-      flags |= JERRY_FLAG_MEM_STATS;
+      flags |= JERRY_FLAG_MEM_STATS_AT_EXIT;
+    }
+    else if (!strcmp ("--mem-stats-per-opcode", argv[i]))
+    {
+      flags |= JERRY_FLAG_MEM_STATS_PER_OPCODE;
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {

@@ -904,7 +904,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
   jerry_flags = flags;
 
 #ifndef MEM_STATS
-  if (flags & JERRY_FLAG_MEM_STATS)
+  if (flags & (JERRY_FLAG_MEM_STATS_AT_EXIT | JERRY_FLAG_MEM_STATS_PER_OPCODE))
   {
     printf ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
   }
@@ -921,7 +921,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 void
 jerry_cleanup (void)
 {
-  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
+  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS_AT_EXIT) != 0);
 
   ecma_finalize ();
   serializer_free ();
@@ -966,8 +966,9 @@ jerry_parse (const char* source_p, /**< script source */
   serializer_print_opcodes ();
   parser_free ();
 
-  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
-  init_int (opcodes, is_show_mem_stats);
+  bool is_show_mem_stats_per_opcode = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
+
+  init_int (opcodes, is_show_mem_stats_per_opcode);
 
   return true;
 } /* jerry_parse */

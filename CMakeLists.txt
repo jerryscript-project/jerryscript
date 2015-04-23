@@ -15,7 +15,7 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (Jerry CXX C ASM)
 
-# Require g++ of version >= 4.8.0
+# Require g++ of version >= 4.7.0
  if(NOT CMAKE_COMPILER_IS_GNUCXX)
   message(FATAL_ERROR "g++ compiler is required")
  else()
@@ -23,8 +23,8 @@ project (Jerry CXX C ASM)
                   OUTPUT_VARIABLE GNU_CXX_VERSION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  if(${GNU_CXX_VERSION} VERSION_LESS 4.8.0)
-   message(FATAL_ERROR "g++ compiler version 4.8.0 or higher required")
+  if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
+   message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
   endif()
  endif()
 
@@ -177,7 +177,7 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
 
  # Warnings
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -Wpedantic -Wlogical-op")
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic -Wlogical-op")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
@@ -250,6 +250,19 @@ project (Jerry CXX C ASM)
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc
                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
+ # libgcc_eh
+  add_library(${PREFIX_IMPORTED_LIB}libgcc_eh STATIC IMPORTED)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc_eh.a
+                  OUTPUT_VARIABLE IMPORTED_LIBGCC_EH_LOCATION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(EXISTS "${IMPORTED_LIBGCC_EH_LOCATION}")
+   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc_eh
+                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_EH_LOCATION})
+  else()
+   # If libgcc_eh not found, reference libgcc instead
+   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc_eh
+                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
+  endif()
 
 # Platform-specific configuration
  set(MODIFIERS_LISTS ${MODIFIERS_LISTS_${PLATFORM_EXT}})
@@ -307,7 +320,8 @@ project (Jerry CXX C ASM)
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
+    target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
+                          ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})
 
@@ -387,7 +401,8 @@ project (Jerry CXX C ASM)
     set_property(TARGET ${TARGET_NAME}
                  PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc ${PREFIX_IMPORTED_LIB}libgcc)
+    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc
+                          ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})
 

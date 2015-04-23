@@ -39,10 +39,10 @@ enum
 static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIELDS_NUMBER + 1] =
 {
 #define EXTENSION_FIELD(_field_name, _type, _value) \
-  { # _field_name, JERRY_API_DATA_TYPE_ ## _type, _value },
+  { # _field_name, JERRY_API_DATA_TYPE_ ## _type, { _value } },
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FIELD
-#define EMPTY_FIELD_ENTRY { NULL, JERRY_API_DATA_TYPE_UNDEFINED, NULL }
+#define EMPTY_FIELD_ENTRY { NULL, JERRY_API_DATA_TYPE_UNDEFINED, { NULL } }
   EMPTY_FIELD_ENTRY
 #undef EMPTY_FIELD_ENTRY
 };
@@ -87,7 +87,7 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 /* Functions' arguments description */
 #define EXTENSION_ARG(_arg_index, _type) [_arg_index] = { \
   (JERRY_API_DATA_TYPE_ ## _type), \
-  false /* just for initialization, should be overwritten upon call */ \
+  { false } /* just for initialization, should be overwritten upon call */ \
 }
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _ret_value_type, _args_number, ...) \
   static jerry_api_value_t jerry_extension_function_ ## _function_name ## _args [_args_number] = { \
@@ -103,13 +103,13 @@ static jerry_extension_function_t jerry_extension_functions [JERRY_EXTENSION_FUN
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _ret_value_type, _args_number, ...) \
   {  \
     # _function_name, jerry_extension_ ## _function_name ## _wrapper, \
-    { JERRY_API_DATA_TYPE_ ## _ret_value_type, false }, \
+    { JERRY_API_DATA_TYPE_ ## _ret_value_type, { false } }, \
     jerry_extension_function_ ## _function_name ## _args, \
      _args_number \
   },
 # include EXTENSION_DESCRIPTION_HEADER
 #undef EXTENSION_FUNCTION
-#define EMPTY_FUNCTION_ENTRY { NULL, NULL, { JERRY_API_DATA_TYPE_VOID, false }, NULL, 0 }
+#define EMPTY_FUNCTION_ENTRY { NULL, NULL, { JERRY_API_DATA_TYPE_VOID, { false } }, NULL, 0 }
   EMPTY_FUNCTION_ENTRY
 #undef EMPTY_FUNCTION_ENTRY
 };

@@ -19,7 +19,7 @@
 #include "literal.h"
 
 #define INVALID_VALUE 255
-#define INVALID_LITERAL UINT32_MAX
+#define INVALID_LITERAL ((uint32_t) -1)
 
 /* Keywords.  */
 typedef enum __attr_packed___

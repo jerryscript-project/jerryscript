@@ -59,10 +59,10 @@ typedef uint8_t mem_pool_chunk_index_t;
 typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_pool_state_t
 {
   /** Offset of first free chunk from the beginning of the pool (mem_pool_chunk_index_t) */
-  unsigned int first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
+  mem_pool_chunk_index_t first_free_chunk : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
 
   /** Number of free chunks (mem_pool_chunk_index_t) */
-  unsigned int free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
+  mem_pool_chunk_index_t free_chunks_number : MEM_POOL_MAX_CHUNKS_NUMBER_LOG;
 
   /** Pointer to the next pool with same chunk size */
   mem_cpointer_t next_pool_cp : MEM_COMPRESSED_POINTER_WIDTH;

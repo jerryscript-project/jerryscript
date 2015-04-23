@@ -139,9 +139,13 @@ main (int argc,
       printf ("Branch name:\t%s\n", jerry_branch_name);
       printf ("\n");
     }
-    else if (!strcmp ("--mem-stats", argv[i]))
+    else if (!strcmp ("--mem-stats-at-exit", argv[i]))
     {
-      flags |= JERRY_FLAG_MEM_STATS;
+      flags |= JERRY_FLAG_MEM_STATS_AT_EXIT;
+    }
+    else if (!strcmp ("--mem-stats-per-opcode", argv[i]))
+    {
+      flags |= JERRY_FLAG_MEM_STATS_PER_OPCODE;
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {

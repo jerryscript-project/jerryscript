@@ -162,7 +162,7 @@ project (Jerry CXX C ASM)
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
- set(LINKER_FLAGS_COMMON "")
+ set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
 
  # LTO
   if("${ENABLE_LTO}" STREQUAL "ON")

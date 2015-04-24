@@ -139,13 +139,17 @@ main (int argc,
       printf ("Branch name:\t%s\n", jerry_branch_name);
       printf ("\n");
     }
-    else if (!strcmp ("--mem-stats-at-exit", argv[i]))
+    else if (!strcmp ("--mem-stats", argv[i]))
     {
-      flags |= JERRY_FLAG_MEM_STATS_AT_EXIT;
+      flags |= JERRY_FLAG_MEM_STATS;
     }
     else if (!strcmp ("--mem-stats-per-opcode", argv[i]))
     {
       flags |= JERRY_FLAG_MEM_STATS_PER_OPCODE;
+    }
+    else if (!strcmp ("--mem-stats-separate", argv[i]))
+    {
+      flags |= JERRY_FLAG_MEM_STATS_SEPARATE;
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {

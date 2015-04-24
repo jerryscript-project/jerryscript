@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,27 +16,16 @@
 
 JERRY=$1
 TEST=$2
-RAW_OUTPUT=$3
-SLEEP=0.3
-REPEATS=5
-
+SLEEP=0.1
 
 Rss_OUT=""
-Pss_OUT=""
-Private_Dirty_OUT=""
-Private_Clean_OUT=""
-Shared_Dirty_OUT=""
-Shared_Clean_OUT=""
-Share_OUT=""
-Size_OUT=""
-Swap_OUT=""
 
 function collect_entry()
 {
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
 
-  SUM=$(cat /proc/"$PID"/smaps 2>/dev/null | grep "$1" | awk '{sum += $2;} END { if (sum != 0) { print sum; }; }');
+  SUM=$(grep -o -e "^[0-9a-f][0-9a-f]*.*" -e "^Rss.*" /proc/$PID/smaps 2>/dev/null | grep -A 1 -- "r[w-]-p " | grep "^Rss"|awk '{s += $2;} END {print s;}')
 
   if [ "$SUM" != "" ];
   then
@@ -49,7 +38,7 @@ function print_entry()
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
 
-  eval "echo -e \"\$$OUT\"" | awk -v entry="$1" '{ if ($1 != "") { sum += $1; n += 1; if ($1 > max) { max = $1; } } } END { if (n == 0) { exit; }; printf "%19s:%8d Kb%19s:%8d Kb\n", entry, sum / n, entry, max; }';
+  eval "echo -e \"\$$OUT\"" | awk -v entry="$1" '{ if ($1 != "") { n += 1; if ($1 > max) { max = $1; } } } END { if (n == 0) { exit; }; printf "%s:%8d Kb\n", entry,  max; }';
 }
 
 function run_test()
@@ -60,68 +49,11 @@ function run_test()
   while kill -0 "$PID" > /dev/null 2>&1;
   do
     collect_entry Rss
-    collect_entry Pss
-    collect_entry Private_Dirty
-    collect_entry Private_Clean
-    collect_entry Shared_Dirty
-    collect_entry Shared_Clean
-    collect_entry Share
-    collect_entry Size
-    collect_entry Swap
 
     sleep $SLEEP
-
   done
 }
 
+run_test
 
-ITERATIONS=`seq 1 $REPEATS`
-START=$(date +%s.%N)
-
-for i in $ITERATIONS
-do
-  run_test
-done
-
-FINISH=$(date +%s.%N)
-
-echo
-
-if [ "$RAW_OUTPUT" != "" ];
-then
-   echo -e "$Rss_OUT";
-   echo -e "$Pss_OUT";
-   echo -e "$Private_Dirty_OUT";
-   echo -e "$Private_Clean_OUT";
-   echo -e "$Shared_Dirty_OUT";
-   echo -e "$Shared_Clean_OUT";
-   echo -e "$Share_OUT";
-   echo -e "$Size_OUT";
-   echo -e "$Swap_OUT";
-fi;
-
-if [ "$Size_OUT" == "" ]
-then
-  echo "==================="
-  echo "Test failed."
-  echo "==================="
-  exit 1
-fi;
-
-TIME=$(echo "scale=3;($FINISH - $START) / 1.0" | bc );
-AVG_TIME=$(echo "scale=3;$TIME / $REPEATS" | bc );
-
-echo "==================="
-printf "%24sAVERAGE%28sMAX\n" "" "";
 print_entry Rss
-print_entry Pss
-print_entry Private_Dirty
-print_entry Private_Clean
-print_entry Shared_Dirty
-print_entry Shared_Clean
-print_entry Share
-print_entry Size
-print_entry Swap
-echo -e "---"
-echo -e "Exec time / average:\t$TIME / $AVG_TIME secs"
-echo "==================="

@@ -26,6 +26,7 @@
  * @{
  */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
 /**
  * Entry of LCache hash table
  */
@@ -65,6 +66,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t));
  * LCache's hash table
  */
 static ecma_lcache_hash_entry_t ecma_lcache_hash_table[ ECMA_LCACHE_HASH_ROWS_COUNT ][ ECMA_LCACHE_HASH_ROW_LENGTH ];
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Initialize LCache
@@ -72,9 +74,12 @@ static ecma_lcache_hash_entry_t ecma_lcache_hash_table[ ECMA_LCACHE_HASH_ROWS_CO
 void
 ecma_lcache_init (void)
 {
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   memset (ecma_lcache_hash_table, 0, sizeof (ecma_lcache_hash_table));
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_init */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
 /**
  * Invalidate specified LCache entry
  */
@@ -98,6 +103,7 @@ ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to i
                                false);
   }
 } /* ecma_lcache_invalidate_entry */
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Invalidate all entries in LCache
@@ -105,6 +111,7 @@ ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to i
 void
 ecma_lcache_invalidate_all (void)
 {
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   for (uint32_t row_index = 0; row_index < ECMA_LCACHE_HASH_ROWS_COUNT; row_index++)
   {
     for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
@@ -115,8 +122,10 @@ ecma_lcache_invalidate_all (void)
       }
     }
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate_all */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
 /**
  * Invalidate entries of LCache's row that correspond to given (object, property) pair
  */
@@ -137,6 +146,7 @@ ecma_lcache_invalidate_row_for_object_property_pair (uint32_t row_index, /**< in
     }
   }
 } /* ecma_lcache_invalidate_row_for_object_property_pair */
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Insert an entry into LCache
@@ -151,6 +161,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   prop_name_p = ecma_copy_or_ref_ecma_string (prop_name_p);
 
   ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
@@ -210,6 +221,9 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].object_cp, object_p);
   ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_name_cp, prop_name_p);
   ECMA_SET_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_cp, prop_p);
+#else /* CONFIG_ECMA_LCACHE_DISABLE */
+  (void) prop_p;
+#endif /* CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_insert */
 
 /**
@@ -228,6 +242,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                                                  *        if return value is false,
                                                  *         then the output parameter is not set */
 {
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   unsigned int object_cp;
@@ -255,6 +270,11 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
       }
     }
   }
+#else /* CONFIG_ECMA_LCACHE_DISABLE */
+  (void) object_p;
+  (void) prop_name_p;
+  (void) prop_p_p;
+#endif /* CONFIG_ECMA_LCACHE_DISABLE */
 
   return false;
 } /* ecma_lcache_lookup */
@@ -276,6 +296,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_p != NULL || prop_name_arg_p != NULL);
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   ecma_string_t *prop_name_p = NULL;
 
   if (prop_p != NULL)
@@ -318,6 +339,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
    * Given (object, property name) pair should be in the row corresponding to computed hash.
    */
   ecma_lcache_invalidate_row_for_object_property_pair (hash_key, object_cp, prop_cp);
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate */
 
 /**

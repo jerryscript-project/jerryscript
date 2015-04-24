@@ -120,28 +120,6 @@ main (int __attr_unused___ argc,
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      if (ptrs[j] != NULL && (rand () % 2) == 0)
-      {
-        for (size_t k = 0; k < sizes[j]; k++)
-        {
-          JERRY_ASSERT(ptrs[j][k] == 0);
-        }
-
-        size_t new_size = (size_t) rand () % (test_threshold_block_size);
-
-        if (mem_heap_try_resize_block (ptrs[j], new_size))
-        {
-          sizes[j] = new_size;
-          memset (ptrs[j], 0, sizes[j]);
-        }
-
-        JERRY_ASSERT (sizes [j] == 0
-                      || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes [j]) == ptrs[j]);
-      }
-    }
-
-    for (uint32_t j = 0; j < test_sub_iters; j++)
-    {
       if (ptrs[j] != NULL)
       {
         for (size_t k = 0; k < sizes[j]; k++)

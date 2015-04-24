@@ -439,6 +439,10 @@ run_int_loop (int_data_t *int_data)
 
       completion = __opfuncs[curr->op_idx] (*curr, int_data);
 
+#ifdef CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
+      ecma_gc_run ();
+#endif /* CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE */
+
 #ifdef MEM_STATS
       interp_mem_stats_opcode_exit (int_data,
                                     opcode_pos,

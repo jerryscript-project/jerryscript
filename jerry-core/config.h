@@ -170,4 +170,9 @@
  */
 #define CONFIG_EXTENSION_MAX_ARGUMENTS_IN_FUNCTION 16
 
+/**
+ * Run GC after execution of each opcode
+ */
+// #define CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
+
 #endif /* !CONFIG_H */

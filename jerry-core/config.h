@@ -56,6 +56,11 @@
 #endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
+ * Desired limit of heap usage
+ */
+#define CONFIG_MEM_HEAP_DESIRED_LIMIT (CONFIG_MEM_HEAP_AREA_SIZE / 32)
+
+/**
  * Log2 of maximum possible offset in the heap
  *
  * The option affects size of compressed pointer that in turn

@@ -139,6 +139,9 @@ typedef struct
   size_t heap_size; /**< heap space size */
   mem_block_header_t* first_block_p; /**< first block of the heap */
   mem_block_header_t* last_block_p;  /**< last block of the heap */
+  size_t allocated_bytes; /**< total size of allocated heap space */
+  size_t limit; /**< current limit of heap usage, that is upon being reached,
+                 *   causes call of "try give memory back" callbacks */
 } mem_heap_state_t;
 
 /**
@@ -382,6 +385,7 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
 
   mem_heap.heap_start = heap_start;
   mem_heap.heap_size = heap_size;
+  mem_heap.limit = CONFIG_MEM_HEAP_DESIRED_LIMIT;
 
   VALGRIND_NOACCESS_SPACE(heap_start, heap_size);
 
@@ -510,6 +514,18 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
     return NULL;
   }
 
+  mem_heap.allocated_bytes += size_in_bytes;
+
+  JERRY_ASSERT (mem_heap.allocated_bytes <= mem_heap.heap_size);
+
+  if (mem_heap.allocated_bytes >= mem_heap.limit)
+  {
+    mem_heap.limit = JERRY_MIN (mem_heap.heap_size,
+                                JERRY_MAX (mem_heap.limit + CONFIG_MEM_HEAP_DESIRED_LIMIT,
+                                           mem_heap.allocated_bytes));
+    JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_bytes);
+  }
+
   /* appropriate block found, allocating space */
   size_t new_block_size_in_chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
   size_t found_block_size_in_chunks = mem_get_block_chunks_count (block_p);
@@ -625,6 +641,11 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
   }
   else
   {
+    if (mem_heap.allocated_bytes >= mem_heap.limit)
+    {
+      mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
+    }
+
     void *data_space_p = mem_heap_alloc_block_internal (size_in_bytes, alloc_term);
 
     if (likely (data_space_p != NULL))
@@ -672,6 +693,23 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 
   mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
   mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
+
+  JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_bytes);
+
+  size_t bytes = block_p->allocated_bytes;
+  JERRY_ASSERT (mem_heap.allocated_bytes >= bytes);
+  mem_heap.allocated_bytes -= bytes;
+
+  if (mem_heap.allocated_bytes * 3 <= mem_heap.limit)
+  {
+    mem_heap.limit /= 2;
+  }
+  else if (mem_heap.allocated_bytes + CONFIG_MEM_HEAP_DESIRED_LIMIT <= mem_heap.limit)
+  {
+    mem_heap.limit -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
+  }
+
+  JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_bytes);
 
   MEM_HEAP_STAT_FREE_BLOCK (block_p);
 
@@ -927,6 +965,7 @@ mem_check_heap (void)
 
   bool is_last_block_was_met = false;
   size_t chunk_sizes_sum = 0;
+  size_t allocated_sum = 0;
 
   for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
        block_p != NULL;
@@ -937,6 +976,11 @@ mem_check_heap (void)
     JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
                  || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
+
+    if (block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK)
+    {
+      allocated_sum += block_p->allocated_bytes;
+    }
 
     next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
 
@@ -955,6 +999,7 @@ mem_check_heap (void)
   }
 
   JERRY_ASSERT(chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
+  JERRY_ASSERT(allocated_sum == mem_heap.allocated_bytes);
   JERRY_ASSERT(is_last_block_was_met);
 
   bool is_first_block_was_met = false;

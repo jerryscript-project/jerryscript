@@ -27,6 +27,8 @@
 #include "ecma-objects-general.h"
 #include "jerry.h"
 #include "jrt.h"
+#include "mem-heap.h"
+#include "mem-poolman.h"
 #include "parser.h"
 #include "serializer.h"
 #include "vm.h"
@@ -901,14 +903,24 @@ jerry_api_eval (const char *source_p, /**< source code */
 void
 jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 {
-  jerry_flags = flags;
-
-#ifndef MEM_STATS
-  if (flags & (JERRY_FLAG_MEM_STATS_AT_EXIT | JERRY_FLAG_MEM_STATS_PER_OPCODE))
+  if (flags & (JERRY_FLAG_MEM_STATS))
   {
+#ifndef MEM_STATS
+    flags &= ~(JERRY_FLAG_MEM_STATS
+               | JERRY_FLAG_MEM_STATS_PER_OPCODE
+               | JERRY_FLAG_MEM_STATS_SEPARATE);
+
     printf ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
-  }
 #endif /* !MEM_STATS */
+  }
+  else if (flags & (JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
+  {
+    flags &= ~(JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE);
+
+    printf ("Ignoring detailed memory statistics options because memory statistics dump mode is not enabled.\n");
+  }
+
+  jerry_flags = flags;
 
   mem_init ();
   serializer_init ();
@@ -921,7 +933,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 void
 jerry_cleanup (void)
 {
-  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS_AT_EXIT) != 0);
+  bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
 
   ecma_finalize ();
   serializer_free ();
@@ -965,6 +977,14 @@ jerry_parse (const char* source_p, /**< script source */
 
   serializer_print_opcodes ();
   parser_free ();
+
+#ifdef MEM_STATS
+  if (jerry_flags & JERRY_FLAG_MEM_STATS_SEPARATE)
+  {
+    mem_stats_print ();
+    mem_stats_reset_peak ();
+  }
+#endif /* MEM_STATS */
 
   bool is_show_mem_stats_per_opcode = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
 

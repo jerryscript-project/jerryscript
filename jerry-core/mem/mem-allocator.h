@@ -93,6 +93,11 @@ extern void mem_unregister_a_try_give_memory_back_callback (mem_try_give_memory_
 extern bool mem_is_heap_pointer (void *pointer);
 #endif /* !JERRY_NDEBUG */
 
+#ifdef MEM_STATS
+extern void mem_stats_reset_peak (void);
+extern void mem_stats_print (void);
+#endif /* MEM_STATS */
+
 #endif /* !JERRY_MEM_ALLOCATOR_H */
 
 /**

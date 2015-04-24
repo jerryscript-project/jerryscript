@@ -31,13 +31,14 @@
  */
 typedef uint32_t jerry_flag_t;
 
-#define JERRY_FLAG_EMPTY                  (0)      /**< empty flag set */
-#define JERRY_FLAG_SHOW_OPCODES           (1 << 0) /**< dump opcodes to stdout after parse */
-#define JERRY_FLAG_MEM_STATS_AT_EXIT      (1 << 1) /**< dump per-opcode memory statistics during execution
-                                                    *   (in the mode full GC is performed after each opcode handler) */
-#define JERRY_FLAG_MEM_STATS_PER_OPCODE   (1 << 2) /**< dump peak memory statistics before exit */
-#define JERRY_FLAG_PARSE_ONLY             (1 << 3) /**< parse only, prevents script execution (only for testing)
-                                                    *   FIXME: Remove. */
+#define JERRY_FLAG_EMPTY                  (0u)      /**< empty flag set */
+#define JERRY_FLAG_SHOW_OPCODES           (1u << 0) /**< dump opcodes to stdout after parse */
+#define JERRY_FLAG_MEM_STATS              (1u << 1) /**< dump memory statistics */
+#define JERRY_FLAG_MEM_STATS_PER_OPCODE   (1u << 2) /**< dump per-opcode memory statistics during execution
+                                                     *   (in the mode full GC is performed after each opcode handler) */
+#define JERRY_FLAG_MEM_STATS_SEPARATE     (1u << 3) /**< dump memory statistics and reset peak values after parse */
+#define JERRY_FLAG_PARSE_ONLY             (1u << 4) /**< parse only, prevents script execution (only for testing)
+                                                     *   FIXME: Remove. */
 
 /**
  * Error codes

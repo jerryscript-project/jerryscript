@@ -185,3 +185,41 @@ mem_is_heap_pointer (void *pointer) /**< pointer */
   return (uint8_pointer >= mem_heap_area && uint8_pointer <= (mem_heap_area + MEM_HEAP_AREA_SIZE));
 } /* mem_is_heap_pointer */
 #endif /* !JERRY_NDEBUG */
+
+#ifdef MEM_STATS
+/**
+ * Reset peak values in memory usage statistics
+ */
+void
+mem_stats_reset_peak (void)
+{
+  mem_heap_stats_reset_peak ();
+  mem_pools_stats_reset_peak ();
+} /* mem_stats_reset_peak */
+
+/**
+ * Print memory usage statistics
+ */
+void
+mem_stats_print (void)
+{
+  mem_heap_print (false, false, true);
+
+  mem_pools_stats_t stats;
+  mem_pools_get_stats (&stats);
+
+  printf ("Pools stats:\n");
+  printf (" Chunk size: %zu\n"
+          "  Pools: %zu\n"
+          "  Allocated chunks: %zu\n"
+          "  Free chunks: %zu\n"
+          "  Peak pools: %zu\n"
+          "  Peak allocated chunks: %zu\n\n",
+          MEM_POOL_CHUNK_SIZE,
+          stats.pools_count,
+          stats.allocated_chunks,
+          stats.free_chunks,
+          stats.peak_pools_count,
+          stats.peak_allocated_chunks);
+} /* mem_stats_print */
+#endif /* MEM_STATS */

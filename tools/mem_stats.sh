@@ -28,9 +28,34 @@ else
   TABLE="yes"
 fi
 
+function fail_msg
+{
+  echo "$1"
+  exit 1
+}
+
 # Engine
+
+# Check if the specified build supports memory statistics options
+function is_mem_stats_build
+{
+  [ -x "$1" ] || fail_msg "Engine '$1' is not executable"
+
+  tmpfile=`mktemp`
+  "$1" --mem-stats $tmpfile | grep -- "Ignoring memory statistics option because of '!MEM_STATS' build configuration." 2>&1 > /dev/null
+  code=$?
+  rm $tmpfile
+
+  return $code
+}
+
 JERRY="$1"
 shift
+is_mem_stats_build "$JERRY" || fail_msg "First engine specified should be built without memory statistics support"
+
+JERRY_MEM_STATS="$1"
+shift
+is_mem_stats_build "$JERRY_MEM_STATS" && fail_msg "Second engine specified should be built with memory statistics support"
 
 # Benchmarks list
 BENCHMARKS=""
@@ -40,19 +65,6 @@ do
   BENCHMARKS="$BENCHMARKS $1"
   shift
 done
-
-# Checking that the specified build supports memory statistics options
-tmpfile=`mktemp`
-$JERRY --mem-stats $tmpfile | grep -- "Ignoring memory statistics option because of '!MEM_STATS' build configuration." 2>&1 > /dev/null
-code=$?
-rm $tmpfile
-
-if [ $code -eq 0 ]
-then
-  echo "Please, use engine built with mem_stats modifier."
-
-  exit 1
-fi
 
 # Running
 if [ "$TABLE" == "yes" ]
@@ -66,7 +78,7 @@ do
   test=`basename -s '.js' $bench`
 
   echo "$test" | awk "$PRINT_TEST_NAME_AWK_SCRIPT"
-  ./tools/rss-measure.sh "$JERRY --mem-stats --mem-stats-separate" $bench | \
-    grep -e "Peak allocated=" -e "Allocated =" -e "Rss" | grep -o "[0-9]*" | awk '{s=s" "$1;} END {print s;}' | \
-    awk "$PRINT_TOTAL_AWK_SCRIPT"
+  MEM_STATS=$("$JERRY_MEM_STATS" --mem-stats --mem-stats-separate $bench | grep -e "Peak allocated=" -e "Allocated =" | grep -o "[0-9]*")
+  RSS=$(./tools/rss-measure.sh "$JERRY" $bench | tail -n 1 | grep -e "Rss" | grep -o "[0-9]*")
+  echo $MEM_STATS $RSS | xargs | awk "$PRINT_TOTAL_AWK_SCRIPT"
 done

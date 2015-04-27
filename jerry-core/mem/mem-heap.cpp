@@ -641,7 +641,7 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
   }
   else
   {
-    if (mem_heap.allocated_bytes >= mem_heap.limit)
+    if (mem_heap.allocated_bytes + size_in_bytes >= mem_heap.limit)
     {
       mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
     }

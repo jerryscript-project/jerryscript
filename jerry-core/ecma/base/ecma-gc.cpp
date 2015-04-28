@@ -34,6 +34,10 @@
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
 
+#define JERRY_INTERNAL
+#include "jerry-internal.h"
+
+
 /**
  * An object's GC color
  *
@@ -320,6 +324,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
+            case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object free callback */
             case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
@@ -360,6 +365,25 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
   if (!ecma_is_lexical_environment (object_p) ||
       ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
   {
+    /* call object free callback with given handle */
+    {
+      ecma_external_pointer_t freecb_p;
+      ecma_external_pointer_t native_p;
+
+      bool is_retrieved =
+          ecma_get_external_pointer_value (object_p,
+                                           ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                           &freecb_p);
+      if (is_retrieved && freecb_p)
+        is_retrieved =
+            ecma_get_external_pointer_value (object_p,
+                                             ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
+                                             &native_p);
+
+      if (is_retrieved && native_p)
+        jerry_dispatch_object_free_callback (object_p, freecb_p, native_p);
+    }
+
     for (ecma_property_t *property = ecma_get_property_list (object_p), *next_property_p;
          property != NULL;
          property = next_property_p)

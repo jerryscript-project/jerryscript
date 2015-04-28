@@ -115,6 +115,14 @@ handler (const jerry_api_object_t *function_obj_p,
   return true;
 } /* handler */
 
+static void
+handler_construct_freecb (const jerry_api_object_t *object_p, uintptr_t native_p)
+{
+  (void)object_p;
+  assert (native_p == (uintptr_t) 0x0012345678abcdefull);
+  printf("ok object free callback\n");
+}
+
 static bool
 handler_construct (const jerry_api_object_t *function_obj_p,
                    const jerry_api_value_t *this_p,
@@ -134,6 +142,8 @@ handler_construct (const jerry_api_object_t *function_obj_p,
   jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p [0]);
 
   jerry_api_set_object_native_handle (this_p->v_object, (uintptr_t) 0x0012345678abcdefull);
+
+  jerry_api_set_object_free_callback (this_p->v_object, handler_construct_freecb);
 
   return true;
 } /* handler_construct */

@@ -425,6 +425,20 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 } /* jerry_dispatch_external_function */
 
 /**
+ * Dispatch call to object free callback function
+ *
+ * Note:
+ *       it's critical GC phase so should not re-enter jerry apis
+ */
+void
+jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< pointer to free callback handler */
+                                     ecma_external_pointer_t native_p) /**< pointer to the function's native handler */
+{
+  /* Todo: prevent call inside jerry again */
+  ((jerry_object_free_callback_t) freecb_p) ((uintptr_t)native_p);
+}
+
+/**
  * Check if the specified object is a function object.
  *
  * @return true - if the specified object is a function object,
@@ -651,6 +665,18 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
 } /* jerry_api_set_object_native_handle */
+
+/**
+ * Set object free callback native handle for the specified object
+ */
+void
+jerry_api_set_object_free_callback (jerry_api_object_t *object_p, /**< object to set handle in */
+                                    jerry_object_free_callback_t freecb_p) /**< free callback function */
+{
+  ecma_create_external_pointer_property (object_p,
+                                         ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                         (uintptr_t)freecb_p);
+} /* jerry_api_set_object_freecb_handle */
 
 /**
  * Invoke function specified by a function object

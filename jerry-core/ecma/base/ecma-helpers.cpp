@@ -780,6 +780,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
     case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
+    case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an external pointer */
     {
       ecma_free_external_pointer_in_property (property_p);
 

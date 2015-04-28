@@ -381,7 +381,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                                              &native_p);
 
       if (is_retrieved && native_p)
-        jerry_dispatch_object_free_callback (object_p, freecb_p, native_p);
+        jerry_dispatch_object_free_callback (freecb_p, native_p);
     }
 
     for (ecma_property_t *property = ecma_get_property_list (object_p), *next_property_p;

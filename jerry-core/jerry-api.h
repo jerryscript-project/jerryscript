@@ -100,8 +100,7 @@ typedef bool (*jerry_external_handler_t) (const jerry_api_object_t *function_obj
                                           const jerry_api_value_t args_p [],
                                           const uint16_t args_count);
 
-typedef void (*jerry_object_free_callback_t) (const jerry_api_object_t *object_p,
-                                              const uintptr_t native_p);
+typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 
 
 extern EXTERN_C ssize_t
@@ -155,10 +154,6 @@ bool jerry_api_get_object_native_handle (jerry_api_object_t *object_p, uintptr_t
 
 extern EXTERN_C
 void jerry_api_set_object_native_handle (jerry_api_object_t *object_p, uintptr_t handle);
-
-extern EXTERN_C
-bool jerry_api_get_object_free_callback (jerry_api_object_t *object_p,
-                                         jerry_object_free_callback_t* out_freecb_p);
 
 extern EXTERN_C
 void jerry_api_set_object_free_callback (jerry_api_object_t *object_p,

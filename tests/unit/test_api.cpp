@@ -116,9 +116,8 @@ handler (const jerry_api_object_t *function_obj_p,
 } /* handler */
 
 static void
-handler_construct_freecb (const jerry_api_object_t *object_p, uintptr_t native_p)
+handler_construct_freecb (uintptr_t native_p)
 {
-  (void)object_p;
   assert (native_p == (uintptr_t) 0x0012345678abcdefull);
   printf("ok object free callback\n");
 }

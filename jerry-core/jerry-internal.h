@@ -31,8 +31,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p,
                                   ecma_length_t args_count);
 
 extern void
-jerry_dispatch_object_free_callback (ecma_object_t *object_p,
-                                     ecma_external_pointer_t freecb_p,
+jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p,
                                      ecma_external_pointer_t native_p);
 
 

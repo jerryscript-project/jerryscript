@@ -431,12 +431,11 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
  *       it's critical GC phase so should not re-enter jerry apis
  */
 void
-jerry_dispatch_object_free_callback (ecma_object_t *object_p, /**< object that is garbage colleted*/
-                                     ecma_external_pointer_t freecb_p, /**< pointer to free callback handler */
+jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< pointer to free callback handler */
                                      ecma_external_pointer_t native_p) /**< pointer to the function's native handler */
 {
   /* Todo: prevent call inside jerry again */
-  ((jerry_object_free_callback_t) freecb_p) (object_p, (uintptr_t)native_p);
+  ((jerry_object_free_callback_t) freecb_p) ((uintptr_t)native_p);
 }
 
 /**
@@ -666,30 +665,6 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
 } /* jerry_api_set_object_native_handle */
-
-/**
- * Get object free callbaack handle, associated with specified object
- *
- * @return true - if there is associated handle (handle is returned through out_handle_p),
- *         false - otherwise.
- */
-bool
-jerry_api_get_object_free_callback (jerry_api_object_t *object_p, /**< object to get handle from */
-                                    jerry_object_free_callback_t* out_freecb_p) /**< out: handle value */
-{
-  uintptr_t handle_value;
-
-  bool does_exist = ecma_get_external_pointer_value (object_p,
-                                                     ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
-                                                     &handle_value);
-
-  if (does_exist)
-  {
-    *out_freecb_p = (jerry_object_free_callback_t)handle_value;
-  }
-
-  return does_exist;
-} /* jerry_api_get_object_native_handle */
 
 /**
  * Set object free callback native handle for the specified object

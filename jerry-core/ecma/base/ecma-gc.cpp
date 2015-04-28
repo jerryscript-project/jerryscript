@@ -366,6 +366,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
   {
     /* call object free callback with given handle */
+    if (!ecma_is_lexical_environment (object_p))
     {
       ecma_external_pointer_t freecb_p;
       ecma_external_pointer_t native_p;

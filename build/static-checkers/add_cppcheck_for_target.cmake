@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Cppcheck launcher
- set(CMAKE_CPPCHECK ${CMAKE_SOURCE_DIR}/tools/cppcheck.sh)
+ set(CMAKE_CPPCHECK ${CMAKE_SOURCE_DIR}/tools/cppcheck/cppcheck.sh)
 
 # Definition of cppcheck targets
  add_custom_target(cppcheck)

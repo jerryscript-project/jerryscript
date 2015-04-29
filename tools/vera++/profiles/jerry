@@ -1,0 +1,4 @@
+set rules {
+    jerry_indentation
+    jerry_switch_case
+}

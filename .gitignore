@@ -2,6 +2,7 @@
 
 build/bin
 build/obj-*
+build/prerequisites
 build/tests
 
 # IDE related files
@@ -25,3 +26,11 @@ cscope.*
 # ctags and ID database
 tags
 ID
+
+# Prerequisites
+.prerequisites
+third-party/STM32F3-Discovery_FW_V1.1.0
+third-party/STM32F4-Discovery_FW_V1.1.0
+third-party/nuttx
+third-party/vera++
+third-party/cppcheck

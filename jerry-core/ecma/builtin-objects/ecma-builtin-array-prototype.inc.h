@@ -59,6 +59,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_array_prototype_object_to_string, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

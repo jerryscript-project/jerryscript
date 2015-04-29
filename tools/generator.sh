@@ -17,6 +17,7 @@
 echo "#define JERRY_MCU_SCRIPT \\" > $2
 cat $1 | while read line
 do
+  line=$(echo $line | sed 's/"/\\"/g')
   echo "\"$line\n\" \\" >> $2
 done
 echo >> $2

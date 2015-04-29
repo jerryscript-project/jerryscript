@@ -49,12 +49,14 @@ project (Jerry_Plugins CXX ASM)
    # MCU
     # STM32F3
      set(INCLUDE_THIRD_PARTY_MCU_STM32F3
+         ${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0/Project/Demonstration
          ${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include
          ${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc
          ${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include
          ${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0)
     # STM32F4
      set(INCLUDE_THIRD_PARTY_MCU_STM32F4
+        ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Project/Demonstration
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/ST/STM32F4xx/Include
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/STM32F4xx_StdPeriph_Driver/inc
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Libraries/CMSIS/Include

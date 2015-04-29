@@ -97,6 +97,10 @@ project (Jerry CXX C ASM)
    message(FATAL_ERROR "Currently, external build with Jerry's libc is not supported")
   endif()
  else()
+  if (NOT EXISTS "${EXTERNAL_LIBC_INTERFACE}")
+   message(FATAL_ERROR "External libc interface directory doesn't exist: ${EXTERNAL_LIBC_INTERFACE}")
+  endif()
+
   set(USE_EXTERNAL_LIBC TRUE)
  endif()
 
@@ -194,9 +198,9 @@ project (Jerry CXX C ASM)
  # Platform-specific
   # MCU
    # stm32f3
-    set(LINKER_FLAGS_COMMON_MCU_STM32F3 "-T${CMAKE_SOURCE_DIR}/third-party/stm32f3.ld")
+    set(LINKER_FLAGS_COMMON_MCU_STM32F3 "-T${CMAKE_SOURCE_DIR}/third-party/STM32F3-Discovery_FW_V1.1.0/Project/Peripheral_Examples/FLASH_Program/TrueSTUDIO/FLASH_Program/STM32_FLASH.ld")
    # stm32f4
-    set(LINKER_FLAGS_COMMON_MCU_STM32F4 "-T${CMAKE_SOURCE_DIR}/third-party/stm32f4.ld")
+    set(LINKER_FLAGS_COMMON_MCU_STM32F4 "-T${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Project/Peripheral_Examples/FLASH_Program/TrueSTUDIO/FLASH_Program/stm32_flash.ld")
 
  # Debug
   set(FLAGS_COMMON_DEBUG "-nostdlib")

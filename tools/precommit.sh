@@ -23,27 +23,18 @@ shift
 TARGETS="$1"
 shift
 
-PARSE_ONLY_TESTING_PATHS="./tests/benchmarks/jerry"
-FULL_TESTING_PATHS="./tests/jerry ./tests/jerry-test-suite/precommit_test_list"
+VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests"
+VERA_CONFIGURATION_PATH="./tools/vera++"
 
-VERA=`which vera++`
-if [ -x "$VERA" ]
+SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.cpp" -or -name "*.h"`
+./tools/vera++/vera.sh -r $VERA_CONFIGURATION_PATH -p jerry $SOURCES_AND_HEADERS_LIST -e --no-duplicate
+STATUS_CODE=$?
+
+if [ $STATUS_CODE -ne 0 ]
 then
- VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests"
- VERA_SCRIPTS_PATH="./tools/vera++"
+ echo -e "\e[1;33m vera++ static checks failed. See output above for details. \e[0m\n"
 
- SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.cpp" -or -name "*.h"`
- vera++ -r $VERA_SCRIPTS_PATH -p jerry $SOURCES_AND_HEADERS_LIST -e --no-duplicate
- STATUS_CODE=$?
-
- if [ $STATUS_CODE -ne 0 ]
- then
-  echo -e "\e[1;33m vera++ static checks failed. See output above for details. \e[0m\n"
-
-  exit $STATUS_CODE
- fi
-else
- echo -e "\e[1;33m Warning: vera++ not installed, skipping corresponding static checks. \e[0m\n"
+ exit $STATUS_CODE
 fi
 
 echo -e "\nBuilding...\n\n"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014-2015 Samsung Electronics Co., Ltd.
+# Copyright 2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASE=$(dirname $0)/../third-party/tools/cppcheck
+REPOSITORY_DIR=$(dirname $0)/../..
+VERA=$REPOSITORY_DIR/third-party/vera++/bin/vera++
 
-if [ ! -x $BASE/$(uname -m)/cppcheck ]
+if [ ! -x $VERA ]
 then
   exit 1;
 fi
 
-$BASE/$(uname -m)/cppcheck "$@" "--exitcode-suppressions=$BASE/cfg/suppressions-list"
+$VERA "$@"
 status_code=$?
 
 exit $status_code

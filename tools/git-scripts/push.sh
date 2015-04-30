@@ -15,12 +15,6 @@
 # limitations under the License.
 
 GIT_STATUS_NOT_CLEAN_MSG="Git status of current directory is not clean"
-GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files, locally commiting all changes and running $0 again"
-
-CPPCHECK_INFO=`cppcheck --version`
-VERA_INFO="Vera++ "`vera++ --version`
-GCC_INFO=`gcc --version | head -n 1`
-BUILD_INFO=`echo -e "$CPPCHECK_INFO\n$VERA_INFO\n$GCC_INFO"`
 
 clear
 
@@ -129,22 +123,6 @@ do
   fi
 
   echo "Pre-commit quality testing for '$commit_hash' passed successfully"
-#  echo
-#  echo "Starting pre-commit performance measurement for '$commit_hash'"
-#  echo
-
-#  BENCH_ENGINE="./build/bin/release.linux/jerry"
-#  BENCH_SCRIPT="./tests/benchmarks/jerry/loop_arithmetics_1kk.js"
-#  PERF_ITERS="5"
-#  PERF_INFO=`echo -e "$BENCH_SCRIPT:\n\t"``./tools/perf.sh $PERF_ITERS $BENCH_ENGINE $BENCH_SCRIPT`" seconds"
-#  MEM_INFO=`echo -e "$BENCH_SCRIPT:\n"``./tools/rss-measure.sh $BENCH_ENGINE $BENCH_SCRIPT`
-
-#  echo "Pre-commit performance measurement for '$commit_hash' completed"
-#  echo
-
-#  git notes --ref=test_build_env add -m "$BUILD_INFO" $commit_hash
-#  git notes --ref=perf add -m "$PERF_INFO" $commit_hash
-#  git notes --ref=mem add -m "$MEM_INFO" $commit_hash
 done
 
 git checkout master >&/dev/null
@@ -168,14 +146,8 @@ then
       echo -e "\n\e[0;32m     Pushed successfully\e[0m\n"
     else
       echo -e "\n\e[1;33m     Push failed\e[0m"
-
-#      for commit_hash in $commits_to_push
-#      do
-#        git notes --ref=test_build_env remove $commit_hash
-#        git notes --ref=perf remove $commit_hash
-#        git notes --ref=mem remove $commit_hash
-#      done
     fi
+
     exit $status_code
   else
     echo -e "\e[1;33m $GIT_STATUS_NOT_CLEAN_MSG. $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"

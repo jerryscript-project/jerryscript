@@ -65,6 +65,7 @@ static void parse_statement (void);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
 static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand *);
+static void process_keyword_names (void);
 static void skip_braces (void);
 static void skip_parens (void);
 
@@ -2463,6 +2464,50 @@ skip_optional_name_and_parens (void)
   }
 }
 
+static void process_keyword_names ()
+{
+  if (token_is (TOK_KEYWORD))
+  {
+    keyword kw = (keyword) token_data ();
+    skip_newlines ();
+    if (token_is (TOK_COLON))
+    {
+      lexer_add_keyword_or_numeric_literal_if_not_present (
+        create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+    }
+    else
+    {
+      lexer_save_token (tok);
+    }
+  }
+  else if (token_is (TOK_NAME))
+  {
+    if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get")
+        || literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
+    {
+      skip_newlines ();
+      if (token_is (TOK_KEYWORD))
+      {
+        keyword kw = (keyword) token_data ();
+        skip_newlines ();
+        if (token_is (TOK_OPEN_PAREN))
+        {
+          lexer_add_keyword_or_numeric_literal_if_not_present (
+            create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+        }
+        else
+        {
+          lexer_save_token (tok);
+        }
+      }
+      else
+      {
+        lexer_save_token (tok);
+      }
+    }
+  }
+}
+
 static void
 skip_braces (void)
 {
@@ -2480,45 +2525,9 @@ skip_braces (void)
     {
       nesting_level--;
     }
-    else if (token_is (TOK_KEYWORD))
+    else
     {
-      keyword kw = (keyword) token_data ();
-      skip_newlines ();
-      if (token_is (TOK_COLON))
-      {
-        lexer_add_keyword_or_numeric_literal_if_not_present (
-          create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
-      }
-      else
-      {
-        lexer_save_token (tok);
-      }
-    }
-    else if (token_is (TOK_NAME))
-    {
-      if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get")
-          || literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
-      {
-        skip_newlines ();
-        if (token_is (TOK_KEYWORD))
-        {
-          keyword kw = (keyword) token_data ();
-          skip_newlines ();
-          if (token_is (TOK_OPEN_PAREN))
-          {
-            lexer_add_keyword_or_numeric_literal_if_not_present (
-              create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
-          }
-          else
-          {
-            lexer_save_token (tok);
-          }
-        }
-        else
-        {
-          lexer_save_token (tok);
-        }
-      }
+      process_keyword_names ();
     }
   }
 }
@@ -2649,9 +2658,18 @@ preparse_scope (bool is_global)
 
   dump_reg_var_decl_for_rewrite ();
 
-  while (!token_is (end_tt))
+  size_t nesting_level = 0;
+  while (nesting_level > 0 || !token_is (end_tt))
   {
-    if (is_keyword (KW_VAR))
+    if (token_is (TOK_OPEN_BRACE))
+    {
+      nesting_level++;
+    }
+    else if (token_is (TOK_CLOSE_BRACE))
+    {
+      nesting_level--;
+    }
+    else if (is_keyword (KW_VAR))
     {
       preparse_var_decls ();
     }
@@ -2662,6 +2680,10 @@ preparse_scope (bool is_global)
     else if (token_is (TOK_OPEN_BRACE))
     {
       skip_braces ();
+    }
+    else
+    {
+      process_keyword_names ();
     }
     skip_newlines ();
   }

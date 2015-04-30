@@ -102,6 +102,7 @@ export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_LINUX_TARGETS),$(__TARGET).che
 export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS),$(__TARGET).flash)
 
 export OUT_DIR = ./build/bin
+export PREREQUISITES_STATE_DIR = ./build/prerequisites
 
 export SHELL=/bin/bash
 
@@ -138,7 +139,7 @@ export SHELL=/bin/bash
 
 all: precommit
 
-$(BUILD_DIRS_NATIVE):
+$(BUILD_DIRS_NATIVE): prerequisites
 	@ arch=`uname -m`; \
           if [ "$$arch" == "armv7l" ]; \
           then \
@@ -149,7 +150,7 @@ $(BUILD_DIRS_NATIVE):
           cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
-$(BUILD_DIRS_NUTTX):
+$(BUILD_DIRS_NUTTX): prerequisites
 	@ [ "$(EXTERNAL_LIBS_INTERFACE)" != "" ] && [ -x `which $(EXTERNAL_C_COMPILER)` ] && [ -x `which $(EXTERNAL_CXX_COMPILER)` ] || \
           (echo "Wrong external arguments."; \
            echo "EXTERNAL_LIBS_INTERFACE='$(EXTERNAL_LIBS_INTERFACE)'"; \
@@ -167,13 +168,13 @@ $(BUILD_DIRS_NUTTX):
           ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
-$(BUILD_DIRS_STM32F3):
+$(BUILD_DIRS_STM32F3): prerequisites
 	@ mkdir -p $@ && \
           cd $@ && \
           cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
-$(BUILD_DIRS_STM32F4):
+$(BUILD_DIRS_STM32F4): prerequisites
 	@ mkdir -p $@ && \
           cd $@ && \
           cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
@@ -279,7 +280,7 @@ pull: ./tools/git-scripts/pull.sh
 log: ./tools/git-scripts/log.sh
 	@ ./tools/git-scripts/log.sh
 
-precommit: clean
+precommit: clean prerequisites
 	@ ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
 
 unittests_run: unittests
@@ -291,4 +292,17 @@ unittests_run: unittests
 clean:
 	@ rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
-.PHONY: clean build unittests_run $(BUILD_DIRS_ALL) $(JERRY_TARGETS) $(FLASH_TARGETS)
+prerequisites: $(PREREQUISITES_STATE_DIR)/.prerequisites
+
+$(PREREQUISITES_STATE_DIR)/.prerequisites:
+	@ echo "Setting up prerequisites... (log file: $(PREREQUISITES_STATE_DIR)/prerequisites.log)"
+	@ mkdir -p $(PREREQUISITES_STATE_DIR)
+	@ ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites >&$(PREREQUISITES_STATE_DIR)/prerequisites.log || \
+          (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
+	@ echo "Prerequisites setup succeeded"
+
+prerequisites_clean:
+	@ ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
+	@ rm -rf $(PREREQUISITES_STATE_DIR)
+
+.PHONY: prerequisites_clean prerequisites clean build unittests_run $(BUILD_DIRS_ALL) $(JERRY_TARGETS) $(FLASH_TARGETS)

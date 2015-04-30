@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2014-2015 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-
 echo "#define JERRY_MCU_SCRIPT \\" > $2
 cat $1 | while read line
 do
+  line=$(echo $line | sed 's/"/\\"/g')
   echo "\"$line\n\" \\" >> $2
 done
 echo >> $2

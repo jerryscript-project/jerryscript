@@ -15,6 +15,7 @@
 # limitations under the License.
 
 GIT_STATUS_NOT_CLEAN_MSG="Git status of current directory is not clean"
+GIT_STATUS_CONSIDER_CLEAN_MSG="Consider removing all untracked files, locally commiting all changes and running $0 again"
 
 clear
 
@@ -74,13 +75,6 @@ trap ctrl_c INT
 function ctrl_c() {
     git checkout master >&/dev/null
 
-#    for commit_hash in $commits_to_push
-#    do
-#      git notes --ref=test_build_env remove $commit_hash
-#      git notes --ref=perf remove $commit_hash
-#      git notes --ref=mem remove $commit_hash
-#    done
-
     exit 1
 }
 
@@ -94,10 +88,6 @@ for commit_hash in $commits_to_push
 do
   git checkout $commit_hash >&/dev/null
   status_code=$?
-
-#  git notes --ref=test_build_env remove $commit_hash >&/dev/null
-#  git notes --ref=perf remove $commit_hash >&/dev/null
-#  git notes --ref=mem remove $commit_hash >&/dev/null
 
   if [ $status_code -ne 0 ]
   then

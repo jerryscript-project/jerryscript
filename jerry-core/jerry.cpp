@@ -54,6 +54,11 @@ const char *jerry_branch_name = JERRY_BRANCH_NAME;
  */
 static jerry_flag_t jerry_flags;
 
+/**
+ * Jerry API availability flag
+ */
+static bool jerry_api_available;
+
 /** \addtogroup jerry Jerry engine extension interface
  * @{
  */
@@ -62,6 +67,50 @@ static jerry_flag_t jerry_flags;
  * Buffer of character data (used for exchange between core and extensions' routines)
  */
 char jerry_extension_characters_buffer [CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
+
+/**
+ * Assert that it is correct to call API in current state.
+ *
+ * Note:
+ *         By convention, there can be some states when API could not be invoked.
+ *
+ *         While, API can be invoked jerry_api_available flag is set,
+ *         and while it is incorrect to invoke API - it is not set.
+ *
+ *         The procedure checks that it is correct to invoke API in current state.
+ *         If it is correct, procedure just returns; otherwise - engine is stopped.
+ *
+ * Note:
+ *         TODO: Add states when API could not be invoked, when they would appear.
+ *         // "API could not be invoked in the following cases:"
+ *         //    - ... .
+ */
+static void
+jerry_assert_api_available (void)
+{
+  if (!jerry_api_available)
+  {
+    JERRY_UNREACHABLE ();
+  }
+} /* jerry_assert_api_available */
+
+/**
+ * Turn on API availability
+ */
+static void
+jerry_make_api_available (void)
+{
+  jerry_api_available = true;
+} /* jerry_make_api_available */
+
+/**
+ * Turn off API availability
+ */
+static void
+jerry_make_api_unavailable (void)
+{
+  jerry_api_available = false;
+} /* jerry_make_api_unavailable */
 
 /**
  * Convert ecma-value to Jerry API value representation
@@ -77,6 +126,8 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
                                                                        *   null, boolean, number,
                                                                        *   string or object */
 {
+  jerry_assert_api_available ();
+
   JERRY_ASSERT (out_value_p != NULL);
 
   if (ecma_is_value_undefined (value))
@@ -218,6 +269,8 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
 bool
 jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the extension object */
 {
+  jerry_assert_api_available ();
+
   return ecma_extension_register (desc_p);
 } /* jerry_extend_with */
 
@@ -237,6 +290,8 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string
                              char *buffer_p, /**< output characters buffer */
                              ssize_t buffer_size) /**< size of output buffer */
 {
+  jerry_assert_api_available ();
+
   return ecma_string_to_zt_string (string_p, (ecma_char_t*) buffer_p, buffer_size);
 } /* jerry_api_string_to_char_buffer */
 
@@ -252,6 +307,8 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string
 jerry_api_string_t*
 jerry_api_acquire_string (jerry_api_string_t *string_p) /**< pointer passed to function */
 {
+  jerry_assert_api_available ();
+
   return ecma_copy_or_ref_ecma_string (string_p);
 } /* jerry_api_acquire_string */
 
@@ -266,6 +323,8 @@ jerry_api_acquire_string (jerry_api_string_t *string_p) /**< pointer passed to f
 void
 jerry_api_release_string (jerry_api_string_t *string_p) /**< pointer acquired through jerry_api_acquire_string */
 {
+  jerry_assert_api_available ();
+
   ecma_deref_ecma_string (string_p);
 } /* jerry_api_release_string */
 
@@ -281,6 +340,8 @@ jerry_api_release_string (jerry_api_string_t *string_p) /**< pointer acquired th
 jerry_api_object_t*
 jerry_api_acquire_object (jerry_api_object_t *object_p) /**< pointer passed to function */
 {
+  jerry_assert_api_available ();
+
   ecma_ref_object (object_p);
 
   return object_p;
@@ -297,6 +358,8 @@ jerry_api_acquire_object (jerry_api_object_t *object_p) /**< pointer passed to f
 void
 jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired through jerry_api_acquire_object */
 {
+  jerry_assert_api_available ();
+
   ecma_deref_object (object_p);
 } /* jerry_api_release_object */
 
@@ -306,6 +369,8 @@ jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired th
 void
 jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */
 {
+  jerry_assert_api_available ();
+
   if (value_p->type == JERRY_API_DATA_TYPE_STRING)
   {
     jerry_api_release_string (value_p->v_string);
@@ -327,6 +392,8 @@ jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */
 jerry_api_string_t*
 jerry_api_create_string (const char *v) /**< string value */
 {
+  jerry_assert_api_available ();
+
   return ecma_new_ecma_string ((const ecma_char_t*) v);
 } /* jerry_api_create_string */
 
@@ -341,6 +408,8 @@ jerry_api_create_string (const char *v) /**< string value */
 jerry_api_object_t*
 jerry_api_create_object (void)
 {
+  jerry_assert_api_available ();
+
   return ecma_op_create_object_object_noarg ();
 } /* jerry_api_create_object */
 
@@ -356,6 +425,8 @@ jerry_api_object_t*
 jerry_api_create_external_function (jerry_external_handler_t handler_p) /**< pointer to native handler
                                                                          *   for the function */
 {
+  jerry_assert_api_available ();
+
   return ecma_op_create_external_function_object ((ecma_external_pointer_t) handler_p);
 } /* jerry_api_create_external_function */
 
@@ -376,6 +447,8 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
                                   const ecma_value_t args_p [], /**< arguments list */
                                   ecma_length_t args_count) /**< number of arguments */
 {
+  jerry_assert_api_available ();
+
   JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (uint16_t));
 
   ecma_completion_value_t completion_value;
@@ -433,6 +506,8 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 bool
 jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
 {
+  jerry_assert_api_available ();
+
   JERRY_ASSERT (object_p != NULL);
 
   ecma_value_t obj_val = ecma_make_object_value (object_p);
@@ -449,6 +524,8 @@ jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
 bool
 jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
 {
+  jerry_assert_api_available ();
+
   JERRY_ASSERT (object_p != NULL);
 
   ecma_value_t obj_val = ecma_make_object_value (object_p);
@@ -470,6 +547,8 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
                             const jerry_api_value_t *field_value_p, /**< value of the field */
                             bool is_writable) /**< flag indicating whether the created field should be writable */
 {
+  jerry_assert_api_available ();
+
   bool is_successful = false;
 
   if (ecma_get_object_extensible (object_p))
@@ -512,6 +591,8 @@ bool
 jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to delete field at */
                                const char *field_name_p) /**< name of the field */
 {
+  jerry_assert_api_available ();
+
   bool is_successful = true;
 
   ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
@@ -550,6 +631,8 @@ jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
                                   const char *field_name_p, /**< name of the field */
                                   jerry_api_value_t *field_value_p) /**< out: field value, if retrieved successfully */
 {
+  jerry_assert_api_available ();
+
   bool is_successful = true;
 
   ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
@@ -589,6 +672,8 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
                                   const char *field_name_p, /**< name of the field */
                                   const jerry_api_value_t *field_value_p) /**< field value to set */
 {
+  jerry_assert_api_available ();
+
   bool is_successful = true;
 
   ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
@@ -626,6 +711,8 @@ bool
 jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to get handle from */
                                     uintptr_t* out_handle_p) /**< out: handle value */
 {
+  jerry_assert_api_available ();
+
   uintptr_t handle_value;
 
   bool does_exist = ecma_get_external_pointer_value (object_p,
@@ -647,6 +734,8 @@ void
 jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to set handle in */
                                     uintptr_t handle) /**< handle value */
 {
+  jerry_assert_api_available ();
+
   ecma_create_external_pointer_property (object_p,
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
@@ -783,6 +872,8 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
                                                              *   (NULL if arguments number is zero) */
                          uint16_t args_count) /**< number of the arguments */
 {
+  jerry_assert_api_available ();
+
   if (jerry_api_is_function (function_object_p))
   {
     return jerry_api_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
@@ -812,6 +903,8 @@ jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function
                                                                 *   (NULL if arguments number is zero) */
                             uint16_t args_count) /**< number of the arguments */
 {
+  jerry_assert_api_available ();
+
   if (jerry_api_is_constructor (function_object_p))
   {
     return jerry_api_invoke_function (true, function_object_p, NULL, retval_p, args_p, args_count);
@@ -833,6 +926,8 @@ jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function
 jerry_api_object_t*
 jerry_api_get_global (void)
 {
+  jerry_assert_api_available ();
+
   return ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 } /* jerry_api_get_global */
 
@@ -853,6 +948,8 @@ jerry_api_eval (const char *source_p, /**< source code */
                 bool is_strict, /**< perform eval as it is called from strict mode code */
                 jerry_api_value_t *retval_p) /**< out: returned value */
 {
+  jerry_assert_api_available ();
+
   ecma_string_t *code_p = ecma_new_ecma_string ((const ecma_char_t*) source_p);
   (void) source_size;
 
@@ -902,6 +999,8 @@ void
 jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 {
   jerry_flags = flags;
+  jerry_make_api_unavailable (); /* TODO remove this line when it's called somewhere else */
+  jerry_make_api_available ();
 
 #ifndef MEM_STATS
   if (flags & JERRY_FLAG_MEM_STATS)
@@ -921,6 +1020,8 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 void
 jerry_cleanup (void)
 {
+  jerry_assert_api_available ();
+
   bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
 
   ecma_finalize ();
@@ -946,6 +1047,8 @@ jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< out: Jerry's max
 void
 jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callback function */
 {
+  jerry_assert_api_available ();
+
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Error callback is not implemented", callback);
 } /* jerry_reg_err_callback */
 
@@ -956,6 +1059,8 @@ bool
 jerry_parse (const char* source_p, /**< script source */
              size_t source_size) /**< script source size */
 {
+  jerry_assert_api_available ();
+
   bool is_show_opcodes = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
   parser_init (source_p, source_size, is_show_opcodes);
@@ -980,6 +1085,8 @@ jerry_parse (const char* source_p, /**< script source */
 jerry_completion_code_t
 jerry_run (void)
 {
+  jerry_assert_api_available ();
+
   return run_int ();
 } /* jerry_run */
 /**
@@ -1023,6 +1130,8 @@ jerry_run_simple (const char *script_source, /**< script source */
 jerry_ctx_t*
 jerry_new_ctx (void)
 {
+  jerry_assert_api_available ();
+
   JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
 } /* jerry_new_ctx */
 
@@ -1032,6 +1141,8 @@ jerry_new_ctx (void)
 void
 jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
 {
+  jerry_assert_api_available ();
+
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
 } /* jerry_cleanup_ctx */
 
@@ -1041,6 +1152,8 @@ jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
 void
 jerry_push_ctx (jerry_ctx_t *ctx_p) /**< run context */
 {
+  jerry_assert_api_available ();
+
   JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
 } /* jerry_push_ctx */
 
@@ -1053,6 +1166,8 @@ jerry_push_ctx (jerry_ctx_t *ctx_p) /**< run context */
 void
 jerry_pop_ctx (void)
 {
+  jerry_assert_api_available ();
+
   JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
 } /* jerry_pop_ctx */
 #endif /* CONFIG_JERRY_ENABLE_CONTEXTS */

@@ -500,6 +500,25 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 } /* jerry_dispatch_external_function */
 
 /**
+ * Dispatch call to object's native free callback function
+ *
+ * Note:
+ *       the callback is called during critical GC phase,
+ *       so, should not perform any requests to engine
+ */
+void
+jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< pointer to free callback handler */
+                                     ecma_external_pointer_t native_p) /**< native handle, associated
+                                                                        *   with freed object */
+{
+  jerry_make_api_unavailable ();
+
+  ((jerry_object_free_callback_t) freecb_p) ((uintptr_t) native_p);
+
+  jerry_make_api_available ();
+} /* jerry_dispatch_object_free_callback */
+
+/**
  * Check if the specified object is a function object.
  *
  * @return true - if the specified object is a function object,
@@ -742,6 +761,32 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
 } /* jerry_api_set_object_native_handle */
+
+/**
+ * Set object free callback for the specified object
+ *
+ * @return true - if callback was set successfully,
+ *         false - otherwise (there is no native handle, associated with the object).
+ */
+bool
+jerry_api_set_object_free_callback (jerry_api_object_t *object_p, /**< object to set callback for */
+                                    jerry_object_free_callback_t freecb_p) /**< object free callback */
+{
+  uintptr_t handle_value;
+  bool is_native_handle_associated = jerry_api_get_object_native_handle (object_p,
+                                                                         &handle_value);
+
+  if (!is_native_handle_associated)
+  {
+    return false;
+  }
+
+  ecma_create_external_pointer_property (object_p,
+                                         ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                         (uintptr_t) freecb_p);
+
+  return true;
+} /* jerry_api_set_object_free_callback */
 
 /**
  * Invoke function specified by a function object
@@ -1019,7 +1064,6 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 
   jerry_flags = flags;
 
-  jerry_make_api_unavailable (); /* TODO remove this line when it's called somewhere else */
   jerry_make_api_available ();
 
   mem_init ();

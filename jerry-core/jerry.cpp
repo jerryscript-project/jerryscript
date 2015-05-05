@@ -772,6 +772,8 @@ bool
 jerry_api_set_object_free_callback (jerry_api_object_t *object_p, /**< object to set callback for */
                                     jerry_object_free_callback_t freecb_p) /**< object free callback */
 {
+  jerry_assert_api_available ();
+
   uintptr_t handle_value;
   bool is_native_handle_associated = jerry_api_get_object_native_handle (object_p,
                                                                          &handle_value);

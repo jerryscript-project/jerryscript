@@ -26,11 +26,57 @@
 # define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
 #endif /* !OBJECT_VALUE */
 
+#ifndef NUMBER_VALUE
+# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !NUMBER_VALUE */
+
+#ifndef SIMPLE_VALUE
+# define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !SIMPLE_VALUE */
+
+#ifndef STRING_VALUE
+# define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !STRING_VALUE */
+
 /* Object identifier */
 OBJECT_ID (ECMA_BUILTIN_ID_REGEXP)
 
+// ECMA-262 v5, 15.10.5.1
 OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
               ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE),
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.1
+STRING_VALUE (ECMA_MAGIC_STRING_SOURCE,
+              ECMA_MAGIC_STRING_REGEXP_SOURCE_UL,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.2
+SIMPLE_VALUE (ECMA_MAGIC_STRING_GLOBAL,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.3
+SIMPLE_VALUE (ECMA_MAGIC_STRING_IGNORECASE,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+// ECMA-262 v5, 15.10.7.4
+SIMPLE_VALUE (ECMA_MAGIC_STRING_MULTILINE,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+// ECMA-262 v5, 15.10.7.5
+NUMBER_VALUE (ECMA_MAGIC_STRING_LASTINDEX,
+              0,
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)

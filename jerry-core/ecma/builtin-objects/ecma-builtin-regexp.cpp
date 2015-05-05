@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-helpers.h"
+#include "ecma-regexp-object.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
@@ -57,7 +59,7 @@ ecma_completion_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p, arguments_list_len);
+  return ecma_op_create_regexp_object (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_construct */
 
 /**

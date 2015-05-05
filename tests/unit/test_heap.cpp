@@ -106,7 +106,7 @@ main (int __attr_unused___ argc,
       size_t size = (size_t) rand () % test_threshold_block_size;
       ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
                                                  (rand () % 2) ?
-                                                 MEM_HEAP_ALLOC_SHORT_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+                                                 MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
       sizes[j] = size;
 
       JERRY_ASSERT (size == 0 || ptrs[j] != NULL);

@@ -19,7 +19,6 @@
 #include "ecma-globals.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
-#include "ecma-try-catch-macro.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -40,13 +39,10 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                         are passed to RegExp constructor */
-                              ecma_length_t arguments_list_len) /**< length of the arguments' list */
+ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
+                              ecma_string_t *flags __attr_unused___) /**< flags */
 {
-  ecma_completion_value_t ret_value;
-
-  JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
+  JERRY_ASSERT (pattern != NULL);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
   ecma_object_t *regexp_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
@@ -57,25 +53,21 @@ ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_object_t *obj_p = ecma_create_object (regexp_prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (regexp_prototype_obj_p);
 
-  ECMA_TRY_CATCH (regexp_str_value,
-                  ecma_op_to_string (arguments_list_p[0]),
-                  ret_value);
-
   /* Set source property. ECMA-262 v5, 15.10.7.1 */
   ecma_string_t *magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SOURCE);
   ecma_property_t *source_prop_p = ecma_create_named_data_property (obj_p,
                                                                     magic_string_p,
                                                                     false, false, false);
-
-  ecma_string_t *source_string_p = ecma_get_string_from_value (regexp_str_value);
+  ecma_deref_ecma_string (magic_string_p);
   ecma_set_named_data_property_value (source_prop_p,
-                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (source_string_p)));
+                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (pattern)));
 
   /* Set global property. ECMA-262 v5, 15.10.7.2*/
   magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GLOBAL);
   ecma_property_t *global_prop_p = ecma_create_named_data_property (obj_p,
                                                                     magic_string_p,
                                                                     false, false, false);
+  ecma_deref_ecma_string (magic_string_p);
   ecma_set_named_data_property_value (global_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
 
   /* Set ignoreCase property. ECMA-262 v5, 15.10.7.3*/
@@ -83,6 +75,7 @@ ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_property_t *ignorecase_prop_p = ecma_create_named_data_property (obj_p,
                                                                         magic_string_p,
                                                                         false, false, false);
+  ecma_deref_ecma_string (magic_string_p);
   ecma_set_named_data_property_value (ignorecase_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
 
   /* Set multiline property. ECMA-262 v5, 15.10.7.4*/
@@ -90,6 +83,7 @@ ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_property_t *multiline_prop_p = ecma_create_named_data_property (obj_p,
                                                                        magic_string_p,
                                                                        false, false, false);
+  ecma_deref_ecma_string (magic_string_p);
   ecma_set_named_data_property_value (multiline_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
 
   /* Set lastIndex property. ECMA-262 v5, 15.10.7.5*/
@@ -97,16 +91,14 @@ ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_property_t *lastindex_prop_p = ecma_create_named_data_property (obj_p,
                                                                        magic_string_p,
                                                                        true, false, false);
+  ecma_deref_ecma_string (magic_string_p);
+
   ecma_number_t *lastindex_num_p = ecma_alloc_number ();
   *lastindex_num_p = ECMA_NUMBER_ZERO;
-  ecma_set_named_data_property_value (lastindex_prop_p, ecma_make_number_value(lastindex_num_p));
+  ecma_named_data_property_assign_value (obj_p, lastindex_prop_p, ecma_make_number_value(lastindex_num_p));
+  ecma_dealloc_number (lastindex_num_p);
 
-  ecma_deref_ecma_string (magic_string_p);
-  ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
-
-  ECMA_FINALIZE (regexp_str_value);
-
-  return ret_value;
+  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
 }
 
 /**

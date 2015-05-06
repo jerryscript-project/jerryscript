@@ -27,8 +27,7 @@
  */
 
 extern ecma_completion_value_t
-ecma_op_create_regexp_object (const ecma_value_t *arguments_list_p,
-                              ecma_length_t arguments_list_len);
+ecma_op_create_regexp_object (ecma_string_t *pattern, ecma_string_t *flags);
 
 /**
  * @}

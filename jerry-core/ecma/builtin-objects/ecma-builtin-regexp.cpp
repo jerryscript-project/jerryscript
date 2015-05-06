@@ -16,8 +16,10 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-conversion.h"
 #include "ecma-helpers.h"
 #include "ecma-regexp-object.h"
+#include "ecma-try-catch-macro.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
@@ -59,7 +61,21 @@ ecma_completion_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_op_create_regexp_object (arguments_list_p, arguments_list_len);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
+
+  ECMA_TRY_CATCH (regexp_str_value,
+                  ecma_op_to_string (arguments_list_p[0]),
+                  ret_value);
+
+  ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+  ecma_string_t *flags_string_p = NULL; /* FIXME: get flags from arguments_list_p[1] */
+  ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+
+  ECMA_FINALIZE (regexp_str_value);
+
+  return ret_value;
 } /* ecma_builtin_regexp_dispatch_construct */
 
 /**

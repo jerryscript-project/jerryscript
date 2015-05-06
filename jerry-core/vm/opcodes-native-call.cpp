@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,39 +68,49 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
       case OPCODE_NATIVE_CALL_PRINT:
       {
-        JERRY_ASSERT (args_number == 1);
-
-        ECMA_TRY_CATCH (str_value,
-                        ecma_op_to_string (arg_values[0]),
-                        ret_value);
-
-        ecma_string_t *str_p = ecma_get_string_from_value (str_value);
-
-        int32_t chars = ecma_string_get_length (str_p);
-        JERRY_ASSERT (chars >= 0);
-
-        ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-        ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) zt_str_size,
-                                                                     MEM_HEAP_ALLOC_SHORT_TERM);
-        if (zt_str_p == NULL)
+        for (ecma_length_t arg_index = 0;
+             arg_index < args_read;
+             arg_index++)
         {
-          jerry_fatal (ERR_OUT_OF_MEMORY);
-        }
+          ECMA_TRY_CATCH (str_value,
+                          ecma_op_to_string (arg_values[arg_index]),
+                          ret_value);
 
-        ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
+          ecma_string_t *str_p = ecma_get_string_from_value (str_value);
+
+          int32_t chars = ecma_string_get_length (str_p);
+          JERRY_ASSERT (chars >= 0);
+
+          ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+          ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) zt_str_size,
+                                                                       MEM_HEAP_ALLOC_SHORT_TERM);
+          if (zt_str_p == NULL)
+          {
+            jerry_fatal (ERR_OUT_OF_MEMORY);
+          }
+
+          ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
 
 #if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
-        printf ("%s\n", (char*) zt_str_p);
+          if (arg_index < args_read - 1)
+          {
+            printf ("%s ", (char*) zt_str_p);
+          }
+          else
+          {
+            printf ("%s", (char*) zt_str_p);
+          }
 #elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-        JERRY_UNIMPLEMENTED ("UTF-16 support is not implemented.");
+          JERRY_UNIMPLEMENTED ("UTF-16 support is not implemented.");
 #endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
-        mem_heap_free_block (zt_str_p);
+          mem_heap_free_block (zt_str_p);
 
-        ret_value = ecma_make_empty_completion_value ();
+          ret_value = ecma_make_empty_completion_value ();
 
-        ECMA_FINALIZE (str_value);
-
+          ECMA_FINALIZE (str_value);
+        }
+        printf ("\n");
         break;
       }
 

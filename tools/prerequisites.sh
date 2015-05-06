@@ -77,7 +77,7 @@ function setup_from_zip() {
     return 0
   fi
 
-  wget -O "$TMP_DIR/$NAME.zip" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' zip archive."
+  wget --no-check-certificate -O "$TMP_DIR/$NAME.zip" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' zip archive."
 
   echo "$CHECKSUM $TMP_DIR/$NAME.zip" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
@@ -164,7 +164,7 @@ function setup_cppcheck() {
     return 0
   fi
 
-  wget -O "$TMP_DIR/$NAME.tar.bz2" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
+  wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.bz2" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
 
   echo "$CHECKSUM $TMP_DIR/$NAME.tar.bz2" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
@@ -211,7 +211,7 @@ function setup_vera() {
     return 0
   fi
 
-  wget -O "$TMP_DIR/$NAME.tar.gz" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
+  wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.gz" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
 
   echo "$CHECKSUM $TMP_DIR/$NAME.tar.gz" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
@@ -246,7 +246,7 @@ setup_from_zip "stm32f4" \
 
 setup_nuttx_headers "nuttx" \
                      "./third-party/nuttx" \
-                     "git://git.code.sf.net/p/nuttx/git" \
+                     "http://git.code.sf.net/p/nuttx/git" \
                      "36a655eddec29754cc93631b6083fe6409817861"
 
 setup_cppcheck "cppcheck-1.66" \

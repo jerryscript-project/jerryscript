@@ -315,6 +315,50 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_object_can_put */
 
 /**
+ * [[HasProperty]] ecma object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *
+ * @return true - if property exists,
+ *         false - otherwise
+ */
+bool
+ecma_op_object_has_property (ecma_object_t *obj_p, /**< the object */
+                    ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT(property_name_p != NULL);
+
+  const ecma_object_type_t type = ecma_get_object_type (obj_p);
+  ecma_assert_object_type_is_valid (type);
+
+
+  switch (type)
+  {
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTENSION:
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      return ecma_op_general_object_has_property (obj_p, property_name_p);
+    }
+
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ecma_op_arguments_object_has_property (obj_p, property_name_p);
+    }
+  }
+
+  JERRY_UNREACHABLE();
+} /* ecma_op_object_has_property */
+
+/**
  * [[Delete]] ecma object's operation
  *
  * See also:

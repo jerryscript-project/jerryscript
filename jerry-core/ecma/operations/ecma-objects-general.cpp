@@ -434,6 +434,29 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_can_put */
 
 /**
+ * [[HasProperty]] ecma general object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *          ECMA-262 v5, 8.12.6
+ *
+ * @return true - if property exists,
+ *         false - otherwise.
+ */
+bool
+ecma_op_general_object_has_property (ecma_object_t *obj_p, /**< the object */
+                                     ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT(obj_p != NULL
+               && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT(property_name_p != NULL);
+
+  ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+
+  return !!prop_p;
+} /* ecma_op_general_object_has_property */
+
+/**
  * [[Delete]] ecma general object's operation
  *
  * See also:

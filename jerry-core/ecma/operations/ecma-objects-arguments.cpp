@@ -476,6 +476,25 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
 } /* ecma_op_arguments_object_define_own_property */
 
 /**
+ * [[HasProperty]] ecma Arguments object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *
+ * @return true - if property exists,
+ *         false - otherwise
+ */
+bool
+ecma_op_arguments_object_has_property (ecma_object_t *obj_p, /**< the object */
+                                           ecma_string_t *property_name_p) /**< property name */
+{
+  // 1.
+  ecma_property_t *desc_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
+
+  return !!desc_p;
+} /* ecma_op_arguments_object_has_property */
+
+/**
  * [[Delete]] ecma Arguments object's operation
  *
  * See also:

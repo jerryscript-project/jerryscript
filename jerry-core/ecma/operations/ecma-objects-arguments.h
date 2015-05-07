@@ -31,6 +31,8 @@ extern ecma_completion_value_t ecma_op_arguments_object_get (ecma_object_t *obj_
                                                              ecma_string_t *property_name_p);
 extern ecma_property_t *ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p,
                                                                    ecma_string_t *property_name_p);
+extern bool ecma_op_arguments_object_has_property (ecma_object_t *obj_p,
+                                                   ecma_string_t *property_name_p);
 extern ecma_completion_value_t ecma_op_arguments_object_delete (ecma_object_t *obj_p,
                                                                 ecma_string_t *property_name_p,
                                                                 bool is_throw);

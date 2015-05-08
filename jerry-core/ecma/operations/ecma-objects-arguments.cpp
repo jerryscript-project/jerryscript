@@ -405,7 +405,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
 
   // 3.
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (defined,
                   ecma_op_general_object_define_own_property (obj_p,
@@ -499,7 +499,7 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
   ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
 
   // 3.
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (delete_in_args_ret,
                   ecma_op_general_object_delete (obj_p,

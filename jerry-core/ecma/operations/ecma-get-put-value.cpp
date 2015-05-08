@@ -103,7 +103,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
   else
   {
     // 4.b case 2
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
@@ -226,7 +226,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (put_ret_value,
                     ecma_op_object_put (obj_p,
@@ -245,7 +245,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
   else
   {
     // 4.b case 2
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     // sub_1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);

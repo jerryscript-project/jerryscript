@@ -56,7 +56,7 @@
 static ecma_completion_value_t
 ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 2.
   if (!ecma_is_value_object (this_arg))

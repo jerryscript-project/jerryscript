@@ -56,7 +56,7 @@
 static ecma_completion_value_t
 ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (value_of_ret,
                   ecma_builtin_boolean_prototype_object_value_of (this_arg),

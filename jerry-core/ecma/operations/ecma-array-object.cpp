@@ -233,7 +233,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       ecma_property_descriptor_t new_len_property_desc = *property_desc_p;
       new_len_property_desc.value = ecma_make_number_value (new_len_num_p);
 
-      ecma_completion_value_t ret_value;
+      ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
       // f.
       if (new_len_uint32 >= old_len_uint32)

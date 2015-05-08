@@ -32,7 +32,7 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.equal_value.var_left;
   const idx_t right_var_idx = opdata.data.equal_value.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -71,7 +71,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.not_equal_value.var_left;
   const idx_t right_var_idx = opdata.data.not_equal_value.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -112,7 +112,7 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.equal_value_type.var_left;
   const idx_t right_var_idx = opdata.data.equal_value_type.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -147,7 +147,7 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.not_equal_value_type.var_left;
   const idx_t right_var_idx = opdata.data.not_equal_value_type.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);

@@ -30,6 +30,7 @@
  *      statement with same argument as corresponding ECMA_TRY_CATCH's first argument.
  */
 #define ECMA_TRY_CATCH(var, op, return_value) \
+  JERRY_ASSERT (return_value == ecma_make_empty_completion_value ()); \
   ecma_completion_value_t var ## _completion = op; \
   if (unlikely (ecma_is_completion_value_throw (var ## _completion) \
                 || ecma_is_completion_value_exit (var ## _completion))) \

@@ -57,7 +57,7 @@ ecma_builtin_range_error_dispatch_call (const ecma_value_t *arguments_list_p, /*
   if (arguments_list_len != 0
       && !ecma_is_value_undefined (arguments_list_p [0]))
   {
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (msg_str_value,
                     ecma_op_to_string (arguments_list_p[0]),

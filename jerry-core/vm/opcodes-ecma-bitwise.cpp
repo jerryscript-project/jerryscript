@@ -126,7 +126,7 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_and.var_left;
   const idx_t right_var_idx = opdata.data.b_and.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -161,7 +161,7 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_or.var_left;
   const idx_t right_var_idx = opdata.data.b_or.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -196,7 +196,7 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_xor.var_left;
   const idx_t right_var_idx = opdata.data.b_xor.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -231,7 +231,7 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_left.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -266,7 +266,7 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_right.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -301,7 +301,7 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
   const idx_t right_var_idx = opdata.data.b_shift_uright.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -335,7 +335,7 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.b_not.dst;
   const idx_t right_var_idx = opdata.data.b_not.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 

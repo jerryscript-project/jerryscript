@@ -267,7 +267,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
   }
   else if (ecma_is_value_object (value))
   {
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (primitive_value,
                     ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
@@ -325,7 +325,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
   if (unlikely (ecma_is_value_object (value)))
   {
-    ecma_completion_value_t ret_value;
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (prim_value,
                     ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING),

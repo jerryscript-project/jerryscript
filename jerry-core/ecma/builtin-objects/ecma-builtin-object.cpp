@@ -53,7 +53,7 @@ ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (arguments_list_len == 0
       || ecma_is_value_undefined (arguments_list_p[0])
@@ -311,7 +311,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused_
                                             ecma_value_t arg2, /**< routine's second argument */
                                             ecma_value_t arg3) /**< routine's third argument */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (!ecma_is_value_object (arg1))
   {

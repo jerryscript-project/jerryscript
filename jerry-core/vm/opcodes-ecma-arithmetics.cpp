@@ -110,7 +110,7 @@ opfunc_addition (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.addition.var_left;
   const idx_t right_var_idx = opdata.data.addition.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -176,7 +176,7 @@ opfunc_substraction (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.substraction.var_left;
   const idx_t right_var_idx = opdata.data.substraction.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -211,7 +211,7 @@ opfunc_multiplication (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.multiplication.var_left;
   const idx_t right_var_idx = opdata.data.multiplication.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -246,7 +246,7 @@ opfunc_division (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.division.var_left;
   const idx_t right_var_idx = opdata.data.division.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
@@ -281,7 +281,7 @@ opfunc_remainder (opcode_t opdata, /**< operation data */
   const idx_t left_var_idx = opdata.data.remainder.var_left;
   const idx_t right_var_idx = opdata.data.remainder.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);

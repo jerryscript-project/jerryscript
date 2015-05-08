@@ -55,7 +55,7 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (arguments_list_len == 0)
   {

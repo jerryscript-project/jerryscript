@@ -87,7 +87,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   const opcode_arg_type_operand type_value_right = (opcode_arg_type_operand) opdata.data.assignment.type_value_right;
   const idx_t src_val_descr = opdata.data.assignment.value_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (type_value_right == OPCODE_ARG_TYPE_SIMPLE)
   {
@@ -492,7 +492,7 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
 
@@ -534,7 +534,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   const ecma_length_t params_number = opdata.data.func_expr_n.arg_list;
   const bool is_named_func_expr = (function_name_lit_idx != INVALID_VALUE);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   opcode_counter_t function_code_end_oc;
 
@@ -628,7 +628,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   const idx_t args_number_idx = opdata.data.call_n.arg_list;
   const opcode_counter_t lit_oc = int_data->pos;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
 
@@ -746,7 +746,7 @@ opfunc_construct_n (opcode_t opdata, /**< operation data */
   const idx_t args_number = opdata.data.construct_n.arg_list;
   const opcode_counter_t lit_oc = int_data->pos;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   ECMA_TRY_CATCH (constructor_value,
                   get_variable_value (int_data, constructor_name_lit_idx, false),
                   ret_value);
@@ -824,7 +824,7 @@ opfunc_array_decl (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
@@ -887,7 +887,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ecma_completion_value_t completion = ecma_make_empty_completion_value ();
   ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
@@ -1066,7 +1066,7 @@ ecma_completion_value_t
 opfunc_retval (opcode_t opdata __attr_unused___, /**< operation data */
                int_data_t *int_data __attr_unused___) /**< interpreter context */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (expr_val, get_variable_value (int_data, opdata.data.retval.ret_value, false), ret_value);
 
@@ -1094,7 +1094,7 @@ opfunc_prop_getter (opcode_t opdata __attr_unused___, /**< operation data */
   const idx_t base_var_idx = opdata.data.prop_getter.obj;
   const idx_t prop_name_var_idx = opdata.data.prop_getter.prop;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (base_value,
                   get_variable_value (int_data, base_var_idx, false),
@@ -1147,7 +1147,7 @@ opfunc_prop_setter (opcode_t opdata __attr_unused___, /**< operation data */
   const idx_t prop_name_var_idx = opdata.data.prop_setter.prop;
   const idx_t rhs_var_idx = opdata.data.prop_setter.rhs;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (base_value,
                   get_variable_value (int_data, base_var_idx, false),
@@ -1221,7 +1221,7 @@ opfunc_logical_not (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.logical_not.dst;
   const idx_t right_var_idx = opdata.data.logical_not.var_right;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
 
@@ -1284,7 +1284,7 @@ opfunc_with (opcode_t opdata, /**< operation data */
 {
   const idx_t expr_var_idx = opdata.data.with.expr;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (expr_value,
                   get_variable_value (int_data,
@@ -1348,7 +1348,7 @@ opfunc_throw_value (opcode_t opdata, /**< operation data */
 {
   const idx_t var_idx = opdata.data.throw_value.var;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (var_value,
                   get_variable_value (int_data,
@@ -1377,7 +1377,7 @@ static ecma_completion_value_t
 evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
                          idx_t var_idx) /**< arg variable identifier */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (is_reg_variable (int_data, var_idx))
   {
@@ -1428,7 +1428,7 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
   const idx_t dst_var_idx = opdata.data.typeof.lhs;
   const idx_t obj_var_idx = opdata.data.typeof.obj;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (typeof_arg,
                   evaluate_arg_for_typeof (int_data,
@@ -1503,7 +1503,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   const literal_index_t lit_id = serializer_get_literal_id_by_uid (name_lit_idx, lit_oc);
   JERRY_ASSERT (lit_id != INVALID_LITERAL);
@@ -1568,7 +1568,7 @@ opfunc_delete_prop (opcode_t opdata, /**< operation data */
   const idx_t base_var_idx = opdata.data.delete_prop.base;
   const idx_t name_var_idx = opdata.data.delete_prop.name;
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (base_value,
                   get_variable_value (int_data, base_var_idx, false),

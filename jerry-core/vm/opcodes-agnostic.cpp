@@ -31,7 +31,7 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_down.opcode_1,
                                                                     opdata.data.is_true_jmp_down.opcode_2);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
@@ -64,7 +64,7 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_up.opcode_1,
                                                                     opdata.data.is_true_jmp_up.opcode_2);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
@@ -103,7 +103,7 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_down.opcode_1,
                                                                     opdata.data.is_false_jmp_down.opcode_2);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 
@@ -136,7 +136,7 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_up.opcode_1,
                                                                     opdata.data.is_false_jmp_up.opcode_2);
 
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
 

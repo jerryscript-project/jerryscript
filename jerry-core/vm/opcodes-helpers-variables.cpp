@@ -77,7 +77,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                           See also: do_strict_eval_arguments_check */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (is_reg_variable (int_data, var_idx))
   {
@@ -129,7 +129,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     ecma_value_t value) /**< value to set */
 {
-  ecma_completion_value_t ret_value;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (is_reg_variable (int_data, var_idx))
   {

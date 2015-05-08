@@ -23,7 +23,6 @@ shift
 TARGETS="$1"
 shift
 
-# Checking presence and correctness of Signed-off-by message
 commit_hash=`git show -s --format=%H HEAD`
 author_name=`git show -s --format=%an HEAD`
 author_email=`git show -s --format=%ae HEAD`

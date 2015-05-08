@@ -566,6 +566,7 @@ typedef uint16_t ecma_char_t;
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
+#define DOUBLE_TO_ECMA_NUMBER_T(value) static_cast<ecma_number_t> (value)
 
 /**
  * Maximum number of significant digits that ecma-number can store
@@ -576,6 +577,7 @@ typedef float ecma_number_t;
  * Description of an ecma-number
  */
 typedef double ecma_number_t;
+#define DOUBLE_TO_ECMA_NUMBER_T(value) value
 
 /**
  * Maximum number of significant digits that ecma-number can store

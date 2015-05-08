@@ -167,6 +167,7 @@ $(BUILD_DIRS_NUTTX): prerequisites
           cmake \
           -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) \
           -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
+          -DEXTERNAL_TARGET_NAME=NUTTX \
           -DEXTERNAL_LIBC_INTERFACE="${EXTERNAL_LIBC_INTERFACE}" \
           -DEXTERNAL_LIBS_INTERFACE="${EXTERNAL_LIBS_INTERFACE}" \
           -DEXTERNAL_CMAKE_C_COMPILER="${EXTERNAL_C_COMPILER}" \

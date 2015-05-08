@@ -76,8 +76,8 @@ project (Jerry CXX C ASM)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" OFF)
   set(MCU_SCRIPT_FILE "tests/blinky.js" CACHE STRING "Script to run on MCU")
- elseif("${PLATFORM}" STREQUAL "NUTTX")
-  set(PLATFORM_EXT "NUTTX")
+ elseif("${PLATFORM}" STREQUAL "EXTERNAL")
+  set(PLATFORM_EXT "${CMAKE_SYSTEM_VERSION}")
   set(EXTERNAL_BUILD TRUE)
 
   set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc include directory")
@@ -95,7 +95,7 @@ project (Jerry CXX C ASM)
   set(USE_JERRY_LIBC TRUE)
 
   # Jerry's libc doesn't support Nuttx platform
-   if(${PLATFORM} STREQUAL "NUTTX")
+   if(${PLATFORM_EXT} STREQUAL "NUTTX")
     message(FATAL_ERROR "Nuttx build doesn't support Jerry's libc implementation")
    endif()
  else()

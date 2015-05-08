@@ -63,8 +63,7 @@ project (Jerry_Plugins CXX ASM)
         ${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0)
 
    # Nuttx
-    set(INCLUDE_THIRD_PARTY_NUTTX
-        ${EXTERNAL_LIBC_INTERFACE})
+    set(INCLUDE_THIRD_PARTY_NUTTX )
 
 # Sources
  file(GLOB SOURCE_PLUGINS
@@ -108,6 +107,7 @@ project (Jerry_Plugins CXX ASM)
    target_compile_definitions(${TARGET_NAME}.lib PRIVATE ${DEFINES_PLUGINS})
    target_include_directories(${TARGET_NAME}.lib PRIVATE ${INCLUDE_PLUGINS} ${INCLUDE_CORE_INTERFACE})
    target_include_directories(${TARGET_NAME}.lib SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+   target_include_directories(${TARGET_NAME}.lib SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
    add_dependencies(plugins-all ${TARGET_NAME}.lib)
 
   # Third-party MCU library
@@ -117,6 +117,7 @@ project (Jerry_Plugins CXX ASM)
                  PROPERTY COMPILE_FLAGS "${FLAGS_COMMON_${BUILD_MODE}}")
     target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_PLUGINS})
     target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_include_directories(${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 
     target_link_libraries(${TARGET_NAME}.lib ${TARGET_NAME}${SUFFIX_THIRD_PARTY_LIB})
    endif()

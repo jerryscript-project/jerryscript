@@ -63,7 +63,11 @@
   endif
 
 # External build configuration
- EXTERNAL_LIBS_INTERFACE ?= $(shell pwd)/third-party/nuttx/include
+ # List of include paths for external libraries (semicolon-separated)
+  EXTERNAL_LIBS_INTERFACE ?=
+ # External libc interface
+  EXTERNAL_LIBC_INTERFACE ?= $(shell pwd)/third-party/nuttx/include
+ # Compiler to use for external build
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
  EXTERNAL_CXX_COMPILER ?= arm-none-eabi-g++
 
@@ -151,8 +155,9 @@ $(BUILD_DIRS_NATIVE): prerequisites
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_NUTTX): prerequisites
-	@ [ "$(EXTERNAL_LIBS_INTERFACE)" != "" ] && [ -x `which $(EXTERNAL_C_COMPILER)` ] && [ -x `which $(EXTERNAL_CXX_COMPILER)` ] || \
+	@ [ "$(EXTERNAL_LIBC_INTERFACE)" != "" ] && [ -x `which $(EXTERNAL_C_COMPILER)` ] && [ -x `which $(EXTERNAL_CXX_COMPILER)` ] || \
           (echo "Wrong external arguments."; \
+           echo "EXTERNAL_LIBC_INTERFACE='$(EXTERNAL_LIBC_INTERFACE)'"; \
            echo "EXTERNAL_LIBS_INTERFACE='$(EXTERNAL_LIBS_INTERFACE)'"; \
            echo "EXTERNAL_C_COMPILER='$(EXTERNAL_C_COMPILER)'"; \
            echo "EXTERNAL_CXX_COMPILER='$(EXTERNAL_CXX_COMPILER)'"; \
@@ -162,9 +167,10 @@ $(BUILD_DIRS_NUTTX): prerequisites
           cmake \
           -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) \
           -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
-          -DEXTERNAL_LIBC_INTERFACE=${EXTERNAL_LIBS_INTERFACE} \
-          -DEXTERNAL_CMAKE_C_COMPILER=${EXTERNAL_C_COMPILER} \
-          -DEXTERNAL_CMAKE_CXX_COMPILER=${EXTERNAL_CXX_COMPILER} \
+          -DEXTERNAL_LIBC_INTERFACE="${EXTERNAL_LIBC_INTERFACE}" \
+          -DEXTERNAL_LIBS_INTERFACE="${EXTERNAL_LIBS_INTERFACE}" \
+          -DEXTERNAL_CMAKE_C_COMPILER="${EXTERNAL_C_COMPILER}" \
+          -DEXTERNAL_CMAKE_CXX_COMPILER="${EXTERNAL_CXX_COMPILER}" \
           ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 

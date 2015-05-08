@@ -80,7 +80,8 @@ project (Jerry CXX C ASM)
   set(PLATFORM_EXT "NUTTX")
   set(EXTERNAL_BUILD TRUE)
 
-  set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc's include directory")
+  set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc include directory")
+  set(EXTERNAL_LIBS_INTERFACE "UNDEFINED" CACHE STRING "Path to external libraries' include directory")
  else()
   message(FATAL_ERROR "Platform is not supported")
  endif()
@@ -91,17 +92,33 @@ project (Jerry CXX C ASM)
 
 # Should we use external libc?
  if(NOT DEFINED EXTERNAL_LIBC_INTERFACE OR EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
-  set(USE_EXTERNAL_LIBC FALSE)
+  set(USE_JERRY_LIBC TRUE)
 
-  if(${EXTERNAL_BUILD})
-   message(FATAL_ERROR "Currently, external build with Jerry's libc is not supported")
-  endif()
+  # Jerry's libc doesn't support Nuttx platform
+   if(${PLATFORM} STREQUAL "NUTTX")
+    message(FATAL_ERROR "Nuttx build doesn't support Jerry's libc implementation")
+   endif()
  else()
-  if (NOT EXISTS "${EXTERNAL_LIBC_INTERFACE}")
-   message(FATAL_ERROR "External libc interface directory doesn't exist: ${EXTERNAL_LIBC_INTERFACE}")
+  set(USE_JERRY_LIBC FALSE)
+
+  if(NOT EXISTS "${EXTERNAL_LIBC_INTERFACE}/stdlib.h")
+   message(FATAL_ERROR "It seems that external libc interface '${EXTERNAL_LIBC_INTERFACE}' doesn't provide stdlib.h header")
   endif()
 
-  set(USE_EXTERNAL_LIBC TRUE)
+  set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
+ endif()
+
+# Are there any interfaces for external libraries, other than libc, that should be registered?
+ if(DEFINED EXTERNAL_LIBS_INTERFACE AND NOT EXTERNAL_LIBS_INTERFACE STREQUAL "UNDEFINED")
+  set(INCLUDE_EXTERNAL_LIBS_INTERFACE )
+
+  foreach(EXTERNAL_LIB_INTERFACE ${EXTERNAL_LIBS_INTERFACE})
+   if (NOT EXISTS "${EXTERNAL_LIB_INTERFACE}")
+    message(FATAL_ERROR "Interface directory of the external library doesn't exist: ${EXTERNAL_LIB_INTERFACE}")
+   endif()
+
+   set(INCLUDE_EXTERNAL_LIBS_INTERFACE ${INCLUDE_EXTERNAL_LIBS_INTERFACE} ${EXTERNAL_LIB_INTERFACE})
+  endforeach()
  endif()
 
 # Build modes
@@ -163,9 +180,9 @@ project (Jerry CXX C ASM)
       "COMPACT_PROFILE"
       "COMPACT_PROFILE_MINIMAL")
 
-  # Nuttx
-   set(MODIFIERS_LISTS_NUTTX
-       ${MODIFIERS_LISTS_LINUX})
+ # Nuttx
+  set(MODIFIERS_LISTS_NUTTX
+      ${MODIFIERS_LISTS_LINUX})
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
@@ -278,10 +295,8 @@ project (Jerry CXX C ASM)
 
 # Component targets
  # Jerry's libc
-  if(NOT ${USE_EXTERNAL_LIBC})
+  if(${USE_JERRY_LIBC})
    add_subdirectory(jerry-libc)
-  else()
-   set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
   endif()
 
  # Jerry's Core
@@ -327,6 +342,7 @@ project (Jerry CXX C ASM)
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
     target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
                           ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
@@ -357,6 +373,7 @@ project (Jerry CXX C ASM)
     target_compile_definitions(${MAIN_MODULE_TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${MAIN_MODULE_TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 
     add_custom_target(${TARGET_NAME} ALL)
     add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME})
@@ -369,11 +386,7 @@ project (Jerry CXX C ASM)
                        $<TARGET_FILE:${PLUGINS_TARGET_NAME}>
                        $<TARGET_FILE:${CORE_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
 
-    if(NOT ${USE_EXTERNAL_LIBC})
-     if(${PLATFORM} STREQUAL "NUTTX")
-      message(Nuttx build doesn't support Jerry's libc implementation)
-     endif()
-
+    if(${USE_JERRY_LIBC})
      add_dependencies(${TARGET_NAME} ${LIBC_TARGET_NAME})
     endif()
 

@@ -284,6 +284,9 @@ project (Jerry CXX C ASM)
    set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
   endif()
 
+ # Jerry's fdlibm
+  add_subdirectory(third-party/fdlibm)
+
  # Jerry's Core
   add_subdirectory(jerry-core)
 
@@ -304,6 +307,7 @@ project (Jerry CXX C ASM)
 
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
+   set(FDLIBM_TARGET_NAME ${CORE_TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB})
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
 
    set(DEFINES_JERRY )
@@ -327,8 +331,9 @@ project (Jerry CXX C ASM)
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+
     target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-                          ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+                          ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})
 
@@ -401,6 +406,7 @@ project (Jerry CXX C ASM)
     set(TARGET_NAME unit_${TARGET_NAME})
 
     set(CORE_TARGET_NAME unittests.jerry-core)
+    set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB})
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
     set_property(TARGET ${TARGET_NAME}
@@ -408,7 +414,7 @@ project (Jerry CXX C ASM)
     set_property(TARGET ${TARGET_NAME}
                  PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc
+    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc
                           ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})

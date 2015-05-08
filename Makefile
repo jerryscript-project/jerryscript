@@ -200,6 +200,8 @@ $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	@ mkdir -p $(OUT_DIR)/$@
 	@ $(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
+	@ $(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/native plugins-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \

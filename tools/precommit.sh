@@ -23,7 +23,7 @@ shift
 TARGETS="$1"
 shift
 
-VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests"
+VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path ./jerry-fdlibm -o -path tests"
 VERA_CONFIGURATION_PATH="./tools/vera++"
 
 SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.cpp" -or -name "*.h"`

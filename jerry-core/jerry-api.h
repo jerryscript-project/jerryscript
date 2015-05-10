@@ -155,10 +155,8 @@ extern EXTERN_C
 bool jerry_api_get_object_native_handle (jerry_api_object_t *object_p, uintptr_t* out_handle_p);
 
 extern EXTERN_C
-void jerry_api_set_object_native_handle (jerry_api_object_t *object_p, uintptr_t handle);
-
-extern EXTERN_C
-bool jerry_api_set_object_free_callback (jerry_api_object_t *object_p,
+void jerry_api_set_object_native_handle (jerry_api_object_t *object_p,
+                                         uintptr_t handle,
                                          jerry_object_free_callback_t freecb_p);
 
 extern EXTERN_C

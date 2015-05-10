@@ -749,46 +749,43 @@ jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to
 } /* jerry_api_get_object_native_handle */
 
 /**
- * Set native handle for the specified object
+ * Set native handle and, optionally, free callback for the specified object
+ *
+ * Note:
+ *      If native handle was already set for the object, its value is updated.
+ *
+ * Note:
+ *      If free callback is specified, it is set to be called upon specified JS-object is freed (by GC).
+ *
+ *      Otherwise, if NULL is specified for free callback pointer, free callback is not created
+ *      and, if a free callback was added earlier for the object, it is removed.
  */
 void
 jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to set handle in */
-                                    uintptr_t handle) /**< handle value */
+                                    uintptr_t handle, /**< handle value */
+                                    jerry_object_free_callback_t freecb_p) /**< object free callback or NULL */
 {
   jerry_assert_api_available ();
 
   ecma_create_external_pointer_property (object_p,
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
-} /* jerry_api_set_object_native_handle */
-
-/**
- * Set object free callback for the specified object
- *
- * @return true - if callback was set successfully,
- *         false - otherwise (there is no native handle, associated with the object).
- */
-bool
-jerry_api_set_object_free_callback (jerry_api_object_t *object_p, /**< object to set callback for */
-                                    jerry_object_free_callback_t freecb_p) /**< object free callback */
-{
-  jerry_assert_api_available ();
-
-  uintptr_t handle_value;
-  bool is_native_handle_associated = jerry_api_get_object_native_handle (object_p,
-                                                                         &handle_value);
-
-  if (!is_native_handle_associated)
+  if (freecb_p != NULL)
   {
-    return false;
+    ecma_create_external_pointer_property (object_p,
+                                           ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                           (uintptr_t) freecb_p);
   }
-
-  ecma_create_external_pointer_property (object_p,
-                                         ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
-                                         (uintptr_t) freecb_p);
-
-  return true;
-} /* jerry_api_set_object_free_callback */
+  else
+  {
+    ecma_property_t *prop_p = ecma_find_internal_property (object_p,
+                                                           ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
+    if (prop_p != NULL)
+    {
+      ecma_delete_property (object_p, prop_p);
+    }
+  }
+} /* jerry_api_set_object_native_handle */
 
 /**
  * Invoke function specified by a function object

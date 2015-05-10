@@ -144,10 +144,9 @@ handler_construct (const jerry_api_object_t *function_obj_p,
 
   jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p [0]);
 
-  jerry_api_set_object_native_handle (this_p->v_object, (uintptr_t) 0x0012345678abcdefull);
-
-  bool is_set = jerry_api_set_object_free_callback (this_p->v_object, handler_construct_freecb);
-  assert (is_set);
+  jerry_api_set_object_native_handle (this_p->v_object,
+                                      (uintptr_t) 0x0012345678abcdefull,
+                                      handler_construct_freecb);
 
   return true;
 } /* handler_construct */
@@ -348,6 +347,8 @@ main (void)
   jerry_api_release_value (&res);
 
   jerry_cleanup ();
+
+  assert(test_api_is_free_callback_was_called);
 
   return 0;
 }

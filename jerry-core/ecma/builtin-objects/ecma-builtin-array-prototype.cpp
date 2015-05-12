@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-array-prototype.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
@@ -168,6 +169,112 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_for_each */
+
+/**
+ * The Array.prototype object's 'join' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.5
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argument */
+                                   const ecma_value_t separator_arg) /** < separator argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_value,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (length_value,
+                  ecma_op_object_get (obj_p, length_magic_string_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
+                               length_value,
+                               ret_value);
+
+  /* 3. */
+  uint32_t length = ecma_number_to_uint32 (length_number);
+
+  /* 4-5. */
+  ECMA_TRY_CATCH (separator_value,
+                  ecma_op_array_get_separator_string (separator_arg),
+                  ret_value);
+
+  if (length == 0)
+  {
+    /* 6. */
+    ecma_string_t *empty_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+  }
+  else
+  {
+    ecma_string_t *separator_string_p = ecma_get_string_from_value (separator_value);
+
+    /* 7-8. */
+    ECMA_TRY_CATCH (first_value,
+                    ecma_op_array_get_to_string_at_index (obj_p, 0),
+                    ret_value);
+
+    ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
+
+    /* 9-10. */
+    for (uint32_t k = 1; ecma_is_completion_value_empty (ret_value) && (k < length); ++k)
+    {
+      /* 10.a */
+      ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+
+      /* 10.b, 10.c */
+      ECMA_TRY_CATCH (next_string_value,
+                      ecma_op_array_get_to_string_at_index (obj_p, k),
+                      ret_value);
+
+      ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
+
+      ecma_deref_ecma_string (return_string_p);
+
+      /* 10.d */
+      return_string_p = ecma_concat_ecma_strings (part_string_p, next_string_p);
+
+      ECMA_FINALIZE (next_string_value);
+
+      ecma_deref_ecma_string (part_string_p);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
+    }
+    else
+    {
+      ecma_deref_ecma_string (return_string_p);
+    }
+
+    ECMA_FINALIZE (first_value);
+  }
+
+  ECMA_FINALIZE (separator_value);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
+
+  ECMA_FINALIZE (length_value);
+
+  ecma_deref_ecma_string (length_magic_string_p);
+
+  ECMA_FINALIZE (obj_value);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_join */
 
 /**
  * The Array.prototype object's 'toString' routine

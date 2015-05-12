@@ -17,6 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -157,7 +158,38 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this 
 static ecma_completion_value_t
 ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  /* 1. */
+  ECMA_TRY_CATCH (obj_val,
+                  ecma_op_to_object (this_arg),
+                  return_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+  ecma_string_t *to_string_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TO_STRING_UL);
+
+  /* 2. */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_object_get (obj_p, to_string_magic_string_p),
+                  return_value);
+
+  /* 3. */
+  if (!ecma_op_is_callable (to_string_val))
+  {
+    return_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    /* 4. */
+    ecma_object_t *to_string_func_obj_p = ecma_get_object_from_value (to_string_val);
+    return_value = ecma_op_function_call (to_string_func_obj_p, this_arg, NULL, 0);
+  }
+  ECMA_FINALIZE (to_string_val);
+
+  ecma_deref_ecma_string (to_string_magic_string_p);
+
+  ECMA_FINALIZE (obj_val);
+
+  return return_value;
 } /* ecma_builtin_object_prototype_object_to_locale_string */
 
 /**

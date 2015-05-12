@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,11 +290,70 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                               ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (arg1))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ret_value;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
+  ecma_object_t *props = ecma_get_object_from_value (arg2);
+
+  ecma_property_t *property_p;
+
+  for (property_p = ecma_get_property_list (props);
+       property_p != NULL;
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+  {
+    ecma_string_t *property_name_p;
+
+    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER(ecma_string_t,
+                                                  property_p->u.named_accessor_property.name_p);
+    }
+    else
+    {
+      continue;
+    }
+    ecma_value_t val = ecma_get_named_data_property_value (property_p);
+    ecma_property_descriptor_t prop_desc;
+
+    ECMA_TRY_CATCH (conv_result,
+                    ecma_op_to_property_descriptor (val, &prop_desc),
+                    ret_value);
+
+    ECMA_TRY_CATCH (define_own_prop_ret,
+                    ecma_op_object_define_own_property (obj_p,
+                                                        property_name_p,
+                                                        &prop_desc,
+                                                        true),
+                    ret_value);
+
+    ECMA_FINALIZE (define_own_prop_ret);
+    ecma_free_property_descriptor (&prop_desc);
+    ECMA_FINALIZE (conv_result);
+
+    if (ecma_is_completion_value_throw (ret_value))
+    {
+      return ret_value;
+    }
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg1, true));
+
+  return ret_value;
 } /* ecma_builtin_object_object_define_properties */
 
 /**

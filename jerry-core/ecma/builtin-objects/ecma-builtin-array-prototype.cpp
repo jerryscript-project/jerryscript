@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
@@ -180,7 +181,42 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
 static ecma_completion_value_t
 ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this_value,
+                  ecma_op_to_object (this_arg),
+                  return_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this_value);
+
+  ecma_string_t *join_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_JOIN);
+
+  /* 2. */
+  ECMA_TRY_CATCH (join_value,
+                  ecma_op_object_get (obj_p, join_magic_string_p),
+                  return_value);
+
+  if (!ecma_op_is_callable (join_value))
+  {
+    /* 3. */
+    return_value = ecma_builtin_helper_object_to_string (this_arg);
+  }
+  else
+  {
+    /* 4. */
+    ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
+
+    return_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+  }
+
+  ECMA_FINALIZE (join_value);
+
+  ecma_deref_ecma_string (join_magic_string_p);
+
+  ECMA_FINALIZE (obj_this_value);
+
+  return return_value;
 } /* ecma_builtin_array_prototype_object_to_string */
 
 /**

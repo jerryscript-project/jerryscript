@@ -118,8 +118,8 @@ ecma_builtin_jerry_try_to_instantiate_property (ecma_object_t *obj_p, /**< objec
 ecma_completion_value_t
 ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide identifier of routine */
                                      ecma_value_t this_arg_value __attr_unused___, /**< 'this' argument value */
-                                     const ecma_value_t arguments_list [], /**< list of arguments
-                                                                            *   passed to routine */
+                                     const ecma_value_t arguments_list[], /**< list of arguments
+                                                                           *   passed to routine */
                                      ecma_length_t arguments_number) /**< length of arguments' list */
 {
   uint32_t extension_object_index = builtin_routine_id / ECMA_EXTENSION_MAX_FUNCTIONS_IN_EXTENSION;
@@ -138,7 +138,7 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
   JERRY_ASSERT (desc_p != NULL);
 
   JERRY_ASSERT (function_index < desc_p->functions_count);
-  jerry_extension_function_t *function_p = &desc_p->functions_p [function_index];
+  jerry_extension_function_t *function_p = &desc_p->functions_p[function_index];
 
   bool throw_type_error = false;
   if (function_p->args_number != arguments_number)
@@ -150,8 +150,8 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
     uint32_t arg_index;
     for (arg_index = 0; arg_index < function_p->args_number; arg_index++)
     {
-      jerry_api_value_t *arg_p = &function_p->args_p [arg_index];
-      const ecma_value_t arg_value = arguments_list [arg_index];
+      jerry_api_value_t *arg_p = &function_p->args_p[arg_index];
+      const ecma_value_t arg_value = arguments_list[arg_index];
 
       if (arg_p->type == JERRY_API_DATA_TYPE_BOOLEAN)
       {
@@ -234,7 +234,7 @@ ecma_builtin_jerry_dispatch_routine (uint16_t builtin_routine_id, /**< built-in 
          arg_index < initialized_args_count;
          arg_index++)
     {
-      jerry_api_value_t *arg_p = &function_p->args_p [arg_index];
+      jerry_api_value_t *arg_p = &function_p->args_p[arg_index];
 
       if (arg_p->type == JERRY_API_DATA_TYPE_STRING)
       {
@@ -342,8 +342,8 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
     for (uint32_t j = 0; j < extension_desc_p->fields_count; j++)
     {
       if (i != j
-          && !strcmp (extension_desc_p->fields_p [i].field_name_p,
-                      extension_desc_p->fields_p [j].field_name_p))
+          && !strcmp (extension_desc_p->fields_p[i].field_name_p,
+                      extension_desc_p->fields_p[j].field_name_p))
       {
         return false;
       }
@@ -352,14 +352,14 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
 
   for (uint32_t i = 0; i < extension_desc_p->functions_count; i++)
   {
-    if (extension_desc_p->functions_p [i].args_number >= ECMA_EXTENSION_MAX_ARGUMENTS_IN_FUNCTION)
+    if (extension_desc_p->functions_p[i].args_number >= ECMA_EXTENSION_MAX_ARGUMENTS_IN_FUNCTION)
     {
       return false;
     }
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     /* Check if we can represent the arguments' values */
-    for (uint32_t j = 0; j < extension_desc_p->functions_p [i].args_number; j++)
+    for (uint32_t j = 0; j < extension_desc_p->functions_p[i].args_number; j++)
     {
       if (extension_desc_p->functions_p[i].args_p[j].type == JERRY_API_DATA_TYPE_FLOAT64)
       {
@@ -371,8 +371,8 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
     for (uint32_t j = 0; j < extension_desc_p->functions_count; j++)
     {
       if (i != j
-          && !strcmp (extension_desc_p->functions_p [i].function_name_p,
-                      extension_desc_p->functions_p [j].function_name_p))
+          && !strcmp (extension_desc_p->functions_p[i].function_name_p,
+                      extension_desc_p->functions_p[j].function_name_p))
       {
         return false;
       }
@@ -399,8 +399,8 @@ ecma_extension_register (jerry_extension_descriptor_t *extension_desc_p) /**< ex
 
     for (uint32_t j = 0; j < extension_desc_p->functions_count; j++)
     {
-      if (!strcmp (extension_desc_p->fields_p [i].field_name_p,
-                   extension_desc_p->functions_p [j].function_name_p))
+      if (!strcmp (extension_desc_p->fields_p[i].field_name_p,
+                   extension_desc_p->functions_p[j].function_name_p))
       {
         return false;
       }
@@ -480,7 +480,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
        field_index < desc_p->fields_count;
        field_index++)
   {
-    if (!strcmp (name_p, desc_p->fields_p [field_index].field_name_p))
+    if (!strcmp (name_p, desc_p->fields_p[field_index].field_name_p))
     {
       break;
     }
@@ -488,7 +488,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
   if (field_index < desc_p->fields_count)
   {
-    const jerry_extension_field_t *field_p = &desc_p->fields_p [field_index];
+    const jerry_extension_field_t *field_p = &desc_p->fields_p[field_index];
 
     ecma_value_t value;
     prop_p = ecma_create_named_data_property (obj_p,
@@ -549,7 +549,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
          function_index < desc_p->functions_count;
          function_index++)
     {
-      if (!strcmp (name_p, desc_p->functions_p [function_index].function_name_p))
+      if (!strcmp (name_p, desc_p->functions_p[function_index].function_name_p))
       {
         break;
       }
@@ -557,7 +557,7 @@ ecma_op_extension_object_get_own_property (ecma_object_t *obj_p, /**< the extens
 
     if (function_index < desc_p->functions_count)
     {
-      const jerry_extension_function_t *function_p = &desc_p->functions_p [function_index];
+      const jerry_extension_function_t *function_p = &desc_p->functions_p[function_index];
 
       /* Currently, combined identifier of extension object and extension function should fit in uint16_t. */
       JERRY_STATIC_ASSERT (ECMA_EXTENSION_MAX_NUMBER_OF_EXTENSIONS * ECMA_EXTENSION_MAX_FUNCTIONS_IN_EXTENSION

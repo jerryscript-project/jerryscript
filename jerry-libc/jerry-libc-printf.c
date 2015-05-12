@@ -131,14 +131,14 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
   char *str_p = str_buffer_end;
   *--str_p = '\0';
 
-  LIBC_ASSERT(radix >= 2);
+  LIBC_ASSERT (radix >= 2);
 
   if ((radix & (radix - 1)) != 0)
   {
     /*
      * Radix is not power of 2. Only 32-bit numbers are supported in this mode.
      */
-    LIBC_ASSERT((value >> 32) == 0);
+    LIBC_ASSERT ((value >> 32) == 0);
 
     uint32_t value_lo = (uint32_t) value;
 
@@ -157,7 +157,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     {
       shift++;
 
-      LIBC_ASSERT(shift <= 32);
+      LIBC_ASSERT (shift <= 32);
     }
 
     uint32_t value_lo = (uint32_t) value;
@@ -180,7 +180,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     *--str_p = '0';
   }
 
-  LIBC_ASSERT(str_p >= buffer_p && str_p < str_buffer_end);
+  LIBC_ASSERT (str_p >= buffer_p && str_p < str_buffer_end);
 
   return str_p;
 } /* libc_printf_uint_to_string */
@@ -197,7 +197,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
                        libc_printf_arg_length_type_t length, /**< field's length type */
                        uint32_t width) /**< minimum field width to output */
 {
-  LIBC_ASSERT((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
+  LIBC_ASSERT ((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
 
   bool is_signed = true;
   uintmax_t value = 0;
@@ -261,7 +261,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      LIBC_UNREACHABLE();
+      LIBC_UNREACHABLE ();
     }
   }
 
@@ -312,12 +312,12 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
  * @return updated va_list
  */
 static void
-libc_printf_write_u_o_x_X(FILE *stream, /**< stream pointer */
-                          char specifier, /**< specifier (u, o, x, X) */
-                          va_list* args_list_p, /**< args' list */
-                          libc_printf_arg_flags_mask_t flags, /**< field's flags */
-                          libc_printf_arg_length_type_t length, /**< field's length type */
-                          uint32_t width) /**< minimum field width to output */
+libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
+                           char specifier, /**< specifier (u, o, x, X) */
+                           va_list* args_list_p, /**< args' list */
+                           libc_printf_arg_flags_mask_t flags, /**< field's flags */
+                           libc_printf_arg_length_type_t length, /**< field's length type */
+                           uint32_t width) /**< minimum field width to output */
 {
   uintmax_t value = 0;
 
@@ -373,7 +373,7 @@ libc_printf_write_u_o_x_X(FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      LIBC_UNREACHABLE();
+      LIBC_UNREACHABLE ();
     }
   }
 
@@ -393,7 +393,7 @@ libc_printf_write_u_o_x_X(FILE *stream, /**< stream pointer */
       }
       else
       {
-        LIBC_ASSERT(specifier == 'o');
+        LIBC_ASSERT (specifier == 'o');
       }
     }
   }
@@ -433,7 +433,7 @@ libc_printf_write_u_o_x_X(FILE *stream, /**< stream pointer */
 
     default:
     {
-      LIBC_UNREACHABLE();
+      LIBC_UNREACHABLE ();
     }
   }
 
@@ -627,7 +627,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         case 'x':
         case 'X':
         {
-          libc_printf_write_u_o_x_X(stream, *format_iter_p, &args_copy, flags, length, width);
+          libc_printf_write_u_o_x_X (stream, *format_iter_p, &args_copy, flags, length, width);
           break;
         }
 
@@ -702,12 +702,12 @@ vfprintf (FILE *stream, /**< stream pointer */
           }
           else
           {
-            libc_printf_write_u_o_x_X(stream,
-                                      'x',
-                                      &args_copy,
-                                      flags | LIBC_PRINTF_ARG_FLAG_SHARP,
-                                      LIBC_PRINTF_ARG_LENGTH_TYPE_Z,
-                                      width);
+            libc_printf_write_u_o_x_X (stream,
+                                       'x',
+                                       &args_copy,
+                                       flags | LIBC_PRINTF_ARG_FLAG_SHARP,
+                                       LIBC_PRINTF_ARG_LENGTH_TYPE_Z,
+                                       width);
           }
           break;
         }

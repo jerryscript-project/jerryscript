@@ -120,7 +120,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else
     { // f.
-      JERRY_ASSERT(is_x_object);
+      JERRY_ASSERT (is_x_object);
 
       bool is_equal = (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 
@@ -339,12 +339,12 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   ecma_value_t second_converted_value = left_first ? y : x;
 
   // 1., 2.
-  ECMA_TRY_CATCH(prim_first_converted_value,
-                 ecma_op_to_primitive (first_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
-                 ret_value);
-  ECMA_TRY_CATCH(prim_second_converted_value,
-                 ecma_op_to_primitive (second_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
-                 ret_value);
+  ECMA_TRY_CATCH (prim_first_converted_value,
+                  ecma_op_to_primitive (first_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
+                  ret_value);
+  ECMA_TRY_CATCH (prim_second_converted_value,
+                  ecma_op_to_primitive (second_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
+                  ret_value);
 
   const ecma_value_t &px = left_first ? prim_first_converted_value : prim_second_converted_value;
   const ecma_value_t &py = left_first ? prim_second_converted_value : prim_first_converted_value;
@@ -448,8 +448,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                                               : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ECMA_FINALIZE(prim_second_converted_value);
-  ECMA_FINALIZE(prim_first_converted_value);
+  ECMA_FINALIZE (prim_second_converted_value);
+  ECMA_FINALIZE (prim_first_converted_value);
 
   return ret_value;
 } /* ecma_op_abstract_relational_compare */

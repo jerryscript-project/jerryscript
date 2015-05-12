@@ -37,7 +37,7 @@ const uint32_t test_max_sub_iters = 1024;
 
 #define TEST_POOL_SPACE_SIZE (sizeof (mem_pool_state_t) + \
                               (1ull << MEM_POOL_MAX_CHUNKS_NUMBER_LOG) * MEM_POOL_CHUNK_SIZE)
-uint8_t test_pool [TEST_POOL_SPACE_SIZE] __attribute__ ((aligned (MEM_ALIGNMENT)));
+uint8_t test_pool[TEST_POOL_SPACE_SIZE] __attribute__ ((aligned (MEM_ALIGNMENT)));
 
 uint8_t* ptrs[test_max_sub_iters];
 
@@ -84,7 +84,7 @@ main (int __attr_unused___ argc,
       {
         for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
         {
-          JERRY_ASSERT(((uint8_t*)ptrs[j])[k] == 0);
+          JERRY_ASSERT (((uint8_t*)ptrs[j])[k] == 0);
         }
 
         mem_pool_free_chunk (pool_p, ptrs[j]);

@@ -71,7 +71,7 @@ ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *argu
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
-                                                      const ecma_value_t arguments_list [], \
+                                                      const ecma_value_t arguments_list[], \
                                                       ecma_length_t arguments_number); \
 extern ecma_property_t* \
 ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \

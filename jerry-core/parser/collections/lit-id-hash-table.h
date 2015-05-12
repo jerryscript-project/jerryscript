@@ -25,8 +25,7 @@ typedef struct
   size_t current_bucket_pos;
   literal_index_t *raw_buckets;
   literal_index_t **buckets;
-}
-lit_id_hash_table;
+} lit_id_hash_table;
 
 lit_id_hash_table *lit_id_hash_table_init (size_t, size_t);
 void lit_id_hash_table_free (lit_id_hash_table *);

@@ -73,14 +73,14 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
     swapped = false;
 
     for (ecma_length_t i = 1;
-         i < (sizeof (ecma_builtin_property_names) / sizeof (ecma_builtin_property_names [0]));
+         i < (sizeof (ecma_builtin_property_names) / sizeof (ecma_builtin_property_names[0]));
          i++)
     {
-      if (ecma_builtin_property_names [i] < ecma_builtin_property_names [i - 1])
+      if (ecma_builtin_property_names[i] < ecma_builtin_property_names[i - 1])
       {
-        ecma_magic_string_id_t id_temp = ecma_builtin_property_names [i - 1];
-        ecma_builtin_property_names [i - 1] = ecma_builtin_property_names [i];
-        ecma_builtin_property_names [i] = id_temp;
+        ecma_magic_string_id_t id_temp = ecma_builtin_property_names[i - 1];
+        ecma_builtin_property_names[i - 1] = ecma_builtin_property_names[i];
+        ecma_builtin_property_names[i] = id_temp;
 
         swapped = true;
       }
@@ -115,7 +115,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
   }
 
   const ecma_length_t property_numbers = (ecma_length_t) (sizeof (ecma_builtin_property_names) /
-                                                          sizeof (ecma_builtin_property_names [0]));
+                                                          sizeof (ecma_builtin_property_names[0]));
   int32_t index;
   index = ecma_builtin_bin_search_for_magic_string_id_in_array (ecma_builtin_property_names,
                                                                 property_numbers,
@@ -279,7 +279,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine
                                                                                           identifier */
                                                         ecma_value_t this_arg_value, /**< 'this' argument
                                                                                           value */
-                                                        const ecma_value_t arguments_list [], /**< list of arguments
+                                                        const ecma_value_t arguments_list[], /**< list of arguments
                                                                                                    passed to routine */
                                                         ecma_length_t arguments_number) /**< length of
                                                                                              arguments' list */

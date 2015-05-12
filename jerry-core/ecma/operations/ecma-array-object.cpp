@@ -133,7 +133,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     ecma_property_descriptor_t item_prop_desc = ecma_make_empty_property_descriptor ();
     {
       item_prop_desc.is_value_defined = true;
-      item_prop_desc.value = array_items_p [index];
+      item_prop_desc.value = array_items_p[index];
 
       item_prop_desc.is_writable_defined = true;
       item_prop_desc.is_writable = true;
@@ -377,7 +377,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       return ret_value;
     }
 
-    JERRY_UNREACHABLE();
+    JERRY_UNREACHABLE ();
   }
   else
   {
@@ -453,7 +453,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_op_array_object_define_own_property */
 
 /**

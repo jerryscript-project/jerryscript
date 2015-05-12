@@ -49,9 +49,9 @@ typedef struct ecma_stack_frame_t
   ecma_value_t *dynamically_allocated_value_slots_p; /**< pointer to dynamically allocated value slots
                                                       *   in the top-most chunk */
   uint32_t current_slot_index; /**< index of first free slot in the top chunk */
-  ecma_value_t inlined_values [ECMA_STACK_FRAME_INLINED_VALUES_NUMBER]; /**< place for values inlined in stack frame
-                                                                         *   (instead of being dynamically allocated
-                                                                         *   on the heap) */
+  ecma_value_t inlined_values[ECMA_STACK_FRAME_INLINED_VALUES_NUMBER]; /**< place for values inlined in stack frame
+                                                                        *   (instead of being dynamically allocated
+                                                                        *   on the heap) */
   ecma_value_t *regs_p; /**< register variables */
   int32_t regs_number; /**< number of register variables */
 } ecma_stack_frame_t;

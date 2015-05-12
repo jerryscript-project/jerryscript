@@ -40,7 +40,7 @@
 #endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
 #include "jerry-libc-defs.h"
 
-LIBC_UNREACHABLE_STUB_FOR(int raise (int sig_no __attr_unused___))
+LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
 
 /**
  * Exit program with ERR_SYSCALL if syscall_ret_val is negative
@@ -70,7 +70,7 @@ syscall_1 (long int syscall_no, /**< syscall number */
 {
   long int ret = syscall_1_asm (syscall_no, arg1);
 
-  LIBC_EXIT_ON_ERROR(ret);
+  LIBC_EXIT_ON_ERROR (ret);
 
   return ret;
 } /* syscall_1 */
@@ -87,7 +87,7 @@ syscall_2 (long int syscall_no, /**< syscall number */
 {
   long int ret = syscall_2_asm (syscall_no, arg1, arg2);
 
-  LIBC_EXIT_ON_ERROR(ret);
+  LIBC_EXIT_ON_ERROR (ret);
 
   return ret;
 } /* syscall_2 */
@@ -105,7 +105,7 @@ syscall_3 (long int syscall_no, /**< syscall number */
 {
   long int ret = syscall_3_asm (syscall_no, arg1, arg2, arg3);
 
-  LIBC_EXIT_ON_ERROR(ret);
+  LIBC_EXIT_ON_ERROR (ret);
 
   return ret;
 } /* syscall_3 */
@@ -169,8 +169,8 @@ fopen (const char *path, /**< file path */
   bool create_if_not_exist = false;
   bool position_at_end = false;
 
-  LIBC_ASSERT(path != NULL && mode != NULL);
-  LIBC_ASSERT(mode[1] == '+' || mode[1] == '\0');
+  LIBC_ASSERT (path != NULL && mode != NULL);
+  LIBC_ASSERT (mode[1] == '+' || mode[1] == '\0');
 
   switch (mode[0])
   {
@@ -196,13 +196,13 @@ fopen (const char *path, /**< file path */
       if (mode[1] == '+')
       {
         /* Not supported */
-        LIBC_UNREACHABLE();
+        LIBC_UNREACHABLE ();
       }
       break;
     }
     default:
     {
-      LIBC_UNREACHABLE();
+      LIBC_UNREACHABLE ();
     }
   }
 
@@ -218,7 +218,7 @@ fopen (const char *path, /**< file path */
   }
   else
   {
-    LIBC_ASSERT(may_read && may_write);
+    LIBC_ASSERT (may_read && may_write);
 
     flags = O_RDWR;
   }

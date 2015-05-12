@@ -142,7 +142,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
     return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
 
-  JERRY_ASSERT(is_x_object);
+  JERRY_ASSERT (is_x_object);
 
   return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 } /* ecma_op_same_value */

@@ -25,8 +25,7 @@ typedef enum __attr_packed___
   LIT_STR,
   LIT_MAGIC_STR,
   LIT_NUMBER
-}
-literal_type;
+} literal_type;
 
 typedef struct
 {
@@ -36,11 +35,9 @@ typedef struct
     ecma_number_t num;
     lp_string lp;
     void *none;
-  }
-  data;
+  } data;
   literal_type type;
-}
-literal;
+} literal;
 
 #define LITERAL_TO_REWRITE (INVALID_VALUE - 1)
 

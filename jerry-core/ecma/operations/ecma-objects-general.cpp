@@ -118,9 +118,9 @@ ecma_completion_value_t
 ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
                             ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
   const ecma_property_t* prop_p = ecma_op_object_get_property (obj_p, property_name_p);
@@ -156,7 +156,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
     }
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_op_general_object_get */
 
 /**
@@ -173,9 +173,9 @@ ecma_property_t*
 ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                                          ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   return ecma_find_named_property (obj_p, property_name_p);
 } /* ecma_op_general_object_get_own_property */
@@ -194,9 +194,9 @@ ecma_property_t*
 ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
                                      ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
   ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -237,9 +237,9 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                             ecma_value_t value, /**< ecma-value */
                             bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
   if (!ecma_op_object_can_put (obj_p, property_name_p))
@@ -286,7 +286,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
   {
     // a.
     ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (desc_p);
-    JERRY_ASSERT(setter_p != NULL);
+    JERRY_ASSERT (setter_p != NULL);
 
     ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -330,7 +330,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                                                is_throw);
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_op_general_object_put */
 
 /**
@@ -347,9 +347,9 @@ bool
 ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
                                 ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
   ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -375,7 +375,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
     {
       // b.
 
-      JERRY_ASSERT(prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
       return ecma_is_property_writable (prop_p);
     }
@@ -416,7 +416,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 8.
-    JERRY_ASSERT(inherited_p->type == ECMA_PROPERTY_NAMEDDATA);
+    JERRY_ASSERT (inherited_p->type == ECMA_PROPERTY_NAMEDDATA);
 
     // a.
     if (!ecma_get_object_extensible (obj_p))
@@ -430,7 +430,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
     }
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_op_general_object_can_put */
 
 /**
@@ -448,9 +448,9 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
                                ecma_string_t *property_name_p, /**< property name */
                                bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
   ecma_property_t *desc_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -481,7 +481,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
     return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_op_general_object_delete */
 
 /**
@@ -498,8 +498,8 @@ ecma_completion_value_t
 ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
                                       ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
 
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
@@ -589,9 +589,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
                                                                                                 *   descriptor */
                                             bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT(obj_p != NULL
-               && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT(property_name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (property_name_p != NULL);
 
   const bool is_property_desc_generic_descriptor = (!property_desc_p->is_value_defined
                                                     && !property_desc_p->is_writable_defined
@@ -633,7 +633,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
     else
     {
       // b.
-      JERRY_ASSERT(is_property_desc_accessor_descriptor);
+      JERRY_ASSERT (is_property_desc_accessor_descriptor);
 
       ecma_create_named_accessor_property (obj_p,
                                            property_name_p,
@@ -659,7 +659,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   const bool is_current_data_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDDATA);
   const bool is_current_accessor_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
 
-  JERRY_ASSERT(is_current_data_descriptor || is_current_accessor_descriptor);
+  JERRY_ASSERT (is_current_data_descriptor || is_current_accessor_descriptor);
 
   bool is_every_field_in_desc_also_occurs_in_current_desc_with_same_value = true;
   if (property_desc_p->is_value_defined)
@@ -796,7 +796,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
   else
   {
-    JERRY_ASSERT(is_property_desc_accessor_descriptor && is_current_accessor_descriptor);
+    JERRY_ASSERT (is_property_desc_accessor_descriptor && is_current_accessor_descriptor);
 
     // 11.
 
@@ -818,28 +818,28 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   // 12.
   if (property_desc_p->is_value_defined)
   {
-    JERRY_ASSERT(is_current_data_descriptor);
+    JERRY_ASSERT (is_current_data_descriptor);
 
     ecma_named_data_property_assign_value (obj_p, current_p, property_desc_p->value);
   }
 
   if (property_desc_p->is_writable_defined)
   {
-    JERRY_ASSERT(is_current_data_descriptor);
+    JERRY_ASSERT (is_current_data_descriptor);
 
     ecma_set_property_writable_attr (current_p, property_desc_p->is_writable);
   }
 
   if (property_desc_p->is_get_defined)
   {
-    JERRY_ASSERT(is_current_accessor_descriptor);
+    JERRY_ASSERT (is_current_accessor_descriptor);
 
     ecma_set_named_accessor_property_getter (obj_p, current_p, property_desc_p->get_p);
   }
 
   if (property_desc_p->is_set_defined)
   {
-    JERRY_ASSERT(is_current_accessor_descriptor);
+    JERRY_ASSERT (is_current_accessor_descriptor);
 
     ecma_set_named_accessor_property_setter (obj_p, current_p, property_desc_p->set_p);
   }

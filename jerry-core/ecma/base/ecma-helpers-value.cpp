@@ -226,7 +226,7 @@ ecma_make_simple_value (const ecma_simple_value_t value) /**< simple value */
 ecma_value_t __attr_const___
 ecma_make_number_value (const ecma_number_t* num_p) /**< number to reference in value */
 {
-  JERRY_ASSERT(num_p != NULL);
+  JERRY_ASSERT (num_p != NULL);
 
   mem_cpointer_t num_cp;
   ECMA_SET_NON_NULL_POINTER (num_cp, num_p);
@@ -245,7 +245,7 @@ ecma_make_number_value (const ecma_number_t* num_p) /**< number to reference in 
 ecma_value_t __attr_const___
 ecma_make_string_value (const ecma_string_t* ecma_string_p) /**< string to reference in value */
 {
-  JERRY_ASSERT(ecma_string_p != NULL);
+  JERRY_ASSERT (ecma_string_p != NULL);
 
   mem_cpointer_t string_cp;
   ECMA_SET_NON_NULL_POINTER (string_cp, ecma_string_p);
@@ -264,7 +264,7 @@ ecma_make_string_value (const ecma_string_t* ecma_string_p) /**< string to refer
 ecma_value_t __attr_const___
 ecma_make_object_value (const ecma_object_t* object_p) /**< object to reference in value */
 {
-  JERRY_ASSERT(object_p != NULL);
+  JERRY_ASSERT (object_p != NULL);
 
   mem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
@@ -591,10 +591,10 @@ ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
 ecma_completion_value_t __attr_const___ __attr_always_inline___
 ecma_make_simple_completion_value (ecma_simple_value_t simple_value) /**< simple ecma-value */
 {
-  JERRY_ASSERT(simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
-               || simple_value == ECMA_SIMPLE_VALUE_NULL
-               || simple_value == ECMA_SIMPLE_VALUE_FALSE
-               || simple_value == ECMA_SIMPLE_VALUE_TRUE);
+  JERRY_ASSERT (simple_value == ECMA_SIMPLE_VALUE_UNDEFINED
+                || simple_value == ECMA_SIMPLE_VALUE_NULL
+                || simple_value == ECMA_SIMPLE_VALUE_FALSE
+                || simple_value == ECMA_SIMPLE_VALUE_TRUE);
 
   return ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL,
                                      ecma_make_simple_value (simple_value));
@@ -630,8 +630,8 @@ ecma_make_throw_completion_value (ecma_value_t value) /**< value */
 ecma_completion_value_t __attr_const___
 ecma_make_throw_obj_completion_value (ecma_object_t *exception_p) /**< an object */
 {
-  JERRY_ASSERT(exception_p != NULL
-               && !ecma_is_lexical_environment (exception_p));
+  JERRY_ASSERT (exception_p != NULL
+                && !ecma_is_lexical_environment (exception_p));
 
   ecma_value_t exception = ecma_make_object_value (exception_p);
 
@@ -781,7 +781,7 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     case ECMA_COMPLETION_TYPE_EXIT:
     {
       ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
-      JERRY_ASSERT(ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
+      JERRY_ASSERT (ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
       break;
     }
     case ECMA_COMPLETION_TYPE_CONTINUE:

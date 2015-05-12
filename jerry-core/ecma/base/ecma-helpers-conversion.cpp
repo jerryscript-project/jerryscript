@@ -71,10 +71,10 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_copy_to); \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_copy_from); \
   \
-  name_copy_to[0] = name_copy_from [0]; \
-  name_copy_to[1] = name_copy_from [1]; \
-  name_copy_to[2] = name_copy_from [2]; \
-  name_copy_to[3] = name_copy_from [3]; \
+  name_copy_to[0] = name_copy_from[0]; \
+  name_copy_to[1] = name_copy_from[1]; \
+  name_copy_to[2] = name_copy_from[2]; \
+  name_copy_to[3] = name_copy_from[3]; \
 }
 
 /**
@@ -176,13 +176,13 @@
 { \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
   \
-  name [0] += 1ull; \
-  name [1] += (name [0] >> 32u); \
-  name [0] = (uint32_t) name [0]; \
-  name [2] += (name [1] >> 32u); \
-  name [1] = (uint32_t) name [1]; \
-  name [3] += (name [2] >> 32u); \
-  name [2] = (uint32_t) name [2]; \
+  name[0] += 1ull; \
+  name[1] += (name[0] >> 32u); \
+  name[0] = (uint32_t) name[0]; \
+  name[2] += (name[1] >> 32u); \
+  name[1] = (uint32_t) name[1]; \
+  name[3] += (name[2] >> 32u); \
+  name[2] = (uint32_t) name[2]; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
@@ -195,17 +195,17 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_to_add); \
   \
-  name_add_to [0] += name_to_add [0]; \
-  name_add_to [1] += name_to_add [1]; \
-  name_add_to [2] += name_to_add [2]; \
-  name_add_to [3] += name_to_add [3]; \
+  name_add_to[0] += name_to_add[0]; \
+  name_add_to[1] += name_to_add[1]; \
+  name_add_to[2] += name_to_add[2]; \
+  name_add_to[3] += name_to_add[3]; \
   \
-  name_add_to [1] += (name_add_to [0] >> 32u); \
-  name_add_to [0] = (uint32_t) name_add_to [0]; \
-  name_add_to [2] += (name_add_to [1] >> 32u); \
-  name_add_to [1] = (uint32_t) name_add_to [1]; \
-  name_add_to [3] += (name_add_to [2] >> 32u); \
-  name_add_to [2] = (uint32_t) name_add_to [2]; \
+  name_add_to[1] += (name_add_to[0] >> 32u); \
+  name_add_to[0] = (uint32_t) name_add_to[0]; \
+  name_add_to[2] += (name_add_to[1] >> 32u); \
+  name_add_to[1] = (uint32_t) name_add_to[1]; \
+  name_add_to[3] += (name_add_to[2] >> 32u); \
+  name_add_to[2] = (uint32_t) name_add_to[2]; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_to_add); \
@@ -244,7 +244,7 @@
   const uint64_t div10_p_mid = 0x99999999ul; \
   const uint64_t div10_p_high = 0x19999999ul; \
   \
-  uint64_t intermediate [8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; \
+  uint64_t intermediate[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; \
   uint64_t l0, l1, l2, l3, m0, m1, m2, m3, h0, h1, h2, h3; \
   l0 = name[0] * div10_p_low; \
   l1 = name[1] * div10_p_low; \
@@ -297,25 +297,25 @@
   intermediate[6] += (uint32_t) h3; \
   intermediate[7] += h3 >> 32u; \
   \
-  intermediate [1] += intermediate[0] >> 32u; \
-  intermediate [0] = (uint32_t) intermediate[0]; \
-  intermediate [2] += intermediate[1] >> 32u; \
-  intermediate [1] = (uint32_t) intermediate[1]; \
-  intermediate [3] += intermediate[2] >> 32u; \
-  intermediate [2] = (uint32_t) intermediate[2]; \
-  intermediate [4] += intermediate[3] >> 32u; \
-  intermediate [3] = (uint32_t) intermediate[3]; \
-  intermediate [5] += intermediate[4] >> 32u; \
-  intermediate [4] = (uint32_t) intermediate[4]; \
-  intermediate [6] += intermediate[5] >> 32u; \
-  intermediate [5] = (uint32_t) intermediate[5]; \
-  intermediate [7] += intermediate[6] >> 32u; \
-  intermediate [6] = (uint32_t) intermediate[6]; \
+  intermediate[1] += intermediate[0] >> 32u; \
+  intermediate[0] = (uint32_t) intermediate[0]; \
+  intermediate[2] += intermediate[1] >> 32u; \
+  intermediate[1] = (uint32_t) intermediate[1]; \
+  intermediate[3] += intermediate[2] >> 32u; \
+  intermediate[2] = (uint32_t) intermediate[2]; \
+  intermediate[4] += intermediate[3] >> 32u; \
+  intermediate[3] = (uint32_t) intermediate[3]; \
+  intermediate[5] += intermediate[4] >> 32u; \
+  intermediate[4] = (uint32_t) intermediate[4]; \
+  intermediate[6] += intermediate[5] >> 32u; \
+  intermediate[5] = (uint32_t) intermediate[5]; \
+  intermediate[7] += intermediate[6] >> 32u; \
+  intermediate[6] = (uint32_t) intermediate[6]; \
   \
-  name[0] = intermediate [4]; \
-  name[1] = intermediate [5]; \
-  name[2] = intermediate [6]; \
-  name[3] = intermediate [7]; \
+  name[0] = intermediate[4]; \
+  name[1] = intermediate[5]; \
+  name[2] = intermediate[6]; \
+  name[3] = intermediate[7]; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
@@ -342,7 +342,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
   const ecma_char_t hex_upper_digits_range[10] = { 'A', 'F' };
   const ecma_char_t hex_x_chars[2] = { 'x', 'X' };
   const ecma_char_t white_space[2] = { ' ', '\n' };
-  const ecma_char_t e_chars [2] = { 'e', 'E' };
+  const ecma_char_t e_chars[2] = { 'e', 'E' };
   const ecma_char_t plus_char = '+';
   const ecma_char_t minus_char = '-';
   const ecma_char_t dot_char = '.';
@@ -393,8 +393,8 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     {
       int32_t digit_value;
 
-      if (*iter_p >= dec_digits_range [0]
-          && *iter_p <= dec_digits_range [1])
+      if (*iter_p >= dec_digits_range[0]
+          && *iter_p <= dec_digits_range[1])
       {
         digit_value = (*iter_p - dec_digits_range[0]);
       }
@@ -464,8 +464,8 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
   {
     int32_t digit_value;
 
-    if (*begin_p >= dec_digits_range [0]
-        && *begin_p <= dec_digits_range [1])
+    if (*begin_p >= dec_digits_range[0]
+        && *begin_p <= dec_digits_range[1])
     {
       digit_value = (*begin_p - dec_digits_range[0]);
     }
@@ -502,8 +502,8 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     {
       int32_t digit_value;
 
-      if (*begin_p >= dec_digits_range [0]
-          && *begin_p <= dec_digits_range [1])
+      if (*begin_p >= dec_digits_range[0]
+          && *begin_p <= dec_digits_range[1])
       {
         digit_value = (*begin_p - dec_digits_range[0]);
       }
@@ -556,8 +556,8 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
     {
       int32_t digit_value;
 
-      if (*begin_p >= dec_digits_range [0]
-          && *begin_p <= dec_digits_range [1])
+      if (*begin_p >= dec_digits_range[0]
+          && *begin_p <= dec_digits_range[1])
       {
         digit_value = (*begin_p - dec_digits_range[0]);
       }
@@ -1120,7 +1120,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
                           ssize_t buffer_size) /**< size of buffer */
 {
   const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-  const ecma_char_t e_chars [2] = { 'e', 'E' };
+  const ecma_char_t e_chars[2] = { 'e', 'E' };
   const ecma_char_t plus_char = '+';
   const ecma_char_t minus_char = '-';
   const ecma_char_t dot_char = '.';
@@ -1324,12 +1324,12 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
           for (int32_t i = 0; i < n - k; i++)
           {
-            *--dst_p = digits [0];
+            *--dst_p = digits[0];
           }
 
           for (int32_t i = 0; i < k; i++)
           {
-            *--dst_p = digits [s % 10];
+            *--dst_p = digits[s % 10];
             s /= 10;
           }
         }
@@ -1343,7 +1343,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
           for (int32_t i = 0; i < k - n; i++)
           {
-            *--dst_p = digits [s % 10];
+            *--dst_p = digits[s % 10];
             s /= 10;
           }
 
@@ -1351,7 +1351,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
           for (int32_t i = 0; i < n; i++)
           {
-            *--dst_p = digits [s % 10];
+            *--dst_p = digits[s % 10];
             s /= 10;
           }
         }
@@ -1365,13 +1365,13 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
           for (int32_t i = 0; i < k; i++)
           {
-            *--dst_p = digits [s % 10];
+            *--dst_p = digits[s % 10];
             s /= 10;
           }
 
           for (int32_t i = 0; i < -n; i++)
           {
-            *--dst_p = digits [0];
+            *--dst_p = digits[0];
           }
 
           *--dst_p = dot_char;
@@ -1384,7 +1384,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
             // 9.
             JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) <= buffer_size);
 
-            *dst_p++ = digits [s % 10];
+            *dst_p++ = digits[s % 10];
             s /= 10;
           }
           else
@@ -1395,7 +1395,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
             for (int32_t i = 0; i < k - 1; i++)
             {
-              *--dst_p = digits [s % 10];
+              *--dst_p = digits[s % 10];
               s /= 10;
             }
 
@@ -1415,7 +1415,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
           if (t == 0)
           {
             JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 1) <= buffer_size);
-            *dst_p++ = digits [0];
+            *dst_p++ = digits[0];
           }
           else
           {
@@ -1431,7 +1431,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
             while (t_mod != 0)
             {
               JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 1) <= buffer_size);
-              *dst_p++ = digits [t / t_mod];
+              *dst_p++ = digits[t / t_mod];
 
               t -= (t / t_mod) * t_mod;
               t_mod /= 10;

@@ -86,8 +86,8 @@ mem_pools_init (void)
 void
 mem_pools_finalize (void)
 {
-  JERRY_ASSERT(mem_pools == NULL);
-  JERRY_ASSERT(mem_free_chunks_number == 0);
+  JERRY_ASSERT (mem_pools == NULL);
+  JERRY_ASSERT (mem_free_chunks_number == 0);
 } /* mem_pools_finalize */
 
 /**
@@ -234,7 +234,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
 void
 mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stats */
 {
-  JERRY_ASSERT(out_pools_stats_p != NULL);
+  JERRY_ASSERT (out_pools_stats_p != NULL);
 
   *out_pools_stats_p = mem_pools_stats;
 } /* mem_pools_get_stats */
@@ -283,7 +283,7 @@ mem_pools_stat_alloc_pool (void)
 static void
 mem_pools_stat_free_pool (void)
 {
-  JERRY_ASSERT(mem_pools_stats.pools_count > 0);
+  JERRY_ASSERT (mem_pools_stats.pools_count > 0);
 
   mem_pools_stats.pools_count--;
   mem_pools_stats.free_chunks = mem_free_chunks_number;
@@ -295,7 +295,7 @@ mem_pools_stat_free_pool (void)
 static void
 mem_pools_stat_alloc_chunk (void)
 {
-  JERRY_ASSERT(mem_pools_stats.free_chunks > 0);
+  JERRY_ASSERT (mem_pools_stats.free_chunks > 0);
 
   mem_pools_stats.allocated_chunks++;
   mem_pools_stats.free_chunks--;
@@ -316,7 +316,7 @@ mem_pools_stat_alloc_chunk (void)
 static void
 mem_pools_stat_free_chunk (void)
 {
-  JERRY_ASSERT(mem_pools_stats.allocated_chunks > 0);
+  JERRY_ASSERT (mem_pools_stats.allocated_chunks > 0);
 
   mem_pools_stats.allocated_chunks--;
   mem_pools_stats.free_chunks++;

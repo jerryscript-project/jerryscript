@@ -24,8 +24,7 @@ typedef struct
 {
   prop_type type;
   literal lit;
-}
-prop_literal;
+} prop_literal;
 
 enum
 {

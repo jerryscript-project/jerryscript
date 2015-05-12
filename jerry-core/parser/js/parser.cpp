@@ -86,7 +86,7 @@ static void
 must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
 {
   va_list insides_list;
-  if (STACK_SIZE(nestings) == 0)
+  if (STACK_SIZE (nestings) == 0)
   {
     EMIT_ERROR ("Shall be inside a nesting");
   }
@@ -111,7 +111,7 @@ must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
     }
     if (STACK_ELEMENT (nestings, i - 1) == not_in)
     {
-      EMIT_ERROR_VARG ("Shall not be inside a '%s' nesting", NESTING_TO_STRING(not_in));
+      EMIT_ERROR_VARG ("Shall not be inside a '%s' nesting", NESTING_TO_STRING (not_in));
     }
   }
   EMIT_ERROR ("Shall be inside a nesting");

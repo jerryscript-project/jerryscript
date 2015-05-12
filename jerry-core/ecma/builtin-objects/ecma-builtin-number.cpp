@@ -66,7 +66,7 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   }
   else
   {
-    ret_value = ecma_op_to_number (arguments_list_p [0]);
+    ret_value = ecma_op_to_number (arguments_list_p[0]);
   }
 
   return ret_value;

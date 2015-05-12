@@ -170,7 +170,7 @@ serializer_print_opcodes (void)
     opm.op = bytecode_data.opcodes[loc];
     for (int i = 0; i < 3; i++)
     {
-      opm.lit_id [i] = NOT_A_LITERAL;
+      opm.lit_id[i] = NOT_A_LITERAL;
     }
 
     pp_op_meta (loc, opm, false);

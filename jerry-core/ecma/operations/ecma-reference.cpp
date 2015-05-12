@@ -40,7 +40,7 @@ ecma_object_t*
 ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
                                 ecma_string_t *name_p) /**< identifier's name */
 {
-  JERRY_ASSERT(lex_env_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL);
 
   ecma_object_t *lex_env_iter_p = lex_env_p;
 
@@ -68,7 +68,7 @@ ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environ
                                   ecma_string_t *name_p, /**< identifier's name */
                                   bool is_strict) /**< strict reference flag */
 {
-  JERRY_ASSERT(lex_env_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL);
 
   ecma_object_t *base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, name_p);
 

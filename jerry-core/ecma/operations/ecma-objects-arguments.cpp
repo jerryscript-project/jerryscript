@@ -192,11 +192,11 @@ ecma_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
 
     ecma_property_t *parameters_map_prop_p = ecma_create_internal_property (obj_p,
                                                                             ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-    ECMA_SET_POINTER(parameters_map_prop_p->u.internal_property.value, map_p);
+    ECMA_SET_POINTER (parameters_map_prop_p->u.internal_property.value, map_p);
 
     ecma_property_t *scope_prop_p = ecma_create_internal_property (map_p,
                                                                    ECMA_INTERNAL_PROPERTY_SCOPE);
-    ECMA_SET_POINTER(scope_prop_p->u.internal_property.value, lex_env_p);
+    ECMA_SET_POINTER (scope_prop_p->u.internal_property.value, lex_env_p);
 
     ecma_deref_object (map_p);
   }
@@ -281,8 +281,8 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
   ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
   ecma_object_t *lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                                         scope_prop_p->u.internal_property.value);
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
   ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (arg_name_prop_p);
 

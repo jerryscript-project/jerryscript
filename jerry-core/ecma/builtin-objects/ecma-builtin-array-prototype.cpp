@@ -181,7 +181,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
 {
   JERRY_ASSERT (argument_list_p == NULL || arguments_number > 0);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value();
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   // 1.
   ECMA_TRY_CATCH (obj_this_value, ecma_op_to_object (this_arg), ret_value);
@@ -240,7 +240,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
                                                              true);
 
     if (unlikely (ecma_is_completion_value_throw (completion)
-                  || ecma_is_completion_value_exit(completion)))
+                  || ecma_is_completion_value_exit (completion)))
     {
       ret_value = completion;
 

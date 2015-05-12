@@ -35,14 +35,14 @@ static ecma_completion_value_t
 ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id,
                                uint16_t builtin_routine_id,
                                ecma_value_t this_arg_value,
-                               const ecma_value_t arguments_list [],
+                               const ecma_value_t arguments_list[],
                                ecma_length_t arguments_number);
 static void ecma_instantiate_builtin (ecma_builtin_id_t id);
 
 /**
  * Pointer to instances of built-in objects
  */
-static ecma_object_t* ecma_builtin_objects [ECMA_BUILTIN_ID__COUNT];
+static ecma_object_t* ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT];
 
 /**
  * Check if passed object is the instance of specified built-in.
@@ -54,12 +54,12 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (unlikely (ecma_builtin_objects [builtin_id] == NULL))
+  if (unlikely (ecma_builtin_objects[builtin_id] == NULL))
   {
     ecma_instantiate_builtin (builtin_id);
   }
 
-  return (obj_p == ecma_builtin_objects [builtin_id]);
+  return (obj_p == ecma_builtin_objects[builtin_id]);
 } /* ecma_builtin_is */
 
 /**
@@ -72,14 +72,14 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (unlikely (ecma_builtin_objects [builtin_id] == NULL))
+  if (unlikely (ecma_builtin_objects[builtin_id] == NULL))
   {
     ecma_instantiate_builtin (builtin_id);
   }
 
-  ecma_ref_object (ecma_builtin_objects [builtin_id]);
+  ecma_ref_object (ecma_builtin_objects[builtin_id]);
 
-  return ecma_builtin_objects [builtin_id];
+  return ecma_builtin_objects[builtin_id];
 } /* ecma_builtin_get */
 
 /**
@@ -169,7 +169,7 @@ ecma_init_builtins (void)
        id < ECMA_BUILTIN_ID__COUNT;
        id = (ecma_builtin_id_t) (id + 1))
   {
-    ecma_builtin_objects [id] = NULL;
+    ecma_builtin_objects[id] = NULL;
   }
 } /* ecma_init_builtins */
 
@@ -190,7 +190,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
                 lowercase_name) \
     case builtin_id: \
     { \
-      JERRY_ASSERT (ecma_builtin_objects [builtin_id] == NULL); \
+      JERRY_ASSERT (ecma_builtin_objects[builtin_id] == NULL); \
       if (is_static) \
       { \
         ecma_builtin_ ## lowercase_name ## _sort_property_names (); \
@@ -203,11 +203,11 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
       } \
       else \
       { \
-        if (ecma_builtin_objects [object_prototype_builtin_id] == NULL) \
+        if (ecma_builtin_objects[object_prototype_builtin_id] == NULL) \
         { \
           ecma_instantiate_builtin (object_prototype_builtin_id); \
         } \
-        prototype_obj_p = ecma_builtin_objects [object_prototype_builtin_id]; \
+        prototype_obj_p = ecma_builtin_objects[object_prototype_builtin_id]; \
         JERRY_ASSERT (prototype_obj_p != NULL); \
       } \
       \
@@ -216,7 +216,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
                                                                 object_type, \
                                                                 object_class, \
                                                                 is_extensible); \
-      ecma_builtin_objects [builtin_id] = builtin_obj_p; \
+      ecma_builtin_objects[builtin_id] = builtin_obj_p; \
       \
       break; \
     }
@@ -241,11 +241,11 @@ ecma_finalize_builtins (void)
        id < ECMA_BUILTIN_ID__COUNT;
        id = (ecma_builtin_id_t) (id + 1))
   {
-    if (ecma_builtin_objects [id] != NULL)
+    if (ecma_builtin_objects[id] != NULL)
     {
-      ecma_deref_object (ecma_builtin_objects [id]);
+      ecma_deref_object (ecma_builtin_objects[id]);
 
-      ecma_builtin_objects [id] = NULL;
+      ecma_builtin_objects[id] = NULL;
     }
   }
 } /* ecma_finalize_builtins */
@@ -523,7 +523,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                                              *   of the built-in object's
                                                              *   routine property */
                                ecma_value_t this_arg_value, /**< 'this' argument value */
-                               const ecma_value_t arguments_list [], /**< list of arguments passed to routine */
+                               const ecma_value_t arguments_list[], /**< list of arguments passed to routine */
                                ecma_length_t arguments_number) /**< length of arguments' list */
 {
   switch (builtin_object_id)
@@ -583,7 +583,7 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id
        id_index < array_length;
        id_index++)
   {
-    JERRY_ASSERT (ids [id_index - 1] < ids [id_index]);
+    JERRY_ASSERT (ids[id_index - 1] < ids[id_index]);
   }
 #endif /* !JERRY_NDEBUG */
 

@@ -55,7 +55,7 @@ typedef enum
 /**
  * List of marked (visited during current GC session) and umarked objects
  */
-static ecma_object_t *ecma_gc_objects_lists [ECMA_GC_COLOR__COUNT];
+static ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT];
 
 /**
  * Current state of an object's visited flag that indicates whether the object is in visited state:
@@ -177,8 +177,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
   ecma_gc_set_object_refs (object_p, 1);
 
-  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY]);
-  ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY] = object_p;
+  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY]);
+  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = object_p;
 
   /* Should be set to false at the beginning of garbage collection */
   ecma_gc_set_object_visited (object_p, false);
@@ -199,7 +199,7 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 void
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
-  JERRY_ASSERT(ecma_gc_get_object_refs (object_p) > 0);
+  JERRY_ASSERT (ecma_gc_get_object_refs (object_p) > 0);
   ecma_gc_set_object_refs (object_p, ecma_gc_get_object_refs (object_p) - 1);
 } /* ecma_deref_object */
 
@@ -209,8 +209,8 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 void
 ecma_gc_init (void)
 {
-  ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY] = NULL;
-  ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK] = NULL;
+  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = NULL;
+  ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
 } /* ecma_gc_init */
 
 /**
@@ -219,7 +219,7 @@ ecma_gc_init (void)
 void
 ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 {
-  JERRY_ASSERT(object_p != NULL);
+  JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_gc_is_object_visited (object_p));
 
   bool traverse_properties = true;
@@ -302,7 +302,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
             case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
             {
-              JERRY_UNIMPLEMENTED("Indexed array storage is not implemented yet.");
+              JERRY_UNIMPLEMENTED ("Indexed array storage is not implemented yet.");
             }
 
             case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
@@ -312,7 +312,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
                                                  * but number of the real internal property types */
             {
-              JERRY_UNREACHABLE();
+              JERRY_UNREACHABLE ();
             }
 
             case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection of strings */
@@ -336,7 +336,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
             case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
             {
-              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER(ecma_object_t, property_value);
+              ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, property_value);
 
               ecma_gc_set_object_visited (obj_p, true);
 
@@ -357,9 +357,9 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 void
 ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 {
-  JERRY_ASSERT(object_p != NULL
-               && !ecma_gc_is_object_visited (object_p)
-               && ecma_gc_get_object_refs (object_p) == 0);
+  JERRY_ASSERT (object_p != NULL
+                && !ecma_gc_is_object_visited (object_p)
+                && ecma_gc_get_object_refs (object_p) == 0);
 
   if (!ecma_is_lexical_environment (object_p))
   {
@@ -405,10 +405,10 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (void)
 {
-  JERRY_ASSERT (ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK] == NULL);
+  JERRY_ASSERT (ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] == NULL);
 
   /* if some object is referenced from stack or globals (i.e. it is root), mark it */
-  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY];
+  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY];
        obj_iter_p != NULL;
        obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
   {
@@ -445,7 +445,7 @@ ecma_gc_run (void)
   {
     marked_anything_during_current_iteration = false;
 
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY], *obj_prev_p = NULL, *obj_next_p;
+    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY], *obj_prev_p = NULL, *obj_next_p;
          obj_iter_p != NULL;
          obj_iter_p = obj_next_p)
     {
@@ -454,8 +454,8 @@ ecma_gc_run (void)
       if (ecma_gc_is_object_visited (obj_iter_p))
       {
         /* Moving the object to list of marked objects */
-        ecma_gc_set_object_next (obj_iter_p, ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK]);
-        ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK] = obj_iter_p;
+        ecma_gc_set_object_next (obj_iter_p, ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK]);
+        ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = obj_iter_p;
 
         if (likely (obj_prev_p != NULL))
         {
@@ -465,7 +465,7 @@ ecma_gc_run (void)
         }
         else
         {
-          ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY] = obj_next_p;
+          ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = obj_next_p;
         }
 
         ecma_gc_mark (obj_iter_p);
@@ -476,10 +476,11 @@ ecma_gc_run (void)
         obj_prev_p = obj_iter_p;
       }
     }
-  } while (marked_anything_during_current_iteration);
+  }
+  while (marked_anything_during_current_iteration);
 
   /* Sweeping objects that are currently unmarked */
-  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY], *obj_next_p;
+  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY], *obj_next_p;
        obj_iter_p != NULL;
        obj_iter_p = obj_next_p)
   {
@@ -491,8 +492,8 @@ ecma_gc_run (void)
   }
 
   /* Unmarking all objects */
-  ecma_gc_objects_lists [ECMA_GC_COLOR_WHITE_GRAY] = ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK];
-  ecma_gc_objects_lists [ECMA_GC_COLOR_BLACK] = NULL;
+  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK];
+  ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
 
   ecma_gc_visited_flip_flag = !ecma_gc_visited_flip_flag;
 } /* ecma_gc_run */

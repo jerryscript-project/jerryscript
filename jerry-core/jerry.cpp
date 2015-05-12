@@ -68,7 +68,7 @@ static bool jerry_api_available;
 /**
  * Buffer of character data (used for exchange between core and extensions' routines)
  */
-char jerry_extension_characters_buffer [CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
+char jerry_extension_characters_buffer[CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
 
 /**
  * Assert that it is correct to call API in current state.
@@ -446,7 +446,7 @@ ecma_completion_value_t
 jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< external function object */
                                   ecma_external_pointer_t handler_p, /**< pointer to the function's native handler */
                                   ecma_value_t this_arg_value, /**< 'this' argument */
-                                  const ecma_value_t args_p [], /**< arguments list */
+                                  const ecma_value_t args_p[], /**< arguments list */
                                   ecma_length_t args_count) /**< number of arguments */
 {
   jerry_assert_api_available ();
@@ -459,7 +459,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    jerry_api_convert_ecma_value_to_api_value (&api_arg_values [i], args_p [i]);
+    jerry_api_convert_ecma_value_to_api_value (&api_arg_values[i], args_p[i]);
   }
 
   jerry_api_value_t api_this_arg_value, api_ret_value;
@@ -491,7 +491,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
   jerry_api_release_value (&api_this_arg_value);
   for (uint32_t i = 0; i < args_count; i++)
   {
-    jerry_api_release_value (&api_arg_values [i]);
+    jerry_api_release_value (&api_arg_values[i]);
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (api_arg_values);
@@ -814,8 +814,8 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
                                                             *            binding to the global object) */
                            jerry_api_value_t *retval_p, /**< pointer to place for function's return value
                                                          *   or NULL (to ignore the return value) */
-                           const jerry_api_value_t args_p [], /**< function's call arguments
-                                                               *   (NULL if arguments number is zero) */
+                           const jerry_api_value_t args_p[], /**< function's call arguments
+                                                              *   (NULL if arguments number is zero) */
                            uint16_t args_count) /**< number of the arguments */
 {
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
@@ -827,7 +827,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    jerry_api_convert_api_value_to_ecma_value (&arg_values [i], &args_p [i]);
+    jerry_api_convert_api_value_to_ecma_value (&arg_values[i], &args_p[i]);
   }
 
   ecma_completion_value_t call_completion;
@@ -888,7 +888,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   for (uint32_t i = 0; i < args_count; i++)
   {
-    ecma_free_value (arg_values [i], true);
+    ecma_free_value (arg_values[i], true);
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (arg_values);
@@ -914,8 +914,8 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
                                                           *   or NULL (set 'this' binding to the global object) */
                          jerry_api_value_t *retval_p, /**< pointer to place for function's return value
                                                        *   or NULL (to ignore the return value) */
-                         const jerry_api_value_t args_p [], /**< function's call arguments
-                                                             *   (NULL if arguments number is zero) */
+                         const jerry_api_value_t args_p[], /**< function's call arguments
+                                                            *   (NULL if arguments number is zero) */
                          uint16_t args_count) /**< number of the arguments */
 {
   jerry_assert_api_available ();
@@ -945,8 +945,8 @@ bool
 jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function object to call */
                             jerry_api_value_t *retval_p, /**< pointer to place for function's return value
                                                           *   or NULL (to ignore the return value) */
-                            const jerry_api_value_t args_p [], /**< function's call arguments
-                                                                *   (NULL if arguments number is zero) */
+                            const jerry_api_value_t args_p[], /**< function's call arguments
+                                                               *   (NULL if arguments number is zero) */
                             uint16_t args_count) /**< number of the arguments */
 {
   jerry_assert_api_available ();

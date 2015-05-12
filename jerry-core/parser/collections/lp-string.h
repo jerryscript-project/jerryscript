@@ -24,8 +24,7 @@ typedef struct
   const ecma_char_t *str;
   ecma_length_t length;
   ecma_string_hash_t hash;
-}
-lp_string;
+} lp_string;
 
 bool lp_string_equal (lp_string, lp_string);
 bool lp_string_equal_s (lp_string, const char *);

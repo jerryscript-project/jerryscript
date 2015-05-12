@@ -26,8 +26,7 @@ typedef struct
   uint8_t key_size;
   uint8_t value_size;
   mem_heap_alloc_term_t alloc_term;
-}
-hash_table_int;
+} hash_table_int;
 
 static hash_table_int *
 extract_header (hash_table ht)

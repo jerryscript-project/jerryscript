@@ -203,7 +203,7 @@ pp_printf (const char *format, opcode_t opcode, literal_index_t lit_ids[], opcod
 }
 
 #define PP_OP(op_name, format) \
-  case NAME_TO_ID(op_name): pp_printf (format, opm.op, opm.lit_id, oc); break;
+  case NAME_TO_ID (op_name): pp_printf (format, opm.op, opm.lit_id, oc); break;
 #define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
 #define OC(i, j) __extension__({ raw_opcode* raw = (raw_opcode *) &opm.op; \
                                  calc_opcode_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })

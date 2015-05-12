@@ -1,4 +1,14 @@
 set rules {
+    jerry_always_curly
+    jerry_braces_on_separate_line
+    jerry_braces_same_line_or_column
+    jerry_funcname_space_parentheses
+    jerry_identifier_no_space_bracket
     jerry_indentation
+    jerry_max_line_length
+    jerry_no_space_after_opening_parentheses
+    jerry_no_space_before_closing_parentheses
+    jerry_no_tabs
+    jerry_no_trailing_spaces
     jerry_switch_case
 }

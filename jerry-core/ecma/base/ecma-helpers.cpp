@@ -140,8 +140,8 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                             ecma_object_t *binding_obj_p, /**< binding object */
                             bool provide_this) /**< provideThis flag */
 {
-  JERRY_ASSERT(binding_obj_p != NULL
-               && !ecma_is_lexical_environment (binding_obj_p));
+  JERRY_ASSERT (binding_obj_p != NULL
+                && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
@@ -432,7 +432,7 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
   new_property_p->type = ECMA_PROPERTY_INTERNAL;
 
   ecma_property_t *list_head_p = ecma_get_property_list (object_p);
-  ECMA_SET_POINTER(new_property_p->next_property_p, list_head_p);
+  ECMA_SET_POINTER (new_property_p->next_property_p, list_head_p);
   ecma_set_property_list (object_p, new_property_p);
 
   JERRY_STATIC_ASSERT (ECMA_INTERNAL_PROPERTY__COUNT <= (1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH));
@@ -454,10 +454,10 @@ ecma_property_t*
 ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
                              ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
-  JERRY_ASSERT(object_p != NULL);
+  JERRY_ASSERT (object_p != NULL);
 
-  JERRY_ASSERT(property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
-               && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE);
+  JERRY_ASSERT (property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
+                && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE);
 
   for (ecma_property_t *property_p = ecma_get_property_list (object_p);
        property_p != NULL;
@@ -489,7 +489,7 @@ ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
 {
   ecma_property_t *property_p = ecma_find_internal_property (object_p, property_id);
 
-  JERRY_ASSERT(property_p != NULL);
+  JERRY_ASSERT (property_p != NULL);
 
   return property_p;
 } /* ecma_get_internal_property */
@@ -507,15 +507,15 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
                                  bool is_enumerable, /**< 'Enumerable' attribute */
                                  bool is_configurable) /**< 'Configurable' attribute */
 {
-  JERRY_ASSERT(obj_p != NULL && name_p != NULL);
-  JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
+  JERRY_ASSERT (obj_p != NULL && name_p != NULL);
+  JERRY_ASSERT (ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
 
   prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
-  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_data_property.name_p, name_p);
+  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_data_property.name_p, name_p);
 
   prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
   prop_p->u.named_data_property.enumerable = is_enumerable ? ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE;
@@ -529,7 +529,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
   ecma_lcache_invalidate (obj_p, name_p, NULL);
 
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
-  ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
+  ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
 
   return prop_p;
@@ -548,15 +548,15 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
                                      bool is_enumerable, /**< 'enumerable' attribute */
                                      bool is_configurable) /**< 'configurable' attribute */
 {
-  JERRY_ASSERT(obj_p != NULL && name_p != NULL);
-  JERRY_ASSERT(ecma_find_named_property (obj_p, name_p) == NULL);
+  JERRY_ASSERT (obj_p != NULL && name_p != NULL);
+  JERRY_ASSERT (ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
-  ECMA_SET_NON_NULL_POINTER(prop_p->u.named_accessor_property.name_p, name_p);
+  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.name_p, name_p);
 
   prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
                                                   ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
@@ -568,7 +568,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   ecma_lcache_invalidate (obj_p, name_p, NULL);
 
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
-  ECMA_SET_POINTER(prop_p->next_property_p, list_head_p);
+  ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p = ecma_alloc_getter_setter_pointers ();
@@ -593,8 +593,8 @@ ecma_property_t*
 ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in */
                           ecma_string_t *name_p) /**< property's name */
 {
-  JERRY_ASSERT(obj_p != NULL);
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL);
+  JERRY_ASSERT (name_p != NULL);
 
   ecma_property_t *property_p;
 
@@ -616,15 +616,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     }
     else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      property_name_p = ECMA_GET_NON_NULL_POINTER(ecma_string_t,
-                                                  property_p->u.named_accessor_property.name_p);
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_accessor_property.name_p);
     }
     else
     {
       continue;
     }
 
-    JERRY_ASSERT(property_name_p != NULL);
+    JERRY_ASSERT (property_name_p != NULL);
 
     if (ecma_compare_ecma_strings (name_p, property_name_p))
     {
@@ -650,12 +650,12 @@ ecma_property_t*
 ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in */
                          ecma_string_t *name_p) /**< property's name */
 {
-  JERRY_ASSERT(obj_p != NULL);
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (obj_p != NULL);
+  JERRY_ASSERT (name_p != NULL);
 
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
-  JERRY_ASSERT(property_p != NULL);
+  JERRY_ASSERT (property_p != NULL);
 
   return property_p;
 } /* ecma_get_named_property */
@@ -871,14 +871,14 @@ ecma_delete_property (ecma_object_t *obj_p, /**< object */
       }
       else
       {
-        ECMA_SET_POINTER(prev_prop_p->next_property_p, next_prop_p);
+        ECMA_SET_POINTER (prev_prop_p->next_property_p, next_prop_p);
       }
 
       return;
     }
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_delete_property */
 
 /**

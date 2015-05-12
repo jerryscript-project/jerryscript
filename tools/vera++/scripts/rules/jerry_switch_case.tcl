@@ -27,7 +27,7 @@ foreach fileName [getSourceFileNames] {
         if {$is_in_comment == "yes"} {
             set is_in_comment "no"
         }
-        
+
         if {$type == "newline"} {
             set is_in_pp_define "no"
         } elseif {$type == "ccomment"} {
@@ -140,7 +140,7 @@ foreach fileName [getSourceFileNames] {
                         if {$next_token_type == "semicolon"} {
                             set state "break"
                         }
-                        continue   
+                        continue
                     } elseif {$state == "wait-for-break"} {
                         if {$next_token_type == "case" || $next_token_type == "default"} {
                             report $fileName [lindex $next_token 1] "Missing break or FALLTHRU comment before case (state $state)"

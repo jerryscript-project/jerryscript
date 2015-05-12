@@ -36,7 +36,7 @@ enum
 };
 
 /* Fields description */
-static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIELDS_NUMBER + 1] =
+static const jerry_extension_field_t jerry_extension_fields[JERRY_EXTENSION_FIELDS_NUMBER + 1] =
 {
 #define EXTENSION_FIELD(_field_name, _type, _value) \
   { # _field_name, JERRY_API_DATA_TYPE_ ## _type, { _value } },
@@ -49,17 +49,17 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 
 /* Functions wrapper definitions */
 #define EXTENSION_ARG_PASS_BOOL(_arg_index) \
-  args_p [_arg_index].v_bool
+  args_p[_arg_index].v_bool
 #define EXTENSION_ARG_PASS_FLOAT32(_arg_index) \
-  args_p [_arg_index].v_float32
+  args_p[_arg_index].v_float32
 #define EXTENSION_ARG_PASS_FLOAT64(_arg_index) \
-  args_p [_arg_index].v_float64
+  args_p[_arg_index].v_float64
 #define EXTENSION_ARG_PASS_UINT32(_arg_index) \
-  args_p [_arg_index].v_uint32
+  args_p[_arg_index].v_uint32
 #define EXTENSION_ARG_PASS_STRING(_arg_index) \
-  args_p [_arg_index].v_string
+  args_p[_arg_index].v_string
 #define EXTENSION_ARG_PASS_OBJECT(_arg_index) \
-  args_p [_arg_index].v_object
+  args_p[_arg_index].v_object
 #define EXTENSION_ARG(_arg_index, _type) EXTENSION_ARG_PASS_ ## _type(_arg_index)
 #define EXTENSION_RET_VALUE_SET_VOID
 #define EXTENSION_RET_VALUE_SET_BOOLEAN function_block_p->ret_value.v_bool =
@@ -90,7 +90,7 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
   { false } /* just for initialization, should be overwritten upon call */ \
 }
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _ret_value_type, _args_number, ...) \
-  static jerry_api_value_t jerry_extension_function_ ## _function_name ## _args [_args_number] = { \
+  static jerry_api_value_t jerry_extension_function_ ## _function_name ## _args[_args_number] = { \
     __VA_ARGS__ \
   };
 # include EXTENSION_DESCRIPTION_HEADER
@@ -98,7 +98,7 @@ static const jerry_extension_field_t jerry_extension_fields [JERRY_EXTENSION_FIE
 #undef EXTENSION_ARG
 
 /* Functions description */
-static jerry_extension_function_t jerry_extension_functions [JERRY_EXTENSION_FUNCTIONS_NUMBER + 1] =
+static jerry_extension_function_t jerry_extension_functions[JERRY_EXTENSION_FUNCTIONS_NUMBER + 1] =
 {
 #define EXTENSION_FUNCTION(_function_name, _function_to_call, _ret_value_type, _args_number, ...) \
   {  \

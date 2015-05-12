@@ -31,7 +31,7 @@ FILE *stdin  = (FILE*) 0;
 FILE *stdout = (FILE*) 1;
 FILE *stderr = (FILE*) 2;
 
-LIBC_UNREACHABLE_STUB_FOR(void abort (void))
+LIBC_UNREACHABLE_STUB_FOR (void abort (void))
 
 #ifdef __GNUC__
 /*
@@ -42,10 +42,10 @@ LIBC_UNREACHABLE_STUB_FOR(void abort (void))
  */
 #define CALL_PRAGMA(x) _Pragma (#x)
 
-CALL_PRAGMA(GCC diagnostic push)
-CALL_PRAGMA(GCC diagnostic ignored "-Wpragmas")
-CALL_PRAGMA(GCC push_options)
-CALL_PRAGMA(GCC optimize ("-fno-tree-loop-distribute-patterns"))
+CALL_PRAGMA (GCC diagnostic push)
+CALL_PRAGMA (GCC diagnostic ignored "-Wpragmas")
+CALL_PRAGMA (GCC push_options)
+CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
 #endif /* __GNUC__ */
 
 /**
@@ -146,8 +146,8 @@ memmove (void *s1, /**< destination */
 } /* memmove */
 
 #ifdef __GNUC__
-CALL_PRAGMA(GCC pop_options)
-CALL_PRAGMA(GCC diagnostic pop)
+CALL_PRAGMA (GCC pop_options)
+CALL_PRAGMA (GCC diagnostic pop)
 #endif /* __GNUC__ */
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero

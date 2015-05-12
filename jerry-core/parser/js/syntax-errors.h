@@ -85,8 +85,7 @@ typedef enum __attr_packed___
   PROP_SET,
   PROP_GET,
   VARG
-}
-prop_type;
+} prop_type;
 
 void syntax_init (void);
 void syntax_free (void);

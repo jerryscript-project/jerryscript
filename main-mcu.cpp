@@ -22,7 +22,7 @@
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 #include JERRY_MCU_SCRIPT_HEADER
-static const char generated_source [] = JERRY_MCU_SCRIPT;
+static const char generated_source[] = JERRY_MCU_SCRIPT;
 
 int
 main (void)

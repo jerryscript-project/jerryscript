@@ -24,8 +24,7 @@ typedef enum __attr_packed___
 {
   OPERAND_LITERAL,
   OPERAND_TMP
-}
-operand_type;
+} operand_type;
 
 typedef struct
 {
@@ -34,10 +33,8 @@ typedef struct
   {
     idx_t uid;
     literal_index_t lit_id;
-  }
-  data;
-}
-operand;
+  } data;
+} operand;
 
 typedef enum __attr_packed___
 {
@@ -47,8 +44,7 @@ typedef enum __attr_packed___
   VARG_OBJ_DECL,
   VARG_CONSTRUCT_EXPR,
   VARG_CALL_EXPR
-}
-varg_list_type;
+} varg_list_type;
 
 operand empty_operand (void);
 operand literal_operand (literal_index_t);

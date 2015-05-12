@@ -55,7 +55,7 @@ main (int __attr_unused___ argc,
     for (size_t j = 0; j < subiters; j++)
     {
       ptrs[j] = mem_pools_alloc ();
-      // JERRY_ASSERT(ptrs[j] != NULL);
+      // JERRY_ASSERT (ptrs[j] != NULL);
 
       if (ptrs[j] != NULL)
       {
@@ -71,7 +71,7 @@ main (int __attr_unused___ argc,
       {
         for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
         {
-          JERRY_ASSERT(((uint8_t*) ptrs[j])[k] == 0);
+          JERRY_ASSERT (((uint8_t*) ptrs[j])[k] == 0);
         }
 
         mem_pools_free (ptrs[j]);

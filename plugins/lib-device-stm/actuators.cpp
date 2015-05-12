@@ -72,7 +72,7 @@ led_blink_once (uint32_t led_id) /**< index of LED */
 /**
  * LEDs' GPIO pins
  */
-static const uint16_t led_pins [LED_NUMBER] =
+static const uint16_t led_pins[LED_NUMBER] =
 {
   GPIO_Pin_12, /* LD4: Green */
   GPIO_Pin_13, /* LD3: Orange */
@@ -130,7 +130,7 @@ initialize_leds (void)
 /**
  * LEDs' GPIO pins
  */
-static const uint16_t led_pins [LED_NUMBER] =
+static const uint16_t led_pins[LED_NUMBER] =
 {
   GPIO_Pin_15, /* LD6  - Green */
   GPIO_Pin_14, /* LD8  - Orange */
@@ -189,7 +189,7 @@ led_toggle (uint32_t led_id) /**< index of LED */
 {
   if (led_id < LED_NUMBER)
   {
-    leds_port->ODR ^= led_pins [led_id];
+    leds_port->ODR ^= led_pins[led_id];
   }
 } /* led_toggle */
 

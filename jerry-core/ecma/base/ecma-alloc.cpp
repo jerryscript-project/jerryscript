@@ -78,8 +78,8 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
  * Declaration of alloc/free routine for specified ecma-type.
  */
 #define DECLARE_ROUTINES_FOR(ecma_type) \
-  ALLOC(ecma_type) \
-  DEALLOC(ecma_type)
+  ALLOC (ecma_type) \
+  DEALLOC (ecma_type)
 
 DECLARE_ROUTINES_FOR (object)
 DECLARE_ROUTINES_FOR (property)

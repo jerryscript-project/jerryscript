@@ -56,8 +56,8 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   }
 
   // 5.
-  JERRY_ASSERT(ref_base_lex_env_p != NULL
-               && ecma_is_lexical_environment (ref_base_lex_env_p));
+  JERRY_ASSERT (ref_base_lex_env_p != NULL
+                && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
   return ecma_op_get_binding_value (ref_base_lex_env_p,
@@ -94,8 +94,8 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     // 4.b case 1
 
     ecma_object_t *obj_p = ecma_get_object_from_value (base);
-    JERRY_ASSERT(obj_p != NULL
-                 && !ecma_is_lexical_environment (obj_p));
+    JERRY_ASSERT (obj_p != NULL
+                  && !ecma_is_lexical_environment (obj_p));
 
     return ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                  ref.referenced_name_cp));
@@ -156,16 +156,16 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 
       ecma_deref_object (global_object_p);
 
-      JERRY_ASSERT(ecma_is_completion_value_normal_true (completion)
-                   || ecma_is_completion_value_normal_false (completion));
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                    || ecma_is_completion_value_normal_false (completion));
 
       return ecma_make_empty_completion_value ();
     }
   }
 
   // 5.
-  JERRY_ASSERT(ref_base_lex_env_p != NULL
-               && ecma_is_lexical_environment (ref_base_lex_env_p));
+  JERRY_ASSERT (ref_base_lex_env_p != NULL
+                && ecma_is_lexical_environment (ref_base_lex_env_p));
 
   // 5.a
   return ecma_op_set_mutable_binding (ref_base_lex_env_p,

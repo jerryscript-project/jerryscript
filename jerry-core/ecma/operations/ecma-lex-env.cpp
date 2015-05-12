@@ -92,8 +92,8 @@ ecma_get_global_environment (void)
 bool
 ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
   return (lex_env_p == ecma_global_lex_env_p);
 } /* ecma_is_lexical_environment_global */
@@ -113,8 +113,8 @@ bool
 ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                      ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
@@ -145,9 +145,9 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
                                 ecma_string_t *name_p, /**< argument N */
                                 bool is_deletable) /**< argument D */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (name_p != NULL);
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
@@ -209,9 +209,9 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
                              ecma_value_t value, /**< argument V */
                              bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (name_p != NULL);
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
@@ -284,9 +284,9 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
                            ecma_string_t *name_p, /**< argument N */
                            bool is_strict) /**< argument S */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (name_p != NULL);
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
@@ -366,9 +366,9 @@ ecma_completion_value_t
 ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                         ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
-  JERRY_ASSERT(name_p != NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (name_p != NULL);
 
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
@@ -382,7 +382,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
     }
     else
     {
-      JERRY_ASSERT(prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
       if (!ecma_is_property_configurable (prop_p))
       {
@@ -419,8 +419,8 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 ecma_completion_value_t
 ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
@@ -453,8 +453,8 @@ void
 ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                   ecma_string_t *name_p) /**< argument N */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   /*
@@ -465,7 +465,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
                                                              name_p,
                                                              false, false, false);
 
-  JERRY_ASSERT(ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
+  JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
 
   ecma_set_named_data_property_value (prop_p,
                                       ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY));
@@ -481,15 +481,15 @@ ecma_op_initialize_immutable_binding (ecma_object_t *lex_env_p, /**< lexical env
                                       ecma_string_t *name_p, /**< argument N */
                                       ecma_value_t value) /**< argument V */
 {
-  JERRY_ASSERT(lex_env_p != NULL
-               && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   ecma_property_t *prop_p = ecma_get_named_data_property (lex_env_p, name_p);
 
   /* The binding must be unitialized immutable binding */
-  JERRY_ASSERT(!ecma_is_property_writable (prop_p)
-               && ecma_is_value_empty (ecma_get_named_data_property_value (prop_p)));
+  JERRY_ASSERT (!ecma_is_property_writable (prop_p)
+                && ecma_is_value_empty (ecma_get_named_data_property_value (prop_p)));
 
   ecma_named_data_property_assign_value (lex_env_p, prop_p, value);
 } /* ecma_op_initialize_immutable_binding */

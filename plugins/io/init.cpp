@@ -48,7 +48,7 @@ plugin_io_print_uint32 (uint32_t num) /**< uint32 to print */
 static void
 plugin_io_print_string (jerry_api_string_t *string_p) /**< string to print */
 {
-  char buffer [32];
+  char buffer[32];
 
   ssize_t req_size = jerry_api_string_to_char_buffer (string_p, buffer, (ssize_t) sizeof (buffer));
 

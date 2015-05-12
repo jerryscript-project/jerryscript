@@ -2173,7 +2173,7 @@ rewrite_breaks (void)
     break_op_meta.op.data.jmp_down.opcode_2 = id2;
     serializer_rewrite_op_meta (break_oc, break_op_meta);
   }
-  STACK_ITERATE_END();
+  STACK_ITERATE_END ();
 
   STACK_DROP (break_targets, 1);
   STACK_DROP (breaks, STACK_SIZE (breaks) - STACK_TOP (U8));
@@ -2195,7 +2195,7 @@ rewrite_continues (void)
     continue_op_meta.op.data.jmp_down.opcode_2 = id2;
     serializer_rewrite_op_meta (continue_oc, continue_op_meta);
   }
-  STACK_ITERATE_END();
+  STACK_ITERATE_END ();
 
   STACK_DROP (continue_targets, 1);
   STACK_DROP (continues, STACK_SIZE (continues) - STACK_TOP (U8));

@@ -139,7 +139,7 @@ fake_exit (void)
   while (1)
   {
     led_on (pin);
-    for ( index = 0; index < dot; index ++)
+    for (index = 0; index < dot; index ++)
     {
     };
     led_off (pin);

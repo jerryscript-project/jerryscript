@@ -119,8 +119,8 @@ interp_mem_stats_context_enter (int_data_t *int_data_p,
 
   char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [indentation] = '|';
-  indent_prefix [indentation + 1] = '\0';
+  indent_prefix[indentation] = '|';
+  indent_prefix[indentation + 1] = '\0';
 
   int_data_p->context_peak_allocated_heap_bytes = 0;
   int_data_p->context_peak_waste_heap_bytes = 0;
@@ -157,8 +157,8 @@ interp_mem_stats_context_exit (int_data_t *int_data_p,
 
   char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [indentation] = '|';
-  indent_prefix [indentation + 1] = '\0';
+  indent_prefix[indentation] = '|';
+  indent_prefix[indentation + 1] = '\0';
 
   mem_heap_stats_t heap_stats_context_exit;
   mem_pools_stats_t pools_stats_context_exit;
@@ -228,8 +228,8 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
 
   char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [indentation] = '|';
-  indent_prefix [indentation + 1] = '\0';
+  indent_prefix[indentation] = '|';
+  indent_prefix[indentation + 1] = '\0';
 
   interp_mem_get_stats (out_heap_stats_p,
                         out_pools_stats_p,
@@ -238,7 +238,7 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
   opcode_t opcode = read_opcode (opcode_position);
 
   printf ("%s-- Opcode: %s (position %u) --\n",
-          indent_prefix, __op_names [opcode.op_idx], (uint32_t) opcode_position);
+          indent_prefix, __op_names[opcode.op_idx], (uint32_t) opcode_position);
 
   interp_mem_stats_print_indentation += INTERP_MEM_PRINT_INDENTATION_STEP;
 }
@@ -261,8 +261,8 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
 
   char indent_prefix[INTERP_MEM_PRINT_INDENTATION_MAX + 2];
   memset (indent_prefix, ' ', sizeof (indent_prefix));
-  indent_prefix [indentation] = '|';
-  indent_prefix [indentation + 1] = '\0';
+  indent_prefix[indentation] = '|';
+  indent_prefix[indentation + 1] = '\0';
 
   mem_heap_stats_t heap_stats_after;
   mem_pools_stats_t pools_stats_after;
@@ -328,7 +328,7 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
   }
 
   printf ("%s-- End of execution of opcode %s (position %u) --\n\n",
-          indent_prefix, __op_names [opcode.op_idx], opcode_position);
+          indent_prefix, __op_names[opcode.op_idx], opcode_position);
 }
 #endif /* MEM_STATS */
 

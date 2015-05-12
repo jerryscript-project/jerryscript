@@ -49,7 +49,7 @@ JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH)
 /**
  * Lengths of magic strings
  */
-static ecma_length_t ecma_magic_string_lengths [ECMA_MAGIC_STRING__COUNT];
+static ecma_length_t ecma_magic_string_lengths[ECMA_MAGIC_STRING__COUNT];
 
 #ifndef JERRY_NDEBUG
 /**
@@ -286,10 +286,10 @@ ecma_strings_init (void)
        id < ECMA_MAGIC_STRING__COUNT;
        id = (ecma_magic_string_id_t) (id + 1))
   {
-    ecma_magic_string_lengths [id] = ecma_zt_string_length (ecma_get_magic_string_zt (id));
+    ecma_magic_string_lengths[id] = ecma_zt_string_length (ecma_get_magic_string_zt (id));
 
 #ifndef JERRY_NDEBUG
-    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_lengths [id]);
+    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_lengths[id]);
 
     JERRY_ASSERT (ecma_magic_string_max_length <= ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT);
 #endif /* !JERRY_NDEBUG */
@@ -348,7 +348,7 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
   string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
   string_p->hash = ecma_chars_buffer_calc_hash_last_chars (ecma_get_magic_string_zt (magic_string_id),
-                                                           ecma_magic_string_lengths [magic_string_id]);
+                                                           ecma_magic_string_lengths[magic_string_id]);
 
   string_p->u.common_field = 0;
   string_p->u.magic_string_id = magic_string_id;
@@ -413,10 +413,10 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   FIXME (/* Use digit to char conversion routine */);
   const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
   const bool is_one_char_or_more = (uint32_number >= 10);
-  const ecma_char_t last_chars [ECMA_STRING_HASH_LAST_CHARS_COUNT] =
+  const ecma_char_t last_chars[ECMA_STRING_HASH_LAST_CHARS_COUNT] =
   {
-    is_one_char_or_more ? digits [digit_pl] : digits[digit_l],
-    is_one_char_or_more ? digits [digit_l] : ECMA_CHAR_NULL
+    is_one_char_or_more ? digits[digit_pl] : digits[digit_l],
+    is_one_char_or_more ? digits[digit_l] : ECMA_CHAR_NULL
   };
 
   /* Only last two chars are really used for hash calculation */
@@ -424,7 +424,7 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
                                                                 is_one_char_or_more ? 2 : 1);
 
 #ifndef JERRY_NDEBUG
-  ecma_char_t char_buf [ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  ecma_char_t char_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
   ssize_t chars_copied = ecma_uint32_to_string (uint32_number,
                                                 char_buf,
                                                 ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
@@ -962,7 +962,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       const ecma_magic_string_id_t id = string_desc_p->u.magic_string_id;
-      const size_t length = ecma_magic_string_lengths [id];
+      const size_t length = ecma_magic_string_lengths[id];
 
       size_t bytes_to_copy = (length + 1) * sizeof (ecma_char_t);
 
@@ -1184,8 +1184,8 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
   const ecma_char_t *zt_string1_p, *zt_string2_p;
   bool is_zt_string1_on_heap = false, is_zt_string2_on_heap = false;
-  ecma_char_t zt_string1_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
-  ecma_char_t zt_string2_buffer [ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  ecma_char_t zt_string1_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  ecma_char_t zt_string2_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
   if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
@@ -1292,7 +1292,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
-    return ecma_magic_string_lengths [string_p->u.magic_string_id];
+    return ecma_magic_string_lengths[string_p->u.magic_string_id];
   }
   else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
@@ -1315,7 +1315,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
     int32_t length = 1;
 
     while (length < max_uint32_len
-           && uint32_number >= nums_with_ascending_length [length])
+           && uint32_number >= nums_with_ascending_length[length])
     {
       length++;
     }
@@ -1376,7 +1376,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   ecma_string_to_zt_string (string_p, zt_str_p, (ssize_t) buffer_size);
 
-  ecma_char_t ch = zt_str_p [index];
+  ecma_char_t ch = zt_str_p[index];
 
   mem_heap_free_block (zt_str_p);
 
@@ -1586,7 +1586,7 @@ ecma_zt_string_length (const ecma_char_t *string_p) /**< zero-terminated string 
 const ecma_char_t*
 ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
 {
-  TODO(Support UTF-16);
+  TODO (Support UTF-16);
 
   switch (id)
   {
@@ -1598,7 +1598,7 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
     case ECMA_MAGIC_STRING__COUNT: break;
   }
 
-  JERRY_UNREACHABLE();
+  JERRY_UNREACHABLE ();
 } /* ecma_get_magic_string_zt */
 
 /**
@@ -1655,7 +1655,7 @@ static bool
 ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
                                ecma_magic_string_id_t *out_id_p) /**< out: magic string's id */
 {
-  ecma_char_t zt_string_buffer [ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT + 1];
+  ecma_char_t zt_string_buffer[ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT + 1];
 
   ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
   JERRY_ASSERT (copied > 0);

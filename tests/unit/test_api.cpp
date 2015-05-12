@@ -92,25 +92,25 @@ static bool
 handler (const jerry_api_object_t *function_obj_p,
          const jerry_api_value_t *this_p,
          jerry_api_value_t *ret_val_p,
-         const jerry_api_value_t args_p [],
+         const jerry_api_value_t args_p[],
          const uint16_t args_cnt)
 {
-  char buffer [32];
+  char buffer[32];
   ssize_t sz;
 
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 
   assert (args_cnt == 2);
 
-  assert (args_p [0].type == JERRY_API_DATA_TYPE_STRING);
-  sz = jerry_api_string_to_char_buffer (args_p [0].v_string, NULL, 0);
+  assert (args_p[0].type == JERRY_API_DATA_TYPE_STRING);
+  sz = jerry_api_string_to_char_buffer (args_p[0].v_string, NULL, 0);
   assert (sz == -2);
-  sz = jerry_api_string_to_char_buffer (args_p [0].v_string, buffer, -sz);
+  sz = jerry_api_string_to_char_buffer (args_p[0].v_string, buffer, -sz);
   assert (sz == 2);
   assert (!strcmp (buffer, "1"));
 
-  assert (args_p [1].type == JERRY_API_DATA_TYPE_BOOLEAN);
-  assert (args_p [1].v_bool == true);
+  assert (args_p[1].type == JERRY_API_DATA_TYPE_BOOLEAN);
+  assert (args_p[1].v_bool == true);
 
   test_api_init_api_value_string (ret_val_p, "string from handler");
 
@@ -130,7 +130,7 @@ static bool
 handler_construct (const jerry_api_object_t *function_obj_p,
                    const jerry_api_value_t *this_p,
                    jerry_api_value_t *ret_val_p,
-                   const jerry_api_value_t args_p [],
+                   const jerry_api_value_t args_p[],
                    const uint16_t args_cnt)
 {
   printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
@@ -139,10 +139,10 @@ handler_construct (const jerry_api_object_t *function_obj_p,
   assert (this_p->type == JERRY_API_DATA_TYPE_OBJECT);
 
   assert (args_cnt == 1);
-  assert (args_p [0].type == JERRY_API_DATA_TYPE_BOOLEAN);
-  assert (args_p [0].v_bool == true);
+  assert (args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN);
+  assert (args_p[0].v_bool == true);
 
-  jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p [0]);
+  jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p[0]);
 
   jerry_api_set_object_native_handle (this_p->v_object,
                                       (uintptr_t) 0x0012345678abcdefull,
@@ -162,8 +162,8 @@ main (void)
   jerry_api_value_t val_external, val_external_construct, val_call_external;
   jerry_api_object_t* global_obj_p;
   jerry_api_object_t* external_func_p, *external_construct_p;
-  jerry_api_value_t res, args [2];
-  char buffer [32];
+  jerry_api_value_t res, args[2];
+  char buffer[32];
 
   is_ok = jerry_parse (test_source, strlen (test_source));
   assert (is_ok);
@@ -348,7 +348,7 @@ main (void)
 
   jerry_cleanup ();
 
-  assert(test_api_is_free_callback_was_called);
+  assert (test_api_is_free_callback_was_called);
 
   return 0;
 }

@@ -76,8 +76,7 @@ typedef enum __attr_packed___
   KW_WHILE,
   KW_WITH,
   KW_YIELD
-}
-keyword;
+} keyword;
 
 
 /* Type of tokens.  */
@@ -152,8 +151,7 @@ typedef enum __attr_packed___
   TOK_DIV, // /
   TOK_DIV_EQ, // /=
   TOK_EMPTY,
-}
-token_type;
+} token_type;
 
 typedef size_t locus;
 
@@ -163,8 +161,7 @@ typedef struct
   locus loc;
   token_type type;
   literal_index_t uid;
-}
-token;
+} token;
 
 void lexer_init (const char *, size_t, bool);
 void lexer_free (void);

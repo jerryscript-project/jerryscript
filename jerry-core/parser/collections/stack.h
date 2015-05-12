@@ -37,30 +37,30 @@
     max_temp_name,
     temp_names_global_size
   };
-  STACK(temp_names, uint8_t, uint8_t)
+  STACK (temp_names, uint8_t, uint8_t)
 
   #define GLOBAL(NAME, VAR) \
   STACK_ELEMENT (NAME, VAR)
 
   #define MAX_TEMP_NAME() \
-  GLOBAL(temp_names, max_temp_name)
+  GLOBAL (temp_names, max_temp_name)
 
   #define MIN_TEMP_NAME() \
-  GLOBAL(temp_names, min_temp_name)
+  GLOBAL (temp_names, min_temp_name)
 
   #define TEMP_NAME() \
-  GLOBAL(temp_names, temp_name)
+  GLOBAL (temp_names, temp_name)
 
   void
   parser_init (void)
   {
-    STACK_INIT(temp_names)
+    STACK_INIT (temp_names)
   }
 
   void
   parser_free (void)
   {
-    STACK_FREE(temp_names)
+    STACK_FREE (temp_names)
   }
 */
 #ifndef STACK_H
@@ -124,8 +124,7 @@ static TYPE *convert_##NAME##_to_raw_data (void) { \
   { \
     return NULL; \
   } \
-  size_t size = mem_heap_recommend_allocation_size ( \
-      array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
+  size_t size = mem_heap_recommend_allocation_size (array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
   TYPE *DATA = (TYPE *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM); \
   if (DATA == NULL) \
   { \
@@ -164,9 +163,9 @@ STACK_HEAD (NAME, 1)
 
 #define STACK_SWAP(NAME) \
 do { \
-  NAME##_stack_value_type temp = STACK_TOP(NAME); \
-  STACK_SET_HEAD(NAME, 1, STACK_HEAD(NAME, 2)); \
-  STACK_SET_HEAD(NAME, 2, temp); \
+  NAME##_stack_value_type temp = STACK_TOP (NAME); \
+  STACK_SET_HEAD (NAME, 1, STACK_HEAD (NAME, 2)); \
+  STACK_SET_HEAD (NAME, 2, temp); \
 } while (0)
 
 #define STACK_SIZE(NAME) \
@@ -182,10 +181,10 @@ do { set_##NAME##_stack_element ((size_t) I, VALUE); } while (0)
 do { DATA = convert_##NAME##_to_raw_data (); } while (0)
 
 #define STACK_INCR_ELEMENT(NAME, I) \
-do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, I) + 1)); } while (0)
+do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT (NAME, I) + 1)); } while (0)
 
 #define STACK_DECR_ELEMENT(NAME, I) \
-do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT(NAME, I) - 1)); } while (0)
+do { STACK_SET_ELEMENT (NAME, I, (NAME##_stack_value_type) (STACK_ELEMENT (NAME, I) - 1)); } while (0)
 
 #define STACK_ITERATE(NAME, VAL, FROM) \
 for (size_t NAME##_i = FROM; \
@@ -203,24 +202,24 @@ do { for (size_t i = FROM; i < array_list_len (NAME.data); i++) { \
 } } while (0)
 
 #define STACK(NAME, TYPE) \
-DEFINE_STACK_TYPE(NAME, TYPE) \
+DEFINE_STACK_TYPE (NAME, TYPE) \
 NAME##_stack NAME; \
-DEFINE_STACK_ELEMENT(NAME, TYPE) \
-DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
-DEFINE_STACK_HEAD(NAME, TYPE) \
-DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-DEFINE_SET_STACK_HEAD(NAME, TYPE) \
-DEFINE_STACK_PUSH(NAME, TYPE)
+DEFINE_STACK_ELEMENT (NAME, TYPE) \
+DEFINE_SET_STACK_ELEMENT (NAME, TYPE) \
+DEFINE_STACK_HEAD (NAME, TYPE) \
+DEFINE_CONVERT_TO_RAW_DATA (NAME, TYPE) \
+DEFINE_SET_STACK_HEAD (NAME, TYPE) \
+DEFINE_STACK_PUSH (NAME, TYPE)
 
 #define STATIC_STACK(NAME, TYPE) \
-DEFINE_STACK_TYPE(NAME, TYPE) \
+DEFINE_STACK_TYPE (NAME, TYPE) \
 static NAME##_stack NAME; \
-DEFINE_STACK_ELEMENT(NAME, TYPE) \
-DEFINE_SET_STACK_ELEMENT(NAME, TYPE) \
-DEFINE_STACK_HEAD(NAME, TYPE) \
-DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-DEFINE_SET_STACK_HEAD(NAME, TYPE) \
-DEFINE_STACK_PUSH(NAME, TYPE)
+DEFINE_STACK_ELEMENT (NAME, TYPE) \
+DEFINE_SET_STACK_ELEMENT (NAME, TYPE) \
+DEFINE_STACK_HEAD (NAME, TYPE) \
+DEFINE_CONVERT_TO_RAW_DATA (NAME, TYPE) \
+DEFINE_SET_STACK_HEAD (NAME, TYPE) \
+DEFINE_STACK_PUSH (NAME, TYPE)
 
 #ifndef JERRY_NDEBUG
 #define STACK_DECLARE_USAGE(NAME) \

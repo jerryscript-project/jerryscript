@@ -98,16 +98,16 @@ mem_get_base_pointer (void)
 uintptr_t
 mem_compress_pointer (const void *pointer) /**< pointer to compress */
 {
-  JERRY_ASSERT(pointer != NULL);
+  JERRY_ASSERT (pointer != NULL);
 
   uintptr_t int_ptr = (uintptr_t) pointer;
 
-  JERRY_ASSERT(int_ptr % MEM_ALIGNMENT == 0);
+  JERRY_ASSERT (int_ptr % MEM_ALIGNMENT == 0);
 
   int_ptr -= mem_get_base_pointer ();
   int_ptr >>= MEM_ALIGNMENT_LOG;
 
-  JERRY_ASSERT((int_ptr & ~((1u << MEM_HEAP_OFFSET_LOG) - 1)) == 0);
+  JERRY_ASSERT ((int_ptr & ~((1u << MEM_HEAP_OFFSET_LOG) - 1)) == 0);
 
   JERRY_ASSERT (int_ptr != MEM_CP_NULL);
 

@@ -97,7 +97,7 @@ typedef struct jerry_api_value_t
 typedef bool (*jerry_external_handler_t) (const jerry_api_object_t *function_obj_p,
                                           const jerry_api_value_t *this_p,
                                           jerry_api_value_t *ret_val_p,
-                                          const jerry_api_value_t args_p [],
+                                          const jerry_api_value_t args_p[],
                                           const uint16_t args_count);
 
 /**
@@ -163,13 +163,13 @@ extern EXTERN_C
 bool jerry_api_call_function (jerry_api_object_t *function_object_p,
                               jerry_api_object_t *this_arg_p,
                               jerry_api_value_t *retval_p,
-                              const jerry_api_value_t args_p [],
+                              const jerry_api_value_t args_p[],
                               uint16_t args_count);
 
 extern EXTERN_C
 bool jerry_api_construct_object (jerry_api_object_t *function_object_p,
                                  jerry_api_value_t *retval_p,
-                                 const jerry_api_value_t args_p [],
+                                 const jerry_api_value_t args_p[],
                                  uint16_t args_count);
 
 extern EXTERN_C

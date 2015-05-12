@@ -279,7 +279,6 @@ OP_ARGS_LIST (GETOP_DECL)
 typedef struct
 {
   uint8_t uids[4];
-}
-raw_opcode;
+} raw_opcode;
 
 #endif /* OPCODES_H */

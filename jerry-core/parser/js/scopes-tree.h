@@ -29,16 +29,14 @@ typedef struct
 {
   literal_index_t lit_id[3];
   opcode_t op;
-}
-op_meta;
+} op_meta;
 
 typedef struct tree_header
 {
   struct tree_header *parent;
   linked_list children;
   uint8_t children_num;
-}
-tree_header;
+} tree_header;
 
 typedef struct
 {
@@ -46,8 +44,7 @@ typedef struct
   linked_list opcodes;
   opcode_counter_t opcodes_num;
   unsigned strict_mode:1;
-}
-scopes_tree_int;
+} scopes_tree_int;
 
 typedef scopes_tree_int * scopes_tree;
 

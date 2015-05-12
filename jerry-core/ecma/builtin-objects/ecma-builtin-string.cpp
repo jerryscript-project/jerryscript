@@ -64,7 +64,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
 
   ecma_char_t *ret_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_buffer_size,
                                                                    MEM_HEAP_ALLOC_SHORT_TERM);
-  ret_zt_str_p [args_number] = ECMA_CHAR_NULL;
+  ret_zt_str_p[args_number] = ECMA_CHAR_NULL;
 
   for (ecma_length_t arg_index = 0;
        arg_index < args_number;
@@ -82,10 +82,10 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
     }
     else
     {
-      ret_zt_str_p [arg_index] = (ecma_char_t) uint16_char_code;
+      ret_zt_str_p[arg_index] = (ecma_char_t) uint16_char_code;
     }
 #elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-    ret_zt_str_p [arg_index] = (ecma_char_t) uint16_char_code;
+    ret_zt_str_p[arg_index] = (ecma_char_t) uint16_char_code;
 #endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
@@ -129,7 +129,7 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   }
   else
   {
-    ret_value = ecma_op_to_string (arguments_list_p [0]);
+    ret_value = ecma_op_to_string (arguments_list_p[0]);
   }
 
   return ret_value;

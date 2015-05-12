@@ -23,8 +23,7 @@ typedef struct linked_list_header
 {
   struct linked_list_header *next;
   uint16_t element_size;
-}
-linked_list_header;
+} linked_list_header;
 
 #define ASSERT_LIST(list) \
 do { \

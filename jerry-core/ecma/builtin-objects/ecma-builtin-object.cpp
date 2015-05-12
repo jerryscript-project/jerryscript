@@ -57,13 +57,13 @@ ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 
   if (arguments_list_len == 0
       || ecma_is_value_undefined (arguments_list_p[0])
-      || ecma_is_value_null (arguments_list_p [0]))
+      || ecma_is_value_null (arguments_list_p[0]))
   {
     ret_value = ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
   }
   else
   {
-    ret_value = ecma_op_to_object (arguments_list_p [0]);
+    ret_value = ecma_op_to_object (arguments_list_p[0]);
   }
 
   return ret_value;
@@ -88,7 +88,7 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
   else
   {
-    ecma_completion_value_t new_obj_value = ecma_op_create_object_object_arg (arguments_list_p [0]);
+    ecma_completion_value_t new_obj_value = ecma_op_create_object_object_arg (arguments_list_p[0]);
 
     if (!ecma_is_completion_value_normal (new_obj_value))
     {

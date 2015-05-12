@@ -22,8 +22,7 @@ typedef struct
   uint8_t element_size;
   size_t len;
   size_t size;
-}
-array_list_header;
+} array_list_header;
 
 static array_list_header *
 extract_header (array_list al)

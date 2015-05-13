@@ -23,6 +23,20 @@ shift
 TARGETS="$1"
 shift
 
+# Checking presence and correctness of Signed-off-by message
+commit_hash=`git show -s --format=%H HEAD`
+author_name=`git show -s --format=%an HEAD`
+author_email=`git show -s --format=%ae HEAD`
+required_signed_off_by_line="JerryScript-DCO-1.0-Signed-off-by: $author_name $author_email"
+actual_signed_off_by_line=`git show -s --format=%B HEAD | sed '/^$/d' | tail -n 1`
+
+if [ "$actual_signed_off_by_line" != "$required_signed_off_by_line" ]
+then
+ echo -e "\e[1;33m Signed-off-by message is incorrect. The following line should be at the end of the $commit_hash commit's message: '$required_signed_off_by_line'. \e[0m\n"
+
+ exit 1
+fi
+
 VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests"
 VERA_CONFIGURATION_PATH="./tools/vera++"
 

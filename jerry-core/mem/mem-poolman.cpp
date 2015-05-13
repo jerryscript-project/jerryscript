@@ -110,14 +110,7 @@ mem_pools_alloc_longpath (void)
 
     mem_pool_init (pool_state, MEM_POOL_SIZE);
 
-    if (mem_pools == NULL)
-    {
-      pool_state->next_pool_cp = MEM_COMPRESSED_POINTER_NULL;
-    }
-    else
-    {
-      pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
-    }
+    MEM_CP_SET_POINTER (pool_state->next_pool_cp, mem_pools);
 
     mem_pools = pool_state;
 
@@ -137,15 +130,13 @@ mem_pools_alloc_longpath (void)
     while (pool_state->first_free_chunk == MEM_POOL_CHUNKS_NUMBER)
     {
       prev_pool_state_p = pool_state;
-      pool_state = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
-
-      JERRY_ASSERT(pool_state != NULL);
+      pool_state = MEM_CP_GET_NON_NULL_POINTER (mem_pool_state_t, pool_state->next_pool_cp);
     }
 
     JERRY_ASSERT (prev_pool_state_p != NULL && pool_state != mem_pools);
 
     prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
-    pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
+    MEM_CP_SET_NON_NULL_POINTER (pool_state->next_pool_cp, mem_pools);
     mem_pools = pool_state;
   }
 
@@ -195,9 +186,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
   while (!mem_pool_is_chunk_inside (pool_state, chunk_p))
   {
     prev_pool_state_p = pool_state;
-    pool_state = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
-
-    JERRY_ASSERT(pool_state != NULL);
+    pool_state = MEM_CP_GET_NON_NULL_POINTER (mem_pool_state_t, pool_state->next_pool_cp);
   }
 
   /**
@@ -219,14 +208,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
     }
     else
     {
-      if (pool_state->next_pool_cp == MEM_COMPRESSED_POINTER_NULL)
-      {
-        mem_pools = NULL;
-      }
-      else
-      {
-        mem_pools = (mem_pool_state_t*) mem_decompress_pointer (pool_state->next_pool_cp);
-      }
+      mem_pools = MEM_CP_GET_POINTER (mem_pool_state_t, pool_state->next_pool_cp);
     }
 
     mem_free_chunks_number -= MEM_POOL_CHUNKS_NUMBER;
@@ -240,7 +222,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
     JERRY_ASSERT (prev_pool_state_p != NULL);
 
     prev_pool_state_p->next_pool_cp = pool_state->next_pool_cp;
-    pool_state->next_pool_cp = mem_compress_pointer (mem_pools) & MEM_COMPRESSED_POINTER_MASK;
+    MEM_CP_SET_NON_NULL_POINTER (pool_state->next_pool_cp, mem_pools);
     mem_pools = pool_state;
   }
 } /* mem_pools_free */

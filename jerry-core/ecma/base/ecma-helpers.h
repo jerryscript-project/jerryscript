@@ -27,44 +27,27 @@
 #include "mem-allocator.h"
 
 /**
- * Get value of pointer from specified non-null compressed pointer field.
+ * Get value of pointer from specified non-null compressed pointer.
  */
-#define ECMA_GET_NON_NULL_POINTER(type, field) \
-  ((type *) mem_decompress_pointer (field))
+#define ECMA_GET_NON_NULL_POINTER(type, field) MEM_CP_GET_NON_NULL_POINTER (type, field)
 
 /**
- * Get value of pointer from specified compressed pointer field.
+ * Get value of pointer from specified compressed pointer.
  */
-#define ECMA_GET_POINTER(type, field) \
-  (((unlikely (field == ECMA_NULL_POINTER)) ? NULL : ECMA_GET_NON_NULL_POINTER (type, field)))
+#define ECMA_GET_POINTER(type, field) MEM_CP_GET_POINTER (type, field)
 
 /**
- * Set value of non-null compressed pointer field so that it will correspond
+ * Set value of non-null compressed pointer so that it will correspond
  * to specified non_compressed_pointer.
  */
-#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) \
-  (field) = (mem_compress_pointer (non_compressed_pointer) & \
-             ((((mem_cpointer_t) 1u) << ECMA_POINTER_FIELD_WIDTH) - 1))
+#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) MEM_CP_SET_NON_NULL_POINTER (field, \
+                                                                                              non_compressed_pointer)
 
 /**
- * Set value of compressed pointer field so that it will correspond
+ * Set value of compressed pointer so that it will correspond
  * to specified non_compressed_pointer.
  */
-#define ECMA_SET_POINTER(field, non_compressed_pointer) \
-  do \
-  { \
-    auto __temp_pointer = non_compressed_pointer; \
-    non_compressed_pointer = __temp_pointer; \
-  } while (0); \
-  \
-  if (unlikely ((non_compressed_pointer) == NULL)) \
-  { \
-    (field) = ECMA_NULL_POINTER; \
-  } \
-  else \
-  { \
-    ECMA_SET_NON_NULL_POINTER (field, non_compressed_pointer); \
-  }
+#define ECMA_SET_POINTER(field, non_compressed_pointer) MEM_CP_SET_POINTER (field, non_compressed_pointer)
 
 /* ecma-helpers-value.c */
 extern bool ecma_is_value_empty (ecma_value_t value);

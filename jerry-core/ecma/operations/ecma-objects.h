@@ -45,6 +45,8 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p,
                                     bool is_throw);
 extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *obj_p,
                                                             ecma_value_t value);
+extern bool ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
+
 /**
  * @}
  * @}

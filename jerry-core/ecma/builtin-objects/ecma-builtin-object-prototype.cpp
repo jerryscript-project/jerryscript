@@ -252,7 +252,37 @@ static ecma_completion_value_t
 ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**< this argument */
                                                       ecma_value_t arg) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  /* 1. Is the argument an object? */
+  if (!ecma_is_value_object (arg))
+  {
+    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+
+  /* 2. ToObject(this) */
+  ECMA_TRY_CATCH (obj_value,
+                  ecma_op_to_object (this_arg),
+                  return_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+
+  /* 3. Compare prototype to object */
+  ECMA_TRY_CATCH (v_obj_value,
+                  ecma_op_to_object (arg),
+                  return_value);
+
+  ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
+
+  bool is_prototype_of = ecma_op_object_is_prototype_of (obj_p, v_obj_p);
+  return_value = ecma_make_simple_completion_value (is_prototype_of
+                                                    ? ECMA_SIMPLE_VALUE_TRUE
+                                                    : ECMA_SIMPLE_VALUE_FALSE);
+  ECMA_FINALIZE (v_obj_value);
+
+  ECMA_FINALIZE (obj_value);
+
+  return return_value;
 } /* ecma_builtin_object_prototype_object_is_prototype_of */
 
 /**

@@ -504,6 +504,36 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
   JERRY_UNREACHABLE ();
 } /* ecma_op_object_has_instance */
 
+
+
+/**
+ * Object's isPrototypeOf operation
+ *
+ * See also:
+ *          ECMA-262 v5, 15.2.4.6; 3
+ *
+ * @return true if the target object is prototype of the base object
+ *         false if the target object is not prototype of the base object
+ */
+bool
+ecma_op_object_is_prototype_of (ecma_object_t *base_p, /** < base object */
+                                ecma_object_t *target_p) /** < target object */
+{
+  do
+  {
+    target_p = ecma_get_object_prototype (target_p);
+    if (target_p == NULL)
+    {
+      return false;
+    }
+    else if (target_p == base_p)
+    {
+      return true;
+    }
+  } while (true);
+} /* ecma_op_object_is_prototype_of */
+
+
 /**
  * @}
  * @}

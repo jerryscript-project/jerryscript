@@ -56,15 +56,6 @@
 #endif /* JERRY_VALGRIND */
 
 /**
- * Magic numbers for heap memory blocks
- */
-typedef enum
-{
-  MEM_MAGIC_NUM_OF_FREE_BLOCK      = 0xc809,
-  MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK = 0x5b46
-} mem_magic_num_of_block_t;
-
-/**
  * State of the block to initialize (argument of mem_init_block_header)
  *
  * @see mem_init_block_header
@@ -108,9 +99,6 @@ typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_block_header_t
                                                    *   0 - if the block is the first block */
   mem_heap_offset_t next_p : MEM_HEAP_OFFSET_LOG; /**< next block's offset;
                                                    *   0 - if the block is the last block */
-  uint16_t magic_num; /**< magic number (mem_magic_num_of_block_t):
-                       *   MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK for allocated block
-                       *   or MEM_MAGIC_NUM_OF_FREE_BLOCK for free block */
 } mem_block_header_t;
 
 #if MEM_HEAP_OFFSET_LOG <= 16
@@ -152,6 +140,7 @@ mem_heap_state_t mem_heap;
 static size_t mem_get_block_chunks_count (const mem_block_header_t *block_header_p);
 static size_t mem_get_block_data_space_size (const mem_block_header_t *block_header_p);
 static size_t mem_get_block_chunks_count_from_data_size (size_t block_allocated_size);
+static bool mem_is_block_free (const mem_block_header_t *block_header_p);
 
 static void mem_init_block_header (uint8_t *first_chunk_p,
                                    size_t size_in_chunks,
@@ -371,6 +360,18 @@ mem_get_block_chunks_count_from_data_size (size_t block_allocated_size) /**< siz
 } /* mem_get_block_chunks_count_from_data_size */
 
 /**
+ * Check whether specified block is free.
+ *
+ * @return true - if block is free,
+ *         false - otherwise
+ */
+static bool
+mem_is_block_free (const mem_block_header_t *block_header_p) /**< block header */
+{
+  return (block_header_p->allocated_bytes == 0);
+} /* mem_is_block_free */
+
+/**
  * Startup initialization of heap
  */
 void
@@ -410,7 +411,7 @@ mem_heap_finalize (void)
   VALGRIND_DEFINED_SPACE(mem_heap.heap_start, mem_heap.heap_size);
 
   JERRY_ASSERT(mem_heap.first_block_p == mem_heap.last_block_p);
-  JERRY_ASSERT(mem_heap.first_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK);
+  JERRY_ASSERT (mem_is_block_free (mem_heap.first_block_p));
 
   VALGRIND_NOACCESS_SPACE(mem_heap.heap_start, mem_heap.heap_size);
 
@@ -431,22 +432,22 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
 
   VALGRIND_UNDEFINED_STRUCT(block_header_p);
 
-  if (block_state == MEM_BLOCK_FREE)
-  {
-    block_header_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
-
-    JERRY_ASSERT(allocated_bytes == 0);
-  }
-  else
-  {
-    block_header_p->magic_num = MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK;
-  }
-
   mem_set_block_prev (block_header_p, prev_block_p);
   mem_set_block_next (block_header_p, next_block_p);
   mem_set_block_allocated_bytes (block_header_p, allocated_bytes);
 
   JERRY_ASSERT(allocated_bytes <= mem_get_block_data_space_size (block_header_p));
+
+  if (block_state == MEM_BLOCK_FREE)
+  {
+    JERRY_ASSERT (allocated_bytes == 0);
+    JERRY_ASSERT (mem_is_block_free (block_header_p));
+  }
+  else
+  {
+    JERRY_ASSERT (allocated_bytes != 0);
+    JERRY_ASSERT (!mem_is_block_free (block_header_p));
+  }
 
   VALGRIND_NOACCESS_STRUCT(block_header_p);
 } /* mem_init_block_header */
@@ -489,7 +490,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
   {
     VALGRIND_DEFINED_STRUCT(block_p);
 
-    if (block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
+    if (mem_is_block_free (block_p))
     {
       if (mem_get_block_data_space_size (block_p) >= size_in_bytes)
       {
@@ -498,7 +499,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
     }
     else
     {
-      JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+      JERRY_ASSERT (!mem_is_block_free (block_p));
     }
 
     mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, direction);
@@ -715,25 +716,16 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 
   VALGRIND_NOACCESS_SPACE(uint8_ptr, block_p->allocated_bytes);
 
-  /* checking magic nums that are neighbour to data space */
-  JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
-  if (next_block_p != NULL)
-  {
-    VALGRIND_DEFINED_STRUCT(next_block_p);
+  JERRY_ASSERT (!mem_is_block_free (block_p));
 
-    JERRY_ASSERT(next_block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK
-                 || next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK);
-
-    VALGRIND_NOACCESS_STRUCT(next_block_p);
-  }
-
-  block_p->magic_num = MEM_MAGIC_NUM_OF_FREE_BLOCK;
+  /* marking the block free */
+  block_p->allocated_bytes = 0;
 
   if (next_block_p != NULL)
   {
     VALGRIND_DEFINED_STRUCT(next_block_p);
 
-    if (next_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
+    if (mem_is_block_free (next_block_p))
     {
       /* merge with the next block */
       MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
@@ -764,7 +756,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
   {
     VALGRIND_DEFINED_STRUCT(prev_block_p);
 
-    if (prev_block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK)
+    if (mem_is_block_free (prev_block_p))
     {
       /* merge with the previous block */
       MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
@@ -834,7 +826,7 @@ mem_heap_get_block_start (void *ptr) /**< pointer into a block */
 
     if (is_found)
     {
-      JERRY_ASSERT (block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+      JERRY_ASSERT (!mem_is_block_free (block_p));
       JERRY_ASSERT (block_p + 1 <= ptr);
       JERRY_ASSERT (ptr < ((uint8_t*) (block_p + 1) + block_p->allocated_bytes));
     }
@@ -894,9 +886,9 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
     {
       VALGRIND_DEFINED_STRUCT(block_p);
 
-      printf ("Block (%p): magic num=0x%08x, size in chunks=%lu, previous block->%p next block->%p\n",
+      printf ("Block (%p): state=%s, size in chunks=%lu, previous block->%p next block->%p\n",
               (void*) block_p,
-              block_p->magic_num,
+              mem_is_block_free (block_p) ? "free" : "allocated",
               (unsigned long) mem_get_block_chunks_count (block_p),
               (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
               (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
@@ -973,11 +965,9 @@ mem_check_heap (void)
   {
     VALGRIND_DEFINED_STRUCT(block_p);
 
-    JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
-                 || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
 
-    if (block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK)
+    if (!mem_is_block_free (block_p))
     {
       allocated_sum += block_p->allocated_bytes;
     }
@@ -1011,8 +1001,6 @@ mem_check_heap (void)
   {
     VALGRIND_DEFINED_STRUCT(block_p);
 
-    JERRY_ASSERT(block_p->magic_num == MEM_MAGIC_NUM_OF_FREE_BLOCK
-                 || block_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
 
     prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
@@ -1076,7 +1064,7 @@ mem_heap_stat_init ()
 static void
 mem_heap_stat_alloc_block (mem_block_header_t *block_header_p) /**< allocated block */
 {
-  JERRY_ASSERT(block_header_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+  JERRY_ASSERT (!mem_is_block_free (block_header_p));
 
   const size_t chunks = mem_get_block_chunks_count (block_header_p);
   const size_t bytes = block_header_p->allocated_bytes;
@@ -1134,7 +1122,7 @@ mem_heap_stat_alloc_block (mem_block_header_t *block_header_p) /**< allocated bl
 static void
 mem_heap_stat_free_block (mem_block_header_t *block_header_p) /**< block to be freed */
 {
-  JERRY_ASSERT(block_header_p->magic_num == MEM_MAGIC_NUM_OF_ALLOCATED_BLOCK);
+  JERRY_ASSERT (!mem_is_block_free (block_header_p));
 
   const size_t chunks = mem_get_block_chunks_count (block_header_p);
   const size_t bytes = block_header_p->allocated_bytes;

@@ -109,7 +109,7 @@ mem_compress_pointer (const void *pointer) /**< pointer to compress */
 
   JERRY_ASSERT((int_ptr & ~((1u << MEM_HEAP_OFFSET_LOG) - 1)) == 0);
 
-  JERRY_ASSERT(int_ptr != MEM_COMPRESSED_POINTER_NULL);
+  JERRY_ASSERT (int_ptr != MEM_CP_NULL);
 
   return int_ptr;
 } /* mem_compress_pointer */
@@ -120,7 +120,7 @@ mem_compress_pointer (const void *pointer) /**< pointer to compress */
 void*
 mem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
-  JERRY_ASSERT(compressed_pointer != MEM_COMPRESSED_POINTER_NULL);
+  JERRY_ASSERT (compressed_pointer != MEM_CP_NULL);
 
   uintptr_t int_ptr = compressed_pointer;
 

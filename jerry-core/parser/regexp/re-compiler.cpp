@@ -29,14 +29,16 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
 static regexp_bytecode_t*
 realloc_regexp_bytecode_block (bytecode_ctx_t *bc_ctx)
 {
-  JERRY_ASSERT (bc_ctx->block_end_p - bc_ctx->block_start_p >= 0);
+  long old_size = bc_ctx->block_end_p - bc_ctx->block_start_p;
+  JERRY_ASSERT (old_size >= 0);
   JERRY_ASSERT (!bc_ctx->current_p && !bc_ctx->block_end_p && !bc_ctx->block_start_p);
 
-  size_t new_block_size = static_cast<size_t> (bc_ctx->block_end_p - bc_ctx->block_start_p + REGEXP_BYTECODE_BLOCK_SIZE);
+  size_t new_block_size = static_cast<size_t> (old_size + REGEXP_BYTECODE_BLOCK_SIZE);
   long current_ptr_offset = bc_ctx->current_p - bc_ctx->block_start_p;
   JERRY_ASSERT (current_ptr_offset >= 0);
 
-  regexp_bytecode_t *new_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (new_block_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  regexp_bytecode_t *new_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (new_block_size,
+                                                                                     MEM_HEAP_ALLOC_SHORT_TERM);
   if (bc_ctx->current_p)
   {
     memcpy (new_block_start_p, bc_ctx->block_start_p, static_cast<size_t> (current_ptr_offset));
@@ -125,12 +127,14 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   int32_t chars = ecma_string_get_length (pattern);
   MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, chars + 1, ecma_char_t);
   ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-  ecma_string_to_zt_string(pattern, pattern_start_p, zt_str_size);
+  ecma_string_to_zt_string (pattern, pattern_start_p, zt_str_size);
 
   /* 1. Add extra informations for bytecode header */
   append_u32 (&bc_ctx, 0);
-  append_u32 (&bc_ctx, 2);
-  append_u32 (&bc_ctx, 0);
+  append_u32 (&bc_ctx, 2); // FIXME: Count the number of capture groups
+  append_u32 (&bc_ctx, 0); // FIXME: Count the number of non-capture groups
+
+  append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
 
   ecma_char_t *pattern_char_p = pattern_start_p;
   while (pattern_char_p && *pattern_char_p != '\0')
@@ -152,7 +156,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
     }
   }
 
-  append_opcode (&bc_ctx, RE_OP_MATCH);
+  append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
   append_opcode (&bc_ctx, RE_OP_EOF);
 
   MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
@@ -169,10 +173,10 @@ void
 regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
 {
   regexp_bytecode_t *bytecode_p = bc_ctx->block_start_p;
-  fprintf(stderr, "%d %d %d | ",
-          get_value (&bytecode_p),
-          get_value (&bytecode_p),
-          get_value (&bytecode_p));
+  fprintf (stderr, "%d %d %d | ",
+           get_value (&bytecode_p),
+           get_value (&bytecode_p),
+           get_value (&bytecode_p));
 
   regexp_opcode_t op;
   while ((op = get_opcode (&bytecode_p)))
@@ -181,21 +185,31 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
     {
       case RE_OP_MATCH:
       {
-        fprintf(stderr, "MATCH ");
+        fprintf (stderr, "MATCH ");
         break;
       }
       case RE_OP_CHAR:
       {
-        fprintf(stderr, "CHAR ");
-        fprintf(stderr, "%d, ", get_value(&bytecode_p));
+        fprintf (stderr, "CHAR ");
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_SAVE_AT_START:
+      {
+        fprintf (stderr, "RE_START ");
+        break;
+      }
+      case RE_OP_SAVE_AND_MATCH:
+      {
+        fprintf (stderr, "RE_END ");
         break;
       }
       default:
       {
-        fprintf(stderr, "UNKNOWN ");
+        fprintf (stderr, "UNKNOWN ");
         break;
       }
     }
   }
-  fprintf(stderr, "EOF\n");
+  fprintf (stderr, "EOF\n");
 } /* regexp_dump_bytecode */

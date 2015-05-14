@@ -19,9 +19,11 @@
 
 #include "ecma-globals.h"
 
-#define RE_OP_EOF     0
-#define RE_OP_MATCH   1
-#define RE_OP_CHAR    2
+#define RE_OP_EOF               0
+#define RE_OP_MATCH             1
+#define RE_OP_CHAR              2
+#define RE_OP_SAVE_AT_START     3
+#define RE_OP_SAVE_AND_MATCH    4
 
 typedef uint8_t regexp_opcode_t;
 typedef uint8_t regexp_bytecode_t;

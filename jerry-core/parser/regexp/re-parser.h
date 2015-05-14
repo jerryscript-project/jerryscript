@@ -33,7 +33,7 @@ typedef struct re_token_t
 } re_token_t;
 
 operand
-parse_regexp_literal();
+parse_regexp_literal ();
 
 re_token_t
 re_parse_next_token (ecma_char_t **pattern);

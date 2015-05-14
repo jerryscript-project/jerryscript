@@ -33,6 +33,9 @@
  * @{
  */
 
+#define RE_GLOBAL_START_IDX 0
+#define RE_GLOBAL_END_IDX   1
+
 /**
  * RegExp object creation operation.
  *
@@ -125,17 +128,42 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
       }
       case RE_OP_CHAR:
       {
-        uint32_t ch = get_value (&bc_p);
-        fprintf (stderr, "Character matching %d to %d\n", ch, (uint32_t) *str_p);
-        if (ch != (uint32_t) *str_p)
+        uint32_t ch1 = get_value (&bc_p);
+        uint32_t ch2 = (uint32_t) *str_p;
+        str_p++;
+        fprintf (stderr, "Character matching %d to %d\n", ch1, ch2);
+
+        if (ch1 != ch2)
         {
           return NULL;
         }
         break;
       }
+      case RE_OP_SAVE_AT_START:
+      {
+        const ecma_char_t *old_start;
+        const ecma_char_t *sub_str_p;
+
+        old_start = re_ctx->saved_p[RE_GLOBAL_START_IDX];
+        re_ctx->saved_p[RE_GLOBAL_START_IDX] = str_p;
+
+        sub_str_p = regexp_match (re_ctx, bc_p, str_p);
+        if (sub_str_p)
+        {
+          return sub_str_p;
+        }
+
+        re_ctx->saved_p[RE_GLOBAL_START_IDX] = old_start;
+        return NULL;
+      }
+      case RE_OP_SAVE_AND_MATCH:
+      {
+        re_ctx->saved_p[RE_GLOBAL_END_IDX] = str_p;
+        return str_p;
+      }
       default:
       {
-        fprintf(stderr, "UNKNOWN opcode!\n");
+        fprintf (stderr, "UNKNOWN opcode!\n");
         // FIXME: throw an internal error
         return NULL;
       }
@@ -143,7 +171,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
   }
 
   // FIXME: throw an internal error
-  fprintf(stderr, "Should not get here!\n");
+  fprintf (stderr, "Should not get here!\n");
   return NULL;
 } /* ecma_regexp_match */
 
@@ -152,16 +180,21 @@ ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
 {
   re_matcher_ctx re_ctx;
   bool match = 0;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   /* 1. Read bytecode header and init regexp matcher context. */
   re_ctx.flags = (uint8_t) get_value (&bc_p);
   re_ctx.num_of_captures = get_value (&bc_p);
+  JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = get_value (&bc_p);
+
+  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures, const ecma_char_t*);
+  re_ctx.saved_p = saved_p;
 
   /* 2. Try to match */
   while (str_p && *str_p != '\0')
   {
-    if (regexp_match(&re_ctx, bc_p, str_p) != NULL)
+    if (regexp_match (&re_ctx, bc_p, str_p) != NULL)
     {
       match = 1;
       break;
@@ -169,13 +202,34 @@ ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
     str_p++;
   }
 
-  /* 3. Fill the result array */
+  /* 3. Fill the result array or return with 'undefiend' */
   if (match)
   {
-    // FIXME: parse the result array!
-    return ecma_op_create_array_object (0, 0, false);
+    ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
+    ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+    uint32_t length = re_ctx.num_of_captures / 2;
+    for (uint32_t i = 0; i < length; i++)
+    {
+      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i);
+
+      ecma_length_t capture_str_len = static_cast<ecma_length_t> (re_ctx.saved_p[i+1] - re_ctx.saved_p[i]);
+      ecma_string_t *capture_str_p = ecma_new_ecma_string (re_ctx.saved_p[i], capture_str_len);
+
+      ecma_op_object_put (new_array_p, index_str_p, ecma_make_string_value (capture_str_p), true);
+      ecma_deref_ecma_string (index_str_p);
+      ecma_deref_ecma_string (capture_str_p);
+    }
+    ret_value = new_array;
   }
-  return ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  else
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (saved_p);
+
+  return ret_value;
 } /* ecma_regexp_exec_helper */
 
 /**

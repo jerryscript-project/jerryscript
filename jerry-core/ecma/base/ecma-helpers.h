@@ -109,6 +109,7 @@ extern bool ecma_is_completion_value_normal_false (ecma_completion_value_t value
 extern bool ecma_is_completion_value_empty (ecma_completion_value_t value);
 
 /* ecma-helpers-string.c */
+extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p, const ecma_length_t length);
 extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
 extern ecma_string_t* ecma_new_ecma_string_from_uint32 (uint32_t uint_number);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);

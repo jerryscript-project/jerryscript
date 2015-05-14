@@ -20,7 +20,7 @@ operand
 parse_regexp_literal ()
 {
   // FIXME: Impelement this!
-  return operand();
+  return operand ();
 }
 
 /**

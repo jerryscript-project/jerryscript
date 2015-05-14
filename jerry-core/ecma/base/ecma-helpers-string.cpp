@@ -456,6 +456,31 @@ ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p, /**< des
 } /* ecma_init_ecma_string_from_magic_string_ex_id */
 
 /**
+ * Allocate new ecma-string and fill it with specified number of characters from specified buffer
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string (const ecma_char_t *string_p, /**< input string */
+                      const ecma_length_t length) /**< number of characters */
+{
+  JERRY_ASSERT (string_p != NULL);
+  JERRY_ASSERT (length > 0);
+
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
+  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
+  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
+
+  string_desc_p->u.common_field = 0;
+  ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
+
+  return string_desc_p;
+} /* ecma_new_ecma_string */
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
  * @return pointer to ecma-string descriptor
@@ -485,19 +510,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
     length++;
   }
 
-  JERRY_ASSERT (length > 0);
-
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
-  string_desc_p->refs = 1;
-  string_desc_p->is_stack_var = false;
-  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
-  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
-
-  string_desc_p->u.common_field = 0;
-  ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
-
-  return string_desc_p;
+  return ecma_new_ecma_string (string_p, length);
 } /* ecma_new_ecma_string */
 
 /**

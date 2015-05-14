@@ -396,6 +396,9 @@ mem_is_block_free (const mem_block_header_t *block_header_p) /**< block header *
 
 /**
  * Startup initialization of heap
+ *
+ * Note:
+ *      heap start and size should be aligned on MEM_HEAP_CHUNK_SIZE
  */
 void
 mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
@@ -403,8 +406,12 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
 {
   JERRY_ASSERT (heap_start != NULL);
   JERRY_ASSERT (heap_size != 0);
-  JERRY_ASSERT (heap_size % MEM_HEAP_CHUNK_SIZE == 0);
+
+  JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
   JERRY_ASSERT ((uintptr_t) heap_start % MEM_ALIGNMENT == 0);
+  JERRY_ASSERT ((uintptr_t) heap_start % MEM_HEAP_CHUNK_SIZE == 0);
+  JERRY_ASSERT (heap_size % MEM_HEAP_CHUNK_SIZE == 0);
+
   JERRY_ASSERT (heap_size <= (1u << MEM_HEAP_OFFSET_LOG));
 
   mem_heap.heap_start = heap_start;
@@ -800,6 +807,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 
   /* marking the block free */
   block_p->allocated_bytes = 0;
+  block_p->length_type = mem_block_length_type_t::GENERAL;
 
   if (next_block_p != NULL)
   {
@@ -866,12 +874,12 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 } /* mem_heap_free_block */
 
 /**
- * Find beginning of user data in a block from pointer,
+ * Find beginning of user data in a one-chunked block from pointer,
  * pointing into it, i.e. into [block_data_space_start; block_data_space_end) range.
  *
  * Note:
- *      Pointer must point to the memory region which was previously allocated
- *      with mem_heap_alloc_block and is currently valid.
+ *      Pointer must point to the one-chunked memory region which was previously allocated
+ *      with mem_heap_alloc_chunked_block and is currently valid.
  *
  * Note:
  *      The interface should only be used for determining where the user space of heap-allocated block begins.
@@ -880,49 +888,59 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
  * @return beginning of user data space of block identified by the pointer
  */
 void*
-mem_heap_get_block_start (void *ptr) /**< pointer into a block */
+mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 {
-  mem_check_heap ();
-
-  /*
-   * PERF: consider introducing bitmap of block beginnings
-   */
+  JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
+  JERRY_ASSERT (((uintptr_t) mem_heap.heap_start % MEM_HEAP_CHUNK_SIZE) == 0);
 
   JERRY_ASSERT (mem_heap.heap_start <= ptr
                 && ptr < mem_heap.heap_start + mem_heap.heap_size);
 
-  const mem_block_header_t *block_p = mem_heap.first_block_p;
+  uintptr_t uintptr = (uintptr_t) ptr;
+  uintptr_t uintptr_chunk_aligned = JERRY_ALIGNDOWN (uintptr, MEM_HEAP_CHUNK_SIZE);
+
+  JERRY_ASSERT (uintptr > uintptr_chunk_aligned);
+
+  mem_block_header_t *block_p = (mem_block_header_t *) uintptr_chunk_aligned;
+  JERRY_ASSERT (block_p->length_type == mem_block_length_type_t::ONE_CHUNKED);
+
+#ifndef JERRY_NDEBUG
+  const mem_block_header_t *block_iter_p = mem_heap.first_block_p;
+  bool is_found = false;
 
   /* searching for corresponding block */
-  while (block_p != NULL)
+  while (block_iter_p != NULL)
   {
-    VALGRIND_DEFINED_STRUCT (block_p);
+    VALGRIND_DEFINED_STRUCT (block_iter_p);
 
-    const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p,
+    const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_iter_p,
                                                                               MEM_DIRECTION_NEXT);
-    bool is_found = (ptr > block_p
-                     && (ptr < next_block_p
-                         || next_block_p == NULL));
+    is_found = (ptr > block_iter_p
+                && (ptr < next_block_p
+                    || next_block_p == NULL));
 
     if (is_found)
     {
-      JERRY_ASSERT (!mem_is_block_free (block_p));
-      JERRY_ASSERT (block_p + 1 <= ptr);
-      JERRY_ASSERT (ptr < ((uint8_t*) (block_p + 1) + block_p->allocated_bytes));
+      JERRY_ASSERT (!mem_is_block_free (block_iter_p));
+      JERRY_ASSERT (block_iter_p + 1 <= ptr);
+      JERRY_ASSERT (ptr < ((uint8_t*) (block_iter_p + 1) + block_iter_p->allocated_bytes));
     }
 
-    VALGRIND_NOACCESS_STRUCT (block_p);
+    VALGRIND_NOACCESS_STRUCT (block_iter_p);
 
     if (is_found)
     {
-      return (void*) (block_p + 1);
+      break;
     }
 
-    block_p = next_block_p;
+    block_iter_p = next_block_p;
   }
 
-  JERRY_UNREACHABLE ();
-} /* mem_heap_get_block_start */
+  JERRY_ASSERT (is_found && block_p == block_iter_p);
+#endif /* !JERRY_NDEBUG */
+
+  return (void*) (block_p + 1);
+} /* mem_heap_get_chunked_block_start */
 
 /**
  * Get size of one-chunked block data space

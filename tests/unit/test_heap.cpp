@@ -39,6 +39,7 @@ extern "C"
 
 uint8_t *ptrs[test_sub_iters];
 size_t sizes[test_sub_iters];
+bool is_one_chunked[test_sub_iters];
 
 static void
 test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
@@ -82,12 +83,13 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
   }
 } /* test_heap_give_some_memory_back */
 
+uint8_t test_native_heap[test_heap_size] __attribute__ ((aligned (JERRY_MAX (MEM_ALIGNMENT,
+                                                                             MEM_HEAP_CHUNK_SIZE))));
+
 int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  uint8_t test_native_heap[test_heap_size];
-
   mem_heap_init (test_native_heap, sizeof (test_native_heap));
 
   srand ((unsigned int) time (NULL));
@@ -103,17 +105,31 @@ main (int __attr_unused___ argc,
   {
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      size_t size = (size_t) rand () % test_threshold_block_size;
-      ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
-                                                 (rand () % 2) ?
-                                                 MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
-      sizes[j] = size;
+      if (rand () % 2)
+      {
+        size_t size = (size_t) rand () % test_threshold_block_size;
+        ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
+                                                   (rand () % 2) ?
+                                                   MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+        sizes[j] = size;
+        is_one_chunked[j] = false;
+      }
+      else
+      {
+        ptrs[j] = (uint8_t*) mem_heap_alloc_chunked_block ((rand () % 2) ?
+                                                           MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
+        sizes[j] = mem_heap_get_chunked_block_data_size ();
+        is_one_chunked[j] = true;
+      }
 
-      JERRY_ASSERT (size == 0 || ptrs[j] != NULL);
+      JERRY_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
       memset (ptrs[j], 0, sizes[j]);
 
-      JERRY_ASSERT (ptrs[j] == NULL
-                    || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
+      if (is_one_chunked[j])
+      {
+        JERRY_ASSERT (ptrs[j] != NULL
+                      && mem_heap_get_chunked_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
+      }
     }
 
     // mem_heap_print (true);
@@ -127,8 +143,11 @@ main (int __attr_unused___ argc,
           JERRY_ASSERT (ptrs[j][k] == 0);
         }
 
-        JERRY_ASSERT (sizes[j] == 0
-                      || mem_heap_get_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
+        if (is_one_chunked[j])
+        {
+          JERRY_ASSERT (sizes[j] == 0
+                        || mem_heap_get_chunked_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
+        }
 
         mem_heap_free_block (ptrs[j]);
 

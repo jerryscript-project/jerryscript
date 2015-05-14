@@ -30,7 +30,8 @@
 /**
  * Area for heap
  */
-static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__ ((aligned (MEM_ALIGNMENT)));
+static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__ ((aligned (JERRY_MAX (MEM_ALIGNMENT,
+                                                                                       MEM_HEAP_CHUNK_SIZE))));
 
 /**
  * The 'try to give memory back' callback

@@ -14,37 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REGEXP_OBJECT_H
-#define ECMA_REGEXP_OBJECT_H
+#ifndef RE_COMPILER_H
+#define RE_COMPILER_H
 
 #include "ecma-globals.h"
-#include "re-compiler.h"
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmaregexpobject ECMA RegExp object related routines
- * @{
- */
+#define RE_OP_EOF     0
+#define RE_OP_MATCH   1
+#define RE_OP_CHAR    2
 
-typedef struct re_matcher_ctx
+typedef uint8_t regexp_opcode_t;
+typedef uint8_t regexp_bytecode_t;
+
+typedef struct bytecode_ctx_t
 {
-  const regexp_bytecode_t *bytecode;
-  const ecma_char_t **saved;
-  uint32_t num_of_captures;
-  uint32_t num_of_non_captures;
-  uint8_t flags;
-} re_matcher_ctx;
+  regexp_bytecode_t *block_start_p;
+  regexp_bytecode_t *block_end_p;
+  regexp_bytecode_t *current_p;
+} bytecode_ctx_t;
 
-extern ecma_completion_value_t
-ecma_op_create_regexp_object (ecma_string_t *pattern, ecma_string_t *flags);
+void
+regexp_compile_bytecode (ecma_property_t *bytecode, ecma_string_t *pattern);
 
-extern ecma_completion_value_t
-ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p);
+regexp_opcode_t
+get_opcode (regexp_bytecode_t **bc_p);
 
-/**
- * @}
- * @}
- */
+uint32_t
+get_value (regexp_bytecode_t **bc_p);
 
-#endif /* !ECMA_REGEXP_OBJECT_H */
+#endif /* RE_COMPILER_H */

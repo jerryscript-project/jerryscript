@@ -22,18 +22,24 @@
 # define OBJECT_ID(builtin_object_id)
 #endif /* !OBJECT_ID */
 
-#ifndef CP_UNIMPLEMENTED_VALUE
-# define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable)
-#endif /* !CP_UNIMPLEMENTED_VALUE */
+#ifndef OBJECT_VALUE
+# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !OBJECT_VALUE */
+
+#ifndef ROUTINE
+# define ROUTINE(name, c_function_name, args_number, length_prop_value)
+#endif /* !ROUTINE */
 
 /* Object identifier */
 OBJECT_ID (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
 
-CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
-                        ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),
-                        ECMA_PROPERTY_WRITABLE,
-                        ECMA_PROPERTY_NOT_ENUMERABLE,
-                        ECMA_PROPERTY_CONFIGURABLE)
+OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+              ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),
+              ECMA_PROPERTY_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_CONFIGURABLE)
+
+ROUTINE (ECMA_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

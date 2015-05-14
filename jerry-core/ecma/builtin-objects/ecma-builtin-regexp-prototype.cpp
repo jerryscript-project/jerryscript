@@ -15,9 +15,14 @@
  */
 
 #include "ecma-builtins.h"
+#include "ecma-conversion.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-try-catch-macro.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#include "ecma-regexp-object.h"
+#include "re-compiler.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -35,6 +40,52 @@
  * \addtogroup regexp ECMA RegExp.prototype object built-in
  * @{
  */
+
+/**
+ * The RegExp.prototype object's 'exec' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.10.6.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
+                                    ecma_value_t arg) /**< routine's argument */
+{
+  regexp_bytecode_t *bytecode_p;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
+  ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
+  ecma_property_t *bytecode_prop = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+  bytecode_p = ECMA_GET_POINTER (regexp_bytecode_t, bytecode_prop->u.internal_property.value);
+
+  ECMA_TRY_CATCH (input_str_value,
+                  ecma_op_to_string (arg),
+                  ret_value);
+
+  ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
+
+  /* Convert ecma_String_t* to regexp_bytecode_t* */
+  int32_t chars = ecma_string_get_length (input_str_p);
+
+  MEM_DEFINE_LOCAL_ARRAY (input_zt_str_p, chars + 1, ecma_char_t);
+
+  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+  ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
+
+  /* FIXME: call of ecma_make_normal_completion_value should be in an ECMA_TRY_CATCH */
+  ret_value = ecma_regexp_exec_helper (bytecode_p, input_zt_str_p);
+
+  MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);
+
+  ECMA_FINALIZE (input_str_value);
+
+  ECMA_FINALIZE (obj_this);
+  return ret_value;
+} /* ecma_builtin_regexp_prototype_exec */
 
 /**
  * @}

@@ -254,6 +254,11 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63,
 
   /**
+   * Bytecode of RegExp property type
+   */
+  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE,
+
+  /**
    * Number of internal properties' types
    */
   ECMA_INTERNAL_PROPERTY__COUNT

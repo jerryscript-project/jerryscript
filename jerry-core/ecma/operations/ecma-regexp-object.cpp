@@ -15,10 +15,13 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
+#include "re-compiler.h"
+#include "stdio.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -92,14 +95,88 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
                                                                        magic_string_p,
                                                                        true, false, false);
   ecma_deref_ecma_string (magic_string_p);
-
   ecma_number_t *lastindex_num_p = ecma_alloc_number ();
   *lastindex_num_p = ECMA_NUMBER_ZERO;
-  ecma_named_data_property_assign_value (obj_p, lastindex_prop_p, ecma_make_number_value(lastindex_num_p));
+  ecma_named_data_property_assign_value (obj_p, lastindex_prop_p, ecma_make_number_value (lastindex_num_p));
   ecma_dealloc_number (lastindex_num_p);
 
+  /* Set bytecode internal property. */
+  ecma_property_t *bytecode = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+  regexp_compile_bytecode (bytecode, pattern);
+
   return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
-}
+} /* ecma_op_create_regexp_object */
+
+static const ecma_char_t*
+regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
+              regexp_bytecode_t *bc_p,
+              const ecma_char_t *str_p)
+{
+  regexp_opcode_t op;
+
+  while ((op = get_opcode (&bc_p)))
+  {
+    switch (op)
+    {
+      case RE_OP_MATCH:
+      {
+        fprintf (stderr, "RegExp match\n");
+        return str_p;
+      }
+      case RE_OP_CHAR:
+      {
+        uint32_t ch = get_value (&bc_p);
+        fprintf (stderr, "Character matching %d to %d\n", ch, (uint32_t) *str_p);
+        if (ch != (uint32_t) *str_p)
+        {
+          return NULL;
+        }
+        break;
+      }
+      default:
+      {
+        fprintf(stderr, "UNKNOWN opcode!\n");
+        // FIXME: throw an internal error
+        return NULL;
+      }
+    }
+  }
+
+  // FIXME: throw an internal error
+  fprintf(stderr, "Should not get here!\n");
+  return NULL;
+} /* ecma_regexp_match */
+
+ecma_completion_value_t
+ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
+{
+  re_matcher_ctx re_ctx;
+  bool match = 0;
+
+  /* 1. Read bytecode header and init regexp matcher context. */
+  re_ctx.flags = (uint8_t) get_value (&bc_p);
+  re_ctx.num_of_captures = get_value (&bc_p);
+  re_ctx.num_of_non_captures = get_value (&bc_p);
+
+  /* 2. Try to match */
+  while (str_p && *str_p != '\0')
+  {
+    if (regexp_match(&re_ctx, bc_p, str_p) != NULL)
+    {
+      match = 1;
+      break;
+    }
+    str_p++;
+  }
+
+  /* 3. Fill the result array */
+  if (match)
+  {
+    // FIXME: parse the result array!
+    return ecma_op_create_array_object (0, 0, false);
+  }
+  return ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+} /* ecma_regexp_exec_helper */
 
 /**
  * @}

@@ -69,10 +69,11 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
                   ecma_op_to_string (arguments_list_p[0]),
                   ret_value);
 
-  ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+  ecma_string_t *pattern_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
   ecma_string_t *flags_string_p = NULL; /* FIXME: get flags from arguments_list_p[1] */
   ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
 
+  ecma_deref_ecma_string (pattern_string_p);
   ECMA_FINALIZE (regexp_str_value);
 
   return ret_value;

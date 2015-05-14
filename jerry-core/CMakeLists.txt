@@ -93,6 +93,7 @@ project (JerryCore CXX C ASM)
 # Include directories
  set(INCLUDE_CORE
      ${CMAKE_SOURCE_DIR}/jerry-core
+     ${CMAKE_SOURCE_DIR}/jerry-core/rcs
      ${CMAKE_SOURCE_DIR}/jerry-core/mem
      ${CMAKE_SOURCE_DIR}/jerry-core/vm
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
@@ -109,6 +110,7 @@ project (JerryCore CXX C ASM)
 # Sources
  # Jerry core
   file(GLOB SOURCE_CORE_API                *.cpp)
+  file(GLOB SOURCE_CORE_RCS                rcs/*.cpp)
   file(GLOB SOURCE_CORE_MEM                mem/*.cpp)
   file(GLOB SOURCE_CORE_VM                 vm/*.cpp)
   file(GLOB SOURCE_CORE_ECMA_BUILTINS      ecma/builtin-objects/*.cpp)
@@ -121,6 +123,7 @@ project (JerryCore CXX C ASM)
   set(SOURCE_CORE
       jerry.cpp
       ${SOURCE_CORE_API}
+      ${SOURCE_CORE_RCS}
       ${SOURCE_CORE_MEM}
       ${SOURCE_CORE_VM}
       ${SOURCE_CORE_ECMA_BUILTINS}

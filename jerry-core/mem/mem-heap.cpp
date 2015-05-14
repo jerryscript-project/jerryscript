@@ -67,6 +67,17 @@ typedef enum
 } mem_block_state_t;
 
 /**
+ * Length type of the block
+ *
+ * @see mem_init_block_header
+ */
+typedef enum class : uint8_t
+{
+  ONE_CHUNKED, /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
+  GENERAL      /**< general (may be multi-chunk) block */
+} mem_block_length_type_t;
+
+/**
  * Linked list direction descriptors
  */
 typedef enum
@@ -99,6 +110,7 @@ typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_block_header_t
                                                    *   0 - if the block is the first block */
   mem_heap_offset_t next_p : MEM_HEAP_OFFSET_LOG; /**< next block's offset;
                                                    *   0 - if the block is the last block */
+  mem_block_length_type_t length_type; /**< length type of the block (one-chunked or general) */
 } mem_block_header_t;
 
 #if MEM_HEAP_OFFSET_LOG <= 16
@@ -145,6 +157,7 @@ static bool mem_is_block_free (const mem_block_header_t *block_header_p);
 static void mem_init_block_header (uint8_t *first_chunk_p,
                                    size_t size_in_chunks,
                                    mem_block_state_t block_state,
+                                   mem_block_length_type_t length_type,
                                    mem_block_header_t *prev_block_p,
                                    mem_block_header_t *next_block_p);
 static void mem_check_heap (void);
@@ -262,6 +275,16 @@ mem_set_block_allocated_bytes (mem_block_header_t *block_p, /**< block to set al
 
   JERRY_ASSERT (block_p->allocated_bytes == allocated_bytes);
 } /* mem_set_block_allocated_bytes */
+
+/**
+ * Set the block's length type
+ */
+static void
+mem_set_block_set_length_type (mem_block_header_t *block_p, /**< block to set length type field for */
+                               mem_block_length_type_t length_type) /**< length type of the block */
+{
+  block_p->length_type = length_type;
+} /* mem_set_block_set_length_type */
 
 /**
  * Get block located at specified offset from specified block.
@@ -393,6 +416,7 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
   mem_init_block_header (mem_heap.heap_start,
                          0,
                          MEM_BLOCK_FREE,
+                         mem_block_length_type_t::GENERAL,
                          NULL,
                          NULL);
 
@@ -419,12 +443,13 @@ mem_heap_finalize (void)
 } /* mem_heap_finalize */
 
 /**
- * Initialize block header
+ * Initialize block header located in the specified first chunk of the block
  */
 static void
-mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first chunk to use for the block */
-                       size_t allocated_bytes,        /**< size of block's allocated area */
-                       mem_block_state_t block_state,   /**< state of the block (allocated or free) */
+mem_init_block_header (uint8_t *first_chunk_p, /**< address of the first chunk to use for the block */
+                       size_t allocated_bytes, /**< size of block's allocated area */
+                       mem_block_state_t block_state, /**< state of the block (allocated or free) */
+                       mem_block_length_type_t length_type, /**< length type of the block (one-chunked or general) */
                        mem_block_header_t *prev_block_p, /**< previous block */
                        mem_block_header_t *next_block_p) /**< next block */
 {
@@ -435,12 +460,14 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
   mem_set_block_prev (block_header_p, prev_block_p);
   mem_set_block_next (block_header_p, next_block_p);
   mem_set_block_allocated_bytes (block_header_p, allocated_bytes);
+  mem_set_block_set_length_type (block_header_p, length_type);
 
   JERRY_ASSERT (allocated_bytes <= mem_get_block_data_space_size (block_header_p));
 
   if (block_state == MEM_BLOCK_FREE)
   {
     JERRY_ASSERT (allocated_bytes == 0);
+    JERRY_ASSERT (length_type == mem_block_length_type_t::GENERAL);
     JERRY_ASSERT (mem_is_block_free (block_header_p));
   }
   else
@@ -462,13 +489,17 @@ mem_init_block_header (uint8_t *first_chunk_p,         /**< address of the first
  *         NULL - if there is not enough memory.
  */
 static
-void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size of region to allocate in bytes */
+void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region to allocate in bytes */
+                                     mem_block_length_type_t length_type, /**< length type of the block
+                                                                           *   (one-chunked or general) */
                                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   mem_block_header_t *block_p;
   mem_direction_t direction;
 
   JERRY_ASSERT (size_in_bytes != 0);
+  JERRY_ASSERT (length_type != mem_block_length_type_t::ONE_CHUNKED
+                || size_in_bytes == mem_heap_get_chunked_block_data_size ());
 
   mem_check_heap ();
 
@@ -571,6 +602,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
       mem_init_block_header (new_free_block_first_chunk_p,
                              0,
                              MEM_BLOCK_FREE,
+                             mem_block_length_type_t::GENERAL,
                              block_p,
                              next_block_p);
 
@@ -597,6 +629,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
   mem_init_block_header ((uint8_t*) block_p,
                          size_in_bytes,
                          MEM_BLOCK_ALLOCATED,
+                         length_type,
                          prev_block_p,
                          next_block_p);
 
@@ -620,17 +653,67 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes,             /**< size
 } /* mem_heap_alloc_block_internal */
 
 /**
+ * Allocation of memory region, running 'try to give memory back' callbacks, if there is not enough memory.
+ *
+ * Note:
+ *      if after running the callbacks, there is still not enough memory, engine is terminated with ERR_OUT_OF_MEMORY.
+ *
+ * Note:
+ *      To reduce heap fragmentation there are two allocation modes - short-term and long-term.
+ *
+ *      If allocation is short-term then the beginning of the heap is preferred, else - the end of the heap.
+ *
+ *      It is supposed, that all short-term allocation is used during relatively short discrete sessions.
+ *      After end of the session all short-term allocated regions are supposed to be freed.
+ *
+ * @return pointer to allocated memory block
+ */
+static void*
+mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of region to allocate in bytes */
+                                           mem_block_length_type_t length_type, /**< length type of the block
+                                                                                 *   (one-chunked or general) */
+                                           mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+{
+  if (mem_heap.allocated_bytes + size_in_bytes >= mem_heap.limit)
+  {
+    mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
+  }
+
+  void *data_space_p = mem_heap_alloc_block_internal (size_in_bytes, length_type, alloc_term);
+
+  if (likely (data_space_p != NULL))
+  {
+    return data_space_p;
+  }
+
+  for (mem_try_give_memory_back_severity_t severity = MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
+       severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL;
+       severity = (mem_try_give_memory_back_severity_t) (severity + 1))
+  {
+    mem_run_try_to_give_memory_back_callbacks (severity);
+
+    data_space_p = mem_heap_alloc_block_internal (size_in_bytes, length_type, alloc_term);
+
+    if (data_space_p != NULL)
+    {
+      return data_space_p;
+    }
+  }
+
+  JERRY_ASSERT (data_space_p == NULL);
+
+  jerry_fatal (ERR_OUT_OF_MEMORY);
+} /* mem_heap_alloc_block_try_give_memory_back */
+
+/**
  * Allocation of memory region.
  *
- * To reduce heap fragmentation there are two allocation modes - short-term and long-term.
- *
- * If allocation is short-term then the beginning of the heap is preferred, else - the end of the heap.
- *
- * It is supposed, that all short-term allocation is used during relatively short discrete sessions.
- * After end of the session all short-term allocated regions are supposed to be freed.
+ * Note:
+ *      Please look at mem_heap_alloc_block_try_give_memory_back
+ *      for description of allocation term and out-of-memory handling.
  *
  * @return pointer to allocated memory block - if allocation is successful,
- *         NULL - if requested region size is zero or if there is not enough memory.
+ *         NULL - if requested region size is zero.
  */
 void*
 mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to allocate in bytes */
@@ -642,37 +725,34 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
   }
   else
   {
-    if (mem_heap.allocated_bytes + size_in_bytes >= mem_heap.limit)
-    {
-      mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
-    }
-
-    void *data_space_p = mem_heap_alloc_block_internal (size_in_bytes, alloc_term);
-
-    if (likely (data_space_p != NULL))
-    {
-      return data_space_p;
-    }
-
-    for (mem_try_give_memory_back_severity_t severity = MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
-         severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL;
-         severity = (mem_try_give_memory_back_severity_t) (severity + 1))
-    {
-      mem_run_try_to_give_memory_back_callbacks (severity);
-
-      data_space_p = mem_heap_alloc_block_internal (size_in_bytes, alloc_term);
-
-      if (data_space_p != NULL)
-      {
-        return data_space_p;
-      }
-    }
-
-    JERRY_ASSERT (data_space_p == NULL);
-
-    jerry_fatal (ERR_OUT_OF_MEMORY);
+    return mem_heap_alloc_block_try_give_memory_back (size_in_bytes,
+                                                      mem_block_length_type_t::GENERAL,
+                                                      alloc_term);
   }
 } /* mem_heap_alloc_block */
+
+/**
+ * Allocation of one-chunked memory region, i.e. memory block that exactly fits one heap chunk.
+ *
+ * Note:
+ *      If there is any free space in the heap, it anyway can be allocated for one-chunked block.
+ *
+ *      Contrariwise, there are cases, when block, requiring more than one chunk,
+ *      cannot be allocated, because of heap fragmentation.
+ *
+ * Note:
+ *      Please look at mem_heap_alloc_block_try_give_memory_back
+ *      for description of allocation term and out-of-memory handling.
+ *
+ * @return pointer to allocated memory block
+ */
+void*
+mem_heap_alloc_chunked_block (mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+{
+  return mem_heap_alloc_block_try_give_memory_back (mem_heap_get_chunked_block_data_size (),
+                                                    mem_block_length_type_t::ONE_CHUNKED,
+                                                    alloc_term);
+} /* mem_heap_alloc_chunked_block */
 
 /**
  * Free the memory block.
@@ -845,6 +925,15 @@ mem_heap_get_block_start (void *ptr) /**< pointer into a block */
 } /* mem_heap_get_block_start */
 
 /**
+ * Get size of one-chunked block data space
+ */
+size_t
+mem_heap_get_chunked_block_data_size (void)
+{
+  return (MEM_HEAP_CHUNK_SIZE - sizeof (mem_block_header_t));
+} /* mem_heap_get_chunked_block_data_size */
+
+/**
  * Recommend allocation size based on chunk size.
  *
  * @return recommended allocation size
@@ -964,6 +1053,9 @@ mem_check_heap (void)
        block_p = next_block_p)
   {
     VALGRIND_DEFINED_STRUCT (block_p);
+
+    JERRY_ASSERT (block_p->length_type != mem_block_length_type_t::ONE_CHUNKED
+                  || block_p->allocated_bytes == mem_heap_get_chunked_block_data_size ());
 
     chunk_sizes_sum += mem_get_block_chunks_count (block_p);
 

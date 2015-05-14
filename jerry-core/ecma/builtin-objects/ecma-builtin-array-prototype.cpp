@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -265,6 +266,136 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_push */
+
+/**
+ * The Array.prototype object's 'indexOf' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.14
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
+                                              ecma_value_t arg1, /**< searchElement */
+                                              ecma_value_t arg2) /**< fromIndex */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 3. */
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  ecma_number_t* num_p = ecma_alloc_number ();
+  *num_p = ecma_int32_to_number (-1);
+
+  /* 4. */
+  if (len == 0)
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
+  else
+  {
+    /* 5. */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
+
+    int32_t from_idx_int = ecma_number_to_int32 (arg_from_idx);
+
+    /* 6. */
+    if (from_idx_int > 0 && (uint32_t) from_idx_int >= len)
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    }
+    else
+    {
+      uint32_t k;
+
+      /* 7 */
+      if (from_idx_int >= 0)
+      {
+        k = (uint32_t) from_idx_int;
+      }
+      /* 8. */
+      else
+      {
+        from_idx_int = -from_idx_int;
+
+        /* As opposed to the standard, we prevent k from being negative, so that we can use an uint32 */
+        if ((uint32_t) from_idx_int < len)
+        {
+          /* 8.a */
+          k = len - (uint32_t) from_idx_int;
+        }
+        /* If k would've been negative */
+        else
+        {
+          /* 8.b */
+          k = 0;
+        }
+
+      }
+      JERRY_ASSERT (k < len);
+
+      for (; k < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); k++)
+      {
+        ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (k);
+
+        /* 9.a */
+        if (ecma_op_object_get_property (obj_p, idx_str_p) != NULL)
+        {
+          /* 9.b.i */
+          ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, idx_str_p), ret_value);
+
+          /* 9.b.ii */
+          if (ecma_op_strict_equality_compare (arg1, get_value))
+          {
+            *num_p = ecma_uint32_to_number (k);
+          }
+
+          ECMA_FINALIZE (get_value);
+        }
+
+        ecma_deref_ecma_string (idx_str_p);
+      }
+
+      if (ecma_is_completion_value_empty (ret_value))
+      {
+        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+      }
+      else
+      {
+        ecma_dealloc_number (num_p);
+      }
+    }
+
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_from_idx);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+
+  ECMA_FINALIZE (len_value);
+
+  ecma_deref_ecma_string (magic_string_length_p);
+
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_index_of */
 
 /**
  * @}

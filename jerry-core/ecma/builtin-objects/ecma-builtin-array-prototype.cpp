@@ -267,6 +267,103 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
 } /* ecma_builtin_array_prototype_object_push */
 
 /**
+ * The Array.prototype object's 'unshift' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.13
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this argument */
+                                             const ecma_value_t args[], /**< arguments list */
+                                             ecma_length_t args_number) /**< number of arguments */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 3. */
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  /* 5. and 6. */
+  for (uint32_t k = len; k > 0 && ecma_is_completion_value_empty (ret_value); k--)
+  {
+    /* 6.a */
+    ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (k - 1);
+    /* 6.b */
+    ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (k + args_number - 1);
+
+    /* 6.c */
+    if (ecma_op_object_get_property (obj_p, from_str_p) != NULL)
+    {
+      /* 6.d.i */
+      ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, from_str_p), ret_value);
+      /* 6.d.ii */
+      ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, to_str_p, get_value, true), ret_value);
+
+      ECMA_FINALIZE (put_value);
+      ECMA_FINALIZE (get_value);
+    }
+    else
+    {
+      /* 6.e.i */
+      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, to_str_p, true), ret_value);
+      ECMA_FINALIZE (del_value);
+    }
+
+    ecma_deref_ecma_string (to_str_p);
+    ecma_deref_ecma_string (from_str_p);
+  }
+
+  for (uint32_t arg_index = 0;
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index++)
+  {
+    ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (arg_index);
+    /* 9.b */
+    ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, to_str_p, args[arg_index], true), ret_value);
+    ECMA_FINALIZE (put_value);
+    ecma_deref_ecma_string (to_str_p);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 10. */
+    ECMA_TRY_CATCH (set_length_value,
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, len + args_number),
+                    ret_value);
+
+    ecma_number_t *num_p = ecma_alloc_number ();
+    *num_p = ecma_uint32_to_number (len + args_number);
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+
+    ECMA_FINALIZE (set_length_value);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_unshift */
+
+/**
  * @}
  * @}
  * @}

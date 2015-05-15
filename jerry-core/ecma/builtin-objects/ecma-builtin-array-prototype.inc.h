@@ -61,6 +61,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_array_prototype_object_to_string, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_POP, ecma_builtin_array_prototype_object_pop, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_FIXED, 1)
+ROUTINE (ECMA_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

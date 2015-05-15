@@ -449,8 +449,8 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   }
 
   // 3.
-  if (prop_desc.is_value_defined
-      || prop_desc.is_writable_defined)
+  if (src_prop_desc_p->is_value_defined
+      || src_prop_desc_p->is_writable_defined)
   {
     JERRY_ASSERT (prop_desc.is_value_defined && prop_desc.is_writable_defined);
 
@@ -481,7 +481,8 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   else
   {
     // 4.
-    JERRY_ASSERT (prop_desc.is_get_defined && prop_desc.is_set_defined);
+    JERRY_ASSERT (src_prop_desc_p->is_get_defined
+                  && src_prop_desc_p->is_set_defined);
 
     // a.
     if (src_prop_desc_p->get_p == NULL)

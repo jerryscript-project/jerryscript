@@ -38,29 +38,38 @@ then
   echo -e "\n\n  $GIT_STATUS_CONSIDER_CLEAN_MSG.\e[0m\n"
 fi
 
-echo "Pulling..."
-
-make pull
-status_code=$?
-
-if [ $status_code -ne 0 ]
-then
-  echo "Pull failed"
-  exit 1
-fi
-
 ok_to_push=1
 
 current_branch=`git branch | grep "^* " | cut -d ' ' -f 2`
+git branch -r | grep "^ *origin/$current_branch$" 2>&1 > /dev/null
+have_remote=$?
 
-if [ "$current_branch" != "master" ]
+if [ $have_remote -eq 0 ]
 then
-  echo "Current branch is '$current_branch', not 'master'."
+  base_ref="origin/$current_branch"
 
-  exit 1
+  echo "Pulling..."
+
+  make pull
+  status_code=$?
+
+  if [ $status_code -ne 0 ]
+  then
+    echo "Pull failed"
+    exit 1
+  fi
+else
+  base_ref=`git merge-base master $current_branch`
+  status_code=$?
+
+  if [ $status_code -ne 0 ]
+  then
+    echo "Cannot determine merge-base for '$current_branch' and 'master' branches."
+    exit 1
+  fi
 fi
 
-commits_to_push=`git log origin/master..master | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = ""; } { s = $2" "s; } END { print s; }'`
+commits_to_push=`git log $base_ref..$current_branch | grep "^commit [0-9a-f]*$" | awk 'BEGIN { s = ""; } { s = $2" "s; } END { print s; }'`
 
 echo $commits_to_push | grep "[^ ]" >&/dev/null
 status_code=$?
@@ -73,7 +82,7 @@ fi
 trap ctrl_c INT
 
 function ctrl_c() {
-    git checkout master >&/dev/null
+    git checkout $current_branch >&/dev/null
 
     exit 1
 }
@@ -115,7 +124,7 @@ do
   echo "Pre-commit quality testing for '$commit_hash' passed successfully"
 done
 
-git checkout master >&/dev/null
+git checkout $current_branch >&/dev/null
 
 echo
 echo "Pre-commit testing passed successfully"
@@ -128,7 +137,7 @@ then
     echo "Pushing..."
     echo
 
-    git push origin master # refs/notes/*
+    git push -u origin $current_branch
     status_code=$?
 
     if [ $status_code -eq 0 ]

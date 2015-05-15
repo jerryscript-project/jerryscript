@@ -35,7 +35,8 @@ typedef uint8_t token_type_t;
 #define RE_TOK_ASSERT_START_POS_LOOKAHEAD    12
 #define RE_TOK_ASSERT_START_NEG_LOOKAHEAD    13
 
-#define RE_ITERATOR_INFINITE 0
+#define RE_ITERATOR_INFINITE ((uint32_t)-1)
+
 typedef struct re_token_t
 {
   token_type_t type;

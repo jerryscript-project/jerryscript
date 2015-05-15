@@ -21,7 +21,7 @@
 #include "re-parser.h"
 #include "stdio.h"
 
-#define REGEXP_BYTECODE_BLOCK_SIZE (unsigned) 256
+#define REGEXP_BYTECODE_BLOCK_SIZE 256UL
 
 void
 regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
@@ -29,13 +29,13 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
 static regexp_bytecode_t*
 realloc_regexp_bytecode_block (bytecode_ctx_t *bc_ctx)
 {
-  long old_size = bc_ctx->block_end_p - bc_ctx->block_start_p;
-  JERRY_ASSERT (old_size >= 0);
+  JERRY_ASSERT (bc_ctx->block_end_p - bc_ctx->block_start_p >= 0);
+  size_t old_size = static_cast<size_t> (bc_ctx->block_end_p - bc_ctx->block_start_p);
   JERRY_ASSERT (!bc_ctx->current_p && !bc_ctx->block_end_p && !bc_ctx->block_start_p);
 
-  size_t new_block_size = static_cast<size_t> (old_size + REGEXP_BYTECODE_BLOCK_SIZE);
-  long current_ptr_offset = bc_ctx->current_p - bc_ctx->block_start_p;
-  JERRY_ASSERT (current_ptr_offset >= 0);
+  size_t new_block_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
+  JERRY_ASSERT (bc_ctx->current_p - bc_ctx->block_start_p >= 0);
+  size_t current_ptr_offset = static_cast<size_t> (bc_ctx->current_p - bc_ctx->block_start_p);
 
   regexp_bytecode_t *new_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (new_block_size,
                                                                                      MEM_HEAP_ALLOC_SHORT_TERM);

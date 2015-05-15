@@ -179,7 +179,6 @@ ecma_completion_value_t
 ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
 {
   re_matcher_ctx re_ctx;
-  bool match = 0;
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   /* 1. Read bytecode header and init regexp matcher context. */
@@ -189,6 +188,7 @@ ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
   re_ctx.num_of_non_captures = get_value (&bc_p);
 
   MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures, const ecma_char_t*);
+  bool match = 0;
   re_ctx.saved_p = saved_p;
 
   /* 2. Try to match */

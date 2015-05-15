@@ -71,7 +71,7 @@ typedef enum
  *
  * @see mem_init_block_header
  */
-typedef enum class : uint8_t
+typedef enum : uint8_t
 {
   ONE_CHUNKED, /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
   GENERAL      /**< general (may be multi-chunk) block */

@@ -17,6 +17,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-exceptions.h"
 #include "ecma-extension.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
@@ -414,6 +415,80 @@ jerry_api_create_object (void)
 
   return ecma_op_create_object_object_noarg ();
 } /* jerry_api_create_object */
+
+/**
+ * Create an error object
+ *
+ * Note:
+ *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *
+ * @return pointer to created error object
+ */
+jerry_api_object_t*
+jerry_api_create_error (jerry_api_error_t error_type, const char *message_p)
+{
+  jerry_assert_api_available ();
+
+  ecma_standard_error_t standard_error_type = ECMA_ERROR_COMMON;
+
+  switch (error_type)
+  {
+    case JERRY_API_ERROR_COMMON:
+    {
+      standard_error_type = ECMA_ERROR_COMMON;
+      break;
+    }
+    case JERRY_API_ERROR_EVAL:
+    {
+      standard_error_type = ECMA_ERROR_EVAL;
+      break;
+    }
+    case JERRY_API_ERROR_RANGE:
+    {
+      standard_error_type = ECMA_ERROR_RANGE;
+      break;
+    }
+    case JERRY_API_ERROR_REFERENCE:
+    {
+      standard_error_type = ECMA_ERROR_REFERENCE;
+      break;
+    }
+    case JERRY_API_ERROR_SYNTAX:
+    {
+      standard_error_type = ECMA_ERROR_SYNTAX;
+      break;
+    }
+    case JERRY_API_ERROR_TYPE:
+    {
+      standard_error_type = ECMA_ERROR_TYPE;
+      break;
+    }
+    case JERRY_API_ERROR_URI:
+    {
+      standard_error_type = ECMA_ERROR_URI;
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  if (message_p == NULL)
+  {
+    return ecma_new_standard_error (standard_error_type);
+  }
+  else
+  {
+    ecma_string_t* message_string_p = ecma_new_ecma_string ((const ecma_char_t*) message_p);
+
+    ecma_object_t* error_object_p = ecma_new_standard_error_with_message (standard_error_type, message_string_p);
+
+    ecma_deref_ecma_string (message_string_p);
+
+    return error_object_p;
+  }
+}
 
 /**
  * Create an external function object

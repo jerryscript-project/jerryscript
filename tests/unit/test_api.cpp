@@ -34,10 +34,21 @@ const char *test_source = (
                            "this.t = 12; "
                            "} "
                            "this.A = A; "
-                           "this.a = new A ();"
-                           "function call_external () {"
-                           "  return this.external ('1', true);"
-                           "}"
+                           "this.a = new A (); "
+                           "function call_external () { "
+                           "  return this.external ('1', true); "
+                           "} "
+                           "function call_throw_test() { "
+                           "  bool catched = false "
+                           "  try { "
+                           "    this.throw_test(); "
+                           "  } catch (e) { "
+                           "    catched = true; "
+                           "    assert(e.name == 'TypeError'); "
+                           "    assert(e.message == 'error'); "
+                           "  } "
+                           "  assert(catched); "
+                           "} "
                            );
 
 bool test_api_is_free_callback_was_called = false;
@@ -117,6 +128,24 @@ handler (const jerry_api_object_t *function_obj_p,
   return true;
 } /* handler */
 
+static bool
+handler_throw_test (const jerry_api_object_t *function_obj_p,
+                    const jerry_api_value_t *this_p,
+                    jerry_api_value_t *ret_val_p,
+                    const jerry_api_value_t args_p[],
+                    const uint16_t args_cnt)
+{
+  printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+
+  jerry_api_object_t* error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE, "error");
+
+  test_api_init_api_value_object (ret_val_p, error_p);
+
+  jerry_api_release_object (error_p);
+
+  return false;
+}
+
 static void
 handler_construct_freecb (uintptr_t native_p)
 {
@@ -162,6 +191,7 @@ main (void)
   jerry_api_value_t val_external, val_external_construct, val_call_external;
   jerry_api_object_t* global_obj_p;
   jerry_api_object_t* external_func_p, *external_construct_p;
+  jerry_api_object_t* throw_test_handler_p;
   jerry_api_value_t res, args[2];
   char buffer[32];
 
@@ -308,8 +338,6 @@ main (void)
   jerry_api_release_value (&res);
   assert (!strcmp (buffer, "string from handler"));
 
-  jerry_api_release_object (global_obj_p);
-
   // Create native handler bound function object and set it to 'external_construct' variable
   external_construct_p = jerry_api_create_external_function (handler_construct);
   assert (external_construct_p != NULL
@@ -345,6 +373,36 @@ main (void)
           && ptr == (uintptr_t) 0x0012345678abcdefull);
 
   jerry_api_release_value (&res);
+
+
+  // Test: Throwing exception from native handler.
+  throw_test_handler_p = jerry_api_create_external_function (handler_throw_test);
+  assert (throw_test_handler_p != NULL
+          && jerry_api_is_function (throw_test_handler_p));
+
+  test_api_init_api_value_object (&val_t, throw_test_handler_p);
+  is_ok = jerry_api_set_object_field_value (global_obj_p,
+                                            "throw_test",
+                                            &val_t);
+  assert (is_ok);
+  jerry_api_release_value (&val_t);
+  jerry_api_release_object (throw_test_handler_p);
+
+  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_throw_test", &val_t);
+  assert (is_ok
+          && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
+
+  is_ok = jerry_api_call_function (val_t.v_object,
+                                   global_obj_p,
+                                   &res,
+                                   NULL, 0);
+  assert (is_ok);
+  jerry_api_release_value (&val_t);
+  jerry_api_release_value (&res);
+
+
+  // cleanup.
+  jerry_api_release_object (global_obj_p);
 
   jerry_cleanup ();
 

@@ -58,6 +58,20 @@ typedef enum
 } jerry_api_data_type_t;
 
 /**
+ * Jerry API Error object types
+ */
+typedef enum
+{
+  JERRY_API_ERROR_COMMON, /**< Error */
+  JERRY_API_ERROR_EVAL, /**< EvalError */
+  JERRY_API_ERROR_RANGE, /**< RangeError */
+  JERRY_API_ERROR_REFERENCE, /**< ReferenceError */
+  JERRY_API_ERROR_SYNTAX, /**< SyntaxError */
+  JERRY_API_ERROR_TYPE, /**< TypeError */
+  JERRY_API_ERROR_URI /**< URIError */
+} jerry_api_error_t;
+
+/**
  * Jerry's string value
  */
 typedef struct ecma_string_t jerry_api_string_t;
@@ -126,6 +140,8 @@ extern EXTERN_C
 jerry_api_string_t* jerry_api_create_string (const char *v);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);
+extern EXTERN_C
+jerry_api_object_t* jerry_api_create_error (jerry_api_error_t error_type, const char *message_p);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_external_function (jerry_external_handler_t handler_p);
 

@@ -530,6 +530,140 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
 } /* ecma_builtin_array_prototype_object_index_of */
 
 /**
+ * The Array.prototype object's 'lastIndexOf' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.15
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< this argument */
+                                                   ecma_value_t arg1, /**< searchElement */
+                                                   ecma_value_t arg2) /**< fromIndex */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 3. */
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  ecma_number_t* num_p = ecma_alloc_number ();
+  *num_p = ecma_int32_to_number (-1);
+
+  /* 4. */
+  if (len == 0)
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
+  else
+  {
+    uint32_t k = len - 1;
+
+    /* 5. */
+    if (!ecma_is_value_undefined (arg2))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
+      int32_t n = ecma_number_to_int32 (arg_from_idx);
+
+      /* 6. */
+      if (n >= 0)
+      {
+        /* min(n, len - 1)*/
+        if ((uint32_t) n > len - 1)
+        {
+          k = len - 1;
+        }
+        else
+        {
+          k = (uint32_t) n;
+        }
+      }
+      /* 7. */
+      else
+      {
+        n = -n;
+
+        /* We prevent k from being negative, so that we can use an uint32 */
+        if ((uint32_t) n <= len)
+        {
+          k = len - (uint32_t) n;
+        }
+        else
+        {
+          /*
+           * If k would be negative, we set it to UINT_MAX. See reasoning for this in the comment
+           * at the for loop below.
+           */
+          k = (uint32_t) -1;
+        }
+      }
+
+      ECMA_OP_TO_NUMBER_FINALIZE (arg_from_idx);
+    }
+
+    /* 8.
+     * We should break from the loop when k < 0. We can still use an uint32_t for k, and check
+     * for an underflow instead. This is safe, because k will always start in [0, len - 1],
+     * and len is in [0, UINT_MAX], so k >= len means we've had an underflow, and should stop.
+     */
+    for (;k < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); k--)
+    {
+      /* 8.a */
+      ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (k);
+
+      /* 8.a */
+      if (ecma_op_object_get_property (obj_p, idx_str_p) != NULL)
+      {
+        /* 8.b.i */
+        ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, idx_str_p), ret_value);
+
+        /* 8.b.ii */
+        if (ecma_op_strict_equality_compare (arg1, get_value))
+        {
+          *num_p = ecma_uint32_to_number (k);
+        }
+
+        ECMA_FINALIZE (get_value);
+      }
+
+      ecma_deref_ecma_string (idx_str_p);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    }
+    else
+    {
+      ecma_dealloc_number (num_p);
+    }
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_last_index_of */
+
+/**
  * The Array.prototype object's 'shift' routine
  *
  * See also:

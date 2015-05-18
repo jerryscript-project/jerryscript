@@ -303,11 +303,11 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
-  ecma_object_t *props = ecma_get_object_from_value (arg2);
+  ecma_object_t *props_p = ecma_get_object_from_value (arg2);
 
   ecma_property_t *property_p;
 
-  for (property_p = ecma_get_property_list (props);
+  for (property_p = ecma_get_property_list (props_p);
        property_p != NULL;
        property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
@@ -327,11 +327,15 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     {
       continue;
     }
-    ecma_value_t val = ecma_get_named_data_property_value (property_p);
     ecma_property_descriptor_t prop_desc;
 
+    ECMA_TRY_CATCH (descObj,
+                    ecma_op_general_object_get (props_p, property_name_p),
+                    ret_value);
+
     ECMA_TRY_CATCH (conv_result,
-                    ecma_op_to_property_descriptor (val, &prop_desc),
+                    ecma_op_to_property_descriptor (ecma_get_completion_value_value (descObj),
+                                                    &prop_desc),
                     ret_value);
 
     ECMA_TRY_CATCH (define_own_prop_ret,
@@ -344,6 +348,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     ECMA_FINALIZE (define_own_prop_ret);
     ecma_free_property_descriptor (&prop_desc);
     ECMA_FINALIZE (conv_result);
+    ECMA_FINALIZE (descObj);
 
     if (ecma_is_completion_value_throw (ret_value))
     {

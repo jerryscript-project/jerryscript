@@ -290,6 +290,7 @@ extern void ecma_set_property_lcached (ecma_property_t *prop_p,
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
+extern ecma_property_descriptor_t ecma_get_property_descriptor_from_property (ecma_property_t *prop_p);
 
 /* ecma-helpers-external-pointers.c */
 extern bool

@@ -256,11 +256,48 @@ ecma_builtin_object_object_keys (ecma_value_t this_arg, /**< 'this' argument */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                         ecma_value_t arg1, /**< routine's first argument */
                                                         ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  // 1.
+  if (!ecma_is_value_object (arg1))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ret_value;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
+
+  // 2.
+  ECMA_TRY_CATCH (name_str_value,
+                  ecma_op_to_string (arg2),
+                  ret_value);
+
+  ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
+
+  // 3.
+  ecma_property_t *prop_p = ecma_op_general_object_get_own_property (obj_p, name_str_p);
+
+  if (prop_p != NULL)
+  {
+    ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (prop_p);
+
+    // 4.
+    ecma_object_t* desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (desc_obj_p));
+  }
+  else
+  {
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  ECMA_FINALIZE (name_str_value);
+
+  return ret_value;
 } /* ecma_builtin_object_object_get_own_property_descriptor */
 
 /**

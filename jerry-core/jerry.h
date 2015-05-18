@@ -39,6 +39,7 @@ typedef uint32_t jerry_flag_t;
 #define JERRY_FLAG_MEM_STATS_SEPARATE     (1u << 3) /**< dump memory statistics and reset peak values after parse */
 #define JERRY_FLAG_PARSE_ONLY             (1u << 4) /**< parse only, prevents script execution (only for testing)
                                                      *   FIXME: Remove. */
+#define JERRY_FLAG_ENABLE_LOG             (1u << 5) /**< enable logging */
 
 /**
  * Error codes
@@ -66,6 +67,11 @@ extern const char *jerry_commit_hash;
  * Jerry engine build branch name
  */
 extern const char *jerry_branch_name;
+
+#ifdef JERRY_ENABLE_LOG
+extern int jerry_debug_level;
+extern FILE *jerry_log_file;
+#endif /* JERRY_ENABLE_LOG */
 
 /**
  * Jerry error callback type

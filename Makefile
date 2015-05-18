@@ -62,6 +62,12 @@
    LTO := OFF
   endif
 
+ # LOG
+  LOG ?= OFF
+  ifneq ($(LOG),ON)
+   LOG := OFF
+  endif
+
 # External build configuration
  # List of include paths for external libraries (semicolon-separated)
   EXTERNAL_LIBS_INTERFACE ?=
@@ -151,7 +157,7 @@ $(BUILD_DIRS_NATIVE): prerequisites
           fi; \
 	  mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_NUTTX): prerequisites

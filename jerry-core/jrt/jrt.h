@@ -16,6 +16,7 @@
 #ifndef JERRY_GLOBALS_H
 #define JERRY_GLOBALS_H
 
+#include <stdio.h>
 #include "jerry.h"
 #include "jrt-types.h"
 
@@ -91,6 +92,36 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
 #else /* !JERRY_NDEBUG */
 #define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
 #endif /* !JERRY_NDEBUG */
+
+#ifdef JERRY_ENABLE_LOG
+#define JERRY_LOG(lvl, ...) \
+  do \
+  { \
+    if (lvl <= jerry_debug_level && jerry_log_file) \
+    { \
+      fprintf (jerry_log_file, __VA_ARGS__); \
+    } \
+  } \
+  while (0)
+
+#define JERRY_DLOG(...) JERRY_LOG (1, __VA_ARGS__)
+#define JERRY_DDLOG(...) JERRY_LOG (2, __VA_ARGS__)
+#define JERRY_DDDLOG(...) JERRY_LOG (3, __VA_ARGS__)
+#else /* !JERRY_ENABLE_LOG */
+#define JERRY_DLOG(...) \
+  do \
+  { \
+    if (false) \
+    { \
+      jerry_ref_unused_variables (0, __VA_ARGS__); \
+    } \
+  } while (0)
+#define JERRY_DDLOG(...) JERRY_DLOG (__VA_ARGS__)
+#define JERRY_DDDLOG(...) JERRY_DLOG (__VA_ARGS__)
+#endif /* !JERRY_ENABLE_LOG */
+
+#define JERRY_ERROR_MSG(...) fprintf (stderr, __VA_ARGS__)
+#define JERRY_WARNING_MSG(...) JERRY_ERROR_MSG (__VA_ARGS__)
 
 /**
  * Mark for unreachable points and unimplemented cases

@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "jerry.h"
+#include "jrt/jrt.h"
 
 #include "plugins/io/init.h"
 
@@ -93,7 +94,7 @@ read_sources (const char *script_file_names[],
 
   if (i < files_count)
   {
-    printf ("Failed to read script N%d\n", i + 1);
+    JERRY_ERROR_MSG ("Failed to read script N%d\n", i + 1);
 
     return NULL;
   }
@@ -113,7 +114,7 @@ main (int argc,
 {
   if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    printf ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
+    JERRY_ERROR_MSG ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -130,6 +131,9 @@ main (int argc,
 
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
 
+#ifdef JERRY_ENABLE_LOG
+  const char *log_file_name = nullptr;
+#endif /* JERRY_ENABLE_LOG */
   for (i = 1; i < argc; i++)
   {
     if (!strcmp ("-v", argv[i]))
@@ -159,6 +163,36 @@ main (int argc,
     {
       flags |= JERRY_FLAG_SHOW_OPCODES;
     }
+    else if (!strcmp ("--log-level", argv[i]))
+    {
+      flags |= JERRY_FLAG_ENABLE_LOG;
+      if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
+      {
+#ifdef JERRY_ENABLE_LOG
+        jerry_debug_level = argv[i][0] - '0';
+#endif /* JERRY_ENABLE_LOG */
+      }
+      else
+      {
+        JERRY_ERROR_MSG ("Error: wrong format or invalid argument\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+    }
+    else if (!strcmp ("--log-file", argv[i]))
+    {
+      flags |= JERRY_FLAG_ENABLE_LOG;
+      if (++i < argc)
+      {
+#ifdef JERRY_ENABLE_LOG
+        log_file_name = argv[i];
+#endif /* JERRY_ENABLE_LOG */
+      }
+      else
+      {
+        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+    }
     else
     {
       file_names[files_counter++] = argv[i];
@@ -180,6 +214,22 @@ main (int argc,
     }
     else
     {
+#ifdef JERRY_ENABLE_LOG
+      if (log_file_name)
+      {
+        jerry_log_file = fopen (log_file_name, "w");
+        if (jerry_log_file == nullptr)
+        {
+          JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+      }
+      else
+      {
+        jerry_log_file = stdout;
+      }
+#endif /* JERRY_ENABLE_LOG */
+
       jerry_init (flags);
 
       plugin_io_init ();
@@ -200,6 +250,14 @@ main (int argc,
       }
 
       jerry_cleanup ();
+
+#ifdef JERRY_ENABLE_LOG
+      if (jerry_log_file && jerry_log_file != stdout)
+      {
+        fclose (jerry_log_file);
+        jerry_log_file = nullptr;
+      }
+#endif /* JERRY_ENABLE_LOG */
 
       if (ret_code == JERRY_COMPLETION_CODE_OK)
       {

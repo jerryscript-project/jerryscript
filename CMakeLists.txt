@@ -61,6 +61,7 @@ project (Jerry CXX C ASM)
 # Determining platform and defining options
  option(ENABLE_VALGRIND "Enable valgrind helpers in memory allocators" OFF)
  option(ENABLE_LTO      "Enable LTO build" ON)
+ option(ENABLE_LOG      "Enable LOG build" OFF)
 
  set(PLATFORM "${CMAKE_SYSTEM_NAME}")
  string(TOUPPER "${PLATFORM}" PLATFORM)
@@ -337,6 +338,10 @@ project (Jerry CXX C ASM)
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
      add_custom_target(mcu_header_with_script_to_run.${TARGET_NAME} DEPENDS ${MCU_SCRIPT_GENERATED_HEADER})
      set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
+    elseif("${PLATFORM}" STREQUAL "LINUX")
+     if("${ENABLE_LOG}" STREQUAL "ON")
+      set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
+     endif()
     endif()
 
     set_property(TARGET ${TARGET_NAME}

@@ -140,6 +140,11 @@ project (JerryCore CXX C ASM)
   set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
  endif()
 
+ # Log
+  if("${ENABLE_LOG}" STREQUAL "ON")
+   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
+  endif()
+
 # Platform-specific configuration
  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_${PLATFORM_EXT}})
 

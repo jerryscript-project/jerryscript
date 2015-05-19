@@ -192,10 +192,24 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument *
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+    ecma_set_object_extensible (obj_p, false);
+
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg, true));
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_prevent_extensions */
 
 /**
@@ -240,10 +254,27 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argumen
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_is_extensible (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                           ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+
+    bool extensible = ecma_get_object_extensible (obj_p);
+
+    ret_value = ecma_make_simple_completion_value (extensible
+                                                   ? ECMA_SIMPLE_VALUE_TRUE
+                                                   : ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_is_extensible */
 
 /**

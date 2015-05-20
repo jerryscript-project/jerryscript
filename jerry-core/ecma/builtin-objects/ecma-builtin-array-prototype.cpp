@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
@@ -701,6 +702,162 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_unshift */
+
+/**
+ * The Array.prototype object's 'slice' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.10
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' argument */
+                              ecma_value_t arg1, /**< start */
+                              ecma_value_t arg2) /**< end */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t* obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t* length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, length_magic_string_p),
+                  ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 4. */
+  const uint32_t len = ecma_number_to_uint32 (len_number);
+
+  uint32_t start = 0, end = len;
+
+  /* 5. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num, arg1, ret_value);
+  int32_t relative_start = ecma_number_to_int32 (start_num);
+
+  /* 6. */
+  if (relative_start < 0)
+  {
+    uint32_t start_abs = (uint32_t) -relative_start;
+
+    if (start_abs > len)
+    {
+      start = 0;
+    }
+    else
+    {
+      start = len - start_abs;
+    }
+  }
+  else
+  {
+    start = (uint32_t) relative_start;
+    if (start > len)
+    {
+      start = len;
+    }
+  }
+
+  /* 7. */
+  if (ecma_is_value_undefined (arg2))
+  {
+    end = len;
+  }
+  else
+  {
+    /* 7. part 2*/
+    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num, arg2, ret_value)
+    int32_t relative_end = ecma_number_to_int32 (end_num);
+
+    if (relative_end < 0)
+    {
+      uint32_t end_abs = (uint32_t) -relative_end;
+
+      if (end_abs > len)
+      {
+        end = 0;
+      }
+      else
+      {
+        end = len - end_abs;
+      }
+    }
+    else
+    {
+      end = (uint32_t) relative_end;
+      if (end > len)
+      {
+        end = len;
+      }
+    }
+
+    ECMA_OP_TO_NUMBER_FINALIZE (end_num);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+
+  JERRY_ASSERT (start <= len && end <= len);
+
+  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+  /* 9. */
+  uint32_t n = 0;
+
+  /* 10. */
+  for (uint32_t k = start; k < end && ecma_is_completion_value_empty (ret_value); k++, n++)
+  {
+    /* 10.a */
+    ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (k);
+
+    /* 10.c */
+    if (ecma_op_object_get_property (obj_p, curr_idx_str_p) != NULL)
+    {
+      /* 10.c.i */
+      ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, curr_idx_str_p), ret_value);
+
+      ecma_string_t *to_idx_str_p = ecma_new_ecma_string_from_uint32 (n);
+      /*
+       * 10.c.ii
+       * Using [[Put]] is equivalent to using [[DefineOwnProperty]] as specified the standard,
+       * so we use [[Put]] instead for simplicity. No need for a try-catch block since it is called
+       * with is_throw = false.
+       */
+      ecma_completion_value_t put_comp_value = ecma_op_object_put (new_array_p, to_idx_str_p, get_value, false);
+      JERRY_ASSERT (ecma_is_completion_value_normal (put_comp_value));
+      ecma_free_completion_value (put_comp_value);
+      ecma_deref_ecma_string (to_idx_str_p);
+
+      ECMA_FINALIZE (get_value);
+    }
+
+    ecma_deref_ecma_string (curr_idx_str_p);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = new_array;
+  }
+  else
+  {
+    ecma_free_completion_value (new_array);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (length_magic_string_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_slice */
 
 /**
  * @}

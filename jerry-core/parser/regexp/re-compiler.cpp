@@ -186,7 +186,7 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
     {
       case RE_TOK_CHAR:
       {
-        fprintf (stderr, "Character token: %c\n", re_tok.value);
+        JERRY_DDLOG ("Compile character token: %c\n", re_tok.value);
         append_opcode (bc_ctx_p, RE_OP_CHAR);
         append_u32 (bc_ctx_p, re_tok.value);
         if ((re_tok.qmin != 1) || (re_tok.qmax != 1))
@@ -197,6 +197,7 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
       }
       case RE_TOK_PERIOD:
       {
+        JERRY_DDLOG ("Compile a period\n");
         append_opcode (bc_ctx_p, RE_OP_PERIOD);
         break;
       }
@@ -260,9 +261,12 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
 
   ECMA_SET_POINTER (bytecode->u.internal_property.value, bc_ctx.block_start_p);
 
+#ifdef JERRY_ENABLE_LOG
   regexp_dump_bytecode (&bc_ctx);
+#endif
 } /* regexp_compile_bytecode */
 
+#ifdef JERRY_ENABLE_LOG
 /**
  * RegExp bytecode dumper
  */
@@ -270,10 +274,10 @@ void
 regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
 {
   regexp_bytecode_t *bytecode_p = bc_ctx->block_start_p;
-  fprintf (stderr, "%d %d %d | ",
-           get_value (&bytecode_p),
-           get_value (&bytecode_p),
-           get_value (&bytecode_p));
+  JERRY_DLOG ("%d %d %d | ",
+              get_value (&bytecode_p),
+              get_value (&bytecode_p),
+              get_value (&bytecode_p));
 
   regexp_opcode_t op;
   while ((op = get_opcode (&bytecode_p)))
@@ -282,57 +286,58 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
     {
       case RE_OP_MATCH:
       {
-        fprintf (stderr, "MATCH ");
+        JERRY_DLOG ("MATCH ");
         break;
       }
       case RE_OP_CHAR:
       {
-        fprintf (stderr, "CHAR ");
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("CHAR ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AT_START:
       {
-        fprintf (stderr, "RE_START ");
+        JERRY_DLOG ("RE_START ");
         break;
       }
       case RE_OP_SAVE_AND_MATCH:
       {
-        fprintf (stderr, "RE_END ");
+        JERRY_DLOG ("RE_END ");
         break;
       }
       case RE_OP_GREEDY_ITERATOR:
       {
-        fprintf (stderr, "RE_OP_GREEDY_ITERATOR ");
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("RE_OP_GREEDY_ITERATOR ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_NON_GREEDY_ITERATOR:
       {
-        fprintf (stderr, "RE_OP_NON_GREEDY_ITERATOR ");
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
-        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("RE_OP_NON_GREEDY_ITERATOR ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_PERIOD:
       {
-        fprintf (stderr, "RE_OP_PERIOD ");
+        JERRY_DLOG ("RE_OP_PERIOD ");
         break;
       }
       case RE_OP_ALTERNATIVE:
       {
-        fprintf (stderr, "RE_OP_ALTERNATIVE ");
+        JERRY_DLOG ("RE_OP_ALTERNATIVE ");
         break;
       }
       default:
       {
-        fprintf (stderr, "UNKNOWN(%d) ", (uint32_t) op);
+        JERRY_DLOG ("UNKNOWN(%d) ", (uint32_t) op);
         break;
       }
     }
   }
-  fprintf (stderr, "EOF\n");
+  JERRY_DLOG ("EOF\n");
 } /* regexp_dump_bytecode */
+#endif

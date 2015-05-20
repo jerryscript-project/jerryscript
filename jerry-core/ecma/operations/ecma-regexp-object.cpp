@@ -130,7 +130,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
     {
       case RE_OP_MATCH:
       {
-        fprintf (stderr, "RegExp match\n");
+        JERRY_DDLOG ("RegExp match\n");
         return str_p; /* match */
       }
       case RE_OP_CHAR:
@@ -138,7 +138,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
         uint32_t ch1 = get_value (&bc_p);
         uint32_t ch2 = (uint32_t) *str_p;
         str_p++;
-        fprintf (stderr, "Character matching %d to %d\n", ch1, ch2);
+        JERRY_DDLOG ("Character matching %d to %d\n", ch1, ch2);
 
         if (ch1 != ch2)
         {
@@ -177,8 +177,8 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
         max = get_value (&bc_p);
 
         offset = get_value (&bc_p);
-        fprintf (stderr, "Non-greedy iterator, min=%lu, max=%lu, offset=%ld\n",
-                 (unsigned long) min, (unsigned long) max, (long) offset);
+        JERRY_DDLOG ("Non-greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                     (unsigned long) min, (unsigned long) max, (long) offset);
 
         q = 0;
         while (q <= max)
@@ -211,8 +211,8 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
         max = get_value (&bc_p);
 
         offset = get_value (&bc_p);
-        fprintf (stderr, "Greedy iterator, min=%lu, max=%lu, offset=%ld\n",
-                 (unsigned long) min, (unsigned long) max, (long) offset);
+        JERRY_DDLOG ("Greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                     (unsigned long) min, (unsigned long) max, (long) offset);
 
         q = 0;
         while (q < max)
@@ -245,7 +245,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
       }
       default:
       {
-        fprintf (stderr, "UNKNOWN opcode (%d)!\n", (uint32_t) op);
+        JERRY_DDLOG ("UNKNOWN opcode (%d)!\n", (uint32_t) op);
         // FIXME: throw an internal error
         return NULL; /* fail*/
       }
@@ -253,7 +253,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
   }
 
   // FIXME: throw an internal error
-  fprintf (stderr, "Should not get here!\n");
+  JERRY_ERROR_MSG ("Should not get here!\n");
   return NULL; /* fail*/
 } /* ecma_regexp_match */
 

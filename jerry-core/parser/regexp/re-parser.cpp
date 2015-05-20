@@ -247,7 +247,7 @@ re_parse_next_token (ecma_char_t **pattern)
     {
       advance = 1;
       advance += parse_re_iterator (pattern, &result, 1);
-      result.type = RE_TOK_ATOM_PERIOD;
+      result.type = RE_TOK_PERIOD;
       break;
     }
     case '(':
@@ -270,21 +270,21 @@ re_parse_next_token (ecma_char_t **pattern)
         {
           /* (?: */
           advance = 3;
-          result.type = RE_TOK_ATOM_START_NONCAPTURE_GROUP;
+          result.type = RE_TOK_START_NON_CAPTURE_GROUP;
         }
       }
       else
       {
         /* ( */
         advance = 1;
-        result.type = RE_TOK_ATOM_START_CAPTURE_GROUP;
+        result.type = RE_TOK_START_CAPTURE_GROUP;
       }
       break;
     }
     case ')':
     {
       advance = 1;
-      result.type = RE_TOK_ATOM_START_CAPTURE_GROUP;
+      result.type = RE_TOK_START_CAPTURE_GROUP;
       break;
     }
     case '[':
@@ -303,6 +303,12 @@ re_parse_next_token (ecma_char_t **pattern)
       JERRY_UNREACHABLE ();
       break;
     }
+    case '\0':
+    {
+      advance = 0;
+      result.type = RE_TOK_EOF;
+      break;
+    }
     default:
     {
       advance = 1;
@@ -312,7 +318,6 @@ re_parse_next_token (ecma_char_t **pattern)
     }
   }
 
-  JERRY_ASSERT (advance > 0);
   (*pattern) += advance;
 
   return result;

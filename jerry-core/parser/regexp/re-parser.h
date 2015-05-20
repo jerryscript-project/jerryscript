@@ -21,17 +21,18 @@
 
 typedef uint8_t token_type_t;
 
-#define RE_TOK_MATCH                          1
+#define RE_TOK_EOF                            0
+#define RE_TOK_BACKREFERENCE                  1
 #define RE_TOK_CHAR                           2
 #define RE_TOK_RE_START                       3
 #define RE_TOK_RE_END                         4
 #define RE_TOK_ALTERNATIVE                    5
 #define RE_TOK_ASSERT_START                   6
 #define RE_TOK_ASSERT_END                     7
-#define RE_TOK_ATOM_PERIOD                    8
-#define RE_TOK_ATOM_START_CAPTURE_GROUP       9
-#define RE_TOK_ATOM_START_NONCAPTURE_GROUP   10
-#define RE_TOK_ATOM_END_GROUP                11
+#define RE_TOK_PERIOD                         8
+#define RE_TOK_START_CAPTURE_GROUP            9
+#define RE_TOK_START_NON_CAPTURE_GROUP       10
+#define RE_TOK_END_GROUP                     11
 #define RE_TOK_ASSERT_START_POS_LOOKAHEAD    12
 #define RE_TOK_ASSERT_START_NEG_LOOKAHEAD    13
 

@@ -111,6 +111,13 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
 } /* ecma_op_create_regexp_object */
 
 static const ecma_char_t*
+utf8_backtrack (const ecma_char_t* str_p)
+{
+  /* FIXME: fix this, when unicode support is finished! */
+  return --str_p;
+}
+
+static const ecma_char_t*
 regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
               regexp_bytecode_t *bc_p,
               const ecma_char_t *str_p)
@@ -124,7 +131,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
       case RE_OP_MATCH:
       {
         fprintf (stderr, "RegExp match\n");
-        return str_p;
+        return str_p; /* match */
       }
       case RE_OP_CHAR:
       {
@@ -135,7 +142,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
 
         if (ch1 != ch2)
         {
-          return NULL;
+          return NULL; /* fail*/
         }
         break;
       }
@@ -150,29 +157,104 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
         sub_str_p = regexp_match (re_ctx, bc_p, str_p);
         if (sub_str_p)
         {
-          return sub_str_p;
+          return sub_str_p; /* match */
         }
 
         re_ctx->saved_p[RE_GLOBAL_START_IDX] = old_start;
-        return NULL;
+        return NULL; /* fail*/
       }
       case RE_OP_SAVE_AND_MATCH:
       {
         re_ctx->saved_p[RE_GLOBAL_END_IDX] = str_p;
-        return str_p;
+        return str_p; /* match */
+      }
+      case RE_OP_NON_GREEDY_ITERATOR:
+      {
+        uint32_t min, max, offset, q;
+        const ecma_char_t *sub_str_p;
+
+        min = get_value (&bc_p);
+        max = get_value (&bc_p);
+
+        offset = get_value (&bc_p);
+        fprintf (stderr, "Non-greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                 (unsigned long) min, (unsigned long) max, (long) offset);
+
+        q = 0;
+        while (q <= max)
+        {
+          if (q >= min)
+          {
+            sub_str_p = regexp_match (re_ctx, bc_p + offset, str_p);
+            if (sub_str_p)
+            {
+              return sub_str_p; /* match */
+            }
+          }
+
+          sub_str_p = regexp_match (re_ctx, bc_p, str_p);
+          if (!sub_str_p)
+          {
+            break;
+          }
+          str_p = sub_str_p;
+          q++;
+        }
+        return NULL; /* fail*/
+      }
+      case RE_OP_GREEDY_ITERATOR:
+      {
+        uint32_t min, max, offset, q;
+        const ecma_char_t *sub_str_p;
+
+        min = get_value (&bc_p);
+        max = get_value (&bc_p);
+
+        offset = get_value (&bc_p);
+        fprintf (stderr, "Greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                 (unsigned long) min, (unsigned long) max, (long) offset);
+
+        q = 0;
+        while (q < max)
+        {
+          sub_str_p = regexp_match (re_ctx, bc_p, str_p);
+          if (!sub_str_p)
+          {
+            break;
+          }
+          str_p = sub_str_p;
+          q++;
+        }
+
+        while (q >= min)
+        {
+          sub_str_p = regexp_match (re_ctx, bc_p + offset, str_p);
+          if (sub_str_p)
+          {
+            return sub_str_p; /* match */
+          }
+          if (q == min)
+          {
+            break;
+          }
+
+          str_p = utf8_backtrack (str_p);
+          q--;
+        }
+        return NULL; /* fail*/
       }
       default:
       {
-        fprintf (stderr, "UNKNOWN opcode!\n");
+        fprintf (stderr, "UNKNOWN opcode (%d)!\n", (uint32_t) op);
         // FIXME: throw an internal error
-        return NULL;
+        return NULL; /* fail*/
       }
     }
   }
 
   // FIXME: throw an internal error
   fprintf (stderr, "Should not get here!\n");
-  return NULL;
+  return NULL; /* fail*/
 } /* ecma_regexp_match */
 
 ecma_completion_value_t

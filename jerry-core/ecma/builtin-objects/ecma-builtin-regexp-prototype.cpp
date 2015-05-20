@@ -57,7 +57,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
-  ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
   ecma_property_t *bytecode_prop = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
   regexp_bytecode_t *bytecode_p = ECMA_GET_POINTER (regexp_bytecode_t, bytecode_prop->u.internal_property.value);
 

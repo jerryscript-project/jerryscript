@@ -18,10 +18,15 @@
 #include "jrt-libc-includes.h"
 #include "mem-heap.h"
 #include "re-compiler.h"
-#include "re-parser.h"
 #include "stdio.h"
 
 #define REGEXP_BYTECODE_BLOCK_SIZE 256UL
+
+/*
+ * FIXME: remove the magic number constant from offset calculation.
+ * We have to subtract 1 from offset, because the current_p points after the last valid bytecode not to it.
+ */
+#define BYTECODE_LEN(bc_ctx_p) (static_cast<uint32_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p) - 1)
 
 void
 regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
@@ -64,7 +69,6 @@ bytecode_list_append (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode)
   bc_ctx->current_p += sizeof (regexp_bytecode_t);
 } /* bytecode_list_append */
 
-#if 0 /* unused */
 static void
 bytecode_list_insert (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode, size_t offset)
 {
@@ -75,23 +79,45 @@ bytecode_list_insert (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode, size_t
   }
   regexp_bytecode_t *src = current_p - offset;
   regexp_bytecode_t *dest = src + sizeof (regexp_bytecode_t);
-  memcpy (dest, src, offset);
 
-  *(current_p - offset) = bytecode;
+  regexp_bytecode_t *tmp_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (offset,
+                                                                                     MEM_HEAP_ALLOC_SHORT_TERM);
+  memcpy (tmp_block_start_p, src, offset);
+  memcpy (dest, tmp_block_start_p, offset);
+  mem_heap_free_block (tmp_block_start_p);
+
+  *src = bytecode;
   bc_ctx->current_p += sizeof (regexp_bytecode_t);
 } /* bytecode_list_insert  */
-#endif
 
 static void
-append_opcode (bytecode_ctx_t *bc_ctx, regexp_opcode_t opcode)
+append_opcode (bytecode_ctx_t *bc_ctx,
+               regexp_opcode_t opcode)
 {
   bytecode_list_append (bc_ctx, (regexp_bytecode_t) opcode);
 }
 
 static void
-append_u32 (bytecode_ctx_t *bc_ctx, uint32_t value)
+append_u32 (bytecode_ctx_t *bc_ctx,
+            uint32_t value)
 {
   bytecode_list_append (bc_ctx, (regexp_bytecode_t) value);
+}
+
+static void
+insert_opcode (bytecode_ctx_t *bc_ctx,
+               uint32_t offset,
+               regexp_opcode_t opcode)
+{
+  bytecode_list_insert (bc_ctx, (regexp_bytecode_t) opcode, offset);
+}
+
+static void
+insert_u32 (bytecode_ctx_t *bc_ctx,
+            uint32_t offset,
+            uint32_t value)
+{
+  bytecode_list_insert (bc_ctx, (regexp_bytecode_t) value, offset);
 }
 
 regexp_opcode_t
@@ -111,43 +137,84 @@ get_value (regexp_bytecode_t **bc_p)
   return (uint32_t) bytecode;
 }
 
-/**
- * Compilation of RegExp bytecode
- */
-void
-regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
-                         ecma_string_t *pattern __attr_unused___) /**< pattern */
+static void
+insert_simple_iterator (regexp_compiler_ctx *re_ctx_p,
+                        uint32_t new_atom_start_offset)
+{
+  uint32_t atom_code_length;
+  uint32_t offset;
+  uint32_t qmin, qmax;
+
+  qmin = re_ctx_p->current_token_p->qmin;
+  qmax = re_ctx_p->current_token_p->qmax;
+  JERRY_ASSERT (qmin <= qmax);
+
+  /* FIXME: optimize bytecode lenght. Store 0 rather than INF */
+
+  append_opcode (re_ctx_p->bytecode_ctx_p, RE_OP_MATCH);   /* complete 'sub atom' */
+  uint32_t bytecode_length = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+  atom_code_length = (uint32_t) (bytecode_length - new_atom_start_offset);
+
+  offset = new_atom_start_offset;
+  if (re_ctx_p->current_token_p->greedy)
+  {
+    insert_opcode (re_ctx_p->bytecode_ctx_p, offset, RE_OP_GREEDY_ITERATOR);
+  }
+  else
+  {
+    insert_opcode (re_ctx_p->bytecode_ctx_p, offset, RE_OP_NON_GREEDY_ITERATOR);
+  }
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmin);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmax);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, atom_code_length);
+}
+
+static void
+parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
 {
   re_token_t re_tok;
-  bytecode_ctx_t bc_ctx;
-  bc_ctx.block_start_p = NULL;
-  bc_ctx.block_end_p = NULL;
-  bc_ctx.current_p = NULL;
+  re_ctx_p->current_token_p = &re_tok;
+  ecma_char_t *pattern_p = re_ctx_p->pattern_p;
+  bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
 
-  int32_t chars = ecma_string_get_length (pattern);
-  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, chars + 1, ecma_char_t);
-  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-  ecma_string_to_zt_string (pattern, pattern_start_p, zt_str_size);
-
-  /* 1. Add extra informations for bytecode header */
-  append_u32 (&bc_ctx, 0);
-  append_u32 (&bc_ctx, 2); // FIXME: Count the number of capture groups
-  append_u32 (&bc_ctx, 0); // FIXME: Count the number of non-capture groups
-
-  append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
-
-  ecma_char_t *pattern_char_p = pattern_start_p;
-  while (pattern_char_p && *pattern_char_p != '\0')
+  while (true)
   {
-    re_tok = re_parse_next_token (&pattern_char_p);
+    re_tok = re_parse_next_token (&pattern_p);
+    uint32_t new_atom_start_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
     switch (re_tok.type)
     {
       case RE_TOK_CHAR:
       {
-        append_opcode (&bc_ctx, RE_OP_CHAR);
-        append_u32 (&bc_ctx, re_tok.value);
+        fprintf (stderr, "Character token: %c\n", re_tok.value);
+        append_opcode (bc_ctx_p, RE_OP_CHAR);
+        append_u32 (bc_ctx_p, re_tok.value);
+        if ((re_tok.qmin != 1) || (re_tok.qmax != 1))
+        {
+          insert_simple_iterator (re_ctx_p, new_atom_start_offset);
+        }
         break;
+      }
+      case RE_TOK_PERIOD:
+      {
+        append_opcode (bc_ctx_p, RE_OP_PERIOD);
+        break;
+      }
+      case RE_TOK_END_GROUP:
+      {
+        if (expect_eof)
+        {
+          // FIXME: throw and error!
+        }
+        return;
+      }
+      case RE_TOK_EOF:
+      {
+        if (!expect_eof)
+        {
+          // FIXME: throw and error!
+        }
+        return;
       }
       default:
       {
@@ -155,7 +222,37 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
       }
     }
   }
+}
 
+/**
+ * Compilation of RegExp bytecode
+ */
+void
+regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
+                         ecma_string_t *pattern __attr_unused___) /**< pattern */
+{
+  regexp_compiler_ctx re_ctx;
+  bytecode_ctx_t bc_ctx;
+  bc_ctx.block_start_p = NULL;
+  bc_ctx.block_end_p = NULL;
+  bc_ctx.current_p = NULL;
+
+  re_ctx.bytecode_ctx_p = &bc_ctx;
+
+  int32_t chars = ecma_string_get_length (pattern);
+  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, chars + 1, ecma_char_t);
+  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+  ecma_string_to_zt_string (pattern, pattern_start_p, zt_str_size);
+  re_ctx.pattern_p = pattern_start_p;
+
+  /* 1. Add extra informations for bytecode header */
+  append_u32 (&bc_ctx, 0);
+  append_u32 (&bc_ctx, 2); // FIXME: Count the number of capture groups
+  append_u32 (&bc_ctx, 0); // FIXME: Count the number of non-capture groups
+
+  /* 2. Parse RegExp pattern */
+  append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
+  parse_alternative (&re_ctx, true);
   append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
   append_opcode (&bc_ctx, RE_OP_EOF);
 
@@ -204,9 +301,35 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
         fprintf (stderr, "RE_END ");
         break;
       }
+      case RE_OP_GREEDY_ITERATOR:
+      {
+        fprintf (stderr, "RE_OP_GREEDY_ITERATOR ");
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_NON_GREEDY_ITERATOR:
+      {
+        fprintf (stderr, "RE_OP_NON_GREEDY_ITERATOR ");
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        fprintf (stderr, "%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_PERIOD:
+      {
+        fprintf (stderr, "RE_OP_PERIOD ");
+        break;
+      }
+      case RE_OP_ALTERNATIVE:
+      {
+        fprintf (stderr, "RE_OP_ALTERNATIVE ");
+        break;
+      }
       default:
       {
-        fprintf (stderr, "UNKNOWN ");
+        fprintf (stderr, "UNKNOWN(%d) ", (uint32_t) op);
         break;
       }
     }

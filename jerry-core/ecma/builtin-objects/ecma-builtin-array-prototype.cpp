@@ -1436,6 +1436,311 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
 } /* ecma_builtin_array_prototype_object_slice */
 
 /**
+ * The Array.prototype object's 'splice' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.12
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this argument */
+                                          const ecma_value_t args[], /**< arguments list */
+                                          ecma_length_t args_number) /**< number of arguments */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+
+  /* 3. */
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, length_magic_string_p),
+                  ret_value);
+
+  /* 4. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number,
+                               len_value,
+                               ret_value);
+
+  const uint32_t len = ecma_number_to_uint32 (len_number);
+
+  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+  uint32_t start = 0;
+  uint32_t delete_count = 0;
+
+  if (args_number > 0)
+  {
+    /* 5. */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
+                                 args[0],
+                                 ret_value);
+
+    int32_t relative_start = ecma_number_to_int32 (start_num);
+
+    /* 6. */
+    if (relative_start < 0)
+    {
+      uint32_t start_abs = (uint32_t) - relative_start;
+      if (start_abs > len)
+      {
+        start = 0;
+      }
+      else
+      {
+        start = len - start_abs;
+      }
+    }
+    else
+    {
+      start = (uint32_t) relative_start;
+      if (start > len)
+      {
+        start = len;
+      }
+    }
+
+    /*
+     * If there is only one argument, that will be the start argument,
+     * and we must delete the additional elements.
+     */
+    if (args_number == 1)
+    {
+      delete_count = len - start;
+    }
+    else
+    {
+      /* 7. */
+      ECMA_OP_TO_NUMBER_TRY_CATCH (delete_num,
+                                   args[1],
+                                   ret_value);
+
+      int32_t delete_count_int = ecma_number_to_int32 (delete_num);
+
+      if (delete_count_int > 0)
+      {
+        delete_count = (uint32_t) delete_count_int;
+      }
+      else
+      {
+        delete_count = 0;
+      }
+
+      if (len - start < delete_count)
+      {
+        delete_count = len - start;
+      }
+
+      ECMA_OP_TO_NUMBER_FINALIZE (delete_num);
+    }
+
+    ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+  }
+
+  /* 8-9. */
+  uint32_t k;
+
+  for (uint32_t del_item_idx, k = 0;
+       k < delete_count && ecma_is_completion_value_empty (ret_value);
+       k++)
+  {
+    /* 9.a */
+    del_item_idx = k + start;
+    ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (del_item_idx);
+
+    /* 9.b */
+    if (ecma_op_object_get_property (obj_p, idx_str_p) != NULL)
+    {
+      /* 9.c.i */
+      ECMA_TRY_CATCH (get_value,
+                      ecma_op_object_get (obj_p, idx_str_p),
+                      ret_value);
+
+      ecma_string_t *idx_str_new_p = ecma_new_ecma_string_from_uint32 (k);
+
+      /* 9.c.ii
+       * Using [[Put]] is equivalent to using [[DefineOwnProperty]] as specified the standard,
+       * so we use [[Put]] instead for simplicity. No need for a try-catch block since it is called
+       * with is_throw = false.
+       */
+      ECMA_TRY_CATCH (put_value,
+                      ecma_op_object_put (new_array_p, idx_str_new_p, get_value, false),
+                      ret_value);
+
+      ECMA_FINALIZE (put_value);
+      ecma_deref_ecma_string (idx_str_new_p);
+      ECMA_FINALIZE (get_value);
+    }
+
+    ecma_deref_ecma_string (idx_str_p);
+  }
+
+  /* 11. */
+  ecma_length_t item_count;
+
+  if (args_number > 2)
+  {
+    item_count = (ecma_length_t) (args_number - 2);
+  }
+  else
+  {
+    item_count = 0;
+  }
+
+  const uint32_t new_len = len - delete_count + item_count;
+
+  if (item_count != delete_count)
+  {
+    uint32_t from, to;
+
+    /* 12. */
+    if (item_count < delete_count)
+    {
+      /* 12.b */
+      for (k = start; k < (len - delete_count) && ecma_is_completion_value_empty (ret_value); k++)
+      {
+        from = k + delete_count;
+        ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (from);
+
+        to = k + item_count;
+        ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (to);
+
+        /* 12.b.iii */
+        if (ecma_op_object_get_property (obj_p, from_str_p) != NULL)
+        {
+          /* 12.b.iv */
+          ECMA_TRY_CATCH (get_value,
+                          ecma_op_object_get (obj_p, from_str_p),
+                          ret_value);
+
+          ECMA_TRY_CATCH (put_value,
+                          ecma_op_object_put (obj_p, to_str_p, get_value, true),
+                          ret_value);
+
+          ECMA_FINALIZE (put_value);
+          ECMA_FINALIZE (get_value);
+        }
+        else
+        {
+          /* 12.b.v */
+          ECMA_TRY_CATCH (del_value,
+                          ecma_op_object_delete (obj_p, to_str_p, true),
+                          ret_value);
+
+          ECMA_FINALIZE (del_value);
+        }
+
+        ecma_deref_ecma_string (to_str_p);
+        ecma_deref_ecma_string (from_str_p);
+      }
+
+      /* 12.d */
+      for (k = len; k > new_len && ecma_is_completion_value_empty (ret_value); k--)
+      {
+        ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 (k - 1);
+        ECMA_TRY_CATCH (del_value,
+                        ecma_op_object_delete (obj_p, str_idx_p, true),
+                        ret_value);
+
+        ECMA_FINALIZE (del_value);
+        ecma_deref_ecma_string (str_idx_p);
+      }
+    }
+    /* 13. */
+    else if (item_count > delete_count)
+    {
+      /* 13.b */
+      for (k = len - delete_count; k > start  && ecma_is_completion_value_empty (ret_value); k--)
+      {
+        from = k + delete_count - 1;
+        ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (from);
+
+        to = k + item_count - 1;
+        ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (to);
+
+        /* 13.b.iii */
+        if (ecma_op_object_get_property (obj_p, from_str_p) != NULL)
+        {
+          /* 13.b.iv */
+          ECMA_TRY_CATCH (get_value,
+                          ecma_op_object_get (obj_p, from_str_p),
+                          ret_value);
+
+          ECMA_TRY_CATCH (put_value,
+                          ecma_op_object_put (obj_p, to_str_p, get_value, true),
+                          ret_value);
+
+          ECMA_FINALIZE (put_value);
+          ECMA_FINALIZE (get_value);
+        }
+        else
+        {
+          /* 13.b.v */
+          ECMA_TRY_CATCH (del_value,
+                          ecma_op_object_delete (obj_p, to_str_p, true),
+                          ret_value);
+
+          ECMA_FINALIZE (del_value);
+        }
+
+        ecma_deref_ecma_string (to_str_p);
+        ecma_deref_ecma_string (from_str_p);
+      }
+    }
+  }
+
+  /* 15. */
+  ecma_length_t idx = 0;
+  for (ecma_length_t arg_index = 2;
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index++, idx++)
+  {
+    ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) (start + idx));
+    ECMA_TRY_CATCH (put_value,
+                    ecma_op_object_put (obj_p, str_idx_p, args[arg_index], true),
+                    ret_value);
+
+    ECMA_FINALIZE (put_value);
+    ecma_deref_ecma_string (str_idx_p);
+  }
+
+  /* 16. */
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (set_length_value,
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, new_len),
+                    ret_value);
+
+    ECMA_FINALIZE (set_length_value);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = new_array;
+  }
+  else
+  {
+    ecma_free_completion_value (new_array);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (length_magic_string_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_splice */
+
+/**
  * @}
  * @}
  * @}

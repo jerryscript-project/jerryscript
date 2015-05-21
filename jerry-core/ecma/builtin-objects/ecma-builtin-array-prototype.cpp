@@ -664,6 +664,103 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
 } /* ecma_builtin_array_prototype_object_last_index_of */
 
 /**
+ * The Array.prototype object's 'reverse' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.8
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 3. */
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  /* 4. */
+  uint32_t middle = len / 2;
+
+  /* 5. and 6. */
+  for (uint32_t lower = 0; lower < middle && ecma_is_completion_value_empty (ret_value); lower++)
+  {
+    /* 6.a */
+    uint32_t upper = len - lower - 1;
+    /* 6.b and 6.c */
+    ecma_string_t *upper_str_p = ecma_new_ecma_string_from_uint32 (upper);
+    ecma_string_t *lower_str_p = ecma_new_ecma_string_from_uint32 (lower);
+
+    /* 6.d and 6.e */
+    ECMA_TRY_CATCH (lower_value, ecma_op_object_get (obj_p, lower_str_p), ret_value);
+    ECMA_TRY_CATCH (upper_value, ecma_op_object_get (obj_p, upper_str_p), ret_value);
+
+    /* 6.f and 6.g */
+    bool lower_exist = (ecma_op_object_get_property (obj_p, lower_str_p) != NULL);
+    bool upper_exist = (ecma_op_object_get_property (obj_p, upper_str_p) != NULL);
+
+    /* 6.h */
+    if (lower_exist && upper_exist)
+    {
+      ECMA_TRY_CATCH (outer_put_value, ecma_op_object_put (obj_p, lower_str_p, upper_value, true), ret_value);
+      ECMA_TRY_CATCH (inner_put_value, ecma_op_object_put (obj_p, upper_str_p, lower_value, true), ret_value);
+      ECMA_FINALIZE (inner_put_value);
+      ECMA_FINALIZE (outer_put_value);
+    }
+    /* 6.i */
+    else if (!lower_exist && upper_exist)
+    {
+      ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, lower_str_p, upper_value, true), ret_value);
+      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, upper_str_p, true), ret_value);
+      ECMA_FINALIZE (del_value);
+      ECMA_FINALIZE (put_value);
+    }
+    /* 6.j */
+    else if (lower_exist && !upper_exist)
+    {
+      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, lower_str_p, true), ret_value);
+      ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, upper_str_p, lower_value, true), ret_value);
+      ECMA_FINALIZE (put_value);
+      ECMA_FINALIZE (del_value);
+    }
+
+    ECMA_FINALIZE (upper_value);
+    ECMA_FINALIZE (lower_value);
+    ecma_deref_ecma_string (lower_str_p);
+    ecma_deref_ecma_string (upper_str_p);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 7. */
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (obj_this, true));
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_reverse */
+
+/**
  * The Array.prototype object's 'shift' routine
  *
  * See also:

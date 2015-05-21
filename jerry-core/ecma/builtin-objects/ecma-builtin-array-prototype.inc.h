@@ -66,6 +66,7 @@ ROUTINE (ECMA_MAGIC_STRING_INDEX_OF_UL, ecma_builtin_array_prototype_object_inde
 ROUTINE (ECMA_MAGIC_STRING_SHIFT, ecma_builtin_array_prototype_object_shift, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
 ROUTINE (ECMA_MAGIC_STRING_SLICE, ecma_builtin_array_prototype_object_slice, 2, 2)
+ROUTINE (ECMA_MAGIC_STRING_SPLICE, ecma_builtin_array_prototype_object_splice, NON_FIXED, 2)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

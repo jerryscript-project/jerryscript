@@ -35,8 +35,24 @@ typedef uint8_t token_type_t;
 #define RE_TOK_END_GROUP                     11
 #define RE_TOK_ASSERT_START_POS_LOOKAHEAD    12
 #define RE_TOK_ASSERT_START_NEG_LOOKAHEAD    13
+#define RE_TOK_ASSERT_WORD_BOUNDARY          14
+#define RE_TOK_ASSERT_NOT_WORD_BOUNDARY      15
+#define RE_TOK_DIGIT                         16
+#define RE_TOK_NOT_DIGIT                     17
+#define RE_TOK_WHITE                         18
+#define RE_TOK_NOT_WHITE                     19
+#define RE_TOK_WORD_CHAR                     20
+#define RE_TOK_NOT_WORD_CHAR                 21
+#define RE_TOK_START_CHARCLASS               22
+#define RE_TOK_START_CHARCLASS_INVERTED      23
 
 #define RE_ITERATOR_INFINITE ((uint32_t)-1)
+#define RE_CONTROL_CHAR_NULL 0x0000 /* \0 */
+#define RE_CONTROL_CHAR_TAB  0x0009 /* \t */
+#define RE_CONTROL_CHAR_EOL  0x000a /* \n */
+#define RE_CONTROL_CHAR_VT   0x000b /* \v */
+#define RE_CONTROL_CHAR_FF   0x000c /* \f */
+#define RE_CONTROL_CHAR_CR   0x000d /* \r */
 
 typedef struct re_token_t
 {

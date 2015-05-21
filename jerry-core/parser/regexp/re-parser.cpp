@@ -221,9 +221,9 @@ re_parse_next_token (ecma_char_t **pattern)
 {
   re_token_t result;
   uint32_t advance = 0;
-  ecma_char_t ch = **pattern;
+  ecma_char_t ch0 = **pattern;
 
-  switch (ch)
+  switch (ch0)
   {
     case '|':
     {
@@ -250,23 +250,147 @@ re_parse_next_token (ecma_char_t **pattern)
       result.type = RE_TOK_PERIOD;
       break;
     }
+    case '\\':
+    {
+      advance = 2;
+      result.type = RE_TOK_CHAR;
+      ecma_char_t ch1 = JERRY_LOOKUP (*pattern, 1);
+
+      if (ch1 == 'b')
+      {
+        result.type = RE_TOK_ASSERT_WORD_BOUNDARY;
+      }
+      else if (ch1 == 'B')
+      {
+        result.type = RE_TOK_ASSERT_NOT_WORD_BOUNDARY;
+      }
+      else if (ch1 == 'f')
+      {
+        result.value = RE_CONTROL_CHAR_FF;
+      }
+      else if (ch1 == 'n')
+      {
+        result.value = RE_CONTROL_CHAR_EOL;
+      }
+      else if (ch1 == 't')
+      {
+        result.value = RE_CONTROL_CHAR_TAB;
+      }
+      else if (ch1 == 'r')
+      {
+        result.value = RE_CONTROL_CHAR_CR;
+      }
+      else if (ch1 == 'v')
+      {
+        result.value = RE_CONTROL_CHAR_VT;
+      }
+      else if (ch1 == 'c')
+      {
+        ecma_char_t ch2 = JERRY_LOOKUP (*pattern, 2);
+        if ((ch2 >= 'A' && ch2 <= 'Z') || (ch2 >= 'a' && ch2 <= 'z'))
+        {
+          advance = 3;
+          result.type = RE_TOK_CHAR;
+          result.value = (ch2 % 32);
+        }
+        else
+        {
+          /* FIXME: invalid regexp control escape */
+        }
+      }
+      else if (ch1 == 'x'
+               && isxdigit (JERRY_LOOKUP (*pattern, 2))
+               && isxdigit (JERRY_LOOKUP (*pattern, 3)))
+      {
+        advance = 4;
+        result.type = RE_TOK_CHAR;
+        /* FIXME: get unicode char from hex-digits */
+        /* result.value = ...; */
+      }
+      else if (ch1 == 'u'
+               && isxdigit (JERRY_LOOKUP (*pattern, 2))
+               && isxdigit (JERRY_LOOKUP (*pattern, 3))
+               && isxdigit (JERRY_LOOKUP (*pattern, 4))
+               && isxdigit (JERRY_LOOKUP (*pattern, 5)))
+      {
+        advance = 4;
+        result.type = RE_TOK_CHAR;
+        /* FIXME: get unicode char from digits */
+        /* result.value = ...; */
+      }
+      else if (ch1 == 'd')
+      {
+        advance = 2;
+        result.type = RE_TOK_DIGIT;
+      }
+      else if (ch1 == 'D')
+      {
+        advance = 2;
+        result.type = RE_TOK_NOT_DIGIT;
+      }
+      else if (ch1 == 's')
+      {
+        advance = 2;
+        result.type = RE_TOK_WHITE;
+      }
+      else if (ch1 == 'S')
+      {
+        advance = 2;
+        result.type = RE_TOK_NOT_WHITE;
+      }
+      else if (ch1 == 'w')
+      {
+        advance = 2;
+        result.type = RE_TOK_WORD_CHAR;
+      }
+      else if (ch1 == 'W')
+      {
+        advance = 2;
+        result.type = RE_TOK_NOT_WORD_CHAR;
+      }
+      else if (isdigit (ch1))
+      {
+        if (ch1 == '0')
+        {
+          if (isdigit (JERRY_LOOKUP (*pattern, 2)))
+          {
+            PARSE_ERROR ("RegExp escape pattern error.", 0 /* FIXME: locus needed */);
+          }
+
+          advance = 2;
+          result.value = RE_CONTROL_CHAR_NULL;
+        }
+        else
+        {
+          /* FIXME: Unimplemented BACKREFERENCE */
+        }
+      }
+      else
+      {
+        result.value = ch1;
+      }
+
+      advance += parse_re_iterator (pattern, &result, advance);
+      break;
+    }
     case '(':
     {
       if (JERRY_LOOKUP (*pattern, 1) == '?')
       {
-        if (JERRY_LOOKUP (*pattern, 2) == '=')
+        ecma_char_t ch2 = JERRY_LOOKUP (*pattern, 2);
+        if (ch2 == '=')
         {
           /* (?= */
           advance = 3;
           result.type = RE_TOK_ASSERT_START_POS_LOOKAHEAD;
         }
-        else if (JERRY_LOOKUP (*pattern, 2) == '!')
+        else if (ch2 == '!')
         {
           /* (?! */
           advance = 3;
           result.type = RE_TOK_ASSERT_START_NEG_LOOKAHEAD;
         }
-        else if (JERRY_LOOKUP (*pattern, 2) == ':')
+        else if (ch2 == ':')
         {
           /* (?: */
           advance = 3;
@@ -288,9 +412,18 @@ re_parse_next_token (ecma_char_t **pattern)
       break;
     }
     case '[':
+    {
+      advance = 1;
+      result.type = RE_TOK_START_CHARCLASS;
+      if (JERRY_LOOKUP (*pattern, 1) == '^')
+      {
+        advance = 2;
+        result.type = RE_TOK_START_CHARCLASS_INVERTED;
+      }
+      break;
+    }
     case ']':
     case '}':
-    case '\\':
     {
       JERRY_UNIMPLEMENTED ("Unimplemented RegExp token!");
       break;
@@ -314,7 +447,7 @@ re_parse_next_token (ecma_char_t **pattern)
       advance = 1;
       advance += parse_re_iterator (pattern, &result, 1);
       result.type = RE_TOK_CHAR;
-      result.value = ch;
+      result.value = ch0;
     }
   }
 

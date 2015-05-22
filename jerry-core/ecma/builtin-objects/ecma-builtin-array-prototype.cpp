@@ -469,6 +469,105 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
   return return_value;
 } /* ecma_builtin_array_prototype_object_to_string */
 
+
+/**
+ * The Array.prototype object's 'toLocaleString' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.3
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_arg) /**< this argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj_value,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_value);
+
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2. */
+  ECMA_TRY_CATCH (length_value,
+                  ecma_op_object_get (obj_p, length_magic_string_p),
+                  ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
+                               length_value,
+                               ret_value);
+
+  uint32_t length = ecma_number_to_uint32 (length_number);
+
+  /* 4. Implementation-defined: set the separator to a single comma character */
+  ecma_string_t *separator_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_COMMA_CHAR);
+
+  /* 5. */
+  if (length == 0)
+  {
+    ecma_string_t *empty_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+  }
+  else
+  {
+    /* 7-8. */
+    ECMA_TRY_CATCH (first_value,
+                    ecma_builtin_helper_get_to_locale_string_at_index (obj_p, 0),
+                    ret_value);
+
+    ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
+
+    /* 9-10. */
+    for (uint32_t k = 1; ecma_is_completion_value_empty (ret_value) && (k < length); ++k)
+    {
+      ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+
+      ECMA_TRY_CATCH (next_string_value,
+                      ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k),
+                      ret_value);
+
+      ecma_string_t *next_string_p = ecma_get_string_from_completion_value (next_string_value);
+
+      ecma_deref_ecma_string (return_string_p);
+
+      return_string_p = ecma_concat_ecma_strings (part_string_p, next_string_p);
+
+      ECMA_FINALIZE (next_string_value);
+
+      ecma_deref_ecma_string (part_string_p);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
+    }
+    else
+    {
+      ecma_deref_ecma_string (return_string_p);
+    }
+
+    ECMA_FINALIZE (first_value);
+  }
+
+  ecma_deref_ecma_string (separator_string_p);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
+
+  ECMA_FINALIZE (length_value);
+
+  ecma_deref_ecma_string (length_magic_string_p);
+
+  ECMA_FINALIZE (obj_value);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_to_locale_string */
+
 /**
  * The Array.prototype object's 'pop' routine
  *

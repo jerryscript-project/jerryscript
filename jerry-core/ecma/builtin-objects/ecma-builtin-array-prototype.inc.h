@@ -62,6 +62,7 @@ ROUTINE (ECMA_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_array_prototype_object_for_
 ROUTINE (ECMA_MAGIC_STRING_CONCAT, ecma_builtin_array_prototype_object_concat, NON_FIXED, 1)
 ROUTINE (ECMA_MAGIC_STRING_JOIN, ecma_builtin_array_prototype_join, 1, 1)
 ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_array_prototype_object_to_string, 0, 0)
+ROUTINE (ECMA_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_array_prototype_object_to_locale_string, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_POP, ecma_builtin_array_prototype_object_pop, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_FIXED, 1)
 ROUTINE (ECMA_MAGIC_STRING_REVERSE, ecma_builtin_array_prototype_object_reverse, 0, 0)

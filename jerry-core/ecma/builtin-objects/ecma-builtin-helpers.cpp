@@ -18,9 +18,11 @@
 
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
+#include "ecma-function-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -121,6 +123,71 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
   return ecma_make_normal_completion_value (ecma_make_string_value (ret_string_p));
 } /* ecma_builtin_helper_object_to_string */
+
+/**
+ * The Array.prototype's 'toLocaleString' single element operation routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.3 steps 6-8 and 10.b-d
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < this object */
+                                                   uint32_t index) /** < array index */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+
+  ECMA_TRY_CATCH (index_value,
+                  ecma_op_object_get (obj_p, index_string_p),
+                  ret_value);
+
+  if (ecma_is_value_undefined (index_value) || ecma_is_value_null (index_value))
+  {
+    ecma_string_t *return_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
+  }
+  else
+  {
+    ECMA_TRY_CATCH (index_obj_value,
+                    ecma_op_to_object (index_value),
+                    ret_value);
+
+    ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
+    ecma_string_t *locale_string_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TO_LOCALE_STRING_UL);
+
+    ECMA_TRY_CATCH (to_locale_value,
+                    ecma_op_object_get (index_obj_p, locale_string_magic_string_p),
+                    ret_value);
+
+    if (ecma_op_is_callable (to_locale_value))
+    {
+      ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
+      ret_value = ecma_op_function_call (locale_func_obj_p,
+                                         ecma_make_object_value (index_obj_p),
+                                         NULL,
+                                         0);
+    }
+    else
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+
+    ECMA_FINALIZE (to_locale_value);
+
+    ecma_deref_ecma_string (locale_string_magic_string_p);
+
+    ECMA_FINALIZE (index_obj_value);
+  }
+
+  ECMA_FINALIZE (index_value);
+
+  ecma_deref_ecma_string (index_string_p);
+
+  return ret_value;
+} /* ecma_builtin_helper_get_to_locale_string_at_index */
 
 /**
  * @}

@@ -27,6 +27,7 @@
  */
 
 extern ecma_completion_value_t ecma_builtin_helper_object_to_string (const ecma_value_t this_arg);
+extern ecma_completion_value_t ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, uint32_t index);
 
 /**
  * @}

@@ -30,25 +30,33 @@
 #define RE_OP_GREEDY_ITERATOR       7
 #define RE_OP_NON_GREEDY_ITERATOR   8
 
+#define RE_FLAG_GLOBAL              (1 << 0)
+#define RE_FLAG_IGNORE_CASE         (1 << 1)
+#define RE_FLAG_MULTILINE           (1 << 2)
+
+#define RE_COMPILE_RECURSION_LIMIT  100
+
 typedef uint8_t regexp_opcode_t;
 typedef uint8_t regexp_bytecode_t;
 
-typedef struct bytecode_ctx_t
+typedef struct
 {
   regexp_bytecode_t *block_start_p;
   regexp_bytecode_t *block_end_p;
   regexp_bytecode_t *current_p;
 } bytecode_ctx_t;
 
-typedef struct regexp_compiler_ctx
+typedef struct
 {
+  uint8_t flags;
+  uint32_t recursion_depth;
   bytecode_ctx_t *bytecode_ctx_p;
   ecma_char_t *pattern_p;
   re_token_t *current_token_p;
-} regexp_compiler_ctx;
+} regexp_compiler_ctx_t;
 
-void
-regexp_compile_bytecode (ecma_property_t *bytecode, ecma_string_t *pattern);
+ecma_completion_value_t
+regexp_compile_bytecode (ecma_property_t *bytecode, ecma_string_t *pattern, ecma_string_t *flags);
 
 regexp_opcode_t
 get_opcode (regexp_bytecode_t **bc_p);

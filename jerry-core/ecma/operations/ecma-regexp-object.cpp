@@ -20,6 +20,7 @@
 #include "ecma-globals.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
+#include "ecma-try-catch-macro.h"
 #include "re-compiler.h"
 #include "stdio.h"
 
@@ -46,7 +47,7 @@
  */
 ecma_completion_value_t
 ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
-                              ecma_string_t *flags __attr_unused___) /**< flags */
+                              ecma_string_t *flags) /**< flags */
 {
   JERRY_ASSERT (pattern != NULL);
 
@@ -105,9 +106,14 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
 
   /* Set bytecode internal property. */
   ecma_property_t *bytecode = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-  regexp_compile_bytecode (bytecode, pattern);
 
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  /* Compile bytecode. */
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ECMA_TRY_CATCH (empty, regexp_compile_bytecode (bytecode, pattern, flags), ret_value);
+  ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  ECMA_FINALIZE (empty);
+
+  return ret_value;
 } /* ecma_op_create_regexp_object */
 
 static const ecma_char_t*

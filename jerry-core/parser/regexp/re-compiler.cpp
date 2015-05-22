@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+#include "ecma-exceptions.h"
 #include "ecma-helpers.h"
+#include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
 #include "mem-heap.h"
 #include "re-compiler.h"
@@ -133,9 +135,12 @@ get_value (regexp_bytecode_t **bc_p)
   return (uint32_t) bytecode;
 }
 
+/**
+ * Insert simple atom iterator
+ */
 static void
-insert_simple_iterator (regexp_compiler_ctx *re_ctx_p,
-                        uint32_t new_atom_start_offset)
+insert_simple_iterator (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                        uint32_t new_atom_start_offset) /**< atom start offset */
 {
   uint32_t atom_code_length;
   uint32_t offset;
@@ -165,9 +170,12 @@ insert_simple_iterator (regexp_compiler_ctx *re_ctx_p,
   }
 } /* insert_simple_iterator */
 
-static void
-parse_alternative (regexp_compiler_ctx *re_ctx_p,
-                   bool expect_eof)
+/**
+ * Parse alternatives
+ */
+static ecma_completion_value_t
+parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                   bool expect_eof) /**< expect end of file */
 {
   re_token_t re_tok;
   re_ctx_p->current_token_p = &re_tok;
@@ -175,6 +183,12 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p,
   bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
 
   uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+
+  if (re_ctx_p->recursion_depth >= RE_COMPILE_RECURSION_LIMIT)
+  {
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+  }
+  re_ctx_p->recursion_depth++;
 
   while (true)
   {
@@ -212,36 +226,125 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p,
       {
         if (expect_eof)
         {
-          // FIXME: throw and error!
+          JERRY_ERROR_MSG ("Unexpected end of paren.\n");
+          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
         }
         insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - alterantive_offset);
-        return;
+        re_ctx_p->recursion_depth--;
+        return ecma_make_empty_completion_value ();
       }
       case RE_TOK_EOF:
       {
         if (!expect_eof)
         {
-          // FIXME: throw and error!
+          JERRY_ERROR_MSG ("Unexpected end of pattern.\n");
+          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
         }
         insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - alterantive_offset);
-        return;
+        re_ctx_p->recursion_depth--;
+        return ecma_make_empty_completion_value ();
       }
       default:
       {
-        break;
+        JERRY_ERROR_MSG ("Unexpected RegExp token.\n");
+        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
       }
     }
   }
+  JERRY_UNREACHABLE ();
 } /* parse_alternative */
+
+/**
+ * Parse RegExp flags (global, ignoreCase, multiline)
+ */
+static ecma_completion_value_t
+parse_regexp_flags (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                    ecma_string_t *flags) /**< flags */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  int32_t chars = ecma_string_get_length (flags);
+  MEM_DEFINE_LOCAL_ARRAY (flags_start_p, chars + 1, ecma_char_t);
+  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+  ecma_string_to_zt_string (flags, flags_start_p, zt_str_size);
+
+  ecma_char_t *flags_p = flags_start_p;
+  while (flags_p
+         && *flags_p != '\0'
+         && ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_char_t ch = *flags_p;
+    switch (ch)
+    {
+      case 'g':
+      {
+        if (re_ctx_p->flags & RE_FLAG_GLOBAL)
+        {
+          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+        }
+        re_ctx_p->flags |= RE_FLAG_GLOBAL;
+        break;
+      }
+      case 'i':
+      {
+        if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
+        {
+          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+        }
+        re_ctx_p->flags |= RE_FLAG_IGNORE_CASE;
+        break;
+      }
+      case 'm':
+      {
+        if (re_ctx_p->flags & RE_FLAG_MULTILINE)
+        {
+          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+        }
+        re_ctx_p->flags |= RE_FLAG_MULTILINE;
+        break;
+      }
+      default:
+      {
+        JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+        break;
+      }
+    }
+    flags_p++;
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (flags_start_p);
+
+  return ret_value;
+} /* parse_regexp_flags  */
 
 /**
  * Compilation of RegExp bytecode
  */
-void
+ecma_completion_value_t
 regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
-                         ecma_string_t *pattern __attr_unused___) /**< pattern */
+                         ecma_string_t *pattern, /**< pattern */
+                         ecma_string_t *flags) /**< flags */
 {
-  regexp_compiler_ctx re_ctx;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  regexp_compiler_ctx_t re_ctx;
+  re_ctx.flags = 0;
+  re_ctx.recursion_depth = 0;
+
+  if (flags != NULL)
+  {
+    ECMA_TRY_CATCH (empty, parse_regexp_flags (&re_ctx, flags), ret_value);
+    ECMA_FINALIZE (empty);
+
+    if (!ecma_is_completion_value_empty (ret_value))
+    {
+      return ret_value;
+    }
+  }
+
   bytecode_ctx_t bc_ctx;
   bc_ctx.block_start_p = NULL;
   bc_ctx.block_end_p = NULL;
@@ -262,7 +365,10 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
 
   /* 2. Parse RegExp pattern */
   append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
-  parse_alternative (&re_ctx, true);
+
+  ECMA_TRY_CATCH (empty, parse_alternative (&re_ctx, true), ret_value);
+  ECMA_FINALIZE (empty);
+
   append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
   append_opcode (&bc_ctx, RE_OP_EOF);
 
@@ -273,6 +379,8 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
 #ifdef JERRY_ENABLE_LOG
   regexp_dump_bytecode (&bc_ctx);
 #endif
+
+  return ret_value;
 } /* regexp_compile_bytecode */
 
 #ifdef JERRY_ENABLE_LOG

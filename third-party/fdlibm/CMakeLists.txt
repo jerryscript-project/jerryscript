@@ -47,13 +47,13 @@ add_custom_target (jerry-fdlibm-all)
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
 
-   add_library(${TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_FDLIBM})
-   set_property(TARGET ${TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB}
+   add_library(${TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB} STATIC ${SOURCE_FDLIBM})
+   set_property(TARGET ${TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB}
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_FDLIBM}")
-   target_include_directories(${TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_FDLIBM})
+   target_include_directories(${TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB} PRIVATE ${INCLUDE_FDLIBM})
 
    if("${BUILD_MODE}" STREQUAL "UNITTESTS")
-    target_include_directories(${TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB} INTERFACE ${INCLUDE_FDLIBM})
+    target_include_directories(${TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB} INTERFACE ${INCLUDE_FDLIBM})
    endif()
   endfunction()
 

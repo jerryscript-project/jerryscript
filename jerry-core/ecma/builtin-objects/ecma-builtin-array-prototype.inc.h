@@ -76,6 +76,7 @@ ROUTINE (ECMA_MAGIC_STRING_SOME, ecma_builtin_array_prototype_object_some, 2, 1)
 ROUTINE (ECMA_MAGIC_STRING_SLICE, ecma_builtin_array_prototype_object_slice, 2, 2)
 ROUTINE (ECMA_MAGIC_STRING_SPLICE, ecma_builtin_array_prototype_object_splice, NON_FIXED, 2)
 ROUTINE (ECMA_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2, 1)
+ROUTINE (ECMA_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, 2, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

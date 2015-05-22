@@ -59,7 +59,7 @@ rm -f $JS_FILES $JERRY_ERROR
 
 if [ -d $TESTS ];
 then
- find $TESTS -path $TESTS/fail -prune -o -name [^N]*.js -print | sort > $JS_FILES
+ find $TESTS -path $TESTS/fail -prune -o -name "[^N]*.js" -print | sort > $JS_FILES
 else
  if [ -f $TESTS ];
  then

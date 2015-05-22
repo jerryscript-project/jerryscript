@@ -323,7 +323,7 @@ project (Jerry CXX C ASM)
 
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
-   set(FDLIBM_TARGET_NAME ${CORE_TARGET_NAME}.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB})
+   set(FDLIBM_TARGET_NAME ${CORE_TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
 
    set(DEFINES_JERRY )
@@ -385,13 +385,14 @@ project (Jerry CXX C ASM)
     target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 
     add_custom_target(${TARGET_NAME} ALL)
-    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME})
+    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${FDLIBM_TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME})
 
     add_custom_command(TARGET ${TARGET_NAME}
                        POST_BUILD
                        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
                        COMMAND echo
                        $<TARGET_FILE:${MAIN_MODULE_TARGET_NAME}>
+                       $<TARGET_FILE:${FDLIBM_TARGET_NAME}>
                        $<TARGET_FILE:${PLUGINS_TARGET_NAME}>
                        $<TARGET_FILE:${CORE_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
 
@@ -423,7 +424,7 @@ project (Jerry CXX C ASM)
     set(TARGET_NAME unit_${TARGET_NAME})
 
     set(CORE_TARGET_NAME unittests.jerry-core)
-    set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm.${SUFFIX_THIRD_PARTY_LIB})
+    set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
     set_property(TARGET ${TARGET_NAME}

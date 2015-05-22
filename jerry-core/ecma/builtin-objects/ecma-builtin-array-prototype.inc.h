@@ -68,6 +68,7 @@ ROUTINE (ECMA_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_F
 ROUTINE (ECMA_MAGIC_STRING_REVERSE, ecma_builtin_array_prototype_object_reverse, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_INDEX_OF_UL, ecma_builtin_array_prototype_object_index_of, 2, 1)
 ROUTINE (ECMA_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_array_prototype_object_last_index_of, 2, 1)
+ROUTINE (ECMA_MAGIC_STRING_SORT, ecma_builtin_array_prototype_object_sort, 1, 1)
 ROUTINE (ECMA_MAGIC_STRING_SHIFT, ecma_builtin_array_prototype_object_shift, 0, 0)
 ROUTINE (ECMA_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
 ROUTINE (ECMA_MAGIC_STRING_EVERY, ecma_builtin_array_prototype_object_every, 2, 1)

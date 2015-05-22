@@ -1110,6 +1110,352 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
 } /* ecma_builtin_array_prototype_object_last_index_of */
 
 /**
+ * SortCompare abstract method
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.11
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< left value */
+                                                         ecma_value_t k, /**< right value */
+                                                         ecma_value_t comparefn) /**< compare function */
+{
+  /*
+   * ECMA-262 v5, 15.4.4.11 NOTE1: Because non-existent property values always
+   * compare greater than undefined property values, and undefined always
+   * compares greater than any other value, undefined property values always
+   * sort to the end of the result, followed by non-existent property values.
+   */
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_number_t *result_p = ecma_alloc_number ();
+
+  bool j_is_undef = ecma_is_value_undefined (j);
+  bool k_is_undef = ecma_is_value_undefined (k);
+
+  if (j_is_undef)
+  {
+    if (k_is_undef)
+    {
+      *result_p = ecma_int32_to_number (0);
+    }
+    else
+    {
+      *result_p = ecma_int32_to_number (1);
+    }
+  }
+  else
+  {
+    if (k_is_undef)
+    {
+      *result_p = ecma_int32_to_number (-1);
+    }
+    else
+    {
+      if (ecma_is_value_undefined (comparefn))
+      {
+        /* Default comparison when no comparefn is passed. */
+        ECMA_TRY_CATCH (j_value, ecma_op_to_string (j), ret_value);
+        ECMA_TRY_CATCH (k_value, ecma_op_to_string (k), ret_value);
+        ecma_string_t *j_str_p = ecma_get_string_from_value (j_value);
+        ecma_string_t *k_str_p = ecma_get_string_from_value (k_value);
+
+        if (ecma_compare_ecma_strings_relational (j_str_p, k_str_p))
+        {
+          *result_p = ecma_int32_to_number (-1);
+        }
+        else if (!ecma_compare_ecma_strings (j_str_p, k_str_p))
+        {
+          *result_p = ecma_int32_to_number (1);
+        }
+        else
+        {
+          *result_p = ecma_int32_to_number (0);
+        }
+
+        ECMA_FINALIZE (k_value);
+        ECMA_FINALIZE (j_value);
+      }
+      else
+      {
+        /*
+         * comparefn, if not undefined, will always contain a callable function object.
+         * We checked this previously, before this function was called.
+         */
+        JERRY_ASSERT (ecma_op_is_callable (comparefn));
+        ecma_object_t *comparefn_obj_p = ecma_get_object_from_value (comparefn);
+
+        ecma_value_t compare_args[] = {j, k};
+
+        ECMA_TRY_CATCH (call_value,
+                        ecma_op_function_call (comparefn_obj_p,
+                                               ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                               compare_args,
+                                               2),
+                        ret_value);
+
+        if (!ecma_is_value_number (call_value))
+        {
+          ECMA_OP_TO_NUMBER_TRY_CATCH (ret_num, call_value, ret_value);
+          *result_p = ret_num;
+          ECMA_OP_TO_NUMBER_FINALIZE (ret_num);
+        }
+        else
+        {
+          *result_p = *ecma_get_number_from_value (call_value);
+        }
+
+        ECMA_FINALIZE (call_value);
+      }
+    }
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (result_p));
+  }
+  else
+  {
+    ecma_dealloc_number (result_p);
+  }
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_sort_compare_helper */
+
+/**
+ * Function used to reconstruct the ordered binary tree.
+ * Shifts 'index' down in the tree until it is in the correct position.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], /**< heap data array */
+                                                          int index, /**< current item index */
+                                                          int right, /**< right index is a maximum index */
+                                                          ecma_value_t comparefn) /**< compare function */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* Left child of the current index. */
+  int child = index * 2 + 1;
+  ecma_value_t swap = array[index];
+  bool should_break = false;
+
+  while (child <= right && ecma_is_completion_value_empty (ret_value) && !should_break)
+  {
+    if (child < right)
+    {
+      /* Compare the two child nodes. */
+      ECMA_TRY_CATCH (child_compare_value,
+                      ecma_builtin_array_prototype_object_sort_compare_helper (array[child],
+                                                                               array[child + 1],
+                                                                               comparefn),
+                      ret_value);
+
+      JERRY_ASSERT (ecma_is_value_number (child_compare_value));
+
+      /* Use the child that is greater. */
+      if (*ecma_get_number_from_value (child_compare_value) < ECMA_NUMBER_ZERO)
+      {
+        child++;
+      }
+
+      ECMA_FINALIZE (child_compare_value);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      JERRY_ASSERT (child <= right);
+
+      /* Compare current child node with the swap (tree top). */
+      ECMA_TRY_CATCH (swap_compare_value,
+                      ecma_builtin_array_prototype_object_sort_compare_helper (array[child],
+                                                                               swap,
+                                                                               comparefn),
+                      ret_value);
+      JERRY_ASSERT (ecma_is_value_number (swap_compare_value));
+
+      if (*ecma_get_number_from_value (swap_compare_value) <= ECMA_NUMBER_ZERO)
+      {
+        /* Break from loop if current child is less than swap (tree top) */
+        should_break = true;
+      }
+      else
+      {
+        /* We have to move 'swap' lower in the tree, so shift current child up in the hierarchy. */
+        int parent = (child - 1) / 2;
+        JERRY_ASSERT (parent >= 0 && parent <= right);
+        array[parent] = array[child];
+
+        /* Update child to be the left child of the current node. */
+        child = child * 2 + 1;
+      }
+
+      ECMA_FINALIZE (swap_compare_value);
+    }
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /*
+     * Loop ended, either current child does not exist, or is less than swap.
+     * This means that 'swap' should be placed in the parent node.
+     */
+    int parent = (child - 1) / 2;
+    JERRY_ASSERT (parent >= 0 && parent <= right);
+    array[parent] = swap;
+
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_array_to_heap_helper */
+
+/**
+ * Heapsort function
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_array_heap_sort_helper (ecma_value_t array[], /**< array to sort */
+                                                            int right, /**< right index */
+                                                            ecma_value_t comparefn) /**< compare function */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* First, construct the ordered binary tree from the array. */
+  for (int i = right / 2; i >= 0 && ecma_is_completion_value_empty (ret_value); i--)
+  {
+    ECMA_TRY_CATCH (value,
+                    ecma_builtin_array_prototype_object_array_to_heap_helper (array,
+                                                                              i,
+                                                                              right,
+                                                                              comparefn),
+                    ret_value);
+    ECMA_FINALIZE (value);
+  }
+
+  /* Sorting elements. */
+  for (int i = right; i > 0 && ecma_is_completion_value_empty (ret_value); i--)
+  {
+    /*
+     * The top element will always contain the largest value.
+     * Move top to the end, and remove it from the tree.
+     */
+    ecma_value_t swap = array[0];
+    array[0] = array[i];
+    array[i] = swap;
+
+    /* Rebuild binary tree from the remaining elements. */
+    ECMA_TRY_CATCH (value,
+                    ecma_builtin_array_prototype_object_array_to_heap_helper (array,
+                                                                              0,
+                                                                              i - 1,
+                                                                              comparefn),
+                    ret_value);
+    ECMA_FINALIZE (value);
+  }
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_array_heap_sort_helper */
+
+/**
+ * The Array.prototype object's 'sort' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.11
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argument */
+                                          ecma_value_t arg1) /**< comparefn */
+{
+  /* Check if the provided compare function is callable. */
+  if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
+  {
+    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  MEM_DEFINE_LOCAL_ARRAY (values_buffer, len, ecma_value_t);
+  uint32_t copied_num = 0;
+
+  /* Copy unsorted array into a native c array. */
+  for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+  {
+    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+    ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, index_string_p), ret_value);
+
+    values_buffer[index] = ecma_copy_value (index_value, true);
+    copied_num++;
+
+    ECMA_FINALIZE (index_value);
+    ecma_deref_ecma_string (index_string_p);
+  }
+
+  JERRY_ASSERT (copied_num == len || !ecma_is_completion_value_empty (ret_value));
+
+  /* Sorting. */
+  if (len > 1 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (sort_value,
+                    ecma_builtin_array_prototype_object_array_heap_sort_helper (values_buffer,
+                                                                                (int)(len - 1),
+                                                                                arg1),
+                    ret_value);
+    ECMA_FINALIZE (sort_value);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /*
+     * FIXME: Casting len to ecma_length_t may overflow, but since ecma_length_t is still at least
+     * 16 bits long, with an array of that size, we would run out of memory way before this happens.
+     */
+    JERRY_ASSERT ((ecma_length_t) len == len);
+    /* Copy the sorted array into a new array. */
+    ret_value = ecma_op_create_array_object (values_buffer, (ecma_length_t) len, false);
+  }
+
+  /* Free values that were copied to the local array. */
+  for (uint32_t index = 0; index < copied_num; index++)
+  {
+    ecma_free_value (values_buffer[index], true);
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (values_buffer);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_sort */
+
+/**
  * The Array.prototype object's 'shift' routine
  *
  * See also:

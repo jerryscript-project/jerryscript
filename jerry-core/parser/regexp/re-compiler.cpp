@@ -21,12 +21,7 @@
 #include "stdio.h"
 
 #define REGEXP_BYTECODE_BLOCK_SIZE 256UL
-
-/*
- * FIXME: remove the magic number constant from offset calculation.
- * We have to subtract 1 from offset, because the current_p points after the last valid bytecode not to it.
- */
-#define BYTECODE_LEN(bc_ctx_p) (static_cast<uint32_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p) - 1)
+#define BYTECODE_LEN(bc_ctx_p) (static_cast<uint32_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p))
 
 void
 regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
@@ -75,15 +70,16 @@ bytecode_list_insert (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode, size_t
   regexp_bytecode_t *current_p = bc_ctx->current_p;
   if (current_p  + sizeof (regexp_bytecode_t) > bc_ctx->block_end_p)
   {
-    current_p = realloc_regexp_bytecode_block (bc_ctx);
+    realloc_regexp_bytecode_block (bc_ctx);
   }
-  regexp_bytecode_t *src = current_p - offset;
+
+  regexp_bytecode_t *src = bc_ctx->block_start_p + offset;
   regexp_bytecode_t *dest = src + sizeof (regexp_bytecode_t);
 
-  regexp_bytecode_t *tmp_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (offset,
+  regexp_bytecode_t *tmp_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block ((BYTECODE_LEN (bc_ctx) - offset),
                                                                                      MEM_HEAP_ALLOC_SHORT_TERM);
-  memcpy (tmp_block_start_p, src, offset);
-  memcpy (dest, tmp_block_start_p, offset);
+  memcpy (tmp_block_start_p, src, (size_t) (BYTECODE_LEN (bc_ctx) - offset));
+  memcpy (dest, tmp_block_start_p, (size_t) (BYTECODE_LEN (bc_ctx) - offset));
   mem_heap_free_block (tmp_block_start_p);
 
   *src = bytecode;
@@ -156,6 +152,9 @@ insert_simple_iterator (regexp_compiler_ctx *re_ctx_p,
   atom_code_length = (uint32_t) (bytecode_length - new_atom_start_offset);
 
   offset = new_atom_start_offset;
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, atom_code_length);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmax);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmin);
   if (re_ctx_p->current_token_p->greedy)
   {
     insert_opcode (re_ctx_p->bytecode_ctx_p, offset, RE_OP_GREEDY_ITERATOR);
@@ -164,18 +163,18 @@ insert_simple_iterator (regexp_compiler_ctx *re_ctx_p,
   {
     insert_opcode (re_ctx_p->bytecode_ctx_p, offset, RE_OP_NON_GREEDY_ITERATOR);
   }
-  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmin);
-  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmax);
-  insert_u32 (re_ctx_p->bytecode_ctx_p, offset, atom_code_length);
-}
+} /* insert_simple_iterator */
 
 static void
-parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
+parse_alternative (regexp_compiler_ctx *re_ctx_p,
+                   bool expect_eof)
 {
   re_token_t re_tok;
   re_ctx_p->current_token_p = &re_tok;
   ecma_char_t *pattern_p = re_ctx_p->pattern_p;
   bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
+
+  uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
   while (true)
   {
@@ -186,7 +185,8 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
     {
       case RE_TOK_CHAR:
       {
-        JERRY_DDLOG ("Compile character token: %c\n", re_tok.value);
+        JERRY_DDLOG ("Compile character token: %c, qmin: %d, qmax: %d\n",
+                     re_tok.value, re_tok.qmin, re_tok.qmax);
         append_opcode (bc_ctx_p, RE_OP_CHAR);
         append_u32 (bc_ctx_p, re_tok.value);
         if ((re_tok.qmin != 1) || (re_tok.qmax != 1))
@@ -201,12 +201,20 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
         append_opcode (bc_ctx_p, RE_OP_PERIOD);
         break;
       }
+      case RE_TOK_ALTERNATIVE:
+      {
+        insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - alterantive_offset);
+        append_opcode (bc_ctx_p, RE_OP_ALTERNATIVE);
+        alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+        break;
+      }
       case RE_TOK_END_GROUP:
       {
         if (expect_eof)
         {
           // FIXME: throw and error!
         }
+        insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - alterantive_offset);
         return;
       }
       case RE_TOK_EOF:
@@ -215,6 +223,7 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
         {
           // FIXME: throw and error!
         }
+        insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - alterantive_offset);
         return;
       }
       default:
@@ -223,7 +232,7 @@ parse_alternative (regexp_compiler_ctx *re_ctx_p, bool expect_eof)
       }
     }
   }
-}
+} /* parse_alternative */
 
 /**
  * Compilation of RegExp bytecode
@@ -286,30 +295,31 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
     {
       case RE_OP_MATCH:
       {
-        JERRY_DLOG ("MATCH ");
+        JERRY_DLOG ("MATCH, ");
         break;
       }
       case RE_OP_CHAR:
       {
         JERRY_DLOG ("CHAR ");
-        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%c, ", (char) get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AT_START:
       {
         JERRY_DLOG ("RE_START ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AND_MATCH:
       {
-        JERRY_DLOG ("RE_END ");
+        JERRY_DLOG ("RE_END, ");
         break;
       }
       case RE_OP_GREEDY_ITERATOR:
       {
         JERRY_DLOG ("RE_OP_GREEDY_ITERATOR ");
-        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
@@ -329,11 +339,12 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
       case RE_OP_ALTERNATIVE:
       {
         JERRY_DLOG ("RE_OP_ALTERNATIVE ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       default:
       {
-        JERRY_DLOG ("UNKNOWN(%d) ", (uint32_t) op);
+        JERRY_DLOG ("UNKNOWN(%d), ", (uint32_t) op);
         break;
       }
     }

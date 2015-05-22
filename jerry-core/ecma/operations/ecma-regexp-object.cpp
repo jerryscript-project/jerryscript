@@ -146,19 +146,37 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
         }
         break;
       }
+      case RE_OP_PERIOD:
+      {
+        uint32_t ch1 = (uint32_t) *str_p;
+        str_p++;
+        JERRY_DDLOG ("Period matching '.' to %d\n", ch1);
+        if (ch1 == '\n')
+        {
+          return NULL; /* fail*/
+        }
+        break;
+      }
       case RE_OP_SAVE_AT_START:
       {
         const ecma_char_t *old_start;
-        const ecma_char_t *sub_str_p;
+        regexp_bytecode_t *old_bc_p;
 
         old_start = re_ctx->saved_p[RE_GLOBAL_START_IDX];
         re_ctx->saved_p[RE_GLOBAL_START_IDX] = str_p;
-
-        sub_str_p = regexp_match (re_ctx, bc_p, str_p);
-        if (sub_str_p)
+        do
         {
-          return sub_str_p; /* match */
+          uint32_t offset = get_value (&bc_p);
+          const ecma_char_t *sub_str_p = regexp_match (re_ctx, bc_p, str_p);
+          if (sub_str_p)
+          {
+            return sub_str_p; /* match */
+          }
+          bc_p += offset;
+          old_bc_p = bc_p;
         }
+        while (get_opcode (&bc_p) == RE_OP_ALTERNATIVE);
+        bc_p = old_bc_p;
 
         re_ctx->saved_p[RE_GLOBAL_START_IDX] = old_start;
         return NULL; /* fail*/
@@ -167,6 +185,21 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
       {
         re_ctx->saved_p[RE_GLOBAL_END_IDX] = str_p;
         return str_p; /* match */
+      }
+      case RE_OP_ALTERNATIVE:
+      {
+        /*
+        *  Alternatives should be jump over, when alternative opcode appears.
+        */
+        uint32_t offset = get_value (&bc_p);
+        bc_p += offset;
+        while (*bc_p == RE_OP_ALTERNATIVE)
+        {
+          bc_p++;
+          offset = get_value (&bc_p);
+          bc_p += offset;
+        }
+        break;
       }
       case RE_OP_NON_GREEDY_ITERATOR:
       {

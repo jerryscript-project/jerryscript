@@ -69,6 +69,7 @@ ROUTINE (ECMA_MAGIC_STRING_SHIFT, ecma_builtin_array_prototype_object_shift, 0, 
 ROUTINE (ECMA_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
 ROUTINE (ECMA_MAGIC_STRING_SOME, ecma_builtin_array_prototype_object_some, 2, 1)
 ROUTINE (ECMA_MAGIC_STRING_SLICE, ecma_builtin_array_prototype_object_slice, 2, 2)
+ROUTINE (ECMA_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, 2, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

@@ -1652,11 +1652,6 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     }
 
     case OPCODE_META_TYPE_STRICT_CODE:
-    {
-      FIXME (/* Handle in run_int_from_pos */);
-      return ecma_make_meta_completion_value ();
-    }
-
     case OPCODE_META_TYPE_UNDEFINED:
     case OPCODE_META_TYPE_THIS_ARG:
     case OPCODE_META_TYPE_FUNCTION_END:

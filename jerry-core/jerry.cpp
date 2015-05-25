@@ -1225,7 +1225,7 @@ jerry_parse (const char* source_p, /**< script source */
 
   bool is_show_mem_stats_per_opcode = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
 
-  init_int (opcodes, is_show_mem_stats_per_opcode);
+  vm_init (opcodes, is_show_mem_stats_per_opcode);
 
   return true;
 } /* jerry_parse */
@@ -1240,7 +1240,7 @@ jerry_run (void)
 {
   jerry_assert_api_available ();
 
-  return run_int ();
+  return vm_run_global ();
 } /* jerry_run */
 /**
  * Simple jerry runner

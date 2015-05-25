@@ -579,11 +579,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                is_strict),
                       ret_value);
 
-      ecma_completion_value_t completion = run_int_from_pos (code_first_opcode_idx,
-                                                             this_binding,
-                                                             local_env_p,
-                                                             is_strict,
-                                                             false);
+      ecma_completion_value_t completion = vm_run_from_pos (code_first_opcode_idx,
+                                                            this_binding,
+                                                            local_env_p,
+                                                            is_strict,
+                                                            false);
+
       if (ecma_is_completion_value_return (completion))
       {
         ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));

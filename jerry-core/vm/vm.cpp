@@ -235,7 +235,7 @@ interp_mem_stats_opcode_enter (opcode_counter_t opcode_position,
                         out_pools_stats_p,
                         true, false);
 
-  opcode_t opcode = read_opcode (opcode_position);
+  opcode_t opcode = vm_get_opcode (opcode_position);
 
   printf ("%s-- Opcode: %s (position %u) --\n",
           indent_prefix, __op_names[opcode.op_idx], (uint32_t) opcode_position);
@@ -280,7 +280,7 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
   int_data_p->context_peak_allocated_pool_chunks = JERRY_MAX (int_data_p->context_peak_allocated_pool_chunks,
                                                               pools_stats_after.allocated_chunks);
 
-  opcode_t opcode = read_opcode (opcode_position);
+  opcode_t opcode = vm_get_opcode (opcode_position);
 
   printf ("%s Allocated heap bytes:  %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
@@ -336,8 +336,8 @@ interp_mem_stats_opcode_exit (int_data_t *int_data_p,
  * Initialize interpreter.
  */
 void
-init_int (const opcode_t *program_p, /**< pointer to byte-code program */
-          bool dump_mem_stats) /** dump per-opcode memory usage change statistics */
+vm_init (const opcode_t *program_p, /**< pointer to byte-code program */
+         bool dump_mem_stats) /** dump per-opcode memory usage change statistics */
 {
 #ifdef MEM_STATS
   interp_mem_stats_enabled = dump_mem_stats;
@@ -348,10 +348,13 @@ init_int (const opcode_t *program_p, /**< pointer to byte-code program */
   JERRY_ASSERT (__program == NULL);
 
   __program = program_p;
-} /* init_int */
+} /* vm_init */
 
+/**
+ * Run global code
+ */
 jerry_completion_code_t
-run_int (void)
+vm_run_global (void)
 {
   JERRY_ASSERT (__program != NULL);
   JERRY_ASSERT (vm_top_context_p == NULL);
@@ -363,7 +366,7 @@ run_int (void)
   bool is_strict = false;
   opcode_counter_t start_pos = 0;
 
-  opcode_t first_opcode = read_opcode (start_pos);
+  opcode_t first_opcode = vm_get_opcode (start_pos);
   if (first_opcode.op_idx == __op__idx_meta
       && first_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
   {
@@ -374,11 +377,11 @@ run_int (void)
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
 
-  ecma_completion_value_t completion = run_int_from_pos (start_pos,
-                                                         ecma_make_object_value (glob_obj_p),
-                                                         lex_env_p,
-                                                         is_strict,
-                                                         false);
+  ecma_completion_value_t completion = vm_run_from_pos (start_pos,
+                                                        ecma_make_object_value (glob_obj_p),
+                                                        lex_env_p,
+                                                        is_strict,
+                                                        false);
 
   jerry_completion_code_t ret_code;
 
@@ -408,10 +411,20 @@ run_int (void)
   JERRY_ASSERT (vm_top_context_p == NULL);
 
   return ret_code;
-}
+} /* vm_run_global */
 
+/**
+ * Run interpreter loop using specified context
+ *
+ * Note:
+ *      The interpreter loop stops upon receiving completion value that is normal completion value.
+ *
+ * @return If the received completion value is not meta completion value (ECMA_COMPLETION_TYPE_META), then
+ *          the completion value is returned as is;
+ *         Otherwise - the completion value is discarded and normal empty completion value is returned.
+ */
 ecma_completion_value_t
-run_int_loop (int_data_t *int_data)
+vm_loop (int_data_t *int_data) /**< interpreter context */
 {
   ecma_completion_value_t completion;
 
@@ -470,14 +483,17 @@ run_int_loop (int_data_t *int_data)
 
     return completion;
   }
-}
+} /* vm_loop */
 
+/**
+ * Run the code, starting from specified opcode
+ */
 ecma_completion_value_t
-run_int_from_pos (opcode_counter_t start_pos,
-                  ecma_value_t this_binding_value,
-                  ecma_object_t *lex_env_p,
-                  bool is_strict,
-                  bool is_eval_code)
+vm_run_from_pos (opcode_counter_t start_pos, /**< identifier of starting opcode */
+                 ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
+                 ecma_object_t *lex_env_p, /**< lexical environment to use */
+                 bool is_strict, /**< is the code is strict mode code (ECMA-262 v5, 10.1.1) */
+                 bool is_eval_code) /**< is the code is eval code (ECMA-262 v5, 10.1) */
 {
   ecma_completion_value_t completion;
 
@@ -510,7 +526,7 @@ run_int_from_pos (opcode_counter_t start_pos,
   interp_mem_stats_context_enter (&int_data, start_pos);
 #endif /* MEM_STATS */
 
-  completion = run_int_loop (&int_data);
+  completion = vm_loop (&int_data);
 
   JERRY_ASSERT (ecma_is_completion_value_normal (completion)
                 || ecma_is_completion_value_throw (completion)
@@ -530,16 +546,16 @@ run_int_from_pos (opcode_counter_t start_pos,
   MEM_FINALIZE_LOCAL_ARRAY (regs);
 
   return completion;
-}
+} /* vm_run_from_pos */
 
 /**
  * Get specified opcode from the program.
  */
 opcode_t
-read_opcode (opcode_counter_t counter) /**< opcode counter */
+vm_get_opcode (opcode_counter_t counter) /**< opcode counter */
 {
   return __program[ counter ];
-} /* read_opcode */
+} /* vm_get_opcode */
 
 /**
  * Get this binding of current execution context

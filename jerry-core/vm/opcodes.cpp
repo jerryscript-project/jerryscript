@@ -449,7 +449,7 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
     read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data) + int_data->pos);
   int_data->pos++;
 
-  opcode_t next_opcode = read_opcode (int_data->pos);
+  opcode_t next_opcode = vm_get_opcode (int_data->pos);
   if (next_opcode.op_idx == __op__idx_meta
       && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
   {
@@ -548,7 +548,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                                        int_data) + int_data->pos);
   int_data->pos++;
 
-  opcode_t next_opcode = read_opcode (int_data->pos);
+  opcode_t next_opcode = vm_get_opcode (int_data->pos);
   if (next_opcode.op_idx == __op__idx_meta
       && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
   {
@@ -638,7 +638,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   idx_t this_arg_var_idx = INVALID_VALUE;
   idx_t args_number;
 
-  opcode_t next_opcode = read_opcode (int_data->pos);
+  opcode_t next_opcode = vm_get_opcode (int_data->pos);
   if (next_opcode.op_idx == __op__idx_meta
       && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
   {
@@ -896,13 +896,13 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
        prop_index < args_number;
        prop_index++)
   {
-    ecma_completion_value_t evaluate_prop_completion = run_int_loop (int_data);
+    ecma_completion_value_t evaluate_prop_completion = vm_loop (int_data);
 
     if (ecma_is_completion_value_normal (evaluate_prop_completion))
     {
       JERRY_ASSERT (ecma_is_completion_value_empty (evaluate_prop_completion));
 
-      opcode_t next_opcode = read_opcode (int_data->pos);
+      opcode_t next_opcode = vm_get_opcode (int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
       const opcode_meta_type type = (opcode_meta_type) next_opcode.data.meta.type;
@@ -1305,13 +1305,13 @@ opfunc_with (opcode_t opdata, /**< operation data */
                                                          true);
   int_data->lex_env_p = new_env_p;
 
-  ecma_completion_value_t evaluation_completion = run_int_loop (int_data);
+  ecma_completion_value_t evaluation_completion = vm_loop (int_data);
 
   if (ecma_is_completion_value_normal (evaluation_completion))
   {
     JERRY_ASSERT (ecma_is_completion_value_empty (evaluation_completion));
 
-    opcode_t meta_opcode = read_opcode (int_data->pos);
+    opcode_t meta_opcode = vm_get_opcode (int_data->pos);
     JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
     JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
 
@@ -1695,7 +1695,7 @@ opcode_counter_t
 read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of meta opcode */
                           int_data_t *int_data) /**< interpreter context */
 {
-  opcode_t meta_opcode = read_opcode (int_data->pos);
+  opcode_t meta_opcode = vm_get_opcode (int_data->pos);
   JERRY_ASSERT (meta_opcode.data.meta.type == expected_type);
 
   const idx_t data_1 = meta_opcode.data.meta.data_1;

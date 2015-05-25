@@ -20,16 +20,16 @@
 #include "jrt.h"
 #include "opcodes.h"
 
-void init_int (const opcode_t* program_p, bool dump_mem_stats);
-jerry_completion_code_t run_int (void);
-ecma_completion_value_t run_int_loop (int_data_t *int_data);
-ecma_completion_value_t run_int_from_pos (opcode_counter_t start_pos,
-                                          ecma_value_t this_binding_value,
-                                          ecma_object_t *lex_env_p,
-                                          bool is_strict,
-                                          bool is_eval_code);
+extern void vm_init (const opcode_t* program_p, bool dump_mem_stats);
+extern jerry_completion_code_t vm_run_global (void);
+extern ecma_completion_value_t vm_loop (int_data_t *int_data);
+extern ecma_completion_value_t vm_run_from_pos (opcode_counter_t start_pos,
+                                                ecma_value_t this_binding_value,
+                                                ecma_object_t *lex_env_p,
+                                                bool is_strict,
+                                                bool is_eval_code);
 
-opcode_t read_opcode (opcode_counter_t counter);
+extern opcode_t vm_get_opcode (opcode_counter_t counter);
 
 extern ecma_value_t vm_get_this_binding (void);
 extern ecma_object_t* vm_get_lex_env (void);

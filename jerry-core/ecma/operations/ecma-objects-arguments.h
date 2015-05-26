@@ -20,12 +20,12 @@
 #include "ecma-helpers.h"
 
 extern ecma_object_t*
-ecma_create_arguments_object (ecma_object_t *func_obj_p,
-                              ecma_object_t *lex_env_p,
-                              ecma_collection_iterator_t *formal_params_iter_p,
-                              const ecma_value_t *arguments_list_p,
-                              ecma_length_t arguments_list_length,
-                              bool is_strict);
+ecma_op_create_arguments_object (ecma_object_t *func_obj_p,
+                                 ecma_object_t *lex_env_p,
+                                 ecma_collection_header_t *formal_params_p,
+                                 const ecma_value_t *arguments_list_p,
+                                 ecma_length_t arguments_list_length,
+                                 bool is_strict);
 
 extern ecma_completion_value_t ecma_op_arguments_object_get (ecma_object_t *obj_p,
                                                              ecma_string_t *property_name_p);

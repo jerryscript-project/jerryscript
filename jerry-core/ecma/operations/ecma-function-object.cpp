@@ -23,6 +23,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-objects-arguments.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
@@ -379,60 +380,58 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
   formal_parameters_p = ECMA_GET_POINTER (ecma_collection_header_t,
                                           formal_parameters_prop_p->u.internal_property.value);
 
-  if (formal_parameters_p == NULL)
+  if (formal_parameters_p != NULL)
   {
-    return ecma_make_empty_completion_value ();
-  }
+    ecma_length_t formal_parameters_count = formal_parameters_p->unit_number;
 
-  ecma_length_t formal_parameters_count = formal_parameters_p->unit_number;
+    ecma_collection_iterator_t formal_params_iterator;
+    ecma_collection_iterator_init (&formal_params_iterator, formal_parameters_p);
 
-  ecma_collection_iterator_t formal_params_iterator;
-  ecma_collection_iterator_init (&formal_params_iterator, formal_parameters_p);
-
-  for (size_t n = 0;
-       n < formal_parameters_count;
-       n++)
-  {
-    ecma_value_t v;
-    if (n >= arguments_list_len)
+    for (size_t n = 0;
+         n < formal_parameters_count;
+         n++)
     {
-      v = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-    }
-    else
-    {
-      v = arguments_list_p[n];
-    }
-
-    bool is_moved = ecma_collection_iterator_next (&formal_params_iterator);
-    JERRY_ASSERT (is_moved);
-
-    ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
-    ecma_string_t *formal_parameter_name_string_p = ecma_get_string_from_value (formal_parameter_name_value);
-
-    bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
-    if (!arg_already_declared)
-    {
-      ecma_completion_value_t completion = ecma_op_create_mutable_binding (env_p,
-                                                                           formal_parameter_name_string_p,
-                                                                           false);
-      if (ecma_is_completion_value_throw (completion))
+      ecma_value_t v;
+      if (n >= arguments_list_len)
       {
-        return completion;
+        v = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      }
+      else
+      {
+        v = arguments_list_p[n];
       }
 
-      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+      bool is_moved = ecma_collection_iterator_next (&formal_params_iterator);
+      JERRY_ASSERT (is_moved);
 
-      completion = ecma_op_set_mutable_binding (env_p,
-                                                formal_parameter_name_string_p,
-                                                v,
-                                                is_strict);
+      ecma_value_t formal_parameter_name_value = *formal_params_iterator.current_value_p;
+      ecma_string_t *formal_parameter_name_string_p = ecma_get_string_from_value (formal_parameter_name_value);
 
-      if (ecma_is_completion_value_throw (completion))
+      bool arg_already_declared = ecma_op_has_binding (env_p, formal_parameter_name_string_p);
+      if (!arg_already_declared)
       {
-        return completion;
-      }
+        ecma_completion_value_t completion = ecma_op_create_mutable_binding (env_p,
+                                                                             formal_parameter_name_string_p,
+                                                                             false);
+        if (ecma_is_completion_value_throw (completion))
+        {
+          return completion;
+        }
 
-      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+
+        completion = ecma_op_set_mutable_binding (env_p,
+                                                  formal_parameter_name_string_p,
+                                                  v,
+                                                  is_strict);
+
+        if (ecma_is_completion_value_throw (completion))
+        {
+          return completion;
+        }
+
+        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+      }
     }
   }
 
@@ -451,7 +450,43 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
      *    so instantiation of Arguments object here, in general, is supposed to not affect resource consumption
      *    significantly.
      */
-    JERRY_UNIMPLEMENTED ("Instantiate Arguments object and setup 'arguments' implicit variable");
+
+    ecma_string_t *arguments_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+
+    bool binding_already_declared = ecma_op_has_binding (env_p, arguments_string_p);
+
+    if (!binding_already_declared)
+    {
+      ecma_object_t *args_obj_p = ecma_op_create_arguments_object (func_obj_p,
+                                                                   env_p,
+                                                                   formal_parameters_p,
+                                                                   arguments_list_p,
+                                                                   arguments_list_len,
+                                                                   is_strict);
+
+      if (is_strict)
+      {
+        ecma_op_create_immutable_binding (env_p, arguments_string_p);
+        ecma_op_initialize_immutable_binding (env_p, arguments_string_p, ecma_make_object_value (args_obj_p));
+      }
+      else
+      {
+        ecma_completion_value_t completion = ecma_op_create_mutable_binding (env_p,
+                                                                             arguments_string_p,
+                                                                             false);
+        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+
+        completion = ecma_op_set_mutable_binding (env_p,
+                                                  arguments_string_p,
+                                                  ecma_make_object_value (args_obj_p),
+                                                  false);
+        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+      }
+
+      ecma_deref_object (args_obj_p);
+    }
+
+    ecma_deref_ecma_string (arguments_string_p);
   }
 
   return ecma_make_empty_completion_value ();

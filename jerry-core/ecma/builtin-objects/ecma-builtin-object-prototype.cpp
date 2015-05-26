@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -298,7 +299,44 @@ static ecma_completion_value_t
 ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_arg, /**< this argument */
                                                              ecma_value_t arg) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (arg),
+                  return_value);
+
+  /* 2. */
+  ECMA_TRY_CATCH (obj_val,
+                  ecma_op_to_object (this_arg),
+                  return_value);
+
+  ecma_string_t *property_name_string_p = ecma_get_string_from_value (to_string_val);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+
+  /* 3. */
+  ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_string_p);
+
+  /* 4. */
+  if (property_p != NULL)
+  {
+    bool is_enumerable = ecma_is_property_enumerable (property_p);
+
+    return_value = ecma_make_simple_completion_value (is_enumerable
+                                                      ? ECMA_SIMPLE_VALUE_TRUE
+                                                      : ECMA_SIMPLE_VALUE_FALSE);
+  }
+  else
+  {
+    return_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  ECMA_FINALIZE (obj_val);
+
+  ECMA_FINALIZE (to_string_val);
+
+  return return_value;
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
 /**

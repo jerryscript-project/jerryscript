@@ -2598,6 +2598,151 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
 } /* ecma_builtin_array_prototype_object_reduce */
 
 /**
+ * The Array.prototype object's 'reduceRight' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.22
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< this argument */
+                                                  ecma_value_t arg1, /**< callbackfn */
+                                                  ecma_value_t arg2) /**< initialValue */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  /* 2 */
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  /* 3 */
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  /* 4 */
+  if (!ecma_op_is_callable (arg1))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *func_object_p;
+
+    JERRY_ASSERT (ecma_is_value_object (arg1));
+    func_object_p = ecma_get_object_from_value (arg1);
+
+    /* 5 */
+    if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (arg2))
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    else
+    {
+      ecma_number_t *num_p = ecma_alloc_number ();
+      ecma_value_t accumulator = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+      /* 6 */
+      uint32_t index = len - 1;
+      bool zero_reached = !len;
+
+      /* 7a */
+      if (!ecma_is_value_undefined (arg2))
+      {
+        accumulator = ecma_copy_value (arg2, true);
+      }
+      else
+      {
+        /* 8a */
+        bool k_present = false;
+        /* 8b */
+        while (!k_present && !zero_reached && ecma_is_completion_value_empty (ret_value))
+        {
+          /* 8b-i */
+          ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+
+          /* 8b-ii-iii */
+          if ((k_present = (ecma_op_object_get_property (obj_p, index_str_p) != NULL)))
+          {
+            ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
+            accumulator = ecma_copy_value (current_value, true);
+            ECMA_FINALIZE (current_value);
+          }
+          /* 8b-iv */
+          index ? --index : zero_reached = true;
+
+          ecma_deref_ecma_string (index_str_p);
+        }
+        /* 8c */
+        if (!k_present)
+        {
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        }
+      }
+      /* 9 */
+      ecma_value_t current_index;
+
+      for (; !zero_reached && ecma_is_completion_value_empty (ret_value); index ? --index : zero_reached = true)
+      {
+        /* 9a */
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+        /* 9b */
+        if (ecma_op_object_get_property (obj_p, index_str_p) != NULL)
+        {
+          /* 9c-i */
+          ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
+          /* 9c-ii */
+          *num_p = ecma_uint32_to_number (index);
+          current_index = ecma_make_number_value (num_p);
+          ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
+
+          ECMA_TRY_CATCH (call_value,
+                          ecma_op_function_call (func_object_p,
+                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                 call_args,
+                                                 4),
+                          ret_value);
+
+          ecma_free_value (accumulator, true);
+          accumulator = ecma_copy_value (call_value, true);
+
+          ECMA_FINALIZE (call_value);
+          ECMA_FINALIZE (current_value);
+        }
+        ecma_deref_ecma_string (index_str_p);
+        /* 9d in for loop */
+      }
+
+      if (ecma_is_completion_value_empty (ret_value))
+      {
+        ret_value = ecma_make_normal_completion_value (ecma_copy_value (accumulator, true));
+      }
+
+      ecma_free_value (accumulator, true);
+      ecma_dealloc_number (num_p);
+    }
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_reduce */
+
+/**
  * @}
  * @}
  * @}

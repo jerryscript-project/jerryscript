@@ -37,48 +37,60 @@
  */
 
 /**
- * Pack 'is_strict' flag and opcode index to value
+ * Pack 'is_strict', 'do_instantiate_arguments_object' flags and opcode index to value
  * that can be stored in an [[Code]] internal property.
  *
  * @return packed value
  */
 static uint32_t
 ecma_pack_code_internal_property_value (bool is_strict, /**< is code strict? */
+                                        bool do_instantiate_args_obj, /**< should an Arguments object be
+                                                                       *   instantiated for the code */
                                         opcode_counter_t opcode_idx) /**< index of first opcode */
 {
   uint32_t value = opcode_idx;
   const uint32_t is_strict_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 1);
+  const uint32_t do_instantiate_arguments_object_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 2);
 
   JERRY_ASSERT (((value) & (1u << is_strict_bit_offset)) == 0);
+  JERRY_ASSERT (((value) & (1u << do_instantiate_arguments_object_bit_offset)) == 0);
 
   if (is_strict)
   {
     value |= (1u << is_strict_bit_offset);
   }
 
+  if (do_instantiate_args_obj)
+  {
+    value |= (1u << do_instantiate_arguments_object_bit_offset);
+  }
+
   return value;
 } /* ecma_pack_code_internal_property_value */
 
 /**
- * Unpack 'is_strict' flag and opcode index from value
+ * Unpack 'is_strict', 'do_instantiate_arguments_object' flags and opcode index from value
  * that can be stored in an [[Code]] internal property.
  *
  * @return opcode index
  */
 static opcode_counter_t
 ecma_unpack_code_internal_property_value (uint32_t value, /**< packed value */
-                                          bool* out_is_strict_p) /**< out: is code strict? */
+                                          bool* out_is_strict_p, /**< out: is code strict? */
+                                          bool* out_do_instantiate_args_obj_p) /**< should an Arguments object be
+                                                                                *   instantiated for the code */
 {
   JERRY_ASSERT (out_is_strict_p != NULL);
+  JERRY_ASSERT (out_do_instantiate_args_obj_p != NULL);
 
   const uint32_t is_strict_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 1);
+  const uint32_t do_instantiate_arguments_object_bit_offset = (uint32_t) (sizeof (value) * JERRY_BITSINBYTE - 2);
 
-  bool is_strict = ((value & (1u << is_strict_bit_offset)) != 0);
-  *out_is_strict_p = is_strict;
+  *out_is_strict_p = ((value & (1u << is_strict_bit_offset)) != 0);
+  *out_do_instantiate_args_obj_p = ((value & (1u << do_instantiate_arguments_object_bit_offset)) != 0);
+  value &= ~((1u << is_strict_bit_offset) | (1u << do_instantiate_arguments_object_bit_offset));
 
-  opcode_counter_t opcode_idx = (opcode_counter_t) (value & ~(1u << is_strict_bit_offset));
-
-  return opcode_idx;
+  return (opcode_counter_t) value;
 } /* ecma_unpack_code_internal_property_value */
 
 /**
@@ -144,6 +156,8 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
                                 ecma_length_t formal_parameters_number, /**< formal parameters list's length */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
+                                bool do_instantiate_arguments_object, /**< should an Arguments object be instantiated
+                                                                       *   for the function object upon call */
                                 opcode_counter_t first_opcode_idx) /**< index of first opcode of function's body */
 {
   // 1., 4., 13.
@@ -185,6 +199,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 12.
   ecma_property_t *code_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE);
   code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
+                                                                                   do_instantiate_arguments_object,
                                                                                    first_opcode_idx);
 
   // 14.
@@ -339,10 +354,11 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
 } /* ecma_op_create_external_function_object */
 
 /**
- * Setup variables for arguments listed in formal parameter list.
+ * Setup variables for arguments listed in formal parameter list,
+ * and, if necessary, Arguments object with 'arguments' binding.
  *
  * See also:
- *          Declaration binding instantiation (ECMA-262 v5, 10.5), block 4
+ *          Declaration binding instantiation (ECMA-262 v5, 10.5), block 4 and 7
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value
@@ -352,7 +368,10 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
                                          ecma_object_t *env_p, /**< lexical environment */
                                          const ecma_value_t *arguments_list_p, /**< arguments list */
                                          ecma_length_t arguments_list_len, /**< length of argument list */
-                                         bool is_strict) /**< flag indicating strict mode */
+                                         bool is_strict, /**< flag indicating strict mode */
+                                         bool do_instantiate_arguments_object) /**< flag indicating whether
+                                                                                *   Arguments object should be
+                                                                                *   instantiated */
 {
   ecma_property_t *formal_parameters_prop_p = ecma_get_internal_property (func_obj_p,
                                                                           ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
@@ -415,6 +434,24 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
 
       JERRY_ASSERT (ecma_is_completion_value_empty (completion));
     }
+  }
+
+  if (do_instantiate_arguments_object)
+  {
+    /*
+     * According to ECMA-262 v5, 10.5, the Arguments object should be instantiated
+     * after instantiating declared functions, and only if there is no binding named 'arguments'
+     * by that time.
+     *
+     * However, we can setup Arguments object and 'arguments' binding here, because:
+     *  - instantiation of Arguments object itself doesn't have any side effects;
+     *  - if 'arguments' is name of a declared function in current scope,
+     *    value of the binding would be overwritten, execution would proceed in correct state.
+     *  - declaration of function, named 'arguments', is considered to be unrecommended (and so, rare) case,
+     *    so instantiation of Arguments object here, in general, is supposed to not affect resource consumption
+     *    significantly.
+     */
+    JERRY_UNIMPLEMENTED ("Instantiate Arguments object and setup 'arguments' implicit variable");
   }
 
   return ecma_make_empty_completion_value ();
@@ -543,8 +580,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       uint32_t code_prop_value = code_prop_p->u.internal_property.value;
 
       bool is_strict;
+      bool do_instantiate_args_obj;
       // 8.
-      opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value, &is_strict);
+      opcode_counter_t code_first_opcode_idx = ecma_unpack_code_internal_property_value (code_prop_value,
+                                                                                         &is_strict,
+                                                                                         &do_instantiate_args_obj);
 
       ecma_value_t this_binding;
       // 1.
@@ -576,7 +616,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                local_env_p,
                                                                arguments_list_p,
                                                                arguments_list_len,
-                                                               is_strict),
+                                                               is_strict,
+                                                               do_instantiate_args_obj),
                       ret_value);
 
       ecma_completion_value_t completion = vm_run_from_pos (code_first_opcode_idx,
@@ -769,14 +810,18 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                               ecma_string_t* formal_parameter_list_p[], /**< formal parameters list */
                               ecma_length_t formal_parameter_list_length, /**< length of formal parameters list */
                               bool is_strict, /**< flag indicating if function is declared in strict mode code */
+                              bool do_instantiate_arguments_object, /**< flag, indicating whether an Arguments object
+                                                                     *   should be instantiated for the function object
+                                                                     *   upon call */
                               bool is_configurable_bindings) /**< flag indicating whether function
-                                                                  is declared in eval code */
+                                                              *   is declared in eval code */
 {
   // b.
   ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_parameter_list_p,
                                                               formal_parameter_list_length,
                                                               lex_env_p,
                                                               is_strict,
+                                                              do_instantiate_arguments_object,
                                                               function_code_opcode_idx);
 
   // c.

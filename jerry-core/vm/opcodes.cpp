@@ -443,6 +443,7 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
                       ecma_length_t args_number) /**< number of arguments */
 {
   bool is_strict = int_data->is_strict;
+  bool do_instantiate_arguments_object = true;
   const bool is_configurable_bindings = int_data->is_eval_code;
 
   const opcode_counter_t function_code_end_oc = (opcode_counter_t) (
@@ -455,6 +456,14 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
   {
     is_strict = true;
   }
+  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
+      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+  {
+    /* the code doesn't use 'arguments' identifier
+     * and doesn't perform direct call to eval,
+     * so Arguments object can't be referenced */
+    do_instantiate_arguments_object = false;
+  }
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_id);
 
@@ -464,6 +473,7 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
                                                                     args_names,
                                                                     args_number,
                                                                     is_strict,
+                                                                    do_instantiate_arguments_object,
                                                                     is_configurable_bindings);
   ecma_deref_ecma_string (function_name_string_p);
 
@@ -541,6 +551,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   fill_params_list (int_data, params_number, params_names);
 
   bool is_strict = int_data->is_strict;
+  bool do_instantiate_arguments_object = true;
 
   function_code_end_oc = (opcode_counter_t) (read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END,
                                                                        int_data) + int_data->pos);
@@ -551,6 +562,14 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
   {
     is_strict = true;
+  }
+  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
+      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+  {
+    /* the code doesn't use 'arguments' identifier
+     * and doesn't perform direct call to eval,
+     * so Arguments object can't be referenced */
+    do_instantiate_arguments_object = false;
   }
 
   ecma_object_t *scope_p;
@@ -576,6 +595,7 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                               params_number,
                                                               scope_p,
                                                               is_strict,
+                                                              do_instantiate_arguments_object,
                                                               int_data->pos);
 
   ret_value = set_variable_value (int_data, lit_oc,

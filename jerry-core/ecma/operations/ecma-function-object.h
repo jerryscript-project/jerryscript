@@ -34,6 +34,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[],
                                 ecma_length_t formal_parameters_number,
                                 ecma_object_t *scope_p,
                                 bool is_strict,
+                                bool do_instantiate_arguments_object,
                                 opcode_counter_t first_opcode_idx);
 extern ecma_object_t*
 ecma_op_create_external_function_object (ecma_external_pointer_t code_p);
@@ -60,6 +61,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p,
                               ecma_string_t* formal_parameter_list_p[],
                               ecma_length_t formal_parameter_list_length,
                               bool is_strict,
+                              bool do_instantiate_arguments_object,
                               bool is_configurable_bindings);
 
 /**

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <assert.h>
-
 #include "jrt.h"
 #include "mem-allocator.h"
 #include "rcs-recordset.h"
@@ -45,175 +43,175 @@ extern "C"
 
 class test_rcs_record_type_one_t : public rcs_record_t
 {
-  public:
-    static size_t size (uint32_t elements_count)
-    {
-      return JERRY_ALIGNUP (header_size + element_size * elements_count,
-                            RCS_DYN_STORAGE_LENGTH_UNIT);
-    }
+public:
+  static size_t size (uint32_t elements_count)
+  {
+    return JERRY_ALIGNUP (header_size + element_size * elements_count,
+                          RCS_DYN_STORAGE_LENGTH_UNIT);
+  }
 
-    size_t get_size () const
-    {
-      return get_field (length_field_pos, length_field_width) * RCS_DYN_STORAGE_LENGTH_UNIT;
-    }
+  size_t get_size () const
+  {
+    return get_field (length_field_pos, length_field_width) * RCS_DYN_STORAGE_LENGTH_UNIT;
+  }
 
-    void set_size (size_t size)
-    {
-      JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_ALIGNMENT) == size);
+  void set_size (size_t size)
+  {
+    JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_ALIGNMENT) == size);
 
-      set_field (length_field_pos, length_field_width, size >> RCS_DYN_STORAGE_ALIGNMENT_LOG);
-    }
+    set_field (length_field_pos, length_field_width, size >> RCS_DYN_STORAGE_ALIGNMENT_LOG);
+  }
 
-    rcs_record_t* get_prev () const
-    {
-      return get_pointer (prev_field_pos, prev_field_width);
-    }
+  rcs_record_t* get_prev () const
+  {
+    return get_pointer (prev_field_pos, prev_field_width);
+  }
 
-    void set_prev (rcs_record_t* prev_rec_p)
-    {
-      set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
-    }
+  void set_prev (rcs_record_t* prev_rec_p)
+  {
+    set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
+  }
 
-  private:
-    static const uint32_t length_field_pos = _fields_offset_begin;
-    static const uint32_t length_field_width = 12u;
+private:
+  static const uint32_t length_field_pos = _fields_offset_begin;
+  static const uint32_t length_field_width = 12u;
 
-    static const uint32_t prev_field_pos = length_field_pos + length_field_width;
-    static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
+  static const uint32_t prev_field_pos = length_field_pos + length_field_width;
+  static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
 
-    static const size_t header_size = 2 * RCS_DYN_STORAGE_LENGTH_UNIT;
-    static const size_t element_size = sizeof (uint16_t);
+  static const size_t header_size = 2 * RCS_DYN_STORAGE_LENGTH_UNIT;
+  static const size_t element_size = sizeof (uint16_t);
 };
 
 class test_rcs_record_type_two_t : public rcs_record_t
 {
-  public:
-    static size_t size (void)
-    {
-      return JERRY_ALIGNUP (header_size, RCS_DYN_STORAGE_LENGTH_UNIT);
-    }
+public:
+  static size_t size (void)
+  {
+    return JERRY_ALIGNUP (header_size, RCS_DYN_STORAGE_LENGTH_UNIT);
+  }
 
-    size_t get_size () const
-    {
-      return size ();
-    }
+  size_t get_size () const
+  {
+    return size ();
+  }
 
-    void set_size (size_t size)
-    {
-      JERRY_ASSERT (size == get_size ());
-    }
+  void set_size (size_t size)
+  {
+    JERRY_ASSERT (size == get_size ());
+  }
 
-    rcs_record_t* get_prev () const
-    {
-      return get_pointer (prev_field_pos, prev_field_width);
-    }
+  rcs_record_t* get_prev () const
+  {
+    return get_pointer (prev_field_pos, prev_field_width);
+  }
 
-    void set_prev (rcs_record_t* prev_rec_p)
-    {
-      set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
-    }
+  void set_prev (rcs_record_t* prev_rec_p)
+  {
+    set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
+  }
 
-  private:
-    static const uint32_t prev_field_pos = _fields_offset_begin;
-    static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
+private:
+  static const uint32_t prev_field_pos = _fields_offset_begin;
+  static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
 
-    static const size_t header_size = RCS_DYN_STORAGE_LENGTH_UNIT;
+  static const size_t header_size = RCS_DYN_STORAGE_LENGTH_UNIT;
 };
 
 class test_rcs_recordset_t : public rcs_recordset_t
 {
-  public:
-    test_rcs_record_type_one_t*
-      create_record_type_one (uint32_t elements_count)
-      {
-        return alloc_record<test_rcs_record_type_one_t, uint32_t> (_record_type_one_id,
-                                                                   elements_count);
-      }
+public:
+  test_rcs_record_type_one_t*
+  create_record_type_one (uint32_t elements_count)
+  {
+    return alloc_record<test_rcs_record_type_one_t, uint32_t> (_record_type_one_id,
+                                                               elements_count);
+  }
 
-    void
-      free_record_type_one (test_rcs_record_type_one_t* rec_p)
-      {
-        free_record (rec_p);
-      }
+  void
+  free_record_type_one (test_rcs_record_type_one_t* rec_p)
+  {
+    free_record (rec_p);
+  }
 
-    test_rcs_record_type_two_t*
-      create_record_type_two (void)
-      {
-        return alloc_record<test_rcs_record_type_two_t> (_record_type_two_id);
-      }
+  test_rcs_record_type_two_t*
+  create_record_type_two (void)
+  {
+    return alloc_record<test_rcs_record_type_two_t> (_record_type_two_id);
+  }
 
-    void
-      free_record_type_two (test_rcs_record_type_two_t* rec_p)
-      {
-        free_record (rec_p);
-      }
-  private:
-    static const int _record_type_one_id  = _first_type_id + 0;
-    static const int _record_type_two_id  = _first_type_id + 1;
+  void
+  free_record_type_two (test_rcs_record_type_two_t* rec_p)
+  {
+    free_record (rec_p);
+  }
+private:
+  static const int _record_type_one_id  = _first_type_id + 0;
+  static const int _record_type_two_id  = _first_type_id + 1;
 
-    virtual rcs_record_t* get_prev (rcs_record_t* rec_p)
+  virtual rcs_record_t* get_prev (rcs_record_t* rec_p)
+  {
+    switch (rec_p->get_type ())
     {
-      switch (rec_p->get_type ())
+      case _record_type_one_id:
       {
-        case _record_type_one_id:
-        {
-          return (static_cast<test_rcs_record_type_one_t*> (rec_p))->get_prev ();
-        }
-        case _record_type_two_id:
-        {
-          return (static_cast<test_rcs_record_type_two_t*> (rec_p))->get_prev ();
-        }
-        default:
-        {
-          JERRY_ASSERT (rec_p->get_type () < _first_type_id);
+        return (static_cast<test_rcs_record_type_one_t*> (rec_p))->get_prev ();
+      }
+      case _record_type_two_id:
+      {
+        return (static_cast<test_rcs_record_type_two_t*> (rec_p))->get_prev ();
+      }
+      default:
+      {
+        JERRY_ASSERT (rec_p->get_type () < _first_type_id);
 
-          return rcs_recordset_t::get_prev (rec_p);
-        }
+        return rcs_recordset_t::get_prev (rec_p);
       }
     }
+  }
 
-    virtual void set_prev (rcs_record_t* rec_p,
-                           rcs_record_t *prev_rec_p)
+  virtual void set_prev (rcs_record_t* rec_p,
+                         rcs_record_t *prev_rec_p)
+  {
+    switch (rec_p->get_type ())
     {
-      switch (rec_p->get_type ())
+      case _record_type_one_id:
       {
-        case _record_type_one_id:
-        {
-          return (static_cast<test_rcs_record_type_one_t*> (rec_p))->set_prev (prev_rec_p);
-        }
-        case _record_type_two_id:
-        {
-          return (static_cast<test_rcs_record_type_two_t*> (rec_p))->set_prev (prev_rec_p);
-        }
-        default:
-        {
-          JERRY_ASSERT (rec_p->get_type () < _first_type_id);
+        return (static_cast<test_rcs_record_type_one_t*> (rec_p))->set_prev (prev_rec_p);
+      }
+      case _record_type_two_id:
+      {
+        return (static_cast<test_rcs_record_type_two_t*> (rec_p))->set_prev (prev_rec_p);
+      }
+      default:
+      {
+        JERRY_ASSERT (rec_p->get_type () < _first_type_id);
 
-          return rcs_recordset_t::set_prev (rec_p, prev_rec_p);
-        }
+        return rcs_recordset_t::set_prev (rec_p, prev_rec_p);
       }
     }
+  }
 
-    virtual size_t get_record_size (rcs_record_t* rec_p)
+  virtual size_t get_record_size (rcs_record_t* rec_p)
+  {
+    switch (rec_p->get_type ())
     {
-      switch (rec_p->get_type ())
+      case _record_type_one_id:
       {
-        case _record_type_one_id:
-        {
-          return (static_cast<test_rcs_record_type_one_t*> (rec_p))->get_size ();
-        }
-        case _record_type_two_id:
-        {
-          return (static_cast<test_rcs_record_type_two_t*> (rec_p))->get_size ();
-        }
-        default:
-        {
-          JERRY_ASSERT (rec_p->get_type () < _first_type_id);
+        return (static_cast<test_rcs_record_type_one_t*> (rec_p))->get_size ();
+      }
+      case _record_type_two_id:
+      {
+        return (static_cast<test_rcs_record_type_two_t*> (rec_p))->get_size ();
+      }
+      default:
+      {
+        JERRY_ASSERT (rec_p->get_type () < _first_type_id);
 
-          return rcs_recordset_t::get_record_size (rec_p);
-        }
+        return rcs_recordset_t::get_record_size (rec_p);
       }
     }
+  }
 };
 
 int
@@ -243,23 +241,23 @@ main (int __attr_unused___ argc,
     {
       if (rand () % 2)
       {
-        assert (type_one_records_number < test_sub_iters);
+        JERRY_ASSERT (type_one_records_number < test_sub_iters);
 
         uint32_t elements_count = ((uint32_t) rand ()) % test_max_type_one_record_elements;
         type_one_record_element_counts[type_one_records_number] = elements_count;
         type_one_records[type_one_records_number] = storage.create_record_type_one (elements_count);
 
-        assert (type_one_records[type_one_records_number] != NULL);
+        JERRY_ASSERT (type_one_records[type_one_records_number] != NULL);
 
         type_one_records_number++;
       }
       else
       {
-        assert (type_two_records_number < test_sub_iters);
+        JERRY_ASSERT (type_two_records_number < test_sub_iters);
 
         type_two_records[type_two_records_number] = storage.create_record_type_two ();
 
-        assert (type_two_records[type_two_records_number] != NULL);
+        JERRY_ASSERT (type_two_records[type_two_records_number] != NULL);
 
         type_two_records_number++;
       }
@@ -271,13 +269,13 @@ main (int __attr_unused___ argc,
 
       if (type_one_records_number == 0)
       {
-        assert (type_two_records_number != 0);
+        JERRY_ASSERT (type_two_records_number != 0);
 
         free_type_one = false;
       }
       else if (type_two_records_number == 0)
       {
-        assert (type_one_records_number != 0);
+        JERRY_ASSERT (type_one_records_number != 0);
 
         free_type_one = true;
       }
@@ -288,10 +286,10 @@ main (int __attr_unused___ argc,
 
       if (free_type_one)
       {
-        assert (type_one_records_number > 0);
+        JERRY_ASSERT (type_one_records_number > 0);
         int index_to_free = (rand () % type_one_records_number);
 
-        assert (index_to_free >= 0 && index_to_free < type_one_records_number);
+        JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_one_records_number);
 
         storage.free_record_type_one (type_one_records[index_to_free]);
 
@@ -306,10 +304,10 @@ main (int __attr_unused___ argc,
       }
       else
       {
-        assert (type_two_records_number > 0);
+        JERRY_ASSERT (type_two_records_number > 0);
         int index_to_free = (rand () % type_two_records_number);
 
-        assert (index_to_free >= 0 && index_to_free < type_two_records_number);
+        JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_two_records_number);
 
         storage.free_record_type_two (type_two_records[index_to_free]);
 

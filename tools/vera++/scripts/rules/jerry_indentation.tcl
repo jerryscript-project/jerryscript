@@ -22,7 +22,9 @@ foreach fileName [getSourceFileNames] {
     set is_in_comment "no"
     set is_in_pp_define "no"
     set is_in_class "no"
+    set is_in_template "no"
     set parentheses_level 0
+    set template_brackets_level 0
 
     foreach token [getTokens $fileName 1 0 -1 -1 {}] {
         set type [lindex $token 3]
@@ -36,6 +38,8 @@ foreach fileName [getSourceFileNames] {
             set is_in_pp_define "no"
         } elseif {$type == "class"} {
             set is_in_class "yes"
+        } elseif {$type == "template"} {
+            set is_in_template "yes"
         } elseif {$is_in_class == "yes" && $type == "semicolon" && $indent == 0} {
             set is_in_class "no"
         } elseif {$type == "ccomment"} {
@@ -52,20 +56,23 @@ foreach fileName [getSourceFileNames] {
                 incr indent -2
             }
 
-            if {$is_in_pp_define == "no" && $is_in_comment == "no" && $is_in_class == "no" && $parentheses_level == 0} {
+            if {$is_in_pp_define == "no" && $is_in_comment == "no" && $parentheses_level == 0 &&
+                $is_in_template == "no"} {
                 set line [getLine $fileName $lineNumber]
 
                 if {$lineNumber != $lastCheckedLineNumber} {
-                    if {[string length $line] == 0} {
-                    }
-
                     if {[regexp {^[[:blank:]]*} $line match]} {
                         set real_indent [string length $match]
-                          if {$indent != $real_indent} {
-                              if {![regexp {^[[:alnum:]_]{1,}:$} $line] || $real_indent != 0} {
-                                  report $fileName $lineNumber "Indentation: $real_indent -> $indent. Line: '$line'"
-                              }
-                          }
+                        if {$indent != $real_indent} {
+                            if {[regexp {^[[:blank:]]*(private:|public:|protected:)} $line]} {
+                                if {$indent != $real_indent + 2} {
+                                    set exp_indent [expr  {$indent - 2}]
+                                    report $fileName $lineNumber "Indentation: $real_indent -> $exp_indent. Line: '$line'"
+                                }
+                            } elseif {![regexp {^[[:alnum:]_]{1,}:$} $line] || $real_indent != 0} {
+                                report $fileName $lineNumber "Indentation: $real_indent -> $indent. Line: '$line'"
+                            }
+                        }
                     }
                 }
 
@@ -73,7 +80,7 @@ foreach fileName [getSourceFileNames] {
                     if {$type == "leftbrace"} {
                         if {![regexp {^[[:blank:]]*\{[[:blank:]]*$} $line]
                             && ![regexp {[^\{=]=[^\{=]\{.*\},?} $line]} {
-                          report $fileName $lineNumber "Left brace is not the only non-space character in the line: '$line'"
+                            report $fileName $lineNumber "Left brace is not the only non-space character in the line: '$line'"
                         }
                     }
                     if {$type == "rightbrace"} {
@@ -84,11 +91,11 @@ foreach fileName [getSourceFileNames] {
                     }
                 }
                 if {$type == "rightbrace"} {
-                  if {![regexp {^[[:blank:]]*\}((( [a-z_\(][a-z0-9_\(\)]{0,}){1,})?;| /\*.*\*/| //.*)?$} $line]
-                      && ![regexp {[^\{=]=[^\{=]\{.*\}[,;]?} $line]} {
+                    if {![regexp {^[[:blank:]]*\};?((( [a-z_\(][a-z0-9_\(\)]{0,}){1,})?;| /\*.*\*/| //.*)?$} $line]
+                        && ![regexp {[^\{=]=[^\{=]\{.*\}[,;]?} $line]} {
                         report $fileName $lineNumber "Right brace is not the only non-space character in the line and \
-                          is not single right brace followed by \[a-z0-9_() \] string and single semicolon character: '$line'"
-                 }
+                            is not single right brace followed by \[a-z0-9_() \] string and single semicolon character: '$line'"
+                    }
                 }
             }
 
@@ -98,6 +105,17 @@ foreach fileName [getSourceFileNames] {
                 incr parentheses_level 1
             } elseif {$type == "rightparen"} {
                 incr parentheses_level -1
+            }
+
+            if {$is_in_template == "yes"} {
+                if {$type == "less"} {
+                    incr template_brackets_level
+                } elseif {$type == "greater"} {
+                    incr template_brackets_level -1
+                    if {$template_brackets_level == 0} {
+                        set is_in_template "no"
+                    }
+                }
             }
 
             set lastCheckedLineNumber $lineNumber

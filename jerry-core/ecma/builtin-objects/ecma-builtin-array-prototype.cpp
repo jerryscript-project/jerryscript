@@ -1252,7 +1252,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
                                             ecma_value_t arg2) /**< initialValue */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  ecma_completion_value_t accumulator = ecma_make_empty_completion_value ();
+
   /* 1 */
   ECMA_TRY_CATCH (obj_this,
                   ecma_op_to_object (this_arg),
@@ -1274,10 +1274,11 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
   /* 4 */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value =  ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
   else
   {
+    ecma_completion_value_t accumulator = ecma_make_empty_completion_value ();
     ecma_number_t *num_p = ecma_alloc_number ();
     ecma_object_t *func_object_p;
     ecma_value_t current_index;
@@ -1345,7 +1346,8 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         ecma_value_t call_args[] = {prev_value, current_value, current_index, obj_this};
 
         ECMA_TRY_CATCH (call_value,
-          ecma_op_function_call (func_object_p, ECMA_SIMPLE_VALUE_UNDEFINED, call_args, 4), ret_value);
+                        ecma_op_function_call (func_object_p, ECMA_SIMPLE_VALUE_UNDEFINED, call_args, 4),
+                        ret_value);
         accumulator = ecma_copy_completion_value (call_value);
 
         ECMA_FINALIZE (call_value);
@@ -1355,6 +1357,11 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
       /* 9d in for loop */
     }
 
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_copy_completion_value (accumulator);
+    }
+    ecma_free_completion_value (accumulator);
     ecma_free_completion_value (to_object_comp);
     ecma_dealloc_number (num_p);
   }
@@ -1363,12 +1370,6 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
   ECMA_FINALIZE (len_value);
   ecma_deref_ecma_string (magic_string_length_p);
   ECMA_FINALIZE (obj_this);
-
-  if (ecma_is_completion_value_empty (ret_value))
-  {
-    ret_value = ecma_copy_completion_value (accumulator);
-  }
-  ecma_free_completion_value (accumulator);
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_reduce */

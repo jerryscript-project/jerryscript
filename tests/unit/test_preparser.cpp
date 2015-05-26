@@ -41,7 +41,8 @@ main (int __attr_unused___ argc,
   opcode_t opcodes[] =
   {
     getop_meta (OPCODE_META_TYPE_SCOPE_CODE_FLAGS, // [ ]
-                OPCODE_SCOPE_CODE_FLAGS__NO_FLAGS,
+                OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
+                | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
                 INVALID_VALUE),
     getop_reg_var_decl (128, 129),  // var tmp128 .. tmp129;
     getop_var_decl (0),             // var a;

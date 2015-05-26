@@ -2650,12 +2650,14 @@ preparse_scope (bool is_global)
 
   opcode_counter_t scope_code_flags_oc = dump_scope_code_flags_for_rewrite ();
 
-  opcode_scope_code_flags_t scope_flags = OPCODE_SCOPE_CODE_FLAGS__NO_FLAGS;
+  bool is_ref_arguments_identifier = false;
+  bool is_ref_eval_identifier = false;
+  bool is_use_strict = false;
 
   if (token_is (TOK_STRING) && literal_equal_s (lexer_get_literal_by_id (token_data ()), "use strict"))
   {
     scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
-    scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_STRICT);
+    is_use_strict = true;
   }
 
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
@@ -2687,9 +2689,41 @@ preparse_scope (bool is_global)
     }
     else
     {
+      if (token_is (TOK_NAME))
+      {
+        if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()),
+                                  "arguments"))
+        {
+          is_ref_arguments_identifier = true;
+        }
+
+        if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()),
+                                  "eval"))
+        {
+          is_ref_eval_identifier = true;
+        }
+      }
+
       process_keyword_names ();
     }
     skip_newlines ();
+  }
+
+  opcode_scope_code_flags_t scope_flags = OPCODE_SCOPE_CODE_FLAGS__EMPTY;
+
+  if (is_use_strict)
+  {
+    scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_STRICT);
+  }
+
+  if (!is_ref_arguments_identifier)
+  {
+    scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER);
+  }
+
+  if (!is_ref_eval_identifier)
+  {
+    scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
   }
 
   rewrite_scope_code_flags (scope_code_flags_oc, scope_flags);

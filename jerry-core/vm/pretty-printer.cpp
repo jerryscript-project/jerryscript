@@ -627,15 +627,32 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
         }
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
-          idx_t scope_flags = opm.op.data.meta.data_1;
-
-          if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+          if (opm.op.data.meta.data_1 != INVALID_VALUE)
           {
-            printf ("[use strict] ");
-            scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
-          }
+            idx_t scope_flags = opm.op.data.meta.data_1;
 
-          JERRY_ASSERT (scope_flags == 0);
+            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+            {
+              printf ("[use strict] ");
+              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
+            }
+            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
+            {
+              printf ("[no 'arguments'] ");
+              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER);
+            }
+            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER)
+            {
+              printf ("[no 'eval'] ");
+              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
+            }
+
+            JERRY_ASSERT (scope_flags == 0);
+          }
+          else
+          {
+            printf ("[to be rewritten]");
+          }
 
           break;
         }

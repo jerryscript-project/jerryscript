@@ -79,8 +79,12 @@ typedef enum
  */
 typedef enum : idx_t
 {
-  OPCODE_SCOPE_CODE_FLAGS__NO_FLAGS         = (0u),      /**< initializer for empty flag set */
-  OPCODE_SCOPE_CODE_FLAGS_STRICT            = (1u << 0), /**< code is strict mode code */
+  OPCODE_SCOPE_CODE_FLAGS__EMPTY                       = (0u),      /**< initializer for empty flag set */
+  OPCODE_SCOPE_CODE_FLAGS_STRICT                       = (1u << 0), /**< code is strict mode code */
+  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER = (1u << 1), /**< code doesn't reference
+                                                                     *   'arguments' identifier */
+  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER      = (1u << 2)  /**< code doesn't reference
+                                                                     *   'eval' identifier */
 } opcode_scope_code_flags_t;
 
 /**

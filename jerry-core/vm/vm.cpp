@@ -366,12 +366,11 @@ vm_run_global (void)
   bool is_strict = false;
   opcode_counter_t start_pos = 0;
 
-  opcode_t first_opcode = vm_get_opcode (start_pos);
-  if (first_opcode.op_idx == __op__idx_meta
-      && first_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (start_pos++);
+
+  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
   {
     is_strict = true;
-    start_pos++;
   }
 
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
@@ -556,6 +555,20 @@ vm_get_opcode (opcode_counter_t counter) /**< opcode counter */
 {
   return __program[ counter ];
 } /* vm_get_opcode */
+
+/**
+ * Get scope code flags from opcode specified by opcode counter
+ *
+ * @return mask of scope code flags
+ */
+opcode_scope_code_flags_t
+vm_get_scope_flags (opcode_counter_t counter) /**< opcode counter */
+{
+  opcode_t flags_opcode = vm_get_opcode (counter);
+  JERRY_ASSERT (flags_opcode.op_idx == __op__idx_meta
+                && flags_opcode.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
+  return (opcode_scope_code_flags_t) flags_opcode.data.meta.data_1;
+} /* vm_get_scope_flags */
 
 /**
  * Get this binding of current execution context

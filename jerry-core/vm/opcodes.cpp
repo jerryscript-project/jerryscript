@@ -449,13 +449,11 @@ function_declaration (int_data_t *int_data, /**< interpreter context */
     read_meta_opcode_counter (OPCODE_META_TYPE_FUNCTION_END, int_data) + int_data->pos);
   int_data->pos++;
 
-  opcode_t next_opcode = vm_get_opcode (int_data->pos);
-  if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (int_data->pos++);
+
+  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
   {
     is_strict = true;
-
-    int_data->pos++;
   }
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_index (function_name_lit_id);
@@ -548,13 +546,11 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
                                                                        int_data) + int_data->pos);
   int_data->pos++;
 
-  opcode_t next_opcode = vm_get_opcode (int_data->pos);
-  if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_STRICT_CODE)
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (int_data->pos++);
+
+  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
   {
     is_strict = true;
-
-    int_data->pos++;
   }
 
   ecma_object_t *scope_p;
@@ -1651,7 +1647,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
       return ecma_make_meta_completion_value ();
     }
 
-    case OPCODE_META_TYPE_STRICT_CODE:
+    case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
     case OPCODE_META_TYPE_UNDEFINED:
     case OPCODE_META_TYPE_THIS_ARG:
     case OPCODE_META_TYPE_FUNCTION_END:

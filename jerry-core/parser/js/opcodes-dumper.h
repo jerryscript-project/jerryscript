@@ -217,7 +217,9 @@ void dump_throw (operand);
 bool dumper_variable_declaration_exists (literal_index_t);
 void dump_variable_declaration (literal_index_t);
 
-void dump_strict_mode_header (void);
+opcode_counter_t dump_scope_code_flags_for_rewrite (void);
+void rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc,
+                               opcode_scope_code_flags_t scope_flags);
 
 void dump_reg_var_decl_for_rewrite (void);
 void rewrite_reg_var_decl (void);

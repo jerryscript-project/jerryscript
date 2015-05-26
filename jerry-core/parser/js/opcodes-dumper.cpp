@@ -2383,11 +2383,27 @@ dump_variable_declaration (literal_index_t lit_id)
   serializer_dump_op_meta (create_op_meta_100 (opcode, lit_id));
 }
 
-void
-dump_strict_mode_header (void)
+opcode_counter_t
+dump_scope_code_flags_for_rewrite (void)
 {
-  const opcode_t opcode = getop_meta (OPCODE_META_TYPE_STRICT_CODE, INVALID_VALUE, INVALID_VALUE);
+  opcode_counter_t oc = serializer_get_current_opcode_counter ();
+
+  const opcode_t opcode = getop_meta (OPCODE_META_TYPE_SCOPE_CODE_FLAGS, INVALID_VALUE, INVALID_VALUE);
   serializer_dump_op_meta (create_op_meta_000 (opcode));
+
+  return oc;
+}
+
+void
+rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc,
+                          opcode_scope_code_flags_t scope_flags)
+{
+  JERRY_ASSERT ((idx_t) scope_flags == scope_flags);
+
+  op_meta opm = serializer_get_op_meta (scope_code_flags_oc);
+  JERRY_ASSERT (opm.op.op_idx == OPCODE (meta));
+  opm.op.data.meta.data_1 = (idx_t) scope_flags;
+  serializer_rewrite_op_meta (scope_code_flags_oc, opm);
 }
 
 void

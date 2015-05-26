@@ -2648,10 +2648,14 @@ preparse_scope (bool is_global)
   const locus start_loc = tok.loc;
   const token_type end_tt = is_global ? TOK_EOF : TOK_CLOSE_BRACE;
 
+  opcode_counter_t scope_code_flags_oc = dump_scope_code_flags_for_rewrite ();
+
+  opcode_scope_code_flags_t scope_flags = OPCODE_SCOPE_CODE_FLAGS__NO_FLAGS;
+
   if (token_is (TOK_STRING) && literal_equal_s (lexer_get_literal_by_id (token_data ()), "use strict"))
   {
     scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
-    dump_strict_mode_header ();
+    scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_STRICT);
   }
 
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
@@ -2687,6 +2691,8 @@ preparse_scope (bool is_global)
     }
     skip_newlines ();
   }
+
+  rewrite_scope_code_flags (scope_code_flags_oc, scope_flags);
 
   if (start_loc != tok.loc)
   {

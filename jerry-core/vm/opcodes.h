@@ -70,8 +70,18 @@ typedef enum
   OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
   OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */
   OPCODE_META_TYPE_END_TRY_CATCH_FINALLY, /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
-  OPCODE_META_TYPE_STRICT_CODE /**< mark of beginning of strict code */
+  OPCODE_META_TYPE_SCOPE_CODE_FLAGS /**< set of flags indicating various properties of the scope's code
+                                     *   (See also: opcode_scope_code_flags_t) */
 } opcode_meta_type;
+
+/**
+ * Flags indicating various properties of a scope's code
+ */
+typedef enum : idx_t
+{
+  OPCODE_SCOPE_CODE_FLAGS__NO_FLAGS         = (0u),      /**< initializer for empty flag set */
+  OPCODE_SCOPE_CODE_FLAGS_STRICT            = (1u << 0), /**< code is strict mode code */
+} opcode_scope_code_flags_t;
 
 /**
  * Interpreter context

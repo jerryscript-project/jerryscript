@@ -625,9 +625,18 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
           printf ("end try");
           break;
         }
-        case OPCODE_META_TYPE_STRICT_CODE:
+        case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
-          printf ("use strict;");
+          idx_t scope_flags = opm.op.data.meta.data_1;
+
+          if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+          {
+            printf ("[use strict] ");
+            scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
+          }
+
+          JERRY_ASSERT (scope_flags == 0);
+
           break;
         }
         default:

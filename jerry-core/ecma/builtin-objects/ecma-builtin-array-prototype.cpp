@@ -77,6 +77,149 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
 } /* ecma_builtin_array_prototype_helper_set_length */
 
 /**
+ * The Array.prototype object's 'concat' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this argument */
+                                            const ecma_value_t args[], /**< arguments list */
+                                            ecma_length_t args_number) /**< number of arguments */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  /* 1. */
+  ECMA_TRY_CATCH (obj_this,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+  ECMA_TRY_CATCH (len_value,
+                  ecma_op_object_get (obj_p, magic_string_length_p),
+                  ret_value);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  uint32_t new_array_index = 0;
+
+  /* 2. */
+  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+
+  for (uint32_t index = 0;
+       index < len && ecma_is_completion_value_empty (ret_value);
+       index++, new_array_index++)
+  {
+    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+    ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, index_string_p), ret_value);
+
+    /* Using [[Put]] is equvalent to [[DefineOwnProperty]] in this case, so we use it for simplicity. */
+    ecma_completion_value_t put_comp = ecma_op_object_put (new_array_p,
+                                                           index_string_p,
+                                                           get_value,
+                                                           false);
+    JERRY_ASSERT (ecma_is_completion_value_normal (put_comp));
+    ecma_free_completion_value (put_comp);
+
+    ECMA_FINALIZE (get_value);
+    ecma_deref_ecma_string (index_string_p);
+  }
+
+  for (uint32_t arg_index = 0;
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index++)
+  {
+    /* 5.b */
+    if ((ecma_is_value_object (args[arg_index])) &&
+        (ecma_get_object_type (ecma_get_object_from_value (args[arg_index])) == ECMA_OBJECT_TYPE_ARRAY))
+    {
+      /* 5.b.ii */
+      ECMA_TRY_CATCH (arg_len_value,
+                      ecma_op_object_get (ecma_get_object_from_value (args[arg_index]),
+                                          magic_string_length_p),
+                      ret_value);
+      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, len_value, ret_value);
+
+      uint32_t arg_len = ecma_number_to_uint32 (arg_len_number);
+
+      for (uint32_t array_index = 0;
+           array_index < arg_len && ecma_is_completion_value_empty (ret_value);
+           array_index++, new_array_index++)
+      {
+        ecma_string_t *array_index_string_p = ecma_new_ecma_string_from_uint32 (array_index);
+
+        /* 5.b.iii.2 */
+        if (ecma_op_object_get_property (ecma_get_object_from_value (args[arg_index]),
+                                         array_index_string_p) != NULL)
+        {
+          ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (new_array_index);
+
+          ECMA_TRY_CATCH (get_value,
+                          ecma_op_object_get (ecma_get_object_from_value (args[arg_index]),
+                                              array_index_string_p),
+                          ret_value);
+
+          /* Using [[Put]] is equvalent to [[DefineOwnProperty]] in this case, so we use it for simplicity. */
+          ecma_completion_value_t put_comp = ecma_op_object_put (new_array_p,
+                                                                 new_array_index_string_p,
+                                                                 get_value,
+                                                                 false);
+          JERRY_ASSERT (ecma_is_completion_value_normal (put_comp));
+          ecma_free_completion_value (put_comp);
+
+          ECMA_FINALIZE (get_value);
+          ecma_deref_ecma_string (new_array_index_string_p);
+        }
+
+        ecma_deref_ecma_string (array_index_string_p);
+      }
+
+      ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+      ECMA_FINALIZE (arg_len_value);
+    }
+    else
+    {
+      ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (new_array_index);
+
+      /* Using [[Put]] is equvalent to [[DefineOwnProperty]] in this case, so we use it for simplicity. */
+      ecma_completion_value_t put_comp = ecma_op_object_put (new_array_p,
+                                                             new_array_index_string_p,
+                                                             args[arg_index],
+                                                             false);
+      JERRY_ASSERT (ecma_is_completion_value_normal (put_comp));
+      ecma_free_completion_value (put_comp);
+
+      ecma_deref_ecma_string (new_array_index_string_p);
+      new_array_index++;
+    }
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = new_array;
+  }
+  else
+  {
+    ecma_free_completion_value (new_array);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ECMA_FINALIZE (len_value);
+  ecma_deref_ecma_string (magic_string_length_p);
+  ECMA_FINALIZE (obj_this);
+
+  return ret_value;
+}
+
+/**
  * The Array.prototype object's 'forEach' routine
  *
  * See also:

@@ -51,8 +51,8 @@ typedef struct
   uint8_t flags;
   uint32_t recursion_depth;
   bytecode_ctx_t *bytecode_ctx_p;
-  ecma_char_t *pattern_p;
   re_token_t *current_token_p;
+  re_parser_ctx_t *parser_ctx_p;
 } regexp_compiler_ctx_t;
 
 ecma_completion_value_t

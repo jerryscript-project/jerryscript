@@ -179,7 +179,6 @@ parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
 {
   re_token_t re_tok;
   re_ctx_p->current_token_p = &re_tok;
-  ecma_char_t *pattern_p = re_ctx_p->pattern_p;
   bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
 
   uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
@@ -192,7 +191,7 @@ parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
 
   while (true)
   {
-    re_tok = re_parse_next_token (&pattern_p);
+    re_tok = re_parse_next_token (re_ctx_p->parser_ctx_p);
     uint32_t new_atom_start_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
     switch (re_tok.type)
@@ -356,7 +355,12 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, chars + 1, ecma_char_t);
   ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
   ecma_string_to_zt_string (pattern, pattern_start_p, zt_str_size);
-  re_ctx.pattern_p = pattern_start_p;
+
+  re_parser_ctx_t parser_ctx;
+  parser_ctx.pattern_start_p = pattern_start_p;
+  parser_ctx.current_char_p = pattern_start_p;
+  parser_ctx.number_of_groups = -1;
+  re_ctx.parser_ctx_p = &parser_ctx;
 
   /* 1. Add extra informations for bytecode header */
   append_u32 (&bc_ctx, 0);

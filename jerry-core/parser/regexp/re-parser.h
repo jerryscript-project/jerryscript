@@ -54,7 +54,7 @@ typedef uint8_t token_type_t;
 #define RE_CONTROL_CHAR_FF   0x000c /* \f */
 #define RE_CONTROL_CHAR_CR   0x000d /* \r */
 
-typedef struct re_token_t
+typedef struct
 {
   token_type_t type;
   uint32_t value;
@@ -63,10 +63,17 @@ typedef struct re_token_t
   bool greedy;
 } re_token_t;
 
+typedef struct
+{
+  ecma_char_t* pattern_start_p;
+  ecma_char_t* current_char_p;
+  int number_of_groups;
+} re_parser_ctx_t;
+
 operand
 parse_regexp_literal ();
 
 re_token_t
-re_parse_next_token (ecma_char_t **pattern);
+re_parse_next_token (re_parser_ctx_t *parser_ctx_p);
 
 #endif /* RE_PARSER_H */

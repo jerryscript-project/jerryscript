@@ -26,111 +26,119 @@
 #define BYTECODE_LEN(bc_ctx_p) (static_cast<uint32_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p))
 
 void
-regexp_dump_bytecode (bytecode_ctx_t *bc_ctx);
+regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
 
-static regexp_bytecode_t*
-realloc_regexp_bytecode_block (bytecode_ctx_t *bc_ctx)
+static re_bytecode_t*
+realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p)
 {
-  JERRY_ASSERT (bc_ctx->block_end_p - bc_ctx->block_start_p >= 0);
-  size_t old_size = static_cast<size_t> (bc_ctx->block_end_p - bc_ctx->block_start_p);
-  JERRY_ASSERT (!bc_ctx->current_p && !bc_ctx->block_end_p && !bc_ctx->block_start_p);
+  JERRY_ASSERT (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p >= 0);
+  size_t old_size = static_cast<size_t> (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
+  JERRY_ASSERT (!bc_ctx_p->current_p && !bc_ctx_p->block_end_p && !bc_ctx_p->block_start_p);
 
   size_t new_block_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
-  JERRY_ASSERT (bc_ctx->current_p - bc_ctx->block_start_p >= 0);
-  size_t current_ptr_offset = static_cast<size_t> (bc_ctx->current_p - bc_ctx->block_start_p);
+  JERRY_ASSERT (bc_ctx_p->current_p - bc_ctx_p->block_start_p >= 0);
+  size_t current_ptr_offset = static_cast<size_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
-  regexp_bytecode_t *new_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block (new_block_size,
+  re_bytecode_t *new_block_start_p = (re_bytecode_t *) mem_heap_alloc_block (new_block_size,
                                                                                      MEM_HEAP_ALLOC_SHORT_TERM);
-  if (bc_ctx->current_p)
+  if (bc_ctx_p->current_p)
   {
-    memcpy (new_block_start_p, bc_ctx->block_start_p, static_cast<size_t> (current_ptr_offset));
-    mem_heap_free_block (bc_ctx->block_start_p);
+    memcpy (new_block_start_p, bc_ctx_p->block_start_p, static_cast<size_t> (current_ptr_offset));
+    mem_heap_free_block (bc_ctx_p->block_start_p);
   }
-  bc_ctx->block_start_p = new_block_start_p;
-  bc_ctx->block_end_p = new_block_start_p + new_block_size;
-  bc_ctx->current_p = new_block_start_p + current_ptr_offset;
+  bc_ctx_p->block_start_p = new_block_start_p;
+  bc_ctx_p->block_end_p = new_block_start_p + new_block_size;
+  bc_ctx_p->current_p = new_block_start_p + current_ptr_offset;
 
-  return bc_ctx->current_p;
+  return bc_ctx_p->current_p;
 } /* realloc_regexp_bytecode_block */
 
 static void
-bytecode_list_append (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode)
+bytecode_list_append (re_bytecode_ctx_t *bc_ctx_p, re_bytecode_t bytecode)
 {
-  regexp_bytecode_t *current_p = bc_ctx->current_p;
-  if (current_p  + sizeof (regexp_bytecode_t) > bc_ctx->block_end_p)
+  re_bytecode_t *current_p = bc_ctx_p->current_p;
+  if (current_p  + sizeof (re_bytecode_t) > bc_ctx_p->block_end_p)
   {
-    current_p = realloc_regexp_bytecode_block (bc_ctx);
+    current_p = realloc_regexp_bytecode_block (bc_ctx_p);
   }
 
   *current_p = bytecode;
-  bc_ctx->current_p += sizeof (regexp_bytecode_t);
+  bc_ctx_p->current_p += sizeof (re_bytecode_t);
 } /* bytecode_list_append */
 
 static void
-bytecode_list_insert (bytecode_ctx_t *bc_ctx, regexp_bytecode_t bytecode, size_t offset)
+bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, re_bytecode_t bytecode, size_t offset)
 {
-  regexp_bytecode_t *current_p = bc_ctx->current_p;
-  if (current_p  + sizeof (regexp_bytecode_t) > bc_ctx->block_end_p)
+  re_bytecode_t *current_p = bc_ctx_p->current_p;
+  if (current_p  + sizeof (re_bytecode_t) > bc_ctx_p->block_end_p)
   {
-    realloc_regexp_bytecode_block (bc_ctx);
+    realloc_regexp_bytecode_block (bc_ctx_p);
   }
 
-  regexp_bytecode_t *src = bc_ctx->block_start_p + offset;
-  regexp_bytecode_t *dest = src + sizeof (regexp_bytecode_t);
+  re_bytecode_t *src_p = bc_ctx_p->block_start_p + offset;
+  re_bytecode_t *dest_p = src_p + sizeof (re_bytecode_t);
 
-  regexp_bytecode_t *tmp_block_start_p = (regexp_bytecode_t *) mem_heap_alloc_block ((BYTECODE_LEN (bc_ctx) - offset),
+  re_bytecode_t *tmp_block_start_p = (re_bytecode_t *) mem_heap_alloc_block ((BYTECODE_LEN (bc_ctx_p) - offset),
                                                                                      MEM_HEAP_ALLOC_SHORT_TERM);
-  memcpy (tmp_block_start_p, src, (size_t) (BYTECODE_LEN (bc_ctx) - offset));
-  memcpy (dest, tmp_block_start_p, (size_t) (BYTECODE_LEN (bc_ctx) - offset));
+  memcpy (tmp_block_start_p, src_p, (size_t) (BYTECODE_LEN (bc_ctx_p) - offset));
+  memcpy (dest_p, tmp_block_start_p, (size_t) (BYTECODE_LEN (bc_ctx_p) - offset));
   mem_heap_free_block (tmp_block_start_p);
 
-  *src = bytecode;
-  bc_ctx->current_p += sizeof (regexp_bytecode_t);
+  *src_p = bytecode;
+  bc_ctx_p->current_p += sizeof (re_bytecode_t);
 } /* bytecode_list_insert  */
 
 static void
-append_opcode (bytecode_ctx_t *bc_ctx,
-               regexp_opcode_t opcode)
+append_opcode (re_bytecode_ctx_t *bc_ctx_p,
+               re_opcode_t opcode)
 {
-  bytecode_list_append (bc_ctx, (regexp_bytecode_t) opcode);
+  bytecode_list_append (bc_ctx_p, (re_bytecode_t) opcode);
 }
 
 static void
-append_u32 (bytecode_ctx_t *bc_ctx,
+append_u32 (re_bytecode_ctx_t *bc_ctx_p,
             uint32_t value)
 {
-  bytecode_list_append (bc_ctx, (regexp_bytecode_t) value);
+  bytecode_list_append (bc_ctx_p, (re_bytecode_t) value);
 }
 
 static void
-insert_opcode (bytecode_ctx_t *bc_ctx,
-               uint32_t offset,
-               regexp_opcode_t opcode)
+append_jump_offset (re_bytecode_ctx_t *bc_ctx_p,
+                    uint32_t value)
 {
-  bytecode_list_insert (bc_ctx, (regexp_bytecode_t) opcode, offset);
+  value += static_cast<uint32_t> (sizeof (re_bytecode_t));
+  bytecode_list_append (bc_ctx_p, (re_bytecode_t) value);
 }
 
 static void
-insert_u32 (bytecode_ctx_t *bc_ctx,
+insert_opcode (re_bytecode_ctx_t *bc_ctx_p,
+               uint32_t offset,
+               re_opcode_t opcode)
+{
+  bytecode_list_insert (bc_ctx_p, (re_bytecode_t) opcode, offset);
+}
+
+static void
+insert_u32 (re_bytecode_ctx_t *bc_ctx_p,
             uint32_t offset,
             uint32_t value)
 {
-  bytecode_list_insert (bc_ctx, (regexp_bytecode_t) value, offset);
+  bytecode_list_insert (bc_ctx_p, (re_bytecode_t) value, offset);
 }
 
-regexp_opcode_t
-get_opcode (regexp_bytecode_t **bc_p)
+re_opcode_t
+get_opcode (re_bytecode_t **bc_p)
 {
-  regexp_bytecode_t bytecode = **bc_p;
+  re_bytecode_t bytecode = **bc_p;
   (*bc_p)++;
-  return (regexp_opcode_t) bytecode;
+  return (re_opcode_t) bytecode;
 }
 
 uint32_t
-get_value (regexp_bytecode_t **bc_p)
+get_value (re_bytecode_t **bc_p)
 {
   /* FIXME: Read 32bit! */
-  regexp_bytecode_t bytecode = **bc_p;
+  re_bytecode_t bytecode = **bc_p;
   (*bc_p)++;
   return (uint32_t) bytecode;
 }
@@ -139,7 +147,7 @@ get_value (regexp_bytecode_t **bc_p)
  * Insert simple atom iterator
  */
 static void
-insert_simple_iterator (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+insert_simple_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                         uint32_t new_atom_start_offset) /**< atom start offset */
 {
   uint32_t atom_code_length;
@@ -171,15 +179,128 @@ insert_simple_iterator (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler co
 } /* insert_simple_iterator */
 
 /**
+ * Get the type of a group start
+ */
+static re_opcode_t
+get_start_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                       bool is_capturable) /**< is capturabel group */
+{
+  if (is_capturable)
+  {
+    if (re_ctx_p->current_token_p->qmin == 0)
+    {
+      if (re_ctx_p->current_token_p->greedy)
+      {
+        return RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START;
+      }
+      else
+      {
+        return RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START;
+      }
+    }
+    else
+    {
+      return RE_OP_CAPTURE_GROUP_START;
+    }
+  }
+  else
+  {
+    if (re_ctx_p->current_token_p->qmin == 0)
+    {
+      if (re_ctx_p->current_token_p->greedy)
+      {
+        return RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START;
+      }
+      else
+      {
+        return RE_OP_NON_CAPTURE_NON_GREEDY_ZERO_GROUP_START;
+      }
+    }
+    else
+    {
+      return RE_OP_NON_CAPTURE_GROUP_START;
+    }
+  }
+
+  JERRY_UNREACHABLE ();
+  return 0;
+} /* get_start_opcode_type */
+
+/**
+ * Get the type of a group end
+ */
+static re_opcode_t
+get_end_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                     bool is_capturable) /**< is capturabel group */
+{
+  if (is_capturable)
+  {
+    if (re_ctx_p->current_token_p->greedy)
+    {
+      return RE_OP_CAPTURE_GREEDY_GROUP_END;
+    }
+    return RE_OP_CAPTURE_NON_GREEDY_GROUP_END;
+  }
+  else
+  {
+    if (re_ctx_p->current_token_p->greedy)
+    {
+      return RE_OP_NON_CAPTURE_GREEDY_GROUP_END;
+    }
+    return RE_OP_NON_CAPTURE_NON_GREEDY_GROUP_END;
+  }
+
+  JERRY_UNREACHABLE ();
+  return 0;
+} /* get_end_opcode_type */
+
+static void
+insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                   uint32_t group_start_offset, /**< offset of group start */
+                   uint32_t idx, /**< index of group */
+                   bool is_capturable) /**< is capturabel group */
+{
+  uint32_t qmin, qmax;
+  re_opcode_t start_opcode = get_start_opcode_type (re_ctx_p, is_capturable);
+  re_opcode_t end_opcode = get_end_opcode_type (re_ctx_p, is_capturable);
+  uint32_t start_head_offset_len;
+
+  qmin = re_ctx_p->current_token_p->qmin;
+  qmax = re_ctx_p->current_token_p->qmax;
+  JERRY_ASSERT (qmin <= qmax);
+
+  start_head_offset_len = (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, group_start_offset, idx);
+  insert_u32 (re_ctx_p->bytecode_ctx_p, group_start_offset, start_opcode);
+  start_head_offset_len = (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - start_head_offset_len;
+  append_opcode (re_ctx_p->bytecode_ctx_p, end_opcode);
+  append_u32 (re_ctx_p->bytecode_ctx_p, idx);
+  append_u32 (re_ctx_p->bytecode_ctx_p, qmin);
+  append_u32 (re_ctx_p->bytecode_ctx_p, qmax);
+
+  group_start_offset += start_head_offset_len;
+  append_jump_offset (re_ctx_p->bytecode_ctx_p,
+                      (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
+
+  if (start_opcode != RE_OP_CAPTURE_GROUP_START && start_opcode != RE_OP_NON_CAPTURE_GROUP_START)
+  {
+    insert_u32 (re_ctx_p->bytecode_ctx_p,
+                group_start_offset,
+                (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
+  }
+} /* insert_into_group */
+
+/**
  * Parse alternatives
  */
 static ecma_completion_value_t
-parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                    bool expect_eof) /**< expect end of file */
 {
+  uint32_t idx;
   re_token_t re_tok;
   re_ctx_p->current_token_p = &re_tok;
-  bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
+  re_bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
 
   uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
@@ -196,6 +317,25 @@ parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
 
     switch (re_tok.type)
     {
+      case RE_TOK_START_CAPTURE_GROUP:
+      {
+        idx = re_ctx_p->num_of_captures++;
+        JERRY_DDLOG ("Compile a capture group start (idx: %d)\n", idx);
+
+        parse_alternative (re_ctx_p, false);
+
+        insert_into_group (re_ctx_p, new_atom_start_offset, idx, true);
+        break;
+      }
+      case RE_TOK_START_NON_CAPTURE_GROUP:
+      {
+        JERRY_DDLOG ("Compile a non-capture group start (idx: %d)\n", idx);
+        idx = re_ctx_p->num_of_non_captures++;
+        parse_alternative (re_ctx_p, false);
+
+        insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
+        break;
+      }
       case RE_TOK_CHAR:
       {
         JERRY_DDLOG ("Compile character token: %c, qmin: %d, qmax: %d\n",
@@ -257,7 +397,7 @@ parse_alternative (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
  * Parse RegExp flags (global, ignoreCase, multiline)
  */
 static ecma_completion_value_t
-parse_regexp_flags (regexp_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+parse_regexp_flags (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                     ecma_string_t *flags) /**< flags */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -329,8 +469,10 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
                          ecma_string_t *flags) /**< flags */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  regexp_compiler_ctx_t re_ctx;
+  re_compiler_ctx_t re_ctx;
   re_ctx.flags = 0;
+  re_ctx.num_of_captures = 0;
+  re_ctx.num_of_non_captures = 0;
   re_ctx.recursion_depth = 0;
 
   if (flags != NULL)
@@ -344,7 +486,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
     }
   }
 
-  bytecode_ctx_t bc_ctx;
+  re_bytecode_ctx_t bc_ctx;
   bc_ctx.block_start_p = NULL;
   bc_ctx.block_end_p = NULL;
   bc_ctx.current_p = NULL;
@@ -363,7 +505,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   re_ctx.parser_ctx_p = &parser_ctx;
 
   /* 1. Add extra informations for bytecode header */
-  append_u32 (&bc_ctx, 0);
+  append_u32 (&bc_ctx, (uint32_t) re_ctx.flags);
   append_u32 (&bc_ctx, 2); // FIXME: Count the number of capture groups
   append_u32 (&bc_ctx, 0); // FIXME: Count the number of non-capture groups
 
@@ -392,15 +534,15 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
  * RegExp bytecode dumper
  */
 void
-regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
+regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
 {
-  regexp_bytecode_t *bytecode_p = bc_ctx->block_start_p;
+  re_bytecode_t *bytecode_p = bc_ctx_p->block_start_p;
   JERRY_DLOG ("%d %d %d | ",
               get_value (&bytecode_p),
               get_value (&bytecode_p),
               get_value (&bytecode_p));
 
-  regexp_opcode_t op;
+  re_opcode_t op;
   while ((op = get_opcode (&bytecode_p)))
   {
     switch (op)
@@ -414,6 +556,74 @@ regexp_dump_bytecode (bytecode_ctx_t *bc_ctx)
       {
         JERRY_DLOG ("CHAR ");
         JERRY_DLOG ("%c, ", (char) get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
+      {
+        JERRY_DLOG ("N");
+        /* FALLTHRU */
+      }
+      case RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START:
+      {
+        JERRY_DLOG ("GZ_START ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_CAPTURE_GROUP_START:
+      {
+        JERRY_DLOG ("START ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_CAPTURE_NON_GREEDY_GROUP_END:
+      {
+        JERRY_DLOG ("N");
+        /* FALLTHRU */
+      }
+      case RE_OP_CAPTURE_GREEDY_GROUP_END:
+      {
+        JERRY_DLOG ("G_END ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_NON_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
+      {
+        JERRY_DLOG ("N");
+        /* FALLTHRU */
+      }
+      case RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START:
+      {
+        JERRY_DLOG ("GZ__START ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_NON_CAPTURE_GROUP_START:
+      {
+        JERRY_DLOG ("NC_START ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_NON_CAPTURE_NON_GREEDY_GROUP_END:
+      {
+        JERRY_DLOG ("N");
+        /* FALLTHRU */
+      }
+      case RE_OP_NON_CAPTURE_GREEDY_GROUP_END:
+      {
+        JERRY_DLOG ("G_NC_END ");
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d ", get_value (&bytecode_p));
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AT_START:

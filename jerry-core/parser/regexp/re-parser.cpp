@@ -408,7 +408,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     case ')':
     {
       advance = 1;
-      result.type = RE_TOK_START_CAPTURE_GROUP;
+      result.type = RE_TOK_END_GROUP;
       break;
     }
     case '[':

@@ -29,7 +29,7 @@
 
 typedef struct re_matcher_ctx
 {
-  const regexp_bytecode_t *bytecode;
+  const re_bytecode_t *bytecode;
   const ecma_char_t **saved_p;
   uint32_t num_of_captures;
   uint32_t num_of_non_captures;
@@ -40,7 +40,7 @@ extern ecma_completion_value_t
 ecma_op_create_regexp_object (ecma_string_t *pattern, ecma_string_t *flags);
 
 extern ecma_completion_value_t
-ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p);
+ecma_regexp_exec_helper (re_bytecode_t *bc_p, const ecma_char_t *str_p);
 
 /**
  * @}

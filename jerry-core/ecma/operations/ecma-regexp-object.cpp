@@ -125,10 +125,10 @@ utf8_backtrack (const ecma_char_t* str_p)
 
 static const ecma_char_t*
 regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
-              regexp_bytecode_t *bc_p,
+              re_bytecode_t *bc_p,
               const ecma_char_t *str_p)
 {
-  regexp_opcode_t op;
+  re_opcode_t op;
 
   while ((op = get_opcode (&bc_p)))
   {
@@ -166,7 +166,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
       case RE_OP_SAVE_AT_START:
       {
         const ecma_char_t *old_start;
-        regexp_bytecode_t *old_bc_p;
+        re_bytecode_t *old_bc_p;
 
         old_start = re_ctx->saved_p[RE_GLOBAL_START_IDX];
         re_ctx->saved_p[RE_GLOBAL_START_IDX] = str_p;
@@ -297,7 +297,7 @@ regexp_match (re_matcher_ctx *re_ctx __attr_unused___,
 } /* ecma_regexp_match */
 
 ecma_completion_value_t
-ecma_regexp_exec_helper (regexp_bytecode_t *bc_p, const ecma_char_t *str_p)
+ecma_regexp_exec_helper (re_bytecode_t *bc_p, const ecma_char_t *str_p)
 {
   re_matcher_ctx re_ctx;
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();

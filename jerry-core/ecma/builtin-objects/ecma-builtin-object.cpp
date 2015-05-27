@@ -15,6 +15,8 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -128,10 +130,24 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (arg))
+  {
+    /* 1. */
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+    /* 2-5. */
+    ret_value = ecma_builtin_helper_object_get_properties (obj_p, false);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_get_own_property_names */
 
 /**
@@ -240,10 +256,24 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg, /**< 'this' arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_keys (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                  ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (arg))
+  {
+    /* 1. */
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+    /* 3-6. */
+    ret_value = ecma_builtin_helper_object_get_properties (obj_p, true);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_keys */
 
 /**

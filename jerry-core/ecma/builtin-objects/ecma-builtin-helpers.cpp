@@ -16,6 +16,7 @@
 
 #include "ecma-builtin-helpers.h"
 
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-function-object.h"
@@ -186,6 +187,88 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
 
   return ret_value;
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
+
+
+/**
+ * The Object.keys and Object.getOwnPropertyName routine's common part.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.2.3.4 steps 2-5
+ *          ECMA-262 v5, 15.2.3.14 steps 3-6
+ *
+ * @return completion value - Array of property names.
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
+                                           bool only_enumerable_properties) /** < list enumerable properties? */
+{
+  JERRY_ASSERT (obj_p != NULL);
+
+  ecma_completion_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  JERRY_ASSERT (ecma_is_completion_value_normal (new_array));
+  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+  uint32_t index = 0;
+
+  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
+       property_p != NULL;
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p), index++)
+  {
+    ecma_string_t *property_name_p;
+
+    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_accessor_property.name_p);
+    }
+    else
+    {
+      continue;
+    }
+
+    if (only_enumerable_properties && !ecma_is_property_enumerable (property_p))
+    {
+      continue;
+    }
+
+    JERRY_ASSERT (property_name_p != NULL);
+
+    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+
+    ecma_property_descriptor_t item_prop_desc = ecma_make_empty_property_descriptor ();
+    {
+      item_prop_desc.is_value_defined = true;
+      item_prop_desc.value = ecma_make_string_value (property_name_p);
+
+      item_prop_desc.is_writable_defined = true;
+      item_prop_desc.is_writable = true;
+
+      item_prop_desc.is_enumerable_defined = true;
+      item_prop_desc.is_enumerable = true;
+
+      item_prop_desc.is_configurable_defined = true;
+      item_prop_desc.is_configurable = true;
+    }
+
+    ecma_completion_value_t completion = ecma_op_object_define_own_property (new_array_p,
+                                                                             index_string_p,
+                                                                             &item_prop_desc,
+                                                                             false);
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+
+    ecma_free_completion_value (completion);
+    ecma_deref_ecma_string (index_string_p);
+  }
+
+  return new_array;
+} /* ecma_builtin_helper_object_get_properties */
 
 /**
  * @}

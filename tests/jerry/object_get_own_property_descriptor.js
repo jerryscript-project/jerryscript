@@ -70,3 +70,16 @@ assert (typeof(desc.set) === 'function');
 assert (desc.configurable);
 assert (desc.enumerable);
 assert (obj.foo === 0)
+
+var array_desc = Object.getOwnPropertyDescriptor(Array, "prototype");
+assert (array_desc.configurable === false);
+assert (array_desc.writable === false);
+assert (array_desc.enumerable === false);
+
+var obj_undef;
+try {
+    Object.getOwnPropertyDescriptor (obj_undef, "fail");
+    assert (false);
+} catch (e) {
+    assert (e instanceof TypeError);
+}

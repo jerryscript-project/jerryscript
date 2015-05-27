@@ -279,7 +279,7 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
   ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
 
   // 3.
-  ecma_property_t *prop_p = ecma_op_general_object_get_own_property (obj_p, name_str_p);
+  ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, name_str_p);
 
   if (prop_p != NULL)
   {

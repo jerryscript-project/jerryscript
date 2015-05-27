@@ -43,7 +43,7 @@ typedef struct
 
 literal create_empty_literal (void);
 literal create_literal_from_num (ecma_number_t);
-literal create_literal_from_str (const char *, ecma_length_t);
+literal create_literal_from_str (const ecma_char_t*, ecma_length_t);
 literal create_literal_from_str_compute_len (const char *);
 literal create_literal_from_zt (const ecma_char_t *, ecma_length_t);
 bool literal_equal (literal, literal);

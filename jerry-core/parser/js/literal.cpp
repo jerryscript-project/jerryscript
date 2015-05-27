@@ -39,11 +39,17 @@ create_literal_from_num (ecma_number_t num)
   return ret;
 }
 
+/**
+ * Create literal from string
+ *
+ * @return literal descriptor
+ */
 literal
-create_literal_from_str (const char *s, ecma_length_t len)
+create_literal_from_str (const ecma_char_t *s, /**< characters buffer */
+                         ecma_length_t len) /**< string's length */
 {
-  return create_literal_from_zt ((const ecma_char_t *) s, len);
-}
+  return create_literal_from_zt (s, len);
+} /* create_literal_from_str */
 
 literal
 create_literal_from_str_compute_len (const char *s)

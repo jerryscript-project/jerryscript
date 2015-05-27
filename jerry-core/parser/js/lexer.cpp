@@ -118,34 +118,38 @@ current_token_equals_to (const char *str)
   return false;
 }
 
+/**
+ * Compare specified string to literal
+ *
+ * @return true - if the literal contains exactly the specified string,
+ *         false - otherwise.
+ */
 static bool
-current_token_equals_to_literal (literal lit)
+string_equals_to_literal (const ecma_char_t *str_p, /**< characters buffer */
+                          ecma_length_t length, /**< string's length */
+                          literal lit) /**< literal */
 {
   if (lit.type == LIT_STR)
   {
-    if (lit.data.lp.length != (ecma_length_t) (buffer - token_start))
-    {
-      return false;
-    }
-    if (!strncmp ((const char *) lit.data.lp.str, token_start, lit.data.lp.length))
+    if (lit.data.lp.length == length
+        && strncmp ((const char *) lit.data.lp.str, (const char*) str_p, length) == 0)
     {
       return true;
     }
   }
   else if (lit.type == LIT_MAGIC_STR)
   {
-    const char *str = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
-    if (strlen (str) != (size_t) (buffer - token_start))
-    {
-      return false;
-    }
-    if (!strncmp (str, token_start, strlen (str)))
+    const char *magic_str_p = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
+
+    if (strlen (magic_str_p) == length
+        && strncmp (magic_str_p, (const char*) str_p, length) == 0)
     {
       return true;
     }
   }
+
   return false;
-}
+} /* string_equals_to_literal */
 
 static literal
 adjust_string_ptrs (literal lit, size_t diff)
@@ -189,38 +193,52 @@ add_string_to_string_cache (const ecma_char_t* str, ecma_length_t length)
   return res;
 }
 
-static literal
-add_current_token_to_string_cache (void)
-{
-  return add_string_to_string_cache ((ecma_char_t*) token_start, (ecma_length_t) (buffer - token_start));
-}
-
+/**
+ * Convert string to token of specified type
+ *
+ * @return token descriptor
+ */
 static token
-convert_current_token_to_token (token_type tt)
+convert_string_to_token (token_type tt, /**< token type */
+                         const ecma_char_t *str_p, /**< characters buffer */
+                         ecma_length_t length) /**< string's length */
 {
-  JERRY_ASSERT (token_start);
+  JERRY_ASSERT (str_p != NULL);
 
   for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     const literal lit = STACK_ELEMENT (literals, i);
     if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
-        && current_token_equals_to_literal (lit))
+        && string_equals_to_literal (str_p, length, lit))
     {
       return create_token (tt, i);
     }
   }
 
-  literal lit = create_literal_from_str (token_start, (ecma_length_t) (buffer - token_start));
+  literal lit = create_literal_from_str (str_p, length);
   JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
   if (lit.type == LIT_STR)
   {
-    lit = add_current_token_to_string_cache ();
+    lit = add_string_to_string_cache (str_p, length);
   }
 
   STACK_PUSH (literals, lit);
 
   return create_token (tt, (literal_index_t) (STACK_SIZE (literals) - 1));
 }
+
+/**
+ * Convert string, currently processed by lexer (see also: token_start, buffer) to token of specified type
+ *
+ * @return token descriptor
+ */
+static token
+convert_current_token_to_token (token_type tt) /**< token type */
+{
+  JERRY_ASSERT (token_start != NULL);
+
+  return convert_string_to_token (tt, (const ecma_char_t*) token_start, (ecma_length_t) (buffer - token_start));
+} /* convert_current_token_to_token */
 
 /* If TOKEN represents a keyword, return decoded keyword,
    if TOKEN represents a Future Reserved Word, return KW_RESERVED,

@@ -313,6 +313,11 @@ extern ecma_number_t ecma_int32_to_number (int32_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
 extern ecma_length_t ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, ssize_t buffer_size);
 
+/* ecma-helpers-char.cpp */
+extern bool ecma_char_is_new_line (ecma_char_t c);
+extern bool ecma_char_is_carriage_return (ecma_char_t c);
+extern bool ecma_char_is_line_terminator (ecma_char_t c);
+
 #endif /* !JERRY_ECMA_HELPERS_H */
 
 /**

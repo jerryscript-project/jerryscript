@@ -1,6 +1,9 @@
-> Escape sequences
-./tests/jerry-test-suite/06/06-001.js
-./tests/jerry-test-suite/08/08.04/08.04-017.js
+> Escape sequences (<NUL> character case)
+./tests/jerry-test-suite/08/08.04/08.04-002.js
+./tests/jerry-test-suite/12/12.05/12.05-006.js
+
+> Unicode
+./tests/jerry-test-suite/06/06-005.js
 
 > Regular expressions
 ./tests/jerry-test-suite/07/07.08/07.08.05/07.08.05-001.js

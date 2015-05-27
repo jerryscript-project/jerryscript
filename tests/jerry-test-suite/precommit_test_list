@@ -1,7 +1,7 @@
+./tests/jerry-test-suite/06/06-001.js
 ./tests/jerry-test-suite/06/06-002.js
 ./tests/jerry-test-suite/06/06-003.js
 ./tests/jerry-test-suite/06/06-004.js
-./tests/jerry-test-suite/06/06-005.js
 ./tests/jerry-test-suite/07/07.06/07.06.01/07.06.01-001.js
 ./tests/jerry-test-suite/07/07.09/07.09-001.js
 ./tests/jerry-test-suite/07/07.09/07.09-002.js
@@ -31,7 +31,6 @@
 ./tests/jerry-test-suite/08/08.03/08.03-003.js
 ./tests/jerry-test-suite/08/08.03/08.03-004.js
 ./tests/jerry-test-suite/08/08.04/08.04-001.js
-./tests/jerry-test-suite/08/08.04/08.04-002.js
 ./tests/jerry-test-suite/08/08.04/08.04-003.js
 ./tests/jerry-test-suite/08/08.04/08.04-004.js
 ./tests/jerry-test-suite/08/08.04/08.04-005.js
@@ -46,6 +45,7 @@
 ./tests/jerry-test-suite/08/08.04/08.04-014.js
 ./tests/jerry-test-suite/08/08.04/08.04-015.js
 ./tests/jerry-test-suite/08/08.04/08.04-016.js
+./tests/jerry-test-suite/08/08.04/08.04-017.js
 ./tests/jerry-test-suite/08/08.05/08.05-001.js
 ./tests/jerry-test-suite/08/08.05/08.05-002.js
 ./tests/jerry-test-suite/08/08.05/08.05-003.js
@@ -868,7 +868,6 @@
 ./tests/jerry-test-suite/12/12.05/12.05-003.js
 ./tests/jerry-test-suite/12/12.05/12.05-004.js
 ./tests/jerry-test-suite/12/12.05/12.05-005.js
-./tests/jerry-test-suite/12/12.05/12.05-006.js
 ./tests/jerry-test-suite/12/12.05/12.05-007.js
 ./tests/jerry-test-suite/12/12.05/12.05-008.js
 ./tests/jerry-test-suite/12/12.06/12.06.01/12.06.01-001.js

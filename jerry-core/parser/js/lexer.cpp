@@ -104,20 +104,6 @@ create_token (token_type type, literal_index_t uid)
   return ret;
 }
 
-static bool
-current_token_equals_to (const char *str)
-{
-  if (strlen (str) != (size_t) (buffer - token_start))
-  {
-    return false;
-  }
-  if (!strncmp (str, token_start, (size_t) (buffer - token_start)))
-  {
-    return true;
-  }
-  return false;
-}
-
 /**
  * Compare specified string to literal
  *
@@ -228,269 +214,138 @@ convert_string_to_token (token_type tt, /**< token type */
 }
 
 /**
- * Convert string, currently processed by lexer (see also: token_start, buffer) to token of specified type
+ * Try to decore specified string as keyword
  *
- * @return token descriptor
+ * @return if specified string represents a keyword, return corresponding keyword token,
+ *         else if it is 'null' - return TOK_NULL token,
+ *         else if it is 'true' or 'false' - return TOK_BOOL with corresponding boolean value,
+ *         else - return empty_token.
  */
 static token
-convert_current_token_to_token (token_type tt) /**< token type */
+decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
+                size_t length) /**< string's length */
 {
-  JERRY_ASSERT (token_start != NULL);
+  typedef struct
+  {
+    const char *keyword_p;
+    keyword keyword_id;
+  } kw_descr_t;
 
-  return convert_string_to_token (tt, (const ecma_char_t*) token_start, (ecma_length_t) (buffer - token_start));
-} /* convert_current_token_to_token */
+  const kw_descr_t keywords[] =
+  {
+#define KW_DESCR(literal, keyword_id) { literal, keyword_id }
+    KW_DESCR ("break", KW_BREAK),
+    KW_DESCR ("case", KW_CASE),
+    KW_DESCR ("catch", KW_CATCH),
+    KW_DESCR ("class", KW_CLASS),
+    KW_DESCR ("const", KW_CONST),
+    KW_DESCR ("continue", KW_CONTINUE),
+    KW_DESCR ("debugger", KW_DEBUGGER),
+    KW_DESCR ("default", KW_DEFAULT),
+    KW_DESCR ("delete", KW_DELETE),
+    KW_DESCR ("do", KW_DO),
+    KW_DESCR ("else", KW_ELSE),
+    KW_DESCR ("enum", KW_ENUM),
+    KW_DESCR ("export", KW_EXPORT),
+    KW_DESCR ("extends", KW_EXTENDS),
+    KW_DESCR ("finally", KW_FINALLY),
+    KW_DESCR ("for", KW_FOR),
+    KW_DESCR ("function", KW_FUNCTION),
+    KW_DESCR ("if", KW_IF),
+    KW_DESCR ("in", KW_IN),
+    KW_DESCR ("instanceof", KW_INSTANCEOF),
+    KW_DESCR ("interface", KW_INTERFACE),
+    KW_DESCR ("import", KW_IMPORT),
+    KW_DESCR ("implements", KW_IMPLEMENTS),
+    KW_DESCR ("let", KW_LET),
+    KW_DESCR ("new", KW_NEW),
+    KW_DESCR ("package", KW_PACKAGE),
+    KW_DESCR ("private", KW_PRIVATE),
+    KW_DESCR ("protected", KW_PROTECTED),
+    KW_DESCR ("public", KW_PUBLIC),
+    KW_DESCR ("return", KW_RETURN),
+    KW_DESCR ("static", KW_STATIC),
+    KW_DESCR ("super", KW_SUPER),
+    KW_DESCR ("switch", KW_SWITCH),
+    KW_DESCR ("this", KW_THIS),
+    KW_DESCR ("throw", KW_THROW),
+    KW_DESCR ("try", KW_TRY),
+    KW_DESCR ("typeof", KW_TYPEOF),
+    KW_DESCR ("var", KW_VAR),
+    KW_DESCR ("void", KW_VOID),
+    KW_DESCR ("while", KW_WHILE),
+    KW_DESCR ("with", KW_WITH),
+    KW_DESCR ("yield", KW_YIELD)
+#undef KW_DESCR
+  };
 
-/* If TOKEN represents a keyword, return decoded keyword,
-   if TOKEN represents a Future Reserved Word, return KW_RESERVED,
-   otherwise return KW_NONE.  */
-static token
-decode_keyword (void)
-{
-  if (current_token_equals_to ("break"))
+  keyword kw = KW_NONE;
+
+  for (uint32_t i = 0; i < sizeof (keywords) / sizeof (kw_descr_t); i++)
   {
-    return create_token (TOK_KEYWORD, KW_BREAK);
-  }
-  if (current_token_equals_to ("case"))
-  {
-    return create_token (TOK_KEYWORD, KW_CASE);
-  }
-  if (current_token_equals_to ("catch"))
-  {
-    return create_token (TOK_KEYWORD, KW_CATCH);
-  }
-  if (current_token_equals_to ("class"))
-  {
-    return create_token (TOK_KEYWORD, KW_CLASS);
-  }
-  if (current_token_equals_to ("const"))
-  {
-    return create_token (TOK_KEYWORD, KW_CONST);
-  }
-  if (current_token_equals_to ("continue"))
-  {
-    return create_token (TOK_KEYWORD, KW_CONTINUE);
-  }
-  if (current_token_equals_to ("debugger"))
-  {
-    return create_token (TOK_KEYWORD, KW_DEBUGGER);
-  }
-  if (current_token_equals_to ("default"))
-  {
-    return create_token (TOK_KEYWORD, KW_DEFAULT);
-  }
-  if (current_token_equals_to ("delete"))
-  {
-    return create_token (TOK_KEYWORD, KW_DELETE);
-  }
-  if (current_token_equals_to ("do"))
-  {
-    return create_token (TOK_KEYWORD, KW_DO);
-  }
-  if (current_token_equals_to ("else"))
-  {
-    return create_token (TOK_KEYWORD, KW_ELSE);
-  }
-  if (current_token_equals_to ("enum"))
-  {
-    return create_token (TOK_KEYWORD, KW_ENUM);
-  }
-  if (current_token_equals_to ("export"))
-  {
-    return create_token (TOK_KEYWORD, KW_EXPORT);
-  }
-  if (current_token_equals_to ("extends"))
-  {
-    return create_token (TOK_KEYWORD, KW_EXTENDS);
-  }
-  if (current_token_equals_to ("false"))
-  {
-    return create_token (TOK_BOOL, false);
-  }
-  if (current_token_equals_to ("finally"))
-  {
-    return create_token (TOK_KEYWORD, KW_FINALLY);
-  }
-  if (current_token_equals_to ("for"))
-  {
-    return create_token (TOK_KEYWORD, KW_FOR);
-  }
-  if (current_token_equals_to ("function"))
-  {
-    return create_token (TOK_KEYWORD, KW_FUNCTION);
-  }
-  if (current_token_equals_to ("if"))
-  {
-    return create_token (TOK_KEYWORD, KW_IF);
-  }
-  if (current_token_equals_to ("in"))
-  {
-    return create_token (TOK_KEYWORD, KW_IN);
-  }
-  if (current_token_equals_to ("instanceof"))
-  {
-    return create_token (TOK_KEYWORD, KW_INSTANCEOF);
-  }
-  if (current_token_equals_to ("interface"))
-  {
-    if (strict_mode)
+    if (strlen (keywords[i].keyword_p) == length
+        && !strncmp (keywords[i].keyword_p, (const char *) str_p, length))
     {
-      return create_token (TOK_KEYWORD, KW_INTERFACE);
+      kw = keywords[i].keyword_id;
+      break;
+    }
+  }
+
+  if (!strict_mode)
+  {
+    switch (kw)
+    {
+      case KW_INTERFACE:
+      case KW_IMPLEMENTS:
+      case KW_LET:
+      case KW_PACKAGE:
+      case KW_PRIVATE:
+      case KW_PROTECTED:
+      case KW_PUBLIC:
+      case KW_STATIC:
+      case KW_YIELD:
+      {
+        return convert_string_to_token (TOK_NAME, str_p, (ecma_length_t) length);
+      }
+
+      default:
+      {
+        break;
+      }
+    }
+  }
+
+  if (kw != KW_NONE)
+  {
+    return create_token (TOK_KEYWORD, kw);
+  }
+  else
+  {
+    const ecma_char_t *false_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_FALSE);
+    const ecma_char_t *true_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_TRUE);
+    const ecma_char_t *null_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_NULL);
+
+    if (strlen ((const char*) false_p) == length
+        && !strncmp ((const char*) str_p, (const char*) false_p, length))
+    {
+      return create_token (TOK_BOOL, false);
+    }
+    else if (strlen ((const char*) true_p) == length
+             && !strncmp ((const char*) str_p, (const char*) true_p, length))
+    {
+      return create_token (TOK_BOOL, true);
+    }
+    else if (strlen ((const char*) null_p) == length
+             && !strncmp ((const char*) str_p, (const char*) null_p, length))
+    {
+      return create_token (TOK_NULL, 0);
     }
     else
     {
-      return convert_current_token_to_token (TOK_NAME);
+      return empty_token;
     }
   }
-  if (current_token_equals_to ("import"))
-  {
-    return create_token (TOK_KEYWORD, KW_IMPORT);
-  }
-  if (current_token_equals_to ("implements"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_IMPLEMENTS);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("let"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_LET);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("new"))
-  {
-    return create_token (TOK_KEYWORD, KW_NEW);
-  }
-  if (current_token_equals_to ("null"))
-  {
-    return create_token (TOK_NULL, 0);
-  }
-  if (current_token_equals_to ("package"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_PACKAGE);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("private"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_PRIVATE);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("protected"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_PROTECTED);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("public"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_PUBLIC);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("return"))
-  {
-    return create_token (TOK_KEYWORD, KW_RETURN);
-  }
-  if (current_token_equals_to ("static"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_STATIC);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  if (current_token_equals_to ("super"))
-  {
-    return create_token (TOK_KEYWORD, KW_SUPER);
-  }
-  if (current_token_equals_to ("switch"))
-  {
-    return create_token (TOK_KEYWORD, KW_SWITCH);
-  }
-  if (current_token_equals_to ("this"))
-  {
-    return create_token (TOK_KEYWORD, KW_THIS);
-  }
-  if (current_token_equals_to ("throw"))
-  {
-    return create_token (TOK_KEYWORD, KW_THROW);
-  }
-  if (current_token_equals_to ("true"))
-  {
-    return create_token (TOK_BOOL, true);
-  }
-  if (current_token_equals_to ("try"))
-  {
-    return create_token (TOK_KEYWORD, KW_TRY);
-  }
-  if (current_token_equals_to ("typeof"))
-  {
-    return create_token (TOK_KEYWORD, KW_TYPEOF);
-  }
-  if (current_token_equals_to ("var"))
-  {
-    return create_token (TOK_KEYWORD, KW_VAR);
-  }
-  if (current_token_equals_to ("void"))
-  {
-    return create_token (TOK_KEYWORD, KW_VOID);
-  }
-  if (current_token_equals_to ("while"))
-  {
-    return create_token (TOK_KEYWORD, KW_WHILE);
-  }
-  if (current_token_equals_to ("with"))
-  {
-    return create_token (TOK_KEYWORD, KW_WITH);
-  }
-  if (current_token_equals_to ("yield"))
-  {
-    if (strict_mode)
-    {
-      return create_token (TOK_KEYWORD, KW_YIELD);
-    }
-    else
-    {
-      return convert_current_token_to_token (TOK_NAME);
-    }
-  }
-  return empty_token;
-}
+} /* decode_keyword */
 
 static token
 convert_seen_num_to_token (ecma_number_t num)
@@ -636,51 +491,6 @@ consume_char (void)
   } \
   while (0)
 
-static token
-parse_name (void)
-{
-  char c = LA (0);
-  bool every_char_islower = islower (c);
-  token known_token = empty_token;
-
-  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_');
-
-  new_token ();
-  consume_char ();
-  while (true)
-  {
-    c = LA (0);
-    if (c == '\0')
-    {
-      break;
-    }
-    if (!isalpha (c) && !isdigit (c) && c != '$' && c != '_')
-    {
-      break;
-    }
-    if (every_char_islower && (!islower (c)))
-    {
-      every_char_islower = false;
-    }
-    consume_char ();
-  }
-
-  if (every_char_islower)
-  {
-    known_token = decode_keyword ();
-    if (!is_empty (known_token))
-    {
-      goto end;
-    }
-  }
-
-  known_token = convert_current_token_to_token (TOK_NAME);
-
-end:
-  token_start = NULL;
-  return known_token;
-}
-
 static uint32_t
 hex_to_int (char hex)
 {
@@ -711,6 +521,339 @@ hex_to_int (char hex)
     default: JERRY_UNREACHABLE ();
   }
 }
+
+/**
+ * Try to decode specified character as SingleEscapeCharacter (ECMA-262, v5, 7.8.4)
+ *
+ * If specified character is a SingleEscapeCharacter, convert it according to ECMA-262 v5, Table 4.
+ * Otherwise, output it as is.
+ *
+ * @return true - if specified character is a SingleEscapeCharacter,
+ *         false - otherwise.
+ */
+static bool
+convert_single_escape_character (ecma_char_t c, /**< character to decode */
+                                 ecma_char_t *out_converted_char_p) /**< out: decoded character */
+{
+  ecma_char_t converted_char;
+  bool is_single_escape_character = true;
+
+  switch (c)
+  {
+    case 'b':
+    {
+      converted_char = (ecma_char_t) '\b';
+      break;
+    }
+
+    case 't':
+    {
+      converted_char = (ecma_char_t) '\t';
+      break;
+    }
+
+    case 'n':
+    {
+      converted_char = (ecma_char_t) '\n';
+      break;
+    }
+
+    case 'v':
+    {
+      converted_char = (ecma_char_t) '\v';
+      break;
+    }
+
+    case 'f':
+    {
+      converted_char = (ecma_char_t) '\f';
+      break;
+    }
+
+    case 'r':
+    {
+      converted_char = (ecma_char_t) '\r';
+      break;
+    }
+
+    case '"':
+    case '\'':
+    case '\\':
+    {
+      converted_char = (ecma_char_t) c;
+      break;
+    }
+
+    default:
+    {
+      converted_char = (ecma_char_t) c;
+      is_single_escape_character = false;
+      break;
+    }
+  }
+
+  if (out_converted_char_p != NULL)
+  {
+    *out_converted_char_p = converted_char;
+  }
+
+  return is_single_escape_character;
+} /* convert_single_escape_character */
+
+/**
+ * Convert specified string to token of specified type, transforming escape sequences
+ *
+ * @return token descriptor
+ */
+static token
+convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of token to produce */
+                                              const char *source_str_p, /**< string to convert,
+                                                                         *   located in source buffer */
+                                              size_t source_str_size) /**< size of the string */
+{
+  token ret;
+
+  if (source_str_size == 0)
+  {
+    return convert_string_to_token (tok_type,
+                                    ecma_get_magic_string_zt (ECMA_MAGIC_STRING__EMPTY),
+                                    0);
+  }
+  else
+  {
+    JERRY_ASSERT (source_str_p != NULL);
+  }
+
+  MEM_DEFINE_LOCAL_ARRAY (str_buf_p,
+                          source_str_size,
+                          ecma_char_t);
+
+  const char *source_str_iter_p = source_str_p;
+  ecma_char_t *str_buf_iter_p = str_buf_p;
+
+  bool is_correct_sequence = true;
+  bool every_char_islower = true;
+  bool every_char_allowed_in_identifier = true;
+
+  while (source_str_iter_p < source_str_p + source_str_size)
+  {
+    ecma_char_t converted_char;
+
+    if (*source_str_iter_p != '\\')
+    {
+      converted_char = (ecma_char_t) *source_str_iter_p++;
+
+      JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
+      JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
+    }
+    else
+    {
+      source_str_iter_p++;
+
+      const ecma_char_t escape_character = (ecma_char_t) *source_str_iter_p++;
+      JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
+
+      if (isdigit (escape_character))
+      {
+        if (escape_character == '0')
+        {
+          JERRY_UNIMPLEMENTED ("<NUL> character is not currently supported.\n");
+        }
+        else
+        {
+          /* Implementation-defined (ECMA-262 v5, B.1.2): octal escape sequences are not implemented */
+          is_correct_sequence = false;
+          break;
+        }
+      }
+      else if (escape_character == 'u'
+               || escape_character == 'x')
+      {
+        const uint32_t hex_chars_num = (escape_character == 'u' ? 4u : 2u);
+
+        if (source_str_iter_p + hex_chars_num > source_str_p + source_str_size)
+        {
+          is_correct_sequence = false;
+          break;
+        }
+
+        bool chars_are_hex = true;
+        uint16_t char_code = 0;
+
+        for (uint32_t i = 0; i < hex_chars_num; i++)
+        {
+          const char nc = *source_str_iter_p++;
+
+          if (!isxdigit (nc))
+          {
+            chars_are_hex = false;
+            break;
+          }
+          else
+          {
+            /*
+             * Check that highest 4 bits are zero, so the value would not overflow.
+             */
+            JERRY_ASSERT ((char_code & 0xF000u) == 0);
+
+            char_code = (uint16_t) (char_code << 4u);
+            char_code = (uint16_t) (char_code + hex_to_int (nc));
+          }
+        }
+
+        JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
+        JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
+
+        if (!chars_are_hex)
+        {
+          is_correct_sequence = false;
+          break;
+        }
+
+        /*
+         * In CONFIG_ECMA_CHAR_ASCII mode size of ecma_char_t is 1 byte, so the conversion
+         * would ignore highest part of 2-byte value, and in CONFIG_ECMA_CHAR_UTF16 mode this
+         * would be just an assignment of 2-byte value.
+         */
+        converted_char = (ecma_char_t) char_code;
+      }
+      else if (ecma_char_is_line_terminator (escape_character))
+      {
+        if (source_str_iter_p + 1 <= source_str_p + source_str_size)
+        {
+          char nc = *source_str_iter_p;
+
+          if (escape_character == '\x0D'
+              && nc == '\x0A')
+          {
+            source_str_iter_p++;
+          }
+        }
+
+        continue;
+      }
+      else
+      {
+        convert_single_escape_character ((ecma_char_t) escape_character, &converted_char);
+      }
+    }
+
+    *str_buf_iter_p++ = converted_char;
+    JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
+
+    if (!islower (converted_char))
+    {
+      every_char_islower = false;
+
+      if (!isalpha (converted_char)
+          && !isdigit (converted_char)
+          && converted_char != '$'
+          && converted_char != '_')
+      {
+        every_char_allowed_in_identifier = false;
+      }
+    }
+  }
+
+  if (is_correct_sequence)
+  {
+    ecma_length_t length = (ecma_length_t) (str_buf_iter_p - str_buf_p);
+    ret = empty_token;
+
+    if (tok_type == TOK_NAME)
+    {
+      if (every_char_islower)
+      {
+        ret = decode_keyword (str_buf_p, length);
+      }
+      else if (!every_char_allowed_in_identifier)
+      {
+        PARSE_ERROR ("Malformed identifier name", source_str_p - buffer_start);
+      }
+    }
+
+    if (is_empty (ret))
+    {
+      ret = convert_string_to_token (tok_type, str_buf_p, length);
+    }
+  }
+  else
+  {
+    PARSE_ERROR ("Malformed escape sequence", source_str_p - buffer_start);
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (str_buf_p);
+
+  return ret;
+} /* convert_string_to_token_transform_escape_seq */
+
+/**
+ * Parse identifier (ECMA-262 v5, 7.6) or keyword (7.6.1.1)
+ */
+static token
+parse_name (void)
+{
+  ecma_char_t c = (ecma_char_t) LA (0);
+
+  token known_token = empty_token;
+
+  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_');
+
+  new_token ();
+
+  while (true)
+  {
+    c = (ecma_char_t) LA (0);
+
+    if (!isalpha (c)
+        && !isdigit (c)
+        && c != '$'
+        && c != '_'
+        && c != '\\')
+    {
+      break;
+    }
+    else
+    {
+      consume_char ();
+
+      if (c == '\\')
+      {
+        bool is_correct_sequence = (LA (0) == 'u');
+        if (is_correct_sequence)
+        {
+          consume_char ();
+        }
+
+        for (uint32_t i = 0;
+             is_correct_sequence && i < 4;
+             i++)
+        {
+          if (!isxdigit (LA (0)))
+          {
+            is_correct_sequence = false;
+            break;
+          }
+
+          consume_char ();
+        }
+
+        if (!is_correct_sequence)
+        {
+          PARSE_ERROR ("Malformed escape sequence", token_start - buffer_start);
+        }
+      }
+    }
+  }
+
+  known_token = convert_string_to_token_transform_escape_seq (TOK_NAME,
+                                                              token_start,
+                                                              (size_t) (buffer - token_start));
+
+  token_start = NULL;
+
+  return known_token;
+} /* parse_name */
 
 /* In this function we cannot use strtol function
    since there is no octal literals in ECMAscript.  */
@@ -938,68 +1081,68 @@ parse_number (void)
   }
 }
 
+/**
+ * Parse string literal (ECMA-262 v5, 7.8.4)
+ */
 static token
 parse_string (void)
 {
-  char c = LA (0);
-  bool is_double_quoted;
-  token result;
-
+  ecma_char_t c = (ecma_char_t) LA (0);
   JERRY_ASSERT (c == '\'' || c == '"');
 
-  is_double_quoted = (c == '"');
-
-  // Eat up '"'
   consume_char ();
   new_token ();
 
-  while (true)
+  const bool is_double_quoted = (c == '"');
+  const char end_char = (is_double_quoted ? '"' : '\'');
+
+  do
   {
-    c = LA (0);
+    c = (ecma_char_t) LA (0);
+    consume_char ();
+
     if (c == '\0')
     {
       PARSE_ERROR ("Unclosed string", token_start - buffer_start);
     }
-    if (c == '\n')
+    else if (ecma_char_is_line_terminator (c))
     {
       PARSE_ERROR ("String literal shall not contain newline character", token_start - buffer_start);
     }
-    if (c == '\\')
+    else if (c == '\\')
     {
-      /* Only single escape character is allowed.  */
-      if (LA (1) == 'x' || LA (1) == 'u' || isdigit (LA (1)))
-      {
-        // PARSE_WARN ("Escape sequences are ignored yet", token_start - buffer_start);
-        consume_char ();
-        consume_char ();
-        continue;
-      }
-      if ((LA (1) == '\'' && !is_double_quoted)
-          || (LA (1) == '"' && is_double_quoted)
-          || LA (1) == '\n')
-      {
-        consume_char ();
-        consume_char ();
-        continue;
-      }
-    }
-    else if ((c == '\'' && !is_double_quoted)
-             || (c == '"' && is_double_quoted))
-    {
-      break;
-    }
+      ecma_char_t nc = (ecma_char_t) LA (0);
 
-    consume_char ();
+      if (convert_single_escape_character (nc, NULL))
+      {
+        consume_char ();
+      }
+      else if (ecma_char_is_line_terminator (nc))
+      {
+        consume_char ();
+
+        if (ecma_char_is_carriage_return (nc))
+        {
+          nc = (ecma_char_t) LA (0);
+
+          if (ecma_char_is_new_line (nc))
+          {
+            consume_char ();
+          }
+        }
+      }
+    }
   }
+  while (c != end_char);
 
-  result = convert_current_token_to_token (TOK_STRING);
+  token ret = convert_string_to_token_transform_escape_seq (TOK_STRING,
+                                                            token_start,
+                                                            (size_t) (buffer - token_start) - 1u);
 
-  // Eat up '"'
-  consume_char ();
   token_start = NULL;
 
-  return result;
-}
+  return ret;
+} /* parse_string */
 
 static void
 grobble_whitespaces (void)

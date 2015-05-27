@@ -2494,93 +2494,98 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
   }
   else
   {
-    ecma_completion_value_t accumulator = ecma_make_empty_completion_value ();
     ecma_number_t *num_p = ecma_alloc_number ();
     ecma_object_t *func_object_p;
-    ecma_value_t current_index;
 
     ecma_completion_value_t to_object_comp = ecma_op_to_object (arg1);
     JERRY_ASSERT (ecma_is_completion_value_normal (to_object_comp));
     func_object_p = ecma_get_object_from_completion_value (to_object_comp);
+    ecma_completion_value_t accumulator = ecma_make_empty_completion_value ();
 
     /* 5 */
-    if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (arg1))
+    if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (arg2))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
-
-    /* 6 */
-    uint32_t index = 0;
-
-    /* 7a */
-    if (!ecma_is_value_undefined (arg2))
-    {
-      accumulator = ecma_copy_completion_value (arg2);
-    }
     else
     {
-      /* 8a */
-      bool kPresent = false;
-      /* 8b */
-      while (!kPresent && index < len && ecma_is_completion_value_empty (ret_value))
-      {
-        /* 8b-i */
-        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+      /* 6 */
+      uint32_t index = 0;
 
-        /* 8b-ii-iii */
-        if ((kPresent = (ecma_op_object_get_property (obj_p, index_str_p) != NULL)))
+      /* 7a */
+      if (!ecma_is_value_undefined (arg2))
+      {
+        accumulator = ecma_copy_completion_value (arg2);
+      }
+      else
+      {
+        /* 8a */
+        bool kPresent = false;
+        /* 8b */
+        while (!kPresent && index < len && ecma_is_completion_value_empty (ret_value))
         {
+          /* 8b-i */
+          ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+
+          /* 8b-ii-iii */
+          if ((kPresent = (ecma_op_object_get_property (obj_p, index_str_p) != NULL)))
+          {
+            ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
+            accumulator = ecma_copy_completion_value (current_value);
+            ECMA_FINALIZE (current_value);
+          }
+          /* 8b-iv */
+          index++;
+
+          ecma_deref_ecma_string (index_str_p);
+        }
+        /* 8c */
+        if (!kPresent)
+        {
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        }
+      }
+      /* 9 */
+      ecma_value_t undefined_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ecma_value_t current_index;
+
+      for (; index < len && ecma_is_completion_value_empty (ret_value); ++index)
+      {
+        /* 9a */
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+        /* 9b */
+        if (ecma_op_object_get_property (obj_p, index_str_p) != NULL)
+        {
+          /* 9c-i */
           ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
-          accumulator = ecma_copy_completion_value (current_value);
+          /* 9c-ii */
+          *num_p = ecma_uint32_to_number (index);
+          current_index = ecma_make_number_value (num_p);
+          ecma_value_t prev_value = ecma_get_completion_value_value (accumulator);
+          ecma_value_t call_args[] = {prev_value, current_value, current_index, obj_this};
+
+          ECMA_TRY_CATCH (call_value,
+                          ecma_op_function_call (func_object_p, undefined_value, call_args, 4),
+                          ret_value);
+
+          ecma_free_completion_value (accumulator);
+          accumulator = ecma_copy_completion_value (call_value);
+
+          ECMA_FINALIZE (call_value);
           ECMA_FINALIZE (current_value);
         }
-        /* 8b-iv */
-        index++;
-
         ecma_deref_ecma_string (index_str_p);
+        /* 9d in for loop */
       }
-      /* 8c */
-      if (!kPresent)
+
+      if (ecma_is_completion_value_empty (ret_value))
       {
-        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        ret_value = ecma_copy_completion_value (accumulator);
       }
-    }
-    /* 9 */
-    for (; index < len && ecma_is_completion_value_empty (ret_value); ++index)
-    {
-      /* 9a */
-      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
-      /* 9b */
-      if (ecma_op_object_get_property (obj_p, index_str_p) != NULL)
-      {
-        /* 9c-i */
-        ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
-        /* 9c-ii */
-        *num_p = ecma_uint32_to_number (index);
-        current_index = ecma_make_number_value (num_p);
-        ecma_value_t prev_value = ecma_get_completion_value_value (accumulator);
-        ecma_value_t call_args[] = {prev_value, current_value, current_index, obj_this};
-        ecma_value_t undefined_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-        ECMA_TRY_CATCH (call_value,
-                        ecma_op_function_call (func_object_p, undefined_value, call_args, 4),
-                        ret_value);
-
-        ecma_free_completion_value (accumulator);
-        accumulator = ecma_copy_completion_value (call_value);
-
-        ECMA_FINALIZE (call_value);
-        ecma_free_value (undefined_value, false);
-        ECMA_FINALIZE (current_value);
-      }
-      ecma_deref_ecma_string (index_str_p);
-      /* 9d in for loop */
+      ecma_free_value (undefined_value, false);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
-    {
-      ret_value = ecma_copy_completion_value (accumulator);
-    }
     ecma_free_completion_value (accumulator);
     ecma_free_completion_value (to_object_comp);
     ecma_dealloc_number (num_p);

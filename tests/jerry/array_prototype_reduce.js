@@ -28,6 +28,7 @@ try {
 // check for init value
 try {
   [].reduce(func);
+  assert(false);
 }
 catch(e) {
   assert(e instanceof TypeError);

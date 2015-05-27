@@ -154,8 +154,8 @@ insert_simple_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler contex
   uint32_t offset;
   uint32_t qmin, qmax;
 
-  qmin = re_ctx_p->current_token_p->qmin;
-  qmax = re_ctx_p->current_token_p->qmax;
+  qmin = re_ctx_p->current_token.qmin;
+  qmax = re_ctx_p->current_token.qmax;
   JERRY_ASSERT (qmin <= qmax);
 
   /* FIXME: optimize bytecode lenght. Store 0 rather than INF */
@@ -168,7 +168,7 @@ insert_simple_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler contex
   insert_u32 (re_ctx_p->bytecode_ctx_p, offset, atom_code_length);
   insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmax);
   insert_u32 (re_ctx_p->bytecode_ctx_p, offset, qmin);
-  if (re_ctx_p->current_token_p->greedy)
+  if (re_ctx_p->current_token.greedy)
   {
     insert_opcode (re_ctx_p->bytecode_ctx_p, offset, RE_OP_GREEDY_ITERATOR);
   }
@@ -187,9 +187,9 @@ get_start_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
 {
   if (is_capturable)
   {
-    if (re_ctx_p->current_token_p->qmin == 0)
+    if (re_ctx_p->current_token.qmin == 0)
     {
-      if (re_ctx_p->current_token_p->greedy)
+      if (re_ctx_p->current_token.greedy)
       {
         return RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START;
       }
@@ -205,9 +205,9 @@ get_start_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context
   }
   else
   {
-    if (re_ctx_p->current_token_p->qmin == 0)
+    if (re_ctx_p->current_token.qmin == 0)
     {
-      if (re_ctx_p->current_token_p->greedy)
+      if (re_ctx_p->current_token.greedy)
       {
         return RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START;
       }
@@ -235,7 +235,7 @@ get_end_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context *
 {
   if (is_capturable)
   {
-    if (re_ctx_p->current_token_p->greedy)
+    if (re_ctx_p->current_token.greedy)
     {
       return RE_OP_CAPTURE_GREEDY_GROUP_END;
     }
@@ -243,7 +243,7 @@ get_end_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context *
   }
   else
   {
-    if (re_ctx_p->current_token_p->greedy)
+    if (re_ctx_p->current_token.greedy)
     {
       return RE_OP_NON_CAPTURE_GREEDY_GROUP_END;
     }
@@ -265,8 +265,8 @@ insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
   re_opcode_t end_opcode = get_end_opcode_type (re_ctx_p, is_capturable);
   uint32_t start_head_offset_len;
 
-  qmin = re_ctx_p->current_token_p->qmin;
-  qmax = re_ctx_p->current_token_p->qmax;
+  qmin = re_ctx_p->current_token.qmin;
+  qmax = re_ctx_p->current_token.qmax;
   JERRY_ASSERT (qmin <= qmax);
 
   start_head_offset_len = (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
@@ -298,8 +298,6 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                    bool expect_eof) /**< expect end of file */
 {
   uint32_t idx;
-  re_token_t re_tok;
-  re_ctx_p->current_token_p = &re_tok;
   re_bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
 
   uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
@@ -312,10 +310,10 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
   while (true)
   {
-    re_tok = re_parse_next_token (re_ctx_p->parser_ctx_p);
+    re_ctx_p->current_token = re_parse_next_token (re_ctx_p->parser_ctx_p);
     uint32_t new_atom_start_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
-    switch (re_tok.type)
+    switch (re_ctx_p->current_token.type)
     {
       case RE_TOK_START_CAPTURE_GROUP:
       {
@@ -339,10 +337,10 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
       case RE_TOK_CHAR:
       {
         JERRY_DDLOG ("Compile character token: %c, qmin: %d, qmax: %d\n",
-                     re_tok.value, re_tok.qmin, re_tok.qmax);
+                     re_ctx_p->current_token.value, re_ctx_p->current_token.qmin, re_ctx_p->current_token.qmax);
         append_opcode (bc_ctx_p, RE_OP_CHAR);
-        append_u32 (bc_ctx_p, re_tok.value);
-        if ((re_tok.qmin != 1) || (re_tok.qmax != 1))
+        append_u32 (bc_ctx_p, re_ctx_p->current_token.value);
+        if ((re_ctx_p->current_token.qmin != 1) || (re_ctx_p->current_token.qmax != 1))
         {
           insert_simple_iterator (re_ctx_p, new_atom_start_offset);
         }
@@ -471,7 +469,6 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   re_compiler_ctx_t re_ctx;
   re_ctx.flags = 0;
-  re_ctx.num_of_captures = 0;
   re_ctx.num_of_non_captures = 0;
   re_ctx.recursion_depth = 0;
 
@@ -504,12 +501,8 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   parser_ctx.number_of_groups = -1;
   re_ctx.parser_ctx_p = &parser_ctx;
 
-  /* 1. Add extra informations for bytecode header */
-  append_u32 (&bc_ctx, (uint32_t) re_ctx.flags);
-  append_u32 (&bc_ctx, 2); // FIXME: Count the number of capture groups
-  append_u32 (&bc_ctx, 0); // FIXME: Count the number of non-capture groups
-
-  /* 2. Parse RegExp pattern */
+  /* 1. Parse RegExp pattern */
+  re_ctx.num_of_captures = 1;
   append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
 
   ECMA_TRY_CATCH (empty, parse_alternative (&re_ctx, true), ret_value);
@@ -517,6 +510,11 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
 
   append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
   append_opcode (&bc_ctx, RE_OP_EOF);
+
+  /* 2. Insert extra informations for bytecode header */
+  insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.flags);
+  insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.num_of_captures * 2);
+  insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.num_of_non_captures);
 
   MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
 

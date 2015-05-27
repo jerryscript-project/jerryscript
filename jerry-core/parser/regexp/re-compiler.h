@@ -52,6 +52,8 @@
 
 #define RE_COMPILE_RECURSION_LIMIT  100
 
+#define IS_CAPTURE_GROUP(x) (((x) < RE_OP_NON_CAPTURE_GROUP_START) ? 1 : 0)
+
 typedef uint8_t re_opcode_t;
 typedef uint8_t re_bytecode_t;
 
@@ -69,7 +71,7 @@ typedef struct
   uint32_t num_of_captures;
   uint32_t num_of_non_captures;
   re_bytecode_ctx_t *bytecode_ctx_p;
-  re_token_t *current_token_p;
+  re_token_t current_token;
   re_parser_ctx_t *parser_ctx_p;
 } re_compiler_ctx_t;
 

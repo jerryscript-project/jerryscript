@@ -33,6 +33,7 @@ typedef struct re_matcher_ctx
   const ecma_char_t **saved_p;
   uint32_t num_of_captures;
   uint32_t num_of_non_captures;
+  uint32_t *num_of_iterations;
   uint8_t flags;
 } re_matcher_ctx;
 

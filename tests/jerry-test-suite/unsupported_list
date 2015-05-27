@@ -5,25 +5,6 @@
 > Regular expressions
 ./tests/jerry-test-suite/07/07.08/07.08.05/07.08.05-001.js
 
-> Arguments object
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-001.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-002.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-003.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-004.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-005.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-006.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-007.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-008.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-009.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-010.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-011.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-012.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-013.js
-./tests/jerry-test-suite/11/11.02/11.02.04/11.02.04-014.js
-./tests/jerry-test-suite/13/13-008.js
-./tests/jerry-test-suite/13/13-012.js
-./tests/jerry-test-suite/13/13-013.js
-
 > eval
 ./tests/jerry-test-suite/11/11.04/11.04.01/11.04.01-013.js
 

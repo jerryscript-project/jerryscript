@@ -2560,13 +2560,17 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         current_index = ecma_make_number_value (num_p);
         ecma_value_t prev_value = ecma_get_completion_value_value (accumulator);
         ecma_value_t call_args[] = {prev_value, current_value, current_index, obj_this};
+        ecma_value_t undefined_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         ECMA_TRY_CATCH (call_value,
-                        ecma_op_function_call (func_object_p, ECMA_SIMPLE_VALUE_UNDEFINED, call_args, 4),
+                        ecma_op_function_call (func_object_p, undefined_value, call_args, 4),
                         ret_value);
+
+        ecma_free_completion_value (accumulator);
         accumulator = ecma_copy_completion_value (call_value);
 
         ECMA_FINALIZE (call_value);
+        ecma_free_value (undefined_value, false);
         ECMA_FINALIZE (current_value);
       }
       ecma_deref_ecma_string (index_str_p);

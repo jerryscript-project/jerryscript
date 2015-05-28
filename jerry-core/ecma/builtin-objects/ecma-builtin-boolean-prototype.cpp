@@ -102,9 +102,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-
-    if (class_prop_p->u.internal_property.value == ECMA_MAGIC_STRING_BOOLEAN_UL)
+    if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_BOOLEAN_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE);

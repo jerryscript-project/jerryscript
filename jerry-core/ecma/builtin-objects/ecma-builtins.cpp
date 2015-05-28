@@ -54,12 +54,16 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (unlikely (ecma_builtin_objects[builtin_id] == NULL))
+  if (ecma_builtin_objects[builtin_id] == NULL)
   {
-    ecma_instantiate_builtin (builtin_id);
+    /* If a built-in object is not instantiated,
+     * the specified object cannot be the built-in object */
+    return false;
   }
-
-  return (obj_p == ecma_builtin_objects[builtin_id]);
+  else
+  {
+    return (obj_p == ecma_builtin_objects[builtin_id]);
+  }
 } /* ecma_builtin_is */
 
 /**
@@ -94,14 +98,15 @@ static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_t* prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
-                          ecma_magic_string_id_t obj_class, /**< object's class */
                           bool is_extensible) /**< value of object's [[Extensible]] property */
 {
   ecma_object_t *object_obj_p = ecma_create_object (prototype_obj_p, is_extensible, obj_type);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (object_obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = obj_class;
+  /*
+   * [[Class]] property of built-in object is not stored explicitly.
+   *
+   * See also: ecma_object_get_class_name
+   */
 
   ecma_property_t *built_in_id_prop_p = ecma_create_internal_property (object_obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
@@ -183,7 +188,6 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
   {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
@@ -211,11 +215,10 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
         JERRY_ASSERT (prototype_obj_p != NULL); \
       } \
       \
-      ecma_object_t *builtin_obj_p =  ecma_builtin_init_object (builtin_id, \
-                                                                prototype_obj_p, \
-                                                                object_type, \
-                                                                object_class, \
-                                                                is_extensible); \
+      ecma_object_t *builtin_obj_p = ecma_builtin_init_object (builtin_id, \
+                                                               prototype_obj_p, \
+                                                               object_type, \
+                                                               is_extensible); \
       ecma_builtin_objects[builtin_id] = builtin_obj_p; \
       \
       break; \
@@ -274,7 +277,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
@@ -411,7 +413,6 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
     {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
@@ -474,7 +475,6 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
   {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
@@ -530,7 +530,6 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
   {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \

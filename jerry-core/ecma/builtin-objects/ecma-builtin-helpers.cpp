@@ -71,9 +71,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
     ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
 
-    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
-                                                                ECMA_INTERNAL_PROPERTY_CLASS);
-    type_string = (ecma_magic_string_id_t) class_prop_p->u.internal_property.value;
+    type_string = ecma_object_get_class_name (obj_p);
 
     ecma_free_completion_value (obj_this);
   }

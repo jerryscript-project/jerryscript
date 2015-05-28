@@ -49,7 +49,7 @@ ecma_completion_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p, arguments_list_len);
+  return ecma_builtin_regexp_dispatch_construct (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_call */
 
 /**

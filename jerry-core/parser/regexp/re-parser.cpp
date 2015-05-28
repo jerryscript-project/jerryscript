@@ -408,6 +408,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     case ')':
     {
       advance = 1;
+      advance += parse_re_iterator (parser_ctx_p->current_char_p, &result, advance);
       result.type = RE_TOK_END_GROUP;
       break;
     }

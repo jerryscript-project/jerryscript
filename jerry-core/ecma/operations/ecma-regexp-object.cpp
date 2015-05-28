@@ -21,6 +21,7 @@
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
+#include "jrt-libc-includes.h"
 #include "re-compiler.h"
 #include "stdio.h"
 
@@ -149,7 +150,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         str_p++;
         JERRY_DDLOG ("Character matching %d to %d\n", ch1, ch2);
 
-        if (ch1 != ch2)
+        if (ch2 == '\0' || ch1 != ch2)
         {
           return NULL; /* fail */
         }
@@ -160,7 +161,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         uint32_t ch1 = (uint32_t) *str_p;
         str_p++;
         JERRY_DDLOG ("Period matching '.' to %d\n", ch1);
-        if (ch1 == '\n')
+        if (ch1 == '\n' || ch1 == '\0')
         {
           return NULL; /* fail */
         }
@@ -571,8 +572,19 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
   re_ctx.num_of_non_captures = get_value (&bc_p);
 
   MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures, const ecma_char_t*);
+  for (uint32_t i = 0; i < re_ctx.num_of_captures; i++)
+  {
+    saved_p[i] = NULL;
+  }
   re_ctx.saved_p = saved_p;
-  MEM_DEFINE_LOCAL_ARRAY (num_of_iter_p, (re_ctx.num_of_captures / 2) + (re_ctx.num_of_non_captures - 1), uint32_t);
+
+  uint32_t num_of_iter_length = (re_ctx.num_of_captures / 2) + (re_ctx.num_of_non_captures - 1);
+  MEM_DEFINE_LOCAL_ARRAY (num_of_iter_p, num_of_iter_length, uint32_t);
+  for (uint32_t i = 0; i < num_of_iter_length; i++)
+  {
+    num_of_iter_p[i] = 0u;
+  }
+
   bool match = false;
   re_ctx.num_of_iterations = num_of_iter_p;
 
@@ -596,13 +608,26 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
     for (uint32_t i = 0; i < re_ctx.num_of_captures; i += 2)
     {
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i / 2);
-
-      ecma_length_t capture_str_len = static_cast<ecma_length_t> (re_ctx.saved_p[i + 1] - re_ctx.saved_p[i]);
-      ecma_string_t *capture_str_p = ecma_new_ecma_string (re_ctx.saved_p[i], capture_str_len);
-
-      ecma_op_object_put (new_array_p, index_str_p, ecma_make_string_value (capture_str_p), true);
+      if (re_ctx.saved_p[i] && re_ctx.saved_p[i + 1] && re_ctx.saved_p[i + 1] >= re_ctx.saved_p[i])
+      {
+        ecma_length_t capture_str_len = static_cast<ecma_length_t> (re_ctx.saved_p[i + 1] - re_ctx.saved_p[i]);
+        ecma_string_t *capture_str_p;
+        if (capture_str_len > 0)
+        {
+          capture_str_p = ecma_new_ecma_string (re_ctx.saved_p[i], capture_str_len);
+        }
+        else
+        {
+          capture_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+        }
+        ecma_op_object_put (new_array_p, index_str_p, ecma_make_string_value (capture_str_p), true);
+        ecma_deref_ecma_string (capture_str_p);
+      }
+      else
+      {
+        ecma_op_object_put (new_array_p, index_str_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED), true);
+      }
       ecma_deref_ecma_string (index_str_p);
-      ecma_deref_ecma_string (capture_str_p);
     }
     ret_value = new_array;
   }

@@ -305,6 +305,7 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
   if (re_ctx_p->recursion_depth >= RE_COMPILE_RECURSION_LIMIT)
   {
+    JERRY_ERROR_MSG ("RegExp compiler recursion limit is exceeded.\n");
     return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
   }
   re_ctx_p->recursion_depth++;

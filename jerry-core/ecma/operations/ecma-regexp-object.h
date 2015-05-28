@@ -27,10 +27,15 @@
  * @{
  */
 
+#define RE_EXECUTE_RECURSION_LIMIT  1000
+#define RE_EXECUTE_STEPS_LIMIT      10000
+
 typedef struct re_matcher_ctx
 {
   const re_bytecode_t *bytecode;
   const ecma_char_t **saved_p;
+  uint32_t steps_count;
+  uint32_t recursion_depth;
   uint32_t num_of_captures;
   uint32_t num_of_non_captures;
   uint32_t *num_of_iterations;

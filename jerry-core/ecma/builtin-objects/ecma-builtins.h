@@ -25,7 +25,6 @@ typedef enum
 {
 #define BUILTIN(builtin_id, \
                 object_type, \
-                object_class, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \

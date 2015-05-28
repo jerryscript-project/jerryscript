@@ -66,8 +66,13 @@ ecma_op_create_object_object_noarg (void)
 
   ecma_deref_object (object_prototype_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_OBJECT_UL;
+  /*
+   * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
+   * without ECMA_INTERNAL_PROPERTY_CLASS internal property
+   * is "Object".
+   *
+   * See also: ecma_object_get_class_name
+   */
 
   return obj_p;
 } /* ecma_op_create_object_object_noarg */
@@ -503,11 +508,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
-    ecma_property_t *class_prop_p = ecma_get_internal_property (obj_p,
-                                                                ECMA_INTERNAL_PROPERTY_CLASS);
-    ecma_magic_string_id_t obj_class = (ecma_magic_string_id_t) class_prop_p->u.internal_property.value;
-
-    if (obj_class == ECMA_MAGIC_STRING_DATE_UL)
+    if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_DATE_UL)
     {
       hint = ECMA_PREFERRED_TYPE_STRING;
     }

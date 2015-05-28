@@ -139,7 +139,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
   {
     /* 5.b */
     if (ecma_is_value_object (args[arg_index]) &&
-        (ecma_get_object_type (ecma_get_object_from_value (args[arg_index])) == ECMA_OBJECT_TYPE_ARRAY))
+        (ecma_object_get_class_name (ecma_get_object_from_value (args[arg_index])) == ECMA_MAGIC_STRING_ARRAY_UL))
     {
       /* 5.b.ii */
       ECMA_TRY_CATCH (arg_len_value,

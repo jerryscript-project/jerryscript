@@ -176,8 +176,11 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
    */
 
   // 3.
-  ecma_property_t *class_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
+  /*
+   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
+   *
+   * See also: ecma_object_get_class_name
+   */
 
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
@@ -321,8 +324,11 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
 
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (function_obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_FUNCTION_UL;
+  /*
+   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION type.
+   *
+   * See also: ecma_object_get_class_name
+   */
 
   bool is_created = ecma_create_external_pointer_property (function_obj_p,
                                                            ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
@@ -751,11 +757,16 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   // 1., 2., 4.
   ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
 
-  // 3.
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_OBJECT_UL;
-
   ecma_deref_object (prototype_p);
+
+  // 3.
+  /*
+   * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
+   * without ECMA_INTERNAL_PROPERTY_CLASS internal property
+   * is "Object".
+   *
+   * See also: ecma_object_get_class_name.
+   */
 
   // 8.
   ECMA_TRY_CATCH (call_completion,

@@ -200,6 +200,13 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       // 12.
       ecma_set_object_type (obj_p, ECMA_OBJECT_TYPE_ARGUMENTS);
 
+      /*
+       * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_ARGUMENTS type.
+       *
+       * See also: ecma_object_get_class_name
+       */
+      ecma_delete_property (obj_p, class_prop_p);
+
       ecma_property_t *parameters_map_prop_p = ecma_create_internal_property (obj_p,
                                                                               ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
       ECMA_SET_POINTER (parameters_map_prop_p->u.internal_property.value, map_p);

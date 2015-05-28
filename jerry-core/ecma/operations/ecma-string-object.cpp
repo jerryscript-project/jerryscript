@@ -88,8 +88,11 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
                                              ECMA_OBJECT_TYPE_STRING);
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_STRING_UL;
+  /*
+   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_STRING type.
+   *
+   * See also: ecma_object_get_class_name
+   */
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);

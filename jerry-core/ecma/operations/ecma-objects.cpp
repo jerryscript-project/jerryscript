@@ -504,8 +504,6 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
   JERRY_UNREACHABLE ();
 } /* ecma_op_object_has_instance */
 
-
-
 /**
  * Object's isPrototypeOf operation
  *
@@ -533,6 +531,204 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /** < base object */
   } while (true);
 } /* ecma_op_object_is_prototype_of */
 
+/**
+ * Get [[Class]] string of specified object
+ *
+ * @return class name magic string
+ */
+ecma_magic_string_id_t
+ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
+{
+  ecma_object_type_t type = ecma_get_object_type (obj_p);
+
+  switch (type)
+  {
+    case ECMA_OBJECT_TYPE_ARRAY:
+    {
+      return ECMA_MAGIC_STRING_ARRAY_UL;
+    }
+    case ECMA_OBJECT_TYPE_STRING:
+    {
+      return ECMA_MAGIC_STRING_STRING_UL;
+    }
+    case ECMA_OBJECT_TYPE_ARGUMENTS:
+    {
+      return ECMA_MAGIC_STRING_ARGUMENTS_UL;
+    }
+    case ECMA_OBJECT_TYPE_EXTENSION:
+    {
+      return ECMA_MAGIC_STRING_OBJECT_UL;
+    }
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      ecma_magic_string_id_t class_name;
+
+      if (ecma_get_object_is_builtin (obj_p))
+      {
+        ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
+                                                                          ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+        switch (builtin_id)
+        {
+          case ECMA_BUILTIN_ID_OBJECT:
+          {
+            class_name = ECMA_MAGIC_STRING_OBJECT_UL;
+            break;
+          }
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
+          case ECMA_BUILTIN_ID_ARRAY:
+          {
+            class_name = ECMA_MAGIC_STRING_ARRAY_UL;
+            break;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+          case ECMA_BUILTIN_ID_STRING:
+          {
+            class_name = ECMA_MAGIC_STRING_STRING_UL;
+            break;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
+          case ECMA_BUILTIN_ID_BOOLEAN:
+          {
+            class_name = ECMA_MAGIC_STRING_BOOLEAN_UL;
+            break;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
+          case ECMA_BUILTIN_ID_NUMBER:
+          {
+            class_name = ECMA_MAGIC_STRING_NUMBER_UL;
+            break;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+          case ECMA_BUILTIN_ID_FUNCTION:
+          {
+            class_name = ECMA_MAGIC_STRING_FUNCTION_UL;
+            break;
+          }
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+          case ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR:
+          {
+            class_name = ECMA_MAGIC_STRING_COMPACT_PROFILE_ERROR_UL;
+            break;
+          }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+          case ECMA_BUILTIN_ID_ERROR:
+          case ECMA_BUILTIN_ID_EVAL_ERROR:
+          case ECMA_BUILTIN_ID_RANGE_ERROR:
+          case ECMA_BUILTIN_ID_REFERENCE_ERROR:
+          case ECMA_BUILTIN_ID_SYNTAX_ERROR:
+          case ECMA_BUILTIN_ID_TYPE_ERROR:
+          case ECMA_BUILTIN_ID_URI_ERROR:
+          {
+            class_name = ECMA_MAGIC_STRING_ERROR_UL;
+            break;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+          default:
+          {
+            JERRY_ASSERT (builtin_id == ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+
+            class_name = ECMA_MAGIC_STRING_FUNCTION_UL;
+            break;
+          }
+        }
+      }
+      else
+      {
+        class_name = ECMA_MAGIC_STRING_FUNCTION_UL;
+      }
+
+      return class_name;
+    }
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    {
+      return ECMA_MAGIC_STRING_FUNCTION_UL;
+    }
+    default:
+    {
+      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL);
+
+      if (ecma_get_object_is_builtin (obj_p))
+      {
+        ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
+                                                                          ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+        switch (builtin_id)
+        {
+          case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_OBJECT_UL;
+          }
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+          case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_STRING_UL;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
+          case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_BOOLEAN_UL;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
+          case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_NUMBER_UL;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
+          case ECMA_BUILTIN_ID_MATH:
+          {
+            return ECMA_MAGIC_STRING_MATH_UL;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+          case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE:
+          case ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_ERROR_UL;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+          default:
+          {
+            JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL)
+                          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_JERRY));
+
+            return ECMA_MAGIC_STRING_OBJECT_UL;
+          }
+        }
+      }
+      else
+      {
+        ecma_property_t *class_name_prop_p = ecma_find_internal_property (obj_p,
+                                                                          ECMA_INTERNAL_PROPERTY_CLASS);
+
+        if (class_name_prop_p == NULL)
+        {
+          return ECMA_MAGIC_STRING_OBJECT_UL;
+        }
+        else
+        {
+          return (ecma_magic_string_id_t) class_name_prop_p->u.internal_property.value;
+        }
+      }
+    }
+  }
+} /* ecma_object_get_class_name */
 
 /**
  * @}

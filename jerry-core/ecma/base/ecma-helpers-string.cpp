@@ -459,6 +459,12 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
                                                    str_buf,
                                                    sizeof (str_buf));
 
+  ecma_magic_string_id_t magic_string_id;
+  if (ecma_is_zt_string_magic (str_buf, &magic_string_id))
+  {
+    return ecma_get_magic_string (magic_string_id);
+  }
+
   ecma_string_t* string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;

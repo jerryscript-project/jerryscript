@@ -62,7 +62,14 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 #endif /* !JERRY_NDEBUG */
 
-  exit (code);
+  if (code == ERR_FAILED_INTERNAL_ASSERTION)
+  {
+    abort ();
+  }
+  else
+  {
+    exit (code);
+  }
 } /* jerry_fatal */
 
 /**

@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -192,6 +193,10 @@ extern ecma_number_t ecma_number_sqrt (ecma_number_t num);
 extern ecma_number_t ecma_number_abs (ecma_number_t num);
 extern ecma_number_t ecma_number_ln (ecma_number_t num);
 extern ecma_number_t ecma_number_exp (ecma_number_t num);
+extern void ecma_number_to_decimal (ecma_number_t num,
+                                    uint64_t *out_digits_p,
+                                    int32_t *out_digits_num_p,
+                                    int32_t *out_decimal_exp_p);
 
 /* ecma-helpers-values-collection.c */
 

@@ -21,7 +21,8 @@ var func = function(a, b) {
 try {
   [0].reduce(new Object());
   assert(false);
-} catch(e) {
+}
+catch(e) {
   assert(e instanceof TypeError);
 }
 
@@ -54,3 +55,9 @@ assert ([0, 1].reduce(func, 3.2) === 4.2);
 assert ([0, "x", 1].reduce(func) === "0x1");
 
 assert ([0, "x", 1].reduce(func, 3.2) === "3.2x1");
+
+var long_array = [0, 1];
+assert (long_array.reduce(func,10) === 11);
+
+long_array[10000] = 1;
+assert (long_array.reduce(func,10) === 12);

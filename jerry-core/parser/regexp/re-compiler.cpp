@@ -368,6 +368,58 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
         alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
         break;
       }
+      case RE_TOK_ASSERT_START:
+      {
+        JERRY_DDLOG ("Compile a start assertion\n");
+        append_opcode (bc_ctx_p, RE_OP_ASSERT_START);
+        break;
+      }
+      case RE_TOK_ASSERT_END:
+      {
+        JERRY_DDLOG ("Compile an end assertion\n");
+        append_opcode (bc_ctx_p, RE_OP_ASSERT_END);
+        break;
+      }
+      case RE_TOK_ASSERT_WORD_BOUNDARY:
+      {
+        JERRY_DDLOG ("Compile a word boundary assertion\n");
+        append_opcode (bc_ctx_p, RE_OP_ASSERT_WORD_BOUNDARY);
+        break;
+      }
+      case RE_TOK_ASSERT_NOT_WORD_BOUNDARY:
+      {
+        JERRY_DDLOG ("Compile a not word boundary assertion\n");
+        append_opcode (bc_ctx_p, RE_OP_ASSERT_NOT_WORD_BOUNDARY);
+        break;
+      }
+      case RE_TOK_ASSERT_START_POS_LOOKAHEAD:
+      {
+        JERRY_DDLOG ("Compile a positive lookahead assertion\n");
+        idx = re_ctx_p->num_of_non_captures++;
+        append_opcode (bc_ctx_p, RE_OP_LOOKPOS);
+
+        parse_alternative (re_ctx_p, false);
+
+        append_opcode (bc_ctx_p, RE_OP_MATCH);
+
+        insert_u32 (bc_ctx_p, new_atom_start_offset, BYTECODE_LEN (bc_ctx_p) - new_atom_start_offset);
+        insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
+        break;
+      }
+      case RE_TOK_ASSERT_START_NEG_LOOKAHEAD:
+      {
+        JERRY_DDLOG ("Compile a negative lookahead assertion\n");
+        idx = re_ctx_p->num_of_non_captures++;
+        append_opcode (bc_ctx_p, RE_OP_LOOKNEG);
+
+        parse_alternative (re_ctx_p, false);
+
+        append_opcode (bc_ctx_p, RE_OP_MATCH);
+
+        insert_u32 (bc_ctx_p, new_atom_start_offset, BYTECODE_LEN (bc_ctx_p) - new_atom_start_offset);
+        insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
+        break;
+      }
       case RE_TOK_END_GROUP:
       {
         JERRY_DDLOG ("Compile a group end\n");
@@ -671,6 +723,38 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       case RE_OP_ALTERNATIVE:
       {
         JERRY_DLOG ("RE_OP_ALTERNATIVE ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_ASSERT_START:
+      {
+        JERRY_DLOG ("RE_OP_ASSERT_START ");
+        break;
+      }
+      case RE_OP_ASSERT_END:
+      {
+        JERRY_DLOG ("RE_OP_ASSERT_END ");
+        break;
+      }
+      case RE_OP_ASSERT_WORD_BOUNDARY:
+      {
+        JERRY_DLOG ("RE_OP_ASSERT_WORD_BOUNDARY ");
+        break;
+      }
+      case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
+      {
+        JERRY_DLOG ("RE_OP_ASSERT_NOT_WORD_BOUNDARY ");
+        break;
+      }
+      case RE_OP_LOOKPOS:
+      {
+        JERRY_DLOG ("RE_OP_LOOKPOS ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_LOOKNEG:
+      {
+        JERRY_DLOG ("RE_OP_LOOKNEG ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }

@@ -125,6 +125,18 @@ utf8_backtrack (const ecma_char_t* str_p)
   return --str_p;
 }
 
+static bool
+regexp_is_wordchar (const ecma_char_t ch)
+{
+  if ((ch >= 'a' && ch <= 'z')
+      || (ch >= 'A' && ch <= 'Z')
+      || (ch >= '0' && ch <= '9'))
+  {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Recursive function for RegExp matching
  */
@@ -157,7 +169,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
     {
       case RE_OP_MATCH:
       {
-        JERRY_DDLOG ("RegExp match\n");
+        JERRY_DDLOG ("Execute RE_OP_MATCH: match\n");
         *res = str_p;
         re_ctx_p->recursion_depth--;
         ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
@@ -168,32 +180,218 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         uint32_t ch1 = get_value (&bc_p);
         uint32_t ch2 = (uint32_t) *str_p;
         str_p++;
-        JERRY_DDLOG ("Character matching %d to %d\n", ch1, ch2);
+        JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
 
         if (ch2 == '\0' || ch1 != ch2)
         {
+          JERRY_DDLOG ("fail\n");
           re_ctx_p->recursion_depth--;
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
         }
+        JERRY_DDLOG ("match\n");
         break;
       }
       case RE_OP_PERIOD:
       {
         uint32_t ch1 = (uint32_t) *str_p;
         str_p++;
-        JERRY_DDLOG ("Period matching '.' to %d\n", ch1);
+        JERRY_DDLOG ("Period matching '.' to %d: ", ch1);
         if (ch1 == '\n' || ch1 == '\0')
         {
+          JERRY_DDLOG ("fail\n");
           re_ctx_p->recursion_depth--;
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
         }
+        JERRY_DDLOG ("match\n");
         break;
+      }
+      case RE_OP_ASSERT_START:
+      {
+        const ecma_char_t *ch1 = str_p;
+        JERRY_DDLOG ("Execute RE_OP_ASSERT_START to %c: ", *ch1);
+        ch1--;
+
+        if (str_p <= re_ctx_p->input_start_p)
+        {
+          JERRY_DDLOG ("match\n");
+          break;
+        }
+
+        if (!(re_ctx_p->flags & RE_FLAG_MULTILINE))
+        {
+          JERRY_DDLOG ("fail\n");
+          re_ctx_p->recursion_depth--;
+          return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+        }
+
+        if (*ch1 == '\n')
+        {
+          JERRY_DDLOG ("match\n");
+          break;
+        }
+
+        JERRY_DDLOG ("fail\n");
+        re_ctx_p->recursion_depth--;
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+      }
+      case RE_OP_ASSERT_END:
+      {
+        JERRY_DDLOG ("Execute RE_OP_ASSERT_END to %c: ", *str_p);
+
+        if (str_p >= re_ctx_p->input_end_p)
+        {
+          JERRY_DDLOG ("match\n");
+          break;
+        }
+
+        if (!(re_ctx_p->flags & RE_FLAG_MULTILINE))
+        {
+          JERRY_DDLOG ("fail\n");
+          re_ctx_p->recursion_depth--;
+          return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+        }
+
+        if (*str_p == '\n')
+        {
+          JERRY_DDLOG ("match\n");
+          break;
+        }
+
+        JERRY_DDLOG ("fail\n");
+        re_ctx_p->recursion_depth--;
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+      }
+      case RE_OP_ASSERT_WORD_BOUNDARY:
+      case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
+      {
+        bool wordchar1, wordchar2;
+        const ecma_char_t *ch1 = str_p;
+
+        if (str_p <= re_ctx_p->input_start_p)
+        {
+          wordchar1 = false;  /* not a wordchar */
+        }
+        else
+        {
+          ch1--;
+          wordchar1 = regexp_is_wordchar (*ch1);
+        }
+
+        if (str_p >= re_ctx_p->input_end_p)
+        {
+          wordchar2 = false;  /* not a wordchar */
+        }
+        else
+        {
+          wordchar2 = regexp_is_wordchar (*str_p);
+        }
+
+        if (op == RE_OP_ASSERT_WORD_BOUNDARY)
+        {
+          JERRY_DDLOG ("Execute RE_OP_ASSERT_WORD_BOUNDARY at %c: ", *str_p);
+          if (wordchar1 == wordchar2)
+          {
+            JERRY_DDLOG ("fail\n");
+            re_ctx_p->recursion_depth--;
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+        }
+        else
+        {
+          JERRY_ASSERT (op == RE_OP_ASSERT_NOT_WORD_BOUNDARY);
+          JERRY_DDLOG ("Execute RE_OP_ASSERT_NOT_WORD_BOUNDARY at %c: ", *str_p);
+
+          if (wordchar1 != wordchar2)
+          {
+            JERRY_DDLOG ("fail\n");
+            re_ctx_p->recursion_depth--;
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+        }
+
+        JERRY_DDLOG ("match\n");
+        break;
+      }
+      case RE_OP_LOOKPOS:
+      case RE_OP_LOOKNEG:
+      {
+        const ecma_char_t *sub_str_p = NULL;
+
+        // save the save_p array
+        size_t size = (size_t) (re_ctx_p->num_of_captures) * sizeof (const ecma_char_t *);
+        void* saved_bck_void_p = mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
+        const ecma_char_t **saved_bck_p = static_cast <const ecma_char_t **> (saved_bck_void_p);
+
+        memcpy (saved_bck_p, re_ctx_p->saved_p, size);
+
+        do
+        {
+          uint32_t offset = get_value (&bc_p);
+          if (!sub_str_p)
+          {
+            ecma_completion_value_t match_value = regexp_match (re_ctx_p, bc_p, str_p, &sub_str_p);
+            if (ecma_is_completion_value_throw (match_value))
+            {
+              mem_heap_free_block (saved_bck_p);
+              return match_value;
+            }
+          }
+          bc_p += offset;
+        }
+        while (get_opcode (&bc_p) == RE_OP_ALTERNATIVE);
+
+        if (op == RE_OP_LOOKPOS)
+        {
+          JERRY_DDLOG ("Execute RE_OP_LOOKPOS: ");
+          if (!sub_str_p)
+          {
+            JERRY_DDLOG ("fail\n");
+            // restore saves
+            memcpy (re_ctx_p->saved_p, saved_bck_p, size);
+            mem_heap_free_block (saved_bck_p);
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+          JERRY_DDLOG ("match\n");
+        }
+        else
+        {
+          JERRY_DDLOG ("Execute RE_OP_LOOKNEG: ");
+          if (sub_str_p)
+          {
+            JERRY_DDLOG ("fail\n");
+            // restore saves
+            memcpy (re_ctx_p->saved_p, saved_bck_p, size);
+            mem_heap_free_block (saved_bck_p);
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+          JERRY_DDLOG ("match\n");
+        }
+
+        ecma_completion_value_t match_value = regexp_match (re_ctx_p, bc_p, str_p, &sub_str_p);
+        if (ecma_is_value_true (match_value))
+        {
+          *res = sub_str_p;
+          mem_heap_free_block (saved_bck_p);
+          re_ctx_p->recursion_depth--;
+          return match_value; /* match */
+        }
+        else if (ecma_is_completion_value_throw (match_value))
+        {
+          mem_heap_free_block (saved_bck_p);
+          return match_value;
+        }
+
+        // restore saves
+        memcpy (re_ctx_p->saved_p, saved_bck_p, size);
+        mem_heap_free_block (saved_bck_p);
+        return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
       }
       case RE_OP_SAVE_AT_START:
       {
         const ecma_char_t *old_start_p;
         re_bytecode_t *old_bc_p;
 
+        JERRY_DDLOG ("Execute RE_OP_SAVE_AT_START\n");
         old_start_p = re_ctx_p->saved_p[RE_GLOBAL_START_IDX];
         re_ctx_p->saved_p[RE_GLOBAL_START_IDX] = str_p;
         do
@@ -223,6 +421,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_SAVE_AND_MATCH:
       {
+        JERRY_DDLOG ("End of pattern is reached: match\n");
         re_ctx_p->saved_p[RE_GLOBAL_END_IDX] = str_p;
         *res = str_p;
         re_ctx_p->recursion_depth--;
@@ -234,13 +433,16 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         *  Alternatives should be jump over, when alternative opcode appears.
         */
         uint32_t offset = get_value (&bc_p);
+        JERRY_DDLOG ("Execute RE_OP_ALTERNATIVE");
         bc_p += offset;
         while (*bc_p == RE_OP_ALTERNATIVE)
         {
+          JERRY_DDLOG (", jump: %d");
           bc_p++;
           offset = get_value (&bc_p);
           bc_p += offset;
         }
+        JERRY_DDLOG ("\n");
         break;
       }
       case RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
@@ -668,6 +870,8 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   re_matcher_ctx re_ctx;
+  re_ctx.input_start_p = str_p;
+  re_ctx.input_end_p = str_p + strlen ((char *) str_p);
   re_ctx.steps_count = 0;
   re_ctx.recursion_depth = 0;
 
@@ -677,8 +881,8 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = get_value (&bc_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures, const ecma_char_t*);
-  for (uint32_t i = 0; i < re_ctx.num_of_captures; i++)
+  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, const ecma_char_t*);
+  for (uint32_t i = 0; i < re_ctx.num_of_captures + re_ctx.num_of_non_captures; i++)
   {
     saved_p[i] = NULL;
   }

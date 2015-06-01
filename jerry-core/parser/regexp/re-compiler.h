@@ -44,6 +44,12 @@
 #define RE_OP_ALTERNATIVE                                   16
 #define RE_OP_GREEDY_ITERATOR                               17
 #define RE_OP_NON_GREEDY_ITERATOR                           18
+#define RE_OP_ASSERT_START                                  19
+#define RE_OP_ASSERT_END                                    20
+#define RE_OP_ASSERT_WORD_BOUNDARY                          21
+#define RE_OP_ASSERT_NOT_WORD_BOUNDARY                      22
+#define RE_OP_LOOKPOS                                       23
+#define RE_OP_LOOKNEG                                       24
 
 /* flags */
 #define RE_FLAG_GLOBAL              (1 << 0)

@@ -145,8 +145,8 @@ assert (t == undefined);
 t = new RegExp ("(?!a|b)Dt").exec("Dt");
 assert (t == "Dt");
 
-// t = new RegExp ("(?!.|P)").exec("a");
-// assert (t == "");
+t = new RegExp ("(?!.|P)").exec("a");
+assert (t == "");
 
-// t = new RegExp ("(?!.)").exec("a");
-// assert (t == "");
+t = new RegExp ("(?!.)").exec("a");
+assert (t == "");

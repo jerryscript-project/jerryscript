@@ -899,7 +899,7 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
   re_ctx.num_of_iterations = num_of_iter_p;
 
   /* 2. Try to match */
-  while (str_p && *str_p != '\0' && ecma_is_completion_value_empty (ret_value))
+  while (str_p && str_p <= re_ctx.input_end_p && ecma_is_completion_value_empty (ret_value))
   {
     const ecma_char_t *sub_str_p;
     ECMA_TRY_CATCH (match_value, regexp_match (&re_ctx, bc_p, str_p, &sub_str_p), ret_value);

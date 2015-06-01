@@ -18,7 +18,8 @@
 #include "re-parser.h"
 #include "syntax-errors.h"
 
-#define JERRY_LOOKUP(str_p, lookup)  *(str_p + lookup)
+#define RE_LOOKUP(str_p, lookup)  *(str_p + lookup)
+#define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)
 
 operand
 parse_regexp_literal ()
@@ -58,6 +59,13 @@ hex_to_int (ecma_char_t hex)
   }
 }
 
+static ecma_char_t
+get_ecma_char (ecma_char_t** char_p)
+{
+  RE_ADVANCE (*char_p, 1);
+  return **char_p;
+}
+
 static uint32_t
 parse_re_iterator (ecma_char_t *pattern_p,
                    re_token_t *re_token_p,
@@ -68,8 +76,8 @@ parse_re_iterator (ecma_char_t *pattern_p,
   re_token_p->qmax = 1;
   re_token_p->greedy = true;
 
-  ecma_char_t ch0 = JERRY_LOOKUP (pattern_p, lookup);
-  ecma_char_t ch1 = JERRY_LOOKUP (pattern_p, lookup + 1);
+  ecma_char_t ch0 = RE_LOOKUP (pattern_p, lookup);
+  ecma_char_t ch1 = RE_LOOKUP (pattern_p, lookup + 1);
 
   switch (ch0)
   {
@@ -129,7 +137,7 @@ parse_re_iterator (ecma_char_t *pattern_p,
       while (true)
       {
         advance++;
-        ch1 = JERRY_LOOKUP (pattern_p, lookup + advance);
+        ch1 = RE_LOOKUP (pattern_p, lookup + advance);
 
         if (isdigit (ch1))
         {
@@ -146,7 +154,7 @@ parse_re_iterator (ecma_char_t *pattern_p,
           {
             JERRY_ERROR_MSG ("RegExp quantifier error: double comma.");
           }
-          if ((JERRY_LOOKUP (pattern_p, lookup + advance + 1)) == '}')
+          if ((RE_LOOKUP (pattern_p, lookup + advance + 1)) == '}')
           {
             if (digits == 0)
             {
@@ -189,7 +197,7 @@ parse_re_iterator (ecma_char_t *pattern_p,
         }
       }
 
-      if ((JERRY_LOOKUP (pattern_p, lookup + advance)) == '?')
+      if ((RE_LOOKUP (pattern_p, lookup + advance)) == '?')
       {
         re_token_p->greedy = false;
         advance += 1;
@@ -213,11 +221,58 @@ parse_re_iterator (ecma_char_t *pattern_p,
   return advance;
 }
 
+static void
+re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p)
+{
+  ecma_char_t **pattern_p = &(parser_ctx_p->pattern_start_p);
+  ecma_char_t ch1;
+  int char_class_in = 0;
+  parser_ctx_p->number_of_groups = 0;
+
+  ch1 = get_ecma_char (pattern_p);
+  while (ch1 != '\0')
+  {
+    ecma_char_t ch0 = ch1;
+    ch1 = get_ecma_char (pattern_p);
+    switch (ch0)
+    {
+      case '\\':
+      {
+        ch1 = get_ecma_char (pattern_p);
+        break;
+      }
+      case '[':
+      {
+        char_class_in++;
+        break;
+      }
+      case ']':
+      {
+        if (!char_class_in)
+        {
+          char_class_in--;
+        }
+        break;
+      }
+      case '(':
+      {
+        if (ch1 != '?' && !char_class_in)
+        {
+          parser_ctx_p->number_of_groups++;
+        }
+        break;
+      }
+    }
+  }
+}
+
 /**
  * Read the input pattern and parse the next token for the RegExp compiler
+ *
+ * @return current parsed token
  */
 re_token_t
-re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
+re_parse_next_token (re_parser_ctx_t *parser_ctx_p) /**< parser context */
 {
   re_token_t result;
   uint32_t advance = 0;
@@ -254,7 +309,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     {
       advance = 2;
       result.type = RE_TOK_CHAR;
-      ecma_char_t ch1 = JERRY_LOOKUP (parser_ctx_p->current_char_p, 1);
+      ecma_char_t ch1 = RE_LOOKUP (parser_ctx_p->current_char_p, 1);
 
       if (ch1 == 'b')
       {
@@ -286,7 +341,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
       }
       else if (ch1 == 'c')
       {
-        ecma_char_t ch2 = JERRY_LOOKUP (parser_ctx_p->current_char_p, 2);
+        ecma_char_t ch2 = RE_LOOKUP (parser_ctx_p->current_char_p, 2);
         if ((ch2 >= 'A' && ch2 <= 'Z') || (ch2 >= 'a' && ch2 <= 'z'))
         {
           advance = 3;
@@ -299,8 +354,8 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
         }
       }
       else if (ch1 == 'x'
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 2))
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 3)))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 2))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 3)))
       {
         advance = 4;
         result.type = RE_TOK_CHAR;
@@ -308,10 +363,10 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
         /* result.value = ...; */
       }
       else if (ch1 == 'u'
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 2))
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 3))
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 4))
-               && isxdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 5)))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 2))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 3))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 4))
+               && isxdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 5)))
       {
         advance = 4;
         result.type = RE_TOK_CHAR;
@@ -352,7 +407,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
       {
         if (ch1 == '0')
         {
-          if (isdigit (JERRY_LOOKUP (parser_ctx_p->current_char_p, 2)))
+          if (isdigit (RE_LOOKUP (parser_ctx_p->current_char_p, 2)))
           {
             JERRY_ERROR_MSG ("RegExp escape pattern error.");
           }
@@ -362,7 +417,46 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
         }
         else
         {
-          /* FIXME: Unimplemented BACKREFERENCE */
+          if (parser_ctx_p->number_of_groups == -1)
+          {
+            re_count_num_of_groups (parser_ctx_p);
+          }
+
+          if (parser_ctx_p->number_of_groups)
+          {
+            uint32_t number = 0;
+            int index = 0;
+            advance = 0;
+
+            do
+            {
+              if (index >= RE_MAX_RE_DECESC_DIGITS)
+              {
+                JERRY_ERROR_MSG ("RegExp escape pattern error: decimal escape too long.");
+              }
+
+              advance++;
+              ecma_char_t digit = RE_LOOKUP (parser_ctx_p->current_char_p, advance);
+              if (!isdigit (digit))
+              {
+                break;
+              }
+              number = number * 10 + hex_to_int (digit);
+              index++;
+            }
+            while (true);
+
+            if ((int) number <= parser_ctx_p->number_of_groups)
+            {
+              result.type = RE_TOK_BACKREFERENCE;
+            }
+
+            result.value = number;
+          }
+          else
+          {
+            result.value = ch1;
+          }
         }
       }
       else
@@ -375,9 +469,9 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     }
     case '(':
     {
-      if (JERRY_LOOKUP (parser_ctx_p->current_char_p, 1) == '?')
+      if (RE_LOOKUP (parser_ctx_p->current_char_p, 1) == '?')
       {
-        ecma_char_t ch2 = JERRY_LOOKUP (parser_ctx_p->current_char_p, 2);
+        ecma_char_t ch2 = RE_LOOKUP (parser_ctx_p->current_char_p, 2);
         if (ch2 == '=')
         {
           /* (?= */
@@ -416,7 +510,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     {
       advance = 1;
       result.type = RE_TOK_START_CHARCLASS;
-      if (JERRY_LOOKUP (parser_ctx_p->current_char_p, 1) == '^')
+      if (RE_LOOKUP (parser_ctx_p->current_char_p, 1) == '^')
       {
         advance = 2;
         result.type = RE_TOK_START_CHARCLASS_INVERTED;
@@ -452,7 +546,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p)
     }
   }
 
-  (parser_ctx_p->current_char_p) += advance;
+  RE_ADVANCE (parser_ctx_p->current_char_p, advance);
 
   return result;
 } /* re_parse_next_token */

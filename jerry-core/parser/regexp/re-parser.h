@@ -47,6 +47,8 @@ typedef uint8_t token_type_t;
 #define RE_TOK_START_CHARCLASS_INVERTED      23
 
 #define RE_ITERATOR_INFINITE ((uint32_t)-1)
+#define RE_MAX_RE_DECESC_DIGITS 9
+
 #define RE_CONTROL_CHAR_NULL 0x0000 /* \0 */
 #define RE_CONTROL_CHAR_TAB  0x0009 /* \t */
 #define RE_CONTROL_CHAR_EOL  0x000a /* \n */
@@ -70,10 +72,8 @@ typedef struct
   int number_of_groups;
 } re_parser_ctx_t;
 
-operand
-parse_regexp_literal ();
-
-re_token_t
-re_parse_next_token (re_parser_ctx_t *parser_ctx_p);
+operand parse_regexp_literal ();
+re_token_t re_parse_char_class (re_parser_ctx_t *parser_ctx_p);
+re_token_t re_parse_next_token (re_parser_ctx_t *parser_ctx_p);
 
 #endif /* RE_PARSER_H */

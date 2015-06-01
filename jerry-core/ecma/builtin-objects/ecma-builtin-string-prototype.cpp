@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -258,7 +259,140 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2. */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3. */
+  ecma_string_t *get_string_val = ecma_get_string_from_value (to_string_val);
+
+  JERRY_ASSERT (ecma_string_get_length (get_string_val) >= 0);
+
+  const uint32_t len = (uint32_t) ecma_string_get_length (get_string_val);
+
+  /* 4. */
+  uint32_t start = 0, end = len;
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
+                               arg1,
+                               ret_value);
+
+  if (!ecma_number_is_nan (start_num))
+  {
+
+    if (ecma_number_is_infinity (start_num))
+    {
+      start = ecma_number_is_negative (start_num) ? 0 : len;
+    }
+    else
+    {
+      const int int_start = ecma_number_to_int32 (start_num);
+
+      if (int_start < 0)
+      {
+        const uint32_t start_abs = (uint32_t) - int_start;
+        start = start_abs > len ? 0 : len - start_abs;
+      }
+      else
+      {
+        start = (uint32_t) int_start;
+
+        if (start > len)
+        {
+          start = len;
+        }
+      }
+    }
+  }
+  else
+  {
+    start = 0;
+  }
+
+  /* 5. */
+  if (ecma_is_value_undefined (arg2))
+  {
+    end = len;
+  }
+  else
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num,
+                                 arg2,
+                                 ret_value);
+
+    if (!ecma_number_is_nan (end_num))
+    {
+
+      if (ecma_number_is_infinity (end_num))
+      {
+        end = ecma_number_is_negative (end_num) ? 0 : len;
+      }
+      else
+      {
+        const int32_t int_end = ecma_number_to_int32 (end_num);
+
+        if (int_end < 0)
+        {
+          const uint32_t end_abs = (uint32_t) - int_end;
+          end = end_abs > len ? 0 : len - end_abs;
+        }
+        else
+        {
+          end = (uint32_t) int_end;
+
+          if (end > len)
+          {
+            end = len;
+          }
+        }
+      }
+    }
+    else
+    {
+      end = 0;
+    }
+
+    ECMA_OP_TO_NUMBER_FINALIZE (end_num);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+
+  JERRY_ASSERT (start <= len && end <= len);
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 8. */
+    const uint32_t span = (start > end) ? 0 : end - start;
+    const uint32_t new_str_size = (uint32_t) sizeof (ecma_char_t) * (span + 1);
+
+    MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_str_size, ecma_char_t);
+
+    /* 9. */
+    for (uint32_t idx = 0; idx < span; idx++)
+    {
+      new_str_buffer[idx] = ecma_string_get_char_at_pos (get_string_val, start + idx);
+    }
+
+    new_str_buffer[span] = '\0';
+    ecma_string_t* new_str = ecma_new_ecma_string ((ecma_char_t *) new_str_buffer);
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str));
+
+    MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
+  }
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_slice */
 
 /**

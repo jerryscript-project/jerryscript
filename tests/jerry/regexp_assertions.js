@@ -14,8 +14,8 @@
 // limitations under the License.
 
 var t;
-t
- = new RegExp ("^alma$").exec("alma");
+
+t = new RegExp ("^alma$").exec("alma");
 assert (t == "alma");
 
 t = new RegExp ("^alma$").exec("almaa");

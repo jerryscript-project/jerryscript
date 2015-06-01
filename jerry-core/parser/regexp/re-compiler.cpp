@@ -420,6 +420,22 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
         insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
         break;
       }
+      case RE_TOK_BACKREFERENCE:
+      {
+        uint32_t backref = (uint32_t) re_ctx_p->current_token.value;
+        idx = re_ctx_p->num_of_non_captures++;
+        if (backref > re_ctx_p->highest_backref)
+        {
+          re_ctx_p->highest_backref = backref;
+        }
+        JERRY_DDLOG ("Compile a backreference: %d\n", backref);
+        append_opcode (bc_ctx_p, RE_OP_BACKREFERENCE);
+        append_u32 (bc_ctx_p, backref);
+
+        insert_u32 (bc_ctx_p, new_atom_start_offset, BYTECODE_LEN (bc_ctx_p) - new_atom_start_offset);
+        insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
+        break;
+      }
       case RE_TOK_END_GROUP:
       {
         JERRY_DDLOG ("Compile a group end\n");
@@ -534,6 +550,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   re_compiler_ctx_t re_ctx;
   re_ctx.flags = 0;
+  re_ctx.highest_backref = 0;
   re_ctx.num_of_non_captures = 0;
   re_ctx.recursion_depth = 0;
 
@@ -576,7 +593,15 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
   append_opcode (&bc_ctx, RE_OP_EOF);
 
-  /* 2. Insert extra informations for bytecode header */
+  /* 2. Check for invalid backreference */
+  if (ecma_is_completion_value_empty (ret_value)
+      && re_ctx.highest_backref >= re_ctx.num_of_captures)
+  {
+    JERRY_ERROR_MSG ("Invalid backreference.\n");
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+  }
+
+  /* 3. Insert extra informations for bytecode header */
   insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.num_of_non_captures);
   insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.num_of_captures * 2);
   insert_u32 (&bc_ctx, 0, (uint32_t) re_ctx.flags);
@@ -701,7 +726,7 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       }
       case RE_OP_GREEDY_ITERATOR:
       {
-        JERRY_DLOG ("RE_OP_GREEDY_ITERATOR ");
+        JERRY_DLOG ("GREEDY_ITERATOR ");
         JERRY_DLOG ("%d ", get_value (&bytecode_p));
         JERRY_DLOG ("%d ", get_value (&bytecode_p));
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
@@ -709,7 +734,7 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       }
       case RE_OP_NON_GREEDY_ITERATOR:
       {
-        JERRY_DLOG ("RE_OP_NON_GREEDY_ITERATOR ");
+        JERRY_DLOG ("NON_GREEDY_ITERATOR ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
@@ -717,44 +742,50 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       }
       case RE_OP_PERIOD:
       {
-        JERRY_DLOG ("RE_OP_PERIOD ");
+        JERRY_DLOG ("PERIOD ");
         break;
       }
       case RE_OP_ALTERNATIVE:
       {
-        JERRY_DLOG ("RE_OP_ALTERNATIVE ");
+        JERRY_DLOG ("ALTERNATIVE ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_ASSERT_START:
       {
-        JERRY_DLOG ("RE_OP_ASSERT_START ");
+        JERRY_DLOG ("ASSERT_START ");
         break;
       }
       case RE_OP_ASSERT_END:
       {
-        JERRY_DLOG ("RE_OP_ASSERT_END ");
+        JERRY_DLOG ("ASSERT_END ");
         break;
       }
       case RE_OP_ASSERT_WORD_BOUNDARY:
       {
-        JERRY_DLOG ("RE_OP_ASSERT_WORD_BOUNDARY ");
+        JERRY_DLOG ("ASSERT_WORD_BOUNDARY ");
         break;
       }
       case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
       {
-        JERRY_DLOG ("RE_OP_ASSERT_NOT_WORD_BOUNDARY ");
+        JERRY_DLOG ("ASSERT_NOT_WORD_BOUNDARY ");
         break;
       }
       case RE_OP_LOOKPOS:
       {
-        JERRY_DLOG ("RE_OP_LOOKPOS ");
+        JERRY_DLOG ("LOOKPOS ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }
       case RE_OP_LOOKNEG:
       {
-        JERRY_DLOG ("RE_OP_LOOKNEG ");
+        JERRY_DLOG ("LOOKNEG ");
+        JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_BACKREFERENCE:
+      {
+        JERRY_DLOG ("BACKREFERENCE ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
         break;
       }

@@ -62,8 +62,9 @@ hex_to_int (ecma_char_t hex)
 static ecma_char_t
 get_ecma_char (ecma_char_t** char_p)
 {
+  ecma_char_t ch = **char_p;
   RE_ADVANCE (*char_p, 1);
-  return **char_p;
+  return ch;
 }
 
 static uint32_t

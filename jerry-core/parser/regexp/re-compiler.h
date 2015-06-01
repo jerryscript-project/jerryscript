@@ -50,6 +50,7 @@
 #define RE_OP_ASSERT_NOT_WORD_BOUNDARY                      22
 #define RE_OP_LOOKPOS                                       23
 #define RE_OP_LOOKNEG                                       24
+#define RE_OP_BACKREFERENCE                                 25
 
 /* flags */
 #define RE_FLAG_GLOBAL              (1 << 0)
@@ -76,6 +77,7 @@ typedef struct
   uint32_t recursion_depth;
   uint32_t num_of_captures;
   uint32_t num_of_non_captures;
+  uint32_t highest_backref;
   re_bytecode_ctx_t *bytecode_ctx_p;
   re_token_t current_token;
   re_parser_ctx_t *parser_ctx_p;

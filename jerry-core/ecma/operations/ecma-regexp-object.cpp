@@ -386,6 +386,40 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         mem_heap_free_block (saved_bck_p);
         return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
       }
+      case RE_OP_BACKREFERENCE:
+      {
+        uint32_t backref_idx;
+        const ecma_char_t *sub_str_p;
+
+        backref_idx = get_value (&bc_p);
+        backref_idx *= 2;  /* backref n -> saved indices [n*2, n*2+1] */
+        JERRY_ASSERT (backref_idx >= 2 && backref_idx + 1 < re_ctx_p->num_of_captures);
+
+        if (!re_ctx_p->saved_p[backref_idx] || !re_ctx_p->saved_p[backref_idx + 1])
+        {
+          break; /* capture is 'undefined', always matches! */
+        }
+
+        sub_str_p = re_ctx_p->saved_p[backref_idx];
+        while (sub_str_p < re_ctx_p->saved_p[backref_idx + 1])
+        {
+          uint32_t ch1, ch2;
+
+          if (str_p >= re_ctx_p->input_end_p)
+          {
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+          ch1 = *sub_str_p;
+          sub_str_p++;
+          ch2 = *str_p;
+          str_p++;
+          if (ch1 != ch2)
+          {
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail*/
+          }
+        }
+        break;
+      }
       case RE_OP_SAVE_AT_START:
       {
         const ecma_char_t *old_start_p;

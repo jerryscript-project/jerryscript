@@ -29,9 +29,25 @@
 #include "opcodes-dumper.h"
 #include "serializer.h"
 
-#define NESTING_ITERATIONAL 1
-#define NESTING_SWITCH      2
-#define NESTING_FUNCTION    3
+/**
+ * Nesting types
+ *
+ * Note:
+ *      Nesting is an element, describing classes of syntax blocks, handled by parser.
+ *
+ *      Nestings are pushed to the nestings stack upon entering them, and popped upon leaving.
+ *
+ *      The top-most nesting, if any, describes the inner-most syntax block of specified type,
+ *      currently reached by parser.
+ */
+typedef enum
+{
+  NESTING_ITERATIONAL, /**< an iterational (for, for-in, while, do-while) statement */
+  NESTING_SWITCH,      /**< switch-case block */
+  NESTING_FUNCTION,    /**< function */
+  NESTING_TRY,         /**< try-catch-finally block */
+  NESTING_WITH         /**< with block */
+} nesting_t;
 
 static token tok;
 
@@ -39,7 +55,7 @@ enum
 {
   nestings_global_size
 };
-STATIC_STACK (nestings, uint8_t)
+STATIC_STACK (nestings, nesting_t)
 
 enum
 {
@@ -56,7 +72,12 @@ STATIC_STACK (scopes, scopes_tree)
                                 : I == NESTING_ITERATIONAL \
                                   ? "iterational" \
                                   : I == NESTING_SWITCH \
-                                    ? "switch" : "unknown")
+                                    ? "switch" \
+                                    : I == NESTING_TRY \
+                                      ? "try" \
+                                      : I == NESTING_WITH \
+                                        ? "with" \
+                                        : "unknown")
 
 #define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
 
@@ -69,18 +90,24 @@ static void process_keyword_names (void);
 static void skip_braces (void);
 static void skip_parens (void);
 
+/**
+ * Push a nesting to the nesting stack, so setting new current nesting
+ */
 static void
-push_nesting (uint8_t nesting_type)
+push_nesting (nesting_t nesting_type) /**< type of new nesting */
 {
   STACK_PUSH (nestings, nesting_type);
-}
+} /* push_nesting */
 
+/**
+ * Restore nesting from nestings stack
+ */
 static void
-pop_nesting (uint8_t nesting_type)
+pop_nesting (nesting_t nesting_type) /**< type of current nesting */
 {
   JERRY_ASSERT (STACK_HEAD (nestings, 1) == nesting_type);
   STACK_DROP (nestings, 1);
-}
+} /* pop_nesting */
 
 static void
 must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
@@ -1992,10 +2019,15 @@ parse_with_statement (void)
     EMIT_ERROR ("'with' expression is not allowed in strict mode.");
   }
   const operand expr = parse_expression_inside_parens ();
+
+  push_nesting (NESTING_WITH);
+
   dump_with (expr);
   skip_newlines ();
   parse_statement ();
   dump_with_end ();
+
+  pop_nesting (NESTING_WITH);
 }
 
 static void
@@ -2160,6 +2192,8 @@ parse_try_statement (void)
 {
   assert_keyword (KW_TRY);
 
+  push_nesting (NESTING_TRY);
+
   dump_try_for_rewrite ();
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
@@ -2194,6 +2228,8 @@ parse_try_statement (void)
   }
 
   dump_end_try_catch_finally ();
+
+  pop_nesting (NESTING_TRY);
 }
 
 static void
@@ -2341,13 +2377,24 @@ parse_statement (void)
   }
   if (is_keyword (KW_CONTINUE))
   {
+    must_be_inside_but_not_in (NESTING_FUNCTION,
+                               4,
+                               NESTING_ITERATIONAL,
+                               NESTING_TRY,
+                               NESTING_WITH);
+
     must_be_inside_but_not_in (NESTING_FUNCTION, 1, NESTING_ITERATIONAL);
     dump_continue_for_rewrite ();
     return;
   }
   if (is_keyword (KW_BREAK))
   {
-    must_be_inside_but_not_in (NESTING_FUNCTION, 2, NESTING_ITERATIONAL, NESTING_SWITCH);
+    must_be_inside_but_not_in (NESTING_FUNCTION,
+                               4,
+                               NESTING_ITERATIONAL,
+                               NESTING_SWITCH,
+                               NESTING_TRY,
+                               NESTING_WITH);
     dump_break_for_rewrite ();
     return;
   }

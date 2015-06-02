@@ -38,6 +38,15 @@ exit (int status __attr_unused___)
   }
 } /* exit */
 
+/** abort - cause abnormal process termination  */
+void __attr_noreturn___ __attr_used___
+abort (void)
+{
+  while (true)
+  {
+  }
+} /* abort */
+
 /**
  * fwrite
  *

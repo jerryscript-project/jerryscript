@@ -18,6 +18,19 @@
 
 /*
  * mov syscall_no (%r0) -> %r7
+ * svc #0
+ */
+#define SYSCALL_0 \
+  push {r4-r12, lr}; \
+  \
+  mov r7, r0; \
+  \
+  svc #0; \
+  \
+  pop {r4-r12, pc};
+
+/*
+ * mov syscall_no (%r0) -> %r7
  * mov arg1 (%r1) -> %r0
  * svc #0
  */

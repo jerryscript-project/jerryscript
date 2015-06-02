@@ -41,5 +41,5 @@ libc_fatal (const char *msg, /**< fatal error description */
             msg, function_name, file_name, line_number);
   }
 
-  exit (LIBC_FATAL_ERROR_EXIT_CODE);
+  abort ();
 } /* libc_fatal */

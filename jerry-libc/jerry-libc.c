@@ -31,8 +31,6 @@ FILE *stdin  = (FILE*) 0;
 FILE *stdout = (FILE*) 1;
 FILE *stderr = (FILE*) 2;
 
-LIBC_UNREACHABLE_STUB_FOR (void abort (void))
-
 #ifdef __GNUC__
 /*
  * Making GCC not to replace:

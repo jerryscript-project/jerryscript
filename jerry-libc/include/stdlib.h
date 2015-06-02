@@ -23,5 +23,6 @@
 #endif /* !__cplusplus */
 
 extern EXTERN_C void __attribute__ ((noreturn)) exit (int);
+extern EXTERN_C void __attribute__ ((noreturn)) abort (void);
 
 #endif /* !JERRY_LIBC_STDLIB_H */

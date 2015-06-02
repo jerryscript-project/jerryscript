@@ -48,16 +48,33 @@ LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
 #define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
   if ((syscall_ret_val) < 0) \
 { \
-  libc_fatal ("Syscall successful", __FILE__, __FUNCTION__, __LINE__); \
+  libc_fatal ("Syscall", __FILE__, __FUNCTION__, __LINE__); \
 }
 
+static long int syscall_0 (long int syscall_no);
 static long int syscall_1 (long int syscall_no, long int arg1);
 static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
 static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
+extern long int syscall_0_asm (long int syscall_no);
 extern long int syscall_1_asm (long int syscall_no, long int arg1);
 extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
 extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
+
+/**
+ * System call with no argument.
+ *
+ * @return syscall's return value
+ */
+static __attr_noinline___ long int
+syscall_0 (long int syscall_no) /**< syscall number */
+{
+  long int ret = syscall_0_asm (syscall_no);
+
+  LIBC_EXIT_ON_ERROR (ret);
+
+  return ret;
+} /* syscall_0 */
 
 /**
  * System call with one argument.
@@ -152,6 +169,25 @@ exit (int status) /**< status code */
     /* unreachable */
   }
 } /* exit */
+
+/**
+ * Abort current process, producing an abnormal program termination.
+ * The function raises the SIGABRT signal.
+ */
+void __attr_noreturn___ __attr_used___
+abort (void)
+{
+  syscall_1 (__NR_close, (long int)stdin);
+  syscall_1 (__NR_close, (long int)stdout);
+  syscall_1 (__NR_close, (long int)stderr);
+
+  syscall_2 (__NR_kill, syscall_0 (__NR_getpid), SIGABRT);
+
+  while (true)
+  {
+    /* unreachable */
+  }
+} /* abort */
 
 /**
  * fopen

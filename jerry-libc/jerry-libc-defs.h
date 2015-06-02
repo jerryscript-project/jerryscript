@@ -29,11 +29,6 @@
 #define __attr_noinline___ __attribute__((noinline))
 
 /**
- * Constants
- */
-#define LIBC_FATAL_ERROR_EXIT_CODE (2)
-
-/**
  * Assertions
  */
 extern void __attr_noreturn___

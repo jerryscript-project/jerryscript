@@ -18,6 +18,22 @@
 
 /*
  * mov syscall_no -> %eax
+ * int $0x80
+ * mov %eax -> ret
+ */
+#define SYSCALL_0 \
+  push %edi;               \
+  push %esi;               \
+  push %ebx;               \
+  mov 0x10 (%esp), %eax;   \
+  int $0x80;               \
+  pop %ebx;                \
+  pop %esi;                \
+  pop %edi;                \
+  ret;
+
+/*
+ * mov syscall_no -> %eax
  * mov arg1 -> %ebx
  * int $0x80
  * mov %eax -> ret

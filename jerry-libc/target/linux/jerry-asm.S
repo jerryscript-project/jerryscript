@@ -14,6 +14,12 @@ _start:
   _START
 .size _start, . - _start
 
+.global syscall_0_asm
+.type syscall_0_asm, %function
+syscall_0_asm:
+  SYSCALL_0
+.size syscall_0_asm, . - syscall_0_asm
+
 .global syscall_1_asm
 .type syscall_1_asm, %function
 syscall_1_asm:

@@ -18,6 +18,15 @@
 
 /*
  * mov syscall_no (%rdi) -> %rax
+ * syscall
+ */
+#define SYSCALL_0 \
+  mov %rdi, %rax; \
+  syscall; \
+  ret;
+
+/*
+ * mov syscall_no (%rdi) -> %rax
  * mov arg1 (%rsi) -> %rdi
  * syscall
  */

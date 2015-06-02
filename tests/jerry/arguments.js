@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+function f_arg (arguments)
+{
+  return arguments;
+}
+assert (f_arg (1) === 1);
+
 function f (a, b, c)
 {
   return arguments;

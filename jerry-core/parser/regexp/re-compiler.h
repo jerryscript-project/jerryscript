@@ -51,8 +51,8 @@
 #define RE_OP_LOOKPOS                                       23
 #define RE_OP_LOOKNEG                                       24
 #define RE_OP_BACKREFERENCE                                 25
-#define RE_OP_RANGES                                        26
-#define RE_OP_INVRANGES                                     27
+#define RE_OP_CHAR_CLASS                                    26
+#define RE_OP_INV_CHAR_CLASS                                27
 
 /* flags */
 #define RE_FLAG_GLOBAL              (1 << 0)

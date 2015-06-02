@@ -228,7 +228,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p)
   ecma_char_t **pattern_p = &(parser_ctx_p->pattern_start_p);
   ecma_char_t ch1;
   int char_class_in = 0;
-  parser_ctx_p->number_of_groups = 0;
+  parser_ctx_p->num_of_groups = 0;
 
   ch1 = get_ecma_char (pattern_p);
   while (ch1 != '\0')
@@ -259,13 +259,229 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p)
       {
         if (ch1 != '?' && !char_class_in)
         {
-          parser_ctx_p->number_of_groups++;
+          parser_ctx_p->num_of_groups++;
         }
         break;
       }
     }
   }
 }
+
+/**
+ * Read the input pattern and parse the range of character class
+ *
+ * @return current parsed token
+ */
+re_token_t
+re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
+                     re_char_class_callback append_char_class, /**< callback function,
+                                                                *   which add the char-ranges
+                                                                *   to the bytecode */
+                     void* re_ctx_p) /**< regexp context */
+{
+  ecma_char_t **pattern_p = &(parser_ctx_p->current_char_p);
+
+  re_token_t result;
+  result.qmax = result.qmin = 1;
+  ecma_char_t start = RE_CHAR_UNDEF;
+  bool is_range = false;
+  parser_ctx_p->num_of_classes = 0;
+
+  do
+  {
+    ecma_char_t ch = get_ecma_char (pattern_p);
+    if (ch == ']')
+    {
+      if (start != RE_CHAR_UNDEF)
+      {
+        append_char_class (re_ctx_p, start, start);
+      }
+      break;
+    }
+    else if (ch == '-')
+    {
+      if (start != RE_CHAR_UNDEF && !is_range && RE_LOOKUP (*pattern_p, 0) != ']')
+      {
+        is_range = true;
+        continue;
+      }
+    }
+    else if (ch == '\\')
+    {
+      ch = get_ecma_char (pattern_p);
+
+      if (ch == 'b')
+      {
+        ch = RE_CONTROL_CHAR_BEL;
+      }
+      else if (ch == 'f')
+      {
+        ch = RE_CONTROL_CHAR_FF;
+      }
+      else if (ch == 'n')
+      {
+        ch = RE_CONTROL_CHAR_EOL;
+      }
+      else if (ch == 't')
+      {
+        ch = RE_CONTROL_CHAR_TAB;
+      }
+      else if (ch == 'r')
+      {
+        ch = RE_CONTROL_CHAR_CR;
+      }
+      else if (ch == 'v')
+      {
+        ch = RE_CONTROL_CHAR_VT;
+      }
+      else if (ch == 'c')
+      {
+        ch = get_ecma_char (pattern_p);
+        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+        {
+          ch = (ch % 32);
+        }
+        else
+        {
+          /* FIXME: invalid regexp control escape */
+        }
+      }
+      else if (ch == 'x')
+      {
+        /* FIXME: get unicode char from hex-digits */
+        /* ch = ...; */
+      }
+      else if (ch == 'u')
+      {
+        /* FIXME: get unicode char from digits */
+        /* ch = ...; */
+      }
+      else if (ch == 'd')
+      {
+        /* append digits from '0' to '9'. */
+        append_char_class (re_ctx_p, 0x0030UL, 0x0039UL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (ch == 'D')
+      {
+        append_char_class (re_ctx_p, 0x0000UL, 0x002FUL);
+        append_char_class (re_ctx_p, 0x003AUL, 0xFFFFUL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (ch == 's')
+      {
+        append_char_class (re_ctx_p, 0x0009UL, 0x000DUL);
+        append_char_class (re_ctx_p, 0x0020UL, 0x0020UL);
+        append_char_class (re_ctx_p, 0x00A0UL, 0x00A0UL);
+        append_char_class (re_ctx_p, 0x1680UL, 0x1680UL);
+        append_char_class (re_ctx_p, 0x180EUL, 0x180EUL);
+        append_char_class (re_ctx_p, 0x2000UL, 0x200AUL);
+        append_char_class (re_ctx_p, 0x2028UL, 0x2029UL);
+        append_char_class (re_ctx_p, 0x202FUL, 0x202FUL);
+        append_char_class (re_ctx_p, 0x205FUL, 0x205FUL);
+        append_char_class (re_ctx_p, 0x3000UL, 0x3000UL);
+        append_char_class (re_ctx_p, 0xFEFFUL, 0xFEFFUL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (ch == 'S')
+      {
+        append_char_class (re_ctx_p, 0x0000UL, 0x0008UL);
+        append_char_class (re_ctx_p, 0x000EUL, 0x001FUL);
+        append_char_class (re_ctx_p, 0x0021UL, 0x009FUL);
+        append_char_class (re_ctx_p, 0x00A1UL, 0x167FUL);
+        append_char_class (re_ctx_p, 0x1681UL, 0x180DUL);
+        append_char_class (re_ctx_p, 0x180FUL, 0x1FFFUL);
+        append_char_class (re_ctx_p, 0x200BUL, 0x2027UL);
+        append_char_class (re_ctx_p, 0x202AUL, 0x202EUL);
+        append_char_class (re_ctx_p, 0x2030UL, 0x205EUL);
+        append_char_class (re_ctx_p, 0x2060UL, 0x2FFFUL);
+        append_char_class (re_ctx_p, 0x3001UL, 0xFEFEUL);
+        append_char_class (re_ctx_p, 0xFF00UL, 0xFFFFUL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (ch == 'w')
+      {
+        append_char_class (re_ctx_p, 0x0030UL, 0x0039UL);
+        append_char_class (re_ctx_p, 0x0041UL, 0x005AUL);
+        append_char_class (re_ctx_p, 0x005FUL, 0x005FUL);
+        append_char_class (re_ctx_p, 0x0061UL, 0x007AUL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (ch == 'W')
+      {
+        append_char_class (re_ctx_p, 0x0000UL, 0x002FUL);
+        append_char_class (re_ctx_p, 0x003AUL, 0x0040UL);
+        append_char_class (re_ctx_p, 0x005BUL, 0x005EUL);
+        append_char_class (re_ctx_p, 0x0060UL, 0x0060UL);
+        append_char_class (re_ctx_p, 0x007BUL, 0xFFFFUL);
+        ch = RE_CHAR_UNDEF;
+      }
+      else if (isdigit (ch))
+      {
+        if (ch != '\0' || isdigit (RE_LOOKUP (*pattern_p, 1)))
+        {
+          /* FIXME: octal support */
+        }
+      }
+      /* FIXME: depends on the unicode support
+      else if (!jerry_unicode_identifier (ch))
+      {
+        JERRY_ERROR_MSG ("RegExp escape pattern error. (Char class)");
+      }
+      */
+    }
+
+    if (ch == RE_CHAR_UNDEF)
+    {
+      if (start != RE_CHAR_UNDEF)
+      {
+        if (is_range)
+        {
+          JERRY_ERROR_MSG ("RegExp parse error: wrong char-class range.");
+        }
+        else
+        {
+          append_char_class (re_ctx_p, start, start);
+          start = RE_CHAR_UNDEF;
+        }
+      }
+    }
+    else
+    {
+      if (start != RE_CHAR_UNDEF)
+      {
+        if (is_range)
+        {
+          if (start > ch)
+          {
+            JERRY_ERROR_MSG ("RegExp parse error: wrong char-class range (start > end).");
+          }
+          else
+          {
+            append_char_class (re_ctx_p, start, ch);
+            start = RE_CHAR_UNDEF;
+            is_range = false;
+          }
+        }
+        else
+        {
+          append_char_class (re_ctx_p, start, start);
+          start = ch;
+        }
+      }
+      else
+      {
+        start = ch;
+      }
+    }
+  }
+  while (true);
+
+  RE_ADVANCE (parser_ctx_p->current_char_p,
+              parse_re_iterator (parser_ctx_p->current_char_p, &result, 0));
+
+  return result;
+} /* re_parse_char_class */
 
 /**
  * Read the input pattern and parse the next token for the RegExp compiler
@@ -414,16 +630,16 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p) /**< parser context */
           }
 
           advance = 2;
-          result.value = RE_CONTROL_CHAR_NULL;
+          result.value = RE_CONTROL_CHAR_NUL;
         }
         else
         {
-          if (parser_ctx_p->number_of_groups == -1)
+          if (parser_ctx_p->num_of_groups == -1)
           {
             re_count_num_of_groups (parser_ctx_p);
           }
 
-          if (parser_ctx_p->number_of_groups)
+          if (parser_ctx_p->num_of_groups)
           {
             uint32_t number = 0;
             int index = 0;
@@ -447,7 +663,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p) /**< parser context */
             }
             while (true);
 
-            if ((int) number <= parser_ctx_p->number_of_groups)
+            if ((int) number <= parser_ctx_p->num_of_groups)
             {
               result.type = RE_TOK_BACKREFERENCE;
             }
@@ -510,11 +726,11 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p) /**< parser context */
     case '[':
     {
       advance = 1;
-      result.type = RE_TOK_START_CHARCLASS;
+      result.type = RE_TOK_START_CHAR_CLASS;
       if (RE_LOOKUP (parser_ctx_p->current_char_p, 1) == '^')
       {
         advance = 2;
-        result.type = RE_TOK_START_CHARCLASS_INVERTED;
+        result.type = RE_TOK_START_INV_CHAR_CLASS;
       }
       break;
     }

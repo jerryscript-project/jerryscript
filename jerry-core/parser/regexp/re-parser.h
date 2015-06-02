@@ -43,13 +43,17 @@ typedef uint8_t token_type_t;
 #define RE_TOK_NOT_WHITE                     19
 #define RE_TOK_WORD_CHAR                     20
 #define RE_TOK_NOT_WORD_CHAR                 21
-#define RE_TOK_START_CHARCLASS               22
-#define RE_TOK_START_CHARCLASS_INVERTED      23
+#define RE_TOK_START_CHAR_CLASS              22
+#define RE_TOK_START_INV_CHAR_CLASS          23
 
 #define RE_ITERATOR_INFINITE ((uint32_t)-1)
 #define RE_MAX_RE_DECESC_DIGITS 9
 
-#define RE_CONTROL_CHAR_NULL 0x0000 /* \0 */
+/* FIXME: depends on unicode support */
+#define RE_CHAR_UNDEF ((ecma_char_t)-1)
+
+#define RE_CONTROL_CHAR_NUL  0x0000 /* \0 */
+#define RE_CONTROL_CHAR_BEL  0x0008 /* \b */
 #define RE_CONTROL_CHAR_TAB  0x0009 /* \t */
 #define RE_CONTROL_CHAR_EOL  0x000a /* \n */
 #define RE_CONTROL_CHAR_VT   0x000b /* \v */
@@ -69,11 +73,16 @@ typedef struct
 {
   ecma_char_t* pattern_start_p;
   ecma_char_t* current_char_p;
-  int number_of_groups;
+  int num_of_groups;
+  uint32_t num_of_classes;
 } re_parser_ctx_t;
 
+typedef void (*re_char_class_callback) (void *re_ctx_p, uint32_t start, uint32_t end);
+
 operand parse_regexp_literal ();
-re_token_t re_parse_char_class (re_parser_ctx_t *parser_ctx_p);
+re_token_t re_parse_char_class (re_parser_ctx_t *parser_ctx_p,
+                                re_char_class_callback append_char_class,
+                                void *re_ctx_p);
 re_token_t re_parse_next_token (re_parser_ctx_t *parser_ctx_p);
 
 #endif /* RE_PARSER_H */

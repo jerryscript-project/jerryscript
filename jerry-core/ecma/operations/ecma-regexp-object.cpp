@@ -499,13 +499,13 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         re_ctx_p->recursion_depth--;
         return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
       }
-      case RE_OP_RANGES:
-      case RE_OP_INVRANGES:
+      case RE_OP_CHAR_CLASS:
+      case RE_OP_INV_CHAR_CLASS:
       {
         uint32_t curr_ch, q;
         bool match;
 
-        JERRY_DDLOG ("Execute RE_OP_RANGES/RE_OP_INVRANGES, ");
+        JERRY_DDLOG ("Execute RE_OP_CHAR_CLASS/RE_OP_INV_CHAR_CLASS, ");
 
         if (str_p >= re_ctx_p->input_end_p)
         {
@@ -533,7 +533,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
           q--;
         }
 
-        if (op == RE_OP_RANGES)
+        if (op == RE_OP_CHAR_CLASS)
         {
           if (!match)
           {
@@ -544,7 +544,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         }
         else
         {
-          JERRY_ASSERT (op == RE_OP_INVRANGES);
+          JERRY_ASSERT (op == RE_OP_INV_CHAR_CLASS);
           if (match)
           {
             JERRY_DDLOG ("fail\n");

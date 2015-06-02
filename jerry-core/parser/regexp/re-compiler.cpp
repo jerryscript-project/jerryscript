@@ -144,6 +144,18 @@ get_value (re_bytecode_t **bc_p)
   return (uint32_t) bytecode;
 }
 
+static void
+append_char_class (void* re_ctx_p,
+                   uint32_t start,
+                   uint32_t end)
+{
+  /* FIXME: Handle ignore case flag and add unicode support. */
+  re_compiler_ctx_t *ctx_p = (re_compiler_ctx_t*) re_ctx_p;
+  append_u32 (ctx_p->bytecode_ctx_p, start);
+  append_u32 (ctx_p->bytecode_ctx_p, end);
+  ctx_p->parser_ctx_p->num_of_classes++;
+}
+
 /**
  * Insert simple atom iterator
  */
@@ -451,6 +463,24 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
         re_ctx_p->recursion_depth--;
         return ecma_make_empty_completion_value ();
       }
+      case RE_TOK_START_CHAR_CLASS:
+      case RE_TOK_START_INV_CHAR_CLASS:
+      {
+        append_opcode (bc_ctx_p,
+                       re_ctx_p->current_token.type == RE_TOK_START_CHAR_CLASS
+                                                    ? RE_OP_CHAR_CLASS
+                                                    : RE_OP_INV_CHAR_CLASS);
+        uint32_t offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+
+        re_ctx_p->current_token = re_parse_char_class (re_ctx_p->parser_ctx_p, append_char_class, re_ctx_p);
+        insert_u32 (bc_ctx_p, offset, re_ctx_p->parser_ctx_p->num_of_classes);
+
+        if ((re_ctx_p->current_token.qmin != 1) || (re_ctx_p->current_token.qmax != 1))
+        {
+          insert_simple_iterator (re_ctx_p, new_atom_start_offset);
+        }
+        break;
+      }
       case RE_TOK_EOF:
       {
         if (!expect_eof)
@@ -503,7 +533,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   re_parser_ctx_t parser_ctx;
   parser_ctx.pattern_start_p = pattern_start_p;
   parser_ctx.current_char_p = pattern_start_p;
-  parser_ctx.number_of_groups = -1;
+  parser_ctx.num_of_groups = -1;
   re_ctx.parser_ctx_p = &parser_ctx;
 
   /* 1. Parse RegExp pattern */
@@ -709,6 +739,25 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       {
         JERRY_DLOG ("BACKREFERENCE ");
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));
+        break;
+      }
+      case RE_OP_INV_CHAR_CLASS:
+      {
+        JERRY_DLOG ("INV_");
+        /* FALLTHRU */
+      }
+      case RE_OP_CHAR_CLASS:
+      {
+        JERRY_DLOG ("CHAR_CLASS ");
+        uint32_t num_of_class = get_value (&bytecode_p);
+        JERRY_DLOG ("%d", num_of_class);
+        while (num_of_class)
+        {
+          JERRY_DLOG (" %d", get_value (&bytecode_p));
+          JERRY_DLOG ("-%d", get_value (&bytecode_p));
+          num_of_class--;
+        }
+        JERRY_DLOG (", ");
         break;
       }
       default:

@@ -202,7 +202,8 @@ operand dump_delete_res (operand, bool, locus);
 void dump_typeof (operand, operand);
 operand dump_typeof_res (operand);
 
-void dump_with (operand);
+opcode_counter_t dump_with_for_rewrite (operand);
+void rewrite_with (opcode_counter_t);
 void dump_with_end (void);
 
 void dump_try_for_rewrite (void);

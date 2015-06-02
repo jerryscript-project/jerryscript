@@ -2262,18 +2262,61 @@ finish_dumping_case_clauses (void)
   STACK_DROP (U8, 1);
 }
 
-void
-dump_with (operand op)
+/**
+ * Dump template of 'with' instruction.
+ *
+ * Note:
+ *      the instruction's flags field is written later (see also: rewrite_with).
+ *
+ * @return position of dumped instruction
+ */
+opcode_counter_t
+dump_with_for_rewrite (operand op) /**< operand - result of evaluating Expression
+                                    *   in WithStatement */
 {
-  dump_single_address (getop_with, op);
-}
+  opcode_counter_t oc = serializer_get_current_opcode_counter ();
 
+  if (op.type == OPERAND_LITERAL)
+  {
+    const opcode_t opcode = getop_with (LITERAL_TO_REWRITE, INVALID_VALUE, INVALID_VALUE);
+    serializer_dump_op_meta (create_op_meta_100 (opcode, op.data.lit_id));
+  }
+  else
+  {
+    JERRY_ASSERT (op.type == OPERAND_TMP);
+
+    const opcode_t opcode = getop_with (op.data.uid, INVALID_VALUE, INVALID_VALUE);
+    serializer_dump_op_meta (create_op_meta_000 (opcode));
+  }
+
+  return oc;
+} /* dump_with_for_rewrite */
+
+/**
+ * Write position of 'with' block's end to specified 'with' instruction template,
+ * dumped earlier (see also: dump_with_for_rewrite).
+ */
+void
+rewrite_with (opcode_counter_t oc) /**< opcode counter of the instruction template */
+{
+  op_meta with_op_meta = serializer_get_op_meta (oc);
+
+  idx_t id1, id2;
+  split_opcode_counter (get_diff_from (oc), &id1, &id2);
+  with_op_meta.op.data.with.oc_idx_1 = id1;
+  with_op_meta.op.data.with.oc_idx_2 = id2;
+  serializer_rewrite_op_meta (oc, with_op_meta);
+} /* rewrite_with */
+
+/**
+ * Dump 'meta' instruction of 'end with' type
+ */
 void
 dump_with_end (void)
 {
   const opcode_t opcode = getop_meta (OPCODE_META_TYPE_END_WITH, INVALID_VALUE, INVALID_VALUE);
   serializer_dump_op_meta (create_op_meta_000 (opcode));
-}
+} /* dump_with_end */
 
 void
 dump_try_for_rewrite (void)

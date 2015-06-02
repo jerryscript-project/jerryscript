@@ -40,7 +40,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
        arg_index < args_number;
        arg_index++)
   {
-    ecma_completion_value_t evaluate_arg_completion = vm_loop (int_data);
+    ecma_completion_value_t evaluate_arg_completion = vm_loop (int_data, NULL);
 
     if (ecma_is_completion_value_normal (evaluate_arg_completion))
     {

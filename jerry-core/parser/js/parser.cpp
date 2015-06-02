@@ -2022,9 +2022,10 @@ parse_with_statement (void)
 
   push_nesting (NESTING_WITH);
 
-  dump_with (expr);
+  opcode_counter_t with_begin_oc = dump_with_for_rewrite (expr);
   skip_newlines ();
   parse_statement ();
+  rewrite_with (with_begin_oc);
   dump_with_end ();
 
   pop_nesting (NESTING_WITH);

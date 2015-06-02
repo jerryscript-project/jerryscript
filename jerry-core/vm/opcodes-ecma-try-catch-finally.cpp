@@ -37,7 +37,8 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t try_completion = vm_loop (int_data);
+  vm_run_scope_t run_scope_try = { int_data->pos, try_end_oc };
+  ecma_completion_value_t try_completion = vm_loop (int_data, &run_scope_try);
   JERRY_ASSERT ((!ecma_is_completion_value_empty (try_completion) && int_data->pos <= try_end_oc)
                 || (ecma_is_completion_value_empty (try_completion) && int_data->pos == try_end_oc));
   int_data->pos = try_end_oc;
@@ -87,7 +88,9 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
       int_data->lex_env_p = catch_env_p;
 
       ecma_free_completion_value (try_completion);
-      try_completion = vm_loop (int_data);
+
+      vm_run_scope_t run_scope_catch = { int_data->pos, catch_end_oc };
+      try_completion = vm_loop (int_data, &run_scope_catch);
 
       int_data->lex_env_p = old_env_p;
 
@@ -114,7 +117,9 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
       read_meta_opcode_counter (OPCODE_META_TYPE_FINALLY, int_data) + int_data->pos);
     int_data->pos++;
 
-    ecma_completion_value_t finally_completion = vm_loop (int_data);
+    vm_run_scope_t run_scope_finally = { int_data->pos, finally_end_oc };
+    ecma_completion_value_t finally_completion = vm_loop (int_data, &run_scope_finally);
+
     JERRY_ASSERT ((!ecma_is_completion_value_empty (finally_completion) && int_data->pos <= finally_end_oc)
                   || (ecma_is_completion_value_empty (finally_completion) && int_data->pos == finally_end_oc));
     int_data->pos = finally_end_oc;

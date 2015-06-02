@@ -22,7 +22,7 @@
 
 extern void vm_init (const opcode_t* program_p, bool dump_mem_stats);
 extern jerry_completion_code_t vm_run_global (void);
-extern ecma_completion_value_t vm_loop (int_data_t *int_data);
+extern ecma_completion_value_t vm_loop (int_data_t *int_data, vm_run_scope_t *run_scope_p);
 extern ecma_completion_value_t vm_run_from_pos (opcode_counter_t start_pos,
                                                 ecma_value_t this_binding_value,
                                                 ecma_object_t *lex_env_p,

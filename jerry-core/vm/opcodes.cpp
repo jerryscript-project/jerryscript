@@ -912,7 +912,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
        prop_index < args_number;
        prop_index++)
   {
-    ecma_completion_value_t evaluate_prop_completion = vm_loop (int_data);
+    ecma_completion_value_t evaluate_prop_completion = vm_loop (int_data, NULL);
 
     if (ecma_is_completion_value_normal (evaluate_prop_completion))
     {
@@ -1299,6 +1299,10 @@ opfunc_with (opcode_t opdata, /**< operation data */
              int_data_t *int_data) /**< interpreter context */
 {
   const idx_t expr_var_idx = opdata.data.with.expr;
+  const idx_t block_end_oc_idx_1 = opdata.data.with.oc_idx_1;
+  const idx_t block_end_oc_idx_2 = opdata.data.with.oc_idx_2;
+  const opcode_counter_t with_end_oc = (opcode_counter_t) (
+    calc_opcode_counter_from_idx_idx (block_end_oc_idx_1, block_end_oc_idx_2) + int_data->pos);
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -1321,15 +1325,19 @@ opfunc_with (opcode_t opdata, /**< operation data */
                                                          true);
   int_data->lex_env_p = new_env_p;
 
-  ecma_completion_value_t evaluation_completion = vm_loop (int_data);
+#ifndef JERRY_NDEBUG
+  opcode_t meta_opcode = vm_get_opcode (with_end_oc);
+  JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
+#endif /* !JERRY_NDEBUG */
 
-  if (ecma_is_completion_value_normal (evaluation_completion))
+  vm_run_scope_t run_scope_with = { int_data->pos, with_end_oc };
+  ecma_completion_value_t with_completion = vm_loop (int_data, &run_scope_with);
+
+  if (ecma_is_completion_value_normal (with_completion))
   {
-    JERRY_ASSERT (ecma_is_completion_value_empty (evaluation_completion));
-
-    opcode_t meta_opcode = vm_get_opcode (int_data->pos);
-    JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
-    JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
+    JERRY_ASSERT (ecma_is_completion_value_empty (with_completion));
+    JERRY_ASSERT (int_data->pos == with_end_oc);
 
     int_data->pos++;
 
@@ -1337,7 +1345,9 @@ opfunc_with (opcode_t opdata, /**< operation data */
   }
   else
   {
-    ret_value = evaluation_completion;
+    JERRY_ASSERT (int_data->pos <= with_end_oc);
+
+    ret_value = with_completion;
   }
 
   int_data->lex_env_p = old_env_p;

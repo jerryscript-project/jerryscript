@@ -113,6 +113,22 @@ typedef struct
 #endif /* MEM_STATS */
 } int_data_t;
 
+/**
+ * Description of a run scope
+ *
+ * Note:
+ *      Run scope represents boundaries of byte-code block to run.
+ *
+ *      Jumps within of the current run scope are performed by just changing opcode counter,
+ *      and outside of the run scope - by returning corresponding ECMA_COMPLETION_TYPE_BREAK_CONTINUE
+ *      completion value.
+ */
+typedef struct
+{
+  const opcode_counter_t start_oc; /**< opcode counter of the first instruction of the scope */
+  const opcode_counter_t end_oc; /**< opcode counter of the last instruction of the scope */
+} vm_run_scope_t;
+
 opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
 opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_data_t *int_data);
 
@@ -135,7 +151,7 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_2 (a, delete_var, lhs, name)                                     \
         p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
-        p##_1 (a, with, expr)                                                \
+        p##_3 (a, with, expr, oc_idx_1, oc_idx_2)                            \
         p##_2 (a, try_block, oc_idx_1, oc_idx_2)                             \
         p##_1 (a, throw_value, var)
 

@@ -423,7 +423,9 @@ vm_run_global (void)
  *         Otherwise - the completion value is discarded and normal empty completion value is returned.
  */
 ecma_completion_value_t
-vm_loop (int_data_t *int_data) /**< interpreter context */
+vm_loop (int_data_t *int_data_p, /**< interpreter context */
+         vm_run_scope_t *run_scope_p) /**< current run scope,
+                                       *   or NULL - if there is no active run scope */
 {
   ecma_completion_value_t completion;
 
@@ -439,24 +441,28 @@ vm_loop (int_data_t *int_data) /**< interpreter context */
   {
     do
     {
-      const opcode_t *curr = &__program[int_data->pos];
+      JERRY_ASSERT (run_scope_p == NULL
+                    || (run_scope_p->start_oc <= int_data_p->pos
+                        && int_data_p->pos <= run_scope_p->end_oc));
+
+      const opcode_t *curr = &__program[int_data_p->pos];
 
 #ifdef MEM_STATS
-      const opcode_counter_t opcode_pos = int_data->pos;
+      const opcode_counter_t opcode_pos = int_data_p->pos;
 
       interp_mem_stats_opcode_enter (opcode_pos,
                                      &heap_stats_before,
                                      &pools_stats_before);
 #endif /* MEM_STATS */
 
-      completion = __opfuncs[curr->op_idx] (*curr, int_data);
+      completion = __opfuncs[curr->op_idx] (*curr, int_data_p);
 
 #ifdef CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
       ecma_gc_run ();
 #endif /* CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE */
 
 #ifdef MEM_STATS
-      interp_mem_stats_opcode_exit (int_data,
+      interp_mem_stats_opcode_exit (int_data_p,
                                     opcode_pos,
                                     &heap_stats_before,
                                     &pools_stats_before);
@@ -525,7 +531,7 @@ vm_run_from_pos (opcode_counter_t start_pos, /**< identifier of starting opcode 
   interp_mem_stats_context_enter (&int_data, start_pos);
 #endif /* MEM_STATS */
 
-  completion = vm_loop (&int_data);
+  completion = vm_loop (&int_data, NULL);
 
   JERRY_ASSERT (ecma_is_completion_value_normal (completion)
                 || ecma_is_completion_value_throw (completion)

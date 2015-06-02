@@ -288,6 +288,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     case NAME_TO_ID (is_false_jmp_down): printf ("if (%s == false) goto %d;", VAR (1), oc + OC (2, 3)); break;
     case NAME_TO_ID (jmp_up): printf ("goto %d;", oc - OC (1, 2)); break;
     case NAME_TO_ID (jmp_down): printf ("goto %d;", oc + OC (1, 2)); break;
+    case NAME_TO_ID (jmp_break_continue): printf ("goto_nested %d;", oc + OC (1, 2)); break;
     case NAME_TO_ID (try_block): printf ("try (end: %d);", oc + OC (1, 2)); break;
     case NAME_TO_ID (assignment):
     {

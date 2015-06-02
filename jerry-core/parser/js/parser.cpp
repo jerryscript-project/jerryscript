@@ -109,15 +109,19 @@ pop_nesting (nesting_t nesting_type) /**< type of current nesting */
   STACK_DROP (nestings, 1);
 } /* pop_nesting */
 
+/**
+ * Check that current nesting chain contains one of the specified 'inside' nesting types,
+ * and there is no 'not_in' nesting between current nesting and the 'inside' nesting type
+ * in the chain.
+ */
 static void
-must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
+must_be_inside_but_not_in (uint8_t not_in, /**< 'not_in' nesting type */
+                           uint8_t insides_count, /**< 'inside' nestings number */
+                           ...) /**< 'inside' nestings list */
 {
-  va_list insides_list;
-  if (STACK_SIZE (nestings) == 0)
-  {
-    EMIT_ERROR ("Shall be inside a nesting");
-  }
+  JERRY_ASSERT (STACK_SIZE (nestings) != 0);
 
+  va_list insides_list;
   va_start (insides_list, insides_count);
   uint8_t *insides = (uint8_t*) mem_heap_alloc_block (insides_count, MEM_HEAP_ALLOC_SHORT_TERM);
   for (uint8_t i = 0; i < insides_count; i++)
@@ -142,7 +146,7 @@ must_be_inside_but_not_in (uint8_t not_in, uint8_t insides_count, ...)
     }
   }
   EMIT_ERROR ("Shall be inside a nesting");
-}
+} /* must_be_inside_but_not_in */
 
 static bool
 token_is (token_type tt)
@@ -2376,27 +2380,50 @@ parse_statement (void)
     parse_for_or_for_in_statement ();
     return;
   }
-  if (is_keyword (KW_CONTINUE))
+  if (is_keyword (KW_CONTINUE)
+      || is_keyword (KW_BREAK))
   {
-    must_be_inside_but_not_in (NESTING_FUNCTION,
-                               4,
-                               NESTING_ITERATIONAL,
-                               NESTING_TRY,
-                               NESTING_WITH);
+    bool is_break = is_keyword (KW_BREAK);
 
-    must_be_inside_but_not_in (NESTING_FUNCTION, 1, NESTING_ITERATIONAL);
-    dump_continue_for_rewrite ();
-    return;
-  }
-  if (is_keyword (KW_BREAK))
-  {
-    must_be_inside_but_not_in (NESTING_FUNCTION,
-                               4,
-                               NESTING_ITERATIONAL,
-                               NESTING_SWITCH,
-                               NESTING_TRY,
-                               NESTING_WITH);
-    dump_break_for_rewrite ();
+    if (STACK_SIZE (nestings) == 0)
+    {
+      EMIT_ERROR ("Shall be inside a nesting");
+    }
+
+    nesting_t topmost_nesting = STACK_ELEMENT (nestings, STACK_SIZE (nestings) - 1);
+
+    if (is_break)
+    {
+      must_be_inside_but_not_in (NESTING_FUNCTION,
+                                 4,
+                                 NESTING_ITERATIONAL,
+                                 NESTING_SWITCH,
+                                 NESTING_TRY,
+                                 NESTING_WITH);
+    }
+    else
+    {
+      must_be_inside_but_not_in (NESTING_FUNCTION,
+                                 3,
+                                 NESTING_ITERATIONAL,
+                                 NESTING_TRY,
+                                 NESTING_WITH);
+    }
+
+    if (topmost_nesting == NESTING_ITERATIONAL
+        || (topmost_nesting == NESTING_SWITCH && is_break))
+    {
+      dump_break_continue_for_rewrite (is_break, true);
+    }
+    else
+    {
+      JERRY_ASSERT (topmost_nesting == NESTING_TRY
+                    || topmost_nesting == NESTING_WITH
+                    || (topmost_nesting == NESTING_SWITCH && !is_break));
+
+      dump_break_continue_for_rewrite (is_break, false);
+    }
+
     return;
   }
   if (is_keyword (KW_RETURN))

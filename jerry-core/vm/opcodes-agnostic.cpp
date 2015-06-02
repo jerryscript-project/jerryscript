@@ -198,3 +198,20 @@ opfunc_jmp_up (opcode_t opdata, /**< operation data */
 
   return ecma_make_empty_completion_value ();
 }
+
+/**
+ * 'Break or continue jump' opcode handler.
+ *
+ * Note:
+ *      the opcode returns break-continue completion value with jump target
+ */
+ecma_completion_value_t
+opfunc_jmp_break_continue (opcode_t opdata, /**< operation data */
+                           int_data_t *int_data) /**< interpreter context */
+{
+  opcode_counter_t target = int_data->pos;
+  target = (opcode_counter_t) (target + calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
+                                                                          opdata.data.jmp_down.opcode_2));
+
+  return ecma_make_jump_completion_value (target);
+} /* opfunc_jmp_break_continue */

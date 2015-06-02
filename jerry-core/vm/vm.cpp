@@ -473,12 +473,23 @@ vm_loop (int_data_t *int_data_p, /**< interpreter context */
     }
     while (ecma_is_completion_value_normal (completion));
 
-    if (ecma_is_completion_value_break (completion)
-        || ecma_is_completion_value_continue (completion))
+    if (ecma_is_completion_value_jump (completion))
     {
-      JERRY_UNIMPLEMENTED ("break and continue on labels are not supported.");
+      opcode_counter_t target = ecma_get_jump_target_from_completion_value (completion);
 
-      continue;
+      /*
+       * TODO:
+       *      Implement instantiation of run scopes for global scope, functions and eval scope.
+       *      Currently, correctness of jumps without run scope set is guaranteed through byte-code semantics.
+       */
+      if (run_scope_p == NULL /* if no run scope set */
+          || (target >= run_scope_p->start_oc /* or target is within the current run scope */
+              && target < run_scope_p->end_oc))
+      {
+        int_data_p->pos = target;
+
+        continue;
+      }
     }
 
     if (ecma_is_completion_value_meta (completion))

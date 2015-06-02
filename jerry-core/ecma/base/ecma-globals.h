@@ -99,11 +99,26 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_COMPLETION_TYPE_NORMAL, /**< default block completion */
-  ECMA_COMPLETION_TYPE_RETURN, /**< block completed with return */
-  ECMA_COMPLETION_TYPE_BREAK, /**< block completed with break */
-  ECMA_COMPLETION_TYPE_CONTINUE, /**< block completed with continue */
-  ECMA_COMPLETION_TYPE_THROW, /**< block completed with throw */
+  ECMA_COMPLETION_TYPE_NORMAL, /**< default completion */
+  ECMA_COMPLETION_TYPE_RETURN, /**< completion with return */
+  ECMA_COMPLETION_TYPE_JUMP, /**< implementation-defined completion type
+                              *   for jump statements (break, continue)
+                              *   that require completion of one or several
+                              *   statements, before performing related jump.
+                              *
+                              *   For example, 'break' in the following code
+                              *   requires to return from opfunc_with handler
+                              *   before performing jump to the loop end:
+                              *
+                              *     for (var i = 0; i < 10; i++)
+                              *     {
+                              *        with (obj)
+                              *        {
+                              *          break;
+                              *        }
+                              *     }
+                              */
+  ECMA_COMPLETION_TYPE_THROW, /**< completion with throw */
   ECMA_COMPLETION_TYPE_EXIT, /**< implementation-defined completion type
                                   for finishing script execution */
   ECMA_COMPLETION_TYPE_META /**< implementation-defined completion type
@@ -142,7 +157,7 @@ typedef uint32_t ecma_value_t;
  *
  *                                               value (16)
  * Bit-field structure: type (8) | padding (8) <
- *                                               label_desc_cp (16)
+ *                                               break / continue target
  */
 typedef uint32_t ecma_completion_value_t;
 
@@ -155,12 +170,10 @@ typedef uint32_t ecma_completion_value_t;
 #define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
 
 /**
- * Label
- *
- * Used for break and continue completion types.
+ * Break / continue jump target
  */
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS (0)
-#define ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+#define ECMA_COMPLETION_VALUE_TARGET_POS (0)
+#define ECMA_COMPLETION_VALUE_TARGET_WIDTH ((uint32_t) sizeof (opcode_counter_t) * JERRY_BITSINBYTE)
 
 /**
  * Type (ecma_completion_type_t)
@@ -168,8 +181,8 @@ typedef uint32_t ecma_completion_value_t;
 #define ECMA_COMPLETION_VALUE_TYPE_POS (JERRY_MAX (JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_VALUE_POS + \
                                                                   ECMA_COMPLETION_VALUE_VALUE_WIDTH, \
                                                                   JERRY_BITSINBYTE), \
-                                                   JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS + \
-                                                                  ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH, \
+                                                   JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_TARGET_POS + \
+                                                                  ECMA_COMPLETION_VALUE_TARGET_WIDTH, \
                                                                   JERRY_BITSINBYTE)))
 #define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
 

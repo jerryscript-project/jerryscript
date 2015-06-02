@@ -462,18 +462,17 @@ ecma_get_completion_value_value_field (ecma_completion_value_t completion_value)
 } /* ecma_get_completion_value_value_field */
 
 /**
- * Get pointer to label descriptor from completion value
+ * Get target of break / continue completion value
  *
- * @return pointer to label descriptor
+ * @return opcode counter
  */
-static ecma_label_descriptor_t* __attr_const___
-ecma_get_completion_value_label_descriptor (ecma_completion_value_t completion_value) /**< completion value */
+static opcode_counter_t
+ecma_get_completion_value_target (ecma_completion_value_t completion_value) /**< completion value */
 {
-  return ECMA_GET_NON_NULL_POINTER (ecma_label_descriptor_t,
-                                    (uintptr_t) jrt_extract_bit_field (completion_value,
-                                                                       ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS,
-                                                                       ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH));
-} /* ecma_get_completion_value_label_descriptor */
+  return (opcode_counter_t) jrt_extract_bit_field (completion_value,
+                                                   ECMA_COMPLETION_VALUE_TARGET_POS,
+                                                   ECMA_COMPLETION_VALUE_TARGET_WIDTH);
+} /* ecma_get_completion_value_target */
 
 /**
  * Set type field of completion value
@@ -508,24 +507,20 @@ ecma_set_completion_value_value_field (ecma_completion_value_t completion_value,
 } /* ecma_set_completion_value_value_field */
 
 /**
- * Set label descriptor of completion value
+ * Set target of break / continue completion value
  *
  * @return completion value with updated field
  */
 static ecma_completion_value_t __attr_const___
-ecma_set_completion_value_label_descriptor (ecma_completion_value_t completion_value, /**< completion value
-                                                                                       * to set field in */
-                                            ecma_label_descriptor_t* label_desc_p) /**< pointer to the
-                                                                                    *   label descriptor */
+ecma_set_completion_value_target (ecma_completion_value_t completion_value, /**< completion value
+                                                                             * to set field in */
+                                  opcode_counter_t target) /**< break / continue target */
 {
-  uintptr_t label_desc_cp;
-  ECMA_SET_NON_NULL_POINTER (label_desc_cp, label_desc_p);
-
   return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
-                                                            label_desc_cp,
-                                                            ECMA_COMPLETION_VALUE_LABEL_DESC_CP_POS,
-                                                            ECMA_COMPLETION_VALUE_LABEL_DESC_CP_WIDTH);
-} /* ecma_set_completion_value_label_descriptor */
+                                                            target,
+                                                            ECMA_COMPLETION_VALUE_TARGET_POS,
+                                                            ECMA_COMPLETION_VALUE_TARGET_WIDTH);
+} /* ecma_set_completion_value_target */
 
 /**
  * Normal, throw, return, exit and meta completion values constructor
@@ -554,34 +549,6 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
 
   return completion_value;
 } /* ecma_make_completion_value */
-
-/**
- * Break and continue completion values constructor
- *
- * @return completion value
- */
-ecma_completion_value_t __attr_const___
-ecma_make_label_completion_value (ecma_completion_type_t type, /**< type */
-                                  uint8_t depth_level, /**< depth level (in try constructions,
-                                                            with blocks, etc.) */
-                                  uint16_t offset) /**< offset to label from end of last block */
-{
-  JERRY_ASSERT (type == ECMA_COMPLETION_TYPE_BREAK
-                || type == ECMA_COMPLETION_TYPE_CONTINUE);
-
-  ecma_label_descriptor_t *label_desc_p = ecma_alloc_label_descriptor ();
-  label_desc_p->offset = offset;
-  label_desc_p->depth = depth_level;
-
-  ecma_completion_value_t completion_value = 0;
-
-  completion_value = ecma_set_completion_value_type_field (completion_value,
-                                                           type);
-  completion_value = ecma_set_completion_value_label_descriptor (completion_value,
-                                                                 label_desc_p);
-
-  return completion_value;
-} /* ecma_make_label_completion_value */
 
 /**
  * Simple normal completion value constructor
@@ -689,6 +656,24 @@ ecma_make_meta_completion_value (void)
 } /* ecma_make_meta_completion_value */
 
 /**
+ * Break / continue completion values constructor
+ *
+ * @return completion value
+ */
+ecma_completion_value_t __attr_const___
+ecma_make_jump_completion_value (opcode_counter_t target) /**< target break / continue */
+{
+  ecma_completion_value_t completion_value = 0;
+
+  completion_value = ecma_set_completion_value_type_field (completion_value,
+                                                           ECMA_COMPLETION_TYPE_JUMP);
+  completion_value = ecma_set_completion_value_target (completion_value,
+                                                       target);
+
+  return completion_value;
+} /* ecma_make_jump_completion_value */
+
+/**
  * Get ecma-value from specified completion value
  *
  * @return ecma-value
@@ -742,6 +727,20 @@ ecma_get_object_from_completion_value (ecma_completion_value_t completion_value)
 } /* ecma_get_object_from_completion_value */
 
 /**
+ * Get break / continue target from completion value
+ *
+ * @return opcode counter
+ */
+opcode_counter_t
+ecma_get_jump_target_from_completion_value (ecma_completion_value_t completion_value) /**< completion
+                                                                                       *   value */
+{
+  JERRY_ASSERT (ecma_get_completion_value_type_field (completion_value) == ECMA_COMPLETION_TYPE_JUMP);
+
+  return ecma_get_completion_value_target (completion_value);
+} /* ecma_get_jump_target_from_completion_value */
+
+/**
  * Copy ecma-completion value.
  *
  * @return (source.type, ecma_copy_value (source.value), source.target).
@@ -753,6 +752,7 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
                            || type == ECMA_COMPLETION_TYPE_THROW
                            || type == ECMA_COMPLETION_TYPE_RETURN
+                           || type == ECMA_COMPLETION_TYPE_JUMP
                            || type == ECMA_COMPLETION_TYPE_EXIT);
 
   JERRY_ASSERT (is_type_ok);
@@ -784,10 +784,8 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
       JERRY_ASSERT (ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
       break;
     }
-    case ECMA_COMPLETION_TYPE_CONTINUE:
-    case ECMA_COMPLETION_TYPE_BREAK:
+    case ECMA_COMPLETION_TYPE_JUMP:
     {
-      ecma_dealloc_label_descriptor (ecma_get_completion_value_label_descriptor (completion_value));
       break;
     }
     case ECMA_COMPLETION_TYPE_META:
@@ -876,28 +874,16 @@ ecma_is_completion_value_meta (ecma_completion_value_t value) /**< completion va
 } /* ecma_is_completion_value_meta */
 
 /**
- * Check if the completion value is break value.
+ * Check if the completion value is break / continue value.
  *
- * @return true - if the completion type is break,
+ * @return true - if the completion type is break / continue,
  *         false - otherwise.
  */
 bool __attr_const___ __attr_always_inline___
-ecma_is_completion_value_break (ecma_completion_value_t value) /**< completion value */
+ecma_is_completion_value_jump (ecma_completion_value_t value) /**< completion value */
 {
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_BREAK);
-} /* ecma_is_completion_value_break */
-
-/**
- * Check if the completion value is continue value.
- *
- * @return true - if the completion type is continue,
- *         false - otherwise.
- */
-bool __attr_const___ __attr_always_inline___
-ecma_is_completion_value_continue (ecma_completion_value_t value) /**< completion value */
-{
-  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_CONTINUE);
-} /* ecma_is_completion_value_continue */
+  return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_JUMP);
+} /* ecma_is_completion_value_jump */
 
 /**
  * Check if the completion value is specified normal simple value.

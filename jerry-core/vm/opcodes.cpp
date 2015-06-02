@@ -1334,21 +1334,19 @@ opfunc_with (opcode_t opdata, /**< operation data */
   vm_run_scope_t run_scope_with = { int_data->pos, with_end_oc };
   ecma_completion_value_t with_completion = vm_loop (int_data, &run_scope_with);
 
-  if (ecma_is_completion_value_normal (with_completion))
+  if (ecma_is_completion_value_empty (with_completion))
   {
-    JERRY_ASSERT (ecma_is_completion_value_empty (with_completion));
     JERRY_ASSERT (int_data->pos == with_end_oc);
 
     int_data->pos++;
-
-    ret_value = ecma_make_empty_completion_value ();
   }
   else
   {
+    JERRY_ASSERT (!ecma_is_completion_value_normal (with_completion));
     JERRY_ASSERT (int_data->pos <= with_end_oc);
-
-    ret_value = with_completion;
   }
+
+  ret_value = with_completion;
 
   int_data->lex_env_p = old_env_p;
 

@@ -206,7 +206,8 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_3 (a, is_true_jmp_up, value, opcode_1, opcode_2)                 \
         p##_3 (a, is_true_jmp_down, value, opcode_1, opcode_2)               \
         p##_3 (a, is_false_jmp_up, value, opcode_1, opcode_2)                \
-        p##_3 (a, is_false_jmp_down, value, opcode_1, opcode_2)
+        p##_3 (a, is_false_jmp_down, value, opcode_1, opcode_2)              \
+        p##_2 (a, jmp_break_continue, opcode_1, opcode_2)
 
 #define OP_LIST_FULL(p, a)                                                   \
         OP_CALLS_AND_ARGS (p, a)                                             \

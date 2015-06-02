@@ -2142,22 +2142,50 @@ dump_continue_iterations_check (operand op)
   STACK_DROP (next_iterations, 1);
 }
 
+/**
+ * Dump template of 'jmp_break_continue' instruction.
+ *
+ * Note:
+ *      the instruction's flags field is written later (see also: rewrite_breaks, rewrite_continues).
+ *
+ * @return position of dumped instruction
+ */
 void
-dump_continue_for_rewrite (void)
+dump_break_continue_for_rewrite (bool is_break, /**< flag indicating whether 'break' should be dumped (true)
+                                                 *   or 'continue' (false) */
+                                 bool is_simple_jump) /**< flag indicating, whether simple jump
+                                                       *   or 'jmp_break_continue' template should be dumped */
 {
-  STACK_PUSH (continues, serializer_get_current_opcode_counter ());
-  const opcode_t opcode = getop_jmp_down (INVALID_VALUE, INVALID_VALUE);
-  serializer_dump_op_meta (create_op_meta_000 (opcode));
-}
+  if (is_break)
+  {
+    STACK_PUSH (breaks, serializer_get_current_opcode_counter ());
+  }
+  else
+  {
+    STACK_PUSH (continues, serializer_get_current_opcode_counter ());
+  }
 
-void
-dump_break_for_rewrite (void)
-{
-  STACK_PUSH (breaks, serializer_get_current_opcode_counter ());
-  const opcode_t opcode = getop_jmp_down (INVALID_VALUE, INVALID_VALUE);
-  serializer_dump_op_meta (create_op_meta_000 (opcode));
-}
+  opcode_t opcode;
+  if (is_simple_jump)
+  {
+    opcode = getop_jmp_down (INVALID_VALUE, INVALID_VALUE);
+  }
+  else
+  {
+    opcode = getop_jmp_break_continue (INVALID_VALUE, INVALID_VALUE);
+  }
 
+  serializer_dump_op_meta (create_op_meta_000 (opcode));
+} /* dump_break_continue_for_rewrite */
+
+/**
+ * Write jump target positions into previously dumped templates of instructions
+ * for currently processed set of 'break' statements.
+ *
+ * See also:
+ *          dump_break_continue_for_rewrite
+ *          start_collecting_breaks
+ */
 void
 rewrite_breaks (void)
 {
@@ -2168,9 +2196,22 @@ rewrite_breaks (void)
     idx_t id1, id2;
     split_opcode_counter ((opcode_counter_t) (break_target - break_oc), &id1, &id2);
     op_meta break_op_meta = serializer_get_op_meta (break_oc);
-    JERRY_ASSERT (break_op_meta.op.op_idx == OPCODE (jmp_down));
-    break_op_meta.op.data.jmp_down.opcode_1 = id1;
-    break_op_meta.op.data.jmp_down.opcode_2 = id2;
+
+    bool is_simple_jump = (break_op_meta.op.op_idx == OPCODE (jmp_down));
+
+    if (is_simple_jump)
+    {
+      break_op_meta.op.data.jmp_down.opcode_1 = id1;
+      break_op_meta.op.data.jmp_down.opcode_2 = id2;
+    }
+    else
+    {
+      JERRY_ASSERT (break_op_meta.op.op_idx == OPCODE (jmp_break_continue));
+
+      break_op_meta.op.data.jmp_break_continue.opcode_1 = id1;
+      break_op_meta.op.data.jmp_break_continue.opcode_2 = id2;
+    }
+
     serializer_rewrite_op_meta (break_oc, break_op_meta);
   }
   STACK_ITERATE_END ();
@@ -2178,8 +2219,16 @@ rewrite_breaks (void)
   STACK_DROP (break_targets, 1);
   STACK_DROP (breaks, STACK_SIZE (breaks) - STACK_TOP (U8));
   STACK_DROP (U8, 1);
-}
+} /* rewrite_breaks */
 
+/**
+ * Write jump target positions into previously dumped templates of instructions
+ * for currently processed set of 'continue' statements.
+ *
+ * See also:
+ *          dump_break_continue_for_rewrite
+ *          start_collecting_continues
+ */
 void
 rewrite_continues (void)
 {
@@ -2190,9 +2239,22 @@ rewrite_continues (void)
     idx_t id1, id2;
     split_opcode_counter ((opcode_counter_t) (continue_target - continue_oc), &id1, &id2);
     op_meta continue_op_meta = serializer_get_op_meta (continue_oc);
-    JERRY_ASSERT (continue_op_meta.op.op_idx == OPCODE (jmp_down));
-    continue_op_meta.op.data.jmp_down.opcode_1 = id1;
-    continue_op_meta.op.data.jmp_down.opcode_2 = id2;
+
+    bool is_simple_jump = (continue_op_meta.op.op_idx == OPCODE (jmp_down));
+
+    if (is_simple_jump)
+    {
+      continue_op_meta.op.data.jmp_down.opcode_1 = id1;
+      continue_op_meta.op.data.jmp_down.opcode_2 = id2;
+    }
+    else
+    {
+      JERRY_ASSERT (continue_op_meta.op.op_idx == OPCODE (jmp_break_continue));
+
+      continue_op_meta.op.data.jmp_break_continue.opcode_1 = id1;
+      continue_op_meta.op.data.jmp_break_continue.opcode_2 = id2;
+    }
+
     serializer_rewrite_op_meta (continue_oc, continue_op_meta);
   }
   STACK_ITERATE_END ();
@@ -2200,7 +2262,7 @@ rewrite_continues (void)
   STACK_DROP (continue_targets, 1);
   STACK_DROP (continues, STACK_SIZE (continues) - STACK_TOP (U8));
   STACK_DROP (U8, 1);
-}
+} /* rewrite_continues */
 
 void
 start_dumping_case_clauses (void)

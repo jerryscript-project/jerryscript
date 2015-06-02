@@ -2383,6 +2383,14 @@ dump_variable_declaration (literal_index_t lit_id)
   serializer_dump_op_meta (create_op_meta_100 (opcode, lit_id));
 }
 
+/**
+ * Dump template of 'meta' instruction for scope's code flags.
+ *
+ * Note:
+ *      the instruction's flags field is written later (see also: rewrite_scope_code_flags).
+ *
+ * @return position of dumped instruction
+ */
 opcode_counter_t
 dump_scope_code_flags_for_rewrite (void)
 {
@@ -2392,19 +2400,27 @@ dump_scope_code_flags_for_rewrite (void)
   serializer_dump_op_meta (create_op_meta_000 (opcode));
 
   return oc;
-}
+} /* dump_scope_code_flags_for_rewrite */
 
+/**
+ * Write scope's code flags to specified 'meta' instruction template,
+ * dumped earlier (see also: dump_scope_code_flags_for_rewrite).
+ */
 void
-rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc,
-                          opcode_scope_code_flags_t scope_flags)
+rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc, /**< position of instruction to rewrite */
+                          opcode_scope_code_flags_t scope_flags) /**< scope's code properties flags set */
 {
   JERRY_ASSERT ((idx_t) scope_flags == scope_flags);
 
   op_meta opm = serializer_get_op_meta (scope_code_flags_oc);
   JERRY_ASSERT (opm.op.op_idx == OPCODE (meta));
+  JERRY_ASSERT (opm.op.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
+  JERRY_ASSERT (opm.op.data.meta.data_1 == INVALID_VALUE);
+  JERRY_ASSERT (opm.op.data.meta.data_2 == INVALID_VALUE);
+
   opm.op.data.meta.data_1 = (idx_t) scope_flags;
   serializer_rewrite_op_meta (scope_code_flags_oc, opm);
-}
+} /* rewrite_scope_code_flags */
 
 void
 dump_ret (void)

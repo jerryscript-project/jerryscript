@@ -40,6 +40,69 @@
 #define RE_GLOBAL_END_IDX   1
 
 /**
+ * Parse RegExp flags (global, ignoreCase, multiline)
+ */
+static ecma_completion_value_t
+parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags */
+                    uint8_t *flags) /**< Output: parsed flag bits */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  int32_t chars = ecma_string_get_length (flags_str_p);
+  MEM_DEFINE_LOCAL_ARRAY (flags_start_p, chars + 1, ecma_char_t);
+  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+  ecma_string_to_zt_string (flags_str_p, flags_start_p, zt_str_size);
+
+  ecma_char_t *flags_char_p = flags_start_p;
+  while (flags_char_p
+         && *flags_char_p != '\0'
+         && ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_char_t ch = *flags_char_p;
+    switch (ch)
+    {
+      case 'g':
+      {
+        if (*flags & RE_FLAG_GLOBAL)
+        {
+          SYNTAX_ERROR_OBJ (ret_value, "Invalid RegExp flags.");
+        }
+        *flags |= RE_FLAG_GLOBAL;
+        break;
+      }
+      case 'i':
+      {
+        if (*flags & RE_FLAG_IGNORE_CASE)
+        {
+          SYNTAX_ERROR_OBJ (ret_value, "Invalid RegExp flags.");
+        }
+        *flags |= RE_FLAG_IGNORE_CASE;
+        break;
+      }
+      case 'm':
+      {
+        if (*flags & RE_FLAG_MULTILINE)
+        {
+          SYNTAX_ERROR_OBJ (ret_value, "Invalid RegExp flags.");
+        }
+        *flags |= RE_FLAG_MULTILINE;
+        break;
+      }
+      default:
+      {
+        SYNTAX_ERROR_OBJ (ret_value, "Invalid RegExp flags.");
+        break;
+      }
+    }
+    flags_char_p++;
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (flags_start_p);
+
+  return ret_value;
+} /* parse_regexp_flags  */
+
+/**
  * RegExp object creation operation.
  *
  * See also: ECMA-262 v5, 15.10.4.1
@@ -48,10 +111,11 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
-                              ecma_string_t *flags) /**< flags */
+ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
+                              ecma_string_t *flags_str_p) /**< flags */
 {
-  JERRY_ASSERT (pattern != NULL);
+  JERRY_ASSERT (pattern_p != NULL);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
   ecma_object_t *regexp_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
@@ -69,7 +133,20 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
                                                                     false, false, false);
   ecma_deref_ecma_string (magic_string_p);
   ecma_set_named_data_property_value (source_prop_p,
-                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (pattern)));
+                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (pattern_p)));
+
+  uint8_t flags = 0;
+  if (flags_str_p != NULL)
+  {
+    ECMA_TRY_CATCH (empty, parse_regexp_flags (flags_str_p, &flags), ret_value);
+    ECMA_FINALIZE (empty);
+
+    if (!ecma_is_completion_value_empty (ret_value))
+    {
+      return ret_value;
+    }
+  }
+  ecma_simple_value_t prop_value;
 
   /* Set global property. ECMA-262 v5, 15.10.7.2*/
   magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GLOBAL);
@@ -77,7 +154,8 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
                                                                     magic_string_p,
                                                                     false, false, false);
   ecma_deref_ecma_string (magic_string_p);
-  ecma_set_named_data_property_value (global_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+  prop_value = flags & RE_FLAG_GLOBAL ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
+  ecma_set_named_data_property_value (global_prop_p, ecma_make_simple_value (prop_value));
 
   /* Set ignoreCase property. ECMA-262 v5, 15.10.7.3*/
   magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE);
@@ -85,7 +163,9 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
                                                                         magic_string_p,
                                                                         false, false, false);
   ecma_deref_ecma_string (magic_string_p);
-  ecma_set_named_data_property_value (ignorecase_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+  prop_value = flags & RE_FLAG_IGNORE_CASE ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
+  ecma_set_named_data_property_value (ignorecase_prop_p, ecma_make_simple_value (prop_value));
+
 
   /* Set multiline property. ECMA-262 v5, 15.10.7.4*/
   magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MULTILINE);
@@ -93,7 +173,8 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
                                                                        magic_string_p,
                                                                        false, false, false);
   ecma_deref_ecma_string (magic_string_p);
-  ecma_set_named_data_property_value (multiline_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+  prop_value = flags & RE_FLAG_MULTILINE ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
+  ecma_set_named_data_property_value (multiline_prop_p, ecma_make_simple_value (prop_value));
 
   /* Set lastIndex property. ECMA-262 v5, 15.10.7.5*/
   magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
@@ -110,8 +191,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern, /**< input pattern */
   ecma_property_t *bytecode = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
   /* Compile bytecode. */
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  ECMA_TRY_CATCH (empty, regexp_compile_bytecode (bytecode, pattern, flags), ret_value);
+  ECMA_TRY_CATCH (empty, regexp_compile_bytecode (bytecode, pattern_p, flags), ret_value);
   ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
   ECMA_FINALIZE (empty);
 
@@ -151,8 +231,8 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
 
   if (re_ctx_p->recursion_depth >= RE_EXECUTE_RECURSION_LIMIT)
   {
-    JERRY_ERROR_MSG ("RegExp executor recursion limit is exceeded.\n");
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+    RANGE_ERROR_OBJ (ret_value, "RegExp executor recursion limit is exceeded.");
+    return ret_value;
   }
   re_ctx_p->recursion_depth++;
 
@@ -160,8 +240,8 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
   {
     if (re_ctx_p->steps_count >= RE_EXECUTE_STEPS_LIMIT)
     {
-      JERRY_ERROR_MSG ("RegExp executor steps limit is exceeded.\n");
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+      RANGE_ERROR_OBJ (ret_value, "RegExp executor steps limit is exceeded.");
+      return ret_value;
     }
     re_ctx_p->steps_count++;
 

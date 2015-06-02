@@ -86,7 +86,7 @@ typedef struct
 } re_compiler_ctx_t;
 
 ecma_completion_value_t
-regexp_compile_bytecode (ecma_property_t *bytecode_p, ecma_string_t *pattern_p, ecma_string_t *flags_p);
+regexp_compile_bytecode (ecma_property_t *bytecode_p, ecma_string_t *pattern_p, uint8_t flags_p);
 
 re_opcode_t
 get_opcode (re_bytecode_t **bc_p);

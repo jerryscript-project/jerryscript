@@ -300,13 +300,14 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 {
   uint32_t idx;
   re_bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   uint32_t alterantive_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
   if (re_ctx_p->recursion_depth >= RE_COMPILE_RECURSION_LIMIT)
   {
-    JERRY_ERROR_MSG ("RegExp compiler recursion limit is exceeded.\n");
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+    RANGE_ERROR_OBJ (ret_value, "RegExp compiler recursion limit is exceeded.");
+    return ret_value;
   }
   re_ctx_p->recursion_depth++;
 
@@ -442,8 +443,8 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
         if (expect_eof)
         {
-          JERRY_ERROR_MSG ("Unexpected end of paren.\n");
-          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+          SYNTAX_ERROR_OBJ (ret_value, "Unexpected end of paren.");
+          return ret_value;
         }
 
         insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (bc_ctx_p) - alterantive_offset);
@@ -454,8 +455,8 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
       {
         if (!expect_eof)
         {
-          JERRY_ERROR_MSG ("Unexpected end of pattern.\n");
-          return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+          SYNTAX_ERROR_OBJ (ret_value, "Unexpected end of pattern.\n");
+          return ret_value;
         }
 
         insert_u32 (bc_ctx_p, alterantive_offset, BYTECODE_LEN (bc_ctx_p) - alterantive_offset);
@@ -464,8 +465,8 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
       }
       default:
       {
-        JERRY_ERROR_MSG ("Unexpected RegExp token.\n");
-        return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+        SYNTAX_ERROR_OBJ (ret_value, "Unexpected RegExp token.\n");
+        return ret_value;
       }
     }
   }
@@ -473,97 +474,19 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 } /* parse_alternative */
 
 /**
- * Parse RegExp flags (global, ignoreCase, multiline)
- */
-static ecma_completion_value_t
-parse_regexp_flags (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
-                    ecma_string_t *flags) /**< flags */
-{
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  int32_t chars = ecma_string_get_length (flags);
-  MEM_DEFINE_LOCAL_ARRAY (flags_start_p, chars + 1, ecma_char_t);
-  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-  ecma_string_to_zt_string (flags, flags_start_p, zt_str_size);
-
-  ecma_char_t *flags_p = flags_start_p;
-  while (flags_p
-         && *flags_p != '\0'
-         && ecma_is_completion_value_empty (ret_value))
-  {
-    ecma_char_t ch = *flags_p;
-    switch (ch)
-    {
-      case 'g':
-      {
-        if (re_ctx_p->flags & RE_FLAG_GLOBAL)
-        {
-          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
-        }
-        re_ctx_p->flags |= RE_FLAG_GLOBAL;
-        break;
-      }
-      case 'i':
-      {
-        if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
-        {
-          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
-        }
-        re_ctx_p->flags |= RE_FLAG_IGNORE_CASE;
-        break;
-      }
-      case 'm':
-      {
-        if (re_ctx_p->flags & RE_FLAG_MULTILINE)
-        {
-          JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
-        }
-        re_ctx_p->flags |= RE_FLAG_MULTILINE;
-        break;
-      }
-      default:
-      {
-        JERRY_ERROR_MSG ("Invalid RegExp flags.\n");
-        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
-        break;
-      }
-    }
-    flags_p++;
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (flags_start_p);
-
-  return ret_value;
-} /* parse_regexp_flags  */
-
-/**
  * Compilation of RegExp bytecode
  */
 ecma_completion_value_t
 regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
                          ecma_string_t *pattern, /**< pattern */
-                         ecma_string_t *flags) /**< flags */
+                         uint8_t flags) /**< flags */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   re_compiler_ctx_t re_ctx;
-  re_ctx.flags = 0;
+  re_ctx.flags = flags;
   re_ctx.highest_backref = 0;
   re_ctx.num_of_non_captures = 0;
   re_ctx.recursion_depth = 0;
-
-  if (flags != NULL)
-  {
-    ECMA_TRY_CATCH (empty, parse_regexp_flags (&re_ctx, flags), ret_value);
-    ECMA_FINALIZE (empty);
-
-    if (!ecma_is_completion_value_empty (ret_value))
-    {
-      return ret_value;
-    }
-  }
 
   re_bytecode_ctx_t bc_ctx;
   bc_ctx.block_start_p = NULL;
@@ -597,8 +520,7 @@ regexp_compile_bytecode (ecma_property_t *bytecode, /**< bytecode */
   if (ecma_is_completion_value_empty (ret_value)
       && re_ctx.highest_backref >= re_ctx.num_of_captures)
   {
-    JERRY_ERROR_MSG ("Invalid backreference.\n");
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+    SYNTAX_ERROR_OBJ (ret_value, "Invalid backreference.\n");
   }
 
   /* 3. Insert extra informations for bytecode header */

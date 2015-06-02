@@ -541,6 +541,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 {
   ecma_object_type_t type = ecma_get_object_type (obj_p);
 
+  /* FIXME: Recognise RegExp builtin. Return RegExp ID rahter than ECMA_MAGIC_STRING_OBJECT_UL */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_ARRAY:

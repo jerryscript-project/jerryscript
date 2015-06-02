@@ -166,6 +166,10 @@ int jerry_main (int argc, char *argv[])
     {
       flags |= JERRY_FLAG_SHOW_OPCODES;
     }
+    else if (!strcmp ("--abort-on-fail", argv[i]))
+    {
+      flags |= JERRY_FLAG_ABORT_ON_FAIL;
+    }
     else
     {
       file_names[files_counter++] = argv[i];

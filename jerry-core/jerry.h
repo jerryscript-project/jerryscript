@@ -40,6 +40,7 @@ typedef uint32_t jerry_flag_t;
 #define JERRY_FLAG_PARSE_ONLY             (1u << 4) /**< parse only, prevents script execution (only for testing)
                                                      *   FIXME: Remove. */
 #define JERRY_FLAG_ENABLE_LOG             (1u << 5) /**< enable logging */
+#define JERRY_FLAG_ABORT_ON_FAIL          (1u << 6) /**< abort instead of exit in case of failure */
 
 /**
  * Error codes

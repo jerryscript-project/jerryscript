@@ -20,6 +20,9 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
+#define JERRY_INTERNAL
+#include "jerry-internal.h"
+
 /*
  * Exit with specified status code.
  *
@@ -62,7 +65,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 #endif /* !JERRY_NDEBUG */
 
-  if (code == ERR_FAILED_INTERNAL_ASSERTION)
+  if (code != 0 && jerry_is_abort_on_fail ())
   {
     abort ();
   }

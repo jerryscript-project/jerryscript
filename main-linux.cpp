@@ -193,6 +193,10 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
     }
+    else if (!strcmp ("--abort-on-fail", argv[i]))
+    {
+      flags |= JERRY_FLAG_ABORT_ON_FAIL;
+    }
     else
     {
       file_names[files_counter++] = argv[i];

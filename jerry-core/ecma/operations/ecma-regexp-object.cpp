@@ -205,12 +205,48 @@ utf8_backtrack (const ecma_char_t* str_p)
   return --str_p;
 }
 
+/**
+ * Helper to get an input character and increase string pointer.
+ */
+static ecma_char_t
+get_input_char (const ecma_char_t** char_p)
+{
+  /* FIXME: fix this, when unicode support is finished! */
+  const ecma_char_t ch = **char_p;
+  (*char_p)++;
+  return ch;
+}
+
+/**
+ * Helper to get current input character, won't increase string pointer.
+ */
+static ecma_char_t
+lookup_input_char (const ecma_char_t* str_p)
+{
+  /* FIXME: fix this, when unicode support is finished! */
+  return *str_p;
+}
+
+/**
+ * Helper to get previous input character, won't decrease string pointer.
+ */
+static ecma_char_t
+lookup_prev_char (const ecma_char_t* str_p)
+{
+  /* FIXME: fix this, when unicode support is finished! */
+  return *(--str_p);
+}
+
+/**
+ * Helper to check that a unicode character is a word character or not.
+ */
 static bool
 regexp_is_wordchar (const ecma_char_t ch)
 {
   if ((ch >= 'a' && ch <= 'z')
       || (ch >= 'A' && ch <= 'Z')
-      || (ch >= '0' && ch <= '9'))
+      || (ch >= '0' && ch <= '9')
+      || ch == '_')
   {
     return true;
   }
@@ -258,8 +294,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_CHAR:
       {
         uint32_t ch1 = get_value (&bc_p);
-        uint32_t ch2 = (uint32_t) *str_p;
-        str_p++;
+        uint32_t ch2 = get_input_char (&str_p);
         JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
 
         if (ch2 == '\0' || ch1 != ch2)
@@ -273,8 +308,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_PERIOD:
       {
-        uint32_t ch1 = (uint32_t) *str_p;
-        str_p++;
+        uint32_t ch1 = get_input_char (&str_p);
         JERRY_DDLOG ("Period matching '.' to %d: ", ch1);
         if (ch1 == '\n' || ch1 == '\0')
         {
@@ -287,9 +321,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_ASSERT_START:
       {
-        const ecma_char_t *ch1 = str_p;
-        JERRY_DDLOG ("Execute RE_OP_ASSERT_START to %c: ", *ch1);
-        ch1--;
+        JERRY_DDLOG ("Execute RE_OP_ASSERT_START: ");
 
         if (str_p <= re_ctx_p->input_start_p)
         {
@@ -304,7 +336,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        if (*ch1 == '\n')
+        if (ecma_char_is_line_terminator (lookup_prev_char (str_p)))
         {
           JERRY_DDLOG ("match\n");
           break;
@@ -316,7 +348,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_ASSERT_END:
       {
-        JERRY_DDLOG ("Execute RE_OP_ASSERT_END to %c: ", *str_p);
+        JERRY_DDLOG ("Execute RE_OP_ASSERT_END: ");
 
         if (str_p >= re_ctx_p->input_end_p)
         {
@@ -331,7 +363,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        if (*str_p == '\n')
+        if (ecma_char_is_line_terminator (lookup_input_char (str_p)))
         {
           JERRY_DDLOG ("match\n");
           break;
@@ -345,7 +377,6 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
       {
         bool wordchar1, wordchar2;
-        const ecma_char_t *ch1 = str_p;
 
         if (str_p <= re_ctx_p->input_start_p)
         {
@@ -353,8 +384,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         }
         else
         {
-          ch1--;
-          wordchar1 = regexp_is_wordchar (*ch1);
+          wordchar1 = regexp_is_wordchar (lookup_prev_char (str_p));
         }
 
         if (str_p >= re_ctx_p->input_end_p)
@@ -363,7 +393,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
         }
         else
         {
-          wordchar2 = regexp_is_wordchar (*str_p);
+          wordchar2 = regexp_is_wordchar (lookup_input_char (str_p));
         }
 
         if (op == RE_OP_ASSERT_WORD_BOUNDARY)
@@ -484,8 +514,7 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        curr_ch = (uint32_t) *str_p;
-        str_p++;
+        curr_ch = get_input_char (&str_p);
 
         q = get_value (&bc_p);
         match = false;
@@ -553,10 +582,10 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
             re_ctx_p->recursion_depth--;
             return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
-          ch1 = *sub_str_p;
-          sub_str_p++;
-          ch2 = *str_p;
-          str_p++;
+
+          ch1 = get_input_char (&sub_str_p);
+          ch2 = get_input_char (&str_p);
+
           if (ch1 != ch2)
           {
             JERRY_DDLOG ("fail\n");

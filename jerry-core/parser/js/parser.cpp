@@ -2091,7 +2091,8 @@ parse_switch_statement (void)
     {
       token_after_newlines_must_be (TOK_COLON);
       skip_newlines ();
-      if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+      rewrite_default_clause ();
+      if (is_keyword (KW_CASE))
       {
         continue;
       }
@@ -2103,12 +2104,6 @@ parse_switch_statement (void)
   current_token_must_be (TOK_CLOSE_BRACE);
   skip_token ();
   pop_nesting (NESTING_SWITCH);
-
-  // Finally, dump 'finally' jump
-  if (was_default)
-  {
-    rewrite_default_clause ();
-  }
 
   dumper_set_break_target ();
   rewrite_breaks ();

@@ -48,6 +48,17 @@ switch (a) {
     assert (0);
 }
 
+executed_case = '';
+switch (a) {
+  default:
+    executed_case = 'default';
+    break;
+  case 2:
+    executed_case = 'case 2';
+    break;
+}
+assert (executed_case === 'default');
+
 var counter = 0;
 
 switch ("var") {

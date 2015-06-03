@@ -163,6 +163,11 @@ typedef struct
   literal_index_t uid;
 } token;
 
+/**
+ * Initializer for empty token
+ */
+#define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
+
 void lexer_init (const char *, size_t, bool);
 void lexer_free (void);
 
@@ -184,5 +189,7 @@ const char *lexer_keyword_to_string (keyword);
 const char *lexer_token_type_to_string (token_type);
 
 void lexer_set_strict_mode (bool);
+
+extern bool lexer_are_tokens_with_same_identifier (token id1, token id2);
 
 #endif

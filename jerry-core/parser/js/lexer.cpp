@@ -1596,6 +1596,26 @@ lexer_set_strict_mode (bool is_strict)
   strict_mode = is_strict;
 }
 
+/**
+ * Check whether the identifier tokens represent the same identifiers
+ *
+ * Note:
+ *      As all literals represent unique strings,
+ *      it is sufficient to just check if literal indices
+ *      in the tokens are equal.
+ *
+ * @return true / false
+ */
+bool
+lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAME) */
+                                       token id2) /**< identifier token (TOK_NAME) */
+{
+  JERRY_ASSERT (id1.type == TOK_NAME);
+  JERRY_ASSERT (id2.type == TOK_NAME);
+
+  return (id1.uid == id2.uid);
+} /* lexer_are_tokens_with_same_identifier */
+
 void
 lexer_init (const char *source, size_t source_size, bool show_opcodes)
 {

@@ -78,30 +78,6 @@ STATIC_STACK (prop_getters, op_meta)
 
 enum
 {
-  breaks_global_size
-};
-STATIC_STACK (breaks, opcode_counter_t)
-
-enum
-{
-  break_targets_global_size
-};
-STATIC_STACK (break_targets, opcode_counter_t)
-
-enum
-{
-  continues_global_size
-};
-STATIC_STACK (continues, opcode_counter_t)
-
-enum
-{
-  continue_targets_global_size
-};
-STATIC_STACK (continue_targets, opcode_counter_t)
-
-enum
-{
   next_iterations_global_size
 };
 STATIC_STACK (next_iterations, opcode_counter_t)
@@ -2080,30 +2056,6 @@ dump_prop_setter_or_bitwise_or_res (operand res, operand op)
 }
 
 void
-start_collecting_breaks (void)
-{
-  STACK_PUSH (U8, (uint8_t) STACK_SIZE (breaks));
-}
-
-void
-start_collecting_continues (void)
-{
-  STACK_PUSH (U8, (uint8_t) STACK_SIZE (continues));
-}
-
-void
-dumper_set_break_target (void)
-{
-  STACK_PUSH (break_targets, serializer_get_current_opcode_counter ());
-}
-
-void
-dumper_set_continue_target (void)
-{
-  STACK_PUSH (continue_targets, serializer_get_current_opcode_counter ());
-}
-
-void
 dumper_set_next_interation_target (void)
 {
   STACK_PUSH (next_iterations, serializer_get_current_opcode_counter ());
@@ -2143,126 +2095,83 @@ dump_continue_iterations_check (operand op)
 }
 
 /**
- * Dump template of 'jmp_break_continue' instruction.
+ * Dump template of 'jmp_break_continue' or 'jmp_down' instruction (depending on is_simple_jump argument).
  *
  * Note:
- *      the instruction's flags field is written later (see also: rewrite_breaks, rewrite_continues).
+ *      the instruction's flags field is written later (see also: rewrite_simple_or_nested_jump_get_next).
  *
  * @return position of dumped instruction
  */
-void
-dump_break_continue_for_rewrite (bool is_break, /**< flag indicating whether 'break' should be dumped (true)
-                                                 *   or 'continue' (false) */
-                                 bool is_simple_jump) /**< flag indicating, whether simple jump
-                                                       *   or 'jmp_break_continue' template should be dumped */
+opcode_counter_t
+dump_simple_or_nested_jump_for_rewrite (bool is_simple_jump, /**< flag indicating, whether simple jump
+                                                              *   or 'jmp_break_continue' template should be dumped */
+                                        opcode_counter_t next_jump_for_tgt_oc) /**< opcode counter of next
+                                                                                *   template targetted to
+                                                                                *   the same target - if any,
+                                                                                *   or MAX_OPCODES - otherwise */
 {
-  if (is_break)
-  {
-    STACK_PUSH (breaks, serializer_get_current_opcode_counter ());
-  }
-  else
-  {
-    STACK_PUSH (continues, serializer_get_current_opcode_counter ());
-  }
+  idx_t id1, id2;
+  split_opcode_counter (next_jump_for_tgt_oc, &id1, &id2);
 
   opcode_t opcode;
   if (is_simple_jump)
   {
-    opcode = getop_jmp_down (INVALID_VALUE, INVALID_VALUE);
+    opcode = getop_jmp_down (id1, id2);
   }
   else
   {
-    opcode = getop_jmp_break_continue (INVALID_VALUE, INVALID_VALUE);
+    opcode = getop_jmp_break_continue (id1, id2);
   }
+
+  opcode_counter_t ret = serializer_get_current_opcode_counter ();
 
   serializer_dump_op_meta (create_op_meta_000 (opcode));
-} /* dump_break_continue_for_rewrite */
+
+  return ret;
+} /* dump_simple_or_nested_jump_for_rewrite */
 
 /**
- * Write jump target positions into previously dumped templates of instructions
- * for currently processed set of 'break' statements.
+ * Write jump target position into previously dumped template of jump (simple or nested) instruction
  *
- * See also:
- *          dump_break_continue_for_rewrite
- *          start_collecting_breaks
+ * @return opcode counter value that was encoded in the jump before rewrite
  */
-void
-rewrite_breaks (void)
+opcode_counter_t
+rewrite_simple_or_nested_jump_and_get_next (opcode_counter_t jump_oc, /**< position of jump to rewrite */
+                                            opcode_counter_t target_oc) /**< the jump's target */
 {
-  const opcode_counter_t break_target = STACK_TOP (break_targets);
+  op_meta jump_op_meta = serializer_get_op_meta (jump_oc);
 
-  STACK_ITERATE (breaks, break_oc, STACK_TOP (U8))
+  bool is_simple_jump = (jump_op_meta.op.op_idx == OPCODE (jmp_down));
+
+  JERRY_ASSERT (is_simple_jump
+                || (jump_op_meta.op.op_idx == OPCODE (jmp_break_continue)));
+
+  idx_t id1, id2, id1_prev, id2_prev;
+  split_opcode_counter ((opcode_counter_t) (target_oc - jump_oc), &id1, &id2);
+
+  if (is_simple_jump)
   {
-    idx_t id1, id2;
-    split_opcode_counter ((opcode_counter_t) (break_target - break_oc), &id1, &id2);
-    op_meta break_op_meta = serializer_get_op_meta (break_oc);
+    id1_prev = jump_op_meta.op.data.jmp_down.opcode_1;
+    id2_prev = jump_op_meta.op.data.jmp_down.opcode_2;
 
-    bool is_simple_jump = (break_op_meta.op.op_idx == OPCODE (jmp_down));
-
-    if (is_simple_jump)
-    {
-      break_op_meta.op.data.jmp_down.opcode_1 = id1;
-      break_op_meta.op.data.jmp_down.opcode_2 = id2;
-    }
-    else
-    {
-      JERRY_ASSERT (break_op_meta.op.op_idx == OPCODE (jmp_break_continue));
-
-      break_op_meta.op.data.jmp_break_continue.opcode_1 = id1;
-      break_op_meta.op.data.jmp_break_continue.opcode_2 = id2;
-    }
-
-    serializer_rewrite_op_meta (break_oc, break_op_meta);
+    jump_op_meta.op.data.jmp_down.opcode_1 = id1;
+    jump_op_meta.op.data.jmp_down.opcode_2 = id2;
   }
-  STACK_ITERATE_END ();
-
-  STACK_DROP (break_targets, 1);
-  STACK_DROP (breaks, STACK_SIZE (breaks) - STACK_TOP (U8));
-  STACK_DROP (U8, 1);
-} /* rewrite_breaks */
-
-/**
- * Write jump target positions into previously dumped templates of instructions
- * for currently processed set of 'continue' statements.
- *
- * See also:
- *          dump_break_continue_for_rewrite
- *          start_collecting_continues
- */
-void
-rewrite_continues (void)
-{
-  const opcode_counter_t continue_target = STACK_TOP (continue_targets);
-
-  STACK_ITERATE (continues, continue_oc, STACK_TOP (U8))
+  else
   {
-    idx_t id1, id2;
-    split_opcode_counter ((opcode_counter_t) (continue_target - continue_oc), &id1, &id2);
-    op_meta continue_op_meta = serializer_get_op_meta (continue_oc);
+    JERRY_ASSERT (jump_op_meta.op.op_idx == OPCODE (jmp_break_continue));
 
-    bool is_simple_jump = (continue_op_meta.op.op_idx == OPCODE (jmp_down));
+    id1_prev = jump_op_meta.op.data.jmp_break_continue.opcode_1;
+    id2_prev = jump_op_meta.op.data.jmp_break_continue.opcode_2;
 
-    if (is_simple_jump)
-    {
-      continue_op_meta.op.data.jmp_down.opcode_1 = id1;
-      continue_op_meta.op.data.jmp_down.opcode_2 = id2;
-    }
-    else
-    {
-      JERRY_ASSERT (continue_op_meta.op.op_idx == OPCODE (jmp_break_continue));
-
-      continue_op_meta.op.data.jmp_break_continue.opcode_1 = id1;
-      continue_op_meta.op.data.jmp_break_continue.opcode_2 = id2;
-    }
-
-    serializer_rewrite_op_meta (continue_oc, continue_op_meta);
+    jump_op_meta.op.data.jmp_break_continue.opcode_1 = id1;
+    jump_op_meta.op.data.jmp_break_continue.opcode_2 = id2;
   }
-  STACK_ITERATE_END ();
 
-  STACK_DROP (continue_targets, 1);
-  STACK_DROP (continues, STACK_SIZE (continues) - STACK_TOP (U8));
-  STACK_DROP (U8, 1);
-} /* rewrite_continues */
+  serializer_rewrite_op_meta (jump_oc, jump_op_meta);
+
+  return calc_opcode_counter_from_idx_idx (id1_prev, id2_prev);
+} /* rewrite_simple_or_nested_jump_get_next */
 
 void
 start_dumping_case_clauses (void)
@@ -2576,10 +2485,6 @@ dumper_init (void)
   STACK_INIT (conditional_checks);
   STACK_INIT (jumps_to_end);
   STACK_INIT (prop_getters);
-  STACK_INIT (breaks);
-  STACK_INIT (continues);
-  STACK_INIT (break_targets);
-  STACK_INIT (continue_targets);
   STACK_INIT (next_iterations);
   STACK_INIT (case_clauses);
   STACK_INIT (catches);
@@ -2600,10 +2505,6 @@ dumper_free (void)
   STACK_FREE (conditional_checks);
   STACK_FREE (jumps_to_end);
   STACK_FREE (prop_getters);
-  STACK_FREE (breaks);
-  STACK_FREE (continues);
-  STACK_FREE (break_targets);
-  STACK_FREE (continue_targets);
   STACK_FREE (next_iterations);
   STACK_FREE (case_clauses);
   STACK_FREE (catches);

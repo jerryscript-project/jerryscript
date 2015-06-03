@@ -16,6 +16,7 @@
 #include <stdarg.h>
 
 #include "jrt-libc-includes.h"
+#include "jsp-label.h"
 #include "parser.h"
 #include "opcodes.h"
 #include "serializer.h"
@@ -82,7 +83,7 @@ STATIC_STACK (scopes, scopes_tree)
 #define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
 
 static operand parse_expression (bool);
-static void parse_statement (void);
+static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
 static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand *);
@@ -108,45 +109,6 @@ pop_nesting (nesting_t nesting_type) /**< type of current nesting */
   JERRY_ASSERT (STACK_HEAD (nestings, 1) == nesting_type);
   STACK_DROP (nestings, 1);
 } /* pop_nesting */
-
-/**
- * Check that current nesting chain contains one of the specified 'inside' nesting types,
- * and there is no 'not_in' nesting between current nesting and the 'inside' nesting type
- * in the chain.
- */
-static void
-must_be_inside_but_not_in (uint8_t not_in, /**< 'not_in' nesting type */
-                           uint8_t insides_count, /**< 'inside' nestings number */
-                           ...) /**< 'inside' nestings list */
-{
-  JERRY_ASSERT (STACK_SIZE (nestings) != 0);
-
-  va_list insides_list;
-  va_start (insides_list, insides_count);
-  uint8_t *insides = (uint8_t*) mem_heap_alloc_block (insides_count, MEM_HEAP_ALLOC_SHORT_TERM);
-  for (uint8_t i = 0; i < insides_count; i++)
-  {
-    insides[i] = (uint8_t) va_arg (insides_list, int);
-  }
-  va_end (insides_list);
-
-  for (uint8_t i = (uint8_t) STACK_SIZE (nestings); i != 0; i--)
-  {
-    for (uint8_t j = 0; j < insides_count; j++)
-    {
-      if (insides[j] == STACK_ELEMENT (nestings, i - 1))
-      {
-        mem_heap_free_block (insides);
-        return;
-      }
-    }
-    if (STACK_ELEMENT (nestings, i - 1) == not_in)
-    {
-      EMIT_ERROR_VARG ("Shall not be inside a '%s' nesting", NESTING_TO_STRING (not_in));
-    }
-  }
-  EMIT_ERROR ("Shall be inside a nesting");
-} /* must_be_inside_but_not_in */
 
 static bool
 token_is (token_type tt)
@@ -344,9 +306,15 @@ parse_property_assignment (void)
 
     token_after_newlines_must_be (TOK_OPEN_BRACE);
     skip_newlines ();
+
+    jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
+
     push_nesting (NESTING_FUNCTION);
     parse_source_element_list (false);
     pop_nesting (NESTING_FUNCTION);
+
+    jsp_label_restore_set (masked_label_set_p);
+
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
@@ -545,6 +513,8 @@ parse_function_declaration (void)
 
   assert_keyword (KW_FUNCTION);
 
+  jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
+
   token_after_newlines_must_be (TOK_NAME);
   const operand name = literal_operand (token_data ());
 
@@ -560,6 +530,7 @@ parse_function_declaration (void)
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   skip_newlines ();
+
   push_nesting (NESTING_FUNCTION);
   parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
@@ -572,6 +543,8 @@ parse_function_declaration (void)
   STACK_DROP (scopes, 1);
   serializer_set_scope (STACK_TOP (scopes));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
+  jsp_label_restore_set (masked_label_set_p);
 
   STACK_CHECK_USAGE (scopes);
   STACK_CHECK_USAGE (nestings);
@@ -607,9 +580,16 @@ parse_function_expression (void)
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
   skip_newlines ();
+
+  jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
+
   push_nesting (NESTING_FUNCTION);
   parse_source_element_list (false);
   pop_nesting (NESTING_FUNCTION);
+
+  jsp_label_restore_set (masked_label_set_p);
+
+
   next_token_must_be (TOK_CLOSE_BRACE);
 
   dump_ret ();
@@ -1693,27 +1673,10 @@ parse_variable_declaration_list (bool *several_decls)
 }
 
 static void
-parse_plain_for (void)
+parse_plain_for (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
+                                                       *   the statement (or NULL, if there are no named
+                                                       *   labels associated with the statement) */
 {
-  /* Represent loop like
-
-     for (i = 0; i < 10; i++) {
-       body;
-     }
-
-     as
-
-  assign i, 0
-  jmp_down %cond
-%body
-  body
-  post_incr i
-%cond
-  less_than i, 10
-  is_true_jmp_up %body
-
-  */
-
   dump_jump_to_end_for_rewrite ();
 
   // Skip till body
@@ -1731,19 +1694,18 @@ parse_plain_for (void)
     skip_newlines ();
   }
 
-  start_collecting_continues ();
-  start_collecting_breaks ();
   dumper_set_next_interation_target ();
 
   // Parse body
   skip_newlines ();
   push_nesting (NESTING_ITERATIONAL);
-  parse_statement ();
+  parse_statement (NULL);
   pop_nesting (NESTING_ITERATIONAL);
 
   const locus end_loc = tok.loc;
 
-  dumper_set_continue_target ();
+  jsp_label_setup_continue_target (outermost_stmt_label_p,
+                                   serializer_get_current_opcode_counter ());
 
   lexer_seek (incr_loc);
   skip_token ();
@@ -1766,10 +1728,6 @@ parse_plain_for (void)
     dump_continue_iterations_check (cond);
   }
 
-  dumper_set_break_target ();
-  rewrite_breaks ();
-  rewrite_continues ();
-
   lexer_seek (end_loc);
   skip_token ();
   if (tok.type != TOK_CLOSE_BRACE)
@@ -1779,8 +1737,12 @@ parse_plain_for (void)
 }
 
 static void
-parse_for_in (void)
+parse_for_in (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
+                                                    *   the statement (or NULL, if there are no named
+                                                    *   labels associated with the statement) */
 {
+  (void) outermost_stmt_label_p;
+
   EMIT_SORRY ("'for in' loops are not supported yet");
 }
 
@@ -1805,7 +1767,9 @@ parse_for_in (void)
   ;*/
 
 static void
-parse_for_or_for_in_statement (void)
+parse_for_or_for_in_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
+                                                                     *   the statement (or NULL, if there are no named
+                                                                     *   labels associated with the statement) */
 {
   assert_keyword (KW_FOR);
   token_after_newlines_must_be (TOK_OPEN_PAREN);
@@ -1813,7 +1777,7 @@ parse_for_or_for_in_statement (void)
   skip_newlines ();
   if (token_is (TOK_SEMICOLON))
   {
-    parse_plain_for ();
+    parse_plain_for (outermost_stmt_label_p);
     return;
   }
   /* Both for_statement_initialiser_part and for_in_statement_initialiser_part
@@ -1826,7 +1790,7 @@ parse_for_or_for_in_statement (void)
     if (several_decls)
     {
       token_after_newlines_must_be (TOK_SEMICOLON);
-      parse_plain_for ();
+      parse_plain_for (outermost_stmt_label_p);
       return;
     }
     else
@@ -1834,12 +1798,12 @@ parse_for_or_for_in_statement (void)
       skip_newlines ();
       if (token_is (TOK_SEMICOLON))
       {
-        parse_plain_for ();
+        parse_plain_for (outermost_stmt_label_p);
         return;
       }
       else if (is_keyword (KW_IN))
       {
-        parse_for_in ();
+        parse_for_in (outermost_stmt_label_p);
         return;
       }
       else
@@ -1855,12 +1819,12 @@ parse_for_or_for_in_statement (void)
   skip_newlines ();
   if (token_is (TOK_SEMICOLON))
   {
-    parse_plain_for ();
+    parse_plain_for (outermost_stmt_label_p);
     return;
   }
   else if (is_keyword (KW_IN))
   {
-    parse_for_in ();
+    parse_for_in (outermost_stmt_label_p);
     return;
   }
   else
@@ -1887,7 +1851,7 @@ parse_statement_list (void)
 {
   while (true)
   {
-    parse_statement ();
+    parse_statement (NULL);
 
     skip_newlines ();
     while (token_is (TOK_SEMICOLON))
@@ -1919,7 +1883,7 @@ parse_if_statement (void)
   dump_conditional_check_for_rewrite (cond);
 
   skip_newlines ();
-  parse_statement ();
+  parse_statement (NULL);
 
   skip_newlines ();
   if (is_keyword (KW_ELSE))
@@ -1928,7 +1892,7 @@ parse_if_statement (void)
     rewrite_conditional_check ();
 
     skip_newlines ();
-    parse_statement ();
+    parse_statement (NULL);
 
     rewrite_jump_to_end ();
   }
@@ -1943,37 +1907,34 @@ parse_if_statement (void)
   : 'do' LT!* statement LT!* 'while' LT!* '(' expression ')' (LT | ';')!
   ; */
 static void
-parse_do_while_statement (void)
+parse_do_while_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
+                                                                *   the statement (or NULL, if there are no named
+                                                                *   labels associated with the statement) */
 {
   assert_keyword (KW_DO);
-
-  start_collecting_continues ();
-  start_collecting_breaks ();
 
   dumper_set_next_interation_target ();
 
   skip_newlines ();
   push_nesting (NESTING_ITERATIONAL);
-  parse_statement ();
+  parse_statement (NULL);
   pop_nesting (NESTING_ITERATIONAL);
 
-  dumper_set_continue_target ();
+  jsp_label_setup_continue_target (outermost_stmt_label_p,
+                                   serializer_get_current_opcode_counter ());
 
   token_after_newlines_must_be_keyword (KW_WHILE);
   const operand cond = parse_expression_inside_parens ();
   dump_continue_iterations_check (cond);
-
-  dumper_set_break_target ();
-
-  rewrite_breaks ();
-  rewrite_continues ();
 }
 
 /* while_statement
   : 'while' LT!* '(' LT!* expression LT!* ')' LT!* statement
   ; */
 static void
-parse_while_statement (void)
+parse_while_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
+                                                             *   the statement (or NULL, if there are no named
+                                                             *   labels associated with the statement) */
 {
   assert_keyword (KW_WHILE);
 
@@ -1985,15 +1946,13 @@ parse_while_statement (void)
 
   dumper_set_next_interation_target ();
 
-  start_collecting_continues ();
-  start_collecting_breaks ();
-
   skip_newlines ();
   push_nesting (NESTING_ITERATIONAL);
-  parse_statement ();
+  parse_statement (NULL);
   pop_nesting (NESTING_ITERATIONAL);
 
-  dumper_set_continue_target ();
+  jsp_label_setup_continue_target (outermost_stmt_label_p,
+                                   serializer_get_current_opcode_counter ());
 
   rewrite_jump_to_end ();
 
@@ -2001,11 +1960,6 @@ parse_while_statement (void)
   lexer_seek (cond_loc);
   const operand cond = parse_expression_inside_parens ();
   dump_continue_iterations_check (cond);
-
-  dumper_set_break_target ();
-
-  rewrite_breaks ();
-  rewrite_continues ();
 
   lexer_seek (end_loc);
   skip_token ();
@@ -2024,15 +1978,17 @@ parse_with_statement (void)
   }
   const operand expr = parse_expression_inside_parens ();
 
+  jsp_label_raise_nested_jumpable_border ();
   push_nesting (NESTING_WITH);
 
   opcode_counter_t with_begin_oc = dump_with_for_rewrite (expr);
   skip_newlines ();
-  parse_statement ();
+  parse_statement (NULL);
   rewrite_with (with_begin_oc);
   dump_with_end ();
 
   pop_nesting (NESTING_WITH);
+  jsp_label_remove_nested_jumpable_border ();
 }
 
 static void
@@ -2106,7 +2062,11 @@ parse_switch_statement (void)
   lexer_seek (start_loc);
   next_token_must_be (TOK_OPEN_BRACE);
 
-  start_collecting_breaks ();
+  jsp_label_t label;
+  jsp_label_push (&label,
+                  JSP_LABEL_TYPE_UNNAMED_BREAKS,
+                  TOKEN_EMPTY_INITIALIZER);
+
   push_nesting (NESTING_SWITCH);
   // Second, parse case clauses' bodies and rewrite jumps
   skip_newlines ();
@@ -2144,8 +2104,9 @@ parse_switch_statement (void)
   skip_token ();
   pop_nesting (NESTING_SWITCH);
 
-  dumper_set_break_target ();
-  rewrite_breaks ();
+  jsp_label_rewrite_jumps_and_pop (&label,
+                                   serializer_get_current_opcode_counter ());
+
   finish_dumping_case_clauses ();
 }
 
@@ -2199,6 +2160,7 @@ parse_try_statement (void)
 {
   assert_keyword (KW_TRY);
 
+  jsp_label_raise_nested_jumpable_border ();
   push_nesting (NESTING_TRY);
 
   dump_try_for_rewrite ();
@@ -2237,6 +2199,7 @@ parse_try_statement (void)
   dump_end_try_catch_finally ();
 
   pop_nesting (NESTING_TRY);
+  jsp_label_remove_nested_jumpable_border ();
 }
 
 static void
@@ -2259,6 +2222,45 @@ insert_semicolon (void)
     EMIT_ERROR ("Expected either ';' or newline token");
   }
 }
+
+/**
+ * iteration_statement
+ *  : do_while_statement
+ *  | while_statement
+ *  | for_statement
+ *  | for_in_statement
+ *  ;
+ */
+static void
+parse_iterational_statement (jsp_label_t *outermost_named_stmt_label_p) /**< outermost (first) named label,
+                                                                         *   corresponding to the statement
+                                                                         *   (or NULL, if there are no named
+                                                                         *    labels associated with the statement) */
+{
+  jsp_label_t label;
+  jsp_label_push (&label,
+                  (jsp_label_type_flag_t) (JSP_LABEL_TYPE_UNNAMED_BREAKS | JSP_LABEL_TYPE_UNNAMED_CONTINUES),
+                  TOKEN_EMPTY_INITIALIZER);
+
+  jsp_label_t *outermost_stmt_label_p = (outermost_named_stmt_label_p != NULL ? outermost_named_stmt_label_p : &label);
+
+  if (is_keyword (KW_DO))
+  {
+    parse_do_while_statement (outermost_stmt_label_p);
+  }
+  else if (is_keyword (KW_WHILE))
+  {
+    parse_while_statement (outermost_stmt_label_p);
+  }
+  else
+  {
+    JERRY_ASSERT (is_keyword (KW_FOR));
+    parse_for_or_for_in_statement (outermost_stmt_label_p);
+  }
+
+  jsp_label_rewrite_jumps_and_pop (&label,
+                                   serializer_get_current_opcode_counter ());
+} /* parse_iterational_statement */
 
 /* statement
   : statement_block
@@ -2324,7 +2326,9 @@ insert_semicolon (void)
   : 'try' LT!* '{' LT!* statement_list LT!* '}' LT!* (finally_clause | catch_clause (LT!* finally_clause)?)
   ;*/
 static void
-parse_statement (void)
+parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to the statement
+                                                       *   (or NULL, if there are no named labels associated
+                                                       *    with the statement) */
 {
   dumper_new_statement ();
 
@@ -2367,19 +2371,11 @@ parse_statement (void)
     parse_if_statement ();
     return;
   }
-  if (is_keyword (KW_DO))
+  if (is_keyword (KW_DO)
+      || is_keyword (KW_WHILE)
+      || is_keyword (KW_FOR))
   {
-    parse_do_while_statement ();
-    return;
-  }
-  if (is_keyword (KW_WHILE))
-  {
-    parse_while_statement ();
-    return;
-  }
-  if (is_keyword (KW_FOR))
-  {
-    parse_for_or_for_in_statement ();
+    parse_iterational_statement (outermost_stmt_label_p);
     return;
   }
   if (is_keyword (KW_CONTINUE)
@@ -2392,39 +2388,48 @@ parse_statement (void)
       EMIT_ERROR ("Shall be inside a nesting");
     }
 
-    nesting_t topmost_nesting = STACK_ELEMENT (nestings, STACK_SIZE (nestings) - 1);
+    skip_token ();
 
-    if (is_break)
+    jsp_label_t *label_p;
+    bool is_simply_jumpable = true;
+    if (token_is (TOK_NAME))
     {
-      must_be_inside_but_not_in (NESTING_FUNCTION,
-                                 4,
-                                 NESTING_ITERATIONAL,
-                                 NESTING_SWITCH,
-                                 NESTING_TRY,
-                                 NESTING_WITH);
+      /* break or continue on a label */
+      label_p = jsp_label_find (JSP_LABEL_TYPE_NAMED, tok, &is_simply_jumpable);
+
+      if (label_p == NULL)
+      {
+        EMIT_ERROR ("Label not found");
+      }
+    }
+    else if (is_break)
+    {
+      label_p = jsp_label_find (JSP_LABEL_TYPE_UNNAMED_BREAKS,
+                                TOKEN_EMPTY_INITIALIZER,
+                                &is_simply_jumpable);
+
+      if (label_p == NULL)
+      {
+        EMIT_ERROR ("No corresponding statement for the break");
+      }
     }
     else
     {
-      must_be_inside_but_not_in (NESTING_FUNCTION,
-                                 3,
-                                 NESTING_ITERATIONAL,
-                                 NESTING_TRY,
-                                 NESTING_WITH);
+      JERRY_ASSERT (!is_break);
+
+      label_p = jsp_label_find (JSP_LABEL_TYPE_UNNAMED_CONTINUES,
+                                TOKEN_EMPTY_INITIALIZER,
+                                &is_simply_jumpable);
+
+      if (label_p == NULL)
+      {
+        EMIT_ERROR ("No corresponding statement for the continue");
+      }
     }
 
-    if (topmost_nesting == NESTING_ITERATIONAL
-        || (topmost_nesting == NESTING_SWITCH && is_break))
-    {
-      dump_break_continue_for_rewrite (is_break, true);
-    }
-    else
-    {
-      JERRY_ASSERT (topmost_nesting == NESTING_TRY
-                    || topmost_nesting == NESTING_WITH
-                    || (topmost_nesting == NESTING_SWITCH && !is_break));
+    JERRY_ASSERT (label_p != NULL);
 
-      dump_break_continue_for_rewrite (is_break, false);
-    }
+    jsp_label_add_jump (label_p, is_simply_jumpable, is_break);
 
     return;
   }
@@ -2473,8 +2478,21 @@ parse_statement (void)
     skip_newlines ();
     if (token_is (TOK_COLON))
     {
-      // STMT_LABELLED;
-      EMIT_SORRY ("Labelled statements are not supported yet");
+      skip_newlines ();
+
+      jsp_label_t *label_p = jsp_label_find (JSP_LABEL_TYPE_NAMED, temp, NULL);
+      if (label_p != NULL)
+      {
+        EMIT_ERROR ("Label is duplicated");
+      }
+
+      jsp_label_t label;
+      jsp_label_push (&label, JSP_LABEL_TYPE_NAMED, temp);
+
+      parse_statement (outermost_stmt_label_p != NULL ? outermost_stmt_label_p : &label);
+
+      jsp_label_rewrite_jumps_and_pop (&label,
+                                       serializer_get_current_opcode_counter ());
     }
     else
     {
@@ -2514,7 +2532,7 @@ parse_source_element (void)
   }
   else
   {
-    parse_statement ();
+    parse_statement (NULL);
   }
 }
 
@@ -2866,11 +2884,15 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
 
   STACK_INIT (nestings);
   STACK_INIT (scopes);
+
+  jsp_label_init ();
 }
 
 void
 parser_free (void)
 {
+  jsp_label_finalize ();
+
   STACK_FREE (nestings);
   STACK_FREE (scopes);
 

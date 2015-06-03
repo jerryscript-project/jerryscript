@@ -178,14 +178,15 @@ operand dump_prop_setter_or_bitwise_and_res (operand, operand);
 operand dump_prop_setter_or_bitwise_xor_res (operand, operand);
 operand dump_prop_setter_or_bitwise_or_res (operand, operand);
 
-void start_collecting_breaks (void);
-void start_collecting_continues (void);
 void dumper_set_break_target (void);
 void dumper_set_continue_target (void);
 void dumper_set_next_interation_target (void);
-void dump_break_continue_for_rewrite (bool is_break, bool is_simple_jump);
-void rewrite_continues (void);
-void rewrite_breaks (void);
+opcode_counter_t
+dump_simple_or_nested_jump_for_rewrite (bool is_simple_jump,
+                                        opcode_counter_t next_jump_for_tg_oc);
+opcode_counter_t
+rewrite_simple_or_nested_jump_and_get_next (opcode_counter_t jump_oc,
+                                            opcode_counter_t target_oc);
 void dump_continue_iterations_check (operand);
 
 void start_dumping_case_clauses (void);

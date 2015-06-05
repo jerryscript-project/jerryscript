@@ -30,33 +30,7 @@
 #include "opcodes-dumper.h"
 #include "serializer.h"
 
-/**
- * Nesting types
- *
- * Note:
- *      Nesting is an element, describing classes of syntax blocks, handled by parser.
- *
- *      Nestings are pushed to the nestings stack upon entering them, and popped upon leaving.
- *
- *      The top-most nesting, if any, describes the inner-most syntax block of specified type,
- *      currently reached by parser.
- */
-typedef enum
-{
-  NESTING_ITERATIONAL, /**< an iterational (for, for-in, while, do-while) statement */
-  NESTING_SWITCH,      /**< switch-case block */
-  NESTING_FUNCTION,    /**< function */
-  NESTING_TRY,         /**< try-catch-finally block */
-  NESTING_WITH         /**< with block */
-} nesting_t;
-
 static token tok;
-
-enum
-{
-  nestings_global_size
-};
-STATIC_STACK (nestings, nesting_t)
 
 enum
 {
@@ -68,18 +42,6 @@ STATIC_STACK (scopes, scopes_tree)
 #define EMIT_SORRY(MESSAGE) PARSE_SORRY(MESSAGE, tok.loc)
 #define EMIT_ERROR_VARG(MESSAGE, ...) PARSE_ERROR_VARG(MESSAGE, tok.loc, __VA_ARGS__)
 
-#define NESTING_TO_STRING(I) (I == NESTING_FUNCTION \
-                                ? "function" \
-                                : I == NESTING_ITERATIONAL \
-                                  ? "iterational" \
-                                  : I == NESTING_SWITCH \
-                                    ? "switch" \
-                                    : I == NESTING_TRY \
-                                      ? "try" \
-                                      : I == NESTING_WITH \
-                                        ? "with" \
-                                        : "unknown")
-
 #define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
 
 static operand parse_expression (bool);
@@ -90,25 +52,6 @@ static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand 
 static void process_keyword_names (void);
 static void skip_braces (void);
 static void skip_parens (void);
-
-/**
- * Push a nesting to the nesting stack, so setting new current nesting
- */
-static void
-push_nesting (nesting_t nesting_type) /**< type of new nesting */
-{
-  STACK_PUSH (nestings, nesting_type);
-} /* push_nesting */
-
-/**
- * Restore nesting from nestings stack
- */
-static void
-pop_nesting (nesting_t nesting_type) /**< type of current nesting */
-{
-  JERRY_ASSERT (STACK_HEAD (nestings, 1) == nesting_type);
-  STACK_DROP (nestings, 1);
-} /* pop_nesting */
 
 static bool
 token_is (token_type tt)
@@ -260,8 +203,6 @@ parse_property_name_and_value (void)
 static void
 parse_property_assignment (void)
 {
-  STACK_DECLARE_USAGE (nestings);
-
   if (token_is (TOK_NAME))
   {
     bool is_setter;
@@ -278,7 +219,7 @@ parse_property_assignment (void)
     {
       parse_property_name_and_value ();
 
-      goto cleanup;
+      return;
     }
 
     const token temp = tok;
@@ -290,7 +231,7 @@ parse_property_assignment (void)
 
       parse_property_name_and_value ();
 
-      goto cleanup;
+      return;
     }
 
     const operand name = parse_property_name ();
@@ -309,9 +250,7 @@ parse_property_assignment (void)
 
     jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
-    push_nesting (NESTING_FUNCTION);
     parse_source_element_list (false);
-    pop_nesting (NESTING_FUNCTION);
 
     jsp_label_restore_set (masked_label_set_p);
 
@@ -334,9 +273,6 @@ parse_property_assignment (void)
   {
     parse_property_name_and_value ();
   }
-
-cleanup:
-  STACK_CHECK_USAGE (nestings);
 }
 
 /** Parse list of identifiers, assigment expressions or properties, splitted by comma.
@@ -509,7 +445,6 @@ static void
 parse_function_declaration (void)
 {
   STACK_DECLARE_USAGE (scopes);
-  STACK_DECLARE_USAGE (nestings);
 
   assert_keyword (KW_FUNCTION);
 
@@ -531,9 +466,7 @@ parse_function_declaration (void)
 
   skip_newlines ();
 
-  push_nesting (NESTING_FUNCTION);
   parse_source_element_list (false);
-  pop_nesting (NESTING_FUNCTION);
 
   next_token_must_be (TOK_CLOSE_BRACE);
 
@@ -547,7 +480,6 @@ parse_function_declaration (void)
   jsp_label_restore_set (masked_label_set_p);
 
   STACK_CHECK_USAGE (scopes);
-  STACK_CHECK_USAGE (nestings);
 }
 
 /* function_expression
@@ -556,8 +488,6 @@ parse_function_declaration (void)
 static operand
 parse_function_expression (void)
 {
-  STACK_DECLARE_USAGE (nestings)
-
   assert_keyword (KW_FUNCTION);
 
   operand res;
@@ -583,9 +513,7 @@ parse_function_expression (void)
 
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
-  push_nesting (NESTING_FUNCTION);
   parse_source_element_list (false);
-  pop_nesting (NESTING_FUNCTION);
 
   jsp_label_restore_set (masked_label_set_p);
 
@@ -594,8 +522,6 @@ parse_function_expression (void)
 
   dump_ret ();
   rewrite_function_end (VARG_FUNC_EXPR);
-
-  STACK_CHECK_USAGE (nestings);
 
   return res;
 }
@@ -1698,9 +1624,7 @@ parse_plain_for (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
 
   // Parse body
   skip_newlines ();
-  push_nesting (NESTING_ITERATIONAL);
   parse_statement (NULL);
-  pop_nesting (NESTING_ITERATIONAL);
 
   const locus end_loc = tok.loc;
 
@@ -1916,9 +1840,7 @@ parse_do_while_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (f
   dumper_set_next_interation_target ();
 
   skip_newlines ();
-  push_nesting (NESTING_ITERATIONAL);
   parse_statement (NULL);
-  pop_nesting (NESTING_ITERATIONAL);
 
   jsp_label_setup_continue_target (outermost_stmt_label_p,
                                    serializer_get_current_opcode_counter ());
@@ -1947,9 +1869,7 @@ parse_while_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (firs
   dumper_set_next_interation_target ();
 
   skip_newlines ();
-  push_nesting (NESTING_ITERATIONAL);
   parse_statement (NULL);
-  pop_nesting (NESTING_ITERATIONAL);
 
   jsp_label_setup_continue_target (outermost_stmt_label_p,
                                    serializer_get_current_opcode_counter ());
@@ -1979,7 +1899,6 @@ parse_with_statement (void)
   const operand expr = parse_expression_inside_parens ();
 
   jsp_label_raise_nested_jumpable_border ();
-  push_nesting (NESTING_WITH);
 
   opcode_counter_t with_begin_oc = dump_with_for_rewrite (expr);
   skip_newlines ();
@@ -1987,7 +1906,6 @@ parse_with_statement (void)
   rewrite_with (with_begin_oc);
   dump_with_end ();
 
-  pop_nesting (NESTING_WITH);
   jsp_label_remove_nested_jumpable_border ();
 }
 
@@ -2067,7 +1985,6 @@ parse_switch_statement (void)
                   JSP_LABEL_TYPE_UNNAMED_BREAKS,
                   TOKEN_EMPTY_INITIALIZER);
 
-  push_nesting (NESTING_SWITCH);
   // Second, parse case clauses' bodies and rewrite jumps
   skip_newlines ();
   while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
@@ -2102,7 +2019,6 @@ parse_switch_statement (void)
   }
   current_token_must_be (TOK_CLOSE_BRACE);
   skip_token ();
-  pop_nesting (NESTING_SWITCH);
 
   jsp_label_rewrite_jumps_and_pop (&label,
                                    serializer_get_current_opcode_counter ());
@@ -2161,7 +2077,6 @@ parse_try_statement (void)
   assert_keyword (KW_TRY);
 
   jsp_label_raise_nested_jumpable_border ();
-  push_nesting (NESTING_TRY);
 
   dump_try_for_rewrite ();
 
@@ -2198,7 +2113,6 @@ parse_try_statement (void)
 
   dump_end_try_catch_finally ();
 
-  pop_nesting (NESTING_TRY);
   jsp_label_remove_nested_jumpable_border ();
 }
 
@@ -2382,11 +2296,6 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
       || is_keyword (KW_BREAK))
   {
     bool is_break = is_keyword (KW_BREAK);
-
-    if (STACK_SIZE (nestings) == 0)
-    {
-      EMIT_ERROR ("Shall be inside a nesting");
-    }
 
     skip_token ();
 
@@ -2882,7 +2791,6 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
   dumper_init ();
   syntax_init ();
 
-  STACK_INIT (nestings);
   STACK_INIT (scopes);
 
   jsp_label_init ();
@@ -2893,7 +2801,6 @@ parser_free (void)
 {
   jsp_label_finalize ();
 
-  STACK_FREE (nestings);
   STACK_FREE (scopes);
 
   syntax_free ();

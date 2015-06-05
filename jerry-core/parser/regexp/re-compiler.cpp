@@ -323,9 +323,12 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
   }
   re_ctx_p->recursion_depth++;
 
-  while (true)
+  while (ecma_is_completion_value_empty (ret_value))
   {
-    re_ctx_p->current_token = re_parse_next_token (re_ctx_p->parser_ctx_p);
+    ECMA_TRY_CATCH (empty,
+                    re_parse_next_token (re_ctx_p->parser_ctx_p,
+                                         &(re_ctx_p->current_token)),
+                    ret_value);
     uint32_t new_atom_start_offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
     switch (re_ctx_p->current_token.type)
@@ -472,13 +475,19 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                                                     : RE_OP_INV_CHAR_CLASS);
         uint32_t offset = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
 
-        re_ctx_p->current_token = re_parse_char_class (re_ctx_p->parser_ctx_p, append_char_class, re_ctx_p);
+        ECMA_TRY_CATCH (empty,
+                        re_parse_char_class (re_ctx_p->parser_ctx_p,
+                                             append_char_class,
+                                             re_ctx_p,
+                                             &(re_ctx_p->current_token)),
+                        ret_value);
         insert_u32 (bc_ctx_p, offset, re_ctx_p->parser_ctx_p->num_of_classes);
 
         if ((re_ctx_p->current_token.qmin != 1) || (re_ctx_p->current_token.qmax != 1))
         {
           insert_simple_iterator (re_ctx_p, new_atom_start_offset);
         }
+        ECMA_FINALIZE (empty);
         break;
       }
       case RE_TOK_EOF:
@@ -499,8 +508,12 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
         return ret_value;
       }
     }
+    ECMA_FINALIZE (empty);
   }
-  JERRY_UNREACHABLE ();
+
+  /* Should be reached only when an error catched during the compilation. */
+  JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
+  return ret_value;
 } /* parse_alternative */
 
 /**

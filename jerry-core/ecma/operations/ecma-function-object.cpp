@@ -741,23 +741,24 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
                                       prototype_magic_string_p),
                   ret_value);
 
-  //  6.
-  ecma_object_t *prototype_p;
+  // 1., 2., 4.
+  ecma_object_t *obj_p;
   if (ecma_is_value_object (func_obj_prototype_prop_value))
   {
-    prototype_p = ecma_get_object_from_value (func_obj_prototype_prop_value);
-    ecma_ref_object (prototype_p);
+    //  6.
+    obj_p = ecma_create_object (ecma_get_object_from_value (func_obj_prototype_prop_value),
+                                true,
+                                ECMA_OBJECT_TYPE_GENERAL);
   }
   else
   {
     // 7.
-    prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+    ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+
+    obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+    ecma_deref_object (prototype_p);
   }
-
-  // 1., 2., 4.
-  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
-
-  ecma_deref_object (prototype_p);
 
   // 3.
   /*
@@ -781,19 +782,21 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   // 9.
   if (ecma_is_value_object (call_completion))
   {
-    ecma_deref_object (obj_p);
-
     obj_value = ecma_copy_value (call_completion, true);
   }
   else
   {
     // 10.
+    ecma_ref_object (obj_p);
     obj_value = ecma_make_object_value (obj_p);
   }
 
   ret_value = ecma_make_normal_completion_value (obj_value);
 
   ECMA_FINALIZE (call_completion);
+
+  ecma_deref_object (obj_p);
+
   ECMA_FINALIZE (func_obj_prototype_prop_value);
 
   ecma_deref_ecma_string (prototype_magic_string_p);

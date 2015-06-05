@@ -2038,13 +2038,15 @@ parse_with_statement (void)
 static void
 skip_case_clause_body (void)
 {
-  while (!is_keyword (KW_CASE) && !is_keyword (KW_DEFAULT) && !token_is (TOK_CLOSE_BRACE))
+  while (!is_keyword (KW_CASE)
+         && !is_keyword (KW_DEFAULT)
+         && !token_is (TOK_CLOSE_BRACE))
   {
-    skip_newlines ();
     if (token_is (TOK_OPEN_BRACE))
     {
       skip_braces ();
     }
+    skip_newlines ();
   }
 }
 

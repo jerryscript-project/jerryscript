@@ -351,6 +351,15 @@ vm_init (const opcode_t *program_p, /**< pointer to byte-code program */
 } /* vm_init */
 
 /**
+ * Cleanup interpreter
+ */
+void
+vm_finalize (void)
+{
+  __program = NULL;
+} /* vm_finalize */
+
+/**
  * Run global code
  */
 jerry_completion_code_t

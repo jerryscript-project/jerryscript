@@ -1171,6 +1171,7 @@ jerry_cleanup (void)
   ecma_finalize ();
   serializer_free ();
   mem_finalize (is_show_mem_stats);
+  vm_finalize ();
 } /* jerry_cleanup */
 
 /**

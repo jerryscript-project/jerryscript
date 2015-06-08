@@ -65,7 +65,6 @@ ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
     if (arguments_list_len == 1)
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (re_value);
-      fprintf (stderr, "%s\n", ecma_get_magic_string_zt (ecma_object_get_class_name (obj_p)));
       if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_REGEXP_UL)
       {
         ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));

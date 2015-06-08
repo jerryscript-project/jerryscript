@@ -994,6 +994,49 @@ parse_string (void)
   return ret;
 } /* parse_string */
 
+/**
+ * Parse string literal (ECMA-262 v5, 7.8.5)
+ */
+static token
+parse_regexp (void)
+{
+  /* FIXME: Implement this! */
+  token result;
+
+  // Eat up '/'
+  consume_char ();
+  new_token ();
+
+  while (true)
+  {
+    ecma_char_t c = (ecma_char_t) LA (0);
+    if (c == '\0')
+    {
+      PARSE_ERROR ("Unclosed string", token_start - buffer_start);
+    }
+    else if (c == '\n')
+    {
+      PARSE_ERROR ("RegExp literal shall not contain newline character", token_start - buffer_start);
+    }
+    else if (c == '/')
+    {
+      break;
+    }
+
+    consume_char ();
+  }
+
+  result = convert_string_to_token (TOK_REGEXP,
+                                    (const ecma_char_t*) token_start,
+                                    static_cast<ecma_length_t> (buffer - token_start));
+
+  // Eat up '/'
+  consume_char ();
+  token_start = NULL;
+
+  return result;
+} /* parse_regexp */
+
 static void
 grobble_whitespaces (void)
 {
@@ -1117,10 +1160,27 @@ lexer_next_token_private (void)
     }
   }
 
-  if (c == '/' && LA (1) == '/')
+
+  if (c == '/')
   {
-    replace_comment_by_newline ();
-    return lexer_next_token_private ();
+    if (LA (1) == '/')
+    {
+      replace_comment_by_newline ();
+      return lexer_next_token_private ();
+    }
+    else if (!(sent_token.type == TOK_NAME
+             || sent_token.type == TOK_NULL
+             || sent_token.type == TOK_BOOL
+             || sent_token.type == TOK_CLOSE_BRACE
+             || sent_token.type == TOK_CLOSE_SQUARE
+             || sent_token.type == TOK_CLOSE_PAREN
+             || sent_token.type == TOK_SMALL_INT
+             || sent_token.type == TOK_NUMBER
+             || sent_token.type == TOK_STRING
+             || sent_token.type == TOK_REGEXP))
+    {
+      return parse_regexp ();
+    }
   }
 
   switch (c)
@@ -1223,7 +1283,6 @@ lexer_next_token (void)
 
   prev_token = sent_token;
   sent_token = lexer_next_token_private ();
-
   if (sent_token.type == TOK_NEWLINE)
   {
     dump_current_line ();

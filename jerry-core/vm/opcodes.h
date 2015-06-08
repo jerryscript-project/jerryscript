@@ -50,7 +50,8 @@ typedef enum
   OPCODE_ARG_TYPE_NUMBER, /**< index of number literal */
   OPCODE_ARG_TYPE_NUMBER_NEGATE, /**< index of number literal with negation */
   OPCODE_ARG_TYPE_STRING, /**< index of string literal */
-  OPCODE_ARG_TYPE_VARIABLE /**< index of variable name */
+  OPCODE_ARG_TYPE_VARIABLE, /**< index of variable name */
+  OPCODE_ARG_TYPE_REGEXP /**< index of RegExp literal */
 } opcode_arg_type_operand;
 
 /**

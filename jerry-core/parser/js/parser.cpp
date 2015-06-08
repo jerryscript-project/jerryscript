@@ -15,20 +15,20 @@
 
 #include <stdarg.h>
 
+#include "ecma-helpers.h"
+#include "hash-table.h"
 #include "jrt-libc-includes.h"
 #include "jsp-label.h"
-#include "parser.h"
 #include "opcodes.h"
-#include "serializer.h"
-#include "vm.h"
-#include "stack.h"
-#include "hash-table.h"
-#include "opcodes-native-call.h"
-#include "scopes-tree.h"
-#include "ecma-helpers.h"
-#include "syntax-errors.h"
 #include "opcodes-dumper.h"
+#include "opcodes-native-call.h"
+#include "parser.h"
+#include "re-parser.h"
+#include "scopes-tree.h"
 #include "serializer.h"
+#include "stack.h"
+#include "syntax-errors.h"
+#include "vm.h"
 
 static token tok;
 
@@ -561,6 +561,7 @@ parse_object_literal (void)
   | 'false'
   | number_literal
   | string_literal
+  | regexp_literal
   ; */
 static operand
 parse_literal (void)
@@ -569,6 +570,7 @@ parse_literal (void)
   {
     case TOK_NUMBER: return dump_number_assignment_res (token_data_as_lit_cp ());
     case TOK_STRING: return dump_string_assignment_res (token_data_as_lit_cp ());
+    case TOK_REGEXP: return dump_regexp_assignment_res (token_data_as_lit_cp ());
     case TOK_NULL: return dump_null_assignment_res ();
     case TOK_BOOL: return dump_boolean_assignment_res ((bool) token_data ());
     case TOK_SMALL_INT: return dump_smallint_assignment_res ((idx_t) token_data ());
@@ -602,6 +604,7 @@ parse_primary_expression (void)
     case TOK_BOOL:
     case TOK_SMALL_INT:
     case TOK_NUMBER:
+    case TOK_REGEXP:
     case TOK_STRING: return parse_literal ();
     case TOK_NAME: return literal_operand (token_data_as_lit_cp ());
     case TOK_OPEN_SQUARE: return parse_array_literal ();

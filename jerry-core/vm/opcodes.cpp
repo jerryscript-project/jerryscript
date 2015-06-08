@@ -162,6 +162,24 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
                                     dst_var_idx,
                                     ecma_make_number_value (num_p));
   }
+  else if (type_value_right == OPCODE_ARG_TYPE_REGEXP)
+  {
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->pos);
+    ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
+
+    /* FIXME: parse the RegExp flags too not just the pattern. */
+    ECMA_TRY_CATCH (regexp_obj_value,
+                    ecma_op_create_regexp_object (string_p, NULL),
+                    ret_value);
+
+    ret_value = set_variable_value (int_data,
+                                    int_data->pos,
+                                    dst_var_idx,
+                                    regexp_obj_value);
+
+    ECMA_FINALIZE (regexp_obj_value);
+    ecma_deref_ecma_string (string_p);
+  }
   else
   {
     JERRY_ASSERT (type_value_right == OPCODE_ARG_TYPE_SMALLINT_NEGATE);

@@ -839,6 +839,34 @@ dump_number_assignment_res (lit_cpointer_t lit_id)
 }
 
 void
+dump_regexp_assignment (operand op, lit_cpointer_t lit_id)
+{
+  switch (op.type)
+  {
+    case OPERAND_LITERAL:
+    {
+      const opcode_t opcode = getop_assignment (LITERAL_TO_REWRITE, OPCODE_ARG_TYPE_REGEXP, LITERAL_TO_REWRITE);
+      serializer_dump_op_meta (create_op_meta_101 (opcode, op.data.lit_id, lit_id));
+      break;
+    }
+    case OPERAND_TMP:
+    {
+      const opcode_t opcode = getop_assignment (op.data.uid, OPCODE_ARG_TYPE_REGEXP, LITERAL_TO_REWRITE);
+      serializer_dump_op_meta (create_op_meta_001 (opcode, lit_id));
+      break;
+    }
+  }
+}
+
+operand
+dump_regexp_assignment_res (lit_cpointer_t lit_id)
+{
+  operand op = tmp_operand ();
+  dump_regexp_assignment (op, lit_id);
+  return op;
+}
+
+void
 dump_smallint_assignment (operand op, idx_t uid)
 {
   switch (op.type)

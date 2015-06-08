@@ -143,7 +143,60 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
                                              const ecma_value_t* argument_list_p, /**< arguments list */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, argument_list_p, arguments_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3 */
+  // No copy performed
+
+  /* 4 */
+  ecma_string_t *string_to_return = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (to_string_val));
+
+  JERRY_ASSERT (ecma_string_get_length (string_to_return) >= 0);
+
+  /* 5 */
+  for (uint32_t arg_index = 0;
+       arg_index < arguments_number && ecma_is_completion_value_empty (ret_value);
+       ++arg_index)
+  {
+    /* 5a */
+    /* 5b */
+    ecma_string_t *string_temp = string_to_return;
+
+    ECMA_TRY_CATCH (get_arg_string,
+                    ecma_op_to_string (argument_list_p[arg_index]),
+                    ret_value);
+
+    string_to_return = ecma_concat_ecma_strings (string_to_return, ecma_get_string_from_value (get_arg_string));
+
+    ecma_deref_ecma_string (string_temp);
+
+    ECMA_FINALIZE (get_arg_string);
+  }
+
+  /* 6 */
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (string_to_return));
+  }
+  else
+  {
+    ecma_deref_ecma_string (string_to_return);
+  }
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_concat */
 
 /**

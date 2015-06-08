@@ -24,6 +24,7 @@ typedef enum __attr_packed___
   LIT_UNKNOWN,
   LIT_STR,
   LIT_MAGIC_STR,
+  LIT_MAGIC_STR_EX,
   LIT_NUMBER
 } literal_type;
 
@@ -32,6 +33,7 @@ typedef struct
   union
   {
     ecma_magic_string_id_t magic_str_id;
+    ecma_magic_string_ex_id_t magic_str_ex_id;
     ecma_number_t num;
     lp_string lp;
     void *none;

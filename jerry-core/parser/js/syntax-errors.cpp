@@ -180,12 +180,12 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
   {
     JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
     const literal previous = STACK_ELEMENT (props, i).lit;
-    JERRY_ASSERT (previous.type == LIT_STR || previous.type == LIT_MAGIC_STR);
+    JERRY_ASSERT (previous.type == LIT_STR || previous.type == LIT_MAGIC_STR || previous.type == LIT_MAGIC_STR_EX);
     for (uint8_t j = STACK_TOP (U8); j < i; j = (uint8_t) (j + 1))
     {
       JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
       const literal current = STACK_ELEMENT (props, j).lit;
-      JERRY_ASSERT (current.type == LIT_STR || current.type == LIT_MAGIC_STR);
+      JERRY_ASSERT (current.type == LIT_STR || current.type == LIT_MAGIC_STR || current.type == LIT_MAGIC_STR_EX);
       if (literal_equal_type (previous, current))
       {
         PARSE_ERROR_VARG ("Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",

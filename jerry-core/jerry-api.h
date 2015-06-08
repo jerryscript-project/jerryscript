@@ -72,6 +72,25 @@ typedef enum
 } jerry_api_error_t;
 
 /**
+ * Jerry's char value
+*/
+#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
+typedef uint8_t jerry_api_char_t;
+#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
+typedef uint16_t jerry_api_char_t;
+#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
+
+/**
+ * Pointer to an array of character values
+ */
+typedef jerry_api_char_t* jerry_api_char_ptr_t;
+
+/**
+ * Jerry's length
+*/
+typedef uint16_t jerry_api_length_t;
+
+/**
  * Jerry's string value
  */
 typedef struct ecma_string_t jerry_api_string_t;
@@ -197,6 +216,11 @@ jerry_completion_code_t jerry_api_eval (const char *source_p,
 
 extern EXTERN_C
 jerry_api_object_t* jerry_api_get_global (void);
+
+extern EXTERN_C
+void jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
+                                            uint32_t count,
+                                            const jerry_api_length_t* str_lengths);
 
 /**
  * @}

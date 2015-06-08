@@ -574,6 +574,12 @@ typedef uint8_t ecma_char_t;
 typedef uint16_t ecma_char_t;
 #endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
+/**
+ * Description of an ecma-character pointer
+ */
+typedef ecma_char_t* ecma_char_ptr_t;
+
+
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Description of an ecma-number
@@ -746,7 +752,8 @@ typedef enum
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_CONCATENATION, /**< the ecma-string is concatenation of two specified ecma-strings */
-  ECMA_STRING_CONTAINER_MAGIC_STRING /**< the ecma-string is equal to one of ECMA magic strings */
+  ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
+  ECMA_STRING_CONTAINER_MAGIC_STRING_EX /**< the ecma-string is equal to one of external magic strings */
 } ecma_string_container_t;
 
 FIXME (Move to library that should define the type (literal.h /* ? */))
@@ -767,6 +774,11 @@ typedef enum
 
   ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
 } ecma_magic_string_id_t;
+
+/**
+ * Identifiers of implementation-defined external magic string constants
+ */
+typedef uint32_t ecma_magic_string_ex_id_t;
 
 /**
  * ECMA string hash
@@ -822,6 +834,9 @@ typedef struct ecma_string_t
 
     /** Identifier of magic string */
     ecma_magic_string_id_t magic_string_id;
+
+    /** Identifier of external magic string */
+    ecma_magic_string_ex_id_t magic_string_ex_id;
 
     /** For zeroing and comparison in some cases */
     uint32_t common_field;

@@ -66,6 +66,11 @@ dump_literal (literal lit)
       printf ("%s : MAGIC STRING", (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id));
       break;
     }
+    case LIT_MAGIC_STR_EX:
+    {
+      printf ("%s : EXT MAGIC STRING", (const char *) ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id));
+      break;
+    }
     case LIT_STR:
     {
       printf ("%s : STRING", (const char *) (lit.data.lp.str));
@@ -102,7 +107,7 @@ static const char *
 lit_id_to_str (literal_index_t id)
 {
   literal lit = lexer_get_literal_by_id (id);
-  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
   {
     return (char *) literal_to_zt (lit);
   }

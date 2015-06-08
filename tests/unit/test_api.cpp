@@ -180,6 +180,44 @@ handler_construct (const jerry_api_object_t *function_obj_p,
   return true;
 } /* handler_construct */
 
+
+/**
+ * Extended Magic Strings
+ */
+#define JERRY_MAGIC_STRING_ITEMS \
+  JERRY_MAGIC_STRING_DEF (GLOBAL, global) \
+  JERRY_MAGIC_STRING_DEF (CONSOLE, console)
+
+
+#define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
+  static const char jerry_magic_string_ex_ ## NAME[] = # STRING;
+
+JERRY_MAGIC_STRING_ITEMS
+
+#undef JERRY_MAGIC_STRING_DEF
+
+const jerry_api_length_t magic_string_lengths[] =
+{
+#define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
+    (jerry_api_length_t)(sizeof(jerry_magic_string_ex_ ## NAME) - 1u),
+
+  JERRY_MAGIC_STRING_ITEMS
+
+#undef JERRY_MAGIC_STRING_DEF
+};
+
+const jerry_api_char_ptr_t magic_string_items[] =
+{
+#define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
+    (const jerry_api_char_ptr_t)jerry_magic_string_ex_ ## NAME,
+
+  JERRY_MAGIC_STRING_ITEMS
+
+#undef JERRY_MAGIC_STRING_DEF
+};
+
+
+
 int
 main (void)
 {
@@ -407,6 +445,23 @@ main (void)
   jerry_cleanup ();
 
   assert (test_api_is_free_callback_was_called);
+
+  // External Magic String
+  jerry_init (JERRY_FLAG_SHOW_OPCODES);
+
+  uint32_t num_magic_string_items = sizeof (magic_string_items) / sizeof (jerry_api_char_ptr_t);
+  jerry_register_external_magic_strings (magic_string_items,
+                                         num_magic_string_items,
+                                         magic_string_lengths);
+
+  const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
+  is_ok = jerry_parse (ms_code_src_p, strlen (ms_code_src_p));
+  assert (is_ok);
+
+  is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);
+  assert (is_ok);
+
+  jerry_cleanup ();
 
   return 0;
 }

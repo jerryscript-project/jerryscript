@@ -1099,7 +1099,7 @@ dump_prop_name_and_value (operand name, operand value)
   JERRY_ASSERT (name.type == OPERAND_LITERAL);
   const literal lit = lexer_get_literal_by_id (name.data.lit_id);
   operand tmp;
-  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
   {
     tmp = dump_string_assignment_res (name.data.lit_id);
   }
@@ -1132,7 +1132,7 @@ dump_prop_getter_decl (operand name, operand func)
   JERRY_ASSERT (func.type == OPERAND_TMP);
   const literal lit = lexer_get_literal_by_id (name.data.lit_id);
   operand tmp;
-  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
   {
     tmp = dump_string_assignment_res (name.data.lit_id);
   }
@@ -1152,7 +1152,7 @@ dump_prop_setter_decl (operand name, operand func)
   JERRY_ASSERT (func.type == OPERAND_TMP);
   const literal lit = lexer_get_literal_by_id (name.data.lit_id);
   operand tmp;
-  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
   {
     tmp = dump_string_assignment_res (name.data.lit_id);
   }
@@ -1348,7 +1348,7 @@ dump_delete (operand res, operand op, bool is_strict, locus loc)
     case OPERAND_LITERAL:
     {
       const literal lit = lexer_get_literal_by_id (op.data.lit_id);
-      if (lit.type == LIT_MAGIC_STR || lit.type == LIT_STR)
+      if (lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX || lit.type == LIT_STR)
       {
         syntax_check_delete (is_strict, loc);
         switch (res.type)

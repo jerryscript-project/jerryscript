@@ -133,6 +133,16 @@ string_equals_to_literal (const ecma_char_t *str_p, /**< characters buffer */
       return true;
     }
   }
+  else if (lit.type == LIT_MAGIC_STR_EX)
+  {
+    const char *magic_str_p = (const char *) ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id);
+
+    if (strlen (magic_str_p) == length
+        && strncmp (magic_str_p, (const char*) str_p, length) == 0)
+    {
+      return true;
+    }
+  }
 
   return false;
 } /* string_equals_to_literal */
@@ -194,7 +204,7 @@ convert_string_to_token (token_type tt, /**< token type */
   for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
   {
     const literal lit = STACK_ELEMENT (literals, i);
-    if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR)
+    if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
         && string_equals_to_literal (str_p, length, lit))
     {
       return create_token (tt, i);
@@ -202,7 +212,7 @@ convert_string_to_token (token_type tt, /**< token type */
   }
 
   literal lit = create_literal_from_str (str_p, length);
-  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX);
   if (lit.type == LIT_STR)
   {
     lit = add_string_to_string_cache (str_p, length);

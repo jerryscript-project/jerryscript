@@ -79,6 +79,27 @@ create_literal_from_zt (const ecma_char_t *s, ecma_length_t len)
     }
   }
 
+  uint32_t ex_count = ecma_get_magic_string_ex_count ();
+  for (ecma_magic_string_ex_id_t msi = (ecma_magic_string_ex_id_t) 0;
+       msi < ex_count;
+       msi = (ecma_magic_string_id_t) (msi + 1))
+  {
+    const ecma_char_t* ex_string = ecma_get_magic_string_ex_zt (msi);
+    if (ecma_zt_string_length (ex_string) != len)
+    {
+      continue;
+    }
+    if (!strncmp ((const char *) s, (const char *) ex_string, len))
+    {
+      literal ret;
+
+      ret.type = LIT_MAGIC_STR_EX;
+      ret.data.magic_str_ex_id = msi;
+
+      return ret;
+    }
+  }
+
   literal ret;
 
   ret.type = LIT_STR;
@@ -108,7 +129,7 @@ literal_equal_type_s (literal lit, const char *s)
 bool
 literal_equal_type_zt (literal lit, const ecma_char_t *s)
 {
-  if (lit.type != LIT_STR && lit.type != LIT_MAGIC_STR)
+  if (lit.type != LIT_STR && lit.type != LIT_MAGIC_STR && lit.type != LIT_MAGIC_STR_EX)
   {
     return false;
   }
@@ -142,6 +163,10 @@ literal_equal_lp (literal lit, lp_string lp)
     {
       return lp_string_equal_zt (lp, ecma_get_magic_string_zt (lit.data.magic_str_id));
     }
+    case LIT_MAGIC_STR_EX:
+    {
+      return lp_string_equal_zt (lp, ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id));
+    }
     case LIT_NUMBER:
     {
       ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
@@ -171,6 +196,10 @@ literal_equal (literal lit1, literal lit2)
     case LIT_MAGIC_STR:
     {
       return literal_equal_zt (lit1, ecma_get_magic_string_zt (lit2.data.magic_str_id));
+    }
+    case LIT_MAGIC_STR_EX:
+    {
+      return literal_equal_zt (lit1, ecma_get_magic_string_ex_zt (lit2.data.magic_str_ex_id));
     }
     case LIT_NUMBER:
     {
@@ -206,6 +235,10 @@ literal_equal_zt (literal lit, const ecma_char_t *s)
     {
       return ecma_compare_zt_strings (s, ecma_get_magic_string_zt (lit.data.magic_str_id));
     }
+    case LIT_MAGIC_STR_EX:
+    {
+      return ecma_compare_zt_strings (s, ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id));
+    }
     case LIT_NUMBER:
     {
       ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
@@ -230,12 +263,13 @@ literal_equal_num (literal lit, ecma_number_t num)
 const ecma_char_t *
 literal_to_zt (literal lit)
 {
-  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR);
+  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX);
 
   switch (lit.type)
   {
     case LIT_STR: return lit.data.lp.str;
     case LIT_MAGIC_STR: return ecma_get_magic_string_zt (lit.data.magic_str_id);
+    case LIT_MAGIC_STR_EX: return ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id);
     default: JERRY_UNREACHABLE ();
   }
 }

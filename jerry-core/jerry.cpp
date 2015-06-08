@@ -1337,3 +1337,16 @@ jerry_pop_ctx (void)
   JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
 } /* jerry_pop_ctx */
 #endif /* CONFIG_JERRY_ENABLE_CONTEXTS */
+
+
+/**
+ * Register external magic string array
+ */
+void
+jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items, /**< character arrays, representing
+                                                                                  * external magic strings' contents */
+                                       uint32_t count,                           /**< number of the strings */
+                                       const jerry_api_length_t* str_lengths)    /**< lengths of the strings */
+{
+  ecma_strings_ex_set ((const ecma_char_ptr_t*)ex_str_items, count, (const ecma_length_t*)str_lengths);
+} /* jerry_register_external_magic_strings */

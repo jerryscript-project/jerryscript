@@ -36,6 +36,7 @@ void
 ecma_init (void)
 {
   ecma_strings_init ();
+  ecma_strings_ex_init ();
   ecma_init_builtins ();
   ecma_lcache_init ();
   ecma_stack_init ();

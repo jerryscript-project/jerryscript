@@ -118,6 +118,7 @@ extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_i
 extern void ecma_new_ecma_string_on_stack_from_magic_string_id (ecma_string_t *string_p,
                                                                 ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id);
+extern ecma_string_t* ecma_new_ecma_string_from_magic_string_ex_id (ecma_magic_string_ex_id_t id);
 extern ecma_string_t* ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 extern ecma_string_t* ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p);
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
@@ -143,10 +144,19 @@ ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p,
 extern ecma_length_t ecma_zt_string_length (const ecma_char_t *string_p);
 
 extern void ecma_strings_init (void);
+extern void ecma_strings_ex_init (void);
+extern void ecma_strings_ex_set (const ecma_char_ptr_t* ex_str_items,
+                                 uint32_t count,
+                                 const ecma_length_t* ex_str_lengths);
+extern uint32_t ecma_get_magic_string_ex_count (void);
 extern const ecma_char_t* ecma_get_magic_string_zt (ecma_magic_string_id_t id);
+extern const ecma_char_t* ecma_get_magic_string_ex_zt (ecma_magic_string_ex_id_t id);
 extern ecma_string_t* ecma_get_magic_string (ecma_magic_string_id_t id);
+extern ecma_string_t* ecma_get_magic_string_ex (ecma_magic_string_ex_id_t id);
 extern bool ecma_is_string_magic (const ecma_string_t *string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_is_ex_string_magic (const ecma_string_t *string_p, ecma_magic_string_ex_id_t *out_id_p);
 extern bool ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, ecma_magic_string_id_t *out_id_p);
+extern bool ecma_is_zt_ex_string_magic (const ecma_char_t *zt_string_p, ecma_magic_string_ex_id_t *out_id_p);
 extern ecma_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
 extern ecma_string_hash_t ecma_chars_buffer_calc_hash_last_chars (const ecma_char_t *chars, ecma_length_t length);
 

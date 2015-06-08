@@ -51,6 +51,13 @@ JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH)
  */
 static ecma_length_t ecma_magic_string_lengths[ECMA_MAGIC_STRING__COUNT];
 
+/**
+ * External magic strings data array, count and lengths
+ */
+static const ecma_char_ptr_t* ecma_magic_string_ex_array = NULL;
+static uint32_t ecma_magic_string_ex_count = 0;
+static const ecma_length_t* ecma_magic_string_ex_lengths = NULL;
+
 #ifndef JERRY_NDEBUG
 /**
  * Maximum length among lengths of magic strings
@@ -67,6 +74,10 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p,
                                             ecma_magic_string_id_t magic_string_id,
                                             bool is_stack_var);
 
+static void
+ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p,
+                                               ecma_magic_string_ex_id_t magic_string_ex_id,
+                                               bool is_stack_var);
 /**
  * Allocate a collection of ecma-chars.
  *
@@ -297,6 +308,65 @@ ecma_strings_init (void)
 } /* ecma_strings_init */
 
 /**
+ * Initialize external magic strings
+ */
+void
+ecma_strings_ex_init (void)
+{
+  ecma_magic_string_ex_array = NULL;
+  ecma_magic_string_ex_count = 0;
+  ecma_magic_string_ex_lengths = NULL;
+} /* ecma_strings_ex_init */
+
+/**
+ * Register external magic strings
+ */
+void
+ecma_strings_ex_set (const ecma_char_ptr_t* ex_str_items, /**< character arrays, representing
+                                                           *   external magic strings' contents */
+                     uint32_t count,                      /**< number of the strings */
+                     const ecma_length_t* ex_str_lengths) /**< lengths of the strings */
+{
+  JERRY_ASSERT (ex_str_items != NULL);
+  JERRY_ASSERT (count > 0);
+  JERRY_ASSERT (ex_str_lengths != NULL);
+
+  JERRY_ASSERT (ecma_magic_string_ex_array == NULL);
+  JERRY_ASSERT (ecma_magic_string_ex_count == 0);
+  JERRY_ASSERT (ecma_magic_string_ex_lengths == NULL);
+
+  /* Set external magic strings information */
+  ecma_magic_string_ex_array = ex_str_items;
+  ecma_magic_string_ex_count = count;
+  ecma_magic_string_ex_lengths = ex_str_lengths;
+
+#ifndef JERRY_NDEBUG
+  for (ecma_magic_string_ex_id_t id = (ecma_magic_string_ex_id_t) 0;
+       id < ecma_magic_string_ex_count;
+       id = (ecma_magic_string_ex_id_t) (id + 1))
+  {
+    JERRY_ASSERT (ecma_magic_string_ex_lengths[id] == ecma_zt_string_length (ecma_get_magic_string_ex_zt (id)));
+
+    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, ecma_magic_string_ex_lengths[id]);
+
+    JERRY_ASSERT (ecma_magic_string_max_length <= ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT);
+  }
+#endif /* !JERRY_NDEBUG */
+} /* ecma_strings_ex_init */
+
+/**
+ * Get number of external magic strings
+ *
+ * @return number of the strings, if there were registered,
+ *         zero - otherwise.
+ */
+uint32_t
+ecma_get_magic_string_ex_count (void)
+{
+  return ecma_magic_string_ex_count;
+} /* ecma_get_magic_string_ex_count */
+
+/**
  * Initialize ecma-string descriptor with string described by index in literal table
  */
 static void
@@ -318,7 +388,14 @@ ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor t
 
     return;
   }
+  else if (lit.type == LIT_MAGIC_STR_EX)
+  {
+    ecma_init_ecma_string_from_magic_string_ex_id (string_p,
+                                                   lit.data.magic_str_ex_id,
+                                                   is_stack_var);
 
+    return;
+  }
   JERRY_ASSERT (lit.type == LIT_STR);
 
   string_p->refs = 1;
@@ -355,6 +432,30 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
 } /* ecma_init_ecma_string_from_magic_string_id */
 
 /**
+ * Initialize external ecma-string descriptor with specified magic string
+ */
+static void
+ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p, /**< descriptor to initialize */
+                                               ecma_magic_string_ex_id_t magic_string_ex_id, /**< identifier of
+                                                                                           the external magic string */
+                                               bool is_stack_var) /**< flag indicating whether the string descriptor
+                                                                    is placed on stack (true) or in the heap (false) */
+{
+#ifndef JERRY_NDEBUG
+  JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
+#endif /* !JERRY_NDEBUG */
+
+  string_p->refs = 1;
+  string_p->is_stack_var = (is_stack_var != 0);
+  string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING_EX;
+  string_p->hash = ecma_chars_buffer_calc_hash_last_chars (ecma_get_magic_string_ex_zt (magic_string_ex_id),
+                                                           ecma_magic_string_ex_lengths[magic_string_ex_id]);
+
+  string_p->u.common_field = 0;
+  string_p->u.magic_string_ex_id = magic_string_ex_id;
+} /* ecma_init_ecma_string_from_magic_string_ex_id */
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
  * @return pointer to ecma-string descriptor
@@ -368,6 +469,12 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
   if (ecma_is_zt_string_magic (string_p, &magic_string_id))
   {
     return ecma_get_magic_string (magic_string_id);
+  }
+
+  ecma_magic_string_ex_id_t magic_string_ex_id;
+  if (ecma_is_zt_ex_string_magic (string_p, &magic_string_ex_id))
+  {
+    return ecma_get_magic_string_ex (magic_string_ex_id);
   }
 
   ecma_length_t length = 0;
@@ -534,6 +641,23 @@ ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id) /**< ident
 } /* ecma_new_ecma_string_from_magic_string_id */
 
 /**
+ * Allocate new ecma-string and fill it with reference to ECMA magic string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string_from_magic_string_ex_id (ecma_magic_string_ex_id_t id) /**< identifier of externl magic string */
+{
+  JERRY_ASSERT (id < ecma_magic_string_ex_count);
+
+  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_init_ecma_string_from_magic_string_ex_id (string_desc_p, id, false);
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_magic_string_ex_id */
+
+
+/**
  * Concatenate ecma-strings
  *
  * @return concatenation of two ecma-strings
@@ -616,6 +740,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
       new_str_p = ecma_alloc_string ();
 
@@ -778,6 +903,7 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
       /* only the string descriptor itself should be freed */
     }
@@ -812,6 +938,7 @@ ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p) /*
 
   JERRY_ASSERT (container_type == ECMA_STRING_CONTAINER_LIT_TABLE ||
                 container_type == ECMA_STRING_CONTAINER_MAGIC_STRING ||
+                container_type == ECMA_STRING_CONTAINER_MAGIC_STRING_EX ||
                 container_type == ECMA_STRING_CONTAINER_UINT32_IN_DESC);
 #endif /* !JERRY_NDEBUG */
 } /* ecma_check_that_ecma_string_need_not_be_freed */
@@ -845,6 +972,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
     case ECMA_STRING_CONTAINER_CONCATENATION:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
       const int32_t string_len = ecma_string_get_length (str_p);
       const size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
@@ -978,6 +1106,19 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
 
       break;
     }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
+    {
+      const ecma_magic_string_ex_id_t id = string_desc_p->u.magic_string_ex_id;
+      const size_t length = ecma_magic_string_ex_lengths[id];
+
+      size_t bytes_to_copy = (length + 1) * sizeof (ecma_char_t);
+
+      memcpy (buffer_p, ecma_get_magic_string_ex_zt (id), bytes_to_copy);
+
+      JERRY_ASSERT (required_buffer_size == (ssize_t) bytes_to_copy);
+
+      break;
+    }
   }
 
   return required_buffer_size;
@@ -1007,6 +1148,12 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     else if (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
     {
       JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
+
+      return false;
+    }
+    else if (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
+    {
+      JERRY_ASSERT (string1_p->u.magic_string_ex_id != string2_p->u.magic_string_ex_id);
 
       return false;
     }
@@ -1074,6 +1221,12 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       case ECMA_STRING_CONTAINER_MAGIC_STRING:
       {
         JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
+
+        return false;
+      }
+      case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
+      {
+        JERRY_ASSERT (string1_p->u.magic_string_ex_id != string2_p->u.magic_string_ex_id);
 
         return false;
       }
@@ -1299,6 +1452,10 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
     return ecma_magic_string_lengths[string_p->u.magic_string_id];
+  }
+  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
+  {
+    return ecma_magic_string_ex_lengths[string_p->u.magic_string_ex_id];
   }
   else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
@@ -1608,6 +1765,25 @@ ecma_get_magic_string_zt (ecma_magic_string_id_t id) /**< magic string id */
 } /* ecma_get_magic_string_zt */
 
 /**
+ * Get specified magic string as zero-terminated string from external table
+ *
+ * @return pointer to zero-terminated magic string
+ */
+const ecma_char_t*
+ecma_get_magic_string_ex_zt (ecma_magic_string_ex_id_t id) /**< extern magic string id */
+{
+  TODO (Support UTF-16);
+
+  if (ecma_magic_string_ex_array && id < ecma_magic_string_ex_count)
+  {
+    return ecma_magic_string_ex_array[id];
+  }
+
+  JERRY_UNREACHABLE ();
+} /* ecma_get_magic_string_ex_zt */
+
+
+/**
  * Get specified magic string
  *
  * @return ecma-string containing specified magic string
@@ -1617,6 +1793,17 @@ ecma_get_magic_string (ecma_magic_string_id_t id) /**< magic string id */
 {
   return ecma_new_ecma_string_from_magic_string_id (id);
 } /* ecma_get_magic_string */
+
+/**
+ * Get specified external magic string
+ *
+ * @return ecma-string containing specified external magic string
+ */
+ecma_string_t*
+ecma_get_magic_string_ex (ecma_magic_string_ex_id_t id) /**< external magic string id */
+{
+  return ecma_new_ecma_string_from_magic_string_ex_id (id);
+} /* ecma_get_magic_string_ex */
 
 /**
  * Check if passed zt-string equals to one of magic strings
@@ -1649,6 +1836,36 @@ ecma_is_zt_string_magic (const ecma_char_t *zt_string_p, /**< zero-terminated st
 } /* ecma_is_zt_string_magic */
 
 /**
+ * Check if passed zt-string equals to one of external magic strings
+ * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ *
+ * @return true - if external magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+bool
+ecma_is_zt_ex_string_magic (const ecma_char_t *zt_string_p, /**< zero-terminated string */
+                            ecma_magic_string_ex_id_t *out_id_p) /**< out: external magic string's id */
+{
+  TODO (Improve performance of search);
+
+  for (ecma_magic_string_ex_id_t id = (ecma_magic_string_ex_id_t) 0;
+       id < ecma_magic_string_ex_count;
+       id = (ecma_magic_string_ex_id_t) (id + 1))
+  {
+    if (ecma_compare_zt_strings (zt_string_p, ecma_get_magic_string_ex_zt (id)))
+    {
+      *out_id_p = id;
+
+      return true;
+    }
+  }
+
+  *out_id_p = ecma_magic_string_ex_count;
+
+  return false;
+} /* ecma_is_zt_ex_string_magic */
+
+/**
  * Long path part of ecma_is_string_magic
  *
  * Converts passed ecma-string to zt-string and
@@ -1668,6 +1885,27 @@ ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string *
 
   return ecma_is_zt_string_magic (zt_string_buffer, out_id_p);
 } /* ecma_is_string_magic_longpath */
+
+/**
+ * Long path part of ecma_is_ex_string_magic
+ *
+ * Converts passed ecma-string to zt-string and
+ * checks if it is equal to one of magic string
+ *
+ * @return true - if magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+static bool
+ecma_is_ex_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
+                                  ecma_magic_string_ex_id_t *out_id_p) /**< out: external magic string's id */
+{
+  ecma_char_t zt_string_buffer[ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT + 1];
+
+  ssize_t copied = ecma_string_to_zt_string (string_p, zt_string_buffer, (ssize_t) sizeof (zt_string_buffer));
+  JERRY_ASSERT (copied > 0);
+
+  return ecma_is_zt_ex_string_magic (zt_string_buffer, out_id_p);
+} /* ecma_is_ex_string_magic_longpath */
 
 /**
  * Check if passed string equals to one of magic strings
@@ -1706,6 +1944,44 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
     return false;
   }
 } /* ecma_is_string_magic */
+
+/**
+ * Check if passed string equals to one of external magic strings
+ * and if equal external magic string was found, return it's id in 'out_id_p' argument.
+ *
+ * @return true - if external magic string equal to passed string was found,
+ *         false - otherwise.
+ */
+bool
+ecma_is_ex_string_magic (const ecma_string_t *string_p, /**< ecma-string */
+                         ecma_magic_string_ex_id_t *out_id_p) /**< out: external magic string's id */
+{
+  if (string_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
+  {
+    JERRY_ASSERT (string_p->u.magic_string_ex_id < ecma_magic_string_ex_count);
+
+    *out_id_p = (ecma_magic_string_ex_id_t) string_p->u.magic_string_ex_id;
+
+    return true;
+  }
+  else if (string_p->container == ECMA_STRING_CONTAINER_CONCATENATION
+           && ecma_string_get_length (string_p) <= ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT)
+  {
+    return ecma_is_ex_string_magic_longpath (string_p, out_id_p);
+  }
+  else
+  {
+    /*
+     * Any ecma-string constructor except ecma_concat_ecma_strings
+     * should return ecma-string with ECMA_STRING_CONTAINER_MAGIC_STRING_EX
+     * container type if new ecma-string's content is equal to one of external magic strings.
+     */
+    JERRY_ASSERT (ecma_string_get_length (string_p) > ECMA_STRING_MAGIC_STRING_LENGTH_LIMIT
+                  || !ecma_is_ex_string_magic_longpath (string_p, out_id_p));
+
+    return false;
+  }
+} /* ecma_is_ex_string_magic */
 
 /**
  * Try to calculate hash of the ecma-string

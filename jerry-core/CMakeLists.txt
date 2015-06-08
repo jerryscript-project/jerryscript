@@ -43,7 +43,7 @@ project (JerryCore CXX C ASM)
    set(DEFINES_JERRY_RELEASE JERRY_NDEBUG)
 
   # Unit tests
-   set(DEFINES_JERRY_UNITTESTS )
+   set(DEFINES_JERRY_UNITTESTS JERRY_ENABLE_PRETTY_PRINTER)
 
  # Modifiers
   # Full profile

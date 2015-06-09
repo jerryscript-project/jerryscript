@@ -23,7 +23,7 @@
 #include "stdio.h"
 
 #define REGEXP_BYTECODE_BLOCK_SIZE 256UL
-#define BYTECODE_LEN(bc_ctx_p) (static_cast<uint32_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p))
+#define BYTECODE_LEN(bc_ctx_p) ((uint32_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p))
 
 void
 regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
@@ -40,7 +40,7 @@ realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p)
   size_t current_ptr_offset = static_cast<size_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
   re_bytecode_t *new_block_start_p = (re_bytecode_t *) mem_heap_alloc_block (new_block_size,
-                                                                                     MEM_HEAP_ALLOC_SHORT_TERM);
+                                                                             MEM_HEAP_ALLOC_SHORT_TERM);
   if (bc_ctx_p->current_p)
   {
     memcpy (new_block_start_p, bc_ctx_p->block_start_p, static_cast<size_t> (current_ptr_offset));
@@ -54,23 +54,32 @@ realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p)
 } /* realloc_regexp_bytecode_block */
 
 static void
-bytecode_list_append (re_bytecode_ctx_t *bc_ctx_p, re_bytecode_t bytecode)
+bytecode_list_append (re_bytecode_ctx_t *bc_ctx_p,
+                      re_bytecode_t *bytecode_p,
+                      size_t length)
 {
+  JERRY_ASSERT (length <= REGEXP_BYTECODE_BLOCK_SIZE);
+
   re_bytecode_t *current_p = bc_ctx_p->current_p;
-  if (current_p  + sizeof (re_bytecode_t) > bc_ctx_p->block_end_p)
+  if (current_p + length > bc_ctx_p->block_end_p)
   {
     current_p = realloc_regexp_bytecode_block (bc_ctx_p);
   }
 
-  *current_p = bytecode;
-  bc_ctx_p->current_p += sizeof (re_bytecode_t);
+  memcpy (current_p, bytecode_p, length);
+  bc_ctx_p->current_p += length;
 } /* bytecode_list_append */
 
 static void
-bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, re_bytecode_t bytecode, size_t offset)
+bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p,
+                      size_t offset,
+                      re_bytecode_t *bytecode_p,
+                      size_t length)
 {
+  JERRY_ASSERT (length <= REGEXP_BYTECODE_BLOCK_SIZE);
+
   re_bytecode_t *current_p = bc_ctx_p->current_p;
-  if (current_p  + sizeof (re_bytecode_t) > bc_ctx_p->block_end_p)
+  if (current_p + length > bc_ctx_p->block_end_p)
   {
     realloc_regexp_bytecode_block (bc_ctx_p);
   }
@@ -78,37 +87,38 @@ bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, re_bytecode_t bytecode, size_
   re_bytecode_t *src_p = bc_ctx_p->block_start_p + offset;
   if ((BYTECODE_LEN (bc_ctx_p) - offset) > 0)
   {
-    re_bytecode_t *dest_p = src_p + sizeof (re_bytecode_t);
+    re_bytecode_t *dest_p = src_p + length;
     re_bytecode_t *tmp_block_start_p = (re_bytecode_t *) mem_heap_alloc_block ((BYTECODE_LEN (bc_ctx_p) - offset),
-                                                                                       MEM_HEAP_ALLOC_SHORT_TERM);
+                                                                               MEM_HEAP_ALLOC_SHORT_TERM);
     memcpy (tmp_block_start_p, src_p, (size_t) (BYTECODE_LEN (bc_ctx_p) - offset));
     memcpy (dest_p, tmp_block_start_p, (size_t) (BYTECODE_LEN (bc_ctx_p) - offset));
     mem_heap_free_block (tmp_block_start_p);
   }
-  *src_p = bytecode;
-  bc_ctx_p->current_p += sizeof (re_bytecode_t);
-} /* bytecode_list_insert  */
+  memcpy (src_p, bytecode_p, length);
+
+  bc_ctx_p->current_p += length;
+} /* bytecode_list_insert */
 
 static void
 append_opcode (re_bytecode_ctx_t *bc_ctx_p,
                re_opcode_t opcode)
 {
-  bytecode_list_append (bc_ctx_p, (re_bytecode_t) opcode);
+  bytecode_list_append (bc_ctx_p, (re_bytecode_t*) &opcode, sizeof (re_bytecode_t));
 }
 
 static void
 append_u32 (re_bytecode_ctx_t *bc_ctx_p,
             uint32_t value)
 {
-  bytecode_list_append (bc_ctx_p, (re_bytecode_t) value);
+  bytecode_list_append (bc_ctx_p, (re_bytecode_t*) &value, sizeof (uint32_t));
 }
 
 static void
 append_jump_offset (re_bytecode_ctx_t *bc_ctx_p,
                     uint32_t value)
 {
-  value += static_cast<uint32_t> (sizeof (re_bytecode_t));
-  bytecode_list_append (bc_ctx_p, (re_bytecode_t) value);
+  value += (uint32_t) (sizeof (uint32_t));
+  append_u32 (bc_ctx_p, value);
 }
 
 static void
@@ -116,7 +126,7 @@ insert_opcode (re_bytecode_ctx_t *bc_ctx_p,
                uint32_t offset,
                re_opcode_t opcode)
 {
-  bytecode_list_insert (bc_ctx_p, (re_bytecode_t) opcode, offset);
+  bytecode_list_insert (bc_ctx_p, offset, (re_bytecode_t*) &opcode, sizeof (re_bytecode_t));
 }
 
 static void
@@ -124,24 +134,23 @@ insert_u32 (re_bytecode_ctx_t *bc_ctx_p,
             uint32_t offset,
             uint32_t value)
 {
-  bytecode_list_insert (bc_ctx_p, (re_bytecode_t) value, offset);
+  bytecode_list_insert (bc_ctx_p, offset, (re_bytecode_t*) &value, sizeof (uint32_t));
 }
 
 re_opcode_t
 get_opcode (re_bytecode_t **bc_p)
 {
   re_bytecode_t bytecode = **bc_p;
-  (*bc_p)++;
+  (*bc_p) += sizeof (re_bytecode_t);
   return (re_opcode_t) bytecode;
 }
 
 uint32_t
 get_value (re_bytecode_t **bc_p)
 {
-  /* FIXME: Read 32bit! */
-  re_bytecode_t bytecode = **bc_p;
-  (*bc_p)++;
-  return (uint32_t) bytecode;
+  uint32_t value = *((uint32_t*) *bc_p);
+  (*bc_p) += sizeof (uint32_t);
+  return value;
 }
 
 static void
@@ -282,10 +291,10 @@ insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
   qmax = re_ctx_p->current_token.qmax;
   JERRY_ASSERT (qmin <= qmax);
 
-  start_head_offset_len = (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
+  start_head_offset_len = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p);
   insert_u32 (re_ctx_p->bytecode_ctx_p, group_start_offset, idx);
-  insert_u32 (re_ctx_p->bytecode_ctx_p, group_start_offset, start_opcode);
-  start_head_offset_len = (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - start_head_offset_len;
+  insert_opcode (re_ctx_p->bytecode_ctx_p, group_start_offset, start_opcode);
+  start_head_offset_len = BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - start_head_offset_len;
   append_opcode (re_ctx_p->bytecode_ctx_p, end_opcode);
   append_u32 (re_ctx_p->bytecode_ctx_p, idx);
   append_u32 (re_ctx_p->bytecode_ctx_p, qmin);
@@ -293,13 +302,13 @@ insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
   group_start_offset += start_head_offset_len;
   append_jump_offset (re_ctx_p->bytecode_ctx_p,
-                      (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
+                      BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
 
   if (start_opcode != RE_OP_CAPTURE_GROUP_START && start_opcode != RE_OP_NON_CAPTURE_GROUP_START)
   {
     insert_u32 (re_ctx_p->bytecode_ctx_p,
                 group_start_offset,
-                (uint32_t) BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
+                BYTECODE_LEN (re_ctx_p->bytecode_ctx_p) - group_start_offset);
   }
 } /* insert_into_group */
 
@@ -651,7 +660,7 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
       }
       case RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START:
       {
-        JERRY_DLOG ("GZ__START ");
+        JERRY_DLOG ("GZ_NC_START ");
         JERRY_DLOG ("%d ", get_value (&bytecode_p));
         JERRY_DLOG ("%d ", get_value (&bytecode_p));
         JERRY_DLOG ("%d, ", get_value (&bytecode_p));

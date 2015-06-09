@@ -13,11 +13,15 @@
  * limitations under the License.
  */
 
-#include "mem-allocator.h"
+#include "ecma-helpers.h"
+#include "ecma-exceptions.h"
 #include "jrt-libc-includes.h"
 #include "lexer.h"
+#include "mem-allocator.h"
+#include "opcodes.h"
+#include "parser.h"
+#include "stack.h"
 #include "syntax-errors.h"
-#include "ecma-helpers.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
 
@@ -1000,10 +1004,9 @@ parse_string (void)
 static token
 parse_regexp (void)
 {
-  /* FIXME: Implement this! */
   token result;
 
-  // Eat up '/'
+  /* Eat up '/' */
   consume_char ();
   new_token ();
 
@@ -1026,14 +1029,31 @@ parse_regexp (void)
     consume_char ();
   }
 
+
+  /* Eat up '/' */
+  consume_char ();
+
+  /* Try to parse RegExp flags */
+  while (true)
+  {
+    ecma_char_t c = (ecma_char_t) LA (0);
+
+    if (c == '\0'
+        || c == '.'
+        || c == ')'
+        || c == ';'
+        || ecma_char_is_line_terminator (c))
+    {
+      break;
+    }
+    consume_char ();
+  }
+
   result = convert_string_to_token (TOK_REGEXP,
                                     (const ecma_char_t*) token_start,
                                     static_cast<ecma_length_t> (buffer - token_start));
 
-  // Eat up '/'
-  consume_char ();
   token_start = NULL;
-
   return result;
 } /* parse_regexp */
 

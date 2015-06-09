@@ -20,7 +20,8 @@
 #include "jrt-libc-includes.h"
 #include "mem-heap.h"
 #include "re-compiler.h"
-#include "stdio.h"
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
 #define REGEXP_BYTECODE_BLOCK_SIZE 256UL
 #define BYTECODE_LEN(bc_ctx_p) ((uint32_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p))
@@ -791,4 +792,6 @@ regexp_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p)
   }
   JERRY_DLOG ("EOF\n");
 } /* regexp_dump_bytecode */
-#endif
+#endif /* JERRY_ENABLE_LOG */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

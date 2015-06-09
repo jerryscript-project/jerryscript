@@ -17,6 +17,8 @@
 #ifndef ECMA_REGEXP_OBJECT_H
 #define ECMA_REGEXP_OBJECT_H
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+
 #include "ecma-globals.h"
 #include "re-compiler.h"
 
@@ -55,4 +57,5 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, const ecma_char_t *str_p);
  * @}
  */
 
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 #endif /* !ECMA_REGEXP_OBJECT_H */

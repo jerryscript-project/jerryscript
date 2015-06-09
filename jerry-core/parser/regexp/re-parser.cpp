@@ -22,6 +22,8 @@
 #include "re-parser.h"
 #include "syntax-errors.h"
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+
 #define RE_LOOKUP(str_p, lookup)  *(str_p + lookup)
 #define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)
 
@@ -812,3 +814,5 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< parser context */
 
   return ret_value;
 } /* re_parse_next_token */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

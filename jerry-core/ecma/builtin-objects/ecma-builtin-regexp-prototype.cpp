@@ -57,6 +57,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
+
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
   ecma_property_t *bytecode_prop = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
   re_bytecode_t *bytecode_p = ECMA_GET_POINTER (re_bytecode_t, bytecode_prop->u.internal_property.value);
@@ -75,7 +76,6 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
   ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
 
-  /* FIXME: call of ecma_make_normal_completion_value should be in an ECMA_TRY_CATCH */
   ret_value = ecma_regexp_exec_helper (bytecode_p, input_zt_str_p);
 
   MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);

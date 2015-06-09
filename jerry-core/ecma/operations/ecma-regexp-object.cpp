@@ -24,7 +24,8 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
 #include "re-compiler.h"
-#include "stdio.h"
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -38,6 +39,11 @@
 
 #define RE_GLOBAL_START_IDX 0
 #define RE_GLOBAL_END_IDX   1
+
+/* flags */
+#define RE_FLAG_GLOBAL              (1 << 0)
+#define RE_FLAG_IGNORE_CASE         (1 << 1)
+#define RE_FLAG_MULTILINE           (1 << 2)
 
 /**
  * Parse RegExp flags (global, ignoreCase, multiline)
@@ -1171,3 +1177,5 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
  * @}
  * @}
  */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

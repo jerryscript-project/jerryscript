@@ -17,6 +17,8 @@
 #ifndef RE_COMPILER_H
 #define RE_COMPILER_H
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+
 #include "ecma-globals.h"
 #include "re-parser.h"
 
@@ -54,11 +56,6 @@
 #define RE_OP_CHAR_CLASS                                    26
 #define RE_OP_INV_CHAR_CLASS                                27
 
-/* flags */
-#define RE_FLAG_GLOBAL              (1 << 0)
-#define RE_FLAG_IGNORE_CASE         (1 << 1)
-#define RE_FLAG_MULTILINE           (1 << 2)
-
 #define RE_COMPILE_RECURSION_LIMIT  100
 
 #define IS_CAPTURE_GROUP(x) (((x) < RE_OP_NON_CAPTURE_GROUP_START) ? 1 : 0)
@@ -94,4 +91,5 @@ get_opcode (re_bytecode_t **bc_p);
 uint32_t
 get_value (re_bytecode_t **bc_p);
 
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 #endif /* RE_COMPILER_H */

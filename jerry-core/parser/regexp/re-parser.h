@@ -17,6 +17,8 @@
 #ifndef RE_PARSER_H
 #define RE_PARSER_H
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+
 #include "opcodes-dumper.h"
 
 typedef uint8_t token_type_t;
@@ -89,4 +91,5 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p,
 ecma_completion_value_t
 re_parse_next_token (re_parser_ctx_t *parser_ctx_p, re_token_t *out_token_p);
 
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 #endif /* RE_PARSER_H */

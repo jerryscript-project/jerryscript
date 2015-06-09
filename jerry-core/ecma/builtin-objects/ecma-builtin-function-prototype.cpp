@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +22,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-function-object.h"
+#include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
@@ -70,7 +72,94 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
                                               ecma_value_t arg1, /**< first argument */
                                               ecma_value_t arg2) /**< second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  if (!ecma_op_is_callable (this_arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *func_obj_p = ecma_get_object_from_value (this_arg);
+
+    /* 2. */
+    if (ecma_is_value_null (arg2) || ecma_is_value_undefined (arg2))
+    {
+      ret_value = ecma_op_function_call (func_obj_p,
+                                         arg1,
+                                         NULL,
+                                         0);
+    }
+    else
+    {
+      /* 3. */
+      if (!ecma_is_value_object (arg2))
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      }
+      else
+      {
+        ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
+        ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+
+        /* 4. */
+        ECMA_TRY_CATCH (length_value,
+                        ecma_op_object_get (obj_p, length_magic_string_p),
+                        ret_value);
+
+        ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
+                                     length_value,
+                                     ret_value);
+
+        /* 5. */
+        const uint32_t length = ecma_number_to_uint32 (length_number);
+
+        /* 6. */
+        MEM_DEFINE_LOCAL_ARRAY (arg_list, length, ecma_value_t);
+
+        /* 7. */
+        uint32_t appended_num = 0;
+        for (uint32_t index = 0; index < length && ecma_is_completion_value_empty (ret_value); index++)
+        {
+          ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
+
+          ECMA_TRY_CATCH (get_value,
+                          ecma_op_object_get (obj_p, curr_idx_str_p),
+                          ret_value);
+
+          arg_list[index] = ecma_copy_value (get_value, true);
+          appended_num++;
+
+          ECMA_FINALIZE (get_value);
+          ecma_deref_ecma_string (curr_idx_str_p);
+        }
+
+        JERRY_ASSERT (appended_num == length || !ecma_is_completion_value_empty (ret_value));
+
+        if (ecma_is_completion_value_empty (ret_value))
+        {
+          ret_value = ecma_op_function_call (func_obj_p,
+                                             arg1,
+                                             arg_list,
+                                             (ecma_length_t) appended_num);
+        }
+
+        for (uint32_t index = 0; index < appended_num; index++)
+        {
+          ecma_free_value (arg_list[index], true);
+        }
+
+        MEM_FINALIZE_LOCAL_ARRAY (arg_list);
+
+        ECMA_OP_TO_NUMBER_FINALIZE (length_number);
+        ECMA_FINALIZE (length_value);
+        ecma_deref_ecma_string (length_magic_string_p);
+      }
+    }
+  }
+
+  return ret_value;
 } /* ecma_builtin_function_prototype_object_apply */
 
 /**

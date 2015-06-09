@@ -579,6 +579,30 @@ typedef float ecma_number_t;
  * Maximum number of significant digits that ecma-number can store
  */
 #define ECMA_NUMBER_MAX_DIGITS  (9)
+
+/**
+ * Width of sign field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_SIGN_WIDTH       (1)
+
+/**
+ * Width of biased exponent field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_BIASED_EXP_WIDTH (8)
+
+/**
+ * Width of fraction field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_FRACTION_WIDTH   (23)
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Description of an ecma-number
@@ -590,6 +614,30 @@ typedef double ecma_number_t;
  * Maximum number of significant digits that ecma-number can store
  */
 #define ECMA_NUMBER_MAX_DIGITS  (18)
+
+/**
+ * Width of sign field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_SIGN_WIDTH       (1)
+
+/**
+ * Width of biased exponent field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_BIASED_EXP_WIDTH (11)
+
+/**
+ * Width of fraction field
+ *
+ * See also:
+ *          IEEE-754 2008, 3.6, Table 3.5
+ */
+#define ECMA_NUMBER_FRACTION_WIDTH   (52)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**

@@ -28,30 +28,6 @@
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t));
 
 /**
- * Width of sign field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_SIGN_WIDTH       (1)
-
-/**
- * Width of biased exponent field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_BIASED_EXP_WIDTH (8)
-
-/**
- * Width of fraction field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_FRACTION_WIDTH   (23)
-
-/**
  * Packing sign, fraction and biased exponent to ecma-number
  *
  * @return ecma-number with specified sign, biased_exponent and fraction
@@ -136,30 +112,6 @@ const int32_t ecma_number_exponent_bias = 127;
 const ecma_number_t ecma_number_relative_eps = 1.0e-10f;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t));
-
-/**
- * Width of sign field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_SIGN_WIDTH       (1)
-
-/**
- * Width of biased exponent field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_BIASED_EXP_WIDTH (11)
-
-/**
- * Width of fraction field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_FRACTION_WIDTH   (52)
 
 /**
  * Packing sign, fraction and biased exponent to ecma-number

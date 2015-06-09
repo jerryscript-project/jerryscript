@@ -24,7 +24,9 @@
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
+#include "fdlibm-math.h"
 #include "jrt.h"
+#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
 
@@ -118,14 +120,205 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
     return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
 
-  if (arguments_list_len == 0)
+  if (arguments_list_len == 0
+      || ecma_number_is_nan (this_arg_number)
+      || ecma_number_is_infinity (this_arg_number)
+      || ecma_number_is_zero (this_arg_number))
   {
     ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
 
     return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
   }
+  else
   {
-    ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p);
+    const ecma_char_t digit_chars[36] =
+    {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+      'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+      'u', 'v', 'w', 'x', 'y', 'z'
+    };
+
+    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arguments_list_p[0], ret_value);
+
+    uint32_t radix = ecma_number_to_uint32 (arg_num);
+
+    if (radix < 2 || radix > 36)
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+    }
+    else if (radix == 10)
+    {
+      ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
+
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+    }
+    else
+    {
+      /* Allocate a buffer that will be used to construct the number. */
+      const int buff_size = 1080;
+      ecma_char_t buff[buff_size];
+      int buff_index = 0;
+
+      uint64_t digits;
+      int32_t num_digits;
+      int32_t exponent;
+      bool is_negative = false;
+
+      if (ecma_number_is_negative (this_arg_number))
+      {
+        this_arg_number = -this_arg_number;
+        is_negative = true;
+      }
+
+      ecma_number_to_decimal (this_arg_number, &digits, &num_digits, &exponent);
+
+      exponent = exponent - num_digits;
+      bool is_scale_negative = false;
+
+      /* Calculate the scale of the number in the specified radix. */
+      int scale = (int) -floor ((log (10) / log (radix)) * exponent);
+
+      if (scale < 0)
+      {
+        is_scale_negative = true;
+        scale = -scale;
+      }
+
+      /* Normalize the number, so that it is as close to 0 exponent as possible. */
+      for (int i = 0; i < scale; i++)
+      {
+        if (is_scale_negative)
+        {
+          this_arg_number /= (ecma_number_t) radix;
+        }
+        else
+        {
+          this_arg_number *= (ecma_number_t) radix;
+        }
+      }
+
+      uint64_t whole = (uint64_t) this_arg_number;
+      double fraction = this_arg_number - (double) whole;
+
+      /* Calculate digits for whole part. */
+      while (whole > 0)
+      {
+        buff[buff_index++] = (ecma_char_t) (whole % radix);
+        whole /= radix;
+      }
+
+      /* Calculate where we have to put the radix point. */
+      int point = is_scale_negative ? buff_index + scale : buff_index - scale;
+
+      /* Reverse the digits, since they are backwards. */
+      for (int i = 0; i < buff_index / 2; i++)
+      {
+        ecma_char_t swap = buff[i];
+        buff[i] = buff[buff_index - i - 1];
+        buff[buff_index - i - 1] = swap;
+      }
+
+      bool should_round = false;
+      /* Calculate digits for fractional part. */
+      for (int iter_count = 0; (fraction > 0 || iter_count < scale) && buff_index < buff_size - 2; iter_count++)
+      {
+        fraction *= radix;
+        ecma_char_t digit = (ecma_char_t) floor (fraction);
+
+        buff[buff_index++] = digit;
+        fraction -= floor (fraction);
+
+        if (iter_count == scale && is_scale_negative)
+        {
+          /*
+           * When scale is negative, that means the original number did not have a fractional part,
+           * but by normalizing it, we introduced one. In this case, when the iteration count reaches
+           * the scale, we already have the number, but it may be incorrect, so we calculate
+           * one extra digit that we round off just to make sure.
+           */
+          should_round = true;
+          break;
+        }
+      }
+
+      if (should_round)
+      {
+        /* Round off last digit. */
+        if (buff[buff_index - 1] > radix / 2)
+        {
+          buff[buff_index - 2]++;
+        }
+
+        buff_index--;
+
+        /* Propagate carry. */
+        for (int i = buff_index - 1; i > 0 && buff[i] >= radix; i--)
+        {
+          buff[i] = (ecma_char_t) (buff[i] - radix);
+          buff[i - 1]++;
+        }
+
+        /* Carry propagated over the whole number, need to add a leading digit. */
+        if (buff[0] >= radix)
+        {
+          memmove (buff + 1, buff, (size_t) buff_index);
+          buff_index++;
+          buff[0] = 1;
+        }
+      }
+
+      /* Remove trailing zeros from fraction. */
+      while (buff_index - 1 > point && buff[buff_index - 1] == 0)
+      {
+        buff_index--;
+      }
+
+      /* Add leading zeros in case place of radix point is negative. */
+      if (point <= 0)
+      {
+        memmove (buff - point + 1, buff, (size_t) buff_index);
+        buff_index += -point + 1;
+
+        for (int i = 0; i < -point + 1; i++)
+        {
+          buff[i] = 0;
+        }
+
+        point = 1;
+      }
+
+      /* Convert digits to characters. */
+      for (int i = 0; i < buff_index; i++)
+      {
+        buff[i] = digit_chars[buff[i]];
+      }
+
+      /* Place radix point to the required position. */
+      if (point < buff_index)
+      {
+        memmove (buff + point + 1, buff + point,  (size_t) buff_index);
+        buff[point] = '.';
+        buff_index++;
+      }
+
+      /* Add negative sign if necessary. */
+      if (is_negative)
+      {
+        memmove (buff + 1, buff, (size_t) buff_index);
+        buff_index++;
+        buff[0] = '-';
+      }
+
+      /* Add zero terminator. */
+      buff[buff_index] = '\0';
+
+      ecma_string_t* str_p = ecma_new_ecma_string ((ecma_char_t *) buff);
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str_p));
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
+    return ret_value;
   }
 } /* ecma_builtin_number_prototype_object_to_string */
 

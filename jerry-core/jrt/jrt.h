@@ -88,7 +88,7 @@ extern void __noreturn jerry_unimplemented (const char *comment, const char *fil
 
 #ifndef JERRY_NDEBUG
 #define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
-    jerry_assert_fail (#x, __FILE__, __FUNCTION__, __LINE__); } } while (0)
+    jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
 #else /* !JERRY_NDEBUG */
 #define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
 #endif /* !JERRY_NDEBUG */
@@ -132,19 +132,19 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 #define JERRY_UNREACHABLE() \
   do \
   { \
-    jerry_unreachable (NULL, __FILE__, __FUNCTION__, __LINE__); \
+    jerry_unreachable (NULL, __FILE__, __func__, __LINE__); \
   } while (0)
 
 #define JERRY_UNIMPLEMENTED(comment) \
   do \
   { \
-    jerry_unimplemented (comment, __FILE__, __FUNCTION__, __LINE__); \
+    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
   } while (0)
 
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(comment, ...) \
   do \
   { \
-    jerry_unimplemented (comment, __FILE__, __FUNCTION__, __LINE__); \
+    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
     if (false) \
     { \
       jerry_ref_unused_variables (0, __VA_ARGS__); \

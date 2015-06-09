@@ -39,11 +39,11 @@ libc_fatal (const char *msg,
 
 #ifndef LIBC_NDEBUG
 # define LIBC_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
-     libc_fatal (#x, __FILE__, __FUNCTION__, __LINE__); } } while (0)
+     libc_fatal (#x, __FILE__, __func__, __LINE__); } } while (0)
 # define LIBC_UNREACHABLE() \
    do \
    { \
-     libc_fatal ("Code is unreachable", __FILE__, __FUNCTION__, __LINE__); \
+     libc_fatal ("Code is unreachable", __FILE__, __func__, __LINE__); \
    } while (0)
 #else /* !LIBC_NDEBUG */
 # define LIBC_ASSERT(x) do { if (false) { (void) (x); } } while (0)

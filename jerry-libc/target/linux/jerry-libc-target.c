@@ -48,7 +48,7 @@ LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
 #define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
   if ((syscall_ret_val) < 0) \
 { \
-  libc_fatal ("Syscall", __FILE__, __FUNCTION__, __LINE__); \
+  libc_fatal ("Syscall", __FILE__, __func__, __LINE__); \
 }
 
 static long int syscall_0 (long int syscall_no);

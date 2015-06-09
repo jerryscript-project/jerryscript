@@ -44,7 +44,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
     if (ecma_is_completion_value_normal (evaluate_arg_completion))
     {
-      opcode_t next_opcode = vm_get_opcode (int_data->pos);
+      opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 
@@ -92,7 +92,7 @@ fill_params_list (int_data_t *int_data, /**< interpreter context */
        param_index < params_number;
        param_index++)
   {
-    opcode_t next_opcode = vm_get_opcode (int_data->pos);
+    opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
     JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
     JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 

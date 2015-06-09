@@ -320,7 +320,8 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
             case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
             case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-            case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
+            case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
+            case ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */

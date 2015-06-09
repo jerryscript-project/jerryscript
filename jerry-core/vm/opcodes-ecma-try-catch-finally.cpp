@@ -43,7 +43,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
                 || (ecma_is_completion_value_empty (try_completion) && int_data->pos == try_end_oc));
   int_data->pos = try_end_oc;
 
-  opcode_t next_opcode = vm_get_opcode (int_data->pos);
+  opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
   if (ecma_is_completion_value_exit (try_completion))
@@ -59,7 +59,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
     if (ecma_is_completion_value_throw (try_completion))
     {
-      next_opcode = vm_get_opcode (int_data->pos);
+      next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
@@ -103,7 +103,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
     int_data->pos = catch_end_oc;
   }
 
-  next_opcode = vm_get_opcode (int_data->pos);
+  next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
   if (ecma_is_completion_value_exit (try_completion))
@@ -131,7 +131,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
     }
   }
 
-  next_opcode = vm_get_opcode (int_data->pos++);
+  next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos++);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
   JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_END_TRY_CATCH_FINALLY);
 

@@ -217,7 +217,9 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-  ECMA_INTERNAL_PROPERTY_CODE, /**< [[Code]] */
+  ECMA_INTERNAL_PROPERTY_CODE_BYTECODE, /**< first part of [[Code]] - compressed pointer to bytecode array */
+  ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET, /**< second part of [[Code]] - offset in bytecode array and code flags
+                                                 *   (see also: ecma_pack_code_internal_property_value) */
   ECMA_INTERNAL_PROPERTY_NATIVE_CODE, /**< native handler location descriptor */
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */

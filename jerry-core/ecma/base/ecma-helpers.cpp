@@ -793,7 +793,8 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-    case ECMA_INTERNAL_PROPERTY_CODE: /* an integer */
+    case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
+    case ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */

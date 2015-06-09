@@ -55,7 +55,18 @@
 static ecma_completion_value_t
 ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_op_is_callable (this_arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_string_t *function_to_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__FUNCTION_TO_STRING);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (function_to_string_p));
+  }
+  return ret_value;
 } /* ecma_builtin_function_prototype_object_to_string */
 
 /**

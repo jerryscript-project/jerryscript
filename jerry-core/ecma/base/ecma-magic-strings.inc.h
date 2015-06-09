@@ -213,3 +213,4 @@ ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING__EMPTY, "")
  * Implementation-defined magic strings
  */
 ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING_JERRY_UL, "Jerry")
+ECMA_MAGIC_STRING_DEF (ECMA_MAGIC_STRING__FUNCTION_TO_STRING, "function(){/* ecmascript */}")

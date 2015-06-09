@@ -449,7 +449,7 @@ main (void)
   // External Magic String
   jerry_init (JERRY_FLAG_SHOW_OPCODES);
 
-  uint32_t num_magic_string_items = sizeof (magic_string_items) / sizeof (jerry_api_char_ptr_t);
+  uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_api_char_ptr_t));
   jerry_register_external_magic_strings (magic_string_items,
                                          num_magic_string_items,
                                          magic_string_lengths);

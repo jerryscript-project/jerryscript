@@ -97,6 +97,7 @@ fill_params_list (int_data_t *int_data, /**< interpreter context */
     JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 
     const lit_cpointer_t param_name_lit_idx = serializer_get_literal_cp_by_uid (next_opcode.data.meta.data_1,
+                                                                                int_data->opcodes_p,
                                                                                 int_data->pos);
 
     params_names[param_index] = ecma_new_ecma_string_from_lit_cp (param_name_lit_idx);

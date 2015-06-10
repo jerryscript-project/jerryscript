@@ -74,8 +74,9 @@ main (int __attr_unused___ argc,
 
   mem_init ();
   serializer_init ();
-  parser_init (program, strlen (program), true);
-  parser_parse_program ();
+  parser_set_show_opcodes (true);
+  parser_init ();
+  parser_parse_script (program, strlen (program));
   parser_free ();
 
   opcode_t opcodes[] =

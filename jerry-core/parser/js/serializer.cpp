@@ -16,10 +16,11 @@
 #include "serializer.h"
 #include "bytecode-data.h"
 #include "pretty-printer.h"
+#include "array-list.h"
 
 static bytecode_data_t bytecode_data;
 static scopes_tree current_scope;
-
+static array_list bytecodes_cache; /**< storage of pointers to byetecodes */
 static bool print_opcodes;
 
 op_meta
@@ -40,15 +41,27 @@ serializer_get_opcode (opcode_counter_t oc)
   return bytecode_data.opcodes[oc];
 }
 
+/**
+ * Convert literal id (operand value of instruction) to compressed pointer to literal
+ *
+ * Bytecode is divided into blocks of fixed size and each block has independent encoding of variable names,
+ * which are represented by 8 bit numbers - ids.
+ * This function performs conversion from id to literal.
+ *
+ * @return compressed pointer to literal
+ */
 lit_cpointer_t
-serializer_get_literal_cp_by_uid (uint8_t id, opcode_counter_t oc)
+serializer_get_literal_cp_by_uid (uint8_t id, /**< literal idx */
+                                  const opcode_t *opcodes_p, /**< pointer to bytecode */
+                                  opcode_counter_t oc) /**< position in the bytecode */
 {
-  if (bytecode_data.lit_id_hash == null_hash)
+  lit_id_hash_table *lit_id_hash = GET_HASH_TABLE_FOR_BYTECODE (opcodes_p == NULL ? bytecode_data.opcodes : opcodes_p);
+  if (lit_id_hash == null_hash)
   {
     return INVALID_LITERAL;
   }
-  return lit_id_hash_table_lookup (bytecode_data.lit_id_hash, id, oc);
-}
+  return lit_id_hash_table_lookup (lit_id_hash, id, oc);
+} /* serializer_get_literal_cp_by_uid */
 
 const void *
 serializer_get_bytecode (void)
@@ -72,11 +85,11 @@ serializer_set_scope (scopes_tree new_scope)
 void
 serializer_merge_scopes_into_bytecode (void)
 {
-  JERRY_ASSERT (bytecode_data.lit_id_hash == null_hash);
   bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
-  bytecode_data.lit_id_hash = lit_id_hash_table_init (scopes_tree_count_literals_in_blocks (current_scope),
-                                                      bytecode_data.opcodes_count);
-  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, bytecode_data.lit_id_hash);
+  lit_id_hash_table *lit_id_hash = lit_id_hash_table_init (scopes_tree_count_literals_in_blocks (current_scope),
+                                                           (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1);
+  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, lit_id_hash);
+  bytecodes_cache = array_list_append (bytecodes_cache, &bytecode_data.opcodes);
 }
 
 void
@@ -172,9 +185,10 @@ serializer_init ()
 
   bytecode_data.strings_buffer = NULL;
   bytecode_data.opcodes = NULL;
-  bytecode_data.lit_id_hash = null_hash;
 
   lit_init ();
+
+  bytecodes_cache = array_list_init (sizeof (opcode_t *));
 }
 
 void serializer_set_show_opcodes (bool show_opcodes)
@@ -189,12 +203,13 @@ serializer_free (void)
   {
     mem_heap_free_block ((uint8_t *) bytecode_data.strings_buffer);
   }
-  if (bytecode_data.lit_id_hash != null_hash)
-  {
-    lit_id_hash_table_free (bytecode_data.lit_id_hash);
-  }
-
-  mem_heap_free_block ((uint8_t *) bytecode_data.opcodes);
 
   lit_finalize ();
+
+  for (size_t i = 0; i < array_list_len (bytecodes_cache); ++i)
+  {
+    lit_id_hash_table_free (GET_BYTECODE_HEADER (*(opcode_t **) array_list_element (bytecodes_cache, i))->lit_id_hash);
+    mem_heap_free_block (GET_BYTECODE_HEADER (*(opcode_t **) array_list_element (bytecodes_cache, i)));
+  }
+  array_list_free (bytecodes_cache);
 }

@@ -1215,8 +1215,9 @@ jerry_parse (const char* source_p, /**< script source */
 
   bool is_show_opcodes = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
-  parser_init (source_p, source_size, is_show_opcodes);
-  parser_parse_program ();
+  parser_set_show_opcodes (is_show_opcodes);
+  parser_init ();
+  parser_parse_script (source_p, source_size);
 
   const opcode_t* opcodes = (const opcode_t*) serializer_get_bytecode ();
 

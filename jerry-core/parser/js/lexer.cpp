@@ -1466,14 +1466,29 @@ lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAM
   return (id1.uid == id2.uid);
 } /* lexer_are_tokens_with_same_identifier */
 
+/**
+ * Initialize lexer to start parsing of a new source
+ */
 void
-lexer_init (const char *source, size_t source_size, bool show_opcodes)
+lexer_init_source (const char *source, /**< script source */
+                   size_t source_size) /**< script source size in bytes */
+{
+  saved_token = prev_token = sent_token = empty_token;
+
+  buffer_size = source_size;
+  lexer_set_source (source);
+  lexer_set_strict_mode (false);
+} /* lexer_init_source */
+
+/**
+ * Intitialize lexer
+ */
+void
+lexer_init (bool show_opcodes) /**< flag indicating if to dump opcodes */
 {
   empty_token.type = TOK_EMPTY;
   empty_token.uid = 0;
   empty_token.loc = 0;
-
-  saved_token = prev_token = sent_token = empty_token;
 
 #ifndef JERRY_NDEBUG
   allow_dump_lines = show_opcodes;
@@ -1481,11 +1496,7 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
   (void) show_opcodes;
   allow_dump_lines = false;
 #endif /* JERRY_NDEBUG */
-
-  buffer_size = source_size;
-  lexer_set_source (source);
-  lexer_set_strict_mode (false);
-}
+} /* lexer_init */
 
 void
 lexer_free (void)

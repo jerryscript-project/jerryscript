@@ -88,10 +88,16 @@ typedef enum : idx_t
 } opcode_scope_code_flags_t;
 
 /**
+ * Forward declaration of opcode structure
+ */
+struct opcode_t;
+
+/**
  * Interpreter context
  */
 typedef struct
 {
+  const opcode_t *opcodes_p; /**< pointer to array containing currently executed bytecode */
   opcode_counter_t pos; /**< current opcode to execute */
   ecma_value_t this_binding; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
@@ -257,7 +263,7 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
 OP_ARGS_LIST (OP_DATA)
 
 #define __OP_STRUCT_FIELD(name, arg1, arg2, arg3) __op_##name name;
-typedef struct
+typedef struct opcode_t
 {
   idx_t op_idx;
   union

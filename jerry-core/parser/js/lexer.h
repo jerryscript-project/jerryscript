@@ -19,6 +19,7 @@
 #include "lit-literal.h"
 
 #define INVALID_VALUE 255
+#define EVAL_RET_VALUE 128
 #define INVALID_LITERAL (rcs_cpointer_t::null_cp ())
 
 /* Keywords.  */
@@ -168,7 +169,8 @@ typedef struct
  */
 #define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
 
-void lexer_init (const char *, size_t, bool);
+void lexer_init (bool);
+void lexer_init_source (const char *, size_t);
 void lexer_free (void);
 
 token lexer_next_token (void);

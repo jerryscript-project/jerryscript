@@ -695,6 +695,22 @@ literal_operand (lit_cpointer_t lit_cp)
   return ret;
 }
 
+/**
+ * Creates operand for eval's return value
+ *
+ * @return constructed operand
+ */
+operand
+eval_ret_operand (void)
+{
+  operand ret;
+
+  ret.type = OPERAND_TMP;
+  ret.data.uid = EVAL_RET_VALUE;
+
+  return ret;
+} /* eval_ret_operand */
+
 bool
 operand_is_empty (operand op)
 {

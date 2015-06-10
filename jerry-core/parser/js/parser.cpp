@@ -30,7 +30,27 @@
 #include "opcodes-dumper.h"
 #include "serializer.h"
 
+/**
+ * Flag, indicating whether result of expression
+ * evaluation should be stored to 'eval result'
+ * temporary variable.
+ *
+ * In other words, the flag indicates whether
+ * 'eval result' store code should be dumped.
+ *
+ * See also:
+ *          parse_expression
+ */
+typedef enum
+{
+  JSP_EVAL_RET_STORE_NOT_DUMP, /**< do not dump */
+  JSP_EVAL_RET_STORE_DUMP, /**< dump */
+} jsp_eval_ret_store_t;
+
 static token tok;
+static bool inside_eval = false;
+static bool inside_function = false;
+static bool parser_show_opcodes = false;
 
 enum
 {
@@ -44,7 +64,7 @@ STATIC_STACK (scopes, scopes_tree)
 
 #define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
 
-static operand parse_expression (bool);
+static operand parse_expression (bool, jsp_eval_ret_store_t);
 static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
@@ -259,6 +279,9 @@ parse_property_assignment (void)
     token_after_newlines_must_be (TOK_OPEN_BRACE);
     skip_newlines ();
 
+    bool was_in_function = inside_function;
+    inside_function = true;
+
     jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
     parse_source_element_list (false);
@@ -271,6 +294,9 @@ parse_property_assignment (void)
 
     dump_ret ();
     rewrite_function_end (VARG_FUNC_EXPR);
+
+    inside_function = was_in_function;
+
     if (is_setter)
     {
       dump_prop_setter_decl (name, func);
@@ -474,8 +500,10 @@ parse_function_declaration (void)
   dump_function_end_for_rewrite ();
 
   token_after_newlines_must_be (TOK_OPEN_BRACE);
-
   skip_newlines ();
+
+  bool was_in_function = inside_function;
+  inside_function = true;
 
   parse_source_element_list (false);
 
@@ -483,6 +511,8 @@ parse_function_declaration (void)
 
   dump_ret ();
   rewrite_function_end (VARG_FUNC_DECL);
+
+  inside_function = was_in_function;
 
   STACK_DROP (scopes, 1);
   serializer_set_scope (STACK_TOP (scopes));
@@ -522,6 +552,9 @@ parse_function_expression (void)
   token_after_newlines_must_be (TOK_OPEN_BRACE);
   skip_newlines ();
 
+  bool was_in_function = inside_function;
+  inside_function = true;
+
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
   parse_source_element_list (false);
@@ -533,6 +566,8 @@ parse_function_expression (void)
 
   dump_ret ();
   rewrite_function_end (VARG_FUNC_EXPR);
+
+  inside_function = was_in_function;
 
   return res;
 }
@@ -611,7 +646,7 @@ parse_primary_expression (void)
       skip_newlines ();
       if (!token_is (TOK_CLOSE_PAREN))
       {
-        operand res = parse_expression (true);
+        operand res = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
         token_after_newlines_must_be (TOK_CLOSE_PAREN);
         return res;
       }
@@ -683,7 +718,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
     if (token_is (TOK_OPEN_SQUARE))
     {
       skip_newlines ();
-      prop = parse_expression (true);
+      prop = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
       next_token_must_be (TOK_CLOSE_SQUARE);
     }
     else if (token_is (TOK_DOT))
@@ -774,7 +809,7 @@ parse_call_expression (operand *this_arg_gl, operand *prop_gl)
       if (tok.type == TOK_OPEN_SQUARE)
       {
         skip_newlines ();
-        prop = parse_expression (true);
+        prop = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
         next_token_must_be (TOK_CLOSE_SQUARE);
       }
       else if (tok.type == TOK_DOT)
@@ -1532,12 +1567,19 @@ parse_assignment_expression (bool in_allowed)
   return expr;
 }
 
-/* expression
-  : assignment_expression (LT!* ',' LT!* assignment_expression)*
-  ;
+/**
+ * Parse an expression
+ *
+ * expression
+ *  : assignment_expression (LT!* ',' LT!* assignment_expression)*
+ *  ;
+ *
+ * @return operand which holds result of expression
  */
 static operand
-parse_expression (bool in_allowed)
+parse_expression (bool in_allowed, /**< flag indicating if 'in' is allowed inside expression to parse */
+                  jsp_eval_ret_store_t dump_eval_ret_store) /**< flag indicating if 'eval'
+                                                             *   result code store should be dumped */
 {
   operand expr = parse_assignment_expression (in_allowed);
 
@@ -1555,8 +1597,16 @@ parse_expression (bool in_allowed)
       break;
     }
   }
+
+  if (inside_eval
+      && dump_eval_ret_store == JSP_EVAL_RET_STORE_DUMP
+      && !inside_function)
+  {
+    dump_variable_assignment (eval_ret_operand () , expr);
+  }
+
   return expr;
-}
+} /* parse_expression */
 
 /* variable_declaration
   : Identifier LT!* initialiser?
@@ -1646,7 +1696,7 @@ parse_plain_for (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   skip_token ();
   if (!token_is (TOK_CLOSE_PAREN))
   {
-    parse_expression (true);
+    parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
   }
 
   rewrite_jump_to_end ();
@@ -1659,7 +1709,7 @@ parse_plain_for (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   }
   else
   {
-    const operand cond = parse_expression (true);
+    const operand cond = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
     dump_continue_iterations_check (cond);
   }
 
@@ -1749,7 +1799,7 @@ parse_for_or_for_in_statement (jsp_label_t *outermost_stmt_label_p) /**< outermo
   }
 
   /* expression contains left_hand_side_expression.  */
-  parse_expression (false);
+  parse_expression (false, JSP_EVAL_RET_STORE_NOT_DUMP);
 
   skip_newlines ();
   if (token_is (TOK_SEMICOLON))
@@ -1773,7 +1823,7 @@ parse_expression_inside_parens (void)
 {
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   skip_newlines ();
-  const operand res = parse_expression (true);
+  const operand res = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
   return res;
 }
@@ -1963,7 +2013,7 @@ parse_switch_statement (void)
     if (is_keyword (KW_CASE))
     {
       skip_newlines ();
-      const operand case_expr = parse_expression (true);
+      const operand case_expr = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
       next_token_must_be (TOK_COLON);
       dump_case_clause_check_for_rewrite (switch_expr, case_expr);
       skip_newlines ();
@@ -2358,7 +2408,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     skip_token ();
     if (!token_is (TOK_SEMICOLON) && !token_is (TOK_NEWLINE))
     {
-      const operand op = parse_expression (true);
+      const operand op = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
       dump_retval (op);
       insert_semicolon ();
       return;
@@ -2382,7 +2432,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   if (is_keyword (KW_THROW))
   {
     skip_token ();
-    const operand op = parse_expression (true);
+    const operand op = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
     insert_semicolon ();
     dump_throw (op);
     return;
@@ -2418,7 +2468,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     {
       lexer_save_token (tok);
       tok = temp;
-      parse_expression (true);
+      parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
       skip_newlines ();
       if (!token_is (TOK_SEMICOLON))
       {
@@ -2429,7 +2479,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   }
   else
   {
-    parse_expression (true);
+    parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
     skip_newlines ();
     if (!token_is (TOK_SEMICOLON))
     {
@@ -2748,14 +2798,24 @@ preparse_scope (bool is_global)
   }
 }
 
-/* source_element_list
-  : source_element (LT!* source_element)*
-  ; */
+/**
+ * Parse source element list
+ *
+ *  source_element_list
+ *   : source_element (LT!* source_element)*
+ *   ;
+ */
 static void
-parse_source_element_list (bool is_global)
+parse_source_element_list (bool is_global) /**< flag indicating if we are parsing the global scope */
 {
   dumper_new_scope ();
   preparse_scope (is_global);
+
+  if (inside_eval
+      && !inside_function)
+  {
+    dump_undefined_assignment (eval_ret_operand ());
+  }
 
   skip_newlines ();
   while (!token_is (TOK_EOF) && !token_is (TOK_CLOSE_BRACE))
@@ -2766,14 +2826,22 @@ parse_source_element_list (bool is_global)
   lexer_save_token (tok);
   rewrite_reg_var_decl ();
   dumper_finish_scope ();
-}
+} /* parse_source_element_list */
 
-/* program
-  : LT!* source_element_list LT!* EOF!
-  ; */
-void
-parser_parse_program (void)
+/**
+ * Parse program
+ *
+ * program
+ *  : LT!* source_element_list LT!* EOF!
+ *  ;
+ */
+static void
+parser_parse_program (const char *source, /**< source code buffer */
+                      size_t source_size, /**< source code size in bytes */
+                      bool in_new_function) /**< flag indicating if we are parsing body of a function */
 {
+  lexer_init_source (source, source_size);
+
   STACK_PUSH (scopes, scopes_tree_init (NULL));
   serializer_set_scope (STACK_TOP (scopes));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
@@ -2783,7 +2851,19 @@ parser_parse_program (void)
 
   skip_newlines ();
   JERRY_ASSERT (token_is (TOK_EOF));
-  dump_exit ();
+
+  if (in_new_function)
+  {
+    dump_ret ();
+  }
+  else if (inside_eval)
+  {
+    dump_retval (eval_ret_operand ());
+  }
+  else
+  {
+    dump_exit ();
+  }
 
   serializer_dump_literals ();
   serializer_merge_scopes_into_bytecode ();
@@ -2791,13 +2871,66 @@ parser_parse_program (void)
 
   scopes_tree_free (STACK_TOP (scopes));
   STACK_DROP (scopes, 1);
-}
+} /* parser_parse_program */
+
+/**
+ * Parse source script
+ */
+void
+parser_parse_script (const char *source, /**< source script */
+                     size_t source_size) /**< source script size it bytes */
+{
+  inside_eval = false;
+  inside_function = false;
+  parser_parse_program (source, source_size, false);
+} /* parser_parse_script */
+
+/**
+ * Parse string passed to eval() call
+ *
+ * @return true if parse succeeds
+ *         false otherwise
+ */
+bool parser_parse_eval (const char *source, /**< string passed to eval() */
+                        size_t source_size) /**< string size in bytes */
+{
+  TODO (implement syntax error processing);
+
+  inside_eval = true;
+  inside_function = false;
+  parser_parse_program (source, source_size, false);
+  return true;
+} /* parser_parse_eval */
+
+/**
+ * Parse a function created via new Function call
+ *
+ * NOTE: Array of arguments should contain at least one element.
+ *       In case of new Function() call without parameters, empty string should be passed as argument to this
+ *       function.
+ */
+void
+parser_parse_new_function (const char **params, /**< array of arguments of new Function (p1, p2, ..., pn, body) call */
+                           size_t params_count) /**< total number of arguments passed to new Function (...) */
+{
+  inside_eval = false;
+  inside_function = true;
+
+  // Process arguments
+  JERRY_ASSERT (params_count > 0);
+  for (size_t i = 0; i < params_count - 1; ++i)
+  {
+    FIXME ("check parameter's name for syntax errors");
+    lit_find_or_create_literal_from_charset ((ecma_char_t *) params[i], (ecma_length_t) strlen (params[i]));
+  }
+  parser_parse_program (params[params_count - 1], strlen (params[params_count - 1]), true);
+} /* parser_parse_new_function */
 
 void
-parser_init (const char *source, size_t source_size, bool show_opcodes)
+parser_init ()
 {
-  lexer_init (source, source_size, show_opcodes);
-  serializer_set_show_opcodes (show_opcodes);
+  lexer_init (parser_show_opcodes);
+  serializer_set_show_opcodes (parser_show_opcodes);
   dumper_init ();
   syntax_init ();
 
@@ -2805,6 +2938,15 @@ parser_init (const char *source, size_t source_size, bool show_opcodes)
 
   jsp_label_init ();
 }
+
+/**
+ * Tell parser to dump bytecode
+ */
+void
+parser_set_show_opcodes (bool show_opcodes) /**< flag indicating if to dump bytecode */
+{
+  parser_show_opcodes = show_opcodes;
+} /* parser_set_show_opcodes */
 
 void
 parser_free (void)

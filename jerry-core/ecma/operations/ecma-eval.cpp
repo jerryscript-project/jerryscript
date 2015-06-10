@@ -20,6 +20,8 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
+#include "parser.h"
+#include "serializer.h"
 #include "vm.h"
 
 /** \addtogroup ecma ECMA
@@ -54,15 +56,15 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
                                                       buf_size);
   JERRY_ASSERT (buffer_size_req == buf_size);
 
-  // FIXME: Get parser feedback about syntax correctness
-  bool is_syntax_correct = true;
-  bool is_strict_prologue;
-
-  // FIXME: Call parser
-  JERRY_UNIMPLEMENTED ("eval operation is not implemented");
+  parser_init ();
+  bool is_syntax_correct = parser_parse_eval ((const char *) code_p, (size_t) buf_size);
+  const opcode_t* opcodes_p = (const opcode_t*) serializer_get_bytecode ();
+  serializer_print_opcodes ();
+  parser_free ();
 
   // FIXME:
-  is_strict_prologue = false;
+  bool is_strict_prologue = false;
+  (void) is_strict_prologue;
 
   if (!is_syntax_correct)
   {
@@ -95,6 +97,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
     }
 
     // FIXME: Call interpreter
+    (void) opcodes_p;
     completion = ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
     JERRY_UNIMPLEMENTED ("eval operation is not implemented");
 

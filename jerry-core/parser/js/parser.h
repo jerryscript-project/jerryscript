@@ -18,8 +18,11 @@
 
 #include "jrt.h"
 
-void parser_init (const char *, size_t, bool);
-void parser_parse_program (void);
+void parser_init ();
+void parser_set_show_opcodes (bool);
+void parser_parse_script (const char *, size_t);
+bool parser_parse_eval (const char *, size_t);
+void parser_parse_new_function (const char **, size_t);
 void parser_free (void);
 
 #endif

@@ -34,12 +34,30 @@
  */
 #define BLOCK_SIZE 64
 
+/**
+ * Pointer to lit_id_hash_table precedes every independent bytecode region
+ */
+typedef struct __attribute__ ((aligned (MEM_ALIGNMENT)))
+{
+  lit_id_hash_table *lit_id_hash;
+} opcodes_header_t;
+
 typedef struct
 {
   const ecma_char_t *strings_buffer;
   const opcode_t *opcodes;
-  lit_id_hash_table *lit_id_hash;
   opcode_counter_t opcodes_count;
 } bytecode_data_t;
+
+/**
+ * Macros to get a hash table corresponding to a bytecode region
+ */
+#define GET_HASH_TABLE_FOR_BYTECODE(opcodes) (((opcodes_header_t *) (((uint8_t *) (opcodes)) - \
+                                                                     sizeof (opcodes_header_t)))->lit_id_hash)
+
+/**
+ * Macros to get a pointer to bytecode header by pointer to opcodes start
+ */
+#define GET_BYTECODE_HEADER(opcodes) ((opcodes_header_t *) (((uint8_t *) (opcodes)) - sizeof (opcodes_header_t)))
 
 #endif // BYTECODE_DATA_H

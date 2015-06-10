@@ -96,7 +96,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   }
   else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->opcodes_p, int_data->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
     ret_value = set_variable_value (int_data,
@@ -125,7 +125,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   {
     ecma_number_t *num_p = int_data->tmp_num_p;
 
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->opcodes_p, int_data->pos);
     literal_t lit = lit_get_literal_by_cp (lit_cp);
     JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
 
@@ -140,7 +140,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
   {
     ecma_number_t *num_p = int_data->tmp_num_p;
 
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, int_data->opcodes_p, int_data->pos);
     literal_t lit = lit_get_literal_by_cp (lit_cp);
     JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
 
@@ -395,7 +395,9 @@ ecma_completion_value_t
 opfunc_var_decl (opcode_t opdata, /**< operation data */
                  int_data_t *int_data) /**< interpreter context */
 {
-  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (opdata.data.var_decl.variable_name, int_data->pos);
+  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (opdata.data.var_decl.variable_name,
+                                                            int_data->opcodes_p,
+                                                            int_data->pos);
   JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
   ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
@@ -491,7 +493,9 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
   const idx_t function_name_idx = opdata.data.func_decl_n.name_lit_idx;
   const ecma_length_t params_number = opdata.data.func_decl_n.arg_list;
 
-  lit_cpointer_t function_name_lit_cp = serializer_get_literal_cp_by_uid (function_name_idx, int_data->pos);
+  lit_cpointer_t function_name_lit_cp = serializer_get_literal_cp_by_uid (function_name_idx,
+                                                                          int_data->opcodes_p,
+                                                                          int_data->pos);
 
   int_data->pos++;
 
@@ -573,7 +577,9 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
   {
     scope_p = ecma_create_decl_lex_env (int_data->lex_env_p);
 
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (function_name_lit_idx, lit_oc);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (function_name_lit_idx,
+                                                              int_data->opcodes_p,
+                                                              lit_oc);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
     function_name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
@@ -1407,7 +1413,7 @@ evaluate_arg_for_typeof (int_data_t *int_data, /**< interpreter context */
   }
   else
   {
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->opcodes_p, int_data->pos);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
@@ -1523,7 +1529,7 @@ opfunc_delete_var (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (name_lit_idx, lit_oc);
+  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (name_lit_idx, int_data->opcodes_p, lit_oc);
   JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
   ecma_string_t *name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);

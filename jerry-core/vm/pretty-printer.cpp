@@ -104,7 +104,7 @@ var_to_str (opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint
   }
   else
   {
-    return lit_cp_to_str (serializer_get_literal_cp_by_uid (raw.uids[current_arg], oc));
+    return lit_cp_to_str (serializer_get_literal_cp_by_uid (raw.uids[current_arg], NULL, oc));
   }
 }
 

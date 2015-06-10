@@ -534,6 +534,7 @@ vm_run_from_pos (opcode_counter_t start_pos, /**< identifier of starting opcode 
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
   int_data_t int_data;
+  int_data.opcodes_p = __program;
   int_data.pos = (opcode_counter_t) (start_pos + 1);
   int_data.this_binding = this_binding_value;
   int_data.lex_env_p = lex_env_p;

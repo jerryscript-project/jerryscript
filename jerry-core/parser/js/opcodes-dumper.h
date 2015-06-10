@@ -48,6 +48,7 @@ typedef enum __attr_packed___
 
 operand empty_operand (void);
 operand literal_operand (lit_cpointer_t);
+operand eval_ret_operand (void);
 bool operand_is_empty (operand);
 
 void dumper_init (void);

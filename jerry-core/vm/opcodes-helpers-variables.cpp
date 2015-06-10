@@ -91,7 +91,7 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->opcodes_p, int_data->pos);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
@@ -158,7 +158,7 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, lit_oc);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->opcodes_p, lit_oc);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 

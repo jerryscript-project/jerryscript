@@ -16,6 +16,8 @@
 #ifndef RCS_RECORDSET_H
 #define RCS_RECORDSET_H
 
+#include <string.h>
+
 #include "jrt.h"
 #include "jrt-bit-fields.h"
 #include "mem-allocator.h"
@@ -109,8 +111,12 @@ public:
         uint16_t packed_value;
       };
 
-      static cpointer_t compress (record_t* pointer_p);
-      static record_t* decompress (cpointer_t pointer_cp);
+      static cpointer_t compress (record_t *pointer_p);
+      static record_t *decompress (cpointer_t pointer_cp);
+
+      static cpointer_t null_cp ();
+
+      static const int conval = 3;
     };
 
   private:
@@ -130,7 +136,7 @@ public:
     uint32_t get_field (uint32_t field_pos, uint32_t field_width) const;
     void set_field (uint32_t field_pos, uint32_t field_width, size_t value);
 
-    record_t* get_pointer (uint32_t field_pos, uint32_t field_width) const;
+    record_t *get_pointer (uint32_t field_pos, uint32_t field_width) const;
     void set_pointer (uint32_t field_pos, uint32_t field_width, record_t* pointer_p);
 
     /**
@@ -138,6 +144,9 @@ public:
      */
     static const uint32_t _fields_offset_begin = _type_field_pos + _type_field_width;
   };
+
+  record_t *get_first (void);
+  record_t *get_next (record_t *rec_p);
 
 private:
   friend class rcs_record_iterator_t;
@@ -158,6 +167,7 @@ private:
 
   void init_free_record (record_t *free_rec_p, size_t size, record_t *prev_rec_p);
   bool is_record_free (record_t *record_p);
+
 protected:
   /**
    * First type identifier that can be used for storage-specific record types
@@ -172,7 +182,7 @@ protected:
   template<
     typename T, /**< type of record structure */
     typename ... SizeArgs> /**< type of arguments of T::size */
-  T* alloc_record (record_t::type_t type, /**< record's type identifier */
+  T *alloc_record (record_t::type_t type, /**< record's type identifier */
                    SizeArgs ... size_args) /**< arguments of T::size */
   {
     JERRY_ASSERT (type >= _first_type_id);
@@ -180,7 +190,7 @@ protected:
     size_t size = T::size (size_args...);
 
     record_t *prev_rec_p;
-    T* rec_p = static_cast<T*> (alloc_space_for_record (size, &prev_rec_p));
+    T *rec_p = static_cast<T*> (alloc_space_for_record (size, &prev_rec_p));
 
     rec_p->set_type (type);
     rec_p->set_size (size);
@@ -191,16 +201,14 @@ protected:
     return rec_p;
   } /* alloc_record */
 
-  record_t* alloc_space_for_record (size_t bytes, record_t** out_prev_rec_p);
-  void free_record (record_t* record_p);
+  record_t *alloc_space_for_record (size_t bytes, record_t **out_prev_rec_p);
+  void free_record (record_t *record_p);
 
-  record_t* get_first (void);
+  virtual record_t *get_prev (record_t *rec_p);
 
-  virtual record_t* get_prev (record_t* rec_p);
-  record_t* get_next (record_t* rec_p);
-  virtual void set_prev (record_t* rec_p, record_t *prev_rec_p);
+  virtual void set_prev (record_t *rec_p, record_t *prev_rec_p);
 
-  virtual size_t get_record_size (record_t* rec_p);
+  virtual size_t get_record_size (record_t *rec_p);
 
   void assert_state_is_correct (void);
 }; /* rcs_recordset_t */
@@ -221,17 +229,109 @@ typedef rcs_record_t::cpointer_t rcs_cpointer_t;
 class rcs_record_iterator_t
 {
 public:
-  rcs_record_iterator_t (rcs_record_t* rec_p);
-  rcs_record_iterator_t (rcs_cpointer_t rec_ext_cp);
+  /**
+   * Constructor
+   */
+  rcs_record_iterator_t (rcs_recordset_t *rcs_p, /**< recordset */
+                         rcs_record_t *rec_p) /**< record which should belong to the recordset */
+  {
+    _record_start_p = rec_p;
+    _recordset_p = rcs_p;
+
+    reset ();
+  } /* rcs_record_iterator_t */
+
+  /**
+   * Constructor
+   */
+  rcs_record_iterator_t (rcs_recordset_t *rcs_p, /**< recordset */
+                         rcs_cpointer_t rec_ext_cp) /**< compressed pointer to the record */
+  {
+    _record_start_p = rcs_cpointer_t::decompress (rec_ext_cp);
+    _recordset_p = rcs_p;
+
+    reset ();
+  } /* rcs_record_iterator_t */
 
 protected:
-  template<typename T> T read (void);
-  template<typename T> void write (T value);
+  /**
+   * Types of access
+   */
+  typedef enum
+  {
+    ACCESS_WRITE, /**< If access_type == ACCESS_WRITE,
+                   * write 'size' bytes from 'data' buffer to the record. */
+    ACCESS_READ,  /**< If access_type == ACCESS_READ,
+                   * read 'size' bytes from the record and write to the 'data' buffer. */
+    ACCESS_SKIP   /**< If access_type == ACCESS_SKIP,
+                   * increment current position so that 'size' bytes would be skipped. */
+  } access_t;
+
+  void access (access_t access_type, void *data, size_t size);
+
+public:
+  /**
+   * Read value of type T from the record.
+   * After reading iterator doesn't change its position.
+   *
+   * @return read value
+   */
+  template<typename T> T read (void)
+  {
+    T data;
+    access (ACCESS_READ, &data, sizeof (T));
+    return data;
+  } /* read */
+
+  /**
+   * Write value of type T to the record.
+   * After writing iterator doesn't change its position.
+   */
+  template<typename T> void write (T value) /**< value to write */
+  {
+    access (ACCESS_WRITE, &value, sizeof (T));
+  } /* write */
+
+  /**
+   * Increment current position to skip T value in the record.
+   */
+  template<typename T> void skip ()
+  {
+    access (ACCESS_SKIP, NULL, sizeof (T));
+  } /* skip */
+
+  /**
+   * Increment current position to skip 'size' bytes.
+   */
+  void skip (size_t size) /**< number of bytes to skip */
+  {
+    access (ACCESS_SKIP, NULL, size);
+  } /* skip */
+
+  /**
+   * Check if the end of the record was reached.
+   *
+   * @return true if the whole record was iterated
+   *         false otherwise
+   */
+  bool finished ()
+  {
+    return _current_pos_p == NULL;
+  } /* finished */
+
+  /**
+   * Reset the iterator, so that it points to the beginning of the record
+   */
+  void reset ()
+  {
+    _current_pos_p = (uint8_t *)_record_start_p;
+    _current_offset = 0;
+  } /* reset */
 
 private:
   rcs_record_t* _record_start_p; /**< start of current record */
   uint8_t* _current_pos_p; /**< pointer to current offset in current record */
-
+  size_t _current_offset; /**< current offset */
   rcs_recordset_t *_recordset_p; /**< recordset containing the record */
 }; /* rcs_record_iterator_t */
 

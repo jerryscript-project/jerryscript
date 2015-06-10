@@ -15,7 +15,6 @@
 
 #include "rcs-chunked-list.h"
 #include "rcs-recordset.h"
-#include "jrt-bit-fields.h"
 
 /** \addtogroup recordset Recordset
  * @{
@@ -91,7 +90,6 @@ rcs_recordset_t::record_t::cpointer_t::decompress (rcs_cpointer_t compressed_poi
                                                                                        *   compressed pointer */
 {
   uint8_t* base_pointer;
-
   if (compressed_pointer.value.base_cp == MEM_CP_NULL)
   {
     base_pointer = NULL;
@@ -105,6 +103,19 @@ rcs_recordset_t::record_t::cpointer_t::decompress (rcs_cpointer_t compressed_poi
 
   return (rcs_recordset_t::record_t*) (base_pointer + diff);
 } /* rcs_recordset_t::record_t::cpointer_t::decompress */
+
+/**
+ * Create NULL compressed pointer
+ *
+ * @return NULL compressed pointer
+ */
+rcs_cpointer_t
+rcs_recordset_t::record_t::cpointer_t::null_cp ()
+{
+  rcs_cpointer_t cp;
+  cp.packed_value = MEM_CP_NULL;
+  return cp;
+} /* rcs_recordset_t::record_t::cpointer_t::null_cp */
 
 /**
  * Assert that 'this' value points to correct record
@@ -612,6 +623,7 @@ rcs_recordset_t::assert_state_is_correct (void)
        rec_p != NULL;
        last_record_p = rec_p, rec_p = next_rec_p)
   {
+    JERRY_ASSERT (get_record_size (rec_p) > 0);
     record_size_sum += get_record_size (rec_p);
 
     rcs_chunked_list_t::node_t *node_p = _chunk_list.get_node_from_pointer (rec_p);
@@ -648,6 +660,110 @@ rcs_recordset_t::assert_state_is_correct (void)
   JERRY_ASSERT (node_size_sum == record_size_sum);
 #endif /* !JERRY_NDEBUG */
 } /* rcs_recordset_t::assert_state_is_correct */
+
+/**
+ * Perform general access to the record
+ *
+ * Warning: This function is implemented in assumption that `size` is not more than `2 * node_data_space_size`.
+ */
+void
+rcs_record_iterator_t::access (access_t access_type, /**< type of access: read, write or skip */
+                               void *data, /**< in/out data to read or write */
+                               size_t size) /**< size of the data in bytes */
+{
+  const size_t node_data_space_size = _recordset_p->_chunk_list.get_data_space_size ();
+  JERRY_ASSERT (2 * node_data_space_size >= size);
+  const size_t record_size = _recordset_p->get_record_size (_record_start_p);
+
+  JERRY_ASSERT (!finished ());
+
+  rcs_chunked_list_t::node_t *current_node_p = _recordset_p->_chunk_list.get_node_from_pointer (_current_pos_p);
+  uint8_t *current_node_data_space_p = _recordset_p->_chunk_list.get_data_space (current_node_p);
+  size_t left_in_node = node_data_space_size - (size_t)(_current_pos_p - current_node_data_space_p);
+
+  JERRY_ASSERT (_current_offset + size <= record_size);
+
+  /*
+   * Read the data and increase the current position pointer.
+   */
+  if (left_in_node >= size)
+  {
+    /* all data is placed inside single node */
+    if (access_type == ACCESS_READ)
+    {
+      memcpy (data, _current_pos_p, size);
+    }
+    else if (access_type == ACCESS_WRITE)
+    {
+      memcpy (_current_pos_p, data, size);
+    }
+    else
+    {
+      JERRY_ASSERT (access_type == ACCESS_SKIP);
+
+      if (left_in_node > size)
+      {
+        _current_pos_p += size;
+      }
+      else if (_current_offset + size < record_size)
+      {
+        current_node_p = _recordset_p->_chunk_list.get_next (current_node_p);
+        JERRY_ASSERT (current_node_p);
+        _current_pos_p = _recordset_p->_chunk_list.get_data_space (current_node_p);
+      }
+      else
+      {
+        JERRY_ASSERT (_current_offset + size == record_size);
+      }
+    }
+  }
+  else
+  {
+    /* data is distributed between two nodes */
+    size_t first_chunk_size = node_data_space_size - (size_t) (_current_pos_p - current_node_data_space_p);
+
+    if (access_type == ACCESS_READ)
+    {
+      memcpy (data, _current_pos_p, first_chunk_size);
+    }
+    else if (access_type == ACCESS_WRITE)
+    {
+      memcpy (_current_pos_p, data, first_chunk_size);
+    }
+
+    rcs_chunked_list_t::node_t *next_node_p = _recordset_p->_chunk_list.get_next (current_node_p);
+    JERRY_ASSERT (next_node_p != NULL);
+    uint8_t *next_node_data_space_p = _recordset_p->_chunk_list.get_data_space (next_node_p);
+
+    if (access_type == ACCESS_READ)
+    {
+      memcpy ((uint8_t *)data + first_chunk_size, next_node_data_space_p, size - first_chunk_size);
+    }
+    else if (access_type == ACCESS_WRITE)
+    {
+      memcpy (next_node_data_space_p, (uint8_t *)data + first_chunk_size, size - first_chunk_size);
+    }
+    else
+    {
+      JERRY_ASSERT (access_type == ACCESS_SKIP);
+
+      _current_pos_p = next_node_data_space_p + size - first_chunk_size;
+    }
+  }
+
+  /* check if we reached the end */
+  if (access_type == ACCESS_SKIP)
+  {
+    _current_offset += size;
+    JERRY_ASSERT (_current_offset <= record_size);
+
+    if (_current_offset == record_size)
+    {
+      _current_pos_p = NULL;
+      _current_offset = 0;
+    }
+  }
+} /* rcs_record_iterator_t::access */
 
 /**
  * Get size of the free record

@@ -16,7 +16,6 @@
 #ifndef SYNTAX_ERRORS_H
 #define SYNTAX_ERRORS_H
 
-#include "literal.h"
 #include "opcodes-dumper.h"
 #include "lexer.h"
 

@@ -16,15 +16,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include "literal.h"
-
 #define NAME_TO_ID(op) (__op__idx_##op)
 
 #define __OPCODE_SIZE(name, arg1, arg2, arg3) \
   (uint8_t) (sizeof (__op_##name) + 1),
-
-#define LP(s) create_literal_from_str_compute_len (s)
-#define NUM(s) create_literal_from_num (s)
 
 static uint8_t opcode_sizes[] =
 {

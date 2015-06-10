@@ -26,13 +26,8 @@
 #include "ecma-init-finalize.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "jerry.h"
-#include "jrt.h"
-#include "mem-heap.h"
-#include "mem-poolman.h"
 #include "parser.h"
 #include "serializer.h"
-#include "vm.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"

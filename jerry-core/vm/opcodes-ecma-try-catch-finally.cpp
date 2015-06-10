@@ -63,12 +63,12 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
-      const literal_index_t catch_exc_val_var_name_lit_idx = serializer_get_literal_id_by_uid (
-          next_opcode.data.meta.data_1,
-          int_data->pos);
+      lit_cpointer_t catch_exc_val_var_name_lit_cp = serializer_get_literal_cp_by_uid (
+        next_opcode.data.meta.data_1,
+        int_data->pos);
       int_data->pos++;
 
-      ecma_string_t *catch_exc_var_name_str_p = ecma_new_ecma_string_from_lit_index (catch_exc_val_var_name_lit_idx);
+      ecma_string_t *catch_exc_var_name_str_p = ecma_new_ecma_string_from_lit_cp (catch_exc_val_var_name_lit_cp);
 
       ecma_object_t *old_env_p = int_data->lex_env_p;
       ecma_object_t *catch_env_p = ecma_create_decl_lex_env (old_env_p);

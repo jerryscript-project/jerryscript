@@ -112,9 +112,9 @@ extern bool ecma_is_completion_value_empty (ecma_completion_value_t value);
 extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
 extern ecma_string_t* ecma_new_ecma_string_from_uint32 (uint32_t uint_number);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
-extern void ecma_new_ecma_string_on_stack_from_lit_index (ecma_string_t *string_p,
-                                                          literal_index_t lit_index);
-extern ecma_string_t* ecma_new_ecma_string_from_lit_index (literal_index_t lit_index);
+extern void ecma_new_ecma_string_on_stack_from_lit_cp (ecma_string_t *string_p,
+                                                       lit_cpointer_t lit_index);
+extern ecma_string_t *ecma_new_ecma_string_from_lit_cp (lit_cpointer_t lit_cp);
 extern void ecma_new_ecma_string_on_stack_from_magic_string_id (ecma_string_t *string_p,
                                                                 ecma_magic_string_id_t id);
 extern ecma_string_t* ecma_new_ecma_string_from_magic_string_id (ecma_magic_string_id_t id);

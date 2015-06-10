@@ -22,12 +22,13 @@
 #include "hash-table.h"
 #include "opcodes.h"
 #include "lit-id-hash-table.h"
+#include "lit-literal.h"
 
-#define NOT_A_LITERAL (INVALID_LITERAL - 1)
+#define NOT_A_LITERAL (lit_cpointer_t::null_cp ())
 
 typedef struct
 {
-  literal_index_t lit_id[3];
+  lit_cpointer_t lit_id[3];
   opcode_t op;
 } op_meta;
 

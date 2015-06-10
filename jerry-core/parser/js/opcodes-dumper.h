@@ -32,7 +32,7 @@ typedef struct
   union
   {
     idx_t uid;
-    literal_index_t lit_id;
+    lit_cpointer_t lit_id;
   } data;
 } operand;
 
@@ -47,7 +47,7 @@ typedef enum __attr_packed___
 } varg_list_type;
 
 operand empty_operand (void);
-operand literal_operand (literal_index_t);
+operand literal_operand (lit_cpointer_t);
 bool operand_is_empty (operand);
 
 void dumper_init (void);
@@ -62,10 +62,10 @@ operand dump_intrinsic (operand, operand);
 
 void dump_boolean_assignment (operand, bool);
 operand dump_boolean_assignment_res (bool);
-void dump_string_assignment (operand, literal_index_t);
-operand dump_string_assignment_res (literal_index_t);
-void dump_number_assignment (operand, literal_index_t);
-operand dump_number_assignment_res (literal_index_t);
+void dump_string_assignment (operand, lit_cpointer_t);
+operand dump_string_assignment_res (lit_cpointer_t);
+void dump_number_assignment (operand, lit_cpointer_t);
+operand dump_number_assignment_res (lit_cpointer_t);
 void dump_smallint_assignment (operand, idx_t);
 operand dump_smallint_assignment_res (idx_t);
 void dump_undefined_assignment (operand);
@@ -215,8 +215,8 @@ void rewrite_finally (void);
 void dump_end_try_catch_finally (void);
 void dump_throw (operand);
 
-bool dumper_variable_declaration_exists (literal_index_t);
-void dump_variable_declaration (literal_index_t);
+bool dumper_variable_declaration_exists (lit_cpointer_t);
+void dump_variable_declaration (lit_cpointer_t);
 
 opcode_counter_t dump_scope_code_flags_for_rewrite (void);
 void rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc,

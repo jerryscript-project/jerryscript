@@ -23,7 +23,7 @@
 typedef struct
 {
   prop_type type;
-  literal lit;
+  literal_t lit;
 } prop_literal;
 
 enum
@@ -39,7 +39,7 @@ enum
 STATIC_STACK (U8, uint8_t)
 
 static prop_literal
-create_prop_literal (literal lit, prop_type type)
+create_prop_literal (literal_t lit, prop_type type)
 {
   prop_literal ret;
 
@@ -59,7 +59,7 @@ void
 syntax_add_prop_name (operand op, prop_type pt)
 {
   JERRY_ASSERT (op.type == OPERAND_LITERAL);
-  STACK_PUSH (props, create_prop_literal (lexer_get_literal_by_id (op.data.lit_id), pt));
+  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), pt));
 }
 
 void
@@ -94,34 +94,34 @@ syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unu
       JERRY_ASSERT (current.type == PROP_DATA
                     || current.type == PROP_GET
                     || current.type == PROP_SET);
-      if (literal_equal (previous.lit, current.lit))
+      if (lit_literal_equal (previous.lit, current.lit))
       {
         /*a*/
         if (is_strict && previous.type == PROP_DATA && current.type == PROP_DATA)
         {
           PARSE_ERROR_VARG ("Duplication of parameter name '%s' in ObjectDeclaration is not allowed in strict mode",
-                            loc, (const char *) literal_to_zt (current.lit));
+                            loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*b*/
         if (previous.type == PROP_DATA
             && (current.type == PROP_SET || current.type == PROP_GET))
         {
           PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
-                            loc, (const char *) literal_to_zt (current.lit));
+                            loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*c*/
         if (current.type == PROP_DATA
             && (previous.type == PROP_SET || previous.type == PROP_GET))
         {
           PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
-                            loc, (const char *) literal_to_zt (current.lit));
+                            loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*d*/
         if ((previous.type == PROP_SET && current.type == PROP_SET)
             || (previous.type == PROP_GET && current.type == PROP_GET))
         {
           PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be accessor of same type",
-                            loc, (const char *) literal_to_zt (current.lit));
+                            loc, lit_literal_to_str_internal_buf (current.lit));
         }
       }
     }
@@ -140,7 +140,7 @@ syntax_start_checking_of_vargs (void)
 void syntax_add_varg (operand op)
 {
   JERRY_ASSERT (op.type == OPERAND_LITERAL);
-  STACK_PUSH (props, create_prop_literal (lexer_get_literal_by_id (op.data.lit_id), VARG));
+  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), VARG));
 }
 
 static void
@@ -148,10 +148,10 @@ emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
 {
   if (op.type == OPERAND_LITERAL)
   {
-    if (literal_equal_type_zt (lexer_get_literal_by_id (op.data.lit_id),
-                               ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
-        || literal_equal_type_zt (lexer_get_literal_by_id (op.data.lit_id),
-                                  ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
+                                   ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
+        || lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
+                                      ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
     {
       PARSE_ERROR ("'eval' and 'arguments' are not allowed here in strict mode", loc);
     }
@@ -179,17 +179,21 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
   for (uint8_t i = (uint8_t) (STACK_TOP (U8) + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
   {
     JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
-    const literal previous = STACK_ELEMENT (props, i).lit;
-    JERRY_ASSERT (previous.type == LIT_STR || previous.type == LIT_MAGIC_STR || previous.type == LIT_MAGIC_STR_EX);
+    literal_t previous = STACK_ELEMENT (props, i).lit;
+    JERRY_ASSERT (previous->get_type () == LIT_STR_T
+                  || previous->get_type () == LIT_MAGIC_STR_T
+                  || previous->get_type () == LIT_MAGIC_STR_EX_T);
     for (uint8_t j = STACK_TOP (U8); j < i; j = (uint8_t) (j + 1))
     {
       JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
-      const literal current = STACK_ELEMENT (props, j).lit;
-      JERRY_ASSERT (current.type == LIT_STR || current.type == LIT_MAGIC_STR || current.type == LIT_MAGIC_STR_EX);
-      if (literal_equal_type (previous, current))
+      literal_t current = STACK_ELEMENT (props, j).lit;
+      JERRY_ASSERT (current->get_type () == LIT_STR_T
+                    || current->get_type () == LIT_MAGIC_STR_T
+                    || current->get_type () == LIT_MAGIC_STR_EX_T);
+      if (lit_literal_equal_type (previous, current))
       {
         PARSE_ERROR_VARG ("Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
-                          loc, (const char *) literal_to_zt (previous));
+                          loc, lit_literal_to_str_internal_buf (previous));
       }
     }
   }

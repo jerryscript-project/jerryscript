@@ -16,11 +16,7 @@
 #include "mem-allocator.h"
 #include "jrt-libc-includes.h"
 #include "lexer.h"
-#include "parser.h"
-#include "stack.h"
-#include "opcodes.h"
 #include "syntax-errors.h"
-#include "parser.h"
 #include "ecma-helpers.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
@@ -32,17 +28,8 @@ static size_t buffer_size = 0;
 static const char *buffer_start = NULL;
 static const char *buffer = NULL;
 static const char *token_start;
-static ecma_char_t *strings_cache;
-static size_t strings_cache_size;
-static size_t strings_cache_used_size;
 
 #define LA(I)       (get_char (I))
-
-enum
-{
-  literals_global_size
-};
-STATIC_STACK (literals, literal)
 
 static bool
 is_empty (token tok)
@@ -93,7 +80,25 @@ dump_current_line (void)
 }
 
 static token
-create_token (token_type type, literal_index_t uid)
+create_token_from_lit (token_type type, literal_t lit)
+{
+  token ret;
+
+  ret.type = type;
+  ret.loc = current_locus () - (type == TOK_STRING ? 1 : 0);
+  ret.uid = lit_cpointer_t::compress (lit).packed_value;
+
+  return ret;
+}
+
+/**
+ * Create token of specified type
+ *
+ * @return token descriptor
+ */
+static token
+create_token (token_type type,  /**< type of token */
+              uint16_t uid)     /**< uid of token */
 {
   token ret;
 
@@ -102,92 +107,7 @@ create_token (token_type type, literal_index_t uid)
   ret.uid = uid;
 
   return ret;
-}
-
-/**
- * Compare specified string to literal
- *
- * @return true - if the literal contains exactly the specified string,
- *         false - otherwise.
- */
-static bool
-string_equals_to_literal (const ecma_char_t *str_p, /**< characters buffer */
-                          ecma_length_t length, /**< string's length */
-                          literal lit) /**< literal */
-{
-  if (lit.type == LIT_STR)
-  {
-    if (lit.data.lp.length == length
-        && strncmp ((const char *) lit.data.lp.str, (const char*) str_p, length) == 0)
-    {
-      return true;
-    }
-  }
-  else if (lit.type == LIT_MAGIC_STR)
-  {
-    const char *magic_str_p = (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id);
-
-    if (strlen (magic_str_p) == length
-        && strncmp (magic_str_p, (const char*) str_p, length) == 0)
-    {
-      return true;
-    }
-  }
-  else if (lit.type == LIT_MAGIC_STR_EX)
-  {
-    const char *magic_str_p = (const char *) ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id);
-
-    if (strlen (magic_str_p) == length
-        && strncmp (magic_str_p, (const char*) str_p, length) == 0)
-    {
-      return true;
-    }
-  }
-
-  return false;
-} /* string_equals_to_literal */
-
-static literal
-adjust_string_ptrs (literal lit, size_t diff)
-{
-  if (lit.type != LIT_STR)
-  {
-    return lit;
-  }
-
-  literal ret;
-
-  ret.type = LIT_STR;
-  ret.data.lp.length = lit.data.lp.length;
-  ret.data.lp.hash = lit.data.lp.hash;
-  ret.data.lp.str = lit.data.lp.str + diff;
-
-  return ret;
-}
-
-static literal
-add_string_to_string_cache (const ecma_char_t* str, ecma_length_t length)
-{
-  if (strings_cache_used_size + length * sizeof (ecma_char_t) >= strings_cache_size)
-  {
-    strings_cache_size = mem_heap_recommend_allocation_size (strings_cache_used_size
-                                                             + ((size_t) length + 1) * sizeof (ecma_char_t));
-    ecma_char_t *temp = (ecma_char_t *) mem_heap_alloc_block (strings_cache_size,
-                                                              MEM_HEAP_ALLOC_SHORT_TERM);
-    if (strings_cache)
-    {
-      memcpy (temp, strings_cache, strings_cache_used_size);
-      STACK_ITERATE_VARG_SET (literals, adjust_string_ptrs, 0, (size_t) (temp - strings_cache));
-      mem_heap_free_block ((uint8_t *) strings_cache);
-    }
-    strings_cache = temp;
-  }
-  strncpy ((char *) (strings_cache + strings_cache_used_size), (const char*) str, length);
-  (strings_cache + strings_cache_used_size)[length] = '\0';
-  const literal res = create_literal_from_zt (strings_cache + strings_cache_used_size, length);
-  strings_cache_used_size = (size_t) (((size_t) length + 1) * sizeof (ecma_char_t) + strings_cache_used_size);
-  return res;
-}
+} /* create_token */
 
 /**
  * Convert string to token of specified type
@@ -201,30 +121,22 @@ convert_string_to_token (token_type tt, /**< token type */
 {
   JERRY_ASSERT (str_p != NULL);
 
-  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
+  literal_t lit = lit_find_literal_by_charset (str_p, length);
+  if (lit != NULL)
   {
-    const literal lit = STACK_ELEMENT (literals, i);
-    if ((lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
-        && string_equals_to_literal (str_p, length, lit))
-    {
-      return create_token (tt, i);
-    }
+    return create_token_from_lit (tt, lit);
   }
 
-  literal lit = create_literal_from_str (str_p, length);
-  JERRY_ASSERT (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX);
-  if (lit.type == LIT_STR)
-  {
-    lit = add_string_to_string_cache (str_p, length);
-  }
+  lit = lit_create_literal_from_charset (str_p, length);
+  JERRY_ASSERT (lit->get_type () == LIT_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
-  STACK_PUSH (literals, lit);
-
-  return create_token (tt, (literal_index_t) (STACK_SIZE (literals) - 1));
+  return create_token_from_lit (tt, lit);
 }
 
 /**
- * Try to decore specified string as keyword
+ * Try to decode specified string as keyword
  *
  * @return if specified string represents a keyword, return corresponding keyword token,
  *         else if it is 'null' - return TOK_NULL token,
@@ -360,85 +272,13 @@ decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
 static token
 convert_seen_num_to_token (ecma_number_t num)
 {
-  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
+  literal_t lit = lit_find_literal_by_num (num);
+  if (lit != NULL)
   {
-    const literal lit = STACK_ELEMENT (literals, i);
-    if (lit.type != LIT_NUMBER)
-    {
-      continue;
-    }
-    if (lit.data.num == num)
-    {
-      return create_token (TOK_NUMBER, i);
-    }
+    return create_token_from_lit (TOK_NUMBER, lit);
   }
 
-  STACK_PUSH (literals, create_literal_from_num (num));
-
-  return create_token (TOK_NUMBER, (literal_index_t) (STACK_SIZE (literals) - 1));
-}
-
-const literal *
-lexer_get_literals (void)
-{
-  literal *data = NULL;
-  if (STACK_SIZE (literals) > 0)
-  {
-    STACK_CONVERT_TO_RAW_DATA (literals, data);
-  }
-  return data;
-}
-
-literal_index_t
-lexer_get_literals_count (void)
-{
-  return (literal_index_t) STACK_SIZE (literals);
-}
-
-literal_index_t
-lexer_lookup_literal_uid (literal lit)
-{
-  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
-  {
-    if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
-    {
-      return i;
-    }
-  }
-  return INVALID_VALUE;
-}
-
-literal
-lexer_get_literal_by_id (literal_index_t id)
-{
-  JERRY_ASSERT (id != INVALID_LITERAL);
-  JERRY_ASSERT (id < STACK_SIZE (literals));
-  return STACK_ELEMENT (literals, id);
-}
-
-const ecma_char_t *
-lexer_get_strings_cache (void)
-{
-  return strings_cache;
-}
-
-void
-lexer_add_keyword_or_numeric_literal_if_not_present (literal lit)
-{
-  for (literal_index_t i = 0; i < STACK_SIZE (literals); i++)
-  {
-    if (literal_equal_type (STACK_ELEMENT (literals, i), lit))
-    {
-      return;
-    }
-  }
-
-  if (lit.type == LIT_STR)
-  {
-    lit = add_string_to_string_cache (lit.data.lp.str, lit.data.lp.length);
-  }
-
-  STACK_PUSH (literals, lit);
+  return create_token_from_lit (TOK_NUMBER, lit_create_literal_from_num (num));
 }
 
 static void
@@ -1644,15 +1484,10 @@ lexer_init (const char *source, size_t source_size, bool show_opcodes)
 
   buffer_size = source_size;
   lexer_set_source (source);
-  strings_cache = NULL;
-  strings_cache_used_size = strings_cache_size = 0;
   lexer_set_strict_mode (false);
-
-  STACK_INIT (literals);
 }
 
 void
 lexer_free (void)
 {
-  STACK_FREE (literals);
 }

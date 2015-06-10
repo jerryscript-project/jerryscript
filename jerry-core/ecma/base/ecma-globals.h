@@ -758,19 +758,12 @@ typedef enum
 } ecma_string_container_t;
 
 FIXME (Move to library that should define the type (literal.h /* ? */))
+
 /**
  * Literal and compressed pointer to literal
  */
 typedef rcs_record_t *literal_t;
 typedef rcs_cpointer_t lit_cpointer_t;
-
-/**
- * Index in literal table
- *
- * FIXME: Remove after switching to literal storage
- */
-typedef uint32_t literal_index_t;
-
 
 /**
  * Identifiers of ECMA and implementation-defined magic string constants
@@ -824,7 +817,7 @@ typedef struct ecma_string_t
   union
   {
     /** Index of string in literal table */
-    literal_index_t lit_index;
+    lit_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
     mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;

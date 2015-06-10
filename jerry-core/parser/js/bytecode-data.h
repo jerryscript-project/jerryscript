@@ -17,7 +17,6 @@
 #define BYTECODE_DATA_H
 
 #include "opcodes.h"
-#include "literal.h"
 #include "lit-id-hash-table.h"
 
 /*
@@ -38,10 +37,8 @@
 typedef struct
 {
   const ecma_char_t *strings_buffer;
-  const literal *literals;
   const opcode_t *opcodes;
   lit_id_hash_table *lit_id_hash;
-  literal_index_t literals_count;
   opcode_counter_t opcodes_count;
 } bytecode_data_t;
 

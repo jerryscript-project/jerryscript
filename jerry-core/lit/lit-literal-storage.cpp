@@ -15,6 +15,7 @@
 
 #include "lit-literal-storage.h"
 #include "ecma-helpers.h"
+#include "lit-literal.h"
 
 /**
  * Literal storage
@@ -258,11 +259,24 @@ lit_magic_record_t *
 lit_literal_storage_t::create_magic_record (ecma_magic_string_id_t id) /**< id of a magic string */
 {
   lit_magic_record_t *ret = alloc_record<lit_magic_record_t> (LIT_MAGIC_STR);
-
   ret->set_magic_str_id (id);
 
   return ret;
 } /* lit_literal_storage_t::create_magic_record */
+
+/**
+ * Create external magic string record in the literal storage
+ *
+ * @return  pointer to the created record
+ */
+lit_magic_record_t *
+lit_literal_storage_t::create_magic_record_ex (ecma_magic_string_ex_id_t id) /**< id of a magic string */
+{
+  lit_magic_record_t *ret = alloc_record<lit_magic_record_t> (LIT_MAGIC_STR_EX);
+  ret->set_magic_str_id (id);
+
+  return ret;
+} /* lit_literal_storage_t::create_magic_record_ex */
 
 /**
  * Create number record in the literal storage
@@ -315,10 +329,17 @@ lit_literal_storage_t::dump ()
       }
       case LIT_MAGIC_STR:
       {
-        lit_magic_record_t *lit_p = static_cast<lit_magic_record_t *> (rec_p);
+        ecma_magic_string_id_t id = lit_magic_record_get_magic_str_id (rec_p);
+        printf ("%s : MAGIC STRING", ecma_get_magic_string_zt (id));
+        printf (" [id=%d] ", id);
 
-        printf ("%s : MAGIC STRING", ecma_get_magic_string_zt (lit_p->get_magic_str_id ()));
-        printf (" [id=%d] ", lit_p->get_magic_str_id ());
+        break;
+      }
+      case LIT_MAGIC_STR_EX:
+      {
+        ecma_magic_string_ex_id_t id = lit_magic_record_ex_get_magic_str_id (rec_p);
+        printf ("%s : EXT MAGIC STRING", ecma_get_magic_string_ex_zt (id));
+        printf (" [id=%d] ", id);
 
         break;
       }
@@ -364,6 +385,7 @@ lit_literal_storage_t::get_prev (rcs_record_t *rec_p) /**< record, relative to w
       return (static_cast<lit_charset_record_t *> (rec_p))->get_prev ();
     }
     case LIT_MAGIC_STR:
+    case LIT_MAGIC_STR_EX:
     {
       return (static_cast<lit_magic_record_t *> (rec_p))->get_prev ();
     }
@@ -394,6 +416,7 @@ lit_literal_storage_t::set_prev (rcs_record_t *rec_p, /**< record to modify */
       return (static_cast<lit_charset_record_t *> (rec_p))->set_prev (prev_rec_p);
     }
     case LIT_MAGIC_STR:
+    case LIT_MAGIC_STR_EX:
     {
       return (static_cast<lit_magic_record_t *> (rec_p))->set_prev (prev_rec_p);
     }
@@ -425,6 +448,7 @@ lit_literal_storage_t::get_record_size (rcs_record_t* rec_p) /**< pointer to a r
       return (static_cast<lit_charset_record_t *> (rec_p))->get_size ();
     }
     case LIT_MAGIC_STR:
+    case LIT_MAGIC_STR_EX:
     {
       return lit_magic_record_t::size ();
     }
@@ -454,7 +478,13 @@ template ecma_number_t rcs_record_iterator_t::read<ecma_number_t> ();
 template void rcs_record_iterator_t::write<uint16_t> (uint16_t);
 template uint16_t rcs_record_iterator_t::read<uint16_t> ();
 
+template ecma_magic_string_id_t lit_magic_record_t::get_magic_str_id<ecma_magic_string_id_t>() const;
+template ecma_magic_string_ex_id_t lit_magic_record_t::get_magic_str_id<ecma_magic_string_ex_id_t>() const;
+template void lit_magic_record_t::set_magic_str_id<ecma_magic_string_id_t>(ecma_magic_string_id_t);
+template void lit_magic_record_t::set_magic_str_id<ecma_magic_string_ex_id_t>(ecma_magic_string_ex_id_t);
+
 template lit_charset_record_t *rcs_recordset_t::alloc_record<lit_charset_record_t> (rcs_record_t::type_t type,
                                                                                     size_t size);
 template lit_magic_record_t *rcs_recordset_t::alloc_record<lit_magic_record_t> (rcs_record_t::type_t type);
 template lit_number_record_t *rcs_recordset_t::alloc_record<lit_number_record_t> (rcs_record_t::type_t type);
+

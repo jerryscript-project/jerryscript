@@ -23,6 +23,7 @@
 #include "ecma-helpers.h"
 #include "ecma-globals.h"
 #include "serializer.h"
+#include "lit-literal.h"
 
 #define NAME_TO_ID(op) (__op__idx_##op)
 
@@ -44,57 +45,6 @@ static uint8_t opcode_sizes[] =
   0
 };
 
-static void
-dump_literal (literal lit)
-{
-  switch (lit.type)
-  {
-    case LIT_NUMBER:
-    {
-      if (ecma_number_is_nan (lit.data.num))
-      {
-        printf ("%s : NUMBER", "NaN");
-      }
-      else
-      {
-        printf ("%d : Truncated NUMBER", (int) lit.data.num);
-      }
-      break;
-    }
-    case LIT_MAGIC_STR:
-    {
-      printf ("%s : MAGIC STRING", (const char *) ecma_get_magic_string_zt (lit.data.magic_str_id));
-      break;
-    }
-    case LIT_MAGIC_STR_EX:
-    {
-      printf ("%s : EXT MAGIC STRING", (const char *) ecma_get_magic_string_ex_zt (lit.data.magic_str_ex_id));
-      break;
-    }
-    case LIT_STR:
-    {
-      printf ("%s : STRING", (const char *) (lit.data.lp.str));
-      break;
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
-    }
-  }
-}
-
-void
-pp_literals (const literal *lits, literal_index_t size)
-{
-  printf ("LITERALS %lu:\n", (unsigned long) size);
-  for (literal_index_t i = 0; i < size; i++)
-  {
-    printf ("%3lu ", (unsigned long) i);
-    dump_literal (lits[i]);
-    putchar ('\n');
-  }
-}
-
 static char buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
 
 static void
@@ -104,20 +54,10 @@ clear_temp_buffer (void)
 }
 
 static const char *
-lit_id_to_str (literal_index_t id)
+lit_cp_to_str (lit_cpointer_t cp)
 {
-  literal lit = lexer_get_literal_by_id (id);
-  if (lit.type == LIT_STR || lit.type == LIT_MAGIC_STR || lit.type == LIT_MAGIC_STR_EX)
-  {
-    return (char *) literal_to_zt (lit);
-  }
-  else
-  {
-    JERRY_ASSERT (lit.type == LIT_NUMBER);
-    clear_temp_buffer ();
-    ecma_number_to_zt_string (lit.data.num, (ecma_char_t *) buff, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
-    return buff;
-  }
+  literal_t lit = lit_get_literal_by_cp (cp);
+  return lit_literal_to_str_internal_buf (lit);
 }
 
 static const char *
@@ -146,7 +86,7 @@ tmp_id_to_str (idx_t id)
 }
 
 static const char *
-var_to_str (opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc, uint8_t current_arg)
+var_to_str (opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint8_t current_arg)
 {
   raw_opcode raw = *(raw_opcode*) &opcode;
   if (raw.uids[current_arg] == LITERAL_TO_REWRITE)
@@ -155,9 +95,8 @@ var_to_str (opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc, uin
     {
       return "hz";
     }
-    JERRY_ASSERT (lit_ids[current_arg - 1] != NOT_A_LITERAL
-                  && lit_ids[current_arg - 1] != INVALID_LITERAL);
-    return lit_id_to_str (lit_ids[current_arg - 1]);
+    JERRY_ASSERT (lit_ids[current_arg - 1].packed_value != MEM_CP_NULL);
+    return lit_cp_to_str (lit_ids[current_arg - 1]);
   }
   else if (raw.uids[current_arg] >= 128)
   {
@@ -165,14 +104,15 @@ var_to_str (opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc, uin
   }
   else
   {
-    return lit_id_to_str (serializer_get_literal_id_by_uid (raw.uids[current_arg], oc));
+    return lit_cp_to_str (serializer_get_literal_cp_by_uid (raw.uids[current_arg], oc));
   }
 }
 
 static void
-pp_printf (const char *format, opcode_t opcode, literal_index_t lit_ids[], opcode_counter_t oc)
+pp_printf (const char *format, opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint8_t start_arg)
 {
-  uint8_t current_arg = 1;
+  uint8_t current_arg = start_arg;
+  JERRY_ASSERT (current_arg <= 3);
   while (*format)
   {
     if (*format != '%')
@@ -187,12 +127,14 @@ pp_printf (const char *format, opcode_t opcode, literal_index_t lit_ids[], opcod
     {
       case 'd':
       {
+        JERRY_ASSERT (current_arg <= 3);
         raw_opcode raw = *(raw_opcode*) &opcode;
         printf ("%d", raw.uids[current_arg]);
         break;
       }
       case 's':
       {
+        JERRY_ASSERT (current_arg <= 3);
         printf ("%s", var_to_str (opcode, lit_ids, oc, current_arg));
         break;
       }
@@ -208,7 +150,7 @@ pp_printf (const char *format, opcode_t opcode, literal_index_t lit_ids[], opcod
 }
 
 #define PP_OP(op_name, format) \
-  case NAME_TO_ID (op_name): pp_printf (format, opm.op, opm.lit_id, oc); break;
+  case NAME_TO_ID (op_name): pp_printf (format, opm.op, opm.lit_id, oc, 1); break;
 #define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
 #define OC(i, j) __extension__({ raw_opcode* raw = (raw_opcode *) &opm.op; \
                                  calc_opcode_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
@@ -326,7 +268,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     {
       if (opm.op.data.call_n.arg_list == 0)
       {
-        printf ("%s = %s ();", VAR (1), VAR (2));
+        pp_printf ("%s = %s ();", opm.op, opm.lit_id, oc, 1);
       }
       else
       {
@@ -362,7 +304,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     {
       if (opm.op.data.construct_n.arg_list == 0)
       {
-        printf ("%s = new %s;", VAR (1), VAR (2));
+        pp_printf ("%s = new %s;", opm.op, opm.lit_id, oc, 1);
       }
       else
       {
@@ -394,7 +336,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
         }
         else
         {
-          printf ("%s = function %s ();", VAR (1), VAR (2));
+          pp_printf ("%s = function %s ();", opm.op, opm.lit_id, oc, 1);
         }
       }
       else
@@ -473,13 +415,12 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             {
               case NAME_TO_ID (call_n):
               {
-                printf ("%s = %s (", var_to_str (start_op, NULL, start, 1),
-                        var_to_str (start_op, NULL, start, 2));
+                pp_printf ("%s = %s (", start_op, NULL, start, 1);
                 break;
               }
               case NAME_TO_ID (native_call):
               {
-                printf ("%s = ", var_to_str (start_op, NULL, start, 1));
+                pp_printf ("%s = ", start_op, NULL, start, 1);
                 switch (start_op.data.native_call.name)
                 {
                   case OPCODE_NATIVE_CALL_LED_TOGGLE: printf ("LEDToggle ("); break;
@@ -494,36 +435,34 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
               }
               case NAME_TO_ID (construct_n):
               {
-                printf ("%s = new %s (", var_to_str (start_op, NULL, start, 1),
-                        var_to_str (start_op, NULL, start, 2));
+                pp_printf ("%s = new %s (", start_op, NULL, start, 1);
                 break;
               }
               case NAME_TO_ID (func_decl_n):
               {
-                printf ("function %s (", var_to_str (start_op, NULL, start, 1));
+                pp_printf ("function %s (", start_op, NULL, start, 1);
                 break;
               }
               case NAME_TO_ID (func_expr_n):
               {
                 if (start_op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
                 {
-                  printf ("%s = function (", var_to_str (start_op, NULL, start, 1));
+                  pp_printf ("%s = function (", start_op, NULL, start, 1);
                 }
                 else
                 {
-                  printf ("%s = function %s (", var_to_str (start_op, NULL, start, 1),
-                          var_to_str (start_op, NULL, start, 2));
+                  pp_printf ("%s = function %s (", start_op, NULL, start, 1);
                 }
                 break;
               }
               case NAME_TO_ID (array_decl):
               {
-                printf ("%s = [", var_to_str (start_op, NULL, start, 1));
+                pp_printf ("%s = [", start_op, NULL, start, 1);
                 break;
               }
               case NAME_TO_ID (obj_decl):
               {
-                printf ("%s = {", var_to_str (start_op, NULL, start, 1));
+                pp_printf ("%s = {", start_op, NULL, start, 1);
                 break;
               }
               default:
@@ -542,30 +481,27 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
                   {
                     case OPCODE_META_TYPE_THIS_ARG:
                     {
-                      printf ("this_arg = %s", var_to_str (meta_op, NULL, counter, 2));
+                      pp_printf ("this_arg = %s", meta_op, NULL, counter, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG:
                     {
-                      printf ("%s", var_to_str (meta_op, NULL, counter, 2));
+                      pp_printf ("%s", meta_op, NULL, counter, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_DATA:
                     {
-                      printf ("%s:%s", var_to_str (meta_op, NULL, counter, 2),
-                              var_to_str (meta_op, NULL, counter, 3));
+                      pp_printf ("%s:%s", meta_op, NULL, counter, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_GETTER:
                     {
-                      printf ("%s = get %s ();", var_to_str (meta_op, NULL, counter, 2),
-                              var_to_str (meta_op, NULL, counter, 3));
+                      pp_printf ("%s = get %s ();", meta_op, NULL, counter, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_SETTER:
                     {
-                      printf ("%s = set (%s);", var_to_str (meta_op, NULL, counter, 2),
-                              var_to_str (meta_op, NULL, counter, 3));
+                      pp_printf ("%s = set (%s);", meta_op, NULL, counter, 2);
                       break;
                     }
                     default:

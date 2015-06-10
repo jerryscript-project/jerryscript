@@ -66,9 +66,9 @@ static ecma_length_t ecma_magic_string_max_length;
 #endif /* !JERRY_NDEBUG */
 
 static void
-ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p,
-                                      literal_index_t lit_index,
-                                      bool is_stack_var);
+ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p,
+                                   lit_cpointer_t lit_index,
+                                   bool is_stack_var);
 static void
 ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p,
                                             ecma_magic_string_id_t magic_string_id,
@@ -370,42 +370,42 @@ ecma_get_magic_string_ex_count (void)
  * Initialize ecma-string descriptor with string described by index in literal table
  */
 static void
-ecma_init_ecma_string_from_lit_index (ecma_string_t *string_p, /**< descriptor to initialize */
-                                      literal_index_t lit_index, /**< index in the literal table */
-                                      bool is_stack_var) /**< flag indicating whether the string descriptor
+ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p, /**< descriptor to initialize */
+                                   lit_cpointer_t lit_cp, /**< compressed pointer to literal */
+                                   bool is_stack_var) /**< flag indicating whether the string descriptor
                                                               is placed on stack (true) or in the heap (false) */
 {
 #ifndef JERRY_NDEBUG
   JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
 #endif /* !JERRY_NDEBUG */
 
-  const literal lit = serializer_get_literal_by_id (lit_index);
-  if (lit.type == LIT_MAGIC_STR)
+  literal_t lit = lit_get_literal_by_cp (lit_cp);
+  if (lit->get_type () == LIT_MAGIC_STR_T)
   {
     ecma_init_ecma_string_from_magic_string_id (string_p,
-                                                lit.data.magic_str_id,
+                                                lit_magic_record_get_magic_str_id (lit),
                                                 is_stack_var);
 
     return;
   }
-  else if (lit.type == LIT_MAGIC_STR_EX)
+  else if (lit->get_type () == LIT_MAGIC_STR_EX_T)
   {
     ecma_init_ecma_string_from_magic_string_ex_id (string_p,
-                                                   lit.data.magic_str_ex_id,
+                                                   lit_magic_record_ex_get_magic_str_id (lit),
                                                    is_stack_var);
-
     return;
   }
-  JERRY_ASSERT (lit.type == LIT_STR);
+
+  JERRY_ASSERT (lit->get_type () == LIT_STR_T);
 
   string_p->refs = 1;
   string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_LIT_TABLE;
-  string_p->hash = lit.data.lp.hash;
+  string_p->hash = lit_charset_literal_get_hash (lit);
 
   string_p->u.common_field = 0;
-  string_p->u.lit_index = lit_index;
-} /* ecma_init_ecma_string_from_lit_index */
+  string_p->u.lit_cp = lit_cp;
+} /* ecma_init_ecma_string_from_lit_cp */
 
 /**
  * Initialize ecma-string descriptor with specified magic string
@@ -591,12 +591,12 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
  * with string described by index in literal table
  */
 void
-ecma_new_ecma_string_on_stack_from_lit_index (ecma_string_t *string_p, /**< pointer to the ecma-string
+ecma_new_ecma_string_on_stack_from_lit_cp (ecma_string_t *string_p, /**< pointer to the ecma-string
                                                                             descriptor to initialize */
-                                              literal_index_t lit_index) /**< index in the literal table */
+                                           lit_cpointer_t lit_cp) /**< compressed pointer to literal */
 {
-  ecma_init_ecma_string_from_lit_index (string_p, lit_index, true);
-} /* ecma_new_ecma_string_on_stack_from_lit_index */
+  ecma_init_ecma_string_from_lit_cp (string_p, lit_cp, true);
+} /* ecma_new_ecma_string_on_stack_from_lit_cp */
 
 /**
  * Allocate new ecma-string and fill it with reference to string literal
@@ -604,14 +604,14 @@ ecma_new_ecma_string_on_stack_from_lit_index (ecma_string_t *string_p, /**< poin
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t*
-ecma_new_ecma_string_from_lit_index (literal_index_t lit_index) /**< index in the literal table */
+ecma_new_ecma_string_from_lit_cp (lit_cpointer_t lit_cp) /**< index in the literal table */
 {
   ecma_string_t* string_desc_p = ecma_alloc_string ();
 
-  ecma_init_ecma_string_from_lit_index (string_desc_p, lit_index, false);
+  ecma_init_ecma_string_from_lit_cp (string_desc_p, lit_cp, false);
 
   return string_desc_p;
-} /* ecma_new_ecma_string_from_lit_index */
+} /* ecma_new_ecma_string_from_lit_cp */
 
 /**
  * Initialize ecma-string descriptor placed on stack with specified magic string
@@ -1037,13 +1037,9 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      const literal lit = serializer_get_literal_by_id (string_desc_p->u.lit_index);
-      JERRY_ASSERT (lit.type == LIT_STR);
-      const ecma_char_t *str_p = literal_to_zt (lit);
-      JERRY_ASSERT (str_p != NULL);
-
-      ecma_copy_zt_string_to_buffer (str_p, buffer_p, required_buffer_size);
-
+      literal_t lit = lit_get_literal_by_cp (string_desc_p->u.lit_cp);
+      JERRY_ASSERT (lit->get_type () == LIT_STR_T);
+      lit_literal_to_charset (lit, buffer_p, (size_t) required_buffer_size);
       break;
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
@@ -1141,7 +1137,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   {
     if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
     {
-      JERRY_ASSERT (string1_p->u.lit_index != string2_p->u.lit_index);
+      JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
 
       return false;
     }
@@ -1214,7 +1210,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
       {
-        JERRY_ASSERT (string1_p->u.lit_index != string2_p->u.lit_index);
+        JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
 
         return false;
       }
@@ -1346,74 +1342,56 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   ecma_char_t zt_string1_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
   ecma_char_t zt_string2_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
 
-  if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  ssize_t req_size = ecma_string_to_zt_string (string1_p,
+                                               zt_string1_buffer,
+                                               sizeof (zt_string1_buffer));
+
+  if (req_size < 0)
   {
-    const literal lit = serializer_get_literal_by_id (string1_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR);
-    zt_string1_p = literal_to_zt (lit);
+    ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+    if (heap_buffer_p == NULL)
+    {
+      jerry_fatal (ERR_OUT_OF_MEMORY);
+    }
+
+    ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
+                                                     heap_buffer_p,
+                                                     -req_size);
+
+    JERRY_ASSERT (bytes_copied > 0);
+
+    zt_string1_p = heap_buffer_p;
+    is_zt_string1_on_heap = true;
   }
   else
   {
-    ssize_t req_size = ecma_string_to_zt_string (string1_p,
-                                                 zt_string1_buffer,
-                                                 sizeof (zt_string1_buffer));
-
-    if (req_size < 0)
-    {
-      ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
-      if (heap_buffer_p == NULL)
-      {
-        jerry_fatal (ERR_OUT_OF_MEMORY);
-      }
-
-      ssize_t bytes_copied = ecma_string_to_zt_string (string1_p,
-                                                       heap_buffer_p,
-                                                       -req_size);
-
-      JERRY_ASSERT (bytes_copied > 0);
-
-      zt_string1_p = heap_buffer_p;
-      is_zt_string1_on_heap = true;
-    }
-    else
-    {
-      zt_string1_p = zt_string1_buffer;
-    }
+    zt_string1_p = zt_string1_buffer;
   }
 
-  if (string2_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  req_size = ecma_string_to_zt_string (string2_p,
+                                       zt_string2_buffer,
+                                       sizeof (zt_string2_buffer));
+
+  if (req_size < 0)
   {
-    const literal lit = serializer_get_literal_by_id (string2_p->u.lit_index);
-    JERRY_ASSERT (lit.type == LIT_STR);
-    zt_string2_p = literal_to_zt (lit);
+    ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
+    if (heap_buffer_p == NULL)
+    {
+      jerry_fatal (ERR_OUT_OF_MEMORY);
+    }
+
+    ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
+                                                     heap_buffer_p,
+                                                     -req_size);
+
+    JERRY_ASSERT (bytes_copied > 0);
+
+    zt_string2_p = heap_buffer_p;
+    is_zt_string2_on_heap = true;
   }
   else
   {
-    ssize_t req_size = ecma_string_to_zt_string (string2_p,
-                                                 zt_string2_buffer,
-                                                 sizeof (zt_string2_buffer));
-
-    if (req_size < 0)
-    {
-      ecma_char_t *heap_buffer_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) -req_size, MEM_HEAP_ALLOC_SHORT_TERM);
-      if (heap_buffer_p == NULL)
-      {
-        jerry_fatal (ERR_OUT_OF_MEMORY);
-      }
-
-      ssize_t bytes_copied = ecma_string_to_zt_string (string2_p,
-                                                       heap_buffer_p,
-                                                       -req_size);
-
-      JERRY_ASSERT (bytes_copied > 0);
-
-      zt_string2_p = heap_buffer_p;
-      is_zt_string2_on_heap = true;
-    }
-    else
-    {
-      zt_string2_p = zt_string2_buffer;
-    }
+    zt_string2_p = zt_string2_buffer;
   }
 
   bool is_first_less_than_second = ecma_compare_zt_strings_relational (zt_string1_p,
@@ -1445,9 +1423,9 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
   if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    const literal lit = serializer_get_literal_by_id (string_p->u.lit_index);
-
-    return lit.data.lp.length;
+    literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
+    JERRY_ASSERT (lit->get_type () == LIT_STR_T);
+    return lit_charset_record_get_length (lit);
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {

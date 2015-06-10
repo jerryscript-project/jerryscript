@@ -19,12 +19,10 @@
 #include "jrt.h"
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
 #include "vm.h"
-#include "literal.h"
 #include "scopes-tree.h"
 
 void pp_opcode (opcode_counter_t, opcode_t, bool);
 void pp_op_meta (opcode_counter_t, op_meta, bool);
-void pp_literals (const literal *, literal_index_t);
 #endif // JERRY_ENABLE_PRETTY_PRINTER
 
 #endif // PRETTY_PRINTER

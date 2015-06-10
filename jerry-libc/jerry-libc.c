@@ -96,7 +96,7 @@ memcmp (const void *s1, /**< first area */
 /**
  * memcpy
  */
-void *
+void *  __attr_used___ // FIXME
 memcpy (void *s1, /**< destination */
         const void *s2, /**< source */
         size_t n) /**< bytes number */

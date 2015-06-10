@@ -15,8 +15,6 @@
 
 #include "lit-id-hash-table.h"
 #include "bytecode-data.h"
-#include "mem-heap.h"
-#include "jrt-libc-includes.h"
 
 lit_id_hash_table *
 lit_id_hash_table_init (size_t buckets_count, size_t blocks_count)
@@ -24,11 +22,11 @@ lit_id_hash_table_init (size_t buckets_count, size_t blocks_count)
   size_t size = mem_heap_recommend_allocation_size (sizeof (lit_id_hash_table));
   lit_id_hash_table *table = (lit_id_hash_table *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
   memset (table, 0, size);
-  size = mem_heap_recommend_allocation_size (sizeof (literal_index_t) * buckets_count);
-  table->raw_buckets = (literal_index_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
+  size = mem_heap_recommend_allocation_size (sizeof (lit_cpointer_t) * buckets_count);
+  table->raw_buckets = (lit_cpointer_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
   memset (table->raw_buckets, 0, size);
-  size = mem_heap_recommend_allocation_size (sizeof (literal_index_t *) * blocks_count);
-  table->buckets = (literal_index_t **) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
+  size = mem_heap_recommend_allocation_size (sizeof (lit_cpointer_t *) * blocks_count);
+  table->buckets = (lit_cpointer_t **) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
   memset (table->buckets, 0, size);
   table->current_bucket_pos = 0;
   return table;
@@ -44,7 +42,7 @@ lit_id_hash_table_free (lit_id_hash_table *table)
 }
 
 void
-lit_id_hash_table_insert (lit_id_hash_table *table, idx_t uid, opcode_counter_t oc, literal_index_t lit_id)
+lit_id_hash_table_insert (lit_id_hash_table *table, idx_t uid, opcode_counter_t oc, lit_cpointer_t lit_cp)
 {
   JERRY_ASSERT (table);
   size_t block_id = oc / BLOCK_SIZE;
@@ -52,11 +50,11 @@ lit_id_hash_table_insert (lit_id_hash_table *table, idx_t uid, opcode_counter_t 
   {
     table->buckets[block_id] = table->raw_buckets + table->current_bucket_pos;
   }
-  table->buckets[block_id][uid] = lit_id;
+  table->buckets[block_id][uid] = lit_cp;
   table->current_bucket_pos++;
 }
 
-literal_index_t
+lit_cpointer_t
 lit_id_hash_table_lookup (lit_id_hash_table *table, idx_t uid, opcode_counter_t oc)
 {
   JERRY_ASSERT (table);

@@ -15,9 +15,6 @@
 
 #include "scopes-tree.h"
 #include "bytecode-data.h"
-#include "mem-heap.h"
-#include "jrt-libc-includes.h"
-#include "lexer.h"
 
 #define OPCODE(op) (__op__idx_##op)
 #define HASH_SIZE 128
@@ -103,7 +100,7 @@ scopes_tree_count_opcodes (scopes_tree t)
 static uint16_t
 lit_id_hash (void * lit_id)
 {
-  return *(literal_index_t *) lit_id % HASH_SIZE;
+  return ((lit_cpointer_t *) lit_id)->packed_value % HASH_SIZE;
 }
 
 static void
@@ -117,7 +114,7 @@ start_new_block_if_necessary (void)
       hash_table_free (lit_id_to_uid);
       lit_id_to_uid = null_hash;
     }
-    lit_id_to_uid = hash_table_init (sizeof (literal_index_t), sizeof (idx_t), HASH_SIZE, lit_id_hash,
+    lit_id_to_uid = hash_table_init (sizeof (lit_cpointer_t), sizeof (idx_t), HASH_SIZE, lit_id_hash,
                                      MEM_HEAP_ALLOC_SHORT_TERM);
   }
 }
@@ -157,8 +154,8 @@ change_uid (op_meta *om, lit_id_hash_table *lit_ids, uint16_t mask)
     {
       if (get_uid (om, i) == LITERAL_TO_REWRITE)
       {
-        JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
-        literal_index_t lit_id = om->lit_id[i];
+        JERRY_ASSERT (om->lit_id[i].packed_value != MEM_CP_NULL);
+        lit_cpointer_t lit_id = om->lit_id[i];
         idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
@@ -173,12 +170,12 @@ change_uid (op_meta *om, lit_id_hash_table *lit_ids, uint16_t mask)
       }
       else
       {
-        JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+        JERRY_ASSERT (om->lit_id[i].packed_value == MEM_CP_NULL);
       }
     }
     else
     {
-      JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+      JERRY_ASSERT (om->lit_id[i].packed_value == MEM_CP_NULL);
     }
   }
 }
@@ -192,8 +189,8 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
     {
       if (get_uid (om, i) == LITERAL_TO_REWRITE)
       {
-        JERRY_ASSERT (om->lit_id[i] != NOT_A_LITERAL);
-        literal_index_t lit_id = om->lit_id[i];
+        JERRY_ASSERT (om->lit_id[i].packed_value != MEM_CP_NULL);
+        lit_cpointer_t lit_id = om->lit_id[i];
         idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
@@ -206,12 +203,12 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
       }
       else
       {
-        JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+        JERRY_ASSERT (om->lit_id[i].packed_value == MEM_CP_NULL);
       }
     }
     else
     {
-      JERRY_ASSERT (om->lit_id[i] == NOT_A_LITERAL);
+      JERRY_ASSERT (om->lit_id[i].packed_value == MEM_CP_NULL);
     }
   }
 }

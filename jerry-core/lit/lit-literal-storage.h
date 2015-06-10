@@ -238,11 +238,12 @@ public:
    *
    * @return magic string id
    */
-  ecma_magic_string_id_t get_magic_str_id () const
+  template <typename magic_string_id_t>
+  magic_string_id_t get_magic_str_id () const
   {
     uint32_t id = get_field (magic_field_pos, magic_field_width);
-    JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
-    return (ecma_magic_string_id_t) id;
+    // JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
+    return (magic_string_id_t) id;
   } /* get_magic_str_id */
 
 private:
@@ -254,7 +255,8 @@ private:
     JERRY_ASSERT (size == get_size ());
   } /* set_size */
 
-  void set_magic_str_id (ecma_magic_string_id_t id)
+  template <typename magic_string_id_t>
+  void set_magic_str_id (magic_string_id_t id)
   {
     set_field (magic_field_pos, magic_field_width, id);
   } /* set_magic_str_id */
@@ -293,7 +295,6 @@ private:
 
   static const size_t _size = RCS_DYN_STORAGE_LENGTH_UNIT;
 }; /* lit_magic_record_t */
-
 
 /**
  * Number record
@@ -412,11 +413,13 @@ public:
   {
     LIT_STR = _first_type_id,
     LIT_MAGIC_STR,
+    LIT_MAGIC_STR_EX,
     LIT_NUMBER
   };
 
   lit_charset_record_t *create_charset_record (const ecma_char_t *, size_t);
   lit_magic_record_t *create_magic_record (ecma_magic_string_id_t);
+  lit_magic_record_t *create_magic_record_ex (ecma_magic_string_ex_id_t);
   lit_number_record_t *create_number_record (ecma_number_t);
 
   void dump ();
@@ -429,6 +432,7 @@ private:
 
 #define LIT_STR_T (lit_literal_storage_t::LIT_STR)
 #define LIT_MAGIC_STR_T (lit_literal_storage_t::LIT_MAGIC_STR)
+#define LIT_MAGIC_STR_EX_T (lit_literal_storage_t::LIT_MAGIC_STR_EX)
 #define LIT_NUMBER_T (lit_literal_storage_t::LIT_NUMBER)
 
 #endif /* LIT_LITERAL_STORAGE_H */

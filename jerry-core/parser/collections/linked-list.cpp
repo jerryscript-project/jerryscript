@@ -15,9 +15,7 @@
 
 #include "linked-list.h"
 #include "jrt-libc-includes.h"
-#include "jrt.h"
 #include "mem-heap.h"
-#include "lp-string.h"
 
 typedef struct linked_list_header
 {

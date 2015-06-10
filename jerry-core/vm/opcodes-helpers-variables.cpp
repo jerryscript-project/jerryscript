@@ -91,9 +91,9 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    const literal_index_t lit_id = serializer_get_literal_id_by_uid (var_idx, int_data->pos);
-    JERRY_ASSERT (lit_id != INVALID_LITERAL);
-    ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->pos);
+    JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
+    ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
     ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
                                                                         &var_name_string);
@@ -158,9 +158,9 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    const literal_index_t lit_id = serializer_get_literal_id_by_uid (var_idx, lit_oc);
-    JERRY_ASSERT (lit_id != INVALID_LITERAL);
-    ecma_new_ecma_string_on_stack_from_lit_index (&var_name_string, lit_id);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, lit_oc);
+    JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
+    ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
     ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
                                                                         &var_name_string);

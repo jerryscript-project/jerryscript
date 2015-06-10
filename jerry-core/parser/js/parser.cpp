@@ -59,11 +59,25 @@ token_is (token_type tt)
   return tok.type == tt;
 }
 
-static literal_index_t
+static uint16_t
 token_data (void)
 {
   return tok.uid;
 }
+
+/**
+ * Get token data as `lit_cpointer_t`
+ *
+ * @return compressed pointer to token data
+ */
+static lit_cpointer_t
+token_data_as_lit_cp (void)
+{
+  lit_cpointer_t cp;
+  cp.packed_value = tok.uid;
+
+  return cp;
+} /* token_data_as_lit_cp */
 
 static void
 skip_token (void)
@@ -158,21 +172,18 @@ parse_property_name (void)
     case TOK_STRING:
     case TOK_NUMBER:
     {
-      return literal_operand (token_data ());
+      return literal_operand (token_data_as_lit_cp ());
     }
     case TOK_SMALL_INT:
     {
-      const literal lit = create_literal_from_num ((ecma_number_t) token_data ());
-      lexer_add_keyword_or_numeric_literal_if_not_present (lit);
-      const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
-      return literal_operand (lit_id);
+      literal_t lit = lit_find_or_create_literal_from_num ((ecma_number_t) token_data ());
+      return literal_operand (lit_cpointer_t::compress (lit));
     }
     case TOK_KEYWORD:
     {
-      const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string ((keyword) token_data ()));
-      lexer_add_keyword_or_numeric_literal_if_not_present (lit);
-      const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
-      return literal_operand (lit_id);
+      const char *s = lexer_keyword_to_string ((keyword) token_data ());
+      literal_t lit = lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
+      return literal_operand (lit_cpointer_t::compress (lit));
     }
     default:
     {
@@ -207,11 +218,11 @@ parse_property_assignment (void)
   {
     bool is_setter;
 
-    if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get"))
+    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "get"))
     {
       is_setter = false;
     }
-    else if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
+    else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "set"))
     {
       is_setter = true;
     }
@@ -344,7 +355,7 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       case VARG_FUNC_EXPR:
       {
         current_token_must_be (TOK_NAME);
-        op = literal_operand (token_data ());
+        op = literal_operand (token_data_as_lit_cp ());
         syntax_add_varg (op);
         syntax_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
         break;
@@ -451,7 +462,7 @@ parse_function_declaration (void)
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
   token_after_newlines_must_be (TOK_NAME);
-  const operand name = literal_operand (token_data ());
+  const operand name = literal_operand (token_data_as_lit_cp ());
 
   skip_newlines ();
   STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
@@ -495,7 +506,7 @@ parse_function_expression (void)
   skip_newlines ();
   if (token_is (TOK_NAME))
   {
-    const operand name = literal_operand (token_data ());
+    const operand name = literal_operand (token_data_as_lit_cp ());
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
   }
@@ -556,8 +567,8 @@ parse_literal (void)
 {
   switch (tok.type)
   {
-    case TOK_NUMBER: return dump_number_assignment_res (token_data ());
-    case TOK_STRING: return dump_string_assignment_res (token_data ());
+    case TOK_NUMBER: return dump_number_assignment_res (token_data_as_lit_cp ());
+    case TOK_STRING: return dump_string_assignment_res (token_data_as_lit_cp ());
     case TOK_NULL: return dump_null_assignment_res ();
     case TOK_BOOL: return dump_boolean_assignment_res ((bool) token_data ());
     case TOK_SMALL_INT: return dump_smallint_assignment_res ((idx_t) token_data ());
@@ -592,7 +603,7 @@ parse_primary_expression (void)
     case TOK_SMALL_INT:
     case TOK_NUMBER:
     case TOK_STRING: return parse_literal ();
-    case TOK_NAME: return literal_operand (token_data ());
+    case TOK_NAME: return literal_operand (token_data_as_lit_cp ());
     case TOK_OPEN_SQUARE: return parse_array_literal ();
     case TOK_OPEN_BRACE: return parse_object_literal ();
     case TOK_OPEN_PAREN:
@@ -680,17 +691,17 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
       skip_newlines ();
       if (token_is (TOK_NAME))
       {
-        prop = dump_string_assignment_res (token_data ());
+        prop = dump_string_assignment_res (token_data_as_lit_cp ());
       }
       else if (token_is (TOK_KEYWORD))
       {
-        const literal lit = create_literal_from_str_compute_len (lexer_keyword_to_string ((keyword) token_data ()));
-        const literal_index_t lit_id = lexer_lookup_literal_uid (lit);
-        if (lit_id == INVALID_LITERAL)
+        const char *s = lexer_keyword_to_string ((keyword) token_data ());
+        literal_t lit = lit_find_literal_by_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
+        if (lit == NULL)
         {
           EMIT_ERROR ("Expected identifier");
         }
-        prop = dump_string_assignment_res (lit_id);
+        prop = dump_string_assignment_res (lit_cpointer_t::compress (lit));
       }
       else
       {
@@ -769,7 +780,7 @@ parse_call_expression (operand *this_arg_gl, operand *prop_gl)
       else if (tok.type == TOK_DOT)
       {
         token_after_newlines_must_be (TOK_NAME);
-        prop = dump_string_assignment_res (token_data ());
+        prop = dump_string_assignment_res (token_data_as_lit_cp ());
       }
       expr = dump_prop_getter_res (expr, prop);
       skip_newlines ();
@@ -1557,7 +1568,7 @@ static void
 parse_variable_declaration (void)
 {
   current_token_must_be (TOK_NAME);
-  const operand name = literal_operand (token_data ());
+  const operand name = literal_operand (token_data_as_lit_cp ());
 
   skip_newlines ();
   if (token_is (TOK_EQ))
@@ -2036,7 +2047,7 @@ parse_catch_clause (void)
 
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   token_after_newlines_must_be (TOK_NAME);
-  const operand exception = literal_operand (token_data ());
+  const operand exception = literal_operand (token_data_as_lit_cp ());
   syntax_check_for_eval_and_arguments_in_strict_mode (exception, is_strict_mode (), tok.loc);
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
 
@@ -2471,8 +2482,8 @@ static void process_keyword_names ()
     skip_newlines ();
     if (token_is (TOK_COLON))
     {
-      lexer_add_keyword_or_numeric_literal_if_not_present (
-        create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+      const char *s = lexer_keyword_to_string (kw);
+      lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
     }
     else
     {
@@ -2481,8 +2492,8 @@ static void process_keyword_names ()
   }
   else if (token_is (TOK_NAME))
   {
-    if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "get")
-        || literal_equal_type_s (lexer_get_literal_by_id (token_data ()), "set"))
+    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "get")
+        || lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "set"))
     {
       skip_newlines ();
       if (token_is (TOK_KEYWORD))
@@ -2491,8 +2502,8 @@ static void process_keyword_names ()
         skip_newlines ();
         if (token_is (TOK_OPEN_PAREN))
         {
-          lexer_add_keyword_or_numeric_literal_if_not_present (
-            create_literal_from_str_compute_len (lexer_keyword_to_string (kw)));
+          const char *s = lexer_keyword_to_string (kw);
+          lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
         }
         else
         {
@@ -2581,9 +2592,9 @@ skip_parens (void)
 }
 
 static bool
-var_declared (literal_index_t var_id)
+var_declared (lit_cpointer_t var_cp)
 {
-  return dumper_variable_declaration_exists (var_id);
+  return dumper_variable_declaration_exists (var_cp);
 }
 
 static void
@@ -2596,12 +2607,12 @@ preparse_var_decls (void)
   {
     if (token_is (TOK_NAME))
     {
-      if (!var_declared (token_data ()))
+      if (!var_declared (token_data_as_lit_cp ()))
       {
-        syntax_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data ()),
+        syntax_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
                                                             is_strict_mode (),
                                                             tok.loc);
-        dump_variable_declaration (token_data ());
+        dump_variable_declaration (token_data_as_lit_cp ());
       }
       skip_token ();
       continue;
@@ -2653,7 +2664,8 @@ preparse_scope (bool is_global)
   bool is_ref_eval_identifier = false;
   bool is_use_strict = false;
 
-  if (token_is (TOK_STRING) && literal_equal_s (lexer_get_literal_by_id (token_data ()), "use strict"))
+  if (token_is (TOK_STRING) && lit_literal_equal_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
+                                                     (const ecma_char_t *) "use strict"))
   {
     scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
     is_use_strict = true;
@@ -2690,14 +2702,13 @@ preparse_scope (bool is_global)
     {
       if (token_is (TOK_NAME))
       {
-        if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()),
-                                  "arguments"))
+        if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
+                                       (const ecma_char_t *) "arguments"))
         {
           is_ref_arguments_identifier = true;
         }
-
-        if (literal_equal_type_s (lexer_get_literal_by_id (token_data ()),
-                                  "eval"))
+        else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
+                                            (const ecma_char_t *) "eval"))
         {
           is_ref_eval_identifier = true;
         }
@@ -2774,10 +2785,9 @@ parser_parse_program (void)
   JERRY_ASSERT (token_is (TOK_EOF));
   dump_exit ();
 
-  serializer_dump_literals (lexer_get_literals (), lexer_get_literals_count ());
+  serializer_dump_literals ();
   serializer_merge_scopes_into_bytecode ();
   serializer_set_scope (NULL);
-  serializer_set_strings_buffer (lexer_get_strings_cache ());
 
   scopes_tree_free (STACK_TOP (scopes));
   STACK_DROP (scopes, 1);

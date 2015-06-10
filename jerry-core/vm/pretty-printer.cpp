@@ -266,15 +266,9 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
     }
     case NAME_TO_ID (call_n):
     {
-      if (opm.op.data.call_n.arg_list == 0)
-      {
-        pp_printf ("%s = %s ();", opm.op, opm.lit_id, oc, 1);
-      }
-      else
-      {
-        vargs_num = opm.op.data.call_n.arg_list;
-        seen_vargs = 0;
-      }
+      vargs_num = opm.op.data.call_n.arg_list;
+      seen_vargs = 0;
+
       break;
     }
     case NAME_TO_ID (native_call):
@@ -381,13 +375,17 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
           printf ("unknown meta;");
           break;
         }
-        case OPCODE_META_TYPE_THIS_ARG:
+        case OPCODE_META_TYPE_CALL_SITE_INFO:
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_VARG_PROP_DATA:
         case OPCODE_META_TYPE_VARG_PROP_GETTER:
         case OPCODE_META_TYPE_VARG_PROP_SETTER:
         {
-          seen_vargs++;
+          if (opm.op.data.meta.type != OPCODE_META_TYPE_CALL_SITE_INFO)
+          {
+            seen_vargs++;
+          }
+
           if (seen_vargs == vargs_num)
           {
             bool found = false;
@@ -473,15 +471,26 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             for (opcode_counter_t counter = start; counter <= oc; counter++)
             {
               opcode_t meta_op = serializer_get_opcode (counter);
+
               switch (meta_op.op_idx)
               {
                 case NAME_TO_ID (meta):
                 {
                   switch (meta_op.data.meta.type)
                   {
-                    case OPCODE_META_TYPE_THIS_ARG:
+                    case OPCODE_META_TYPE_CALL_SITE_INFO:
                     {
-                      pp_printf ("this_arg = %s", meta_op, NULL, counter, 2);
+                      opcode_call_flags_t call_flags = (opcode_call_flags_t) meta_op.data.meta.data_1;
+
+                      if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+                      {
+                        pp_printf ("this_arg = %s", meta_op, NULL, counter, 3);
+                      }
+                      if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
+                      {
+                        printf ("['direct call to eval' form]");
+                      }
+
                       break;
                     }
                     case OPCODE_META_TYPE_VARG:

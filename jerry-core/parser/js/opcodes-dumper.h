@@ -61,6 +61,8 @@ void dumper_finish_scope (void);
 bool dumper_is_intrinsic (operand);
 operand dump_intrinsic (operand, operand);
 
+extern bool dumper_is_eval_literal (operand);
+
 void dump_boolean_assignment (operand, bool);
 operand dump_boolean_assignment_res (bool);
 void dump_string_assignment (operand, lit_cpointer_t);
@@ -78,7 +80,7 @@ operand dump_variable_assignment_res (operand);
 
 void dump_varg_header_for_rewrite (varg_list_type, operand);
 operand rewrite_varg_header_set_args_count (uint8_t);
-void dump_this_arg (operand);
+void dump_call_additional_info (opcode_call_flags_t, operand);
 void dump_varg (operand);
 
 void dump_prop_name_and_value (operand, operand);

@@ -653,44 +653,40 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  bool this_arg_var_idx_set = false;
   idx_t this_arg_var_idx = INVALID_VALUE;
-  idx_t args_number;
+
+  opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
 
   opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_THIS_ARG)
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
   {
-    this_arg_var_idx = next_opcode.data.meta.data_1;
-    JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+    call_flags = (opcode_call_flags_t) next_opcode.data.meta.data_1;
 
-    this_arg_var_idx_set = true;
-
-    JERRY_ASSERT (args_number_idx > 0);
-    args_number = (idx_t) (args_number_idx - 1);
+    if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+    {
+      this_arg_var_idx = next_opcode.data.meta.data_2;
+      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+    }
 
     int_data->pos++;
   }
-  else
-  {
-    args_number = args_number_idx;
-  }
 
-  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
+  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number_idx, ecma_value_t);
 
   ecma_length_t args_read;
   ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
-                                                               args_number,
+                                                               args_number_idx,
                                                                arg_values,
                                                                &args_read);
 
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
-    JERRY_ASSERT (args_read == args_number);
+    JERRY_ASSERT (args_read == args_number_idx);
 
     ecma_completion_value_t get_this_completion_value;
 
-    if (this_arg_var_idx_set)
+    if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
     {
       get_this_completion_value = get_variable_value (int_data, this_arg_var_idx, false);
     }
@@ -714,7 +710,7 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
                       ecma_op_function_call (func_obj_p,
                                              this_value,
                                              arg_values,
-                                             args_number),
+                                             args_number_idx),
                       ret_value);
 
       ret_value = set_variable_value (int_data, lit_oc,
@@ -1680,7 +1676,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
 
     case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
     case OPCODE_META_TYPE_UNDEFINED:
-    case OPCODE_META_TYPE_THIS_ARG:
+    case OPCODE_META_TYPE_CALL_SITE_INFO:
     case OPCODE_META_TYPE_FUNCTION_END:
     case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
     {

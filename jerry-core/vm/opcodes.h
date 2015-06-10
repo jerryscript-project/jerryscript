@@ -59,7 +59,8 @@ typedef enum
 typedef enum
 {
   OPCODE_META_TYPE_UNDEFINED, /**< undefined meta (should be rewritten) */
-  OPCODE_META_TYPE_THIS_ARG, /**< value (var_idx) of this used during call */
+  OPCODE_META_TYPE_CALL_SITE_INFO, /**< optional additional information about call site
+                                    *   (includes opcode_call_flags_t and can include 'this' argument) */
   OPCODE_META_TYPE_VARG, /**< element (var_idx) of arguments' list */
   OPCODE_META_TYPE_VARG_PROP_DATA, /**< name (lit_idx) and value (var_idx) for a data property descriptor */
   OPCODE_META_TYPE_VARG_PROP_GETTER, /**< name (lit_idx) and getter (var_idx) for an accessor property descriptor */
@@ -73,6 +74,17 @@ typedef enum
   OPCODE_META_TYPE_SCOPE_CODE_FLAGS /**< set of flags indicating various properties of the scope's code
                                      *   (See also: opcode_scope_code_flags_t) */
 } opcode_meta_type;
+
+typedef enum : idx_t
+{
+  OPCODE_CALL_FLAGS__EMPTY                   = (0u),      /**< initializer for empty flag set */
+  OPCODE_CALL_FLAGS_HAVE_THIS_ARG            = (1u << 0), /**< flag, indicating that call is performed
+                                                           *   with 'this' argument specified */
+  OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM = (1u << 1)  /**< flag, indicating that call is performed
+                                                           *   in form 'eval (...)', i.e. through 'eval' string
+                                                           *   without object base (i.e. with lexical environment
+                                                           *   as base), so it can be a direct call to eval */
+} opcode_call_flags_t;
 
 /**
  * Flags indicating various properties of a scope's code

@@ -316,10 +316,12 @@ parse_property_assignment (void)
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Result tmp. */
 static operand
-parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, operand *this_arg)
+parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, operand *this_arg_p)
 {
   token_type close_tt = TOK_CLOSE_PAREN;
   uint8_t args_num = 0;
+
+  JERRY_ASSERT (!(vlt != VARG_CALL_EXPR && this_arg_p != NULL));
 
   switch (vlt)
   {
@@ -342,11 +344,58 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       {
         break;
       }
-      if (this_arg != NULL && this_arg->type == OPERAND_LITERAL)
+
+      opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
+
+      operand this_arg = empty_operand ();
+      if (this_arg_p != NULL
+          && !operand_is_empty (*this_arg_p))
       {
-        *this_arg = dump_variable_assignment_res (*this_arg);
+        call_flags = (opcode_call_flags_t) (call_flags | OPCODE_CALL_FLAGS_HAVE_THIS_ARG);
+
+        if (this_arg_p->type == OPERAND_LITERAL)
+        {
+          /*
+           * FIXME:
+           *       Base of CallExpression should be evaluated only once during evaluation of CallExpression
+           *
+           * See also:
+           *          Evaluation of MemberExpression (ECMA-262 v5, 11.2.1)
+           */
+          this_arg = dump_variable_assignment_res (*this_arg_p);
+        }
+        else
+        {
+          this_arg = *this_arg_p;
+        }
+
+        /*
+         * Presence of explicit 'this' argument implies that it is not Direct call to Eval
+         *
+         * See also:
+         *          ECMA-262 v5, 15.2.2.1
+         */
       }
+      else if (dumper_is_eval_literal (obj))
+      {
+        call_flags = (opcode_call_flags_t) (call_flags | OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM);
+      }
+
       dump_varg_header_for_rewrite (vlt, obj);
+
+      if (call_flags != OPCODE_CALL_FLAGS__EMPTY)
+      {
+        if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+        {
+          JERRY_ASSERT (!operand_is_empty (this_arg));
+          dump_call_additional_info (call_flags, this_arg);
+        }
+        else
+        {
+          dump_call_additional_info (call_flags, empty_operand ());
+        }
+      }
+
       break;
     }
     case VARG_ARRAY_DECL:
@@ -364,11 +413,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       syntax_start_checking_of_prop_names ();
       break;
     }
-  }
-  if (vlt == VARG_CALL_EXPR && this_arg != NULL && !operand_is_empty (*this_arg))
-  {
-    dump_this_arg (*this_arg);
-    args_num++;
   }
 
   skip_newlines ();

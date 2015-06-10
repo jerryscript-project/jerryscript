@@ -338,7 +338,6 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
           change_uid (om, lit_ids, 0x011);
           break;
         }
-        case OPCODE_META_TYPE_THIS_ARG:
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
         {
@@ -351,6 +350,7 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
         case OPCODE_META_TYPE_CATCH:
         case OPCODE_META_TYPE_FINALLY:
         case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+        case OPCODE_META_TYPE_CALL_SITE_INFO:
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
           change_uid (om, lit_ids, 0x000);
@@ -477,7 +477,6 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
           insert_uids_to_lit_id_map (om, 0x011);
           break;
         }
-        case OPCODE_META_TYPE_THIS_ARG:
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
         {
@@ -490,6 +489,7 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
         case OPCODE_META_TYPE_CATCH:
         case OPCODE_META_TYPE_FINALLY:
         case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+        case OPCODE_META_TYPE_CALL_SITE_INFO:
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
           insert_uids_to_lit_id_map (om, 0x000);

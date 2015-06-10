@@ -764,6 +764,27 @@ dump_intrinsic (operand obj, operand arg)
   return dump_undefined_assignment_res ();
 }
 
+/**
+ * Check that byte-code operand refers to 'eval' string
+ *
+ * @return true - if specified byte-code operand's type is literal, and value of corresponding
+ *                literal is equal to ECMA_MAGIC_STRING_EVAL string,
+ *         false - otherwise.
+ */
+bool
+dumper_is_eval_literal (operand obj) /**< byte-code operand */
+{
+  /*
+   * FIXME: Switch to corresponding magic string
+   */
+  const ecma_char_t *eval_string_p = (const ecma_char_t *) "eval";
+  bool is_eval_lit = (obj.type == OPERAND_LITERAL
+                      && lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id),
+                                                    eval_string_p));
+
+  return is_eval_lit;
+} /* dumper_is_eval_literal */
+
 void
 dump_boolean_assignment (operand op, bool is_true)
 {
@@ -1077,14 +1098,30 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
   }
 }
 
+/**
+ * Dump 'meta' instruction of 'call additional information' type,
+ * containing call flags and, optionally, 'this' argument
+ */
 void
-dump_this_arg (operand this_arg)
+dump_call_additional_info (opcode_call_flags_t flags, /**< call flags */
+                           operand this_arg) /**< 'this' argument - if flags include OPCODE_CALL_FLAGS_HAVE_THIS_ARG,
+                                              *   or empty operand - otherwise */
 {
-  JERRY_ASSERT (this_arg.type == OPERAND_TMP);
-  const opcode_t opcode = getop_meta (OPCODE_META_TYPE_THIS_ARG, this_arg.data.uid, INVALID_VALUE);
+  if (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+  {
+    JERRY_ASSERT (this_arg.type == OPERAND_TMP);
+    JERRY_ASSERT (!operand_is_empty (this_arg));
+  }
+  else
+  {
+    JERRY_ASSERT (operand_is_empty (this_arg));
+  }
+
+  const opcode_t opcode = getop_meta (OPCODE_META_TYPE_CALL_SITE_INFO,
+                                      flags,
+                                      (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG) ? this_arg.data.uid : INVALID_VALUE);
   serializer_dump_op_meta (create_op_meta_000 (opcode));
-  return;
-}
+} /* dump_call_additional_info */
 
 void
 dump_varg (operand op)

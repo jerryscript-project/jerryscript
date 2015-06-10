@@ -27,13 +27,6 @@
 #define RE_LOOKUP(str_p, lookup)  *(str_p + lookup)
 #define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)
 
-operand
-parse_regexp_literal ()
-{
-  // FIXME: Impelement this!
-  return operand ();
-}
-
 static uint32_t
 hex_to_int (ecma_char_t hex)
 {
@@ -73,11 +66,14 @@ get_ecma_char (ecma_char_t** char_p)
   return ch;
 }
 
+/**
+ * Parse RegExp iterators
+ */
 static ecma_completion_value_t
-parse_re_iterator (ecma_char_t *pattern_p,
-                   re_token_t *re_token_p,
-                   uint32_t lookup,
-                   uint32_t *advance_p)
+parse_re_iterator (ecma_char_t *pattern_p, /**< RegExp pattern */
+                   re_token_t *re_token_p, /**< output token */
+                   uint32_t lookup, /**< size of lookup */
+                   uint32_t *advance_p) /**< output length of current advance */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -227,17 +223,21 @@ parse_re_iterator (ecma_char_t *pattern_p,
     }
   }
 
+  JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+
   if (re_token_p->qmin > re_token_p->qmax)
   {
     SYNTAX_ERROR_OBJ (ret_value, "RegExp quantifier error: qmin > qmax.");
-    return ret_value;
   }
 
   return ret_value;
 }
 
+/**
+ * Count the number of groups in pattern
+ */
 static void
-re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p)
+re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
 {
   ecma_char_t **pattern_p = &(parser_ctx_p->pattern_start_p);
   ecma_char_t ch1;
@@ -496,7 +496,12 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
   while (true);
 
   uint32_t advance = 0;
-  ECMA_TRY_CATCH (empty, parse_re_iterator (parser_ctx_p->current_char_p, out_token_p, 0, &advance), ret_value);
+  ECMA_TRY_CATCH (empty,
+                  parse_re_iterator (parser_ctx_p->current_char_p,
+                                     out_token_p,
+                                     0,
+                                     &advance),
+                  ret_value);
   RE_ADVANCE (parser_ctx_p->current_char_p, advance);
   ECMA_FINALIZE (empty);
 
@@ -507,7 +512,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
  * Read the input pattern and parse the next token for the RegExp compiler
  */
 ecma_completion_value_t
-re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< parser context */
+re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                      re_token_t *out_token_p) /**< output token */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -804,6 +809,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< parser context */
       out_token_p->type = RE_TOK_CHAR;
       out_token_p->value = ch0;
       ECMA_FINALIZE (empty);
+      break;
     }
   }
 

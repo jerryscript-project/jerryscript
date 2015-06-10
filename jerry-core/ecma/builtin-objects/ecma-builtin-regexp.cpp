@@ -100,43 +100,35 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
 
-  ecma_string_t *pattern_string_p = NULL;
-
   ECMA_TRY_CATCH (regexp_str_value,
                   ecma_op_to_string (arguments_list_p[0]),
                   ret_value);
 
-  pattern_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
-  ECMA_FINALIZE (regexp_str_value);
+  ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+
+  ecma_string_t *flags_string_p = NULL;
+
+  if (arguments_list_len > 1)
+  {
+    ECMA_TRY_CATCH (flags_str_value,
+                    ecma_op_to_string (arguments_list_p[1]),
+                    ret_value);
+
+    flags_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (flags_str_value));
+    ECMA_FINALIZE (flags_str_value);
+  }
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    ecma_string_t *flags_string_p = NULL;
-
-    if (arguments_list_len > 1)
-    {
-      ECMA_TRY_CATCH (flags_str_value,
-                      ecma_op_to_string (arguments_list_p[1]),
-                      ret_value);
-
-      flags_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (flags_str_value));
-      ECMA_FINALIZE (flags_str_value);
-    }
-
-    if (ecma_is_completion_value_empty (ret_value))
-    {
-      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
-    }
-
-    if (pattern_string_p != NULL)
-    {
-      ecma_deref_ecma_string (pattern_string_p);
-    }
-    if (flags_string_p != NULL)
-    {
-      ecma_deref_ecma_string (flags_string_p);
-    }
+    ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
   }
+
+  if (flags_string_p != NULL)
+  {
+    ecma_deref_ecma_string (flags_string_p);
+  }
+
+  ECMA_FINALIZE (regexp_str_value);
 
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_construct */

@@ -123,6 +123,18 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   JERRY_ASSERT (pattern_p != NULL);
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
+  uint8_t flags = 0;
+  if (flags_str_p != NULL)
+  {
+    ECMA_TRY_CATCH (empty, parse_regexp_flags (flags_str_p, &flags), ret_value);
+    ECMA_FINALIZE (empty);
+
+    if (!ecma_is_completion_value_empty (ret_value))
+    {
+      return ret_value;
+    }
+  }
+
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
   ecma_object_t *regexp_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
@@ -141,17 +153,6 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_set_named_data_property_value (source_prop_p,
                                       ecma_make_string_value (ecma_copy_or_ref_ecma_string (pattern_p)));
 
-  uint8_t flags = 0;
-  if (flags_str_p != NULL)
-  {
-    ECMA_TRY_CATCH (empty, parse_regexp_flags (flags_str_p, &flags), ret_value);
-    ECMA_FINALIZE (empty);
-
-    if (!ecma_is_completion_value_empty (ret_value))
-    {
-      return ret_value;
-    }
-  }
   ecma_simple_value_t prop_value;
 
   /* Set global property. ECMA-262 v5, 15.10.7.2*/
@@ -188,6 +189,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
                                                                        magic_string_p,
                                                                        true, false, false);
   ecma_deref_ecma_string (magic_string_p);
+
   ecma_number_t *lastindex_num_p = ecma_alloc_number ();
   *lastindex_num_p = ECMA_NUMBER_ZERO;
   ecma_named_data_property_assign_value (obj_p, lastindex_prop_p, ecma_make_number_value (lastindex_num_p));
@@ -200,6 +202,11 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ECMA_TRY_CATCH (empty, regexp_compile_bytecode (bytecode, pattern_p, flags), ret_value);
   ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
   ECMA_FINALIZE (empty);
+
+  if (ecma_is_completion_value_throw (ret_value))
+  {
+    ecma_deref_object (obj_p);
+  }
 
   return ret_value;
 } /* ecma_op_create_regexp_object */

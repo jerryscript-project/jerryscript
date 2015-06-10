@@ -40,6 +40,8 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
               ECMA_PROPERTY_CONFIGURABLE)
 
 ROUTINE (ECMA_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
+ROUTINE (ECMA_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
+ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

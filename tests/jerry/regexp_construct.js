@@ -53,14 +53,14 @@ try {
 // assert (r2.ignoreCase == true);
 // assert (r2.multiline == true);
 
-// r = /a/gim;
-// assert (r.source == "a");
-// assert (r.global == false);
-// assert (r.ignoreCase == false);
-// assert (r.multiline == false);
+r = /a/;
+assert (r.source == "a");
+assert (r.global == false);
+assert (r.ignoreCase == false);
+assert (r.multiline == false);
 
-// r = /a/;
-// assert (r.source == "a");
-// assert (r.global == true);
-// assert (r.ignoreCase == true);
-// assert (r.multiline == true);
+r = /a/gim;
+assert (r.source == "a");
+assert (r.global == true);
+assert (r.ignoreCase == true);
+assert (r.multiline == true);

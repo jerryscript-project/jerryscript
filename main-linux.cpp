@@ -132,7 +132,7 @@ main (int argc,
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
 
 #ifdef JERRY_ENABLE_LOG
-  const char *log_file_name = nullptr;
+  const char *log_file_name = NULL;
 #endif /* JERRY_ENABLE_LOG */
   for (i = 1; i < argc; i++)
   {
@@ -222,7 +222,7 @@ main (int argc,
       if (log_file_name)
       {
         jerry_log_file = fopen (log_file_name, "w");
-        if (jerry_log_file == nullptr)
+        if (jerry_log_file == NULL)
         {
           JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
           return JERRY_STANDALONE_EXIT_CODE_FAIL;
@@ -259,7 +259,7 @@ main (int argc,
       if (jerry_log_file && jerry_log_file != stdout)
       {
         fclose (jerry_log_file);
-        jerry_log_file = nullptr;
+        jerry_log_file = NULL;
       }
 #endif /* JERRY_ENABLE_LOG */
 

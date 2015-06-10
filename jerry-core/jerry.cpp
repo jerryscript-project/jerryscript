@@ -68,7 +68,7 @@ char jerry_extension_characters_buffer[CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
 
 #ifdef JERRY_ENABLE_LOG
 int jerry_debug_level = 0;
-FILE *jerry_log_file = nullptr;
+FILE *jerry_log_file = NULL;
 #endif
 
 /**

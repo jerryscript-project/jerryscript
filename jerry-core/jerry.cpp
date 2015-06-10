@@ -1071,12 +1071,12 @@ jerry_api_eval (const char *source_p, /**< source code */
 {
   jerry_assert_api_available ();
 
-  ecma_string_t *code_p = ecma_new_ecma_string ((const ecma_char_t*) source_p);
-  (void) source_size;
-
   jerry_completion_code_t status;
 
-  ecma_completion_value_t completion = ecma_op_eval (code_p, is_direct, is_strict);
+  ecma_completion_value_t completion = ecma_op_eval_chars_buffer ((const ecma_char_t*) source_p,
+                                                                  source_size,
+                                                                  is_direct,
+                                                                  is_strict);
 
   if (ecma_is_completion_value_normal (completion))
   {
@@ -1108,7 +1108,7 @@ jerry_api_eval (const char *source_p, /**< source code */
     }
   }
 
-  ecma_deref_ecma_string (code_p);
+  ecma_free_completion_value (completion);
 
   return status;
 } /* jerry_api_eval */

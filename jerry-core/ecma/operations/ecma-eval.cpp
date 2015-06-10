@@ -31,9 +31,10 @@
  */
 
 /**
- * eval
+ * Perform 'eval' with code stored in ecma-string
  *
  * See also:
+ *          ecma_op_eval_chars_buffer
  *          ECMA-262 v5, 15.1.2.1
  *
  * @return completion value
@@ -43,7 +44,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
               bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
               bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
 {
-  ecma_completion_value_t completion;
+  ecma_completion_value_t ret_value;
 
   int32_t chars_num = ecma_string_get_length (code_p);
   MEM_DEFINE_LOCAL_ARRAY (code_zt_buffer_p,
@@ -56,8 +57,37 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
                                                       buf_size);
   JERRY_ASSERT (buffer_size_req == buf_size);
 
+  ret_value = ecma_op_eval_chars_buffer (code_zt_buffer_p,
+                                         (size_t) buf_size,
+                                         is_direct,
+                                         is_called_from_strict_mode_code);
+
+  MEM_FINALIZE_LOCAL_ARRAY (code_zt_buffer_p);
+
+  return ret_value;
+} /* ecma_op_eval */
+
+/**
+ * Perform 'eval' with code stored in continuous character buffer
+ *
+ * See also:
+ *          ecma_op_eval
+ *          ECMA-262 v5, 15.1.2.1
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffer */
+                           size_t code_buffer_size, /**< size of the buffer */
+                           bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
+                           bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
+{
+  JERRY_ASSERT (code_p != NULL);
+
+  ecma_completion_value_t completion;
+
   parser_init ();
-  bool is_syntax_correct = parser_parse_eval ((const char *) code_p, (size_t) buf_size);
+  bool is_syntax_correct = parser_parse_eval ((const char *) code_p, code_buffer_size);
   const opcode_t* opcodes_p = (const opcode_t*) serializer_get_bytecode ();
   serializer_print_opcodes ();
   parser_free ();
@@ -115,11 +145,8 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
     ecma_free_value (this_binding, true);
   }
 
-
-  MEM_FINALIZE_LOCAL_ARRAY (code_zt_buffer_p);
-
   return completion;
-} /* ecma_op_eval */
+} /* ecma_op_eval_chars_buffer */
 
 /**
  * @}

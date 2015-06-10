@@ -26,6 +26,7 @@
 #include "config.h"
 #include "jrt.h"
 #include "mem-allocator.h"
+#include "rcs-recordset.h"
 
 /** \addtogroup compressedpointer Compressed pointer
  * @{
@@ -758,9 +759,18 @@ typedef enum
 
 FIXME (Move to library that should define the type (literal.h /* ? */))
 /**
+ * Literal and compressed pointer to literal
+ */
+typedef rcs_record_t *literal_t;
+typedef rcs_cpointer_t lit_cpointer_t;
+
+/**
  * Index in literal table
+ *
+ * FIXME: Remove after switching to literal storage
  */
 typedef uint32_t literal_index_t;
+
 
 /**
  * Identifiers of ECMA and implementation-defined magic string constants

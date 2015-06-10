@@ -74,6 +74,12 @@ public:
     _chunk_list.free ();
   } /* finalize */
 
+  /* Free memory occupied by the dynamic storage */
+  void cleanup (void)
+  {
+    _chunk_list.cleanup ();
+  } /* cleanup */
+
   /**
    * Record type
    */

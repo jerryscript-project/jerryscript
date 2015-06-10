@@ -35,6 +35,15 @@ rcs_chunked_list_t::free (void)
   JERRY_ASSERT (tail_p == NULL);
 } /* rcs_chunked_list_t::free */
 
+void
+rcs_chunked_list_t::cleanup (void)
+{
+  while (head_p)
+  {
+    remove (head_p);
+  }
+} /* rcs_chunked_list_t::cleanup */
+
 /**
  * Get first node of the list
  *

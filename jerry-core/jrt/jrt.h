@@ -214,4 +214,16 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t code);
 #define JERRY_MIN(v1, v2) ((v1 < v2) ? v1 : v2)
 #define JERRY_MAX(v1, v2) ((v1 < v2) ? v2 : v1)
 
+/**
+ * Placement new operator (constructs an object on a pre-allocated buffer)
+ *
+ * Our version of the libc library doesn't support calling the constructors and destructors of the static variables.
+ * It is proposed to use placement new operator. Generally it is available via #include <new>,
+ * To fix the unavailability of the header in some configurations placement new operator is implemented here.
+ */
+inline void* operator new (size_t, void* where)
+{
+  return where;
+} /* operator new */
+
 #endif /* !JERRY_GLOBALS_H */

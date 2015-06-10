@@ -92,9 +92,16 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
   serializer_print_opcodes ();
   parser_free ();
 
-  // FIXME:
+  opcode_counter_t first_opcode_index = 0u;
   bool is_strict_prologue = false;
-  (void) is_strict_prologue;
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
+                                                              first_opcode_index++);
+  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+  {
+    is_strict_prologue = true;
+  }
+
+  bool is_strict = (is_strict_prologue || (is_direct && is_called_from_strict_mode_code));
 
   if (!is_syntax_correct)
   {
@@ -117,8 +124,7 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
       lex_env_p = ecma_get_global_environment ();
     }
 
-    if (is_strict_prologue
-        || (is_direct && is_called_from_strict_mode_code))
+    if (is_strict)
     {
       ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
       ecma_deref_object (lex_env_p);
@@ -126,10 +132,12 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
       lex_env_p = strict_lex_env_p;
     }
 
-    // FIXME: Call interpreter
-    (void) opcodes_p;
-    completion = ecma_make_return_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
-    JERRY_UNIMPLEMENTED ("eval operation is not implemented");
+    completion = vm_run_from_pos (opcodes_p,
+                                  first_opcode_index,
+                                  this_binding,
+                                  lex_env_p,
+                                  is_strict,
+                                  true);
 
     if (ecma_is_completion_value_return (completion))
     {

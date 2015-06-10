@@ -435,6 +435,26 @@ main (void)
   jerry_api_release_value (&val_t);
   jerry_api_release_value (&res);
 
+  const char *eval_code_src_p = "(function () { return 123; })";
+  jerry_completion_code_t status = jerry_api_eval (eval_code_src_p,
+                                                   strlen (eval_code_src_p),
+                                                   false,
+                                                   true,
+                                                   &val_t);
+  JERRY_ASSERT (status == JERRY_COMPLETION_CODE_OK);
+  JERRY_ASSERT (val_t.type == JERRY_API_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (jerry_api_is_function (val_t.v_object));
+
+  is_ok = jerry_api_call_function (val_t.v_object,
+                                   NULL,
+                                   &res,
+                                   NULL, 0);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (res.type == JERRY_API_DATA_TYPE_FLOAT64
+                && res.v_float64 == 123.0);
+  jerry_api_release_value (&res);
+
+  jerry_api_release_value (&val_t);
 
   // cleanup.
   jerry_api_release_object (global_obj_p);

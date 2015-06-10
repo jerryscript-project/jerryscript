@@ -83,7 +83,9 @@ typedef enum : idx_t
   OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM = (1u << 1)  /**< flag, indicating that call is performed
                                                            *   in form 'eval (...)', i.e. through 'eval' string
                                                            *   without object base (i.e. with lexical environment
-                                                           *   as base), so it can be a direct call to eval */
+                                                           *   as base), so it can be a direct call to eval
+                                                           *   See also: ECMA-262 v5, 15.1.2.1.1
+                                                           */
 } opcode_call_flags_t;
 
 /**
@@ -115,6 +117,8 @@ typedef struct
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   bool is_eval_code; /**< is current code executed with eval */
+  bool is_call_in_direct_eval_form; /** flag, indicating if there is call of 'Direct call to eval' form in
+                                     *  process (see also: OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) */
   idx_t min_reg_num; /**< minimum idx used for register identification */
   idx_t max_reg_num; /**< maximum idx used for register identification */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */

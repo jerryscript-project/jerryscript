@@ -545,6 +545,7 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
   int_data.lex_env_p = lex_env_p;
   int_data.is_strict = is_strict;
   int_data.is_eval_code = is_eval_code;
+  int_data.is_call_in_direct_eval_form = false;
   int_data.min_reg_num = min_reg_num;
   int_data.max_reg_num = max_reg_num;
   int_data.tmp_num_p = ecma_alloc_number ();
@@ -603,6 +604,49 @@ vm_get_scope_flags (const opcode_t *opcodes_p, /**< byte-code array */
                 && flags_opcode.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
   return (opcode_scope_code_flags_t) flags_opcode.data.meta.data_1;
 } /* vm_get_scope_flags */
+
+/**
+ * Check whether currently executed code is strict mode code
+ *
+ * @return true - current code is executed in strict mode,
+ *         false - otherwise.
+ */
+bool
+vm_is_strict_mode (void)
+{
+  JERRY_ASSERT (vm_top_context_p != NULL);
+
+  return vm_top_context_p->is_strict;
+} /* vm_is_strict_mode */
+
+/**
+ * Check whether currently performed call (on top of call-stack) is performed in form,
+ * meeting conditions of 'Direct Call to Eval' (see also: ECMA-262 v5, 15.1.2.1.1)
+ *
+ * Warning:
+ *         the function should only be called from implementation
+ *         of built-in 'eval' routine of Global object
+ *
+ * @return true - currently performed call is performed through 'eval' identifier,
+ *                without 'this' argument,
+ *         false - otherwise.
+ */
+bool
+vm_is_direct_eval_form_call (void)
+{
+  if (vm_top_context_p != NULL)
+  {
+    return vm_top_context_p->is_call_in_direct_eval_form;
+  }
+  else
+  {
+    /*
+     * There is no any interpreter context, so call is performed not from a script.
+     * This implies that the call is indirect.
+     */
+    return false;
+  }
+} /* vm_is_direct_eval_form_call */
 
 /**
  * Get this binding of current execution context

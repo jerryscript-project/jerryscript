@@ -657,6 +657,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
 
+  JERRY_ASSERT (!int_data->is_call_in_direct_eval_form);
+
   opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   if (next_opcode.op_idx == __op__idx_meta
       && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
@@ -667,6 +669,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     {
       this_arg_var_idx = next_opcode.data.meta.data_2;
       JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
+
+      JERRY_ASSERT ((call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) == 0);
     }
 
     int_data->pos++;
@@ -704,6 +708,11 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
     }
     else
     {
+      if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
+      {
+        int_data->is_call_in_direct_eval_form = true;
+      }
+
       ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
 
       ECMA_TRY_CATCH (call_ret_value,
@@ -719,6 +728,15 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
       ECMA_FINALIZE (call_ret_value);
 
+      if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
+      {
+        JERRY_ASSERT (int_data->is_call_in_direct_eval_form);
+        int_data->is_call_in_direct_eval_form = false;
+      }
+      else
+      {
+        JERRY_ASSERT (!int_data->is_call_in_direct_eval_form);
+      }
     }
 
     ecma_free_completion_value (get_this_completion_value);

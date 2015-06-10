@@ -34,6 +34,9 @@ extern ecma_completion_value_t vm_run_from_pos (const opcode_t *opcodes_p,
 extern opcode_t vm_get_opcode (const opcode_t*, opcode_counter_t counter);
 extern opcode_scope_code_flags_t vm_get_scope_flags (const opcode_t*, opcode_counter_t counter);
 
+extern bool vm_is_strict_mode (void);
+extern bool vm_is_direct_eval_form_call (void);
+
 extern ecma_value_t vm_get_this_binding (void);
 extern ecma_object_t* vm_get_lex_env (void);
 

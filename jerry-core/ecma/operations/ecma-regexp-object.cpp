@@ -1088,10 +1088,12 @@ regexp_match (re_matcher_ctx *re_ctx_p, /**< RegExp matcher context */
  * RegExp helper function
  */
 ecma_completion_value_t
-ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode */
+ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
+                         re_bytecode_t *bc_p, /**< start of the RegExp bytecode */
                          const ecma_char_t *str_p) /**< start of the input string */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  int32_t input_length = ecma_zt_string_length (str_p);
   re_matcher_ctx re_ctx;
   re_ctx.input_start_p = str_p;
   re_ctx.input_end_p = str_p + strlen ((char *) str_p);
@@ -1100,6 +1102,11 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
 
   /* 1. Read bytecode header and init regexp matcher context. */
   re_ctx.flags = (uint8_t) get_value (&bc_p);
+  JERRY_DDLOG ("Exec with flags [global: %d, ignoreCase: %d, multiline: %d]\n",
+               re_ctx.flags & RE_FLAG_GLOBAL,
+               re_ctx.flags & RE_FLAG_IGNORE_CASE,
+               re_ctx.flags & RE_FLAG_MULTILINE);
+
   re_ctx.num_of_captures = get_value (&bc_p);
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = get_value (&bc_p);
@@ -1120,19 +1127,58 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
 
   bool match = false;
   re_ctx.num_of_iterations = num_of_iter_p;
+  int32_t index = 0;
+
+  if (re_ctx.flags & RE_FLAG_GLOBAL)
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+    ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (obj_p, magic_str_p);
+    ecma_number_t *lastindex_num_p = ecma_get_number_from_value (lastindex_prop_p->u.named_data_property.value);
+    index = ecma_number_to_int32 (*lastindex_num_p);
+    JERRY_ASSERT (str_p != NULL);
+    str_p += ecma_number_to_int32 (*lastindex_num_p);
+    ecma_deref_ecma_string (magic_str_p);
+  }
 
   /* 2. Try to match */
+  const ecma_char_t *sub_str_p;
   while (str_p && str_p <= re_ctx.input_end_p && ecma_is_completion_value_empty (ret_value))
   {
-    const ecma_char_t *sub_str_p;
-    ECMA_TRY_CATCH (match_value, regexp_match (&re_ctx, bc_p, str_p, &sub_str_p), ret_value);
-    if (ecma_is_value_true (match_value))
+    if (index < 0 || index > input_length)
     {
-      match = true;
+      ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+      ecma_number_t *lastindex_num_p = ecma_alloc_number ();
+      *lastindex_num_p = ECMA_NUMBER_ZERO;
+      ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
+      ecma_dealloc_number (lastindex_num_p);
+      ecma_deref_ecma_string (magic_str_p);
+
+      match = false;
       break;
     }
-    str_p++;
-    ECMA_FINALIZE (match_value);
+    else
+    {
+      sub_str_p = NULL;
+      ECMA_TRY_CATCH (match_value, regexp_match (&re_ctx, bc_p, str_p, &sub_str_p), ret_value);
+      if (ecma_is_value_true (match_value))
+      {
+        match = true;
+        break;
+      }
+      str_p++;
+      index++;
+      ECMA_FINALIZE (match_value);
+    }
+  }
+
+  if (re_ctx.flags & RE_FLAG_GLOBAL)
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+    ecma_number_t *lastindex_num_p = ecma_alloc_number ();
+    *lastindex_num_p = ((ecma_number_t) (sub_str_p - re_ctx.input_start_p));
+    ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
+    ecma_dealloc_number (lastindex_num_p);
+    ecma_deref_ecma_string (magic_str_p);
   }
 
   /* 3. Fill the result array or return with 'undefiend' */
@@ -1142,6 +1188,86 @@ ecma_regexp_exec_helper (re_bytecode_t *bc_p, /**< start of the RegExp bytecode 
     {
       ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
       ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+
+      /* Set index property of the result array */
+      ecma_string_t* result_prop_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_INDEX);
+      {
+        ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
+
+        array_item_prop_desc.is_value_defined = true;
+
+        ecma_number_t *num_p = ecma_alloc_number ();
+        *num_p = (ecma_number_t) index;
+        array_item_prop_desc.value = ecma_make_number_value (num_p);
+
+        array_item_prop_desc.is_writable_defined = true;
+        array_item_prop_desc.is_writable = true;
+
+        array_item_prop_desc.is_enumerable_defined = true;
+        array_item_prop_desc.is_enumerable = true;
+
+        array_item_prop_desc.is_configurable_defined = true;
+        array_item_prop_desc.is_configurable = true;
+
+        ecma_op_object_define_own_property (new_array_p,
+                                            result_prop_str_p,
+                                            &array_item_prop_desc,
+                                            true);
+
+        ecma_dealloc_number (num_p);
+      }
+      ecma_deref_ecma_string (result_prop_str_p);
+
+      /* Set input property of the result array */
+      result_prop_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_INPUT);
+      {
+        ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
+
+        array_item_prop_desc.is_value_defined = true;
+        ecma_string_t *input_str_p = ecma_new_ecma_string (re_ctx.input_start_p);
+        array_item_prop_desc.value = ecma_make_string_value (input_str_p);
+
+        array_item_prop_desc.is_writable_defined = true;
+        array_item_prop_desc.is_writable = true;
+
+        array_item_prop_desc.is_enumerable_defined = true;
+        array_item_prop_desc.is_enumerable = true;
+
+        array_item_prop_desc.is_configurable_defined = true;
+        array_item_prop_desc.is_configurable = true;
+
+        ecma_op_object_define_own_property (new_array_p,
+                                            result_prop_str_p,
+                                            &array_item_prop_desc,
+                                            true);
+
+        ecma_deref_ecma_string (input_str_p);
+      }
+      ecma_deref_ecma_string (result_prop_str_p);
+
+      /* Set length property of the result array */
+      result_prop_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+      {
+
+        ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
+        array_item_prop_desc.is_value_defined = true;
+
+        ecma_number_t *num_p = ecma_alloc_number ();
+        *num_p = (ecma_number_t) (re_ctx.num_of_captures / 2);
+        array_item_prop_desc.value = ecma_make_number_value (num_p);
+
+        array_item_prop_desc.is_writable_defined = false;
+        array_item_prop_desc.is_enumerable_defined = false;
+        array_item_prop_desc.is_configurable_defined = false;
+
+        ecma_op_object_define_own_property (new_array_p,
+                                            result_prop_str_p,
+                                            &array_item_prop_desc,
+                                            true);
+
+        ecma_dealloc_number (num_p);
+      }
+      ecma_deref_ecma_string (result_prop_str_p);
 
       for (uint32_t i = 0; i < re_ctx.num_of_captures; i += 2)
       {

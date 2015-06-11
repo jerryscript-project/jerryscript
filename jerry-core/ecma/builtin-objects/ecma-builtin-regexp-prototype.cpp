@@ -77,7 +77,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
   ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
 
-  ret_value = ecma_regexp_exec_helper (bytecode_p, input_zt_str_p);
+  ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_zt_str_p);
 
   MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);
 
@@ -86,12 +86,6 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   ECMA_FINALIZE (obj_this);
   return ret_value;
 } /* ecma_builtin_regexp_prototype_exec */
-
-/**
- * @}
- * @}
- * @}
- */
 
 /**
  * The RegExp.prototype object's 'test' routine
@@ -123,12 +117,6 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 
   return ret_value;
 } /* ecma_builtin_regexp_prototype_test */
-
-/**
- * @}
- * @}
- * @}
- */
 
 /**
  * The RegExp.prototype object's 'toString' routine

@@ -207,7 +207,7 @@ unittests: $(BUILD_DIR)/native
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ cp $(BUILD_DIR)/native/unit_test_* $(OUT_DIR)/$@
+	@ cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
 
 $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	@ mkdir -p $(OUT_DIR)/$@

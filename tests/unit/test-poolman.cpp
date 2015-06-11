@@ -17,17 +17,13 @@
  * Unit test for pool manager.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
 #define JERRY_MEM_POOL_INTERNAL
 
-#include "jrt.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
 #include "mem-poolman.h"
+
+#include "test-common.h"
 
 // Iterations count
 const uint32_t test_iters = 16384;
@@ -41,12 +37,9 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  mem_init ();
+  TEST_RANDOMIZE ();
 
-  srand ((unsigned int) time (NULL));
-  unsigned int seed = (unsigned int) rand ();
-  printf ("seed=%u\n", seed);
-  srand (seed);
+  mem_init ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {

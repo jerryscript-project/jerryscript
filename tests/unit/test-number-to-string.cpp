@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-#include <math.h>
-
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "jrt.h"
+
+#include "test-common.h"
 
 /**
  * Unit test's main function.
@@ -31,18 +30,11 @@ main (int __attr_unused___ argc,
     (const ecma_char_t*) "1",
     (const ecma_char_t*) "0.5",
     (const ecma_char_t*) "12345",
+    (const ecma_char_t*) "12345.123",
     (const ecma_char_t*) "1e-45",
     (const ecma_char_t*) "-2.5e+38",
-    (const ecma_char_t*) "-2.5e38",
-    (const ecma_char_t*) "- 2.5e+38",
-    (const ecma_char_t*) "-2 .5e+38",
-    (const ecma_char_t*) "-2. 5e+38",
-    (const ecma_char_t*) "-2.5e+ 38",
-    (const ecma_char_t*) "-2.5 e+38",
-    (const ecma_char_t*) "-2.5e +38",
     (const ecma_char_t*) "NaN",
-    (const ecma_char_t*) "abc",
-    (const ecma_char_t*) "   Infinity  ",
+    (const ecma_char_t*) "Infinity",
     (const ecma_char_t*) "-Infinity",
     (const ecma_char_t*) "0",
     (const ecma_char_t*) "0",
@@ -53,16 +45,9 @@ main (int __attr_unused___ argc,
     (ecma_number_t) 1.0,
     (ecma_number_t) 0.5,
     (ecma_number_t) 12345.0,
+    (ecma_number_t) 12345.123,
     (ecma_number_t) 1.0e-45,
     (ecma_number_t) -2.5e+38,
-    (ecma_number_t) -2.5e+38,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
-    (ecma_number_t) NAN,
     (ecma_number_t) NAN,
     (ecma_number_t) INFINITY,
     (ecma_number_t) -INFINITY,
@@ -74,11 +59,11 @@ main (int __attr_unused___ argc,
        i < sizeof (nums) / sizeof (nums[0]);
        i++)
   {
-    ecma_number_t num = ecma_zt_string_to_number (zt_strings[i]);
+    ecma_char_t zt_str[64];
 
-    if (num != nums[i]
-        && (!ecma_number_is_nan (num)
-            || !ecma_number_is_nan (nums[i])))
+    ecma_number_to_zt_string (nums[i], zt_str, sizeof (zt_str));
+
+    if (strcmp ((char*)zt_str, (char*)zt_strings[i]) != 0)
     {
       return 1;
     }

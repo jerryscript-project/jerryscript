@@ -16,17 +16,7 @@
 #include "ecma-helpers.h"
 #include "lit-literal.h"
 
-extern "C"
-{
-  extern void srand (unsigned int __seed);
-  extern int rand (void);
-  extern long int time (long int *__timer);
-  extern int printf (__const char *__restrict __format, ...);
-  extern void *memset (void *__s, int __c, size_t __n);
-}
-
-// Heap size is 32K
-#define test_heap_size (32 * 1024)
+#include "test-common.h"
 
 // Iterations count
 #define test_iters 64
@@ -68,6 +58,8 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
+  TEST_RANDOMIZE ();
+
   const ecma_char_t *ptrs[test_sub_iters];
   ecma_number_t numbers[test_sub_iters];
   ecma_char_t strings[test_sub_iters][max_characters_in_string + 1];
@@ -76,10 +68,6 @@ main (int __attr_unused___ argc,
   mem_init ();
   lit_init ();
 
-  srand ((unsigned int) time (NULL));
-  int k = rand ();
-  printf ("seed=%d\n", k);
-  srand ((unsigned int) k);
 
   for (uint32_t i = 0; i < test_iters; i++)
   {

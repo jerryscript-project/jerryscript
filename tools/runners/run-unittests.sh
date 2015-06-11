@@ -30,7 +30,7 @@ done
 
 rm -f $DIR/unit_tests_run.log
 
-UNITTESTS=$(ls $DIR/unit_*)
+UNITTESTS=$(ls $DIR/unit-*)
 
 for unit_test in $UNITTESTS;
 do

@@ -421,7 +421,7 @@ project (Jerry CXX C ASM)
 
    foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
     get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
-    set(TARGET_NAME unit_${TARGET_NAME})
+    set(TARGET_NAME unit-${TARGET_NAME})
 
     set(CORE_TARGET_NAME unittests.jerry-core)
     set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})

@@ -15,19 +15,11 @@
 
 #define JERRY_MEM_POOL_INTERNAL
 
-#include "jrt.h"
 #include "mem-allocator.h"
 #include "mem-pool.h"
 #include "mem-poolman.h"
 
-extern "C"
-{
-  extern void srand (unsigned int __seed);
-  extern int rand (void);
-  extern long int time (long int *__timer);
-  extern int printf (__const char *__restrict __format, ...);
-  extern void *memset (void *__s, int __c, size_t __n);
-}
+#include "test-common.h"
 
 // Iterations count
 const uint32_t test_iters = 64;
@@ -45,10 +37,7 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  srand ((unsigned int) time (NULL));
-  int k = rand ();
-  printf ("seed=%d\n", k);
-  srand ((unsigned int) k);
+  TEST_RANDOMIZE ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {

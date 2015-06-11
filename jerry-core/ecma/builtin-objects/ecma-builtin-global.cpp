@@ -16,11 +16,13 @@
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
+#include "ecma-eval.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "vm.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -52,7 +54,37 @@ static ecma_completion_value_t
 ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
                                  ecma_value_t x) /**< routine's first argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, x);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  bool is_direct_eval = vm_is_direct_eval_form_call ();
+  JERRY_ASSERT (!(is_direct_eval
+                  && !ecma_is_value_undefined (this_arg)));
+
+  /* See also: ECMA-262 v5, 10.1.1 */
+  bool is_called_from_strict_mode_code;
+  if (is_direct_eval)
+  {
+    is_called_from_strict_mode_code = vm_is_strict_mode ();
+  }
+  else
+  {
+    is_called_from_strict_mode_code = false;
+  }
+
+  if (!ecma_is_value_string (x))
+  {
+    /* step 1 */
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (x, true));
+  }
+  else
+  {
+    /* steps 2 to 8 */
+    ret_value = ecma_op_eval (ecma_get_string_from_value (x),
+                              is_direct_eval,
+                              is_called_from_strict_mode_code);
+  }
+
+  return ret_value;
 } /* ecma_builtin_global_object_eval */
 
 /**

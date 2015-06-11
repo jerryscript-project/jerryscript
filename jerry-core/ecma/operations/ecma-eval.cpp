@@ -35,7 +35,7 @@
  *
  * See also:
  *          ecma_op_eval_chars_buffer
- *          ECMA-262 v5, 15.1.2.1
+ *          ECMA-262 v5, 15.1.2.1 (steps 2 to 8)
  *
  * @return completion value
  */
@@ -72,7 +72,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
  *
  * See also:
  *          ecma_op_eval
- *          ECMA-262 v5, 15.1.2.1
+ *          ECMA-262 v5, 15.1.2.1 (steps 2 to 8)
  *
  * @return completion value
  */

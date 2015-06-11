@@ -141,7 +141,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_object_t *regexp_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (regexp_prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (regexp_prototype_obj_p, true, ECMA_OBJECT_TYPE_REGEXP);
   ecma_deref_object (regexp_prototype_obj_p);
 
   /* Set source property. ECMA-262 v5, 15.10.7.1 */

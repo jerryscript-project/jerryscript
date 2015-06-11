@@ -42,16 +42,24 @@ assert (r.multiline == true);
 var r2;
 try {
   r2 = RegExp (r,"gim");
-} catch ( e ) {
+  assert(false);
+}
+catch ( e )
+{
   assert (e instanceof TypeError);
-//  print (e.message);
 }
 
-// r2 = RegExp (r);
-// assert (r2.source == "a");
-// assert (r2.global == true);
-// assert (r2.ignoreCase == true);
-// assert (r2.multiline == true);
+r2 = RegExp (r);
+assert (r2.source == "a");
+assert (r2.global == true);
+assert (r2.ignoreCase == true);
+assert (r2.multiline == true);
+
+r2 = RegExp (r, undefined);
+assert (r2.source == "a");
+assert (r2.global == true);
+assert (r2.ignoreCase == true);
+assert (r2.multiline == true);
 
 r = /a/;
 assert (r.source == "a");
@@ -64,3 +72,5 @@ assert (r.source == "a");
 assert (r.global == true);
 assert (r.ignoreCase == true);
 assert (r.multiline == true);
+
+assert(Object.prototype.toString.call(RegExp.prototype) === '[object RegExp]');

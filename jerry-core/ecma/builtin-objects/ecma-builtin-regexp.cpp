@@ -51,40 +51,7 @@ ecma_completion_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
-  ecma_value_t re_value = arguments_list_p[0];
-
-  if (ecma_is_value_string (re_value))
-  {
-    ret_value = ecma_builtin_regexp_dispatch_construct (arguments_list_p, arguments_list_len);
-  }
-  else if (ecma_is_value_object (re_value))
-  {
-    if (arguments_list_len == 1)
-    {
-      ecma_object_t *obj_p = ecma_get_object_from_value (re_value);
-      if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_REGEXP_UL)
-      {
-        ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
-      }
-      else
-      {
-        TYPE_ERROR_OBJ (ret_value, "Invalid argument of RegExp call.");
-      }
-    }
-    else
-    {
-      TYPE_ERROR_OBJ (ret_value, "Cannot supply flags when constructing one RegExp from another.");
-    }
-  }
-  else
-  {
-    TYPE_ERROR_OBJ (ret_value, "Invalid argument of RegExp call.");
-  }
-
-  return ret_value;
+  return ecma_builtin_regexp_dispatch_construct (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_call */
 
 /**
@@ -100,35 +67,51 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
 
-  ECMA_TRY_CATCH (regexp_str_value,
-                  ecma_op_to_string (arguments_list_p[0]),
-                  ret_value);
-
-  ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
-
-  ecma_string_t *flags_string_p = NULL;
-
-  if (arguments_list_len > 1)
+  if (ecma_is_value_object (arguments_list_p[0]) &&
+      ecma_object_get_class_name (ecma_get_object_from_value (arguments_list_p[0])) == ECMA_MAGIC_STRING_REGEXP_UL)
   {
-    ECMA_TRY_CATCH (flags_str_value,
-                    ecma_op_to_string (arguments_list_p[1]),
+    if (arguments_list_len == 1 ||
+        (arguments_list_len > 1 && ecma_is_value_undefined (arguments_list_p[1])))
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_copy_value (arguments_list_p[0], true));
+    }
+    else
+    {
+      TYPE_ERROR_OBJ (ret_value, "Invalid argument of RegExp call.");
+    }
+  }
+  else
+  {
+    ECMA_TRY_CATCH (regexp_str_value,
+                    ecma_op_to_string (arguments_list_p[0]),
                     ret_value);
 
-    flags_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (flags_str_value));
-    ECMA_FINALIZE (flags_str_value);
-  }
+    ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
 
-  if (ecma_is_completion_value_empty (ret_value))
-  {
-    ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
-  }
+    ecma_string_t *flags_string_p = NULL;
 
-  if (flags_string_p != NULL)
-  {
-    ecma_deref_ecma_string (flags_string_p);
-  }
+    if (arguments_list_len > 1)
+    {
+      ECMA_TRY_CATCH (flags_str_value,
+                      ecma_op_to_string (arguments_list_p[1]),
+                      ret_value);
 
-  ECMA_FINALIZE (regexp_str_value);
+      flags_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (flags_str_value));
+      ECMA_FINALIZE (flags_str_value);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+    }
+
+    if (flags_string_p != NULL)
+    {
+      ecma_deref_ecma_string (flags_string_p);
+    }
+
+    ECMA_FINALIZE (regexp_str_value);
+  }
 
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_construct */

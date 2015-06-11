@@ -400,6 +400,7 @@ typedef enum
                                           of ECMA-262 v5 specification */
   ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
   ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_REGEXP, /**< RegExp object (15.10) */
   ECMA_OBJECT_TYPE_EXTENSION, /**< Extension (implementation-defined) object
                                *   See also: ecma_extension_instantiate */
   // ECMA_OBJECT_TYPE_HOST /**< Host object */

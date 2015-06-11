@@ -259,10 +259,82 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  // 1.
+  if (!ecma_is_value_object (arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    // 2.
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+
+    ecma_property_t *property_p;
+    for (property_p = ecma_get_property_list (obj_p);
+         property_p != NULL && ecma_is_completion_value_empty (ret_value);
+         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    {
+      ecma_string_t *property_name_p;
+
+      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+      {
+        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                     property_p->u.named_data_property.name_p);
+      }
+      else
+      if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+      {
+        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                     property_p->u.named_accessor_property.name_p);
+      }
+      else
+      {
+        continue;
+      }
+
+      // 2.a
+      ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
+
+      // 2.b
+      if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
+      {
+        prop_desc.is_writable = false;
+      }
+
+      // 2.c
+      if (ecma_is_property_configurable (property_p))
+      {
+        prop_desc.is_configurable = false;
+      }
+
+      // 2.d
+      ECMA_TRY_CATCH (define_own_prop_ret,
+                      ecma_op_object_define_own_property (obj_p,
+                                                          property_name_p,
+                                                          &prop_desc,
+                                                          true),
+                      ret_value);
+      ECMA_FINALIZE (define_own_prop_ret);
+
+      ecma_free_property_descriptor (&prop_desc);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      // 3.
+      ecma_set_object_extensible (obj_p, false);
+
+      // 4.
+      ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg, true));
+    }
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_freeze */
 
 /**
@@ -370,10 +442,66 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argument */
+ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  // 1.
+  if (!ecma_is_value_object (arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+    ecma_property_t *property_p;
+
+    // This will be the result if the other steps doesn't change it.
+    bool frozen = false;
+
+    // 3.
+    // The pseudo code contains multiple early return but this way we get the same
+    // result.
+    if (!ecma_get_object_extensible (obj_p))
+    {
+      frozen = true;
+    }
+
+    // 2.
+    for (property_p = ecma_get_property_list (obj_p);
+         property_p != NULL && frozen;
+         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    {
+      if (property_p->type == ECMA_PROPERTY_INTERNAL)
+      {
+        continue;
+      }
+
+      JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+      // 2.b
+      if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
+      {
+        frozen = false;
+        break;
+      }
+
+      // 2.c
+      if (ecma_is_property_configurable (property_p))
+      {
+        frozen = false;
+        break;
+      }
+    }
+
+    // 4.
+    ret_value = ecma_make_simple_completion_value (frozen
+                                                   ? ECMA_SIMPLE_VALUE_TRUE
+                                                   : ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_is_frozen */
 
 /**

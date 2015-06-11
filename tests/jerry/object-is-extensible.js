@@ -42,7 +42,6 @@ try
 var sealed = Object.seal({});
 assert (Object.isExtensible(sealed) === false);
 
-// The functions below are unimplemented.
 // Frozen objects are also by definition non-extensible.
-// var frozen = Object.freeze({});
-// assert(Object.isExtensible(frozen) === false);
+var frozen = Object.freeze({});
+assert(Object.isExtensible(frozen) === false);

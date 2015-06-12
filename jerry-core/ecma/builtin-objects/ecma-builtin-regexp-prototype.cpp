@@ -168,7 +168,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
   }
 
   /* Check the ignoreCase flag */
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE);
+  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE_UL);
   ecma_property_t* ignorecase_prop = ecma_op_object_get_property (obj_p, magic_string_p);
   ecma_deref_ecma_string (magic_string_p);
 

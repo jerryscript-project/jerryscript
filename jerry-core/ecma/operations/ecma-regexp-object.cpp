@@ -165,7 +165,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_set_named_data_property_value (global_prop_p, ecma_make_simple_value (prop_value));
 
   /* Set ignoreCase property. ECMA-262 v5, 15.10.7.3*/
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE);
+  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE_UL);
   ecma_property_t *ignorecase_prop_p = ecma_create_named_data_property (obj_p,
                                                                         magic_string_p,
                                                                         false, false, false);
@@ -184,7 +184,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_set_named_data_property_value (multiline_prop_p, ecma_make_simple_value (prop_value));
 
   /* Set lastIndex property. ECMA-262 v5, 15.10.7.5*/
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX_UL);
   ecma_property_t *lastindex_prop_p = ecma_create_named_data_property (obj_p,
                                                                        magic_string_p,
                                                                        true, false, false);
@@ -1131,7 +1131,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
 
   if (re_ctx.flags & RE_FLAG_GLOBAL)
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX_UL);
     ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (obj_p, magic_str_p);
     ecma_number_t *lastindex_num_p = ecma_get_number_from_value (lastindex_prop_p->u.named_data_property.value);
     index = ecma_number_to_int32 (*lastindex_num_p);
@@ -1146,7 +1146,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
   {
     if (index < 0 || index > input_length)
     {
-      ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+      ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX_UL);
       ecma_number_t *lastindex_num_p = ecma_alloc_number ();
       *lastindex_num_p = ECMA_NUMBER_ZERO;
       ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
@@ -1173,7 +1173,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
 
   if (re_ctx.flags & RE_FLAG_GLOBAL)
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX);
+    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LASTINDEX_UL);
     ecma_number_t *lastindex_num_p = ecma_alloc_number ();
     *lastindex_num_p = ((ecma_number_t) (sub_str_p - re_ctx.input_start_p));
     ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);

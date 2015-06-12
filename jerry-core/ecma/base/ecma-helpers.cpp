@@ -1240,7 +1240,14 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 } /* ecma_free_property_descriptor */
 
 /**
- * Return property descriptor of property.
+ * Construct property descriptor from specified property
+ *
+ * @return property descriptor, corresponding to type and content of the specified property, i.e.:
+ *                  - for named data properties: { [Value], [Writable], [Enumerable], [Configurable] };
+ *                  - for named accessor properties: { [Get] - if defined,
+ *                                                     [Set] - if defined,
+ *                                                     [Enumerable], [Configurable]
+ *                                                   }.
  */
 ecma_property_descriptor_t
 ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< property */
@@ -1248,11 +1255,13 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
   prop_desc.is_enumerable = ecma_is_property_enumerable (prop_p);
+  prop_desc.is_enumerable_defined = true;
   prop_desc.is_configurable = ecma_is_property_configurable (prop_p);
+  prop_desc.is_configurable_defined = true;
 
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
-    prop_desc.value = ecma_get_named_data_property_value (prop_p);
+    prop_desc.value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
     prop_desc.is_value_defined = true;
     prop_desc.is_writable = ecma_is_property_writable (prop_p);
     prop_desc.is_writable_defined = true;
@@ -1260,9 +1269,25 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
   else if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     prop_desc.get_p = ecma_get_named_accessor_property_getter (prop_p);
-    prop_desc.is_get_defined = prop_desc.get_p != NULL ? true : false;
+    if (prop_desc.get_p != NULL)
+    {
+      prop_desc.is_get_defined = true;
+      ecma_ref_object (prop_desc.get_p);
+    }
+    else
+    {
+      prop_desc.is_get_defined = false;
+    }
     prop_desc.set_p = ecma_get_named_accessor_property_setter (prop_p);
-    prop_desc.is_set_defined = prop_desc.set_p != NULL ? true : false;
+    if (prop_desc.set_p != NULL)
+    {
+      prop_desc.is_set_defined = true;
+      ecma_ref_object (prop_desc.set_p);
+    }
+    else
+    {
+      prop_desc.is_set_defined = false;
+    }
   }
 
   return prop_desc;

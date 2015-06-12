@@ -367,6 +367,8 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
     // 4.
     ecma_object_t* desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
 
+    ecma_free_property_descriptor (&prop_desc);
+
     ret_value = ecma_make_normal_completion_value (ecma_make_object_value (desc_obj_p));
   }
   else

@@ -1,30 +1,44 @@
----
-layout: null
----
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>{{ site.title | xml_escape }}</title>
-    <description>{{ site.description | xml_escape }}</description>
-    <link>{{ site.url }}{{ site.baseurl }}/</link>
-    <atom:link href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}" rel="self" type="application/rss+xml"/>
-    <pubDate>{{ site.time | date_to_rfc822 }}</pubDate>
-    <lastBuildDate>{{ site.time | date_to_rfc822 }}</lastBuildDate>
-    <generator>Jekyll v{{ jekyll.version }}</generator>
-    {% for post in site.posts limit:10 %}
+    <title>JerryScript Engine</title>
+    <description>JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less then 8KB of RAM.
+</description>
+    <link>http://samsung.github.io/jerryscript/</link>
+    <atom:link href="http://samsung.github.io/jerryscript/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Sat, 13 Jun 2015 19:02:12 +0300</pubDate>
+    <lastBuildDate>Sat, 13 Jun 2015 19:02:12 +0300</lastBuildDate>
+    <generator>Jekyll v2.5.3</generator>
+    
       <item>
-        <title>{{ post.title | xml_escape }}</title>
-        <description>{{ post.content | xml_escape }}</description>
-        <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
-        <link>{{ post.url | prepend: site.baseurl | prepend: site.url }}</link>
-        <guid isPermaLink="true">{{ post.url | prepend: site.baseurl | prepend: site.url }}</guid>
-        {% for tag in post.tags %}
-        <category>{{ tag | xml_escape }}</category>
-        {% endfor %}
-        {% for cat in post.categories %}
-        <category>{{ cat | xml_escape }}</category>
-        {% endfor %}
+        <title>Hello World.js!</title>
+        <description>&lt;p&gt;The concept of the Internet of Things (IoT) is becoming more and more popular. According to the reports of global corporations, there will be from 25 to 75 billion Internet of Things devices by 2020. Existence of a unified platform for developing applications of the IoT is essential domination in this field. Popularity of the JavaScript language in modern web, both on client and server sides, implies that providing a JavaScript-based platform for the IoT can attract developers to this platform.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;print_hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Tom&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;print_hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;print&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Hi, &amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;JerryScript engine satisfies the following requirements:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Capable to run on MCU (ARM Cortex M)&lt;/li&gt;
+  &lt;li&gt;Only few kilobytes of RAM available to the engine (&amp;lt;64 KB RAM)&lt;/li&gt;
+  &lt;li&gt;Constrained ROM space for the code of the engine (&amp;lt;200 KB ROM)&lt;/li&gt;
+  &lt;li&gt;On-device compilation and execution&lt;/li&gt;
+  &lt;li&gt;The engine provides access to peripherals from JavaScript.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;http://github.com/Samsung/jerryscript&quot;&gt;JerryScript sources&lt;/a&gt; and start using JerryScript in you projects. Please, report all found bugs and request new features at &lt;a href=&quot;http://github.com/Samsung/jerryscript/issues&quot;&gt;JerryScript issue tracker&lt;/a&gt;. If you have questions, feel free to ask them on &lt;a href=&quot;http://github.com/Samsung/jerryscript/issues&quot;&gt;issue tracker&lt;/a&gt; and don’t forget to label it with &lt;code&gt;question&lt;/code&gt; or &lt;code&gt;discussion&lt;/code&gt;.&lt;/p&gt;
+
+</description>
+        <pubDate>Sat, 13 Jun 2015 16:30:58 +0300</pubDate>
+        <link>http://samsung.github.io/jerryscript/2015/06/13/hello-world-js.html</link>
+        <guid isPermaLink="true">http://samsung.github.io/jerryscript/2015/06/13/hello-world-js.html</guid>
+        
+        
       </item>
-    {% endfor %}
+    
   </channel>
 </rss>

@@ -225,21 +225,21 @@ As byte-code decomposition into blocks is not possible until parsing is finished
 <h1 id="byte-code">Byte-code</h1>
 <p>Every instruction of bytecode consists of opcode and up to three operands. Operand (idx) can be either a “register” or a string<br />
 literal, specifying identifier to evaluate (i.e. <code>var //Storage idx</code>). General structure of instruction is shown on the picture.  <br />
-<img src="/img/bytecode_view.jpg" alt="Structure of instruction" /></p>
+<img src="/jerryscript/img/bytecode_view.jpg" alt="Structure of instruction" /></p>
 
 <p>Special kinds of instructions are described below.</p>
 
 <h2 id="arithmeticbitwise-logiclogiccomparisonshift">Arithmetic/bitwise-logic/logic/comparison/shift</h2>
 <p>Arithmetic instruction can have the following structure:  </p>
 
-<p><img src="/img/bytecode_arithmetic.jpg" alt="Arithmetic instructions" /></p>
+<p><img src="/jerryscript/img/bytecode_arithmetic.jpg" alt="Arithmetic instructions" /></p>
 
 <p>where dst/left/right/value identify an operand.</p>
 
 <h2 id="control-jumps">Control (jumps)</h2>
 <p>Control instructions utilize two bytes to encode jump location. Destination offset is contained inside <code>offset_high</code> and <code>offset_low</code> fields.  </p>
 
-<p><img src="/img/bytecode_control.jpg" alt="Control instructions" /></p>
+<p><img src="/jerryscript/img/bytecode_control.jpg" alt="Control instructions" /></p>
 
 <p>Condition jump checks <code>cond value</code> field, which identifies an operand, and performs a jump if the operand has <code>true</code> value.</p>
 
@@ -247,7 +247,7 @@ literal, specifying identifier to evaluate (i.e. <code>var //Storage idx</code>)
 
 <p>Assignment instructions perform assignment of immediate value (contained inside instruction) to the operand, which is marked as <code>idx</code> on the picture.</p>
 
-<p><img src="/img/bytecode_assignment.jpg" alt="Assignment instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_assignment.jpg" alt="Assignment instruction" /></p>
 
 <p>Type of the immediate value is encoded in the <code>type</code> field of instruction. The following values are supported:<br />
 - “simple value” (see ECMA types encoding)<br />
@@ -260,7 +260,7 @@ literal, specifying identifier to evaluate (i.e. <code>var //Storage idx</code>)
 
 <p>Exit instruction serves to stop the execution and exit with a specified status.</p>
 
-<p><img src="/img/bytecode_exit.jpg" alt="Exit instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_exit.jpg" alt="Exit instruction" /></p>
 
 <p>Exit instruction is employed in following cases:<br />
 - at script end (exit with “succesful” stats);<br />
@@ -270,35 +270,35 @@ literal, specifying identifier to evaluate (i.e. <code>var //Storage idx</code>)
 
 <p>Native call instruction is used to call intrinsics. Arguments are not encoded directly inside this instruction, instead they follow it as special “meta” instructions (see the according section). Id of desired intrinsic is encoded in the <code>intrinsic id</code> field.</p>
 
-<p><img src="/img/bytecode_native.jpg" alt="Native call instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_native.jpg" alt="Native call instruction" /></p>
 
 <h2 id="function-callconstructor-call">Function call/Constructor call</h2>
 
 <p>Function/constructor call are utilized to perform calls to functions and constructors. Destination operand is encoded in <code>dst</code> field. Operand <code>name_idx</code> specifies the name of the function to call. Arguments are encoded the same way as in native call instruction.</p>
 
-<p><img src="/img/bytecode_fcall.jpg" alt="Function/constructor instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_fcall.jpg" alt="Function/constructor instruction" /></p>
 
 <h2 id="function-declaration">Function declaration</h2>
 
 <p>Function declarations are represented by special kind of instructions. Function name and number of arguments are located in <code>name_idx</code> and <code>arg_list</code> fields respectively.</p>
 
-<p><img src="/img/bytecode_fdecl.jpg" alt="Function declaration instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_fdecl.jpg" alt="Function declaration instruction" /></p>
 
 <h2 id="function-expression">Function expression</h2>
 
 <p>Very similar to function declaration. But additionally contains destination (<code>dst</code>) field and <code>name</code> operand is optional, because anonymous functions are possible.</p>
 
-<p><img src="/img/bytecode_fexpr.jpg" alt="Function expression instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_fexpr.jpg" alt="Function expression instruction" /></p>
 
 <h2 id="return-from-functioneval">Return from function/eval</h2>
 
 <p>Return instructions perfrom unconditional return from function/eval code. Return value can be specified (<code>idx</code> field).</p>
 
-<p><img src="/img/bytecode_ret.jpg" alt="Return instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_ret.jpg" alt="Return instruction" /></p>
 
 <h2 id="meta-special-marker-opcode">“Meta” (special marker opcode)</h2>
 
-<p><img src="/img/bytecode_meta.jpg" alt="Meta instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_meta.jpg" alt="Meta instruction" /></p>
 
 <p>Meta instructions are usually utilized as continuations of other instructions. Depending on <code>type</code> field, meta instruction can have the following meaning:</p>
 
@@ -315,49 +315,49 @@ literal, specifying identifier to evaluate (i.e. <code>var //Storage idx</code>)
 
 <p>JavaScript delete operator is modeled with delete instruction in the bytecode. There are two types of delete instruction, applied either to element of lexical environment or to object’s property.</p>
 
-<p><img src="/img/bytecode_delete.jpg" alt="Delete instructions" /></p>
+<p><img src="/jerryscript/img/bytecode_delete.jpg" alt="Delete instructions" /></p>
 
 <h2 id="this-binding-evaluate-this">This binding (evaluate “this”)</h2>
 <p>This binding instruction writes value of “this” to the <code>dst</code> operand.</p>
 
-<p><img src="/img/bytecode_binding.jpg" alt="This instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_binding.jpg" alt="This instruction" /></p>
 
 <h2 id="typeof-typeof-operation">typeof (typeof operation)</h2>
 
 <p>Typeof instruction executes JavaScript operator with the same name. Result is written to the <code>dst</code> operand.</p>
 
-<p><img src="/img/bytecode_typeof.jpg" alt="Typeof instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_typeof.jpg" alt="Typeof instruction" /></p>
 
 <h2 id="with-block">with block</h2>
 
 <p>To specify bounds of “with” block, a pair of instructions is used. “With” instruction specifies its start. Followed by a number of arbitrary instructions, the block ends with <code>end_with</code> meta instruction.</p>
 
-<p><img src="/img/bytecode_with.jpg" alt="With block instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_with.jpg" alt="With block instruction" /></p>
 
 <h2 id="try-block">try block</h2>
 
 <p>Try block consists of try instruction, followed by a number of arbitrary instructions, meta instruction <code>catch</code> or <code>finally</code> or both of them, separating catch and finally blocks respectively and meta instruction <code>end_try_catch_finally</code>, which finishes the whole construction.</p>
 
-<p><img src="/img/bytecode_try.jpg" alt="Try block instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_try.jpg" alt="Try block instruction" /></p>
 
 <h2 id="object-declaration">Object declaration</h2>
 
 <p>Obect declaration instruction represents object literal in JavaScript specification. It consists of <code>op_obj_decl</code> instruction, followed by a list of <code>prop_data</code>, <code>prop_getter</code> and <code>prop_setter</code> meta instructions. A series of instructions which evaluate property values can precede meta instructions. Number of meta instructions, e.g. number of properties, is specified in the <code>prop_num</code> field.</p>
 
-<p><img src="/img/bytecode_obj.jpg" alt="Object declaration instruction" /></p>
+<p><img src="/jerryscript/img/bytecode_obj.jpg" alt="Object declaration instruction" /></p>
 
 <h2 id="arguments-and-array-declarartion">Arguments and array declarartion</h2>
 
 <p>The strategy descibed in previous section is also used for encoding of arguments in function/constructor calls and elements in array declarations.<br />
 See the according pictures.</p>
 
-<p><img src="/img/bytecode_with.jpg" alt="Arguments/Array elements representation" /></p>
+<p><img src="/jerryscript/img/bytecode_with.jpg" alt="Arguments/Array elements representation" /></p>
 
 <h1 id="virtual-machine">Virtual machine</h1>
 
 <p>Virtual machine executes bytecode by interpreting instructions one by one. Bytecode is a continuous array of instructions, divided into blocks of fixed size. Main loop of interpreter calls <code>opfunc_*</code> for every instruction. This function returns completion value and position of the next instruction.</p>
 
-<p><img src="/img/bytecode_storage.jpg" alt="Bytecode storage" /></p>
+<p><img src="/jerryscript/img/bytecode_storage.jpg" alt="Bytecode storage" /></p>
 
 <p>Instruction can have up to three operands which are represented by <code>idx</code> values. Meaning of <code>idx</code> value depends on opcode and can be the following:</p>
 
@@ -410,7 +410,7 @@ position, ‘this’ binding, lexical environment.</li>
   <li>object</li>
 </ul>
 
-<p><img src="/img/ecma_value.jpg" alt="ECMA value representation" /></p>
+<p><img src="/jerryscript/img/ecma_value.jpg" alt="ECMA value representation" /></p>
 
 <p>The immediate value is placed in higher bits. “Simple value” is an enumeration, which consists of the following elements:<br />
 - undefined<br />
@@ -426,7 +426,7 @@ position, ‘this’ binding, lexical environment.</li>
 
 <p>Compressed pointers were introduced to save heap space. They are possible because heap size is currently limited by 256 KB, which requires 18 bits to cover it. ECMA values in heap are aligned by 8 bytes and this allows to save three more bits, so that compressed pointer consumes 15 bits only.</p>
 
-<p><img src="/img/ecma_compressed.jpg" alt="Heap and ECMA elements" /></p>
+<p><img src="/jerryscript/img/ecma_compressed.jpg" alt="Heap and ECMA elements" /></p>
 
 <p>ECMA data elements are allocated in pools (pools are allocated on heap)<br />
 Chunk size of the pool is 8 bytes (reduces fragmentation).</p>
@@ -466,7 +466,7 @@ Chunk size of the pool is 8 bytes (reduces fragmentation).</p>
 
 <p>Remaining fields of these structures are different and are shown on the picture.</p>
 
-<p><img src="/img/ecma_object.jpg" alt="Object/Lexicat environment structures" /></p>
+<p><img src="/jerryscript/img/ecma_object.jpg" alt="Object/Lexicat environment structures" /></p>
 
 <h3 id="property-of-an-object--description-of-a-lexical-environment-variable">Property of an object / description of a lexical environment variable</h3>
 
@@ -480,7 +480,7 @@ Chunk size of the pool is 8 bytes (reduces fragmentation).</p>
 - next property/variable in the object/lexical environment (compressed pointer)</p>
 
 <p>The remaining parts are differnt:<br />
-<img src="/img/ecma_object_property.jpg" alt="Object property/lexcial environment variable" /></p>
+<img src="/jerryscript/img/ecma_object_property.jpg" alt="Object property/lexcial environment variable" /></p>
 
 <h3 id="collections">Collections</h3>
 
@@ -530,7 +530,7 @@ Chunk size of the pool is 8 bytes (reduces fragmentation).</p>
 
 <p>LCache is a cache for property variable search requests.</p>
 
-<p><img src="/img/ecma_lcache.jpg" alt="LCache" /></p>
+<p><img src="/jerryscript/img/ecma_lcache.jpg" alt="LCache" /></p>
 
 <p>Entry of LCache has the following layout:<br />
 - object pointer<br />
@@ -556,7 +556,7 @@ or  <br />
 
 <p>Many algorithms/routines described in ECMA return a value of “completion” type, that is triplet of the following form:</p>
 
-<p><img src="/img/ecma_completion.jpg" alt="ECMA completion" /></p>
+<p><img src="/jerryscript/img/ecma_completion.jpg" alt="ECMA completion" /></p>
 
 <p>Jerry introduces two additional completion types:<br />
 - exit - produced by <code>exitval</code> opcode, indicates request to finish execution<br />

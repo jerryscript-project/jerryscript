@@ -253,6 +253,7 @@ body{ height: 100%; margin: 0;}
 
     h3 {
         font-size: 18px;
+        color: #2388DB;
 
         @include media-query($on-laptop) {
             font-size: 20px;
@@ -261,6 +262,7 @@ body{ height: 100%; margin: 0;}
 
     h4 {
         font-size: 16px;
+        color: #2388DB;
 
         @include media-query($on-laptop) {
             font-size: 18px;

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>JerryScript Engine</title>
+  <meta name="description" content="JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less then 8KB of RAM.
+">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="http://jerryscript.org/01.about.html">
+  <link rel="alternate" type="application/rss+xml" title="JerryScript Engine" href="http://jerryscript.org/feed.xml" />
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">JerryScript Engine</a>
+
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+
+      <div class="trigger">
+        
+          
+        
+          
+          <a class="page-link" href="/how-to/">How To</a>
+          
+        
+          
+          <a class="page-link" href="/API/">API</a>
+          
+        
+          
+          <a class="page-link" href="/internals/">Internals</a>
+          
+        
+          
+          <a class="page-link" href="/dev-guide/">Development</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title"></h1>
+  </header>
+
+  <article class="post-content">
+    <p>The concept of the Internet of Things (IoT) is becoming more and more popular. According to the reports of global corporations, there will be from 25 to 75 billion Internet of Things devices by 2020. Existence of a unified platform for developing applications of the IoT is essential domination in this field. Popularity of the JavaScript language in modern web, both on client and server sides, implies that providing a JavaScript-based platform for the IoT can attract developers to this platform.</p>
+
+<p>Nowadays, IoT is a very important, it becomes a part of our life with great speed. According to the main idea of the IoT, each everyday object, like key ring or cup of coffee, is supplied with a set of sensors which helps us to interact with it. These everyday objects should be organized into a network. The aim of the network is to achieve greater value and service by exchanging data with the manufacturer, operator and/or other connected devices. It’s very important to organize communication and program such devices in a safe and secure manner, so, applications for the IoT should be safe and secure.<br />
+The development of the IoT solutions is very active. There will be a lot of IoT devices soon and these devices will be very small and constraint.  Therefore, the majority of commercial solutions utilize low-level languages, such as C or assembler, for programming such devices. This choice complicates software development, debugging, deployment and update. Moreover, programming requires knowledge of low-level hardware details of the specific device, hence the developer should be highly qualified. Also, due to a wide variety of hardware for the IoT, the applications developed using low-level programming would not be cross-platform.<br />
+Meanwhile, application development should be very simple and developer friendly. We believe, that the key component to success in IoT is a lightweight engine that should become the core of future IoT platform, providing a way to develop applications using runtime-safe technology. Existing web technologies would perfectly suit the needs of the IoT.  The paper describes design and implementation of the world’s smallest and lightweight JavaScript engine.<br />
+The paper presents the architecture of the developed engine and core techniques used to provide small footprint. Chapter 2 describes high-level design of the engine, chapter 3 compares it with other engine, and the last chapter provides the list of possible improvements and our further plans.<br />
+The paper presents an engine, capable to execute applications on very constrained devices, with less then 100KB native code size, and able to run scripts on microcontrollers (MCU) with less than 8KB of RAM available. This paper proves that usage of JavaScript on every constraint device is reasonable and profitable. We provide comparison with existing technologies and summarize pros and cons, mentioning the main differentiation.</p>
+
+<p>JerryScript engine satisfies the following requirements:<br />
+* Capable to run on MCU (ARM Cortex M)<br />
+* Only few kilobytes of RAM available to the engine (&lt;64 KB RAM)<br />
+* Constrained ROM space for the code of the engine (&lt;200 KB ROM)<br />
+* On-device compilation and execution</p>
+
+<p>The engine provides access to peripherals from JS. To support variety of devices, the Common Peripheral API, providing access to sensors and actuators, is defined.</p>
+
+  </article>
+
+</div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+  <div class="wrapper">
+      <!--
+    <h2 class="footer-heading">JerryScript Engine</h2>
+    <div class="footer-col-wrapper">
+      <div class="footer-col  footer-col-1">
+        <ul class="contact-list">
+          <li>JerryScript Engine</li>
+          <li><a href="mailto:"></a></li>
+        </ul>
+      </div>
+
+    <h3 class="footer-heading">JerryScript Engine</h2>
+    <div class="footer-col footer-col-5">
+        <p class="text">JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less then 8KB of RAM.
+</p>
+    </div>
+-->
+    <div class="footer-copy">
+        <p> &copy; Copyright 2015 Samsung Electronics Co., Ltd., Licensed under the  <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+    </div>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

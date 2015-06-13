@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>JerryScript Engine</title>
+  <title>How To</title>
   <meta name="description" content="JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less then 8KB of RAM.
 ">
 
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="canonical" href="http://jerryscript.org/">
+  <link rel="canonical" href="http://jerryscript.org/how-to/">
   <link rel="alternate" type="application/rss+xml" title="JerryScript Engine" href="http://jerryscript.org/feed.xml" />
 </head>
 
@@ -71,23 +71,64 @@
 
     <div class="page-content">
       <div class="wrapper">
-        <p>JerryScript is a lightweight JavaScript engine intended to run on a very constrained devices such as microcontrollers:</p>
+        <div class="post">
 
-<ul>
-  <li>Only few kilobytes of RAM available to the engine (&lt;64 KB RAM)</li>
-  <li>Constrained ROM space for the code of the engine (&lt;200 KB ROM)</li>
-  <li>On-device compilation and execution</li>
-  <li>The engine provides access to peripherals from JavaScript</li>
-</ul>
+  <header class="post-header">
+    <h1 class="post-title">How To</h1>
+  </header>
 
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">print_hello</span><span class="p">(</span><span class="s2">&quot;Tom&quot;</span><span class="p">)</span>
+  <article class="post-content">
+    <p>This is very simple way of compiling JerryScript. (Please add more so to guide how to build.)</p>
 
-<span class="kd">function</span> <span class="nx">print_hello</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">print</span> <span class="p">(</span><span class="s2">&quot;Hi, &quot;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">)</span>
-<span class="p">}</span></code></pre></div>
+<h2 id="get-the-source">Get the source</h2>
 
-<p>Check out the <a href="http://github.com/Samsung/jerryscript">JerryScript sources</a> and start using JerryScript in you projects. Please, report all found bugs and request new features at <a href="http://github.com/Samsung/jerryscript/issues">JerryScript issue tracker</a>. If you have questions, feel free to ask them on <a href="http://github.com/Samsung/jerryscript/labels/question">issue tracker</a> and don’t forget to label it with <code>question</code> or <code>discussion</code>.</p>
+<p>You may know this.<br />
+<code>
+git clone https://github.com/Samsung/jerryscript.git
+cd jerryscript
+</code></p>
 
+<h2 id="building">Building</h2>
+
+<p>It’s based on Ubuntu Linux 14.04 LTS. You may need to read https://github.com/Samsung/jerryscript/wiki/Prerequisites before starting.</p>
+
+<pre><code>make
+</code></pre>
+<p>For the first time of the make, it’ll prepare prerequisites with next message. It may take some time so go grab some coffee.<br />
+<code>
+Setting up prerequisites... (log file: ./build/prerequisites/prerequisites.log)
+</code></p>
+
+<p>After prerequisites are prepared, make will build all supporting platforms and mods. It may also take a while.</p>
+
+<p>If only debug version for linux for development, just do as;<br />
+<code>
+make debug.linux
+</code></p>
+
+<p>without LTO(Link Time Optimization) and debug for linux<br />
+<code>
+LTO=ff make debug.linux
+</code></p>
+
+<p>if something goes wrong, it’ll show<br />
+<code>
+Build failed. See ./build/bin/unittests/make.log for details.
+</code></p>
+
+<h2 id="testing">Testing</h2>
+<pre><code>make unittests
+</code></pre>
+<p>It should have no errors if it is ok.</p>
+
+<h2 id="check-before-committing">Check before committing</h2>
+<pre><code>make precommit -j
+</code></pre>
+<p>This will check any problems in your modifications. may take some time depending on your machine. This is necessary before pull requests but can omit for local commits.</p>
+
+  </article>
+
+</div>
 
       </div>
     </div>

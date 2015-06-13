@@ -230,11 +230,18 @@ body{ height: 100%; margin: 0;}
     margin-bottom: $spacing-unit;
 
     h1 {
+        font-size: 30px;
         color: #2388DB;
-   }
+        margin-top: 10px;
+        margin-bottom: 5px;
+
+        @include media-query($on-laptop) {
+            font-size: 32px;
+        }
+    }
 
     h2 {
-        font-size: 30px;
+        font-size: 22px;
         color: #2388DB;
         margin-top: 10px;
         margin-bottom: 5px;
@@ -245,15 +252,15 @@ body{ height: 100%; margin: 0;}
     }
 
     h3 {
-        font-size: 26px;
+        font-size: 18px;
 
         @include media-query($on-laptop) {
-            font-size: 22px;
+            font-size: 20px;
         }
     }
 
     h4 {
-        font-size: 20px;
+        font-size: 16px;
 
         @include media-query($on-laptop) {
             font-size: 18px;

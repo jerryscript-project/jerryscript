@@ -1,3 +1,6 @@
+html {height: 100%;}
+body{ height: 100%; margin: 0;}
+
 /**
  * Site header
  */
@@ -40,6 +43,8 @@
         &:not(:first-child) {
             margin-left: 20px;
         }
+
+        vertical-align: middle;
     }
 
     @include media-query($on-palm) {
@@ -93,7 +98,10 @@
  */
 .site-footer {
     border-top: 5px solid #1B73BA;
-    background-color: #2388DB
+    background-color: #2388DB;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
 .footer-heading {

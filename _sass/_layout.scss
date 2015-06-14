@@ -49,9 +49,9 @@ body{ height: 100%; margin: 0;}
 
     @include media-query($on-palm) {
         position: absolute;
-        top: 9px;
+        top: 14px;
         right: 30px;
-        background-color: $background-color;
+        background-color: white;
         border: 1px solid $grey-color-light;
         border-radius: 5px;
         text-align: right;
@@ -80,14 +80,11 @@ body{ height: 100%; margin: 0;}
             display: none;
         }
 
-        &:hover .trigger {
-            display: block;
-        }
-
         .page-link {
             padding: 5px 10px;
             vertical-align: middle;
             color: #2388DB;
+            display: block;
         }
     }
 }

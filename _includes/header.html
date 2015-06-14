@@ -9,7 +9,7 @@
       </button>
       <a class="navbar-brand" href="{{ site.baseurl }}/"><b>JerryScript</b></a>
     </div>
-    <div id="navbar" class="collapse navbar-collapse" style="position: relative;">
+    <div id="navbar" class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
         {% if page.url == "/" %}
           <li class="active"><a href="{{ site.baseurl }}/">Home</a></li>
@@ -19,7 +19,7 @@
         <li><a href="http://github.com/Samsung/jerryscript">View on Github</a></li>
         <li><a href="http://www.iotjs.net">Powering <b>IoT.js</b></a></li>
       </ul>
-      <ul class="nav navbar-nav" style="position: absolute; right: 0px;">
+      <ul class="nav navbar-nav navbar-right">
         {% for p in site.pages %}
           {% if p.title %}
             {% if page.url == p.url %}
@@ -27,7 +27,7 @@
             {% else %}
               <li><a href="{{ p.url | prepend: site.baseurl }}" >{{ p.title }}</a></li>
             {% endif %}
-            {% endif %}
+          {% endif %}
         {% endfor %}
       </ul>
     </div><!--/.nav-collapse -->

@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
   {% include head.html %}
 
   <body>
-      <div style="min-height: 100%; position: relative;">
+
     {% include header.html %}
 
-    <div class="page-content">
-      <div class="wrapper">
+    <div class="container">
         {{ content }}
-      </div>
-    </div>
+    </div><!-- /.container -->
 
     {% include footer.html %}
-</div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+
   </body>
 </html>

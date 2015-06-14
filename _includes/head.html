@@ -3,10 +3,56 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
   <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
+  <meta name="author" content="IoTjs">
 
-  <link rel="stylesheet" href="{{ "/css/main.css" | prepend: site.baseurl }}">
-  <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
-  <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}" />
+  <title>JavaScript engine for Internet of Things{% if page.title %}: {{ page.title }} {% endif %}</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="{{ site.baseurl }}/bootstrap.min.css" rel="stylesheet">
+  <style>
+      html {
+           position: relative;
+            min-height: 100%;
+      }
+      body {
+        padding-top: 50px;
+        margin-bottom: 50px;
+      }
+      .footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 40px;
+        background-color: #f5f5f5;
+      }
+      .project_title h1{
+         font-size: 64px; text-align: center;
+         font-weight: bold;
+       }
+      .project_title {
+        padding: 40px 20px;
+         text-align: center;
+         border-radius: 6px;
+       }
+       .lead {
+           color:#245580;
+       }
+       .project_overview {
+           font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+           font-size: 18px;
+           padding: 40px; padding-bottom: 20px;
+           background-color: #f5f5f5;
+       }
+       .learn_more {
+           font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+           font-size: 18px;
+           padding: 40px; padding-bottom: 20px;
+       }
+       .container .copyright_and_license_notice {
+           margin: 8px 0;
+           font-size:14px; text-align: center;
+           color:#3C3C3C;
+       }
+  </style>
 </head>

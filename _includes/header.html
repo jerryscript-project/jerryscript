@@ -7,9 +7,9 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#"><b>JerryScript</b></a>
+      <a class="navbar-brand" href="{{ site.baseurl }}/"><b>JerryScript</b></a>
     </div>
-    <div id="navbar" class="collapse navbar-collapse">
+    <div id="navbar" class="collapse navbar-collapse" style="position: relative;">
       <ul class="nav navbar-nav">
         {% if page.url == "/" %}
           <li class="active"><a href="{{ site.baseurl }}/">Home</a></li>
@@ -18,6 +18,8 @@
         {% endif %}
         <li><a href="http://github.com/Samsung/jerryscript">View on Github</a></li>
         <li><a href="http://www.iotjs.net">Powering <b>IoT.js</b></a></li>
+      </ul>
+      <ul class="nav navbar-nav" style="position: absolute; right: 0px;">
         {% for p in site.pages %}
           {% if p.title %}
             {% if page.url == p.url %}

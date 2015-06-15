@@ -169,6 +169,8 @@ typedef struct
  */
 #define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
 
+uint32_t hex_to_int (char hex);
+
 void lexer_init (const char *, size_t, bool);
 void lexer_free (void);
 

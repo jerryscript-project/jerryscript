@@ -346,7 +346,7 @@ consume_char (void)
   } \
   while (0)
 
-static uint32_t
+uint32_t
 hex_to_int (char hex)
 {
   switch (hex)

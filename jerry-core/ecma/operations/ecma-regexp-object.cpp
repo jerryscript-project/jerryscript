@@ -216,7 +216,7 @@ utf8_backtrack (const ecma_char_t* str_p)
 {
   /* FIXME: fix this, when unicode support is finished! */
   return --str_p;
-}
+} /* utf8_backtrack */
 
 /**
  * Helper to get an input character and increase string pointer.
@@ -228,7 +228,7 @@ get_input_char (const ecma_char_t** char_p)
   const ecma_char_t ch = **char_p;
   (*char_p)++;
   return ch;
-}
+} /* get_input_char */
 
 /**
  * Helper to get current input character, won't increase string pointer.
@@ -238,7 +238,7 @@ lookup_input_char (const ecma_char_t* str_p)
 {
   /* FIXME: fix this, when unicode support is finished! */
   return *str_p;
-}
+} /* lookup_input_char */
 
 /**
  * Helper to get previous input character, won't decrease string pointer.
@@ -248,7 +248,7 @@ lookup_prev_char (const ecma_char_t* str_p)
 {
   /* FIXME: fix this, when unicode support is finished! */
   return *(--str_p);
-}
+} /* lookup_prev_char */
 
 /**
  * Helper to check that a unicode character is a word character or not.
@@ -264,7 +264,7 @@ regexp_is_wordchar (const ecma_char_t ch)
     return true;
   }
   return false;
-}
+} /* regexp_is_wordchar */
 
 /**
  * Recursive function for RegExp matching

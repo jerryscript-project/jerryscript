@@ -879,8 +879,8 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
  * Invoke function specified by a function object
  *
  * Note:
- *      if invocation was performed successfully, returned value should be freed
- *      with jerry_api_release_value just when the value becomes unnecessary.
+ *      returned value should be freed with jerry_api_release_value
+ *      just when the value becomes unnecessary.
  *
  * Note:
  *      If function is invoked as constructor, it should support [[Construct]] method,
@@ -900,8 +900,9 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
                                                             *            if function is invoked as constructor;
                                                             *            in case of simple function call set 'this'
                                                             *            binding to the global object) */
-                           jerry_api_value_t *retval_p, /**< pointer to place for function's return value
-                                                         *   or NULL (to ignore the return value) */
+                           jerry_api_value_t *retval_p, /**< pointer to place for function's
+                                                         *   return value / thrown exception value
+                                                         *   or NULL (to ignore the values) */
                            const jerry_api_value_t args_p[], /**< function's call arguments
                                                               *   (NULL if arguments number is zero) */
                            uint16_t args_count) /**< number of the arguments */
@@ -950,26 +951,18 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
                                              args_count);
   }
 
-  if (ecma_is_completion_value_normal (call_completion))
-  {
-    if (retval_p != NULL)
-    {
-      jerry_api_convert_ecma_value_to_api_value (retval_p,
-                                                 ecma_get_completion_value_value (call_completion));
-    }
-  }
-  else
+  if (!ecma_is_completion_value_normal (call_completion))
   {
     /* unhandled exception during the function call */
-
     JERRY_ASSERT (ecma_is_completion_value_throw (call_completion));
 
-    if (retval_p != NULL)
-    {
-      jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
-    }
-
     is_successful = false;
+  }
+
+  if (retval_p != NULL)
+  {
+    jerry_api_convert_ecma_value_to_api_value (retval_p,
+                                               ecma_get_completion_value_value (call_completion));
   }
 
   ecma_free_completion_value (call_completion);
@@ -985,23 +978,41 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 } /* jerry_api_invoke_function */
 
 /**
+ * Construct new TypeError object
+ */
+static void
+jerry_api_construct_type_error (jerry_api_value_t *retval_p) /**< out: value with constructed
+                                                              *        TypeError object */
+{
+  ecma_object_t *type_error_obj_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
+  ecma_value_t type_error_value = ecma_make_object_value (type_error_obj_p);
+
+  jerry_api_convert_ecma_value_to_api_value (retval_p, type_error_value);
+
+  ecma_deref_object (type_error_obj_p);
+} /* jerry_api_construct_type_error */
+
+/**
  * Call function specified by a function object
  *
  * Note:
- *      if call was performed successfully, returned value should be freed
- *      with jerry_api_release_value just when the value becomes unnecessary.
+ *      returned value should be freed with jerry_api_release_value
+ *      just when the value becomes unnecessary.
  *
  * @return true, if call was performed successfully, i.e.:
  *                - specified object is a function object (see also jerry_api_is_function);
  *                - no unhandled exceptions were thrown in connection with the call;
- *         false - otherwise.
+ *         false - otherwise, 'retval_p' contains thrown exception:
+ *                  if called object is not function object - a TypeError instance;
+ *                  else - exception, thrown during the function call.
  */
 bool
 jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
                          jerry_api_object_t *this_arg_p, /**< object for 'this' binding
                                                           *   or NULL (set 'this' binding to the global object) */
-                         jerry_api_value_t *retval_p, /**< pointer to place for function's return value
-                                                       *   or NULL (to ignore the return value) */
+                         jerry_api_value_t *retval_p, /**< pointer to place for function's
+                                                       *   return value / thrown exception value
+                                                       *   or NULL (to ignore the values) */
                          const jerry_api_value_t args_p[], /**< function's call arguments
                                                             *   (NULL if arguments number is zero) */
                          uint16_t args_count) /**< number of the arguments */
@@ -1012,7 +1023,13 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
   {
     return jerry_api_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
   }
+  else
   {
+    if (retval_p != NULL)
+    {
+      jerry_api_construct_type_error (retval_p);
+    }
+
     return false;
   }
 } /* jerry_api_call_function */
@@ -1021,18 +1038,21 @@ jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function ob
  * Construct object invoking specified function object as a constructor
  *
  * Note:
- *      if construction was performed successfully, returned value should be freed
- *      with jerry_api_release_value just when the value becomes unnecessary.
+ *      returned value should be freed with jerry_api_release_value
+ *      just when the value becomes unnecessary.
  *
  * @return true, if construction was performed successfully, i.e.:
  *                - specified object is a constructor function object (see also jerry_api_is_constructor);
  *                - no unhandled exceptions were thrown in connection with the invocation;
- *         false - otherwise.
+ *         false - otherwise, 'retval_p' contains thrown exception:
+ *                if  specified object is not a constructor function object - a TypeError instance;
+ *                else - exception, thrown during the invocation.
  */
 bool
 jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function object to call */
-                            jerry_api_value_t *retval_p, /**< pointer to place for function's return value
-                                                          *   or NULL (to ignore the return value) */
+                            jerry_api_value_t *retval_p, /**< pointer to place for function's
+                                                          *   return value / thrown exception value
+                                                          *   or NULL (to ignore the values) */
                             const jerry_api_value_t args_p[], /**< function's call arguments
                                                                *   (NULL if arguments number is zero) */
                             uint16_t args_count) /**< number of the arguments */
@@ -1045,6 +1065,11 @@ jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function
   }
   else
   {
+    if (retval_p != NULL)
+    {
+      jerry_api_construct_type_error (retval_p);
+    }
+
     return false;
   }
 } /* jerry_api_construct_object */

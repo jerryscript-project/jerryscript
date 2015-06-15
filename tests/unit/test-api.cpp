@@ -46,6 +46,9 @@ const char *test_source = (
                            "  } "
                            "  assert(catched); "
                            "} "
+                           "function throw_reference_error() { "
+                           " throw new ReferenceError ();"
+                           "} "
                            );
 
 bool test_api_is_free_callback_was_called = false;
@@ -222,11 +225,11 @@ main (void)
 
   jerry_init (JERRY_FLAG_EMPTY);
 
-  bool is_ok;
+  bool is_ok, is_exception;
   ssize_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field;
   jerry_api_value_t val_external, val_external_construct, val_call_external;
-  jerry_api_object_t* global_obj_p;
+  jerry_api_object_t* global_obj_p, *obj_p;
   jerry_api_object_t* external_func_p, *external_construct_p;
   jerry_api_object_t* throw_test_handler_p;
   jerry_api_value_t res, args[2];
@@ -437,6 +440,71 @@ main (void)
   jerry_api_release_value (&val_t);
   jerry_api_release_value (&res);
 
+  // Test: Unhandled exception in called function
+  is_ok = jerry_api_get_object_field_value (global_obj_p, "throw_reference_error", &val_t);
+  JERRY_ASSERT (is_ok
+                && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
+
+  is_ok = jerry_api_call_function (val_t.v_object,
+                                   global_obj_p,
+                                   &res,
+                                   NULL, 0);
+  is_exception = !is_ok;
+
+  JERRY_ASSERT (is_exception);
+  jerry_api_release_value (&val_t);
+
+  // 'res' should contain exception object
+  JERRY_ASSERT (res.type == JERRY_API_DATA_TYPE_OBJECT);
+  jerry_api_release_value (&res);
+
+  // Test: Call of non-function
+  obj_p = jerry_api_create_object ();
+  is_ok = jerry_api_call_function (obj_p,
+                                   global_obj_p,
+                                   &res,
+                                   NULL, 0);
+  is_exception = !is_ok;
+  JERRY_ASSERT (is_exception);
+
+  // 'res' should contain exception object
+  JERRY_ASSERT (res.type == JERRY_API_DATA_TYPE_OBJECT);
+  jerry_api_release_value (&res);
+
+  jerry_api_release_object (obj_p);
+
+  // Test: Unhandled exception in function called, as constructor
+  is_ok = jerry_api_get_object_field_value (global_obj_p, "throw_reference_error", &val_t);
+  JERRY_ASSERT (is_ok
+                && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
+
+  is_ok = jerry_api_construct_object (val_t.v_object,
+                                      &res,
+                                      NULL, 0);
+  is_exception = !is_ok;
+
+  JERRY_ASSERT (is_exception);
+  jerry_api_release_value (&val_t);
+
+  // 'res' should contain exception object
+  JERRY_ASSERT (res.type == JERRY_API_DATA_TYPE_OBJECT);
+  jerry_api_release_value (&res);
+
+  // Test: Call of non-function as constructor
+  obj_p = jerry_api_create_object ();
+  is_ok = jerry_api_construct_object (obj_p,
+                                      &res,
+                                      NULL, 0);
+  is_exception = !is_ok;
+  JERRY_ASSERT (is_exception);
+
+  // 'res' should contain exception object
+  JERRY_ASSERT (res.type == JERRY_API_DATA_TYPE_OBJECT);
+  jerry_api_release_value (&res);
+
+  jerry_api_release_object (obj_p);
+
+  // Test: eval
   const char *eval_code_src_p = "(function () { return 123; })";
   jerry_completion_code_t status = jerry_api_eval (eval_code_src_p,
                                                    strlen (eval_code_src_p),

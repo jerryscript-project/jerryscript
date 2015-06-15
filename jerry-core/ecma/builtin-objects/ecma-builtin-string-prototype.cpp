@@ -25,6 +25,7 @@
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
 
@@ -554,7 +555,66 @@ ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this_arg
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+  JERRY_ASSERT (ecma_string_get_length (original_string_p) >= 0);
+
+  /* 3 */
+  const uint32_t len = (uint32_t) ecma_string_get_length (original_string_p);
+
+  /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
+  uint32_t zt_str_size = (uint32_t) sizeof (ecma_char_t) * (len + 1);
+  ecma_char_t *original_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_size,
+                                                                        MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_string_to_zt_string (original_string_p, original_zt_str_p, (ssize_t) zt_str_size);
+
+  uint32_t prefix = 0, postfix = 0;
+  uint32_t new_len = 0;
+
+  while (prefix < len && isspace (original_zt_str_p[prefix]))
+  {
+    prefix++;
+  }
+
+  while (postfix < len - prefix && isspace (original_zt_str_p[len - postfix - 1]))
+  {
+    postfix++;
+  }
+
+  new_len = prefix < len ? len - prefix - postfix : 0;
+
+  MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_len + 1, ecma_char_t);
+
+  for (uint32_t idx = 0; idx < new_len; ++idx)
+  {
+    new_str_buffer[idx] = original_zt_str_p[idx + prefix];
+  }
+
+  new_str_buffer[new_len] = '\0';
+  ecma_string_t *new_str_p = ecma_new_ecma_string ((ecma_char_t *) new_str_buffer);
+
+  /* 4 */
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
+
+  MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
+
+  mem_heap_free_block (original_zt_str_p);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_trim */
 
 /**

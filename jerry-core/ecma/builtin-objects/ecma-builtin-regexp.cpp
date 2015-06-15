@@ -67,11 +67,11 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   JERRY_ASSERT (arguments_list_len <= 2 && arguments_list_p != NULL);
 
-  if (ecma_is_value_object (arguments_list_p[0]) &&
-      ecma_object_get_class_name (ecma_get_object_from_value (arguments_list_p[0])) == ECMA_MAGIC_STRING_REGEXP_UL)
+  if (ecma_is_value_object (arguments_list_p[0])
+      && ecma_object_get_class_name (ecma_get_object_from_value (arguments_list_p[0])) == ECMA_MAGIC_STRING_REGEXP_UL)
   {
-    if (arguments_list_len == 1 ||
-        (arguments_list_len > 1 && ecma_is_value_undefined (arguments_list_p[1])))
+    if (arguments_list_len == 1
+        || (arguments_list_len > 1 && ecma_is_value_undefined (arguments_list_p[1])))
     {
       ret_value = ecma_make_normal_completion_value (ecma_copy_value (arguments_list_p[0], true));
     }

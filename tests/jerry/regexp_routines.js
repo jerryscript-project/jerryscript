@@ -18,9 +18,33 @@ var r;
 r = new RegExp ("a");
 assert (r.exec ("a") == "a");
 assert (r.exec ("b") == undefined);
+try {
+	r.exec.call({}, "a");
+	assert (false)
+}
+catch (e)
+{
+	assert (e instanceof TypeError);
+}
 
 assert (r.test ("a") == true);
 assert (r.test ("b") == false);
+try {
+	r.test.call({}, "a");
+	assert (false)
+}
+catch (e)
+{
+	assert (e instanceof TypeError);
+}
 
 r = new RegExp ("a", "mig");
 assert (r.toString () == "/a/gim");
+try {
+	r.toString.call({}, "a");
+	assert (false)
+}
+catch (e)
+{
+	assert (e instanceof TypeError);
+}

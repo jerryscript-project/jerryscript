@@ -16,6 +16,7 @@
 
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
@@ -57,33 +58,40 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
+  if (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != ECMA_MAGIC_STRING_REGEXP_UL)
+  {
+    TYPE_ERROR_OBJ (ret_value, "Incomplete RegExp type");
+  }
+  else
+  {
+    ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_property_t *bytecode_prop = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-  re_bytecode_t *bytecode_p = ECMA_GET_POINTER (re_bytecode_t, bytecode_prop->u.internal_property.value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+    ecma_property_t *bytecode_prop = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+    re_bytecode_t *bytecode_p = ECMA_GET_POINTER (re_bytecode_t, bytecode_prop->u.internal_property.value);
 
-  ECMA_TRY_CATCH (input_str_value,
-                  ecma_op_to_string (arg),
-                  ret_value);
+    ECMA_TRY_CATCH (input_str_value,
+                    ecma_op_to_string (arg),
+                    ret_value);
 
-  ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
+    ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
 
-  /* Convert ecma_String_t* to regexp_bytecode_t* */
-  int32_t chars = ecma_string_get_length (input_str_p);
+    /* Convert ecma_String_t* to regexp_bytecode_t* */
+    int32_t chars = ecma_string_get_length (input_str_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (input_zt_str_p, chars + 1, ecma_char_t);
+    MEM_DEFINE_LOCAL_ARRAY (input_zt_str_p, chars + 1, ecma_char_t);
 
-  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
-  ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
+    ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+    ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
 
-  ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_zt_str_p);
+    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_zt_str_p);
 
-  MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);
+    MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);
 
-  ECMA_FINALIZE (input_str_value);
+    ECMA_FINALIZE (input_str_value);
 
-  ECMA_FINALIZE (obj_this);
+    ECMA_FINALIZE (obj_this);
+  }
   return ret_value;
 } /* ecma_builtin_regexp_prototype_exec */
 
@@ -132,73 +140,79 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (obj_this,
-                  ecma_op_to_object (this_arg),
-                  ret_value);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-
-  /* Get RegExp source from the source property */
-  ecma_string_t *magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SOURCE);
-  ecma_property_t* source_prop = ecma_op_object_get_property (obj_p, magic_string_p);
-  ecma_deref_ecma_string (magic_string_p);
-
-  ecma_string_t *src_sep_str_p = ecma_new_ecma_string ((ecma_char_t *) "/");
-  ecma_string_t *source_str_p = ecma_get_string_from_value (source_prop->u.named_data_property.value);
-  ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, ecma_copy_or_ref_ecma_string (source_str_p));
-  ecma_deref_ecma_string (source_str_p);
-
-  ecma_string_t *concat_p = ecma_concat_ecma_strings (output_str_p, src_sep_str_p);
-  ecma_deref_ecma_string (src_sep_str_p);
-  ecma_deref_ecma_string (output_str_p);
-  output_str_p = concat_p;
-
-  /* Check the global flag */
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GLOBAL);
-  ecma_property_t* global_prop = ecma_op_object_get_property (obj_p, magic_string_p);
-  ecma_deref_ecma_string (magic_string_p);
-
-  if (ecma_is_value_true (global_prop->u.named_data_property.value))
+  if (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != ECMA_MAGIC_STRING_REGEXP_UL)
   {
-    ecma_string_t *g_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "g");
-    concat_p = ecma_concat_ecma_strings (output_str_p, g_flag_str_p);
-    ecma_deref_ecma_string (output_str_p);
-    ecma_deref_ecma_string (g_flag_str_p);
-    output_str_p = concat_p;
+    TYPE_ERROR_OBJ (ret_value, "Incomplete RegExp type");
   }
-
-  /* Check the ignoreCase flag */
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE_UL);
-  ecma_property_t* ignorecase_prop = ecma_op_object_get_property (obj_p, magic_string_p);
-  ecma_deref_ecma_string (magic_string_p);
-
-  if (ecma_is_value_true (ignorecase_prop->u.named_data_property.value))
+  else
   {
-    ecma_string_t *ic_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "i");
-    concat_p = ecma_concat_ecma_strings (output_str_p, ic_flag_str_p);
+    ECMA_TRY_CATCH (obj_this,
+                    ecma_op_to_object (this_arg),
+                    ret_value);
+
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+
+    /* Get RegExp source from the source property */
+    ecma_string_t *magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SOURCE);
+    ecma_property_t* source_prop = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_deref_ecma_string (magic_string_p);
+
+    ecma_string_t *src_sep_str_p = ecma_new_ecma_string ((ecma_char_t *) "/");
+    ecma_string_t *source_str_p = ecma_get_string_from_value (source_prop->u.named_data_property.value);
+    ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, ecma_copy_or_ref_ecma_string (source_str_p));
+    ecma_deref_ecma_string (source_str_p);
+
+    ecma_string_t *concat_p = ecma_concat_ecma_strings (output_str_p, src_sep_str_p);
+    ecma_deref_ecma_string (src_sep_str_p);
     ecma_deref_ecma_string (output_str_p);
-    ecma_deref_ecma_string (ic_flag_str_p);
     output_str_p = concat_p;
+
+    /* Check the global flag */
+    magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GLOBAL);
+    ecma_property_t* global_prop = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_deref_ecma_string (magic_string_p);
+
+    if (ecma_is_value_true (global_prop->u.named_data_property.value))
+    {
+      ecma_string_t *g_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "g");
+      concat_p = ecma_concat_ecma_strings (output_str_p, g_flag_str_p);
+      ecma_deref_ecma_string (output_str_p);
+      ecma_deref_ecma_string (g_flag_str_p);
+      output_str_p = concat_p;
+    }
+
+    /* Check the ignoreCase flag */
+    magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_IGNORECASE_UL);
+    ecma_property_t* ignorecase_prop = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_deref_ecma_string (magic_string_p);
+
+    if (ecma_is_value_true (ignorecase_prop->u.named_data_property.value))
+    {
+      ecma_string_t *ic_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "i");
+      concat_p = ecma_concat_ecma_strings (output_str_p, ic_flag_str_p);
+      ecma_deref_ecma_string (output_str_p);
+      ecma_deref_ecma_string (ic_flag_str_p);
+      output_str_p = concat_p;
+    }
+
+    /* Check the global flag */
+    magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MULTILINE);
+    ecma_property_t* multiline_prop = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_deref_ecma_string (magic_string_p);
+
+    if (ecma_is_value_true (multiline_prop->u.named_data_property.value))
+    {
+      ecma_string_t *m_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "m");
+      concat_p = ecma_concat_ecma_strings (output_str_p, m_flag_str_p);
+      ecma_deref_ecma_string (output_str_p);
+      ecma_deref_ecma_string (m_flag_str_p);
+      output_str_p = concat_p;
+    }
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+
+    ECMA_FINALIZE (obj_this);
   }
-
-  /* Check the global flag */
-  magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MULTILINE);
-  ecma_property_t* multiline_prop = ecma_op_object_get_property (obj_p, magic_string_p);
-  ecma_deref_ecma_string (magic_string_p);
-
-  if (ecma_is_value_true (multiline_prop->u.named_data_property.value))
-  {
-    ecma_string_t *m_flag_str_p = ecma_new_ecma_string ((ecma_char_t *) "m");
-    concat_p = ecma_concat_ecma_strings (output_str_p, m_flag_str_p);
-    ecma_deref_ecma_string (output_str_p);
-    ecma_deref_ecma_string (m_flag_str_p);
-    output_str_p = concat_p;
-  }
-
-  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
-
-  ECMA_FINALIZE (obj_this);
-
   return ret_value;
 } /* ecma_builtin_regexp_prototype_to_string */
 

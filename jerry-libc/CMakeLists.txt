@@ -50,15 +50,6 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
  set(INCLUDE_LIBC_INTERFACE ${CMAKE_SOURCE_DIR}/jerry-libc/include)
  set(INCLUDE_LIBC_INTERFACE ${INCLUDE_LIBC_INTERFACE} PARENT_SCOPE)
 
- # Platform-specific
-  # Linux
-   set(INCLUDE_LIBC_LINUX target/linux)
-  # MCU
-   # STM32F3
-    set(INCLUDE_LIBC_MCU_STM32F3 target/mcu-stubs)
-   # STM32F4
-    set(INCLUDE_LIBC_MCU_STM32F4 target/mcu-stubs)
-
  # Third-party
   # Platform-specific
    # Linux

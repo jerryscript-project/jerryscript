@@ -19,6 +19,7 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
+#include "lexer.h"
 #include "re-parser.h"
 #include "syntax-errors.h"
 
@@ -27,44 +28,13 @@
 #define RE_LOOKUP(str_p, lookup)  *(str_p + lookup)
 #define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)
 
-static uint32_t
-hex_to_int (ecma_char_t hex)
-{
-  switch (hex)
-  {
-    case '0': return 0x0;
-    case '1': return 0x1;
-    case '2': return 0x2;
-    case '3': return 0x3;
-    case '4': return 0x4;
-    case '5': return 0x5;
-    case '6': return 0x6;
-    case '7': return 0x7;
-    case '8': return 0x8;
-    case '9': return 0x9;
-    case 'a':
-    case 'A': return 0xA;
-    case 'b':
-    case 'B': return 0xB;
-    case 'c':
-    case 'C': return 0xC;
-    case 'd':
-    case 'D': return 0xD;
-    case 'e':
-    case 'E': return 0xE;
-    case 'f':
-    case 'F': return 0xF;
-    default: JERRY_UNREACHABLE ();
-  }
-}
-
 static ecma_char_t
 get_ecma_char (ecma_char_t** char_p)
 {
   ecma_char_t ch = **char_p;
   RE_ADVANCE (*char_p, 1);
   return ch;
-}
+} /* get_ecma_char */
 
 /**
  * Parse RegExp iterators
@@ -152,7 +122,7 @@ parse_re_iterator (ecma_char_t *pattern_p, /**< RegExp pattern */
             return ret_value;
           }
           digits++;
-          qmin = qmin * 10 + hex_to_int (ch1);
+          qmin = qmin * 10 + hex_to_int ((char) ch1);
         }
         else if (ch1 == ',')
         {
@@ -231,7 +201,7 @@ parse_re_iterator (ecma_char_t *pattern_p, /**< RegExp pattern */
   }
 
   return ret_value;
-}
+} /* parse_re_iterator */
 
 /**
  * Count the number of groups in pattern
@@ -279,7 +249,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
       }
     }
   }
-}
+} /* re_count_num_of_groups */
 
 /**
  * Read the input pattern and parse the range of character class
@@ -691,7 +661,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
               {
                 break;
               }
-              number = number * 10 + hex_to_int (digit);
+              number = number * 10 + hex_to_int ((char) digit);
               index++;
             }
             while (true);

@@ -27,7 +27,7 @@
  * @{
  */
 
-/** \addtogroup jerry Jerry engine extension interface
+/** \addtogroup jerry_extension Jerry engine extension interface
  * @{
  */
 

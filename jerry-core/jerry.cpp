@@ -57,7 +57,7 @@ static jerry_flag_t jerry_flags;
  */
 static bool jerry_api_available;
 
-/** \addtogroup jerry Jerry engine extension interface
+/** \addtogroup jerry_extension Jerry engine extension interface
  * @{
  */
 
@@ -67,9 +67,21 @@ static bool jerry_api_available;
 char jerry_extension_characters_buffer[CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
 
 #ifdef JERRY_ENABLE_LOG
+/**
+ * TODO:
+ *      Move logging-related functionality to separate module, like jerry-log.cpp
+ */
+
+/**
+ * Verbosity level of logging
+ */
 int jerry_debug_level = 0;
+
+/**
+ * File, used for logging
+ */
 FILE *jerry_log_file = NULL;
-#endif
+#endif /* JERRY_ENABLE_LOG */
 
 /**
  * Assert that it is correct to call API in current state.
@@ -84,9 +96,8 @@ FILE *jerry_log_file = NULL;
  *         If it is correct, procedure just returns; otherwise - engine is stopped.
  *
  * Note:
- *         TODO: Add states when API could not be invoked, when they would appear.
- *         // "API could not be invoked in the following cases:"
- *         //    - ... .
+ *         API could not be invoked in the following cases:
+ *           - between enter to and return from native free callback.
  */
 static void
 jerry_assert_api_available (void)
@@ -126,8 +137,8 @@ jerry_make_api_unavailable (void)
 static void
 jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< out: api value */
                                            ecma_value_t value) /**< ecma-value (undefined,
-                                                                       *   null, boolean, number,
-                                                                       *   string or object */
+                                                                *   null, boolean, number,
+                                                                *   string or object */
 {
   jerry_assert_api_available ();
 
@@ -425,7 +436,9 @@ jerry_api_create_object (void)
  * @return pointer to created error object
  */
 jerry_api_object_t*
-jerry_api_create_error (jerry_api_error_t error_type, const char *message_p)
+jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
+                        const char *message_p) /**< value of 'message' property
+                                                *   of constructed error object */
 {
   jerry_assert_api_available ();
 
@@ -488,7 +501,7 @@ jerry_api_create_error (jerry_api_error_t error_type, const char *message_p)
 
     return error_object_p;
   }
-}
+} /* jerry_api_create_error */
 
 /**
  * Create an external function object
@@ -1123,7 +1136,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
   {
 #ifndef JERRY_ENABLE_LOG
     JERRY_WARNING_MSG ("Ignoring log options because of '!JERRY_ENABLE_LOG' build configuration.\n");
-#endif
+#endif /* !JERRY_ENABLE_LOG */
   }
 
   if (flags & (JERRY_FLAG_MEM_STATS))

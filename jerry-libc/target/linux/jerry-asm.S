@@ -38,3 +38,33 @@ syscall_3_asm:
   SYSCALL_3
 .size syscall_3_asm, . - syscall_3_asm
 
+/**
+ * setjmp (jmp_buf env)
+ *
+ * See also:
+ *          longjmp
+ *
+ * @return 0 - if returns from direct call,
+ *         nonzero - if returns after longjmp.
+ */
+.global setjmp
+.type setjmp, %function
+setjmp:
+  _SETJMP
+.size setjmp, . - setjmp
+
+/**
+ * longjmp (jmp_buf env, int val)
+ *
+ * Note:
+ *      if val is not 0, then it would be returned from setjmp,
+ *      otherwise - 0 would be returned.
+ *
+ * See also:
+ *          setjmp
+ */
+.global longjmp
+.type longjmp, %function
+longjmp:
+  _LONGJMP
+.size longjmu, . - setjmp

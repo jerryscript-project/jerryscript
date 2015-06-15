@@ -18,4 +18,9 @@ set(CMAKE_SYSTEM_PROCESSOR armv7l)
 set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
 set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
 
-set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb)
+#
+# Limit fpu to VFPv3 with d0-d15 registers
+#
+# If this is changed, setjmp / longjmp for ARMv7 should be updated accordingly
+#
+set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb -mfpu=vfpv3-d16)

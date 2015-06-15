@@ -80,13 +80,88 @@
   \
   pop {r4-r12, pc};
 
+/*
+ * ldr argc ([sp + 0x0]) -> r0
+ * add argv (sp + 0x4) -> r1
+ *
+ * bl main
+ *
+ * bl exit
+ *
+ * infinite loop
+ */
 #define _START            \
    ldr r0, [sp, #0];      \
    add r1, sp, #4;        \
    bl main;               \
                           \
-   bl exit;             \
+   bl exit;               \
    1:                     \
    b 1b
+
+
+/*
+ * setjmp
+ *
+ * According to procedure call standard for the ARM architecture, the following
+ * registers are callee-saved, and so need to be stored in context:
+ *   - r4 - r11
+ *   - sp
+ *   - s16-s31
+ *
+ * Also, we should store:
+ *   - lr
+ *
+ * stmia {r4-r11, sp, lr} -> jmp_buf_0 (r0)!
+ *
+ * FIXME:
+ *       vstm should not be performed in softfp mode
+ * vstm  {s16-s31} -> jmp_buf_32 (r0)!
+ *
+ * mov r0, #0
+ *
+ * bx lr
+ */
+#define _SETJMP \
+  stmia r0!, {r4 - r11, sp, lr}; \
+                                 \
+  vstm r0!, {s16 - s31};         \
+                                 \
+  mov r0, #0;                    \
+                                 \
+  bx lr;
+
+/*
+ * longjmp
+ *
+ * See also:
+ *          _SETJMP
+ *
+ * ldmia jmp_buf_0 (r0)! -> {r4-r11, sp, lr}
+ *
+ * FIXME:
+ *       vstm should not be performed in softfp mode
+ * vldm  jmp_buf_32 (r0)! -> {s16-s31}
+ *
+ * mov r1 -> r0
+ * cmp r0, #0
+ * bne 1f
+ * mov #1 -> r0
+ * 1:
+ *
+ * bx lr
+ */
+#define _LONGJMP \
+  ldmia r0!, {r4 - r11, sp, lr}; \
+                                 \
+  vldm r0!, {s16 - s31};         \
+                                 \
+  mov r0, r1;                    \
+  cmp r0, #0;                    \
+  bne 1f;                        \
+  mov r0, #1;                    \
+  1:                             \
+                                 \
+  bx lr;
 
 #endif /* !ASM_ARM_H */

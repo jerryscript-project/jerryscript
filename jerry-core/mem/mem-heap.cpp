@@ -1058,7 +1058,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
 static void
 mem_check_heap (void)
 {
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   JERRY_ASSERT ((uint8_t*) mem_heap.first_block_p == mem_heap.heap_start);
   JERRY_ASSERT (mem_heap.heap_size % MEM_HEAP_CHUNK_SIZE == 0);
 
@@ -1131,7 +1131,7 @@ mem_check_heap (void)
 
   JERRY_ASSERT (chunk_sizes_sum * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
   JERRY_ASSERT (is_first_block_was_met);
-#endif /* !JERRY_NDEBUG */
+#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
 } /* mem_check_heap */
 
 #ifdef MEM_STATS

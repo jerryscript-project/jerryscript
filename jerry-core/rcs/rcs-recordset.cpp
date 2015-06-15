@@ -613,7 +613,7 @@ rcs_recordset_t::get_record_size (rcs_record_t* rec_p) /**< record */
 void
 rcs_recordset_t::assert_state_is_correct (void)
 {
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   size_t node_size_sum = 0;
   size_t record_size_sum = 0;
 
@@ -658,7 +658,7 @@ rcs_recordset_t::assert_state_is_correct (void)
   }
 
   JERRY_ASSERT (node_size_sum == record_size_sum);
-#endif /* !JERRY_NDEBUG */
+#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
 } /* rcs_recordset_t::assert_state_is_correct */
 
 /**

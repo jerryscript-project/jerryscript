@@ -26,6 +26,13 @@
 
 using namespace std;
 
+/**
+ * Verify that unit tests are built with all debug checks enabled
+ */
+#if defined (JERRY_NDEBUG) || defined (JERRY_DISABLE_HEAVY_DEBUG)
+# error "defined (JERRY_NDEBUG) || defined (JERRY_DISABLE_HEAVY_DEBUG) in a unit test"
+#endif /* JERRY_NDEBUG || JERRY_DISABLE_HEAVY_DEBUG */
+
 #define TEST_RANDOMIZE() \
 do \
 { \

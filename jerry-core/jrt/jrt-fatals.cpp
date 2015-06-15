@@ -84,15 +84,15 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /** line */
 {
-#ifndef JERRY_NDEBUG
+#if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
   printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
           assertion, file, function, (unsigned long) line);
-#else /* !JERRY_NDEBUG */
+#else /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG */
   (void) assertion;
   (void) file;
   (void) function;
   (void) line;
-#endif /* JERRY_NDEBUG */
+#endif /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_DEBUG */
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */

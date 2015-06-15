@@ -86,12 +86,12 @@ extern void __noreturn jerry_unreachable (const char *comment, const char *file,
 extern void __noreturn jerry_unimplemented (const char *comment, const char *file, const char *function,
                                             const uint32_t line);
 
-#ifndef JERRY_NDEBUG
+#if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
 #define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
     jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
-#else /* !JERRY_NDEBUG */
+#else /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG*/
 #define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
-#endif /* !JERRY_NDEBUG */
+#endif /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_NEBUG */
 
 #ifdef JERRY_ENABLE_LOG
 #define JERRY_LOG(lvl, ...) \

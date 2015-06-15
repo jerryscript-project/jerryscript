@@ -181,9 +181,9 @@ mem_pool_free_chunk (mem_pool_state_t *pool_p,  /**< pool */
  * Check pool state consistency
  */
 static void
-mem_check_pool (mem_pool_state_t __attr_unused___ *pool_p) /**< pool (unused #ifdef JERRY_NDEBUG) */
+mem_check_pool (mem_pool_state_t __attr_unused___ *pool_p) /**< pool (unused #ifdef JERRY_DISABLE_HEAVY_DEBUG) */
 {
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   JERRY_ASSERT (pool_p->free_chunks_number <= MEM_POOL_CHUNKS_NUMBER);
 
   size_t met_free_chunks_number = 0;
@@ -204,7 +204,9 @@ mem_check_pool (mem_pool_state_t __attr_unused___ *pool_p) /**< pool (unused #if
   }
 
   JERRY_ASSERT (met_free_chunks_number == pool_p->free_chunks_number);
-#endif /* !JERRY_NDEBUG */
+#else /* !JERRY_DISABLE_HEAVY_DEBUG */
+  (void) pool_p;
+#endif /* JERRY_DISABLE_HEAVY_DEBUG */
 } /* mem_check_pool */
 
 /**

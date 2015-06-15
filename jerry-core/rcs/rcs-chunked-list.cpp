@@ -289,7 +289,7 @@ void
 rcs_chunked_list_t::assert_list_is_correct (void)
 const
 {
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   for (node_t *node_iter_p = get_first ();
        node_iter_p != NULL;
        node_iter_p = get_next (node_iter_p))
@@ -308,7 +308,7 @@ const
                       && next_node_p != NULL
                       && get_prev (next_node_p) == node_iter_p));
   }
-#endif /* !JERRY_NDEBUG */
+#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
 } /* rcs_chunked_list_t::assert_list_is_correct */
 
 /**
@@ -318,7 +318,7 @@ void
 rcs_chunked_list_t::assert_node_is_correct (const rcs_chunked_list_t::node_t* node_p) /**< the node */
 const
 {
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   JERRY_ASSERT (node_p != NULL);
 
   assert_list_is_correct ();
@@ -337,7 +337,7 @@ const
   }
 
   JERRY_ASSERT (is_in_list);
-#else /* JERRY_NDEBUG */
+#else /* !JERRY_DISABLE_HEAVY_DEBUG */
   (void) node_p;
-#endif /* JERRY_NDEBUG */
+#endif /* JERRY_DISABLE_HEAVY_DEBUG */
 } /* rcs_chunked_list_t::assert_node_is_correct */

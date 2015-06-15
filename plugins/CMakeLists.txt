@@ -23,7 +23,7 @@ project (Jerry_Plugins CXX ASM)
    set(DEFINES_PLUGINS_DEBUG )
 
   # Release
-   set(DEFINES_PLUGINS_RELEASE JERRY_NDEBUG)
+   set(DEFINES_PLUGINS_RELEASE JERRY_NDEBUG JERRY_DISABLE_HEAVY_DEBUG)
 
  # Platform-specific
   # Linux

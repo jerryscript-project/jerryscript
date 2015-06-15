@@ -322,7 +322,7 @@ ftell (FILE * fp) /**< stream pointer */
 /**
  * fread
  *
- * @return number of bytes read
+ * @return number of elements read
  */
 size_t
 fread (void *ptr, /**< address of buffer to read to */
@@ -332,6 +332,11 @@ fread (void *ptr, /**< address of buffer to read to */
 {
   long int ret;
   size_t bytes_read = 0;
+
+  if (size == 0)
+  {
+    return 0;
+  }
 
   do
   {
@@ -344,13 +349,13 @@ fread (void *ptr, /**< address of buffer to read to */
   }
   while (bytes_read != size * nmemb && ret != 0);
 
-  return bytes_read;
+  return bytes_read / size;
 } /* fread */
 
 /**
  * fwrite
  *
- * @return number of bytes written
+ * @return number of elements written
  */
 size_t
 fwrite (const void *ptr, /**< data to write */
@@ -359,6 +364,11 @@ fwrite (const void *ptr, /**< data to write */
         FILE *stream) /**< stream pointer */
 {
   size_t bytes_written = 0;
+
+  if (size == 0)
+  {
+    return 0;
+  }
 
   do
   {
@@ -371,7 +381,7 @@ fwrite (const void *ptr, /**< data to write */
   }
   while (bytes_written != size * nmemb);
 
-  return bytes_written;
+  return bytes_written / size;
 } /* fwrite */
 
 // FIXME

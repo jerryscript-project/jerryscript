@@ -234,7 +234,7 @@ project (Jerry CXX C ASM)
   set(FLAGS_COMMON_RELEASE "-Os -nostdlib")
 
  # Unit tests
-  set(FLAGS_COMMON_UNITTESTS "-O3 -nodefaultlibs")
+  set(FLAGS_COMMON_UNITTESTS "-O3 -nostdlib")
 
 # Include directories
  # Core interface
@@ -310,8 +310,9 @@ project (Jerry CXX C ASM)
   add_subdirectory(plugins)
 
 # Targets declaration
+ string(TOLOWER "${PLATFORM_EXT}" PLATFORM_L)
+
  function(declare_targets_for_build_mode BUILD_MODE)
-  string(TOLOWER "${PLATFORM_EXT}" PLATFORM_L)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${PLATFORM_L})
   set(PLUGINS_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.plugins.${PLATFORM_L}.lib)
   set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
@@ -424,6 +425,7 @@ project (Jerry CXX C ASM)
     set(TARGET_NAME unit-${TARGET_NAME})
 
     set(CORE_TARGET_NAME unittests.jerry-core)
+    set(LIBC_TARGET_NAME unittests.jerry-libc.${PLATFORM_L}.lib)
     set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
@@ -432,7 +434,8 @@ project (Jerry CXX C ASM)
     set_property(TARGET ${TARGET_NAME}
                  PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libc
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
                           ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})

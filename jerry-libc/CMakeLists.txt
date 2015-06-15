@@ -139,3 +139,4 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
 
  declare_targets_for_build_mode(DEBUG)
  declare_targets_for_build_mode(RELEASE)
+ declare_targets_for_build_mode(UNITTESTS)

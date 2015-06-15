@@ -218,6 +218,8 @@ const jerry_api_char_ptr_t magic_string_items[] =
 int
 main (void)
 {
+  TEST_INIT ();
+
   jerry_init (JERRY_FLAG_EMPTY);
 
   bool is_ok;

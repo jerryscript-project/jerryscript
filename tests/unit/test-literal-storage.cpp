@@ -58,7 +58,7 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  TEST_RANDOMIZE ();
+  TEST_INIT ();
 
   const ecma_char_t *ptrs[test_sub_iters];
   ecma_number_t numbers[test_sub_iters];

@@ -25,6 +25,8 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
+  TEST_INIT ();
+
   const ecma_char_t* zt_strings[] =
   {
     (const ecma_char_t*) "1",

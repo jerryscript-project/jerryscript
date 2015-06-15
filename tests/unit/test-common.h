@@ -24,8 +24,6 @@
 #include <string.h>
 #include <sys/time.h>
 
-using namespace std;
-
 /**
  * Verify that unit tests are built with all debug checks enabled
  */
@@ -33,21 +31,32 @@ using namespace std;
 # error "defined (JERRY_NDEBUG) || defined (JERRY_DISABLE_HEAVY_DEBUG) in a unit test"
 #endif /* JERRY_NDEBUG || JERRY_DISABLE_HEAVY_DEBUG */
 
-#define TEST_RANDOMIZE() \
+/**
+ * Test initialization statement that should be included
+ * at the beginning of main function in every unit test.
+ */
+#define TEST_INIT() \
 do \
 { \
-  struct timeval current_time; \
-  gettimeofday (&current_time, NULL); \
-  \
-  time_t seconds = current_time.tv_sec; \
-  suseconds_t microseconds = current_time.tv_usec; \
-  \
-  uint32_t seed = (uint32_t) (seconds + microseconds); \
-  \
-  printf ("TEST_RANDOMIZE: seed is %u\n", seed); \
-  \
+  FILE *f_rnd = fopen ("/dev/urandom", "r"); \
+ \
+  if (f_rnd == NULL) \
+  { \
+    return 1; \
+  } \
+ \
+  uint32_t seed; \
+ \
+  size_t bytes_read = fread (&seed, 1, sizeof (seed), f_rnd); \
+ \
+ fclose (f_rnd); \
+ \
+  if (bytes_read != sizeof (seed)) \
+  { \
+    return 1; \
+  } \
+ \
   srand (seed); \
-} \
-while (0)
+} while (0)
 
 #endif /* TEST_COMMON_H */

@@ -37,7 +37,7 @@ int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
-  TEST_RANDOMIZE ();
+  TEST_INIT ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {

@@ -25,6 +25,11 @@
 #include "jerry-libc-defs.h"
 
 /**
+ * State of pseudo-random number generator
+ */
+static unsigned int libc_random_gen_state[4] = { 1455997910, 1999515274, 1234451287, 1949149569 };
+
+/**
  * Standard file descriptors
  */
 FILE *stdin  = (FILE*) 0;
@@ -326,3 +331,38 @@ isxdigit (int c)
 {
   return isdigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
+
+/**
+ * Generate pseudo-random integer
+ *
+ * Note:
+ *      The function implements George Marsaglia's XorShift random number generator
+ *
+ * @return integer in range [0; RAND_MAX]
+ */
+int
+rand (void)
+{
+  uint32_t intermediate = libc_random_gen_state[0] ^ (libc_random_gen_state[0] << 11);
+  intermediate ^= intermediate >> 8;
+
+  libc_random_gen_state[0] = libc_random_gen_state[1];
+  libc_random_gen_state[1] = libc_random_gen_state[2];
+  libc_random_gen_state[2] = libc_random_gen_state[3];
+
+  libc_random_gen_state[3] ^= libc_random_gen_state[3] >> 19;
+  libc_random_gen_state[3] ^= intermediate;
+
+  uint32_t ret = libc_random_gen_state[3] % (RAND_MAX + 1u);
+
+  return (int32_t) ret;
+} /* rand */
+
+/**
+ * Initialize pseudo-random number generator with the specified seed value
+ */
+void
+srand (unsigned int seed) /**< new seed */
+{
+  libc_random_gen_state[3] = seed;
+} /* srand */

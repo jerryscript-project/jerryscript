@@ -25,4 +25,15 @@
 extern EXTERN_C void __attribute__ ((noreturn)) exit (int);
 extern EXTERN_C void __attribute__ ((noreturn)) abort (void);
 
+/**
+ * Maximum integer that could be returned by random number generator
+ *
+ * See also:
+ *          rand
+ */
+#define RAND_MAX (0x7fffffffu)
+
+extern EXTERN_C int rand (void);
+extern EXTERN_C void srand (unsigned int);
+
 #endif /* !JERRY_LIBC_STDLIB_H */

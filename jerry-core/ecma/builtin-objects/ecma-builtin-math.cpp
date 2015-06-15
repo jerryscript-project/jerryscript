@@ -25,8 +25,9 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
-#include "jrt.h"
 #include "fdlibm-math.h"
+#include "jrt.h"
+#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
 
@@ -528,26 +529,24 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __attr_unused___, /**< 'this
 static ecma_completion_value_t
 ecma_builtin_math_object_random (ecma_value_t this_arg __attr_unused___) /**< 'this' argument */
 {
-  /* Implementation of George Marsaglia's XorShift random number generator */
-  TODO (/* Check for license issues */);
+  uint32_t rnd = 1;
+  uint32_t reps_count;
+#if RAND_MAX < 0x100
+  reps_count = 4;
+#elif RAND_MAX < 0x10000
+  reps_count = 2;
+#else /* RAND_MAX < 0x10000 */
+  reps_count = 1;
+#endif /* RAND_MAX >= 0x10000 */
 
-  static uint32_t word1 = 1455997910;
-  static uint32_t word2 = 1999515274;
-  static uint32_t word3 = 1234451287;
-  static uint32_t word4 = 1949149569;
-
-  uint32_t intermediate = word1 ^ (word1 << 11);
-  intermediate ^= intermediate >> 8;
-
-  word1 = word2;
-  word2 = word3;
-  word3 = word4;
-
-  word4 ^= word4 >> 19;
-  word4 ^= intermediate;
+  for (uint32_t i = 0; i < reps_count; i++)
+  {
+    uint32_t next_rand = (uint32_t) rand ();
+    rnd *= next_rand;
+  }
 
   const uint32_t max_uint32 = (uint32_t) -1;
-  ecma_number_t rand = (ecma_number_t) word4;
+  ecma_number_t rand = (ecma_number_t) rnd;
   rand /= (ecma_number_t) max_uint32;
   rand *= (ecma_number_t) (max_uint32 - 1) / (ecma_number_t) max_uint32;
 

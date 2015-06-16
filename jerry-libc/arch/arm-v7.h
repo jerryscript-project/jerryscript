@@ -99,6 +99,20 @@
    1:                     \
    b 1b
 
+/**
+ * If hard-float mode:
+ *   store s16-s31 vfp registers to buffer, pointed with r0 register,
+ *   and increase the register on size of stored data.
+ */
+#ifdef __TARGET_HOST_ARMv7_HARD_FLOAT
+# define _STORE_VFP_S16_S31_IF_HARD_FLOAT \
+   vstm r0!, {s16 - s31};
+# define _LOAD_VFP_S16_S31_IF_HARD_FLOAT \
+   vldm r0!, {s16 - s31};
+#else /* !__TARGET_HOST_ARMv7_HARD_FLOAT */
+# define _STORE_VFP_S16_S31_IF_HARD_FLOAT
+# define _LOAD_VFP_S16_S31_IF_HARD_FLOAT
+#endif /* !__TARGET_HOST_ARMv7_HARD_FLOAT */
 
 /*
  * setjmp
@@ -107,28 +121,27 @@
  * registers are callee-saved, and so need to be stored in context:
  *   - r4 - r11
  *   - sp
- *   - s16-s31
+ *   - s16 - s31
  *
  * Also, we should store:
  *   - lr
  *
  * stmia {r4-r11, sp, lr} -> jmp_buf_0 (r0)!
  *
- * FIXME:
- *       vstm should not be performed in softfp mode
- * vstm  {s16-s31} -> jmp_buf_32 (r0)!
+ * If hard-float build
+ *   vstm  {s16-s31} -> jmp_buf_32 (r0)!
  *
  * mov r0, #0
  *
  * bx lr
  */
 #define _SETJMP \
-  stmia r0!, {r4 - r11, sp, lr}; \
-                                 \
-  vstm r0!, {s16 - s31};         \
-                                 \
-  mov r0, #0;                    \
-                                 \
+  stmia r0!, {r4 - r11, sp, lr};    \
+                                    \
+  _STORE_VFP_S16_S31_IF_HARD_FLOAT  \
+                                    \
+  mov r0, #0;                       \
+                                    \
   bx lr;
 
 /*
@@ -139,9 +152,8 @@
  *
  * ldmia jmp_buf_0 (r0)! -> {r4-r11, sp, lr}
  *
- * FIXME:
- *       vstm should not be performed in softfp mode
- * vldm  jmp_buf_32 (r0)! -> {s16-s31}
+ * If hard-float build
+ *   vldm  jmp_buf_32 (r0)! -> {s16-s31}
  *
  * mov r1 -> r0
  * cmp r0, #0
@@ -152,16 +164,16 @@
  * bx lr
  */
 #define _LONGJMP \
-  ldmia r0!, {r4 - r11, sp, lr}; \
-                                 \
-  vldm r0!, {s16 - s31};         \
-                                 \
-  mov r0, r1;                    \
-  cmp r0, #0;                    \
-  bne 1f;                        \
-  mov r0, #1;                    \
-  1:                             \
-                                 \
+  ldmia r0!, {r4 - r11, sp, lr};    \
+                                    \
+  _LOAD_VFP_S16_S31_IF_HARD_FLOAT   \
+                                    \
+  mov r0, r1;                       \
+  cmp r0, #0;                       \
+  bne 1f;                           \
+  mov r0, #1;                       \
+  1:                                \
+                                    \
   bx lr;
 
 #endif /* !ASM_ARM_H */

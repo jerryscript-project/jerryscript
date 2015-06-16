@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <ctype.h>
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -26,6 +25,7 @@
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
 
@@ -573,30 +573,32 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   /* 3 */
   const uint32_t len = (uint32_t) ecma_string_get_length (original_string_p);
 
+  /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
+  uint32_t zt_str_size = (uint32_t) sizeof (ecma_char_t) * (len + 1);
+  ecma_char_t *original_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_size,
+                                                                        MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_string_to_zt_string (original_string_p, original_zt_str_p, (ssize_t) zt_str_size);
+
   uint32_t prefix = 0, postfix = 0;
   uint32_t new_len = 0;
 
-  while (prefix < len &&
-         ecma_is_completion_value_empty (ret_value) &&
-         isspace (ecma_string_get_char_at_pos (original_string_p, prefix)))
+  while (prefix < len && isspace (original_zt_str_p[prefix]))
   {
     prefix++;
   }
 
-  while (postfix < len &&
-         ecma_is_completion_value_empty (ret_value) &&
-         isspace (ecma_string_get_char_at_pos (original_string_p, len-postfix-1)))
+  while (postfix < len - prefix && isspace (original_zt_str_p[len - postfix - 1]))
   {
     postfix++;
   }
 
-  new_len = len - prefix - postfix;
+  new_len = prefix < len ? len - prefix - postfix : 0;
 
   MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_len + 1, ecma_char_t);
 
   for (uint32_t idx = 0; idx < new_len; ++idx)
   {
-    new_str_buffer[idx] = ecma_string_get_char_at_pos (original_string_p, idx + prefix);
+    new_str_buffer[idx] = original_zt_str_p[idx + prefix];
   }
 
   new_str_buffer[new_len] = '\0';
@@ -606,6 +608,8 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
 
   MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
+
+  mem_heap_free_block (original_zt_str_p);
 
   ECMA_FINALIZE (to_string_val);
   ECMA_FINALIZE (check_coercible_val);

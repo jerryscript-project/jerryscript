@@ -15,6 +15,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -332,46 +333,16 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
 
   const uint32_t len = (uint32_t) ecma_string_get_length (get_string_val);
 
-  /* 4. */
+  /* 4. 6. */
   uint32_t start = 0, end = len;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
                                arg1,
                                ret_value);
 
-  if (!ecma_number_is_nan (start_num))
-  {
+  start = ecma_builtin_helper_array_index_normalize (start_num, len);
 
-    if (ecma_number_is_infinity (start_num))
-    {
-      start = ecma_number_is_negative (start_num) ? 0 : len;
-    }
-    else
-    {
-      const int int_start = ecma_number_to_int32 (start_num);
-
-      if (int_start < 0)
-      {
-        const uint32_t start_abs = (uint32_t) - int_start;
-        start = start_abs > len ? 0 : len - start_abs;
-      }
-      else
-      {
-        start = (uint32_t) int_start;
-
-        if (start > len)
-        {
-          start = len;
-        }
-      }
-    }
-  }
-  else
-  {
-    start = 0;
-  }
-
-  /* 5. */
+  /* 5. 7. */
   if (ecma_is_value_undefined (arg2))
   {
     end = len;
@@ -382,37 +353,7 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
                                  arg2,
                                  ret_value);
 
-    if (!ecma_number_is_nan (end_num))
-    {
-
-      if (ecma_number_is_infinity (end_num))
-      {
-        end = ecma_number_is_negative (end_num) ? 0 : len;
-      }
-      else
-      {
-        const int32_t int_end = ecma_number_to_int32 (end_num);
-
-        if (int_end < 0)
-        {
-          const uint32_t end_abs = (uint32_t) - int_end;
-          end = end_abs > len ? 0 : len - end_abs;
-        }
-        else
-        {
-          end = (uint32_t) int_end;
-
-          if (end > len)
-          {
-            end = len;
-          }
-        }
-      }
-    }
-    else
-    {
-      end = 0;
-    }
+    end = ecma_builtin_helper_array_index_normalize (end_num, len);
 
     ECMA_OP_TO_NUMBER_FINALIZE (end_num);
   }

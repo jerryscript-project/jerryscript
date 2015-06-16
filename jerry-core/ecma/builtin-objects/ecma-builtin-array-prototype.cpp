@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -892,46 +893,20 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
     /* 5. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
 
-    int32_t from_idx_int = ecma_number_to_int32 (arg_from_idx);
+    uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len);
 
     /* 6. */
-    if (from_idx_int > 0 && (uint32_t) from_idx_int >= len)
+    if (from_idx >= len)
     {
       ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
     }
     else
     {
-      uint32_t k;
+      JERRY_ASSERT (from_idx < len);
 
-      /* 7 */
-      if (from_idx_int >= 0)
+      for (; from_idx < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); from_idx++)
       {
-        k = (uint32_t) from_idx_int;
-      }
-      /* 8. */
-      else
-      {
-        from_idx_int = -from_idx_int;
-
-        /* As opposed to the standard, we prevent k from being negative, so that we can use an uint32 */
-        if ((uint32_t) from_idx_int < len)
-        {
-          /* 8.a */
-          k = len - (uint32_t) from_idx_int;
-        }
-        /* If k would've been negative */
-        else
-        {
-          /* 8.b */
-          k = 0;
-        }
-
-      }
-      JERRY_ASSERT (k < len);
-
-      for (; k < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); k++)
-      {
-        ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (k);
+        ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (from_idx);
 
         /* 9.a */
         if (ecma_op_object_get_property (obj_p, idx_str_p) != NULL)
@@ -942,7 +917,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
           /* 9.b.ii */
           if (ecma_op_strict_equality_compare (arg1, get_value))
           {
-            *num_p = ecma_uint32_to_number (k);
+            *num_p = ecma_uint32_to_number (from_idx);
           }
 
           ECMA_FINALIZE (get_value);
@@ -1019,59 +994,75 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
   }
   else
   {
-    uint32_t k = len - 1;
+    uint32_t from_idx = len - 1;
 
     /* 5. */
     if (!ecma_is_value_undefined (arg2))
     {
       ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
-      int32_t n = ecma_number_to_int32 (arg_from_idx);
 
-      /* 6. */
-      if (n >= 0)
+      if (!ecma_number_is_nan (arg_from_idx))
       {
-        /* min(n, len - 1)*/
-        if ((uint32_t) n > len - 1)
+
+        if (ecma_number_is_infinity (arg_from_idx))
         {
-          k = len - 1;
+          from_idx = ecma_number_is_negative (arg_from_idx) ? (uint32_t) -1 : len - 1;
         }
         else
         {
-          k = (uint32_t) n;
+          int32_t int_from_idx = ecma_number_to_int32 (arg_from_idx);
+
+          /* 6. */
+          if (int_from_idx >= 0)
+          {
+            /* min(int_from_idx, len - 1)*/
+            if ((uint32_t) int_from_idx > len - 1)
+            {
+              from_idx = len - 1;
+            }
+            else
+            {
+              from_idx = (uint32_t) int_from_idx;
+            }
+          }
+          /* 7. */
+          else
+          {
+            int_from_idx = -int_from_idx;
+
+            /* We prevent from_idx from being negative, so that we can use an uint32 */
+            if ((uint32_t) int_from_idx <= len)
+            {
+              from_idx = len - (uint32_t) int_from_idx;
+            }
+            else
+            {
+              /*
+               * If from_idx would be negative, we set it to UINT_MAX. See reasoning for this in the comment
+               * at the for loop below.
+               */
+              from_idx = (uint32_t) -1;
+            }
+          }
         }
       }
-      /* 7. */
       else
       {
-        n = -n;
-
-        /* We prevent k from being negative, so that we can use an uint32 */
-        if ((uint32_t) n <= len)
-        {
-          k = len - (uint32_t) n;
-        }
-        else
-        {
-          /*
-           * If k would be negative, we set it to UINT_MAX. See reasoning for this in the comment
-           * at the for loop below.
-           */
-          k = (uint32_t) -1;
-        }
+        from_idx = 0;
       }
 
       ECMA_OP_TO_NUMBER_FINALIZE (arg_from_idx);
     }
 
     /* 8.
-     * We should break from the loop when k < 0. We can still use an uint32_t for k, and check
-     * for an underflow instead. This is safe, because k will always start in [0, len - 1],
-     * and len is in [0, UINT_MAX], so k >= len means we've had an underflow, and should stop.
+     * We should break from the loop when from_idx < 0. We can still use an uint32_t for from_idx, and check
+     * for an underflow instead. This is safe, because from_idx will always start in [0, len - 1],
+     * and len is in [0, UINT_MAX], so from_idx >= len means we've had an underflow, and should stop.
      */
-    for (;k < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); k--)
+    for (; from_idx < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); from_idx--)
     {
       /* 8.a */
-      ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (k);
+      ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (from_idx);
 
       /* 8.a */
       if (ecma_op_object_get_property (obj_p, idx_str_p) != NULL)
@@ -1082,7 +1073,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
         /* 8.b.ii */
         if (ecma_op_strict_equality_compare (arg1, get_value))
         {
-          *num_p = ecma_uint32_to_number (k);
+          *num_p = ecma_uint32_to_number (from_idx);
         }
 
         ECMA_FINALIZE (get_value);
@@ -2029,30 +2020,8 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
 
   /* 5. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (start_num, arg1, ret_value);
-  int32_t relative_start = ecma_number_to_int32 (start_num);
 
-  /* 6. */
-  if (relative_start < 0)
-  {
-    uint32_t start_abs = (uint32_t) -relative_start;
-
-    if (start_abs > len)
-    {
-      start = 0;
-    }
-    else
-    {
-      start = len - start_abs;
-    }
-  }
-  else
-  {
-    start = (uint32_t) relative_start;
-    if (start > len)
-    {
-      start = len;
-    }
-  }
+  start = ecma_builtin_helper_array_index_normalize (start_num, len);
 
   /* 7. */
   if (ecma_is_value_undefined (arg2))
@@ -2062,30 +2031,9 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
   else
   {
     /* 7. part 2*/
-    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num, arg2, ret_value)
-    int32_t relative_end = ecma_number_to_int32 (end_num);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num, arg2, ret_value);
 
-    if (relative_end < 0)
-    {
-      uint32_t end_abs = (uint32_t) -relative_end;
-
-      if (end_abs > len)
-      {
-        end = 0;
-      }
-      else
-      {
-        end = len - end_abs;
-      }
-    }
-    else
-    {
-      end = (uint32_t) relative_end;
-      if (end > len)
-      {
-        end = len;
-      }
-    }
+    end = ecma_builtin_helper_array_index_normalize (end_num, len);
 
     ECMA_OP_TO_NUMBER_FINALIZE (end_num);
   }
@@ -2197,29 +2145,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
                                  args[0],
                                  ret_value);
 
-    int32_t relative_start = ecma_number_to_int32 (start_num);
-
-    /* 6. */
-    if (relative_start < 0)
-    {
-      uint32_t start_abs = (uint32_t) - relative_start;
-      if (start_abs > len)
-      {
-        start = 0;
-      }
-      else
-      {
-        start = len - start_abs;
-      }
-    }
-    else
-    {
-      start = (uint32_t) relative_start;
-      if (start > len)
-      {
-        start = len;
-      }
-    }
+    start = ecma_builtin_helper_array_index_normalize (start_num, len);
 
     /*
      * If there is only one argument, that will be the start argument,
@@ -2236,20 +2162,20 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
                                    args[1],
                                    ret_value);
 
-      int32_t delete_count_int = ecma_number_to_int32 (delete_num);
-
-      if (delete_count_int > 0)
+      if (!ecma_number_is_nan (delete_num))
       {
-        delete_count = (uint32_t) delete_count_int;
+        if (ecma_number_is_negative (delete_num))
+        {
+          delete_count = 0;
+        }
+        else
+        {
+          delete_count = ecma_number_is_infinity (delete_num) ? len : ecma_number_to_uint32 (delete_num);
+        }
       }
       else
       {
         delete_count = 0;
-      }
-
-      if (len - start < delete_count)
-      {
-        delete_count = len - start;
       }
 
       ECMA_OP_TO_NUMBER_FINALIZE (delete_num);

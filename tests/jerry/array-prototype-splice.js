@@ -88,6 +88,37 @@ assert (array[3] == -127);
 assert (array[4] == "sunshine");
 assert (array6.length == 0);
 
+// --------------------------------------------------------
+array = setDefaultValues();
+var array7 = array.splice(Infinity, NaN);
+assert (array.length == 4);
+assert (array[0] == 54);
+assert (array[1] == undefined);
+assert (array[2] == -127);
+assert (array[3] == "sunshine");
+assert (array7.length == 0);
+
+// --------------------------------------------------------
+array = setDefaultValues();
+var array8 = array.splice(-Infinity, Infinity);
+
+assert (array.length == 0);
+assert (array8.length == 4);
+assert (array8[0] == 54);
+assert (array8[1] == undefined);
+assert (array8[2] == -127);
+assert (array8[3] == "sunshine");
+
+// --------------------------------------------------------
+array = setDefaultValues();
+var array9 = array.splice(NaN, -Infinity);
+assert (array.length == 4);
+assert (array[0] == 54);
+assert (array[1] == undefined);
+assert (array[2] == -127);
+assert (array[3] == "sunshine");
+assert (array9.length == 0);
+
 // Checking behavior when unable to get length
 var obj = {splice : Array.prototype.splice};
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

@@ -33,6 +33,10 @@ var index = array.lastIndexOf(obj);
 assert(index === 3);
 assert(array[index] === obj);
 
+assert(array.lastIndexOf("foo", NaN) === 0);
+assert(array.lastIndexOf("foo", Infinity) === 4);
+assert(array.lastIndexOf("foo", -Infinity) === -1);
+
 var arr = [];
 arr[4294967294] = "foo";
 assert(arr.lastIndexOf("foo", -1) === 4294967294)

@@ -271,6 +271,69 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 } /* ecma_builtin_helper_object_get_properties */
 
 /**
+ * Helper function to normalizing an array index
+ *
+ * This function clamps the given index to the [0, length] range.
+ * If the index is negative, it is used as the offset from the end of the array,
+ * to compute normalized index.
+ * If the index is greater than the length of the array, the normalized index will be the length of the array.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.10 steps 5-6, 7 (part 2) and 8
+ *          ECMA-262 v5, 15.4.4.12 steps 5-6
+ *          ECMA-262 v5, 15.4.4.14 steps 5
+ *          ECMA-262 v5, 15.5.4.13 steps 4, 5 (part 2) and 6-7
+ *
+ * Used by:
+ *         - The Array.prototype.slice routine.
+ *         - The Array.prototype.splice routine.
+ *         - The Array.prototype.indexOf routine.
+ *         - The String.prototype.slice routine.
+ *
+ * @return uint32_t - the normalized value of the index
+ */
+uint32_t
+ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
+                                           uint32_t length) /**< array's length */
+{
+  uint32_t norm_index;
+
+  if (!ecma_number_is_nan (index))
+  {
+
+    if (ecma_number_is_infinity (index))
+    {
+      norm_index = ecma_number_is_negative (index) ? 0 : length;
+    }
+    else
+    {
+      const int32_t int_index = ecma_number_to_int32 (index);
+
+      if (int_index < 0)
+      {
+        const uint32_t uint_index = (uint32_t) - int_index;
+        norm_index = uint_index > length ? 0 : length - uint_index;
+      }
+      else
+      {
+        norm_index = (uint32_t) int_index;
+
+        if (norm_index > length)
+        {
+          norm_index = length;
+        }
+      }
+    }
+  }
+  else
+  {
+    norm_index = 0;
+  }
+
+  return norm_index;
+} /* ecma_builtin_helper_array_index_normalize */
+
+/**
  * @}
  * @}
  * @}

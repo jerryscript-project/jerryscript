@@ -20,6 +20,9 @@ var array2 = array.slice("a", "3");
 var array3 = array.slice(-2);
 var array4 = array.slice(-12, undefined);
 var array5 = array.slice(undefined, -3);
+var array6 = array.slice(Infinity, NaN);
+var array7 = array.slice(-Infinity, Infinity);
+var array8 = array.slice(NaN, -Infinity);
 
 assert (array1.length == 4);
 assert (array1[0] == 54);
@@ -44,6 +47,16 @@ assert (array4[3] == -127);
 
 assert (array5.length == 1);
 assert (array5[0] == 54);
+
+assert (array6.length == 0);
+
+assert (array7.length == 4);
+assert (array7[0] == 54);
+assert (array7[1] == undefined);
+assert (array7[2] == "Lemon");
+assert (array7[3] == -127);
+
+assert (array8.length == 0);
 
 // Checking behavior when unable to get length
 var obj = { slice : Array.prototype.slice };

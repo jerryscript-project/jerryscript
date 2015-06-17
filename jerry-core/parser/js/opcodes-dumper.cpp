@@ -384,28 +384,6 @@ create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
 }
 
 static void
-dump_assert (operand op)
-{
-  switch (op.type)
-  {
-    case OPERAND_LITERAL:
-    {
-      const opcode_t opcode = getop_is_true_jmp_down (LITERAL_TO_REWRITE, 0, 2);
-      serializer_dump_op_meta (create_op_meta_100 (opcode, op.data.lit_id));
-      break;
-    }
-    case OPERAND_TMP:
-    {
-      const opcode_t opcode = getop_is_true_jmp_down (op.data.uid, 0, 2);
-      serializer_dump_op_meta (create_op_meta_000 (opcode));
-      break;
-    }
-  }
-  const opcode_t opcode = getop_exitval (1);
-  serializer_dump_op_meta (create_op_meta_000 (opcode));
-}
-
-static void
 split_opcode_counter (opcode_counter_t oc, idx_t *id1, idx_t *id2)
 {
   JERRY_ASSERT (id1 != NULL);
@@ -742,25 +720,15 @@ dumper_finish_scope (void)
 }
 
 bool
-dumper_is_intrinsic (operand obj)
+dumper_is_intrinsic (operand /* obj */)
 {
-  if (obj.type == OPERAND_LITERAL)
-  {
-    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "assert"))
-    {
-      return true;
-    }
-  }
   return false;
 }
 
 operand
-dump_intrinsic (operand obj, operand arg)
+dump_intrinsic (operand /* obj */, operand /* arg */)
 {
-  JERRY_ASSERT (obj.type == OPERAND_LITERAL);
-  TODO (/* Rewrite when there will be more intrinsics.  */)
-  JERRY_ASSERT (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "assert"));
-  dump_assert (arg);
+  JERRY_UNREACHABLE ();
   return dump_undefined_assignment_res ();
 }
 

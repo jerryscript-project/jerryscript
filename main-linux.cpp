@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "jerry.h"
@@ -107,6 +108,30 @@ read_sources (const char *script_file_names[],
     return (const char*)source_buffer;
   }
 }
+
+/**
+ * Provide the 'assert' implementation for the engine.
+ *
+ * @return true - if the argument was not a boolean value or it was boolean true.
+ */
+static bool
+assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** < function object */
+                const jerry_api_value_t *this_p __attr_unused___, /** < this arg */
+                jerry_api_value_t *ret_val_p __attr_unused___, /** < return argument */
+                const jerry_api_value_t args_p[], /** < function arguments */
+                const uint16_t args_cnt) /** < number of function arguments */
+{
+  if (args_cnt > 0
+      && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
+      && args_p[0].v_bool != true)
+  {
+    JERRY_ERROR_MSG ("Script assertion failed\n");
+    exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
+  }
+
+  return true;
+} /* assert_handler */
+
 
 int
 main (int argc,
@@ -237,6 +262,22 @@ main (int argc,
       jerry_init (flags);
 
       plugin_io_init ();
+
+      jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+      jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
+      jerry_api_value_t assert_value;
+      assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
+      assert_value.v_object = assert_func_p;
+
+      bool is_assert_added = jerry_api_set_object_field_value (global_obj_p, "assert", &assert_value);
+
+      jerry_api_release_value (&assert_value);
+      jerry_api_release_object (global_obj_p);
+
+      if (!is_assert_added)
+      {
+        JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+      }
 
       jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 

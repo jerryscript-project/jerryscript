@@ -19,6 +19,11 @@
 #include "test-common.h"
 
 const char *test_source = (
+                           "function assert (arg) { "
+                           "  if (!arg) { "
+                           "    throw Error('Assert failed');"
+                           "  } "
+                           "} "
                            "this.t = 1; "
                            "function f () { "
                            "return this.t; "

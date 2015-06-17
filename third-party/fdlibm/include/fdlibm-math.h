@@ -75,5 +75,6 @@ extern EXTERN_C double floor(double);
 
 // Other functions
 extern EXTERN_C double fabs(double);
+extern EXTERN_C double fmod(double, double);
 
 #endif /* !JERRY_FDLIBM_MATH_H */

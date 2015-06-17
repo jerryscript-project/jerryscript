@@ -356,7 +356,7 @@ extern ecma_number_t ecma_date_make_day (ecma_number_t year,
                                          ecma_number_t month,
                                          ecma_number_t date);
 extern ecma_number_t ecma_date_make_date (ecma_number_t day, ecma_number_t time);
-extern ecma_number_t ecma_date_time_clip (ecma_number_t year);
+extern ecma_number_t ecma_date_time_clip (ecma_number_t time);
 
 /* ecma-helpers-char.cpp */
 extern bool ecma_char_is_new_line (ecma_char_t c);

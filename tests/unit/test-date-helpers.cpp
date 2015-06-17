@@ -123,7 +123,12 @@ main (int __attr_unused___ argc,
 
   /* ecma_number_t ecma_date_make_day (year, month, date) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_make_day (1970, 0, 1) == 0);
+  JERRY_ASSERT (ecma_date_make_day (1970, 0, 2.5) == 1);
+  JERRY_ASSERT (ecma_date_make_day (1970, 1, 35) == 65);
+  JERRY_ASSERT (ecma_date_make_day (1970, 13, 35) == 430);
+  JERRY_ASSERT (ecma_date_make_day (2016, 2, 1) == 16861);
+  /* FIXME: More testcase */
 
   /* ecma_number_t ecma_date_make_date (day, time) */
 

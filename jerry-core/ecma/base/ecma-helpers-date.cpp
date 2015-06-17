@@ -27,8 +27,17 @@
  * @{
  */
 
-/* 24 * 3600 * 1000 */
-#define ECMA_MS_PER_DAY 86400000
+#define ECMA_DATE_HOURS_PER_DAY         24
+#define ECMA_DATE_MINUTES_PER_HOUR      60
+#define ECMA_DATE_SECONDS_PER_MINUTE    60
+#define ECMA_DATE_MS_PER_SECOND         1000
+/* ECMA_DATE_MS_PER_MINUTE == 60000 */
+#define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
+/* ECMA_DATE_MS_PER_HOUR == 3600000 */
+#define ECMA_DATE_MS_PER_HOUR           (ECMA_DATE_MS_PER_MINUTE * ECMA_DATE_MINUTES_PER_HOUR)
+/* ECMA_DATE_MS_PER_DAY == 86400000 */
+#define ECMA_DATE_MS_PER_DAY            (ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY)
+#define ECMA_DATE_MAX_VALUE             8.64e15
 
 /**
  * Helper function to get day number from time value.
@@ -41,7 +50,7 @@
 int __attr_always_inline___
 ecma_date_day (ecma_number_t time) /**< time value */
 {
-  return (int) floor (time / ECMA_MS_PER_DAY);
+  return (int) floor (time / ECMA_DATE_MS_PER_DAY);
 } /* ecma_date_day */
 
 /**
@@ -55,7 +64,7 @@ ecma_date_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_time_within_day (ecma_number_t time) /**< time value */
 {
-  return (ecma_number_t) fmod (time, ECMA_MS_PER_DAY);
+  return (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_DAY);
 } /* ecma_date_time_within_day */
 
 /**
@@ -115,7 +124,7 @@ ecma_date_day_from_year (ecma_number_t year) /**< year value */
 ecma_number_t __attr_always_inline___
 ecma_date_time_from_year (ecma_number_t year) /**< year value */
 {
-  return ECMA_MS_PER_DAY * (ecma_number_t) ecma_date_day_from_year (year);
+  return ECMA_DATE_MS_PER_DAY * (ecma_number_t) ecma_date_day_from_year (year);
 } /* ecma_date_time_from_year */
 
 /**
@@ -358,9 +367,9 @@ ecma_date_daylight_saving_ta (ecma_number_t __attr_unused___ time)
  * @return  local time
  */
 ecma_number_t __attr_always_inline___
-ecma_date_local_time (ecma_number_t __attr_unused___ time)
+ecma_date_local_time (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_local_time is not implemented yet.");
+  return time + ecma_date_local_tza () + ecma_date_daylight_saving_ta (time);
 } /* ecma_date_local_time */
 
 /**
@@ -372,9 +381,10 @@ ecma_date_local_time (ecma_number_t __attr_unused___ time)
  * @return  utc value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_utc (ecma_number_t __attr_unused___ time)
+ecma_date_utc (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_utc is not implemented yet.");
+  ecma_number_t simple_utc_time = time - ecma_date_local_tza ();
+  return simple_utc_time - ecma_date_daylight_saving_ta (simple_utc_time);
 } /* ecma_date_utc */
 
 /**
@@ -386,9 +396,10 @@ ecma_date_utc (ecma_number_t __attr_unused___ time)
  * @return  hour value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_hour_from_time (ecma_number_t __attr_unused___ time)
+ecma_date_hour_from_time (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_hour_from_time is not implemented yet.");
+  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_HOUR),
+                               ECMA_DATE_HOURS_PER_DAY);
 } /* ecma_date_hour_from_time */
 
 /**
@@ -400,9 +411,10 @@ ecma_date_hour_from_time (ecma_number_t __attr_unused___ time)
  * @return  minute value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_min_from_time (ecma_number_t __attr_unused___ time)
+ecma_date_min_from_time (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_min_from_time is not implemented yet.");
+  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_MINUTE),
+                               ECMA_DATE_MINUTES_PER_HOUR);
 } /* ecma_date_min_from_time */
 
 /**
@@ -414,9 +426,10 @@ ecma_date_min_from_time (ecma_number_t __attr_unused___ time)
  * @return  second value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_sec_from_time (ecma_number_t __attr_unused___ time)
+ecma_date_sec_from_time (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_sec_from_time is not implemented yet.");
+  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_SECOND),
+                               ECMA_DATE_SECONDS_PER_MINUTE);
 } /* ecma_date_sec_from_time */
 
 /**
@@ -428,9 +441,9 @@ ecma_date_sec_from_time (ecma_number_t __attr_unused___ time)
  * @return  millisecond value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_ms_from_time (ecma_number_t __attr_unused___ time)
+ecma_date_ms_from_time (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_ms_from_time is not implemented yet.");
+  return (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_SECOND);
 } /* ecma_date_ms_from_time */
 
 /**
@@ -442,12 +455,30 @@ ecma_date_ms_from_time (ecma_number_t __attr_unused___ time)
  * @return  time value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_make_time (ecma_number_t __attr_unused___ hour,
-                     ecma_number_t __attr_unused___ min,
-                     ecma_number_t __attr_unused___ sec,
-                     ecma_number_t __attr_unused___ ms)
+ecma_date_make_time (ecma_number_t hour,
+                     ecma_number_t min,
+                     ecma_number_t sec,
+                     ecma_number_t ms)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_make_time is not implemented yet.");
+  if (ecma_number_is_nan (hour) || ecma_number_is_infinity (hour)
+      || ecma_number_is_nan (min) || ecma_number_is_infinity (min)
+      || ecma_number_is_nan (sec) || ecma_number_is_infinity (sec)
+      || ecma_number_is_nan (ms) || ecma_number_is_infinity (ms))
+  {
+    return ecma_number_make_nan ();
+  }
+
+  ecma_number_t h = ecma_number_trunc (hour);
+  ecma_number_t m = ecma_number_trunc (min);
+  ecma_number_t s = ecma_number_trunc (sec);
+  ecma_number_t milli = ecma_number_trunc (ms);
+
+  /* FIXME: performing the arithmetic according to IEEE 754 rules
+   * (that is, as if using the ECMAScript operators * and +) */
+  return (h * ECMA_DATE_MS_PER_HOUR
+          + m * ECMA_DATE_MS_PER_MINUTE
+          + s * ECMA_DATE_MS_PER_SECOND
+          + milli);
 } /* ecma_date_make_time */
 
 /**
@@ -459,11 +490,35 @@ ecma_date_make_time (ecma_number_t __attr_unused___ hour,
  * @return  day value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_make_day (ecma_number_t __attr_unused___ year,
-                    ecma_number_t __attr_unused___ month,
-                    ecma_number_t __attr_unused___ date)
+ecma_date_make_day (ecma_number_t year,
+                    ecma_number_t month,
+                    ecma_number_t date)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_make_day is not implemented yet.");
+  if (ecma_number_is_nan (year) || ecma_number_is_infinity (year)
+      || ecma_number_is_nan (month) || ecma_number_is_infinity (month)
+      || ecma_number_is_nan (date) || ecma_number_is_infinity (date))
+  {
+    return ecma_number_make_nan ();
+  }
+
+  ecma_number_t y = ecma_number_trunc (year);
+  ecma_number_t m = ecma_number_trunc (month);
+  ecma_number_t dt = ecma_number_trunc (date);
+  ecma_number_t ym = y + (ecma_number_t) floor (m / 12);
+  ecma_number_t mn = (ecma_number_t) fmod (m, 12);
+  ecma_number_t time = ecma_date_time_from_year (ym);
+
+  JERRY_ASSERT (ecma_date_year_from_time (time) == ym);
+
+  while (ecma_date_month_from_time (time) < mn)
+  {
+    time += ECMA_DATE_MS_PER_DAY;
+  }
+
+  JERRY_ASSERT ((ecma_date_month_from_time (time) == mn)
+                && (ecma_date_date_from_time (time) == 1));
+
+  return (ecma_number_t) ecma_date_day (time) + dt - ((ecma_number_t) 1.0);
 } /* ecma_date_make_day */
 
 /**
@@ -475,9 +530,15 @@ ecma_date_make_day (ecma_number_t __attr_unused___ year,
  * @return  date value
  */
 ecma_number_t __attr_always_inline___
-ecma_date_make_date (ecma_number_t __attr_unused___ day, ecma_number_t __attr_unused___ time)
+ecma_date_make_date (ecma_number_t day, ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_make_date is not implemented yet.");
+  if (ecma_number_is_nan (day) || ecma_number_is_infinity (day)
+      || ecma_number_is_nan (time) || ecma_number_is_infinity (time))
+  {
+    return ecma_number_make_nan ();
+  }
+
+  return day * ECMA_DATE_MS_PER_DAY + time;
 } /* ecma_date_make_date */
 
 /**
@@ -489,9 +550,15 @@ ecma_date_make_date (ecma_number_t __attr_unused___ day, ecma_number_t __attr_un
  * @return  number of milliseconds
  */
 ecma_number_t __attr_always_inline___
-ecma_date_time_clip (ecma_number_t __attr_unused___ year)
+ecma_date_time_clip (ecma_number_t time)
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_time_clip is not implemented yet.");
+  if (ecma_number_is_nan (time) || ecma_number_is_infinity (time)
+      || fabs (time) > ECMA_DATE_MAX_VALUE)
+  {
+    return ecma_number_make_nan ();
+  }
+
+  return ecma_number_trunc (time);
 } /* ecma_date_time_clip */
 
 /**

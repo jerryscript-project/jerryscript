@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "hash-table.h"
 #include "array-list.h"
-#include "mem-heap.h"
+#include "hash-table.h"
 #include "jrt-libc-includes.h"
+#include "jsp-mm.h"
 
 typedef struct
 {
@@ -25,7 +25,6 @@ typedef struct
   uint16_t size;
   uint8_t key_size;
   uint8_t value_size;
-  mem_heap_alloc_term_t alloc_term;
 } hash_table_int;
 
 static hash_table_int *
@@ -65,12 +64,12 @@ hash_table_insert (hash_table ht, void *key, void *value)
   {
     list = array_list_init (bucket_size (hti));
   }
-  uint8_t *bucket = (uint8_t*) mem_heap_alloc_block (bucket_size (hti), hti->alloc_term);
+  uint8_t *bucket = (uint8_t *) jsp_mm_alloc (bucket_size (hti));
   memcpy (bucket, key, hti->key_size);
   memcpy (bucket + hti->key_size, value, hti->value_size);
   list = array_list_append (list, bucket);
   hti->data[index] = list;
-  mem_heap_free_block (bucket);
+  jsp_mm_free (bucket);
 }
 
 void *
@@ -98,15 +97,14 @@ hash_table_lookup (hash_table ht, void *key)
 
 hash_table
 hash_table_init (uint8_t key_size, uint8_t value_size, uint16_t size,
-                 uint16_t (*hash) (void *), mem_heap_alloc_term_t alloc_term)
+                 uint16_t (*hash) (void *))
 {
-  hash_table_int *res = (hash_table_int *) mem_heap_alloc_block (sizeof (hash_table_int), alloc_term);
+  hash_table_int *res = (hash_table_int *) jsp_mm_alloc (sizeof (hash_table_int));
   memset (res, 0, sizeof (hash_table_int));
   res->key_size = key_size;
   res->value_size = value_size;
   res->size = size;
-  res->alloc_term = alloc_term;
-  res->data = (array_list *) mem_heap_alloc_block (size * sizeof (array_list), alloc_term);
+  res->data = (array_list *) jsp_mm_alloc (size * sizeof (array_list));
   memset (res->data, 0, size * sizeof (array_list));
   res->hash = hash;
   return res;
@@ -125,6 +123,6 @@ hash_table_free (hash_table ht)
       set_list (h, i, null_list);
     }
   }
-  mem_heap_free_block ((uint8_t *) h->data);
-  mem_heap_free_block ((uint8_t *) h);
+  jsp_mm_free (h->data);
+  jsp_mm_free (h);
 }

@@ -47,11 +47,6 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       /* print nothing as it may invoke syscall recursively */
       break;
     }
-    case ERR_PARSER:
-    {
-      printf ("ERR_PARSER\n");
-      break;
-    }
     case ERR_UNIMPLEMENTED_CASE:
     {
       printf ("ERR_UNIMPLEMENTED_CASE\n");

@@ -16,6 +16,8 @@
 #ifndef JERRY_LIBC_SETJMP_H
 #define JERRY_LIBC_SETJMP_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 # define EXTERN_C "C"
 #else /* !__cplusplus */

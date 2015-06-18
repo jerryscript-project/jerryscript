@@ -30,7 +30,7 @@
 typedef void* hash_table;
 #define null_hash NULL
 
-hash_table hash_table_init (uint8_t, uint8_t, uint16_t, uint16_t (*hash) (void *), mem_heap_alloc_term_t);
+hash_table hash_table_init (uint8_t, uint8_t, uint16_t, uint16_t (*hash) (void *));
 void hash_table_free (hash_table);
 void hash_table_insert (hash_table, void *, void *);
 void *hash_table_lookup (hash_table, void *);

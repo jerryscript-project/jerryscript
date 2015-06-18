@@ -169,9 +169,7 @@ typedef struct
  */
 #define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
 
-void lexer_init (bool);
-void lexer_init_source (const char *, size_t);
-void lexer_free (void);
+void lexer_init (const char *, size_t, bool);
 
 token lexer_next_token (void);
 void lexer_save_token (token);

@@ -20,6 +20,15 @@
 #include "jrt-libc-includes.h"
 #include "ecma-helpers.h"
 
+/**
+ * SyntaxError longjmp label, used to finish parse upon a SyntaxError is raised
+ *
+ * See also:
+ *          syntax_get_syntax_error_longjmp_label
+ *          syntax_raise_error
+ */
+static jmp_buf jsp_syntax_error_label;
+
 typedef struct
 {
   prop_type type;
@@ -37,6 +46,26 @@ enum
   U8_global_size
 };
 STATIC_STACK (U8, uint8_t)
+
+/**
+ * Get buffer for SyntaxError longjmp label
+ *
+ * @return pointer to jmp_buf
+ */
+jmp_buf *
+syntax_get_syntax_error_longjmp_label (void)
+{
+  return &jsp_syntax_error_label;
+} /* syntax_get_syntax_error_longjmp_label */
+
+/**
+ * Raise SyntaxError, i.e. perform longjmp to SyntaxError longjmp label
+ */
+void __attribute__((noreturn))
+syntax_raise_error (void)
+{
+  longjmp (jsp_syntax_error_label, 1);
+} /* syntax_raise_error */
 
 static prop_literal
 create_prop_literal (literal_t lit, prop_type type)

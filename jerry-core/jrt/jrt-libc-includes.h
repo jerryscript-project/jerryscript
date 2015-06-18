@@ -17,6 +17,8 @@
 #define JRT_LIBC_INCLUDES_H
 
 #include <ctype.h>
+#include <setjmp.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

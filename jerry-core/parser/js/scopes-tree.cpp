@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "scopes-tree.h"
 #include "bytecode-data.h"
+#include "jsp-mm.h"
+#include "scopes-tree.h"
 
 #define OPCODE(op) (__op__idx_##op)
 #define HASH_SIZE 128
@@ -114,8 +115,7 @@ start_new_block_if_necessary (void)
       hash_table_free (lit_id_to_uid);
       lit_id_to_uid = null_hash;
     }
-    lit_id_to_uid = hash_table_init (sizeof (lit_cpointer_t), sizeof (idx_t), HASH_SIZE, lit_id_hash,
-                                     MEM_HEAP_ALLOC_SHORT_TERM);
+    lit_id_to_uid = hash_table_init (sizeof (lit_cpointer_t), sizeof (idx_t), HASH_SIZE, lit_id_hash);
   }
 }
 
@@ -652,7 +652,7 @@ scopes_tree_strict_mode (scopes_tree tree)
 scopes_tree
 scopes_tree_init (scopes_tree parent)
 {
-  scopes_tree tree = (scopes_tree) mem_heap_alloc_block (sizeof (scopes_tree_int), MEM_HEAP_ALLOC_SHORT_TERM);
+  scopes_tree tree = (scopes_tree) jsp_mm_alloc (sizeof (scopes_tree_int));
   memset (tree, 0, sizeof (scopes_tree_int));
   tree->t.parent = (tree_header *) parent;
   tree->t.children = null_list;
@@ -687,5 +687,5 @@ scopes_tree_free (scopes_tree tree)
     linked_list_free (tree->t.children);
   }
   linked_list_free (tree->opcodes);
-  mem_heap_free_block ((uint8_t *) tree);
+  jsp_mm_free (tree);
 }

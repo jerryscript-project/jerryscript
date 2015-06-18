@@ -13,22 +13,20 @@
  * limitations under the License.
  */
 
-#include <stdarg.h>
-
+#include "ecma-helpers.h"
+#include "hash-table.h"
 #include "jrt-libc-includes.h"
 #include "jsp-label.h"
-#include "parser.h"
+#include "jsp-mm.h"
 #include "opcodes.h"
-#include "serializer.h"
-#include "vm.h"
-#include "stack.h"
-#include "hash-table.h"
-#include "opcodes-native-call.h"
-#include "scopes-tree.h"
-#include "ecma-helpers.h"
-#include "syntax-errors.h"
 #include "opcodes-dumper.h"
+#include "opcodes-native-call.h"
+#include "parser.h"
+#include "scopes-tree.h"
 #include "serializer.h"
+#include "stack.h"
+#include "syntax-errors.h"
+#include "vm.h"
 
 /**
  * Flag, indicating whether result of expression
@@ -2895,8 +2893,16 @@ parser_parse_program (const char *source_p, /**< source code buffer */
   inside_function = in_function;
   inside_eval = in_eval;
 
-  lexer_init (parser_show_opcodes);
-  lexer_init_source (source_p, source_size);
+#ifndef JERRY_NDEBUG
+  volatile bool is_parse_finished = false;
+#endif /* !JERRY_NDEBUG */
+
+  bool is_syntax_correct;
+
+  jsp_mm_init ();
+  jsp_label_init ();
+
+  lexer_init (source_p, source_size, parser_show_opcodes);
 
   serializer_set_show_opcodes (parser_show_opcodes);
   dumper_init ();
@@ -2907,41 +2913,67 @@ parser_parse_program (const char *source_p, /**< source code buffer */
   serializer_set_scope (STACK_TOP (scopes));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
-  jsp_label_init ();
+  jmp_buf *syntax_error_label_p = syntax_get_syntax_error_longjmp_label ();
+  int r = setjmp (*syntax_error_label_p);
 
-  skip_newlines ();
-  parse_source_element_list (true);
-
-  skip_newlines ();
-  JERRY_ASSERT (token_is (TOK_EOF));
-
-  if (in_function)
+  if (r == 0)
   {
-    dump_ret ();
-  }
-  else if (inside_eval)
-  {
-    dump_retval (eval_ret_operand ());
+    skip_newlines ();
+    parse_source_element_list (true);
+
+    skip_newlines ();
+    JERRY_ASSERT (token_is (TOK_EOF));
+
+    if (in_function)
+    {
+      dump_ret ();
+    }
+    else if (inside_eval)
+    {
+      dump_retval (eval_ret_operand ());
+    }
+    else
+    {
+      dump_exit ();
+    }
+
+#ifndef JERRY_NDEBUG
+    is_parse_finished = true;
+#endif /* !JERRY_NDEBUG */
+
+    syntax_free ();
+
+    *out_opcodes_p = serializer_merge_scopes_into_bytecode ();
+
+    dumper_free ();
+
+    serializer_set_scope (NULL);
+    scopes_tree_free (STACK_TOP (scopes));
+    STACK_DROP (scopes, 1);
+    STACK_FREE (scopes);
+
+    is_syntax_correct = true;
   }
   else
   {
-    dump_exit ();
+    /* SyntaxError handling */
+
+#ifndef JERRY_NDEBUG
+    JERRY_ASSERT (!is_parse_finished);
+#endif /* !JERRY_NDEBUG */
+
+    *out_opcodes_p = NULL;
+
+    jsp_label_remove_all_labels ();
+    jsp_mm_free_all ();
+
+    is_syntax_correct = false;
   }
 
   jsp_label_finalize ();
-  syntax_free ();
-  lexer_free ();
+  jsp_mm_finalize ();
 
-  *out_opcodes_p = serializer_merge_scopes_into_bytecode ();
-
-  dumper_free ();
-
-  serializer_set_scope (NULL);
-  scopes_tree_free (STACK_TOP (scopes));
-  STACK_DROP (scopes, 1);
-  STACK_FREE (scopes);
-
-  return true;
+  return is_syntax_correct;
 } /* parser_parse_program */
 
 /**

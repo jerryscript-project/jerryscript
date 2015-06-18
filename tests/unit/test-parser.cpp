@@ -71,18 +71,19 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  char program[] = "a=1;var a;";
-  bool is_ok;
-
   const opcode_t *opcodes_p;
   bool is_syntax_correct;
 
   mem_init ();
+
+  // #1
+  char program1[] = "a=1;var a;";
+
   serializer_init ();
   parser_set_show_opcodes (true);
-  is_syntax_correct = parser_parse_script (program, strlen (program), &opcodes_p);
+  is_syntax_correct = parser_parse_script (program1, strlen (program1), &opcodes_p);
 
-  JERRY_ASSERT (is_syntax_correct);
+  JERRY_ASSERT (is_syntax_correct && opcodes_p != NULL);
 
   opcode_t opcodes[] =
   {
@@ -97,17 +98,22 @@ main (int __attr_unused___ argc,
     getop_exitval (0)               // exit 0;
   };
 
-  if (!opcodes_equal (opcodes_p, opcodes, 5))
-  {
-    is_ok = false;
-  }
-  else
-  {
-    is_ok = true;
-  }
+  JERRY_ASSERT (opcodes_equal (opcodes_p, opcodes, 5));
 
   serializer_free ();
+
+  // #2
+  char program2[] = "var var;";
+
+  serializer_init ();
+  parser_set_show_opcodes (true);
+  is_syntax_correct = parser_parse_script (program2, strlen (program2), &opcodes_p);
+
+  JERRY_ASSERT (!is_syntax_correct && opcodes_p == NULL);
+
+  serializer_free ();
+
   mem_finalize (false);
 
-  return (is_ok ? 0 : 1);
+  return 0;
 } /* main */

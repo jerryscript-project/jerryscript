@@ -49,7 +49,6 @@ typedef enum
 {
   ERR_OUT_OF_MEMORY = 10,
   ERR_SYSCALL = 11,
-  ERR_PARSER = 12,
   ERR_UNIMPLEMENTED_CASE = 118,
   ERR_FAILED_INTERNAL_ASSERTION = 120
 } jerry_fatal_code_t;

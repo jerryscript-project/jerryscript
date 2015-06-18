@@ -92,7 +92,7 @@ jsp_mm_recommend_size (size_t minimum_size) /**< minimum required size */
 void*
 jsp_mm_alloc (size_t size) /**< size of block to allocate */
 {
-  void *ptr_p = mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
+  void *ptr_p = mem_heap_alloc_block (size + sizeof (jsp_mm_header_t), MEM_HEAP_ALLOC_SHORT_TERM);
 
   jsp_mm_header_t *tmem_header_p = (jsp_mm_header_t*) ptr_p;
 

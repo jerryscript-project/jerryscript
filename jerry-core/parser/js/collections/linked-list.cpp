@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "linked-list.h"
 #include "jrt-libc-includes.h"
-#include "mem-heap.h"
+#include "jsp-mm.h"
+#include "linked-list.h"
 
 typedef struct linked_list_header
 {
@@ -31,14 +31,14 @@ do { \
 
 static size_t linked_list_block_size (uint16_t element_size)
 {
-  return mem_heap_recommend_allocation_size (sizeof (linked_list_header) + element_size) - sizeof (linked_list_header);
+  return jsp_mm_recommend_size (sizeof (linked_list_header) + element_size) - sizeof (linked_list_header);
 }
 
 linked_list
 linked_list_init (uint16_t element_size)
 {
   size_t size = sizeof (linked_list_header) + linked_list_block_size (element_size);
-  linked_list list = (linked_list) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_SHORT_TERM);
+  linked_list list = (linked_list) jsp_mm_alloc (size);
   if (list == null_list)
   {
     printf ("Out of memory");
@@ -60,7 +60,7 @@ linked_list_free (linked_list list)
   {
     linked_list_free ((linked_list) header->next);
   }
-  mem_heap_free_block (list);
+  jsp_mm_free (list);
 }
 
 void *

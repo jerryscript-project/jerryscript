@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "mem-allocator.h"
+#include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
+#include "jsp-mm.h"
 #include "lexer.h"
 #include "syntax-errors.h"
-#include "ecma-helpers.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
 
@@ -474,9 +474,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
     JERRY_ASSERT (source_str_p != NULL);
   }
 
-  MEM_DEFINE_LOCAL_ARRAY (str_buf_p,
-                          source_str_size,
-                          ecma_char_t);
+  ecma_char_t *str_buf_p = (ecma_char_t*) jsp_mm_alloc (source_str_size * sizeof (ecma_char_t));
 
   const char *source_str_iter_p = source_str_p;
   ecma_char_t *str_buf_iter_p = str_buf_p;
@@ -632,7 +630,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
     PARSE_ERROR ("Malformed escape sequence", source_str_p - buffer_start);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (str_buf_p);
+  jsp_mm_free (str_buf_p);
 
   return ret;
 } /* convert_string_to_token_transform_escape_seq */
@@ -860,13 +858,12 @@ parse_number (void)
   tok_length = (size_t) (buffer - token_start);;
   if (is_fp || is_exp)
   {
-    ecma_char_t *temp = (ecma_char_t*) mem_heap_alloc_block ((size_t) (tok_length + 1),
-                                                             MEM_HEAP_ALLOC_SHORT_TERM);
+    ecma_char_t *temp = (ecma_char_t*) jsp_mm_alloc ((size_t) (tok_length + 1) * sizeof (ecma_char_t));
     strncpy ((char *) temp, token_start, (size_t) (tok_length));
     temp[tok_length] = '\0';
     ecma_number_t res = ecma_zt_string_to_number (temp);
     JERRY_ASSERT (!ecma_number_is_nan (res));
-    mem_heap_free_block (temp);
+    jsp_mm_free (temp);
     known_token = convert_seen_num_to_token (res);
     token_start = NULL;
     return known_token;
@@ -1467,28 +1464,22 @@ lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAM
 } /* lexer_are_tokens_with_same_identifier */
 
 /**
- * Initialize lexer to start parsing of a new source
+ * Intitialize lexer
  */
 void
-lexer_init_source (const char *source, /**< script source */
-                   size_t source_size) /**< script source size in bytes */
+lexer_init (const char *source, /**< script source */
+            size_t source_size /**< script source size in bytes */,
+            bool show_opcodes) /**< flag indicating if to dump opcodes */
 {
+  empty_token.type = TOK_EMPTY;
+  empty_token.uid = 0;
+  empty_token.loc = 0;
+
   saved_token = prev_token = sent_token = empty_token;
 
   buffer_size = source_size;
   lexer_set_source (source);
   lexer_set_strict_mode (false);
-} /* lexer_init_source */
-
-/**
- * Intitialize lexer
- */
-void
-lexer_init (bool show_opcodes) /**< flag indicating if to dump opcodes */
-{
-  empty_token.type = TOK_EMPTY;
-  empty_token.uid = 0;
-  empty_token.loc = 0;
 
 #ifndef JERRY_NDEBUG
   allow_dump_lines = show_opcodes;
@@ -1497,8 +1488,3 @@ lexer_init (bool show_opcodes) /**< flag indicating if to dump opcodes */
   allow_dump_lines = false;
 #endif /* JERRY_NDEBUG */
 } /* lexer_init */
-
-void
-lexer_free (void)
-{
-}

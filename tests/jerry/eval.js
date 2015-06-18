@@ -86,3 +86,14 @@ for (var i = 0; i < 100; i++)
   r = eval ('if (true) 3; else 5;');
   assert (r === 3);
 }
+
+// Check SyntaxError handling
+try
+{
+  eval ('var var;');
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof SyntaxError);
+}

@@ -16,11 +16,12 @@
 #ifndef SYNTAX_ERRORS_H
 #define SYNTAX_ERRORS_H
 
+#include "jrt-libc-includes.h"
 #include "opcodes-dumper.h"
 #include "lexer.h"
 
 #ifndef JERRY_NDEBUG
-#define PARSE_ERROR(MESSAGE, LOCUS) do { \
+#define PARSE_ERROR_PRINT_PLACE(TYPE, LOCUS) do { \
   size_t line, column; \
   lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
   lexer_dump_line (line); \
@@ -29,49 +30,30 @@
     putchar (' '); \
   } \
   printf ("^\n"); \
-  printf ("ERROR: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
-  jerry_fatal (ERR_PARSER); \
+  printf ("%s: Ln %lu, Col %lu: ", TYPE, (unsigned long) (line + 1), (unsigned long) (column + 1)); \
 } while (0)
-#define PARSE_WARN(MESSAGE, LOCUS) do { \
-  size_t line, column; \
-  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
-  printf ("WARNING: Ln %lu, Col %lu: %s\n", (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
+#define PARSE_ERROR(MESSAGE, LOCUS) do { \
+  PARSE_ERROR_PRINT_PLACE ("ERROR", LOCUS); \
+  printf ("%s\n", MESSAGE); \
+  syntax_raise_error (); \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
-  size_t line, column; \
-  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
-  lexer_dump_line (line); \
-  printf ("\n"); \
-  for (size_t i = 0; i < column; i++) { \
-    putchar (' '); \
-  } \
-  printf ("^\n"); \
-  printf ("ERROR: Ln %lu, Col %lu: ", (unsigned long) (line + 1), (unsigned long) (column + 1)); \
+  PARSE_ERROR_PRINT_PLACE ("ERROR", LOCUS); \
   printf (MESSAGE, __VA_ARGS__); \
   printf ("\n"); \
-  jerry_fatal (ERR_PARSER); \
+  syntax_raise_error (); \
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
-  size_t line, column; \
-  lexer_locus_to_line_and_column ((locus) (LOCUS), &line, &column); \
-  lexer_dump_line (line); \
-  printf ("\n"); \
-  for (size_t i = 0; i < column; i++) { \
-    putchar (' '); \
-  } \
-    printf ("^\n"); \
-  printf ("SORRY, Unimplemented: Ln %lu, Col %lu: %s\n", \
-          (unsigned long) (line + 1), (unsigned long) (column + 1), MESSAGE); \
+  PARSE_ERROR_PRINT_PLACE ("SORRY, Unimplemented", LOCUS); \
+  printf ("%s\n", MESSAGE); \
   JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
 } while (0)
 #else /* JERRY_NDEBUG */
 #define PARSE_ERROR(MESSAGE, LOCUS) do { \
-  jerry_fatal (ERR_PARSER); \
-} while (0)
-#define PARSE_WARN(MESSAGE, LOCUS) do { \
+  syntax_raise_error (); \
 } while (0)
 #define PARSE_ERROR_VARG(MESSAGE, LOCUS, ...) do { \
-  jerry_fatal (ERR_PARSER); \
+  syntax_raise_error (); \
 } while (0)
 #define PARSE_SORRY(MESSAGE, LOCUS) do { \
   JERRY_UNIMPLEMENTED ("Unimplemented parser feature."); \
@@ -99,5 +81,8 @@ void syntax_check_for_eval_and_arguments_in_strict_mode (operand, bool, locus);
 void syntax_check_for_syntax_errors_in_formal_param_list (bool, locus);
 
 void syntax_check_delete (bool, locus);
+
+jmp_buf * syntax_get_syntax_error_longjmp_label (void);
+void __attribute__((noreturn)) syntax_raise_error (void);
 
 #endif /* SYNTAX_ERRORS_H */

@@ -79,3 +79,14 @@ catch (e)
 {
   assert (e instanceof TypeError);
 }
+
+// Check SyntaxError handling
+try
+{
+  new Function ('var var;');
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof SyntaxError);
+}

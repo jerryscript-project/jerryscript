@@ -17,6 +17,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 
+#define MS_PER_DAY ((ecma_number_t) 86400000)
 /**
  * Unit test's main function.
  */
@@ -27,14 +28,14 @@ main (int __attr_unused___ argc,
   /* int ecma_date_day (time)*/
 
   JERRY_ASSERT (ecma_date_day (0) == 0);
-  JERRY_ASSERT (ecma_date_day (86400000.000000000000000000001) == 1);
+  JERRY_ASSERT (ecma_date_day (MS_PER_DAY) == 1);
 
   /* ecma_number_t ecma_date_time_within_day (time) */
 
   JERRY_ASSERT (ecma_date_time_within_day (0) == 0);
   JERRY_ASSERT (ecma_date_time_within_day (42) == 42);
   JERRY_ASSERT (ecma_date_time_within_day (42.51) == 42.51);
-  JERRY_ASSERT (ecma_date_time_within_day (86400000 + 42) == 42);
+  JERRY_ASSERT (ecma_date_time_within_day (MS_PER_DAY + 42) == 42);
 
   /* int ecma_date_days_in_year (year) */
 
@@ -57,17 +58,20 @@ main (int __attr_unused___ argc,
   JERRY_ASSERT (ecma_date_day_from_year (1971) == 365);
   JERRY_ASSERT (ecma_date_day_from_year (2000) == 10957);
 
-  /* ecma_number_t ecma_date_time_from_year (year) */
-
-  /* FIXME: Implement */
-
   /* int ecma_date_year_from_time (time) */
 
-  /* FIXME: Implement */
-
-  /* int ecma_date_in_leap_year (time) */
-
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_year_from_time (0) == 1970);
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY) == 1970);
+  JERRY_ASSERT (ecma_date_year_from_time ((MS_PER_DAY) * (ecma_number_t) 365 - 1) == 1970);
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) 365) == 1971);
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY
+                                          * (ecma_number_t) (365 * (2015 - 1970))
+                                          )
+                == 2014);
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY
+                                          * (ecma_number_t) (365.25 * (2015 - 1970))
+                                          )
+                == 2015);
 
   /* int ecma_date_day_within_year (time) */
 
@@ -128,7 +132,6 @@ main (int __attr_unused___ argc,
   JERRY_ASSERT (ecma_date_make_day (1970, 1, 35) == 65);
   JERRY_ASSERT (ecma_date_make_day (1970, 13, 35) == 430);
   JERRY_ASSERT (ecma_date_make_day (2016, 2, 1) == 16861);
-  /* FIXME: More testcase */
 
   /* ecma_number_t ecma_date_make_date (day, time) */
 

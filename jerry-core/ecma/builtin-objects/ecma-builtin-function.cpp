@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-function-object.h"
 #include "ecma-lex-env.h"
@@ -130,51 +131,54 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
       zt_string_buffer_pos += sz;
     }
 
-    parser_init ();
+    const opcode_t* opcodes_p;
+    bool is_syntax_correct;
 
-    /*
-     * FIXME:
-     *       Handle syntax errors
-     */
-    parser_parse_new_function ((const char **) zt_string_params_p, params_count);
-    const opcode_t* opcodes_p = (const opcode_t*) serializer_get_bytecode ();
-    serializer_print_opcodes ();
-    parser_free ();
+    is_syntax_correct = parser_parse_new_function ((const char **) zt_string_params_p,
+                                                   params_count,
+                                                   &opcodes_p);
 
-    bool is_strict = false;
-    bool do_instantiate_arguments_object = true;
-
-    opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
-                                                                0);
-
-    if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+    if (!is_syntax_correct)
     {
-      is_strict = true;
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
     }
-
-    if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-        && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+    else
     {
-      /* the code doesn't use 'arguments' identifier
-       * and doesn't perform direct call to eval,
-       * so Arguments object can't be referenced */
-      do_instantiate_arguments_object = false;
+      bool is_strict = false;
+      bool do_instantiate_arguments_object = true;
+
+      opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
+                                                                  0);
+
+      if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+      {
+        is_strict = true;
+      }
+
+      if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
+          && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+      {
+        /* the code doesn't use 'arguments' identifier
+         * and doesn't perform direct call to eval,
+         * so Arguments object can't be referenced */
+        do_instantiate_arguments_object = false;
+      }
+
+      /* 11. */
+      ecma_object_t *glob_lex_env_p = ecma_get_global_environment ();
+
+      ecma_object_t *func_obj_p = ecma_op_create_function_object (params_count > 1u ? string_params_p : NULL,
+                                                                  (ecma_length_t) (params_count - 1u),
+                                                                  glob_lex_env_p,
+                                                                  is_strict,
+                                                                  do_instantiate_arguments_object,
+                                                                  opcodes_p,
+                                                                  1);
+
+      ecma_deref_object (glob_lex_env_p);
+
+      ret_value = ecma_make_normal_completion_value (ecma_make_object_value (func_obj_p));
     }
-
-    /* 11. */
-    ecma_object_t *glob_lex_env_p = ecma_get_global_environment ();
-
-    ecma_object_t *func_obj_p = ecma_op_create_function_object (params_count > 1u ? string_params_p : NULL,
-                                                                (ecma_length_t) (params_count - 1u),
-                                                                glob_lex_env_p,
-                                                                is_strict,
-                                                                do_instantiate_arguments_object,
-                                                                opcodes_p,
-                                                                1);
-
-    ecma_deref_object (glob_lex_env_p);
-
-    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (func_obj_p));
 
     MEM_FINALIZE_LOCAL_ARRAY (zt_string_buffer_p);
     MEM_FINALIZE_LOCAL_ARRAY (zt_string_params_p);

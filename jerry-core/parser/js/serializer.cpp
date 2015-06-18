@@ -23,6 +23,10 @@ static scopes_tree current_scope;
 static array_list bytecodes_cache; /**< storage of pointers to byetecodes */
 static bool print_opcodes;
 
+static void
+serializer_print_opcodes (const opcode_t *opcodes_p,
+                          size_t opcodes_count);
+
 op_meta
 serializer_get_op_meta (opcode_counter_t oc)
 {
@@ -63,13 +67,6 @@ serializer_get_literal_cp_by_uid (uint8_t id, /**< literal idx */
   return lit_id_hash_table_lookup (lit_id_hash, id, oc);
 } /* serializer_get_literal_cp_by_uid */
 
-const void *
-serializer_get_bytecode (void)
-{
-  JERRY_ASSERT (bytecode_data.opcodes != NULL);
-  return bytecode_data.opcodes;
-}
-
 void
 serializer_set_strings_buffer (const ecma_char_t *s)
 {
@@ -82,7 +79,7 @@ serializer_set_scope (scopes_tree new_scope)
   current_scope = new_scope;
 }
 
-void
+const opcode_t *
 serializer_merge_scopes_into_bytecode (void)
 {
   bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
@@ -90,17 +87,14 @@ serializer_merge_scopes_into_bytecode (void)
                                                            (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1);
   bytecode_data.opcodes = scopes_tree_raw_data (current_scope, lit_id_hash);
   bytecodes_cache = array_list_append (bytecodes_cache, &bytecode_data.opcodes);
-}
 
-void
-serializer_dump_literals (void)
-{
-#ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
     lit_dump_literals ();
+    serializer_print_opcodes (bytecode_data.opcodes, bytecode_data.opcodes_count);
   }
-#endif
+
+  return bytecode_data.opcodes;
 }
 
 void
@@ -149,24 +143,16 @@ serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 #endif
 }
 
-void
-serializer_print_opcodes (void)
+static void
+serializer_print_opcodes (const opcode_t *opcodes_p,
+                          size_t opcodes_count)
 {
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
-  opcode_counter_t loc;
-
-  if (!print_opcodes)
-  {
-    return;
-  }
-
-  printf ("AFTER OPTIMIZER:\n");
-
-  for (loc = 0; loc < bytecode_data.opcodes_count; loc++)
+  for (opcode_counter_t loc = 0; loc < opcodes_count; loc++)
   {
     op_meta opm;
 
-    opm.op = bytecode_data.opcodes[loc];
+    opm.op = opcodes_p[loc];
     for (int i = 0; i < 3; i++)
     {
       opm.lit_id[i] = NOT_A_LITERAL;
@@ -174,6 +160,9 @@ serializer_print_opcodes (void)
 
     pp_op_meta (loc, opm, false);
   }
+#else
+  (void) opcodes_p;
+  (void) opcodes_count;
 #endif
 }
 

@@ -1244,6 +1244,9 @@ jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callbac
 
 /**
  * Parse script for specified context
+ *
+ * @return true - if script was parsed successfully,
+ *         false - otherwise (SyntaxError was raised).
  */
 bool
 jerry_parse (const char* source_p, /**< script source */
@@ -1254,13 +1257,18 @@ jerry_parse (const char* source_p, /**< script source */
   bool is_show_opcodes = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
   parser_set_show_opcodes (is_show_opcodes);
-  parser_init ();
-  parser_parse_script (source_p, source_size);
 
-  const opcode_t* opcodes = (const opcode_t*) serializer_get_bytecode ();
+  const opcode_t *opcodes_p;
+  bool is_syntax_correct;
 
-  serializer_print_opcodes ();
-  parser_free ();
+  is_syntax_correct = parser_parse_script (source_p,
+                                           source_size,
+                                           &opcodes_p);
+
+  if (!is_syntax_correct)
+  {
+    return false;
+  }
 
 #ifdef MEM_STATS
   if (jerry_flags & JERRY_FLAG_MEM_STATS_SEPARATE)
@@ -1272,7 +1280,7 @@ jerry_parse (const char* source_p, /**< script source */
 
   bool is_show_mem_stats_per_opcode = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
 
-  vm_init (opcodes, is_show_mem_stats_per_opcode);
+  vm_init (opcodes_p, is_show_mem_stats_per_opcode);
 
   return true;
 } /* jerry_parse */

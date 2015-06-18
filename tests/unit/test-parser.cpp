@@ -74,12 +74,15 @@ main (int __attr_unused___ argc,
   char program[] = "a=1;var a;";
   bool is_ok;
 
+  const opcode_t *opcodes_p;
+  bool is_syntax_correct;
+
   mem_init ();
   serializer_init ();
   parser_set_show_opcodes (true);
-  parser_init ();
-  parser_parse_script (program, strlen (program));
-  parser_free ();
+  is_syntax_correct = parser_parse_script (program, strlen (program), &opcodes_p);
+
+  JERRY_ASSERT (is_syntax_correct);
 
   opcode_t opcodes[] =
   {
@@ -94,7 +97,7 @@ main (int __attr_unused___ argc,
     getop_exitval (0)               // exit 0;
   };
 
-  if (!opcodes_equal ((const opcode_t *) serializer_get_bytecode (), opcodes, 5))
+  if (!opcodes_equal (opcodes_p, opcodes, 5))
   {
     is_ok = false;
   }

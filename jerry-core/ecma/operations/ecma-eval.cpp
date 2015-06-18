@@ -86,22 +86,12 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
 
   ecma_completion_value_t completion;
 
-  parser_init ();
-  bool is_syntax_correct = parser_parse_eval ((const char *) code_p, code_buffer_size);
-  const opcode_t* opcodes_p = (const opcode_t*) serializer_get_bytecode ();
-  serializer_print_opcodes ();
-  parser_free ();
+  const opcode_t *opcodes_p;
+  bool is_syntax_correct;
 
-  opcode_counter_t first_opcode_index = 0u;
-  bool is_strict_prologue = false;
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
-                                                              first_opcode_index++);
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-  {
-    is_strict_prologue = true;
-  }
-
-  bool is_strict = (is_strict_prologue || (is_direct && is_called_from_strict_mode_code));
+  is_syntax_correct = parser_parse_eval ((const char *) code_p,
+                                         code_buffer_size,
+                                         &opcodes_p);
 
   if (!is_syntax_correct)
   {
@@ -109,6 +99,17 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
   }
   else
   {
+    opcode_counter_t first_opcode_index = 0u;
+    bool is_strict_prologue = false;
+    opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
+                                                                first_opcode_index++);
+    if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+    {
+      is_strict_prologue = true;
+    }
+
+    bool is_strict = (is_strict_prologue || (is_direct && is_called_from_strict_mode_code));
+
     ecma_value_t this_binding;
     ecma_object_t *lex_env_p;
 

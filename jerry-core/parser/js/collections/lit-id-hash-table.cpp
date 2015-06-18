@@ -16,49 +16,114 @@
 #include "lit-id-hash-table.h"
 #include "bytecode-data.h"
 
+/** \addtogroup jsparser ECMAScript parser
+ * @{
+ *
+ * \addtogroup collections Collections
+ * @{
+ *
+ * \addtogroup lit_id_hash_table Literal identifiers hash table
+ * The hash table connects pairs (opcode block, idx_t value) with literal identifiers.
+ * @{
+ */
+
+/**
+ * Initialize literal identifiers hash table
+ *
+ * @return pointer to header of the table
+ */
 lit_id_hash_table *
-lit_id_hash_table_init (size_t buckets_count, size_t blocks_count)
+lit_id_hash_table_init (uint8_t *table_buffer_p, /**< buffer to initialize hash table in */
+                        size_t buffer_size, /**< size of the buffer */
+                        size_t buckets_count, /**< number of pairs */
+                        size_t blocks_count) /**< number of opcode blocks */
 {
-  size_t size = mem_heap_recommend_allocation_size (sizeof (lit_id_hash_table));
-  lit_id_hash_table *table = (lit_id_hash_table *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  memset (table, 0, size);
-  size = mem_heap_recommend_allocation_size (sizeof (lit_cpointer_t) * buckets_count);
-  table->raw_buckets = (lit_cpointer_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  memset (table->raw_buckets, 0, size);
-  size = mem_heap_recommend_allocation_size (sizeof (lit_cpointer_t *) * blocks_count);
-  table->buckets = (lit_cpointer_t **) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  memset (table->buckets, 0, size);
-  table->current_bucket_pos = 0;
-  return table;
-}
+  const size_t header_size = JERRY_ALIGNUP (sizeof (lit_id_hash_table), MEM_ALIGNMENT);
+  const size_t raw_buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t) * buckets_count, MEM_ALIGNMENT);
+  const size_t buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t*) * blocks_count, MEM_ALIGNMENT);
 
-void
-lit_id_hash_table_free (lit_id_hash_table *table)
-{
-  JERRY_ASSERT (table);
-  mem_heap_free_block ((uint8_t *) table->raw_buckets);
-  mem_heap_free_block ((uint8_t *) table->buckets);
-  mem_heap_free_block ((uint8_t *) table);
-}
+  JERRY_ASSERT (header_size + raw_buckets_size + buckets_size <= buffer_size);
 
-void
-lit_id_hash_table_insert (lit_id_hash_table *table, idx_t uid, opcode_counter_t oc, lit_cpointer_t lit_cp)
+  lit_id_hash_table *table_p = (lit_id_hash_table *) table_buffer_p;
+
+  table_p->current_bucket_pos = 0;
+  table_p->raw_buckets = (lit_cpointer_t*) (table_buffer_p + header_size);
+  table_p->buckets = (lit_cpointer_t **) (table_buffer_p + header_size + raw_buckets_size);
+
+  memset (table_p->buckets, 0, buckets_size);
+
+  return table_p;
+} /* lit_id_hash_table_init */
+
+/**
+ * Get size of buffer, necessary to hold hash table with specified parameters
+ *
+ * @return size of buffer
+ */
+size_t
+lit_id_hash_table_get_size_for_table (size_t buckets_count, /**< number of pairs */
+                                      size_t blocks_count) /**< number of opcode blocks */
 {
-  JERRY_ASSERT (table);
+  const size_t header_size = JERRY_ALIGNUP (sizeof (lit_id_hash_table), MEM_ALIGNMENT);
+  const size_t raw_buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t) * buckets_count, MEM_ALIGNMENT);
+  const size_t buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t*) * blocks_count, MEM_ALIGNMENT);
+
+  return header_size + raw_buckets_size + buckets_size;
+} /* lit_id_hash_table_get_size_for_table */
+
+/**
+ * Free literal identifiers hash table
+ */
+void
+lit_id_hash_table_free (lit_id_hash_table *table_p) /**< table's header */
+{
+  JERRY_ASSERT (table_p != NULL);
+
+  mem_heap_free_block ((uint8_t *) table_p);
+} /* lit_id_hash_table_free */
+
+/**
+ * Register pair in the hash table
+ */
+void
+lit_id_hash_table_insert (lit_id_hash_table *table_p, /**< table's header */
+                          idx_t uid, /**< value of byte-code instruction's argument */
+                          opcode_counter_t oc, /**< opcode counter of the instruction */
+                          lit_cpointer_t lit_cp) /**< literal identifier */
+{
+  JERRY_ASSERT (table_p != NULL);
+
   size_t block_id = oc / BLOCK_SIZE;
-  if (table->buckets[block_id] == NULL)
+
+  if (table_p->buckets[block_id] == NULL)
   {
-    table->buckets[block_id] = table->raw_buckets + table->current_bucket_pos;
+    table_p->buckets[block_id] = table_p->raw_buckets + table_p->current_bucket_pos;
   }
-  table->buckets[block_id][uid] = lit_cp;
-  table->current_bucket_pos++;
-}
 
+  table_p->buckets[block_id][uid] = lit_cp;
+  table_p->current_bucket_pos++;
+} /* lit_id_hash_table_insert */
+
+/**
+ * Lookup literal identifier by pair
+ *
+ * @return literal identifier
+ */
 lit_cpointer_t
-lit_id_hash_table_lookup (lit_id_hash_table *table, idx_t uid, opcode_counter_t oc)
+lit_id_hash_table_lookup (lit_id_hash_table *table_p, /**< table's header */
+                          idx_t uid, /**< value of byte-code instruction's argument */
+                          opcode_counter_t oc) /**< opcode counter of the instruction */
 {
-  JERRY_ASSERT (table);
+  JERRY_ASSERT (table_p != NULL);
+
   size_t block_id = oc / BLOCK_SIZE;
-  JERRY_ASSERT (table->buckets[block_id]);
-  return table->buckets[block_id][uid];
-}
+  JERRY_ASSERT (table_p->buckets[block_id] != NULL);
+
+  return table_p->buckets[block_id][uid];
+} /* lit_id_hash_table_lookup */
+
+/**
+ * @}
+ * @}
+ * @}
+ */

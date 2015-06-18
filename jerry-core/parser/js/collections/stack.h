@@ -117,24 +117,6 @@ static void NAME##_stack_push (TYPE value) { \
   NAME.data = array_list_append (NAME.data, &value); \
 }
 
-#define DEFINE_CONVERT_TO_RAW_DATA(NAME, TYPE) \
-static TYPE *convert_##NAME##_to_raw_data (void) __attr_unused___; \
-static TYPE *convert_##NAME##_to_raw_data (void) { \
-  if (array_list_len (NAME.data) == 0) \
-  { \
-    return NULL; \
-  } \
-  size_t size = mem_heap_recommend_allocation_size (array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
-  TYPE *DATA = (TYPE *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM); \
-  if (DATA == NULL) \
-  { \
-    printf ("Out of memory\n"); \
-    JERRY_UNREACHABLE (); \
-  } \
-  memcpy (DATA, array_list_element (NAME.data, 0), array_list_len (NAME.data) * sizeof (NAME##_stack_value_type)); \
-  return DATA; \
-}
-
 #define STACK_PUSH(NAME, VALUE) \
 do { NAME##_stack_push (VALUE); } while (0)
 
@@ -207,7 +189,6 @@ NAME##_stack NAME; \
 DEFINE_STACK_ELEMENT (NAME, TYPE) \
 DEFINE_SET_STACK_ELEMENT (NAME, TYPE) \
 DEFINE_STACK_HEAD (NAME, TYPE) \
-DEFINE_CONVERT_TO_RAW_DATA (NAME, TYPE) \
 DEFINE_SET_STACK_HEAD (NAME, TYPE) \
 DEFINE_STACK_PUSH (NAME, TYPE)
 
@@ -217,7 +198,6 @@ static NAME##_stack NAME; \
 DEFINE_STACK_ELEMENT (NAME, TYPE) \
 DEFINE_SET_STACK_ELEMENT (NAME, TYPE) \
 DEFINE_STACK_HEAD (NAME, TYPE) \
-DEFINE_CONVERT_TO_RAW_DATA (NAME, TYPE) \
 DEFINE_SET_STACK_HEAD (NAME, TYPE) \
 DEFINE_STACK_PUSH (NAME, TYPE)
 

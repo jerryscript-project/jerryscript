@@ -600,7 +600,10 @@ merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
    Reorder function declarations.
    Rewrite opcodes' temporary uids with their keys in literal indexes 'hash' table. */
 opcode_t *
-scopes_tree_raw_data (scopes_tree tree, lit_id_hash_table *lit_ids)
+scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code array */
+                      uint8_t *buffer_p, /**< buffer for byte-code array and literal identifiers hash table */
+                      size_t opcodes_array_size, /**< size of space for byte-code array */
+                      lit_id_hash_table *lit_ids) /**< literal identifiers hash table */
 {
   JERRY_ASSERT (lit_ids);
   assert_tree (tree);
@@ -613,10 +616,12 @@ scopes_tree_raw_data (scopes_tree tree, lit_id_hash_table *lit_ids)
   global_oc = 0;
 
   /* Dump bytecode and fill literal indexes 'hash' table. */
-  // +1 for valgrind
-  size_t size = sizeof (opcodes_header_t) + (size_t) (scopes_tree_count_opcodes (tree) + 1) * sizeof (opcode_t);
-  opcodes_header_t *opcodes_data = (opcodes_header_t *) mem_heap_alloc_block (size, MEM_HEAP_ALLOC_LONG_TERM);
-  memset (opcodes_data, 0, size);
+  JERRY_ASSERT (opcodes_array_size >=
+                sizeof (opcodes_header_t) + (size_t) (scopes_tree_count_opcodes (tree)) * sizeof (opcode_t));
+
+  opcodes_header_t *opcodes_data = (opcodes_header_t *) buffer_p;
+  memset (opcodes_data, 0, opcodes_array_size);
+
   opcode_t *opcodes = (opcode_t *)(((uint8_t*) opcodes_data) + sizeof (opcodes_header_t));
   merge_subscopes (tree, opcodes, lit_ids);
   if (lit_id_to_uid != null_hash)
@@ -624,9 +629,11 @@ scopes_tree_raw_data (scopes_tree tree, lit_id_hash_table *lit_ids)
     hash_table_free (lit_id_to_uid);
     lit_id_to_uid = null_hash;
   }
-  opcodes_data->lit_id_hash = lit_ids;
+
+  MEM_CP_SET_POINTER (opcodes_data->lit_id_hash_cp, lit_ids);
+
   return opcodes;
-}
+} /* scopes_tree_raw_data */
 
 void
 scopes_tree_set_strict_mode (scopes_tree tree, bool strict_mode)

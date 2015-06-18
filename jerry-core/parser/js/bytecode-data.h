@@ -18,6 +18,7 @@
 
 #include "opcodes.h"
 #include "lit-id-hash-table.h"
+#include "mem-allocator.h"
 
 /*
  * All literals are kept in the 'literals' array.
@@ -35,11 +36,13 @@
 #define BLOCK_SIZE 64
 
 /**
- * Pointer to lit_id_hash_table precedes every independent bytecode region
+ * Header of byte-code memory region, containing byte-code array and literal identifiers hash table
  */
 typedef struct __attribute__ ((aligned (MEM_ALIGNMENT)))
 {
-  lit_id_hash_table *lit_id_hash;
+  mem_cpointer_t lit_id_hash_cp; /**< pointer to literal identifiers hash table
+                                  *   See also: lit_id_hash_table_init */
+  mem_cpointer_t next_opcodes_cp; /**< pointer to next byte-code memory region */
 } opcodes_header_t;
 
 typedef struct
@@ -50,14 +53,15 @@ typedef struct
 } bytecode_data_t;
 
 /**
- * Macros to get a hash table corresponding to a bytecode region
- */
-#define GET_HASH_TABLE_FOR_BYTECODE(opcodes) (((opcodes_header_t *) (((uint8_t *) (opcodes)) - \
-                                                                     sizeof (opcodes_header_t)))->lit_id_hash)
-
-/**
  * Macros to get a pointer to bytecode header by pointer to opcodes start
  */
 #define GET_BYTECODE_HEADER(opcodes) ((opcodes_header_t *) (((uint8_t *) (opcodes)) - sizeof (opcodes_header_t)))
+
+/**
+ * Macros to get a hash table corresponding to a bytecode region
+ */
+#define GET_HASH_TABLE_FOR_BYTECODE(opcodes) (MEM_CP_GET_POINTER (lit_id_hash_table, \
+                                                                  GET_BYTECODE_HEADER (opcodes)->lit_id_hash_cp))
+
 
 #endif // BYTECODE_DATA_H

@@ -58,7 +58,7 @@ void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
 op_meta scopes_tree_op_meta (scopes_tree, opcode_counter_t);
 size_t scopes_tree_count_literals_in_blocks (scopes_tree);
 opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
-opcode_t *scopes_tree_raw_data (scopes_tree, lit_id_hash_table *);
+opcode_t *scopes_tree_raw_data (scopes_tree, uint8_t *, size_t, lit_id_hash_table *);
 void scopes_tree_set_strict_mode (scopes_tree, bool);
 bool scopes_tree_strict_mode (scopes_tree);
 

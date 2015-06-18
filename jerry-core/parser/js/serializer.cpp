@@ -20,7 +20,6 @@
 
 static bytecode_data_t bytecode_data;
 static scopes_tree current_scope;
-static array_list bytecodes_cache; /**< storage of pointers to byetecodes */
 static bool print_opcodes;
 
 static void
@@ -83,18 +82,37 @@ const opcode_t *
 serializer_merge_scopes_into_bytecode (void)
 {
   bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
-  lit_id_hash_table *lit_id_hash = lit_id_hash_table_init (scopes_tree_count_literals_in_blocks (current_scope),
-                                                           (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1);
-  bytecode_data.opcodes = scopes_tree_raw_data (current_scope, lit_id_hash);
-  bytecodes_cache = array_list_append (bytecodes_cache, &bytecode_data.opcodes);
+
+  const size_t buckets_count = scopes_tree_count_literals_in_blocks (current_scope);
+  const size_t blocks_count = (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1;
+  const size_t opcodes_count = scopes_tree_count_opcodes (current_scope);
+
+  const size_t opcodes_array_size = JERRY_ALIGNUP (sizeof (opcodes_header_t) + opcodes_count * sizeof (opcode_t),
+                                                   MEM_ALIGNMENT);
+  const size_t lit_id_hash_table_size = JERRY_ALIGNUP (lit_id_hash_table_get_size_for_table (buckets_count,
+                                                                                             blocks_count),
+                                                       MEM_ALIGNMENT);
+
+  uint8_t *buffer_p = (uint8_t*) mem_heap_alloc_block (opcodes_array_size + lit_id_hash_table_size,
+                                                       MEM_HEAP_ALLOC_LONG_TERM);
+
+  lit_id_hash_table *lit_id_hash = lit_id_hash_table_init (buffer_p + opcodes_array_size,
+                                                           lit_id_hash_table_size,
+                                                           buckets_count, blocks_count);
+
+  const opcode_t *opcodes_p = scopes_tree_raw_data (current_scope, buffer_p, opcodes_array_size, lit_id_hash);
+
+  opcodes_header_t *header_p = (opcodes_header_t*) buffer_p;
+  MEM_CP_SET_POINTER (header_p->next_opcodes_cp, bytecode_data.opcodes);
+  bytecode_data.opcodes = opcodes_p;
 
   if (print_opcodes)
   {
     lit_dump_literals ();
-    serializer_print_opcodes (bytecode_data.opcodes, bytecode_data.opcodes_count);
+    serializer_print_opcodes (opcodes_p, bytecode_data.opcodes_count);
   }
 
-  return bytecode_data.opcodes;
+  return opcodes_p;
 }
 
 void
@@ -176,8 +194,6 @@ serializer_init ()
   bytecode_data.opcodes = NULL;
 
   lit_init ();
-
-  bytecodes_cache = array_list_init (sizeof (opcode_t *));
 }
 
 void serializer_set_show_opcodes (bool show_opcodes)
@@ -195,10 +211,11 @@ serializer_free (void)
 
   lit_finalize ();
 
-  for (size_t i = 0; i < array_list_len (bytecodes_cache); ++i)
+  while (bytecode_data.opcodes != NULL)
   {
-    lit_id_hash_table_free (GET_BYTECODE_HEADER (*(opcode_t **) array_list_element (bytecodes_cache, i))->lit_id_hash);
-    mem_heap_free_block (GET_BYTECODE_HEADER (*(opcode_t **) array_list_element (bytecodes_cache, i)));
+    opcodes_header_t *header_p = GET_BYTECODE_HEADER (bytecode_data.opcodes);
+    bytecode_data.opcodes = MEM_CP_GET_POINTER (opcode_t, header_p->next_opcodes_cp);
+
+    mem_heap_free_block (header_p);
   }
-  array_list_free (bytecodes_cache);
 }

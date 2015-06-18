@@ -28,7 +28,8 @@ typedef struct
   lit_cpointer_t **buckets;
 } lit_id_hash_table;
 
-lit_id_hash_table *lit_id_hash_table_init (size_t, size_t);
+lit_id_hash_table *lit_id_hash_table_init (uint8_t*, size_t, size_t, size_t);
+size_t lit_id_hash_table_get_size_for_table (size_t, size_t);
 void lit_id_hash_table_free (lit_id_hash_table *);
 void lit_id_hash_table_insert (lit_id_hash_table *, idx_t, opcode_counter_t, lit_cpointer_t);
 lit_cpointer_t lit_id_hash_table_lookup (lit_id_hash_table *, idx_t, opcode_counter_t);

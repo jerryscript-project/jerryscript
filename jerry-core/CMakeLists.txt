@@ -100,8 +100,8 @@ project (JerryCore CXX C ASM)
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/base
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/operations
-     ${CMAKE_SOURCE_DIR}/jerry-core/parser/collections
      ${CMAKE_SOURCE_DIR}/jerry-core/parser/js
+     ${CMAKE_SOURCE_DIR}/jerry-core/parser/js/collections
      ${CMAKE_SOURCE_DIR}/jerry-core/jrt)
 
  # Third-party
@@ -110,17 +110,17 @@ project (JerryCore CXX C ASM)
 
 # Sources
  # Jerry core
-  file(GLOB SOURCE_CORE_API                *.cpp)
-  file(GLOB SOURCE_CORE_LIT                lit/*.cpp)
-  file(GLOB SOURCE_CORE_RCS                rcs/*.cpp)
-  file(GLOB SOURCE_CORE_MEM                mem/*.cpp)
-  file(GLOB SOURCE_CORE_VM                 vm/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_BUILTINS      ecma/builtin-objects/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_BASE          ecma/base/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_OPERATIONS    ecma/operations/*.cpp)
-  file(GLOB SOURCE_CORE_PARSER_COLLECTIONS parser/collections/*.cpp)
-  file(GLOB SOURCE_CORE_PARSER_JS          parser/js/*.cpp)
-  file(GLOB SOURCE_CORE_JRT                jrt/*.cpp)
+  file(GLOB SOURCE_CORE_API                   *.cpp)
+  file(GLOB SOURCE_CORE_LIT                   lit/*.cpp)
+  file(GLOB SOURCE_CORE_RCS                   rcs/*.cpp)
+  file(GLOB SOURCE_CORE_MEM                   mem/*.cpp)
+  file(GLOB SOURCE_CORE_VM                    vm/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.cpp)
+  file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.cpp)
+  file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.cpp)
+  file(GLOB SOURCE_CORE_PARSER_JS_COLLECTIONS parser/js/collections/*.cpp)
+  file(GLOB SOURCE_CORE_JRT                   jrt/*.cpp)
 
   set(SOURCE_CORE
       jerry.cpp
@@ -132,8 +132,8 @@ project (JerryCore CXX C ASM)
       ${SOURCE_CORE_ECMA_BUILTINS}
       ${SOURCE_CORE_ECMA_BASE}
       ${SOURCE_CORE_ECMA_OPERATIONS}
-      ${SOURCE_CORE_PARSER_COLLECTIONS}
       ${SOURCE_CORE_PARSER_JS}
+      ${SOURCE_CORE_PARSER_JS_COLLECTIONS}
       ${SOURCE_CORE_JRT})
 
 # Per-option configuration

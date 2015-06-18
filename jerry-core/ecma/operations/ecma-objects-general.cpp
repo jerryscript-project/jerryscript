@@ -62,17 +62,9 @@ ecma_op_create_object_object_noarg (void)
   ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
   // 3., 4., 6., 7.
-  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_op_create_object_object_noarg_and_set_prototype (object_prototype_p);
 
   ecma_deref_object (object_prototype_p);
-
-  /*
-   * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
-   * without ECMA_INTERNAL_PROPERTY_CLASS internal property
-   * is "Object".
-   *
-   * See also: ecma_object_get_class_name
-   */
 
   return obj_p;
 } /* ecma_op_create_object_object_noarg */
@@ -108,6 +100,32 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
     return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
   }
 } /* ecma_op_create_object_object_arg */
+
+/**
+ * Object creation operation with no arguments.
+ * It sets the given prototype to the newly created object.
+ *
+ * See also: ECMA-262 v5, 15.2.2.1, 15.2.3.5
+ *
+ * @return pointer to newly created object
+ */
+ecma_object_t*
+ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prototype_p) /**< pointer to prototype of
+                                                                                              the object
+                                                                                              (can be NULL) */
+{
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  /*
+   * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
+   * without ECMA_INTERNAL_PROPERTY_CLASS internal property
+   * is "Object".
+   *
+   * See also: ecma_object_get_class_name
+   */
+
+  return obj_p;
+} /* ecma_op_create_object_object_noarg_and_set_prototype */
 
 /**
  * [[Get]] ecma general object's operation

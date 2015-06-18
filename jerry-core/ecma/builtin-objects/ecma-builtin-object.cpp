@@ -637,7 +637,46 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
                                    ecma_value_t arg1, /**< routine's first argument */
                                    ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  // 1.
+  if (!ecma_is_value_object (arg1) && !ecma_is_value_null (arg1))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_object_t *obj_p = NULL;
+
+    if (!ecma_is_value_null (arg1))
+    {
+      obj_p = ecma_get_object_from_value (arg1);
+    }
+    // 2-3.
+    ecma_object_t *result_obj_p = ecma_op_create_object_object_noarg_and_set_prototype (obj_p);
+
+    // 4.
+    if (!ecma_is_value_undefined (arg2))
+    {
+      ECMA_TRY_CATCH (obj,
+                      ecma_builtin_object_object_define_properties (this_arg,
+                                                                    ecma_make_object_value (result_obj_p),
+                                                                    arg2),
+                      ret_value);
+      ECMA_FINALIZE (obj);
+    }
+
+    // 5.
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_copy_value (ecma_make_object_value (result_obj_p),
+                                                                      true));
+    }
+
+    ecma_deref_object (result_obj_p);
+  }
+
+  return ret_value;
 } /* ecma_builtin_object_object_create */
 
 /**

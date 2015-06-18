@@ -48,6 +48,18 @@ jsp_label_finalize (void)
 } /* jsp_label_finalize */
 
 /**
+ * Remove all labels
+ *
+ * Note:
+ *      should be used only upon a SyntaxError is raised
+ */
+void
+jsp_label_remove_all_labels (void)
+{
+  label_set_p = NULL;
+} /* jsp_label_remove_all_labels */
+
+/**
  * Add label to the current label set
  */
 void

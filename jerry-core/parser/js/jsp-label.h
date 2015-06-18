@@ -67,6 +67,8 @@ typedef struct jsp_label_t
 extern void jsp_label_init (void);
 extern void jsp_label_finalize (void);
 
+extern void jsp_label_remove_all_labels (void);
+
 extern void jsp_label_push (jsp_label_t *out_label_p, jsp_label_type_flag_t type_mask, token id);
 extern void jsp_label_rewrite_jumps_and_pop (jsp_label_t *label_p, opcode_counter_t break_tgt_oc);
 

@@ -328,36 +328,6 @@ extern ecma_number_t ecma_int32_to_number (int32_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
 extern ecma_length_t ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, ssize_t buffer_size);
 
-/* ecma-helpers-date.cpp */
-extern int ecma_date_day (ecma_number_t time);
-extern ecma_number_t ecma_date_time_within_day (ecma_number_t time);
-extern int ecma_date_days_in_year (ecma_number_t year);
-extern int ecma_date_day_from_year (ecma_number_t year);
-extern ecma_number_t ecma_date_time_from_year (ecma_number_t year);
-extern int ecma_date_year_from_time (ecma_number_t time);
-extern int ecma_date_in_leap_year (ecma_number_t time);
-extern int ecma_date_day_within_year (ecma_number_t time);
-extern int ecma_date_month_from_time (ecma_number_t time);
-extern int ecma_date_date_from_time (ecma_number_t time);
-extern int ecma_date_week_day (ecma_number_t time);
-extern ecma_number_t ecma_date_local_tza ();
-extern ecma_number_t ecma_date_daylight_saving_ta (ecma_number_t time);
-extern ecma_number_t ecma_date_local_time (ecma_number_t time);
-extern ecma_number_t ecma_date_utc (ecma_number_t time);
-extern ecma_number_t ecma_date_hour_from_time (ecma_number_t time);
-extern ecma_number_t ecma_date_min_from_time (ecma_number_t time);
-extern ecma_number_t ecma_date_sec_from_time (ecma_number_t time);
-extern ecma_number_t ecma_date_ms_from_time (ecma_number_t time);
-extern ecma_number_t ecma_date_make_time (ecma_number_t hour,
-                                          ecma_number_t min,
-                                          ecma_number_t sec,
-                                          ecma_number_t ms);
-extern ecma_number_t ecma_date_make_day (ecma_number_t year,
-                                         ecma_number_t month,
-                                         ecma_number_t date);
-extern ecma_number_t ecma_date_make_date (ecma_number_t day, ecma_number_t time);
-extern ecma_number_t ecma_date_time_clip (ecma_number_t time);
-
 /* ecma-helpers-char.cpp */
 extern bool ecma_char_is_new_line (ecma_char_t c);
 extern bool ecma_char_is_carriage_return (ecma_char_t c);

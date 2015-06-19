@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "ecma-builtin-helpers.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "fdlibm-math.h"
@@ -23,7 +24,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * \addtogroup ecmabuiltinhelpers ECMA builtin helper operations
  * @{
  */
 

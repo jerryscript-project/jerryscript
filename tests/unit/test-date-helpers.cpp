@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "ecma-builtin-helpers.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 
@@ -64,13 +65,9 @@ main (int __attr_unused___ argc,
   JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY) == 1970);
   JERRY_ASSERT (ecma_date_year_from_time ((MS_PER_DAY) * (ecma_number_t) 365 - 1) == 1970);
   JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) 365) == 1971);
-  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY
-                                          * (ecma_number_t) (365 * (2015 - 1970))
-                                          )
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) (365 * (2015 - 1970)))
                 == 2014);
-  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY
-                                          * (ecma_number_t) (365.25 * (2015 - 1970))
-                                          )
+  JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) (365.25 * (2015 - 1970)))
                 == 2015);
 
   /* int ecma_date_day_within_year (time) */

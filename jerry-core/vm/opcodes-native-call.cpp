@@ -31,9 +31,10 @@ ecma_completion_value_t
 opfunc_native_call (opcode_t opdata, /**< operation data */
                     int_data_t *int_data) /**< interpreter context */
 {
-  // const idx_t dst_var_idx = opdata.data.native_call.lhs;
+  const idx_t dst_var_idx = opdata.data.native_call.lhs;
   const idx_t native_call_id_idx = opdata.data.native_call.name;
   const idx_t args_number = opdata.data.native_call.arg_list;
+  const opcode_counter_t lit_oc = int_data->pos;
 
   JERRY_ASSERT (native_call_id_idx < OPCODE_NATIVE_CALL__COUNT);
 
@@ -106,7 +107,8 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
           mem_heap_free_block (zt_str_p);
 
-          ret_value = ecma_make_empty_completion_value ();
+          ret_value = set_variable_value (int_data, lit_oc, dst_var_idx,
+                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
           ECMA_FINALIZE (str_value);
         }

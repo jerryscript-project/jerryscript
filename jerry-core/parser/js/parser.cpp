@@ -773,7 +773,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
       else if (token_is (TOK_KEYWORD))
       {
         const char *s = lexer_keyword_to_string ((keyword) token_data ());
-        literal_t lit = lit_find_literal_by_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
+        literal_t lit = lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
         if (lit == NULL)
         {
           EMIT_ERROR ("Expected identifier");

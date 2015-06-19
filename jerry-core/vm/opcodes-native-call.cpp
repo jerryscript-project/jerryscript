@@ -41,7 +41,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
   JERRY_STATIC_ASSERT (OPCODE_NATIVE_CALL__COUNT < (1u << (sizeof (native_call_id_idx) * JERRY_BITSINBYTE)));
 
-  ecma_completion_value_t ret_value = 0;
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 

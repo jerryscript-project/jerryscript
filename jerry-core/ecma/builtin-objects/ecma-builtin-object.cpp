@@ -670,7 +670,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
                     ecma_op_to_object (arg2),
                     ret_value);
 
-    ecma_object_t *props_p = ecma_get_object_from_completion_value (props);
+    ecma_object_t *props_p = ecma_get_object_from_value (props);
     ecma_property_t *property_p;
 
     // First we need to know how many properties should be stored
@@ -732,7 +732,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
 
       // 5.b
       ECMA_TRY_CATCH (conv_result,
-                      ecma_op_to_property_descriptor (ecma_get_completion_value_value (desc_obj),
+                      ecma_op_to_property_descriptor (desc_obj,
                                                       &property_descriptors[index]),
                       ret_value);
 

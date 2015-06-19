@@ -902,9 +902,12 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
   JERRY_ASSERT (uintptr > uintptr_chunk_aligned);
 
   mem_block_header_t *block_p = (mem_block_header_t *) uintptr_chunk_aligned;
-  JERRY_ASSERT (block_p->length_type == mem_block_length_type_t::ONE_CHUNKED);
 
 #ifndef JERRY_NDEBUG
+  VALGRIND_DEFINED_STRUCT (block_p);
+  JERRY_ASSERT (block_p->length_type == mem_block_length_type_t::ONE_CHUNKED);
+  VALGRIND_NOACCESS_STRUCT (block_p);
+
   const mem_block_header_t *block_iter_p = mem_heap.first_block_p;
   bool is_found = false;
 

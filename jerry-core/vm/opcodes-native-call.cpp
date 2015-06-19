@@ -69,7 +69,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
       case OPCODE_NATIVE_CALL_PRINT:
       {
         for (ecma_length_t arg_index = 0;
-             arg_index < args_read;
+             ecma_is_completion_value_empty (ret_value) && arg_index < args_read;
              arg_index++)
         {
           ECMA_TRY_CATCH (str_value,

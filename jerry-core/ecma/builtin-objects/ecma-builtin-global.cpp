@@ -54,14 +54,12 @@
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_global_object_eval (ecma_value_t this_arg __attr_unused___, /**< this argument */
                                  ecma_value_t x) /**< routine's first argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   bool is_direct_eval = vm_is_direct_eval_form_call ();
-  JERRY_ASSERT (!(is_direct_eval
-                  && !ecma_is_value_undefined (this_arg)));
 
   /* See also: ECMA-262 v5, 10.1.1 */
   bool is_called_from_strict_mode_code;

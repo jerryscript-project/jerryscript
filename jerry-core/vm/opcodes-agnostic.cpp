@@ -40,7 +40,7 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT (offset != 0 && ((uint32_t) int_data->pos + offset < MAX_OPCODES));
+    JERRY_ASSERT ((uint32_t) int_data->pos + offset < MAX_OPCODES);
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
   }
   else
@@ -73,7 +73,7 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT (offset != 0 && (uint32_t) int_data->pos >= offset);
+    JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
     int_data->pos = (opcode_counter_t) (int_data->pos - offset);
   }
   else
@@ -112,7 +112,7 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT (offset != 0 && ((uint32_t) int_data->pos + offset < MAX_OPCODES));
+    JERRY_ASSERT ((uint32_t) int_data->pos + offset < MAX_OPCODES);
     int_data->pos = (opcode_counter_t) (int_data->pos + offset);
   }
   else
@@ -145,7 +145,7 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT (offset != 0 && (uint32_t) int_data->pos >= offset);
+    JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
     int_data->pos = (opcode_counter_t) (int_data->pos - offset);
   }
   else
@@ -173,7 +173,7 @@ opfunc_jmp_down (opcode_t opdata, /**< operation data */
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
                                                                     opdata.data.jmp_down.opcode_2);
 
-  JERRY_ASSERT (offset != 0 && ((uint32_t) int_data->pos + offset < MAX_OPCODES));
+  JERRY_ASSERT (((uint32_t) int_data->pos + offset < MAX_OPCODES));
 
   int_data->pos = (opcode_counter_t) (int_data->pos + offset);
 
@@ -192,7 +192,7 @@ opfunc_jmp_up (opcode_t opdata, /**< operation data */
 {
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_up.opcode_1,
                                                                     opdata.data.jmp_up.opcode_2);
-  JERRY_ASSERT (offset != 0 && (uint32_t) int_data->pos >= offset);
+  JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
 
   int_data->pos = (opcode_counter_t) (int_data->pos - offset);
 

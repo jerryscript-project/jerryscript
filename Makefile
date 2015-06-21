@@ -215,8 +215,6 @@ $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/native plugins-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
@@ -230,8 +228,6 @@ $(JERRY_NUTTX_TARGETS): $(BUILD_DIR)/nuttx
 
 $(BUILD_ALL)_nuttx: $(BUILD_DIRS_NUTTX)
 	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/nuttx plugins-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/nuttx $(JERRY_NUTTX_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
@@ -248,8 +244,6 @@ $(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
 	@ mkdir -p $(OUT_DIR)/$@
 	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 plugins-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
@@ -265,8 +259,6 @@ $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
 	@ mkdir -p $(OUT_DIR)/$@
 	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 plugins-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)

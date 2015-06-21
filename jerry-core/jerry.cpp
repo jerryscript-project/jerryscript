@@ -18,7 +18,6 @@
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
-#include "ecma-extension.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -60,11 +59,6 @@ static bool jerry_api_available;
 /** \addtogroup jerry_extension Jerry engine extension interface
  * @{
  */
-
-/**
- * Buffer of character data (used for exchange between core and extensions' routines)
- */
-char jerry_extension_characters_buffer[CONFIG_EXTENSION_CHAR_BUFFER_SIZE];
 
 #ifdef JERRY_ENABLE_LOG
 /**
@@ -273,20 +267,6 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
   }
 } /* jerry_api_convert_api_value_to_ecma_value */
 
-
-/**
- * Extend Global scope with specified extension object
- *
- * After extension the object is accessible through non-configurable property
- * with name equal to builtin_object_name converted to ecma chars.
- */
-bool
-jerry_extend_with (jerry_extension_descriptor_t *desc_p) /**< description of the extension object */
-{
-  jerry_assert_api_available ();
-
-  return ecma_extension_register (desc_p);
-} /* jerry_extend_with */
 
 /**
  * @}

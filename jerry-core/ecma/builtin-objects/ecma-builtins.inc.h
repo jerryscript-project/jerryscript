@@ -288,12 +288,4 @@ BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          true,
          global)
 
-/* Jerry's dynamic extension proxy object */
-BUILTIN (ECMA_BUILTIN_ID_JERRY,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID__COUNT, /* no prototype */
-         false,
-         false,
-         jerry)
-
 #undef BUILTIN

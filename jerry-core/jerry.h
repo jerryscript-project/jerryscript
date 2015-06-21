@@ -20,7 +20,6 @@
 #include <stdint.h>
 
 #include "jerry-api.h"
-#include "jerry-extension.h"
 
 /** \addtogroup jerry Jerry engine interface
  * @{

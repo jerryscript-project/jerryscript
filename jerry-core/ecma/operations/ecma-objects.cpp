@@ -16,7 +16,6 @@
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
-#include "ecma-extension.h"
 #include "ecma-globals.h"
 #include "ecma-function-object.h"
 #include "ecma-lcache.h"
@@ -45,7 +44,6 @@ ecma_assert_object_type_is_valid (ecma_object_type_t type) /**< object's impleme
                 || type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 || type == ECMA_OBJECT_TYPE_STRING
                 || type == ECMA_OBJECT_TYPE_ARGUMENTS
-                || type == ECMA_OBJECT_TYPE_EXTENSION
                 || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 } /* ecma_assert_object_type_is_valid */
 
@@ -77,7 +75,6 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTENSION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_get (obj_p, property_name_p);
@@ -138,20 +135,12 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
       break;
     }
-
-    case ECMA_OBJECT_TYPE_EXTENSION:
-    {
-      prop_p = ecma_op_extension_object_get_own_property (obj_p, property_name_p);
-
-      break;
-    }
   }
 
   if (unlikely (prop_p == NULL))
   {
     if (is_builtin
-        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
-        && type != ECMA_OBJECT_TYPE_EXTENSION)
+        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
     {
       prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
     }
@@ -219,7 +208,6 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_EXTENSION]         = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_get_property
    * };
@@ -262,7 +250,6 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_EXTENSION]         = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_put
    * };
@@ -303,7 +290,6 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_can_put,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_can_put,
    *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_EXTENSION]         = &ecma_op_general_object_can_put,
    *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_can_put,
    *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_can_put
    * };
@@ -343,7 +329,6 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTENSION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_delete (obj_p,
@@ -393,7 +378,6 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_EXTENSION]         = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_default_value
    * };
@@ -434,7 +418,6 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTENSION:
     case ECMA_OBJECT_TYPE_STRING:
     {
       return ecma_op_general_object_define_own_property (obj_p,
@@ -487,7 +470,6 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
-    case ECMA_OBJECT_TYPE_EXTENSION:
     {
       return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
@@ -554,10 +536,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
       return ECMA_MAGIC_STRING_ARGUMENTS_UL;
-    }
-    case ECMA_OBJECT_TYPE_EXTENSION:
-    {
-      return ECMA_MAGIC_STRING_OBJECT_UL;
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
     {
@@ -705,8 +683,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
           default:
           {
-            JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL)
-                          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_JERRY));
+            JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL));
 
             return ECMA_MAGIC_STRING_OBJECT_UL;
           }

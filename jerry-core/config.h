@@ -161,26 +161,6 @@
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
 /**
- * Size of character buffer used to exchange character data between core and extensions' routine
- */
-#define CONFIG_EXTENSION_CHAR_BUFFER_SIZE 2048
-
-/**
- * Maximum number of registered extensions
- */
-#define CONFIG_EXTENSION_MAX_NUMBER_OF_EXTENSIONS 32
-
-/**
- * Maximum number of functions in an extension
- */
-#define CONFIG_EXTENSION_MAX_FUNCTIONS_IN_EXTENSION 1024
-
-/**
- * Maximum number of arguments in a function
- */
-#define CONFIG_EXTENSION_MAX_ARGUMENTS_IN_FUNCTION 16
-
-/**
  * Run GC after execution of each opcode
  */
 // #define CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE

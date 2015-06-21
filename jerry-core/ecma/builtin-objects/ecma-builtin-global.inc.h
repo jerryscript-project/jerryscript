@@ -133,13 +133,6 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_DATE_UL,
               ECMA_PROPERTY_CONFIGURABLE)
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
-// Implementation-defined property for accessing the engine's extensions */
-OBJECT_VALUE (ECMA_MAGIC_STRING_JERRY_UL,
-              ecma_builtin_get (ECMA_BUILTIN_ID_JERRY),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
-
 // ECMA-262 v5, 15.1.4.8
 CP_UNIMPLEMENTED_VALUE (ECMA_MAGIC_STRING_REG_EXP_UL,
                         ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),

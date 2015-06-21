@@ -19,8 +19,6 @@
 #include "jerry.h"
 #include "jrt/jrt.h"
 
-#include "plugins/io/init.h"
-
 /**
  * Maximum command line arguments number
  */
@@ -235,8 +233,6 @@ main (int argc,
 #endif /* JERRY_ENABLE_LOG */
 
       jerry_init (flags);
-
-      plugin_io_init ();
 
       jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 

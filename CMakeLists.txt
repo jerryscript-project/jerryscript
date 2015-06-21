@@ -306,15 +306,11 @@ project (Jerry CXX C ASM)
  # Jerry's Core
   add_subdirectory(jerry-core)
 
- # Plugins
-  add_subdirectory(plugins)
-
 # Targets declaration
  string(TOLOWER "${PLATFORM_EXT}" PLATFORM_L)
 
  function(declare_targets_for_build_mode BUILD_MODE)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${PLATFORM_L})
-  set(PLUGINS_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.plugins.${PLATFORM_L}.lib)
   set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
@@ -353,7 +349,7 @@ project (Jerry CXX C ASM)
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
+    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
 
     add_cppcheck_target(${TARGET_NAME})
@@ -386,7 +382,7 @@ project (Jerry CXX C ASM)
     target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 
     add_custom_target(${TARGET_NAME} ALL)
-    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${FDLIBM_TARGET_NAME} ${PLUGINS_TARGET_NAME} ${CORE_TARGET_NAME})
+    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${FDLIBM_TARGET_NAME}${CORE_TARGET_NAME})
 
     add_custom_command(TARGET ${TARGET_NAME}
                        POST_BUILD
@@ -394,7 +390,6 @@ project (Jerry CXX C ASM)
                        COMMAND echo
                        $<TARGET_FILE:${MAIN_MODULE_TARGET_NAME}>
                        $<TARGET_FILE:${FDLIBM_TARGET_NAME}>
-                       $<TARGET_FILE:${PLUGINS_TARGET_NAME}>
                        $<TARGET_FILE:${CORE_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
 
     if(${USE_JERRY_LIBC})

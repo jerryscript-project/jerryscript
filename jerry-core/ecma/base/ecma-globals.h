@@ -396,9 +396,7 @@ typedef enum
   ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION, /** One of built-in functions described in section 15
                                           of ECMA-262 v5 specification */
   ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
-  ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_EXTENSION, /**< Extension (implementation-defined) object
-                               *   See also: ecma_extension_instantiate */
+  ECMA_OBJECT_TYPE_ARRAY /**< Array object (15.4) */
   // ECMA_OBJECT_TYPE_HOST /**< Host object */
 } ecma_object_type_t;
 

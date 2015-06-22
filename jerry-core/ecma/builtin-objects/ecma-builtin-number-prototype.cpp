@@ -268,7 +268,13 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         else
         {
           /* Buffer that is used to construct the string. */
-          int buffer_size = (exponent > 0) ? exponent + frac_digits + 1 : frac_digits + 2;
+          int buffer_size = (exponent > 0) ? exponent + frac_digits + 2 : frac_digits + 3;
+
+          if (is_negative)
+          {
+            buffer_size++;
+          }
+
           JERRY_ASSERT (buffer_size > 0);
           MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, ecma_char_t);
 
@@ -360,6 +366,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
             }
           }
 
+          JERRY_ASSERT (p - buff < buffer_size);
           /* String terminator. */
           *p = 0;
           ecma_string_t* str = ecma_new_ecma_string ((ecma_char_t *) buff);

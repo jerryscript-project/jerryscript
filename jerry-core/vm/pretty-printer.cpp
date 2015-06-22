@@ -179,7 +179,10 @@ dump_asm (opcode_counter_t oc, opcode_t opcode)
 }
 
 void
-pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
+pp_op_meta (const opcode_t *opcodes_p,
+            opcode_counter_t oc,
+            op_meta opm,
+            bool rewrite)
 {
   dump_asm (oc, opm.op);
   printf ("    // ");
@@ -393,7 +396,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             while ((int16_t) start >= 0 && !found)
             {
               start--;
-              switch (serializer_get_opcode (start).op_idx)
+              switch (serializer_get_opcode (opcodes_p, start).op_idx)
               {
                 case NAME_TO_ID (call_n):
                 case NAME_TO_ID (native_call):
@@ -408,7 +411,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
                 }
               }
             }
-            opcode_t start_op = serializer_get_opcode (start);
+            opcode_t start_op = serializer_get_opcode (opcodes_p, start);
             switch (start_op.op_idx)
             {
               case NAME_TO_ID (call_n):
@@ -470,7 +473,7 @@ pp_op_meta (opcode_counter_t oc, op_meta opm, bool rewrite)
             }
             for (opcode_counter_t counter = start; counter <= oc; counter++)
             {
-              opcode_t meta_op = serializer_get_opcode (counter);
+              opcode_t meta_op = serializer_get_opcode (opcodes_p, counter);
 
               switch (meta_op.op_idx)
               {

@@ -33,16 +33,27 @@ serializer_get_op_meta (opcode_counter_t oc)
   return scopes_tree_op_meta (current_scope, oc);
 }
 
+/**
+ * Get byte-code instruction from current scope, or specified byte-code array
+ *
+ * @return byte-code instruction
+ */
 opcode_t
-serializer_get_opcode (opcode_counter_t oc)
+serializer_get_opcode (const opcode_t *opcodes_p, /**< pointer to byte-code array (or NULL,
+                                                   *   if instruction should be taken from
+                                                   *   instruction list of current scope) */
+                       opcode_counter_t oc) /**< opcode counter of the intruction */
 {
-  if (bytecode_data.opcodes == NULL)
+  if (opcodes_p == NULL)
   {
     return serializer_get_op_meta (oc).op;
   }
-  JERRY_ASSERT (oc < bytecode_data.opcodes_count);
-  return bytecode_data.opcodes[oc];
-}
+  else
+  {
+    JERRY_ASSERT (oc < GET_BYTECODE_HEADER (opcodes_p)->instructions_number);
+    return opcodes_p[oc];
+  }
+} /* serializer_get_opcode */
 
 /**
  * Convert literal id (operand value of instruction) to compressed pointer to literal
@@ -85,7 +96,7 @@ serializer_merge_scopes_into_bytecode (void)
 
   const size_t buckets_count = scopes_tree_count_literals_in_blocks (current_scope);
   const size_t blocks_count = (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1;
-  const size_t opcodes_count = scopes_tree_count_opcodes (current_scope);
+  const opcode_counter_t opcodes_count = scopes_tree_count_opcodes (current_scope);
 
   const size_t opcodes_array_size = JERRY_ALIGNUP (sizeof (opcodes_header_t) + opcodes_count * sizeof (opcode_t),
                                                    MEM_ALIGNMENT);
@@ -104,6 +115,7 @@ serializer_merge_scopes_into_bytecode (void)
 
   opcodes_header_t *header_p = (opcodes_header_t*) buffer_p;
   MEM_CP_SET_POINTER (header_p->next_opcodes_cp, bytecode_data.opcodes);
+  header_p->instructions_number = opcodes_count;
   bytecode_data.opcodes = opcodes_p;
 
   if (print_opcodes)
@@ -125,7 +137,7 @@ serializer_dump_op_meta (op_meta op)
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
-    pp_op_meta ((opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), op, false);
+    pp_op_meta (NULL, (opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), op, false);
   }
 #endif
 }
@@ -156,7 +168,7 @@ serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
   if (print_opcodes)
   {
-    pp_op_meta (loc, op, true);
+    pp_op_meta (NULL, loc, op, true);
   }
 #endif
 }
@@ -176,7 +188,7 @@ serializer_print_opcodes (const opcode_t *opcodes_p,
       opm.lit_id[i] = NOT_A_LITERAL;
     }
 
-    pp_op_meta (loc, opm, false);
+    pp_op_meta (opcodes_p, loc, opm, false);
   }
 #else
   (void) opcodes_p;

@@ -43,6 +43,7 @@ typedef struct __attribute__ ((aligned (MEM_ALIGNMENT)))
   mem_cpointer_t lit_id_hash_cp; /**< pointer to literal identifiers hash table
                                   *   See also: lit_id_hash_table_init */
   mem_cpointer_t next_opcodes_cp; /**< pointer to next byte-code memory region */
+  opcode_counter_t instructions_number; /**< number of instructions in the byte-code array */
 } opcodes_header_t;
 
 typedef struct

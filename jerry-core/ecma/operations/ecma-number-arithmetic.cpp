@@ -38,8 +38,6 @@ ecma_number_t
 ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                           ecma_number_t right_num) /**< right operand */
 {
-  TODO (Check precision);
-
   ecma_number_t n = left_num, d = right_num;
 
   if (ecma_number_is_nan (n)
@@ -56,16 +54,7 @@ ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
     return n;
   }
 
-  JERRY_ASSERT (!ecma_number_is_nan (n)
-                && !ecma_number_is_zero (n)
-                && !ecma_number_is_infinity (n));
-  JERRY_ASSERT (!ecma_number_is_nan (d)
-                && !ecma_number_is_zero (d)
-                && !ecma_number_is_infinity (d));
-
-  ecma_number_t q = ecma_number_trunc (ecma_number_divide (n, d));
-
-  return ecma_number_substract (n, ecma_number_multiply (d, q));
+  return ecma_number_calc_remainder (n, d);
 } /* ecma_op_number_remainder */
 
 /**

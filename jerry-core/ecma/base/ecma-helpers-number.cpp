@@ -708,6 +708,33 @@ ecma_number_trunc (ecma_number_t num) /**< ecma-number */
 } /* ecma_number_trunc */
 
 /**
+ * Calculate remainder of division of two numbers,
+ * as specified in ECMA-262 v5, 11.5.3, item 6.
+ *
+ * Note:
+ *      operands shouldn't contain NaN, Infinity, or zero.
+ *
+ * @return number - calculated remainder.
+ */
+ecma_number_t
+ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
+                            ecma_number_t right_num) /**< right operand */
+{
+  ecma_number_t n = left_num, d = right_num;
+
+  JERRY_ASSERT (!ecma_number_is_nan (n)
+                && !ecma_number_is_zero (n)
+                && !ecma_number_is_infinity (n));
+  JERRY_ASSERT (!ecma_number_is_nan (d)
+                && !ecma_number_is_zero (d)
+                && !ecma_number_is_infinity (d));
+
+  ecma_number_t q = ecma_number_trunc (ecma_number_divide (n, d));
+
+  return ecma_number_substract (n, ecma_number_multiply (d, q));
+} /* ecma_number_calc_remainder */
+
+/**
  * ECMA-number addition.
  *
  * @return number - result of addition.

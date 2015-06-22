@@ -823,24 +823,80 @@ ecma_int32_to_number (int32_t value) /**< signed 32-bit integer value */
 } /* ecma_int32_to_number */
 
 /**
- * ECMA-defined conversion of Number value to Uint32 value
+ * ECMA-defined conversion of Number value to UInt32 value
  *
  * See also:
  *          ECMA-262 v5, 9.6
  *
- * @return number - result of conversion.
+ * @return 32-bit unsigned integer - result of conversion.
  */
 uint32_t
-ecma_number_to_uint32 (ecma_number_t value) /**< unsigned 32-bit integer value */
+ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
 {
-  if (ecma_number_is_nan (value)
-      || ecma_number_is_zero (value)
-      || ecma_number_is_infinity (value))
+  if (ecma_number_is_nan (num)
+      || ecma_number_is_zero (num)
+      || ecma_number_is_infinity (num))
   {
     return 0;
   }
 
-  return (uint32_t) value;
+  bool sign = ecma_number_is_negative (num);
+  ecma_number_t abs_num;
+
+  if (sign)
+  {
+    abs_num = ecma_number_negate (num);
+  }
+  else
+  {
+    abs_num = num;
+  }
+
+  // 2 ^ 32
+  const uint64_t uint64_2_pow_32 = (1ull << 32);
+
+  const ecma_number_t num_2_pow_32 = (float) uint64_2_pow_32;
+
+  ecma_number_t num_in_uint32_range;
+
+  if (abs_num >= num_2_pow_32)
+  {
+    num_in_uint32_range = ecma_number_calc_remainder (abs_num,
+                                                      num_2_pow_32);
+  }
+  else
+  {
+    num_in_uint32_range = abs_num;
+  }
+
+  // Check that the floating point value can be represented with uint32_t
+  JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
+  uint32_t uint32_num = (uint32_t) num_in_uint32_range;
+
+  uint32_t ret;
+
+  if (sign)
+  {
+    ret = -uint32_num;
+  }
+  else
+  {
+    ret = uint32_num;
+  }
+
+#ifndef JERRY_NDEBUG
+  if (sign
+      && uint32_num != 0)
+  {
+    JERRY_ASSERT (ret == uint64_2_pow_32 - uint32_num);
+  }
+  else
+  {
+    JERRY_ASSERT (ret == uint32_num);
+  }
+#endif /* !JERRY_NDEBUG */
+
+  return ret;
 } /* ecma_number_to_uint32 */
 
 /**
@@ -849,19 +905,46 @@ ecma_number_to_uint32 (ecma_number_t value) /**< unsigned 32-bit integer value *
  * See also:
  *          ECMA-262 v5, 9.5
  *
- * @return number - result of conversion.
+ * @return 32-bit signed integer - result of conversion.
  */
 int32_t
-ecma_number_to_int32 (ecma_number_t value) /**< unsigned 32-bit integer value */
+ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 {
-  if (ecma_number_is_nan (value)
-      || ecma_number_is_zero (value)
-      || ecma_number_is_infinity (value))
+  uint32_t uint32_num = ecma_number_to_uint32 (num);
+
+  // 2 ^ 32
+  const int64_t int64_2_pow_32 = (1ll << 32);
+
+  // 2 ^ 31
+  const uint32_t uint32_2_pow_31 = (1ull << 31);
+
+  int32_t ret;
+
+  if (uint32_num >= uint32_2_pow_31)
   {
-    return 0;
+    ret = (int32_t) (uint32_num - int64_2_pow_32);
+  }
+  else
+  {
+    ret = (int32_t) uint32_num;
   }
 
-  return (int32_t) (uint32_t) value;
+#ifndef JERRY_NDEBUG
+  int64_t int64_num = uint32_num;
+
+  JERRY_ASSERT (int64_num >= 0);
+
+  if (int64_num >= uint32_2_pow_31)
+  {
+    JERRY_ASSERT (ret == int64_num - int64_2_pow_32);
+  }
+  else
+  {
+    JERRY_ASSERT (ret == int64_num);
+  }
+#endif /* !JERRY_NDEBUG */
+
+  return ret;
 } /* ecma_number_to_int32 */
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64

@@ -20,7 +20,6 @@
 #include "syntax-errors.h"
 #include "opcodes-native-call.h"
 
-#define MIN_TEMP_NAME 128
 static idx_t temp_name, max_temp_name;
 
 #define OPCODE(name) (__op__idx_##name)
@@ -115,22 +114,42 @@ enum
 };
 STATIC_STACK (reg_var_decls, opcode_counter_t)
 
+/**
+ * Reset counter of register variables allocator
+ * to identifier of first general register
+ */
 static void
 reset_temp_name (void)
 {
-  temp_name = MIN_TEMP_NAME;
-}
+  temp_name = OPCODE_REG_GENERAL_FIRST;
+} /* reset_temp_name */
 
+/**
+ * Allocate next register variable
+ *
+ * @return identifier of the allocated variable
+ */
 static idx_t
 next_temp_name (void)
 {
-  temp_name++;
-  if (max_temp_name < temp_name)
+  idx_t next_reg = temp_name++;
+
+  if (next_reg > OPCODE_REG_GENERAL_LAST)
   {
-    max_temp_name = temp_name;
+    /*
+     * FIXME:
+     *       Implement mechanism, allowing reusage of register variables
+     */
+    PARSE_ERROR ("Not enough register variables", 0);
   }
-  return temp_name;
-}
+
+  if (max_temp_name < next_reg)
+  {
+    max_temp_name = next_reg;
+  }
+
+  return next_reg;
+} /* next_temp_name */
 
 static op_meta
 create_op_meta (opcode_t op, lit_cpointer_t lit_id1, lit_cpointer_t lit_id2, lit_cpointer_t lit_id3)
@@ -2500,7 +2519,7 @@ void
 dump_reg_var_decl_for_rewrite (void)
 {
   STACK_PUSH (reg_var_decls, serializer_get_current_opcode_counter ());
-  serializer_dump_op_meta (create_op_meta_000 (getop_reg_var_decl (MIN_TEMP_NAME, INVALID_VALUE)));
+  serializer_dump_op_meta (create_op_meta_000 (getop_reg_var_decl (OPCODE_REG_FIRST, INVALID_VALUE)));
 }
 
 void

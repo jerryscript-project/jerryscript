@@ -103,6 +103,18 @@ typedef enum : idx_t
 } opcode_scope_code_flags_t;
 
 /**
+ * Enumeration of registers (temp variables) ranges
+ */
+typedef enum : idx_t
+{
+  OPCODE_REG_FIRST = 128, /** identifier of first special register */
+  OPCODE_REG_SPECIAL_EVAL_RET = OPCODE_REG_FIRST, /**< eval return value */
+  OPCODE_REG_GENERAL_FIRST, /** identifier of first non-special register */
+  OPCODE_REG_GENERAL_LAST = 253, /** identifier of last non-special register */
+  OPCODE_REG_LAST = OPCODE_REG_GENERAL_FIRST /**< identifier of last register */
+} opcode_special_reg_t;
+
+/**
  * Forward declaration of opcode structure
  */
 struct opcode_t;

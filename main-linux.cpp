@@ -275,6 +275,22 @@ main (int argc,
         JERRY_ERROR_MSG ("Failed to register 'assert' method.");
       }
 
+      jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+      jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
+      jerry_api_value_t assert_value;
+      assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
+      assert_value.v_object = assert_func_p;
+
+      bool is_assert_added = jerry_api_set_object_field_value (global_obj_p, "assert", &assert_value);
+
+      jerry_api_release_value (&assert_value);
+      jerry_api_release_object (global_obj_p);
+
+      if (!is_assert_added)
+      {
+        JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+      }
+
       jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 
       if (!jerry_parse (source_p, source_size))

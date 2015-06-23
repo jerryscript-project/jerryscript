@@ -91,10 +91,10 @@ main (int __attr_unused___ argc,
                 OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
                 | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
                 INVALID_VALUE),
-    getop_reg_var_decl (128, 129),  // var tmp128 .. tmp129;
+    getop_reg_var_decl (OPCODE_REG_FIRST, OPCODE_REG_GENERAL_FIRST),
     getop_var_decl (0),             // var a;
-    getop_assignment (129, 1, 1),   // tmp129 = 1: SMALLINT;
-    getop_assignment (0, 6, 129),   // a = tmp129 : TYPEOF (tmp129);
+    getop_assignment (130, 1, 1),   // $tmp0 = 1;
+    getop_assignment (0, 6, 130),   // a = $tmp0;
     getop_exitval (0)               // exit 0;
   };
 

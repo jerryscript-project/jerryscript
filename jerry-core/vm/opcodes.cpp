@@ -1748,6 +1748,7 @@ opfunc_meta (opcode_t opdata, /**< operation data */
     case OPCODE_META_TYPE_CATCH:
     case OPCODE_META_TYPE_FINALLY:
     case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
+    case OPCODE_META_TYPE_END_FOR_IN:
     {
       return ecma_make_meta_completion_value ();
     }

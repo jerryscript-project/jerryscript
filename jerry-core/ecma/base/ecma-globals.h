@@ -794,6 +794,11 @@ typedef uint32_t ecma_magic_string_ex_id_t;
 typedef uint8_t ecma_string_hash_t;
 
 /**
+ * Length of string hash, in bits
+ */
+#define ECMA_STRING_HASH_BITS (sizeof (ecma_string_hash_t) * JERRY_BITSINBYTE)
+
+/**
  * Number of string's last characters to use for hash calculation
  */
 #define ECMA_STRING_HASH_LAST_CHARS_COUNT (2)

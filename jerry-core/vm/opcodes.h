@@ -72,8 +72,9 @@ typedef enum
   OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
   OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */
   OPCODE_META_TYPE_END_TRY_CATCH_FINALLY, /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
-  OPCODE_META_TYPE_SCOPE_CODE_FLAGS /**< set of flags indicating various properties of the scope's code
-                                     *   (See also: opcode_scope_code_flags_t) */
+  OPCODE_META_TYPE_SCOPE_CODE_FLAGS, /**< set of flags indicating various properties of the scope's code
+                                      *   (See also: opcode_scope_code_flags_t) */
+  OPCODE_META_TYPE_END_FOR_IN /**< end of for-in statement */
 } opcode_meta_type;
 
 typedef enum : idx_t
@@ -109,6 +110,8 @@ typedef enum : idx_t
 {
   OPCODE_REG_FIRST = 128, /** identifier of first special register */
   OPCODE_REG_SPECIAL_EVAL_RET = OPCODE_REG_FIRST, /**< eval return value */
+  OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< variable, containing property name,
+                                            *   at start of for-in loop body */
   OPCODE_REG_GENERAL_FIRST, /** identifier of first non-special register */
   OPCODE_REG_GENERAL_LAST = 253, /** identifier of last non-special register */
   OPCODE_REG_LAST = OPCODE_REG_GENERAL_FIRST /**< identifier of last register */
@@ -186,6 +189,7 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_2 (a, delete_var, lhs, name)                                     \
         p##_3 (a, delete_prop, lhs, base, name)                              \
         p##_2 (a, typeof, lhs, obj)                                          \
+        p##_3 (a, for_in, expr, oc_idx_1, oc_idx_2)                          \
         p##_3 (a, with, expr, oc_idx_1, oc_idx_2)                            \
         p##_2 (a, try_block, oc_idx_1, oc_idx_2)                             \
         p##_1 (a, throw_value, var)

@@ -35,11 +35,21 @@ try {
   assert (e instanceof TypeError);
 }
 
+try {
+  var y = Object.getPrototypeOf(null);
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
 var obj = { x : "foo" };
-assert (Object.getPrototypeOf(obj) === Object.prototype)
+assert (Object.getPrototypeOf(obj) === Object.prototype);
 
 var constructor = function () {};
 constructor.prototype = obj;
 
 var d_obj = new constructor();
 assert (Object.getPrototypeOf(d_obj) === obj);
+
+obj = Object.create(null);
+assert (Object.getPrototypeOf(obj) === null);

@@ -306,6 +306,7 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
     case OPCODE (obj_decl):
     case OPCODE (this_binding):
     case OPCODE (with):
+    case OPCODE (for_in):
     case OPCODE (throw_value):
     case OPCODE (is_true_jmp_up):
     case OPCODE (is_true_jmp_down):

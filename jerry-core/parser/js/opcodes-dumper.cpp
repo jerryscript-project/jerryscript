@@ -708,6 +708,23 @@ eval_ret_operand (void)
   return ret;
 } /* eval_ret_operand */
 
+/**
+ * Creates operand for taking iterator value (next property name)
+ * from for-in opcode handler.
+ *
+ * @return constructed operand
+ */
+operand
+jsp_create_operand_for_in_special_reg (void)
+{
+  operand ret;
+
+  ret.type = OPERAND_TMP;
+  ret.data.uid = OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME;
+
+  return ret;
+} /* jsp_create_operand_for_in_special_reg */
+
 bool
 operand_is_empty (operand op)
 {
@@ -2361,6 +2378,62 @@ dump_with_end (void)
   const opcode_t opcode = getop_meta (OPCODE_META_TYPE_END_WITH, INVALID_VALUE, INVALID_VALUE);
   serializer_dump_op_meta (create_op_meta_000 (opcode));
 } /* dump_with_end */
+
+/**
+ * Dump template of 'for_in' instruction.
+ *
+ * Note:
+ *      the instruction's flags field is written later (see also: rewrite_for_in).
+ *
+ * @return position of dumped instruction
+ */
+opcode_counter_t
+dump_for_in_for_rewrite (operand op) /**< operand - result of evaluating Expression
+                                      *   in for-in statement */
+{
+  opcode_counter_t oc = serializer_get_current_opcode_counter ();
+
+  if (op.type == OPERAND_LITERAL)
+  {
+    const opcode_t opcode = getop_for_in (LITERAL_TO_REWRITE, INVALID_VALUE, INVALID_VALUE);
+    serializer_dump_op_meta (create_op_meta_100 (opcode, op.data.lit_id));
+  }
+  else
+  {
+    JERRY_ASSERT (op.type == OPERAND_TMP);
+
+    const opcode_t opcode = getop_for_in (op.data.uid, INVALID_VALUE, INVALID_VALUE);
+    serializer_dump_op_meta (create_op_meta_000 (opcode));
+  }
+
+  return oc;
+} /* dump_for_in_for_rewrite */
+
+/**
+ * Write position of 'for_in' block's end to specified 'for_in' instruction template,
+ * dumped earlier (see also: dump_for_in_for_rewrite).
+ */
+void
+rewrite_for_in (opcode_counter_t oc) /**< opcode counter of the instruction template */
+{
+  op_meta for_in_op_meta = serializer_get_op_meta (oc);
+
+  idx_t id1, id2;
+  split_opcode_counter (get_diff_from (oc), &id1, &id2);
+  for_in_op_meta.op.data.for_in.oc_idx_1 = id1;
+  for_in_op_meta.op.data.for_in.oc_idx_2 = id2;
+  serializer_rewrite_op_meta (oc, for_in_op_meta);
+} /* rewrite_for_in */
+
+/**
+ * Dump 'meta' instruction of 'end for_in' type
+ */
+void
+dump_for_in_end (void)
+{
+  const opcode_t opcode = getop_meta (OPCODE_META_TYPE_END_FOR_IN, INVALID_VALUE, INVALID_VALUE);
+  serializer_dump_op_meta (create_op_meta_000 (opcode));
+} /* dump_for_in_end */
 
 void
 dump_try_for_rewrite (void)

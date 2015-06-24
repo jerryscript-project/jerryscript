@@ -1768,7 +1768,7 @@ parse_expression (bool in_allowed, /**< flag indicating if 'in' is allowed insid
    initialiser
   : '=' LT!* assignment_expression
   ; */
-static void
+static operand
 parse_variable_declaration (void)
 {
   current_token_must_be (TOK_NAME);
@@ -1785,6 +1785,8 @@ parse_variable_declaration (void)
   {
     lexer_save_token (tok);
   }
+
+  return name;
 }
 
 /* variable_declaration_list
@@ -1933,15 +1935,176 @@ jsp_parse_for_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost (fi
   }
 } /* jsp_parse_for_statement */
 
-static void
-parse_for_in (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) label, corresponding to
-                                                    *   the statement (or NULL, if there are no named
-                                                    *   labels associated with the statement) */
+/**
+ * Parse VariableDeclarationNoIn / LeftHandSideExpression (iterator part) of for-in statement
+ *
+ * See also:
+ *          jsp_parse_for_in_statement
+ *
+ * @return true - if iterator consists of base and property name,
+ *         false - otherwise, iterator consists of an identifier name (without base).
+ */
+static bool
+jsp_parse_for_in_statement_iterator (operand *base_p, /**< out: base value of member expression, if any,
+                                                       *        empty operand - otherwise */
+                                     operand *identifier_p) /**< out: property name (if base value is not empty),
+                                                             *        identifier - otherwise */
 {
-  (void) outermost_stmt_label_p;
+  JERRY_ASSERT (base_p != NULL);
+  JERRY_ASSERT (identifier_p != NULL);
 
-  EMIT_SORRY ("'for in' loops are not supported yet");
-}
+  if (is_keyword (KW_VAR))
+  {
+    skip_newlines ();
+
+    *base_p = empty_operand ();
+    *identifier_p = parse_variable_declaration ();
+
+    return false;
+  }
+  else
+  {
+    operand base, identifier;
+
+    /*
+     * FIXME:
+     *       Remove evaluation of last part of identifier chain
+     */
+    operand i = parse_left_hand_side_expression (&base, &identifier);
+
+    if (operand_is_empty (base))
+    {
+      *base_p = empty_operand ();
+      *identifier_p = i;
+
+      return false;
+    }
+    else
+    {
+      *base_p = base;
+      *identifier_p = identifier;
+
+      return true;
+    }
+  }
+} /* jsp_parse_for_in_statement_iterator */
+
+/**
+ * Parse for-in statement
+ *
+ * See also:
+ *          ECMA-262 v5, 12.6.4
+ *
+ * Note:
+ *      Syntax:
+ *                     Iterator                 Collection   Body     LoopEnd
+ *       - for (    LeftHandSideExpression  in Expression) Statement
+ *       - for (var VariableDeclarationNoIn in Expression) Statement
+ *
+ * Note:
+ *      Layout of generate byte-code is the following:
+ *                        tmp <- Collection (Expression)
+ *                        for_in instruction (tmp, opcode counter of for-in end mark)
+ *                         {
+ *                          Assignment of OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME to
+ *                          Iterator (VariableDeclarationNoIn / LeftHandSideExpression)
+ *                         }
+ *                         Body (Statement)
+ *        ContinueTarget:
+ *                        meta (OPCODE_META_TYPE_END_FOR_IN)
+ */
+static void
+jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost (first) label,
+                                                                  *   corresponding to the statement
+                                                                  *   (or NULL, if there are no name
+                                                                  *   labels associated with the statement) */
+                            locus for_body_statement_loc) /**< locus of loop body statement */
+{
+  jsp_label_raise_nested_jumpable_border ();
+
+  current_token_must_be (TOK_OPEN_PAREN);
+  skip_newlines ();
+
+  // Save Iterator location
+  locus iterator_loc = tok.loc;
+
+  while (tok.loc < for_body_statement_loc)
+  {
+    if (jsp_find_next_token_before_the_locus (TOK_KEYWORD,
+                                              for_body_statement_loc,
+                                              true))
+    {
+      if (is_keyword (KW_IN))
+      {
+        break;
+      }
+      else
+      {
+        skip_token ();
+      }
+    }
+    else
+    {
+      EMIT_ERROR ("Invalid for statement");
+    }
+  }
+
+  JERRY_ASSERT (is_keyword (KW_IN));
+  skip_newlines ();
+
+  // Collection
+  operand collection = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
+  current_token_must_be (TOK_CLOSE_PAREN);
+  skip_token ();
+
+  // Dump for-in instruction
+  opcode_counter_t for_in_oc = dump_for_in_for_rewrite (collection);
+
+  // Dump assignment VariableDeclarationNoIn / LeftHandSideExpression <- OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME
+  lexer_seek (iterator_loc);
+  tok = lexer_next_token ();
+
+  operand iterator_base, iterator_identifier, for_in_special_reg;
+  for_in_special_reg = jsp_create_operand_for_in_special_reg ();
+
+  if (jsp_parse_for_in_statement_iterator (&iterator_base, &iterator_identifier))
+  {
+    dump_prop_setter (iterator_base, iterator_identifier, for_in_special_reg);
+  }
+  else
+  {
+    JERRY_ASSERT (operand_is_empty (iterator_base));
+    dump_variable_assignment (iterator_identifier, for_in_special_reg);
+  }
+
+  // Body
+  lexer_seek (for_body_statement_loc);
+  tok = lexer_next_token ();
+
+  parse_statement (NULL);
+
+  // Save LoopEnd locus
+  const locus loop_end_loc = tok.loc;
+
+  // Setup ContinueTarget
+  jsp_label_setup_continue_target (outermost_stmt_label_p,
+                                   serializer_get_current_opcode_counter ());
+
+  // Write position of for-in end to for_in instruction
+  rewrite_for_in (for_in_oc);
+
+  // Dump meta (OPCODE_META_TYPE_END_FOR_IN)
+  dump_for_in_end ();
+
+  lexer_seek (loop_end_loc);
+  tok = lexer_next_token ();
+  if (tok.type != TOK_CLOSE_BRACE)
+  {
+    lexer_save_token (tok);
+  }
+
+  jsp_label_remove_nested_jumpable_border ();
+} /* jsp_parse_for_in_statement */
 
 /**
  * Parse for/for-in statements
@@ -1982,7 +2145,7 @@ jsp_parse_for_or_for_in_statement (jsp_label_t *outermost_stmt_label_p) /**< out
   }
   else
   {
-    parse_for_in (outermost_stmt_label_p);
+    jsp_parse_for_in_statement (outermost_stmt_label_p, for_body_statement_loc);
   }
 } /* jsp_parse_for_or_for_in_statement */
 

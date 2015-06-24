@@ -232,6 +232,7 @@ pp_op_meta (const opcode_t *opcodes_p,
     PP_OP (delete_prop, "%s = delete %s.%s;");
     PP_OP (typeof, "%s = typeof %s;");
     PP_OP (with, "with (%s);");
+    PP_OP (for_in, "for_in (%s);");
     case NAME_TO_ID (is_true_jmp_up): printf ("if (%s) goto %d;", VAR (1), oc - OC (2, 3)); break;
     case NAME_TO_ID (is_false_jmp_up): printf ("if (%s == false) goto %d;", VAR (1), oc - OC (2, 3)); break;
     case NAME_TO_ID (is_true_jmp_down): printf ("if (%s) goto %d;", VAR (1), oc + OC (2, 3)); break;
@@ -552,6 +553,11 @@ pp_op_meta (const opcode_t *opcodes_p,
         case OPCODE_META_TYPE_END_WITH:
         {
           printf ("end with;");
+          break;
+        }
+        case OPCODE_META_TYPE_END_FOR_IN:
+        {
+          printf ("end for-in;");
           break;
         }
         case OPCODE_META_TYPE_FUNCTION_END:

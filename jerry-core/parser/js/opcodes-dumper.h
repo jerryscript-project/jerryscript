@@ -49,6 +49,7 @@ typedef enum __attr_packed___
 operand empty_operand (void);
 operand literal_operand (lit_cpointer_t);
 operand eval_ret_operand (void);
+operand jsp_create_operand_for_in_special_reg (void);
 bool operand_is_empty (operand);
 
 void dumper_init (void);
@@ -210,6 +211,10 @@ operand dump_typeof_res (operand);
 opcode_counter_t dump_with_for_rewrite (operand);
 void rewrite_with (opcode_counter_t);
 void dump_with_end (void);
+
+opcode_counter_t dump_for_in_for_rewrite (operand);
+void rewrite_for_in (opcode_counter_t);
+void dump_for_in_end (void);
 
 void dump_try_for_rewrite (void);
 void rewrite_try (void);

@@ -71,3 +71,22 @@ assert (a.property1 === 25);
 b = delete a[b]; 
 assert (b === true); 
 assert (a.property1 === undefined); 
+
+flow = '';
+a = {
+  get q ()
+  {
+    flow += 'get: ' + (typeof q);
+
+    return 0;
+  },
+  set q (v)
+  {
+    flow += ', set: ' + (typeof q);
+  }
+};
+
+a.q;
+a.q = 1;
+
+assert (flow == 'get: undefined, set: undefined');

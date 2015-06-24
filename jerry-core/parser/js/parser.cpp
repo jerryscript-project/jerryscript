@@ -267,7 +267,7 @@ parse_property_assignment (void)
     syntax_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
 
     skip_newlines ();
-    const operand func = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
+    const operand func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL, NULL);
 
     dump_function_end_for_rewrite ();
 

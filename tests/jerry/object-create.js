@@ -128,8 +128,7 @@ try {
 // Create an object with null as prototype
 var obj = Object.create(null)
 assert (typeof (obj) === "object");
-// FIXME: enable this assertion after the #208 is fixed.
-// assert (Object.getPrototypeOf (obj) === null);
+assert (Object.getPrototypeOf (obj) === null);
 
 try {
     Object.create()

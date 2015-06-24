@@ -128,11 +128,17 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused
   {
     /* 2. */
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-
     ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
-    ecma_ref_object (prototype_p);
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (prototype_p));
+    if (prototype_p)
+    {
+      ret_value = ecma_make_normal_completion_value (ecma_make_object_value (prototype_p));
+      ecma_ref_object (prototype_p);
+    }
+    else
+    {
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_NULL);
+    }
   }
 
   return ret_value;

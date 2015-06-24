@@ -29,29 +29,29 @@ catch (e)
   assert (e.message === "foo");
 }
 
-// FIXME: Add assert statements when getters for Date are finished.
 d = Date("abcd");
-// assert (isNaN(d.valueOf()));
+assert (isNaN(d.valueOf()));
 
 d = Date();
-// assert (!isNaN(d.valueOf()));
+assert (!isNaN(d.valueOf()));
+
 d = Date("2015-01-01");
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);
 
 d = Date(1420070400000);
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);
 
 d = Date(2015,0,1,0,0,0,0);
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);
 
 d = new Date();
-// assert (isNaN(d.valueOf()));
+assert (!isNaN(d.valueOf()));
 
 d = new Date("2015-01-01");
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);
 
 d = new Date(1420070400000);
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);
 
 d = new Date(2015,0,1,0,0,0,0);
-// assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() == 1420070400000);

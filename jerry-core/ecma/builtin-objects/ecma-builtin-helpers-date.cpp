@@ -29,31 +29,6 @@
  */
 
 /**
- * Time range defines for helper functions.
- *
- * See also:
- *          ECMA-262 v5, 15.9.1.1, 15.9.1.10
- */
-/* Hours in a day. */
-#define ECMA_DATE_HOURS_PER_DAY         24
-/* Minutes in an hour. */
-#define ECMA_DATE_MINUTES_PER_HOUR      60
-/* Seconds in a minute. */
-#define ECMA_DATE_SECONDS_PER_MINUTE    60
-/* Milliseconds in a second. */
-#define ECMA_DATE_MS_PER_SECOND         1000
-/* ECMA_DATE_MS_PER_MINUTE == 60000 */
-#define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
-/* ECMA_DATE_MS_PER_HOUR == 3600000 */
-#define ECMA_DATE_MS_PER_HOUR           (ECMA_DATE_MS_PER_MINUTE * ECMA_DATE_MINUTES_PER_HOUR)
-/* ECMA_DATE_MS_PER_DAY == 86400000 */
-#define ECMA_DATE_MS_PER_DAY            (ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY)
-/* This gives a range of 8,640,000,000,000,000 milliseconds
- * to either side of 01 January, 1970 UTC.
- */
-#define ECMA_DATE_MAX_VALUE             8.64e15
-
-/**
  * Helper function to get day number from time value.
  *
  * See also:
@@ -172,6 +147,10 @@ ecma_date_time_from_year (ecma_number_t year) /**< year value */
  * See also:
  *          ECMA-262 v5, 15.9.1.3
  *
+ * Used by:
+ *         - The Date.prototype.getFullYear routine. (Generated.)
+ *         - The Date.prototype.getUTCFullYear routine. (Generated.)
+ *
  * @return  year value
  */
 ecma_number_t
@@ -243,6 +222,10 @@ ecma_date_day_within_year (ecma_number_t time) /**< time value */
  * See also:
  *          ECMA-262 v5, 15.9.1.4
  *
+ * Used by:
+ *         - The Date.prototype.getMonth routine. (Generated.)
+ *         - The Date.prototype.getUTCMonth routine. (Generated.)
+ *
  * @return  month number
  */
 ecma_number_t
@@ -311,6 +294,10 @@ ecma_date_month_from_time (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.5
+ *
+ * Used by:
+ *         - The Date.prototype.getDate routine. (Generated.)
+ *         - The Date.prototype.getUTCDate routine. (Generated.)
  *
  * @return  date number
  */
@@ -389,6 +376,10 @@ ecma_date_date_from_time (ecma_number_t time) /**< time value */
  * See also:
  *          ECMA-262 v5, 15.9.1.6
  *
+ * Used by:
+ *         - The Date.prototype.getDay routine. (Generated.)
+ *         - The Date.prototype.getUTCDay routine. (Generated.)
+ *
  * @return  weekday number
  */
 ecma_number_t __attr_always_inline___
@@ -451,6 +442,10 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
  * See also:
  *          ECMA-262 v5, 15.9.1.9
  *
+ * Used by:
+ *         - All Date.prototype.getUTC* routines. (Generated.)
+ *         - The Date.prototype.getTimezoneOffset routine.
+ *
  * @return  local time
  */
 ecma_number_t __attr_always_inline___
@@ -490,6 +485,10 @@ ecma_date_utc (ecma_number_t time) /**< time value */
  * See also:
  *          ECMA-262 v5, 15.9.1.10
  *
+ * Used by:
+ *         - The Date.prototype.getHour routine. (Generated.)
+ *         - The Date.prototype.getUTCHour routine. (Generated.)
+ *
  * @return  hour value
  */
 ecma_number_t __attr_always_inline___
@@ -509,6 +508,10 @@ ecma_date_hour_from_time (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.10
+ *
+ * Used by:
+ *         - The Date.prototype.getMinutes routine. (Generated.)
+ *         - The Date.prototype.getUTCMinutes routine. (Generated.)
  *
  * @return  minute value
  */
@@ -530,6 +533,10 @@ ecma_date_min_from_time (ecma_number_t time) /**< time value */
  * See also:
  *          ECMA-262 v5, 15.9.1.10
  *
+ * Used by:
+ *         - The Date.prototype.getSeconds routine. (Generated.)
+ *         - The Date.prototype.getUTCSeconds routine. (Generated.)
+ *
  * @return  second value
  */
 ecma_number_t __attr_always_inline___
@@ -549,6 +556,10 @@ ecma_date_sec_from_time (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.10
+ *
+ * Used by:
+ *         - The Date.prototype.getMilliseconds routine. (Generated.)
+ *         - The Date.prototype.getUTCMilliseconds routine. (Generated.)
  *
  * @return  millisecond value
  */
@@ -687,6 +698,28 @@ ecma_date_time_clip (ecma_number_t time) /**< time value */
 
   return ecma_number_trunc (time);
 } /* ecma_date_time_clip */
+
+/**
+ * Helper function to calculate timezone offset.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.9.5.26
+ *
+ * Used by:
+ *         - The Date.prototype.getTimezoneOffset routine. (Generated.)
+ *
+ * @return  timezone offset
+ */
+ecma_number_t __attr_always_inline___
+ecma_date_timezone_offset (ecma_number_t time) /**< time value */
+{
+  if (ecma_number_is_nan (time))
+  {
+    return ecma_number_make_nan ();
+  }
+
+  return (time - ecma_date_local_time (time)) / ECMA_DATE_MS_PER_MINUTE;
+} /* ecma_date_timezone_offset */
 
 /**
  * @}

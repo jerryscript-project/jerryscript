@@ -15,8 +15,12 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtin-helpers.h"
+#include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
+#include "ecma-try-catch-macro.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
@@ -139,7 +143,7 @@ ecma_builtin_date_prototype_to_locale_time_string (ecma_value_t this_arg) /**< t
 static ecma_completion_value_t
 ecma_builtin_date_prototype_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_date_prototype_get_time (this_arg);
 } /* ecma_builtin_date_prototype_value_of */
 
 /**
@@ -154,263 +158,93 @@ ecma_builtin_date_prototype_value_of (ecma_value_t this_arg) /**< this argument 
 static ecma_completion_value_t
 ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  if (ecma_is_value_object (this_arg))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
+    {
+      ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+
+      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                   prim_value_prop_p->u.internal_property.value);
+
+      ecma_number_t *ret_num_p = ecma_alloc_number ();
+      *ret_num_p = *prim_value_num_p;
+
+      return ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+    }
+  }
+
+  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
 } /* ecma_builtin_date_prototype_get_time */
 
 /**
- * The Date.prototype object's 'getFullYear' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.10
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * Helper macro, define the getter function argument to use
+ * UTC time, passing the argument as is.
  */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_full_year (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_full_year */
+#define DEFINE_GETTER_ARGUMENT_utc(this_num) (this_num)
 
 /**
- * The Date.prototype object's 'getUTCFullYear' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.11
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * Helper macro, define the getter function argument to use
+ * local time, passing the argument to 'ecma_date_local_time' function.
  */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_full_year (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_full_year */
+#define DEFINE_GETTER_ARGUMENT_local(this_num) (ecma_date_local_time (this_num))
 
 /**
- * The Date.prototype object's 'getMonth' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.12
+ * Implementation of Data.prototype built-in's getter routines
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_month (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_month */
+#define DEFINE_GETTER(_ecma_paragraph, _routine_name, _getter_name, _timezone) \
+static ecma_completion_value_t \
+ecma_builtin_date_prototype_get_ ## _routine_name (ecma_value_t this_arg) /**< this argument */ \
+{ \
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value (); \
+ \
+  /* 1. */ \
+  ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value); \
+  ecma_number_t *this_num_p = ecma_get_number_from_value (value); \
+  /* 2. */ \
+  if (ecma_number_is_nan (*this_num_p)) \
+  { \
+    ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN); \
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p)); \
+  } \
+  else \
+  { \
+    /* 3. */ \
+    ecma_number_t *ret_num_p = ecma_alloc_number (); \
+    *ret_num_p = _getter_name (DEFINE_GETTER_ARGUMENT_ ## _timezone (*this_num_p)); \
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p)); \
+  } \
+  ECMA_FINALIZE (value); \
+  \
+  return ret_value; \
+}
 
-/**
- * The Date.prototype object's 'getUTCMonth' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.13
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_month (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_month */
+DEFINE_GETTER (ECMA-262 v5 15.9.5.10, full_year, ecma_date_year_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.11, utc_full_year, ecma_date_year_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.12, month, ecma_date_month_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.13, utc_month, ecma_date_month_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.14, date, ecma_date_date_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.15, utc_date, ecma_date_date_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.16, day, ecma_date_week_day, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.17, utc_day, ecma_date_week_day, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.18, hours, ecma_date_hour_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.19, utc_hours, ecma_date_hour_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.20, minutes, ecma_date_min_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.21, utc_minutes, ecma_date_min_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.22, seconds, ecma_date_sec_from_time, local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.23, utc_seconds, ecma_date_sec_from_time, utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.24, milliseconds, ecma_date_ms_from_time , local)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.25, utc_milliseconds, ecma_date_ms_from_time , utc)
+DEFINE_GETTER (ECMA-262 v5 15.9.5.26, timezone_offset, ecma_date_timezone_offset, utc)
 
-/**
- * The Date.prototype object's 'getDate' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.14
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_date (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_date */
-
-/**
- * The Date.prototype object's 'getUTCDate' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.15
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_date (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_date */
-
-/**
- * The Date.prototype object's 'getDay' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.16
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_day (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_day */
-
-/**
- * The Date.prototype object's 'getUTCDay' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.17
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_day (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_day */
-
-/**
- * The Date.prototype object's 'getHours' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.18
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_hours (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_hours */
-
-/**
- * The Date.prototype object's 'getUTCHours' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.19
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_hours (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_hours */
-
-/**
- * The Date.prototype object's 'getMinutes' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.20
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_minutes (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_minutes */
-
-/**
- * The Date.prototype object's 'getUTCMinutes' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.21
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_minutes (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_minutes */
-
-/**
- * The Date.prototype object's 'getSeconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.22
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_seconds (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_seconds */
-
-/**
- * The Date.prototype object's 'getUTCSeconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.23
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_seconds (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_seconds */
-
-/**
- * The Date.prototype object's 'getMilliseconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.24
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_milliseconds (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_milliseconds */
-
-/**
- * The Date.prototype object's 'getUTCMilliseconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.25
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_utc_milliseconds (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_utc_milliseconds */
-
-/**
- * The Date.prototype object's 'getTimezoneOffset' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.26
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
- */
-static ecma_completion_value_t
-ecma_builtin_date_prototype_get_timezone_offset (ecma_value_t this_arg) /**< this argument */
-{
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
-} /* ecma_builtin_date_prototype_get_timezone_offset */
+#undef DEFINE_GETTER_ARGUMENT_utc
+#undef DEFINE_GETTER_ARGUMENT_local
+#undef DEFINE_GETTER
 
 /**
  * The Date.prototype object's 'setTime' routine

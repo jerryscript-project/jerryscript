@@ -67,7 +67,6 @@ static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
 static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand *);
-static void process_keyword_names (void);
 static void skip_braces (void);
 static void skip_parens (void);
 
@@ -2566,50 +2565,6 @@ skip_optional_name_and_parens (void)
   }
 }
 
-static void process_keyword_names ()
-{
-  if (token_is (TOK_KEYWORD))
-  {
-    keyword kw = (keyword) token_data ();
-    skip_newlines ();
-    if (token_is (TOK_COLON))
-    {
-      const char *s = lexer_keyword_to_string (kw);
-      lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
-    }
-    else
-    {
-      lexer_save_token (tok);
-    }
-  }
-  else if (token_is (TOK_NAME))
-  {
-    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "get")
-        || lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()), (const ecma_char_t *) "set"))
-    {
-      skip_newlines ();
-      if (token_is (TOK_KEYWORD))
-      {
-        keyword kw = (keyword) token_data ();
-        skip_newlines ();
-        if (token_is (TOK_OPEN_PAREN))
-        {
-          const char *s = lexer_keyword_to_string (kw);
-          lit_find_or_create_literal_from_charset ((const ecma_char_t *) s, (ecma_length_t) strlen (s));
-        }
-        else
-        {
-          lexer_save_token (tok);
-        }
-      }
-      else
-      {
-        lexer_save_token (tok);
-      }
-    }
-  }
-}
-
 static void
 skip_braces (void)
 {
@@ -2626,10 +2581,6 @@ skip_braces (void)
     else if (token_is (TOK_CLOSE_BRACE))
     {
       nesting_level--;
-    }
-    else
-    {
-      process_keyword_names ();
     }
   }
 }
@@ -2805,8 +2756,6 @@ preparse_scope (bool is_global)
           is_ref_eval_identifier = true;
         }
       }
-
-      process_keyword_names ();
     }
     skip_newlines ();
   }

@@ -67,8 +67,6 @@ static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
 static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand *);
-static void skip_braces (void);
-static void skip_parens (void);
 
 static bool
 token_is (token_type tt)
@@ -172,6 +170,55 @@ is_strict_mode (void)
 {
   return scopes_tree_strict_mode (STACK_TOP (scopes));
 }
+
+/**
+ * Skip block, defined with braces of specified type
+ *
+ * Note:
+ *      Missing corresponding brace is considered a syntax error
+ *
+ * Note:
+ *      Opening brace of the block to skip should be set as current
+ *      token when the routine is called
+ */
+static void
+jsp_skip_braces (token_type brace_type) /**< type of the opening brace */
+{
+  current_token_must_be (brace_type);
+
+  token_type closing_bracket_type;
+
+  if (brace_type == TOK_OPEN_PAREN)
+  {
+    closing_bracket_type = TOK_CLOSE_PAREN;
+  }
+  else if (brace_type == TOK_OPEN_BRACE)
+  {
+    closing_bracket_type = TOK_CLOSE_BRACE;
+  }
+  else
+  {
+    JERRY_ASSERT (brace_type == TOK_OPEN_SQUARE);
+    closing_bracket_type = TOK_CLOSE_SQUARE;
+  }
+
+  skip_newlines ();
+
+  while (!token_is (closing_bracket_type)
+         && !token_is (TOK_EOF))
+  {
+    if (token_is (TOK_OPEN_PAREN)
+        || token_is (TOK_OPEN_BRACE)
+        || token_is (TOK_OPEN_SQUARE))
+    {
+      jsp_skip_braces (tok.type);
+    }
+
+    skip_newlines ();
+  }
+
+  current_token_must_be (closing_bracket_type);
+} /* jsp_skip_braces */
 
 /* property_name
   : Identifier
@@ -1964,7 +2011,7 @@ parse_while_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (firs
 
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   const locus cond_loc = tok.loc;
-  skip_parens ();
+  jsp_skip_braces (TOK_OPEN_PAREN);
 
   dump_jump_to_end_for_rewrite ();
 
@@ -2020,7 +2067,7 @@ skip_case_clause_body (void)
   {
     if (token_is (TOK_OPEN_BRACE))
     {
-      skip_braces ();
+      jsp_skip_braces (TOK_OPEN_BRACE);
     }
     skip_newlines ();
   }
@@ -2566,72 +2613,12 @@ skip_optional_name_and_parens (void)
 }
 
 static void
-skip_braces (void)
-{
-  current_token_must_be (TOK_OPEN_BRACE);
-
-  uint8_t nesting_level = 1;
-  while (nesting_level > 0)
-  {
-    skip_newlines ();
-    if (token_is (TOK_OPEN_BRACE))
-    {
-      nesting_level++;
-    }
-    else if (token_is (TOK_CLOSE_BRACE))
-    {
-      nesting_level--;
-    }
-  }
-}
-
-static void
 skip_function (void)
 {
   skip_newlines ();
   skip_optional_name_and_parens ();
   skip_newlines ();
-  skip_braces ();
-}
-
-static void
-skip_squares (void)
-{
-  current_token_must_be (TOK_OPEN_SQUARE);
-
-  uint8_t nesting_level = 1;
-  while (nesting_level > 0)
-  {
-    skip_newlines ();
-    if (token_is (TOK_OPEN_SQUARE))
-    {
-      nesting_level++;
-    }
-    else if (token_is (TOK_CLOSE_SQUARE))
-    {
-      nesting_level--;
-    }
-  }
-}
-
-static void
-skip_parens (void)
-{
-  current_token_must_be (TOK_OPEN_PAREN);
-
-  uint8_t nesting_level = 1;
-  while (nesting_level > 0)
-  {
-    skip_newlines ();
-    if (token_is (TOK_OPEN_PAREN))
-    {
-      nesting_level++;
-    }
-    else if (token_is (TOK_CLOSE_PAREN))
-    {
-      nesting_level--;
-    }
-  }
+  jsp_skip_braces (TOK_OPEN_BRACE);
 }
 
 static bool
@@ -2670,15 +2657,15 @@ preparse_var_decls (void)
         }
         else if (token_is (TOK_OPEN_BRACE))
         {
-          skip_braces ();
+          jsp_skip_braces (TOK_OPEN_BRACE);
         }
         else if (token_is (TOK_OPEN_SQUARE))
         {
-          skip_squares ();
+          jsp_skip_braces (TOK_OPEN_SQUARE);
         }
         else if (token_is (TOK_OPEN_PAREN))
         {
-          skip_parens ();
+          jsp_skip_braces (TOK_OPEN_PAREN);
         }
         skip_token ();
       }
@@ -2739,7 +2726,7 @@ preparse_scope (bool is_global)
     }
     else if (token_is (TOK_OPEN_BRACE))
     {
-      skip_braces ();
+      jsp_skip_braces (TOK_OPEN_BRACE);
     }
     else
     {

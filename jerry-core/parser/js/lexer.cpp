@@ -1218,6 +1218,19 @@ lexer_next_token (void)
     goto end;
   }
 
+  /**
+   * FIXME:
+   *       The way to raise syntax errors for unexpected EOF
+   *       should be reworked so that EOF would be checked by
+   *       caller of the routine, and the following condition
+   *       would be checked as assertion in the routine.
+   */
+  if (prev_token.type == TOK_EOF
+      && sent_token.type == TOK_EOF)
+  {
+    PARSE_ERROR ("Unexpected EOF", buffer - buffer_start);
+  }
+
   prev_token = sent_token;
   sent_token = lexer_next_token_private ();
 

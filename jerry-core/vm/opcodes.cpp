@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,6 +162,65 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
                                     int_data->pos,
                                     dst_var_idx,
                                     ecma_make_number_value (num_p));
+  }
+  else if (type_value_right == OPCODE_ARG_TYPE_REGEXP)
+  {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr,
+                                                              int_data->opcodes_p,
+                                                              int_data->pos);
+    ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
+
+    int32_t re_str_len = ecma_string_get_length (string_p);
+    MEM_DEFINE_LOCAL_ARRAY (re_str_p, re_str_len + 1, ecma_char_t);
+
+    ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (re_str_len + 1);
+    ecma_string_to_zt_string (string_p, re_str_p, zt_str_size);
+
+    ecma_char_t *ch_p = re_str_p;
+    ecma_char_t *last_slash_p = NULL;
+    while (*ch_p)
+    {
+      if (*ch_p == '/')
+      {
+        last_slash_p = ch_p;
+      }
+      ch_p++;
+    }
+
+    JERRY_ASSERT (last_slash_p != NULL);
+    JERRY_ASSERT ((re_str_p < last_slash_p) && (last_slash_p < ch_p));
+    JERRY_ASSERT ((last_slash_p - re_str_p) > 0);
+    ecma_string_t *pattern_p = ecma_new_ecma_string (re_str_p, (ecma_length_t) (last_slash_p - re_str_p));
+    ecma_string_t *flags_p = NULL;
+
+    if ((ch_p - last_slash_p) > 1)
+    {
+      flags_p = ecma_new_ecma_string (last_slash_p + 1, (ecma_length_t) ((ch_p - last_slash_p - 1)));
+    }
+
+    ECMA_TRY_CATCH (regexp_obj_value,
+                    ecma_op_create_regexp_object (pattern_p, flags_p),
+                    ret_value);
+
+    ret_value = set_variable_value (int_data,
+                                    int_data->pos,
+                                    dst_var_idx,
+                                    regexp_obj_value);
+
+    ECMA_FINALIZE (regexp_obj_value);
+
+    ecma_deref_ecma_string (pattern_p);
+    if (flags_p != NULL)
+    {
+      ecma_deref_ecma_string (flags_p);
+    }
+
+    MEM_FINALIZE_LOCAL_ARRAY (re_str_p)
+    ecma_deref_ecma_string (string_p);
+#else
+    JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in compact profile!");
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
   }
   else
   {

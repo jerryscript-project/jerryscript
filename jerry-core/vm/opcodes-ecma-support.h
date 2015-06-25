@@ -29,6 +29,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-reference.h"
+#include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "serializer.h"
 

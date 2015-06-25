@@ -291,6 +291,7 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
         }
         case OPCODE_ARG_TYPE_NUMBER:
         case OPCODE_ARG_TYPE_NUMBER_NEGATE:
+        case OPCODE_ARG_TYPE_REGEXP:
         case OPCODE_ARG_TYPE_STRING:
         case OPCODE_ARG_TYPE_VARIABLE:
         {
@@ -430,6 +431,7 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
         }
         case OPCODE_ARG_TYPE_NUMBER:
         case OPCODE_ARG_TYPE_NUMBER_NEGATE:
+        case OPCODE_ARG_TYPE_REGEXP:
         case OPCODE_ARG_TYPE_STRING:
         case OPCODE_ARG_TYPE_VARIABLE:
         {

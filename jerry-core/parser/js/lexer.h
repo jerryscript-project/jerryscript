@@ -99,7 +99,7 @@ typedef enum __attr_packed___
   TOK_OPEN_PAREN, // (
   TOK_CLOSE_PAREN, //)
   TOK_OPEN_SQUARE, // [
-  TOK_CLOSE_SQUARE, // [
+  TOK_CLOSE_SQUARE, // ]
 
   TOK_DOT, // .
   TOK_SEMICOLON, // ;
@@ -152,6 +152,7 @@ typedef enum __attr_packed___
   TOK_DIV, // /
   TOK_DIV_EQ, // /=
   TOK_EMPTY,
+  TOK_REGEXP, // RegularExpressionLiteral (/.../gim)
 } token_type;
 
 typedef size_t locus;
@@ -170,6 +171,9 @@ typedef struct
 #define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
 
 void lexer_init (const char *, size_t, bool);
+void lexer_init_source (const char *, size_t);
+
+void lexer_free (void);
 
 token lexer_next_token (void);
 void lexer_save_token (token);

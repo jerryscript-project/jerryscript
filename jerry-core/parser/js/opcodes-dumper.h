@@ -69,6 +69,8 @@ void dump_string_assignment (operand, lit_cpointer_t);
 operand dump_string_assignment_res (lit_cpointer_t);
 void dump_number_assignment (operand, lit_cpointer_t);
 operand dump_number_assignment_res (lit_cpointer_t);
+void dump_regexp_assignment (operand, lit_cpointer_t);
+operand dump_regexp_assignment_res (lit_cpointer_t);
 void dump_smallint_assignment (operand, idx_t);
 operand dump_smallint_assignment_res (idx_t);
 void dump_undefined_assignment (operand);

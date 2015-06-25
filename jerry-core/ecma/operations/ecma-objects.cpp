@@ -681,6 +681,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return ECMA_MAGIC_STRING_ERROR_UL;
           }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+          case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+          {
+            return ECMA_MAGIC_STRING_REGEXP_UL;
+          }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
           default:
           {
             JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL));

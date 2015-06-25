@@ -330,6 +330,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
+            case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
             {
               break;
             }

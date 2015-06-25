@@ -809,6 +809,11 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     {
       JERRY_UNREACHABLE ();
     }
+    case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
+    {
+      void *bytecode_p = ECMA_GET_NON_NULL_POINTER (void, property_value);
+      mem_heap_free_block (bytecode_p);
+    }
   }
 
   ecma_dealloc_property (property_p);

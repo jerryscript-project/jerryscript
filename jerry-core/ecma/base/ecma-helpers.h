@@ -334,6 +334,8 @@ extern ecma_length_t ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *b
 extern bool ecma_char_is_new_line (ecma_char_t c);
 extern bool ecma_char_is_carriage_return (ecma_char_t c);
 extern bool ecma_char_is_line_terminator (ecma_char_t c);
+extern bool ecma_char_is_word_char (ecma_char_t c);
+extern uint32_t ecma_char_hex_to_int (ecma_char_t hex);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

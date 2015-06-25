@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -341,37 +342,6 @@ consume_char (void)
   } \
   while (0)
 
-static uint32_t
-hex_to_int (char hex)
-{
-  switch (hex)
-  {
-    case '0': return 0x0;
-    case '1': return 0x1;
-    case '2': return 0x2;
-    case '3': return 0x3;
-    case '4': return 0x4;
-    case '5': return 0x5;
-    case '6': return 0x6;
-    case '7': return 0x7;
-    case '8': return 0x8;
-    case '9': return 0x9;
-    case 'a':
-    case 'A': return 0xA;
-    case 'b':
-    case 'B': return 0xB;
-    case 'c':
-    case 'C': return 0xC;
-    case 'd':
-    case 'D': return 0xD;
-    case 'e':
-    case 'E': return 0xE;
-    case 'f':
-    case 'F': return 0xF;
-    default: JERRY_UNREACHABLE ();
-  }
-}
-
 /**
  * Try to decode specified character as SingleEscapeCharacter (ECMA-262, v5, 7.8.4)
  *
@@ -545,7 +515,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
             JERRY_ASSERT ((char_code & 0xF000u) == 0);
 
             char_code = (uint16_t) (char_code << 4u);
-            char_code = (uint16_t) (char_code + hex_to_int (nc));
+            char_code = (uint16_t) (char_code + ecma_char_hex_to_int ((ecma_char_t) nc));
           }
         }
 
@@ -761,11 +731,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = (res << 4) + hex_to_int (token_start[i]);
+        res = (res << 4) + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 16 + (ecma_number_t) hex_to_int (token_start[i]);
+        fp_res = fp_res * 16 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
 
       if (res > 255)
@@ -879,11 +849,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 8 + hex_to_int (token_start[i]);
+        res = res * 8 + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 8 + (ecma_number_t) hex_to_int (token_start[i]);
+        fp_res = fp_res * 8 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
       if (res > 255)
       {
@@ -899,11 +869,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 10 + hex_to_int (token_start[i]);
+        res = res * 10 + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 10 + (ecma_number_t) hex_to_int (token_start[i]);
+        fp_res = fp_res * 10 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
       }
       if (res > 255)
       {

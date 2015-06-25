@@ -45,8 +45,17 @@ typedef enum
 } ecma_standard_error_t;
 
 extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
-extern ecma_object_t* ecma_new_standard_error_with_message (ecma_standard_error_t error_type,
+extern ecma_object_t *ecma_new_standard_error_with_message (ecma_standard_error_t error_type,
                                                             ecma_string_t *message_string_p);
+extern ecma_completion_value_t ecma_raise_standard_error (ecma_standard_error_t error_type,
+                                                          const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_common_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_eval_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_range_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_reference_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_syntax_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_type_error (const ecma_char_t *msg_p);
+extern ecma_completion_value_t ecma_raise_uri_error (const ecma_char_t *msg_p);
 
 /**
  * @}

@@ -497,7 +497,7 @@ vm_loop (int_data_t *int_data_p, /**< interpreter context */
        */
       if (run_scope_p == NULL /* if no run scope set */
           || (target >= run_scope_p->start_oc /* or target is within the current run scope */
-              && target < run_scope_p->end_oc))
+              && target <= run_scope_p->end_oc))
       {
         int_data_p->pos = target;
 

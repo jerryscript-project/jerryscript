@@ -102,6 +102,7 @@ project (JerryCore CXX C ASM)
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/operations
      ${CMAKE_SOURCE_DIR}/jerry-core/parser/js
      ${CMAKE_SOURCE_DIR}/jerry-core/parser/js/collections
+     ${CMAKE_SOURCE_DIR}/jerry-core/parser/regexp
      ${CMAKE_SOURCE_DIR}/jerry-core/jrt)
 
  # Third-party
@@ -120,6 +121,7 @@ project (JerryCore CXX C ASM)
   file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.cpp)
   file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.cpp)
   file(GLOB SOURCE_CORE_PARSER_JS_COLLECTIONS parser/js/collections/*.cpp)
+  file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.cpp)
   file(GLOB SOURCE_CORE_JRT                   jrt/*.cpp)
 
   set(SOURCE_CORE
@@ -134,6 +136,7 @@ project (JerryCore CXX C ASM)
       ${SOURCE_CORE_ECMA_OPERATIONS}
       ${SOURCE_CORE_PARSER_JS}
       ${SOURCE_CORE_PARSER_JS_COLLECTIONS}
+      ${SOURCE_CORE_PARSER_REGEXP}
       ${SOURCE_CORE_JRT})
 
 # Per-option configuration

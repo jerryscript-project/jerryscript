@@ -456,6 +456,54 @@ ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p, /**< des
 } /* ecma_init_ecma_string_from_magic_string_ex_id */
 
 /**
+ * Allocate new ecma-string and fill it with specified number of characters from specified buffer
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t*
+ecma_new_ecma_string (const ecma_char_t *string_p, /**< input string */
+                      const ecma_length_t length) /**< number of characters */
+{
+  JERRY_ASSERT (string_p != NULL);
+  JERRY_ASSERT (length > 0 && length <= ecma_zt_string_length (string_p));
+
+  if (length != ecma_zt_string_length (string_p))
+  {
+    /* FIXME: update this when 'ecma_is_charset_magic' interface is added */
+    ecma_char_t *zt_str_p = (ecma_char_t *) mem_heap_alloc_block ((size_t) (length + 1), MEM_HEAP_ALLOC_SHORT_TERM);
+    memcpy (zt_str_p, string_p, length * sizeof (ecma_char_t));
+    zt_str_p[length] = 0;
+
+    ecma_magic_string_id_t magic_string_id;
+    if (ecma_is_zt_string_magic (zt_str_p, &magic_string_id))
+    {
+      mem_heap_free_block (zt_str_p);
+      return ecma_get_magic_string (magic_string_id);
+    }
+
+    ecma_magic_string_ex_id_t magic_string_ex_id;
+    if (ecma_is_zt_ex_string_magic (zt_str_p, &magic_string_ex_id))
+    {
+      mem_heap_free_block (zt_str_p);
+      return ecma_get_magic_string_ex (magic_string_ex_id);
+    }
+    mem_heap_free_block (zt_str_p);
+  }
+
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+  string_desc_p->refs = 1;
+  string_desc_p->is_stack_var = false;
+  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
+  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
+  string_desc_p->u.common_field = 0;
+
+  ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
+
+  return string_desc_p;
+} /* ecma_new_ecma_string */
+
+/**
  * Allocate new ecma-string and fill it with characters from specified buffer
  *
  * @return pointer to ecma-string descriptor
@@ -485,19 +533,7 @@ ecma_new_ecma_string (const ecma_char_t *string_p) /**< zero-terminated string *
     length++;
   }
 
-  JERRY_ASSERT (length > 0);
-
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
-  string_desc_p->refs = 1;
-  string_desc_p->is_stack_var = false;
-  string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
-  string_desc_p->hash = ecma_chars_buffer_calc_hash_last_chars (string_p, length);
-
-  string_desc_p->u.common_field = 0;
-  ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, length);
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.collection_cp, collection_p);
-
-  return string_desc_p;
+  return ecma_new_ecma_string (string_p, length);
 } /* ecma_new_ecma_string */
 
 /**

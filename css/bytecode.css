@@ -44,7 +44,7 @@
 	-webkit-border-bottom-left-radius:5px;
 	border-bottom-left-radius:5px;
 }.CSSTableGeneratorByte tr:hover td{
-	background-color:#f97777;
+	background-color:#b2b2b2;
 
 
 }
@@ -70,7 +70,7 @@
 }
 .CSSTableGeneratorByte tr:first-child td{
 
-	background-color:#f97777;
+	background-color:#b2b2b2;
 	border:0px solid #ffffff;
 	text-align:center;
 	border-width:0px 0px 1px 1px;
@@ -82,7 +82,7 @@
 .CSSTableGeneratorByte tr:first-child:hover td{
 
 
-	background-color:#f97777;
+	background-color:#b2b2b2;
 }
 .CSSTableGeneratorByte tr:first-child td:first-child{
 	border-width:0px 0px 1px 0px;

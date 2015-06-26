@@ -1,7 +1,7 @@
 .CSSTableGeneratorBlock {
 	margin-left:35%;magin-right:35%;padding:0px;
 	width:30%;
-	border:3px solid #0000ff;
+	border:3px solid #2388db;
 
 	-moz-border-radius-bottomleft:0px;
 	-webkit-border-bottom-left-radius:0px;
@@ -53,7 +53,7 @@
 
 	background-color:#ffffff;
 
-	border:1px solid #0000ff;
+	border:1px solid #2388db;
 	border-width:0px 3px 3px 0px;
 	text-align:left;
 	padding:6px;
@@ -71,7 +71,7 @@
 .CSSTableGeneratorBlock tr:first-child td{
 
 	background-color:#ffffff;
-	border:0px solid #0000ff;
+	border:0px solid #2388db;
 	text-align:left;
 	border-width:0px 0px 3px 3px;
 	font-size:14px;

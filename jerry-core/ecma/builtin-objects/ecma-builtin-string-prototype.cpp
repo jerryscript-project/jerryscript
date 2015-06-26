@@ -402,7 +402,69 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
                                                 ecma_value_t arg1, /**< routine's first argument */
                                                 ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3 */
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+
+  const ecma_length_t len = ecma_string_get_length (original_string_p);
+
+  /* 4, 6 */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
+                               arg1,
+                               ret_value);
+
+  ecma_length_t start = 0, end = len;
+
+  start = ecma_builtin_helper_string_index_normalize (start_num, len);
+
+  /* 5, 7 */
+  if (ecma_is_value_undefined (arg2))
+  {
+    end = len;
+  }
+  else
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num,
+                                 arg2,
+                                 ret_value);
+
+    end = ecma_builtin_helper_string_index_normalize (end_num, len);
+
+    ECMA_OP_TO_NUMBER_FINALIZE (end_num);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    JERRY_ASSERT (start <= len && end <= len);
+
+    /* 8 */
+    uint32_t from = start < end ? start : end;
+
+    /* 9 */
+    uint32_t to = start > end ? start : end;
+
+    /* 10 */
+    ecma_string_t *new_str_p = ecma_string_substr (original_string_p, from, to);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_substring */
 
 /**

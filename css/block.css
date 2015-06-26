@@ -1,0 +1,91 @@
+.CSSTableGeneratorBlock {
+	margin-left:35%;magin-right:35%;padding:0px;
+	width:30%;
+	border:3px solid #0000ff;
+
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-bottom-left-radius:0px;
+	border-bottom-left-radius:0px;
+
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-bottom-right-radius:0px;
+	border-bottom-right-radius:0px;
+
+	-moz-border-radius-topright:0px;
+	-webkit-border-top-right-radius:0px;
+	border-top-right-radius:0px;
+
+	-moz-border-radius-topleft:0px;
+	-webkit-border-top-left-radius:0px;
+	border-top-left-radius:0px;
+}.CSSTableGeneratorBlock table{
+    border-collapse: collapse;
+        border-spacing: 0;
+	width:100%;
+	height:100%;
+	margin-left:0%;magin-right:0%;padding:0px;
+	table-layout: fixed
+}.CSSTableGeneratorBlock tr:last-child td:last-child {
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-bottom-right-radius:0px;
+	border-bottom-right-radius:0px;
+}
+.CSSTableGeneratorBlock table tr:first-child td:first-child {
+	-moz-border-radius-topleft:0px;
+	-webkit-border-top-left-radius:0px;
+	border-top-left-radius:0px;
+}
+.CSSTableGeneratorBlock table tr:first-child td:last-child {
+	-moz-border-radius-topright:0px;
+	-webkit-border-top-right-radius:0px;
+	border-top-right-radius:0px;
+}.CSSTableGeneratorBlock tr:last-child td:first-child{
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-bottom-left-radius:0px;
+	border-bottom-left-radius:0px;
+}.CSSTableGeneratorBlock tr:hover td{
+	background-color:#ffffff;
+
+
+}
+.CSSTableGeneratorBlock td{
+	vertical-align:middle;
+
+	background-color:#ffffff;
+
+	border:1px solid #0000ff;
+	border-width:0px 3px 3px 0px;
+	text-align:left;
+	padding:6px;
+	font-size:14px;
+	font-family:Arial;
+	font-weight:normal;
+	color:#000000;
+}.CSSTableGeneratorBlock tr:last-child td{
+	border-width:0px 3px 0px 0px;
+}.CSSTableGeneratorBlock tr td:last-child{
+	border-width:0px 0px 3px 0px;
+}.CSSTableGeneratorBlock tr:last-child td:last-child{
+	border-width:0px 0px 0px 0px;
+}
+.CSSTableGeneratorBlock tr:first-child td{
+
+	background-color:#ffffff;
+	border:0px solid #0000ff;
+	text-align:left;
+	border-width:0px 0px 3px 3px;
+	font-size:14px;
+	font-family:Arial;
+	font-weight:normal;
+	color:#000000;
+}
+.CSSTableGeneratorBlock tr:first-child:hover td{
+
+	background-color:#ffffff;
+}
+.CSSTableGeneratorBlock tr:first-child td:first-child{
+	border-width:0px 0px 3px 0px;
+}
+.CSSTableGeneratorBlock tr:first-child td:last-child{
+	border-width:0px 0px 3px 0px;
+}

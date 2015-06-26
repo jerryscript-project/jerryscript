@@ -326,6 +326,47 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
 } /* ecma_builtin_helper_array_index_normalize */
 
 /**
+ * Helper function to normalizing a string index
+ *
+ * This function clamps the given index to the [0, length] range.
+ * If the index is negative, 0 value is used.
+ * If the index is greater than the length of the string, the normalized index will be the length of the string.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.5.4.15
+ *
+ * Used by:
+ *         - The String.prototype.substring routine.
+ *
+ * @return uint32_t - the normalized value of the index
+ */
+uint32_t
+ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
+                                            uint32_t length) /**< string's length */
+{
+  uint32_t norm_index = 0;
+
+  if (!ecma_number_is_nan (index) && !ecma_number_is_negative (index))
+  {
+    if (ecma_number_is_infinity (index))
+    {
+      norm_index = length;
+    }
+    else
+    {
+      norm_index = ecma_number_to_uint32 (index);
+
+      if (norm_index > length)
+      {
+        norm_index = length;
+      }
+    }
+  }
+
+  return norm_index;
+} /* ecma_builtin_helper_string_index_normalize */
+
+/**
  * @}
  * @}
  * @}

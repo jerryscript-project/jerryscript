@@ -511,10 +511,10 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
+  name_p = ecma_copy_or_ref_ecma_string (name_p);
 
   prop_p->type = ECMA_PROPERTY_NAMEDDATA;
 
-  name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER (prop_p->u.named_data_property.name_p, name_p);
 
   prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
@@ -526,11 +526,11 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
-  ecma_lcache_invalidate (obj_p, name_p, NULL);
-
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
+
+  ecma_lcache_invalidate (obj_p, name_p, NULL);
 
   return prop_p;
 } /* ecma_create_named_data_property */
@@ -552,10 +552,11 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (ecma_find_named_property (obj_p, name_p) == NULL);
 
   ecma_property_t *prop_p = ecma_alloc_property ();
+  ecma_getter_setter_pointers_t *getter_setter_pointers_p = ecma_alloc_getter_setter_pointers ();
+  name_p = ecma_copy_or_ref_ecma_string (name_p);
 
   prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
 
-  name_p = ecma_copy_or_ref_ecma_string (name_p);
   ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.name_p, name_p);
 
   prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
@@ -565,20 +566,19 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
 
   prop_p->u.named_accessor_property.is_lcached = false;
 
-  ecma_lcache_invalidate (obj_p, name_p, NULL);
+  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
 
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
-
-  ecma_getter_setter_pointers_t *getter_setter_pointers_p = ecma_alloc_getter_setter_pointers ();
-  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
 
   /*
    * Should be performed after linking the property into object's property list, because the setters assert that.
    */
   ecma_set_named_accessor_property_getter (obj_p, prop_p, get_p);
   ecma_set_named_accessor_property_setter (obj_p, prop_p, set_p);
+
+  ecma_lcache_invalidate (obj_p, name_p, NULL);
 
   return prop_p;
 } /* ecma_create_named_accessor_property */

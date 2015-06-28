@@ -176,7 +176,6 @@ opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_d
         p##_3 (a, construct_n, lhs, name_lit_idx, arg_list)                  \
         p##_2 (a, func_decl_n, name_lit_idx, arg_list)                       \
         p##_3 (a, func_expr_n, lhs, name_lit_idx, arg_list)                  \
-        p##_1 (a, exitval, status_code)                                      \
         p##_1 (a, retval, ret_value)                                         \
         p##_0 (a, ret)
 

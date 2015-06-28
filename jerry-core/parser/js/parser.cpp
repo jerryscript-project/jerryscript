@@ -3102,7 +3102,7 @@ parser_parse_program (const char *source_p, /**< source code buffer */
     }
     else
     {
-      dump_exit ();
+      dump_ret ();
     }
 
 #ifndef JERRY_NDEBUG

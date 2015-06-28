@@ -696,8 +696,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
 
     ecma_deref_ecma_string (n_str_p);
 
-    if (unlikely (ecma_is_completion_value_throw (completion)
-                  || ecma_is_completion_value_exit (completion)))
+    if (unlikely (ecma_is_completion_value_throw (completion)))
     {
       ret_value = completion;
       break;
@@ -722,8 +721,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
                                                              num_length_value,
                                                              true);
 
-    if (unlikely (ecma_is_completion_value_throw (completion)
-                  || ecma_is_completion_value_exit (completion)))
+    if (unlikely (ecma_is_completion_value_throw (completion)))
     {
       ret_value = completion;
 

@@ -396,16 +396,11 @@ vm_run_global (void)
 
   jerry_completion_code_t ret_code;
 
-  if (ecma_is_completion_value_exit (completion))
+  if (ecma_is_completion_value_return (completion))
   {
-    if (ecma_is_value_true (ecma_get_completion_value_value (completion)))
-    {
-      ret_code = JERRY_COMPLETION_CODE_OK;
-    }
-    else
-    {
-      ret_code = JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT;
-    }
+    JERRY_ASSERT (ecma_is_value_undefined (ecma_get_completion_value_value (completion)));
+
+    ret_code = JERRY_COMPLETION_CODE_OK;
   }
   else
   {
@@ -560,10 +555,8 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
 
   completion = vm_loop (&int_data, NULL);
 
-  JERRY_ASSERT (ecma_is_completion_value_normal (completion)
-                || ecma_is_completion_value_throw (completion)
-                || ecma_is_completion_value_return (completion)
-                || ecma_is_completion_value_exit (completion));
+  JERRY_ASSERT (ecma_is_completion_value_throw (completion)
+                || ecma_is_completion_value_return (completion));
 
   vm_top_context_p = prev_context_p;
 

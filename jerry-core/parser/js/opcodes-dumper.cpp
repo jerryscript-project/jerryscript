@@ -2600,12 +2600,6 @@ dump_retval (operand op)
 }
 
 void
-dump_exit (void)
-{
-  serializer_dump_op_meta (create_op_meta_000 (getop_exitval (0)));
-}
-
-void
 dumper_init (void)
 {
   max_temp_name = 0;

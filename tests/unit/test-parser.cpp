@@ -95,7 +95,7 @@ main (int __attr_unused___ argc,
     getop_var_decl (0),             // var a;
     getop_assignment (130, 1, 1),   // $tmp0 = 1;
     getop_assignment (0, 6, 130),   // a = $tmp0;
-    getop_exitval (0)               // exit 0;
+    getop_ret ()                    // return;
   };
 
   JERRY_ASSERT (opcodes_equal (opcodes_p, opcodes, 5));

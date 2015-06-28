@@ -534,7 +534,6 @@ ecma_make_completion_value (ecma_completion_type_t type, /**< type */
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
                      || type == ECMA_COMPLETION_TYPE_THROW
                      || type == ECMA_COMPLETION_TYPE_RETURN
-                     || type == ECMA_COMPLETION_TYPE_EXIT
                      || (type == ECMA_COMPLETION_TYPE_META
                          && ecma_is_value_empty (value)));
 
@@ -629,21 +628,6 @@ ecma_make_return_completion_value (ecma_value_t value) /**< value */
 } /* ecma_make_return_completion_value */
 
 /**
- * Exit completion value constructor
- *
- * @return completion value
- */
-ecma_completion_value_t __attr_const___ __attr_always_inline___
-ecma_make_exit_completion_value (bool is_successful) /**< does completion value indicate
-                                                          successfulness completion
-                                                          of script execution (true) or not (false) */
-{
-  return ecma_make_completion_value (ECMA_COMPLETION_TYPE_EXIT,
-                                     ecma_make_simple_value (is_successful ? ECMA_SIMPLE_VALUE_TRUE
-                                                                           : ECMA_SIMPLE_VALUE_FALSE));
-} /* ecma_make_exit_completion_value */
-
-/**
  * Meta completion value constructor
  *
  * @return completion value
@@ -685,8 +669,7 @@ ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< 
 
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
                            || type == ECMA_COMPLETION_TYPE_THROW
-                           || type == ECMA_COMPLETION_TYPE_RETURN
-                           || type == ECMA_COMPLETION_TYPE_EXIT);
+                           || type == ECMA_COMPLETION_TYPE_RETURN);
 
   JERRY_ASSERT (is_type_ok);
 
@@ -752,8 +735,7 @@ ecma_copy_completion_value (ecma_completion_value_t value) /**< completion value
   const bool is_type_ok = (type == ECMA_COMPLETION_TYPE_NORMAL
                            || type == ECMA_COMPLETION_TYPE_THROW
                            || type == ECMA_COMPLETION_TYPE_RETURN
-                           || type == ECMA_COMPLETION_TYPE_JUMP
-                           || type == ECMA_COMPLETION_TYPE_EXIT);
+                           || type == ECMA_COMPLETION_TYPE_JUMP);
 
   JERRY_ASSERT (is_type_ok);
 
@@ -776,12 +758,6 @@ ecma_free_completion_value (ecma_completion_value_t completion_value) /**< compl
     {
       ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
       ecma_free_value (v, true);
-      break;
-    }
-    case ECMA_COMPLETION_TYPE_EXIT:
-    {
-      ecma_value_t v = ecma_get_completion_value_value_field (completion_value);
-      JERRY_ASSERT (ecma_get_value_type_field (v) == ECMA_TYPE_SIMPLE);
       break;
     }
     case ECMA_COMPLETION_TYPE_JUMP:
@@ -830,27 +806,6 @@ ecma_is_completion_value_return (ecma_completion_value_t value) /**< completion 
 {
   return (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_RETURN);
 } /* ecma_is_completion_value_return */
-
-/**
- * Check if the completion value is exit value.
- *
- * @return true - if the completion type is exit,
- *         false - otherwise.
- */
-bool __attr_const___ __attr_always_inline___
-ecma_is_completion_value_exit (ecma_completion_value_t value) /**< completion value */
-{
-  if (ecma_get_completion_value_type_field (value) == ECMA_COMPLETION_TYPE_EXIT)
-  {
-    JERRY_ASSERT (ecma_is_value_boolean (ecma_get_completion_value_value_field (value)));
-
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-} /* ecma_is_completion_value_exit */
 
 /**
  * Check if the completion value is meta value.

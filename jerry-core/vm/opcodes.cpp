@@ -991,10 +991,8 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
   {
     ecma_completion_value_t evaluate_prop_completion = vm_loop (int_data, NULL);
 
-    if (ecma_is_completion_value_normal (evaluate_prop_completion))
+    if (ecma_is_completion_value_empty (evaluate_prop_completion))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (evaluate_prop_completion));
-
       opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
@@ -1109,7 +1107,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
     }
     else
     {
-      JERRY_ASSERT (!ecma_is_completion_value_normal (evaluate_prop_completion));
+      JERRY_ASSERT (ecma_is_completion_value_throw (evaluate_prop_completion));
 
       completion = evaluate_prop_completion;
 
@@ -1123,6 +1121,8 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
   }
   else
   {
+    JERRY_ASSERT (ecma_is_completion_value_throw (completion));
+
     ret_value = completion;
   }
 
@@ -1277,29 +1277,6 @@ opfunc_prop_setter (opcode_t opdata __attr_unused___, /**< operation data */
 } /* opfunc_prop_setter */
 
 /**
- * Exit from script with specified status code:
- *   0 - for successful completion
- *   1 - to indicate failure.
- *
- * Note: this is not ECMA specification-defined, but internal
- *       implementation-defined opcode for end of script
- *       and assertions inside of unit tests.
- *
- * @return completion value
- *         Returned value is simple and so need not be freed.
- *         However, ecma_free_completion_value may be called for it, but it is a no-op.
- */
-ecma_completion_value_t
-opfunc_exitval (opcode_t opdata, /**< operation data */
-                int_data_t *int_data __attr_unused___) /**< interpreter context */
-{
-  JERRY_ASSERT (opdata.data.exitval.status_code == 0
-                || opdata.data.exitval.status_code == 1);
-
-  return ecma_make_exit_completion_value (opdata.data.exitval.status_code == 0);
-} /* opfunc_exitval */
-
-/**
  * 'Logical NOT Operator' opcode handler.
  *
  * See also: ECMA-262 v5, 11.4.9
@@ -1419,7 +1396,9 @@ opfunc_with (opcode_t opdata, /**< operation data */
   }
   else
   {
-    JERRY_ASSERT (!ecma_is_completion_value_normal (with_completion));
+    JERRY_ASSERT (ecma_is_completion_value_throw (with_completion)
+                  || ecma_is_completion_value_return (with_completion)
+                  || ecma_is_completion_value_jump (with_completion));
     JERRY_ASSERT (int_data->pos <= with_end_oc);
   }
 

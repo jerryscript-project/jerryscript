@@ -36,9 +36,8 @@
  */
 typedef enum
 {
-  JERRY_COMPLETION_CODE_OK                         = 0, /**< successful completion */
-  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION        = 1, /**< exception occured and it was not handled */
-  JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT = 2  /**< assertion, performed by script, failed */
+  JERRY_COMPLETION_CODE_OK                  = 0, /**< successful completion */
+  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION = 1, /**< exception occured and it was not handled */
 } jerry_completion_code_t;
 
 /**

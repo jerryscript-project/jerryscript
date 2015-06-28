@@ -146,8 +146,7 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_throw (completion)
-                    || ecma_is_completion_value_exit (completion));
+      JERRY_ASSERT (ecma_is_completion_value_throw (completion));
     }
 
     ecma_deref_object (lex_env_p);

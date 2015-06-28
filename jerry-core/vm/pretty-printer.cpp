@@ -222,7 +222,6 @@ pp_op_meta (const opcode_t *opcodes_p,
     PP_OP (reg_var_decl, "var %s .. %s;");
     PP_OP (var_decl, "var %s;");
     PP_OP (nop, ";");
-    PP_OP (exitval, "exit %d;");
     PP_OP (retval, "return %s;");
     PP_OP (ret, "ret;");
     PP_OP (prop_getter, "%s = %s[%s];");

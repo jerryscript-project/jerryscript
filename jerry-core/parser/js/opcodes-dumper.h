@@ -234,6 +234,5 @@ void rewrite_reg_var_decl (void);
 
 void dump_ret (void);
 void dump_retval (operand op);
-void dump_exit (void);
 
 #endif /* OPCODES_DUMPER_H */

@@ -46,11 +46,6 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
   opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
 
-  if (ecma_is_completion_value_exit (try_completion))
-  {
-    return try_completion;
-  }
-
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH)
   {
     const opcode_counter_t catch_end_oc = (opcode_counter_t) (
@@ -105,11 +100,6 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
 
   next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
   JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
-
-  if (ecma_is_completion_value_exit (try_completion))
-  {
-    return try_completion;
-  }
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_FINALLY)
   {

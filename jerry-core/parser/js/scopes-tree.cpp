@@ -318,7 +318,6 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
       change_uid (om, lit_ids, 0x100);
       break;
     }
-    case OPCODE (exitval):
     case OPCODE (ret):
     case OPCODE (try_block):
     case OPCODE (jmp_up):
@@ -458,7 +457,6 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
       insert_uids_to_lit_id_map (om, 0x100);
       break;
     }
-    case OPCODE (exitval):
     case OPCODE (ret):
     case OPCODE (try_block):
     case OPCODE (jmp_up):

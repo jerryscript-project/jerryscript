@@ -1113,16 +1113,9 @@ jerry_api_eval (const char *source_p, /**< source code */
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_exit (completion));
+      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 
-      if (ecma_is_value_true (ecma_get_completion_value_value (completion)))
-      {
-        status = JERRY_COMPLETION_CODE_OK;
-      }
-      else
-      {
-        status = JERRY_COMPLETION_CODE_FAILED_ASSERTION_IN_SCRIPT;
-      }
+      status = JERRY_COMPLETION_CODE_OK;
     }
   }
 

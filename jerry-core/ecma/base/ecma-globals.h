@@ -120,8 +120,6 @@ typedef enum
                               *     }
                               */
   ECMA_COMPLETION_TYPE_THROW, /**< completion with throw */
-  ECMA_COMPLETION_TYPE_EXIT, /**< implementation-defined completion type
-                                  for finishing script execution */
   ECMA_COMPLETION_TYPE_META /**< implementation-defined completion type
                                  for meta opcode */
 } ecma_completion_type_t;

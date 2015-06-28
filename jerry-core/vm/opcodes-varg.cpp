@@ -42,7 +42,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
   {
     ecma_completion_value_t evaluate_arg_completion = vm_loop (int_data, NULL);
 
-    if (ecma_is_completion_value_normal (evaluate_arg_completion))
+    if (ecma_is_completion_value_empty (evaluate_arg_completion))
     {
       opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
       JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
@@ -58,16 +58,17 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
       }
       else
       {
+        JERRY_ASSERT (ecma_is_completion_value_throw (get_arg_completion));
+
         ret_value = get_arg_completion;
       }
     }
     else
     {
-      ret_value = evaluate_arg_completion;
-    }
+      JERRY_ASSERT (ecma_is_completion_value_throw (evaluate_arg_completion));
 
-    if (!ecma_is_completion_value_empty (ret_value))
-    {
+      ret_value = evaluate_arg_completion;
+
       break;
     }
 

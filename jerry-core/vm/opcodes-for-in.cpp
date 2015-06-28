@@ -253,7 +253,9 @@ opfunc_for_in (opcode_t opdata, /**< operation data */
           }
           else
           {
-            JERRY_ASSERT (!ecma_is_completion_value_normal (for_in_body_completion));
+            JERRY_ASSERT (ecma_is_completion_value_throw (for_in_body_completion)
+                          || ecma_is_completion_value_return (for_in_body_completion)
+                          || ecma_is_completion_value_jump (for_in_body_completion));
             JERRY_ASSERT (int_data_p->pos <= for_in_body_end_oc);
 
             ret_value = for_in_body_completion;

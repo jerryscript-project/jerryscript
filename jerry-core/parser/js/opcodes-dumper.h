@@ -58,6 +58,8 @@ void dumper_free (void);
 void dumper_new_statement (void);
 void dumper_new_scope (void);
 void dumper_finish_scope (void);
+void dumper_start_varg_code_sequence (void);
+void dumper_finish_varg_code_sequence (void);
 
 extern bool dumper_is_eval_literal (operand);
 

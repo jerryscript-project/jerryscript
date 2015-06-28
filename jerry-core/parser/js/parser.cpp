@@ -521,6 +521,8 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
   skip_newlines ();
   while (!token_is (close_tt))
   {
+    dumper_start_varg_code_sequence ();
+
     operand op;
 
     if (vlt == VARG_FUNC_DECL
@@ -572,6 +574,8 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     }
 
     args_num++;
+
+    dumper_finish_varg_code_sequence ();
   }
 
   if (args_count != NULL)

@@ -756,6 +756,41 @@ dumper_finish_scope (void)
 }
 
 /**
+ * Handle start of argument preparation instruction sequence generation
+ *
+ * Note:
+ *      Values of registers, allocated for the code sequence, are not used outside of the sequence,
+ *      so they can be reused, reducing register pressure.
+ *
+ *      To reuse the registers, counter of register allocator is saved, and restored then,
+ *      after finishing generation of the code sequence, using dumper_finish_varg_code_sequence.
+ *
+ * FIXME:
+ *       Implement general register allocation mechanism
+ *
+ * See also:
+ *          dumper_finish_varg_code_sequence
+ */
+void
+dumper_start_varg_code_sequence (void)
+{
+  STACK_PUSH (temp_names, temp_name);
+} /* dumper_start_varg_code_sequence */
+
+/**
+ * Handle finish of argument preparation instruction sequence generation
+ *
+ * See also:
+ *          dumper_start_varg_code_sequence
+ */
+void
+dumper_finish_varg_code_sequence (void)
+{
+  temp_name = STACK_TOP (temp_names);
+  STACK_DROP (temp_names, 1);
+} /* dumper_finish_varg_code_sequence */
+
+/**
  * Check that byte-code operand refers to 'eval' string
  *
  * @return true - if specified byte-code operand's type is literal, and value of corresponding

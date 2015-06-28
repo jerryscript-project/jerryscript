@@ -89,8 +89,11 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
   const opcode_t *opcodes_p;
   bool is_syntax_correct;
 
+  bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
+
   is_syntax_correct = parser_parse_eval ((const char *) code_p,
                                          code_buffer_size,
+                                         is_strict_call,
                                          &opcodes_p);
 
   if (!is_syntax_correct)
@@ -108,7 +111,7 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
       is_strict_prologue = true;
     }
 
-    bool is_strict = (is_strict_prologue || (is_direct && is_called_from_strict_mode_code));
+    bool is_strict = (is_strict_call || is_strict_prologue);
 
     ecma_value_t this_binding;
     ecma_object_t *lex_env_p;

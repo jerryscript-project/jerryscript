@@ -51,6 +51,16 @@ function f2 (global)
  assert (v2 === 'local value');
  assert (typeof (global.v2) === 'undefined');
  assert (r === undefined);
+
+ try
+ {
+   eval ('arguments = 1;');
+   assert (false);
+ }
+ catch (e)
+ {
+   assert (e instanceof SyntaxError);
+ }
 }
 
 f2 (this);

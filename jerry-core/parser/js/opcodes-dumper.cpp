@@ -755,19 +755,6 @@ dumper_finish_scope (void)
   STACK_DROP (temp_names, 1);
 }
 
-bool
-dumper_is_intrinsic (operand /* obj */)
-{
-  return false;
-}
-
-operand
-dump_intrinsic (operand /* obj */, operand /* arg */)
-{
-  JERRY_UNREACHABLE ();
-  return dump_undefined_assignment_res ();
-}
-
 /**
  * Check that byte-code operand refers to 'eval' string
  *

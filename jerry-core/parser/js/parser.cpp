@@ -447,10 +447,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     case VARG_CALL_EXPR:
     {
       current_token_must_be (TOK_OPEN_PAREN);
-      if (dumper_is_intrinsic (obj))
-      {
-        break;
-      }
 
       opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
 
@@ -557,12 +553,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       case VARG_CALL_EXPR:
       {
         op = parse_assignment_expression (true);
-        if (dumper_is_intrinsic (obj))
-        {
-          operand res = dump_intrinsic (obj, op);
-          token_after_newlines_must_be (close_tt);
-          return res;
-        }
         break;
       }
       case VARG_OBJ_DECL:

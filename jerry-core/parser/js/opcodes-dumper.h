@@ -59,9 +59,6 @@ void dumper_new_statement (void);
 void dumper_new_scope (void);
 void dumper_finish_scope (void);
 
-bool dumper_is_intrinsic (operand);
-operand dump_intrinsic (operand, operand);
-
 extern bool dumper_is_eval_literal (operand);
 
 void dump_boolean_assignment (operand, bool);

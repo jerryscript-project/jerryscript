@@ -39,6 +39,10 @@
  *         The operator should return from the opcode handler with it's 'return value'.
  *
  *      5. No other operations with opcode handler's 'return value' variable should be performed.
+ *
+ * Note:
+ *      get_variable_value, taking an idx should be called with instruction counter value,
+ *      corresponding to the instruction, containing the idx argument.
  */
 
 #define OP_UNIMPLEMENTED_LIST(op) \
@@ -691,6 +695,72 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
 } /* opfunc_func_expr_n */
 
 /**
+ * Get 'this' argument value and call flags mask for function call
+ *
+ * See also:
+ *          ECMA-262 v5, 11.2.3, steps 6-7
+
+ * @return ecma-value
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+vm_helper_call_get_call_flags_and_this_arg (int_data_t *int_data_p, /**< interpreter context */
+                                            opcode_call_flags_t *out_flags_p) /**< out: call flags */
+{
+  JERRY_ASSERT (out_flags_p != NULL);
+
+  bool is_increase_instruction_pointer;
+
+  opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
+  idx_t this_arg_var_idx = INVALID_VALUE;
+
+  opcode_t next_opcode = vm_get_opcode (int_data_p->opcodes_p, int_data_p->pos);
+  if (next_opcode.op_idx == __op__idx_meta
+      && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
+  {
+    call_flags = (opcode_call_flags_t) next_opcode.data.meta.data_1;
+
+    if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+    {
+      this_arg_var_idx = next_opcode.data.meta.data_2;
+      JERRY_ASSERT (is_reg_variable (int_data_p, this_arg_var_idx));
+
+      JERRY_ASSERT ((call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) == 0);
+    }
+
+    is_increase_instruction_pointer = true;
+  }
+  else
+  {
+    is_increase_instruction_pointer = false;
+  }
+
+  ecma_completion_value_t get_this_completion_value;
+  ecma_value_t this_value;
+
+  if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+  {
+    get_this_completion_value = get_variable_value (int_data_p, this_arg_var_idx, false);
+  }
+  else
+  {
+    get_this_completion_value = ecma_op_implicit_this_value (int_data_p->lex_env_p);
+  }
+  JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
+
+  this_value = ecma_get_completion_value_value (get_this_completion_value);
+
+  if (is_increase_instruction_pointer)
+  {
+    int_data_p->pos++;
+  }
+
+  *out_flags_p = call_flags;
+
+  return this_value;
+} /* vm_helper_call_get_call_flags_and_this_arg */
+
+/**
  * 'Function call' opcode handler.
  *
  * See also: ECMA-262 v5, 11.2.3
@@ -713,28 +783,10 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  idx_t this_arg_var_idx = INVALID_VALUE;
-
-  opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
-
   JERRY_ASSERT (!int_data->is_call_in_direct_eval_form);
 
-  opcode_t next_opcode = vm_get_opcode (int_data->opcodes_p, int_data->pos);
-  if (next_opcode.op_idx == __op__idx_meta
-      && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
-  {
-    call_flags = (opcode_call_flags_t) next_opcode.data.meta.data_1;
-
-    if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
-    {
-      this_arg_var_idx = next_opcode.data.meta.data_2;
-      JERRY_ASSERT (is_reg_variable (int_data, this_arg_var_idx));
-
-      JERRY_ASSERT ((call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) == 0);
-    }
-
-    int_data->pos++;
-  }
+  opcode_call_flags_t call_flags;
+  ecma_value_t this_value = vm_helper_call_get_call_flags_and_this_arg (int_data, &call_flags);
 
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number_idx, ecma_value_t);
 
@@ -747,20 +799,6 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number_idx);
-
-    ecma_completion_value_t get_this_completion_value;
-
-    if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
-    {
-      get_this_completion_value = get_variable_value (int_data, this_arg_var_idx, false);
-    }
-    else
-    {
-      get_this_completion_value = ecma_op_implicit_this_value (int_data->lex_env_p);
-    }
-    JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
-
-    ecma_value_t this_value = ecma_get_completion_value_value (get_this_completion_value);
 
     if (!ecma_op_is_callable (func_value))
     {
@@ -798,8 +836,6 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
         JERRY_ASSERT (!int_data->is_call_in_direct_eval_form);
       }
     }
-
-    ecma_free_completion_value (get_this_completion_value);
   }
   else
   {
@@ -816,6 +852,8 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+
+  ecma_free_value (this_value, true);
 
   ECMA_FINALIZE (func_value);
 
@@ -982,11 +1020,10 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ecma_completion_value_t completion = ecma_make_empty_completion_value ();
   ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
   for (uint32_t prop_index = 0;
-       prop_index < args_number;
+       prop_index < args_number && ecma_is_completion_value_empty (ret_value);
        prop_index++)
   {
     ecma_completion_value_t evaluate_prop_completion = vm_loop (int_data, NULL);
@@ -1002,106 +1039,98 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
                     || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
 
       const idx_t prop_name_var_idx = next_opcode.data.meta.data_1;
+      JERRY_ASSERT (is_reg_variable (int_data, prop_name_var_idx));
+
       const idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
 
-      ecma_completion_value_t value_for_prop_desc = get_variable_value (int_data,
-                                                                        value_for_prop_desc_var_idx,
-                                                                        false);
+      ECMA_TRY_CATCH (value_for_prop_desc,
+                      get_variable_value (int_data,
+                                          value_for_prop_desc_var_idx,
+                                          false),
+                      ret_value);
+      ECMA_TRY_CATCH (prop_name_value,
+                      get_variable_value (int_data,
+                                          prop_name_var_idx,
+                                          false),
+                      ret_value);
+      ECMA_TRY_CATCH (prop_name_str_value,
+                      ecma_op_to_string (prop_name_value),
+                      ret_value);
 
-      if (ecma_is_completion_value_normal (value_for_prop_desc))
+      bool is_throw_syntax_error = false;
+
+      ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
+      ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
+
+      const bool is_previous_undefined = (previous_p == NULL);
+      const bool is_previous_data_desc = (!is_previous_undefined
+                                          && previous_p->type == ECMA_PROPERTY_NAMEDDATA);
+      const bool is_previous_accessor_desc = (!is_previous_undefined
+                                              && previous_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+      JERRY_ASSERT (is_previous_undefined || is_previous_data_desc || is_previous_accessor_desc);
+
+      ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
       {
-        JERRY_ASSERT (is_reg_variable (int_data, prop_name_var_idx));
+        prop_desc.is_enumerable_defined = true;
+        prop_desc.is_enumerable = true;
 
-        ECMA_TRY_CATCH (prop_name_value,
-                        get_variable_value (int_data,
-                                            prop_name_var_idx,
-                                            false),
-                        ret_value);
-        ECMA_TRY_CATCH (prop_name_str_value,
-                        ecma_op_to_string (prop_name_value),
-                        ret_value);
+        prop_desc.is_configurable_defined = true;
+        prop_desc.is_configurable = true;
+      }
 
-        bool is_throw_syntax_error = false;
+      if (type == OPCODE_META_TYPE_VARG_PROP_DATA)
+      {
+        prop_desc.is_value_defined = true;
+        prop_desc.value = value_for_prop_desc;
 
-        ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
-        ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
+        prop_desc.is_writable_defined = true;
+        prop_desc.is_writable = true;
 
-        const bool is_previous_undefined = (previous_p == NULL);
-        const bool is_previous_data_desc = (!is_previous_undefined
-                                            && previous_p->type == ECMA_PROPERTY_NAMEDDATA);
-        const bool is_previous_accessor_desc = (!is_previous_undefined
-                                                && previous_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-        JERRY_ASSERT (is_previous_undefined || is_previous_data_desc || is_previous_accessor_desc);
-
-        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+        if (!is_previous_undefined
+            && ((is_previous_data_desc
+                 && int_data->is_strict)
+                || is_previous_accessor_desc))
         {
-          prop_desc.is_enumerable_defined = true;
-          prop_desc.is_enumerable = true;
-
-          prop_desc.is_configurable_defined = true;
-          prop_desc.is_configurable = true;
+          is_throw_syntax_error = true;
         }
+      }
+      else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
+      {
+        prop_desc.is_get_defined = true;
+        prop_desc.get_p = ecma_get_object_from_value (value_for_prop_desc);
 
-        if (type == OPCODE_META_TYPE_VARG_PROP_DATA)
+        if (!is_previous_undefined
+            && is_previous_data_desc)
         {
-          prop_desc.is_value_defined = true;
-          prop_desc.value = ecma_get_completion_value_value (value_for_prop_desc);
-
-          prop_desc.is_writable_defined = true;
-          prop_desc.is_writable = true;
-
-          if (!is_previous_undefined
-              && ((is_previous_data_desc
-                   && int_data->is_strict)
-                  || is_previous_accessor_desc))
-          {
-            is_throw_syntax_error = true;
-          }
+          is_throw_syntax_error = true;
         }
-        else if (type == OPCODE_META_TYPE_VARG_PROP_GETTER)
-        {
-          prop_desc.is_get_defined = true;
-          prop_desc.get_p = ecma_get_object_from_completion_value (value_for_prop_desc);
-
-          if (!is_previous_undefined
-              && is_previous_data_desc)
-          {
-            is_throw_syntax_error = true;
-          }
-        }
-        else
-        {
-          prop_desc.is_set_defined = true;
-          prop_desc.set_p = ecma_get_object_from_completion_value (value_for_prop_desc);
-
-          if (!is_previous_undefined
-              && is_previous_data_desc)
-          {
-            is_throw_syntax_error = true;
-          }
-        }
-
-        /* The SyntaxError should be treated as an early error  */
-        JERRY_ASSERT (!is_throw_syntax_error);
-
-        ecma_completion_value_t define_prop_completion = ecma_op_object_define_own_property (obj_p,
-                                                                                             prop_name_string_p,
-                                                                                             &prop_desc,
-                                                                                             false);
-        JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
-                      || ecma_is_completion_value_normal_false (define_prop_completion));
-
-        ecma_free_completion_value (value_for_prop_desc);
-
-        ECMA_FINALIZE (prop_name_str_value);
-        ECMA_FINALIZE (prop_name_value);
       }
       else
       {
-        completion = value_for_prop_desc;
+        prop_desc.is_set_defined = true;
+        prop_desc.set_p = ecma_get_object_from_value (value_for_prop_desc);
 
-        break;
+        if (!is_previous_undefined
+            && is_previous_data_desc)
+        {
+          is_throw_syntax_error = true;
+        }
       }
+
+      /* The SyntaxError should be treated as an early error  */
+      JERRY_ASSERT (!is_throw_syntax_error);
+
+      ecma_completion_value_t define_prop_completion = ecma_op_object_define_own_property (obj_p,
+                                                                                           prop_name_string_p,
+                                                                                           &prop_desc,
+                                                                                           false);
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
+                    || ecma_is_completion_value_normal_false (define_prop_completion));
+
+      ECMA_FINALIZE (prop_name_str_value);
+      ECMA_FINALIZE (prop_name_value);
+
+      ECMA_FINALIZE (value_for_prop_desc);
 
       int_data->pos++;
     }
@@ -1109,21 +1138,17 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
     {
       JERRY_ASSERT (ecma_is_completion_value_throw (evaluate_prop_completion));
 
-      completion = evaluate_prop_completion;
-
-      break;
+      ret_value = evaluate_prop_completion;
     }
   }
 
-  if (ecma_is_completion_value_empty (completion))
+  if (ecma_is_completion_value_empty (ret_value))
   {
     ret_value = set_variable_value (int_data, obj_lit_oc, lhs_var_idx, ecma_make_object_value (obj_p));
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_throw (completion));
-
-    ret_value = completion;
+    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
   }
 
   ecma_deref_object (obj_p);

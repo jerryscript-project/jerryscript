@@ -482,7 +482,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   {
     // 4.
     JERRY_ASSERT (src_prop_desc_p->is_get_defined
-                  && src_prop_desc_p->is_set_defined);
+                  || src_prop_desc_p->is_set_defined);
 
     // a.
     if (src_prop_desc_p->get_p == NULL)

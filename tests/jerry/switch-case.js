@@ -73,3 +73,25 @@ switch ("var") {
 }
 
 assert (counter === 4);
+
+var flow = '';
+
+switch ("var") {
+  case "var":
+    flow += '1';
+  case "var1":
+    flow += '2';
+  case "var2":
+    flow += '3';
+    switch (flow) {
+      case '123':
+       flow += 'a';
+       break;
+      default:
+       flow += 'b';
+    }
+  default:
+    flow += '4';
+}
+
+assert (flow === '123a4');

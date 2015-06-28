@@ -2340,8 +2340,8 @@ rewrite_default_clause (void)
 void
 finish_dumping_case_clauses (void)
 {
-  STACK_DROP (U8, 1);
   STACK_DROP (case_clauses, STACK_SIZE (case_clauses) - STACK_TOP (U8));
+  STACK_DROP (U8, 1);
   STACK_DROP (U8, 1);
 }
 

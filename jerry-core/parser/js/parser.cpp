@@ -522,61 +522,56 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
   while (!token_is (close_tt))
   {
     operand op;
-    switch (vlt)
-    {
-      case VARG_FUNC_DECL:
-      case VARG_FUNC_EXPR:
-      {
-        current_token_must_be (TOK_NAME);
-        op = literal_operand (token_data_as_lit_cp ());
-        syntax_add_varg (op);
-        syntax_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
-        break;
-      }
-      case VARG_ARRAY_DECL:
-      {
-        if (token_is (TOK_COMMA))
-        {
-          op = dump_undefined_assignment_res ();
-          dump_varg (op);
-          args_num++;
-          skip_newlines ();
-          continue;
-        }
-        /* FALLTHRU  */
-      }
-      case VARG_CONSTRUCT_EXPR:
-      {
-        op = parse_assignment_expression (true);
-        break;
-      }
-      case VARG_CALL_EXPR:
-      {
-        op = parse_assignment_expression (true);
-        break;
-      }
-      case VARG_OBJ_DECL:
-      {
-        parse_property_assignment ();
-        break;
-      }
-    }
 
-    /* In case of obj_decl prop is already dumped.  */
-    if (vlt != VARG_OBJ_DECL)
+    if (vlt == VARG_FUNC_DECL
+        || vlt == VARG_FUNC_EXPR)
     {
+      current_token_must_be (TOK_NAME);
+      op = literal_operand (token_data_as_lit_cp ());
+      syntax_add_varg (op);
+      syntax_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
       dump_varg (op);
+      skip_newlines ();
     }
-    args_num++;
+    else if (vlt == VARG_CONSTRUCT_EXPR
+             || vlt == VARG_CALL_EXPR)
+    {
+      op = parse_assignment_expression (true);
+      dump_varg (op);
+      skip_newlines ();
+    }
+    else if (vlt == VARG_ARRAY_DECL)
+    {
+      if (token_is (TOK_COMMA))
+      {
+        op = dump_undefined_assignment_res ();
+        dump_varg (op);
+      }
+      else
+      {
+        op = parse_assignment_expression (true);
+        dump_varg (op);
+        skip_newlines ();
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (vlt == VARG_OBJ_DECL);
 
-    skip_newlines ();
-    if (!token_is (TOK_COMMA))
+      parse_property_assignment ();
+      skip_newlines ();
+    }
+
+    if (token_is (TOK_COMMA))
+    {
+      skip_newlines ();
+    }
+    else
     {
       current_token_must_be (close_tt);
-      break;
     }
 
-    skip_newlines ();
+    args_num++;
   }
 
   if (args_count != NULL)

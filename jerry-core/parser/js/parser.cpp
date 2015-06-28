@@ -1000,11 +1000,11 @@ parse_postfix_expression (void)
     return expr;
   }
 
-  syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
-
   skip_token ();
   if (token_is (TOK_DOUBLE_PLUS))
   {
+    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+
     const operand res = dump_post_increment_res (expr);
     if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
     {
@@ -1014,6 +1014,8 @@ parse_postfix_expression (void)
   }
   else if (token_is (TOK_DOUBLE_MINUS))
   {
+    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+
     const operand res = dump_post_decrement_res (expr);
     if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
     {
@@ -1601,112 +1603,84 @@ parse_assignment_expression (bool in_allowed)
   {
     return expr;
   }
-  syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+
   skip_newlines ();
-  switch (tok.type)
+
+  token_type tt = tok.type;
+
+  if (tt == TOK_EQ
+      || tt == TOK_MULT_EQ
+      || tt == TOK_DIV_EQ
+      || tt == TOK_MOD_EQ
+      || tt == TOK_PLUS_EQ
+      || tt == TOK_MINUS_EQ
+      || tt == TOK_LSHIFT_EQ
+      || tt == TOK_RSHIFT_EQ
+      || tt == TOK_RSHIFT_EX_EQ
+      || tt == TOK_AND_EQ
+      || tt == TOK_XOR_EQ
+      || tt == TOK_OR_EQ)
   {
-    case TOK_EQ:
+    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+    skip_newlines ();
+    start_dumping_assignment_expression ();
+    const operand assign_expr = parse_assignment_expression (in_allowed);
+
+    if (tt == TOK_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_variable_assignment_res (expr, assign_expr);
-      break;
     }
-    case TOK_MULT_EQ:
+    else if (tt == TOK_MULT_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_multiplication_res (expr, assign_expr);
-      break;
     }
-    case TOK_DIV_EQ:
+    else if (tt == TOK_DIV_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_division_res (expr, assign_expr);
-      break;
     }
-    case TOK_MOD_EQ:
+    else if (tt == TOK_MOD_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_remainder_res (expr, assign_expr);
-      break;
     }
-    case TOK_PLUS_EQ:
+    else if (tt == TOK_PLUS_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_addition_res (expr, assign_expr);
-      break;
     }
-    case TOK_MINUS_EQ:
+    else if (tt == TOK_MINUS_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_substraction_res (expr, assign_expr);
-      break;
     }
-    case TOK_LSHIFT_EQ:
+    else if (tt == TOK_LSHIFT_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_left_shift_res (expr, assign_expr);
-      break;
     }
-    case TOK_RSHIFT_EQ:
+    else if (tt == TOK_RSHIFT_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_right_shift_res (expr, assign_expr);
-      break;
     }
-    case TOK_RSHIFT_EX_EQ:
+    else if (tt == TOK_RSHIFT_EX_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_right_shift_ex_res (expr, assign_expr);
-      break;
     }
-    case TOK_AND_EQ:
+    else if (tt == TOK_AND_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_bitwise_and_res (expr, assign_expr);
-      break;
     }
-    case TOK_XOR_EQ:
+    else if (tt == TOK_XOR_EQ)
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
       expr = dump_prop_setter_or_bitwise_xor_res (expr, assign_expr);
-      break;
     }
-    case TOK_OR_EQ:
+    else
     {
-      skip_newlines ();
-      start_dumping_assignment_expression ();
-      const operand assign_expr = parse_assignment_expression (in_allowed);
+      JERRY_ASSERT (tt == TOK_OR_EQ);
       expr = dump_prop_setter_or_bitwise_or_res (expr, assign_expr);
-      break;
-    }
-    default:
-    {
-      lexer_save_token (tok);
-      break;
     }
   }
+  else
+  {
+    lexer_save_token (tok);
+  }
+
   return expr;
 }
 

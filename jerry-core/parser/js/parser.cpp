@@ -2645,6 +2645,10 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   if (is_keyword (KW_VAR))
   {
     parse_variable_declaration_list ();
+    if (token_is (TOK_SEMICOLON))
+    {
+      skip_newlines ();
+    }
     return;
   }
   if (is_keyword (KW_FUNCTION))
@@ -2859,61 +2863,6 @@ var_declared (lit_cpointer_t var_cp)
 }
 
 static void
-preparse_var_decls (void)
-{
-  assert_keyword (KW_VAR);
-
-  skip_newlines ();
-  while (!token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON) && !is_keyword (KW_IN))
-  {
-    if (token_is (TOK_NAME))
-    {
-      if (!var_declared (token_data_as_lit_cp ()))
-      {
-        syntax_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
-                                                            is_strict_mode (),
-                                                            tok.loc);
-        dump_variable_declaration (token_data_as_lit_cp ());
-      }
-      skip_token ();
-      continue;
-    }
-    else if (token_is (TOK_EQ))
-    {
-      while (!token_is (TOK_COMMA) && !token_is (TOK_NEWLINE) && !token_is (TOK_SEMICOLON))
-      {
-        if (is_keyword (KW_FUNCTION))
-        {
-          skip_function ();
-        }
-        else if (token_is (TOK_OPEN_BRACE))
-        {
-          jsp_skip_braces (TOK_OPEN_BRACE);
-        }
-        else if (token_is (TOK_OPEN_SQUARE))
-        {
-          jsp_skip_braces (TOK_OPEN_SQUARE);
-        }
-        else if (token_is (TOK_OPEN_PAREN))
-        {
-          jsp_skip_braces (TOK_OPEN_PAREN);
-        }
-        skip_token ();
-      }
-    }
-    else if (!token_is (TOK_COMMA))
-    {
-      EMIT_ERROR ("Expected ','");
-    }
-    else
-    {
-      skip_token ();
-      continue;
-    }
-  }
-}
-
-static void
 preparse_scope (bool is_global)
 {
   const locus start_loc = tok.loc;
@@ -2936,46 +2885,107 @@ preparse_scope (bool is_global)
 
   dump_reg_var_decl_for_rewrite ();
 
+  bool is_in_var_declaration_list = false;
+
   size_t nesting_level = 0;
   while (nesting_level > 0 || !token_is (end_tt))
   {
-    if (token_is (TOK_OPEN_BRACE))
+    if (token_is (TOK_NAME))
     {
-      nesting_level++;
+      if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
+                                     (const ecma_char_t *) "arguments"))
+      {
+        is_ref_arguments_identifier = true;
+      }
+      else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
+                                          (const ecma_char_t *) "eval"))
+      {
+        is_ref_eval_identifier = true;
+      }
+
+      if (is_in_var_declaration_list)
+      {
+        if (!var_declared (token_data_as_lit_cp ()))
+        {
+          syntax_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
+                                                              is_strict_mode (),
+                                                              tok.loc);
+          dump_variable_declaration (token_data_as_lit_cp ());
+        }
+      }
+
+      skip_newlines ();
     }
-    else if (token_is (TOK_CLOSE_BRACE))
+    else if (is_in_var_declaration_list)
     {
-      nesting_level--;
-    }
-    else if (is_keyword (KW_VAR))
-    {
-      preparse_var_decls ();
-    }
-    else if (is_keyword (KW_FUNCTION))
-    {
-      skip_function ();
-    }
-    else if (token_is (TOK_OPEN_BRACE))
-    {
-      jsp_skip_braces (TOK_OPEN_BRACE);
+      if (token_is (TOK_EQ))
+      {
+        skip_newlines ();
+
+        while (!token_is (end_tt)
+               && !token_is (TOK_COMMA)
+               && !token_is (TOK_SEMICOLON))
+        {
+          if (is_keyword (KW_FUNCTION))
+          {
+            skip_function ();
+          }
+          else if (token_is (TOK_OPEN_BRACE))
+          {
+            jsp_skip_braces (TOK_OPEN_BRACE);
+          }
+          else if (token_is (TOK_OPEN_SQUARE))
+          {
+            jsp_skip_braces (TOK_OPEN_SQUARE);
+          }
+          else if (token_is (TOK_OPEN_PAREN))
+          {
+            jsp_skip_braces (TOK_OPEN_PAREN);
+          }
+          else if (token_is (TOK_KEYWORD))
+          {
+            break;
+          }
+
+          skip_token ();
+        }
+      }
+      else if (token_is (TOK_COMMA))
+      {
+        skip_newlines ();
+      }
+      else
+      {
+        is_in_var_declaration_list = false;
+
+        skip_newlines ();
+      }
     }
     else
     {
-      if (token_is (TOK_NAME))
+      if (token_is (TOK_OPEN_BRACE))
       {
-        if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
-                                       (const ecma_char_t *) "arguments"))
-        {
-          is_ref_arguments_identifier = true;
-        }
-        else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (token_data_as_lit_cp ()),
-                                            (const ecma_char_t *) "eval"))
-        {
-          is_ref_eval_identifier = true;
-        }
+        nesting_level++;
       }
+      else if (token_is (TOK_CLOSE_BRACE))
+      {
+        nesting_level--;
+      }
+      else if (token_is (TOK_OPEN_SQUARE))
+      {
+        jsp_skip_braces (TOK_OPEN_SQUARE);
+      }
+      else if (is_keyword (KW_VAR))
+      {
+        is_in_var_declaration_list = true;
+      }
+      else if (is_keyword (KW_FUNCTION))
+      {
+        skip_function ();
+      }
+
+      skip_newlines ();
     }
-    skip_newlines ();
   }
 
   opcode_scope_code_flags_t scope_flags = OPCODE_SCOPE_CODE_FLAGS__EMPTY;

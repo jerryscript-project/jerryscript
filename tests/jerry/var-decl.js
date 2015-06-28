@@ -12,8 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+assert (x === undefined);
+assert (y === undefined);
+assert (z === undefined);
+assert (i === undefined);
+assert (j === undefined);
+assert (q === undefined);
+
+eval ('var n');
+eval ('var m = 1');
+
+try
+{
+  x = p;
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof ReferenceError);
+}
+
 {
   var y;
 }
 var x = y;
-assert (x === undefined);
+
+do var z while (0);
+
+for (var i, j = function () {var p;}; i === undefined; i = null)
+{
+}
+
+for (var q in {})
+{
+}

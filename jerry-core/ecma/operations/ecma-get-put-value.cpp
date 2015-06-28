@@ -88,6 +88,9 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
   JERRY_ASSERT (!is_unresolvable_reference);
   JERRY_ASSERT (is_property_reference);
 
+  ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                ref.referenced_name_cp);
+
   // 4.a
   if (!has_primitive_base)
   {
@@ -97,22 +100,56 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    return ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                 ref.referenced_name_cp));
+    return ecma_op_object_get (obj_p, referenced_name_p);
   }
   else
   {
     // 4.b case 2
     ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
+    // 1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ret_value = ecma_op_object_get (obj_p, ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                      ref.referenced_name_cp));
+
+    // 2.
+    ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, referenced_name_p);
+
+    if (prop_p == NULL)
+    {
+      // 3.
+      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+    {
+      // 4.
+      ecma_value_t prop_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
+      ret_value = ecma_make_normal_completion_value (prop_value);
+    }
+    else
+    {
+      // 5.
+      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+      ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
+
+      // 6.
+      if (obj_p == NULL)
+      {
+        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      }
+      else
+      {
+        // 7.
+        ret_value = ecma_op_function_call (obj_p,
+                                           base,
+                                           NULL,
+                                           0);
+      }
+    }
 
     ECMA_FINALIZE (obj_base);
 

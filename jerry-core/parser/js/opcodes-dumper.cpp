@@ -1171,7 +1171,10 @@ dump_call_additional_info (opcode_call_flags_t flags, /**< call flags */
 
   const opcode_t opcode = getop_meta (OPCODE_META_TYPE_CALL_SITE_INFO,
                                       flags,
-                                      (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG) ? this_arg.data.uid : INVALID_VALUE);
+                                      (idx_t) (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG
+                                               ? this_arg.data.uid
+                                               : INVALID_VALUE));
+
   serializer_dump_op_meta (create_op_meta_000 (opcode));
 } /* dump_call_additional_info */
 

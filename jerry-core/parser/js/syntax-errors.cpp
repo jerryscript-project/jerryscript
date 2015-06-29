@@ -44,9 +44,9 @@ STATIC_STACK (props, prop_literal)
 
 enum
 {
-  U8_global_size
+  size_t_stack_global_size
 };
-STATIC_STACK (U8, uint8_t)
+STATIC_STACK (size_t_stack, size_t)
 
 /**
  * Get buffer for SyntaxError longjmp label
@@ -82,7 +82,7 @@ create_prop_literal (literal_t lit, prop_type type)
 void
 syntax_start_checking_of_prop_names (void)
 {
-  STACK_PUSH (U8, (uint8_t) STACK_SIZE (props));
+  STACK_PUSH (size_t_stack, STACK_SIZE (props));
 }
 
 void
@@ -95,13 +95,13 @@ syntax_add_prop_name (operand op, prop_type pt)
 void
 syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unused___)
 {
-  if (STACK_SIZE (props) - STACK_TOP (U8) < 2)
+  if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2)
   {
-    STACK_DROP (U8, 1);
+    STACK_DROP (size_t_stack, 1);
     return;
   }
 
-  for (uint8_t i = (uint8_t) (STACK_TOP (U8) + 1);
+  for (size_t i = (STACK_TOP (size_t_stack) + 1);
        i < STACK_SIZE (props);
        i++)
   {
@@ -113,7 +113,7 @@ syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unu
     JERRY_ASSERT (previous.type == PROP_DATA
                   || previous.type == PROP_GET
                   || previous.type == PROP_SET);
-    for (uint8_t j = STACK_TOP (U8); j < i; j = (uint8_t) (j + 1))
+    for (size_t j = STACK_TOP (size_t_stack); j < i; j = j + 1)
     {
       /*4*/
       const prop_literal current = STACK_ELEMENT (props, j);
@@ -157,14 +157,14 @@ syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unu
     }
   }
 
-  STACK_DROP (props, (uint8_t) (STACK_SIZE (props) - STACK_TOP (U8)));
-  STACK_DROP (U8, 1);
+  STACK_DROP (props, (size_t) (STACK_SIZE (props) - STACK_TOP (size_t_stack)));
+  STACK_DROP (size_t_stack, 1);
 }
 
 void
 syntax_start_checking_of_vargs (void)
 {
-  STACK_PUSH (U8, (uint8_t) STACK_SIZE (props));
+  STACK_PUSH (size_t_stack, STACK_SIZE (props));
 }
 
 void syntax_add_varg (operand op)
@@ -203,19 +203,19 @@ syntax_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, 
 void
 syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
 {
-  if (STACK_SIZE (props) - STACK_TOP (U8) < 2 || !is_strict)
+  if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2 || !is_strict)
   {
-    STACK_DROP (U8, 1);
+    STACK_DROP (size_t_stack, 1);
     return;
   }
-  for (uint8_t i = (uint8_t) (STACK_TOP (U8) + 1); i < STACK_SIZE (props); i = (uint8_t) (i + 1))
+  for (size_t i = (STACK_TOP (size_t_stack) + 1u); i < STACK_SIZE (props); i++)
   {
     JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
     literal_t previous = STACK_ELEMENT (props, i).lit;
     JERRY_ASSERT (previous->get_type () == LIT_STR_T
                   || previous->get_type () == LIT_MAGIC_STR_T
                   || previous->get_type () == LIT_MAGIC_STR_EX_T);
-    for (uint8_t j = STACK_TOP (U8); j < i; j = (uint8_t) (j + 1))
+    for (size_t j = STACK_TOP (size_t_stack); j < i; j++)
     {
       JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
       literal_t current = STACK_ELEMENT (props, j).lit;
@@ -230,8 +230,8 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
     }
   }
 
-  STACK_DROP (props, (uint8_t) (STACK_SIZE (props) - STACK_TOP (U8)));
-  STACK_DROP (U8, 1);
+  STACK_DROP (props, (size_t) (STACK_SIZE (props) - STACK_TOP (size_t_stack)));
+  STACK_DROP (size_t_stack, 1);
 }
 
 void
@@ -247,13 +247,13 @@ void
 syntax_init (void)
 {
   STACK_INIT (props);
-  STACK_INIT (U8);
+  STACK_INIT (size_t_stack);
 }
 
 void
 syntax_free (void)
 {
-  STACK_FREE (U8);
+  STACK_FREE (size_t_stack);
   STACK_FREE (props);
 }
 

@@ -631,6 +631,8 @@ parse_function_declaration (void)
   token_after_newlines_must_be (TOK_NAME);
   const operand name = literal_operand (token_data_as_lit_cp ());
 
+  syntax_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
+
   skip_newlines ();
   STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
   serializer_set_scope (STACK_TOP (scopes));
@@ -678,6 +680,8 @@ parse_function_expression (void)
   if (token_is (TOK_NAME))
   {
     const operand name = literal_operand (token_data_as_lit_cp ());
+    syntax_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
+
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
   }

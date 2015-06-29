@@ -23,3 +23,16 @@ assert ((function() {
     }
     return f();
 })() === 'bar');
+
+function check_syntax_error (s) {
+  try {
+    eval (s);
+    assert (false);
+  }
+  catch (e) {
+    assert (e instanceof SyntaxError);
+  }
+}
+
+check_syntax_error ("'use strict'; function arguments () {}");
+check_syntax_error ("'use strict'; var l = function arguments () {}");

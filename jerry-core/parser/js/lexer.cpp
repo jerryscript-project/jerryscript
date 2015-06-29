@@ -249,9 +249,9 @@ decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
   }
   else
   {
-    const ecma_char_t *false_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_FALSE);
-    const ecma_char_t *true_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_TRUE);
-    const ecma_char_t *null_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_NULL);
+    const ecma_char_t *false_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_FALSE);
+    const ecma_char_t *true_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_TRUE);
+    const ecma_char_t *null_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_NULL);
 
     if (strlen ((const char*) false_p) == length
         && !strncmp ((const char*) str_p, (const char*) false_p, length))
@@ -441,7 +441,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
   if (source_str_size == 0)
   {
     return convert_string_to_token (tok_type,
-                                    ecma_get_magic_string_zt (ECMA_MAGIC_STRING__EMPTY),
+                                    lit_get_magic_string_zt (LIT_MAGIC_STRING__EMPTY),
                                     0);
   }
   else

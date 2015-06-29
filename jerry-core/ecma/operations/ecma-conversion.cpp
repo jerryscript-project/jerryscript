@@ -353,11 +353,11 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
     }
     else if (ecma_is_value_undefined (value))
     {
-      res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+      res_p = ecma_get_magic_string (LIT_MAGIC_STRING_UNDEFINED);
     }
     else if (ecma_is_value_null (value))
     {
-      res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NULL);
+      res_p = ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
     }
     else
     {
@@ -365,11 +365,11 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
 
       if (ecma_is_value_true (value))
       {
-        res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TRUE);
+        res_p = ecma_get_magic_string (LIT_MAGIC_STRING_TRUE);
       }
       else
       {
-        res_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FALSE);
+        res_p = ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
       }
     }
 
@@ -457,7 +457,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
     // a.
     prop_desc.value = src_prop_desc_p->value;
 
-    ecma_string_t *value_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_VALUE);
+    ecma_string_t *value_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUE);
     completion = ecma_op_object_define_own_property (obj_p,
                                                      value_magic_string_p,
                                                      &prop_desc,
@@ -470,7 +470,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
     prop_desc.value = ecma_make_simple_value (is_writable ? ECMA_SIMPLE_VALUE_TRUE
                                                           : ECMA_SIMPLE_VALUE_FALSE);
 
-    ecma_string_t *writable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_WRITABLE);
+    ecma_string_t *writable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE);
     completion = ecma_op_object_define_own_property (obj_p,
                                                      writable_magic_string_p,
                                                      &prop_desc,
@@ -494,7 +494,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
       prop_desc.value = ecma_make_object_value (src_prop_desc_p->get_p);
     }
 
-    ecma_string_t *get_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GET);
+    ecma_string_t *get_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GET);
     completion = ecma_op_object_define_own_property (obj_p,
                                                      get_magic_string_p,
                                                      &prop_desc,
@@ -512,7 +512,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
       prop_desc.value = ecma_make_object_value (src_prop_desc_p->set_p);
     }
 
-    ecma_string_t *set_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SET);
+    ecma_string_t *set_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SET);
     completion = ecma_op_object_define_own_property (obj_p,
                                                      set_magic_string_p,
                                                      &prop_desc,
@@ -525,7 +525,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   prop_desc.value = ecma_make_simple_value (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
                                             : ECMA_SIMPLE_VALUE_FALSE);
 
-  ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ENUMERABLE);
+  ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE);
   completion = ecma_op_object_define_own_property (obj_p,
                                                    enumerable_magic_string_p,
                                                    &prop_desc,
@@ -537,7 +537,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_des
   prop_desc.value = ecma_make_simple_value (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
                                             : ECMA_SIMPLE_VALUE_FALSE);
 
-  ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONFIGURABLE);
+  ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE);
   completion = ecma_op_object_define_own_property (obj_p,
                                                    configurable_magic_string_p,
                                                    &prop_desc,
@@ -578,7 +578,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
     // 3.
-    ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ENUMERABLE);
+    ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE);
 
     if (ecma_op_object_get_property (obj_p, enumerable_magic_string_p) != NULL)
     {
@@ -612,7 +612,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
 
       // 4.
-      ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONFIGURABLE);
+      ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE);
 
       if (ecma_op_object_get_property (obj_p, configurable_magic_string_p) != NULL)
       {
@@ -647,7 +647,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
 
       // 5.
-      ecma_string_t *value_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_VALUE);
+      ecma_string_t *value_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUE);
 
       if (ecma_op_object_get_property (obj_p, value_magic_string_p) != NULL)
       {
@@ -669,7 +669,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
 
       // 6.
-      ecma_string_t *writable_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_WRITABLE);
+      ecma_string_t *writable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE);
 
       if (ecma_op_object_get_property (obj_p, writable_magic_string_p) != NULL)
       {
@@ -704,7 +704,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
 
       // 7.
-      ecma_string_t *get_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_GET);
+      ecma_string_t *get_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GET);
 
       if (ecma_op_object_get_property (obj_p, get_magic_string_p) != NULL)
       {
@@ -748,7 +748,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
       // 8.
 
-      ecma_string_t *set_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_SET);
+      ecma_string_t *set_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SET);
 
       if (ecma_op_object_get_property (obj_p, set_magic_string_p) != NULL)
       {

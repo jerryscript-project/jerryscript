@@ -94,7 +94,7 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
                   return_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
-  ecma_string_t *to_string_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TO_STRING_UL);
+  ecma_string_t *to_string_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_TO_STRING_UL);
 
   /* 2. */
   ECMA_TRY_CATCH (to_string_val,

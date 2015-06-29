@@ -40,7 +40,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE)
  *  (property name, object pointer getter) */
 
 // 15.4.4.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -50,7 +50,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
  *  (property name, object pointer getter) */
 
 // 15.4.4
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -58,27 +58,27 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_array_prototype_object_for_each, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_CONCAT, ecma_builtin_array_prototype_object_concat, NON_FIXED, 1)
-ROUTINE (ECMA_MAGIC_STRING_JOIN, ecma_builtin_array_prototype_join, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_array_prototype_object_to_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_array_prototype_object_to_locale_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_POP, ecma_builtin_array_prototype_object_pop, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_FIXED, 1)
-ROUTINE (ECMA_MAGIC_STRING_REVERSE, ecma_builtin_array_prototype_object_reverse, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_INDEX_OF_UL, ecma_builtin_array_prototype_object_index_of, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_array_prototype_object_last_index_of, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_SORT, ecma_builtin_array_prototype_object_sort, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_SHIFT, ecma_builtin_array_prototype_object_shift, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
-ROUTINE (ECMA_MAGIC_STRING_EVERY, ecma_builtin_array_prototype_object_every, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_SOME, ecma_builtin_array_prototype_object_some, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_SLICE, ecma_builtin_array_prototype_object_slice, 2, 2)
-ROUTINE (ECMA_MAGIC_STRING_SPLICE, ecma_builtin_array_prototype_object_splice, NON_FIXED, 2)
-ROUTINE (ECMA_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_MAP, ecma_builtin_array_prototype_object_map, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, 2, 1)
-ROUTINE (ECMA_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_array_prototype_object_for_each, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_CONCAT, ecma_builtin_array_prototype_object_concat, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_JOIN, ecma_builtin_array_prototype_join, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_array_prototype_object_to_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_array_prototype_object_to_locale_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_POP, ecma_builtin_array_prototype_object_pop, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_PUSH, ecma_builtin_array_prototype_object_push, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_REVERSE, ecma_builtin_array_prototype_object_reverse, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_INDEX_OF_UL, ecma_builtin_array_prototype_object_index_of, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_array_prototype_object_last_index_of, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_SORT, ecma_builtin_array_prototype_object_sort, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_SHIFT, ecma_builtin_array_prototype_object_shift, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_UNSHIFT, ecma_builtin_array_prototype_object_unshift, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_EVERY, ecma_builtin_array_prototype_object_every, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_array_prototype_object_some, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_array_prototype_object_slice, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_SPLICE, ecma_builtin_array_prototype_object_splice, NON_FIXED, 2)
+ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_MAP, ecma_builtin_array_prototype_object_map, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, 2, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

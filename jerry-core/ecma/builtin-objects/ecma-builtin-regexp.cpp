@@ -80,12 +80,12 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   if (arguments_list_len == 0)
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
     ret_value = ecma_op_create_regexp_object (magic_str_p, NULL);
     ecma_deref_ecma_string (magic_str_p);
   }
   else if (ecma_is_value_object (pattern_value)
-           && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == ECMA_MAGIC_STRING_REGEXP_UL)
+           && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == LIT_MAGIC_STRING_REGEXP_UL)
   {
     if (arguments_list_len == 1
         || (arguments_list_len > 1 && ecma_is_value_undefined (flags_value)))

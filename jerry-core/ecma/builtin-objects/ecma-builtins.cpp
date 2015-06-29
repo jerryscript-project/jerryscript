@@ -120,7 +120,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
-      ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+      ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
       ecma_property_t *prim_value_prop_p;
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,
@@ -359,7 +359,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   JERRY_ASSERT ((uint32_t) packed_value == packed_value);
   routine_id_prop_p->u.internal_property.value = (uint32_t) packed_value;
 
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_create_named_data_property (func_obj_p,
                                                                  magic_string_length_p,
                                                                  false, false, false);
@@ -585,10 +585,10 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
  *         -1 - otherwise.
  */
 int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[], /**< array to search in */
+ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t ids[], /**< array to search in */
                                                       ecma_length_t array_length, /**< number of elements
                                                                                        in the array */
-                                                      ecma_magic_string_id_t key) /**< value to search for */
+                                                      lit_magic_string_id_t key) /**< value to search for */
 {
 #ifndef JERRY_NDEBUG
   /* For binary search the values should be sorted */

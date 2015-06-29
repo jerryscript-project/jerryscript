@@ -178,9 +178,9 @@ emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
   if (op.type == OPERAND_LITERAL)
   {
     if (lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
-                                   ecma_get_magic_string_zt (ECMA_MAGIC_STRING_ARGUMENTS))
+                                   lit_get_magic_string_zt (LIT_MAGIC_STRING_ARGUMENTS))
         || lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
-                                      ecma_get_magic_string_zt (ECMA_MAGIC_STRING_EVAL)))
+                                      lit_get_magic_string_zt (LIT_MAGIC_STRING_EVAL)))
     {
       PARSE_ERROR ("'eval' and 'arguments' are not allowed here in strict mode", loc);
     }

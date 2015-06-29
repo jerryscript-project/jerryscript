@@ -794,7 +794,7 @@ dumper_finish_varg_code_sequence (void)
  * Check that byte-code operand refers to 'eval' string
  *
  * @return true - if specified byte-code operand's type is literal, and value of corresponding
- *                literal is equal to ECMA_MAGIC_STRING_EVAL string,
+ *                literal is equal to LIT_MAGIC_STRING_EVAL string,
  *         false - otherwise.
  */
 bool

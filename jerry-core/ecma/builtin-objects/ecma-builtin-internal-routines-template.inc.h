@@ -49,7 +49,7 @@
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG
 
-static ecma_magic_string_id_t ecma_builtin_property_names[] =
+static lit_magic_string_id_t ecma_builtin_property_names[] =
 {
 #define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
@@ -78,7 +78,7 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
     {
       if (ecma_builtin_property_names[i] < ecma_builtin_property_names[i - 1])
       {
-        ecma_magic_string_id_t id_temp = ecma_builtin_property_names[i - 1];
+        lit_magic_string_id_t id_temp = ecma_builtin_property_names[i - 1];
         ecma_builtin_property_names[i - 1] = ecma_builtin_property_names[i];
         ecma_builtin_property_names[i] = id_temp;
 
@@ -107,7 +107,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
   JERRY_ASSERT (ecma_builtin_is (obj_p, builtin_object_id));
   JERRY_ASSERT (ecma_find_named_property (obj_p, prop_name_p) == NULL);
 
-  ecma_magic_string_id_t id;
+  lit_magic_string_id_t id;
 
   if (!ecma_is_string_magic (prop_name_p, &id))
   {

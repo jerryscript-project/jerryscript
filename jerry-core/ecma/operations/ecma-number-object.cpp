@@ -62,7 +62,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
   ecma_deref_object (prototype_obj_p);
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_NUMBER_UL;
+  class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_NUMBER_UL;
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);

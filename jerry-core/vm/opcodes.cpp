@@ -1545,23 +1545,23 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
   if (ecma_is_value_undefined (typeof_arg))
   {
-    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_UNDEFINED);
+    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_UNDEFINED);
   }
   else if (ecma_is_value_null (typeof_arg))
   {
-    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
+    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_OBJECT);
   }
   else if (ecma_is_value_boolean (typeof_arg))
   {
-    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_BOOLEAN);
+    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BOOLEAN);
   }
   else if (ecma_is_value_number (typeof_arg))
   {
-    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NUMBER);
+    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NUMBER);
   }
   else if (ecma_is_value_string (typeof_arg))
   {
-    type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_STRING);
+    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STRING);
   }
   else
   {
@@ -1569,11 +1569,11 @@ opfunc_typeof (opcode_t opdata, /**< operation data */
 
     if (ecma_op_is_callable (typeof_arg))
     {
-      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_FUNCTION);
+      type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_FUNCTION);
     }
     else
     {
-      type_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_OBJECT);
+      type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_OBJECT);
     }
   }
 

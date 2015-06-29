@@ -1363,5 +1363,5 @@ jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
                                        uint32_t count,                           /**< number of the strings */
                                        const jerry_api_length_t* str_lengths)    /**< lengths of the strings */
 {
-  ecma_strings_ex_set ((const ecma_char_ptr_t*)ex_str_items, count, (const ecma_length_t*)str_lengths);
+  lit_magic_strings_ex_set ((const ecma_char_ptr_t*)ex_str_items, count, (const ecma_length_t*)str_lengths);
 } /* jerry_register_external_magic_strings */

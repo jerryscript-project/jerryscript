@@ -526,7 +526,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
-    if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_DATE_UL)
+    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
     {
       hint = ECMA_PREFERRED_TYPE_STRING;
     }
@@ -538,16 +538,16 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
   for (uint32_t i = 1; i <= 2; i++)
   {
-    ecma_magic_string_id_t function_name_magic_string_id;
+    lit_magic_string_id_t function_name_magic_string_id;
 
     if ((i == 1 && hint == ECMA_PREFERRED_TYPE_STRING)
         || (i == 2 && hint == ECMA_PREFERRED_TYPE_NUMBER))
     {
-      function_name_magic_string_id = ECMA_MAGIC_STRING_TO_STRING_UL;
+      function_name_magic_string_id = LIT_MAGIC_STRING_TO_STRING_UL;
     }
     else
     {
-      function_name_magic_string_id = ECMA_MAGIC_STRING_VALUE_OF_UL;
+      function_name_magic_string_id = LIT_MAGIC_STRING_VALUE_OF_UL;
     }
 
     ecma_string_t *function_name_p = ecma_get_magic_string (function_name_magic_string_id);

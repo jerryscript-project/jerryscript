@@ -40,7 +40,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_RANGE_ERROR)
  *  (property name, number value, writable, enumerable, configurable) */
 
 // 15.11.3
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -50,7 +50,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
  *  (property name, object pointer getter) */
 
 // 15.11.3.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
+OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ecma_builtin_get (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,

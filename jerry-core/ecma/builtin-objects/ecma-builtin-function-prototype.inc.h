@@ -40,7 +40,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE)
  *  (property name, object pointer getter) */
 
 // 15.3.4.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -50,7 +50,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
  *  (property name, object pointer getter) */
 
 // 15.3.4
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -58,10 +58,10 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_function_prototype_object_to_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_APPLY, ecma_builtin_function_prototype_object_apply, 2, 2)
-ROUTINE (ECMA_MAGIC_STRING_CALL, ecma_builtin_function_prototype_object_call, NON_FIXED, 1)
-ROUTINE (ECMA_MAGIC_STRING_BIND, ecma_builtin_function_prototype_object_bind, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_function_prototype_object_to_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_APPLY, ecma_builtin_function_prototype_object_apply, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_CALL, ecma_builtin_function_prototype_object_call, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_BIND, ecma_builtin_function_prototype_object_bind, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

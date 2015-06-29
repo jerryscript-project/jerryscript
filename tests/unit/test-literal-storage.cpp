@@ -89,8 +89,8 @@ main (int __attr_unused___ argc,
       }
       else if (type == 1)
       {
-        ecma_magic_string_id_t msi = (ecma_magic_string_id_t) (rand () % ECMA_MAGIC_STRING__COUNT);
-        ptrs[j] = ecma_get_magic_string_zt (msi);
+        lit_magic_string_id_t msi = (lit_magic_string_id_t) (rand () % LIT_MAGIC_STRING__COUNT);
+        ptrs[j] = lit_get_magic_string_zt (msi);
         JERRY_ASSERT (ptrs[j]);
         lengths[j] = (ecma_length_t) ecma_zt_string_length (ptrs[j]);
         lit_create_literal_from_charset (ptrs[j], lengths[j]);

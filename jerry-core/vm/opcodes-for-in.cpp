@@ -32,7 +32,7 @@ vm_helper_for_in_enumerate_properties_names (ecma_object_t *obj_p) /**< starting
                                                                     *   conversion (ECMA-262 v5, 12.6.4, step 4) */
 {
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
-  uint32_t names_hashes_bitmap[(1u << ECMA_STRING_HASH_BITS) / bitmap_row_size];
+  uint32_t names_hashes_bitmap[(1u << LIT_STRING_HASH_BITS) / bitmap_row_size];
 
   memset (names_hashes_bitmap, 0, sizeof (names_hashes_bitmap));
 
@@ -96,7 +96,7 @@ vm_helper_for_in_enumerate_properties_names (ecma_object_t *obj_p) /**< starting
           prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_accessor_property.name_p);
         }
 
-        ecma_string_hash_t hash = prop_name_p->hash;
+        lit_string_hash_t hash = prop_name_p->hash;
         uint32_t bitmap_row = hash / bitmap_row_size;
         uint32_t bitmap_column = hash % bitmap_row_size;
 

@@ -256,7 +256,7 @@ lit_literal_storage_t::create_charset_record (const ecma_char_t *str, /**< strin
  * @return  pointer to the created record
  */
 lit_magic_record_t *
-lit_literal_storage_t::create_magic_record (ecma_magic_string_id_t id) /**< id of a magic string */
+lit_literal_storage_t::create_magic_record (lit_magic_string_id_t id) /**< id of a magic string */
 {
   lit_magic_record_t *ret = alloc_record<lit_magic_record_t> (LIT_MAGIC_STR);
   ret->set_magic_str_id (id);
@@ -270,7 +270,7 @@ lit_literal_storage_t::create_magic_record (ecma_magic_string_id_t id) /**< id o
  * @return  pointer to the created record
  */
 lit_magic_record_t *
-lit_literal_storage_t::create_magic_record_ex (ecma_magic_string_ex_id_t id) /**< id of a magic string */
+lit_literal_storage_t::create_magic_record_ex (lit_magic_string_ex_id_t id) /**< id of a magic string */
 {
   lit_magic_record_t *ret = alloc_record<lit_magic_record_t> (LIT_MAGIC_STR_EX);
   ret->set_magic_str_id (id);
@@ -329,16 +329,16 @@ lit_literal_storage_t::dump ()
       }
       case LIT_MAGIC_STR:
       {
-        ecma_magic_string_id_t id = lit_magic_record_get_magic_str_id (rec_p);
-        printf ("%s : MAGIC STRING", ecma_get_magic_string_zt (id));
+        lit_magic_string_id_t id = lit_magic_record_get_magic_str_id (rec_p);
+        printf ("%s : MAGIC STRING", lit_get_magic_string_zt (id));
         printf (" [id=%d] ", id);
 
         break;
       }
       case LIT_MAGIC_STR_EX:
       {
-        ecma_magic_string_ex_id_t id = lit_magic_record_ex_get_magic_str_id (rec_p);
-        printf ("%s : EXT MAGIC STRING", ecma_get_magic_string_ex_zt (id));
+        lit_magic_string_ex_id_t id = lit_magic_record_ex_get_magic_str_id (rec_p);
+        printf ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_zt (id));
         printf (" [id=%d] ", id);
 
         break;
@@ -478,10 +478,10 @@ template ecma_number_t rcs_record_iterator_t::read<ecma_number_t> ();
 template void rcs_record_iterator_t::write<uint16_t> (uint16_t);
 template uint16_t rcs_record_iterator_t::read<uint16_t> ();
 
-template ecma_magic_string_id_t lit_magic_record_t::get_magic_str_id<ecma_magic_string_id_t>() const;
-template ecma_magic_string_ex_id_t lit_magic_record_t::get_magic_str_id<ecma_magic_string_ex_id_t>() const;
-template void lit_magic_record_t::set_magic_str_id<ecma_magic_string_id_t>(ecma_magic_string_id_t);
-template void lit_magic_record_t::set_magic_str_id<ecma_magic_string_ex_id_t>(ecma_magic_string_ex_id_t);
+template lit_magic_string_id_t lit_magic_record_t::get_magic_str_id<lit_magic_string_id_t>() const;
+template lit_magic_string_ex_id_t lit_magic_record_t::get_magic_str_id<lit_magic_string_ex_id_t>() const;
+template void lit_magic_record_t::set_magic_str_id<lit_magic_string_id_t>(lit_magic_string_id_t);
+template void lit_magic_record_t::set_magic_str_id<lit_magic_string_ex_id_t>(lit_magic_string_ex_id_t);
 
 template lit_charset_record_t *rcs_recordset_t::alloc_record<lit_charset_record_t> (rcs_record_t::type_t type,
                                                                                     size_t size);

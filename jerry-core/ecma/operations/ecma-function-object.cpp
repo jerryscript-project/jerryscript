@@ -217,7 +217,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   length_prop_desc.is_value_defined = true;
   length_prop_desc.value = ecma_make_number_value (len_p);
 
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
                                                                            magic_string_length_p,
                                                                            &length_prop_desc,
@@ -249,7 +249,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
     prop_desc.is_configurable = true;
   }
 
-  ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CONSTRUCTOR);
+  ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
   ecma_op_object_define_own_property (proto_p,
                                       magic_string_constructor_p,
                                       &prop_desc,
@@ -259,7 +259,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 18.
   prop_desc.value = ecma_make_object_value (proto_p);
   prop_desc.is_configurable = false;
-  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
   ecma_op_object_define_own_property (f,
                                       magic_string_prototype_p,
                                       &prop_desc,
@@ -288,14 +288,14 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
       prop_desc.set_p = thrower_p;
     }
 
-    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER);
+    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
     ecma_op_object_define_own_property (f,
                                         magic_string_caller_p,
                                         &prop_desc,
                                         false);
     ecma_deref_ecma_string (magic_string_caller_p);
 
-    ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+    ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
     ecma_op_object_define_own_property (f,
                                         magic_string_arguments_p,
                                         &prop_desc,
@@ -352,7 +352,7 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
     prop_desc.is_configurable = false;
   }
 
-  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
   ecma_op_object_define_own_property (function_obj_p,
                                       magic_string_prototype_p,
                                       &prop_desc,
@@ -459,7 +459,7 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
      *    significantly.
      */
 
-    ecma_string_t *arguments_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+    ecma_string_t *arguments_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
 
     bool binding_already_declared = ecma_op_has_binding (env_p, arguments_string_p);
 
@@ -526,7 +526,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     ecma_object_t* v_obj_p = ecma_get_object_from_value (value);
 
-    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
 
     ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -739,7 +739,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_PROTOTYPE);
+  ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
 
   // 5.
   ECMA_TRY_CATCH (func_obj_prototype_prop_value,

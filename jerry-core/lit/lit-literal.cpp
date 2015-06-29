@@ -24,6 +24,8 @@ lit_init ()
 {
   new (&lit_storage) lit_literal_storage_t ();
   lit_storage.init ();
+  lit_magic_strings_init ();
+  lit_magic_strings_ex_init ();
 } /* lit_init */
 
 /**
@@ -57,31 +59,31 @@ lit_create_literal_from_charset (const ecma_char_t *str, /**< string to initiali
                                  ecma_length_t len)      /**< length of the string */
 {
   JERRY_ASSERT (str || !len);
-  for (ecma_magic_string_id_t msi = (ecma_magic_string_id_t) 0;
-       msi < ECMA_MAGIC_STRING__COUNT;
-       msi = (ecma_magic_string_id_t) (msi + 1))
+  for (lit_magic_string_id_t msi = (lit_magic_string_id_t) 0;
+       msi < LIT_MAGIC_STRING__COUNT;
+       msi = (lit_magic_string_id_t) (msi + 1))
   {
-    if (ecma_zt_string_length (ecma_get_magic_string_zt (msi)) != len)
+    if (ecma_zt_string_length (lit_get_magic_string_zt (msi)) != len)
     {
       continue;
     }
 
-    if (!strncmp ((const char *) str, (const char *) ecma_get_magic_string_zt (msi), len))
+    if (!strncmp ((const char *) str, (const char *) lit_get_magic_string_zt (msi), len))
     {
       return lit_storage.create_magic_record (msi);
     }
   }
 
-  for (ecma_magic_string_ex_id_t msi = (ecma_magic_string_ex_id_t) 0;
+  for (lit_magic_string_ex_id_t msi = (lit_magic_string_ex_id_t) 0;
        msi < ecma_get_magic_string_ex_count ();
-       msi = (ecma_magic_string_ex_id_t) (msi + 1))
+       msi = (lit_magic_string_ex_id_t) (msi + 1))
   {
-    if (ecma_zt_string_length (ecma_get_magic_string_ex_zt (msi)) != len)
+    if (ecma_zt_string_length (lit_get_magic_string_ex_zt (msi)) != len)
     {
       continue;
     }
 
-    if (!strncmp ((const char *) str, (const char *) ecma_get_magic_string_ex_zt (msi), len))
+    if (!strncmp ((const char *) str, (const char *) lit_get_magic_string_ex_zt (msi), len))
     {
       return lit_storage.create_magic_record_ex (msi);
     }
@@ -119,8 +121,8 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
     }
     else if (type == LIT_MAGIC_STR_T)
     {
-      ecma_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
-      const char *magic_str = (const char *) ecma_get_magic_string_zt (magic_id);
+      lit_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
+      const char *magic_str = (const char *) lit_get_magic_string_zt (magic_id);
 
       if (strlen (magic_str) != len)
       {
@@ -134,8 +136,8 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
     }
     else if (type == LIT_MAGIC_STR_EX_T)
     {
-      ecma_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
-      const char *magic_str = (const char *) ecma_get_magic_string_ex_zt (magic_id);
+      lit_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
+      const char *magic_str = (const char *) lit_get_magic_string_ex_zt (magic_id);
 
       if (strlen (magic_str) != len)
       {
@@ -248,11 +250,11 @@ lit_literal_equal_charset_rec (literal_t lit,                /**< literal to com
     }
     case LIT_MAGIC_STR_T:
     {
-      return record->equal_zt (ecma_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit)));
+      return record->equal_zt (lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit)));
     }
     case LIT_MAGIC_STR_EX_T:
     {
-      return record->equal_zt (ecma_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit)));
+      return record->equal_zt (lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit)));
     }
     case LIT_NUMBER_T:
     {
@@ -288,13 +290,13 @@ lit_literal_equal_zt (literal_t lit,          /**< literal to compare */
     }
     case LIT_MAGIC_STR_T:
     {
-      ecma_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
-      return ecma_compare_zt_strings (str, ecma_get_magic_string_zt (magic_id));
+      lit_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
+      return ecma_compare_zt_strings (str, lit_get_magic_string_zt (magic_id));
     }
     case LIT_MAGIC_STR_EX_T:
     {
-      ecma_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
-      return ecma_compare_zt_strings (str, ecma_get_magic_string_ex_zt (magic_id));
+      lit_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
+      return ecma_compare_zt_strings (str, lit_get_magic_string_ex_zt (magic_id));
     }
     case LIT_NUMBER_T:
     {
@@ -346,11 +348,11 @@ lit_literal_equal (literal_t lit1, /**< first literal */
     }
     case lit_literal_storage_t::LIT_MAGIC_STR:
     {
-      return lit_literal_equal_zt (lit1, ecma_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit2)));
+      return lit_literal_equal_zt (lit1, lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit2)));
     }
     case lit_literal_storage_t::LIT_MAGIC_STR_EX:
     {
-      return lit_literal_equal_zt (lit1, ecma_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit2)));
+      return lit_literal_equal_zt (lit1, lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit2)));
     }
     case lit_literal_storage_t::LIT_NUMBER:
     {
@@ -455,11 +457,11 @@ lit_literal_to_charset (literal_t lit,     /**< literal to be processed */
     }
     case LIT_MAGIC_STR_T:
     {
-      return ecma_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit));
+      return lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit));
     }
     case LIT_MAGIC_STR_EX_T:
     {
-      return ecma_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit));
+      return lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit));
     }
     case LIT_NUMBER_T:
     {
@@ -524,22 +526,22 @@ lit_get_literal_by_cp (lit_cpointer_t lit_cp) /**< compressed pointer to literal
   return lit;
 } /* lit_get_literal_by_cp */
 
-ecma_string_hash_t
+lit_string_hash_t
 lit_charset_literal_get_hash (literal_t lit) /**< literal */
 {
   return static_cast<lit_charset_record_t *> (lit)->get_hash ();
 } /* lit_charset_literal_get_hash */
 
-ecma_magic_string_id_t
+lit_magic_string_id_t
 lit_magic_record_get_magic_str_id (literal_t lit) /**< literal */
 {
-  return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<ecma_magic_string_id_t> ();
+  return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<lit_magic_string_id_t> ();
 } /* lit_magic_record_get_magic_str_id */
 
-ecma_magic_string_ex_id_t
+lit_magic_string_ex_id_t
 lit_magic_record_ex_get_magic_str_id (literal_t lit) /**< literal */
 {
-  return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<ecma_magic_string_ex_id_t> ();
+  return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<lit_magic_string_ex_id_t> ();
 } /* lit_magic_record_ex_get_magic_str_id */
 
 int32_t

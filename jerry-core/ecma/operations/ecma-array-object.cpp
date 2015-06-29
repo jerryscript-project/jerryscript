@@ -116,7 +116,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
    * See also: ecma_object_get_class_name
    */
 
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_number_t *length_num_p = ecma_alloc_number ();
   *length_num_p = ecma_uint32_to_number (length);
 
@@ -179,7 +179,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
 
   // 1.
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
   JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
@@ -242,7 +242,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       if (new_len_uint32 >= old_len_uint32)
       {
         // i.
-        magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+        magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
         ret_value = ecma_op_general_object_define_own_property (obj_p,
                                                                 magic_string_length_p,
                                                                 &new_len_property_desc,
@@ -276,7 +276,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
           }
 
           // j.
-          magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+          magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
           ecma_completion_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
                                                                                           magic_string_length_p,
                                                                                           &new_len_property_desc,
@@ -329,7 +329,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 }
 
                 // 3.
-                ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+                ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
                 ecma_completion_value_t completion = ecma_op_general_object_define_own_property (obj_p,
                                                                                                  magic_string_length_p,
                                                                                                  &new_len_property_desc,
@@ -360,7 +360,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 prop_desc_not_writable.is_writable = false;
 
                 ecma_completion_value_t completion_set_not_writable;
-                magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+                magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
                 completion_set_not_writable = ecma_op_general_object_define_own_property (obj_p,
                                                                                           magic_string_length_p,
                                                                                           &prop_desc_not_writable,

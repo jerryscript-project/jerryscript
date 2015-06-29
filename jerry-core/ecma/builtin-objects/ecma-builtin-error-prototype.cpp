@@ -66,7 +66,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-    ecma_string_t *name_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAME);
+    ecma_string_t *name_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAME);
 
     ECMA_TRY_CATCH (name_get_ret_value,
                     ecma_op_object_get (obj_p, name_magic_string_p),
@@ -76,7 +76,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
     if (ecma_is_value_undefined (name_get_ret_value))
     {
-      ecma_string_t *error_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ERROR_UL);
+      ecma_string_t *error_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ERROR_UL);
 
       name_to_str_completion = ecma_make_normal_completion_value (ecma_make_string_value (error_magic_string_p));
     }
@@ -91,7 +91,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
     }
     else
     {
-      ecma_string_t *message_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MESSAGE);
+      ecma_string_t *message_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
 
       ECMA_TRY_CATCH (msg_get_ret_value,
                       ecma_op_object_get (obj_p, message_magic_string_p),
@@ -101,7 +101,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
       if (ecma_is_value_undefined (msg_get_ret_value))
       {
-        ecma_string_t *empty_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+        ecma_string_t *empty_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
         msg_to_str_completion = ecma_make_normal_completion_value (ecma_make_string_value (empty_magic_string_p));
       }
@@ -131,8 +131,8 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
         }
         else
         {
-          const ecma_char_t *colon_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_COLON_CHAR);
-          const ecma_char_t *space_zt_magic_string_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_SPACE_CHAR);
+          const ecma_char_t *colon_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_COLON_CHAR);
+          const ecma_char_t *space_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_SPACE_CHAR);
 
           const int32_t len = (ecma_string_get_length (name_string_p) +
                                ecma_string_get_length (msg_string_p) +

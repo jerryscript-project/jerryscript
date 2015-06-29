@@ -40,7 +40,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_OBJECT)
  *  (property name, number value, writable, enumerable, configurable) */
 
 // 15.2.3
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -50,7 +50,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
  *  (property name, object pointer getter) */
 
 // 15.2.3.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
+OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -58,19 +58,19 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_GET_PROTOTYPE_OF_UL, ecma_builtin_object_object_get_prototype_of, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_GET_OWN_PROPERTY_NAMES_UL, ecma_builtin_object_object_get_own_property_names, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_SEAL, ecma_builtin_object_object_seal, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_FREEZE, ecma_builtin_object_object_freeze, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_PREVENT_EXTENSIONS_UL, ecma_builtin_object_object_prevent_extensions, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_IS_SEALED_UL, ecma_builtin_object_object_is_sealed, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_IS_FROZEN_UL, ecma_builtin_object_object_is_frozen, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_IS_EXTENSIBLE, ecma_builtin_object_object_is_extensible, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_KEYS, ecma_builtin_object_object_keys, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_GET_OWN_PROPERTY_DESCRIPTOR_UL, ecma_builtin_object_object_get_own_property_descriptor, 2, 2)
-ROUTINE (ECMA_MAGIC_STRING_CREATE, ecma_builtin_object_object_create, 2, 2)
-ROUTINE (ECMA_MAGIC_STRING_DEFINE_PROPERTIES_UL, ecma_builtin_object_object_define_properties, 2, 2)
-ROUTINE (ECMA_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_property, 3, 3)
+ROUTINE (LIT_MAGIC_STRING_GET_PROTOTYPE_OF_UL, ecma_builtin_object_object_get_prototype_of, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_GET_OWN_PROPERTY_NAMES_UL, ecma_builtin_object_object_get_own_property_names, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_SEAL, ecma_builtin_object_object_seal, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_FREEZE, ecma_builtin_object_object_freeze, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_PREVENT_EXTENSIONS_UL, ecma_builtin_object_object_prevent_extensions, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_SEALED_UL, ecma_builtin_object_object_is_sealed, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_FROZEN_UL, ecma_builtin_object_object_is_frozen, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_EXTENSIBLE, ecma_builtin_object_object_is_extensible, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_object_object_keys, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_GET_OWN_PROPERTY_DESCRIPTOR_UL, ecma_builtin_object_object_get_own_property_descriptor, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_CREATE, ecma_builtin_object_object_create, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTIES_UL, ecma_builtin_object_object_define_properties, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_property, 3, 3)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

@@ -97,10 +97,10 @@ public:
    *
    * @return hash value of the string (the value of the 'hash' field in the header)
    */
-  ecma_string_hash_t
+  lit_string_hash_t
   get_hash () const
   {
-    return (ecma_string_hash_t) get_field (_hash_field_pos, _hash_field_width);
+    return (lit_string_hash_t) get_field (_hash_field_pos, _hash_field_width);
   } /* get_hash */
 
   /**
@@ -150,7 +150,7 @@ private:
    * Set record's hash (the value of the 'hash' field in the header)
    */
   void
-  set_hash (ecma_string_hash_t hash) /**< hash value */
+  set_hash (lit_string_hash_t hash) /**< hash value */
   {
     set_field (_hash_field_pos, _hash_field_width, hash);
   } /* set_hash */
@@ -242,7 +242,7 @@ public:
   magic_string_id_t get_magic_str_id () const
   {
     uint32_t id = get_field (magic_field_pos, magic_field_width);
-    // JERRY_ASSERT (id < ECMA_MAGIC_STRING__COUNT);
+    // JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
     return (magic_string_id_t) id;
   } /* get_magic_str_id */
 
@@ -418,8 +418,8 @@ public:
   };
 
   lit_charset_record_t *create_charset_record (const ecma_char_t *, size_t);
-  lit_magic_record_t *create_magic_record (ecma_magic_string_id_t);
-  lit_magic_record_t *create_magic_record_ex (ecma_magic_string_ex_id_t);
+  lit_magic_record_t *create_magic_record (lit_magic_string_id_t);
+  lit_magic_record_t *create_magic_record_ex (lit_magic_string_ex_id_t);
   lit_number_record_t *create_number_record (ecma_number_t);
 
   void dump ();

@@ -51,9 +51,9 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
                                                uint16_t routine_id,
                                                ecma_number_t length_prop_num_value);
 extern int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const ecma_magic_string_id_t ids[],
+ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t ids[],
                                                       ecma_length_t array_length,
-                                                      ecma_magic_string_id_t key);
+                                                      lit_magic_string_id_t key);
 
 #define BUILTIN(builtin_id, \
                 object_type, \

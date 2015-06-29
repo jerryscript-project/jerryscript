@@ -310,7 +310,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ecma_number_t *ret_num_p = ecma_alloc_number ();
 
   /* Check if string is equal to "Infinity". */
-  const ecma_char_t *infinity_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_INFINITY_UL);
+  const ecma_char_t *infinity_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_INFINITY_UL);
 
   for (int i = 0; infinity_zt_str_p[i] == zt_string_buff[start + i]; i++)
   {

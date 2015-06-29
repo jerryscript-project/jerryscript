@@ -61,7 +61,7 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
                                                 uint32_t length) /**< new length */
 {
   ecma_completion_value_t ret_value;
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ecma_number_t *len_p = ecma_alloc_number ();
   *len_p = ecma_uint32_to_number (length);
@@ -98,7 +98,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ECMA_TRY_CATCH (len_value,
                   ecma_op_object_get (obj_p, magic_string_length_p),
@@ -140,7 +140,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
   {
     /* 5.b */
     if (ecma_is_value_object (args[arg_index]) &&
-        (ecma_object_get_class_name (ecma_get_object_from_value (args[arg_index])) == ECMA_MAGIC_STRING_ARRAY_UL))
+        (ecma_object_get_class_name (ecma_get_object_from_value (args[arg_index])) == LIT_MAGIC_STRING_ARRAY_UL))
     {
       /* 5.b.ii */
       ECMA_TRY_CATCH (arg_len_value,
@@ -241,7 +241,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -336,7 +336,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
 
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (length_value,
@@ -358,7 +358,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
   if (length == 0)
   {
     /* 6. */
-    ecma_string_t *empty_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
   }
   else
@@ -441,7 +441,7 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this_value);
 
-  ecma_string_t *join_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_JOIN);
+  ecma_string_t *join_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_JOIN);
 
   /* 2. */
   ECMA_TRY_CATCH (join_value,
@@ -492,7 +492,7 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
 
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (length_value,
@@ -507,12 +507,12 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
   uint32_t length = ecma_number_to_uint32 (length_number);
 
   /* 4. Implementation-defined: set the separator to a single comma character */
-  ecma_string_t *separator_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_COMMA_CHAR);
+  ecma_string_t *separator_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
 
   /* 5. */
   if (length == 0)
   {
-    ecma_string_t *empty_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
   }
   else
@@ -589,7 +589,7 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -672,7 +672,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this_value);
 
   // 2.
-  ecma_string_t *length_str_p = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LENGTH);
 
   ECMA_TRY_CATCH (length_value, ecma_op_object_get (obj_p, length_str_p), ret_value);
 
@@ -767,7 +767,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this ar
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -866,7 +866,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -970,7 +970,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -1378,7 +1378,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ECMA_TRY_CATCH (len_value,
                   ecma_op_object_get (obj_p, magic_string_length_p),
@@ -1464,7 +1464,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -1579,7 +1579,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -1676,7 +1676,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -1777,7 +1777,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -1878,7 +1878,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2. */
   ECMA_TRY_CATCH (len_value,
@@ -2002,7 +2002,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
                   ret_value);
 
   ecma_object_t* obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t* length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t* length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ECMA_TRY_CATCH (len_value,
                   ecma_op_object_get (obj_p, length_magic_string_p),
@@ -2117,7 +2117,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
 
   /* 3. */
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ECMA_TRY_CATCH (len_value,
                   ecma_op_object_get (obj_p, length_magic_string_p),
@@ -2398,7 +2398,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2 */
   ECMA_TRY_CATCH (len_value,
@@ -2507,7 +2507,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2 */
   ECMA_TRY_CATCH (len_value,
@@ -2651,7 +2651,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
                   ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   /* 2 */
   ECMA_TRY_CATCH (len_value,

@@ -49,15 +49,15 @@
 ecma_completion_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this argument */
 {
-  ecma_magic_string_id_t type_string;
+  lit_magic_string_id_t type_string;
 
   if (ecma_is_value_undefined (this_arg))
   {
-    type_string = ECMA_MAGIC_STRING_UNDEFINED_UL;
+    type_string = LIT_MAGIC_STRING_UNDEFINED_UL;
   }
   else if (ecma_is_value_null (this_arg))
   {
-    type_string = ECMA_MAGIC_STRING_NULL_UL;
+    type_string = LIT_MAGIC_STRING_NULL_UL;
   }
   else
   {
@@ -85,11 +85,11 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   const ssize_t buffer_size = 19;
   MEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, ecma_char_t);
 
-  const ecma_char_t *left_square_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_LEFT_SQUARE_CHAR);
-  const ecma_char_t *object_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_OBJECT);
-  const ecma_char_t *space_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_SPACE_CHAR);
-  const ecma_char_t *type_name_zt_str_p = ecma_get_magic_string_zt (type_string);
-  const ecma_char_t *right_square_zt_str_p = ecma_get_magic_string_zt (ECMA_MAGIC_STRING_RIGHT_SQUARE_CHAR);
+  const ecma_char_t *left_square_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
+  const ecma_char_t *object_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_OBJECT);
+  const ecma_char_t *space_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_SPACE_CHAR);
+  const ecma_char_t *type_name_zt_str_p = lit_get_magic_string_zt (type_string);
+  const ecma_char_t *right_square_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
 
   ecma_char_t *buffer_ptr = str_buffer;
   ssize_t buffer_size_left = buffer_size;
@@ -145,7 +145,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
 
   if (ecma_is_value_undefined (index_value) || ecma_is_value_null (index_value))
   {
-    ecma_string_t *return_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ecma_string_t *return_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
   }
   else
@@ -155,7 +155,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
                     ret_value);
 
     ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
-    ecma_string_t *locale_string_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_TO_LOCALE_STRING_UL);
+    ecma_string_t *locale_string_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
 
     ECMA_TRY_CATCH (to_locale_value,
                     ecma_op_object_get (index_obj_p, locale_string_magic_string_p),

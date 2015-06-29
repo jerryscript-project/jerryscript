@@ -81,7 +81,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
   if (arguments_list_len == 0)
   {
     /* 3. */
-    string_params_p[0] = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING__EMPTY);
+    string_params_p[0] = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
     zt_strings_buffer_size = sizeof (ecma_char_t);
     params_count = 1;
   }

@@ -40,7 +40,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_STRING)
  *  (property name, number value, writable, enumerable, configurable) */
 
 // 15.5.3
-NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -50,7 +50,7 @@ NUMBER_VALUE (ECMA_MAGIC_STRING_LENGTH,
  *  (property name, object pointer getter) */
 
 // 15.7.3.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
+OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ecma_builtin_get (ECMA_BUILTIN_ID_STRING_PROTOTYPE),
               ECMA_PROPERTY_NOT_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -58,7 +58,7 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_PROTOTYPE,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_char_code, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_char_code, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

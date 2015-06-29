@@ -62,7 +62,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ARGUMENTS_UL;
+  class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_ARGUMENTS_UL;
 
   // 7.
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
@@ -79,7 +79,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     prop_desc.is_configurable_defined = true;
     prop_desc.is_configurable = true;
   }
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_completion_value_t completion = ecma_op_object_define_own_property (obj_p,
                                                                            length_magic_string_p,
                                                                            &prop_desc,
@@ -237,7 +237,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       prop_desc.is_configurable = true;
     }
 
-    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLEE);
+    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
 
     completion = ecma_op_object_define_own_property (obj_p,
                                                      callee_magic_string_p,
@@ -267,8 +267,8 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       prop_desc.is_configurable = false;
     }
 
-    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLEE);
-    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_CALLER);
+    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
+    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
 
     completion = ecma_op_object_define_own_property (obj_p,
                                                      callee_magic_string_p,

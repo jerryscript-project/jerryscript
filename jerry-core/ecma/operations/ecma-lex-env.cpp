@@ -219,7 +219,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
 # ifdef CONFIG_ECMA_COMPACT_PROFILE
     bool is_equal = false;
 
-    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
     if (ecma_compare_ecma_strings (name_p, arguments_magic_string_p))
     {
       is_equal = true;
@@ -294,7 +294,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 # ifdef CONFIG_ECMA_COMPACT_PROFILE
     bool is_equal = false;
 
-    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
     if (ecma_compare_ecma_strings (name_p, arguments_magic_string_p))
     {
       is_equal = true;

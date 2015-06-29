@@ -25,6 +25,8 @@
 
 #include "config.h"
 #include "jrt.h"
+#include "lit-globals.h"
+#include "lit-magic-strings.h"
 #include "mem-allocator.h"
 #include "rcs-recordset.h"
 
@@ -566,24 +568,6 @@ typedef struct
   bool is_configurable;
 } ecma_property_descriptor_t;
 
-#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
-/**
- * Description of an ecma-character
- */
-typedef uint8_t ecma_char_t;
-#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-/**
- * Description of an ecma-character
- */
-typedef uint16_t ecma_char_t;
-#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
-
-/**
- * Description of an ecma-character pointer
- */
-typedef ecma_char_t* ecma_char_ptr_t;
-
-
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Description of an ecma-number
@@ -690,11 +674,6 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_SQRT2  ((ecma_number_t)1.4142135623730951)
 
 /**
- * Null character (zt-string end marker)
- */
-#define ECMA_CHAR_NULL  ((ecma_char_t) '\0')
-
-/**
  * Maximum number of characters in string representation of ecma-number
  */
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER 64
@@ -711,11 +690,6 @@ typedef double ecma_number_t;
  *          ECMA-262 v5, 15.4
  */
 #define ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX ((uint32_t) (-1))
-
-/**
- * Description of a collection's/string's length
- */
-typedef uint16_t ecma_length_t;
 
 /**
  * Description of a collection's header.
@@ -769,39 +743,6 @@ typedef rcs_record_t *literal_t;
 typedef rcs_cpointer_t lit_cpointer_t;
 
 /**
- * Identifiers of ECMA and implementation-defined magic string constants
- */
-typedef enum
-{
-#define ECMA_MAGIC_STRING_DEF(id, ascii_zt_string) \
-     id,
-#include "ecma-magic-strings.inc.h"
-#undef ECMA_MAGIC_STRING_DEF
-
-  ECMA_MAGIC_STRING__COUNT /**< number of magic strings */
-} ecma_magic_string_id_t;
-
-/**
- * Identifiers of implementation-defined external magic string constants
- */
-typedef uint32_t ecma_magic_string_ex_id_t;
-
-/**
- * ECMA string hash
- */
-typedef uint8_t ecma_string_hash_t;
-
-/**
- * Length of string hash, in bits
- */
-#define ECMA_STRING_HASH_BITS (sizeof (ecma_string_hash_t) * JERRY_BITSINBYTE)
-
-/**
- * Number of string's last characters to use for hash calculation
- */
-#define ECMA_STRING_HASH_LAST_CHARS_COUNT (2)
-
-/**
  * ECMA string-value descriptor
  */
 typedef struct ecma_string_t
@@ -817,7 +758,7 @@ typedef struct ecma_string_t
   uint8_t container;
 
   /** Hash of the string (calculated from two last characters of the string) */
-  ecma_string_hash_t hash;
+  lit_string_hash_t hash;
 
   /**
    * Actual data or identifier of it's place in container (depending on 'container' field)
@@ -844,10 +785,10 @@ typedef struct ecma_string_t
     } concatenation;
 
     /** Identifier of magic string */
-    ecma_magic_string_id_t magic_string_id;
+    lit_magic_string_id_t magic_string_id;
 
     /** Identifier of external magic string */
-    ecma_magic_string_ex_id_t magic_string_ex_id;
+    lit_magic_string_ex_id_t magic_string_ex_id;
 
     /** For zeroing and comparison in some cases */
     uint32_t common_field;

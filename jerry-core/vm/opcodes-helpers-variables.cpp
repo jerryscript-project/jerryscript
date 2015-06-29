@@ -35,8 +35,8 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
     {
       JERRY_ASSERT (ecma_is_lexical_environment (ref_base_lex_env_p));
 
-      ecma_string_t* magic_string_eval = ecma_get_magic_string (ECMA_MAGIC_STRING_EVAL);
-      ecma_string_t* magic_string_arguments = ecma_get_magic_string (ECMA_MAGIC_STRING_ARGUMENTS);
+      ecma_string_t* magic_string_eval = ecma_get_magic_string (LIT_MAGIC_STRING_EVAL);
+      ecma_string_t* magic_string_arguments = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
 
       is_check_failed = (ecma_compare_ecma_strings (var_name_string_p,
                                                     magic_string_eval)

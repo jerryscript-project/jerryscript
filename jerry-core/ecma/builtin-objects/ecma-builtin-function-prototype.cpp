@@ -63,7 +63,7 @@ ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< th
   }
   else
   {
-    ecma_string_t *function_to_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__FUNCTION_TO_STRING);
+    ecma_string_t *function_to_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__FUNCTION_TO_STRING);
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (function_to_string_p));
   }
   return ret_value;
@@ -112,7 +112,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
       else
       {
         ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
-        ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+        ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
         /* 4. */
         ECMA_TRY_CATCH (length_value,

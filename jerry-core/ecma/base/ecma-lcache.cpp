@@ -50,7 +50,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t));
 /**
  * LCache hash value length, in bits
  */
-#define ECMA_LCACHE_HASH_BITS (ECMA_STRING_HASH_BITS)
+#define ECMA_LCACHE_HASH_BITS (LIT_STRING_HASH_BITS)
 
 /**
  * Number of rows in LCache's hash table
@@ -164,7 +164,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
   prop_name_p = ecma_copy_or_ref_ecma_string (prop_name_p);
 
-  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   if (prop_p != NULL)
   {
@@ -243,7 +243,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                                                  *         then the output parameter is not set */
 {
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   unsigned int object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
@@ -333,7 +333,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
   ECMA_SET_POINTER (prop_cp, prop_p);
 
-  ecma_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
 
   /* Property's name has was computed.
    * Given (object, property name) pair should be in the row corresponding to computed hash.

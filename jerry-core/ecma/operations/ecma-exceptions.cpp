@@ -96,7 +96,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   ecma_property_t *class_prop_p = ecma_create_internal_property (new_error_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_CLASS);
-  class_prop_p->u.internal_property.value = ECMA_MAGIC_STRING_ERROR_UL;
+  class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
 #else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
@@ -118,7 +118,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
 {
   ecma_object_t *new_error_obj_p = ecma_new_standard_error (error_type);
 
-  ecma_string_t *message_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_MESSAGE);
+  ecma_string_t *message_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
   ecma_property_t *prop_p = ecma_create_named_data_property (new_error_obj_p,
                                                              message_magic_string_p,
                                                              true, false, true);

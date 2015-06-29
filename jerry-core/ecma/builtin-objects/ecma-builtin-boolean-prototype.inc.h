@@ -36,7 +36,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE)
  *  (property name, object pointer getter) */
 
 // 15.6.4.1
-OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
@@ -44,8 +44,8 @@ OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_boolean_prototype_object_to_string, 0, 0)
-ROUTINE (ECMA_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_value_of,  0, 0)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_boolean_prototype_object_to_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_value_of,  0, 0)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

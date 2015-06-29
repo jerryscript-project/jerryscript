@@ -52,7 +52,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   if (arguments_list_len == 0)
   {
-    prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (ECMA_MAGIC_STRING__EMPTY);
+    prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
     length_value = ECMA_NUMBER_ZERO;
   }
   else
@@ -99,7 +99,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_str_value_p);
 
   // 15.5.5.1
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
                                                                     false, false, false);

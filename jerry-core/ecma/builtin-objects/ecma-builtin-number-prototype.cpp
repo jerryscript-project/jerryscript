@@ -99,7 +99,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_NUMBER_UL)
+    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_NUMBER_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
@@ -164,7 +164,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_get_class_name (obj_p) == ECMA_MAGIC_STRING_NUMBER_UL)
+    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_NUMBER_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
@@ -213,7 +213,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
     /* 4. */
     if (ecma_number_is_nan (this_num))
     {
-      ecma_string_t *nan_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_NAN);
+      ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
       ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
     }
     else
@@ -230,7 +230,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
       /* We handle infinities separately. */
       if (ecma_number_is_infinity (this_num))
       {
-        ecma_string_t *infinity_str_p = ecma_get_magic_string (ECMA_MAGIC_STRING_INFINITY_UL);
+        ecma_string_t *infinity_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INFINITY_UL);
 
         if (is_negative)
         {

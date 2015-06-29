@@ -33,15 +33,15 @@
 /* Object identifier */
 OBJECT_ID (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
 
-OBJECT_VALUE (ECMA_MAGIC_STRING_CONSTRUCTOR,
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
 
-ROUTINE (ECMA_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
-ROUTINE (ECMA_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

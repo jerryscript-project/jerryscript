@@ -48,7 +48,7 @@ ecma_op_array_get_separator_string (ecma_value_t separator) /** < possible separ
 {
   if (ecma_is_value_undefined (separator))
   {
-    ecma_string_t *comma_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING_COMMA_CHAR);
+    ecma_string_t *comma_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
     return ecma_make_normal_completion_value (ecma_make_string_value (comma_string_p));
   }
   else
@@ -80,7 +80,7 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /** < this object */
   if (ecma_is_value_undefined (index_value)
       || ecma_is_value_null (index_value))
   {
-    ecma_string_t *empty_string_p = ecma_get_magic_string (ECMA_MAGIC_STRING__EMPTY);
+    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
   }
   else

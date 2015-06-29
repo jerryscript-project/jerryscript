@@ -435,10 +435,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
   {
     case VARG_FUNC_DECL:
     case VARG_FUNC_EXPR:
-    {
-      syntax_start_checking_of_vargs ();
-      /* FALLTHRU */
-    }
     case VARG_CONSTRUCT_EXPR:
     {
       current_token_must_be (TOK_OPEN_PAREN);
@@ -590,7 +586,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     case VARG_FUNC_DECL:
     case VARG_FUNC_EXPR:
     {
-      syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
       res = rewrite_varg_header_set_args_count (args_num);
       break;
     }
@@ -638,6 +633,8 @@ parse_function_declaration (void)
   serializer_set_scope (STACK_TOP (scopes));
   scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
+  syntax_start_checking_of_vargs ();
   parse_argument_list (VARG_FUNC_DECL, name, NULL, NULL);
 
   dump_function_end_for_rewrite ();
@@ -657,6 +654,8 @@ parse_function_declaration (void)
 
   inside_function = was_in_function;
 
+  syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
+
   STACK_DROP (scopes, 1);
   serializer_set_scope (STACK_TOP (scopes));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
@@ -675,6 +674,8 @@ parse_function_expression (void)
   assert_keyword (KW_FUNCTION);
 
   operand res;
+
+  syntax_start_checking_of_vargs ();
 
   skip_newlines ();
   if (token_is (TOK_NAME))
@@ -713,6 +714,8 @@ parse_function_expression (void)
   rewrite_function_end (VARG_FUNC_EXPR);
 
   inside_function = was_in_function;
+
+  syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
   return res;
 }

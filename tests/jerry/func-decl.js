@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2015 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,3 +36,5 @@ function check_syntax_error (s) {
 
 check_syntax_error ("'use strict'; function arguments () {}");
 check_syntax_error ("'use strict'; var l = function arguments () {}");
+
+check_syntax_error ("function f__strict_mode_duplicate_parameters (p, p) { 'use strict'; }");

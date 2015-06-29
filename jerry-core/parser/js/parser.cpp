@@ -373,6 +373,8 @@ parse_property_assignment (void)
       return;
     }
 
+    bool is_outer_scope_strict = is_strict_mode ();
+
     const operand name = parse_property_name ();
     syntax_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
 
@@ -404,6 +406,9 @@ parse_property_assignment (void)
     rewrite_function_end (VARG_FUNC_EXPR);
 
     inside_function = was_in_function;
+
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), is_outer_scope_strict);
+    lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
     if (is_setter)
     {
@@ -675,13 +680,15 @@ parse_function_expression (void)
 
   operand res;
 
+  bool is_outer_scope_strict = is_strict_mode ();
+
   syntax_start_checking_of_vargs ();
 
   skip_newlines ();
   if (token_is (TOK_NAME))
   {
     const operand name = literal_operand (token_data_as_lit_cp ());
-    syntax_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
+    syntax_check_for_eval_and_arguments_in_strict_mode (name, is_outer_scope_strict, tok.loc);
 
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
@@ -716,6 +723,9 @@ parse_function_expression (void)
   inside_function = was_in_function;
 
   syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
+
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), is_outer_scope_strict);
+  lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
   return res;
 }

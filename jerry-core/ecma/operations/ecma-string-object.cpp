@@ -71,7 +71,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
       prim_prop_str_value_p = ecma_get_string_from_completion_value (to_str_arg_value);
 
       ecma_length_t string_len = ecma_string_get_length (prim_prop_str_value_p);
-
       length_value = ecma_uint32_to_number ((uint32_t) string_len);
     }
   }
@@ -188,8 +187,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the string ob
     ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
 
     // 9.
-    ecma_char_t new_prop_zt_str_p[2] = { c, ECMA_CHAR_NULL };
-    ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string (new_prop_zt_str_p);
+    ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string_from_code_unit (c);
 
     new_prop_p = ecma_create_named_data_property (obj_p,
                                                   new_prop_name_p,

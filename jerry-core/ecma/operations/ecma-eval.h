@@ -30,7 +30,7 @@ ecma_op_eval (ecma_string_t *code_p,
               bool is_called_from_strict_mode_code);
 
 extern ecma_completion_value_t
-ecma_op_eval_chars_buffer (const ecma_char_t *code_p,
+ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p,
                            size_t code_buffer_size,
                            bool is_direct,
                            bool is_called_from_strict_mode_code);

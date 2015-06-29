@@ -60,7 +60,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
 
   if (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ret_value = ecma_raise_type_error ((const ecma_char_t *) "Incomplete RegExp type");
+    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
   }
   else
   {
@@ -77,16 +77,18 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
 
     /* Convert ecma_String_t *to regexp_bytecode_t* */
-    ecma_length_t input_str_len = ecma_string_get_length (input_str_p);
+    lit_utf8_size_t input_str_size = ecma_string_get_size (input_str_p);
 
-    MEM_DEFINE_LOCAL_ARRAY (input_zt_str_p, input_str_len + 1, ecma_char_t);
+    MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_str_size + 1, lit_utf8_byte_t);
 
-    ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (input_str_len + 1));
-    ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
+    ecma_string_to_utf8_string (input_str_p, input_utf8_buffer_p, (ssize_t) input_str_size);
 
-    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_zt_str_p);
+    FIXME ("Update ecma_regexp_exec_helper so that zero symbol is not needed.");
+    input_utf8_buffer_p[input_str_size] = LIT_BYTE_NULL;
 
-    MEM_FINALIZE_LOCAL_ARRAY (input_zt_str_p);
+    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_utf8_buffer_p, input_str_size);
+
+    MEM_FINALIZE_LOCAL_ARRAY (input_utf8_buffer_p);
 
     ECMA_FINALIZE (input_str_value);
 
@@ -145,7 +147,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
   if (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ret_value = ecma_raise_type_error ((const ecma_char_t *) "Incomplete RegExp type");
+    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
   }
   else
   {

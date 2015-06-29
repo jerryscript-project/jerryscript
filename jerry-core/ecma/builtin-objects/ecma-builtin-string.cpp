@@ -60,12 +60,19 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  size_t zt_str_buffer_size = sizeof (ecma_char_t) * (args_number + 1u);
+  if (args_number == 0)
+  {
+    ecma_string_t *ret_str_p = ecma_new_ecma_string_from_utf8 (NULL, 0);
+    return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+  }
 
-  ecma_char_t *ret_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_buffer_size,
-                                                                   MEM_HEAP_ALLOC_SHORT_TERM);
-  ret_zt_str_p[args_number] = ECMA_CHAR_NULL;
+  lit_utf8_size_t utf8_buf_size = args_number * LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+  ecma_string_t *ret_str_p;
+  MEM_DEFINE_LOCAL_ARRAY (utf8_buf_p, utf8_buf_size, lit_utf8_byte_t);
 
+  lit_utf8_size_t utf8_buf_used = 0;
+
+  FIXME ("Support surrogate pairs");
   for (ecma_length_t arg_index = 0;
        arg_index < args_number;
        arg_index++)
@@ -73,26 +80,17 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
     uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
-    uint16_t uint16_char_code = (uint16_t) uint32_char_code;
+    ecma_char_t code_unit = (uint16_t) uint32_char_code;
 
-#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
-    if ((uint16_char_code >> JERRY_BITSINBYTE) != 0)
-    {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-    }
-    else
-    {
-      ret_zt_str_p[arg_index] = (ecma_char_t) uint16_char_code;
-    }
-#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-    ret_zt_str_p[arg_index] = (ecma_char_t) uint16_char_code;
-#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
+    JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+    utf8_buf_used += lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
+    JERRY_ASSERT (utf8_buf_used <= utf8_buf_size);
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
     if (ecma_is_completion_value_throw (ret_value))
     {
-      mem_heap_free_block (ret_zt_str_p);
+      mem_heap_free_block (utf8_buf_p);
 
       return ret_value;
     }
@@ -100,9 +98,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
     JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
   }
 
-  ecma_string_t *ret_str_p = ecma_new_ecma_string (ret_zt_str_p);
+  ret_str_p = ecma_new_ecma_string_from_utf8 (utf8_buf_p, utf8_buf_used);
 
-  mem_heap_free_block (ret_zt_str_p);
+  MEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
 
   return ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
 } /* ecma_builtin_string_object_from_char_code */

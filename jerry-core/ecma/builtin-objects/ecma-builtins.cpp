@@ -609,7 +609,7 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_
 
     if (ids[mid] == key)
     {
-      return mid;
+      return (int32_t) mid;
     }
     else if (ids[mid] > key)
     {

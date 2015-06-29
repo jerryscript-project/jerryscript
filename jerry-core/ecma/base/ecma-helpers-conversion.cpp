@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
+#include "lit-magic-strings.h"
 
 /*
  * \addtogroup ecmahelpersbigintegers Helpers for operations intermediate 128-bit integers
@@ -325,7 +326,7 @@
  */
 
 /**
- * ECMA-defined conversion of string (zero-terminated) to Number.
+ * ECMA-defined conversion of string to Number.
  *
  * See also:
  *          ECMA-262 v5, 9.3.1
@@ -333,28 +334,28 @@
  * @return ecma-number
  */
 ecma_number_t
-ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string */
+ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
+                            lit_utf8_size_t str_size) /**< string size */
 {
   TODO (Check license issues);
 
-  const ecma_char_t dec_digits_range[10] = { '0', '9' };
-  const ecma_char_t hex_lower_digits_range[10] = { 'a', 'f' };
-  const ecma_char_t hex_upper_digits_range[10] = { 'A', 'F' };
-  const ecma_char_t hex_x_chars[2] = { 'x', 'X' };
-  const ecma_char_t white_space[2] = { ' ', '\n' };
-  const ecma_char_t e_chars[2] = { 'e', 'E' };
-  const ecma_char_t plus_char = '+';
-  const ecma_char_t minus_char = '-';
-  const ecma_char_t dot_char = '.';
+  const lit_utf8_byte_t dec_digits_range[10] = { '0', '9' };
+  const lit_utf8_byte_t hex_lower_digits_range[10] = { 'a', 'f' };
+  const lit_utf8_byte_t hex_upper_digits_range[10] = { 'A', 'F' };
+  const lit_utf8_byte_t hex_x_chars[2] = { 'x', 'X' };
+  const lit_utf8_byte_t white_space[2] = { ' ', '\n' };
+  const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
+  const lit_utf8_byte_t plus_char = '+';
+  const lit_utf8_byte_t minus_char = '-';
+  const lit_utf8_byte_t dot_char = '.';
 
-  const ecma_char_t *begin_p = str_p;
-  const ecma_char_t *end_p = begin_p;
-
-  while (*end_p != ECMA_CHAR_NULL)
+  if (str_size == 0)
   {
-    end_p++;
+    return ECMA_NUMBER_ZERO;
   }
-  end_p--;
+
+  const lit_utf8_byte_t *begin_p = str_p;
+  const lit_utf8_byte_t *end_p = begin_p + str_size - 1;
 
   while (begin_p <= end_p
          && (*begin_p == white_space[0]
@@ -387,7 +388,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
     ecma_number_t num = 0;
 
-    for (const ecma_char_t* iter_p = begin_p;
+    for (const lit_utf8_byte_t * iter_p = begin_p;
          iter_p <= end_p;
          iter_p++)
     {
@@ -438,9 +439,9 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
   }
 
   /* Checking if significant part of parse string is equal to "Infinity" */
-  const ecma_char_t *infinity_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_INFINITY_UL);
+  const lit_utf8_byte_t *infinity_zt_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
 
-  for (const ecma_char_t *iter_p = begin_p, *iter_infinity_p = infinity_zt_str_p;
+  for (const lit_utf8_byte_t *iter_p = begin_p, *iter_infinity_p = infinity_zt_str_p;
        ;
        iter_infinity_p++, iter_p++)
   {
@@ -750,7 +751,7 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
 
   return num;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
-} /* ecma_zt_string_to_number */
+} /* ecma_utf8_string_to_number */
 
 /**
  * ECMA-defined conversion of UInt32 to String (zero-terminated).
@@ -761,16 +762,14 @@ ecma_zt_string_to_number (const ecma_char_t *str_p) /**< zero-terminated string 
  * @return number of bytes copied to buffer
  */
 ssize_t
-ecma_uint32_to_string (uint32_t value, /**< value to convert */
-                       ecma_char_t *out_buffer_p, /**< buffer for zero-terminated string */
-                       ssize_t buffer_size) /**< size of buffer */
+ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
+                            lit_utf8_byte_t *out_buffer_p, /**< buffer for string */
+                            ssize_t buffer_size) /**< size of buffer */
 {
-  const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-  ecma_char_t *p = (ecma_char_t*) ((uint8_t*) out_buffer_p + buffer_size) - 1;
-  *p-- = ECMA_CHAR_NULL;
-
-  size_t bytes_copied = sizeof (ecma_char_t);
+  lit_utf8_byte_t *p = out_buffer_p + buffer_size - 1;
+  size_t bytes_copied = 0;
 
   do
   {
@@ -779,7 +778,7 @@ ecma_uint32_to_string (uint32_t value, /**< value to convert */
     *p-- = digits[value % 10];
     value /= 10;
 
-    bytes_copied += sizeof (ecma_char_t);
+    bytes_copied ++;
   }
   while (value != 0);
 
@@ -789,12 +788,12 @@ ecma_uint32_to_string (uint32_t value, /**< value to convert */
 
   if (likely (p != out_buffer_p))
   {
-    ssize_t bytes_to_move = ((uint8_t*) out_buffer_p + buffer_size) - (uint8_t*) p;
+    ssize_t bytes_to_move = out_buffer_p + buffer_size - p;
     memmove (out_buffer_p, p, (size_t) bytes_to_move);
   }
 
   return (ssize_t) bytes_copied;
-} /* ecma_uint32_to_string */
+} /* ecma_uint32_to_utf8_string */
 
 /**
  * ECMA-defined conversion of UInt32 value to Number value
@@ -1299,51 +1298,50 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
  *          ECMA-262 v5, 9.8.1
  *
  *
- * @return length of zt-string
+ * @return size of utf-8 string
  */
-ecma_length_t
-ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
-                          ecma_char_t *buffer_p, /**< buffer for zt-string */
-                          ssize_t buffer_size) /**< size of buffer */
+lit_utf8_size_t
+ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
+                            lit_utf8_byte_t *buffer_p, /**< buffer for utf-8 string */
+                            ssize_t buffer_size) /**< size of buffer */
 {
-  const ecma_char_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-  const ecma_char_t e_chars[2] = { 'e', 'E' };
-  const ecma_char_t plus_char = '+';
-  const ecma_char_t minus_char = '-';
-  const ecma_char_t dot_char = '.';
+  const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
+  const lit_utf8_byte_t plus_char = '+';
+  const lit_utf8_byte_t minus_char = '-';
+  const lit_utf8_byte_t dot_char = '.';
+  lit_utf8_size_t size;
 
   if (ecma_number_is_nan (num))
   {
     // 1.
-    ecma_copy_zt_string_to_buffer (lit_get_magic_string_zt (LIT_MAGIC_STRING_NAN),
-                                   buffer_p,
-                                   buffer_size);
+    lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_NAN, buffer_p, buffer_size);
+    size = lit_get_magic_string_size (LIT_MAGIC_STRING_NAN);
   }
   else
   {
-    ecma_char_t *dst_p = buffer_p;
+    lit_utf8_byte_t *dst_p = buffer_p;
 
     if (ecma_number_is_zero (num))
     {
       // 2.
       *dst_p++ = digits[0];
-      *dst_p++ = ECMA_CHAR_NULL;
 
-      JERRY_ASSERT ((uint8_t*)dst_p - (uint8_t*)buffer_p <= (ssize_t) buffer_size);
+      JERRY_ASSERT (dst_p - buffer_p <= (ssize_t) buffer_size);
+      size = (lit_utf8_size_t) (dst_p - buffer_p);
     }
     else if (ecma_number_is_negative (num))
     {
       // 3.
       *dst_p++ = minus_char;
-      ssize_t new_buffer_size = (buffer_size - ((uint8_t*)dst_p - (uint8_t*)buffer_p));
-      ecma_number_to_zt_string (ecma_number_negate (num), dst_p, new_buffer_size);
+      ssize_t new_buffer_size = (buffer_size - (dst_p - buffer_p));
+      size = 1 + ecma_number_to_utf8_string (ecma_number_negate (num), dst_p, new_buffer_size);
     }
     else if (ecma_number_is_infinity (num))
     {
       // 4.
-      ecma_copy_zt_string_to_buffer (lit_get_magic_string_zt (LIT_MAGIC_STRING_INFINITY_UL),
-                                     buffer_p,
-                                     buffer_size);
+      dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_INFINITY_UL, buffer_p, buffer_size);
+      size = (lit_utf8_size_t) (dst_p - buffer_p);
     }
     else
     {
@@ -1355,7 +1353,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
       uint32_t num_uint32 = ecma_number_to_uint32 (num);
       if (ecma_uint32_to_number (num_uint32) == num)
       {
-        ecma_uint32_to_string (num_uint32, dst_p, buffer_size);
+        size = (lit_utf8_size_t) ecma_uint32_to_utf8_string (num_uint32, dst_p, buffer_size);
       }
       else
       {
@@ -1372,9 +1370,9 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
         if (k <= n && n <= 21)
         {
           dst_p += n;
-          JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * ((dst_p - buffer_p) + 1) <= buffer_size);
+          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
 
-          *dst_p = ECMA_CHAR_NULL;
+          size = (lit_utf8_size_t) (dst_p - buffer_p);
 
           for (int32_t i = 0; i < n - k; i++)
           {
@@ -1391,9 +1389,9 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
         {
           // 7.
           dst_p += k + 1;
-          JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * ((dst_p - buffer_p) + 1) <= buffer_size);
+          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
 
-          *dst_p = ECMA_CHAR_NULL;
+          size = (lit_utf8_size_t) (dst_p - buffer_p);
 
           for (int32_t i = 0; i < k - n; i++)
           {
@@ -1413,9 +1411,9 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
         {
           // 8.
           dst_p += k - n + 1 + 1;
-          JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * ((dst_p - buffer_p) + 1) <= buffer_size);
+          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
 
-          *dst_p = ECMA_CHAR_NULL;
+          size = (lit_utf8_size_t) (dst_p - buffer_p);
 
           for (int32_t i = 0; i < k; i++)
           {
@@ -1436,7 +1434,9 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
           if (k == 1)
           {
             // 9.
-            JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) <= buffer_size);
+            JERRY_ASSERT (1 <= buffer_size);
+
+            size = 1;
 
             *dst_p++ = digits[s % 10];
             s /= 10;
@@ -1445,7 +1445,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
           {
             // 10.
             dst_p += k + 1;
-            JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p) <= buffer_size);
+            JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
 
             for (int32_t i = 0; i < k - 1; i++)
             {
@@ -1461,14 +1461,14 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
           }
 
           // 9., 10.
-          JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 2) <= buffer_size);
+          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p + 2) <= buffer_size);
           *dst_p++ = e_chars[0];
           *dst_p++ = (n >= 1) ? plus_char : minus_char;
           int32_t t = (n >= 1) ? (n - 1) : -(n - 1);
 
           if (t == 0)
           {
-            JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 1) <= buffer_size);
+            JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
             *dst_p++ = digits[0];
           }
           else
@@ -1484,7 +1484,7 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
 
             while (t_mod != 0)
             {
-              JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 1) <= buffer_size);
+              JERRY_ASSERT ((ssize_t) (dst_p - buffer_p + 1) <= buffer_size);
               *dst_p++ = digits[t / t_mod];
 
               t -= (t / t_mod) * t_mod;
@@ -1492,8 +1492,8 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
             }
           }
 
-          JERRY_ASSERT ((ssize_t) sizeof (ecma_char_t) * (dst_p - buffer_p + 1) <= buffer_size);
-          *dst_p++ = ECMA_CHAR_NULL;
+          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+          size = (lit_utf8_size_t) (dst_p - buffer_p);
         }
 
         JERRY_ASSERT (s == 0);
@@ -1501,10 +1501,8 @@ ecma_number_to_zt_string (ecma_number_t num, /**< ecma-number */
     }
   }
 
-  ecma_length_t length = ecma_zt_string_length (buffer_p);
-
-  return length;
-} /* ecma_number_to_zt_string */
+  return size;
+} /* ecma_number_to_utf8_string */
 
 /**
  * @}

@@ -194,6 +194,7 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
   }
   else
   {
+
     if (iterator_p->current_index + 1 == iterator_p->header_p->unit_number)
     {
       return false;

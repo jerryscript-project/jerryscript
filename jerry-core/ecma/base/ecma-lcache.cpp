@@ -50,7 +50,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t));
 /**
  * LCache hash value length, in bits
  */
-#define ECMA_LCACHE_HASH_BITS (LIT_STRING_HASH_BITS)
+#define ECMA_LCACHE_HASH_BITS (sizeof (lit_string_hash_t) * JERRY_BITSINBYTE)
 
 /**
  * Number of rows in LCache's hash table

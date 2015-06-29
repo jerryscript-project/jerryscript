@@ -234,7 +234,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
 
         if (is_negative)
         {
-          ecma_string_t *neg_str_p = ecma_new_ecma_string ((const ecma_char_t *) "-");
+          ecma_string_t *neg_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) "-", 1);
           ecma_string_t *neg_inf_str_p = ecma_concat_ecma_strings (neg_str_p, infinity_str_p);
           ecma_deref_ecma_string (infinity_str_p);
           ecma_deref_ecma_string (neg_str_p);
@@ -276,9 +276,9 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           }
 
           JERRY_ASSERT (buffer_size > 0);
-          MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, ecma_char_t);
+          MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
 
-          ecma_char_t* p = buff;
+          lit_utf8_byte_t *p = buff;
 
           if (is_negative)
           {
@@ -321,7 +321,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
                 digit++;
               }
 
-              *p = (ecma_char_t) ((ecma_char_t) digit + '0');
+              *p = (lit_utf8_byte_t) ((lit_utf8_byte_t) digit + '0');
               p++;
             }
           }
@@ -339,7 +339,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
                 digit++;
               }
 
-              *p = (ecma_char_t) ((ecma_char_t) digit + '0');
+              *p = (lit_utf8_byte_t) ((lit_utf8_byte_t) digit + '0');
               p++;
             }
 
@@ -361,7 +361,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
                 digit++;
               }
 
-              *p = (ecma_char_t) ((ecma_char_t) digit + '0');
+              *p = (lit_utf8_byte_t) ((lit_utf8_byte_t) digit + '0');
               p++;
             }
           }
@@ -369,7 +369,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           JERRY_ASSERT (p - buff < buffer_size);
           /* String terminator. */
           *p = 0;
-          ecma_string_t* str = ecma_new_ecma_string ((ecma_char_t *) buff);
+          ecma_string_t* str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
 
           ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str));
           MEM_FINALIZE_LOCAL_ARRAY (buff);

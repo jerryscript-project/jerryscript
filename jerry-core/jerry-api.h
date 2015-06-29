@@ -73,16 +73,17 @@ typedef enum
 /**
  * Jerry's char value
 */
-#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
 typedef uint8_t jerry_api_char_t;
-#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-typedef uint16_t jerry_api_char_t;
-#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
 /**
  * Pointer to an array of character values
  */
 typedef jerry_api_char_t* jerry_api_char_ptr_t;
+
+/**
+ * Jerry's size
+*/
+typedef uint32_t jerry_api_size_t;
 
 /**
  * Jerry's length
@@ -139,7 +140,7 @@ typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 
 extern EXTERN_C ssize_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p,
-                                 char *buffer_p,
+                                 jerry_api_char_t *buffer_p,
                                  ssize_t buffer_size);
 extern EXTERN_C
 jerry_api_string_t* jerry_api_acquire_string (jerry_api_string_t *string_p);
@@ -155,11 +156,18 @@ extern EXTERN_C
 void jerry_api_release_value (jerry_api_value_t *value_p);
 
 extern EXTERN_C
-jerry_api_string_t* jerry_api_create_string (const char *v);
+jerry_api_string_t *jerry_api_create_string (const jerry_api_char_t *v);
+extern EXTERN_C
+jerry_api_string_t *jerry_api_create_string_sz (const jerry_api_char_t *, jerry_api_size_t);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);
 extern EXTERN_C
-jerry_api_object_t* jerry_api_create_error (jerry_api_error_t error_type, const char *message_p);
+jerry_api_object_t* jerry_api_create_error (jerry_api_error_t error_type,
+                                            const jerry_api_char_t *message_p);
+extern EXTERN_C
+jerry_api_object_t* jerry_api_create_error_sz (jerry_api_error_t error_type,
+                                               const jerry_api_char_t *message_p,
+                                               jerry_api_size_t message_size);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_external_function (jerry_external_handler_t handler_p);
 
@@ -170,20 +178,35 @@ bool jerry_api_is_constructor (const jerry_api_object_t *object_p);
 
 extern EXTERN_C
 bool jerry_api_add_object_field (jerry_api_object_t *object_p,
-                                 const char *field_name_p,
+                                 const jerry_api_char_t *field_name_p,
+                                 jerry_api_size_t field_name_size,
                                  const jerry_api_value_t *field_value_p,
                                  bool is_writable);
 extern EXTERN_C
 bool jerry_api_delete_object_field (jerry_api_object_t *object_p,
-                                    const char *field_name_p);
+                                    const jerry_api_char_t *field_name_p,
+                                    jerry_api_size_t field_name_size);
 extern EXTERN_C
 bool jerry_api_get_object_field_value (jerry_api_object_t *object_p,
-                                       const char *field_name_p,
+                                       const jerry_api_char_t *field_name_p,
                                        jerry_api_value_t *field_value_p);
+
+extern EXTERN_C
+bool jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p,
+                                          const jerry_api_char_t *field_name_p,
+                                          jerry_api_size_t field_name_size,
+                                          jerry_api_value_t *field_value_p);
+
 extern EXTERN_C
 bool jerry_api_set_object_field_value (jerry_api_object_t *object_p,
-                                       const char *field_name_p,
+                                       const jerry_api_char_t *field_name_p,
                                        const jerry_api_value_t *field_value_p);
+
+extern EXTERN_C
+bool jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p,
+                                          const jerry_api_char_t *field_name_p,
+                                          jerry_api_size_t field_name_size,
+                                          const jerry_api_value_t *field_value_p);
 
 extern EXTERN_C
 bool jerry_api_get_object_native_handle (jerry_api_object_t *object_p, uintptr_t* out_handle_p);
@@ -207,7 +230,7 @@ bool jerry_api_construct_object (jerry_api_object_t *function_object_p,
                                  uint16_t args_count);
 
 extern EXTERN_C
-jerry_completion_code_t jerry_api_eval (const char *source_p,
+jerry_completion_code_t jerry_api_eval (const jerry_api_char_t *source_p,
                                         size_t source_size,
                                         bool is_direct,
                                         bool is_strict,

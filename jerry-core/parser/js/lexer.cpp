@@ -15,14 +15,10 @@
  */
 
 #include "ecma-helpers.h"
-#include "ecma-exceptions.h"
 #include "jrt-libc-includes.h"
 #include "jsp-mm.h"
 #include "lexer.h"
-#include "mem-allocator.h"
-#include "opcodes.h"
-#include "parser.h"
-#include "stack.h"
+#include "lit-magic-strings.h"
 #include "syntax-errors.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
@@ -31,9 +27,9 @@ static bool allow_dump_lines = false, strict_mode;
 static size_t buffer_size = 0;
 
 /* Represents the contents of a script.  */
-static const char *buffer_start = NULL;
-static const char *buffer = NULL;
-static const char *token_start;
+static const jerry_api_char_t *buffer_start = NULL;
+static const jerry_api_char_t *buffer = NULL;
+static const jerry_api_char_t *token_start;
 
 #define LA(I)       (get_char (I))
 
@@ -56,7 +52,7 @@ current_locus (void)
   }
 }
 
-static char
+static ecma_char_t
 get_char (size_t i)
 {
   if ((buffer + i) >= (buffer_start + buffer_size))
@@ -69,7 +65,7 @@ get_char (size_t i)
 static void
 dump_current_line (void)
 {
-  const char *i;
+  const lit_utf8_byte_t *i;
 
   if (!allow_dump_lines)
   {
@@ -78,6 +74,7 @@ dump_current_line (void)
 
   printf ("// ");
 
+  FIXME ("Unicode: properly process non-ascii characters.");
   for (i = buffer; *i != '\n' && *i != 0; i++)
   {
     putchar (*i);
@@ -122,18 +119,18 @@ create_token (token_type type,  /**< type of token */
  */
 static token
 convert_string_to_token (token_type tt, /**< token type */
-                         const ecma_char_t *str_p, /**< characters buffer */
-                         ecma_length_t length) /**< string's length */
+                         const lit_utf8_byte_t *str_p, /**< characters buffer */
+                         lit_utf8_size_t length) /**< string's length */
 {
   JERRY_ASSERT (str_p != NULL);
 
-  literal_t lit = lit_find_literal_by_charset (str_p, length);
+  literal_t lit = lit_find_literal_by_utf8_string (str_p, length);
   if (lit != NULL)
   {
     return create_token_from_lit (tt, lit);
   }
 
-  lit = lit_create_literal_from_charset (str_p, length);
+  lit = lit_create_literal_from_utf8_string (str_p, length);
   JERRY_ASSERT (lit->get_type () == LIT_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_EX_T);
@@ -150,8 +147,8 @@ convert_string_to_token (token_type tt, /**< token type */
  *         else - return empty_token.
  */
 static token
-decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
-                size_t length) /**< string's length */
+decode_keyword (const lit_utf8_byte_t *str_p, /**< characters buffer */
+                lit_utf8_size_t str_size) /**< string's length */
 {
   typedef struct
   {
@@ -211,8 +208,10 @@ decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
 
   for (uint32_t i = 0; i < sizeof (keywords) / sizeof (kw_descr_t); i++)
   {
-    if (strlen (keywords[i].keyword_p) == length
-        && !strncmp (keywords[i].keyword_p, (const char *) str_p, length))
+    if (lit_compare_utf8_strings (str_p,
+                                  str_size,
+                                  (lit_utf8_byte_t *) keywords[i].keyword_p,
+                                  (lit_utf8_size_t) strlen (keywords[i].keyword_p)))
     {
       kw = keywords[i].keyword_id;
       break;
@@ -233,7 +232,7 @@ decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
       case KW_STATIC:
       case KW_YIELD:
       {
-        return convert_string_to_token (TOK_NAME, str_p, (ecma_length_t) length);
+        return convert_string_to_token (TOK_NAME, str_p, (ecma_length_t) str_size);
       }
 
       default:
@@ -249,22 +248,15 @@ decode_keyword (const ecma_char_t *str_p, /**< characters buffer */
   }
   else
   {
-    const ecma_char_t *false_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_FALSE);
-    const ecma_char_t *true_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_TRUE);
-    const ecma_char_t *null_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_NULL);
-
-    if (strlen ((const char*) false_p) == length
-        && !strncmp ((const char*) str_p, (const char*) false_p, length))
+    if (lit_compare_utf8_string_and_magic_string (str_p, str_size, LIT_MAGIC_STRING_FALSE))
     {
       return create_token (TOK_BOOL, false);
     }
-    else if (strlen ((const char*) true_p) == length
-             && !strncmp ((const char*) str_p, (const char*) true_p, length))
+    else if (lit_compare_utf8_string_and_magic_string (str_p, str_size, LIT_MAGIC_STRING_TRUE))
     {
       return create_token (TOK_BOOL, true);
     }
-    else if (strlen ((const char*) null_p) == length
-             && !strncmp ((const char*) str_p, (const char*) null_p, length))
+    else if (lit_compare_utf8_string_and_magic_string (str_p, str_size, LIT_MAGIC_STRING_NULL))
     {
       return create_token (TOK_NULL, 0);
     }
@@ -432,8 +424,8 @@ convert_single_escape_character (ecma_char_t c, /**< character to decode */
  */
 static token
 convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of token to produce */
-                                              const char *source_str_p, /**< string to convert,
-                                                                         *   located in source buffer */
+                                              const jerry_api_char_t *source_str_p, /**< string to convert,
+                                                                                     *   located in source buffer */
                                               size_t source_str_size) /**< size of the string */
 {
   token ret;
@@ -441,7 +433,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
   if (source_str_size == 0)
   {
     return convert_string_to_token (tok_type,
-                                    lit_get_magic_string_zt (LIT_MAGIC_STRING__EMPTY),
+                                    lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY),
                                     0);
   }
   else
@@ -449,10 +441,10 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
     JERRY_ASSERT (source_str_p != NULL);
   }
 
-  ecma_char_t *str_buf_p = (ecma_char_t*) jsp_mm_alloc (source_str_size * sizeof (ecma_char_t));
+  lit_utf8_byte_t *str_buf_p = (lit_utf8_byte_t*) jsp_mm_alloc (source_str_size);
 
-  const char *source_str_iter_p = source_str_p;
-  ecma_char_t *str_buf_iter_p = str_buf_p;
+  const lit_utf8_byte_t *source_str_iter_p = source_str_p;
+  lit_utf8_byte_t *str_buf_iter_p = str_buf_p;
 
   bool is_correct_sequence = true;
   bool every_char_islower = true;
@@ -464,7 +456,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
 
     if (*source_str_iter_p != '\\')
     {
-      converted_char = (ecma_char_t) *source_str_iter_p++;
+      converted_char = (lit_utf8_byte_t) *source_str_iter_p++;
 
       JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
       JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
@@ -473,7 +465,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
     {
       source_str_iter_p++;
 
-      const ecma_char_t escape_character = (ecma_char_t) *source_str_iter_p++;
+      const lit_utf8_byte_t escape_character = (lit_utf8_byte_t) *source_str_iter_p++;
       JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
 
       if (isdigit (escape_character))
@@ -505,9 +497,9 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
 
         for (uint32_t i = 0; i < hex_chars_num; i++)
         {
-          const char nc = *source_str_iter_p++;
+          const lit_utf8_byte_t byte = (lit_utf8_byte_t) *source_str_iter_p++;
 
-          if (!isxdigit (nc))
+          if (!isxdigit (byte))
           {
             chars_are_hex = false;
             break;
@@ -520,7 +512,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
             JERRY_ASSERT ((char_code & 0xF000u) == 0);
 
             char_code = (uint16_t) (char_code << 4u);
-            char_code = (uint16_t) (char_code + ecma_char_hex_to_int ((ecma_char_t) nc));
+            char_code = (uint16_t) (char_code + ecma_char_hex_to_int (byte));
           }
         }
 
@@ -544,10 +536,10 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
       {
         if (source_str_iter_p + 1 <= source_str_p + source_str_size)
         {
-          char nc = *source_str_iter_p;
+          lit_utf8_byte_t byte = *source_str_iter_p;
 
           if (escape_character == '\x0D'
-              && nc == '\x0A')
+              && byte == '\x0A')
           {
             source_str_iter_p++;
           }
@@ -561,7 +553,8 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
       }
     }
 
-    *str_buf_iter_p++ = converted_char;
+    TODO ("Support surrogate paris.")
+    str_buf_iter_p += lit_code_unit_to_utf8 (converted_char, str_buf_iter_p);
     JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
 
     if (!islower (converted_char))
@@ -580,7 +573,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
 
   if (is_correct_sequence)
   {
-    ecma_length_t length = (ecma_length_t) (str_buf_iter_p - str_buf_p);
+    lit_utf8_size_t length = (lit_utf8_size_t) (str_buf_iter_p - str_buf_p);
     ret = empty_token;
 
     if (tok_type == TOK_NAME)
@@ -683,7 +676,7 @@ parse_name (void)
 static token
 parse_number (void)
 {
-  char c = LA (0);
+  ecma_char_t c = LA (0);
   bool is_hex = false;
   bool is_fp = false;
   bool is_exp = false;
@@ -736,11 +729,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = (res << 4) + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        res = (res << 4) + ecma_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 16 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        fp_res = fp_res * 16 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
       }
 
       if (res > 255)
@@ -830,15 +823,11 @@ parse_number (void)
     consume_char ();
   }
 
-  tok_length = (size_t) (buffer - token_start);;
+  tok_length = (size_t) (buffer - token_start);
   if (is_fp || is_exp)
   {
-    ecma_char_t *temp = (ecma_char_t*) jsp_mm_alloc ((size_t) (tok_length + 1) * sizeof (ecma_char_t));
-    strncpy ((char *) temp, token_start, (size_t) (tok_length));
-    temp[tok_length] = '\0';
-    ecma_number_t res = ecma_zt_string_to_number (temp);
+    ecma_number_t res = ecma_utf8_string_to_number (token_start, (jerry_api_size_t) tok_length);
     JERRY_ASSERT (!ecma_number_is_nan (res));
-    jsp_mm_free (temp);
     known_token = convert_seen_num_to_token (res);
     token_start = NULL;
     return known_token;
@@ -854,11 +843,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 8 + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        res = res * 8 + ecma_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 8 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        fp_res = fp_res * 8 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
       }
       if (res > 255)
       {
@@ -874,11 +863,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 10 + ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        res = res * 10 + ecma_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 10 + (ecma_number_t) ecma_char_hex_to_int ((ecma_char_t) token_start[i]);
+        fp_res = fp_res * 10 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
       }
       if (res > 255)
       {
@@ -1029,7 +1018,7 @@ parse_regexp (void)
   }
 
   result = convert_string_to_token (TOK_REGEXP,
-                                    (const ecma_char_t*) token_start,
+                                    (const lit_utf8_byte_t *) token_start,
                                     static_cast<ecma_length_t> (buffer - token_start));
 
   token_start = NULL;
@@ -1039,7 +1028,7 @@ parse_regexp (void)
 static void
 grobble_whitespaces (void)
 {
-  char c = LA (0);
+  ecma_char_t c = LA (0);
 
   while ((isspace (c) && c != '\n'))
   {
@@ -1049,7 +1038,7 @@ grobble_whitespaces (void)
 }
 
 static void
-lexer_set_source (const char * source)
+lexer_set_source (const jerry_api_char_t * source)
 {
   buffer_start = source;
   buffer = buffer_start;
@@ -1058,7 +1047,7 @@ lexer_set_source (const char * source)
 static bool
 replace_comment_by_newline (void)
 {
-  char c = LA (0);
+  ecma_char_t c = LA (0);
   bool multiline;
   bool was_newlines = false;
 
@@ -1106,7 +1095,7 @@ replace_comment_by_newline (void)
 static token
 lexer_next_token_private (void)
 {
-  char c = LA (0);
+  ecma_char_t c = LA (0);
 
   JERRY_ASSERT (token_start == NULL);
 
@@ -1295,6 +1284,7 @@ lexer_next_token (void)
 
   prev_token = sent_token;
   sent_token = lexer_next_token_private ();
+
   if (sent_token.type == TOK_NEWLINE)
   {
     dump_current_line ();
@@ -1331,7 +1321,7 @@ void
 lexer_locus_to_line_and_column (size_t locus, size_t *line, size_t *column)
 {
   JERRY_ASSERT (locus <= buffer_size);
-  const char *buf;
+  const jerry_api_char_t *buf;
   size_t l = 0, c = 0;
   for (buf = buffer_start; (size_t) (buf - buffer_start) < locus; buf++)
   {
@@ -1358,7 +1348,7 @@ void
 lexer_dump_line (size_t line)
 {
   size_t l = 0;
-  for (const char *buf = buffer_start; *buf != '\0'; buf++)
+  for (const lit_utf8_byte_t *buf = buffer_start; *buf != '\0'; buf++)
   {
     if (l == line)
     {
@@ -1538,11 +1528,11 @@ lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAM
 } /* lexer_are_tokens_with_same_identifier */
 
 /**
- * Intitialize lexer
+ * Initialize lexer to start parsing of a new source
  */
 void
-lexer_init (const char *source, /**< script source */
-            size_t source_size /**< script source size in bytes */,
+lexer_init (const jerry_api_char_t *source, /**< script source */
+            size_t source_size, /**< script source size in bytes */
             bool show_opcodes) /**< flag indicating if to dump opcodes */
 {
   empty_token.type = TOK_EMPTY;

@@ -327,10 +327,10 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
   /* 3. */
   ecma_string_t *get_string_val = ecma_get_string_from_value (to_string_val);
 
-  const uint32_t len = (uint32_t) ecma_string_get_length (get_string_val);
+  const ecma_length_t len = ecma_string_get_length (get_string_val);
 
-  /* 4. 6. */
-  uint32_t start = 0, end = len;
+  /* 4. */
+  ecma_length_t start = 0, end = len;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
                                arg1,
@@ -360,24 +360,9 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    /* 8. */
-    const uint32_t span = (start > end) ? 0 : end - start;
-    const uint32_t new_str_size = (uint32_t) sizeof (ecma_char_t) * (span + 1);
-
-    MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_str_size, ecma_char_t);
-
-    /* 9. */
-    for (uint32_t idx = 0; idx < span; idx++)
-    {
-      new_str_buffer[idx] = ecma_string_get_char_at_pos (get_string_val, start + idx);
-    }
-
-    new_str_buffer[span] = '\0';
-    ecma_string_t* new_str = ecma_new_ecma_string ((ecma_char_t *) new_str_buffer);
-
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str));
-
-    MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
+    /* 8-9. */
+    ecma_string_t *new_str_p = ecma_string_substr (get_string_val, start, end);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
   }
 
   ECMA_FINALIZE (to_string_val);
@@ -507,45 +492,37 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
 
   /* 3 */
-  const uint32_t len = (uint32_t) ecma_string_get_length (original_string_p);
+  const lit_utf8_size_t size = ecma_string_get_size (original_string_p);
+  const ecma_length_t length = ecma_string_get_size (original_string_p);
 
   /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
-  uint32_t zt_str_size = (uint32_t) sizeof (ecma_char_t) * (len + 1);
-  ecma_char_t *original_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_size,
-                                                                        MEM_HEAP_ALLOC_SHORT_TERM);
-  ecma_string_to_zt_string (original_string_p, original_zt_str_p, (ssize_t) zt_str_size);
+  lit_utf8_byte_t *original_utf8_str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (size + 1,
+                                                                                   MEM_HEAP_ALLOC_SHORT_TERM);
+  ecma_string_to_utf8_string (original_string_p, original_utf8_str_p, (ssize_t) size);
 
   uint32_t prefix = 0, postfix = 0;
   uint32_t new_len = 0;
 
-  while (prefix < len && isspace (original_zt_str_p[prefix]))
+  while (prefix < length && isspace (lit_utf8_string_code_unit_at (original_utf8_str_p, size, prefix)))
   {
     prefix++;
   }
 
-  while (postfix < len - prefix && isspace (original_zt_str_p[len - postfix - 1]))
+  while (postfix < length - prefix && isspace (lit_utf8_string_code_unit_at (original_utf8_str_p,
+                                                                             size,
+                                                                             length - postfix - 1)))
   {
     postfix++;
   }
 
-  new_len = prefix < len ? len - prefix - postfix : 0;
+  new_len = prefix < size ? size - prefix - postfix : 0;
 
-  MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_len + 1, ecma_char_t);
-
-  for (uint32_t idx = 0; idx < new_len; ++idx)
-  {
-    new_str_buffer[idx] = original_zt_str_p[idx + prefix];
-  }
-
-  new_str_buffer[new_len] = '\0';
-  ecma_string_t *new_str_p = ecma_new_ecma_string ((ecma_char_t *) new_str_buffer);
+  ecma_string_t *new_str_p = ecma_string_substr (original_string_p, prefix, prefix + new_len);
 
   /* 4 */
   ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
 
-  MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
-
-  mem_heap_free_block (original_zt_str_p);
+  mem_heap_free_block (original_utf8_str_p);
 
   ECMA_FINALIZE (to_string_val);
   ECMA_FINALIZE (check_coercible_val);

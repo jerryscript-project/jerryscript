@@ -25,6 +25,7 @@
 #define JERRY_ECMA_HELPERS_H
 
 #include "ecma-globals.h"
+#include "lit-strings.h"
 #include "mem-allocator.h"
 #include "opcodes.h"
 
@@ -107,9 +108,9 @@ extern bool ecma_is_completion_value_normal_true (ecma_completion_value_t value)
 extern bool ecma_is_completion_value_normal_false (ecma_completion_value_t value);
 extern bool ecma_is_completion_value_empty (ecma_completion_value_t value);
 
-/* ecma-helpers-string.cpp */
-extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p, const ecma_length_t length);
-extern ecma_string_t* ecma_new_ecma_string (const ecma_char_t *string_p);
+/* ecma-helpers-string.c */
+extern ecma_string_t* ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *, lit_utf8_size_t);
+extern ecma_string_t* ecma_new_ecma_string_from_code_unit (ecma_char_t);
 extern ecma_string_t* ecma_new_ecma_string_from_uint32 (uint32_t uint_number);
 extern ecma_string_t* ecma_new_ecma_string_from_number (ecma_number_t number);
 extern void ecma_new_ecma_string_on_stack_from_lit_cp (ecma_string_t *string_p,
@@ -124,9 +125,9 @@ extern ecma_string_t* ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p
 extern void ecma_deref_ecma_string (ecma_string_t *string_p);
 extern void ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
-extern ssize_t ecma_string_to_zt_string (const ecma_string_t *string_desc_p,
-                                         ecma_char_t *buffer_p,
-                                         ssize_t buffer_size);
+extern ssize_t ecma_string_to_utf8_string (const ecma_string_t *string_desc_p,
+                                           lit_utf8_byte_t *buffer_p,
+                                           ssize_t buffer_size);
 extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *string1_p,
                                                     const ecma_string_t *string2_p);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *string1_p,
@@ -134,21 +135,17 @@ extern bool ecma_compare_ecma_strings (const ecma_string_t *string1_p,
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p,
                                                   const ecma_string_t *string2_p);
 extern ecma_length_t ecma_string_get_length (const ecma_string_t *string_p);
-extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, uint32_t index);
-extern bool ecma_compare_zt_strings (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern bool ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
-extern ecma_char_t*
-ecma_copy_zt_string_to_buffer (const ecma_char_t *string_p,
-                               ecma_char_t *buffer_p,
-                               ssize_t buffer_size);
-extern ecma_length_t ecma_zt_string_length (const ecma_char_t *string_p);
+extern lit_utf8_size_t ecma_string_get_size (const ecma_string_t *string_p);
+extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, ecma_length_t index);
+extern lit_utf8_byte_t ecma_string_get_byte_at_pos (const ecma_string_t *string_p, lit_utf8_size_t index);
 
 extern ecma_string_t* ecma_get_magic_string (lit_magic_string_id_t id);
 extern ecma_string_t* ecma_get_magic_string_ex (lit_magic_string_ex_id_t id);
 extern bool ecma_is_string_magic (const ecma_string_t *string_p, lit_magic_string_id_t *out_id_p);
 extern bool ecma_is_ex_string_magic (const ecma_string_t *string_p, lit_magic_string_ex_id_t *out_id_p);
+
 extern lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
-extern lit_string_hash_t ecma_chars_buffer_calc_hash_last_chars (const ecma_char_t *chars, ecma_length_t length);
+extern ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, ecma_length_t, ecma_length_t);
 
 /* ecma-helpers-number.cpp */
 extern const ecma_number_t ecma_number_relative_eps;
@@ -310,13 +307,13 @@ extern void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
 
 /* ecma-helpers-conversion.cpp */
-extern ecma_number_t ecma_zt_string_to_number (const ecma_char_t *str_p);
-extern ssize_t ecma_uint32_to_string (uint32_t value, ecma_char_t *out_buffer_p, ssize_t buffer_size);
+extern ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size);
+extern ssize_t ecma_uint32_to_utf8_string (uint32_t value, lit_utf8_byte_t *out_buffer_p, ssize_t buffer_size);
 extern uint32_t ecma_number_to_uint32 (ecma_number_t value);
 extern int32_t ecma_number_to_int32 (ecma_number_t value);
 extern ecma_number_t ecma_int32_to_number (int32_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
-extern ecma_length_t ecma_number_to_zt_string (ecma_number_t num, ecma_char_t *buffer_p, ssize_t buffer_size);
+extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, ssize_t);
 
 /* ecma-helpers-char.cpp */
 extern bool ecma_char_is_new_line (ecma_char_t c);

@@ -81,7 +81,7 @@ main (int __attr_unused___ argc,
 
   serializer_init ();
   parser_set_show_opcodes (true);
-  is_syntax_correct = parser_parse_script (program1, strlen (program1), &opcodes_p);
+  is_syntax_correct = parser_parse_script ((jerry_api_char_t *) program1, strlen (program1), &opcodes_p);
 
   JERRY_ASSERT (is_syntax_correct && opcodes_p != NULL);
 
@@ -107,7 +107,7 @@ main (int __attr_unused___ argc,
 
   serializer_init ();
   parser_set_show_opcodes (true);
-  is_syntax_correct = parser_parse_script (program2, strlen (program2), &opcodes_p);
+  is_syntax_correct = parser_parse_script ((jerry_api_char_t *) program2, strlen (program2), &opcodes_p);
 
   JERRY_ASSERT (!is_syntax_correct && opcodes_p == NULL);
 

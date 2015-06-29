@@ -106,12 +106,12 @@ public:
   /**
    * Get the length of the string, which is contained inside the record
    *
-   * @return length of the string (count of the ecma_char_t characters inside the charset)
+   * @return length of the string (bytes count)
    */
-  ecma_length_t
+  lit_utf8_size_t
   get_length () const
   {
-    return (ecma_length_t) ((get_size () - header_size () - get_alignment_bytes_count ()) / sizeof (ecma_char_t));
+    return (lit_utf8_size_t) (get_size () - header_size () - get_alignment_bytes_count ());
   } /* get_length */
 
   /**
@@ -127,12 +127,11 @@ public:
 
   rcs_record_t *get_prev () const;
 
-  ecma_length_t get_charset (ecma_char_t *buff, size_t size);
+  lit_utf8_size_t get_charset (lit_utf8_byte_t *, size_t);
 
-  int compare_zt (const ecma_char_t *, size_t);
-  bool equal (lit_charset_record_t *);
-  bool equal_zt (const ecma_char_t *);
-  bool equal_non_zt (const ecma_char_t *, ecma_length_t);
+  int compare_utf8 (const lit_utf8_byte_t *, lit_utf8_size_t);
+  bool is_equal (lit_charset_record_t *);
+  bool is_equal_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 private:
   /**
@@ -157,7 +156,7 @@ private:
 
   void set_prev (rcs_record_t *);
 
-  void set_charset (const ecma_char_t *, size_t);
+  void set_charset (const lit_utf8_byte_t *, lit_utf8_size_t);
 
   /**
    * Offset and length of 'alignment' field, in bits
@@ -242,7 +241,6 @@ public:
   magic_string_id_t get_magic_str_id () const
   {
     uint32_t id = get_field (magic_field_pos, magic_field_width);
-    // JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
     return (magic_string_id_t) id;
   } /* get_magic_str_id */
 
@@ -303,9 +301,10 @@ private:
  * Layout:
  * ------- header -----------------------
  * type (4 bits)
- * magic string id  (12 bits)
+ * padding  (12 bits)
  * pointer to prev (16 bits)
  * --------------------------------------
+ * ecma_number_t
  */
 class lit_number_record_t : public rcs_record_t
 {
@@ -417,7 +416,7 @@ public:
     LIT_NUMBER
   };
 
-  lit_charset_record_t *create_charset_record (const ecma_char_t *, size_t);
+  lit_charset_record_t *create_charset_record (const lit_utf8_byte_t *, lit_utf8_size_t);
   lit_magic_record_t *create_magic_record (lit_magic_string_id_t);
   lit_magic_record_t *create_magic_record_ex (lit_magic_string_ex_id_t);
   lit_number_record_t *create_number_record (ecma_number_t);

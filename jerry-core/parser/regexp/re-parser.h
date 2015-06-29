@@ -71,8 +71,8 @@ typedef struct
 
 typedef struct
 {
-  ecma_char_t *pattern_start_p;
-  ecma_char_t *current_char_p;
+  lit_utf8_byte_t *pattern_start_p;
+  lit_utf8_byte_t *current_char_p;
   int num_of_groups;
   uint32_t num_of_classes;
 } re_parser_ctx_t;

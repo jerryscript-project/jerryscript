@@ -175,15 +175,14 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
                                                               int_data->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
-    ecma_length_t re_str_len = ecma_string_get_length (string_p);
-    MEM_DEFINE_LOCAL_ARRAY (re_str_p, re_str_len + 1, ecma_char_t);
+    lit_utf8_size_t re_utf8_buffer_size = ecma_string_get_size (string_p);
+    MEM_DEFINE_LOCAL_ARRAY (re_utf8_buffer_p, re_utf8_buffer_size, lit_utf8_byte_t);
 
-    ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (re_str_len + 1));
-    ecma_string_to_zt_string (string_p, re_str_p, zt_str_size);
+    ecma_string_to_utf8_string (string_p, re_utf8_buffer_p, (ssize_t) re_utf8_buffer_size);
 
-    ecma_char_t *ch_p = re_str_p;
-    ecma_char_t *last_slash_p = NULL;
-    while (*ch_p)
+    lit_utf8_byte_t *ch_p = re_utf8_buffer_p;
+    lit_utf8_byte_t *last_slash_p = NULL;
+    while (ch_p < re_utf8_buffer_p + re_utf8_buffer_size)
     {
       if (*ch_p == '/')
       {
@@ -193,14 +192,16 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
     }
 
     JERRY_ASSERT (last_slash_p != NULL);
-    JERRY_ASSERT ((re_str_p < last_slash_p) && (last_slash_p < ch_p));
-    JERRY_ASSERT ((last_slash_p - re_str_p) > 0);
-    ecma_string_t *pattern_p = ecma_new_ecma_string (re_str_p, (ecma_length_t) (last_slash_p - re_str_p));
+    JERRY_ASSERT ((re_utf8_buffer_p < last_slash_p) && (last_slash_p < ch_p));
+    JERRY_ASSERT ((last_slash_p - re_utf8_buffer_p) > 0);
+    ecma_string_t *pattern_p = ecma_new_ecma_string_from_utf8 (re_utf8_buffer_p,
+                                                               (lit_utf8_size_t) (last_slash_p - re_utf8_buffer_p));
     ecma_string_t *flags_p = NULL;
 
     if ((ch_p - last_slash_p) > 1)
     {
-      flags_p = ecma_new_ecma_string (last_slash_p + 1, (ecma_length_t) ((ch_p - last_slash_p - 1)));
+      flags_p = ecma_new_ecma_string_from_utf8 (last_slash_p + 1,
+                                                (lit_utf8_size_t) ((ch_p - last_slash_p - 1)));
     }
 
     ECMA_TRY_CATCH (regexp_obj_value,
@@ -220,7 +221,7 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
       ecma_deref_ecma_string (flags_p);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (re_str_p)
+    MEM_FINALIZE_LOCAL_ARRAY (re_utf8_buffer_p)
     ecma_deref_ecma_string (string_p);
 #else
     JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in compact profile!");
@@ -564,7 +565,7 @@ opfunc_func_decl_n (opcode_t opdata, /**< operation data */
 
   int_data->pos++;
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_completion_value_t ret_value;
 
   MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
 

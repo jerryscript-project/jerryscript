@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "jerry.h"
+#include "jerry-core/jerry-api.h"
 
 /**
  * The module interface routine
@@ -195,7 +196,7 @@ int jerry_main (int argc, char *argv[])
     {
       printf ("Source:\n------------\n%s\n------------\n", source_p);
 
-      jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, flags);
+      jerry_completion_code_t ret_code = jerry_run_simple ((jerry_api_char_t *) source_p, source_size, flags);
 
       if (ret_code == JERRY_COMPLETION_CODE_OK)
       {

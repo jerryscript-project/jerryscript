@@ -24,6 +24,7 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "lit-magic-strings.h"
 #include "vm.h"
 #include "jrt-libc-includes.h"
 
@@ -108,22 +109,22 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  ecma_length_t string_len = ecma_string_get_length (number_str_p);
+  ecma_length_t str_size = ecma_string_get_length (number_str_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (zt_string_buff, string_len + 1, ecma_char_t);
+  MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size + 1, lit_utf8_byte_t);
 
-  size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
-  ssize_t bytes_copied = ecma_string_to_zt_string (number_str_p,
-                                                   zt_string_buff,
-                                                   (ssize_t) string_buf_size);
-  JERRY_ASSERT (bytes_copied > 0);
+  ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
+                                                     utf8_string_buff,
+                                                     (ssize_t) str_size);
+  JERRY_ASSERT (bytes_copied >= 0);
+  utf8_string_buff[str_size] = LIT_BYTE_NULL;
 
   /* 2. Remove leading whitespace. */
-  ecma_length_t start = string_len;
-  ecma_length_t end = string_len;
+  ecma_length_t start = str_size;
+  ecma_length_t end = str_size;
   for (ecma_length_t i = 0; i < end; i++)
   {
-    if (!(isspace (zt_string_buff[i])))
+    if (!(isspace (utf8_string_buff[i])))
     {
       start = i;
       break;
@@ -134,13 +135,13 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   int sign = 1;
 
   /* 4. */
-  if (zt_string_buff[start] == '-')
+  if (utf8_string_buff[start] == '-')
   {
     sign = -1;
   }
 
   /* 5. */
-  if (zt_string_buff[start] == '-' || zt_string_buff[start] == '+')
+  if (utf8_string_buff[start] == '-' || utf8_string_buff[start] == '+')
   {
     start++;
   }
@@ -180,8 +181,8 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     if (strip_prefix)
     {
       if (end - start >= 2
-          && zt_string_buff[start] == '0'
-          && (zt_string_buff[start + 1] == 'x' || zt_string_buff[start + 1] == 'X'))
+          && utf8_string_buff[start] == '0'
+          && (utf8_string_buff[start + 1] == 'x' || utf8_string_buff[start + 1] == 'X'))
       {
         start += 2;
 
@@ -190,27 +191,27 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     }
 
     /* 11. Check if characters are in [0, Radix - 1]. We also convert them to number values in the process. */
-    for (ecma_length_t i = start; i < end; i++)
+    for (lit_utf8_size_t i = start; i < end; i++)
     {
-      if ((zt_string_buff[i]) >= 'a' && zt_string_buff[i] <= 'z')
+      if ((utf8_string_buff[i]) >= 'a' && utf8_string_buff[i] <= 'z')
       {
-        zt_string_buff[i] = (ecma_char_t) (zt_string_buff[i] - 'a' + 10);
+        utf8_string_buff[i] = (lit_utf8_byte_t) (utf8_string_buff[i] - 'a' + 10);
       }
-      else if (zt_string_buff[i] >= 'A' && zt_string_buff[i] <= 'Z')
+      else if (utf8_string_buff[i] >= 'A' && utf8_string_buff[i] <= 'Z')
       {
-        zt_string_buff[i] = (ecma_char_t) (zt_string_buff[i] - 'A' + 10);
+        utf8_string_buff[i] = (lit_utf8_byte_t) (utf8_string_buff[i] - 'A' + 10);
       }
-      else if (isdigit (zt_string_buff[i]))
+      else if (isdigit (utf8_string_buff[i]))
       {
-        zt_string_buff[i] = (ecma_char_t) (zt_string_buff[i] - '0');
+        utf8_string_buff[i] = (lit_utf8_byte_t) (utf8_string_buff[i] - '0');
       }
       else
       {
         /* Not a valid number char, set value to radix so it fails to pass as a valid character. */
-        zt_string_buff[i] = (ecma_char_t) rad;
+        utf8_string_buff[i] = (lit_utf8_byte_t) rad;
       }
 
-      if (!(zt_string_buff[i] < rad))
+      if (!(utf8_string_buff[i] < rad))
       {
         end = i;
         break;
@@ -235,7 +236,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     /* 13. and 14. */
     for (int32_t i = (int32_t) end - 1; i >= (int32_t) start; i--)
     {
-      *value_p += (ecma_number_t) zt_string_buff[i] * multiplier;
+      *value_p += (ecma_number_t) utf8_string_buff[i] * multiplier;
       multiplier *= (ecma_number_t) rad;
     }
 
@@ -249,7 +250,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (radix_num);
-  MEM_FINALIZE_LOCAL_ARRAY (zt_string_buff);
+  MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
   ECMA_FINALIZE (string_var);
   return ret_value;
 } /* ecma_builtin_global_object_parse_int */
@@ -273,21 +274,21 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  ecma_length_t string_len = ecma_string_get_length (number_str_p);
+  lit_utf8_size_t str_size = ecma_string_get_size (number_str_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (zt_string_buff, string_len + 1, ecma_char_t);
+  MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size + 1, lit_utf8_byte_t);
 
-  size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
-  ssize_t bytes_copied = ecma_string_to_zt_string (number_str_p,
-                                                   zt_string_buff,
-                                                   (ssize_t) string_buf_size);
-  JERRY_ASSERT (bytes_copied > 0);
+  ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
+                                                     utf8_string_buff,
+                                                     (ssize_t) str_size);
+  JERRY_ASSERT (bytes_copied >= 0);
+  utf8_string_buff[str_size] = LIT_BYTE_NULL;
 
   /* 2. Find first non whitespace char. */
-  ecma_length_t start = 0;
-  for (ecma_length_t i = 0; i < string_len; i++)
+  lit_utf8_size_t start = 0;
+  for (lit_utf8_size_t i = 0; i < str_size; i++)
   {
-    if (!isspace (zt_string_buff[i]))
+    if (!isspace (utf8_string_buff[i]))
     {
       start = i;
       break;
@@ -297,12 +298,12 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   bool sign = false;
 
   /* Check if sign is present. */
-  if (zt_string_buff[start] == '-')
+  if (utf8_string_buff[start] == '-')
   {
     sign = true;
     start++;
   }
-  else if (zt_string_buff[start] == '+')
+  else if (utf8_string_buff[start] == '+')
   {
     start++;
   }
@@ -310,11 +311,11 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ecma_number_t *ret_num_p = ecma_alloc_number ();
 
   /* Check if string is equal to "Infinity". */
-  const ecma_char_t *infinity_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_INFINITY_UL);
+  const lit_utf8_byte_t *infinity_utf8_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
 
-  for (ecma_length_t i = 0; infinity_zt_str_p[i] == zt_string_buff[start + i]; i++)
+  for (lit_utf8_size_t i = 0; infinity_utf8_str_p[i] == utf8_string_buff[start + i]; i++)
   {
-    if (infinity_zt_str_p[i + 1] == 0)
+    if (infinity_utf8_str_p[i + 1] == 0)
     {
       *ret_num_p = ecma_number_make_infinity (sign);
       ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
@@ -324,19 +325,19 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    ecma_length_t current = start;
-    ecma_length_t end = string_len;
+    lit_utf8_size_t current = start;
+    lit_utf8_size_t end = str_size;
     bool has_whole_part = false;
     bool has_fraction_part = false;
 
-    if (isdigit (zt_string_buff[current]))
+    if (isdigit (utf8_string_buff[current]))
     {
       has_whole_part = true;
 
       /* Check digits of whole part. */
-      for (ecma_length_t i = current; i < string_len; i++, current++)
+      for (lit_utf8_size_t i = current; i < str_size; i++, current++)
       {
-        if (!isdigit (zt_string_buff[current]))
+        if (!isdigit (utf8_string_buff[current]))
         {
           break;
         }
@@ -346,18 +347,18 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     end = current;
 
     /* Check decimal point. */
-    if (zt_string_buff[current] == '.')
+    if (utf8_string_buff[current] == '.')
     {
       current++;
 
-      if (isdigit (zt_string_buff[current]))
+      if (isdigit (utf8_string_buff[current]))
       {
         has_fraction_part = true;
 
         /* Check digits of fractional part. */
-        for (ecma_length_t i = current; i < string_len; i++, current++)
+        for (lit_utf8_size_t i = current; i < str_size; i++, current++)
         {
-          if (!isdigit (zt_string_buff[current]))
+          if (!isdigit (utf8_string_buff[current]))
           {
             break;
           }
@@ -368,24 +369,24 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     }
 
     /* Check exponent. */
-    if ((zt_string_buff[current] == 'e' || zt_string_buff[current] == 'E')
+    if ((utf8_string_buff[current] == 'e' || utf8_string_buff[current] == 'E')
         && (has_whole_part || has_fraction_part))
     {
       current++;
 
       /* Check sign of exponent. */
-      if (zt_string_buff[current] == '-' || zt_string_buff[current] == '+')
+      if (utf8_string_buff[current] == '-' || utf8_string_buff[current] == '+')
       {
         current++;
       }
 
-      if (isdigit (zt_string_buff[current]))
+      if (isdigit (utf8_string_buff[current]))
       {
 
         /* Check digits of exponent part. */
-        for (ecma_length_t i = current; i < string_len; i++, current++)
+        for (lit_utf8_size_t i = current; i < str_size; i++, current++)
         {
-          if (!isdigit (zt_string_buff[current]))
+          if (!isdigit (utf8_string_buff[current]))
           {
             break;
           }
@@ -402,14 +403,8 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     }
     else
     {
-      if (end < string_len)
-      {
-        /* 4. End of valid number, terminate the string. */
-        zt_string_buff[end] = '\0';
-      }
-
       /* 5. */
-      *ret_num_p = ecma_zt_string_to_number (zt_string_buff + start);
+      *ret_num_p = ecma_utf8_string_to_number (utf8_string_buff + start, end - start);
 
       if (sign)
       {
@@ -420,8 +415,9 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (zt_string_buff);
+  MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
   ECMA_FINALIZE (string_var);
+
   return ret_value;
 } /* ecma_builtin_global_object_parse_float */
 
@@ -524,7 +520,7 @@ static uint8_t unescaped_uri_component_set[16] =
  *         It returns with ECMA_BUILTIN_HEX_TO_BYTE_ERROR if a parse error is occured.
  */
 static uint32_t
-ecma_builtin_global_object_hex_to_byte (ecma_char_t *source_p) /**< source string */
+ecma_builtin_global_object_hex_to_byte (lit_utf8_byte_t *source_p) /**< source string */
 {
   uint32_t decoded_byte = 0;
 
@@ -536,7 +532,7 @@ ecma_builtin_global_object_hex_to_byte (ecma_char_t *source_p) /**< source strin
     return ECMA_BUILTIN_HEX_TO_BYTE_ERROR;
   }
 
-  for (int i = 0; i < 2; i++)
+  for (lit_utf8_size_t i = 0; i < 2; i++)
   {
     source_p++;
     decoded_byte <<= 4;
@@ -581,19 +577,19 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
   JERRY_ASSERT (ecma_is_value_string (string));
 
   ecma_string_t *input_string_p = ecma_get_string_from_value (string);
-  uint32_t input_length = (uint32_t) ecma_string_get_length (input_string_p);
+  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
   MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_length + 1,
-                          ecma_char_t);
+                          input_size,
+                          lit_utf8_byte_t);
 
-  ecma_string_to_zt_string (input_string_p,
-                            input_start_p,
-                            (ssize_t) (input_length + 1) * (ssize_t) sizeof (ecma_char_t));
+  ecma_string_to_utf8_string (input_string_p,
+                              input_start_p,
+                              (ssize_t) (input_size));
 
-  ecma_char_t *input_char_p = input_start_p;
-  ecma_char_t *input_end_p = input_start_p + input_length;
-  uint32_t output_length = 1;
+  lit_utf8_byte_t *input_char_p = input_start_p;
+  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  lit_utf8_size_t output_size = 0;
 
   /*
    * The URI decoding has two major phases: first we validate the input,
@@ -605,7 +601,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
     /* Input validation. */
     if (*input_char_p != '%')
     {
-      output_length++;
+      output_size++;
       input_char_p++;
       continue;
     }
@@ -628,11 +624,11 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
       if (ecma_builtin_global_object_character_is_in (decoded_byte, reserved_uri_bitset)
           && !ecma_builtin_global_object_character_is_in (decoded_byte, unescaped_uri_component_set))
       {
-        output_length += 3;
+        output_size += 3;
       }
       else
       {
-        output_length++;
+        output_size++;
       }
     }
     else if (decoded_byte < 0xc0 || decoded_byte >= 0xf8)
@@ -670,6 +666,8 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         character = decoded_byte & 0x07;
       }
 
+      output_size += (count + 1);
+
       do
       {
         decoded_byte = ecma_builtin_global_object_hex_to_byte (input_char_p);
@@ -701,19 +699,17 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
         break;
       }
-
-      output_length += (character <= 0xffff) ? 1 : 2;
     }
   }
 
   if (ecma_is_completion_value_empty (ret_value))
   {
     MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                            output_length,
-                            ecma_char_t);
+                            output_size,
+                            lit_utf8_byte_t);
 
     input_char_p = input_start_p;
-    ecma_char_t *output_char_p = output_start_p;
+    lit_utf8_byte_t *output_char_p = output_start_p;
 
     while (input_char_p < input_end_p)
     {
@@ -740,7 +736,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         }
         else
         {
-          *output_char_p = (ecma_char_t) decoded_byte;
+          *output_char_p = (lit_utf8_byte_t) decoded_byte;
           output_char_p++;
         }
       }
@@ -778,26 +774,13 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         }
         while (--count > 0);
 
-        if (character < 0x10000)
-        {
-          *output_char_p = (ecma_char_t) character;
-          output_char_p++;
-        }
-        else
-        {
-          character -= 0x10000;
-          *output_char_p = (ecma_char_t) (0xd800 | (character & 0x3ff));
-          output_char_p++;
-          *output_char_p = (ecma_char_t) (0xdc00 | (character >> 10));
-          output_char_p++;
-        }
+        output_char_p += lit_code_point_to_utf8 (character, output_char_p);
       }
     }
 
-    *output_char_p = '\0';
-    JERRY_ASSERT (output_start_p + output_length == output_char_p + 1);
+    JERRY_ASSERT (output_start_p + output_size == output_char_p);
 
-    ecma_string_t *output_string_p = ecma_new_ecma_string (output_start_p);
+    ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
 
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
 
@@ -847,16 +830,16 @@ ecma_builtin_global_object_decode_uri_component (ecma_value_t this_arg __attr_un
  * Helper function to encode byte as hexadecimal values.
  */
 static void
-ecma_builtin_global_object_byte_to_hex (ecma_char_t *dest_p, /**< destination pointer */
+ecma_builtin_global_object_byte_to_hex (lit_utf8_byte_t *dest_p, /**< destination pointer */
                                         uint32_t byte) /**< value */
 {
   JERRY_ASSERT (byte < 256);
 
   dest_p[0] = '%';
   ecma_char_t hex_digit = (ecma_char_t) (byte >> 4);
-  dest_p[1] = (ecma_char_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
-  hex_digit = (ecma_char_t) (byte & 0xf);
-  dest_p[2] = (ecma_char_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
+  dest_p[1] = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
+  hex_digit = (lit_utf8_byte_t) (byte & 0xf);
+  dest_p[2] = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
 } /* ecma_builtin_global_object_byte_to_hex */
 
 /**
@@ -878,27 +861,29 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
   JERRY_ASSERT (ecma_is_value_string (string));
 
   ecma_string_t *input_string_p = ecma_get_string_from_value (string);
-  uint32_t input_length = (uint32_t) ecma_string_get_length (input_string_p);
+  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
   MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_length + 1,
-                          ecma_char_t);
+                          input_size + 1,
+                          lit_utf8_byte_t);
 
-  ecma_string_to_zt_string (input_string_p,
-                            input_start_p,
-                            (ssize_t) (input_length + 1) * (ssize_t) sizeof (ecma_char_t));
+  input_start_p[input_size] = LIT_BYTE_NULL;
+
+  ecma_string_to_utf8_string (input_string_p,
+                              input_start_p,
+                              (ssize_t) (input_size));
 
   /*
    * The URI encoding has two major phases: first we validate the input,
    * and compute the length of the output, then we encode the input.
    */
 
-  ecma_char_t *input_char_p = input_start_p;
-  uint32_t output_length = 1;
-  for (uint32_t i = 0; i < input_length; i++)
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_start_p, input_size);
+  lit_utf8_size_t output_length = 1;
+  while (!lit_utf8_iterator_reached_buffer_end (&iter))
   {
     /* Input validation. */
-    uint32_t character = *input_char_p++;
+    lit_code_point_t character = lit_utf8_iterator_read_code_unit_and_increment (&iter);
 
     if (character <= 0x7f)
     {
@@ -942,20 +927,20 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
   {
     MEM_DEFINE_LOCAL_ARRAY (output_start_p,
                             output_length,
-                            ecma_char_t);
+                            lit_utf8_byte_t);
 
-    input_char_p = input_start_p;
-    ecma_char_t *output_char_p = output_start_p;
-    for (uint32_t i = 0; i < input_length; i++)
+    lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_start_p, input_size);
+    lit_utf8_byte_t *output_char_p = output_start_p;
+    while (!lit_utf8_iterator_reached_buffer_end (&iter))
     {
       /* Input decode. */
-      uint32_t character = *input_char_p++;
+      lit_code_point_t character = lit_utf8_iterator_read_code_unit_and_increment (&iter);
 
       if (character <= 0x7f)
       {
         if (ecma_builtin_global_object_character_is_in (character, unescaped_uri_bitset))
         {
-          *output_char_p++ = (ecma_char_t) character;
+          *output_char_p++ = (lit_utf8_byte_t) character;
         }
         else
         {
@@ -995,7 +980,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     *output_char_p = '\0';
     JERRY_ASSERT (output_start_p + output_length == output_char_p + 1);
 
-    ecma_string_t *output_string_p = ecma_new_ecma_string (output_start_p);
+    ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length - 1);
 
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
 

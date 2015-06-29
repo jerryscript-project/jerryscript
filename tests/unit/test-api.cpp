@@ -88,7 +88,7 @@ test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API va
                                 const char* v) /**< string value to initialize with */
 {
   out_value_p->type = JERRY_API_DATA_TYPE_STRING;
-  out_value_p->v_string = jerry_api_create_string (v);
+  out_value_p->v_string = jerry_api_create_string ((jerry_api_char_t *) v);
 } /* test_api_init_api_value_string */
 
 /**
@@ -121,7 +121,7 @@ handler (const jerry_api_object_t *function_obj_p,
   JERRY_ASSERT (args_p[0].type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (args_p[0].v_string, NULL, 0);
   JERRY_ASSERT (sz == -2);
-  sz = jerry_api_string_to_char_buffer (args_p[0].v_string, buffer, -sz);
+  sz = jerry_api_string_to_char_buffer (args_p[0].v_string, (jerry_api_char_t *) buffer, -sz);
   JERRY_ASSERT (sz == 2);
   JERRY_ASSERT (!strcmp (buffer, "1"));
 
@@ -142,7 +142,8 @@ handler_throw_test (const jerry_api_object_t *function_obj_p,
 {
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 
-  jerry_api_object_t* error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE, "error");
+  jerry_api_object_t* error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE,
+                                                        (jerry_api_char_t *) "error");
 
   test_api_init_api_value_object (ret_val_p, error_p);
 
@@ -176,7 +177,7 @@ handler_construct (const jerry_api_object_t *function_obj_p,
   JERRY_ASSERT (args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN);
   JERRY_ASSERT (args_p[0].v_bool == true);
 
-  jerry_api_set_object_field_value (this_p->v_object, "value_field", &args_p[0]);
+  jerry_api_set_object_field_value (this_p->v_object, (jerry_api_char_t *) "value_field", &args_p[0]);
 
   jerry_api_set_object_native_handle (this_p->v_object,
                                       (uintptr_t) 0x0012345678abcdefull,
@@ -240,7 +241,7 @@ main (void)
   jerry_api_value_t res, args[2];
   char buffer[32];
 
-  is_ok = jerry_parse (test_source, strlen (test_source));
+  is_ok = jerry_parse ((jerry_api_char_t *)test_source, strlen (test_source));
   JERRY_ASSERT (is_ok);
 
   is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);
@@ -249,14 +250,14 @@ main (void)
   global_obj_p = jerry_api_get_global ();
 
   // Get global.t
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "t", &val_t);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"t", &val_t);
   JERRY_ASSERT (is_ok
                 && val_t.type == JERRY_API_DATA_TYPE_FLOAT64
                 && val_t.v_float64 == 1.0);
   jerry_api_release_value (&val_t);
 
   // Get global.foo
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "foo", &val_foo);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"foo", &val_foo);
   JERRY_ASSERT (is_ok
                 && val_foo.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -270,7 +271,7 @@ main (void)
   jerry_api_release_value (&res);
 
   // Get global.bar
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "bar", &val_bar);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"bar", &val_bar);
   JERRY_ASSERT (is_ok
                 && val_bar.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -285,7 +286,7 @@ main (void)
   // Set global.t = "abcd"
   test_api_init_api_value_string (&args[0], "abcd");
   is_ok = jerry_api_set_object_field_value (global_obj_p,
-                                            "t",
+                                            (jerry_api_char_t *)"t",
                                             &args[0]);
   JERRY_ASSERT (is_ok);
   jerry_api_release_value (&args[0]);
@@ -296,13 +297,13 @@ main (void)
                 && res.type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
   JERRY_ASSERT (sz == -5);
-  sz = jerry_api_string_to_char_buffer (res.v_string, buffer, -sz);
+  sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
   JERRY_ASSERT (sz == 5);
   jerry_api_release_value (&res);
   JERRY_ASSERT (!strcmp (buffer, "abcd"));
 
   // Get global.A
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "A", &val_A);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"A", &val_A);
   JERRY_ASSERT (is_ok
                 && val_A.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -310,7 +311,7 @@ main (void)
   is_ok = jerry_api_is_constructor (val_A.v_object);
   JERRY_ASSERT (is_ok);
   is_ok = jerry_api_get_object_field_value (val_A.v_object,
-                                            "prototype",
+                                            (jerry_api_char_t *) "prototype",
                                             &val_A_prototype);
   JERRY_ASSERT (is_ok
                 && val_A_prototype.type == JERRY_API_DATA_TYPE_OBJECT);
@@ -318,26 +319,26 @@ main (void)
 
   // Set A.prototype.foo = global.foo
   is_ok = jerry_api_set_object_field_value (val_A_prototype.v_object,
-                                            "foo",
+                                            (jerry_api_char_t *) "foo",
                                             &val_foo);
   JERRY_ASSERT (is_ok);
   jerry_api_release_value (&val_A_prototype);
   jerry_api_release_value (&val_foo);
 
   // Get global.a
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "a", &val_a);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "a", &val_a);
   JERRY_ASSERT (is_ok
                 && val_a.type == JERRY_API_DATA_TYPE_OBJECT);
 
   // Get a.t
-  is_ok = jerry_api_get_object_field_value (val_a.v_object, "t", &res);
+  is_ok = jerry_api_get_object_field_value (val_a.v_object, (jerry_api_char_t *) "t", &res);
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_FLOAT64
                 && res.v_float64 == 12.0);
   jerry_api_release_value (&res);
 
   // Get a.foo
-  is_ok = jerry_api_get_object_field_value (val_a.v_object, "foo", &val_a_foo);
+  is_ok = jerry_api_get_object_field_value (val_a.v_object, (jerry_api_char_t *) "foo", &val_a_foo);
   JERRY_ASSERT (is_ok
                 && val_a_foo.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -359,14 +360,14 @@ main (void)
 
   test_api_init_api_value_object (&val_external, external_func_p);
   is_ok = jerry_api_set_object_field_value (global_obj_p,
-                                            "external",
+                                            (jerry_api_char_t *) "external",
                                             &val_external);
   JERRY_ASSERT (is_ok);
   jerry_api_release_value (&val_external);
   jerry_api_release_object (external_func_p);
 
   // Call 'call_external' function that should call external function created above
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_external", &val_call_external);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "call_external", &val_call_external);
   JERRY_ASSERT (is_ok
                 && val_call_external.type == JERRY_API_DATA_TYPE_OBJECT);
   is_ok = jerry_api_call_function (val_call_external.v_object,
@@ -378,7 +379,7 @@ main (void)
                 && res.type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
   JERRY_ASSERT (sz == -20);
-  sz = jerry_api_string_to_char_buffer (res.v_string, buffer, -sz);
+  sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
   JERRY_ASSERT (sz == 20);
   jerry_api_release_value (&res);
   JERRY_ASSERT (!strcmp (buffer, "string from handler"));
@@ -391,7 +392,7 @@ main (void)
 
   test_api_init_api_value_object (&val_external_construct, external_construct_p);
   is_ok = jerry_api_set_object_field_value (global_obj_p,
-                                            "external_construct",
+                                            (jerry_api_char_t *) "external_construct",
                                             &val_external_construct);
   JERRY_ASSERT (is_ok);
   jerry_api_release_value (&val_external_construct);
@@ -403,7 +404,7 @@ main (void)
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_OBJECT);
   is_ok = jerry_api_get_object_field_value (res.v_object,
-                                            "value_field",
+                                            (jerry_api_char_t *)"value_field",
                                             &val_value_field);
 
   // Get 'value_field' of constructed object
@@ -427,13 +428,13 @@ main (void)
 
   test_api_init_api_value_object (&val_t, throw_test_handler_p);
   is_ok = jerry_api_set_object_field_value (global_obj_p,
-                                            "throw_test",
+                                            (jerry_api_char_t *) "throw_test",
                                             &val_t);
   JERRY_ASSERT (is_ok);
   jerry_api_release_value (&val_t);
   jerry_api_release_object (throw_test_handler_p);
 
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "call_throw_test", &val_t);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "call_throw_test", &val_t);
   JERRY_ASSERT (is_ok
                 && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -446,7 +447,7 @@ main (void)
   jerry_api_release_value (&res);
 
   // Test: Unhandled exception in called function
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "throw_reference_error", &val_t);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "throw_reference_error", &val_t);
   JERRY_ASSERT (is_ok
                 && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -479,7 +480,7 @@ main (void)
   jerry_api_release_object (obj_p);
 
   // Test: Unhandled exception in function called, as constructor
-  is_ok = jerry_api_get_object_field_value (global_obj_p, "throw_reference_error", &val_t);
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "throw_reference_error", &val_t);
   JERRY_ASSERT (is_ok
                 && val_t.type == JERRY_API_DATA_TYPE_OBJECT);
 
@@ -511,7 +512,7 @@ main (void)
 
   // Test: eval
   const char *eval_code_src_p = "(function () { return 123; })";
-  jerry_completion_code_t status = jerry_api_eval (eval_code_src_p,
+  jerry_completion_code_t status = jerry_api_eval ((jerry_api_char_t *) eval_code_src_p,
                                                    strlen (eval_code_src_p),
                                                    false,
                                                    true,
@@ -547,7 +548,7 @@ main (void)
                                          magic_string_lengths);
 
   const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
-  is_ok = jerry_parse (ms_code_src_p, strlen (ms_code_src_p));
+  is_ok = jerry_parse ((jerry_api_char_t *) ms_code_src_p, strlen (ms_code_src_p));
   JERRY_ASSERT (is_ok);
 
   is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);

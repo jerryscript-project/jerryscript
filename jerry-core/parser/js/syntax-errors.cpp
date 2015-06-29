@@ -19,6 +19,7 @@
 #include "parser.h"
 #include "jrt-libc-includes.h"
 #include "ecma-helpers.h"
+#include "lit-magic-strings.h"
 
 /**
  * SyntaxError longjmp label, used to finish parse upon a SyntaxError is raised
@@ -177,10 +178,12 @@ emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
 {
   if (op.type == OPERAND_LITERAL)
   {
-    if (lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
-                                   lit_get_magic_string_zt (LIT_MAGIC_STRING_ARGUMENTS))
-        || lit_literal_equal_type_zt (lit_get_literal_by_cp (op.data.lit_id),
-                                      lit_get_magic_string_zt (LIT_MAGIC_STRING_EVAL)))
+    if (lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.data.lit_id),
+                                     lit_get_magic_string_utf8 (LIT_MAGIC_STRING_ARGUMENTS),
+                                     lit_get_magic_string_size (LIT_MAGIC_STRING_ARGUMENTS))
+        || lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.data.lit_id),
+                                        lit_get_magic_string_utf8 (LIT_MAGIC_STRING_EVAL),
+                                        lit_get_magic_string_size (LIT_MAGIC_STRING_EVAL)))
     {
       PARSE_ERROR ("'eval' and 'arguments' are not allowed here in strict mode", loc);
     }

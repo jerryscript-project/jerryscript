@@ -83,11 +83,11 @@ extern EXTERN_C void jerry_cleanup (void);
 extern EXTERN_C void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 extern EXTERN_C void jerry_reg_err_callback (jerry_error_callback_t callback);
 
-extern EXTERN_C bool jerry_parse (const char* source_p, size_t source_size);
+extern EXTERN_C bool jerry_parse (const jerry_api_char_t * source_p, size_t source_size);
 extern EXTERN_C jerry_completion_code_t jerry_run (void);
 
 extern EXTERN_C jerry_completion_code_t
-jerry_run_simple (const char *script_source,
+jerry_run_simple (const jerry_api_char_t *script_source,
                   size_t script_source_size,
                   jerry_flag_t flags);
 

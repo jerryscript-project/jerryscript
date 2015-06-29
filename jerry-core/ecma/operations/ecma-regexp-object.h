@@ -40,9 +40,9 @@
  */
 typedef struct
 {
-  const ecma_char_t **saved_p;
-  const ecma_char_t *input_start_p;
-  const ecma_char_t *input_end_p;
+  const lit_utf8_byte_t **saved_p;
+  const lit_utf8_byte_t *input_start_p;
+  const lit_utf8_byte_t *input_end_p;
   uint32_t match_limit;
   uint32_t recursion_depth;
   uint32_t num_of_captures;
@@ -55,7 +55,10 @@ extern ecma_completion_value_t
 ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str_p);
 
 extern ecma_completion_value_t
-ecma_regexp_exec_helper (ecma_object_t *obj_p, re_bytecode_t *bc_p, const ecma_char_t *str_p);
+ecma_regexp_exec_helper (ecma_object_t *obj_p,
+                         re_bytecode_t *bc_p,
+                         const lit_utf8_byte_t *str_p,
+                         lit_utf8_size_t str_size);
 
 /**
  * @}

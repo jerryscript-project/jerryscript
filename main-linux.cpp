@@ -38,7 +38,7 @@
 
 static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
 
-static const char*
+static const jerry_api_char_t *
 read_sources (const char *script_file_names[],
               int files_count,
               size_t *out_source_size_p)
@@ -103,7 +103,7 @@ read_sources (const char *script_file_names[],
 
     *out_source_size_p = source_size;
 
-    return (const char*)source_buffer;
+    return (const jerry_api_char_t *) source_buffer;
   }
 }
 
@@ -233,7 +233,7 @@ main (int argc,
   else
   {
     size_t source_size;
-    const char *source_p = read_sources (file_names, files_counter, &source_size);
+    const jerry_api_char_t *source_p = read_sources (file_names, files_counter, &source_size);
 
     if (source_p == NULL)
     {
@@ -265,7 +265,9 @@ main (int argc,
       assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
       assert_value.v_object = assert_func_p;
 
-      bool is_assert_added = jerry_api_set_object_field_value (global_obj_p, "assert", &assert_value);
+      bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
+                                                               (jerry_api_char_t *) "assert",
+                                                               &assert_value);
 
       jerry_api_release_value (&assert_value);
       jerry_api_release_object (global_obj_p);

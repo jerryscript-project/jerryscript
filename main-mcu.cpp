@@ -22,6 +22,8 @@
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 #include JERRY_MCU_SCRIPT_HEADER
+#include "jerry-core/jerry-api.h"
+
 static const char generated_source[] = JERRY_MCU_SCRIPT;
 
 int
@@ -30,7 +32,7 @@ main (void)
   const char *source_p = generated_source;
   const size_t source_size = sizeof (generated_source);
 
-  jerry_completion_code_t ret_code = jerry_run_simple (source_p, source_size, JERRY_FLAG_EMPTY);
+  jerry_completion_code_t ret_code = jerry_run_simple ((jerry_api_char_t *) source_p, source_size, JERRY_FLAG_EMPTY);
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {

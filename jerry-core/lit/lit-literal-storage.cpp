@@ -16,6 +16,7 @@
 #include "lit-literal-storage.h"
 #include "ecma-helpers.h"
 #include "lit-literal.h"
+#include "lit-magic-strings.h"
 
 /**
  * Literal storage
@@ -57,18 +58,18 @@ lit_charset_record_t::set_prev (rcs_record_t *prev_rec_p) /**< pointer to the re
  * Set the charset of the record
  */
 void
-lit_charset_record_t::set_charset (const ecma_char_t *str, /**< buffer containing characters to set */
-                                   size_t size)            /**< size of the buffer in bytes */
+lit_charset_record_t::set_charset (const lit_utf8_byte_t *str, /**< buffer containing characters to set */
+                                   lit_utf8_size_t size)                /**< size of the buffer in bytes */
 {
   JERRY_ASSERT (header_size () + size == get_size () - get_alignment_bytes_count ());
 
   rcs_record_iterator_t it ((rcs_recordset_t *)&lit_storage, (rcs_record_t *)this);
   it.skip (header_size ());
 
-  for (size_t i = 0; i < get_length (); ++i)
+  for (lit_utf8_size_t i = 0; i < get_length (); ++i)
   {
-    it.write<ecma_char_t> (str[i]);
-    it.skip<ecma_char_t> ();
+    it.write<lit_utf8_byte_t> (str[i]);
+    it.skip<lit_utf8_byte_t> ();
   }
 } /* lit_charset_record_t::set_charset */
 
@@ -77,38 +78,39 @@ lit_charset_record_t::set_charset (const ecma_char_t *str, /**< buffer containin
  *
  * @return number of code units written to the buffer
  */
-ecma_length_t
-lit_charset_record_t::get_charset (ecma_char_t *buff, /**< output buffer */
+lit_utf8_size_t
+lit_charset_record_t::get_charset (lit_utf8_byte_t *buff, /**< output buffer */
                                    size_t size) /**< size of the output buffer in bytes */
 {
-  JERRY_ASSERT (buff && size >= sizeof (ecma_char_t));
+  JERRY_ASSERT (buff && size >= sizeof (lit_utf8_byte_t));
 
   rcs_record_iterator_t it ((rcs_recordset_t *)&lit_storage, (rcs_record_t *)this);
   it.skip (header_size ());
-  ecma_length_t len = get_length ();
-  size_t i;
+  lit_utf8_size_t len = get_length ();
+  lit_utf8_size_t i;
 
-  for (i = 0; i < len && size > sizeof (ecma_char_t); ++i)
+  for (i = 0; i < len && size > 0; ++i)
   {
-    buff[i] = it.read<ecma_char_t> ();
-    it.skip<ecma_char_t> ();
-    size -= sizeof (ecma_char_t);
+    buff[i] = it.read<lit_utf8_byte_t> ();
+    it.skip<lit_utf8_byte_t> ();
+    size -= sizeof (lit_utf8_byte_t);
   }
 
-  return (ecma_length_t) i;
+  return i;
 } /* lit_charset_record_t::get_charset */
 
 /**
  * Compares characters from the record to the string
  *
  * @return  0 if strings are equal
- *         -1 if str2 is greater
- *          1 if str2 is less
+ *         -1 if str_to_compare_with is greater
+ *          1 if str_to_compare_with is less
  */
 int
-lit_charset_record_t::compare_zt (const ecma_char_t *str_to_compare_with, /**< buffer with string to compare */
-                                  size_t length)                          /**< length of the string in buffer str2 */
+lit_charset_record_t::compare_utf8 (const lit_utf8_byte_t *str_to_compare_with, /**< buffer with string to compare */
+                                    lit_utf8_size_t str_size) /**< size of the string */
 {
+  TODO ("Support utf-8 in comparison.");
   size_t i;
 
   if (get_length () == 0)
@@ -132,9 +134,9 @@ lit_charset_record_t::compare_zt (const ecma_char_t *str_to_compare_with, /**< b
 
   it_this.skip (header_size ());
 
-  for (i = 0; i < get_length () && i < length; i++)
+  for (i = 0; i < get_length () && i < str_size; i++)
   {
-    ecma_char_t chr = it_this.read<ecma_char_t> ();
+    lit_utf8_byte_t chr = it_this.read<lit_utf8_byte_t> ();
 
     if (chr > str_to_compare_with[i])
     {
@@ -145,10 +147,10 @@ lit_charset_record_t::compare_zt (const ecma_char_t *str_to_compare_with, /**< b
       return -1;
     }
 
-    it_this.skip<ecma_char_t> ();
+    it_this.skip<lit_utf8_byte_t> ();
   }
 
-  if (i < length)
+  if (i < str_size)
   {
     return -1;
   }
@@ -163,7 +165,7 @@ lit_charset_record_t::compare_zt (const ecma_char_t *str_to_compare_with, /**< b
  *          false otherwise
  */
 bool
-lit_charset_record_t::equal (lit_charset_record_t *rec) /**< charset record to compare with */
+lit_charset_record_t::is_equal (lit_charset_record_t *rec) /**< charset record to compare with */
 {
   if (get_length () != rec->get_length ())
   {
@@ -176,31 +178,19 @@ lit_charset_record_t::equal (lit_charset_record_t *rec) /**< charset record to c
   it_this.skip (header_size ());
   it_record.skip (rec->header_size ());
 
-  for (ecma_length_t i = 0; i < get_length (); i++)
+  for (lit_utf8_size_t i = 0; i < get_length (); i++)
   {
-    if (it_this.read<ecma_char_t> () != it_record.read<ecma_char_t> ())
+    if (it_this.read<lit_utf8_byte_t> () != it_record.read<lit_utf8_byte_t> ())
     {
       return false;
     }
 
-    it_this.skip<ecma_char_t> ();
-    it_record.skip<ecma_char_t> ();
+    it_this.skip<lit_utf8_byte_t> ();
+    it_record.skip<lit_utf8_byte_t> ();
   }
 
   return true;
-} /* lit_charset_record_t::equal */
-
-/**
- * Compares this lit_charset_record_t records with zero-terminated string for equality
- *
- * @return  true if compared instances are equal
- *          false otherwise
- */
-bool
-lit_charset_record_t::equal_zt (const ecma_char_t *str) /**< zero-terminated string */
-{
-  return equal_non_zt (str, ecma_zt_string_length (str));
-} /* lit_charset_record_t::equal_zt */
+} /* lit_charset_record_t::is_equal */
 
 /**
  * Compare this lit_charset_record_t record with string (which could contain '\0' characters) for equality
@@ -209,24 +199,24 @@ lit_charset_record_t::equal_zt (const ecma_char_t *str) /**< zero-terminated str
  *          false otherwise
  */
 bool
-lit_charset_record_t::equal_non_zt (const ecma_char_t *str, /**< string to compare with */
-                                    ecma_length_t len)      /**< length of the string */
+lit_charset_record_t::is_equal_utf8_string (const lit_utf8_byte_t *str, /**< string to compare with */
+                                            lit_utf8_size_t str_size)   /**< length of the string */
 {
   rcs_record_iterator_t it_this (&lit_storage, this);
 
   it_this.skip (header_size ());
 
-  for (ecma_length_t i = 0; i < get_length () && i < len; i++)
+  for (lit_utf8_size_t i = 0; i < get_length () && i < str_size; i++)
   {
-    if (it_this.read<ecma_char_t> () != str[i])
+    if (it_this.read<lit_utf8_byte_t> () != str[i])
     {
       return false;
     }
 
-    it_this.skip<ecma_char_t> ();
+    it_this.skip<lit_utf8_byte_t> ();
   }
 
-  return get_length () == len;
+  return get_length () == str_size;
 } /* lit_charset_record_t::equal_non_zt */
 
 /**
@@ -235,9 +225,9 @@ lit_charset_record_t::equal_non_zt (const ecma_char_t *str, /**< string to compa
  * @return  pointer to the created record
  */
 lit_charset_record_t *
-lit_literal_storage_t::create_charset_record (const ecma_char_t *str, /**< string to be placed in the record */
-                                              size_t buf_size)        /**< size in bytes of the buffer which holds the
-                                                                       * string */
+lit_literal_storage_t::create_charset_record (const lit_utf8_byte_t *str, /**< string to be placed in the record */
+                                              lit_utf8_size_t buf_size) /**< size in bytes of the buffer which holds the
+                                                                         * string */
 {
   const size_t alignment = lit_charset_record_t::size (buf_size) - (lit_charset_record_t::header_size () + buf_size);
 
@@ -245,7 +235,7 @@ lit_literal_storage_t::create_charset_record (const ecma_char_t *str, /**< strin
 
   ret->set_alignment_bytes_count (alignment);
   ret->set_charset (str, buf_size);
-  ret->set_hash (ecma_chars_buffer_calc_hash_last_chars (str, ret->get_length ()));
+  ret->set_hash (lit_utf8_string_calc_hash_last_bytes (str, ret->get_length ()));
 
   return ret;
 } /* lit_literal_storage_t::create_charset_record */
@@ -319,8 +309,9 @@ lit_literal_storage_t::dump ()
 
         for (size_t i = 0; i < lit_p->get_length (); ++i)
         {
-          printf ("%c", it_this.read<ecma_char_t> ());
-          it_this.skip<ecma_char_t> ();
+          FIXME ("Support proper printing of characters which occupy more than one byte.")
+          printf ("%c", it_this.read<lit_utf8_byte_t> ());
+          it_this.skip<lit_utf8_byte_t> ();
         }
 
         printf (" : STRING");
@@ -330,7 +321,7 @@ lit_literal_storage_t::dump ()
       case LIT_MAGIC_STR:
       {
         lit_magic_string_id_t id = lit_magic_record_get_magic_str_id (rec_p);
-        printf ("%s : MAGIC STRING", lit_get_magic_string_zt (id));
+        printf ("%s : MAGIC STRING", lit_get_magic_string_utf8 (id));
         printf (" [id=%d] ", id);
 
         break;
@@ -338,7 +329,7 @@ lit_literal_storage_t::dump ()
       case LIT_MAGIC_STR_EX:
       {
         lit_magic_string_ex_id_t id = lit_magic_record_ex_get_magic_str_id (rec_p);
-        printf ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_zt (id));
+        printf ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_utf8 (id));
         printf (" [id=%d] ", id);
 
         break;
@@ -353,8 +344,8 @@ lit_literal_storage_t::dump ()
         }
         else
         {
-          ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-          ecma_number_to_zt_string (lit_p->get_number (), buff, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+          lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+          ecma_number_to_utf8_string (lit_p->get_number (), buff, sizeof (buff));
           printf ("%s : NUMBER", buff);
         }
 
@@ -465,12 +456,12 @@ lit_literal_storage_t::get_record_size (rcs_record_t* rec_p) /**< pointer to a r
   }
 } /* lit_literal_storage_t::get_record_size */
 
-template void rcs_record_iterator_t::skip<ecma_char_t> ();
+template void rcs_record_iterator_t::skip<uint8_t> ();
 template void rcs_record_iterator_t::skip<uint16_t> ();
 template void rcs_record_iterator_t::skip<uint32_t> ();
 
-template void rcs_record_iterator_t::write<ecma_char_t> (ecma_char_t);
-template ecma_char_t rcs_record_iterator_t::read<ecma_char_t> ();
+template void rcs_record_iterator_t::write<uint8_t> (uint8_t);
+template uint8_t rcs_record_iterator_t::read<uint8_t> ();
 
 template void rcs_record_iterator_t::write<ecma_number_t> (ecma_number_t);
 template ecma_number_t rcs_record_iterator_t::read<ecma_number_t> ();

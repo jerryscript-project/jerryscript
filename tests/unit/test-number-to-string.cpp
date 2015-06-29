@@ -27,19 +27,19 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  const ecma_char_t* zt_strings[] =
+  const lit_utf8_byte_t *strings[] =
   {
-    (const ecma_char_t*) "1",
-    (const ecma_char_t*) "0.5",
-    (const ecma_char_t*) "12345",
-    (const ecma_char_t*) "12345.123",
-    (const ecma_char_t*) "1e-45",
-    (const ecma_char_t*) "-2.5e+38",
-    (const ecma_char_t*) "NaN",
-    (const ecma_char_t*) "Infinity",
-    (const ecma_char_t*) "-Infinity",
-    (const ecma_char_t*) "0",
-    (const ecma_char_t*) "0",
+    (const lit_utf8_byte_t *) "1",
+    (const lit_utf8_byte_t *) "0.5",
+    (const lit_utf8_byte_t *) "12345",
+    (const lit_utf8_byte_t *) "12345.123",
+    (const lit_utf8_byte_t *) "1e-45",
+    (const lit_utf8_byte_t *) "-2.5e+38",
+    (const lit_utf8_byte_t *) "NaN",
+    (const lit_utf8_byte_t *) "Infinity",
+    (const lit_utf8_byte_t *) "-Infinity",
+    (const lit_utf8_byte_t *) "0",
+    (const lit_utf8_byte_t *) "0",
   };
 
   const ecma_number_t nums[] =
@@ -61,11 +61,11 @@ main (int __attr_unused___ argc,
        i < sizeof (nums) / sizeof (nums[0]);
        i++)
   {
-    ecma_char_t zt_str[64];
+    lit_utf8_byte_t str[64];
 
-    ecma_number_to_zt_string (nums[i], zt_str, sizeof (zt_str));
+    lit_utf8_size_t str_size = ecma_number_to_utf8_string (nums[i], str, sizeof (str));
 
-    if (strcmp ((char*)zt_str, (char*)zt_strings[i]) != 0)
+    if (strncmp ((char *) str, (char *) strings[i], str_size) != 0)
     {
       return 1;
     }

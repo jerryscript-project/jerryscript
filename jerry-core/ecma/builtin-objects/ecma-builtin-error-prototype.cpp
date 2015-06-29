@@ -24,6 +24,7 @@
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "lit-magic-strings.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
 
@@ -131,48 +132,43 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
         }
         else
         {
-          const ecma_char_t *colon_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_COLON_CHAR);
-          const ecma_char_t *space_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_SPACE_CHAR);
+          const lit_utf8_size_t size = (ecma_string_get_size (name_string_p) +
+                                        ecma_string_get_size (msg_string_p) +
+                                        lit_get_magic_string_size (LIT_MAGIC_STRING_COLON_CHAR) +
+                                        lit_get_magic_string_size (LIT_MAGIC_STRING_SPACE_CHAR));
 
-          const ecma_length_t len = (ecma_string_get_length (name_string_p) +
-                                     ecma_string_get_length (msg_string_p) +
-                                     ecma_zt_string_length (colon_zt_magic_string_p) +
-                                     ecma_zt_string_length (space_zt_magic_string_p));
-
-          const ssize_t buffer_size = (ssize_t) ((len + 1) * sizeof (ecma_char_t));
+          const ssize_t buffer_size = (ssize_t) size;
           ssize_t buffer_size_left = buffer_size;
 
-          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, buffer_size, ecma_char_t);
-          ecma_char_t *ret_str_buffer_p = ret_str_buffer;
+          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, buffer_size, lit_utf8_byte_t);
+          lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
 
-          ssize_t bytes = ecma_string_to_zt_string (name_string_p, ret_str_buffer_p, buffer_size_left);
-          JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
+          ssize_t bytes = ecma_string_to_utf8_string (name_string_p, ret_str_buffer_p, buffer_size_left);
+          JERRY_ASSERT (bytes >= 0 && buffer_size_left - bytes >= 0);
 
-          buffer_size_left -= bytes - 1 /* null character */;
-          ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
+          buffer_size_left -= bytes;
+          ret_str_buffer_p = ret_str_buffer + buffer_size - buffer_size_left;
 
-          ret_str_buffer_p = ecma_copy_zt_string_to_buffer (colon_zt_magic_string_p,
-                                                            ret_str_buffer_p,
-                                                            buffer_size_left);
-          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
+          ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_COLON_CHAR,
+                                                              ret_str_buffer_p,
+                                                              buffer_size_left);
+          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer);
           JERRY_ASSERT (buffer_size_left >= 0);
 
-          ret_str_buffer_p = ecma_copy_zt_string_to_buffer (space_zt_magic_string_p,
-                                                            ret_str_buffer_p,
-                                                            buffer_size_left);
-          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer) * (ssize_t) sizeof (ecma_char_t);
+          ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_SPACE_CHAR,
+                                                              ret_str_buffer_p,
+                                                              buffer_size_left);
+          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer);
           JERRY_ASSERT (buffer_size_left >= 0);
 
-          bytes = ecma_string_to_zt_string (msg_string_p, ret_str_buffer_p, buffer_size_left);
-          JERRY_ASSERT (bytes >= 1 && buffer_size_left - bytes >= 0);
+          bytes = ecma_string_to_utf8_string (msg_string_p, ret_str_buffer_p, buffer_size_left);
+          JERRY_ASSERT (bytes >= 0 && buffer_size_left - bytes >= 0);
 
-          buffer_size_left -= bytes - 1 /* null character */;
-          ret_str_buffer_p = (ecma_char_t*) ((uint8_t*) ret_str_buffer + (buffer_size - buffer_size_left));
+          buffer_size_left -= bytes;
+          JERRY_ASSERT (buffer_size_left >= 0);
 
-          JERRY_ASSERT (buffer_size_left >= (ssize_t) sizeof (ecma_char_t));
-          *ret_str_buffer_p = ECMA_CHAR_NULL;
-
-          ret_str_p = ecma_new_ecma_string (ret_str_buffer);
+          ret_str_p = ecma_new_ecma_string_from_utf8 (ret_str_buffer,
+                                                      (jerry_api_size_t) (buffer_size - buffer_size_left));
 
           MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }

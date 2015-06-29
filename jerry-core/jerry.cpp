@@ -25,6 +25,7 @@
 #include "ecma-init-finalize.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "lit-magic-strings.h"
 #include "parser.h"
 #include "serializer.h"
 
@@ -281,12 +282,27 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
  */
 ssize_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string descriptor */
-                             char *buffer_p, /**< output characters buffer */
-                             ssize_t buffer_size) /**< size of output buffer */
+                                 jerry_api_char_t *buffer_p, /**< output characters buffer */
+                                 ssize_t buffer_size) /**< size of output buffer */
 {
   jerry_assert_api_available ();
 
-  return ecma_string_to_zt_string (string_p, (ecma_char_t*) buffer_p, buffer_size);
+  if (buffer_size > 0)
+  {
+    buffer_size--;
+  }
+  ssize_t ret_val = ecma_string_to_utf8_string (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
+  if (ret_val >= 0)
+  {
+    buffer_p[ret_val] = 0;
+    ret_val++;
+  }
+  else
+  {
+    ret_val--;
+  }
+
+  return ret_val;
 } /* jerry_api_string_to_char_buffer */
 
 /**
@@ -383,13 +399,31 @@ jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */
  *
  * @return pointer to created string
  */
-jerry_api_string_t*
-jerry_api_create_string (const char *v) /**< string value */
+jerry_api_string_t *
+jerry_api_create_string (const jerry_api_char_t *v) /**< string value */
 {
   jerry_assert_api_available ();
 
-  return ecma_new_ecma_string ((const ecma_char_t*) v);
+  return ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) v, lit_zt_utf8_string_size ((lit_utf8_byte_t *) v));
 } /* jerry_api_create_string */
+
+/**
+ * Create a string
+ *
+ * Note:
+ *      caller should release the string with jerry_api_release_string, just when the value becomes unnecessary.
+ *
+ * @return pointer to created string
+ */
+jerry_api_string_t *
+jerry_api_create_string_sz (const jerry_api_char_t *v, /**< string value */
+                            jerry_api_size_t v_size)
+{
+  jerry_assert_api_available ();
+
+  return ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) v,
+                                         (lit_utf8_size_t) v_size);
+} /* jerry_api_create_string_sz */
 
 /**
  * Create an object
@@ -417,8 +451,27 @@ jerry_api_create_object (void)
  */
 jerry_api_object_t*
 jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
-                        const char *message_p) /**< value of 'message' property
-                                                *   of constructed error object */
+                        const jerry_api_char_t *message_p) /**< value of 'message' property
+                                                            *   of constructed error object */
+{
+  return jerry_api_create_error_sz (error_type,
+                                    (lit_utf8_byte_t *) message_p,
+                                    lit_zt_utf8_string_size (message_p));
+}
+
+/**
+ * Create an error object
+ *
+ * Note:
+ *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *
+ * @return pointer to created error object
+ */
+jerry_api_object_t*
+jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
+                           const jerry_api_char_t *message_p, /**< value of 'message' property
+                                                               *   of constructed error object */
+                           jerry_api_size_t message_size) /**< size of the message in bytes */
 {
   jerry_assert_api_available ();
 
@@ -473,7 +526,8 @@ jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
   }
   else
   {
-    ecma_string_t* message_string_p = ecma_new_ecma_string ((const ecma_char_t*) message_p);
+    ecma_string_t* message_string_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) message_p,
+                                                                      (lit_utf8_size_t) message_size);
 
     ecma_object_t* error_object_p = ecma_new_standard_error_with_message (standard_error_type, message_string_p);
 
@@ -632,7 +686,8 @@ jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
  */
 bool
 jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add field at */
-                            const char *field_name_p, /**< name of the field */
+                            const jerry_api_char_t *field_name_p, /**< name of the field */
+                            jerry_api_size_t field_name_size, /**< size of field name in bytes */
                             const jerry_api_value_t *field_value_p, /**< value of the field */
                             bool is_writable) /**< flag indicating whether the created field should be writable */
 {
@@ -642,7 +697,8 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
 
   if (ecma_get_object_extensible (object_p))
   {
-    ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
+    ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+                                                                      (lit_utf8_size_t) field_name_size);
 
     ecma_property_t *prop_p = ecma_op_object_get_own_property (object_p, field_name_str_p);
 
@@ -678,13 +734,15 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
  */
 bool
 jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to delete field at */
-                               const char *field_name_p) /**< name of the field */
+                               const jerry_api_char_t *field_name_p, /**< name of the field */
+                               jerry_api_size_t field_name_size) /**< size of the field name in bytes */
 {
   jerry_assert_api_available ();
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
+  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+                                                                    (lit_utf8_size_t) field_name_size);
 
   ecma_completion_value_t delete_completion = ecma_op_object_delete (object_p,
                                                                      field_name_str_p,
@@ -715,16 +773,40 @@ jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to dele
  *                - there is field with specified name in the object;
  *         false - otherwise.
  */
+bool jerry_api_get_object_field_value (jerry_api_object_t *object_p,
+                                       const jerry_api_char_t *field_name_p,
+                                       jerry_api_value_t *field_value_p)
+{
+  return jerry_api_get_object_field_value_sz (object_p,
+                                              field_name_p,
+                                              lit_zt_utf8_string_size (field_name_p),
+                                              field_value_p);
+}
+
+/**
+ * Get value of field in the specified object
+ *
+ * Note:
+ *      if value was retrieved successfully, it should be freed
+ *      with jerry_api_release_value just when it becomes unnecessary.
+ *
+ * @return true, if field value was retrieved successfully, i.e. upon the call:
+ *                - there is field with specified name in the object;
+ *         false - otherwise.
+ */
 bool
-jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
-                                  const char *field_name_p, /**< name of the field */
-                                  jerry_api_value_t *field_value_p) /**< out: field value, if retrieved successfully */
+jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object */
+                                     const jerry_api_char_t *field_name_p, /**< name of the field */
+                                     jerry_api_size_t field_name_size, /**< size of field name in bytes */
+                                     jerry_api_value_t *field_value_p) /**< out: field value, if retrieved
+ * successfully */
 {
   jerry_assert_api_available ();
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
+  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+                                                                    (lit_utf8_size_t) field_name_size);
 
   ecma_completion_value_t get_completion = ecma_op_object_get (object_p,
                                                                field_name_str_p);
@@ -758,14 +840,34 @@ jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
  */
 bool
 jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
-                                  const char *field_name_p, /**< name of the field */
+                                  const jerry_api_char_t *field_name_p, /**< name of the field */
                                   const jerry_api_value_t *field_value_p) /**< field value to set */
+{
+  return jerry_api_set_object_field_value_sz (object_p,
+                                              field_name_p,
+                                              lit_zt_utf8_string_size (field_name_p),
+                                              field_value_p);
+}
+
+/**
+ * Set value of field in the specified object
+ *
+ * @return true, if field value was set successfully, i.e. upon the call:
+ *                - field value is writable;
+ *         false - otherwise.
+ */
+bool
+jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object */
+                                     const jerry_api_char_t *field_name_p, /**< name of the field */
+                                     jerry_api_size_t field_name_size, /**< size of field name in bytes */
+                                     const jerry_api_value_t *field_value_p) /**< field value to set */
 {
   jerry_assert_api_available ();
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string ((const ecma_char_t*) field_name_p);
+  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+                                                                    (lit_utf8_size_t) field_name_size);
 
   ecma_value_t value_to_put;
   jerry_api_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
@@ -1081,7 +1183,7 @@ jerry_api_get_global (void)
  * @return completion status
  */
 jerry_completion_code_t
-jerry_api_eval (const char *source_p, /**< source code */
+jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
                 size_t source_size, /**< length of source code */
                 bool is_direct, /**< perform eval invocation in direct mode */
                 bool is_strict, /**< perform eval as it is called from strict mode code */
@@ -1091,7 +1193,7 @@ jerry_api_eval (const char *source_p, /**< source code */
 
   jerry_completion_code_t status;
 
-  ecma_completion_value_t completion = ecma_op_eval_chars_buffer ((const ecma_char_t*) source_p,
+  ecma_completion_value_t completion = ecma_op_eval_chars_buffer ((const lit_utf8_byte_t *) source_p,
                                                                   source_size,
                                                                   is_direct,
                                                                   is_strict);
@@ -1222,7 +1324,7 @@ jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callbac
  *         false - otherwise (SyntaxError was raised).
  */
 bool
-jerry_parse (const char* source_p, /**< script source */
+jerry_parse (const jerry_api_char_t* source_p, /**< script source */
              size_t source_size) /**< script source size */
 {
   jerry_assert_api_available ();
@@ -1276,7 +1378,7 @@ jerry_run (void)
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run_simple (const char *script_source, /**< script source */
+jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
                   size_t script_source_size, /**< script source size */
                   jerry_flag_t flags) /**< combination of Jerry flags */
 {
@@ -1363,5 +1465,5 @@ jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
                                        uint32_t count,                           /**< number of the strings */
                                        const jerry_api_length_t* str_lengths)    /**< lengths of the strings */
 {
-  lit_magic_strings_ex_set ((const ecma_char_ptr_t*)ex_str_items, count, (const ecma_length_t*)str_lengths);
+  lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_external_magic_strings */

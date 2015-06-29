@@ -24,6 +24,7 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
+#include "lit-magic-strings.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -83,40 +84,29 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
      'Null' or one of possible object's classes.
      The string with null character is maximum 19 characters long. */
   const ssize_t buffer_size = 19;
-  MEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, ecma_char_t);
+  MEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, lit_utf8_byte_t);
 
-  const ecma_char_t *left_square_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
-  const ecma_char_t *object_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_OBJECT);
-  const ecma_char_t *space_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_SPACE_CHAR);
-  const ecma_char_t *type_name_zt_str_p = lit_get_magic_string_zt (type_string);
-  const ecma_char_t *right_square_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
-
-  ecma_char_t *buffer_ptr = str_buffer;
+  lit_utf8_byte_t *buffer_ptr = str_buffer;
   ssize_t buffer_size_left = buffer_size;
-  buffer_ptr = ecma_copy_zt_string_to_buffer (left_square_zt_str_p,
-                                              buffer_ptr,
-                                              buffer_size_left);
-  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
-  buffer_ptr = ecma_copy_zt_string_to_buffer (object_zt_str_p,
-                                              buffer_ptr,
-                                              buffer_size_left);
-  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
-  buffer_ptr = ecma_copy_zt_string_to_buffer (space_zt_str_p,
-                                              buffer_ptr,
-                                              buffer_size_left);
-  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
-  buffer_ptr = ecma_copy_zt_string_to_buffer (type_name_zt_str_p,
-                                              buffer_ptr,
-                                              buffer_size_left);
-  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
-  buffer_ptr = ecma_copy_zt_string_to_buffer (right_square_zt_str_p,
-                                              buffer_ptr,
-                                              buffer_size_left);
-  buffer_size_left = buffer_size - (buffer_ptr - str_buffer) * (ssize_t) sizeof (ecma_char_t);
+
+  const lit_magic_string_id_t magic_string_ids[] =
+  {
+    LIT_MAGIC_STRING_LEFT_SQUARE_CHAR,
+    LIT_MAGIC_STRING_OBJECT,
+    LIT_MAGIC_STRING_SPACE_CHAR,
+    type_string,
+    LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR
+  };
+
+  for (uint32_t i = 0; i < sizeof (magic_string_ids) / sizeof (lit_magic_string_id_t); ++i)
+  {
+    buffer_ptr = lit_copy_magic_string_to_buffer (magic_string_ids[i], buffer_ptr, buffer_size_left);
+    buffer_size_left = buffer_size - (buffer_ptr - str_buffer);
+  }
 
   JERRY_ASSERT (buffer_size_left >= 0);
 
-  ret_string_p = ecma_new_ecma_string (str_buffer);
+  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_size - buffer_size_left));
 
   MEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 

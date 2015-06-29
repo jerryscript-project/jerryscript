@@ -20,6 +20,7 @@
 #include "jrt-libc-includes.h"
 #include "mem-heap.h"
 #include "re-compiler.h"
+#include "re-parser.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
@@ -382,7 +383,7 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
   if (re_ctx_p->recursion_depth >= RE_COMPILE_RECURSION_LIMIT)
   {
-    ret_value = ecma_raise_range_error ((const ecma_char_t *) "RegExp compiler recursion limit is exceeded.");
+    ret_value = ecma_raise_range_error ("RegExp compiler recursion limit is exceeded.");
     return ret_value;
   }
   re_ctx_p->recursion_depth++;
@@ -575,7 +576,7 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
 
         if (expect_eof)
         {
-          ret_value = ecma_raise_syntax_error ((const ecma_char_t *) "Unexpected end of paren.");
+          ret_value = ecma_raise_syntax_error ("Unexpected end of paren.");
         }
         else
         {
@@ -589,7 +590,7 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
       {
         if (!expect_eof)
         {
-          ret_value = ecma_raise_syntax_error ((const ecma_char_t *) "Unexpected end of pattern.");
+          ret_value = ecma_raise_syntax_error ("Unexpected end of pattern.");
         }
         else
         {
@@ -601,7 +602,7 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
       }
       default:
       {
-        ret_value = ecma_raise_syntax_error ((const ecma_char_t *) "Unexpected RegExp token.");
+        ret_value = ecma_raise_syntax_error ("Unexpected RegExp token.");
         return ret_value;
       }
     }
@@ -619,8 +620,8 @@ parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
  */
 ecma_completion_value_t
 re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
-                         ecma_string_t *pattern_str_p, /**< pattern */
-                         uint8_t flags) /**< flags */
+                     ecma_string_t *pattern_str_p, /**< pattern */
+                     uint8_t flags) /**< flags */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   re_compiler_ctx_t re_ctx;
@@ -636,10 +637,12 @@ re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
 
   re_ctx.bytecode_ctx_p = &bc_ctx;
 
-  ecma_length_t pattern_str_len = ecma_string_get_length (pattern_str_p);
-  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_len + 1, ecma_char_t);
-  ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (pattern_str_len + 1));
-  ecma_string_to_zt_string (pattern_str_p, pattern_start_p, zt_str_size);
+  lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
+  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size + 1, lit_utf8_byte_t);
+
+  ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, (ssize_t) pattern_str_size);
+  FIXME ("Update regexp compiler so that zero symbol is not needed.");
+  pattern_start_p[pattern_str_size] = LIT_BYTE_NULL;
 
   re_parser_ctx_t parser_ctx;
   parser_ctx.pattern_start_p = pattern_start_p;
@@ -656,7 +659,7 @@ re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
   /* 2. Check for invalid backreference */
   if (re_ctx.highest_backref >= re_ctx.num_of_captures)
   {
-    ret_value = ecma_raise_syntax_error ((const ecma_char_t *) "Invalid backreference.\n");
+    ret_value = ecma_raise_syntax_error ("Invalid backreference.\n");
   }
   else
   {

@@ -311,7 +311,10 @@ public:
    */
   void skip (size_t size) /**< number of bytes to skip */
   {
-    access (ACCESS_SKIP, NULL, size);
+    if (size)
+    {
+      access (ACCESS_SKIP, NULL, size);
+    }
   } /* skip */
 
   /**

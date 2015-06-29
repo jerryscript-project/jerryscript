@@ -14,7 +14,9 @@
  */
 
 #include "lit-literal.h"
+
 #include "ecma-helpers.h"
+#include "lit-magic-strings.h"
 
 /**
  * Initialize literal storage
@@ -54,43 +56,43 @@ lit_dump_literals ()
  * @return pointer to created record
  */
 literal_t
-lit_create_literal_from_charset (const ecma_char_t *str, /**< string to initialize the record,
-                                                          * could be non-zero-terminated */
-                                 ecma_length_t len)      /**< length of the string */
+lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string to initialize the record,
+                                                                  * could be non-zero-terminated */
+                                     lit_utf8_size_t str_size) /**< length of the string */
 {
-  JERRY_ASSERT (str || !len);
+  JERRY_ASSERT (str_p || !str_size);
   for (lit_magic_string_id_t msi = (lit_magic_string_id_t) 0;
        msi < LIT_MAGIC_STRING__COUNT;
        msi = (lit_magic_string_id_t) (msi + 1))
   {
-    if (ecma_zt_string_length (lit_get_magic_string_zt (msi)) != len)
+    if (lit_get_magic_string_size (msi) != str_size)
     {
       continue;
     }
 
-    if (!strncmp ((const char *) str, (const char *) lit_get_magic_string_zt (msi), len))
+    if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_utf8 (msi), str_size))
     {
       return lit_storage.create_magic_record (msi);
     }
   }
 
   for (lit_magic_string_ex_id_t msi = (lit_magic_string_ex_id_t) 0;
-       msi < ecma_get_magic_string_ex_count ();
+       msi < lit_get_magic_string_ex_count ();
        msi = (lit_magic_string_ex_id_t) (msi + 1))
   {
-    if (ecma_zt_string_length (lit_get_magic_string_ex_zt (msi)) != len)
+    if (lit_get_magic_string_ex_size (msi) != str_size)
     {
       continue;
     }
 
-    if (!strncmp ((const char *) str, (const char *) lit_get_magic_string_ex_zt (msi), len))
+    if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_ex_utf8 (msi), str_size))
     {
       return lit_storage.create_magic_record_ex (msi);
     }
   }
 
-  return lit_storage.create_charset_record (str, len * sizeof (ecma_char_t));
-} /* lit_create_literal_from_charset */
+  return lit_storage.create_charset_record (str_p, str_size);
+} /* lit_create_literal_from_utf8_string */
 
 /**
  * Find a literal in literal storage.
@@ -99,22 +101,22 @@ lit_create_literal_from_charset (const ecma_char_t *str, /**< string to initiali
  * @return pointer to a literal or NULL if no corresponding literal exists
  */
 literal_t
-lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for */
-                             ecma_length_t len)      /**< length of the string */
+lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to search for */
+                                 lit_utf8_size_t str_size)        /**< length of the string */
 {
-  JERRY_ASSERT (str || !len);
+  JERRY_ASSERT (str_p || !str_size);
   for (literal_t lit = lit_storage.get_first (); lit != NULL; lit = lit_storage.get_next (lit))
   {
     rcs_record_t::type_t type = lit->get_type ();
 
     if (type == LIT_STR_T)
     {
-      if (static_cast<lit_charset_record_t *>(lit)->get_length () != len)
+      if (static_cast<lit_charset_record_t *>(lit)->get_length () != str_size)
       {
         continue;
       }
 
-      if (!static_cast<lit_charset_record_t *>(lit)->compare_zt (str, len))
+      if (!static_cast<lit_charset_record_t *>(lit)->compare_utf8 (str_p, str_size))
       {
         return lit;
       }
@@ -122,14 +124,14 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
     else if (type == LIT_MAGIC_STR_T)
     {
       lit_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
-      const char *magic_str = (const char *) lit_get_magic_string_zt (magic_id);
+      const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (magic_id);
 
-      if (strlen (magic_str) != len)
+      if (lit_zt_utf8_string_size (magic_str_p) != str_size)
       {
         continue;
       }
 
-      if (!strncmp (magic_str, (const char *) str, strlen (magic_str)))
+      if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
       {
         return lit;
       }
@@ -137,14 +139,14 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
     else if (type == LIT_MAGIC_STR_EX_T)
     {
       lit_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
-      const char *magic_str = (const char *) lit_get_magic_string_ex_zt (magic_id);
+      const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_ex_utf8 (magic_id);
 
-      if (strlen (magic_str) != len)
+      if (lit_zt_utf8_string_size (magic_str_p) != str_size)
       {
         continue;
       }
 
-      if (!strncmp (magic_str, (const char *) str, strlen (magic_str)))
+      if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
       {
         return lit;
       }
@@ -152,7 +154,7 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
   }
 
   return NULL;
-} /* lit_find_literal_by_charset */
+} /* lit_find_literal_by_utf8_string */
 
 /**
  * Check if a literal which holds the passed string exists.
@@ -161,18 +163,18 @@ lit_find_literal_by_charset (const ecma_char_t *str, /**< a string to search for
  * @return pointer to existing or newly created record
  */
 literal_t
-lit_find_or_create_literal_from_charset (const ecma_char_t *str, /**< string, could be non-zero-terminated */
-                                         ecma_length_t len)      /**< length of the string */
+lit_find_or_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string, could be non-zero-terminated */
+                                             lit_utf8_size_t str_size) /**< length of the string */
 {
-  literal_t lit = lit_find_literal_by_charset (str, len);
+  literal_t lit = lit_find_literal_by_utf8_string (str_p, str_size);
 
   if (lit == NULL)
   {
-    lit = lit_create_literal_from_charset (str, len);
+    lit = lit_create_literal_from_utf8_string (str_p, str_size);
   }
 
   return lit;
-} /* lit_find_or_create_literal_from_s */
+} /* lit_find_or_create_literal_from_utf8_string */
 
 
 /**
@@ -235,7 +237,7 @@ lit_find_literal_by_num (ecma_number_t num) /**< a number to search for */
 /**
  * Check if literal equals to charset record
  *
- * @return true if equal
+ * @return true if is_equal
  *         false otherwise
  */
 static bool
@@ -246,24 +248,28 @@ lit_literal_equal_charset_rec (literal_t lit,                /**< literal to com
   {
     case LIT_STR_T:
     {
-      return static_cast<lit_charset_record_t *>(lit)->equal (record);
+      return static_cast<lit_charset_record_t *>(lit)->is_equal (record);
     }
     case LIT_MAGIC_STR_T:
     {
-      return record->equal_zt (lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit)));
+      lit_magic_string_id_t magic_string_id = lit_magic_record_get_magic_str_id (lit);
+      return record->is_equal_utf8_string (lit_get_magic_string_utf8 (magic_string_id),
+                                           lit_get_magic_string_size (magic_string_id));
     }
     case LIT_MAGIC_STR_EX_T:
     {
-      return record->equal_zt (lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit)));
+      lit_magic_string_ex_id_t magic_string_id = lit_magic_record_ex_get_magic_str_id (lit);
+      return record->is_equal_utf8_string (lit_get_magic_string_ex_utf8 (magic_string_id),
+                                           lit_get_magic_string_ex_size (magic_string_id));
     }
     case LIT_NUMBER_T:
     {
-      ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-      ecma_number_to_zt_string (static_cast<lit_number_record_t *>(lit)->get_number (),
-                                buff,
-                                ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+      lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+      lit_utf8_size_t copied = ecma_number_to_utf8_string (static_cast<lit_number_record_t *>(lit)->get_number (),
+                                                           buff,
+                                                           sizeof (buff));
 
-      return record->equal_zt (buff);
+      return record->is_equal_utf8_string (buff, copied);
     }
     default:
     {
@@ -273,46 +279,47 @@ lit_literal_equal_charset_rec (literal_t lit,                /**< literal to com
 } /* lit_literal_equal_charset_rec */
 
 /**
- * Check if literal equals to zero-terminated string
+ * Check if literal equals to utf-8 string
  *
  * @return true if equal
  *         false otherwise
  */
 bool
-lit_literal_equal_zt (literal_t lit,          /**< literal to compare */
-                      const ecma_char_t *str) /**< zero-terminated string to compare */
+lit_literal_equal_utf8 (literal_t lit, /**< literal to compare */
+                        const lit_utf8_byte_t *str_p, /**< utf-8 string to compare */
+                        lit_utf8_size_t str_size) /**< string size in bytes */
 {
   switch (lit->get_type ())
   {
     case LIT_STR_T:
     {
-      return static_cast<lit_charset_record_t *>(lit)->equal_zt (str);
+      return static_cast<lit_charset_record_t *>(lit)->is_equal_utf8_string (str_p, str_size);
     }
     case LIT_MAGIC_STR_T:
     {
       lit_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
-      return ecma_compare_zt_strings (str, lit_get_magic_string_zt (magic_id));
+      return lit_compare_utf8_string_and_magic_string (str_p, str_size, magic_id);
     }
     case LIT_MAGIC_STR_EX_T:
     {
       lit_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
-      return ecma_compare_zt_strings (str, lit_get_magic_string_ex_zt (magic_id));
+      return lit_compare_utf8_string_and_magic_string_ex (str_p, str_size, magic_id);
     }
     case LIT_NUMBER_T:
     {
-      ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-      ecma_number_to_zt_string (static_cast<lit_number_record_t *>(lit)->get_number (),
-                                buff,
-                                ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+      lit_utf8_byte_t num_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+      lit_utf8_size_t num_size = ecma_number_to_utf8_string (static_cast<lit_number_record_t *>(lit)->get_number (),
+                                                             num_buf,
+                                                             sizeof (num_buf));
 
-      return ecma_compare_zt_strings (str, buff);
+      return lit_compare_utf8_strings (str_p, str_size, num_buf, num_size);
     }
     default:
     {
       JERRY_UNREACHABLE ();
     }
   }
-} /* lit_literal_equal_zt */
+} /* lit_literal_equal_utf8 */
 
 /**
  * Check if literal contains the string equal to the passed number
@@ -324,10 +331,10 @@ bool
 lit_literal_equal_num (literal_t lit,     /**< literal to check */
                        ecma_number_t num) /**< number to compare with */
 {
-  ecma_char_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-  ecma_number_to_zt_string (num, buff, ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+  lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+  lit_utf8_size_t copied = ecma_number_to_utf8_string (num, buff, sizeof (buff));
 
-  return lit_literal_equal_zt (lit, buff);
+  return lit_literal_equal_utf8 (lit, buff, copied);
 } /* lit_literal_equal_num */
 
 /**
@@ -348,11 +355,17 @@ lit_literal_equal (literal_t lit1, /**< first literal */
     }
     case lit_literal_storage_t::LIT_MAGIC_STR:
     {
-      return lit_literal_equal_zt (lit1, lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit2)));
+      lit_magic_string_id_t magic_str_id = lit_magic_record_get_magic_str_id (lit2);
+      return lit_literal_equal_utf8 (lit1,
+                                     lit_get_magic_string_utf8 (magic_str_id),
+                                     lit_get_magic_string_size (magic_str_id));
     }
     case lit_literal_storage_t::LIT_MAGIC_STR_EX:
     {
-      return lit_literal_equal_zt (lit1, lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit2)));
+      lit_magic_string_ex_id_t magic_str_ex_id = lit_magic_record_ex_get_magic_str_id (lit2);
+      return lit_literal_equal_utf8 (lit1,
+                                     lit_get_magic_string_ex_utf8 (magic_str_ex_id),
+                                     lit_get_magic_string_ex_size (magic_str_ex_id));
     }
     case lit_literal_storage_t::LIT_NUMBER:
     {
@@ -366,15 +379,16 @@ lit_literal_equal (literal_t lit1, /**< first literal */
 } /* lit_literal_equal */
 
 /**
- * Check if literal equals to zero-terminated string.
+ * Check if literal equals to utf-8 string.
  * Check that literal is a string literal before performing detailed comparison.
  *
  * @return true if equal
  *         false otherwise
  */
 bool
-lit_literal_equal_type_zt (literal_t lit,          /**< literal to compare */
-                           const ecma_char_t *str) /**< zero-terminated string */
+lit_literal_equal_type_utf8 (literal_t lit, /**< literal to compare */
+                             const lit_utf8_byte_t *str_p, /**< utf-8 string */
+                             lit_utf8_size_t str_size) /**< string size */
 {
   if (lit->get_type () != LIT_STR_T
       && lit->get_type () != LIT_MAGIC_STR_T
@@ -383,8 +397,22 @@ lit_literal_equal_type_zt (literal_t lit,          /**< literal to compare */
     return false;
   }
 
-  return lit_literal_equal_zt (lit, str);
-} /* lit_literal_equal_type_zt */
+  return lit_literal_equal_utf8 (lit, str_p, str_size);
+} /* lit_literal_equal_type_utf8 */
+
+/**
+ * Check if literal equals to C string.
+ * Check that literal is a string literal before performing detailed comparison.
+ *
+ * @return true if equal
+ *         false otherwise
+ */
+bool
+lit_literal_equal_type_cstr (literal_t lit, /**< literal to compare */
+                             const char *c_str_p) /**< zero-terminated C-string */
+{
+  return lit_literal_equal_type_utf8 (lit, (const lit_utf8_byte_t *) c_str_p, (lit_utf8_size_t) strlen (c_str_p));
+} /* lit_literal_equal_type_cstr */
 
 /**
  * Check if literal contains the string equal to the passed number.
@@ -432,12 +460,12 @@ lit_literal_equal_type (literal_t lit1, /**< first literal */
  *
  * @return pointer to the zero-terminated string.
  */
-const ecma_char_t *
-lit_literal_to_charset (literal_t lit,     /**< literal to be processed */
-                        ecma_char_t *buff, /**< buffer to use as a string storage */
-                        size_t size)       /**< size of the buffer */
+const lit_utf8_byte_t *
+lit_literal_to_utf8_string (literal_t lit, /**< literal to be processed */
+                            lit_utf8_byte_t *buff_p, /**< buffer to use as a string storage */
+                            size_t size) /**< size of the buffer */
 {
-  JERRY_ASSERT (buff != NULL && size > sizeof (ecma_char_t));
+  JERRY_ASSERT (buff_p != NULL && size > 0);
   rcs_record_t::type_t type = lit->get_type ();
 
   switch (type)
@@ -445,35 +473,28 @@ lit_literal_to_charset (literal_t lit,     /**< literal to be processed */
     case LIT_STR_T:
     {
       lit_charset_record_t *ch_rec_p = static_cast<lit_charset_record_t *> (lit);
-      ecma_length_t index = ch_rec_p->get_charset (buff, size);
-
-      if (index != 0 && ((size_t)index + 1) * sizeof (ecma_char_t) > size)
-      {
-        index--;
-      }
-      buff[index] = '\0';
-
-      return buff;
+      ch_rec_p->get_charset (buff_p, size);
+      return buff_p;
     }
     case LIT_MAGIC_STR_T:
     {
-      return lit_get_magic_string_zt (lit_magic_record_get_magic_str_id (lit));
+      return lit_get_magic_string_utf8 (lit_magic_record_get_magic_str_id (lit));
     }
     case LIT_MAGIC_STR_EX_T:
     {
-      return lit_get_magic_string_ex_zt (lit_magic_record_ex_get_magic_str_id (lit));
+      return lit_get_magic_string_ex_utf8 (lit_magic_record_ex_get_magic_str_id (lit));
     }
     case LIT_NUMBER_T:
     {
-      ecma_number_to_zt_string (static_cast<lit_number_record_t *> (lit)->get_number (), buff, (ssize_t)size);
+      ecma_number_to_utf8_string (static_cast<lit_number_record_t *> (lit)->get_number (), buff_p, (ssize_t)size);
 
-      return buff;
+      return buff_p;
     }
     default: JERRY_UNREACHABLE ();
   }
 
   JERRY_UNREACHABLE ();
-} /* lit_literal_to_charset */
+} /* lit_literal_to_utf8_string */
 
 /**
  * Get the contents of the literal as a C string.
@@ -484,10 +505,10 @@ lit_literal_to_charset (literal_t lit,     /**< literal to be processed */
 const char *
 lit_literal_to_str_internal_buf (literal_t lit) /**< literal */
 {
-  const ecma_length_t buff_size = ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER;
-  static ecma_char_t buff[buff_size];
+  static lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
+  memset (buff, 0, sizeof (buff));
 
-  return (const char *)lit_literal_to_charset (lit, buff, buff_size);
+  return (const char *) lit_literal_to_utf8_string (lit, buff, sizeof (buff) - 1);
 } /* lit_literal_to_str_internal_buf */
 
 
@@ -544,10 +565,44 @@ lit_magic_record_ex_get_magic_str_id (literal_t lit) /**< literal */
   return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<lit_magic_string_ex_id_t> ();
 } /* lit_magic_record_ex_get_magic_str_id */
 
+lit_utf8_size_t
+lit_charset_record_get_size (literal_t lit) /**< literal */
+{
+  return static_cast<lit_charset_record_t *> (lit)->get_length ();
+} /* lit_charset_record_get_size */
+
+/**
+ * Get length of the literal
+ *
+ * @return code units count
+ */
 ecma_length_t
 lit_charset_record_get_length (literal_t lit) /**< literal */
 {
-  return static_cast<lit_charset_record_t *> (lit)->get_length ();;
+  TODO ("Add special case for literals which doesn't contain long characters");
+
+  lit_charset_record_t *charset_record_p = static_cast<lit_charset_record_t *> (lit);
+  rcs_record_iterator_t lit_iter (&lit_storage, lit);
+  lit_iter.skip (lit_charset_record_t::header_size ());
+
+  lit_utf8_size_t lit_utf8_str_size = charset_record_p->get_length ();
+  ecma_length_t length = 0;
+  for (lit_utf8_size_t i = 0; i < lit_utf8_str_size;)
+  {
+    lit_utf8_byte_t byte = lit_iter.read <lit_utf8_byte_t> ();
+    lit_utf8_size_t bytes_to_skip = lit_get_unicode_char_size_by_utf8_first_byte (byte);
+    lit_iter.skip (bytes_to_skip);
+    i += bytes_to_skip;
+
+    length++;
+  }
+
+#ifndef JERRY_NDEBUG
+  lit_iter.skip (charset_record_p->get_alignment_bytes_count ());
+  JERRY_ASSERT (lit_iter.finished ());
+#endif
+
+  return length;
 } /* lit_charset_record_get_length */
 
 ecma_number_t

@@ -715,7 +715,7 @@ typedef struct
   mem_cpointer_t next_chunk_cp;
 
   /** Characters */
-  uint8_t data[ sizeof (uint64_t) - sizeof (mem_cpointer_t) ];
+  lit_utf8_byte_t data[ sizeof (uint64_t) - sizeof (mem_cpointer_t) ];
 } ecma_collection_chunk_t;
 
 /**

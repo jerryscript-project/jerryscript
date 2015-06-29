@@ -46,23 +46,23 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
 {
   ecma_completion_value_t ret_value;
 
-  ecma_length_t chars_num = ecma_string_get_length (code_p);
-  MEM_DEFINE_LOCAL_ARRAY (code_zt_buffer_p,
-                          chars_num + 1,
-                          ecma_char_t);
+  lit_utf8_size_t chars_num = ecma_string_get_size (code_p);
+  MEM_DEFINE_LOCAL_ARRAY (code_utf8_buffer_p,
+                          chars_num,
+                          lit_utf8_byte_t);
 
-  const ssize_t buf_size = (ssize_t) (sizeof (ecma_char_t) * (chars_num + 1));
-  ssize_t buffer_size_req = ecma_string_to_zt_string (code_p,
-                                                      code_zt_buffer_p,
-                                                      buf_size);
+  const ssize_t buf_size = (ssize_t) chars_num;
+  ssize_t buffer_size_req = ecma_string_to_utf8_string (code_p,
+                                                        code_utf8_buffer_p,
+                                                        buf_size);
   JERRY_ASSERT (buffer_size_req == buf_size);
 
-  ret_value = ecma_op_eval_chars_buffer (code_zt_buffer_p,
+  ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
                                          (size_t) buf_size,
                                          is_direct,
                                          is_called_from_strict_mode_code);
 
-  MEM_FINALIZE_LOCAL_ARRAY (code_zt_buffer_p);
+  MEM_FINALIZE_LOCAL_ARRAY (code_utf8_buffer_p);
 
   return ret_value;
 } /* ecma_op_eval */
@@ -77,7 +77,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
  * @return completion value
  */
 ecma_completion_value_t
-ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffer */
+ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters buffer */
                            size_t code_buffer_size, /**< size of the buffer */
                            bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
                            bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
@@ -91,7 +91,7 @@ ecma_op_eval_chars_buffer (const ecma_char_t *code_p, /**< code characters buffe
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
 
-  is_syntax_correct = parser_parse_eval ((const char *) code_p,
+  is_syntax_correct = parser_parse_eval (code_p,
                                          code_buffer_size,
                                          is_strict_call,
                                          &opcodes_p);

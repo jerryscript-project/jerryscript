@@ -79,32 +79,30 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
           ecma_string_t *str_p = ecma_get_string_from_value (str_value);
 
-          ecma_length_t chars = ecma_string_get_length (str_p);
+          lit_utf8_size_t bytes = ecma_string_get_size (str_p);
 
-          ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (chars + 1));
-          ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) zt_str_size,
-                                                                       MEM_HEAP_ALLOC_SHORT_TERM);
-          if (zt_str_p == NULL)
+          ssize_t utf8_str_size = (ssize_t) (bytes + 1);
+          lit_utf8_byte_t *utf8_str_p = (lit_utf8_byte_t*) mem_heap_alloc_block ((size_t) utf8_str_size,
+                                                                               MEM_HEAP_ALLOC_SHORT_TERM);
+          if (utf8_str_p == NULL)
           {
             jerry_fatal (ERR_OUT_OF_MEMORY);
           }
 
-          ecma_string_to_zt_string (str_p, zt_str_p, zt_str_size);
+          ecma_string_to_utf8_string (str_p, utf8_str_p, utf8_str_size);
+          utf8_str_p[utf8_str_size - 1] = 0;
 
-#if CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_ASCII
+          FIXME ("Support unicode in printf.");
           if (arg_index < args_read - 1)
           {
-            printf ("%s ", (char*) zt_str_p);
+            printf ("%s ", (char*) utf8_str_p);
           }
           else
           {
-            printf ("%s", (char*) zt_str_p);
+            printf ("%s", (char*) utf8_str_p);
           }
-#elif CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16
-          JERRY_UNIMPLEMENTED ("UTF-16 support is not implemented.");
-#endif /* CONFIG_ECMA_CHAR_ENCODING == CONFIG_ECMA_CHAR_UTF16 */
 
-          mem_heap_free_block (zt_str_p);
+          mem_heap_free_block (utf8_str_p);
 
           ret_value = set_variable_value (int_data, lit_oc, dst_var_idx,
                                           ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));

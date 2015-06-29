@@ -27,26 +27,26 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  const ecma_char_t* zt_strings[] =
+  const jerry_api_char_t *strings[] =
   {
-    (const ecma_char_t*) "1",
-    (const ecma_char_t*) "0.5",
-    (const ecma_char_t*) "12345",
-    (const ecma_char_t*) "1e-45",
-    (const ecma_char_t*) "-2.5e+38",
-    (const ecma_char_t*) "-2.5e38",
-    (const ecma_char_t*) "- 2.5e+38",
-    (const ecma_char_t*) "-2 .5e+38",
-    (const ecma_char_t*) "-2. 5e+38",
-    (const ecma_char_t*) "-2.5e+ 38",
-    (const ecma_char_t*) "-2.5 e+38",
-    (const ecma_char_t*) "-2.5e +38",
-    (const ecma_char_t*) "NaN",
-    (const ecma_char_t*) "abc",
-    (const ecma_char_t*) "   Infinity  ",
-    (const ecma_char_t*) "-Infinity",
-    (const ecma_char_t*) "0",
-    (const ecma_char_t*) "0",
+    (const jerry_api_char_t *) "1",
+    (const jerry_api_char_t *) "0.5",
+    (const jerry_api_char_t *) "12345",
+    (const jerry_api_char_t *) "1e-45",
+    (const jerry_api_char_t *) "-2.5e+38",
+    (const jerry_api_char_t *) "-2.5e38",
+    (const jerry_api_char_t *) "- 2.5e+38",
+    (const jerry_api_char_t *) "-2 .5e+38",
+    (const jerry_api_char_t *) "-2. 5e+38",
+    (const jerry_api_char_t *) "-2.5e+ 38",
+    (const jerry_api_char_t *) "-2.5 e+38",
+    (const jerry_api_char_t *) "-2.5e +38",
+    (const jerry_api_char_t *) "NaN",
+    (const jerry_api_char_t *) "abc",
+    (const jerry_api_char_t *) "   Infinity  ",
+    (const jerry_api_char_t *) "-Infinity",
+    (const jerry_api_char_t *) "0",
+    (const jerry_api_char_t *) "0",
   };
 
   const ecma_number_t nums[] =
@@ -75,7 +75,7 @@ main (int __attr_unused___ argc,
        i < sizeof (nums) / sizeof (nums[0]);
        i++)
   {
-    ecma_number_t num = ecma_zt_string_to_number (zt_strings[i]);
+    ecma_number_t num = ecma_utf8_string_to_number (strings[i], lit_zt_utf8_string_size (strings[i]));
 
     if (num != nums[i]
         && (!ecma_number_is_nan (num)

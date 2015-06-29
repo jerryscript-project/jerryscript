@@ -230,27 +230,27 @@ name_to_native_call_id (operand obj)
   {
     return OPCODE_NATIVE_CALL__COUNT;
   }
-  if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "LEDToggle"))
+  if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDToggle"))
   {
     return OPCODE_NATIVE_CALL_LED_TOGGLE;
   }
-  else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "LEDOn"))
+  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOn"))
   {
     return OPCODE_NATIVE_CALL_LED_ON;
   }
-  else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "LEDOff"))
+  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOff"))
   {
     return OPCODE_NATIVE_CALL_LED_OFF;
   }
-  else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "LEDOnce"))
+  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOnce"))
   {
     return OPCODE_NATIVE_CALL_LED_ONCE;
   }
-  else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "wait"))
+  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "wait"))
   {
     return OPCODE_NATIVE_CALL_WAIT;
   }
-  else if (lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id), (const ecma_char_t *) "print"))
+  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "print"))
   {
     return OPCODE_NATIVE_CALL_PRINT;
   }
@@ -803,10 +803,8 @@ dumper_is_eval_literal (operand obj) /**< byte-code operand */
   /*
    * FIXME: Switch to corresponding magic string
    */
-  const ecma_char_t *eval_string_p = (const ecma_char_t *) "eval";
   bool is_eval_lit = (obj.type == OPERAND_LITERAL
-                      && lit_literal_equal_type_zt (lit_get_literal_by_cp (obj.data.lit_id),
-                                                    eval_string_p));
+                      && lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "eval"));
 
   return is_eval_lit;
 } /* dumper_is_eval_literal */

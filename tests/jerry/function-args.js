@@ -45,6 +45,13 @@ for(i = 11; i <= 20; i++)
   f1(i);
 }
 
+function g (p, p) {
+  assert (p === arguments[1]);
+  assert (p === 'second');
+}
+
+g ('first', 'second');
+
 try {
   f1 ({});
   f1 (undefined_variable);

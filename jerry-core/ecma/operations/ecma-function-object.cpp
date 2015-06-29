@@ -190,6 +190,16 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
                                                                              ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
   if (formal_parameters_number != 0)
   {
+    /*
+     * Reverse formal parameter list
+     */
+    for (ecma_length_t i = 0; i < formal_parameters_number / 2; i++)
+    {
+      ecma_string_t *tmp_p = formal_parameter_list_p[i];
+      formal_parameter_list_p[i] = formal_parameter_list_p[formal_parameters_number - 1u - i];
+      formal_parameter_list_p[formal_parameters_number - 1u - i] = tmp_p;
+    }
+
     ecma_collection_header_t *formal_parameters_collection_p = ecma_new_strings_collection (formal_parameter_list_p,
                                                                                             formal_parameters_number);
     ECMA_SET_POINTER (formal_parameters_prop_p->u.internal_property.value, formal_parameters_collection_p);
@@ -395,12 +405,20 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
     ecma_collection_iterator_t formal_params_iterator;
     ecma_collection_iterator_init (&formal_params_iterator, formal_parameters_p);
 
-    for (size_t n = 0;
-         n < formal_parameters_count;
-         n++)
+    /*
+     * Formal parameter list is stored in reversed order
+     *
+     * Although, specification defines ascending order of formal parameters list enumeration,
+     * implementation enumerates the parameters in descending order.
+     *
+     * In the case, redundant SetMutableBinding invocation could be avoided.
+     */
+    for (ssize_t n = (ssize_t) formal_parameters_count - 1;
+         n >= 0;
+         n--)
     {
       ecma_value_t v;
-      if (n >= arguments_list_len)
+      if (n >= (ssize_t) arguments_list_len)
       {
         v = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }

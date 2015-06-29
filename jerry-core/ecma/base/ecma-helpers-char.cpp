@@ -32,7 +32,7 @@
 bool
 ecma_char_is_new_line (ecma_char_t c) /**< character value */
 {
-  return (c == '\x0D');
+  return (c == '\x0A');
 } /* ecma_char_is_new_line */
 
 /**
@@ -44,7 +44,7 @@ ecma_char_is_new_line (ecma_char_t c) /**< character value */
 bool
 ecma_char_is_carriage_return (ecma_char_t c) /**< character value */
 {
-  return (c == '\x0A');
+  return (c == '\x0D');
 } /* ecma_char_is_carriage_return */
 
 /**

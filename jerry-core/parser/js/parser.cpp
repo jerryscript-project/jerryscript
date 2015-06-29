@@ -1985,7 +1985,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
                                                                   *   labels associated with the statement) */
                             locus for_body_statement_loc) /**< locus of loop body statement */
 {
-  jsp_label_raise_nested_jumpable_border ();
+  bool is_raised = jsp_label_raise_nested_jumpable_border ();
 
   current_token_must_be (TOK_OPEN_PAREN);
   skip_newlines ();
@@ -2068,7 +2068,10 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
     lexer_save_token (tok);
   }
 
-  jsp_label_remove_nested_jumpable_border ();
+  if (is_raised)
+  {
+    jsp_label_remove_nested_jumpable_border ();
+  }
 } /* jsp_parse_for_in_statement */
 
 /**
@@ -2255,7 +2258,7 @@ parse_with_statement (void)
   }
   const operand expr = parse_expression_inside_parens ();
 
-  jsp_label_raise_nested_jumpable_border ();
+  bool is_raised = jsp_label_raise_nested_jumpable_border ();
 
   opcode_counter_t with_begin_oc = dump_with_for_rewrite (expr);
   skip_newlines ();
@@ -2263,7 +2266,10 @@ parse_with_statement (void)
   rewrite_with (with_begin_oc);
   dump_with_end ();
 
-  jsp_label_remove_nested_jumpable_border ();
+  if (is_raised)
+  {
+    jsp_label_remove_nested_jumpable_border ();
+  }
 }
 
 static void
@@ -2433,7 +2439,7 @@ parse_try_statement (void)
 {
   assert_keyword (KW_TRY);
 
-  jsp_label_raise_nested_jumpable_border ();
+  bool is_raised = jsp_label_raise_nested_jumpable_border ();
 
   dump_try_for_rewrite ();
 
@@ -2470,7 +2476,10 @@ parse_try_statement (void)
 
   dump_end_try_catch_finally ();
 
-  jsp_label_remove_nested_jumpable_border ();
+  if (is_raised)
+  {
+    jsp_label_remove_nested_jumpable_border ();
+  }
 }
 
 static void

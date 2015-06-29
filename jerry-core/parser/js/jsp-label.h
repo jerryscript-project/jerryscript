@@ -77,7 +77,7 @@ extern jsp_label_t *jsp_label_find (jsp_label_type_flag_t type_mask, token id, b
 extern void jsp_label_add_jump (jsp_label_t *label_p, bool is_simply_jumpable, bool is_break);
 extern void jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, opcode_counter_t tgt_oc);
 
-extern void jsp_label_raise_nested_jumpable_border (void);
+extern bool jsp_label_raise_nested_jumpable_border (void);
 extern void jsp_label_remove_nested_jumpable_border (void);
 
 extern jsp_label_t *jsp_label_mask_set (void);

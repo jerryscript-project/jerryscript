@@ -246,29 +246,47 @@ jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, /**< the outerm
 } /* jsp_label_setup_continue_target */
 
 /**
- * Mark current label, if any, as nested jumpable border
+ * Add nested jumpable border at current label, if there is any.
+ *
+ * @return true - if the border is added (in the case, it should be removed
+ *                using jsp_label_remove_nested_jumpable_border, when parse of
+ *                the corresponding statement would be finished),
+ *         false - otherwise, new border is not raised, because there are no labels,
+ *                 or current label already contains a border.
  */
-void
+bool
 jsp_label_raise_nested_jumpable_border (void)
 {
-  if (label_set_p != NULL)
+  bool is_any_label = (label_set_p != NULL);
+
+  if (is_any_label)
   {
-    JERRY_ASSERT (!label_set_p->is_nested_jumpable_border);
-    label_set_p->is_nested_jumpable_border = true;
+    if (!label_set_p->is_nested_jumpable_border)
+    {
+      label_set_p->is_nested_jumpable_border = true;
+
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
   }
 } /* jsp_label_raise_nested_jumpable_border */
 
 /**
- * Unmark current label, if any, as nested jumpable border
+ * Remove nested jumpable border from current label
  */
 void
 jsp_label_remove_nested_jumpable_border (void)
 {
-  if (label_set_p != NULL)
-  {
-    JERRY_ASSERT (label_set_p->is_nested_jumpable_border);
-    label_set_p->is_nested_jumpable_border = false;
-  }
+  JERRY_ASSERT (label_set_p != NULL && label_set_p->is_nested_jumpable_border);
+
+  label_set_p->is_nested_jumpable_border = false;
 } /* jsp_label_remove_nested_jumpable_border */
 
 /**

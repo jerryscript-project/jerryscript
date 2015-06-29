@@ -37,8 +37,8 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
   ecma_length_t arg_index;
   for (arg_index = 0;
-       arg_index < args_number;
-       arg_index++)
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       )
   {
     ecma_completion_value_t evaluate_arg_completion = vm_loop (int_data, NULL);
 
@@ -54,7 +54,7 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
 
       if (ecma_is_completion_value_normal (get_arg_completion))
       {
-        arg_values[arg_index] = ecma_get_completion_value_value (get_arg_completion);
+        arg_values[arg_index++] = ecma_get_completion_value_value (get_arg_completion);
       }
       else
       {
@@ -68,8 +68,6 @@ fill_varg_list (int_data_t *int_data, /**< interpreter context */
       JERRY_ASSERT (ecma_is_completion_value_throw (evaluate_arg_completion));
 
       ret_value = evaluate_arg_completion;
-
-      break;
     }
 
     int_data->pos++;

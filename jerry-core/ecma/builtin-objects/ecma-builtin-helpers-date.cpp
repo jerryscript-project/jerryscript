@@ -28,9 +28,19 @@
  * @{
  */
 
+/**
+ * Time range defines for helper functions.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.9.1.1, 15.9.1.10
+ */
+/* Hours in a day. */
 #define ECMA_DATE_HOURS_PER_DAY         24
+/* Minutes in an hour. */
 #define ECMA_DATE_MINUTES_PER_HOUR      60
+/* Seconds in a minute. */
 #define ECMA_DATE_SECONDS_PER_MINUTE    60
+/* Milliseconds in a second. */
 #define ECMA_DATE_MS_PER_SECOND         1000
 /* ECMA_DATE_MS_PER_MINUTE == 60000 */
 #define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
@@ -38,6 +48,9 @@
 #define ECMA_DATE_MS_PER_HOUR           (ECMA_DATE_MS_PER_MINUTE * ECMA_DATE_MINUTES_PER_HOUR)
 /* ECMA_DATE_MS_PER_DAY == 86400000 */
 #define ECMA_DATE_MS_PER_DAY            (ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY)
+/* This gives a range of 8,640,000,000,000,000 milliseconds
+ * to either side of 01 January, 1970 UTC.
+ */
 #define ECMA_DATE_MAX_VALUE             8.64e15
 
 /**
@@ -377,7 +390,7 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
-  JERRY_UNIMPLEMENTED ("The ecma_date_local_tza is not implemented yet.");
+  JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
 } /* ecma_date_local_tza */
 
 /**
@@ -394,7 +407,7 @@ ecma_number_t __attr_always_inline___
 ecma_date_daylight_saving_ta (ecma_number_t __attr_unused___ time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
-  JERRY_UNIMPLEMENTED ("The ecma_date_daylight_saving_ta is not implemented yet.");
+  JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
 } /* ecma_date_daylight_saving_ta */
 
 /**

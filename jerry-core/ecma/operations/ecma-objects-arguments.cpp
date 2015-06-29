@@ -151,7 +151,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       }
       JERRY_ASSERT (param_index == formal_params_number);
 
-      for (int32_t indx = formal_params_number - 1;
+      for (int32_t indx = (int32_t) formal_params_number - 1;
            indx >= 0;
            indx--)
       {
@@ -161,7 +161,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
         // ii.
         for (int32_t indx2 = indx + 1;
-             indx2 < formal_params_number;
+             indx2 < (int32_t) formal_params_number;
              indx2++)
         {
           if (ecma_compare_ecma_strings (name_p, formal_params[indx2]))

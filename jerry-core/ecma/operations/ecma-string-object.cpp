@@ -70,8 +70,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
       JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (to_str_arg_value)));
       prim_prop_str_value_p = ecma_get_string_from_completion_value (to_str_arg_value);
 
-      int32_t string_len = ecma_string_get_length (prim_prop_str_value_p);
-      JERRY_ASSERT (string_len >= 0);
+      ecma_length_t string_len = ecma_string_get_length (prim_prop_str_value_p);
 
       length_value = ecma_uint32_to_number ((uint32_t) string_len);
     }
@@ -174,8 +173,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the string ob
                                                                prim_value_prop_p->u.internal_property.value);
 
   // 6.
-  int32_t length = ecma_string_get_length (prim_value_str_p);
-  JERRY_ASSERT (length >= 0);
+  ecma_length_t length = ecma_string_get_length (prim_value_str_p);
 
   ecma_property_t *new_prop_p;
 

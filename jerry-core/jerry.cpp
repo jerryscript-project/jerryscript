@@ -519,7 +519,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 {
   jerry_assert_api_available ();
 
-  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (uint16_t));
+  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (uint32_t));
 
   ecma_completion_value_t completion_value;
 
@@ -885,7 +885,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
                                                          *   or NULL (to ignore the values) */
                            const jerry_api_value_t args_p[], /**< function's call arguments
                                                               *   (NULL if arguments number is zero) */
-                           uint16_t args_count) /**< number of the arguments */
+                           jerry_api_length_t args_count) /**< number of the arguments */
 {
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
   JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t));

@@ -79,10 +79,9 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
           ecma_string_t *str_p = ecma_get_string_from_value (str_value);
 
-          int32_t chars = ecma_string_get_length (str_p);
-          JERRY_ASSERT (chars >= 0);
+          ecma_length_t chars = ecma_string_get_length (str_p);
 
-          ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (chars + 1);
+          ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (chars + 1));
           ecma_char_t *zt_str_p = (ecma_char_t*) mem_heap_alloc_block ((size_t) zt_str_size,
                                                                        MEM_HEAP_ALLOC_SHORT_TERM);
           if (zt_str_p == NULL)

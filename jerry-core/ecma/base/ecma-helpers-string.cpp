@@ -467,7 +467,7 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   ssize_t chars_copied = ecma_uint32_to_string (uint32_number,
                                                 char_buf,
                                                 ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
-  JERRY_ASSERT ((ecma_length_t) chars_copied == chars_copied);
+  JERRY_ASSERT ((ssize_t) ((ecma_length_t) chars_copied) == chars_copied);
 
   JERRY_ASSERT (string_desc_p->hash == ecma_chars_buffer_calc_hash_last_chars (char_buf,
                                                                                ecma_zt_string_length (char_buf)));
@@ -906,7 +906,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
-      const int32_t string_len = ecma_string_get_length (str_p);
+      const ecma_length_t string_len = ecma_string_get_length (str_p);
       const size_t string_buf_size = (size_t) (string_len + 1) * sizeof (ecma_char_t);
 
       ecma_char_t *str_buffer_p = (ecma_char_t*) mem_heap_alloc_block (string_buf_size, MEM_HEAP_ALLOC_SHORT_TERM);
@@ -948,7 +948,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
   JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
   JERRY_ASSERT (buffer_size >= 0);
 
-  ssize_t required_buffer_size = ((ecma_string_get_length (string_desc_p) + 1) * ((ssize_t) sizeof (ecma_char_t)));
+  ssize_t required_buffer_size = (ssize_t) ((ecma_string_get_length (string_desc_p) + 1) * sizeof (ecma_char_t));
 
   if (required_buffer_size > buffer_size
       || buffer_size == 0)
@@ -990,7 +990,7 @@ ecma_string_to_zt_string (const ecma_string_t *string_desc_p, /**< ecma-string d
 
       ecma_length_t length = ecma_number_to_zt_string (*num_p, buffer_p, buffer_size);
 
-      JERRY_ASSERT (required_buffer_size == (length + 1) * ((ssize_t) sizeof (ecma_char_t)));
+      JERRY_ASSERT (required_buffer_size == (ssize_t) ((length + 1) * sizeof (ecma_char_t)));
 
       break;
     }
@@ -1093,15 +1093,15 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     }
   }
 
-  const int32_t string1_len = ecma_string_get_length (string1_p);
-  const int32_t string2_len = ecma_string_get_length (string2_p);
+  const ecma_length_t string1_len = ecma_string_get_length (string1_p);
+  const ecma_length_t string2_len = ecma_string_get_length (string2_p);
 
   if (string1_len != string2_len)
   {
     return false;
   }
 
-  const int32_t strings_len = string1_len;
+  const ecma_length_t strings_len = string1_len;
 
   if (strings_len == 0)
   {
@@ -1348,7 +1348,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
  *
  * @return number of characters in the string
  */
-int32_t
+ecma_length_t
 ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
   ecma_string_container_t container = (ecma_string_container_t) string_p->container;
@@ -1385,7 +1385,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
       1000000000u
     };
 
-    int32_t length = 1;
+    ecma_length_t length = 1;
 
     while (length < max_uint32_len
            && uint32_number >= nums_with_ascending_length[length])

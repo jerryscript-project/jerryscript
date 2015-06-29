@@ -42,13 +42,14 @@ bool lit_literal_equal_type_num (literal_t, ecma_number_t);
 bool lit_literal_equal_type (literal_t, literal_t);
 
 const ecma_char_t *lit_literal_to_charset (literal_t, ecma_char_t *, size_t);
+
 const char *lit_literal_to_str_internal_buf (literal_t);
 
 literal_t lit_get_literal_by_cp (lit_cpointer_t);
 
 lit_string_hash_t lit_charset_literal_get_hash (literal_t);
 ecma_number_t lit_charset_literal_get_number (literal_t);
-int32_t lit_charset_record_get_length (literal_t);
+ecma_length_t lit_charset_record_get_length (literal_t);
 
 lit_magic_string_id_t lit_magic_record_get_magic_str_id (literal_t);
 lit_magic_string_ex_id_t lit_magic_record_ex_get_magic_str_id (literal_t);

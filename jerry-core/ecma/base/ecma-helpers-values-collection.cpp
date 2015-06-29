@@ -191,19 +191,19 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
   {
     JERRY_ASSERT (iterator_p->current_index == 0);
     iterator_p->current_value_p = (ecma_value_t*) iterator_p->header_p->data;
-
-    return true;
   }
-
-  if (iterator_p->current_index + 1 == iterator_p->header_p->unit_number)
+  else
   {
-    return false;
+    if (iterator_p->current_index + 1 == iterator_p->header_p->unit_number)
+    {
+      return false;
+    }
+
+    JERRY_ASSERT (iterator_p->current_index + 1 < iterator_p->header_p->unit_number);
+
+    iterator_p->current_index++;
+    iterator_p->current_value_p++;
   }
-
-  JERRY_ASSERT (iterator_p->current_index + 1 < iterator_p->header_p->unit_number);
-
-  iterator_p->current_index++;
-  iterator_p->current_value_p++;
 
   if (iterator_p->current_value_p == iterator_p->current_chunk_end_p)
   {

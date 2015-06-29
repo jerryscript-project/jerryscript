@@ -108,7 +108,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  int32_t string_len = ecma_string_get_length (number_str_p);
+  ecma_length_t string_len = ecma_string_get_length (number_str_p);
 
   MEM_DEFINE_LOCAL_ARRAY (zt_string_buff, string_len + 1, ecma_char_t);
 
@@ -119,9 +119,9 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   JERRY_ASSERT (bytes_copied > 0);
 
   /* 2. Remove leading whitespace. */
-  int32_t start = string_len;
-  int32_t end = string_len;
-  for (int i = 0; i < end; i++)
+  ecma_length_t start = string_len;
+  ecma_length_t end = string_len;
+  for (ecma_length_t i = 0; i < end; i++)
   {
     if (!(isspace (zt_string_buff[i])))
     {
@@ -190,7 +190,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     }
 
     /* 11. Check if characters are in [0, Radix - 1]. We also convert them to number values in the process. */
-    for (int i = start; i < end; i++)
+    for (ecma_length_t i = start; i < end; i++)
     {
       if ((zt_string_buff[i]) >= 'a' && zt_string_buff[i] <= 'z')
       {
@@ -233,7 +233,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     ecma_number_t multiplier = 1.0f;
 
     /* 13. and 14. */
-    for (int i = end - 1; i >= start; i--)
+    for (int32_t i = (int32_t) end - 1; i >= (int32_t) start; i--)
     {
       *value_p += (ecma_number_t) zt_string_buff[i] * multiplier;
       multiplier *= (ecma_number_t) rad;
@@ -273,7 +273,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  int32_t string_len = ecma_string_get_length (number_str_p);
+  ecma_length_t string_len = ecma_string_get_length (number_str_p);
 
   MEM_DEFINE_LOCAL_ARRAY (zt_string_buff, string_len + 1, ecma_char_t);
 
@@ -284,8 +284,8 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   JERRY_ASSERT (bytes_copied > 0);
 
   /* 2. Find first non whitespace char. */
-  int32_t start = 0;
-  for (int i = 0; i < string_len; i++)
+  ecma_length_t start = 0;
+  for (ecma_length_t i = 0; i < string_len; i++)
   {
     if (!isspace (zt_string_buff[i]))
     {
@@ -312,7 +312,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   /* Check if string is equal to "Infinity". */
   const ecma_char_t *infinity_zt_str_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_INFINITY_UL);
 
-  for (int i = 0; infinity_zt_str_p[i] == zt_string_buff[start + i]; i++)
+  for (ecma_length_t i = 0; infinity_zt_str_p[i] == zt_string_buff[start + i]; i++)
   {
     if (infinity_zt_str_p[i + 1] == 0)
     {
@@ -324,8 +324,8 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    int32_t current = start;
-    int32_t end = string_len;
+    ecma_length_t current = start;
+    ecma_length_t end = string_len;
     bool has_whole_part = false;
     bool has_fraction_part = false;
 
@@ -334,7 +334,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       has_whole_part = true;
 
       /* Check digits of whole part. */
-      for (int i = current; i < string_len; i++, current++)
+      for (ecma_length_t i = current; i < string_len; i++, current++)
       {
         if (!isdigit (zt_string_buff[current]))
         {
@@ -355,7 +355,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
         has_fraction_part = true;
 
         /* Check digits of fractional part. */
-        for (int i = current; i < string_len; i++, current++)
+        for (ecma_length_t i = current; i < string_len; i++, current++)
         {
           if (!isdigit (zt_string_buff[current]))
           {
@@ -383,7 +383,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       {
 
         /* Check digits of exponent part. */
-        for (int i = current; i < string_len; i++, current++)
+        for (ecma_length_t i = current; i < string_len; i++, current++)
         {
           if (!isdigit (zt_string_buff[current]))
           {

@@ -117,7 +117,7 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
                 const jerry_api_value_t *this_p __attr_unused___, /** < this arg */
                 jerry_api_value_t *ret_val_p __attr_unused___, /** < return argument */
                 const jerry_api_value_t args_p[], /** < function arguments */
-                const uint16_t args_cnt) /** < number of function arguments */
+                const jerry_api_length_t args_cnt) /** < number of function arguments */
 {
   if (args_cnt > 0
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN

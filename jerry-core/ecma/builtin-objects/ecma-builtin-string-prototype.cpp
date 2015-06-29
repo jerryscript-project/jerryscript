@@ -163,8 +163,6 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
   /* 4 */
   ecma_string_t *string_to_return = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (to_string_val));
 
-  JERRY_ASSERT (ecma_string_get_length (string_to_return) >= 0);
-
   /* 5 */
   for (uint32_t arg_index = 0;
        arg_index < arguments_number && ecma_is_completion_value_empty (ret_value);
@@ -328,8 +326,6 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
 
   /* 3. */
   ecma_string_t *get_string_val = ecma_get_string_from_value (to_string_val);
-
-  JERRY_ASSERT (ecma_string_get_length (get_string_val) >= 0);
 
   const uint32_t len = (uint32_t) ecma_string_get_length (get_string_val);
 
@@ -509,7 +505,6 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
                   ret_value);
 
   ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
-  JERRY_ASSERT (ecma_string_get_length (original_string_p) >= 0);
 
   /* 3 */
   const uint32_t len = (uint32_t) ecma_string_get_length (original_string_p);

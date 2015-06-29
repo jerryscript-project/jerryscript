@@ -72,9 +72,9 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  int32_t flags_str_len = ecma_string_get_length (flags_str_p);
+  ecma_length_t flags_str_len = ecma_string_get_length (flags_str_p);
   MEM_DEFINE_LOCAL_ARRAY (flags_start_p, flags_str_len + 1, ecma_char_t);
-  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (flags_str_len + 1);
+  ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (flags_str_len + 1));
   ecma_string_to_zt_string (flags_str_p, flags_start_p, zt_str_size);
 
   ecma_char_t *flags_char_p = flags_start_p;
@@ -1181,7 +1181,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
                          const ecma_char_t *str_p) /**< start of the input string */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  int32_t input_length = ecma_zt_string_length (str_p);
+  ecma_length_t input_length = ecma_zt_string_length (str_p);
   re_matcher_ctx_t re_ctx;
   re_ctx.input_start_p = str_p;
   re_ctx.input_end_p = str_p + strlen ((char *) str_p);
@@ -1232,7 +1232,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
   const ecma_char_t *sub_str_p;
   while (str_p && str_p <= re_ctx.input_end_p && ecma_is_completion_value_empty (ret_value))
   {
-    if (index < 0 || index > input_length)
+    if (index < 0 || index > (int32_t) input_length)
     {
       ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
       ecma_number_t *lastindex_num_p = ecma_alloc_number ();

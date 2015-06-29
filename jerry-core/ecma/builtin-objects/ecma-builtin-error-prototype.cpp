@@ -134,12 +134,12 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
           const ecma_char_t *colon_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_COLON_CHAR);
           const ecma_char_t *space_zt_magic_string_p = lit_get_magic_string_zt (LIT_MAGIC_STRING_SPACE_CHAR);
 
-          const int32_t len = (ecma_string_get_length (name_string_p) +
-                               ecma_string_get_length (msg_string_p) +
-                               ecma_zt_string_length (colon_zt_magic_string_p) +
-                               ecma_zt_string_length (space_zt_magic_string_p));
+          const ecma_length_t len = (ecma_string_get_length (name_string_p) +
+                                     ecma_string_get_length (msg_string_p) +
+                                     ecma_zt_string_length (colon_zt_magic_string_p) +
+                                     ecma_zt_string_length (space_zt_magic_string_p));
 
-          const ssize_t buffer_size = (len + 1) * (ssize_t) sizeof (ecma_char_t);
+          const ssize_t buffer_size = (ssize_t) ((len + 1) * sizeof (ecma_char_t));
           ssize_t buffer_size_left = buffer_size;
 
           MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, buffer_size, ecma_char_t);

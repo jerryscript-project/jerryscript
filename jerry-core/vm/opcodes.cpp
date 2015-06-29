@@ -175,10 +175,10 @@ opfunc_assignment (opcode_t opdata, /**< operation data */
                                                               int_data->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
-    int32_t re_str_len = ecma_string_get_length (string_p);
+    ecma_length_t re_str_len = ecma_string_get_length (string_p);
     MEM_DEFINE_LOCAL_ARRAY (re_str_p, re_str_len + 1, ecma_char_t);
 
-    ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (re_str_len + 1);
+    ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (re_str_len + 1));
     ecma_string_to_zt_string (string_p, re_str_p, zt_str_size);
 
     ecma_char_t *ch_p = re_str_p;

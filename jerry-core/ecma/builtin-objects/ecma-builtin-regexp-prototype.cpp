@@ -77,11 +77,11 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
 
     /* Convert ecma_String_t *to regexp_bytecode_t* */
-    int32_t input_str_len = ecma_string_get_length (input_str_p);
+    ecma_length_t input_str_len = ecma_string_get_length (input_str_p);
 
     MEM_DEFINE_LOCAL_ARRAY (input_zt_str_p, input_str_len + 1, ecma_char_t);
 
-    ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (input_str_len + 1);
+    ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (input_str_len + 1));
     ecma_string_to_zt_string (input_str_p, input_zt_str_p, zt_str_size);
 
     ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_zt_str_p);

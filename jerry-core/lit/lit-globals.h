@@ -43,7 +43,7 @@ typedef ecma_char_t *ecma_char_ptr_t;
 /**
  * Description of a collection's/string's length
  */
-typedef uint16_t ecma_length_t;
+typedef uint32_t ecma_length_t;
 
 /**
  * ECMA string hash

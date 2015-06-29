@@ -544,7 +544,7 @@ lit_magic_record_ex_get_magic_str_id (literal_t lit) /**< literal */
   return static_cast<lit_magic_record_t *> (lit)->get_magic_str_id<lit_magic_string_ex_id_t> ();
 } /* lit_magic_record_ex_get_magic_str_id */
 
-int32_t
+ecma_length_t
 lit_charset_record_get_length (literal_t lit) /**< literal */
 {
   return static_cast<lit_charset_record_t *> (lit)->get_length ();;

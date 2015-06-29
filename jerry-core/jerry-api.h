@@ -87,7 +87,7 @@ typedef jerry_api_char_t* jerry_api_char_ptr_t;
 /**
  * Jerry's length
 */
-typedef uint16_t jerry_api_length_t;
+typedef uint32_t jerry_api_length_t;
 
 /**
  * Jerry's string value
@@ -130,7 +130,7 @@ typedef bool (*jerry_external_handler_t) (const jerry_api_object_t *function_obj
                                           const jerry_api_value_t *this_p,
                                           jerry_api_value_t *ret_val_p,
                                           const jerry_api_value_t args_p[],
-                                          const uint16_t args_count);
+                                          const jerry_api_length_t args_count);
 
 /**
  * An object's native free callback

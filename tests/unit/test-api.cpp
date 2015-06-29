@@ -109,7 +109,7 @@ handler (const jerry_api_object_t *function_obj_p,
          const jerry_api_value_t *this_p,
          jerry_api_value_t *ret_val_p,
          const jerry_api_value_t args_p[],
-         const uint16_t args_cnt)
+         const jerry_api_length_t args_cnt)
 {
   char buffer[32];
   ssize_t sz;
@@ -138,7 +138,7 @@ handler_throw_test (const jerry_api_object_t *function_obj_p,
                     const jerry_api_value_t *this_p,
                     jerry_api_value_t *ret_val_p,
                     const jerry_api_value_t args_p[],
-                    const uint16_t args_cnt)
+                    const jerry_api_length_t args_cnt)
 {
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 
@@ -165,7 +165,7 @@ handler_construct (const jerry_api_object_t *function_obj_p,
                    const jerry_api_value_t *this_p,
                    jerry_api_value_t *ret_val_p,
                    const jerry_api_value_t args_p[],
-                   const uint16_t args_cnt)
+                   const jerry_api_length_t args_cnt)
 {
   printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 

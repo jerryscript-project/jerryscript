@@ -636,9 +636,9 @@ re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
 
   re_ctx.bytecode_ctx_p = &bc_ctx;
 
-  int32_t pattern_str_len = ecma_string_get_length (pattern_str_p);
+  ecma_length_t pattern_str_len = ecma_string_get_length (pattern_str_p);
   MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_len + 1, ecma_char_t);
-  ssize_t zt_str_size = (ssize_t) sizeof (ecma_char_t) * (pattern_str_len + 1);
+  ssize_t zt_str_size = (ssize_t) (sizeof (ecma_char_t) * (pattern_str_len + 1));
   ecma_string_to_zt_string (pattern_str_p, pattern_start_p, zt_str_size);
 
   re_parser_ctx_t parser_ctx;

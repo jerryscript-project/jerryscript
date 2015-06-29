@@ -46,12 +46,12 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
 {
   ecma_completion_value_t ret_value;
 
-  int32_t chars_num = ecma_string_get_length (code_p);
+  ecma_length_t chars_num = ecma_string_get_length (code_p);
   MEM_DEFINE_LOCAL_ARRAY (code_zt_buffer_p,
                           chars_num + 1,
                           ecma_char_t);
 
-  const ssize_t buf_size = (ssize_t) sizeof (ecma_char_t) * (chars_num + 1);
+  const ssize_t buf_size = (ssize_t) (sizeof (ecma_char_t) * (chars_num + 1));
   ssize_t buffer_size_req = ecma_string_to_zt_string (code_p,
                                                       code_zt_buffer_p,
                                                       buf_size);

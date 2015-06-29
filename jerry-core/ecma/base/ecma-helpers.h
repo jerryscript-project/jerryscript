@@ -133,7 +133,7 @@ extern bool ecma_compare_ecma_strings (const ecma_string_t *string1_p,
                                        const ecma_string_t *string2_p);
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p,
                                                   const ecma_string_t *string2_p);
-extern int32_t ecma_string_get_length (const ecma_string_t *string_p);
+extern ecma_length_t ecma_string_get_length (const ecma_string_t *string_p);
 extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, uint32_t index);
 extern bool ecma_compare_zt_strings (const ecma_char_t *string1_p, const ecma_char_t *string2_p);
 extern bool ecma_compare_zt_strings_relational (const ecma_char_t *string1_p, const ecma_char_t *string2_p);

@@ -268,16 +268,22 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     }
 
     ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
-    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
 
     completion = ecma_op_object_define_own_property (obj_p,
                                                      callee_magic_string_p,
                                                      &prop_desc,
                                                      false);
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
-
     ecma_deref_ecma_string (callee_magic_string_p);
+
+    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
+    completion = ecma_op_object_define_own_property (obj_p,
+                                                     caller_magic_string_p,
+                                                     &prop_desc,
+                                                     false);
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
     ecma_deref_ecma_string (caller_magic_string_p);
+
     ecma_deref_object (thrower_p);
   }
 

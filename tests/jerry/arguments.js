@@ -109,6 +109,19 @@ fn_expr = function (a, b, c)
   assert (arguments[0] === 'new value');
   assert (arguments[1] === 'p');
   assert (arguments[2] === 'q');
+
+  function check_type_error_for_property (obj, prop) {
+    try {
+      var v = obj[prop];
+      assert (false);
+    }
+    catch (e) {
+      assert (e instanceof TypeError);
+    }
+  }
+
+  check_type_error_for_property (arguments, 'caller');
+  check_type_error_for_property (arguments, 'callee');
 }
 
 fn_expr (1);

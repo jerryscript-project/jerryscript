@@ -315,13 +315,6 @@ extern ecma_number_t ecma_int32_to_number (int32_t value);
 extern ecma_number_t ecma_uint32_to_number (uint32_t value);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, ssize_t);
 
-/* ecma-helpers-char.cpp */
-extern bool ecma_char_is_new_line (ecma_char_t c);
-extern bool ecma_char_is_carriage_return (ecma_char_t c);
-extern bool ecma_char_is_line_terminator (ecma_char_t c);
-extern bool ecma_char_is_word_char (ecma_char_t c);
-extern uint32_t ecma_char_hex_to_int (ecma_char_t hex);
-
 #endif /* !JERRY_ECMA_HELPERS_H */
 
 /**

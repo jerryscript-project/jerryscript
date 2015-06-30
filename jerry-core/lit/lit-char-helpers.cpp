@@ -13,15 +13,7 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA characters
- * @{
- */
-
-#include "ecma-globals.h"
-#include "ecma-helpers.h"
+#include "lit-char-helpers.h"
 
 /**
  * Check if specified character is the newline character
@@ -30,10 +22,10 @@
  *         false - otherwise.
  */
 bool
-ecma_char_is_new_line (ecma_char_t c) /**< character value */
+lit_char_is_new_line (ecma_char_t c) /**< code unit */
 {
   return (c == '\x0A');
-} /* ecma_char_is_new_line */
+} /* lit_char_is_new_line */
 
 /**
  * Check if specified character the carriage return character
@@ -42,10 +34,10 @@ ecma_char_is_new_line (ecma_char_t c) /**< character value */
  *         false - otherwise.
  */
 bool
-ecma_char_is_carriage_return (ecma_char_t c) /**< character value */
+lit_char_is_carriage_return (ecma_char_t c) /**< code unit */
 {
   return (c == '\x0D');
-} /* ecma_char_is_carriage_return */
+} /* lit_char_is_carriage_return */
 
 /**
  * Check if specified character is one of LineTerminator (ECMA-262 v5, Table 3) characters
@@ -54,13 +46,13 @@ ecma_char_is_carriage_return (ecma_char_t c) /**< character value */
  *         false - otherwise.
  */
 bool
-ecma_char_is_line_terminator (ecma_char_t c) /**< character value */
+lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
 {
   /* FIXME: Handle <LS> and <PS> (ECMA-262 v5, 7.3, Table 3) when Unicode would be supported */
 
-  return (ecma_char_is_carriage_return (c)
-          || ecma_char_is_new_line (c));
-} /* ecma_char_is_line_terminator */
+  return (lit_char_is_carriage_return (c)
+          || lit_char_is_new_line (c));
+} /* lit_char_is_line_terminator */
 
 /**
  * Check if specified character is a word character (part of IsWordChar abstract operation)
@@ -71,7 +63,7 @@ ecma_char_is_line_terminator (ecma_char_t c) /**< character value */
  *         false - otherwise.
  */
 bool
-ecma_char_is_word_char (ecma_char_t c) /**< character value */
+lit_char_is_word_char (ecma_char_t c) /**< code unit */
 {
   if ((c >= 'a' && c <= 'z')
       || (c >= 'A' && c <= 'Z')
@@ -82,7 +74,7 @@ ecma_char_is_word_char (ecma_char_t c) /**< character value */
   }
 
   return false;
-} /* ecma_char_is_word_char */
+} /* lit_char_is_word_char */
 
 /**
  * Convert a hex character to an unsigned integer
@@ -90,9 +82,10 @@ ecma_char_is_word_char (ecma_char_t c) /**< character value */
  * @return digit value, corresponding to the hex char
  */
 uint32_t
-ecma_char_hex_to_int (ecma_char_t hex) /**< [0-9A-Fa-f] character value */
+lit_char_hex_to_int (ecma_char_t c) /**< code unit, corresponding to
+                                     *    one of [0-9A-Fa-f] characters */
 {
-  switch (hex)
+  switch (c)
   {
     case '0': return 0x0;
     case '1': return 0x1;
@@ -118,9 +111,4 @@ ecma_char_hex_to_int (ecma_char_t hex) /**< [0-9A-Fa-f] character value */
     case 'F': return 0xF;
     default: JERRY_UNREACHABLE ();
   }
-} /* ecma_char_hex_to_int */
-
-/**
- * @}
- * @}
- */
+} /* lit_char_hex_to_int */

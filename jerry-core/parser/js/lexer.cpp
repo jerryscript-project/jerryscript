@@ -18,7 +18,9 @@
 #include "jrt-libc-includes.h"
 #include "jsp-mm.h"
 #include "lexer.h"
+#include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
+#include "lit-strings.h"
 #include "syntax-errors.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
@@ -512,7 +514,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
             JERRY_ASSERT ((char_code & 0xF000u) == 0);
 
             char_code = (uint16_t) (char_code << 4u);
-            char_code = (uint16_t) (char_code + ecma_char_hex_to_int (byte));
+            char_code = (uint16_t) (char_code + lit_char_hex_to_int (byte));
           }
         }
 
@@ -532,7 +534,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
          */
         converted_char = (ecma_char_t) char_code;
       }
-      else if (ecma_char_is_line_terminator (escape_character))
+      else if (lit_char_is_line_terminator (escape_character))
       {
         if (source_str_iter_p + 1 <= source_str_p + source_str_size)
         {
@@ -729,11 +731,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = (res << 4) + ecma_char_hex_to_int (token_start[i]);
+        res = (res << 4) + lit_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 16 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
+        fp_res = fp_res * 16 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
       }
 
       if (res > 255)
@@ -843,11 +845,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 8 + ecma_char_hex_to_int (token_start[i]);
+        res = res * 8 + lit_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 8 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
+        fp_res = fp_res * 8 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
       }
       if (res > 255)
       {
@@ -863,11 +865,11 @@ parse_number (void)
     {
       if (!is_overflow)
       {
-        res = res * 10 + ecma_char_hex_to_int (token_start[i]);
+        res = res * 10 + lit_char_hex_to_int (token_start[i]);
       }
       else
       {
-        fp_res = fp_res * 10 + (ecma_number_t) ecma_char_hex_to_int (token_start[i]);
+        fp_res = fp_res * 10 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
       }
       if (res > 255)
       {
@@ -916,7 +918,7 @@ parse_string (void)
     {
       PARSE_ERROR ("Unclosed string", token_start - buffer_start);
     }
-    else if (ecma_char_is_line_terminator (c))
+    else if (lit_char_is_line_terminator (c))
     {
       PARSE_ERROR ("String literal shall not contain newline character", token_start - buffer_start);
     }
@@ -928,15 +930,15 @@ parse_string (void)
       {
         consume_char ();
       }
-      else if (ecma_char_is_line_terminator (nc))
+      else if (lit_char_is_line_terminator (nc))
       {
         consume_char ();
 
-        if (ecma_char_is_carriage_return (nc))
+        if (lit_char_is_carriage_return (nc))
         {
           nc = (ecma_char_t) LA (0);
 
-          if (ecma_char_is_new_line (nc))
+          if (lit_char_is_new_line (nc))
           {
             consume_char ();
           }
@@ -1009,8 +1011,8 @@ parse_regexp (void)
     ecma_char_t c = (ecma_char_t) LA (0);
 
     if (c == '\0'
-        || !ecma_char_is_word_char (c)
-        || ecma_char_is_line_terminator (c))
+        || !lit_char_is_word_char (c)
+        || lit_char_is_line_terminator (c))
     {
       break;
     }

@@ -16,9 +16,9 @@
 
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
-#include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 #include "re-parser.h"
 #include "syntax-errors.h"
 
@@ -126,7 +126,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
             return ret_value;
           }
           digits++;
-          qmin = qmin * 10 + ecma_char_hex_to_int (ch1);
+          qmin = qmin * 10 + lit_char_hex_to_int (ch1);
         }
         else if (ch1 == ',')
         {
@@ -677,7 +677,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
               {
                 break;
               }
-              number = number * 10 + ecma_char_hex_to_int (digit);
+              number = number * 10 + lit_char_hex_to_int (digit);
               index++;
             }
             while (true);

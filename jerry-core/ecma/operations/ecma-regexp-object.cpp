@@ -23,6 +23,7 @@
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 #include "re-compiler.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
@@ -360,7 +361,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        if (ecma_char_is_line_terminator (lookup_prev_char (str_p)))
+        if (lit_char_is_line_terminator (lookup_prev_char (str_p)))
         {
           JERRY_DDLOG ("match\n");
           break;
@@ -387,7 +388,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        if (ecma_char_is_line_terminator (lookup_input_char (str_p)))
+        if (lit_char_is_line_terminator (lookup_input_char (str_p)))
         {
           JERRY_DDLOG ("match\n");
           break; /* tail merge */
@@ -408,7 +409,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
         else
         {
-          is_wordchar_left = ecma_char_is_word_char (lookup_prev_char (str_p));
+          is_wordchar_left = lit_char_is_word_char (lookup_prev_char (str_p));
         }
 
         if (str_p >= re_ctx_p->input_end_p)
@@ -417,7 +418,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
         else
         {
-          is_wordchar_right = ecma_char_is_word_char (lookup_input_char (str_p));
+          is_wordchar_right = lit_char_is_word_char (lookup_input_char (str_p));
         }
 
         if (op == RE_OP_ASSERT_WORD_BOUNDARY)

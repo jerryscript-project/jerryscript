@@ -150,15 +150,24 @@ export SHELL=/bin/bash
 all: precommit
 
 $(BUILD_DIRS_NATIVE): prerequisites
-	@ arch=`uname -m`; \
-          if [ "$$arch" == "armv7l" ]; \
+	@ if [ "$$TOOLCHAIN" == "" ]; \
           then \
-           readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el";\
+            arch=`uname -m`; \
+            if [ "$$arch" == "armv7l" ]; \
+            then \
+              readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el"; \
+            fi; \
+            TOOLCHAIN="build/configs/toolchain_linux_$$arch.cmake"; \
           fi; \
+	  if [ -d "$@" ]; \
+	  then \
+		grep -s -q "$$TOOLCHAIN" $@/toolchain.config || rm -rf $@ ; \
+	  fi; \
 	  mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_linux_$$arch.cmake ../../.. &>cmake.log || \
-          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
+          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=$$TOOLCHAIN ../../.. &>cmake.log || \
+          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
+	echo "$$TOOLCHAIN" > toolchain.config
 
 $(BUILD_DIRS_NUTTX): prerequisites
 	@ [ "$(EXTERNAL_LIBC_INTERFACE)" != "" ] && [ -x `which $(EXTERNAL_C_COMPILER)` ] && [ -x `which $(EXTERNAL_CXX_COMPILER)` ] || \

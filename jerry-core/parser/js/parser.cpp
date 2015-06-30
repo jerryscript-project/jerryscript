@@ -2879,6 +2879,12 @@ preparse_scope (bool is_global)
   size_t nesting_level = 0;
   while (nesting_level > 0 || !token_is (end_tt))
   {
+    /*
+     * FIXME:
+     *       Remove preparse_scope; move variable declaration search to main pass of parser.
+     *       When byte-code and scope storages would be introduced, move variable declarations
+     *       from byte-code to scope descriptor.
+     */
     if (token_is (TOK_NAME))
     {
       if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "arguments"))
@@ -2931,6 +2937,13 @@ preparse_scope (bool is_global)
           }
           else if (token_is (TOK_KEYWORD))
           {
+            break;
+          }
+          else if (token_is (TOK_CLOSE_BRACE))
+          {
+            /* the '}' would be handled during next iteration, reducing nesting level counter */
+            is_in_var_declaration_list = false;
+
             break;
           }
 

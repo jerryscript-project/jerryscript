@@ -246,7 +246,7 @@ setup_from_zip "stm32f4" \
 
 setup_nuttx_headers "nuttx" \
                      "./third-party/nuttx" \
-                     "http://git.code.sf.net/p/nuttx/git" \
+                     "https://bitbucket.org/patacongo/nuttx.git" \
                      "36a655eddec29754cc93631b6083fe6409817861"
 
 setup_cppcheck "cppcheck-1.66" \

@@ -934,11 +934,11 @@ parse_string (void)
       {
         consume_char ();
 
-        if (lit_char_is_carriage_return (nc))
+        if (nc == LIT_CHAR_CR)
         {
           nc = (ecma_char_t) LA (0);
 
-          if (lit_char_is_new_line (nc))
+          if (nc == LIT_CHAR_LF)
           {
             consume_char ();
           }

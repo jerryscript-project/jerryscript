@@ -579,7 +579,223 @@ static ecma_completion_value_t
 ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (this_num, this_arg, ret_value);
+
+  /* 2. */
+  if (ecma_is_value_undefined (arg))
+  {
+    ret_value = ecma_builtin_number_prototype_object_to_string (this_arg, NULL, 0);
+  }
+  else
+  {
+    /* 3. */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
+
+    /* 4. */
+    if (ecma_number_is_nan (this_num))
+    {
+      ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
+    }
+    else
+    {
+      bool is_negative = false;
+
+      /* 6. */
+      if (ecma_number_is_negative (this_num) && !ecma_number_is_zero (this_num))
+      {
+        is_negative = true;
+        this_num *= -1;
+      }
+
+      /* 7. */
+      if (ecma_number_is_infinity (this_num))
+      {
+        ecma_string_t *infinity_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INFINITY_UL);
+
+        if (is_negative)
+        {
+          ecma_string_t *neg_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_MINUS_CHAR);
+          ecma_string_t *neg_inf_str_p = ecma_concat_ecma_strings (neg_str_p, infinity_str_p);
+          ecma_deref_ecma_string (infinity_str_p);
+          ecma_deref_ecma_string (neg_str_p);
+          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (neg_inf_str_p));
+        }
+        else
+        {
+          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (infinity_str_p));
+        }
+      }
+      /* 8. */
+      else if (arg_num < 1.0 || arg_num >= 22.0)
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+      }
+      else
+      {
+        uint64_t digits = 0;
+        int32_t num_digits = 0;
+        int32_t exponent = 1;
+
+        int32_t precision = ecma_number_to_int32 (arg_num);
+
+        /* Get the parameters of the number if non-zero. */
+        if (!ecma_number_is_zero (this_num))
+        {
+          ecma_number_to_decimal (this_num, &digits, &num_digits, &exponent);
+        }
+
+        digits = ecma_builtin_number_prototype_helper_round (digits, num_digits - precision);
+
+        int buffer_size;
+        if (exponent  < -5 || exponent > precision)
+        {
+          /* Exponential notation, precision + 1 digits for number, 5 for exponent, 1 for \0 */
+          buffer_size = precision + 1 + 5 + 1;
+        }
+        else if (exponent <= 0)
+        {
+          /* Fixed notation, -exponent + 2 digits for leading zeros, precision digits, 1 for \0 */
+          buffer_size = -exponent + 2 + precision + 1;
+        }
+        else
+        {
+          /* Fixed notation, precision + 1 digits for number, 1 for \0 */
+          buffer_size = precision + 1 + 1;
+        }
+
+        if (is_negative)
+        {
+          buffer_size++;
+        }
+
+        MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
+        lit_utf8_byte_t *actual_char_p = buff;
+
+        uint64_t scale = 1;
+
+        /* Calculate the magnitude of the number. This is used to get the digits from left to right. */
+        while (scale <= digits)
+        {
+          scale *= 10;
+        }
+
+        if (is_negative)
+        {
+          *actual_char_p++ = '-';
+        }
+
+        int digit = 0;
+
+        /* 10.c, Exponential notation.*/
+        if (exponent < -5 || exponent > precision)
+        {
+          /* Add significant digits. */
+          for (int i = 1; i <= precision; i++)
+          {
+            digit = 0;
+            scale /= 10;
+            while (digits >= scale && scale > 0)
+            {
+              digits -= scale;
+              digit++;
+            }
+
+            *actual_char_p++ = (lit_utf8_byte_t) (digit + '0');
+
+            if (i == 1 && i != precision)
+            {
+              *actual_char_p++ = '.';
+            }
+          }
+
+          *actual_char_p++ = 'e';
+
+          exponent--;
+          if (exponent < 0)
+          {
+            exponent *= -1;
+            *actual_char_p++ = '-';
+          }
+          else
+          {
+            *actual_char_p++ = '+';
+          }
+
+          /* Get magnitude of exponent. */
+          int32_t scale_expt = 1;
+          while (scale_expt <= exponent)
+          {
+            scale_expt *= 10;
+          }
+          scale_expt /= 10;
+
+          /* Add exponent digits. */
+          if (exponent == 0)
+          {
+            *actual_char_p++ = '0';
+          }
+          else
+          {
+            while (scale_expt > 0)
+            {
+              digit = exponent / scale_expt;
+              exponent %= scale_expt;
+              *actual_char_p++ = (lit_utf8_byte_t) (digit + '0');
+              scale_expt /= 10;
+            }
+          }
+        }
+        /* Fixed notation. */
+        else
+        {
+          /* Add leading zeros if neccessary. */
+          if (exponent <= 0)
+          {
+            *actual_char_p++ = '0';
+            *actual_char_p++ = '.';
+            for (int i = exponent; i < 0; i++)
+            {
+              *actual_char_p++ = '0';
+            }
+          }
+
+          /* Add significant digits. */
+          for (int i = 1; i <= precision; i++)
+          {
+            digit = 0;
+            scale /= 10;
+            while (digits >= scale && scale > 0)
+            {
+              digits -= scale;
+              digit++;
+            }
+
+            *actual_char_p++ = (lit_utf8_byte_t) (digit + '0');
+
+            if (i == exponent && i != precision)
+            {
+              *actual_char_p++ = '.';
+            }
+          }
+        }
+
+        JERRY_ASSERT (actual_char_p - buff < buffer_size);
+        *actual_char_p = '\0';
+        ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
+
+        ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str_p));
+        MEM_FINALIZE_LOCAL_ARRAY (buff);
+      }
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (this_num);
+
+  return ret_value;
 } /* ecma_builtin_number_prototype_object_to_precision */
 
 /**

@@ -89,6 +89,11 @@ typedef ecma_char_t *ecma_char_ptr_t;
 #define LIT_UTF8_MAX_BYTES_IN_CODE_UNIT (3)
 
 /**
+ * Max bytes needed to represent a code point (Unicode character) via utf-8 encoding
+ */
+#define LIT_UTF8_MAX_BYTES_IN_CODE_POINT (4)
+
+/**
  * A byte of utf-8 string
  */
 typedef uint8_t lit_utf8_byte_t;

@@ -880,10 +880,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
   lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_start_p, input_size);
   lit_utf8_size_t output_length = 1;
-  while (!lit_utf8_iterator_reached_buffer_end (&iter))
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
     /* Input validation. */
-    lit_code_point_t character = lit_utf8_iterator_read_code_unit_and_increment (&iter);
+    lit_code_point_t character = lit_utf8_iterator_read_next (&iter);
 
     if (character <= 0x7f)
     {
@@ -931,10 +931,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_start_p, input_size);
     lit_utf8_byte_t *output_char_p = output_start_p;
-    while (!lit_utf8_iterator_reached_buffer_end (&iter))
+    while (!lit_utf8_iterator_is_eos (&iter))
     {
       /* Input decode. */
-      lit_code_point_t character = lit_utf8_iterator_read_code_unit_and_increment (&iter);
+      lit_code_point_t character = lit_utf8_iterator_read_next (&iter);
 
       if (character <= 0x7f)
       {

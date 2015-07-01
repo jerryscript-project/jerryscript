@@ -2730,6 +2730,11 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   }
   if (is_keyword (KW_RETURN))
   {
+    if (!inside_function)
+    {
+      EMIT_ERROR ("Return is illegal");
+    }
+
     skip_token ();
     if (!token_is (TOK_SEMICOLON) && !token_is (TOK_NEWLINE))
     {

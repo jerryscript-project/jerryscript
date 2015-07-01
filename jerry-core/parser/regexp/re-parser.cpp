@@ -25,7 +25,9 @@
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
 /* FIXME: change it, when unicode support would be implemented  */
-#define RE_LOOKUP(str_p, lookup)  (lit_zt_utf8_string_size (str_p) > (lookup) ? str_p[lookup] : '\0')
+#define RE_LOOKUP(str_p, lookup)  ((lit_zt_utf8_string_size (str_p) > (lookup)) \
+                                  ? (ecma_char_t)  str_p[lookup] \
+                                  : (ecma_char_t) '\0')
 
 /* FIXME: change it, when unicode support would be implemented  */
 #define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)

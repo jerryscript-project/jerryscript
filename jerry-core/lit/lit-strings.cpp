@@ -375,13 +375,13 @@ lit_utf8_string_calc_hash_last_bytes (const lit_utf8_byte_t *utf8_buf_p, /**< ch
 {
   JERRY_ASSERT (utf8_buf_p != NULL);
 
-  lit_utf8_byte_t byte1 = (utf8_buf_size > 0) ? utf8_buf_p[utf8_buf_size - 1] : 0;
-  lit_utf8_byte_t byte2 = (utf8_buf_size > 1) ? utf8_buf_p[utf8_buf_size - 2] : 0;
+  lit_utf8_size_t byte1 = utf8_buf_size > 0 ? utf8_buf_p[utf8_buf_size - 1] : (lit_utf8_size_t) 0;
+  lit_utf8_size_t byte2 = utf8_buf_size > 1 ? utf8_buf_p[utf8_buf_size - 2] : (lit_utf8_size_t) 0;
 
-  uint32_t t1 = (uint32_t) byte1 + (uint32_t) byte2;
-  uint32_t t2 = t1 * 0x24418b66;
-  uint32_t t3 = (t2 >> 16) ^ (t2 & 0xffffu);
-  uint32_t t4 = (t3 >> 8) ^ (t3 & 0xffu);
+  lit_utf8_size_t t1 = byte1 + byte2;
+  lit_utf8_size_t t2 = t1 * 0x24418b66;
+  lit_utf8_size_t t3 = (t2 >> 16) ^ (t2 & 0xffffu);
+  lit_utf8_size_t t4 = (t3 >> 8) ^ (t3 & 0xffu);
 
   return (lit_string_hash_t) t4;
 } /* lit_utf8_string_calc_hash_last_bytes */

@@ -1384,7 +1384,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
     const uint32_t uint32_number = string_p->u.uint32_number;
-    const int32_t max_uint32_len = 10;
+    const uint32_t max_uint32_len = 10;
     const uint32_t nums_with_ascending_length[10] =
     {
       1u,

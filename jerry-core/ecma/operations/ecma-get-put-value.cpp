@@ -226,7 +226,7 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
   }
   else
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_EMPTY);
+    return ecma_make_empty_completion_value ();
   }
 } /* ecma_reject_put */
 

@@ -34,17 +34,17 @@ extern uint32_t ecma_builtin_helper_array_index_normalize (ecma_number_t index, 
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 /* ecma-builtin-helpers-date.cpp */
-extern int ecma_date_day (ecma_number_t time);
+extern ecma_number_t ecma_date_day (ecma_number_t time);
 extern ecma_number_t ecma_date_time_within_day (ecma_number_t time);
-extern int ecma_date_days_in_year (ecma_number_t year);
-extern int ecma_date_day_from_year (ecma_number_t year);
+extern ecma_number_t ecma_date_days_in_year (ecma_number_t year);
+extern ecma_number_t ecma_date_day_from_year (ecma_number_t year);
 extern ecma_number_t ecma_date_time_from_year (ecma_number_t year);
-extern int ecma_date_year_from_time (ecma_number_t time);
-extern int ecma_date_in_leap_year (ecma_number_t time);
-extern int ecma_date_day_within_year (ecma_number_t time);
-extern int ecma_date_month_from_time (ecma_number_t time);
-extern int ecma_date_date_from_time (ecma_number_t time);
-extern int ecma_date_week_day (ecma_number_t time);
+extern ecma_number_t ecma_date_year_from_time (ecma_number_t time);
+extern ecma_number_t ecma_date_in_leap_year (ecma_number_t time);
+extern ecma_number_t ecma_date_day_within_year (ecma_number_t time);
+extern ecma_number_t ecma_date_month_from_time (ecma_number_t time);
+extern ecma_number_t ecma_date_date_from_time (ecma_number_t time);
+extern ecma_number_t ecma_date_week_day (ecma_number_t time);
 extern ecma_number_t ecma_date_local_tza ();
 extern ecma_number_t ecma_date_daylight_saving_ta (ecma_number_t time);
 extern ecma_number_t ecma_date_local_time (ecma_number_t time);

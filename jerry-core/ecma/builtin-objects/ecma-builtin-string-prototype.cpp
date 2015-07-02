@@ -805,16 +805,37 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   uint32_t prefix = 0, postfix = 0;
   uint32_t new_len = 0;
 
-  while (prefix < length && isspace (lit_utf8_string_code_unit_at (original_utf8_str_p, size, prefix)))
+  while (prefix < length)
   {
-    prefix++;
+    ecma_char_t next_char = lit_utf8_string_code_unit_at (original_utf8_str_p,
+                                                          size,
+                                                          prefix);
+
+    if (lit_char_is_white_space (next_char)
+        || lit_char_is_line_terminator (next_char))
+    {
+      prefix++;
+    }
+    else
+    {
+      break;
+    }
   }
 
-  while (postfix < length - prefix && isspace (lit_utf8_string_code_unit_at (original_utf8_str_p,
-                                                                             size,
-                                                                             length - postfix - 1)))
+  while (postfix < length - prefix)
   {
-    postfix++;
+    ecma_char_t next_char = lit_utf8_string_code_unit_at (original_utf8_str_p,
+                                                          size,
+                                                          length - postfix - 1);
+    if (lit_char_is_white_space (next_char)
+        || lit_char_is_line_terminator (next_char))
+    {
+      postfix++;
+    }
+    else
+    {
+      break;
+    }
   }
 
   new_len = prefix < size ? size - prefix - postfix : 0;

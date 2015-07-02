@@ -272,66 +272,6 @@ strlen (const char *s)
   return i;
 }
 
-/** Checks  for  white-space  characters.   In  the "C" and "POSIX" locales, these are: space,
-     form-feed ('\f'), newline ('\n'), carriage return ('\r'), horizontal tab ('\t'), and vertical tab ('\v').  */
-int
-isspace (int c)
-{
-  switch (c)
-  {
-    case ' ':
-    case '\f':
-    case '\n':
-    case '\r':
-    case '\t':
-    case '\v':
-    {
-      return 1;
-    }
-    default:
-    {
-      return 0;
-    }
-  }
-}
-
-/** Checks for an uppercase letter.  */
-int
-isupper (int c)
-{
-  return c >= 'A' && c <= 'Z';
-}
-
-/** Checks for an lowercase letter.  */
-int
-islower (int c)
-{
-  return c >= 'a' && c <= 'z';
-}
-
-/** Checks for an alphabetic character.
-     In the standard "C" locale, it is equivalent to (isupper (c) || islower (c)).  */
-int
-isalpha (int c)
-{
-  return isupper (c) || islower (c);
-}
-
-/** Checks for a digit (0 through 9).  */
-int
-isdigit (int c)
-{
-  return c >= '0' && c <= '9';
-}
-
-/** checks for a hexadecimal digits, that is, one of
-     0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F.  */
-int
-isxdigit (int c)
-{
-  return isdigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
 /**
  * Generate pseudo-random integer
  *

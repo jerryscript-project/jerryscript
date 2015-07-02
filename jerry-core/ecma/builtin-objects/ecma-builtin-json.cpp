@@ -39,6 +39,27 @@
 #define BUILTIN_UNDERSCORED_ID json
 #include "ecma-builtin-internal-routines-template.inc.h"
 
+/*
+ * FIXME:
+ *       Replace usage of isalpha and isdigit functions in the module with lit_char helpers and remove the functions.
+ *
+ *       Related issue: #424
+ */
+
+/** Checks for an alphabetic character. */
+static int
+isalpha (int c)
+{
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+/** Checks for a digit (0 through 9).  */
+static int
+isdigit (int c)
+{
+  return c >= '0' && c <= '9';
+}
+
 /** \addtogroup ecma ECMA
  * @{
  *

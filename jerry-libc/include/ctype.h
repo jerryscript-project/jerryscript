@@ -22,11 +22,4 @@
 # define EXTERN_C
 #endif /* !__cplusplus */
 
-extern EXTERN_C int isxdigit (int c);
-extern EXTERN_C int isalpha (int c);
-extern EXTERN_C int isdigit (int c);
-extern EXTERN_C int islower (int c);
-extern EXTERN_C int isspace (int c);
-extern EXTERN_C int isupper (int c);
-
 #endif /* !JERRY_LIBC_CTYPE_H */

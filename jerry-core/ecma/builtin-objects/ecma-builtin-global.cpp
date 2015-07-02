@@ -126,7 +126,8 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   ecma_length_t end = str_size;
   for (ecma_length_t i = 0; i < end; i++)
   {
-    if (!(isspace (utf8_string_buff[i])))
+    if (!lit_char_is_white_space (utf8_string_buff[i])
+        && !lit_char_is_line_terminator (utf8_string_buff[i]))
     {
       start = i;
       break;
@@ -203,7 +204,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
       {
         utf8_string_buff[i] = (lit_utf8_byte_t) (utf8_string_buff[i] - 'A' + 10);
       }
-      else if (isdigit (utf8_string_buff[i]))
+      else if (lit_char_is_decimal_digit (utf8_string_buff[i]))
       {
         utf8_string_buff[i] = (lit_utf8_byte_t) (utf8_string_buff[i] - '0');
       }
@@ -290,7 +291,8 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   lit_utf8_size_t start = 0;
   for (lit_utf8_size_t i = 0; i < str_size; i++)
   {
-    if (!isspace (utf8_string_buff[i]))
+    if (!lit_char_is_white_space (utf8_string_buff[i])
+        && !lit_char_is_line_terminator (utf8_string_buff[i]))
     {
       start = i;
       break;
@@ -332,14 +334,14 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     bool has_whole_part = false;
     bool has_fraction_part = false;
 
-    if (isdigit (utf8_string_buff[current]))
+    if (lit_char_is_decimal_digit (utf8_string_buff[current]))
     {
       has_whole_part = true;
 
       /* Check digits of whole part. */
       for (lit_utf8_size_t i = current; i < str_size; i++, current++)
       {
-        if (!isdigit (utf8_string_buff[current]))
+        if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
         {
           break;
         }
@@ -353,14 +355,14 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     {
       current++;
 
-      if (isdigit (utf8_string_buff[current]))
+      if (lit_char_is_decimal_digit (utf8_string_buff[current]))
       {
         has_fraction_part = true;
 
         /* Check digits of fractional part. */
         for (lit_utf8_size_t i = current; i < str_size; i++, current++)
         {
-          if (!isdigit (utf8_string_buff[current]))
+          if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
           {
             break;
           }
@@ -382,13 +384,13 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
         current++;
       }
 
-      if (isdigit (utf8_string_buff[current]))
+      if (lit_char_is_decimal_digit (utf8_string_buff[current]))
       {
 
         /* Check digits of exponent part. */
         for (lit_utf8_size_t i = current; i < str_size; i++, current++)
         {
-          if (!isdigit (utf8_string_buff[current]))
+          if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
           {
             break;
           }

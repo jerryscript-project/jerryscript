@@ -74,11 +74,6 @@
 typedef uint16_t ecma_char_t;
 
 /**
- * Null character
- */
-#define ECMA_CHAR_NULL  ((ecma_char_t) '\0')
-
-/**
  * Description of a collection's/string's length
  */
 typedef uint32_t ecma_length_t;

@@ -253,7 +253,7 @@ lit_utf8_iterator_read_code_unit_and_increment (lit_utf8_iterator_t *buf_iter_p)
   }
 
   JERRY_ASSERT (false);
-  return ECMA_CHAR_NULL;
+  return LIT_CHAR_NULL;
 } /* lit_utf8_iterator_read_code_unit_and_increment */
 
 /**

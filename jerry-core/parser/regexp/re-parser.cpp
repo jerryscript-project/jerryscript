@@ -226,7 +226,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
   parser_ctx_p->num_of_groups = 0;
 
   ch1 = get_ecma_char (&pattern_p);
-  while (ch1 != ECMA_CHAR_NULL)
+  while (ch1 != LIT_CHAR_NULL)
   {
     ecma_char_t ch0 = ch1;
     ch1 = get_ecma_char (&pattern_p);

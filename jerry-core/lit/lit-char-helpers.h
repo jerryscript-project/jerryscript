@@ -202,6 +202,11 @@ extern bool lit_char_is_unicode_connector_punctuation (ecma_char_t);
 #define LIT_CHAR_ASCII_DIGITS_BEGIN                 LIT_CHAR_0           /* decimal digits range */
 #define LIT_CHAR_ASCII_DIGITS_END                   LIT_CHAR_9
 
+/**
+ * Null character
+ */
+#define LIT_CHAR_NULL  ((ecma_char_t) '\0')
+
 /*
  * Part of IsWordChar abstract operation (ECMA-262 v5, 15.10.2.6, step 3)
  */

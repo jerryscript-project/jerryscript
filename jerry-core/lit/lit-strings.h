@@ -17,6 +17,7 @@
 #define LIT_UNICODE_HELPERS_H
 
 #include "jrt.h"
+#include "lit-char-helpers.h"
 #include "lit-globals.h"
 
 /**

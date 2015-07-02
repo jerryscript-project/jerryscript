@@ -215,7 +215,7 @@ ecma_date_in_leap_year (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return ecma_date_days_in_year (ecma_date_time_from_year (time)) - 365;
+  return ecma_date_days_in_year (ecma_date_year_from_time (time)) - 365;
 } /* ecma_date_in_leap_year */
 
 /**

@@ -47,14 +47,14 @@
  *   - return address (to jump to upon longjmp)
  *   - x87 control word
  *
- * ARMv7 (8 * 4 + 16 * 4 bytes):
- *   - r4 - r11
+ * ARMv7 (10 * 4 + 16 * 4 bytes):
+ *   - r4 - r11, sp, lr
  *   - s16 - s31 (if hardfp enabled)
  *
  * See also:
  *          setjmp, longjmp
  */
-typedef uint64_t jmp_buf[12];
+typedef uint64_t jmp_buf[14];
 
 extern EXTERN_C int setjmp (jmp_buf env);
 extern EXTERN_C void longjmp (jmp_buf env, int val);

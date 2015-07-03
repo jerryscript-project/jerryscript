@@ -28,6 +28,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN
 

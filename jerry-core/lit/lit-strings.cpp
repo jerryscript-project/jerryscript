@@ -17,6 +17,8 @@
 
 #include "jrt-libc-includes.h"
 
+JERRY_STATIC_ASSERT (sizeof (lit_utf8_iterator_pos_t) == sizeof (lit_utf8_size_t));
+
 /**
  * Validate utf-8 string
  *
@@ -116,6 +118,28 @@ lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
 
   return true;
 } /* lit_is_utf8_string_valid */
+
+/**
+ * Check if the code unit type is low surrogate
+ *
+ * @return true / false
+ */
+bool
+lit_is_code_unit_low_surrogate (ecma_char_t code_unit) /**< code unit */
+{
+  return LIT_UTF16_LOW_SURROGATE_MIN <= code_unit && code_unit <= LIT_UTF16_LOW_SURROGATE_MAX;
+} /* lit_is_code_unit_low_surrogate */
+
+/**
+ * Check if the code unit type is high surrogate
+ *
+ * @return true / false
+ */
+bool
+lit_is_code_unit_high_surrogate (ecma_char_t code_unit) /**< code unit */
+{
+  return LIT_UTF16_HIGH_SURROGATE_MIN <= code_unit && code_unit <= LIT_UTF16_HIGH_SURROGATE_MAX;
+} /* lit_is_code_unit_high_surrogate */
 
 /**
  * Initialize iterator for traversing utf-8 string as a string of code units
@@ -456,6 +480,48 @@ lit_utf8_iterator_is_bos (const lit_utf8_iterator_t *iter_p)
 } /* lit_utf8_iterator_is_bos */
 
 /**
+ * Get offset of the iterator
+ *
+ * @return: current offset in bytes of the iterator from the beginning of buffer
+ */
+lit_utf8_size_t
+lit_utf8_iterator_get_offset (const lit_utf8_iterator_t *iter_p) /**< iterator */
+{
+  return iter_p->buf_pos.offset;
+} /* lit_utf8_iterator_get_offset */
+
+/**
+ * Set iterator to point to specified offset
+ */
+void
+lit_utf8_iterator_set_offset (lit_utf8_iterator_t *iter_p, /**< pointer to iterator */
+                              lit_utf8_size_t offset) /**< offset from the begging of the iterated buffer */
+{
+  JERRY_ASSERT (offset <= iter_p->buf_size);
+
+#ifndef JERRY_NDEBUG
+  if (offset < iter_p->buf_size)
+  {
+    JERRY_ASSERT (((*(iter_p->buf_p + offset)) & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER);
+  }
+#endif
+
+  iter_p->buf_pos.offset = (offset) & LIT_ITERATOR_OFFSET_MASK;
+  iter_p->buf_pos.is_non_bmp_middle = false;
+} /* lit_utf8_iterator_set_offset */
+
+/**
+ * Get pointer to the current utf-8 char which iterator points to
+ *
+ * @return: pointer to utf-8 char
+ */
+lit_utf8_byte_t *
+lit_utf8_iterator_get_ptr (const lit_utf8_iterator_t *iter_p) /**< iterator */
+{
+  return (lit_utf8_byte_t *) iter_p->buf_p + iter_p->buf_pos.offset;
+} /* lit_utf8_iterator_get_ptr */
+
+/**
  * Calculate size of a zero-terminated utf-8 string
  *
  * NOTE:
@@ -703,6 +769,28 @@ lit_code_point_to_utf8 (lit_code_point_t code_point, /**< code point */
 } /* lit_code_unit_to_utf8 */
 
 /**
+ * Convert surrogate pair to code point
+ *
+ * @return code point
+ */
+lit_code_point_t
+lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surrogate, /**< high surrogate code point */
+                                          ecma_char_t low_surrogate) /**< low surrogate code point */
+{
+  JERRY_ASSERT (lit_is_code_unit_high_surrogate (high_surrogate));
+  JERRY_ASSERT (lit_is_code_unit_low_surrogate (low_surrogate));
+
+  lit_code_point_t code_point;
+  code_point = (uint16_t) (high_surrogate - LIT_UTF16_HIGH_SURROGATE_MIN);
+  code_point <<= LIT_UTF16_BITS_IN_SURROGATE;
+
+  code_point += LIT_UTF16_FIRST_SURROGATE_CODE_POINT;
+
+  code_point |= (uint16_t) (low_surrogate - LIT_UTF16_LOW_SURROGATE_MIN);
+  return code_point;
+} /* lit_surrogate_pair_to_code_point */
+
+/**
  * Compare utf-8 string to utf-8 string
  *
  * @return  true - if strings are equal;
@@ -757,3 +845,20 @@ bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, /**<
 
   return (lit_utf8_iterator_is_eos (&iter1) && !lit_utf8_iterator_is_eos (&iter2));
 } /* lit_compare_utf8_strings_relational */
+
+/**
+ * Print code unit to standard output
+ */
+void
+lit_put_ecma_char (ecma_char_t ecma_char) /**< code unit */
+{
+  if (ecma_char <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    putchar (ecma_char);
+  }
+  else
+  {
+    FIXME ("Support unicode characters printing.");
+    putchar ('_');
+  }
+} /* lit_put_ecma_char */

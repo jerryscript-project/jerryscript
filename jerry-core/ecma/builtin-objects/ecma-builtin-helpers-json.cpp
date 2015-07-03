@@ -24,6 +24,7 @@
 #include "ecma-alloc.h"
 #include "ecma-helpers.h"
 #include "ecma-builtin-helpers.h"
+#include "lit-char-helpers.h"
 
 #define LIST_BLOCK_SIZE 256UL
 

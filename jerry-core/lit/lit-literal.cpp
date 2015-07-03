@@ -594,7 +594,7 @@ lit_charset_record_get_length (literal_t lit) /**< literal */
     lit_iter.skip (bytes_to_skip);
     i += bytes_to_skip;
 
-    length++;
+    length += (bytes_to_skip > LIT_UTF8_MAX_BYTES_IN_CODE_UNIT) ? 2 : 1;
   }
 
 #ifndef JERRY_NDEBUG

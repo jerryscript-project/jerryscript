@@ -70,6 +70,111 @@ ecma_date_parse_date_chars (lit_utf8_iterator_t *iter, /**< iterator of the utf8
 } /* ecma_date_parse_date_chars */
 
 /**
+  * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
+  *
+  * See also:
+  *          ECMA-262 v5, 15.9.3.1
+  *          ECMA-262 v5, 15.9.4.3
+  *
+  * @return result of MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))
+  */
+static ecma_completion_value_t
+ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
+                            ecma_length_t args_len) /**< number of arguments */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_number_t *prim_value_p = ecma_alloc_number ();
+  *prim_value_p = ecma_number_make_nan ();
+
+  ECMA_TRY_CATCH (year_value, ecma_op_to_number (args[0]), ret_value);
+  ECMA_TRY_CATCH (month_value, ecma_op_to_number (args[1]), ret_value);
+
+  ecma_number_t year = *ecma_get_number_from_value (year_value);
+  ecma_number_t month = *ecma_get_number_from_value (month_value);
+  ecma_number_t date = ECMA_NUMBER_ONE;
+  ecma_number_t hours = ECMA_NUMBER_ZERO;
+  ecma_number_t minutes = ECMA_NUMBER_ZERO;
+  ecma_number_t seconds = ECMA_NUMBER_ZERO;
+  ecma_number_t milliseconds = ECMA_NUMBER_ZERO;
+
+  /* 3. */
+  if (args_len >= 3 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (date_value, ecma_op_to_number (args[2]), ret_value);
+    date = *ecma_get_number_from_value (date_value);
+    ECMA_FINALIZE (date_value);
+  }
+
+  /* 4. */
+  if (args_len >= 4 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (hours_value, ecma_op_to_number (args[3]), ret_value);
+    hours = *ecma_get_number_from_value (hours_value);
+    ECMA_FINALIZE (hours_value);
+  }
+
+  /* 5. */
+  if (args_len >= 5 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (minutes_value, ecma_op_to_number (args[4]), ret_value);
+    minutes = *ecma_get_number_from_value (minutes_value);
+    ECMA_FINALIZE (minutes_value);
+  }
+
+  /* 6. */
+  if (args_len >= 6 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (seconds_value, ecma_op_to_number (args[5]), ret_value);
+    seconds = *ecma_get_number_from_value (seconds_value);
+    ECMA_FINALIZE (seconds_value);
+  }
+
+  /* 7. */
+  if (args_len >= 7 && ecma_is_completion_value_empty (ret_value))
+  {
+    ECMA_TRY_CATCH (milliseconds_value, ecma_op_to_number (args[6]), ret_value);
+    milliseconds = *ecma_get_number_from_value (milliseconds_value);
+    ECMA_FINALIZE (milliseconds_value);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    if (!ecma_number_is_nan (year))
+    {
+      /* 8. */
+      int32_t y = ecma_number_to_int32 (year);
+
+      if (y >= 0 && y <= 99)
+      {
+        year = (ecma_number_t) (1900 + y);
+      }
+      else
+      {
+        year = (ecma_number_t) y;
+      }
+    }
+
+    *prim_value_p = ecma_date_make_date (ecma_date_make_day (year,
+                                                             month,
+                                                             date),
+                                         ecma_date_make_time (hours,
+                                                              minutes,
+                                                              seconds,
+                                                              milliseconds));
+  }
+
+  ECMA_FINALIZE (month_value);
+  ECMA_FINALIZE (year_value);
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (prim_value_p));
+  }
+
+  return ret_value;
+} /* ecma_date_construct_helper */
+
+/**
  * The Date object's 'parse' routine
  *
  * See also:
@@ -299,11 +404,33 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argument */
                        const ecma_value_t args[], /**< arguments list */
                        ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (args_number < 2)
+  {
+    /* Note:
+     *      When the UTC function is called with fewer than two arguments,
+     *      the behaviour is implementation-dependent, so just return NaN.
+     */
+    ecma_number_t *nan_p = ecma_alloc_number ();
+    *nan_p = ecma_number_make_nan ();
+    return ecma_make_normal_completion_value (ecma_make_number_value (nan_p));
+  }
+
+  ECMA_TRY_CATCH (time_value, ecma_date_construct_helper (args, args_number), ret_value);
+
+  ecma_number_t *time_p = ecma_get_number_from_completion_value (time_value);
+  ecma_number_t *time_clip_p = ecma_alloc_number ();
+  *time_clip_p = ecma_date_time_clip (*time_p);
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (time_clip_p));
+
+  ECMA_FINALIZE (time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_utc */
 
 /**
@@ -316,9 +443,16 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_date_now (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  /*
+   * FIXME:
+   *        Get the real system time. ex: gettimeofday() on Linux
+   *        Introduce system macros at first.
+   */
+  ecma_number_t *now_num_p = ecma_alloc_number ();
+  *now_num_p = ECMA_NUMBER_ZERO;
+  return ecma_make_normal_completion_value (ecma_make_number_value (now_num_p));
 } /* ecma_builtin_date_now */
 
 /**

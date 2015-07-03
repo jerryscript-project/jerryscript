@@ -69,3 +69,31 @@ try {
 } catch (e) {
   assert (e instanceof TypeError);
 }
+
+var o = {};
+
+Object.defineProperty(o, 'a', {
+  value: "OK",
+  writable: true,
+  enumerable: true,
+  configurable: true
+});
+
+Object.defineProperty(o, 'b', {
+  value: "NOT_OK",
+  writable: true,
+  enumerable: false,
+  configurable: true
+});
+
+Object.defineProperty(o, 'c', {
+  value: "OK",
+  writable: true,
+  enumerable: true,
+  configurable: true
+});
+
+props = Object.keys(o);
+assert(props.length === 2);
+assert(o[props[0]] === "OK");
+assert(o[props[1]] === "OK");

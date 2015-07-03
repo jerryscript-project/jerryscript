@@ -203,7 +203,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 
   for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
        property_p != NULL;
-       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p), index++)
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
     ecma_string_t *property_name_p;
 
@@ -255,6 +255,8 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 
     ecma_free_completion_value (completion);
     ecma_deref_ecma_string (index_string_p);
+
+    index++;
   }
 
   return new_array;

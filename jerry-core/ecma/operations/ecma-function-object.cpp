@@ -902,14 +902,14 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
   // c.
   bool func_already_declared = ecma_op_has_binding (lex_env_p, function_name_p);
 
-  // d.
-  ecma_completion_value_t completion = ecma_make_empty_completion_value ();
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
+  // d.
   if (!func_already_declared)
   {
-    completion = ecma_op_create_mutable_binding (lex_env_p,
-                                                 function_name_p,
-                                                 is_configurable_bindings);
+    ecma_completion_value_t completion = ecma_op_create_mutable_binding (lex_env_p,
+                                                                         function_name_p,
+                                                                         is_configurable_bindings);
 
     JERRY_ASSERT (ecma_is_completion_value_empty (completion));
   }
@@ -937,14 +937,15 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
         property_desc.is_configurable = is_configurable_bindings;
       }
 
-      completion = ecma_op_object_define_own_property (glob_obj_p,
-                                                       function_name_p,
-                                                       &property_desc,
-                                                       true);
+      ecma_completion_value_t completion = ecma_op_object_define_own_property (glob_obj_p,
+                                                                               function_name_p,
+                                                                               &property_desc,
+                                                                               true);
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
     }
     else if (existing_prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
     }
     else
     {
@@ -953,28 +954,24 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
       if (!ecma_is_property_writable (existing_prop_p)
           || !ecma_is_property_enumerable (existing_prop_p))
       {
-        completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
       }
     }
 
     ecma_deref_object (glob_obj_p);
   }
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  if (ecma_is_completion_value_throw (completion))
+  if (ecma_is_completion_value_empty (ret_value))
   {
-    ret_value = completion;
-  }
-  else
-  {
-    JERRY_ASSERT (ecma_is_completion_value_empty (completion));
-
     // f.
     ret_value = ecma_op_set_mutable_binding (lex_env_p,
                                              function_name_p,
                                              ecma_make_object_value (func_obj_p),
                                              is_strict);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
   }
 
   ecma_deref_object (func_obj_p);

@@ -30,8 +30,9 @@ static size_t buffer_size = 0;
 
 /* Represents the contents of a script.  */
 static const jerry_api_char_t *buffer_start = NULL;
-static const jerry_api_char_t *buffer = NULL;
 static const jerry_api_char_t *token_start;
+
+static lit_utf8_iterator_t src_iter;
 
 #define LA(I)       (get_char (I))
 
@@ -46,7 +47,7 @@ current_locus (void)
 {
   if (token_start == NULL)
   {
-    return (locus) (buffer - buffer_start);
+    return lit_utf8_iterator_get_offset (&src_iter);
   }
   else
   {
@@ -57,18 +58,26 @@ current_locus (void)
 static ecma_char_t
 get_char (size_t i)
 {
-  if ((buffer + i) >= (buffer_start + buffer_size))
+  lit_utf8_iterator_t iter = src_iter;
+  ecma_char_t code_unit;
+  do
   {
-    return '\0';
+    if (lit_utf8_iterator_is_eos (&iter))
+    {
+      code_unit = LIT_CHAR_NULL;
+      break;
+    }
+
+    code_unit = lit_utf8_iterator_read_next (&iter);
   }
-  return *(buffer + i);
+  while (i--);
+
+  return code_unit;
 }
 
 static void
 dump_current_line (void)
 {
-  const lit_utf8_byte_t *i;
-
   if (!allow_dump_lines)
   {
     return;
@@ -76,12 +85,20 @@ dump_current_line (void)
 
   printf ("// ");
 
-  FIXME ("Unicode: properly process non-ascii characters.");
-  for (i = buffer; *i != '\n' && *i != 0; i++)
+  lit_utf8_iterator_t iter = src_iter;
+
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
-    putchar (*i);
+    ecma_char_t code_unit = lit_utf8_iterator_read_next (&iter);
+    if (code_unit == '\n')
+    {
+      break;
+    }
+
+    lit_put_ecma_char (code_unit);
   }
-  putchar ('\n');
+
+  lit_put_ecma_char ('\n');
 }
 
 static token
@@ -284,22 +301,21 @@ convert_seen_num_to_token (ecma_number_t num)
 static void
 new_token (void)
 {
-  JERRY_ASSERT (buffer);
-  token_start = buffer;
+  JERRY_ASSERT (lit_utf8_iterator_get_ptr (&src_iter));
+  token_start = lit_utf8_iterator_get_ptr (&src_iter);
 }
 
 static void
 consume_char (void)
 {
-  JERRY_ASSERT (buffer);
-  buffer++;
+  lit_utf8_iterator_incr (&src_iter);
 }
 
 #define RETURN_PUNC_EX(TOK, NUM) \
   do \
   { \
     token tok = create_token (TOK, 0); \
-    buffer += NUM; \
+    lit_utf8_iterator_advance (&src_iter, NUM); \
     return tok; \
   } \
   while (0)
@@ -444,37 +460,29 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
   }
 
   lit_utf8_byte_t *str_buf_p = (lit_utf8_byte_t*) jsp_mm_alloc (source_str_size);
-
-  const lit_utf8_byte_t *source_str_iter_p = source_str_p;
   lit_utf8_byte_t *str_buf_iter_p = str_buf_p;
+
+  /* const lit_utf8_byte_t *source_str_iter_p = source_str_p; */
+  lit_utf8_iterator_t source_str_iter = lit_utf8_iterator_create (source_str_p, (lit_utf8_size_t) source_str_size);
 
   bool is_correct_sequence = true;
   bool every_char_islower = true;
   bool every_char_allowed_in_identifier = true;
 
-  while (source_str_iter_p < source_str_p + source_str_size)
+  ecma_char_t prev_converted_char = LIT_CHAR_NULL;
+  while (!lit_utf8_iterator_is_eos (&source_str_iter))
   {
-    ecma_char_t converted_char;
+    ecma_char_t converted_char = lit_utf8_iterator_read_next (&source_str_iter);
 
-    if (*source_str_iter_p != '\\')
+    if (converted_char == '\\')
     {
-      converted_char = (lit_utf8_byte_t) *source_str_iter_p++;
-
-      JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
-      JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
-    }
-    else
-    {
-      source_str_iter_p++;
-
-      const lit_utf8_byte_t escape_character = (lit_utf8_byte_t) *source_str_iter_p++;
-      JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
+      const ecma_char_t escape_character = lit_utf8_iterator_read_next (&source_str_iter);
 
       if (isdigit (escape_character))
       {
         if (escape_character == '0')
         {
-          JERRY_UNIMPLEMENTED ("<NUL> character is not currently supported.\n");
+          converted_char = LIT_CHAR_NULL;
         }
         else
         {
@@ -488,7 +496,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
       {
         const uint32_t hex_chars_num = (escape_character == 'u' ? 4u : 2u);
 
-        if (source_str_iter_p + hex_chars_num > source_str_p + source_str_size)
+        if (lit_utf8_iterator_get_offset (&source_str_iter) + hex_chars_num > source_str_size)
         {
           is_correct_sequence = false;
           break;
@@ -499,9 +507,9 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
 
         for (uint32_t i = 0; i < hex_chars_num; i++)
         {
-          const lit_utf8_byte_t byte = (lit_utf8_byte_t) *source_str_iter_p++;
+          const ecma_char_t next_char = lit_utf8_iterator_read_next (&source_str_iter);
 
-          if (!isxdigit (byte))
+          if (!isxdigit (next_char))
           {
             chars_are_hex = false;
             break;
@@ -514,12 +522,12 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
             JERRY_ASSERT ((char_code & 0xF000u) == 0);
 
             char_code = (uint16_t) (char_code << 4u);
-            char_code = (uint16_t) (char_code + lit_char_hex_to_int (byte));
+            char_code = (uint16_t) (char_code + lit_char_hex_to_int (next_char));
           }
         }
 
         JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
-        JERRY_ASSERT (source_str_iter_p <= source_str_p + source_str_size);
+        JERRY_ASSERT (lit_utf8_iterator_get_offset (&source_str_iter) <= source_str_size);
 
         if (!chars_are_hex)
         {
@@ -536,14 +544,14 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
       }
       else if (lit_char_is_line_terminator (escape_character))
       {
-        if (source_str_iter_p + 1 <= source_str_p + source_str_size)
+        if (str_buf_iter_p + 1 <= source_str_p + source_str_size)
         {
-          lit_utf8_byte_t byte = *source_str_iter_p;
+          ecma_char_t next_char = lit_utf8_iterator_peek_next (&source_str_iter);
 
           if (escape_character == '\x0D'
-              && byte == '\x0A')
+              && next_char == '\x0A')
           {
-            source_str_iter_p++;
+            lit_utf8_iterator_incr (&source_str_iter);
           }
         }
 
@@ -555,9 +563,20 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
       }
     }
 
-    TODO ("Support surrogate paris.")
-    str_buf_iter_p += lit_code_unit_to_utf8 (converted_char, str_buf_iter_p);
-    JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
+    if (lit_is_code_unit_high_surrogate (prev_converted_char)
+        && lit_is_code_unit_low_surrogate (converted_char))
+    {
+      str_buf_iter_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (prev_converted_char, converted_char);
+      str_buf_iter_p += lit_code_point_to_utf8 (code_point, str_buf_iter_p);
+    }
+    else
+    {
+      str_buf_iter_p += lit_code_unit_to_utf8 (converted_char, str_buf_iter_p);
+      JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
+    }
+
+    prev_converted_char = converted_char;
 
     if (!islower (converted_char))
     {
@@ -615,7 +634,7 @@ parse_name (void)
 
   token known_token = empty_token;
 
-  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_');
+  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_' || c == '\\');
 
   new_token ();
 
@@ -664,9 +683,10 @@ parse_name (void)
     }
   }
 
+  const lit_utf8_size_t seq_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
   known_token = convert_string_to_token_transform_escape_seq (TOK_NAME,
                                                               token_start,
-                                                              (size_t) (buffer - token_start));
+                                                              seq_size);
 
   token_start = NULL;
 
@@ -722,10 +742,11 @@ parse_number (void)
 
     if (isalpha (c) || c == '_' || c == '$')
     {
-      PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
+      PARSE_ERROR ("Integer literal shall not contain non-digit characters",
+                   lit_utf8_iterator_get_offset (&src_iter));
     }
 
-    tok_length = (size_t) (buffer - token_start);
+    tok_length = (size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
 
     for (i = 0; i < tok_length; i++)
     {
@@ -776,12 +797,13 @@ parse_number (void)
     if (is_fp && c == '.')
     {
       FIXME (/* This is wrong: 1..toString ().  */)
-      PARSE_ERROR ("Integer literal shall not contain more than one dot character", buffer - buffer_start);
+      PARSE_ERROR ("Integer literal shall not contain more than one dot character",
+                   lit_utf8_iterator_get_offset (&src_iter));
     }
     if (is_exp && (c == 'e' || c == 'E'))
     {
       PARSE_ERROR ("Integer literal shall not contain more than exponential marker ('e' or 'E')",
-                   buffer - buffer_start);
+                   lit_utf8_iterator_get_offset (&src_iter));
     }
 
     if (c == '.')
@@ -789,7 +811,7 @@ parse_number (void)
       if (isalpha (LA (1)) || LA (1) == '_' || LA (1) == '$')
       {
         PARSE_ERROR ("Integer literal shall not contain non-digit character after got character",
-                     buffer - buffer_start);
+                     lit_utf8_iterator_get_offset (&src_iter));
       }
       is_fp = true;
       consume_char ();
@@ -805,7 +827,7 @@ parse_number (void)
       if (!isdigit (LA (1)))
       {
         PARSE_ERROR ("Integer literal shall not contain non-digit character after exponential marker ('e' or 'E')",
-                     buffer - buffer_start);
+                     lit_utf8_iterator_get_offset (&src_iter));
       }
       is_exp = true;
       consume_char ();
@@ -814,7 +836,8 @@ parse_number (void)
 
     if (isalpha (c) || c == '_' || c == '$')
     {
-      PARSE_ERROR ("Integer literal shall not contain non-digit characters", buffer - buffer_start);
+      PARSE_ERROR ("Integer literal shall not contain non-digit characters",
+                   lit_utf8_iterator_get_offset (&src_iter));
     }
 
     if (!isdigit (c))
@@ -825,7 +848,7 @@ parse_number (void)
     consume_char ();
   }
 
-  tok_length = (size_t) (buffer - token_start);
+  tok_length = (size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
   if (is_fp || is_exp)
   {
     ecma_number_t res = ecma_utf8_string_to_number (token_start, (jerry_api_size_t) tok_length);
@@ -948,9 +971,12 @@ parse_string (void)
   }
   while (c != end_char);
 
+  const lit_utf8_size_t esc_seq_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
+                                                          token_start) - 1;
+
   token ret = convert_string_to_token_transform_escape_seq (TOK_STRING,
                                                             token_start,
-                                                            (size_t) (buffer - token_start) - 1u);
+                                                            esc_seq_size);
 
   token_start = NULL;
 
@@ -1021,7 +1047,8 @@ parse_regexp (void)
 
   result = convert_string_to_token (TOK_REGEXP,
                                     (const lit_utf8_byte_t *) token_start,
-                                    static_cast<ecma_length_t> (buffer - token_start));
+                                    (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
+                                                      token_start));
 
   token_start = NULL;
   return result;
@@ -1037,13 +1064,6 @@ grobble_whitespaces (void)
     consume_char ();
     c = LA (0);
   }
-}
-
-static void
-lexer_set_source (const jerry_api_char_t * source)
-{
-  buffer_start = source;
-  buffer = buffer_start;
 }
 
 static bool
@@ -1088,7 +1108,7 @@ replace_comment_by_newline (void)
     }
     if (multiline && c == '\0')
     {
-      PARSE_ERROR ("Unclosed multiline comment", buffer - buffer_start);
+      PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_offset (&src_iter));
     }
     consume_char ();
   }
@@ -1101,7 +1121,7 @@ lexer_next_token_private (void)
 
   JERRY_ASSERT (token_start == NULL);
 
-  if (isalpha (c) || c == '$' || c == '_')
+  if (isalpha (c) || c == '$' || c == '_' || c == '\\')
   {
     return parse_name ();
   }
@@ -1251,15 +1271,15 @@ lexer_next_token_private (void)
       }
       break;
     }
-    default: PARSE_SORRY ("Unknown character", buffer - buffer_start);
+    default: PARSE_SORRY ("Unknown character", lit_utf8_iterator_get_offset (&src_iter));
   }
-  PARSE_SORRY ("Unknown character", buffer - buffer_start);
+  PARSE_SORRY ("Unknown character", lit_utf8_iterator_get_offset (&src_iter));
 }
 
 token
 lexer_next_token (void)
 {
-  if (buffer == buffer_start)
+  if (lit_utf8_iterator_get_offset (&src_iter) == 0)
   {
     dump_current_line ();
   }
@@ -1281,7 +1301,7 @@ lexer_next_token (void)
   if (prev_token.type == TOK_EOF
       && sent_token.type == TOK_EOF)
   {
-    PARSE_ERROR ("Unexpected EOF", buffer - buffer_start);
+    PARSE_ERROR ("Unexpected EOF", lit_utf8_iterator_get_offset (&src_iter));
   }
 
   prev_token = sent_token;
@@ -1315,7 +1335,7 @@ lexer_seek (size_t locus)
   JERRY_ASSERT (locus < buffer_size);
   JERRY_ASSERT (token_start == NULL);
 
-  buffer = buffer_start + locus;
+  lit_utf8_iterator_set_offset (&src_iter, (lit_utf8_size_t) locus);
   saved_token = empty_token;
 }
 
@@ -1543,8 +1563,17 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
 
   saved_token = prev_token = sent_token = empty_token;
 
+  if (!lit_is_utf8_string_valid (source, (lit_utf8_size_t) source_size))
+  {
+    PARSE_ERROR ("Invalid source encoding", 0);
+  }
+
+  src_iter = lit_utf8_iterator_create (source, (lit_utf8_size_t) source_size);
+
   buffer_size = source_size;
-  lexer_set_source (source);
+  buffer_start = source;
+  token_start = NULL;
+
   lexer_set_strict_mode (false);
 
 #ifndef JERRY_NDEBUG

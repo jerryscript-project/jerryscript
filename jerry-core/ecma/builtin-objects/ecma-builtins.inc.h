@@ -301,7 +301,7 @@ BUILTIN (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR,
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID__COUNT /* no prototype */,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, /* Implementation-dependent */
          true,
          true,
          global)

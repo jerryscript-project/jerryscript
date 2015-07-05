@@ -983,25 +983,26 @@ lexer_parse_number (void)
  * Parse string literal (ECMA-262 v5, 7.8.4)
  */
 static token
-parse_string (void)
+lexer_parse_string (void)
 {
   ecma_char_t c = (ecma_char_t) LA (0);
-  JERRY_ASSERT (c == '\'' || c == '"');
+  JERRY_ASSERT (c == LIT_CHAR_SINGLE_QUOTE
+                || c == LIT_CHAR_DOUBLE_QUOTE);
 
+  /* Consume quote character */
   consume_char ();
   new_token ();
 
-  const bool is_double_quoted = (c == '"');
-  const char end_char = (is_double_quoted ? '"' : '\'');
+  const ecma_char_t end_char = c;
 
   bool is_escape_sequence_occured = false;
 
   do
   {
-    c = (ecma_char_t) LA (0);
+    c = LA (0);
     consume_char ();
 
-    if (c == '\0')
+    if (c == LIT_CHAR_NULL)
     {
       PARSE_ERROR ("Unclosed string", token_start - buffer_start);
     }
@@ -1009,28 +1010,18 @@ parse_string (void)
     {
       PARSE_ERROR ("String literal shall not contain newline character", token_start - buffer_start);
     }
-    else if (c == '\\')
+    else if (c == LIT_CHAR_BACKSLASH)
     {
       is_escape_sequence_occured = true;
 
       ecma_char_t nc = (ecma_char_t) LA (0);
+      consume_char ();
 
-      if (lexer_convert_single_escape_character (nc, NULL))
+      if (nc == LIT_CHAR_CR)
       {
-        consume_char ();
-      }
-      else if (lit_char_is_line_terminator (nc))
-      {
-        consume_char ();
-
-        if (nc == LIT_CHAR_CR)
+        if (LA (0) == LIT_CHAR_LF)
         {
-          nc = (ecma_char_t) LA (0);
-
-          if (nc == LIT_CHAR_LF)
-          {
-            consume_char ();
-          }
+          consume_char ();
         }
       }
     }
@@ -1058,7 +1049,7 @@ parse_string (void)
   token_start = NULL;
 
   return ret;
-} /* parse_string */
+} /* lexer_parse_string */
 
 /**
  * Parse string literal (ECMA-262 v5, 7.8.5)
@@ -1223,9 +1214,10 @@ lexer_next_token_private (void)
     return create_token (TOK_EOF, 0);
   }
 
-  if (c == '\'' || c == '"')
+  if (c == LIT_CHAR_SINGLE_QUOTE
+      || c == LIT_CHAR_DOUBLE_QUOTE)
   {
-    return parse_string ();
+    return lexer_parse_string ();
   }
 
   if (isspace (c))

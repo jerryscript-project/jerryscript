@@ -95,15 +95,20 @@ dump_current_line (void)
   while (!lit_utf8_iterator_is_eos (&iter))
   {
     ecma_char_t code_unit = lit_utf8_iterator_read_next (&iter);
-    if (code_unit == '\n')
+    if (lit_char_is_line_terminator (code_unit))
     {
+      if (code_unit == LIT_CHAR_CR
+          && lit_utf8_iterator_peek_next (&iter) == LIT_CHAR_LF)
+      {
+        lit_utf8_iterator_incr (&iter);
+      }
       break;
     }
 
     lit_put_ecma_char (code_unit);
   }
 
-  lit_put_ecma_char ('\n');
+  lit_put_ecma_char (LIT_CHAR_LF);
 }
 
 static token
@@ -1122,29 +1127,17 @@ lexer_parse_regexp (void)
   return result;
 } /* lexer_parse_regexp */
 
-static void
-grobble_whitespaces (void)
-{
-  ecma_char_t c = LA (0);
-
-  while ((isspace (c) && c != '\n'))
-  {
-    consume_char ();
-    c = LA (0);
-  }
-}
-
 static bool
-replace_comment_by_newline (void)
+lexer_parse_comment (void)
 {
   ecma_char_t c = LA (0);
   bool multiline;
   bool was_newlines = false;
 
-  JERRY_ASSERT (LA (0) == '/');
-  JERRY_ASSERT (LA (1) == '/' || LA (1) == '*');
+  JERRY_ASSERT (LA (0) == LIT_CHAR_SLASH);
+  JERRY_ASSERT (LA (1) == LIT_CHAR_SLASH || LA (1) == LIT_CHAR_ASTERISK);
 
-  multiline = (LA (1) == '*');
+  multiline = (LA (1) == LIT_CHAR_ASTERISK);
 
   consume_char ();
   consume_char ();
@@ -1152,40 +1145,68 @@ replace_comment_by_newline (void)
   while (true)
   {
     c = LA (0);
-    if (!multiline && (c == '\n' || c == '\0'))
-    {
-      return false;
-    }
-    if (multiline && c == '*' && LA (1) == '/')
-    {
-      consume_char ();
-      consume_char ();
 
-      if (was_newlines)
+    if (!multiline)
+    {
+      if (lit_char_is_line_terminator (c))
       {
         return true;
       }
-      else
+      else if (c == LIT_CHAR_NULL)
       {
         return false;
       }
     }
-    if (multiline && c == '\n')
+    else
     {
-      was_newlines = true;
+      if (c == LIT_CHAR_ASTERISK
+          && LA (1) == LIT_CHAR_SLASH)
+      {
+        consume_char ();
+        consume_char ();
+
+        return was_newlines;
+      }
+      else if (lit_char_is_line_terminator (c))
+      {
+        was_newlines = true;
+      }
+      else if (c == LIT_CHAR_NULL)
+      {
+        PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_offset (&src_iter));
+      }
     }
-    if (multiline && c == '\0')
-    {
-      PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_offset (&src_iter));
-    }
+
     consume_char ();
   }
-}
+} /* lexer_parse_comment */
 
 static token
 lexer_next_token_private (void)
 {
   ecma_char_t c = LA (0);
+
+  if (lit_char_is_white_space (c))
+  {
+    while (lit_char_is_white_space (c))
+    {
+      consume_char ();
+
+      c = LA (0);
+    }
+  }
+
+  if (lit_char_is_line_terminator (c))
+  {
+    while (lit_char_is_line_terminator (c))
+    {
+      consume_char ();
+
+      c = LA (0);
+    }
+
+    return create_token (TOK_NEWLINE, 0);
+  }
 
   JERRY_ASSERT (token_start == NULL);
 
@@ -1203,7 +1224,7 @@ lexer_next_token_private (void)
     return lexer_parse_number ();
   }
 
-  if (c == '\n')
+  if (c == LIT_CHAR_LF)
   {
     consume_char ();
     return create_token (TOK_NEWLINE, 0);
@@ -1220,34 +1241,17 @@ lexer_next_token_private (void)
     return lexer_parse_string ();
   }
 
-  if (isspace (c))
+  /* ECMA-262 v5, 7.4, SingleLineComment or MultiLineComment */
+  if (c == LIT_CHAR_SLASH
+      && (LA (1) == LIT_CHAR_SLASH
+          || LA (1) == LIT_CHAR_ASTERISK))
   {
-    grobble_whitespaces ();
-    return lexer_next_token_private ();
-  }
-
-  if (c == '/' && LA (1) == '*')
-  {
-    if (replace_comment_by_newline ())
+    if (lexer_parse_comment ())
     {
-      token ret;
-
-      ret.type = TOK_NEWLINE;
-      ret.uid = 0;
-
-      return ret;
+      return create_token (TOK_NEWLINE, 0);
     }
     else
     {
-      return lexer_next_token_private ();
-    }
-  }
-
-  if (c == '/')
-  {
-    if (LA (1) == '/')
-    {
-      replace_comment_by_newline ();
       return lexer_next_token_private ();
     }
   }
@@ -1421,7 +1425,7 @@ lexer_locus_to_line_and_column (size_t locus, size_t *line, size_t *column)
   size_t l = 0, c = 0;
   for (buf = buffer_start; (size_t) (buf - buffer_start) < locus; buf++)
   {
-    if (*buf == '\n')
+    if (*buf == LIT_CHAR_LF)
     {
       c = 0;
       l++;
@@ -1444,17 +1448,17 @@ void
 lexer_dump_line (size_t line)
 {
   size_t l = 0;
-  for (const lit_utf8_byte_t *buf = buffer_start; *buf != '\0'; buf++)
+  for (const lit_utf8_byte_t *buf = buffer_start; *buf != LIT_CHAR_NULL; buf++)
   {
     if (l == line)
     {
-      for (; *buf != '\n' && *buf != '\0'; buf++)
+      for (; *buf != LIT_CHAR_LF && *buf != LIT_CHAR_NULL; buf++)
       {
         putchar (*buf);
       }
       return;
     }
-    if (*buf == '\n')
+    if (*buf == LIT_CHAR_LF)
     {
       l++;
     }

@@ -158,16 +158,16 @@ convert_string_to_token (token_type tt, /**< token type */
 }
 
 /**
- * Try to decode specified string as keyword
+ * Try to decode specified string as ReservedWord (ECMA-262 v5, 7.6.1)
  *
- * @return if specified string represents a keyword, return corresponding keyword token,
- *         else if it is 'null' - return TOK_NULL token,
- *         else if it is 'true' or 'false' - return TOK_BOOL with corresponding boolean value,
- *         else - return empty_token.
+ * @return TOK_KEYWORD - for Keyword or FutureReservedWord,
+ *         TOK_NULL - for NullLiteral,
+ *         TOK_BOOL - for BooleanLiteral,
+ *         TOK_EMPTY - for other tokens.
  */
 static token
-decode_keyword (const lit_utf8_byte_t *str_p, /**< characters buffer */
-                lit_utf8_size_t str_size) /**< string's length */
+lexer_parse_reserved_word (const lit_utf8_byte_t *str_p, /**< characters buffer */
+                           lit_utf8_size_t str_size) /**< string's length */
 {
   typedef struct
   {
@@ -251,7 +251,7 @@ decode_keyword (const lit_utf8_byte_t *str_p, /**< characters buffer */
       case KW_STATIC:
       case KW_YIELD:
       {
-        return convert_string_to_token (TOK_NAME, str_p, (ecma_length_t) str_size);
+        return empty_token;
       }
 
       default:
@@ -284,7 +284,7 @@ decode_keyword (const lit_utf8_byte_t *str_p, /**< characters buffer */
       return empty_token;
     }
   }
-} /* decode_keyword */
+} /* lexer_parse_reserved_word */
 
 static token
 convert_seen_num_to_token (ecma_number_t num)
@@ -601,7 +601,7 @@ convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of 
     {
       if (every_char_islower)
       {
-        ret = decode_keyword (str_buf_p, length);
+        ret = lexer_parse_reserved_word (str_buf_p, length);
       }
       else if (!every_char_allowed_in_identifier)
       {

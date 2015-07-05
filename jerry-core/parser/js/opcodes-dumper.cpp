@@ -140,7 +140,7 @@ next_temp_name (void)
      * FIXME:
      *       Implement mechanism, allowing reusage of register variables
      */
-    PARSE_ERROR ("Not enough register variables", 0);
+    PARSE_ERROR ("Not enough register variables", LIT_ITERATOR_POS_ZERO);
   }
 
   if (max_temp_name < next_reg)

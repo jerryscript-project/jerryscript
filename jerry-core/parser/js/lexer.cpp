@@ -35,11 +35,14 @@ static size_t buffer_size = 0;
 
 /* Represents the contents of a script.  */
 static const jerry_api_char_t *buffer_start = NULL;
-static const jerry_api_char_t *token_start;
+static lit_utf8_iterator_pos_t token_start_pos;
+static bool is_token_parse_in_progress = false;
 
 static lit_utf8_iterator_t src_iter;
 
 #define LA(I)       (get_char (I))
+#define TOK_START() (src_iter.buf_p + token_start_pos.offset)
+#define TOK_SIZE() ((lit_utf8_size_t) (src_iter.buf_pos.offset - token_start_pos.offset))
 
 static bool
 is_empty (token tok)
@@ -50,13 +53,13 @@ is_empty (token tok)
 static locus
 current_locus (void)
 {
-  if (token_start == NULL)
+  if (is_token_parse_in_progress)
   {
-    return lit_utf8_iterator_get_offset (&src_iter);
+    return token_start_pos;
   }
   else
   {
-    return (locus) (token_start - buffer_start);
+    return lit_utf8_iterator_get_pos (&src_iter);
   }
 }
 
@@ -80,6 +83,9 @@ get_char (size_t i)
   return code_unit;
 }
 
+/**
+ * Dump current line
+ */
 static void
 dump_current_line (void)
 {
@@ -98,6 +104,7 @@ dump_current_line (void)
     if (lit_char_is_line_terminator (code_unit))
     {
       if (code_unit == LIT_CHAR_CR
+          && !lit_utf8_iterator_is_eos (&iter)
           && lit_utf8_iterator_peek_next (&iter) == LIT_CHAR_LF)
       {
         lit_utf8_iterator_incr (&iter);
@@ -109,7 +116,7 @@ dump_current_line (void)
   }
 
   lit_put_ecma_char (LIT_CHAR_LF);
-}
+} /* dump_current_line */
 
 static token
 create_token_from_lit (token_type type, literal_t lit)
@@ -117,7 +124,7 @@ create_token_from_lit (token_type type, literal_t lit)
   token ret;
 
   ret.type = type;
-  ret.loc = current_locus () - (type == TOK_STRING ? 1 : 0);
+  ret.loc = current_locus ();
   ret.uid = lit_cpointer_t::compress (lit).packed_value;
 
   return ret;
@@ -135,7 +142,7 @@ create_token (token_type type,  /**< type of token */
   token ret;
 
   ret.type = type;
-  ret.loc = current_locus () - (type == TOK_STRING ? 1 : 0);
+  ret.loc = current_locus ();
   ret.uid = uid;
 
   return ret;
@@ -408,12 +415,10 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
       {
         /* Skip \, followed by a LineTerminatorSequence (ECMA-262, v5, 7.3) */
         if (char_after_next == LIT_CHAR_CR
-            && !lit_utf8_iterator_is_eos (&source_str_iter))
+            && !lit_utf8_iterator_is_eos (&source_str_iter)
+            && lit_utf8_iterator_peek_next (&source_str_iter) == LIT_CHAR_LF)
         {
-          if (lit_utf8_iterator_peek_next (&source_str_iter) == LIT_CHAR_LF)
-          {
-            lit_utf8_iterator_incr (&source_str_iter);
-          }
+          lit_utf8_iterator_incr (&source_str_iter);
         }
 
         continue;
@@ -452,7 +457,7 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
   }
   else
   {
-    PARSE_ERROR ("Illegal escape sequence", source_str_p - buffer_start);
+    PARSE_ERROR ("Illegal escape sequence", token_start_pos);
   }
 } /* lexer_transform_escape_sequences */
 
@@ -625,8 +630,9 @@ convert_seen_num_to_token (ecma_number_t num)
 static void
 new_token (void)
 {
-  JERRY_ASSERT (lit_utf8_iterator_get_ptr (&src_iter));
-  token_start = lit_utf8_iterator_get_ptr (&src_iter);
+  token_start_pos = lit_utf8_iterator_get_pos (&src_iter);
+  JERRY_ASSERT (!token_start_pos.is_non_bmp_middle);
+  is_token_parse_in_progress = true;
 }
 
 static void
@@ -762,10 +768,10 @@ lexer_parse_identifier_or_keyword (void)
 
   if (!is_correct_identifier_name)
   {
-    PARSE_ERROR ("Illegal identifier name", lit_utf8_iterator_get_offset (&src_iter));
+    PARSE_ERROR ("Illegal identifier name", lit_utf8_iterator_get_pos (&src_iter));
   }
 
-  const lit_utf8_size_t charset_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
+  const lit_utf8_size_t charset_size = TOK_SIZE ();
 
   token ret = empty_token;
 
@@ -773,7 +779,7 @@ lexer_parse_identifier_or_keyword (void)
       && is_all_chars_were_lowercase_ascii)
   {
     /* Keyword or FutureReservedWord (TOK_KEYWORD), or boolean literal (TOK_BOOL), or null literal (TOK_NULL) */
-    ret = lexer_parse_reserved_word (token_start, charset_size);
+    ret = lexer_parse_reserved_word (TOK_START (), charset_size);
   }
 
   if (is_empty (ret))
@@ -783,18 +789,18 @@ lexer_parse_identifier_or_keyword (void)
     if (!is_escape_sequence_occured)
     {
       ret = lexer_create_token_for_charset (TOK_NAME,
-                                            token_start,
+                                            TOK_START (),
                                             charset_size);
     }
     else
     {
       ret = lexer_create_token_for_charset_transform_escape_sequences (TOK_NAME,
-                                                                       token_start,
+                                                                       TOK_START (),
                                                                        charset_size);
     }
   }
 
-  token_start = NULL;
+  is_token_parse_in_progress = false;
 
   return ret;
 } /* lexer_parse_identifier_or_keyword */
@@ -849,16 +855,16 @@ lexer_parse_number (void)
 
     if (lexer_is_char_can_be_identifier_start (c))
     {
-      PARSE_ERROR ("Identifier just after integer literal",
-                   lit_utf8_iterator_get_offset (&src_iter));
+      PARSE_ERROR ("Identifier just after integer literal", lit_utf8_iterator_get_pos (&src_iter));
     }
 
-    tok_length = (size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
+    tok_length = (size_t) (TOK_SIZE ());
 
+    const lit_utf8_byte_t *fp_buf_p = TOK_START ();
     /* token is constructed at end of function */
     for (i = 0; i < tok_length; i++)
     {
-      fp_res = fp_res * 16 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
+      fp_res = fp_res * 16 + (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i]);
     }
   }
   else
@@ -898,7 +904,7 @@ lexer_parse_number (void)
         if (is_exp)
         {
           PARSE_ERROR ("Numeric literal shall not contain more than exponential marker ('e' or 'E')",
-                       lit_utf8_iterator_get_offset (&src_iter));
+                       lit_utf8_iterator_get_pos (&src_iter));
         }
         else
         {
@@ -919,7 +925,7 @@ lexer_parse_number (void)
         if (lexer_is_char_can_be_identifier_start (c))
         {
           PARSE_ERROR ("Numeric literal shall not contain non-numeric characters",
-                       lit_utf8_iterator_get_offset (&src_iter));
+                       lit_utf8_iterator_get_pos (&src_iter));
         }
 
         /* token is constructed at end of function */
@@ -929,43 +935,45 @@ lexer_parse_number (void)
       consume_char ();
     }
 
-    tok_length = (size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
+    tok_length = (size_t) (TOK_SIZE ());
 
     if (is_fp || is_exp)
     {
-      ecma_number_t res = ecma_utf8_string_to_number (token_start, (jerry_api_size_t) tok_length);
+      ecma_number_t res = ecma_utf8_string_to_number (TOK_START (), (jerry_api_size_t) tok_length);
       JERRY_ASSERT (!ecma_number_is_nan (res));
 
       known_token = convert_seen_num_to_token (res);
-      token_start = NULL;
+      is_token_parse_in_progress = NULL;
 
       return known_token;
     }
-    else if (*token_start == LIT_CHAR_0
+    else if (*TOK_START () == LIT_CHAR_0
              && tok_length != 1)
     {
       /* Octal integer literals */
       if (strict_mode)
       {
-        PARSE_ERROR ("Octal integer literals are not allowed in strict mode", token_start - buffer_start);
+        PARSE_ERROR ("Octal integer literals are not allowed in strict mode", token_start_pos);
       }
       else
       {
         /* token is constructed at end of function */
+        const lit_utf8_byte_t *fp_buf_p = TOK_START ();
 
         for (i = 0; i < tok_length; i++)
         {
-          fp_res = fp_res * 8 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
+          fp_res = fp_res * 8 + (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i]);
         }
       }
     }
     else
     {
+      const lit_utf8_byte_t *fp_buf_p = TOK_START ();
       /* token is constructed at end of function */
 
       for (i = 0; i < tok_length; i++)
       {
-        fp_res = fp_res * 10 + (ecma_number_t) lit_char_hex_to_int (token_start[i]);
+        fp_res = fp_res * 10 + (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i]);
       }
     }
   }
@@ -973,13 +981,13 @@ lexer_parse_number (void)
   if (fp_res >= 0 && fp_res <= 255 && (uint8_t) fp_res == fp_res)
   {
     known_token = create_token (TOK_SMALL_INT, (uint8_t) fp_res);
-    token_start = NULL;
+    is_token_parse_in_progress = NULL;
     return known_token;
   }
   else
   {
     known_token = convert_seen_num_to_token (fp_res);
-    token_start = NULL;
+    is_token_parse_in_progress = NULL;
     return known_token;
   }
 } /* lexer_parse_number */
@@ -994,9 +1002,11 @@ lexer_parse_string (void)
   JERRY_ASSERT (c == LIT_CHAR_SINGLE_QUOTE
                 || c == LIT_CHAR_DOUBLE_QUOTE);
 
+
+  new_token ();
+
   /* Consume quote character */
   consume_char ();
-  new_token ();
 
   const ecma_char_t end_char = c;
 
@@ -1009,11 +1019,11 @@ lexer_parse_string (void)
 
     if (c == LIT_CHAR_NULL)
     {
-      PARSE_ERROR ("Unclosed string", token_start - buffer_start);
+      PARSE_ERROR ("Unclosed string", token_start_pos);
     }
     else if (lit_char_is_line_terminator (c))
     {
-      PARSE_ERROR ("String literal shall not contain newline character", token_start - buffer_start);
+      PARSE_ERROR ("String literal shall not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
@@ -1024,7 +1034,9 @@ lexer_parse_string (void)
 
       if (nc == LIT_CHAR_CR)
       {
-        if (LA (0) == LIT_CHAR_LF)
+        nc = (ecma_char_t) LA (0);
+
+        if (nc == LIT_CHAR_LF)
         {
           consume_char ();
         }
@@ -1033,25 +1045,24 @@ lexer_parse_string (void)
   }
   while (c != end_char);
 
-  const lit_utf8_size_t charset_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
-                                                          token_start) - 1;
+  const lit_utf8_size_t charset_size = TOK_SIZE () - 2;
 
   token ret;
 
   if (!is_escape_sequence_occured)
   {
     ret = lexer_create_token_for_charset (TOK_STRING,
-                                          token_start,
-                                          charset_size);
+                                   TOK_START () + 1,
+                                   charset_size);
   }
   else
   {
     ret = lexer_create_token_for_charset_transform_escape_sequences (TOK_STRING,
-                                                                     token_start,
+                                                                     TOK_START () + 1,
                                                                      charset_size);
   }
 
-  token_start = NULL;
+  is_token_parse_in_progress = false;
 
   return ret;
 } /* lexer_parse_string */
@@ -1076,11 +1087,11 @@ lexer_parse_regexp (void)
 
     if (c == LIT_CHAR_NULL)
     {
-      PARSE_ERROR ("Unclosed string", token_start - buffer_start);
+      PARSE_ERROR ("Unclosed string", token_start_pos);
     }
     else if (c == LIT_CHAR_LF)
     {
-      PARSE_ERROR ("RegExp literal shall not contain newline character", token_start - buffer_start);
+      PARSE_ERROR ("RegExp literal shall not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
@@ -1118,12 +1129,9 @@ lexer_parse_regexp (void)
     consume_char ();
   }
 
-  result = lexer_create_token_for_charset (TOK_REGEXP,
-                                           (const lit_utf8_byte_t *) token_start,
-                                           (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
-                                                              token_start));
+  result = lexer_create_token_for_charset (TOK_REGEXP, TOK_START (), TOK_SIZE ());
 
-  token_start = NULL;
+  is_token_parse_in_progress = false;
   return result;
 } /* lexer_parse_regexp */
 
@@ -1173,7 +1181,7 @@ lexer_parse_comment (void)
       }
       else if (c == LIT_CHAR_NULL)
       {
-        PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_offset (&src_iter));
+        PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_pos (&src_iter));
       }
     }
 
@@ -1217,7 +1225,7 @@ lexer_parse_token (void)
     return create_token (TOK_NEWLINE, 0);
   }
 
-  JERRY_ASSERT (token_start == NULL);
+  JERRY_ASSERT (is_token_parse_in_progress == false);
 
   /* ECMA-262 v5, 7.6, Identifier */
   if (lexer_is_char_can_be_identifier_start (c))
@@ -1439,13 +1447,14 @@ lexer_parse_token (void)
     }
   }
 
-  PARSE_ERROR ("Illegal character", lit_utf8_iterator_get_offset (&src_iter));
+  PARSE_ERROR ("Illegal character", lit_utf8_iterator_get_pos (&src_iter));
 } /* lexer_parse_token */
 
 token
 lexer_next_token (void)
 {
-  if (lit_utf8_iterator_get_offset (&src_iter) == 0)
+  lit_utf8_iterator_pos_t src_pos = lit_utf8_iterator_get_pos (&src_iter);
+  if (src_pos.offset == 0 && !src_pos.is_non_bmp_middle)
   {
     dump_current_line ();
   }
@@ -1467,7 +1476,7 @@ lexer_next_token (void)
   if (prev_token.type == TOK_EOF
       && sent_token.type == TOK_EOF)
   {
-    PARSE_ERROR ("Unexpected EOF", lit_utf8_iterator_get_offset (&src_iter));
+    PARSE_ERROR ("Unexpected EOF", lit_utf8_iterator_get_pos (&src_iter));
   }
 
   prev_token = sent_token;
@@ -1496,29 +1505,45 @@ lexer_prev_token (void)
 }
 
 void
-lexer_seek (size_t locus)
+lexer_seek (lit_utf8_iterator_pos_t locus)
 {
-  JERRY_ASSERT (locus < buffer_size);
-  JERRY_ASSERT (token_start == NULL);
+  JERRY_ASSERT (is_token_parse_in_progress == false);
 
-  lit_utf8_iterator_set_offset (&src_iter, (lit_utf8_size_t) locus);
+  lit_utf8_iterator_seek (&src_iter, locus);
   saved_token = empty_token;
 }
 
+/**
+ * Convert locus to line and column
+ */
 void
-lexer_locus_to_line_and_column (size_t locus, size_t *line, size_t *column)
+lexer_locus_to_line_and_column (lit_utf8_iterator_pos_t locus, /**< iterator position in the source script */
+                                size_t *line, /**< @out: line number */
+                                size_t *column) /**< @out: column number */
 {
-  JERRY_ASSERT (locus <= buffer_size);
-  const jerry_api_char_t *buf;
+  JERRY_ASSERT ((lit_utf8_size_t) (locus.offset + locus.is_non_bmp_middle) <= buffer_size);
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (buffer_start, (lit_utf8_size_t) buffer_size);
+  lit_utf8_iterator_pos_t iter_pos = lit_utf8_iterator_get_pos (&iter);
+
   size_t l = 0, c = 0;
-  for (buf = buffer_start; (size_t) (buf - buffer_start) < locus; buf++)
+  while (!lit_utf8_iterator_is_eos (&iter) && lit_utf8_iterator_pos_cmp (iter_pos, locus) < 0)
   {
-    if (*buf == LIT_CHAR_LF)
+    ecma_char_t code_unit = lit_utf8_iterator_read_next (&iter);
+    iter_pos = lit_utf8_iterator_get_pos (&iter);
+
+    if (lit_char_is_line_terminator (code_unit))
     {
+      if (code_unit == LIT_CHAR_CR
+          && !lit_utf8_iterator_is_eos (&iter)
+          && lit_utf8_iterator_peek_next (&iter) == LIT_CHAR_LF)
+      {
+        lit_utf8_iterator_incr (&iter);
+      }
       c = 0;
       l++;
       continue;
     }
+
     c++;
   }
 
@@ -1530,28 +1555,49 @@ lexer_locus_to_line_and_column (size_t locus, size_t *line, size_t *column)
   {
     *column = c;
   }
-}
+} /* lexer_locus_to_line_and_column */
 
+/**
+ * Dump specified line of the source script
+ */
 void
-lexer_dump_line (size_t line)
+lexer_dump_line (size_t line) /**< line number */
 {
   size_t l = 0;
-  for (const lit_utf8_byte_t *buf = buffer_start; *buf != LIT_CHAR_NULL; buf++)
+  lit_utf8_iterator_t iter = src_iter;
+
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
+    ecma_char_t code_unit;
+
     if (l == line)
     {
-      for (; *buf != LIT_CHAR_LF && *buf != LIT_CHAR_NULL; buf++)
+      while (!lit_utf8_iterator_is_eos (&iter))
       {
-        putchar (*buf);
+        code_unit = lit_utf8_iterator_read_next (&iter);
+        if (lit_char_is_line_terminator (code_unit))
+        {
+          break;
+        }
+        lit_put_ecma_char (code_unit);
       }
       return;
     }
-    if (*buf == LIT_CHAR_LF)
+
+    code_unit = lit_utf8_iterator_read_next (&iter);
+
+    if (lit_char_is_line_terminator (code_unit))
     {
       l++;
+      if (code_unit == LIT_CHAR_CR
+          && !lit_utf8_iterator_is_eos (&iter)
+          && lit_utf8_iterator_peek_next (&iter) == LIT_CHAR_LF)
+      {
+        lit_utf8_iterator_incr (&iter);
+      }
     }
   }
-}
+} /* lexer_dump_line */
 
 const char *
 lexer_keyword_to_string (keyword kw)
@@ -1725,20 +1771,20 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
 {
   empty_token.type = TOK_EMPTY;
   empty_token.uid = 0;
-  empty_token.loc = 0;
+  empty_token.loc = LIT_ITERATOR_POS_ZERO;
 
   saved_token = prev_token = sent_token = empty_token;
 
   if (!lit_is_utf8_string_valid (source, (lit_utf8_size_t) source_size))
   {
-    PARSE_ERROR ("Invalid source encoding", 0);
+    PARSE_ERROR ("Invalid source encoding", LIT_ITERATOR_POS_ZERO);
   }
 
   src_iter = lit_utf8_iterator_create (source, (lit_utf8_size_t) source_size);
 
   buffer_size = source_size;
   buffer_start = source;
-  token_start = NULL;
+  is_token_parse_in_progress = false;
 
   lexer_set_strict_mode (false);
 

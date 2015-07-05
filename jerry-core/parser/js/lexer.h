@@ -17,6 +17,7 @@
 #define LEXER_H
 
 #include "lit-literal.h"
+#include "lit-strings.h"
 
 #define INVALID_VALUE 255
 #define EVAL_RET_VALUE 128
@@ -155,7 +156,7 @@ typedef enum __attr_packed___
   TOK_REGEXP, // RegularExpressionLiteral (/.../gim)
 } token_type;
 
-typedef size_t locus;
+typedef lit_utf8_iterator_pos_t locus;
 
 /* Represents the contents of a token.  */
 typedef struct
@@ -168,7 +169,7 @@ typedef struct
 /**
  * Initializer for empty token
  */
-#define TOKEN_EMPTY_INITIALIZER {0, TOK_EMPTY, 0}
+#define TOKEN_EMPTY_INITIALIZER {LIT_ITERATOR_POS_ZERO, TOK_EMPTY, 0}
 
 void lexer_init (const jerry_api_char_t *, size_t, bool);
 

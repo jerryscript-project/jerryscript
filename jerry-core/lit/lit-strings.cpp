@@ -20,6 +20,38 @@
 JERRY_STATIC_ASSERT (sizeof (lit_utf8_iterator_pos_t) == sizeof (lit_utf8_size_t));
 
 /**
+ * Compare two iterator positions
+ *
+ * @return +1, if pos1 > pos2
+ *          0, if pos1 == pos2
+ *         -1, otherwise
+ */
+int32_t
+lit_utf8_iterator_pos_cmp (lit_utf8_iterator_pos_t pos1, /**< first position of the iterator */
+                           lit_utf8_iterator_pos_t pos2) /**< second position of the iterator */
+{
+  if (pos1.offset < pos2.offset)
+  {
+    return -1;
+  }
+  else if (pos1.offset > pos2.offset)
+  {
+    return 1;
+  }
+
+  if (pos1.is_non_bmp_middle == false && pos2.is_non_bmp_middle == true)
+  {
+    return -1;
+  }
+  else if (pos1.is_non_bmp_middle == true && pos2.is_non_bmp_middle == false)
+  {
+    return 1;
+  }
+
+  return 0;
+} /* lit_utf8_iterator_pos_cmp */
+
+/**
  * Validate utf-8 string
  *
  * NOTE:
@@ -157,10 +189,7 @@ lit_utf8_iterator_create (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
   {
     utf8_buf_p,
     buf_size,
-    {
-      0,
-      false
-    }
+    LIT_ITERATOR_POS_ZERO
   };
 
   return buf_iter;
@@ -478,48 +507,6 @@ lit_utf8_iterator_is_bos (const lit_utf8_iterator_t *iter_p)
 {
   return (iter_p->buf_pos.offset == 0 && iter_p->buf_pos.is_non_bmp_middle == false);
 } /* lit_utf8_iterator_is_bos */
-
-/**
- * Get offset of the iterator
- *
- * @return: current offset in bytes of the iterator from the beginning of buffer
- */
-lit_utf8_size_t
-lit_utf8_iterator_get_offset (const lit_utf8_iterator_t *iter_p) /**< iterator */
-{
-  return iter_p->buf_pos.offset;
-} /* lit_utf8_iterator_get_offset */
-
-/**
- * Set iterator to point to specified offset
- */
-void
-lit_utf8_iterator_set_offset (lit_utf8_iterator_t *iter_p, /**< pointer to iterator */
-                              lit_utf8_size_t offset) /**< offset from the begging of the iterated buffer */
-{
-  JERRY_ASSERT (offset <= iter_p->buf_size);
-
-#ifndef JERRY_NDEBUG
-  if (offset < iter_p->buf_size)
-  {
-    JERRY_ASSERT (((*(iter_p->buf_p + offset)) & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER);
-  }
-#endif
-
-  iter_p->buf_pos.offset = (offset) & LIT_ITERATOR_OFFSET_MASK;
-  iter_p->buf_pos.is_non_bmp_middle = false;
-} /* lit_utf8_iterator_set_offset */
-
-/**
- * Get pointer to the current utf-8 char which iterator points to
- *
- * @return: pointer to utf-8 char
- */
-lit_utf8_byte_t *
-lit_utf8_iterator_get_ptr (const lit_utf8_iterator_t *iter_p) /**< iterator */
-{
-  return (lit_utf8_byte_t *) iter_p->buf_p + iter_p->buf_pos.offset;
-} /* lit_utf8_iterator_get_ptr */
 
 /**
  * Calculate size of a zero-terminated utf-8 string

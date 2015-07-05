@@ -99,6 +99,11 @@ typedef struct
 } lit_utf8_iterator_pos_t;
 
 /**
+ * Value of an iterator, positioned to beginning of a string
+ */
+#define LIT_ITERATOR_POS_ZERO {0, false}
+
+/**
  * Represents an iterator over utf-8 buffer
  */
 typedef struct
@@ -107,6 +112,8 @@ typedef struct
   lit_utf8_size_t buf_size; /* buffer length */
   lit_utf8_iterator_pos_t buf_pos; /* position in the buffer */
 } lit_utf8_iterator_t;
+
+int32_t lit_utf8_iterator_pos_cmp (lit_utf8_iterator_pos_t, lit_utf8_iterator_pos_t);
 
 /* validation */
 bool lit_is_utf8_string_valid (const lit_utf8_byte_t *, lit_utf8_size_t);
@@ -138,11 +145,6 @@ ecma_char_t lit_utf8_iterator_read_prev (lit_utf8_iterator_t *);
 
 bool lit_utf8_iterator_is_eos (const lit_utf8_iterator_t *);
 bool lit_utf8_iterator_is_bos (const lit_utf8_iterator_t *);
-
-lit_utf8_size_t lit_utf8_iterator_get_offset (const lit_utf8_iterator_t *);
-void lit_utf8_iterator_set_offset (lit_utf8_iterator_t *, lit_utf8_size_t);
-
-lit_utf8_byte_t *lit_utf8_iterator_get_ptr (const lit_utf8_iterator_t *);
 
 /* size */
 lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *);

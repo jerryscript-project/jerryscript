@@ -242,7 +242,7 @@ jsp_find_next_token_before_the_locus (token_type token_to_find, /**< token to se
   JERRY_ASSERT (token_to_find != TOK_NEWLINE
                 && token_to_find != TOK_EOF);
 
-  while (tok.loc < end_loc)
+  while (lit_utf8_iterator_pos_cmp (tok.loc, end_loc) < 0)
   {
     if (skip_brace_blocks)
     {
@@ -253,7 +253,7 @@ jsp_find_next_token_before_the_locus (token_type token_to_find, /**< token to se
         JERRY_ASSERT (token_is (TOK_CLOSE_BRACE));
         skip_newlines ();
 
-        if (tok.loc >= end_loc)
+        if (lit_utf8_iterator_pos_cmp (tok.loc, end_loc) >= 0)
         {
           lexer_seek (end_loc);
           tok = lexer_next_token ();
@@ -279,7 +279,7 @@ jsp_find_next_token_before_the_locus (token_type token_to_find, /**< token to se
     skip_newlines ();
   }
 
-  JERRY_ASSERT (tok.loc == end_loc);
+  JERRY_ASSERT (lit_utf8_iterator_pos_cmp (tok.loc, end_loc) == 0);
   return false;
 } /* jsp_find_next_token_before_the_locus */
 
@@ -2010,7 +2010,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
   // Save Iterator location
   locus iterator_loc = tok.loc;
 
-  while (tok.loc < for_body_statement_loc)
+  while (lit_utf8_iterator_pos_cmp (tok.loc, for_body_statement_loc) < 0)
   {
     if (jsp_find_next_token_before_the_locus (TOK_KEYWORD,
                                               for_body_statement_loc,
@@ -3025,7 +3025,7 @@ preparse_scope (bool is_global)
 
   rewrite_scope_code_flags (scope_code_flags_oc, scope_flags);
 
-  if (start_loc != tok.loc)
+  if (lit_utf8_iterator_pos_cmp (start_loc, tok.loc) != 0)
   {
     lexer_seek (start_loc);
   }

@@ -1055,13 +1055,13 @@ lexer_parse_string (void)
  * Parse string literal (ECMA-262 v5, 7.8.5)
  */
 static token
-parse_regexp (void)
+lexer_parse_regexp (void)
 {
   token result;
   bool is_char_class = false;
 
   /* Eat up '/' */
-  JERRY_ASSERT ((ecma_char_t) LA (0) == '/');
+  JERRY_ASSERT (LA (0) == LIT_CHAR_SLASH);
   consume_char ();
   new_token ();
 
@@ -1069,27 +1069,27 @@ parse_regexp (void)
   {
     ecma_char_t c = (ecma_char_t) LA (0);
 
-    if (c == '\0')
+    if (c == LIT_CHAR_NULL)
     {
       PARSE_ERROR ("Unclosed string", token_start - buffer_start);
     }
-    else if (c == '\n')
+    else if (c == LIT_CHAR_LF)
     {
       PARSE_ERROR ("RegExp literal shall not contain newline character", token_start - buffer_start);
     }
-    else if (c == '\\')
+    else if (c == LIT_CHAR_BACKSLASH)
     {
       consume_char ();
     }
-    else if (c == '[')
+    else if (c == LIT_CHAR_LEFT_SQUARE)
     {
       is_char_class = true;
     }
-    else if (c == ']')
+    else if (c == LIT_CHAR_RIGHT_SQUARE)
     {
       is_char_class = false;
     }
-    else if (c == '/' && !is_char_class)
+    else if (c == LIT_CHAR_SLASH && !is_char_class)
     {
       /* Eat up '/' */
       consume_char ();
@@ -1104,7 +1104,7 @@ parse_regexp (void)
   {
     ecma_char_t c = (ecma_char_t) LA (0);
 
-    if (c == '\0'
+    if (c == LIT_CHAR_NULL
         || !lit_char_is_word_char (c)
         || lit_char_is_line_terminator (c))
     {
@@ -1120,7 +1120,7 @@ parse_regexp (void)
 
   token_start = NULL;
   return result;
-} /* parse_regexp */
+} /* lexer_parse_regexp */
 
 static void
 grobble_whitespaces (void)
@@ -1243,7 +1243,6 @@ lexer_next_token_private (void)
     }
   }
 
-
   if (c == '/')
   {
     if (LA (1) == '/')
@@ -1251,19 +1250,21 @@ lexer_next_token_private (void)
       replace_comment_by_newline ();
       return lexer_next_token_private ();
     }
-    else if (!(sent_token.type == TOK_NAME
-             || sent_token.type == TOK_NULL
-             || sent_token.type == TOK_BOOL
-             || sent_token.type == TOK_CLOSE_BRACE
-             || sent_token.type == TOK_CLOSE_SQUARE
-             || sent_token.type == TOK_CLOSE_PAREN
-             || sent_token.type == TOK_SMALL_INT
-             || sent_token.type == TOK_NUMBER
-             || sent_token.type == TOK_STRING
-             || sent_token.type == TOK_REGEXP))
-    {
-      return parse_regexp ();
-    }
+  }
+
+  if (c == LIT_CHAR_SLASH
+      && !(sent_token.type == TOK_NAME
+           || sent_token.type == TOK_NULL
+           || sent_token.type == TOK_BOOL
+           || sent_token.type == TOK_CLOSE_BRACE
+           || sent_token.type == TOK_CLOSE_SQUARE
+           || sent_token.type == TOK_CLOSE_PAREN
+           || sent_token.type == TOK_SMALL_INT
+           || sent_token.type == TOK_NUMBER
+           || sent_token.type == TOK_STRING
+           || sent_token.type == TOK_REGEXP))
+  {
+    return lexer_parse_regexp ();
   }
 
   switch (c)

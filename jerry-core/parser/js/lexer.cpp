@@ -1271,65 +1271,144 @@ lexer_next_token_private (void)
     return lexer_parse_regexp ();
   }
 
+  /* ECMA-262 v5, 7.7, Punctuator */
   switch (c)
   {
-    case '{': RETURN_PUNC (TOK_OPEN_BRACE); break;
-    case '}': RETURN_PUNC (TOK_CLOSE_BRACE); break;
-    case '(': RETURN_PUNC (TOK_OPEN_PAREN); break;
-    case ')': RETURN_PUNC (TOK_CLOSE_PAREN); break;
-    case '[': RETURN_PUNC (TOK_OPEN_SQUARE); break;
-    case ']': RETURN_PUNC (TOK_CLOSE_SQUARE); break;
-    case '.': RETURN_PUNC (TOK_DOT); break;
-    case ';': RETURN_PUNC (TOK_SEMICOLON); break;
-    case ',': RETURN_PUNC (TOK_COMMA); break;
-    case '~': RETURN_PUNC (TOK_COMPL); break;
-    case ':': RETURN_PUNC (TOK_COLON); break;
-    case '?': RETURN_PUNC (TOK_QUERY); break;
+    case LIT_CHAR_LEFT_BRACE:
+    {
+      RETURN_PUNC (TOK_OPEN_BRACE);
+      break;
+    }
+    case LIT_CHAR_RIGHT_BRACE:
+    {
+      RETURN_PUNC (TOK_CLOSE_BRACE);
+      break;
+    }
+    case LIT_CHAR_LEFT_PAREN:
+    {
+      RETURN_PUNC (TOK_OPEN_PAREN);
+      break;
+    }
+    case LIT_CHAR_RIGHT_PAREN:
+    {
+      RETURN_PUNC (TOK_CLOSE_PAREN);
+      break;
+    }
+    case LIT_CHAR_LEFT_SQUARE:
+    {
+      RETURN_PUNC (TOK_OPEN_SQUARE);
+      break;
+    }
+    case LIT_CHAR_RIGHT_SQUARE:
+    {
+      RETURN_PUNC (TOK_CLOSE_SQUARE);
+      break;
+    }
+    case LIT_CHAR_DOT:
+    {
+      RETURN_PUNC (TOK_DOT);
+      break;
+    }
+    case LIT_CHAR_SEMICOLON:
+    {
+      RETURN_PUNC (TOK_SEMICOLON);
+      break;
+    }
+    case LIT_CHAR_COMMA:
+    {
+      RETURN_PUNC (TOK_COMMA);
+      break;
+    }
+    case LIT_CHAR_TILDE:
+    {
+      RETURN_PUNC (TOK_COMPL);
+      break;
+    }
+    case LIT_CHAR_COLON:
+    {
+      RETURN_PUNC (TOK_COLON);
+      break;
+    }
+    case LIT_CHAR_QUESTION:
+    {
+      RETURN_PUNC (TOK_QUERY);
+      break;
+    }
 
-    case '*': IF_LA_IS ('=', TOK_MULT_EQ, TOK_MULT); break;
-    case '/': IF_LA_IS ('=', TOK_DIV_EQ, TOK_DIV); break;
-    case '^': IF_LA_IS ('=', TOK_XOR_EQ, TOK_XOR); break;
-    case '%': IF_LA_IS ('=', TOK_MOD_EQ, TOK_MOD); break;
-
-    case '+': IF_LA_IS_OR ('+', TOK_DOUBLE_PLUS, '=', TOK_PLUS_EQ, TOK_PLUS); break;
-    case '-': IF_LA_IS_OR ('-', TOK_DOUBLE_MINUS, '=', TOK_MINUS_EQ, TOK_MINUS); break;
-    case '&': IF_LA_IS_OR ('&', TOK_DOUBLE_AND, '=', TOK_AND_EQ, TOK_AND); break;
-    case '|': IF_LA_IS_OR ('|', TOK_DOUBLE_OR, '=', TOK_OR_EQ, TOK_OR); break;
-
-    case '<':
+    case LIT_CHAR_ASTERISK:
+    {
+      IF_LA_IS (LIT_CHAR_EQUALS, TOK_MULT_EQ, TOK_MULT);
+      break;
+    }
+    case LIT_CHAR_SLASH:
+    {
+      IF_LA_IS (LIT_CHAR_EQUALS, TOK_DIV_EQ, TOK_DIV);
+      break;
+    }
+    case LIT_CHAR_CIRCUMFLEX:
+    {
+      IF_LA_IS (LIT_CHAR_EQUALS, TOK_XOR_EQ, TOK_XOR);
+      break;
+    }
+    case LIT_CHAR_PERCENT:
+    {
+      IF_LA_IS (LIT_CHAR_EQUALS, TOK_MOD_EQ, TOK_MOD);
+      break;
+    }
+    case LIT_CHAR_PLUS:
+    {
+      IF_LA_IS_OR (LIT_CHAR_PLUS, TOK_DOUBLE_PLUS, LIT_CHAR_EQUALS, TOK_PLUS_EQ, TOK_PLUS);
+      break;
+    }
+    case LIT_CHAR_MINUS:
+    {
+      IF_LA_IS_OR (LIT_CHAR_MINUS, TOK_DOUBLE_MINUS, LIT_CHAR_EQUALS, TOK_MINUS_EQ, TOK_MINUS);
+      break;
+    }
+    case LIT_CHAR_AMPERSAND:
+    {
+      IF_LA_IS_OR (LIT_CHAR_AMPERSAND, TOK_DOUBLE_AND, LIT_CHAR_EQUALS, TOK_AND_EQ, TOK_AND);
+      break;
+    }
+    case LIT_CHAR_VLINE:
+    {
+      IF_LA_IS_OR (LIT_CHAR_VLINE, TOK_DOUBLE_OR, LIT_CHAR_EQUALS, TOK_OR_EQ, TOK_OR);
+      break;
+    }
+    case LIT_CHAR_LESS_THAN:
     {
       switch (LA (1))
       {
-        case '<': IF_LA_N_IS ('=', TOK_LSHIFT_EQ, TOK_LSHIFT, 2); break;
-        case '=': RETURN_PUNC_EX (TOK_LESS_EQ, 2); break;
+        case LIT_CHAR_LESS_THAN: IF_LA_N_IS (LIT_CHAR_EQUALS, TOK_LSHIFT_EQ, TOK_LSHIFT, 2); break;
+        case LIT_CHAR_EQUALS: RETURN_PUNC_EX (TOK_LESS_EQ, 2); break;
         default: RETURN_PUNC (TOK_LESS);
       }
       break;
     }
-    case '>':
+    case LIT_CHAR_GREATER_THAN:
     {
       switch (LA (1))
       {
-        case '>':
+        case LIT_CHAR_GREATER_THAN:
         {
           switch (LA (2))
           {
-            case '>': IF_LA_N_IS ('=', TOK_RSHIFT_EX_EQ, TOK_RSHIFT_EX, 3); break;
-            case '=': RETURN_PUNC_EX (TOK_RSHIFT_EQ, 3); break;
+            case LIT_CHAR_GREATER_THAN: IF_LA_N_IS (LIT_CHAR_EQUALS, TOK_RSHIFT_EX_EQ, TOK_RSHIFT_EX, 3); break;
+            case LIT_CHAR_EQUALS: RETURN_PUNC_EX (TOK_RSHIFT_EQ, 3); break;
             default: RETURN_PUNC_EX (TOK_RSHIFT, 2);
           }
           break;
         }
-        case '=': RETURN_PUNC_EX (TOK_GREATER_EQ, 2); break;
+        case LIT_CHAR_EQUALS: RETURN_PUNC_EX (TOK_GREATER_EQ, 2); break;
         default: RETURN_PUNC (TOK_GREATER);
       }
       break;
     }
-    case '=':
+    case LIT_CHAR_EQUALS:
     {
-      if (LA (1) == '=')
+      if (LA (1) == LIT_CHAR_EQUALS)
       {
-        IF_LA_N_IS ('=', TOK_TRIPLE_EQ, TOK_DOUBLE_EQ, 2);
+        IF_LA_N_IS (LIT_CHAR_EQUALS, TOK_TRIPLE_EQ, TOK_DOUBLE_EQ, 2);
       }
       else
       {
@@ -1337,11 +1416,11 @@ lexer_next_token_private (void)
       }
       break;
     }
-    case '!':
+    case LIT_CHAR_EXCLAMATION:
     {
-      if (LA (1) == '=')
+      if (LA (1) == LIT_CHAR_EQUALS)
       {
-        IF_LA_N_IS ('=', TOK_NOT_DOUBLE_EQ, TOK_NOT_EQ, 2);
+        IF_LA_N_IS (LIT_CHAR_EQUALS, TOK_NOT_DOUBLE_EQ, TOK_NOT_EQ, 2);
       }
       else
       {

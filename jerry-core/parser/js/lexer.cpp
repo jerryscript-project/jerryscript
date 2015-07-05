@@ -28,6 +28,11 @@ static token saved_token, prev_token, sent_token, empty_token;
 static bool allow_dump_lines = false, strict_mode;
 static size_t buffer_size = 0;
 
+/*
+ * FIXME:
+ *       jerry_api_char_t should not be used outside of API implementation
+ */
+
 /* Represents the contents of a script.  */
 static const jerry_api_char_t *buffer_start = NULL;
 static const jerry_api_char_t *token_start;
@@ -156,6 +161,34 @@ lexer_create_token_for_charset (token_type tt, /**< token type */
 
   return create_token_from_lit (tt, lit);
 } /* lexer_create_token_for_charset */
+
+/**
+ * Check if the character falls into IdentifierStart group (ECMA-262 v5, 7.6)
+ *
+ * @return true / false
+ */
+static bool
+lexer_is_char_can_be_identifier_start (ecma_char_t c) /**< a character */
+{
+  return (lit_char_is_unicode_letter (c)
+          || c == LIT_CHAR_DOLLAR_SIGN
+          || c == LIT_CHAR_UNDERSCORE
+          || c == LIT_CHAR_BACKSLASH);
+} /* lexer_is_char_can_be_identifier_start */
+
+/**
+ * Check if the character falls into IdentifierPart group (ECMA-262 v5, 7.6)
+ *
+ * @return true / false
+ */
+static bool
+lexer_is_char_can_be_identifier_part (ecma_char_t c) /**< a character */
+{
+  return (lexer_is_char_can_be_identifier_start (c)
+          || lit_char_is_unicode_combining_mark (c)
+          || lit_char_is_unicode_digit (c)
+          || lit_char_is_unicode_connector_punctuation (c));
+} /* lexer_is_char_can_be_identifier_part */
 
 /**
  * Try to decode specified character as SingleEscapeCharacter (ECMA-262, v5, 7.8.4)
@@ -652,28 +685,29 @@ consume_char (void)
  *         TOK_BOOL - for BooleanLiteral
  */
 static token
-parse_name (void)
+lexer_parse_identifier_or_keyword (void)
 {
-  ecma_char_t c = (ecma_char_t) LA (0);
+  ecma_char_t c = LA (0);
 
-  JERRY_ASSERT (isalpha (c) || c == '$' || c == '_' || c == '\\');
+  JERRY_ASSERT (lexer_is_char_can_be_identifier_start (c));
 
   new_token ();
 
+  bool is_correct_identifier_name = true;
   bool is_escape_sequence_occured = false;
   bool is_all_chars_were_lowercase_ascii = true;
 
   while (true)
   {
-    c = (ecma_char_t) LA (0);
+    c = LA (0);
 
-    if (c == '\\')
+    if (c == LIT_CHAR_BACKSLASH)
     {
       consume_char ();
 
       is_escape_sequence_occured = true;
 
-      bool is_unicode_escape_sequence = (LA (0) == 'u');
+      bool is_unicode_escape_sequence = (LA (0) == LIT_CHAR_LOWERCASE_U);
       consume_char ();
 
       if (is_unicode_escape_sequence)
@@ -684,42 +718,46 @@ parse_name (void)
                                                            true,
                                                            &c))
         {
-          PARSE_ERROR ("Malformed escape sequence", token_start - buffer_start);
+          is_correct_identifier_name = false;
+          break;
         }
         else
         {
           /* c now contains character, encoded in the UnicodeEscapeSequence */
-          if (!isalpha (c)
-              && !isdigit (c)
-              && c != '$'
-              && c != '_')
+
+          // Check character, converted from UnicodeEscapeSequence
+          if (!lexer_is_char_can_be_identifier_part (c))
           {
-            PARSE_ERROR ("Invalid character in identifier", token_start - buffer_start);
+            is_correct_identifier_name = false;
+            break;
           }
         }
       }
       else
       {
-        PARSE_ERROR ("Only unicode escape sequences are allowed in identifiers",
-                     token_start - buffer_start);
+        is_correct_identifier_name = false;
+        break;
       }
     }
-    else if (!isalpha (c)
-             && !isdigit (c)
-             && c != '$'
-             && c != '_')
+    else if (!lexer_is_char_can_be_identifier_part (c))
     {
       break;
     }
     else
     {
-      if (!islower (c))
+      if (!(c >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN
+            && c <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
       {
         is_all_chars_were_lowercase_ascii = false;
       }
 
       consume_char ();
     }
+  }
+
+  if (!is_correct_identifier_name)
+  {
+    PARSE_ERROR ("Illegal identifier name", lit_utf8_iterator_get_offset (&src_iter));
   }
 
   const lit_utf8_size_t charset_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
@@ -754,7 +792,7 @@ parse_name (void)
   token_start = NULL;
 
   return ret;
-} /* parse_name */
+} /* lexer_parse_identifier_or_keyword */
 
 /* In this function we cannot use strtol function
    since there is no octal literals in ECMAscript.  */
@@ -1199,9 +1237,10 @@ lexer_next_token_private (void)
 
   JERRY_ASSERT (token_start == NULL);
 
-  if (isalpha (c) || c == '$' || c == '_' || c == '\\')
+  /* ECMA-262 v5, 7.6, Identifier */
+  if (lexer_is_char_can_be_identifier_start (c))
   {
-    return parse_name ();
+    return lexer_parse_identifier_or_keyword ();
   }
 
   if (isdigit (c) || (c == '.' && isdigit (LA (1))))

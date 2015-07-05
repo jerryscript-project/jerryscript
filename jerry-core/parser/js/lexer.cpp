@@ -1181,8 +1181,17 @@ lexer_parse_comment (void)
   }
 } /* lexer_parse_comment */
 
+/**
+ * Parse and construct lexer token
+ *
+ * Note:
+ *      Currently, lexer token doesn't fully correspond to Token, defined in ECMA-262, v5, 7.5.
+ *      For example, there is no new-line token type in the token definition of ECMA-262 v5.
+ *
+ * @return constructed token
+ */
 static token
-lexer_next_token_private (void)
+lexer_parse_token (void)
 {
   ecma_char_t c = LA (0);
 
@@ -1230,7 +1239,7 @@ lexer_next_token_private (void)
     return create_token (TOK_NEWLINE, 0);
   }
 
-  if (c == '\0')
+  if (c == LIT_CHAR_NULL)
   {
     return create_token (TOK_EOF, 0);
   }
@@ -1252,7 +1261,7 @@ lexer_next_token_private (void)
     }
     else
     {
-      return lexer_next_token_private ();
+      return lexer_parse_token ();
     }
   }
 
@@ -1428,10 +1437,10 @@ lexer_next_token_private (void)
       }
       break;
     }
-    default: PARSE_SORRY ("Unknown character", lit_utf8_iterator_get_offset (&src_iter));
   }
-  PARSE_SORRY ("Unknown character", lit_utf8_iterator_get_offset (&src_iter));
-}
+
+  PARSE_ERROR ("Illegal character", lit_utf8_iterator_get_offset (&src_iter));
+} /* lexer_parse_token */
 
 token
 lexer_next_token (void)
@@ -1462,7 +1471,7 @@ lexer_next_token (void)
   }
 
   prev_token = sent_token;
-  sent_token = lexer_next_token_private ();
+  sent_token = lexer_parse_token ();
 
   if (sent_token.type == TOK_NEWLINE)
   {

@@ -132,30 +132,316 @@ create_token (token_type type,  /**< type of token */
 } /* create_token */
 
 /**
- * Convert string to token of specified type
+ * Create token of specified type from charset
  *
  * @return token descriptor
  */
 static token
-convert_string_to_token (token_type tt, /**< token type */
-                         const lit_utf8_byte_t *str_p, /**< characters buffer */
-                         lit_utf8_size_t length) /**< string's length */
+lexer_create_token_for_charset (token_type tt, /**< token type */
+                                const lit_utf8_byte_t *charset_p, /**< charset buffer */
+                                lit_utf8_size_t size) /**< size of the charset */
 {
-  JERRY_ASSERT (str_p != NULL);
+  JERRY_ASSERT (charset_p != NULL);
 
-  literal_t lit = lit_find_literal_by_utf8_string (str_p, length);
+  literal_t lit = lit_find_literal_by_utf8_string (charset_p, size);
   if (lit != NULL)
   {
     return create_token_from_lit (tt, lit);
   }
 
-  lit = lit_create_literal_from_utf8_string (str_p, length);
+  lit = lit_create_literal_from_utf8_string (charset_p, size);
   JERRY_ASSERT (lit->get_type () == LIT_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
   return create_token_from_lit (tt, lit);
-}
+} /* lexer_create_token_for_charset */
+
+/**
+ * Try to decode specified character as SingleEscapeCharacter (ECMA-262, v5, 7.8.4)
+ *
+ * If specified character is a SingleEscapeCharacter, convert it according to ECMA-262 v5, Table 4.
+ * Otherwise, output it as is.
+ *
+ * @return true - if specified character is a SingleEscapeCharacter,
+ *         false - otherwise.
+ */
+static bool
+lexer_convert_single_escape_character (ecma_char_t c, /**< character to decode */
+                                       ecma_char_t *out_converted_char_p) /**< out: decoded character */
+{
+  ecma_char_t converted_char;
+  bool is_single_escape_character = true;
+
+  switch (c)
+  {
+    case LIT_CHAR_LOWERCASE_B:
+    {
+      converted_char = LIT_CHAR_BS;
+      break;
+    }
+
+    case LIT_CHAR_LOWERCASE_T:
+    {
+      converted_char = LIT_CHAR_TAB;
+      break;
+    }
+
+    case LIT_CHAR_LOWERCASE_N:
+    {
+      converted_char = LIT_CHAR_LF;
+      break;
+    }
+
+    case LIT_CHAR_LOWERCASE_V:
+    {
+      converted_char = LIT_CHAR_VTAB;
+      break;
+    }
+
+    case LIT_CHAR_LOWERCASE_F:
+    {
+      converted_char = LIT_CHAR_FF;
+      break;
+    }
+
+    case LIT_CHAR_LOWERCASE_R:
+    {
+      converted_char = LIT_CHAR_CR;
+      break;
+    }
+
+    case LIT_CHAR_DOUBLE_QUOTE:
+    case LIT_CHAR_SINGLE_QUOTE:
+    case LIT_CHAR_BACKSLASH:
+    {
+      converted_char = c;
+      break;
+    }
+
+    default:
+    {
+      converted_char = c;
+      is_single_escape_character = false;
+      break;
+    }
+  }
+
+  if (out_converted_char_p != NULL)
+  {
+    *out_converted_char_p = converted_char;
+  }
+
+  return is_single_escape_character;
+} /* lexer_convert_single_escape_character */
+
+/**
+ * Transform specified number of hexadecimal digits pointed by string iterator to character code
+ *
+ * @return true - upon successful conversion,
+ *         false - otherwise (characters, pointed by iterator, are not hexadecimal digits,
+ *                 or number of characters until end of string is less than specified).
+ */
+static bool
+lexer_convert_escape_sequence_digits_to_char (lit_utf8_iterator_t *src_iter_p, /**< string iterator */
+                                              bool is_unicode_escape_sequence, /**< UnicodeEscapeSequence (true)
+                                                                                *   or HexEscapeSequence (false) */
+                                              ecma_char_t *out_converted_char_p) /**< out: converted character */
+{
+  uint16_t char_code = 0;
+
+  const uint32_t digits_num = is_unicode_escape_sequence ? 4 : 2;
+
+  for (uint32_t i = 0; i < digits_num; i++)
+  {
+    if (lit_utf8_iterator_is_eos (src_iter_p))
+    {
+      return false;
+    }
+
+    const ecma_char_t next_char = lit_utf8_iterator_read_next (src_iter_p);
+
+    if (!lit_char_is_hex_digit (next_char))
+    {
+      return false;
+    }
+    else
+    {
+      /*
+       * Check that highest 4 bits are zero, so the value would not overflow.
+       */
+      JERRY_ASSERT ((char_code & 0xF000u) == 0);
+
+      char_code = (uint16_t) (char_code << 4u);
+      char_code = (uint16_t) (char_code + lit_char_hex_to_int (next_char));
+    }
+  }
+
+  *out_converted_char_p = (ecma_char_t) char_code;
+
+  return true;
+} /* lexer_convert_escape_sequence_digits_to_char */
+
+/**
+ * Transforming escape sequences in the charset, outputting converted string to specified buffer
+ *
+ * Note:
+ *      Size of string with transformed escape sequences is always
+ *      less or equal to size of corresponding source string.
+ *
+ * @return size of converted string
+ */
+static lit_utf8_size_t
+lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< string to convert,
+                                                                         *   located in source buffer */
+                                  lit_utf8_size_t source_str_size, /**< size of the string and of the output buffer */
+                                  jerry_api_char_t *output_str_buf_p) /**< output buffer for converted string */
+{
+  if (source_str_size == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    JERRY_ASSERT (source_str_p != NULL);
+  }
+
+  lit_utf8_byte_t *output_str_buf_iter_p = output_str_buf_p;
+  const size_t output_str_buf_size = source_str_size;
+  bool is_correct_sequence = true;
+
+  lit_utf8_iterator_t source_str_iter = lit_utf8_iterator_create (source_str_p,
+                                                                  source_str_size);
+
+  ecma_char_t prev_converted_char = LIT_CHAR_NULL;
+
+  while (!lit_utf8_iterator_is_eos (&source_str_iter))
+  {
+    ecma_char_t converted_char;
+
+    const ecma_char_t next_char = lit_utf8_iterator_read_next (&source_str_iter);
+
+    if (next_char == LIT_CHAR_BACKSLASH)
+    {
+      if (lit_utf8_iterator_is_eos (&source_str_iter))
+      {
+        is_correct_sequence = false;
+        break;
+      }
+
+      const ecma_char_t char_after_next = lit_utf8_iterator_read_next (&source_str_iter);
+
+      if (lit_char_is_decimal_digit (char_after_next))
+      {
+        if (lit_char_is_octal_digit (char_after_next))
+        {
+          if (char_after_next == LIT_CHAR_0
+              && (lit_utf8_iterator_is_eos (&source_str_iter)
+                  || !lit_char_is_octal_digit (lit_utf8_iterator_peek_next (&source_str_iter))))
+          {
+            lit_utf8_iterator_incr (&source_str_iter);
+
+            converted_char = LIT_CHAR_NULL;
+          }
+          else
+          {
+            /* Implementation-defined (ECMA-262 v5, B.1.2): octal escape sequences are not implemented */
+            is_correct_sequence = false;
+            break;
+          }
+        }
+        else
+        {
+          converted_char = char_after_next;
+        }
+      }
+      else if (char_after_next == LIT_CHAR_LOWERCASE_U
+               || char_after_next == LIT_CHAR_LOWERCASE_X)
+      {
+        if (!lexer_convert_escape_sequence_digits_to_char (&source_str_iter,
+                                                           char_after_next == LIT_CHAR_LOWERCASE_U,
+                                                           &converted_char))
+        {
+          is_correct_sequence = false;
+          break;
+        }
+      }
+      else if (lit_char_is_line_terminator (char_after_next))
+      {
+        /* Skip \, followed by a LineTerminatorSequence (ECMA-262, v5, 7.3) */
+        if (char_after_next == LIT_CHAR_CR
+            && !lit_utf8_iterator_is_eos (&source_str_iter))
+        {
+          if (lit_utf8_iterator_peek_next (&source_str_iter) == LIT_CHAR_LF)
+          {
+            lit_utf8_iterator_incr (&source_str_iter);
+          }
+        }
+
+        continue;
+      }
+      else
+      {
+        lexer_convert_single_escape_character (char_after_next, &converted_char);
+      }
+    }
+    else
+    {
+      converted_char = next_char;
+    }
+
+    if (lit_is_code_unit_high_surrogate (prev_converted_char)
+        && lit_is_code_unit_low_surrogate (converted_char))
+    {
+      output_str_buf_iter_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+
+      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (prev_converted_char,
+                                                                              converted_char);
+      output_str_buf_iter_p += lit_code_point_to_utf8 (code_point, output_str_buf_iter_p);
+    }
+    else
+    {
+      output_str_buf_iter_p += lit_code_unit_to_utf8 (converted_char, output_str_buf_iter_p);
+      JERRY_ASSERT (output_str_buf_iter_p <= output_str_buf_p + output_str_buf_size);
+    }
+
+    prev_converted_char = converted_char;
+  }
+
+  if (is_correct_sequence)
+  {
+    return (lit_utf8_size_t) (output_str_buf_iter_p - output_str_buf_p);
+  }
+  else
+  {
+    PARSE_ERROR ("Illegal escape sequence", source_str_p - buffer_start);
+  }
+} /* lexer_transform_escape_sequences */
+
+/**
+ * Create token of specified type from charset, transforming escape sequences.
+ *
+ * @return token descriptor
+ */
+static token
+lexer_create_token_for_charset_transform_escape_sequences (token_type tt, /**< token type */
+                                                           const lit_utf8_byte_t *charset_p, /**< charset buffer */
+                                                           lit_utf8_size_t size) /**< size of the charset */
+{
+  lit_utf8_byte_t *converted_str_p = (lit_utf8_byte_t *) jsp_mm_alloc (size);
+
+  lit_utf8_size_t converted_size = lexer_transform_escape_sequences (charset_p,
+                                                                     size,
+                                                                     converted_str_p);
+
+  token ret = lexer_create_token_for_charset (tt,
+                                              converted_str_p,
+                                              converted_size);
+
+  jsp_mm_free (converted_str_p);
+
+  return ret;
+} /* lexer_create_token_for_charset_transform_escape_sequences */
 
 /**
  * Try to decode specified string as ReservedWord (ECMA-262 v5, 7.6.1)
@@ -358,339 +644,116 @@ consume_char (void)
   while (0)
 
 /**
- * Try to decode specified character as SingleEscapeCharacter (ECMA-262, v5, 7.8.4)
+ * Parse Identifier (ECMA-262 v5, 7.6) or ReservedWord (7.6.1; 7.8.1; 7.8.2).
  *
- * If specified character is a SingleEscapeCharacter, convert it according to ECMA-262 v5, Table 4.
- * Otherwise, output it as is.
- *
- * @return true - if specified character is a SingleEscapeCharacter,
- *         false - otherwise.
- */
-static bool
-convert_single_escape_character (ecma_char_t c, /**< character to decode */
-                                 ecma_char_t *out_converted_char_p) /**< out: decoded character */
-{
-  ecma_char_t converted_char;
-  bool is_single_escape_character = true;
-
-  switch (c)
-  {
-    case 'b':
-    {
-      converted_char = (ecma_char_t) '\b';
-      break;
-    }
-
-    case 't':
-    {
-      converted_char = (ecma_char_t) '\t';
-      break;
-    }
-
-    case 'n':
-    {
-      converted_char = (ecma_char_t) '\n';
-      break;
-    }
-
-    case 'v':
-    {
-      converted_char = (ecma_char_t) '\v';
-      break;
-    }
-
-    case 'f':
-    {
-      converted_char = (ecma_char_t) '\f';
-      break;
-    }
-
-    case 'r':
-    {
-      converted_char = (ecma_char_t) '\r';
-      break;
-    }
-
-    case '"':
-    case '\'':
-    case '\\':
-    {
-      converted_char = (ecma_char_t) c;
-      break;
-    }
-
-    default:
-    {
-      converted_char = (ecma_char_t) c;
-      is_single_escape_character = false;
-      break;
-    }
-  }
-
-  if (out_converted_char_p != NULL)
-  {
-    *out_converted_char_p = converted_char;
-  }
-
-  return is_single_escape_character;
-} /* convert_single_escape_character */
-
-/**
- * Convert specified string to token of specified type, transforming escape sequences
- *
- * @return token descriptor
- */
-static token
-convert_string_to_token_transform_escape_seq (token_type tok_type, /**< type of token to produce */
-                                              const jerry_api_char_t *source_str_p, /**< string to convert,
-                                                                                     *   located in source buffer */
-                                              size_t source_str_size) /**< size of the string */
-{
-  token ret;
-
-  if (source_str_size == 0)
-  {
-    return convert_string_to_token (tok_type,
-                                    lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY),
-                                    0);
-  }
-  else
-  {
-    JERRY_ASSERT (source_str_p != NULL);
-  }
-
-  lit_utf8_byte_t *str_buf_p = (lit_utf8_byte_t*) jsp_mm_alloc (source_str_size);
-  lit_utf8_byte_t *str_buf_iter_p = str_buf_p;
-
-  /* const lit_utf8_byte_t *source_str_iter_p = source_str_p; */
-  lit_utf8_iterator_t source_str_iter = lit_utf8_iterator_create (source_str_p, (lit_utf8_size_t) source_str_size);
-
-  bool is_correct_sequence = true;
-  bool every_char_islower = true;
-  bool every_char_allowed_in_identifier = true;
-
-  ecma_char_t prev_converted_char = LIT_CHAR_NULL;
-  while (!lit_utf8_iterator_is_eos (&source_str_iter))
-  {
-    ecma_char_t converted_char = lit_utf8_iterator_read_next (&source_str_iter);
-
-    if (converted_char == '\\')
-    {
-      const ecma_char_t escape_character = lit_utf8_iterator_read_next (&source_str_iter);
-
-      if (isdigit (escape_character))
-      {
-        if (escape_character == '0')
-        {
-          converted_char = LIT_CHAR_NULL;
-        }
-        else
-        {
-          /* Implementation-defined (ECMA-262 v5, B.1.2): octal escape sequences are not implemented */
-          is_correct_sequence = false;
-          break;
-        }
-      }
-      else if (escape_character == 'u'
-               || escape_character == 'x')
-      {
-        const uint32_t hex_chars_num = (escape_character == 'u' ? 4u : 2u);
-
-        if (lit_utf8_iterator_get_offset (&source_str_iter) + hex_chars_num > source_str_size)
-        {
-          is_correct_sequence = false;
-          break;
-        }
-
-        bool chars_are_hex = true;
-        uint16_t char_code = 0;
-
-        for (uint32_t i = 0; i < hex_chars_num; i++)
-        {
-          const ecma_char_t next_char = lit_utf8_iterator_read_next (&source_str_iter);
-
-          if (!isxdigit (next_char))
-          {
-            chars_are_hex = false;
-            break;
-          }
-          else
-          {
-            /*
-             * Check that highest 4 bits are zero, so the value would not overflow.
-             */
-            JERRY_ASSERT ((char_code & 0xF000u) == 0);
-
-            char_code = (uint16_t) (char_code << 4u);
-            char_code = (uint16_t) (char_code + lit_char_hex_to_int (next_char));
-          }
-        }
-
-        JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
-        JERRY_ASSERT (lit_utf8_iterator_get_offset (&source_str_iter) <= source_str_size);
-
-        if (!chars_are_hex)
-        {
-          is_correct_sequence = false;
-          break;
-        }
-
-        /*
-         * In CONFIG_ECMA_CHAR_ASCII mode size of ecma_char_t is 1 byte, so the conversion
-         * would ignore highest part of 2-byte value, and in CONFIG_ECMA_CHAR_UTF16 mode this
-         * would be just an assignment of 2-byte value.
-         */
-        converted_char = (ecma_char_t) char_code;
-      }
-      else if (lit_char_is_line_terminator (escape_character))
-      {
-        if (str_buf_iter_p + 1 <= source_str_p + source_str_size)
-        {
-          ecma_char_t next_char = lit_utf8_iterator_peek_next (&source_str_iter);
-
-          if (escape_character == '\x0D'
-              && next_char == '\x0A')
-          {
-            lit_utf8_iterator_incr (&source_str_iter);
-          }
-        }
-
-        continue;
-      }
-      else
-      {
-        convert_single_escape_character ((ecma_char_t) escape_character, &converted_char);
-      }
-    }
-
-    if (lit_is_code_unit_high_surrogate (prev_converted_char)
-        && lit_is_code_unit_low_surrogate (converted_char))
-    {
-      str_buf_iter_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
-      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (prev_converted_char, converted_char);
-      str_buf_iter_p += lit_code_point_to_utf8 (code_point, str_buf_iter_p);
-    }
-    else
-    {
-      str_buf_iter_p += lit_code_unit_to_utf8 (converted_char, str_buf_iter_p);
-      JERRY_ASSERT (str_buf_iter_p <= str_buf_p + source_str_size);
-    }
-
-    prev_converted_char = converted_char;
-
-    if (!islower (converted_char))
-    {
-      every_char_islower = false;
-
-      if (!isalpha (converted_char)
-          && !isdigit (converted_char)
-          && converted_char != '$'
-          && converted_char != '_')
-      {
-        every_char_allowed_in_identifier = false;
-      }
-    }
-  }
-
-  if (is_correct_sequence)
-  {
-    lit_utf8_size_t length = (lit_utf8_size_t) (str_buf_iter_p - str_buf_p);
-    ret = empty_token;
-
-    if (tok_type == TOK_NAME)
-    {
-      if (every_char_islower)
-      {
-        ret = lexer_parse_reserved_word (str_buf_p, length);
-      }
-      else if (!every_char_allowed_in_identifier)
-      {
-        PARSE_ERROR ("Malformed identifier name", source_str_p - buffer_start);
-      }
-    }
-
-    if (is_empty (ret))
-    {
-      ret = convert_string_to_token (tok_type, str_buf_p, length);
-    }
-  }
-  else
-  {
-    PARSE_ERROR ("Malformed escape sequence", source_str_p - buffer_start);
-  }
-
-  jsp_mm_free (str_buf_p);
-
-  return ret;
-} /* convert_string_to_token_transform_escape_seq */
-
-/**
- * Parse identifier (ECMA-262 v5, 7.6) or keyword (7.6.1.1)
+ * @return TOK_NAME - for Identifier,
+ *         TOK_KEYWORD - for Keyword or FutureReservedWord,
+ *         TOK_NULL - for NullLiteral,
+ *         TOK_BOOL - for BooleanLiteral
  */
 static token
 parse_name (void)
 {
   ecma_char_t c = (ecma_char_t) LA (0);
 
-  token known_token = empty_token;
-
   JERRY_ASSERT (isalpha (c) || c == '$' || c == '_' || c == '\\');
 
   new_token ();
+
+  bool is_escape_sequence_occured = false;
+  bool is_all_chars_were_lowercase_ascii = true;
 
   while (true)
   {
     c = (ecma_char_t) LA (0);
 
-    if (!isalpha (c)
-        && !isdigit (c)
-        && c != '$'
-        && c != '_'
-        && c != '\\')
+    if (c == '\\')
+    {
+      consume_char ();
+
+      is_escape_sequence_occured = true;
+
+      bool is_unicode_escape_sequence = (LA (0) == 'u');
+      consume_char ();
+
+      if (is_unicode_escape_sequence)
+      {
+        /* UnicodeEscapeSequence */
+
+        if (!lexer_convert_escape_sequence_digits_to_char (&src_iter,
+                                                           true,
+                                                           &c))
+        {
+          PARSE_ERROR ("Malformed escape sequence", token_start - buffer_start);
+        }
+        else
+        {
+          /* c now contains character, encoded in the UnicodeEscapeSequence */
+          if (!isalpha (c)
+              && !isdigit (c)
+              && c != '$'
+              && c != '_')
+          {
+            PARSE_ERROR ("Invalid character in identifier", token_start - buffer_start);
+          }
+        }
+      }
+      else
+      {
+        PARSE_ERROR ("Only unicode escape sequences are allowed in identifiers",
+                     token_start - buffer_start);
+      }
+    }
+    else if (!isalpha (c)
+             && !isdigit (c)
+             && c != '$'
+             && c != '_')
     {
       break;
     }
     else
     {
-      consume_char ();
-
-      if (c == '\\')
+      if (!islower (c))
       {
-        bool is_correct_sequence = (LA (0) == 'u');
-        if (is_correct_sequence)
-        {
-          consume_char ();
-        }
-
-        for (uint32_t i = 0;
-             is_correct_sequence && i < 4;
-             i++)
-        {
-          if (!isxdigit (LA (0)))
-          {
-            is_correct_sequence = false;
-            break;
-          }
-
-          consume_char ();
-        }
-
-        if (!is_correct_sequence)
-        {
-          PARSE_ERROR ("Malformed escape sequence", token_start - buffer_start);
-        }
+        is_all_chars_were_lowercase_ascii = false;
       }
+
+      consume_char ();
     }
   }
 
-  const lit_utf8_size_t seq_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
-  known_token = convert_string_to_token_transform_escape_seq (TOK_NAME,
-                                                              token_start,
-                                                              seq_size);
+  const lit_utf8_size_t charset_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) - token_start);
+
+  token ret = empty_token;
+
+  if (!is_escape_sequence_occured
+      && is_all_chars_were_lowercase_ascii)
+  {
+    /* Keyword or FutureReservedWord (TOK_KEYWORD), or boolean literal (TOK_BOOL), or null literal (TOK_NULL) */
+    ret = lexer_parse_reserved_word (token_start, charset_size);
+  }
+
+  if (is_empty (ret))
+  {
+    /* Identifier (TOK_NAME) */
+
+    if (!is_escape_sequence_occured)
+    {
+      ret = lexer_create_token_for_charset (TOK_NAME,
+                                            token_start,
+                                            charset_size);
+    }
+    else
+    {
+      ret = lexer_create_token_for_charset_transform_escape_sequences (TOK_NAME,
+                                                                       token_start,
+                                                                       charset_size);
+    }
+  }
 
   token_start = NULL;
 
-  return known_token;
+  return ret;
 } /* parse_name */
 
 /* In this function we cannot use strtol function
@@ -932,6 +995,8 @@ parse_string (void)
   const bool is_double_quoted = (c == '"');
   const char end_char = (is_double_quoted ? '"' : '\'');
 
+  bool is_escape_sequence_occured = false;
+
   do
   {
     c = (ecma_char_t) LA (0);
@@ -947,9 +1012,11 @@ parse_string (void)
     }
     else if (c == '\\')
     {
+      is_escape_sequence_occured = true;
+
       ecma_char_t nc = (ecma_char_t) LA (0);
 
-      if (convert_single_escape_character (nc, NULL))
+      if (lexer_convert_single_escape_character (nc, NULL))
       {
         consume_char ();
       }
@@ -971,12 +1038,23 @@ parse_string (void)
   }
   while (c != end_char);
 
-  const lit_utf8_size_t esc_seq_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
+  const lit_utf8_size_t charset_size = (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
                                                           token_start) - 1;
 
-  token ret = convert_string_to_token_transform_escape_seq (TOK_STRING,
-                                                            token_start,
-                                                            esc_seq_size);
+  token ret;
+
+  if (!is_escape_sequence_occured)
+  {
+    ret = lexer_create_token_for_charset (TOK_STRING,
+                                          token_start,
+                                          charset_size);
+  }
+  else
+  {
+    ret = lexer_create_token_for_charset_transform_escape_sequences (TOK_STRING,
+                                                                     token_start,
+                                                                     charset_size);
+  }
 
   token_start = NULL;
 
@@ -1045,10 +1123,10 @@ parse_regexp (void)
     consume_char ();
   }
 
-  result = convert_string_to_token (TOK_REGEXP,
-                                    (const lit_utf8_byte_t *) token_start,
-                                    (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
-                                                      token_start));
+  result = lexer_create_token_for_charset (TOK_REGEXP,
+                                           (const lit_utf8_byte_t *) token_start,
+                                           (lit_utf8_size_t) (lit_utf8_iterator_get_ptr (&src_iter) -
+                                                              token_start));
 
   token_start = NULL;
   return result;

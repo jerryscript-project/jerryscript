@@ -112,7 +112,47 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_char_at (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3 */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (index_num,
+                               arg,
+                               ret_value);
+
+  /* 4 */
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+  const ecma_length_t len = ecma_string_get_length (original_string_p);
+
+  /* 5 */
+  if (index_num < 0 || index_num >= len || !len)
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (
+                                                   ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY)));
+  }
+  else
+  {
+    /* 6 */
+    ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (
+                                                   ecma_new_ecma_string_from_code_unit (new_ecma_char)));
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (index_num);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_char_at */
 
 /**

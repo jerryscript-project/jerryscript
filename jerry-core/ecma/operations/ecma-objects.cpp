@@ -607,6 +607,20 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             break;
           }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+          case ECMA_BUILTIN_ID_DATE:
+          {
+            class_name = LIT_MAGIC_STRING_DATE_UL;
+            break;
+          }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+          case ECMA_BUILTIN_ID_REGEXP:
+          {
+            class_name = LIT_MAGIC_STRING_REGEXP_UL;
+            break;
+          }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
           default:
           {
             JERRY_ASSERT (builtin_id == ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
@@ -681,6 +695,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return LIT_MAGIC_STRING_ERROR_UL;
           }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+          case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
+          {
+            return LIT_MAGIC_STRING_DATE_UL;
+          }
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
           case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
           {

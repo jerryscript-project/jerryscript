@@ -414,7 +414,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       return ecma_op_general_object_define_own_property (obj_p,
                                                          property_name_p,
                                                          property_desc_p,
-                                                         false);
+                                                         is_throw);
     }
 
     // 4.

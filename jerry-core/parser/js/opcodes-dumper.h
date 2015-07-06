@@ -75,6 +75,8 @@ void dump_smallint_assignment (operand, idx_t);
 operand dump_smallint_assignment_res (idx_t);
 void dump_undefined_assignment (operand);
 operand dump_undefined_assignment_res (void);
+void dump_unused_assignment (operand);
+operand dump_unused_assignment_res (void);
 void dump_null_assignment (operand);
 operand dump_null_assignment_res (void);
 void dump_variable_assignment (operand, operand);

@@ -259,6 +259,7 @@ pp_op_meta (const opcode_t *opcodes_p,
             case ECMA_SIMPLE_VALUE_FALSE: printf ("false"); break;
             case ECMA_SIMPLE_VALUE_TRUE: printf ("true"); break;
             case ECMA_SIMPLE_VALUE_UNDEFINED: printf ("undefined"); break;
+            case ECMA_SIMPLE_VALUE_UNUSED: printf ("<unused>"); break;
             default: JERRY_UNREACHABLE ();
           }
           printf (": SIMPLE;");

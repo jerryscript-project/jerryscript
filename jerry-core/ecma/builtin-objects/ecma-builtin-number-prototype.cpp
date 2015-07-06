@@ -200,11 +200,8 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
   ECMA_OP_TO_NUMBER_TRY_CATCH (this_num, this_arg, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  /* 1. */
-  int32_t frac_digits = ecma_number_to_int32 (arg_num);
-
   /* 2. */
-  if (frac_digits < 0 || frac_digits > 20)
+  if (arg_num <= -1 || arg_num >= 21)
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
   }
@@ -250,6 +247,9 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         uint64_t digits = 0;
         int32_t num_digits = 0;
         int32_t exponent = 1;
+
+        /* 1. */
+        int32_t frac_digits = ecma_number_to_int32 (arg_num);
 
         /* Get the parameters of the number if non-zero. */
         if (!ecma_number_is_zero (this_num))

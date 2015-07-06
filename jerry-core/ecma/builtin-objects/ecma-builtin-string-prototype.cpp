@@ -402,7 +402,130 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
                                                 ecma_value_t arg1, /**< routine's first argument */
                                                 ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3 */
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+
+  JERRY_ASSERT (ecma_string_get_length (original_string_p) >= 0);
+
+  const uint32_t len = (uint32_t) ecma_string_get_length (original_string_p);
+
+  /* 4, 6 */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
+                               arg1,
+                               ret_value);
+
+  uint32_t start = 0, end = len;
+
+  if (ecma_number_is_nan (start_num) || ecma_number_is_negative (start_num))
+  {
+    start = 0;
+  }
+  else
+  {
+    if (ecma_number_is_infinity (start_num))
+    {
+      start = len;
+    }
+    else
+    {
+      start = ecma_number_to_uint32 (start_num);
+
+      if (start > len)
+      {
+        start = len;
+      }
+    }
+  }
+
+  /* 5, 7 */
+  if (ecma_is_value_undefined (arg2))
+  {
+    end = len;
+  }
+  else
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num,
+                                 arg2,
+                                 ret_value);
+
+    if (ecma_number_is_nan (end_num) || ecma_number_is_negative (end_num))
+    {
+      end = 0;
+    }
+    else
+    {
+      if (ecma_number_is_infinity (end_num))
+      {
+        end = len;
+      }
+      else
+      {
+        end = ecma_number_to_uint32 (end_num);
+
+        if (end > len)
+        {
+          end = len;
+        }
+      }
+    }
+
+    ECMA_OP_TO_NUMBER_FINALIZE (end_num);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    JERRY_ASSERT (start <= len && end <= len);
+
+    /* 8 */
+    uint32_t from = start < end ? start : end;
+
+    /* 9 */
+    uint32_t to = start > end ? start : end;
+
+    /* 10 */
+    /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
+    uint32_t zt_str_size = (uint32_t) sizeof (ecma_char_t) * (len + 1);
+    ecma_char_t *original_zt_str_p = (ecma_char_t*) mem_heap_alloc_block (zt_str_size,
+                                                                          MEM_HEAP_ALLOC_SHORT_TERM);
+    ecma_string_to_zt_string (original_string_p, original_zt_str_p, (ssize_t) zt_str_size);
+
+    uint32_t new_len = to - from;
+
+    MEM_DEFINE_LOCAL_ARRAY (new_str_buffer, new_len + 1, ecma_char_t);
+
+    for (uint32_t idx = 0; idx < new_len; ++idx)
+    {
+      new_str_buffer[idx] = original_zt_str_p[idx + from];
+    }
+
+    new_str_buffer[new_len] = '\0';
+    ecma_string_t *new_str_p = ecma_new_ecma_string ((ecma_char_t *) new_str_buffer);
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
+
+    MEM_FINALIZE_LOCAL_ARRAY (new_str_buffer);
+
+    mem_heap_free_block (original_zt_str_p);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_substring */
 
 /**

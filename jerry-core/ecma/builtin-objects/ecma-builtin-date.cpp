@@ -17,6 +17,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
@@ -423,7 +424,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
 
   ECMA_TRY_CATCH (time_value, ecma_date_construct_helper (args, args_number), ret_value);
 
-  ecma_number_t *time_p = ecma_get_number_from_completion_value (time_value);
+  ecma_number_t *time_p = ecma_get_number_from_value (time_value);
   ecma_number_t *time_clip_p = ecma_alloc_number ();
   *time_clip_p = ecma_date_time_clip (*time_p);
   ret_value = ecma_make_normal_completion_value (ecma_make_number_value (time_clip_p));
@@ -458,17 +459,26 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
 /**
  * Handle calling [[Call]] of built-in Date object
  *
+ * See also:
+ *          ECMA-262 v5, 15.9.2.1
+ *
  * @return completion-value
  */
 ecma_completion_value_t
 ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                  ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p, arguments_list_len);
+  /* FIXME:
+   *       Fix this, after Date.prototype.toString is finished.
+   */
+  return ecma_builtin_date_dispatch_construct (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_date_dispatch_call */
 
 /**
  * Handle calling [[Construct]] of built-in Date object
+ *
+ * See also:
+ *          ECMA-262 v5, 15.9.3.1
  *
  * @return completion-value
  */
@@ -476,7 +486,92 @@ ecma_completion_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (arguments_list_p, arguments_list_len);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_number_t *prim_value_num_p = NULL;
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
+                                             true,
+                                             ECMA_OBJECT_TYPE_GENERAL);
+  ecma_deref_object (prototype_obj_p);
+
+  if (arguments_list_len == 0)
+  {
+    ECMA_TRY_CATCH (parse_res_value,
+                    ecma_builtin_date_now (ecma_make_object_value (obj_p)),
+                    ret_value);
+
+    prim_value_num_p = ecma_alloc_number ();
+    *prim_value_num_p = *ecma_get_number_from_value (parse_res_value);
+
+    ECMA_FINALIZE (parse_res_value)
+  }
+  else if (arguments_list_len == 1)
+  {
+    ECMA_TRY_CATCH (prim_comp_value,
+                    ecma_op_to_primitive (arguments_list_p[0], ECMA_PREFERRED_TYPE_NUMBER),
+                    ret_value);
+
+    if (ecma_is_value_string (prim_comp_value))
+    {
+      ECMA_TRY_CATCH (parse_res_value,
+                      ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value),
+                      ret_value);
+
+      prim_value_num_p = ecma_alloc_number ();
+      *prim_value_num_p = *ecma_get_number_from_value (parse_res_value);
+
+      ECMA_FINALIZE (parse_res_value);
+    }
+    else
+    {
+      ECMA_TRY_CATCH (prim_value, ecma_op_to_number (arguments_list_p[0]), ret_value);
+
+      prim_value_num_p = ecma_alloc_number ();
+      *prim_value_num_p = *ecma_get_number_from_value (prim_value);
+
+      ECMA_FINALIZE (prim_value);
+    }
+
+    ECMA_FINALIZE (prim_comp_value);
+  }
+  else if (arguments_list_len >= 2)
+  {
+    ECMA_TRY_CATCH (time_value,
+                    ecma_date_construct_helper (arguments_list_p, arguments_list_len),
+                    ret_value);
+
+    ecma_number_t *time_p = ecma_get_number_from_value (time_value);
+    prim_value_num_p = ecma_alloc_number ();
+    *prim_value_num_p = ecma_date_time_clip (ecma_date_utc (*time_p));
+
+    ECMA_FINALIZE (time_value);
+  }
+  else
+  {
+    prim_value_num_p = ecma_alloc_number ();
+    *prim_value_num_p = ecma_number_make_nan ();
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_CLASS);
+    class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_DATE_UL;
+
+    ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
+                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_num_p);
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
+    ecma_deref_object (obj_p);
+  }
+
+  return ret_value;
 } /* ecma_builtin_date_dispatch_construct */
 
 /**

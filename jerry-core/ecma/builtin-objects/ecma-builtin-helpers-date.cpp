@@ -413,7 +413,12 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
-  JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+  /*
+   * FIXME:
+   *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
+   *        Introduce system macros at first.
+   */
+  return ECMA_NUMBER_ZERO;
 } /* ecma_date_local_tza */
 
 /**
@@ -432,7 +437,12 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+  /*
+   * FIXME:
+   *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
+   *        Introduce system macros at first.
+   */
+  return ECMA_NUMBER_ZERO;
 } /* ecma_date_daylight_saving_ta */
 
 /**

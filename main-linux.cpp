@@ -68,6 +68,7 @@ read_sources (const char *script_file_names[],
 
     if (script_len < 0)
     {
+      fclose (file);
       break;
     }
 
@@ -77,12 +78,14 @@ read_sources (const char *script_file_names[],
 
     if (source_buffer_tail + current_source_size >= source_buffer + sizeof (source_buffer))
     {
+      fclose (file);
       break;
     }
 
     size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
+      fclose (file);
       break;
     }
 

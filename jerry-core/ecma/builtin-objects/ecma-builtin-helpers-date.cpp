@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -34,6 +35,16 @@
  * See also:
  *          ECMA-262 v5, 15.9.1.2
  *
+ * Used by:
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setUTCMilliseconds routine.
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setUTCSeconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setUTCMinutes routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setUTCHours routine.
+ *
  * @return  time value for day number
  */
 ecma_number_t __attr_always_inline___
@@ -52,6 +63,14 @@ ecma_date_day (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.2
+ *
+ * Used by:
+ *         - The Date.prototype.setDate routine.
+ *         - The Date.prototype.setUTCDate routine.
+ *         - The Date.prototype.setMonth routine.
+ *         - The Date.prototype.setUTCMonth routine.
+ *         - The Date.prototype.setFullYear routine.
+ *         - The Date.prototype.setUTCFullYear routine.
  *
  * @return  time value within the day
  */
@@ -150,6 +169,10 @@ ecma_date_time_from_year (ecma_number_t year) /**< year value */
  * Used by:
  *         - The Date.prototype.getFullYear routine. (Generated.)
  *         - The Date.prototype.getUTCFullYear routine. (Generated.)
+ *         - The Date.prototype.setDate routine.
+ *         - The Date.prototype.setUTCDate routine.
+ *         - The Date.prototype.setMonth routine.
+ *         - The Date.prototype.setUTCMonth routine.
  *
  * @return  year value
  */
@@ -225,6 +248,10 @@ ecma_date_day_within_year (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getMonth routine. (Generated.)
  *         - The Date.prototype.getUTCMonth routine. (Generated.)
+ *         - The Date.prototype.setDate routine.
+ *         - The Date.prototype.setUTCDate routine.
+ *         - The Date.prototype.setFullYear routine.
+ *         - The Date.prototype.setUTCFullYear routine.
  *
  * @return  month number
  */
@@ -298,6 +325,10 @@ ecma_date_month_from_time (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getDate routine. (Generated.)
  *         - The Date.prototype.getUTCDate routine. (Generated.)
+ *         - The Date.prototype.setMonth routine.
+ *         - The Date.prototype.setUTCMonth routine.
+ *         - The Date.prototype.setFullYear routine.
+ *         - The Date.prototype.setUTCFullYear routine.
  *
  * @return  date number
  */
@@ -445,6 +476,14 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
  * Used by:
  *         - All Date.prototype.getUTC* routines. (Generated.)
  *         - The Date.prototype.getTimezoneOffset routine.
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setDate routine.
+ *         - The Date.prototype.setMonth routine.
+ *         - The Date.prototype.setFullYear routine.
+ *         - The ecma_date_timezone_offset helper function.
  *
  * @return  local time
  */
@@ -464,6 +503,10 @@ ecma_date_local_time (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.9
+ *
+ * Used by:
+ *         - The Date object's 'parse' routine.
+ *         - The [[Construct]] of built-in Date object rutine.
  *
  * @return  utc value
  */
@@ -488,6 +531,12 @@ ecma_date_utc (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getHour routine. (Generated.)
  *         - The Date.prototype.getUTCHour routine. (Generated.)
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setUTCMilliseconds routine.
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setUTCSeconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setUTCMinutes routine.
  *
  * @return  hour value
  */
@@ -512,6 +561,12 @@ ecma_date_hour_from_time (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getMinutes routine. (Generated.)
  *         - The Date.prototype.getUTCMinutes routine. (Generated.)
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setUTCMilliseconds routine.
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setUTCSeconds routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setUTCHours routine.
  *
  * @return  minute value
  */
@@ -536,6 +591,12 @@ ecma_date_min_from_time (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getSeconds routine. (Generated.)
  *         - The Date.prototype.getUTCSeconds routine. (Generated.)
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setUTCMilliseconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setUTCMinutes routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setUTCHours routine.
  *
  * @return  second value
  */
@@ -560,6 +621,12 @@ ecma_date_sec_from_time (ecma_number_t time) /**< time value */
  * Used by:
  *         - The Date.prototype.getMilliseconds routine. (Generated.)
  *         - The Date.prototype.getUTCMilliseconds routine. (Generated.)
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setUTCSeconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setUTCMinutes routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setUTCHours routine.
  *
  * @return  millisecond value
  */
@@ -579,6 +646,16 @@ ecma_date_ms_from_time (ecma_number_t time) /**< time value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.11
+ *
+ * Used by:
+ *         - The Date.prototype.setMilliseconds routine.
+ *         - The Date.prototype.setUTCMilliseconds routine.
+ *         - The Date.prototype.setSeconds routine.
+ *         - The Date.prototype.setUTCSeconds routine.
+ *         - The Date.prototype.setMinutes routine.
+ *         - The Date.prototype.setUTCMinutes routine.
+ *         - The Date.prototype.setHours routine.
+ *         - The Date.prototype.setUTCHours routine.
  *
  * @return  time value
  */
@@ -617,6 +694,14 @@ ecma_date_make_time (ecma_number_t hour, /**< hour value */
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.12
+ *
+ * Used by:
+ *         - The Date.prototype.setDate routine.
+ *         - The Date.prototype.setUTCDate routine.
+ *         - The Date.prototype.setMonth routine.
+ *         - The Date.prototype.setUTCMonth routine.
+ *         - The Date.prototype.setFullYear routine.
+ *         - The Date.prototype.setUTCFullYear routine.
  *
  * @return  day value
  */
@@ -684,6 +769,10 @@ ecma_date_make_date (ecma_number_t day, /**< day value */
  * See also:
  *          ECMA-262 v5, 15.9.1.14
  *
+ * Used by:
+ *         - The Date.prototype.setTime routine.
+ *         - The ecma_date_set_internal_property helper function.
+ *
  * @return  number of milliseconds
  */
 ecma_number_t __attr_always_inline___
@@ -720,6 +809,43 @@ ecma_date_timezone_offset (ecma_number_t time) /**< time value */
 
   return (time - ecma_date_local_time (time)) / ECMA_DATE_MS_PER_MINUTE;
 } /* ecma_date_timezone_offset */
+
+/**
+ * Helper function to set Date internal property.
+ *
+ * Used by:
+ *         - All Date.prototype.set* routine except Date.prototype.setTime.
+ *
+ * @return completion value containing the new internal time value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
+                                 ecma_number_t day, /**< day */
+                                 ecma_number_t time, /**< time */
+                                 ecma_date_timezone_t is_utc) /**< input is utc */
+{
+  JERRY_ASSERT (ecma_is_value_object (this_arg));
+
+  ecma_number_t *value_p = ecma_alloc_number ();
+  ecma_number_t date = ecma_date_make_date (day, time);
+  if (is_utc != ECMA_DATE_UTC)
+  {
+    date = ecma_date_utc (date);
+  }
+  *value_p = ecma_date_time_clip (date);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+
+  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+
+  ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                               prim_value_prop_p->u.internal_property.value);
+  *prim_value_num_p = *value_p;
+
+  return ecma_make_normal_completion_value (ecma_make_number_value (value_p));
+} /* ecma_date_set_internal_property */
 
 /**
  * @}

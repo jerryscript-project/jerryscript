@@ -363,9 +363,30 @@ DEFINE_GETTER (ECMA-262 v5 15.9.5.26, timezone_offset, ecma_date_timezone_offset
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t arg) /**< time */
+                                      ecma_value_t time) /**< time */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (t, time, ret_value);
+  ecma_number_t *value_p = ecma_alloc_number ();
+  *value_p = ecma_date_time_clip (t);
+
+  /* 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+
+  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+
+  ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                               prim_value_prop_p->u.internal_property.value);
+  *prim_value_num_p = *value_p;
+
+  /* 3. */
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (value_p));
+  ECMA_OP_TO_NUMBER_FINALIZE (t);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_time */
 
 /**
@@ -379,9 +400,30 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_milliseconds (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t arg) /**< millisecond */
+                                              ecma_value_t ms) /**< millisecond */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
+
+  /* 3-5. */
+  ecma_number_t hour = ecma_date_hour_from_time (t);
+  ecma_number_t min = ecma_date_min_from_time (t);
+  ecma_number_t sec = ecma_date_sec_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_day (t),
+                                               ecma_date_make_time (hour, min, sec, milli),
+                                               ECMA_DATE_LOCAL);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (milli);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_milliseconds */
 
 /**
@@ -395,9 +437,30 @@ ecma_builtin_date_prototype_set_milliseconds (ecma_value_t this_arg, /**< this a
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_utc_milliseconds (ecma_value_t this_arg, /**< this argument */
-                                                  ecma_value_t arg) /**< millisecond */
+                                                  ecma_value_t ms) /**< millisecond */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
+
+  /* 3-5. */
+  ecma_number_t hour = ecma_date_hour_from_time (t);
+  ecma_number_t min = ecma_date_min_from_time (t);
+  ecma_number_t sec = ecma_date_sec_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_day (t),
+                                               ecma_date_make_time (hour, min, sec, milli),
+                                               ECMA_DATE_UTC);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (milli);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_milliseconds */
 
 /**
@@ -411,10 +474,38 @@ ecma_builtin_date_prototype_set_utc_milliseconds (ecma_value_t this_arg, /**< th
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_seconds (ecma_value_t this_arg, /**< this argument */
-                                         ecma_value_t arg1, /**< second */
-                                         ecma_value_t arg2) /**< millisecond */
+                                         ecma_value_t sec, /**< second */
+                                         ecma_value_t ms) /**< millisecond */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
+  if (ecma_is_value_undefined (ms))
+  {
+    milli = ecma_date_ms_from_time (t);
+  }
+
+  /* 4-7. */
+  ecma_number_t hour = ecma_date_hour_from_time (t);
+  ecma_number_t min = ecma_date_min_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_day (t),
+                                               ecma_date_make_time (hour, min, s, milli),
+                                               ECMA_DATE_LOCAL);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (milli);
+  ECMA_OP_TO_NUMBER_FINALIZE (s);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_seconds */
 
 /**
@@ -428,10 +519,38 @@ ecma_builtin_date_prototype_set_seconds (ecma_value_t this_arg, /**< this argume
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_utc_seconds (ecma_value_t this_arg, /**< this argument */
-                                             ecma_value_t arg1, /**< second */
-                                             ecma_value_t arg2) /**< millisecond */
+                                             ecma_value_t sec, /**< second */
+                                             ecma_value_t ms) /**< millisecond */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
+  if (ecma_is_value_undefined (ms))
+  {
+    milli = ecma_date_ms_from_time (t);
+  }
+
+  /* 4-7. */
+  ecma_number_t hour = ecma_date_hour_from_time (t);
+  ecma_number_t min = ecma_date_min_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_day (t),
+                                               ecma_date_make_time (hour, min, s, milli),
+                                               ECMA_DATE_UTC);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (milli);
+  ECMA_OP_TO_NUMBER_FINALIZE (s);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_seconds */
 
 /**
@@ -448,7 +567,48 @@ ecma_builtin_date_prototype_set_minutes (ecma_value_t this_arg, /**< this argume
                                          const ecma_value_t args[], /**< arguments list */
                                          ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. Let 'm' be ToNumber('min') where 'min' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (m, args[0], ret_value);
+
+  /* 3. If 'sec' is not specified, then let 's' be SecFromTime('t');
+   *    otherwise, let 's' be ToNumber('sec') where 'sec' is args[1]. */
+  ecma_number_t s = ecma_date_sec_from_time (t);
+  ecma_number_t milli = ecma_date_ms_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[1], ret_value);
+    s = sec;
+
+    /* 4. If 'ms' is not specified, then let 'milli' be msFromTime('t');
+     *    otherwise, let 'milli' be ToNumber('ms') where 'ms' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[2], ret_value);
+      milli = ms;
+      ECMA_OP_TO_NUMBER_FINALIZE (ms);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (sec);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 5-8. */
+    ecma_number_t hour = ecma_date_hour_from_time (t);
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_day (t),
+                                                 ecma_date_make_time (hour, m, s, milli),
+                                                 ECMA_DATE_LOCAL);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (m);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_minutes */
 
 /**
@@ -465,7 +625,48 @@ ecma_builtin_date_prototype_set_utc_minutes (ecma_value_t this_arg, /**< this ar
                                              const ecma_value_t args[], /**< arguments list */
                                              ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. Let 'm' be ToNumber('min') where 'min' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (m, args[0], ret_value);
+
+  /* 3. If 'sec' is not specified, then let 's' be SecFromTime('t');
+   *    otherwise, let 's' be ToNumber('sec') where 'sec' is args[1]. */
+  ecma_number_t s = ecma_date_sec_from_time (t);
+  ecma_number_t milli = ecma_date_ms_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[1], ret_value);
+    s = sec;
+
+    /* 4. If 'ms' is not specified, then let 'milli' be msFromTime('t');
+     *    otherwise, let 'milli' be ToNumber('ms') where 'ms' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[2], ret_value);
+      milli = ms;
+      ECMA_OP_TO_NUMBER_FINALIZE (ms);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (sec);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 5-8. */
+    ecma_number_t hour = ecma_date_hour_from_time (t);
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_day (t),
+                                                 ecma_date_make_time (hour, m, s, milli),
+                                                 ECMA_DATE_UTC);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (m);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_minutes */
 
 /**
@@ -482,7 +683,57 @@ ecma_builtin_date_prototype_set_hours (ecma_value_t this_arg, /**< this argument
                                        const ecma_value_t args[], /**< arguments list */
                                        ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. Let 'h' be ToNumber('hour') where 'hour' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (h, args[0], ret_value);
+
+  /* 3. If 'min' is not specified, then let 'm' be MinFromTime('t');
+   *    otherwise, let 'm' be ToNumber('min') where 'min' is args[1]. */
+  ecma_number_t m = ecma_date_min_from_time (t);
+  ecma_number_t s = ecma_date_sec_from_time (t);
+  ecma_number_t milli = ecma_date_ms_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[1], ret_value);
+    m = min;
+
+    /* 4. If 'sec' is not specified, then let 's' be SecFromTime('t');
+     *    otherwise, let 's' be ToNumber('sec') where 'sec' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[2], ret_value);
+      s = sec;
+
+      /* 5. If 'ms' is not specified, then let 'milli' be msFromTime('t');
+       *    otherwise, let 'milli' be ToNumber('ms') where 'ms' is args[3]. */
+      if (args_number > 3 && !ecma_is_value_undefined (args[3]))
+      {
+        ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[3], ret_value);
+        milli = ms;
+        ECMA_OP_TO_NUMBER_FINALIZE (ms);
+      }
+      ECMA_OP_TO_NUMBER_FINALIZE (sec);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (min);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 6-9. */
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_day (t),
+                                                 ecma_date_make_time (h, m, s, milli),
+                                                 ECMA_DATE_LOCAL);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (h);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_hours */
 
 /**
@@ -499,7 +750,57 @@ ecma_builtin_date_prototype_set_utc_hours (ecma_value_t this_arg, /**< this argu
                                            const ecma_value_t args[], /**< arguments list */
                                            ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. Let 'h' be ToNumber('hour') where 'hour' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (h, args[0], ret_value);
+
+  /* 3. If 'min' is not specified, then let 'm' be MinFromTime('t');
+   *    otherwise, let 'm' be ToNumber('min') where 'min' is args[1]. */
+  ecma_number_t m = ecma_date_min_from_time (t);
+  ecma_number_t s = ecma_date_sec_from_time (t);
+  ecma_number_t milli = ecma_date_ms_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[1], ret_value);
+    m = min;
+
+    /* 4. If 'sec' is not specified, then let 's' be SecFromTime('t');
+     *    otherwise, let 's' be ToNumber('sec') where 'sec' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[2], ret_value);
+      s = sec;
+
+      /* 5. If 'ms' is not specified, then let 'milli' be msFromTime('t');
+       *    otherwise, let 'milli' be ToNumber('ms') where 'ms' is args[3]. */
+      if (args_number > 3 && !ecma_is_value_undefined (args[3]))
+      {
+        ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[3], ret_value);
+        milli = ms;
+        ECMA_OP_TO_NUMBER_FINALIZE (ms);
+      }
+      ECMA_OP_TO_NUMBER_FINALIZE (sec);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (min);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 6-9. */
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_day (t),
+                                                 ecma_date_make_time (h, m, s, milli),
+                                                 ECMA_DATE_UTC);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (h);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_hours */
 
 /**
@@ -513,9 +814,29 @@ ecma_builtin_date_prototype_set_utc_hours (ecma_value_t this_arg, /**< this argu
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_date (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t arg) /**< date */
+                                      ecma_value_t date) /**< date */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
+
+  /* 3-6. */
+  ecma_number_t year = ecma_date_year_from_time (t);
+  ecma_number_t month = ecma_date_month_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_make_day (year, month, dt),
+                                               ecma_date_time_within_day (t),
+                                               ECMA_DATE_LOCAL);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (dt);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_date */
 
 /**
@@ -529,9 +850,29 @@ ecma_builtin_date_prototype_set_date (ecma_value_t this_arg, /**< this argument 
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_utc_date (ecma_value_t this_arg, /**< this argument */
-                                          ecma_value_t arg) /**< date */
+                                          ecma_value_t date) /**< date */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
+
+  /* 3-6. */
+  ecma_number_t year = ecma_date_year_from_time (t);
+  ecma_number_t month = ecma_date_month_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_make_day (year, month, dt),
+                                               ecma_date_time_within_day (t),
+                                               ECMA_DATE_UTC);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (dt);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_date */
 
 /**
@@ -545,10 +886,37 @@ ecma_builtin_date_prototype_set_utc_date (ecma_value_t this_arg, /**< this argum
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_month (ecma_value_t this_arg, /**< this argument */
-                                       ecma_value_t arg1, /**< month */
-                                       ecma_value_t arg2) /**< day */
+                                       ecma_value_t month, /**< month */
+                                       ecma_value_t date) /**< date */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
+  if (ecma_is_value_undefined (date))
+  {
+    dt = ecma_date_date_from_time (t);
+  }
+
+  /* 4-7. */
+  ecma_number_t year = ecma_date_year_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_make_day (year, m, dt),
+                                               ecma_date_time_within_day (t),
+                                               ECMA_DATE_LOCAL);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (dt);
+  ECMA_OP_TO_NUMBER_FINALIZE (m);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_month */
 
 /**
@@ -562,10 +930,37 @@ ecma_builtin_date_prototype_set_month (ecma_value_t this_arg, /**< this argument
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_set_utc_month (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t arg1, /**< month */
-                                           ecma_value_t arg2) /**< day */
+                                           ecma_value_t month, /**< month */
+                                           ecma_value_t date) /**< date */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
+
+  /* 3. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
+  if (ecma_is_value_undefined (date))
+  {
+    dt = ecma_date_date_from_time (t);
+  }
+
+  /* 4-7. */
+  ecma_number_t year = ecma_date_year_from_time (t);
+  ret_value = ecma_date_set_internal_property (this_arg,
+                                               ecma_date_make_day (year, m, dt),
+                                               ecma_date_time_within_day (t),
+                                               ECMA_DATE_UTC);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (dt);
+  ECMA_OP_TO_NUMBER_FINALIZE (m);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_month */
 
 /**
@@ -582,7 +977,51 @@ ecma_builtin_date_prototype_set_full_year (ecma_value_t this_arg, /**< this argu
                                            const ecma_value_t args[], /**< arguments list */
                                            ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  if (ecma_number_is_nan (t))
+  {
+    t = ECMA_NUMBER_ZERO;
+  }
+
+  /* 2. Let 'y' be ToNumber('year') where 'year' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (y, args[0], ret_value);
+
+  /* 3. If 'month' is not specified, then let 'm' be MonthFromTime('t');
+   *    otherwise, let 'm' be ToNumber('month') where 'month' is args[1]. */
+  ecma_number_t m = ecma_date_month_from_time (t);
+  ecma_number_t dt = ecma_date_date_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (month, args[1], ret_value);
+    m = month;
+
+    /* 4. If 'date' is not specified, then let 'dt' be DateFromTime('t');
+     *    otherwise, let 'dt' be ToNumber('date') where 'date' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (date, args[2], ret_value);
+      dt = date;
+      ECMA_OP_TO_NUMBER_FINALIZE (date);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (month);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 5-8. */
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_make_day (y, m, dt),
+                                                 ecma_date_time_within_day (t),
+                                                 ECMA_DATE_LOCAL);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (y);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_full_year */
 
 /**
@@ -599,7 +1038,51 @@ ecma_builtin_date_prototype_set_utc_full_year (ecma_value_t this_arg, /**< this 
                                                const ecma_value_t args[], /**< arguments list */
                                                ecma_length_t args_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, args, args_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  if (ecma_number_is_nan (t))
+  {
+    t = ECMA_NUMBER_ZERO;
+  }
+
+  /* 2. Let 'y' be ToNumber('year') where 'year' is args[0]. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (y, args[0], ret_value);
+
+  /* 3. If 'month' is not specified, then let 'm' be MonthFromTime('t');
+   *    otherwise, let 'm' be ToNumber('month') where 'month' is args[1]. */
+  ecma_number_t m = ecma_date_month_from_time (t);
+  ecma_number_t dt = ecma_date_date_from_time (t);
+  if (args_number > 1 && !ecma_is_value_undefined (args[1]))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (month, args[1], ret_value);
+    m = month;
+
+    /* 4. If 'date' is not specified, then let 'dt' be DateFromTime('t');
+     *    otherwise, let 'dt' be ToNumber('date') where 'date' is args[2]. */
+    if (args_number > 2 && !ecma_is_value_undefined (args[2]))
+    {
+      ECMA_OP_TO_NUMBER_TRY_CATCH (date, args[2], ret_value);
+      dt = date;
+      ECMA_OP_TO_NUMBER_FINALIZE (date);
+    }
+    ECMA_OP_TO_NUMBER_FINALIZE (month);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 5-8. */
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_make_day (y, m, dt),
+                                                 ecma_date_time_within_day (t),
+                                                 ECMA_DATE_UTC);
+  }
+  ECMA_OP_TO_NUMBER_FINALIZE (y);
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_set_utc_full_year */
 
 /**

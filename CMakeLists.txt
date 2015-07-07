@@ -92,7 +92,13 @@ project (Jerry CXX C ASM)
   set(MCU_SCRIPT_GENERATED_HEADER ${CMAKE_BINARY_DIR}/generated.h)
 
 # Should we use external libc?
- if(NOT DEFINED EXTERNAL_LIBC_INTERFACE OR EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
+ if(DEFINED USE_COMPILER_DEFAULT_LIBC AND USE_COMPILER_DEFAULT_LIBC STREQUAL "YES")
+  if(NOT EXTERNAL_LIBC_INTERFACE STREQUAL "" AND NOT EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
+    message(FATAL_ERROR "EXTERNAL_LIBC_INTERFACE='${EXTERNAL_LIBC_INTERFACE}' should not be set in case compiler's default libc is used (USE_COMPILER_DEFAULT_LIBC=YES)")
+  endif()
+
+  set(USE_JERRY_LIBC FALSE)
+ elseif(NOT DEFINED EXTERNAL_LIBC_INTERFACE OR EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
   set(USE_JERRY_LIBC TRUE)
  else()
   set(USE_JERRY_LIBC FALSE)
@@ -180,6 +186,11 @@ project (Jerry CXX C ASM)
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
  set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
 
+ # Turn off linking to compiler's default libc, in case jerry-libc is used
+ if(${USE_JERRY_LIBC})
+  set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -nostdlib")
+ endif()
+
  # LTO
   if("${ENABLE_LTO}" STREQUAL "ON")
    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto -fno-fat-lto-objects")
@@ -219,13 +230,13 @@ project (Jerry CXX C ASM)
     set(LINKER_FLAGS_COMMON_MCU_STM32F4 "-T${CMAKE_SOURCE_DIR}/third-party/STM32F4-Discovery_FW_V1.1.0/Project/Peripheral_Examples/FLASH_Program/TrueSTUDIO/FLASH_Program/stm32_flash.ld")
 
  # Debug
-  set(FLAGS_COMMON_DEBUG "-nostdlib")
+  set(FLAGS_COMMON_DEBUG "")
 
  # Release
-  set(FLAGS_COMMON_RELEASE "-Os -nostdlib")
+  set(FLAGS_COMMON_RELEASE "-Os")
 
  # Unit tests
-  set(FLAGS_COMMON_UNITTESTS "-O3 -nostdlib")
+  set(FLAGS_COMMON_UNITTESTS "-O3")
 
 # Include directories
  # Core interface
@@ -249,13 +260,6 @@ project (Jerry CXX C ASM)
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
 
 # Imported libraries
- # libc
-  add_library(${PREFIX_IMPORTED_LIB}libc SHARED IMPORTED)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libc.so
-                  OUTPUT_VARIABLE IMPORTED_LIBC_LOCATION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set_property(TARGET ${PREFIX_IMPORTED_LIB}libc
-               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBC_LOCATION})
  # libgcc
   add_library(${PREFIX_IMPORTED_LIB}libgcc STATIC IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc.a
@@ -299,7 +303,9 @@ project (Jerry CXX C ASM)
 
  function(declare_targets_for_build_mode BUILD_MODE)
   set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.${PLATFORM_L})
-  set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
+  if (${USE_JERRY_LIBC})
+    set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
+  endif()
 
   function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
    set(CORE_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
@@ -408,7 +414,9 @@ project (Jerry CXX C ASM)
     set(TARGET_NAME unit-${TARGET_NAME})
 
     set(CORE_TARGET_NAME unittests.jerry-core)
-    set(LIBC_TARGET_NAME unittests.jerry-libc.${PLATFORM_L}.lib)
+    if (${USE_JERRY_LIBC})
+     set(LIBC_TARGET_NAME unittests.jerry-libc.${PLATFORM_L}.lib)
+    endif ()
     set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})

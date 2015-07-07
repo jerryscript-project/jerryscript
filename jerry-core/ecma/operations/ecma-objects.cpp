@@ -683,6 +683,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return LIT_MAGIC_STRING_MATH_UL;
           }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN */
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN
+          case ECMA_BUILTIN_ID_JSON:
+          {
+            return LIT_MAGIC_STRING_JSON_U;
+          }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN */
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
           case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
           case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:

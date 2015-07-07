@@ -47,6 +47,7 @@
 #define LIT_UTF8_2_BYTE_MARKER (0xC0)
 #define LIT_UTF8_3_BYTE_MARKER (0xE0)
 #define LIT_UTF8_4_BYTE_MARKER (0xF0)
+#define LIT_UTF8_5_BYTE_MARKER (0xF8)
 #define LIT_UTF8_EXTRA_BYTE_MARKER (0x80)
 
 #define LIT_UTF8_1_BYTE_MASK (0x80)
@@ -82,6 +83,11 @@
  * Iterator's offset field mask
  */
 #define LIT_ITERATOR_OFFSET_MASK ((1ull << LIT_ITERATOR_OFFSET_WIDTH) - 1)
+
+/**
+ * Byte values >= LIT_UTF8_FIRST_BYTE_MAX are not allowed in internal strings
+ */
+#define LIT_UTF8_FIRST_BYTE_MAX LIT_UTF8_5_BYTE_MARKER
 
 /**
  * Represents position of the iterator

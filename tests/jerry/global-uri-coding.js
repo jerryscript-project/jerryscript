@@ -15,8 +15,18 @@
 
 // URI encoding
 
-assert (encodeURI ("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") ===
-        "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F");
+function checkEncodeURIParseError (str)
+{
+  try {
+    encodeURI (str);
+    assert (false);
+  } catch(e) {
+    assert(e instanceof URIError);
+  }
+}
+
+assert (encodeURI ("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") ===
+        "%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F");
 assert (encodeURI ("\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f") ===
         "%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F");
 assert (encodeURI (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMN") ===
@@ -24,8 +34,8 @@ assert (encodeURI (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMN") ===
 assert (encodeURI ("OPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}\x7F") ===
          "OPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D%7F");
 
-assert (encodeURIComponent ("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") ===
-        "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F");
+assert (encodeURIComponent ("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") ===
+        "%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F");
 assert (encodeURIComponent ("\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f") ===
         "%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F");
 assert (encodeURIComponent (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMN") ===
@@ -33,9 +43,12 @@ assert (encodeURIComponent (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMN") 
 assert (encodeURIComponent ("OPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}\x7F") ===
         "OPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D%7F");
 
-// TODO: we need tests for characters greater than 0xff and equal to 0x0
-
 assert (encodeURI ("\xe9") == "%C3%A9");
+assert (encodeURI ("\ud7ff") == "%ED%9F%BF");
+assert (encodeURI ("\ue000") == "%EE%80%80");
+
+checkEncodeURIParseError ("\ud800");
+checkEncodeURIParseError ("\udfff");
 
 // URI decoding
 
@@ -49,8 +62,8 @@ function checkDecodeURIParseError (str)
   }
 }
 
-assert (decodeURI ("%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F") ===
-        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f");
+assert (decodeURI ("%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F") ===
+        "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f");
 assert (decodeURI ("%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F") ===
         "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f");
 assert (decodeURI ("%20%21%22%23%24%25%26%27%28%29%2a%2b%2c%2d%2e%2f") ===
@@ -66,8 +79,8 @@ assert (decodeURI ("%60%61%62%63%64%65%66%67%68%69%6a%6b%6c%6d%6e%6f") ===
 assert (decodeURI ("%70%71%72%73%74%75%76%77%78%79%7a%7b%7c%7d%7e") ===
         "pqrstuvwxyz{|}~");
 
-assert (decodeURIComponent ("%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F") ===
-        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f");
+assert (decodeURIComponent ("%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F") ===
+        "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f");
 assert (decodeURIComponent ("%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F") ===
         "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f");
 assert (decodeURIComponent ("%20%21%22%23%24%25%26%27%28%29%2a%2b%2c%2d%2e%2f") ===
@@ -83,9 +96,10 @@ assert (decodeURIComponent ("%60%61%62%63%64%65%66%67%68%69%6a%6b%6c%6d%6e%6f") 
 assert (decodeURIComponent ("%70%71%72%73%74%75%76%77%78%79%7a%7b%7c%7d%7e") ===
         "pqrstuvwxyz{|}~");
 
-
 assert (decodeURI ("%6A%6B%6C%6D%6E%6F") === "jklmno");
 assert (decodeURI ("%C3%A9") === "\xe9");
+assert (decodeURI ("%e2%b1%a5") === "\u2c65");
+/* assert (decodeURI ("%f0%90%90%a8") === "\ud801\udc28"); */
 
 checkDecodeURIParseError ("13%");
 checkDecodeURIParseError ("%0g");
@@ -106,6 +120,3 @@ assert (decodeURI ({ x:1 }) === "[object Object]");
 assert (encodeURI (void 0) === "undefined");
 assert (encodeURI (216.000e1) === "2160");
 
-// TODO: we need tests for characters greater than 0xff and equal to 0x0
-
-assert (decodeURI ("%f0%9f%9f%8f").length === 2);

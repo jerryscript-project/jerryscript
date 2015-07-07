@@ -245,6 +245,11 @@ typedef enum
   /** Identifier of implementation-defined extension object */
   ECMA_INTERNAL_PROPERTY_EXTENSION_ID,
 
+  /** Bound function internal properties **/
+  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION,
+  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS,
+  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS,
+
   /**
    * Bit-mask of non-instantiated built-in's properties (bits 0-31)
    */

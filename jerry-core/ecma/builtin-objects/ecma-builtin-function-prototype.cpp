@@ -226,7 +226,135 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
                                              const ecma_value_t* arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arguments_list_p, arguments_number);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 2. */
+  if (!ecma_op_is_callable (this_arg))
+  {
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    /* 4. 11. 18. */
+    ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+    ecma_object_t *function_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+    ecma_deref_object (prototype_obj_p);
+
+    /* 7. */
+    ecma_property_t *target_function_prop_p;
+    target_function_prop_p = ecma_create_internal_property (function_p,
+                                                            ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
+
+    ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
+    ECMA_SET_NON_NULL_POINTER (target_function_prop_p->u.internal_property.value, this_arg_obj_p);
+
+    /* 8. */
+    ecma_property_t *bound_this_prop_p;
+    bound_this_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
+    const ecma_length_t arg_count = arguments_number;
+
+    if (arg_count > 0)
+    {
+      bound_this_prop_p->u.internal_property.value = ecma_copy_value (arguments_list_p[0], false);
+    }
+    else
+    {
+      bound_this_prop_p->u.internal_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+
+    if (arg_count > 1)
+    {
+      ecma_collection_header_t *bound_args_collection_p;
+      bound_args_collection_p = ecma_new_values_collection (&arguments_list_p[1], arg_count - 1, false);
+
+      ecma_property_t *bound_args_prop_p;
+      bound_args_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
+      ECMA_SET_NON_NULL_POINTER (bound_args_prop_p->u.internal_property.value, bound_args_collection_p);
+    }
+
+    /*
+     * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
+     *
+     * See also: ecma_object_get_class_name
+     */
+
+    /* 17. */
+    ecma_number_t *length_p = ecma_alloc_number ();
+    *length_p = 0;
+
+    ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
+    {
+      length_prop_desc.is_value_defined = true;
+      length_prop_desc.value = ecma_make_number_value (length_p);
+
+      length_prop_desc.is_writable_defined = true;
+      length_prop_desc.is_writable = false;
+
+      length_prop_desc.is_enumerable_defined = true;
+      length_prop_desc.is_enumerable = false;
+
+      length_prop_desc.is_configurable_defined = true;
+      length_prop_desc.is_configurable = false;
+    }
+    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_completion_value_t completion = ecma_op_object_define_own_property (function_p,
+                                                                             magic_string_length_p,
+                                                                             &length_prop_desc,
+                                                                             false);
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                  || ecma_is_completion_value_normal_false (completion));
+
+    ecma_deref_ecma_string (magic_string_length_p);
+    ecma_dealloc_number (length_p);
+
+    /* 19-21. */
+    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+
+    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+    {
+      prop_desc.is_enumerable_defined = true;
+      prop_desc.is_enumerable = false;
+
+      prop_desc.is_configurable_defined = true;
+      prop_desc.is_configurable = false;
+
+      prop_desc.is_get_defined = true;
+      prop_desc.get_p = thrower_p;
+
+      prop_desc.is_set_defined = true;
+      prop_desc.set_p = thrower_p;
+    }
+
+    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
+    completion = ecma_op_object_define_own_property (function_p,
+                                                     magic_string_caller_p,
+                                                     &prop_desc,
+                                                     false);
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                  || ecma_is_completion_value_normal_false (completion));
+
+    ecma_deref_ecma_string (magic_string_caller_p);
+
+    ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
+    completion = ecma_op_object_define_own_property (function_p,
+                                                     magic_string_arguments_p,
+                                                     &prop_desc,
+                                                     false);
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
+                  || ecma_is_completion_value_normal_false (completion));
+
+    ecma_deref_ecma_string (magic_string_arguments_p);
+    ecma_deref_object (thrower_p);
+
+    /* 22. */
+    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (function_p));
+  }
+
+  return ret_value;
 } /* ecma_builtin_function_prototype_object_bind */
 
 /**

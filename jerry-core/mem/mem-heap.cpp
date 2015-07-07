@@ -903,7 +903,7 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 
   mem_block_header_t *block_p = (mem_block_header_t *) uintptr_chunk_aligned;
 
-#ifndef JERRY_NDEBUG
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
   VALGRIND_DEFINED_STRUCT (block_p);
   JERRY_ASSERT (block_p->length_type == mem_block_length_type_t::ONE_CHUNKED);
   VALGRIND_NOACCESS_STRUCT (block_p);
@@ -940,7 +940,7 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
   }
 
   JERRY_ASSERT (is_found && block_p == block_iter_p);
-#endif /* !JERRY_NDEBUG */
+#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
 
   return (void*) (block_p + 1);
 } /* mem_heap_get_chunked_block_start */

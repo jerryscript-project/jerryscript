@@ -16,7 +16,6 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
-#include "ecma-array-prototype.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
@@ -313,6 +312,67 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_for_each */
+
+/**
+ * The Array.prototype.toString's separator creation routine
+ *
+ * See also:
+ *          ECMA-262 v5.1, 15.4.4.2 4th step
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_op_array_get_separator_string (ecma_value_t separator) /** < possible separator */
+{
+  if (ecma_is_value_undefined (separator))
+  {
+    ecma_string_t *comma_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
+    return ecma_make_normal_completion_value (ecma_make_string_value (comma_string_p));
+  }
+  else
+  {
+    return ecma_op_to_string (separator);
+  }
+} /* ecma_op_array_get_separator_string */
+
+/**
+ * The Array.prototype's 'toString' single element operation routine
+ *
+ * See also:
+ *          ECMA-262 v5.1, 15.4.4.2
+ *
+ * @return ecma_completion_value_t value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /** < this object */
+                                      uint32_t index) /** < array index */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+
+  ECMA_TRY_CATCH (index_value,
+                  ecma_op_object_get (obj_p, index_string_p),
+                  ret_value);
+
+  if (ecma_is_value_undefined (index_value)
+      || ecma_is_value_null (index_value))
+  {
+    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+  }
+  else
+  {
+    ret_value = ecma_op_to_string (index_value);
+  }
+
+  ECMA_FINALIZE (index_value);
+
+  ecma_deref_ecma_string (index_string_p);
+
+  return ret_value;
+} /* ecma_op_array_get_to_string_at_index */
 
 /**
  * The Array.prototype object's 'join' routine

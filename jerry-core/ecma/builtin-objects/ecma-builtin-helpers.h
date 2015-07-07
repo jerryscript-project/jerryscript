@@ -60,6 +60,15 @@ extern uint32_t ecma_builtin_helper_string_index_normalize (ecma_number_t index,
  */
 #define ECMA_DATE_MAX_VALUE             8.64e15
 
+/**
+ * Timezone type.
+ */
+typedef enum
+{
+  ECMA_DATE_UTC, /**< date vaule is in UTC */
+  ECMA_DATE_LOCAL /**< date vaule is in local time */
+} ecma_date_timezone_t;
+
 /* ecma-builtin-helpers-date.cpp */
 extern ecma_number_t ecma_date_day (ecma_number_t time);
 extern ecma_number_t ecma_date_time_within_day (ecma_number_t time);
@@ -90,6 +99,10 @@ extern ecma_number_t ecma_date_make_day (ecma_number_t year,
 extern ecma_number_t ecma_date_make_date (ecma_number_t day, ecma_number_t time);
 extern ecma_number_t ecma_date_time_clip (ecma_number_t time);
 extern ecma_number_t ecma_date_timezone_offset (ecma_number_t time);
+extern ecma_completion_value_t ecma_date_set_internal_property (ecma_value_t this_arg,
+                                                                ecma_number_t day,
+                                                                ecma_number_t time,
+                                                                ecma_date_timezone_t is_utc);
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
 typedef struct

@@ -187,4 +187,6 @@ void lexer_set_strict_mode (bool);
 
 extern bool lexer_are_tokens_with_same_identifier (token id1, token id2);
 
+extern bool lexer_is_no_escape_sequences_in_token_string (token);
+
 #endif

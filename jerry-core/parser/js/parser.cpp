@@ -2886,7 +2886,8 @@ preparse_scope (bool is_global)
    */
   while (token_is (TOK_STRING))
   {
-    if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "use strict"))
+    if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "use strict")
+        && lexer_is_no_escape_sequences_in_token_string (tok))
     {
       scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
       is_use_strict = true;

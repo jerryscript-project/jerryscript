@@ -93,51 +93,6 @@ function setup_from_zip() {
   chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
 }
 
-function setup_nuttx_headers() {
-  NAME="$1"
-  shift
-
-  DEST=$(pwd)/"$1"
-  shift
-
-  URL="$1"
-  shift
-
-  REVISION="$1"
-  shift
-
-  FAIL_MSG="Failed to setup '$NAME' prerequisite"
-
-  if [ -e "$DEST" ]
-  then
-    chmod -R u+w "$DEST" || fail_msg "$FAIL_MSG. Failed to add write permission to '$DEST' directory contents."
-    rm -rf "$DEST" || fail_msg "$FAIL_MSG. Cannot remove '$DEST' directory."
-  fi
-
-  if [ "$CLEAN_MODE" == "yes" ]
-  then
-    return 0
-  fi
-
-  git clone "$URL" "$TMP_DIR/$NAME" || fail_msg "$FAIL_MSG. Failed to checkout Nuttx."
-  (
-   cd "$TMP_DIR/$NAME" || exit 1
-   git checkout $REVISION || exit 1
-   cd nuttx/tools || exit 1
-   ./configure.sh stm32f429i-disco/usbnsh || exit 1
-   cd .. || exit 1
-   make include/nuttx/config.h || exit 1
-   make include/arch || exit 1
-   make include/arch/chip || exit 1
-  ) || fail_msg "$FAIL_MSG. Failed to prepare nuttx headers"
-
-  mkdir "./third-party/nuttx" || fail_msg "Failed to create '$DEST' directory."
-  cp -L -r "$TMP_DIR/$NAME/nuttx/include" "$DEST" || fail_msg "Failed to copy Nuttx headers to '$DEST' directory"
-
-  remove_gitignore_files_at "$DEST"
-  chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
-}
-
 function setup_cppcheck() {
   NAME="$1"
   shift
@@ -243,11 +198,6 @@ setup_from_zip "stm32f4" \
                "http://www.st.com/st-web-ui/static/active/en/st_prod_software_internet/resource/technical/software/firmware/stsw-stm32068.zip" \
                "8e67f7b930c6c02bd7f89a266c8d1cae3b530510b7979fbfc0ee0d57e7f88b81" \
                "STM32F4-Discovery_FW_V1.1.0/*"
-
-setup_nuttx_headers "nuttx" \
-                     "./third-party/nuttx" \
-                     "https://bitbucket.org/patacongo/nuttx.git" \
-                     "36a655eddec29754cc93631b6083fe6409817861"
 
 setup_cppcheck "cppcheck-1.66" \
                "./third-party/cppcheck" \

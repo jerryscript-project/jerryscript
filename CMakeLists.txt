@@ -94,11 +94,6 @@ project (Jerry CXX C ASM)
 # Should we use external libc?
  if(NOT DEFINED EXTERNAL_LIBC_INTERFACE OR EXTERNAL_LIBC_INTERFACE STREQUAL "UNDEFINED")
   set(USE_JERRY_LIBC TRUE)
-
-  # Jerry's libc doesn't support Nuttx platform
-   if(${PLATFORM_EXT} STREQUAL "NUTTX")
-    message(FATAL_ERROR "Nuttx build doesn't support Jerry's libc implementation")
-   endif()
  else()
   set(USE_JERRY_LIBC FALSE)
 
@@ -181,10 +176,6 @@ project (Jerry CXX C ASM)
       "COMPACT_PROFILE"
       "COMPACT_PROFILE_MINIMAL")
 
- # Nuttx
-  set(MODIFIERS_LISTS_NUTTX
-      ${MODIFIERS_LISTS_LINUX})
-
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
  set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
@@ -253,9 +244,6 @@ project (Jerry CXX C ASM)
 
     # stm32f4
      set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main-mcu.cpp)
-
-   # Nuttx
-    set(SOURCE_JERRY_STANDALONE_MAIN_NUTTX main-nuttx.cpp)
 
  # Unit tests main modules
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)

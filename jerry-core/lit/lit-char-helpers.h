@@ -199,8 +199,16 @@ extern bool lit_char_is_unicode_connector_punctuation (ecma_char_t);
                                                                           * hexadecimal digits range */
 #define LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END    LIT_CHAR_LOWERCASE_F
 
+#define LIT_CHAR_ASCII_OCTAL_DIGITS_BEGIN           LIT_CHAR_0           /* octal digits range */
+#define LIT_CHAR_ASCII_OCTAL_DIGITS_END             LIT_CHAR_7
+
 #define LIT_CHAR_ASCII_DIGITS_BEGIN                 LIT_CHAR_0           /* decimal digits range */
 #define LIT_CHAR_ASCII_DIGITS_END                   LIT_CHAR_9
+
+extern bool lit_char_is_octal_digit (ecma_char_t);
+extern bool lit_char_is_decimal_digit (ecma_char_t);
+extern bool lit_char_is_hex_digit (ecma_char_t);
+extern uint32_t lit_char_hex_to_int (ecma_char_t);
 
 /**
  * Null character
@@ -211,7 +219,5 @@ extern bool lit_char_is_unicode_connector_punctuation (ecma_char_t);
  * Part of IsWordChar abstract operation (ECMA-262 v5, 15.10.2.6, step 3)
  */
 extern bool lit_char_is_word_char (ecma_char_t);
-
-extern uint32_t lit_char_hex_to_int (ecma_char_t);
 
 #endif /* LIT_CHAR_HELPERS_H */

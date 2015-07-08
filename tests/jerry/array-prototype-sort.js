@@ -14,22 +14,22 @@
 // limitations under the License.
 
 var array = ["Peach", "Apple", "Orange", "Grape", "Cherry", "Apricot", "Grapefruit"];
-var sorted = array.sort();
+array.sort();
 
-assert(sorted[0] === "Apple");
-assert(sorted[1] === "Apricot");
-assert(sorted[2] === "Cherry");
-assert(sorted[3] === "Grape");
-assert(sorted[4] === "Grapefruit");
-assert(sorted[5] === "Orange");
-assert(sorted[6] === "Peach");
+assert(array[0] === "Apple");
+assert(array[1] === "Apricot");
+assert(array[2] === "Cherry");
+assert(array[3] === "Grape");
+assert(array[4] === "Grapefruit");
+assert(array[5] === "Orange");
+assert(array[6] === "Peach");
 
 var array = [6, 4, 5, 1, 2, 9, 7, 3, 0, 8];
 
 // Default comparison
-var sorted = array.sort();
+array.sort();
 for (i = 0; i < array.length; i++) {
-	assert(sorted[i] === i);
+	assert(array[i] === i);
 }
 
 // Using custom comparison function
@@ -43,9 +43,21 @@ function f(arg1, arg2) {
 	}
 }
 
-var sorted = array.sort(f);
+array.sort(f);
 for (i = 0; i < array.length; i++) {
-	assert(sorted[sorted.length - i - 1] === i);
+	assert(array[array.length - i - 1] === i);
+}
+
+// Sorting sparse array
+var array = [1,,2,,3,,4,undefined,5];
+var expected = [1,2,3,4,5,undefined,,,,];
+
+array.sort();
+
+assert(array.length === expected.length);
+for (i = 0; i < array.length; i++) {
+	assert(expected.hasOwnProperty (i) === array.hasOwnProperty (i));
+	assert(array[i] === expected[i]);
 }
 
 // Checking behavior when provided comparefn is not callable

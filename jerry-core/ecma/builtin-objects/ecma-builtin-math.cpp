@@ -332,20 +332,20 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ecma_number_t ret_num = ecma_number_make_infinity (true);
 
-  bool is_just_convert = false;
+  bool is_NaN = false;
 
   for (ecma_length_t arg_index = 0;
-       arg_index < args_number;
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
        arg_index++)
   {
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
-    if (!is_just_convert)
+    if (!is_NaN)
     {
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
         ret_num = arg_num;
-        is_just_convert = true;
+        is_NaN = true;
       }
       else if (ecma_number_is_zero (arg_num) /* both numbers are zeroes */
                && ecma_number_is_zero (ret_num))
@@ -360,7 +360,6 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
         if (!ecma_number_is_negative (arg_num))
         {
           ret_num = arg_num;
-          is_just_convert = true;
         }
       }
       else if (ecma_number_is_infinity (ret_num)) /* ret_num is negative infinity */
@@ -384,21 +383,16 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-    if (ecma_is_completion_value_throw (ret_value))
-    {
-      return ret_value;
-    }
-
-    JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
   }
 
-  JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_number_t *num_p = ecma_alloc_number ();
+    *num_p = ret_num;
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = ret_num;
-
-  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  return ret_value;
 } /* ecma_builtin_math_object_max */
 
 /**
@@ -419,20 +413,20 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ecma_number_t ret_num = ecma_number_make_infinity (false);
 
-  bool is_just_convert = false;
+  bool is_NaN = false;
 
   for (ecma_length_t arg_index = 0;
-       arg_index < args_number;
+       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
        arg_index++)
   {
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
-    if (!is_just_convert)
+    if (!is_NaN)
     {
       if (unlikely (ecma_number_is_nan (arg_num)))
       {
         ret_num = arg_num;
-        is_just_convert = true;
+        is_NaN = true;
       }
       else if (ecma_number_is_zero (arg_num) /* both numbers are zeroes */
                && ecma_number_is_zero (ret_num))
@@ -447,7 +441,6 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
         if (ecma_number_is_negative (arg_num))
         {
           ret_num = arg_num;
-          is_just_convert = true;
         }
       }
       else if (ecma_number_is_infinity (ret_num)) /* ret_num is positive infinity */
@@ -471,21 +464,16 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-    if (ecma_is_completion_value_throw (ret_value))
-    {
-      return ret_value;
-    }
-
-    JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
   }
 
-  JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_number_t *num_p = ecma_alloc_number ();
+    *num_p = ret_num;
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  }
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = ret_num;
-
-  return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+  return ret_value;
 } /* ecma_builtin_math_object_min */
 
 /**

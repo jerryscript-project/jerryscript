@@ -14,6 +14,8 @@
 
 assert(isNaN (Math['max'] (1.0, NaN)));
 assert(isNaN (Math['max'] (NaN, 1.0)));
+assert(isNaN (Math['max'] (Infinity, NaN)));
+assert(isNaN (Math['max'] (NaN, Infinity)));
 assert(Math['max'] (1.0, 3.0, 0.0) === 3.0);
 assert(Math['max'] (1.0, 3.0, Infinity) === Infinity);
 assert(Math['max'] (1.0, 3.0, -Infinity) === 3.0);
@@ -23,9 +25,5 @@ assert(Math['max'] (Infinity, Infinity) === Infinity);
 assert(Math['max'] (-Infinity, -Infinity) === -Infinity);
 assert(Math['max'] () === -Infinity);
 
-/*
-  FIXME: Uncomment when unary minus support appears.
-
 assert(Math['max'] (0.0, -0.0) === 0.0);
 assert(Math['max'] (-0.0, 0.0) === 0.0);
-*/

@@ -2881,11 +2881,24 @@ preparse_scope (bool is_global)
   bool is_ref_eval_identifier = false;
   bool is_use_strict = false;
 
-  if (token_is (TOK_STRING) && lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()),
-                                                            "use strict"))
+  /*
+   * Check Directive Prologue for Use Strict directive (see ECMA-262 5.1 section 14.1)
+   */
+  while (token_is (TOK_STRING))
   {
-    scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
-    is_use_strict = true;
+    if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "use strict"))
+    {
+      scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
+      is_use_strict = true;
+      break;
+    }
+
+    skip_newlines ();
+
+    if (token_is (TOK_SEMICOLON))
+    {
+      skip_newlines ();
+    }
   }
 
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));

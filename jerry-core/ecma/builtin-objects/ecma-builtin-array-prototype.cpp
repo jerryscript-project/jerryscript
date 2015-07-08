@@ -1448,50 +1448,76 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   uint32_t len = ecma_number_to_uint32 (len_number);
 
-  MEM_DEFINE_LOCAL_ARRAY (values_buffer, len, ecma_value_t);
+  uint32_t defined_prop_count = 0;
+  /* Count number of defined properties. */
+  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
+       property_p != NULL;
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+  {
+    defined_prop_count++;
+  }
+
+  MEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
   uint32_t copied_num = 0;
 
   /* Copy unsorted array into a native c array. */
   for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
   {
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-    ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, index_string_p), ret_value);
+    if (ecma_op_object_get_property (obj_p, index_string_p) != NULL)
+    {
+      ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, index_string_p), ret_value);
 
-    values_buffer[index] = ecma_copy_value (index_value, true);
-    copied_num++;
+      values_buffer[copied_num++] = ecma_copy_value (index_value, true);
 
-    ECMA_FINALIZE (index_value);
+      ECMA_FINALIZE (index_value);
+    }
     ecma_deref_ecma_string (index_string_p);
   }
 
-  JERRY_ASSERT (copied_num == len || !ecma_is_completion_value_empty (ret_value));
+  JERRY_ASSERT (copied_num <= defined_prop_count);
 
   /* Sorting. */
   if (len > 1 && ecma_is_completion_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (sort_value,
                     ecma_builtin_array_prototype_object_array_heap_sort_helper (values_buffer,
-                                                                                (int)(len - 1),
+                                                                                (int)(copied_num - 1),
                                                                                 arg1),
                     ret_value);
     ECMA_FINALIZE (sort_value);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  /* Put sorted values to the front of the array. */
+  uint32_t index;
+  for (index = 0; index < copied_num && ecma_is_completion_value_empty (ret_value); index++)
   {
-    /*
-     * FIXME: Casting len to ecma_length_t may overflow, but since ecma_length_t is still at least
-     * 16 bits long, with an array of that size, we would run out of memory way before this happens.
-     */
-    JERRY_ASSERT ((ecma_length_t) len == len);
-    /* Copy the sorted array into a new array. */
-    ret_value = ecma_op_create_array_object (values_buffer, (ecma_length_t) len, false);
+    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+    ECMA_TRY_CATCH (put_value,
+                    ecma_op_object_put (obj_p, index_string_p, values_buffer[index], true),
+                    ret_value);
+    ECMA_FINALIZE (put_value);
+    ecma_deref_ecma_string (index_string_p);
+  }
+
+  /* Undefined properties should be in the back of the array. */
+  for (;index < len && ecma_is_completion_value_empty (ret_value); index++)
+  {
+    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+    ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, index_string_p, true), ret_value);
+    ECMA_FINALIZE (del_value);
+    ecma_deref_ecma_string (index_string_p);
   }
 
   /* Free values that were copied to the local array. */
   for (uint32_t index = 0; index < copied_num; index++)
   {
     ecma_free_value (values_buffer[index], true);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (values_buffer);

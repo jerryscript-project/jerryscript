@@ -21,6 +21,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
+#include "lit-char-helpers.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
@@ -58,7 +59,7 @@ ecma_date_parse_date_chars (lit_utf8_iterator_t *iter, /**< iterator of the utf8
   while (num_of_chars--)
   {
     if (lit_utf8_iterator_is_eos (iter)
-        || !lit_char_is_unicode_digit (lit_utf8_iterator_peek_next (iter)))
+        || !lit_char_is_decimal_digit (lit_utf8_iterator_peek_next (iter)))
     {
       return ecma_number_make_nan ();
     }

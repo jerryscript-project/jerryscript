@@ -1762,6 +1762,42 @@ lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAM
 } /* lexer_are_tokens_with_same_identifier */
 
 /**
+ * Checks that TOK_STRING doesn't contain EscapeSequence or LineContinuation
+ *
+ * @return true, if token's string in source buffer doesn't contain backslash
+ *         false, otherwise
+ */
+bool
+lexer_is_no_escape_sequences_in_token_string (token tok) /**< token of type TOK_STRING */
+{
+  JERRY_ASSERT (tok.type == TOK_STRING);
+
+  lit_utf8_iterator_t iter = src_iter;
+  lit_utf8_iterator_seek (&iter, tok.loc);
+
+  JERRY_ASSERT (!lit_utf8_iterator_is_eos (&iter));
+  ecma_char_t c = lit_utf8_iterator_read_next (&iter);
+  JERRY_ASSERT (c == LIT_CHAR_SINGLE_QUOTE
+                || c == LIT_CHAR_DOUBLE_QUOTE);
+
+  const ecma_char_t end_char = c;
+
+  do
+  {
+    JERRY_ASSERT (!lit_utf8_iterator_is_eos (&iter));
+    c = lit_utf8_iterator_read_next (&iter);
+
+    if (c == LIT_CHAR_BACKSLASH)
+    {
+      return false;
+    }
+  }
+  while (c != end_char);
+
+  return true;
+} /* lexer_is_no_escape_sequences_in_token_string */
+
+/**
  * Initialize lexer to start parsing of a new source
  */
 void

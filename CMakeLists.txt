@@ -78,13 +78,13 @@ project (Jerry CXX C ASM)
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" OFF)
   set(MCU_SCRIPT_FILE "tests/blinky.js" CACHE STRING "Script to run on MCU")
  elseif("${PLATFORM}" STREQUAL "EXTERNAL")
-  set(PLATFORM_EXT "${CMAKE_SYSTEM_VERSION}")
+  set(PLATFORM_EXT "EXTERNAL")
   set(EXTERNAL_BUILD TRUE)
 
   set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc include directory")
   set(EXTERNAL_LIBS_INTERFACE "UNDEFINED" CACHE STRING "Path to external libraries' include directory")
  else()
-  message(FATAL_ERROR "Platform is not supported")
+  message(FATAL_ERROR "Platform '${PLATFORM}' is not supported")
  endif()
 
 # Intermediate files
@@ -181,6 +181,14 @@ project (Jerry CXX C ASM)
       "FULL_PROFILE"
       "COMPACT_PROFILE"
       "COMPACT_PROFILE_MINIMAL")
+
+ # External
+   set(MODIFIERS_LISTS_EXTERNAL
+     "FULL_PROFILE"
+     "COMPACT_PROFILE"
+     "COMPACT_PROFILE_MINIMAL"
+     "FULL_PROFILE MEMORY_STATISTICS"
+     "COMPACT_PROFILE MEMORY_STATISTICS")
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
@@ -366,28 +374,20 @@ project (Jerry CXX C ASM)
      endif()
     endif()
    else()
-    set(MAIN_MODULE_TARGET_NAME ${TARGET_NAME}.${PLATFORM_L}.main)
-    add_library(${MAIN_MODULE_TARGET_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
-    set_property(TARGET ${MAIN_MODULE_TARGET_NAME}
-                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
-    target_compile_definitions(${MAIN_MODULE_TARGET_NAME} PRIVATE ${DEFINES_JERRY})
-    target_include_directories(${MAIN_MODULE_TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
-    target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
-    target_include_directories(${MAIN_MODULE_TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
-
     add_custom_target(${TARGET_NAME} ALL)
-    add_dependencies(${TARGET_NAME} ${MAIN_MODULE_TARGET_NAME} ${FDLIBM_TARGET_NAME}${CORE_TARGET_NAME})
 
+    add_dependencies(${TARGET_NAME} ${FDLIBM_TARGET_NAME} ${CORE_TARGET_NAME})
     add_custom_command(TARGET ${TARGET_NAME}
                        POST_BUILD
                        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
-                       COMMAND echo
-                       $<TARGET_FILE:${MAIN_MODULE_TARGET_NAME}>
-                       $<TARGET_FILE:${FDLIBM_TARGET_NAME}>
-                       $<TARGET_FILE:${CORE_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
+                       COMMAND echo $<TARGET_FILE:${FDLIBM_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list
+                       COMMAND echo $<TARGET_FILE:${CORE_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
 
     if(${USE_JERRY_LIBC})
      add_dependencies(${TARGET_NAME} ${LIBC_TARGET_NAME})
+     add_custom_command(TARGET ${TARGET_NAME}
+                        POST_BUILD
+                        COMMAND echo $<TARGET_FILE:${LIBC_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
     endif()
 
     add_cppcheck_target(${TARGET_NAME})

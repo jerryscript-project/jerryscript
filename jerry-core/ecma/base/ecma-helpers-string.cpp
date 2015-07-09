@@ -658,16 +658,47 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   string1_p = ecma_copy_or_ref_ecma_string (string1_p);
   string2_p = ecma_copy_or_ref_ecma_string (string2_p);
 
+  ecma_char_t str1_last_code_unit = ecma_string_get_char_at_pos (string1_p, ecma_string_get_length (string1_p) - 1);
+  ecma_char_t str2_first_code_unit = ecma_string_get_char_at_pos (string2_p, 0);
+
+  string_desc_p->u.concatenation.is_surrogate_pair_sliced = (lit_is_code_unit_high_surrogate (str1_last_code_unit)
+                                                             && lit_is_code_unit_low_surrogate (str2_first_code_unit));
+
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
   ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
 
+  JERRY_STATIC_ASSERT (LIT_STRING_HASH_LAST_BYTES_COUNT == 2);
+
   if (str2_size >= LIT_STRING_HASH_LAST_BYTES_COUNT)
   {
-    string_desc_p->hash = string2_p->hash;
+    if (str2_size >= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT + LIT_STRING_HASH_LAST_BYTES_COUNT
+        || !string_desc_p->u.concatenation.is_surrogate_pair_sliced)
+    {
+      string_desc_p->hash = string2_p->hash;
+    }
+    else
+    {
+      const lit_utf8_size_t bytes_buf_size = str2_size + 1;
+      lit_utf8_byte_t bytes_buf[LIT_UTF8_MAX_BYTES_IN_CODE_POINT + 1];
+
+      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (str1_last_code_unit,
+                                                                              str2_first_code_unit);
+      lit_utf8_size_t idx = lit_code_point_to_utf8 (code_point, bytes_buf);
+      JERRY_ASSERT (idx = LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
+
+      if (str2_size > LIT_UTF8_MAX_BYTES_IN_CODE_UNIT)
+      {
+        bytes_buf[idx] = ecma_string_get_byte_at_pos (string2_p, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+      }
+
+      string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (bytes_buf + bytes_buf_size -
+                                                                  LIT_STRING_HASH_LAST_BYTES_COUNT,
+                                                                  LIT_STRING_HASH_LAST_BYTES_COUNT);
+    }
+
   }
   else
   {
-    JERRY_STATIC_ASSERT (LIT_STRING_HASH_LAST_BYTES_COUNT == 2);
     JERRY_ASSERT (str2_size == 1);
 
     lit_utf8_byte_t bytes_buf[LIT_STRING_HASH_LAST_BYTES_COUNT] =
@@ -965,7 +996,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
  * Convert ecma-string's contents to a utf-8 string and put it to the buffer.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
- *         otherwise (in case size of buffer is insuficcient) - negative number, which is calculated
+ *         otherwise (in case size of buffer is insufficient) - negative number, which is calculated
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
@@ -1039,13 +1070,37 @@ ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string
       bytes_copied1 = ecma_string_to_utf8_string (string1_p, dest_p, buffer_size);
       JERRY_ASSERT (bytes_copied1 > 0);
 
-      /* one character, which is the null character at end of string, will be overwritten */
       dest_p += ecma_string_get_size (string1_p);
 
-      bytes_copied2 = ecma_string_to_utf8_string (string2_p, dest_p, buffer_size - bytes_copied1);
-      JERRY_ASSERT (bytes_copied2 > 0);
+      if (!string_desc_p->u.concatenation.is_surrogate_pair_sliced)
+      {
+        bytes_copied2 = ecma_string_to_utf8_string (string2_p, dest_p, buffer_size - bytes_copied1);
+        JERRY_ASSERT (bytes_copied2 > 0);
+      }
+      else
+      {
+        dest_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
 
-      JERRY_ASSERT (required_buffer_size == bytes_copied1 + bytes_copied2);
+        ecma_char_t high_surrogate = lit_utf8_string_code_unit_at (dest_p, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT, 0);
+        JERRY_ASSERT (lit_is_code_unit_high_surrogate (high_surrogate));
+
+        bytes_copied2 = ecma_string_to_utf8_string (string2_p,
+                                                    dest_p + 1,
+                                                    buffer_size - bytes_copied1 + LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+        JERRY_ASSERT (bytes_copied2 > 0);
+
+        ecma_char_t low_surrogate = lit_utf8_string_code_unit_at (dest_p + 1, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT, 0);
+        JERRY_ASSERT (lit_is_code_unit_low_surrogate (low_surrogate));
+
+        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (high_surrogate,
+                                                                                          low_surrogate);
+        lit_code_point_to_utf8 (surrogate_code_point, dest_p);
+      }
+
+      JERRY_ASSERT (required_buffer_size == (bytes_copied1 + bytes_copied2 -
+                                             (string_desc_p->u.concatenation.is_surrogate_pair_sliced
+                                              ? LIT_UTF8_CESU8_SURROGATE_SIZE_DIF
+                                              : 0)));
 
       break;
     }
@@ -1434,8 +1489,8 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
     string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string1_cp);
     string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string2_cp);
 
-    TODO ("Check surrogate code units on strings boundaries");
-    return ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p);
+    return (ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p) -
+            string_p->u.concatenation.is_surrogate_pair_sliced);
   }
 } /* ecma_string_get_length */
 
@@ -1443,7 +1498,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 /**
  * Get size of ecma-string
  *
- * @return number of bytes in the string
+ * @return number of bytes in the buffer needed to represent the string
  */
 lit_utf8_size_t
 ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
@@ -1520,7 +1575,10 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
     string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string1_cp);
     string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string2_cp);
 
-    return ecma_string_get_size (string1_p) + ecma_string_get_size (string2_p);
+    return (ecma_string_get_size (string1_p) + ecma_string_get_size (string2_p) -
+           (lit_utf8_size_t) (string_p->u.concatenation.is_surrogate_pair_sliced
+                              ? LIT_UTF8_CESU8_SURROGATE_SIZE_DIF
+                              : 0));
   }
 } /* ecma_string_get_size */
 

@@ -74,6 +74,12 @@
 #define LIT_UTF8_4_BYTE_CODE_POINT_MAX (LIT_UNICODE_CODE_POINT_MAX)
 
 /**
+ * Differnce between byte count needed to represent code point greater than 0xFFFF
+ * in common UTF-8 (4 bytes required) and CESU-8 (6 bytes required)
+ */
+#define LIT_UTF8_CESU8_SURROGATE_SIZE_DIF (2 * LIT_UTF8_MAX_BYTES_IN_CODE_UNIT - LIT_UTF8_MAX_BYTES_IN_CODE_POINT)
+
+/**
  * Width of the offset field in lit_utf8_iterator_pos_t structure
  */
 #define LIT_ITERATOR_OFFSET_WIDTH (31)

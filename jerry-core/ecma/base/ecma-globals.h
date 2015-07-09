@@ -830,6 +830,12 @@ typedef struct ecma_string_t
     {
       mem_cpointer_t string1_cp : ECMA_POINTER_FIELD_WIDTH;
       mem_cpointer_t string2_cp : ECMA_POINTER_FIELD_WIDTH;
+
+      /**
+       * Flag indicating that last code_unit of first string in concatenation is high surrogate
+       * and first code_unit of second string is low surrogate
+       */
+      unsigned int is_surrogate_pair_sliced : 1;
     } concatenation;
 
     /** Identifier of magic string */

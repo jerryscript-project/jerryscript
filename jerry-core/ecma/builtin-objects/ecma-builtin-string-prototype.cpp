@@ -169,7 +169,59 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1 */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2 */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3 */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (index_num,
+                               arg,
+                               ret_value);
+
+  /* 4 */
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+  const ecma_length_t len = ecma_string_get_length (original_string_p);
+
+  ecma_number_t *ret_num_p = ecma_alloc_number ();
+
+  /* 5 */
+  // When index_num is NaN, then the first two comparisons are false
+  if (index_num < 0 || index_num >= len || (ecma_number_is_nan (index_num) && !len))
+  {
+    *ret_num_p = ecma_number_make_nan ();
+  }
+  else
+  {
+    /* 6 */
+    /*
+     * String length is currently uit32_t, but index_num may be bigger,
+     * ToInteger performs floor, while ToUInt32 performs modulo 2^32,
+     * hence after the check 0 <= index_num < len we assume to_uint32 can be used.
+     * We assume to_uint32 (NaN) is 0.
+     */
+    JERRY_ASSERT (ecma_number_is_nan (index_num) || ecma_number_to_uint32 (index_num) == ecma_number_trunc (index_num));
+
+    ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
+    *ret_num_p = ecma_uint32_to_number (new_ecma_char);
+  }
+
+  ecma_value_t new_value = ecma_make_number_value (ret_num_p);
+  ret_value = ecma_make_normal_completion_value (new_value);
+
+  ECMA_OP_TO_NUMBER_FINALIZE (index_num);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_char_code_at */
 
 /**

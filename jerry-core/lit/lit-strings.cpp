@@ -555,10 +555,10 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
 {
   JERRY_ASSERT (buf_p && buf_size);
 
-  lit_utf8_byte_t c = (uint8_t) buf_p[0];
+  lit_utf8_byte_t c = buf_p[0];
   if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
   {
-    *code_point = (uint32_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
+    *code_point = (lit_code_point_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
     return 1;
   }
 
@@ -567,17 +567,17 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
   if ((c & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
   {
     bytes_count = 2;
-    ret = ((uint32_t) (c & LIT_UTF8_LAST_5_BITS_MASK));
+    ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_5_BITS_MASK));
   }
   else if ((c & LIT_UTF8_3_BYTE_MASK) == LIT_UTF8_3_BYTE_MARKER)
   {
     bytes_count = 3;
-    ret = ((uint32_t) (c & LIT_UTF8_LAST_4_BITS_MASK));
+    ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_4_BITS_MASK));
   }
   else if ((c & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
   {
     bytes_count = 4;
-    ret = ((uint32_t) (c & LIT_UTF8_LAST_3_BITS_MASK));
+    ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_3_BITS_MASK));
   }
   else
   {
@@ -608,8 +608,8 @@ lit_utf8_string_calc_hash_last_bytes (const lit_utf8_byte_t *utf8_buf_p, /**< ch
 {
   JERRY_ASSERT (utf8_buf_p != NULL);
 
-  lit_utf8_byte_t byte1 = (utf8_buf_size > 0) ? utf8_buf_p[utf8_buf_size - 1] : 0;
-  lit_utf8_byte_t byte2 = (utf8_buf_size > 1) ? utf8_buf_p[utf8_buf_size - 2] : 0;
+  lit_utf8_byte_t byte1 = (utf8_buf_size > 0) ? utf8_buf_p[utf8_buf_size - 1] : (lit_utf8_byte_t) 0;
+  lit_utf8_byte_t byte2 = (utf8_buf_size > 1) ? utf8_buf_p[utf8_buf_size - 2] : (lit_utf8_byte_t) 0;
 
   uint32_t t1 = (uint32_t) byte1 + (uint32_t) byte2;
   uint32_t t2 = t1 * 0x24418b66;

@@ -17,5 +17,7 @@ set(CMAKE_SYSTEM_PROCESSOR armv7l-el)
 
 set(CMAKE_C_COMPILER arm-linux-gnueabi-gcc)
 set(CMAKE_CXX_COMPILER arm-linux-gnueabi-g++)
+# FIXME: This could break cross compilation, when the strip is not for the target architecture
+find_program(CMAKE_STRIP NAMES arm-linux-gnueabi-strip strip)
 
 set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb)

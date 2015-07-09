@@ -17,7 +17,8 @@ set(CMAKE_SYSTEM_PROCESSOR armv7l-hf)
 
 set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
 set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
-
+# FIXME: This could break cross compilation, when the strip is not for the target architecture
+find_program(CMAKE_STRIP NAMES arm-linux-gnueabihf-strip strip)
 #
 # Limit fpu to VFPv3 with d0-d15 registers
 #

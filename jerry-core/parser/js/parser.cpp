@@ -393,9 +393,6 @@ parse_property_assignment (void)
 
     dump_function_end_for_rewrite ();
 
-    const bool is_strict = scopes_tree_strict_mode (STACK_TOP (scopes));
-    scopes_tree_set_strict_mode (STACK_TOP (scopes), false);
-
     token_after_newlines_must_be (TOK_OPEN_BRACE);
     skip_newlines ();
 
@@ -409,8 +406,6 @@ parse_property_assignment (void)
     jsp_label_restore_set (masked_label_set_p);
 
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
-
-    scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
 
     dump_ret ();
     rewrite_function_end (VARG_FUNC_EXPR);

@@ -24,3 +24,16 @@ function c() {
   assert (b.let + b.enum === 25)
 }
 c();
+
+function d () {
+  "use strict";
+
+  try {
+    /* 'let' is a FutureReservedWord in strict mode code */
+    eval ('var a = { get prop () { let = 1; } }');
+    assert (false);
+  } catch (e) {
+    assert (e instanceof SyntaxError);
+  }
+}
+d ();

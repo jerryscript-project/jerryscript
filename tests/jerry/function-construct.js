@@ -62,6 +62,15 @@ for (i = 1; i < 10; i ++)
   }
 }
 
+var f = new Function ("a,b", "c", "return a + b + c;");
+assert (f (1,2,3) === 6);
+
+f = new Function ("a,b", "c,d", "return a + b + c + d;");
+assert (f (1,2,3,4) === 10);
+
+f = new Function ("a" , "b", "c,d", "return a + b + c + d;");
+assert (f (1,2,3,4) === 10);
+
 try
 {
   new Function ({

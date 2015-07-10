@@ -159,7 +159,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
     case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
     {
       ecma_number_t *prim_prop_num_value_p = ecma_alloc_number ();
-      *prim_prop_num_value_p = ECMA_NUMBER_ZERO;
+      *prim_prop_num_value_p = ecma_number_make_nan ();
 
       ecma_property_t *prim_value_prop_p;
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,

@@ -29,6 +29,8 @@ catch (e)
   assert (e.message === "foo");
 }
 
+assert (isNaN(Date.prototype.valueOf.call(Date.prototype)));
+
 d = Date("abcd");
 assert (isNaN(d.valueOf()));
 

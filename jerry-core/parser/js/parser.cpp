@@ -548,7 +548,7 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     {
       if (token_is (TOK_COMMA))
       {
-        op = dump_undefined_assignment_res ();
+        op = dump_unused_assignment_res ();
         dump_varg (op);
       }
       else

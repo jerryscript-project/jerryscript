@@ -985,6 +985,44 @@ dump_undefined_assignment_res (void)
   return op;
 }
 
+/**
+ * Dump unused value assigment for an operand.
+ */
+void
+dump_unused_assignment (operand op) /**< operand */
+{
+  switch (op.type)
+  {
+    case OPERAND_LITERAL:
+    {
+      const opcode_t opcode = getop_assignment (LITERAL_TO_REWRITE,
+                                                OPCODE_ARG_TYPE_SIMPLE,
+                                                ECMA_SIMPLE_VALUE_UNUSED);
+      serializer_dump_op_meta (create_op_meta_100 (opcode, op.data.lit_id));
+      break;
+    }
+    case OPERAND_TMP:
+    {
+      const opcode_t opcode = getop_assignment (op.data.uid, OPCODE_ARG_TYPE_SIMPLE, ECMA_SIMPLE_VALUE_UNUSED);
+      serializer_dump_op_meta (create_op_meta_000 (opcode));
+      break;
+    }
+  }
+} /* dump_unused_assignment */
+
+/**
+ * Dump unused value assigment into a temp operand.
+ *
+ * @return operand with unused value assigned to it.
+ */
+operand
+dump_unused_assignment_res (void)
+{
+  operand op = tmp_operand ();
+  dump_unused_assignment (op);
+  return op;
+} /* dump_unused_assignment_res */
+
 void
 dump_null_assignment (operand op)
 {

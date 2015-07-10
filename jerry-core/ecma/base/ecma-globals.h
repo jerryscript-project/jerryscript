@@ -79,6 +79,7 @@ typedef enum
   ECMA_SIMPLE_VALUE_NULL, /**< null value */
   ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
+  ECMA_SIMPLE_VALUE_UNUSED, /**< implemenetation defined value to distinguish not initialized values */
   ECMA_SIMPLE_VALUE_ARRAY_REDIRECT, /**< implementation defined value for an array's elements that exist,
                                          but are stored directly in the array's property list
                                          (used for array elements with non-default attribute values) */

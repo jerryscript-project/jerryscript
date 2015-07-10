@@ -113,6 +113,19 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma-value */
 } /* ecma_is_value_undefined */
 
 /**
+ * Check if the value is unused.
+ *
+ * @return true - if the value contains implementation-defined unused simple value,
+ *         false - otherwise.
+ */
+bool __attr_pure___ __attr_always_inline___
+ecma_is_value_unused (ecma_value_t value) /**< ecma-value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_UNUSED);
+} /* ecma_is_value_unused */
+
+/**
  * Check if the value is null.
  *
  * @return true - if the value contains ecma-null simple value,

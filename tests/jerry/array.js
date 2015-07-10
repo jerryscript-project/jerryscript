@@ -74,7 +74,9 @@ assert(Array.prototype[0] === 'string value');
 
 var c = [0,,,'3'];
 assert (c[0] === 0);
+assert (c.hasOwnProperty("1") === false);
 assert (c[1] === undefined);
+assert (c.hasOwnProperty(2) === false);
 assert (c[2] === undefined);
 assert (c[3] === '3');
 

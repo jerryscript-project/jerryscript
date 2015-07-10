@@ -3018,6 +3018,10 @@ preparse_scope (bool is_global)
           }
           else if (token_is (TOK_KEYWORD))
           {
+            if (is_keyword (KW_VAR))
+            {
+              is_in_var_declaration_list = false;
+            }
             break;
           }
           else if (token_is (TOK_CLOSE_BRACE))

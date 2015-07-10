@@ -38,28 +38,11 @@ assert((123456789012345678901.0).toFixed(20) === "123456789012345680000.00000000
 assert((123.56).toFixed(NaN) === "124");
 assert((123.56).toFixed(-0.9) === "124");
 
-var obj = { toFixed : Number.prototype.toFixed };
-assert(obj.toFixed(0) === "NaN");
-
 try {
-    assert(obj.toFixed(Infinity));
+    Number.prototype.toExponential.call(new Object());
     assert(false);
 } catch (e) {
-    assert(e instanceof RangeError);
-}
-
-try {
-    assert(obj.toFixed(-Infinity));
-    assert(false);
-} catch (e) {
-    assert(e instanceof RangeError);
-}
-
-try {
-    assert(obj.toFixed(-1));
-    assert(false);
-} catch (e) {
-    assert(e instanceof RangeError);
+    assert(e instanceof TypeError)
 }
 
 try {

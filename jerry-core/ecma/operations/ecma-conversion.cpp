@@ -102,22 +102,28 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
   {
     return false;
   }
-
-  if (is_x_undefined
-      || is_x_null)
+  else if (is_x_undefined || is_x_null)
   {
     return true;
   }
-
-  if (is_x_number)
+  else if (is_x_number)
   {
     ecma_number_t *x_num_p = ecma_get_number_from_value (x);
     ecma_number_t *y_num_p = ecma_get_number_from_value (y);
 
-    if (ecma_number_is_nan (*x_num_p)
-        && ecma_number_is_nan (*y_num_p))
+    bool is_x_nan = ecma_number_is_nan (*x_num_p);
+    bool is_y_nan = ecma_number_is_nan (*y_num_p);
+
+    if (is_x_nan || is_y_nan)
     {
-      return true;
+      /*
+       * If both are NaN
+       *   return true;
+       * else
+       *   // one of the numbers is NaN, and another - is not
+       *   return false;
+       */
+      return (is_x_nan && is_y_nan);
     }
     else if (ecma_number_is_zero (*x_num_p)
              && ecma_number_is_zero (*y_num_p)
@@ -125,26 +131,28 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
     {
       return false;
     }
-
-    return (*x_num_p == *y_num_p);
+    else
+    {
+      return (*x_num_p == *y_num_p);
+    }
   }
-
-  if (is_x_string)
+  else if (is_x_string)
   {
     ecma_string_t* x_str_p = ecma_get_string_from_value (x);
     ecma_string_t* y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
-
-  if (is_x_boolean)
+  else if (is_x_boolean)
   {
     return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
+  else
+  {
+    JERRY_ASSERT (is_x_object);
 
-  JERRY_ASSERT (is_x_object);
-
-  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+    return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+  }
 } /* ecma_op_same_value */
 
 /**

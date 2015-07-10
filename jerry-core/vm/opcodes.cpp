@@ -706,6 +706,9 @@ opfunc_func_expr_n (opcode_t opdata, /**< operation data */
  */
 static ecma_value_t
 vm_helper_call_get_call_flags_and_this_arg (int_data_t *int_data_p, /**< interpreter context */
+                                            opcode_counter_t var_idx_lit_oc, /**< opcode counter, corresponding to
+                                                                              *   instruction with function_var_idx */
+                                            idx_t var_idx, /**< idx, used to retrieve the called function object */
                                             opcode_call_flags_t *out_flags_p) /**< out: call flags */
 {
   JERRY_ASSERT (out_flags_p != NULL);
@@ -741,11 +744,54 @@ vm_helper_call_get_call_flags_and_this_arg (int_data_t *int_data_p, /**< interpr
 
   if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
   {
+    /* 6.a.i */
     get_this_completion_value = get_variable_value (int_data_p, this_arg_var_idx, false);
   }
   else
   {
-    get_this_completion_value = ecma_op_implicit_this_value (int_data_p->lex_env_p);
+    /*
+     * Note:
+     *      If function object is in a register variable, then base is not lexical environment
+     *
+     * See also:
+     *          parse_argument_list
+     */
+    if (!is_reg_variable (int_data_p, var_idx))
+    {
+      /*
+       * FIXME [PERF]:
+       *              The second search for base lexical environment can be removed or performed less frequently.
+       *
+       *              For example, in one of the following ways:
+       *               - parser could dump meta information about whether current lexical environment chain
+       *                 can contain object-bound lexical environment, created using 'with' statement
+       *                 (in the case, the search should be performed, otherwise - it is unnecessary,
+       *                  as base lexical environment would be either the Global lexical environment,
+       *                  or a declarative lexical environment);
+       *               - get_variable_value and opfunc_prop_getter could save last resolved base
+       *                 into interpreter context (in the case, `have_this_arg` can be unnecesary,
+       *                 as base would always be accessible through interpreter context; on the other hand,
+       *                 some stack-like description of active nested call expressions should be provided).
+       *
+       */
+
+      /* 6.b.i */
+      ecma_string_t var_name_string;
+      lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data_p->opcodes_p, var_idx_lit_oc);
+      ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
+
+      ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data_p->lex_env_p,
+                                                                          &var_name_string);
+      get_this_completion_value = ecma_op_implicit_this_value (ref_base_lex_env_p);
+      JERRY_ASSERT (ref_base_lex_env_p != NULL);
+
+      ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
+    }
+    else
+    {
+      /* 7. a */
+      get_this_completion_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
   }
   JERRY_ASSERT (ecma_is_completion_value_normal (get_this_completion_value));
 
@@ -774,20 +820,23 @@ opfunc_call_n (opcode_t opdata, /**< operation data */
                int_data_t *int_data) /**< interpreter context */
 {
   const idx_t lhs_var_idx = opdata.data.call_n.lhs;
-  const idx_t func_name_lit_idx = opdata.data.call_n.name_lit_idx;
+  const idx_t function_var_idx = opdata.data.call_n.function_var_idx;
   const idx_t args_number_idx = opdata.data.call_n.arg_list;
   const opcode_counter_t lit_oc = int_data->pos;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, func_name_lit_idx, false), ret_value);
+  ECMA_TRY_CATCH (func_value, get_variable_value (int_data, function_var_idx, false), ret_value);
 
   int_data->pos++;
 
   JERRY_ASSERT (!int_data->is_call_in_direct_eval_form);
 
   opcode_call_flags_t call_flags;
-  ecma_value_t this_value = vm_helper_call_get_call_flags_and_this_arg (int_data, &call_flags);
+  ecma_value_t this_value = vm_helper_call_get_call_flags_and_this_arg (int_data,
+                                                                        lit_oc,
+                                                                        function_var_idx,
+                                                                        &call_flags);
 
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number_idx, ecma_value_t);
 

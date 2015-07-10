@@ -60,3 +60,13 @@ try {
 catch (e) {
   assert (e instanceof ReferenceError);
 }
+
+function f2 ()
+{
+  return this;
+}
+
+with ({})
+{
+  assert (f2 () === this);
+}

@@ -495,6 +495,19 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       {
         call_flags = (opcode_call_flags_t) (call_flags | OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM);
       }
+      else
+      {
+        /*
+         * Note:
+         *      If function is called through Identifier, then the obj should be an Identifier reference,
+         *      not register variable.
+         *      Otherwise, if function is called immediately, without reference (for example, through anonymous
+         *      function expression), the obj should be a register variable.
+         *
+         * See also:
+         *          vm_helper_call_get_call_flags_and_this_arg
+         */
+      }
 
       dump_varg_header_for_rewrite (vlt, obj);
 

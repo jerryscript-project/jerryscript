@@ -29,26 +29,30 @@
  * @{
  */
 
-#define RE_EXECUTE_RECURSION_LIMIT  1000  /* Limit of RegExp executor recursion depth */
-#define RE_EXECUTE_MATCH_LIMIT      10000 /* Limit of RegExp execetur matching steps */
+/**
+ * Limit of RegExp executor recursion depth
+ */
+#define RE_EXECUTE_RECURSION_LIMIT  1000
+
+/**
+ * Limit of RegExp execetur matching steps
+ */
+#define RE_EXECUTE_MATCH_LIMIT      10000
 
 /**
  * RegExp executor context
- *
- * FIXME:
- *       Add comments with description of the structure members
  */
 typedef struct
 {
-  const lit_utf8_byte_t **saved_p;
-  const lit_utf8_byte_t *input_start_p;
-  const lit_utf8_byte_t *input_end_p;
-  uint32_t match_limit;
-  uint32_t recursion_depth;
-  uint32_t num_of_captures;
-  uint32_t num_of_non_captures;
-  uint32_t *num_of_iterations;
-  uint8_t flags;
+  const lit_utf8_byte_t **saved_p; /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
+  const lit_utf8_byte_t *input_start_p; /**< start of input pattern string */
+  const lit_utf8_byte_t *input_end_p; /**< end of input pattern string */
+  uint32_t match_limit; /**< matching limit counter */
+  uint32_t recursion_depth; /**< recursion depth counter */
+  uint32_t num_of_captures; /**< number of capture groups */
+  uint32_t num_of_non_captures; /**< number of non-capture groups */
+  uint32_t *num_of_iterations_p; /**< number of iterations */
+  uint8_t flags; /**< RegExp flags */
 } re_matcher_ctx_t;
 
 extern ecma_completion_value_t

@@ -21,32 +21,42 @@
 
 #include "opcodes-dumper.h"
 
-typedef uint8_t token_type_t;
-
-#define RE_TOK_EOF                            0 /* EOF */
-#define RE_TOK_BACKREFERENCE                  1 /* \[0..9] */
-#define RE_TOK_CHAR                           2 /* any character */
-#define RE_TOK_ALTERNATIVE                    3 /* | */
-#define RE_TOK_ASSERT_START                   4 /* ^ */
-#define RE_TOK_ASSERT_END                     5 /* $ */
-#define RE_TOK_PERIOD                         6 /* . */
-#define RE_TOK_START_CAPTURE_GROUP            7 /* ( */
-#define RE_TOK_START_NON_CAPTURE_GROUP        8 /* (?: */
-#define RE_TOK_END_GROUP                      9 /* ')' */
-#define RE_TOK_ASSERT_START_POS_LOOKAHEAD    10 /* (?= */
-#define RE_TOK_ASSERT_START_NEG_LOOKAHEAD    11 /* (?! */
-#define RE_TOK_ASSERT_WORD_BOUNDARY          12 /* \b */
-#define RE_TOK_ASSERT_NOT_WORD_BOUNDARY      13 /* \B */
-#define RE_TOK_DIGIT                         14 /* \d */
-#define RE_TOK_NOT_DIGIT                     15 /* \D */
-#define RE_TOK_WHITE                         16 /* \s */
-#define RE_TOK_NOT_WHITE                     17 /* \S */
-#define RE_TOK_WORD_CHAR                     18 /* \w */
-#define RE_TOK_NOT_WORD_CHAR                 19 /* \W */
-#define RE_TOK_START_CHAR_CLASS              20 /* [ ] */
-#define RE_TOK_START_INV_CHAR_CLASS          21 /* [^ ] */
-
+/**
+ * RegExp token type definitions
+ */
+typedef enum
+{
+  RE_TOK_EOF, /* EOF */
+  RE_TOK_BACKREFERENCE, /* \[0..9] */
+  RE_TOK_CHAR, /* any character */
+  RE_TOK_ALTERNATIVE, /* | */
+  RE_TOK_ASSERT_START, /* ^ */
+  RE_TOK_ASSERT_END, /* $ */
+  RE_TOK_PERIOD, /* . */
+  RE_TOK_START_CAPTURE_GROUP, /* ( */
+  RE_TOK_START_NON_CAPTURE_GROUP, /* (?: */
+  RE_TOK_END_GROUP, /* ')' */
+  RE_TOK_ASSERT_START_POS_LOOKAHEAD, /* (?= */
+  RE_TOK_ASSERT_START_NEG_LOOKAHEAD, /* (?! */
+  RE_TOK_ASSERT_WORD_BOUNDARY, /* \b */
+  RE_TOK_ASSERT_NOT_WORD_BOUNDARY, /* \B */
+  RE_TOK_DIGIT, /* \d */
+  RE_TOK_NOT_DIGIT, /* \D */
+  RE_TOK_WHITE, /* \s */
+  RE_TOK_NOT_WHITE, /* \S */
+  RE_TOK_WORD_CHAR, /* \w */
+  RE_TOK_NOT_WORD_CHAR, /* \W */
+  RE_TOK_START_CHAR_CLASS, /* [ ] */
+  RE_TOK_START_INV_CHAR_CLASS, /* [^ ] */
+} re_token_type_t;
+/**
+  * RegExp constant of infinite
+  */
 #define RE_ITERATOR_INFINITE ((uint32_t)-1)
+
+/**
+  * Maximum number of decimal escape digits
+  */
 #define RE_MAX_RE_DECESC_DIGITS 9
 
 /* FIXME: depends on unicode support */
@@ -60,21 +70,27 @@ typedef uint8_t token_type_t;
 #define RE_CONTROL_CHAR_FF   0x000c /* \f */
 #define RE_CONTROL_CHAR_CR   0x000d /* \r */
 
+/**
+ * RegExp token type
+ */
 typedef struct
 {
-  token_type_t type;
-  uint32_t value;
-  uint32_t qmin;
-  uint32_t qmax;
-  bool greedy;
+  re_token_type_t type; /**< type of the token */
+  uint32_t value; /**< value of the token */
+  uint32_t qmin; /**< minimum number of token iterations */
+  uint32_t qmax; /**< maximum number of token iterations */
+  bool greedy; /**< type of iteration */
 } re_token_t;
 
+/**
+  * RegExp parser context
+  */
 typedef struct
 {
-  lit_utf8_byte_t *pattern_start_p;
-  lit_utf8_byte_t *current_char_p;
-  int num_of_groups;
-  uint32_t num_of_classes;
+  lit_utf8_byte_t *pattern_start_p; /**< start of input pattern string */
+  lit_utf8_byte_t *current_char_p; /**< current character in input pattern */
+  int num_of_groups; /**< number of groups */
+  uint32_t num_of_classes; /**< number of character classes */
 } re_parser_ctx_t;
 
 typedef void (*re_char_class_callback) (void *re_ctx_p, uint32_t start, uint32_t end);

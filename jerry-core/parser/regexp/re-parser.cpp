@@ -32,14 +32,19 @@
 /* FIXME: change it, when unicode support would be implemented  */
 #define RE_ADVANCE(str_p, advance) do { str_p += advance; } while (0)
 
+/**
+  * Get next input character
+  *
+  * @return ecma_char_t
+  */
 static ecma_char_t
-get_ecma_char (lit_utf8_byte_t **char_p)
+re_get_ecma_char (lit_utf8_byte_t **char_p) /**< pointer of input string */
 {
   /* FIXME: change to string iterator with unicode support, when it would be implemented */
   ecma_char_t ch = **char_p;
   RE_ADVANCE (*char_p, 1);
   return ch;
-} /* get_ecma_char */
+} /* re_get_ecma_char */
 
 /**
  * Parse RegExp iterators
@@ -48,7 +53,7 @@ get_ecma_char (lit_utf8_byte_t **char_p)
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
+re_parse_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
                    re_token_t *re_token_p, /**< output token */
                    uint32_t lookup, /**< size of lookup */
                    uint32_t *advance_p) /**< output length of current advance */
@@ -64,6 +69,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
     {
       re_token_p->qmin = 0;
       re_token_p->qmax = 1;
+
       if (ch1 == '?')
       {
         *advance_p = 2;
@@ -80,6 +86,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
     {
       re_token_p->qmin = 0;
       re_token_p->qmax = RE_ITERATOR_INFINITE;
+
       if (ch1 == '?')
       {
         *advance_p = 2;
@@ -96,6 +103,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
     {
       re_token_p->qmin = 1;
       re_token_p->qmax = RE_ITERATOR_INFINITE;
+
       if (ch1 == '?')
       {
         *advance_p = 2;
@@ -113,6 +121,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
       uint32_t qmin = 0;
       uint32_t qmax = RE_ITERATOR_INFINITE;
       uint32_t digits = 0;
+
       while (true)
       {
         (*advance_p)++;
@@ -212,7 +221,7 @@ parse_re_iterator (lit_utf8_byte_t *pattern_p, /**< RegExp pattern */
   }
 
   return ret_value;
-} /* parse_re_iterator */
+} /* re_parse_iterator */
 
 /**
  * Count the number of groups in pattern
@@ -224,17 +233,17 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
   ecma_char_t ch1;
   int char_class_in = 0;
   parser_ctx_p->num_of_groups = 0;
+  ch1 = re_get_ecma_char (&pattern_p);
 
-  ch1 = get_ecma_char (&pattern_p);
   while (ch1 != LIT_CHAR_NULL)
   {
     ecma_char_t ch0 = ch1;
-    ch1 = get_ecma_char (&pattern_p);
+    ch1 = re_get_ecma_char (&pattern_p);
     switch (ch0)
     {
       case '\\':
       {
-        ch1 = get_ecma_char (&pattern_p);
+        ch1 = re_get_ecma_char (&pattern_p);
         break;
       }
       case '[':
@@ -286,7 +295,8 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
   do
   {
-    ecma_char_t ch = get_ecma_char (pattern_p);
+    ecma_char_t ch = re_get_ecma_char (pattern_p);
+
     if (ch == ']')
     {
       if (start != RE_CHAR_UNDEF)
@@ -305,7 +315,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
     }
     else if (ch == '\\')
     {
-      ch = get_ecma_char (pattern_p);
+      ch = re_get_ecma_char (pattern_p);
 
       if (ch == 'b')
       {
@@ -333,7 +343,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       }
       else if (ch == 'c')
       {
-        ch = get_ecma_char (pattern_p);
+        ch = re_get_ecma_char (pattern_p);
         if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
         {
           ch = (ch % 32);
@@ -479,7 +489,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
   uint32_t advance = 0;
   ECMA_TRY_CATCH (empty,
-                  parse_re_iterator (parser_ctx_p->current_char_p,
+                  re_parse_iterator (parser_ctx_p->current_char_p,
                                      out_token_p,
                                      0,
                                      &advance),
@@ -502,8 +512,8 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   uint32_t advance = 0;
-
   ecma_char_t ch0 = *(parser_ctx_p->current_char_p);
+
   switch (ch0)
   {
     case '|':
@@ -527,7 +537,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     case '.':
     {
       ECMA_TRY_CATCH (empty,
-                      parse_re_iterator (parser_ctx_p->current_char_p,
+                      re_parse_iterator (parser_ctx_p->current_char_p,
                                          out_token_p,
                                          1,
                                          &advance),
@@ -574,6 +584,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       else if (ch1 == 'c')
       {
         ecma_char_t ch2 = RE_LOOKUP (parser_ctx_p->current_char_p, 2);
+
         if ((ch2 >= 'A' && ch2 <= 'Z') || (ch2 >= 'a' && ch2 <= 'z'))
         {
           advance = 3;
@@ -702,7 +713,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
       uint32_t iter_adv = 0;
       ECMA_TRY_CATCH (empty,
-                      parse_re_iterator (parser_ctx_p->current_char_p,
+                      re_parse_iterator (parser_ctx_p->current_char_p,
                                          out_token_p,
                                          advance,
                                          &iter_adv),
@@ -716,6 +727,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       if (RE_LOOKUP (parser_ctx_p->current_char_p, 1) == '?')
       {
         ecma_char_t ch2 = RE_LOOKUP (parser_ctx_p->current_char_p, 2);
+
         if (ch2 == '=')
         {
           /* (?= */
@@ -746,7 +758,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     case ')':
     {
       ECMA_TRY_CATCH (empty,
-                      parse_re_iterator (parser_ctx_p->current_char_p,
+                      re_parse_iterator (parser_ctx_p->current_char_p,
                                          out_token_p,
                                          1,
                                          &advance),
@@ -786,7 +798,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     default:
     {
       ECMA_TRY_CATCH (empty,
-                      parse_re_iterator (parser_ctx_p->current_char_p,
+                      re_parse_iterator (parser_ctx_p->current_char_p,
                                          out_token_p,
                                          1,
                                          &advance),

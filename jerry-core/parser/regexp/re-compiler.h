@@ -22,77 +22,83 @@
 #include "ecma-globals.h"
 #include "re-parser.h"
 
-/* RegExp opcodes
- * Group opcode order is important, because RE_IS_CAPTURE_GROUP is based on it.
- * Change it carfully. Capture opcodes should be at first.
+/**
+ * RegExp opcodes
  */
-#define RE_OP_EOF                                           0
+typedef enum
+{
+  RE_OP_EOF,
+  /* Group opcode order is important, because RE_IS_CAPTURE_GROUP is based on it.
+   * Change it carefully. Capture opcodes should be at first.
+   */
+  RE_OP_CAPTURE_GROUP_START,
+  RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START,
+  RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START,
+  RE_OP_CAPTURE_GREEDY_GROUP_END,
+  RE_OP_CAPTURE_NON_GREEDY_GROUP_END,
+  RE_OP_NON_CAPTURE_GROUP_START,
+  RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START,
+  RE_OP_NON_CAPTURE_NON_GREEDY_ZERO_GROUP_START,
+  RE_OP_NON_CAPTURE_GREEDY_GROUP_END,
+  RE_OP_NON_CAPTURE_NON_GREEDY_GROUP_END,
 
-#define RE_OP_CAPTURE_GROUP_START                           1
-#define RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START               2
-#define RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START           3
-#define RE_OP_CAPTURE_GREEDY_GROUP_END                      4
-#define RE_OP_CAPTURE_NON_GREEDY_GROUP_END                  5
-#define RE_OP_NON_CAPTURE_GROUP_START                       6
-#define RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START           7
-#define RE_OP_NON_CAPTURE_NON_GREEDY_ZERO_GROUP_START       8
-#define RE_OP_NON_CAPTURE_GREEDY_GROUP_END                  9
-#define RE_OP_NON_CAPTURE_NON_GREEDY_GROUP_END              10
+  RE_OP_MATCH,
+  RE_OP_CHAR,
+  RE_OP_SAVE_AT_START,
+  RE_OP_SAVE_AND_MATCH,
+  RE_OP_PERIOD,
+  RE_OP_ALTERNATIVE,
+  RE_OP_GREEDY_ITERATOR,
+  RE_OP_NON_GREEDY_ITERATOR,
+  RE_OP_ASSERT_START,
+  RE_OP_ASSERT_END,
+  RE_OP_ASSERT_WORD_BOUNDARY,
+  RE_OP_ASSERT_NOT_WORD_BOUNDARY,
+  RE_OP_LOOKAHEAD_POS,
+  RE_OP_LOOKAHEAD_NEG,
+  RE_OP_BACKREFERENCE,
+  RE_OP_CHAR_CLASS,
+  RE_OP_INV_CHAR_CLASS
+} re_opcode_t;
 
-#define RE_OP_MATCH                                         11
-#define RE_OP_CHAR                                          12
-#define RE_OP_SAVE_AT_START                                 13
-#define RE_OP_SAVE_AND_MATCH                                14
-#define RE_OP_PERIOD                                        15
-#define RE_OP_ALTERNATIVE                                   16
-#define RE_OP_GREEDY_ITERATOR                               17
-#define RE_OP_NON_GREEDY_ITERATOR                           18
-#define RE_OP_ASSERT_START                                  19
-#define RE_OP_ASSERT_END                                    20
-#define RE_OP_ASSERT_WORD_BOUNDARY                          21
-#define RE_OP_ASSERT_NOT_WORD_BOUNDARY                      22
-#define RE_OP_LOOKAHEAD_POS                                 23
-#define RE_OP_LOOKAHEAD_NEG                                 24
-#define RE_OP_BACKREFERENCE                                 25
-#define RE_OP_CHAR_CLASS                                    26
-#define RE_OP_INV_CHAR_CLASS                                27
-
+/**
+ * Recursion limit of RegExp compiler
+ */
 #define RE_COMPILE_RECURSION_LIMIT  100
 
+/**
+ * Check if a RegExp opcode is a capture group or not
+ */
 #define RE_IS_CAPTURE_GROUP(x) (((x) < RE_OP_NON_CAPTURE_GROUP_START) ? 1 : 0)
 
-typedef uint8_t re_opcode_t; /* type of RegExp opcodes */
-typedef uint8_t re_bytecode_t; /* type of standard bytecode elements (ex.: opcode parameters) */
+/**
+ * Type of bytecode elements
+ */
+typedef uint8_t re_bytecode_t;
 
 /**
  * Context of RegExp bytecode container
- *
- * FIXME:
- *       Add comments with description of the structure members
  */
 typedef struct
 {
-  re_bytecode_t *block_start_p;
-  re_bytecode_t *block_end_p;
-  re_bytecode_t *current_p;
+  re_bytecode_t *block_start_p; /**< start of bytecode block */
+  re_bytecode_t *block_end_p; /**< end of bytecode block */
+  re_bytecode_t *current_p; /**< current position in bytecode */
 } re_bytecode_ctx_t;
 
 /**
  * Context of RegExp compiler
- *
- * FIXME:
- *       Add comments with description of the structure members
  */
 typedef struct
 {
-  uint8_t flags;
-  uint32_t recursion_depth;
-  uint32_t num_of_captures;
-  uint32_t num_of_non_captures;
-  uint32_t highest_backref;
-  re_bytecode_ctx_t *bytecode_ctx_p;
-  re_token_t current_token;
-  re_parser_ctx_t *parser_ctx_p;
+  uint8_t flags; /**< RegExp flags */
+  uint32_t recursion_depth; /**< recursion depth */
+  uint32_t num_of_captures; /**< number of capture groups */
+  uint32_t num_of_non_captures; /**< number of non-capture groups */
+  uint32_t highest_backref; /**< highest backreference */
+  re_bytecode_ctx_t *bytecode_ctx_p; /**< pointer of RegExp bytecode context */
+  re_token_t current_token; /**< current token */
+  re_parser_ctx_t *parser_ctx_p; /**< pointer of RegExp parser context */
 } re_compiler_ctx_t;
 
 ecma_completion_value_t

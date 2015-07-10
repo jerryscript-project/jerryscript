@@ -48,7 +48,11 @@ realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode
 {
   JERRY_ASSERT (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p >= 0);
   size_t old_size = static_cast<size_t> (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
-  JERRY_ASSERT (!bc_ctx_p->current_p && !bc_ctx_p->block_end_p && !bc_ctx_p->block_start_p);
+
+  /* If one of the members of RegExp bytecode context is NULL, then all member should be NULL
+   * (it means first allocation), otherwise all of the members should be a non NULL pointer. */
+  JERRY_ASSERT ((!bc_ctx_p->current_p && !bc_ctx_p->block_end_p && !bc_ctx_p->block_start_p)
+                || (bc_ctx_p->current_p && bc_ctx_p->block_end_p && bc_ctx_p->block_start_p));
 
   size_t new_block_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
   JERRY_ASSERT (bc_ctx_p->current_p - bc_ctx_p->block_start_p >= 0);

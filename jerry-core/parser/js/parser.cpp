@@ -2855,31 +2855,47 @@ parse_source_element (void)
   }
 }
 
-static void
+/**
+ * Skip function's optional name and parentheses
+ *
+ * @return: true, if skipped successfully
+ *          false, if open parentheses wasn't found (this means that keyword 'function' is used as
+ *                                                   a property name)
+ */
+static bool
 skip_optional_name_and_parens (void)
 {
   if (token_is (TOK_NAME))
   {
     token_after_newlines_must_be (TOK_OPEN_PAREN);
   }
+
+  if (token_is (TOK_OPEN_PAREN))
+  {
+    skip_newlines ();
+  }
   else
   {
-    current_token_must_be (TOK_OPEN_PAREN);
+    return false;
   }
 
   while (!token_is (TOK_CLOSE_PAREN))
   {
     skip_newlines ();
   }
-}
+
+  return true;
+} /* skip_optional_name_and_parens */
 
 static void
 skip_function (void)
 {
   skip_newlines ();
-  skip_optional_name_and_parens ();
-  skip_newlines ();
-  jsp_skip_braces (TOK_OPEN_BRACE);
+  if (skip_optional_name_and_parens ())
+  {
+    skip_newlines ();
+    jsp_skip_braces (TOK_OPEN_BRACE);
+  }
 }
 
 static bool

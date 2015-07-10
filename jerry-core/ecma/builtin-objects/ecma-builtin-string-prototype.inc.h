@@ -25,6 +25,10 @@
 # define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
 #endif /* !OBJECT_VALUE */
 
+#ifndef NUMBER_VALUE
+# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !NUMBER_VALUE */
+
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
@@ -41,6 +45,16 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
+
+/* Number properties:
+ *  (property name, number value) */
+
+// 15.5.4 (String.prototype is itself a String object whose value is an empty String), 15.5.5.1
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
+              0,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */

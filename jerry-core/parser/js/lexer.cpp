@@ -1566,6 +1566,8 @@ lexer_dump_line (size_t line) /**< line number */
   size_t l = 0;
   lit_utf8_iterator_t iter = src_iter;
 
+  lit_utf8_iterator_seek_bos (&iter);
+
   while (!lit_utf8_iterator_is_eos (&iter))
   {
     ecma_char_t code_unit;

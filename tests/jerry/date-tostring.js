@@ -13,6 +13,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (new Date(NaN) == "Invalid Date");
-assert (new Date("2015-02-13") == "2015-02-13T00:00:00.000");
-assert (new Date("2015-07-08T11:29:05.023") == "2015-07-08T11:29:05.023");
+assert (new Date (NaN) == "Invalid Date");
+assert (new Date ("2015-02-13") == "2015-02-13T00:00:00.000");
+assert (new Date ("2015-07-08T11:29:05.023") == "2015-07-08T11:29:05.023");
+
+try
+{
+  Date.prototype.toString.call(-1);
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+  assert (e.message === "Incompatible type");
+}
+
+assert (new Date (NaN).toDateString () == "Invalid Date");
+assert (new Date ("2015-02-13").toDateString () == "2015-02-13");
+assert (new Date ("2015-07-08T11:29:05.023").toDateString () == "2015-07-08");
+
+try
+{
+  Date.prototype.toDateString.call(-1);
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+  assert (e.message === "Incompatible type");
+}
+
+assert (new Date (NaN).toTimeString () == "Invalid Date");
+assert (new Date ("2015-02-13").toTimeString () == "00:00:00.000");
+assert (new Date ("2015-07-08T11:29:05.023").toTimeString () == "11:29:05.023");
+
+try
+{
+  Date.prototype.toTimeString.call(-1);
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+  assert (e.message === "Incompatible type");
+}

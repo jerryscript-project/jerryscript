@@ -105,9 +105,10 @@ ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
   {
-    ret_value = ecma_raise_type_error ("Incomplete Date type");
+    ret_value = ecma_raise_type_error ("Incompatible type");
   }
   else
   {
@@ -176,7 +177,54 @@ ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+  {
+    ret_value = ecma_raise_type_error ("Incompatible type");
+  }
+  else
+  {
+    ECMA_TRY_CATCH (obj_this,
+                    ecma_op_to_object (this_arg),
+                    ret_value);
+
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+    ecma_property_t *prim_value_prop_p;
+    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                 prim_value_prop_p->u.internal_property.value);
+
+    if (ecma_number_is_nan (*prim_value_num_p))
+    {
+      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+    }
+    else
+    {
+      ecma_number_t day = ecma_date_date_from_time (*prim_value_num_p);
+      ecma_string_t *output_str_p = ecma_new_ecma_string_from_number (day);
+      ecma_date_insert_leading_zeros (&output_str_p, day, 2);
+
+      /*
+       * Note:
+       *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
+       *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
+       */
+      ecma_number_t month = ecma_date_month_from_time (*prim_value_num_p) + 1;
+      ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
+
+      ecma_number_t year = ecma_date_year_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
+
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+    }
+
+    ECMA_FINALIZE (obj_this);
+  }
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_date_string */
 
 /**
@@ -191,7 +239,52 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+  {
+    ret_value = ecma_raise_type_error ("Incompatible type");
+  }
+  else
+  {
+    ECMA_TRY_CATCH (obj_this,
+                    ecma_op_to_object (this_arg),
+                    ret_value);
+
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+    ecma_property_t *prim_value_prop_p;
+    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                 prim_value_prop_p->u.internal_property.value);
+
+    if (ecma_number_is_nan (*prim_value_num_p))
+    {
+      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+    }
+    else
+    {
+      ecma_number_t milliseconds = ecma_date_ms_from_time (*prim_value_num_p);
+      ecma_string_t *output_str_p = ecma_new_ecma_string_from_number (milliseconds);
+      ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
+
+      ecma_number_t seconds = ecma_date_sec_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
+
+      ecma_number_t minutes = ecma_date_min_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+      ecma_number_t hours = ecma_date_hour_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+    }
+
+    ECMA_FINALIZE (obj_this);
+  }
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_time_string */
 
 /**

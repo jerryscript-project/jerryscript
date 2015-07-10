@@ -1318,7 +1318,7 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
     }
     else
     {
-      ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+      ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
     }
   }
   MEM_FINALIZE_LOCAL_ARRAY (num_of_iter_p);

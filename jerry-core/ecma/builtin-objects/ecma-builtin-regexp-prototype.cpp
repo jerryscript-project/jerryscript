@@ -117,7 +117,7 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                   ecma_builtin_regexp_prototype_exec (this_arg, arg),
                   ret_value);
 
-  if (ecma_is_value_undefined (match_value))
+  if (ecma_is_value_null (match_value))
   {
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
   }

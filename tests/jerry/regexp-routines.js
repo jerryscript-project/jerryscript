@@ -17,7 +17,7 @@ var r;
 
 r = new RegExp ("a");
 assert (r.exec ("a") == "a");
-assert (r.exec ("b") == undefined);
+assert (r.exec ("b") == null);
 try {
 	r.exec.call({}, "a");
 	assert (false)

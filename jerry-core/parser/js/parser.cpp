@@ -313,6 +313,16 @@ parse_property_name (void)
                                                                    (lit_utf8_size_t)strlen (s));
       return literal_operand (lit_cpointer_t::compress (lit));
     }
+    case TOK_NULL:
+    case TOK_BOOL:
+    {
+      lit_magic_string_id_t id = (token_is (TOK_NULL)
+                                  ? LIT_MAGIC_STRING_NULL
+                                  : (tok.uid ? LIT_MAGIC_STRING_TRUE : LIT_MAGIC_STRING_FALSE));
+      literal_t lit = lit_find_or_create_literal_from_utf8_string (lit_get_magic_string_utf8 (id),
+                                                                   lit_get_magic_string_size (id));
+      return literal_operand (lit_cpointer_t::compress (lit));
+    }
     default:
     {
       EMIT_ERROR_VARG ("Wrong property name type: %s", lexer_token_type_to_string (tok.type));
@@ -898,6 +908,15 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
         {
           EMIT_ERROR ("Expected identifier");
         }
+        prop = dump_string_assignment_res (lit_cpointer_t::compress (lit));
+      }
+      else if (token_is (TOK_BOOL) || token_is (TOK_NULL))
+      {
+        lit_magic_string_id_t id = (token_is (TOK_NULL)
+                                    ? LIT_MAGIC_STRING_NULL
+                                    : (tok.uid ? LIT_MAGIC_STRING_TRUE : LIT_MAGIC_STRING_FALSE));
+        literal_t lit = lit_find_or_create_literal_from_utf8_string (lit_get_magic_string_utf8 (id),
+                                                                     lit_get_magic_string_size (id));
         prop = dump_string_assignment_res (lit_cpointer_t::compress (lit));
       }
       else

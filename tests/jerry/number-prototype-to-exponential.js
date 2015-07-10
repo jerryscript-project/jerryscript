@@ -63,3 +63,10 @@ try {
 } catch (e) {
     assert(e instanceof RangeError)
 }
+
+try {
+    Number.prototype.toExponential.call(new Object());
+    assert(false);
+} catch (e) {
+    assert(e instanceof TypeError)
+}

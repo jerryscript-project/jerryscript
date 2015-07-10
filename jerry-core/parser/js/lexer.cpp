@@ -384,7 +384,10 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
               && (lit_utf8_iterator_is_eos (&source_str_iter)
                   || !lit_char_is_octal_digit (lit_utf8_iterator_peek_next (&source_str_iter))))
           {
-            lit_utf8_iterator_incr (&source_str_iter);
+            if (!lit_utf8_iterator_is_eos (&source_str_iter))
+            {
+              lit_utf8_iterator_incr (&source_str_iter);
+            }
 
             converted_char = LIT_CHAR_NULL;
           }
@@ -638,7 +641,10 @@ new_token (void)
 static void
 consume_char (void)
 {
-  lit_utf8_iterator_incr (&src_iter);
+  if (!lit_utf8_iterator_is_eos (&src_iter))
+  {
+    lit_utf8_iterator_incr (&src_iter);
+  }
 }
 
 #define RETURN_PUNC_EX(TOK, NUM) \

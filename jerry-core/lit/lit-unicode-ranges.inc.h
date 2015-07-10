@@ -21,6 +21,9 @@
  *          http://www.unicode.org/Public/3.0-Update/UnicodeData-3.0.0.html
  *
  * The range lists were generated using tools/print-unicode-ranges.sh script from UnicodeData-3.0.0.txt
+ *
+ * NOTE:
+ *   Some ranges in "Separator, Space" category were added manually, see the according definitions.
  */
 
 /**
@@ -2430,6 +2433,17 @@ LIT_UNICODE_RANGE_NO (0x3280, 0x3289) /* CIRCLED IDEOGRAPH ONE
 #ifndef LIT_UNICODE_RANGE_ZS
 # define LIT_UNICODE_RANGE_ZS(range_begin, range_end)
 #endif /* !LIT_UNICODE_RANGE_ZS */
+
+LIT_UNICODE_RANGE_ZS (0x180E, 0x180E) /* MONGOLIAN VOWEL SEPARATOR (manually added)
+                                       * This character doesn't belong to Zs category according
+                                       * UnicodeData-3.0.0.txt, but it should be supported according to
+                                       * ch09/9.3/9.3.1/S9.3.1_A2.js form test262 suite. */
+
+LIT_UNICODE_RANGE_ZS (0x205F, 0x205F) /* MEDIUM MATHEMATICAL SPACE (manually added)
+                                       * This character doesn't belong to Zs category according
+                                       * UnicodeData-3.0.0.txt, but it should be supported according to
+                                       * ch09/9.3/9.3.1/S9.3.1_A2.js form test262 suite. */
+
 LIT_UNICODE_RANGE_ZS (0x0020, 0x0020) /* SPACE */
 
 LIT_UNICODE_RANGE_ZS (0x00A0, 0x00A0) /* NO-BREAK SPACE */

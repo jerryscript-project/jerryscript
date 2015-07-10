@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 
 /*
@@ -343,7 +344,6 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   const lit_utf8_byte_t hex_lower_digits_range[10] = { 'a', 'f' };
   const lit_utf8_byte_t hex_upper_digits_range[10] = { 'A', 'F' };
   const lit_utf8_byte_t hex_x_chars[2] = { 'x', 'X' };
-  const lit_utf8_byte_t white_space[2] = { ' ', '\n' };
   const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
   const lit_utf8_byte_t plus_char = '+';
   const lit_utf8_byte_t minus_char = '-';
@@ -354,22 +354,42 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return ECMA_NUMBER_ZERO;
   }
 
-  const lit_utf8_byte_t *begin_p = str_p;
-  const lit_utf8_byte_t *end_p = begin_p + str_size - 1;
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (str_p, str_size);
+  ecma_char_t code_unit;
 
-  while (begin_p <= end_p
-         && (*begin_p == white_space[0]
-             || *begin_p == white_space[1]))
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
-    begin_p++;
+    code_unit = lit_utf8_iterator_peek_next (&iter);
+    if (lit_char_is_white_space (code_unit) || lit_char_is_line_terminator (code_unit))
+    {
+      lit_utf8_iterator_incr (&iter);
+    }
+    else
+    {
+      break;
+    }
   }
 
-  while (begin_p <= end_p
-         && (*end_p == white_space[0]
-             || *end_p == white_space[1]))
+  JERRY_ASSERT (!iter.buf_pos.is_non_bmp_middle);
+  const lit_utf8_byte_t *begin_p = iter.buf_p + iter.buf_pos.offset;
+
+  iter = lit_utf8_iterator_create (iter.buf_p + iter.buf_pos.offset, str_size - iter.buf_pos.offset);
+  lit_utf8_iterator_seek_eos (&iter);
+  while (!lit_utf8_iterator_is_bos (&iter))
   {
-    end_p--;
+    code_unit = lit_utf8_iterator_peek_prev (&iter);
+    if (lit_char_is_white_space (code_unit) || lit_char_is_line_terminator (code_unit))
+    {
+      lit_utf8_iterator_decr (&iter);
+    }
+    else
+    {
+      break;
+    }
   }
+
+  JERRY_ASSERT (!iter.buf_pos.is_non_bmp_middle);
+  const lit_utf8_byte_t *end_p = iter.buf_p + iter.buf_pos.offset - 1;
 
   if (begin_p > end_p)
   {

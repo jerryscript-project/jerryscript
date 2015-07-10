@@ -2536,15 +2536,13 @@ insert_semicolon (void)
 {
   // We cannot use tok, since we may use lexer_save_token
   skip_token ();
-  if (token_is (TOK_NEWLINE) || lexer_prev_token ().type == TOK_NEWLINE)
+
+  bool is_new_line_occured = (token_is (TOK_NEWLINE) || lexer_prev_token ().type == TOK_NEWLINE);
+  bool is_close_brace_or_eof = (token_is (TOK_CLOSE_BRACE) || token_is (TOK_EOF));
+
+  if (is_new_line_occured || is_close_brace_or_eof)
   {
     lexer_save_token (tok);
-    return;
-  }
-  if (token_is (TOK_CLOSE_BRACE))
-  {
-    lexer_save_token (tok);
-    return;
   }
   else if (!token_is (TOK_SEMICOLON))
   {

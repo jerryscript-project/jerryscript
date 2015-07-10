@@ -683,7 +683,15 @@ ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
 
   ecma_number_t q = ecma_number_trunc (ecma_number_divide (n, d));
 
-  return ecma_number_substract (n, ecma_number_multiply (d, q));
+  ecma_number_t r = ecma_number_substract (n, ecma_number_multiply (d, q));
+
+  if (ecma_number_is_zero (r)
+      && ecma_number_is_negative (n))
+  {
+    r = ecma_number_negate (r);
+  }
+
+  return r;
 } /* ecma_number_calc_remainder */
 
 /**

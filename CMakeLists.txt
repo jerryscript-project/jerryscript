@@ -83,6 +83,7 @@ project (Jerry CXX C ASM)
 
   set(EXTERNAL_LIBC_INTERFACE "UNDEFINED" CACHE STRING "Path to external libc include directory")
   set(EXTERNAL_LIBS_INTERFACE "UNDEFINED" CACHE STRING "Path to external libraries' include directory")
+  set(EXTERNAL_MEM_HEAP_SIZE_KB "256" CACHE STRING "Size of memory heap, in kilobytes")
  else()
   message(FATAL_ERROR "Platform '${PLATFORM}' is not supported")
  endif()

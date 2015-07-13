@@ -658,6 +658,15 @@ dump_prop_setter_or_triple_address_res (void (*dumper) (operand, operand, operan
   }
   else
   {
+    if (res.type == OPERAND_TMP)
+    {
+      /*
+       * FIXME:
+       *       Implement correct handling of references through parser operands
+       */
+      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", LIT_ITERATOR_POS_ZERO);
+    }
+
     dumper (res, res, op);
   }
   STACK_DROP (prop_getters, 1);
@@ -2072,6 +2081,14 @@ dump_prop_setter_or_variable_assignment_res (operand res, operand op)
   }
   else
   {
+    if (res.type == OPERAND_TMP)
+    {
+      /*
+       * FIXME:
+       *       Implement correct handling of references through parser operands
+       */
+      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", LIT_ITERATOR_POS_ZERO);
+    }
     dump_variable_assignment (res, op);
   }
   STACK_DROP (prop_getters, 1);

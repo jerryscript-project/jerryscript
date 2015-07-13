@@ -287,7 +287,48 @@ static ecma_completion_value_t
 ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2. */
+  ECMA_TRY_CATCH (this_to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3. */
+  ECMA_TRY_CATCH (arg_to_string_val,
+                  ecma_op_to_string (arg),
+                  ret_value);
+
+  ecma_string_t *this_string_p = ecma_get_string_from_value (this_to_string_val);
+  ecma_string_t *arg_string_p = ecma_get_string_from_value (arg_to_string_val);
+
+  ecma_number_t *result_p = ecma_alloc_number ();
+
+  if (ecma_compare_ecma_strings_relational (this_string_p, arg_string_p))
+  {
+    *result_p = ecma_int32_to_number (-1);
+  }
+  else if (!ecma_compare_ecma_strings (this_string_p, arg_string_p))
+  {
+    *result_p = ecma_int32_to_number (1);
+  }
+  else
+  {
+    *result_p = ecma_int32_to_number (0);
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (result_p));
+
+  ECMA_FINALIZE (arg_to_string_val);
+  ECMA_FINALIZE (this_to_string_val);
+  ECMA_FINALIZE (this_check_coercible_val);
+
+  return ret_value;
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
 /**

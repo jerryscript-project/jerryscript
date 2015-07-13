@@ -53,7 +53,9 @@ ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< input/output string 
   JERRY_ASSERT (length >= 1);
 
   /* If the length is bigger than the number of digits in num, then insert leding zeros. */
-  for (uint32_t i = length - 1; i > 0 && num < pow (10,i); i--)
+  uint32_t first_index = length - 1u;
+  ecma_number_t power_i = (ecma_number_t) pow (10, first_index);
+  for (uint32_t i = first_index; i > 0 && num < power_i; i--, power_i /= 10)
   {
     ecma_string_t *zero_str_p = ecma_new_ecma_string_from_uint32 (0);
     ecma_string_t *concat_p = ecma_concat_ecma_strings (zero_str_p, *str_p);

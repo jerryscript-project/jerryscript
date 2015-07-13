@@ -1756,6 +1756,8 @@ parse_expression (bool in_allowed, /**< flag indicating if 'in' is allowed insid
     skip_newlines ();
     if (token_is (TOK_COMMA))
     {
+      dump_assignment_of_lhs_if_literal (expr);
+
       skip_newlines ();
       expr = parse_assignment_expression (in_allowed);
     }
@@ -2828,7 +2830,8 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     {
       lexer_save_token (tok);
       tok = temp;
-      parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
+      operand expr = parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
+      dump_assignment_of_lhs_if_literal (expr);
       skip_newlines ();
       if (!token_is (TOK_SEMICOLON))
       {

@@ -41,7 +41,7 @@ const char *test_source = (
                            "  return this.external ('1', true); "
                            "} "
                            "function call_throw_test() { "
-                           "  bool catched = false "
+                           "  var catched = false "
                            "  try { "
                            "    this.throw_test(); "
                            "  } catch (e) { "

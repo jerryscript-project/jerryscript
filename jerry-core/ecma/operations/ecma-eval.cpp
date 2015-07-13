@@ -87,21 +87,27 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   ecma_completion_value_t completion;
 
   const opcode_t *opcodes_p;
-  bool is_syntax_correct;
+  jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
 
-  is_syntax_correct = parser_parse_eval (code_p,
-                                         code_buffer_size,
-                                         is_strict_call,
-                                         &opcodes_p);
+  parse_status = parser_parse_eval (code_p,
+                                    code_buffer_size,
+                                    is_strict_call,
+                                    &opcodes_p);
 
-  if (!is_syntax_correct)
+  if (parse_status == JSP_STATUS_SYNTAX_ERROR)
   {
     completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
   }
+  else if (parse_status == JSP_STATUS_REFERENCE_ERROR)
+  {
+    completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+  }
   else
   {
+    JERRY_ASSERT (parse_status == JSP_STATUS_OK);
+
     opcode_counter_t first_opcode_index = 0u;
     bool is_strict_prologue = false;
     opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,

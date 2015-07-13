@@ -17,7 +17,7 @@
 
 #include "serializer.h"
 #include "stack.h"
-#include "syntax-errors.h"
+#include "jsp-early-error.h"
 #include "opcodes-native-call.h"
 
 static idx_t temp_name, max_temp_name;
@@ -140,7 +140,7 @@ next_temp_name (void)
      * FIXME:
      *       Implement mechanism, allowing reusage of register variables
      */
-    PARSE_ERROR ("Not enough register variables", LIT_ITERATOR_POS_ZERO);
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Not enough register variables", LIT_ITERATOR_POS_ZERO);
   }
 
   if (max_temp_name < next_reg)
@@ -1463,7 +1463,7 @@ dump_delete (operand res, operand op, bool is_strict, locus loc)
           || lit->get_type () == LIT_MAGIC_STR_T
           || lit->get_type () == LIT_MAGIC_STR_EX_T)
       {
-        syntax_check_delete (is_strict, loc);
+        jsp_early_error_check_delete (is_strict, loc);
         switch (res.type)
         {
           case OPERAND_LITERAL:

@@ -1334,14 +1334,16 @@ jerry_parse (const jerry_api_char_t* source_p, /**< script source */
   parser_set_show_opcodes (is_show_opcodes);
 
   const opcode_t *opcodes_p;
-  bool is_syntax_correct;
+  jsp_status_t parse_status;
 
-  is_syntax_correct = parser_parse_script (source_p,
-                                           source_size,
-                                           &opcodes_p);
+  parse_status = parser_parse_script (source_p,
+                                      source_size,
+                                      &opcodes_p);
 
-  if (!is_syntax_correct)
+  if (parse_status != JSP_STATUS_OK)
   {
+    JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR || parse_status == JSP_STATUS_REFERENCE_ERROR);
+
     return false;
   }
 

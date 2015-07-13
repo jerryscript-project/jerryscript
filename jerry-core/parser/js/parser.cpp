@@ -27,7 +27,7 @@
 #include "scopes-tree.h"
 #include "serializer.h"
 #include "stack.h"
-#include "syntax-errors.h"
+#include "jsp-early-error.h"
 #include "vm.h"
 
 /**
@@ -58,9 +58,8 @@ enum
 };
 STATIC_STACK (scopes, scopes_tree)
 
-#define EMIT_ERROR(MESSAGE) PARSE_ERROR(MESSAGE, tok.loc)
-#define EMIT_SORRY(MESSAGE) PARSE_SORRY(MESSAGE, tok.loc)
-#define EMIT_ERROR_VARG(MESSAGE, ...) PARSE_ERROR_VARG(MESSAGE, tok.loc, __VA_ARGS__)
+#define EMIT_ERROR(type, MESSAGE) PARSE_ERROR(type, MESSAGE, tok.loc)
+#define EMIT_ERROR_VARG(type, MESSAGE, ...) PARSE_ERROR_VARG(type, MESSAGE, tok.loc, __VA_ARGS__)
 
 #define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
 
@@ -107,7 +106,7 @@ assert_keyword (keyword kw)
 {
   if (!token_is (TOK_KEYWORD) || token_data () != kw)
   {
-    EMIT_ERROR_VARG ("Expected keyword '%s'", lexer_keyword_to_string (kw));
+    EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Expected keyword '%s'", lexer_keyword_to_string (kw));
     JERRY_UNREACHABLE ();
   }
 }
@@ -123,7 +122,7 @@ current_token_must_be (token_type tt)
 {
   if (!token_is (tt))
   {
-    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
+    EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -143,7 +142,7 @@ next_token_must_be (token_type tt)
   skip_token ();
   if (!token_is (tt))
   {
-    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
+    EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -153,7 +152,7 @@ token_after_newlines_must_be (token_type tt)
   skip_newlines ();
   if (!token_is (tt))
   {
-    EMIT_ERROR_VARG ("Expected '%s' token", lexer_token_type_to_string (tt));
+    EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Expected '%s' token", lexer_token_type_to_string (tt));
   }
 }
 
@@ -163,7 +162,7 @@ token_after_newlines_must_be_keyword (keyword kw)
   skip_newlines ();
   if (!is_keyword (kw))
   {
-    EMIT_ERROR_VARG ("Expected keyword '%s'", lexer_keyword_to_string (kw));
+    EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Expected keyword '%s'", lexer_keyword_to_string (kw));
   }
 }
 
@@ -263,7 +262,7 @@ jsp_find_next_token_before_the_locus (token_type token_to_find, /**< token to se
       }
       else if (token_is (TOK_CLOSE_BRACE))
       {
-        EMIT_ERROR ("Unmatched } brace");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unmatched } brace");
       }
     }
 
@@ -325,7 +324,7 @@ parse_property_name (void)
     }
     default:
     {
-      EMIT_ERROR_VARG ("Wrong property name type: %s", lexer_token_type_to_string (tok.type));
+      EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Wrong property name type: %s", lexer_token_type_to_string (tok.type));
     }
   }
 }
@@ -341,7 +340,7 @@ parse_property_name_and_value (void)
   skip_newlines ();
   const operand value = parse_assignment_expression (true);
   dump_prop_name_and_value (name, value);
-  syntax_add_prop_name (name, PROP_DATA);
+  jsp_early_error_add_prop_name (name, PROP_DATA);
 }
 
 /* property_assignment
@@ -386,7 +385,7 @@ parse_property_assignment (void)
     bool is_outer_scope_strict = is_strict_mode ();
 
     const operand name = parse_property_name ();
-    syntax_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
+    jsp_early_error_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
 
     skip_newlines ();
     const operand func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL, NULL);
@@ -533,7 +532,7 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
       current_token_must_be (TOK_OPEN_BRACE);
       close_tt = TOK_CLOSE_BRACE;
       dump_varg_header_for_rewrite (vlt, obj);
-      syntax_start_checking_of_prop_names ();
+      jsp_early_error_start_checking_of_prop_names ();
       break;
     }
   }
@@ -550,8 +549,8 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     {
       current_token_must_be (TOK_NAME);
       op = literal_operand (token_data_as_lit_cp ());
-      syntax_add_varg (op);
-      syntax_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
+      jsp_early_error_add_varg (op);
+      jsp_early_error_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
       dump_varg (op);
       skip_newlines ();
     }
@@ -622,7 +621,7 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     }
     case VARG_OBJ_DECL:
     {
-      syntax_check_for_duplication_of_prop_names (is_strict_mode (), tok.loc);
+      jsp_early_error_check_for_duplication_of_prop_names (is_strict_mode (), tok.loc);
       res = rewrite_varg_header_set_args_count (args_num);
       break;
     }
@@ -649,7 +648,7 @@ parse_function_declaration (void)
   token_after_newlines_must_be (TOK_NAME);
   const operand name = literal_operand (token_data_as_lit_cp ());
 
-  syntax_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
+  jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
 
   skip_newlines ();
   STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes)));
@@ -657,7 +656,7 @@ parse_function_declaration (void)
   scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
-  syntax_start_checking_of_vargs ();
+  jsp_early_error_start_checking_of_vargs ();
   parse_argument_list (VARG_FUNC_DECL, name, NULL, NULL);
 
   dump_function_end_for_rewrite ();
@@ -677,7 +676,7 @@ parse_function_declaration (void)
 
   inside_function = was_in_function;
 
-  syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
+  jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
   STACK_DROP (scopes, 1);
   serializer_set_scope (STACK_TOP (scopes));
@@ -700,13 +699,13 @@ parse_function_expression (void)
 
   bool is_outer_scope_strict = is_strict_mode ();
 
-  syntax_start_checking_of_vargs ();
+  jsp_early_error_start_checking_of_vargs ();
 
   skip_newlines ();
   if (token_is (TOK_NAME))
   {
     const operand name = literal_operand (token_data_as_lit_cp ());
-    syntax_check_for_eval_and_arguments_in_strict_mode (name, is_outer_scope_strict, tok.loc);
+    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_outer_scope_strict, tok.loc);
 
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
@@ -740,7 +739,7 @@ parse_function_expression (void)
 
   inside_function = was_in_function;
 
-  syntax_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
+  jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
   scopes_tree_set_strict_mode (STACK_TOP (scopes), is_outer_scope_strict);
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
@@ -787,7 +786,7 @@ parse_literal (void)
     case TOK_SMALL_INT: return dump_smallint_assignment_res ((idx_t) token_data ());
     default:
     {
-      EMIT_ERROR ("Expected literal");
+      EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected literal");
     }
   }
 }
@@ -833,7 +832,7 @@ parse_primary_expression (void)
     }
     default:
     {
-      EMIT_ERROR_VARG ("Unknown token %s", lexer_token_type_to_string (tok.type));
+      EMIT_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX, "Unknown token %s", lexer_token_type_to_string (tok.type));
     }
   }
 }
@@ -914,7 +913,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
                                                                      (lit_utf8_size_t) strlen (s));
         if (lit == NULL)
         {
-          EMIT_ERROR ("Expected identifier");
+          EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected identifier");
         }
         prop = dump_string_assignment_res (lit_cpointer_t::compress (lit));
       }
@@ -929,7 +928,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
       }
       else
       {
-        EMIT_ERROR ("Expected identifier");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected identifier");
       }
     }
     skip_newlines ();
@@ -1054,7 +1053,7 @@ parse_postfix_expression (operand *out_this_arg_gl_p, /**< out: if expression ev
   skip_token ();
   if (token_is (TOK_DOUBLE_PLUS))
   {
-    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
 
     const operand res = dump_post_increment_res (expr);
     if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
@@ -1065,7 +1064,7 @@ parse_postfix_expression (operand *out_this_arg_gl_p, /**< out: if expression ev
   }
   else if (token_is (TOK_DOUBLE_MINUS))
   {
-    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
 
     const operand res = dump_post_decrement_res (expr);
     if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
@@ -1106,7 +1105,7 @@ parse_unary_expression (operand *this_arg_gl, operand *prop_gl)
     {
       skip_newlines ();
       expr = parse_unary_expression (&this_arg, &prop);
-      syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+      jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
       expr = dump_pre_increment_res (expr);
       if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
       {
@@ -1118,7 +1117,7 @@ parse_unary_expression (operand *this_arg_gl, operand *prop_gl)
     {
       skip_newlines ();
       expr = parse_unary_expression (&this_arg, &prop);
-      syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+      jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
       expr = dump_pre_decrement_res (expr);
       if (!operand_is_empty (this_arg) && !operand_is_empty (prop))
       {
@@ -1682,7 +1681,7 @@ parse_assignment_expression (bool in_allowed)
       || tt == TOK_XOR_EQ
       || tt == TOK_OR_EQ)
   {
-    syntax_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
+    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
     skip_newlines ();
     start_dumping_assignment_expression ();
     const operand assign_expr = parse_assignment_expression (in_allowed);
@@ -1903,7 +1902,7 @@ jsp_parse_for_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost (fi
                                              for_body_statement_loc,
                                              true))
   {
-    EMIT_ERROR ("Invalid for statement");
+    EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Invalid for statement");
   }
 
   current_token_must_be (TOK_SEMICOLON);
@@ -2071,7 +2070,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
     }
     else
     {
-      EMIT_ERROR ("Invalid for statement");
+      EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Invalid for statement");
     }
   }
 
@@ -2315,7 +2314,7 @@ parse_with_statement (void)
   assert_keyword (KW_WITH);
   if (is_strict_mode ())
   {
-    EMIT_ERROR ("'with' expression is not allowed in strict mode.");
+    EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "'with' expression is not allowed in strict mode.");
   }
   const operand expr = parse_expression_inside_parens ();
 
@@ -2386,7 +2385,7 @@ parse_switch_statement (void)
     {
       if (was_default)
       {
-        EMIT_ERROR ("Duplication of 'default' clause");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Duplication of 'default' clause");
       }
       was_default = true;
       token_after_newlines_must_be (TOK_COLON);
@@ -2461,7 +2460,7 @@ parse_catch_clause (void)
   token_after_newlines_must_be (TOK_OPEN_PAREN);
   token_after_newlines_must_be (TOK_NAME);
   const operand exception = literal_operand (token_data_as_lit_cp ());
-  syntax_check_for_eval_and_arguments_in_strict_mode (exception, is_strict_mode (), tok.loc);
+  jsp_early_error_check_for_eval_and_arguments_in_strict_mode (exception, is_strict_mode (), tok.loc);
   token_after_newlines_must_be (TOK_CLOSE_PAREN);
 
   dump_catch_for_rewrite (exception);
@@ -2532,7 +2531,7 @@ parse_try_statement (void)
   }
   else
   {
-    EMIT_ERROR ("Expected either 'catch' or 'finally' token");
+    EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected either 'catch' or 'finally' token");
   }
 
   dump_end_try_catch_finally ();
@@ -2558,7 +2557,7 @@ insert_semicolon (void)
   }
   else if (!token_is (TOK_SEMICOLON) && !token_is (TOK_EOF))
   {
-    EMIT_ERROR ("Expected either ';' or newline token");
+    EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected either ';' or newline token");
   }
 }
 
@@ -2736,7 +2735,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
 
       if (label_p == NULL)
       {
-        EMIT_ERROR ("Label not found");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Label not found");
       }
     }
     else if (is_break)
@@ -2747,7 +2746,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
 
       if (label_p == NULL)
       {
-        EMIT_ERROR ("No corresponding statement for the break");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "No corresponding statement for the break");
       }
     }
     else
@@ -2760,7 +2759,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
 
       if (label_p == NULL)
       {
-        EMIT_ERROR ("No corresponding statement for the continue");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "No corresponding statement for the continue");
       }
     }
 
@@ -2774,7 +2773,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
   {
     if (!inside_function)
     {
-      EMIT_ERROR ("Return is illegal");
+      EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Return is illegal");
     }
 
     skip_token ();
@@ -2825,7 +2824,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
       jsp_label_t *label_p = jsp_label_find (JSP_LABEL_TYPE_NAMED, temp, NULL);
       if (label_p != NULL)
       {
-        EMIT_ERROR ("Label is duplicated");
+        EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Label is duplicated");
       }
 
       jsp_label_t label;
@@ -2981,9 +2980,9 @@ preparse_scope (bool is_global)
       {
         if (!var_declared (token_data_as_lit_cp ()))
         {
-          syntax_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
-                                                              is_strict_mode (),
-                                                              tok.loc);
+          jsp_early_error_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
+                                                                       is_strict_mode (),
+                                                                       tok.loc);
           dump_variable_declaration (token_data_as_lit_cp ());
         }
       }
@@ -3142,7 +3141,7 @@ parse_source_element_list (bool is_global) /**< flag indicating if we are parsin
  * @return true - if parse finished successfully (no SyntaxError was raised);
  *         false - otherwise.
  */
-static bool
+static jsp_status_t
 parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer */
                       size_t source_size, /**< source code size in bytes */
                       bool in_function, /**< flag indicating if we are parsing body of a function */
@@ -3161,22 +3160,22 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
   volatile bool is_parse_finished = false;
 #endif /* !JERRY_NDEBUG */
 
-  bool is_syntax_correct;
+  jsp_status_t status;
 
   jsp_mm_init ();
   jsp_label_init ();
 
   serializer_set_show_opcodes (parser_show_opcodes);
   dumper_init ();
-  syntax_init ();
+  jsp_early_error_init ();
 
   STACK_INIT (scopes);
   STACK_PUSH (scopes, scopes_tree_init (NULL));
   serializer_set_scope (STACK_TOP (scopes));
   scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
 
-  jmp_buf *syntax_error_label_p = syntax_get_syntax_error_longjmp_label ();
-  int r = setjmp (*syntax_error_label_p);
+  jmp_buf *jsp_early_error_label_p = jsp_early_error_get_early_error_longjmp_label ();
+  int r = setjmp (*jsp_early_error_label_p);
 
   if (r == 0)
   {
@@ -3211,7 +3210,7 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
     is_parse_finished = true;
 #endif /* !JERRY_NDEBUG */
 
-    syntax_free ();
+    jsp_early_error_free ();
 
     *out_opcodes_p = serializer_merge_scopes_into_bytecode ();
 
@@ -3222,7 +3221,7 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
     STACK_DROP (scopes, 1);
     STACK_FREE (scopes);
 
-    is_syntax_correct = true;
+    status = JSP_STATUS_OK;
   }
   else
   {
@@ -3237,13 +3236,24 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
     jsp_label_remove_all_labels ();
     jsp_mm_free_all ();
 
-    is_syntax_correct = false;
+    jsp_early_error_t type = jsp_early_error_get_type ();
+
+    if (type == JSP_EARLY_ERROR_SYNTAX)
+    {
+      status = JSP_STATUS_SYNTAX_ERROR;
+    }
+    else
+    {
+      JERRY_ASSERT (type == JSP_EARLY_ERROR_REFERENCE);
+
+      status = JSP_STATUS_REFERENCE_ERROR;
+    }
   }
 
   jsp_label_finalize ();
   jsp_mm_finalize ();
 
-  return is_syntax_correct;
+  return status;
 } /* parser_parse_program */
 
 /**
@@ -3252,7 +3262,7 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
  * @return true - if parse finished successfully (no SyntaxError were raised);
  *         false - otherwise.
  */
-bool
+jsp_status_t
 parser_parse_script (const jerry_api_char_t *source, /**< source script */
                      size_t source_size, /**< source script size it bytes */
                      const opcode_t **opcodes_p) /**< out: generated byte-code array
@@ -3267,7 +3277,7 @@ parser_parse_script (const jerry_api_char_t *source, /**< source script */
  * @return true - if parse finished successfully (no SyntaxError were raised);
  *         false - otherwise.
  */
-bool
+jsp_status_t
 parser_parse_eval (const jerry_api_char_t *source, /**< string passed to eval() */
                    size_t source_size, /**< string size in bytes */
                    bool is_strict, /**< flag, indicating whether eval is called
@@ -3288,7 +3298,7 @@ parser_parse_eval (const jerry_api_char_t *source, /**< string passed to eval() 
  * @return true - if parse finished successfully (no SyntaxError were raised);
  *         false - otherwise.
  */
-bool
+jsp_status_t
 parser_parse_new_function (const jerry_api_char_t **params, /**< array of arguments of new Function (p1, p2, ..., pn,
                                                              *                                       body) call */
                            const size_t *params_size, /**< sizes of arguments strings */

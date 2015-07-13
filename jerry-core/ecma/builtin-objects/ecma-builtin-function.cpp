@@ -256,19 +256,24 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
     }
 
     const opcode_t* opcodes_p;
-    bool is_syntax_correct;
+    jsp_status_t parse_status;
 
-    is_syntax_correct = parser_parse_new_function ((const jerry_api_char_t **) utf8_string_params_p,
-                                                   utf8_string_params_size,
-                                                   params_count,
-                                                   &opcodes_p);
+    parse_status = parser_parse_new_function ((const jerry_api_char_t **) utf8_string_params_p,
+                                              utf8_string_params_size,
+                                              params_count,
+                                              &opcodes_p);
 
-    if (!is_syntax_correct)
+    if (parse_status == JSP_STATUS_SYNTAX_ERROR)
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
     }
+    else if (parse_status == JSP_STATUS_REFERENCE_ERROR)
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+    }
     else
     {
+      JERRY_ASSERT (parse_status == JSP_STATUS_OK);
       bool is_strict = false;
       bool do_instantiate_arguments_object = true;
 

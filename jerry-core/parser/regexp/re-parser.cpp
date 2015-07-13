@@ -20,7 +20,6 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "re-parser.h"
-#include "syntax-errors.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 

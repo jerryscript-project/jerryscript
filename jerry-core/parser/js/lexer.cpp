@@ -21,7 +21,7 @@
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 #include "lit-strings.h"
-#include "syntax-errors.h"
+#include "jsp-early-error.h"
 
 static token saved_token, prev_token, sent_token, empty_token;
 
@@ -460,7 +460,7 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
   }
   else
   {
-    PARSE_ERROR ("Illegal escape sequence", token_start_pos);
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Illegal escape sequence", token_start_pos);
   }
 } /* lexer_transform_escape_sequences */
 
@@ -774,7 +774,7 @@ lexer_parse_identifier_or_keyword (void)
 
   if (!is_correct_identifier_name)
   {
-    PARSE_ERROR ("Illegal identifier name", lit_utf8_iterator_get_pos (&src_iter));
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Illegal identifier name", lit_utf8_iterator_get_pos (&src_iter));
   }
 
   const lit_utf8_size_t charset_size = TOK_SIZE ();
@@ -853,7 +853,7 @@ lexer_parse_number (void)
     c = LA (0);
     if (!lit_char_is_hex_digit (c))
     {
-      PARSE_ERROR ("Invalid HexIntegerLiteral", lit_utf8_iterator_get_pos (&src_iter));
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Invalid HexIntegerLiteral", lit_utf8_iterator_get_pos (&src_iter));
     }
 
     do
@@ -865,7 +865,9 @@ lexer_parse_number (void)
 
     if (lexer_is_char_can_be_identifier_start (c))
     {
-      PARSE_ERROR ("Identifier just after integer literal", lit_utf8_iterator_get_pos (&src_iter));
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                   "Identifier just after integer literal",
+                   lit_utf8_iterator_get_pos (&src_iter));
     }
 
     tok_length = (size_t) (TOK_SIZE ());
@@ -913,7 +915,8 @@ lexer_parse_number (void)
       {
         if (is_exp)
         {
-          PARSE_ERROR ("Numeric literal shall not contain more than exponential marker ('e' or 'E')",
+          PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                       "Numeric literal shall not contain more than exponential marker ('e' or 'E')",
                        lit_utf8_iterator_get_pos (&src_iter));
         }
         else
@@ -934,7 +937,8 @@ lexer_parse_number (void)
       {
         if (lexer_is_char_can_be_identifier_start (c))
         {
-          PARSE_ERROR ("Numeric literal shall not contain non-numeric characters",
+          PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                       "Numeric literal shall not contain non-numeric characters",
                        lit_utf8_iterator_get_pos (&src_iter));
         }
 
@@ -963,7 +967,7 @@ lexer_parse_number (void)
       /* Octal integer literals */
       if (strict_mode)
       {
-        PARSE_ERROR ("Octal integer literals are not allowed in strict mode", token_start_pos);
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Octal integer literals are not allowed in strict mode", token_start_pos);
       }
       else
       {
@@ -1029,11 +1033,11 @@ lexer_parse_string (void)
 
     if (c == LIT_CHAR_NULL)
     {
-      PARSE_ERROR ("Unclosed string", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed string", token_start_pos);
     }
     else if (lit_char_is_line_terminator (c))
     {
-      PARSE_ERROR ("String literal shall not contain newline character", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "String literal shall not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
@@ -1097,18 +1101,20 @@ lexer_parse_regexp (void)
 
     if (c == LIT_CHAR_NULL)
     {
-      PARSE_ERROR ("Unclosed string", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed string", token_start_pos);
     }
     else if (lit_char_is_line_terminator (c))
     {
-      PARSE_ERROR ("RegExp literal shall not contain newline character", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "RegExp literal shall not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
       consume_char ();
       if (lit_char_is_line_terminator (LA (0)))
       {
-        PARSE_ERROR ("RegExp literal backslash sequence should not contain newline character", token_start_pos);
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                     "RegExp literal backslash sequence should not contain newline character",
+                     token_start_pos);
       }
     }
     else if (c == LIT_CHAR_LEFT_SQUARE)
@@ -1195,7 +1201,7 @@ lexer_parse_comment (void)
       }
       else if (c == LIT_CHAR_NULL)
       {
-        PARSE_ERROR ("Unclosed multiline comment", lit_utf8_iterator_get_pos (&src_iter));
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed multiline comment", lit_utf8_iterator_get_pos (&src_iter));
       }
     }
 
@@ -1461,7 +1467,7 @@ lexer_parse_token (void)
     }
   }
 
-  PARSE_ERROR ("Illegal character", lit_utf8_iterator_get_pos (&src_iter));
+  PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Illegal character", lit_utf8_iterator_get_pos (&src_iter));
 } /* lexer_parse_token */
 
 token
@@ -1490,7 +1496,7 @@ lexer_next_token (void)
   if (prev_token.type == TOK_EOF
       && sent_token.type == TOK_EOF)
   {
-    PARSE_ERROR ("Unexpected EOF", lit_utf8_iterator_get_pos (&src_iter));
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unexpected EOF", lit_utf8_iterator_get_pos (&src_iter));
   }
 
   prev_token = sent_token;
@@ -1829,7 +1835,7 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
 
   if (!lit_is_utf8_string_valid (source, (lit_utf8_size_t) source_size))
   {
-    PARSE_ERROR ("Invalid source encoding", LIT_ITERATOR_POS_ZERO);
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Invalid source encoding", LIT_ITERATOR_POS_ZERO);
   }
 
   src_iter = lit_utf8_iterator_create (source, (lit_utf8_size_t) source_size);

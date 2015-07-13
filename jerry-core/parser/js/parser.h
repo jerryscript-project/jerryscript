@@ -18,9 +18,19 @@
 
 #include "jrt.h"
 
+/**
+ * Parser completion status
+ */
+typedef enum
+{
+  JSP_STATUS_OK, /**< parse finished successfully, no early errors occured */
+  JSP_STATUS_SYNTAX_ERROR, /**< SyntaxError early error occured */
+  JSP_STATUS_REFERENCE_ERROR /**< ReferenceError early error occured */
+} jsp_status_t;
+
 void parser_set_show_opcodes (bool);
-bool parser_parse_script (const jerry_api_char_t *, size_t, const opcode_t **);
-bool parser_parse_eval (const jerry_api_char_t *, size_t, bool, const opcode_t **);
-bool parser_parse_new_function (const jerry_api_char_t **, const size_t *, size_t, const opcode_t **);
+jsp_status_t parser_parse_script (const jerry_api_char_t *, size_t, const opcode_t **);
+jsp_status_t parser_parse_eval (const jerry_api_char_t *, size_t, bool, const opcode_t **);
+jsp_status_t parser_parse_new_function (const jerry_api_char_t **, const size_t *, size_t, const opcode_t **);
 
 #endif /* PARSER_H */

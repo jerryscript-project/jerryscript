@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "syntax-errors.h"
+#include "jsp-early-error.h"
 #include "stack.h"
 #include "jrt.h"
 #include "parser.h"
@@ -22,13 +22,18 @@
 #include "lit-magic-strings.h"
 
 /**
- * SyntaxError longjmp label, used to finish parse upon a SyntaxError is raised
+ * Early error longjmp label, used to finish parse upon an early error occurence
  *
  * See also:
- *          syntax_get_syntax_error_longjmp_label
- *          syntax_raise_error
+ *          jsp_early_error_get_early_error_longjmp_label
+ *          jsp_early_error_raise_error
  */
-static jmp_buf jsp_syntax_error_label;
+static jmp_buf jsp_early_error_label;
+
+/**
+ * Type of early error occured, or JSP_EARLY_ERROR__NO_ERROR
+ */
+jsp_early_error_t jsp_early_error_type;
 
 typedef struct
 {
@@ -54,19 +59,42 @@ STATIC_STACK (size_t_stack, size_t)
  * @return pointer to jmp_buf
  */
 jmp_buf *
-syntax_get_syntax_error_longjmp_label (void)
+jsp_early_error_get_early_error_longjmp_label (void)
 {
-  return &jsp_syntax_error_label;
-} /* syntax_get_syntax_error_longjmp_label */
+  return &jsp_early_error_label;
+} /* jsp_early_error_get_early_error_longjmp_label */
 
 /**
- * Raise SyntaxError, i.e. perform longjmp to SyntaxError longjmp label
+ * Raise an early error of specified type
+ *
+ * Note:
+ *      Performs longjmp to early error longjmp label
+ *
+ * See also:
+ *          parser_parse_program
  */
 void __attribute__((noreturn))
-syntax_raise_error (void)
+jsp_early_error_raise_error (jsp_early_error_t type) /**< type of error to raise */
 {
-  longjmp (jsp_syntax_error_label, 1);
-} /* syntax_raise_error */
+  JERRY_ASSERT (jsp_early_error_type == JSP_EARLY_ERROR__NO_ERROR);
+
+  jsp_early_error_type = type;
+
+  longjmp (jsp_early_error_label, 1);
+} /* jsp_early_error_raise_error */
+
+/**
+ * Get type of occured early error
+ *
+ * @return type
+ */
+jsp_early_error_t
+jsp_early_error_get_type (void)
+{
+  JERRY_ASSERT (jsp_early_error_type != JSP_EARLY_ERROR__NO_ERROR);
+
+  return jsp_early_error_type;
+} /* jsp_early_error_get_type */
 
 static prop_literal
 create_prop_literal (literal_t lit, prop_type type)
@@ -80,20 +108,20 @@ create_prop_literal (literal_t lit, prop_type type)
 }
 
 void
-syntax_start_checking_of_prop_names (void)
+jsp_early_error_start_checking_of_prop_names (void)
 {
   STACK_PUSH (size_t_stack, STACK_SIZE (props));
 }
 
 void
-syntax_add_prop_name (operand op, prop_type pt)
+jsp_early_error_add_prop_name (operand op, prop_type pt)
 {
   JERRY_ASSERT (op.type == OPERAND_LITERAL);
   STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), pt));
 }
 
 void
-syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unused___)
+jsp_early_error_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unused___)
 {
   if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2)
   {
@@ -129,28 +157,32 @@ syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unu
         /*a*/
         if (is_strict && previous.type == PROP_DATA && current.type == PROP_DATA)
         {
-          PARSE_ERROR_VARG ("Duplication of parameter name '%s' in ObjectDeclaration is not allowed in strict mode",
+          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                            "Duplication of parameter name '%s' in ObjectDeclaration is not allowed in strict mode",
                             loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*b*/
         if (previous.type == PROP_DATA
             && (current.type == PROP_SET || current.type == PROP_GET))
         {
-          PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
+          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                            "Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
                             loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*c*/
         if (current.type == PROP_DATA
             && (previous.type == PROP_SET || previous.type == PROP_GET))
         {
-          PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
+          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                            "Parameter name '%s' in ObjectDeclaration may not be both data and accessor",
                             loc, lit_literal_to_str_internal_buf (current.lit));
         }
         /*d*/
         if ((previous.type == PROP_SET && current.type == PROP_SET)
             || (previous.type == PROP_GET && current.type == PROP_GET))
         {
-          PARSE_ERROR_VARG ("Parameter name '%s' in ObjectDeclaration may not be accessor of same type",
+          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                            "Parameter name '%s' in ObjectDeclaration may not be accessor of same type",
                             loc, lit_literal_to_str_internal_buf (current.lit));
         }
       }
@@ -162,12 +194,12 @@ syntax_check_for_duplication_of_prop_names (bool is_strict, locus loc __attr_unu
 }
 
 void
-syntax_start_checking_of_vargs (void)
+jsp_early_error_start_checking_of_vargs (void)
 {
   STACK_PUSH (size_t_stack, STACK_SIZE (props));
 }
 
-void syntax_add_varg (operand op)
+void jsp_early_error_add_varg (operand op)
 {
   JERRY_ASSERT (op.type == OPERAND_LITERAL);
   STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), VARG));
@@ -185,13 +217,13 @@ emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
                                         lit_get_magic_string_utf8 (LIT_MAGIC_STRING_EVAL),
                                         lit_get_magic_string_size (LIT_MAGIC_STRING_EVAL)))
     {
-      PARSE_ERROR ("'eval' and 'arguments' are not allowed here in strict mode", loc);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "'eval' and 'arguments' are not allowed here in strict mode", loc);
     }
   }
 }
 
 void
-syntax_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, locus loc)
+jsp_early_error_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, locus loc)
 {
   if (is_strict)
   {
@@ -201,7 +233,7 @@ syntax_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, 
 
 /* 13.1, 15.3.2 */
 void
-syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
+jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
 {
   if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2 || !is_strict)
   {
@@ -224,7 +256,8 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
                     || current->get_type () == LIT_MAGIC_STR_EX_T);
       if (lit_literal_equal_type (previous, current))
       {
-        PARSE_ERROR_VARG ("Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
+        PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                          "Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
                           loc, lit_literal_to_str_internal_buf (previous));
       }
     }
@@ -235,23 +268,25 @@ syntax_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc _
 }
 
 void
-syntax_check_delete (bool is_strict, locus loc __attr_unused___)
+jsp_early_error_check_delete (bool is_strict, locus loc __attr_unused___)
 {
   if (is_strict)
   {
-    PARSE_ERROR ("'delete' operator shall not apply on identifier in strict mode.", loc);
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "'delete' operator shall not apply on identifier in strict mode.", loc);
   }
 }
 
 void
-syntax_init (void)
+jsp_early_error_init (void)
 {
+  jsp_early_error_type = JSP_EARLY_ERROR__NO_ERROR;
+
   STACK_INIT (props);
   STACK_INIT (size_t_stack);
 }
 
 void
-syntax_free (void)
+jsp_early_error_free (void)
 {
   STACK_FREE (size_t_stack);
   STACK_FREE (props);

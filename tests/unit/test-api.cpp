@@ -31,7 +31,7 @@ const char *test_source = (
                            "this.foo = f; "
                            "this.bar = function (a) { "
                            "return a + t; "
-                           "} "
+                           "}; "
                            "function A () { "
                            "this.t = 12; "
                            "} "

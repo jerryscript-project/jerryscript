@@ -2561,7 +2561,7 @@ insert_semicolon (void)
   {
     lexer_save_token (tok);
   }
-  else if (!token_is (TOK_SEMICOLON))
+  else if (!token_is (TOK_SEMICOLON) && !token_is (TOK_EOF))
   {
     EMIT_ERROR ("Expected either ';' or newline token");
   }
@@ -2847,23 +2847,13 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
       tok = temp;
       operand expr = parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
       dump_assignment_of_lhs_if_literal (expr);
-      skip_newlines ();
-      if (!token_is (TOK_SEMICOLON))
-      {
-        lexer_save_token (tok);
-      }
-      return;
+      insert_semicolon ();
     }
   }
   else
   {
     parse_expression (true, JSP_EVAL_RET_STORE_DUMP);
-    skip_newlines ();
-    if (!token_is (TOK_SEMICOLON))
-    {
-      lexer_save_token (tok);
-    }
-    return;
+    insert_semicolon ();
   }
 }
 

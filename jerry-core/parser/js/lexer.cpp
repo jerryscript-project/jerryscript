@@ -849,15 +849,19 @@ lexer_parse_number (void)
     consume_char ();
     consume_char ();
     new_token ();
-    while (true)
+
+    c = LA (0);
+    if (!lit_char_is_hex_digit (c))
     {
-      c = LA (0);
-      if (!lit_char_is_hex_digit (c))
-      {
-        break;
-      }
-      consume_char ();
+      PARSE_ERROR ("Invalid HexIntegerLiteral", lit_utf8_iterator_get_pos (&src_iter));
     }
+
+    do
+    {
+      consume_char ();
+      c = LA (0);
+    }
+    while (lit_char_is_hex_digit (c));
 
     if (lexer_is_char_can_be_identifier_start (c))
     {

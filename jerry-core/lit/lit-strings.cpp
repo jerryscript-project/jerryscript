@@ -753,7 +753,7 @@ lit_code_point_to_utf8 (lit_code_point_t code_point, /**< code point */
     buf[3] = LIT_UTF8_EXTRA_BYTE_MARKER | fourth_byte_bits;
     return 4;
   }
-} /* lit_code_unit_to_utf8 */
+} /* lit_code_point_to_utf8 */
 
 /**
  * Convert surrogate pair to code point

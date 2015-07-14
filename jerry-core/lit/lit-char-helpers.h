@@ -220,4 +220,16 @@ extern uint32_t lit_char_hex_to_int (ecma_char_t);
  */
 extern bool lit_char_is_word_char (ecma_char_t);
 
+/*
+ * Utility functions for uppercasing / lowercasing
+ */
+
+/**
+ * Minimum buffer size for lit_char_to_lower_case / lit_char_to_upper_case functions.
+ */
+#define LIT_MAXIMUM_OTHER_CASE_LENGTH (3)
+
+lit_utf8_size_t lit_char_to_lower_case (ecma_char_t, ecma_char_t *, size_t);
+lit_utf8_size_t lit_char_to_upper_case (ecma_char_t, ecma_char_t *, size_t);
+
 #endif /* LIT_CHAR_HELPERS_H */

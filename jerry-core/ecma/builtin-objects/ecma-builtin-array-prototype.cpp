@@ -1449,36 +1449,75 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   uint32_t len = ecma_number_to_uint32 (len_number);
 
   uint32_t defined_prop_count = 0;
-  /* Count number of defined properties. */
+  /* Count number of array index properties. */
   for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
        property_p != NULL;
        property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
-    defined_prop_count++;
+    ecma_string_t *property_name_p;
+
+    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_accessor_property.name_p);
+    }
+    else
+    {
+      continue;
+    }
+
+    uint32_t index;
+    if (ecma_string_get_array_index (property_name_p, &index) && index < len)
+    {
+      defined_prop_count++;
+    }
   }
 
   MEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
   uint32_t copied_num = 0;
 
   /* Copy unsorted array into a native c array. */
-  for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
+       property_p != NULL && ecma_is_completion_value_empty (ret_value);
+       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
-    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-    if (ecma_op_object_get_property (obj_p, index_string_p) != NULL)
+    ecma_string_t *property_name_p;
+
+    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
-      ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, index_string_p), ret_value);
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_accessor_property.name_p);
+    }
+    else
+    {
+      continue;
+    }
+
+    uint32_t index;
+    if (ecma_string_get_array_index (property_name_p, &index) && index < len)
+    {
+      ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, property_name_p), ret_value);
 
       values_buffer[copied_num++] = ecma_copy_value (index_value, true);
 
       ECMA_FINALIZE (index_value);
     }
-    ecma_deref_ecma_string (index_string_p);
   }
 
-  JERRY_ASSERT (copied_num <= defined_prop_count);
+  JERRY_ASSERT (copied_num == defined_prop_count || !ecma_is_completion_value_empty (ret_value));
 
   /* Sorting. */
-  if (len > 1 && ecma_is_completion_value_empty (ret_value))
+  if (copied_num > 1 && ecma_is_completion_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (sort_value,
                     ecma_builtin_array_prototype_object_array_heap_sort_helper (values_buffer,
@@ -1489,8 +1528,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   }
 
   /* Put sorted values to the front of the array. */
-  uint32_t index;
-  for (index = 0; index < copied_num && ecma_is_completion_value_empty (ret_value); index++)
+  for (uint32_t index = 0; index < copied_num && ecma_is_completion_value_empty (ret_value); index++)
   {
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
     ECMA_TRY_CATCH (put_value,
@@ -1501,12 +1539,35 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   }
 
   /* Undefined properties should be in the back of the array. */
-  for (;index < len && ecma_is_completion_value_empty (ret_value); index++)
+  ecma_property_t *next_prop;
+  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
+       property_p != NULL && ecma_is_completion_value_empty (ret_value);
+       property_p = next_prop)
   {
-    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-    ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, index_string_p, true), ret_value);
-    ECMA_FINALIZE (del_value);
-    ecma_deref_ecma_string (index_string_p);
+    ecma_string_t *property_name_p;
+    next_prop = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p);
+
+    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_data_property.name_p);
+    }
+    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    {
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   property_p->u.named_accessor_property.name_p);
+    }
+    else
+    {
+      continue;
+    }
+
+    uint32_t index;
+    if (ecma_string_get_array_index (property_name_p, &index) && index < len && index >= copied_num)
+    {
+      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, property_name_p, true), ret_value);
+      ECMA_FINALIZE (del_value);
+    }
   }
 
   /* Free values that were copied to the local array. */

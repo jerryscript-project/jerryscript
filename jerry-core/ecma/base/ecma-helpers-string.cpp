@@ -993,6 +993,39 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 } /* ecma_string_to_number */
 
 /**
+ * Check if string is array index.
+ *
+ * @return true - if string is valid array index
+ *         false - otherwise
+ */
+bool
+ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
+                             uint32_t *out_index_p) /**< out: index */
+{
+  bool is_array_index = true;
+  if (str_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  {
+    *out_index_p = str_p->u.uint32_number;
+  }
+  else
+  {
+    ecma_number_t num = ecma_string_to_number (str_p);
+    *out_index_p = ecma_number_to_uint32 (num);
+
+    ecma_string_t *to_uint32_to_string_p = ecma_new_ecma_string_from_uint32 (*out_index_p);
+
+    is_array_index = ecma_compare_ecma_strings (str_p,
+                                                to_uint32_to_string_p);
+
+    ecma_deref_ecma_string (to_uint32_to_string_p);
+  }
+
+  is_array_index = is_array_index && (*out_index_p != ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX);
+
+  return is_array_index;
+} /* ecma_string_is_array_index */
+
+/**
  * Convert ecma-string's contents to a utf-8 string and put it to the buffer.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;

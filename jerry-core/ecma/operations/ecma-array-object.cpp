@@ -386,29 +386,8 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   {
     // 4.a.
     uint32_t index;
-    bool is_index;
 
-    if (property_name_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-    {
-      index = property_name_p->u.uint32_number;
-      is_index = true;
-    }
-    else
-    {
-      ecma_number_t number = ecma_string_to_number (property_name_p);
-      index = ecma_number_to_uint32 (number);
-
-      ecma_string_t *to_uint32_to_string_p = ecma_new_ecma_string_from_uint32 (index);
-
-      is_index = ecma_compare_ecma_strings (property_name_p,
-                                            to_uint32_to_string_p);
-
-      ecma_deref_ecma_string (to_uint32_to_string_p);
-    }
-
-    is_index = is_index && (index != ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX);
-
-    if (!is_index)
+    if (!ecma_string_get_array_index (property_name_p, &index))
     {
       // 5.
       return ecma_op_general_object_define_own_property (obj_p,

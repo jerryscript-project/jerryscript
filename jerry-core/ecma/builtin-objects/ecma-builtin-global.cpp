@@ -110,9 +110,9 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  ecma_length_t str_size = ecma_string_get_length (number_str_p);
+  lit_utf8_size_t str_size = ecma_string_get_size (number_str_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size + 1, lit_utf8_byte_t);
+  MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size, lit_utf8_byte_t);
 
   ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
                                                      utf8_string_buff,

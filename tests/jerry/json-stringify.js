@@ -14,6 +14,8 @@
 // limitations under the License.
 
 // Checking quoting strings
+assert (JSON.stringify ("") === '""');
+
 normal_string = "asdasd";
 assert (JSON.stringify (normal_string) == '"asdasd"');
 

@@ -1129,7 +1129,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
   ssize_t bytes_copied = ecma_string_to_utf8_string (string_p,
                                                      zt_string_buff,
                                                      (ssize_t) string_buf_size);
-  JERRY_ASSERT (bytes_copied > 0);
+  JERRY_ASSERT (bytes_copied > 0 || !string_len);
 
   /* 2. */
   for (ecma_length_t i = 0; i < string_len; i++)

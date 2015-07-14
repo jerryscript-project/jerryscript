@@ -1492,34 +1492,6 @@ dump_delete (operand res, operand op, bool is_strict, locus loc)
       const op_meta last_op_meta = last_dumped_op_meta ();
       switch (last_op_meta.op.op_idx)
       {
-        case OPCODE (assignment):
-        {
-          if (last_op_meta.op.data.assignment.value_right == LITERAL_TO_REWRITE)
-          {
-            const operand var_op = literal_operand (last_op_meta.lit_id[2]);
-            syntax_check_delete (is_strict, loc);
-            switch (res.type)
-            {
-              case OPERAND_LITERAL:
-              {
-                const opcode_t opcode = getop_delete_var (LITERAL_TO_REWRITE, LITERAL_TO_REWRITE);
-                serializer_dump_op_meta (create_op_meta_110 (opcode, res.data.lit_id, var_op.data.lit_id));
-                break;
-              }
-              case OPERAND_TMP:
-              {
-                const opcode_t opcode = getop_delete_var (res.data.uid, LITERAL_TO_REWRITE);
-                serializer_dump_op_meta (create_op_meta_010 (opcode, var_op.data.lit_id));
-                break;
-              }
-            }
-          }
-          else
-          {
-            dump_boolean_assignment (res, true);
-          }
-          break;
-        }
         case OPCODE (prop_getter):
         {
           const opcode_counter_t oc = (opcode_counter_t) (serializer_get_current_opcode_counter () - 1);
@@ -1609,6 +1581,10 @@ dump_delete (operand res, operand op, bool is_strict, locus loc)
             }
           }
           break;
+        }
+        default:
+        {
+          dump_boolean_assignment (res, true);
         }
       }
       break;

@@ -1099,13 +1099,17 @@ lexer_parse_regexp (void)
     {
       PARSE_ERROR ("Unclosed string", token_start_pos);
     }
-    else if (c == LIT_CHAR_LF)
+    else if (lit_char_is_line_terminator (c))
     {
       PARSE_ERROR ("RegExp literal shall not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
       consume_char ();
+      if (lit_char_is_line_terminator (LA (0)))
+      {
+        PARSE_ERROR ("RegExp literal backslash sequence should not contain newline character", token_start_pos);
+      }
     }
     else if (c == LIT_CHAR_LEFT_SQUARE)
     {

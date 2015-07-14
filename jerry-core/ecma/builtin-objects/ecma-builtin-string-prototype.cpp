@@ -27,6 +27,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
 
@@ -508,6 +509,164 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
 } /* ecma_builtin_string_prototype_object_substring */
 
 /**
+ * Helper function to convert a string to upper or lower case.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /**< this argument */
+                                                        bool lower_case) /**< convert to lower (true)
+                                                                          *   or upper (false) case */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 2. */
+  ECMA_TRY_CATCH (to_string_val,
+                  ecma_op_to_string (this_arg),
+                  ret_value);
+
+  /* 3. */
+  ecma_string_t *input_string_p = ecma_get_string_from_value (to_string_val);
+  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
+
+  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
+                          input_size,
+                          lit_utf8_byte_t);
+
+  ecma_string_to_utf8_string (input_string_p,
+                              input_start_p,
+                              (ssize_t) (input_size));
+
+  /*
+   * The URI encoding has two major phases: first we compute
+   * the length of the lower case string, then we encode it.
+   */
+
+  lit_utf8_size_t output_length = 0;
+  lit_utf8_iterator_t input_iterator = lit_utf8_iterator_create (input_start_p, input_size);
+
+  while (!lit_utf8_iterator_is_eos (&input_iterator))
+  {
+    ecma_char_t character = lit_utf8_iterator_read_next (&input_iterator);
+    ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+    lit_utf8_byte_t utf8_byte_buffer[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
+    lit_utf8_size_t character_length;
+
+    /*
+     * We need to keep surrogate pairs. Surrogates are never converted,
+     * regardless they form a valid pair or not.
+     */
+    if (lit_is_code_unit_high_surrogate (character))
+    {
+      ecma_char_t next_character = lit_utf8_iterator_peek_next (&input_iterator);
+
+      if (lit_is_code_unit_low_surrogate (next_character))
+      {
+        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (character, next_character);
+        output_length += lit_code_point_to_utf8 (surrogate_code_point, utf8_byte_buffer);
+        lit_utf8_iterator_incr (&input_iterator);
+        continue;
+      }
+    }
+
+    if (lower_case)
+    {
+      character_length = lit_char_to_lower_case (character,
+                                                 character_buffer,
+                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
+    }
+    else
+    {
+      character_length = lit_char_to_upper_case (character,
+                                                 character_buffer,
+                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
+    }
+
+    JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+    for (lit_utf8_size_t i = 0; i < character_length; i++)
+    {
+      output_length += lit_code_unit_to_utf8 (character_buffer[i], utf8_byte_buffer);
+    }
+  }
+
+  /* Second phase. */
+
+  MEM_DEFINE_LOCAL_ARRAY (output_start_p,
+                          output_length,
+                          lit_utf8_byte_t);
+
+  lit_utf8_byte_t *output_char_p = output_start_p;
+
+  /* Encoding the output. */
+  lit_utf8_iterator_seek_bos (&input_iterator);
+
+  while (!lit_utf8_iterator_is_eos (&input_iterator))
+  {
+    ecma_char_t character = lit_utf8_iterator_read_next (&input_iterator);
+    ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+    lit_utf8_size_t character_length;
+
+    /*
+     * We need to keep surrogate pairs. Surrogates are never converted,
+     * regardless they form a valid pair or not.
+     */
+    if (lit_is_code_unit_high_surrogate (character))
+    {
+      ecma_char_t next_character = lit_utf8_iterator_peek_next (&input_iterator);
+
+      if (lit_is_code_unit_low_surrogate (next_character))
+      {
+        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (character, next_character);
+        output_char_p += lit_code_point_to_utf8 (surrogate_code_point, output_char_p);
+        lit_utf8_iterator_incr (&input_iterator);
+        continue;
+      }
+    }
+
+    if (lower_case)
+    {
+      character_length = lit_char_to_lower_case (character,
+                                                 character_buffer,
+                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
+    }
+    else
+    {
+      character_length = lit_char_to_upper_case (character,
+                                                 character_buffer,
+                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
+    }
+
+    JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+    for (lit_utf8_size_t i = 0; i < character_length; i++)
+    {
+      output_char_p += lit_code_point_to_utf8 (character_buffer[i], output_char_p);
+    }
+  }
+
+  JERRY_ASSERT (output_start_p + output_length == output_char_p);
+
+  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length);
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
+
+  MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
+} /* ecma_builtin_string_prototype_object_conversion_helper */
+
+/**
  * The String.prototype object's 'toLowerCase' routine
  *
  * See also:
@@ -519,7 +678,7 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_string_prototype_object_conversion_helper (this_arg, true);
 } /* ecma_builtin_string_prototype_object_to_lower_case */
 
 /**
@@ -534,7 +693,7 @@ ecma_builtin_string_prototype_object_to_lower_case (ecma_value_t this_arg) /**< 
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_string_prototype_object_conversion_helper (this_arg, true);
 } /* ecma_builtin_string_prototype_object_to_locale_lower_case */
 
 /**
@@ -549,7 +708,7 @@ ecma_builtin_string_prototype_object_to_locale_lower_case (ecma_value_t this_arg
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_string_prototype_object_conversion_helper (this_arg, false);
 } /* ecma_builtin_string_prototype_object_to_upper_case */
 
 /**
@@ -564,7 +723,7 @@ ecma_builtin_string_prototype_object_to_upper_case (ecma_value_t this_arg) /**< 
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_to_locale_upper_case (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_string_prototype_object_conversion_helper (this_arg, false);
 } /* ecma_builtin_string_prototype_object_to_locale_upper_case */
 
 /**

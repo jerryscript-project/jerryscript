@@ -328,3 +328,79 @@ lit_char_is_word_char (ecma_char_t c) /**< code unit */
           || (c >= LIT_CHAR_ASCII_DIGITS_BEGIN && c <= LIT_CHAR_ASCII_DIGITS_END)
           || c == LIT_CHAR_UNDERSCORE);
 } /* lit_char_is_word_char */
+
+/**
+ * Returns the lowercase character sequence of an ecma character.
+ *
+ * Note: output_buffer_p must be able to hold at least LIT_MAXIMUM_OTHER_CASE_LENGTH characters.
+ *
+ * @return the length of the lowercase character sequence
+ *         which is always between 1 and LIT_MAXIMUM_OTHER_CASE_LENGTH.
+ */
+lit_utf8_size_t
+lit_char_to_lower_case (ecma_char_t character, /**< input character value */
+                        ecma_char_t *output_buffer_p, /**< buffer for the result characters */
+                        size_t buffer_size) /**< buffer size */
+{
+  TODO ("Needs a proper lower case implementation. See issue #323.");
+
+  JERRY_ASSERT (buffer_size >= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+  if (character >= LIT_CHAR_UPPERCASE_A && character <= LIT_CHAR_UPPERCASE_Z)
+  {
+    output_buffer_p[0] = (ecma_char_t) (character + (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    return 1;
+  }
+
+  if (character == 0x130)
+  {
+    output_buffer_p[0] = LIT_CHAR_LOWERCASE_I;
+    output_buffer_p[1] = 0x307;
+    return 2;
+  }
+
+  output_buffer_p[0] = character;
+  return 1;
+} /* lit_char_to_lower_case */
+
+/**
+ * Returns the uppercase character sequence of an ecma character.
+ *
+ * Note: output_buffer_p must be able to hold at least LIT_MAXIMUM_OTHER_CASE_LENGTH characters.
+ *
+ * @return the length of the uppercase character sequence
+ *         which is always between 1 and LIT_MAXIMUM_OTHER_CASE_LENGTH.
+ */
+lit_utf8_size_t
+lit_char_to_upper_case (ecma_char_t character, /**< input character value */
+                        ecma_char_t *output_buffer_p, /**< buffer for the result characters */
+                        size_t buffer_size) /**< buffer size */
+{
+  TODO ("Needs a proper upper case implementation. See issue #323.");
+
+  JERRY_ASSERT (buffer_size >= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+  if (character >= LIT_CHAR_LOWERCASE_A && character <= LIT_CHAR_LOWERCASE_Z)
+  {
+    output_buffer_p[0] = (ecma_char_t) (character - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    return 1;
+  }
+
+  if (character == 0xdf)
+  {
+    output_buffer_p[0] = LIT_CHAR_UPPERCASE_S;
+    output_buffer_p[1] = LIT_CHAR_UPPERCASE_S;
+    return 2;
+  }
+
+  if (character == 0x1fd7)
+  {
+    output_buffer_p[0] = 0x399;
+    output_buffer_p[1] = 0x308;
+    output_buffer_p[2] = 0x342;
+    return 3;
+  }
+
+  output_buffer_p[0] = character;
+  return 1;
+} /* lit_char_to_upper_case */

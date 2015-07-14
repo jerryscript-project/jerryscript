@@ -1041,7 +1041,12 @@ parse_left_hand_side_expression (operand *this_arg, operand *prop)
   : left_hand_side_expression ('++' | '--')?
   ; */
 static operand
-parse_postfix_expression (void)
+parse_postfix_expression (operand *out_this_arg_gl_p, /**< out: if expression evaluates to object-based
+                                                       *          reference - the reference's base;
+                                                       *        otherwise - empty operand */
+                          operand *out_prop_gl_p) /**< out: if expression evaluates to object-based
+                                                   *          reference - the reference's name;
+                                                   *        otherwise - empty operand */
 {
   operand this_arg = empty_operand (), prop = empty_operand ();
   operand expr = parse_left_hand_side_expression (&this_arg, &prop);
@@ -1079,8 +1084,18 @@ parse_postfix_expression (void)
     lexer_save_token (tok);
   }
 
+  if (out_this_arg_gl_p != NULL)
+  {
+    *out_this_arg_gl_p = this_arg;
+  }
+
+  if (out_prop_gl_p != NULL)
+  {
+    *out_prop_gl_p = prop;
+  }
+
   return expr;
-}
+} /* parse_postfix_expression */
 
 /* unary_expression
   : postfix_expression
@@ -1172,7 +1187,7 @@ parse_unary_expression (operand *this_arg_gl, operand *prop_gl)
     }
     default:
     {
-      expr = parse_postfix_expression ();
+      expr = parse_postfix_expression (&this_arg, &prop);
     }
   }
 

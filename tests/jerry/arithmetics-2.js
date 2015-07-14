@@ -36,3 +36,10 @@ assert(c == 21);
 
 c = a--;
 assert(c == 22);
+
+var o = { p : 1 };
+
+assert (++o.p === 2);
+assert (o.p === 2);
+assert (--o.p === 1);
+assert (o.p === 1);

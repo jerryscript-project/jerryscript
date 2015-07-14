@@ -3161,8 +3161,6 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
   jsp_mm_init ();
   jsp_label_init ();
 
-  lexer_init (source_p, source_size, parser_show_opcodes);
-
   serializer_set_show_opcodes (parser_show_opcodes);
   dumper_init ();
   syntax_init ();
@@ -3171,13 +3169,20 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
   STACK_PUSH (scopes, scopes_tree_init (NULL));
   serializer_set_scope (STACK_TOP (scopes));
   scopes_tree_set_strict_mode (STACK_TOP (scopes), is_strict);
-  lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
   jmp_buf *syntax_error_label_p = syntax_get_syntax_error_longjmp_label ();
   int r = setjmp (*syntax_error_label_p);
 
   if (r == 0)
   {
+    /*
+     * Note:
+     *      Operations that could raise an early error can be performed only during execution of the block.
+     */
+
+    lexer_init (source_p, source_size, parser_show_opcodes);
+    lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
     skip_newlines ();
     parse_source_element_list (true);
 

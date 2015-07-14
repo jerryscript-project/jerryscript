@@ -2925,9 +2925,9 @@ preparse_scope (bool is_global)
 
   opcode_counter_t scope_code_flags_oc = dump_scope_code_flags_for_rewrite ();
 
+  bool is_use_strict = false;
   bool is_ref_arguments_identifier = false;
   bool is_ref_eval_identifier = false;
-  bool is_use_strict = false;
 
   /*
    * Check Directive Prologue for Use Strict directive (see ECMA-262 5.1 section 14.1)
@@ -2937,7 +2937,6 @@ preparse_scope (bool is_global)
     if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "use strict")
         && lexer_is_no_escape_sequences_in_token_string (tok))
     {
-      scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
       is_use_strict = true;
       break;
     }
@@ -2950,21 +2949,8 @@ preparse_scope (bool is_global)
     }
   }
 
-  lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
-
-  dump_reg_var_decl_for_rewrite ();
-
-  bool is_in_var_declaration_list = false;
-
-  size_t nesting_level = 0;
-  while (nesting_level > 0 || !token_is (end_tt))
+  while (!token_is (end_tt))
   {
-    /*
-     * FIXME:
-     *       Remove preparse_scope; move variable declaration search to main pass of parser.
-     *       When byte-code and scope storages would be introduced, move variable declarations
-     *       from byte-code to scope descriptor.
-     */
     if (token_is (TOK_NAME))
     {
       if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "arguments"))
@@ -2975,107 +2961,17 @@ preparse_scope (bool is_global)
       {
         is_ref_eval_identifier = true;
       }
-
-      if (is_in_var_declaration_list)
-      {
-        if (!var_declared (token_data_as_lit_cp ()))
-        {
-          jsp_early_error_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
-                                                                       is_strict_mode (),
-                                                                       tok.loc);
-          dump_variable_declaration (token_data_as_lit_cp ());
-        }
-      }
-
-      skip_newlines ();
     }
-    else if (is_in_var_declaration_list)
-    {
-      if (token_is (TOK_EQ))
-      {
-        skip_newlines ();
 
-        while (!token_is (end_tt)
-               && !token_is (TOK_COMMA)
-               && !token_is (TOK_SEMICOLON))
-        {
-          if (is_keyword (KW_FUNCTION))
-          {
-            skip_function ();
-          }
-          else if (token_is (TOK_OPEN_BRACE))
-          {
-            jsp_skip_braces (TOK_OPEN_BRACE);
-          }
-          else if (token_is (TOK_OPEN_SQUARE))
-          {
-            jsp_skip_braces (TOK_OPEN_SQUARE);
-          }
-          else if (token_is (TOK_OPEN_PAREN))
-          {
-            jsp_skip_braces (TOK_OPEN_PAREN);
-          }
-          else if (token_is (TOK_KEYWORD))
-          {
-            if (is_keyword (KW_VAR))
-            {
-              is_in_var_declaration_list = false;
-            }
-            break;
-          }
-          else if (token_is (TOK_CLOSE_BRACE))
-          {
-            /* the '}' would be handled during next iteration, reducing nesting level counter */
-            is_in_var_declaration_list = false;
-
-            break;
-          }
-
-          skip_token ();
-        }
-      }
-      else if (token_is (TOK_COMMA))
-      {
-        skip_newlines ();
-      }
-      else
-      {
-        is_in_var_declaration_list = false;
-
-        skip_newlines ();
-      }
-    }
-    else
-    {
-      if (token_is (TOK_OPEN_BRACE))
-      {
-        nesting_level++;
-      }
-      else if (token_is (TOK_CLOSE_BRACE))
-      {
-        nesting_level--;
-      }
-      else if (token_is (TOK_OPEN_SQUARE))
-      {
-        jsp_skip_braces (TOK_OPEN_SQUARE);
-      }
-      else if (is_keyword (KW_VAR))
-      {
-        is_in_var_declaration_list = true;
-      }
-      else if (is_keyword (KW_FUNCTION))
-      {
-        skip_function ();
-      }
-
-      skip_newlines ();
-    }
+    skip_newlines ();
   }
 
   opcode_scope_code_flags_t scope_flags = OPCODE_SCOPE_CODE_FLAGS__EMPTY;
 
   if (is_use_strict)
   {
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), true);
+
     scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_STRICT);
   }
 
@@ -3091,12 +2987,126 @@ preparse_scope (bool is_global)
 
   rewrite_scope_code_flags (scope_code_flags_oc, scope_flags);
 
+  lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
+  dump_reg_var_decl_for_rewrite ();
+
   if (lit_utf8_iterator_pos_cmp (start_loc, tok.loc) != 0)
   {
+    lexer_seek (start_loc);
+    skip_newlines ();
+
+    bool is_in_var_declaration_list = false;
+
+    size_t nesting_level = 0;
+    while (nesting_level > 0 || !token_is (end_tt))
+    {
+      /*
+       * FIXME:
+       *       Remove preparse_scope; move variable declaration search to main pass of parser.
+       *       When byte-code and scope storages would be introduced, move variable declarations
+       *       from byte-code to scope descriptor.
+       */
+      if (token_is (TOK_NAME))
+      {
+        if (is_in_var_declaration_list)
+        {
+          if (!var_declared (token_data_as_lit_cp ()))
+          {
+            jsp_early_error_check_for_eval_and_arguments_in_strict_mode (literal_operand (token_data_as_lit_cp ()),
+                                                                         is_strict_mode (),
+                                                                         tok.loc);
+            dump_variable_declaration (token_data_as_lit_cp ());
+          }
+        }
+
+        skip_newlines ();
+      }
+      else if (is_in_var_declaration_list)
+      {
+        if (token_is (TOK_EQ))
+        {
+          skip_newlines ();
+
+          while (!token_is (end_tt)
+                 && !token_is (TOK_COMMA)
+                 && !token_is (TOK_SEMICOLON))
+          {
+            if (is_keyword (KW_FUNCTION))
+            {
+              skip_function ();
+            }
+            else if (token_is (TOK_OPEN_BRACE))
+            {
+              jsp_skip_braces (TOK_OPEN_BRACE);
+            }
+            else if (token_is (TOK_OPEN_SQUARE))
+            {
+              jsp_skip_braces (TOK_OPEN_SQUARE);
+            }
+            else if (token_is (TOK_OPEN_PAREN))
+            {
+              jsp_skip_braces (TOK_OPEN_PAREN);
+            }
+            else if (token_is (TOK_KEYWORD))
+            {
+              break;
+            }
+            else if (token_is (TOK_CLOSE_BRACE))
+            {
+              /* the '}' would be handled during next iteration, reducing nesting level counter */
+              is_in_var_declaration_list = false;
+
+              break;
+            }
+
+            skip_token ();
+          }
+        }
+        else if (token_is (TOK_COMMA))
+        {
+          skip_newlines ();
+        }
+        else
+        {
+          is_in_var_declaration_list = false;
+
+          skip_newlines ();
+        }
+      }
+      else
+      {
+        if (token_is (TOK_OPEN_BRACE))
+        {
+          nesting_level++;
+        }
+        else if (token_is (TOK_CLOSE_BRACE))
+        {
+          nesting_level--;
+        }
+        else if (token_is (TOK_OPEN_SQUARE))
+        {
+          jsp_skip_braces (TOK_OPEN_SQUARE);
+        }
+        else if (is_keyword (KW_VAR))
+        {
+          is_in_var_declaration_list = true;
+        }
+        else if (is_keyword (KW_FUNCTION))
+        {
+          skip_function ();
+        }
+
+        skip_newlines ();
+      }
+    }
+
     lexer_seek (start_loc);
   }
   else
   {
+    JERRY_ASSERT (token_is (end_tt));
+
     lexer_save_token (tok);
   }
 }

@@ -125,3 +125,7 @@ fn_expr = function (a, b, c)
 }
 
 fn_expr (1);
+
+(function () {
+ var a = [arguments];
+})();

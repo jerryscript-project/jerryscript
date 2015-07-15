@@ -155,8 +155,10 @@ export SHELL=/bin/bash
 # "Build all" targets prefix
  BUILD_ALL := build_all
 
+.PHONY: all
 all: precommit
 
+.PHONY: $(BUILD_DIRS_NATIVE)
 $(BUILD_DIRS_NATIVE): prerequisites
 	$(Q) if [ "$$TOOLCHAIN" == "" ]; \
           then \
@@ -177,18 +179,21 @@ $(BUILD_DIRS_NATIVE): prerequisites
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
 
+.PHONY: $(BUILD_DIRS_STM32F3)
 $(BUILD_DIRS_STM32F3): prerequisites
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
+.PHONY: $(BUILD_DIRS_STM32F4)
 $(BUILD_DIRS_STM32F4): prerequisites
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
+.PHONY: $(JERRY_LINUX_TARGETS)
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -197,6 +202,7 @@ $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
 
+.PHONY: unittests
 unittests: $(BUILD_DIR)/native
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -205,6 +211,7 @@ unittests: $(BUILD_DIR)/native
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
 
+.PHONY: $(BUILD_ALL)_native
 $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -214,6 +221,7 @@ $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
+.PHONY: $(JERRY_STM32F3_TARGETS)
 $(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -223,6 +231,7 @@ $(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
 	$(Q) cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
 	$(Q) cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
 
+.PHONY: $(BUILD_ALL)_stm32f3
 $(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -230,6 +239,7 @@ $(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
+.PHONY: $(JERRY_STM32F4_TARGETS)
 $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -239,6 +249,7 @@ $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 	$(Q) cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
 	$(Q) cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
 
+.PHONY: $(BUILD_ALL)_stm32f4
 $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -246,42 +257,52 @@ $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
+.PHONY: build_all
 build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
 
 #
 # build - build_all, then run cppcheck and copy output to OUT_DIR
 # Prebuild is needed to avoid race conditions between make instances running in parallel
 #
+.PHONY: build
 build: $(BUILD_ALL)
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) ($(MAKE) VERBOSE=1 $(JERRY_TARGETS) 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) rm -rf $(OUT_DIR)/$(BUILD_ALL)* $(OUT_DIR)/$@
 
+.PHONY: $(FLASH_TARGETS)
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
 	$(Q) $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ $(QLOG)
 
+.PHONY: push
 push: ./tools/git-scripts/push.sh
 	$(Q) ./tools/git-scripts/push.sh
 
+.PHONY: pull
 pull: ./tools/git-scripts/pull.sh
 	$(Q) ./tools/git-scripts/pull.sh
 
+.PHONY: log
 log: ./tools/git-scripts/log.sh
 	$(Q) ./tools/git-scripts/log.sh
 
+.PHONY: precommit
 precommit: clean prerequisites
 	$(Q) ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
 
+.PHONY: unittests_run
 unittests_run: unittests
 	$(Q) rm -rf $(OUT_DIR)/unittests/check
 	$(Q) mkdir -p $(OUT_DIR)/unittests/check
 	$(Q) ./tools/runners/run-unittests.sh $(OUT_DIR)/unittests || \
          (echo "Unit tests run failed. See $(OUT_DIR)/unittests/unit_tests_run.log for details."; exit 1;)
 
+.PHONY: clean
 clean:
 	$(Q) rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
+.PHONY: prerequisites
 prerequisites: $(PREREQUISITES_STATE_DIR)/.prerequisites
 
 $(PREREQUISITES_STATE_DIR)/.prerequisites:
@@ -291,8 +312,7 @@ $(PREREQUISITES_STATE_DIR)/.prerequisites:
           (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
 	@ echo "Prerequisites setup succeeded"
 
+.PHONY: prerequisites_clean
 prerequisites_clean:
 	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
 	$(Q) rm -rf $(PREREQUISITES_STATE_DIR)
-
-.PHONY: prerequisites_clean prerequisites clean build unittests_run $(BUILD_DIRS_ALL) $(JERRY_TARGETS) $(FLASH_TARGETS)

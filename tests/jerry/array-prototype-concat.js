@@ -21,9 +21,16 @@ for (i = 0; i < array.length; i++) {
 	assert(array[i] === new_arr[i]);
 }
 
-var obj = {};
+var obj = { concat : Array.prototype.concat };
 var arr1 = ["Apple", 6, "Peach"];
 var arr2 = [obj, "Cherry", "Grape"];
+
+var new_array = obj.concat(arr1);
+assert(new_array.length === 4);
+assert(new_array[0] === obj);
+assert(new_array[1] === "Apple");
+assert(new_array[2] === 6);
+assert(new_array[3] === "Peach");
 
 var new_array = arr1.concat(arr2, obj, 1);
 
@@ -50,24 +57,19 @@ for (i = 0; i < result.length; i++) {
 	assert(result[i] === expected[i]);
 }
 
-// Checking behavior when unable to get length
-var obj = { concat : Array.prototype.concat }
-Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });
-
-try {
-	obj.concat();
-	assert(false);
-} catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
-}
+var arr1 = [];
+arr1.length = 2;
+var arr2 = [];
+arr2.length = 3;
+assert(arr1.concat(arr2).length === arr1.length + arr2.length);
 
 // Checking behavior when unable to get element
-var obj = { concat : Array.prototype.concat, length : 1 }
-Object.defineProperty(obj, '0', { 'get' : function () {throw new ReferenceError ("foo"); } });
+var arr = []
+Object.defineProperty(arr, '0', { 'get' : function () {throw new ReferenceError ("foo"); } });
+arr.length = 1;
 
 try {
-	obj.concat();
+	arr.concat();
 	assert(false);
 } catch (e) {
 	assert(e.message === "foo");

@@ -326,6 +326,132 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
 } /* ecma_builtin_helper_array_index_normalize */
 
 /**
+ * Helper function for concatenating an ecma_value_t to an Array.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.4 steps 5.b - 5.c
+ *
+ * Used by:
+ *         - The Array.prototype.concat routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
+                                        uint32_t *length_p, /**< in-out: array's length */
+                                        ecma_value_t value) /**< value to concat */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 5.b */
+  if (ecma_is_value_object (value)
+      && (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL))
+  {
+    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    /* 5.b.ii */
+    ECMA_TRY_CATCH (arg_len_value,
+                    ecma_op_object_get (ecma_get_object_from_value (value),
+                                        magic_string_length_p),
+                    ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, arg_len_value, ret_value);
+
+    uint32_t arg_len = ecma_number_to_uint32 (arg_len_number);
+
+    /* 5.b.iii */
+    for (uint32_t array_index = 0;
+         array_index < arg_len && ecma_is_completion_value_empty (ret_value);
+         array_index++)
+    {
+      ecma_string_t *array_index_string_p = ecma_new_ecma_string_from_uint32 (array_index);
+
+      /* 5.b.iii.2 */
+      if (ecma_op_object_get_property (ecma_get_object_from_value (value),
+                                       array_index_string_p) != NULL)
+      {
+        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
+
+        /* 5.b.iii.3.a */
+        ECMA_TRY_CATCH (get_value,
+                        ecma_op_object_get (ecma_get_object_from_value (value),
+                                            array_index_string_p),
+                        ret_value);
+
+        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+        {
+          prop_desc.is_value_defined = true;
+          prop_desc.value = get_value;
+
+          prop_desc.is_writable_defined = true;
+          prop_desc.is_writable = true;
+
+          prop_desc.is_enumerable_defined = true;
+          prop_desc.is_enumerable = true;
+
+          prop_desc.is_configurable_defined = true;
+          prop_desc.is_configurable = true;
+        }
+
+        /* 5.b.iii.3.b */
+        /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+        ecma_completion_value_t put_comp = ecma_op_object_define_own_property (obj_p,
+                                                                               new_array_index_string_p,
+                                                                               &prop_desc,
+                                                                               false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+
+        ECMA_FINALIZE (get_value);
+        ecma_deref_ecma_string (new_array_index_string_p);
+      }
+
+      ecma_deref_ecma_string (array_index_string_p);
+    }
+
+    *length_p += arg_len;
+
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_len_number);
+    ECMA_FINALIZE (arg_len_value);
+    ecma_deref_ecma_string (magic_string_length_p);
+  }
+  else
+  {
+    ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 ((*length_p)++);
+
+    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+    {
+      prop_desc.is_value_defined = true;
+      prop_desc.value = value;
+
+      prop_desc.is_writable_defined = true;
+      prop_desc.is_writable = true;
+
+      prop_desc.is_enumerable_defined = true;
+      prop_desc.is_enumerable = true;
+
+      prop_desc.is_configurable_defined = true;
+      prop_desc.is_configurable = true;
+    }
+
+    /* 5.c.i */
+    /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+    ecma_completion_value_t put_comp = ecma_op_object_define_own_property (obj_p,
+                                                                           new_array_index_string_p,
+                                                                           &prop_desc,
+                                                                           false);
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+
+    ecma_deref_ecma_string (new_array_index_string_p);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
+
+  return ret_value;
+} /* ecma_builtin_helper_array_concat_value */
+
+/**
  * Helper function to normalizing a string index
  *
  * This function clamps the given index to the [0, length] range.

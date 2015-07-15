@@ -257,8 +257,8 @@ $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
-.PHONY: build_all
-build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
+.PHONY: $(BUILD_ALL)
+$(BUILD_ALL): $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
 
 #
 # build - build_all, then run cppcheck and copy output to OUT_DIR

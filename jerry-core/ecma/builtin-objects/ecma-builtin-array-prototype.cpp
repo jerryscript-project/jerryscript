@@ -146,7 +146,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
                       ecma_op_object_get (ecma_get_object_from_value (args[arg_index]),
                                           magic_string_length_p),
                       ret_value);
-      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, len_value, ret_value);
+      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, arg_len_value, ret_value);
 
       uint32_t arg_len = ecma_number_to_uint32 (arg_len_number);
 

@@ -88,3 +88,20 @@ catch (e)
   assert (e instanceof TypeError);
   assert (e.message === "Incompatible type");
 }
+
+assert (new Date (NaN).toJSON () == null);
+assert (new Date ("2015-07-16").toJSON () == "2015-07-16T00:00:00.000Z");
+assert (new Date ("2015-07-16T11:29:05.023").toJSON () == "2015-07-16T11:29:05.023Z");
+
+try
+{
+  Date.prototype.toJSON.call(-1);
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+}
+
+date_time = new Date ("2015-07-08T11:29:05.023").toJSON ();
+assert (new Date (date_time) == "2015-07-08T11:29:05.023");

@@ -17,6 +17,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
@@ -1113,9 +1114,62 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
  */
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument */
-                                     ecma_value_t arg) /**< key */
+                                     ecma_value_t arg __attr_unused___) /**< key */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (obj,
+                  ecma_op_to_object (this_arg),
+                  ret_value);
+
+  /* 2. */
+  ECMA_TRY_CATCH (tv,
+                  ecma_op_to_primitive (obj, ECMA_PREFERRED_TYPE_NUMBER),
+                  ret_value);
+
+  /* 3. */
+  if (ecma_is_value_number (tv))
+  {
+    ecma_number_t num_value_p = *ecma_get_number_from_value (tv);
+
+    if (ecma_number_is_nan (num_value_p) || ecma_number_is_infinity (num_value_p))
+    {
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+    }
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ecma_string_t *to_iso_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_TO_ISO_STRING_UL);
+    ecma_object_t *value_obj_p = ecma_get_object_from_value (obj);
+
+    /* 4. */
+    ECMA_TRY_CATCH (to_iso,
+                    ecma_op_object_get (value_obj_p, to_iso_str_p),
+                    ret_value);
+
+    /* 5. */
+    if (!ecma_op_is_callable (to_iso))
+    {
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    }
+    /* 6. */
+    else
+    {
+      ecma_object_t *to_iso_obj_p = ecma_get_object_from_value (to_iso);
+      ret_value = ecma_op_function_call (to_iso_obj_p, this_arg, NULL, 0);
+    }
+
+    ECMA_FINALIZE (to_iso);
+
+    ecma_deref_ecma_string (to_iso_str_p);
+  }
+
+  ECMA_FINALIZE (tv);
+  ECMA_FINALIZE (obj);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
 /**

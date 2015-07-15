@@ -235,30 +235,29 @@ jsp_early_error_check_for_eval_and_arguments_in_strict_mode (operand op, bool is
 void
 jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
 {
-  if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2 || !is_strict)
+  if (is_strict
+      && STACK_SIZE (props) - STACK_TOP (size_t_stack) >= 2)
   {
-    STACK_DROP (size_t_stack, 1);
-    return;
-  }
-  for (size_t i = (STACK_TOP (size_t_stack) + 1u); i < STACK_SIZE (props); i++)
-  {
-    JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
-    literal_t previous = STACK_ELEMENT (props, i).lit;
-    JERRY_ASSERT (previous->get_type () == LIT_STR_T
-                  || previous->get_type () == LIT_MAGIC_STR_T
-                  || previous->get_type () == LIT_MAGIC_STR_EX_T);
-    for (size_t j = STACK_TOP (size_t_stack); j < i; j++)
+    for (size_t i = (STACK_TOP (size_t_stack) + 1u); i < STACK_SIZE (props); i++)
     {
-      JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
-      literal_t current = STACK_ELEMENT (props, j).lit;
-      JERRY_ASSERT (current->get_type () == LIT_STR_T
-                    || current->get_type () == LIT_MAGIC_STR_T
-                    || current->get_type () == LIT_MAGIC_STR_EX_T);
-      if (lit_literal_equal_type (previous, current))
+      JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
+      literal_t previous = STACK_ELEMENT (props, i).lit;
+      JERRY_ASSERT (previous->get_type () == LIT_STR_T
+                    || previous->get_type () == LIT_MAGIC_STR_T
+                    || previous->get_type () == LIT_MAGIC_STR_EX_T);
+      for (size_t j = STACK_TOP (size_t_stack); j < i; j++)
       {
-        PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
-                          "Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
-                          loc, lit_literal_to_str_internal_buf (previous));
+        JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
+        literal_t current = STACK_ELEMENT (props, j).lit;
+        JERRY_ASSERT (current->get_type () == LIT_STR_T
+                      || current->get_type () == LIT_MAGIC_STR_T
+                      || current->get_type () == LIT_MAGIC_STR_EX_T);
+        if (lit_literal_equal_type (previous, current))
+        {
+          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
+                            "Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
+                            loc, lit_literal_to_str_internal_buf (previous));
+        }
       }
     }
   }

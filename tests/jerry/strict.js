@@ -69,3 +69,8 @@ try
 {
   assert (e instanceof TypeError);
 }
+
+(function (a) {
+  (function (a) {
+  });
+});

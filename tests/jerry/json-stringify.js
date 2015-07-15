@@ -163,12 +163,14 @@ assert (JSON.stringify (object, null, "   ") == '{\n   "a": 2\n}');
 assert (JSON.stringify (object, null, "asd") == '{\nasd"a": 2\n}');
 assert (JSON.stringify (object, null, "asd0123456789") == '{\nasd0123456"a": 2\n}');
 assert (JSON.stringify (object, null, 100) == '{\n          "a": 2\n}');
+assert (JSON.stringify (object, null, -5) == '{"a":2}');
 
 array = [2];
 assert (JSON.stringify (array, null, "   ") == '[\n   2\n]');
 assert (JSON.stringify (array, null, "asd") == '[\nasd2\n]');
 assert (JSON.stringify (array, null, "asd0123456789") == '[\nasd01234562\n]');
 assert (JSON.stringify (array, null, 100) == '[\n          2\n]');
+assert (JSON.stringify (array, null, -5) == '[2]');
 
 nested_object = {"a": 2, "b": {"c": 1, "d": true}};
 assert (JSON.stringify (nested_object, null, 2) == '{\n  "b": {\n    "d": true,\n    "c": 1\n  },\n  "a": 2\n}');

@@ -167,25 +167,25 @@ $(BUILD_DIRS_NATIVE): prerequisites
             fi; \
             TOOLCHAIN="build/configs/toolchain_linux_$$arch.cmake"; \
           fi; \
-	  if [ -d "$@" ]; \
-	  then \
-		grep -s -q "$$TOOLCHAIN" $@/toolchain.config || rm -rf $@ ; \
-	  fi; \
-	  mkdir -p $@ && \
-          cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=$$TOOLCHAIN ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+          if [ -d "$@" ]; \
+          then \
+            grep -s -q "$$TOOLCHAIN" $@/toolchain.config || rm -rf $@ ; \
+          fi; \
+          mkdir -p $@; \
+          echo "$$TOOLCHAIN" > $@/toolchain.config
+	$(Q) cd $@ && \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
-	echo "$$TOOLCHAIN" > toolchain.config
 
 $(BUILD_DIRS_STM32F3): prerequisites
-	$(Q) mkdir -p $@ && \
-          cd $@ && \
+	$(Q) mkdir -p $@
+	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F4): prerequisites
-	$(Q) mkdir -p $@ && \
-          cd $@ && \
+	$(Q) mkdir -p $@
+	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 

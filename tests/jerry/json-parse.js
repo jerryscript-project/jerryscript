@@ -38,6 +38,8 @@ str = '-32.5e002';
 assert (JSON.parse (str) == -3250);
 str = '"str"';
 assert (JSON.parse (str) == "str");
+str = '"\\b\\f\\n\\t\\r"'
+assert (JSON.parse (str) === "\b\f\n\t\r");
 
 check_parse_error ('undefined');
 check_parse_error ('falses');

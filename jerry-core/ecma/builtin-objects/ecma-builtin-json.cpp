@@ -163,6 +163,11 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
           *current_p = '\t';
           break;
         }
+        case 'b':
+        {
+          *current_p = '\b';
+          break;
+        }
         default:
         {
           return;

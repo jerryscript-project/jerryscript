@@ -150,7 +150,7 @@ list_remove_last_element (list_ctx_t *ctx_p) /**< list context */
   {
     return;
   }
-  ctx_p->current_p = NULL;
+  *ctx_p->current_p = NULL;
 
   ctx_p->current_p--;
 } /* list_remove_last_element */

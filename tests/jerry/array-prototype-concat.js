@@ -37,6 +37,19 @@ assert(new_array[5] === "Grape");
 assert(new_array[6] === obj);
 assert(new_array[7] === 1);
 
+var arr1 = [1,2];
+var arr2 = [4,5,6,7,8];
+var arr3 = [,,9,10];
+var arr4 = [];
+var expected = [1,2,4,5,6,7,8,,,9,10];
+
+var result = arr1.concat(arr2, arr3, arr4);
+
+assert(result.length === expected.length)
+for (i = 0; i < result.length; i++) {
+	assert(result[i] === expected[i]);
+}
+
 // Checking behavior when unable to get length
 var obj = { concat : Array.prototype.concat }
 Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });

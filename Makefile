@@ -71,8 +71,10 @@
  # Verbosity
   ifdef VERBOSE
    Q :=
+   QLOG :=
   else
    Q := @
+   QLOG := >/dev/null
   endif
 
 # External build configuration
@@ -171,77 +173,77 @@ $(BUILD_DIRS_NATIVE): prerequisites
 	  fi; \
 	  mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=$$TOOLCHAIN ../../.. &>cmake.log || \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=$$TOOLCHAIN ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
 	echo "$$TOOLCHAIN" > toolchain.config
 
 $(BUILD_DIRS_STM32F3): prerequisites
 	$(Q) mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F4): prerequisites
 	$(Q) mkdir -p $@ && \
           cd $@ && \
-          cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
 
 unittests: $(BUILD_DIR)/native
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
 
 $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) $(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 $(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
 	$(Q) cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 $(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
 	$(Q) cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
@@ -252,12 +254,12 @@ build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
 #
 build: $(BUILD_ALL)
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) $(MAKE) VERBOSE=1 $(JERRY_TARGETS) &>$(OUT_DIR)/$@/make.log || \
+	$(Q) ($(MAKE) VERBOSE=1 $(JERRY_TARGETS) 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) rm -rf $(OUT_DIR)/$(BUILD_ALL)* $(OUT_DIR)/$@
 
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
-	$(Q) $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
+	$(Q) $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ $(QLOG)
 
 push: ./tools/git-scripts/push.sh
 	$(Q) ./tools/git-scripts/push.sh
@@ -285,7 +287,7 @@ prerequisites: $(PREREQUISITES_STATE_DIR)/.prerequisites
 $(PREREQUISITES_STATE_DIR)/.prerequisites:
 	@ echo "Setting up prerequisites... (log file: $(PREREQUISITES_STATE_DIR)/prerequisites.log)"
 	$(Q) mkdir -p $(PREREQUISITES_STATE_DIR)
-	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites >&$(PREREQUISITES_STATE_DIR)/prerequisites.log || \
+	$(Q) (./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites 2>&1 | tee $(PREREQUISITES_STATE_DIR)/prerequisites.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
 	@ echo "Prerequisites setup succeeded"
 

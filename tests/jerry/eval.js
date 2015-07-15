@@ -107,3 +107,13 @@ catch (e)
 {
   assert (e instanceof SyntaxError);
 }
+
+try
+{
+  eval ("v_0 = {a: Math, /[]/};");
+  assert (false);
+}
+catch(e)
+{
+  assert (e instanceof SyntaxError);
+}

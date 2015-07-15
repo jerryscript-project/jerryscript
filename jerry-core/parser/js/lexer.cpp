@@ -1684,6 +1684,7 @@ lexer_token_type_to_string (token_type tt)
     case TOK_KEYWORD: return "Keyword";
     case TOK_SMALL_INT: /* FALLTHRU */
     case TOK_NUMBER: return "Number";
+    case TOK_REGEXP: return "RegExp";
 
     case TOK_NULL: return "null";
     case TOK_BOOL: return "bool";

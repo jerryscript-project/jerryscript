@@ -104,6 +104,9 @@ try {
 object = {"a": 1, "b": [1, true, {"a": "foo"}]};
 assert (JSON.stringify (object) == '{"b":[1,true,{"a":"foo"}],"a":1}');
 
+object = {"a": [1], "b": {}};
+assert (JSON.stringify(object) === '{"b":{},"a":[1]}');
+
 array = [1, {"a": 2, "b": true, c: [3]}];
 assert (JSON.stringify (array) == '[1,{"c":[3],"b":true,"a":2}]');
 

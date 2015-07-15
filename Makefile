@@ -68,6 +68,13 @@
    LOG := OFF
   endif
 
+ # Verbosity
+  ifdef VERBOSE
+   Q :=
+  else
+   Q := @
+  endif
+
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
   USE_COMPILER_DEFAULT_LIBC ?= NO
@@ -149,7 +156,7 @@ export SHELL=/bin/bash
 all: precommit
 
 $(BUILD_DIRS_NATIVE): prerequisites
-	@ if [ "$$TOOLCHAIN" == "" ]; \
+	$(Q) if [ "$$TOOLCHAIN" == "" ]; \
           then \
             arch=`uname -m`; \
             if [ "$$arch" == "armv7l" ]; \
@@ -169,72 +176,72 @@ $(BUILD_DIRS_NATIVE): prerequisites
 	echo "$$TOOLCHAIN" > toolchain.config
 
 $(BUILD_DIRS_STM32F3): prerequisites
-	@ mkdir -p $@ && \
+	$(Q) mkdir -p $@ && \
           cd $@ && \
           cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(BUILD_DIRS_STM32F4): prerequisites
-	@ mkdir -p $@ && \
+	$(Q) mkdir -p $@ && \
           cd $@ && \
           cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. &>cmake.log || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 $(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
-	@ mkdir -p $(OUT_DIR)/$@
-	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
+	$(Q) cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
 
 unittests: $(BUILD_DIR)/native
-	@ mkdir -p $(OUT_DIR)/$@
-	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
+	$(Q) cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
 
 $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
-	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) $(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 $(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
-	@ mkdir -p $(OUT_DIR)/$@
-	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
-	@ cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
+	$(Q) cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
+	$(Q) cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 $(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
-	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 $(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
-	@ mkdir -p $(OUT_DIR)/$@
-	@ [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ &>$(OUT_DIR)/$@/cppcheck.log || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
-	@ cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
+	$(Q) cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
+	$(Q) cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
 
 $(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
-	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ $(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
+	$(Q) $(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
@@ -244,46 +251,46 @@ build_all: $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
 # Prebuild is needed to avoid race conditions between make instances running in parallel
 #
 build: $(BUILD_ALL)
-	@ mkdir -p $(OUT_DIR)/$@
-	@ $(MAKE) VERBOSE=1 $(JERRY_TARGETS) &>$(OUT_DIR)/$@/make.log || \
+	$(Q) mkdir -p $(OUT_DIR)/$@
+	$(Q) $(MAKE) VERBOSE=1 $(JERRY_TARGETS) &>$(OUT_DIR)/$@/make.log || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	@ rm -rf $(OUT_DIR)/$(BUILD_ALL)* $(OUT_DIR)/$@
+	$(Q) rm -rf $(OUT_DIR)/$(BUILD_ALL)* $(OUT_DIR)/$@
 
 $(FLASH_TARGETS): $(BUILD_DIR)/mcu
-	@$(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
+	$(Q) $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ 1>/dev/null
 
 push: ./tools/git-scripts/push.sh
-	@ ./tools/git-scripts/push.sh
+	$(Q) ./tools/git-scripts/push.sh
 
 pull: ./tools/git-scripts/pull.sh
-	@ ./tools/git-scripts/pull.sh
+	$(Q) ./tools/git-scripts/pull.sh
 
 log: ./tools/git-scripts/log.sh
-	@ ./tools/git-scripts/log.sh
+	$(Q) ./tools/git-scripts/log.sh
 
 precommit: clean prerequisites
-	@ ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
+	$(Q) ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
 
 unittests_run: unittests
-	@rm -rf $(OUT_DIR)/unittests/check
-	@mkdir -p $(OUT_DIR)/unittests/check
-	@./tools/runners/run-unittests.sh $(OUT_DIR)/unittests || \
+	$(Q) rm -rf $(OUT_DIR)/unittests/check
+	$(Q) mkdir -p $(OUT_DIR)/unittests/check
+	$(Q) ./tools/runners/run-unittests.sh $(OUT_DIR)/unittests || \
          (echo "Unit tests run failed. See $(OUT_DIR)/unittests/unit_tests_run.log for details."; exit 1;)
 
 clean:
-	@ rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
+	$(Q) rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
 prerequisites: $(PREREQUISITES_STATE_DIR)/.prerequisites
 
 $(PREREQUISITES_STATE_DIR)/.prerequisites:
 	@ echo "Setting up prerequisites... (log file: $(PREREQUISITES_STATE_DIR)/prerequisites.log)"
-	@ mkdir -p $(PREREQUISITES_STATE_DIR)
-	@ ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites >&$(PREREQUISITES_STATE_DIR)/prerequisites.log || \
+	$(Q) mkdir -p $(PREREQUISITES_STATE_DIR)
+	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites >&$(PREREQUISITES_STATE_DIR)/prerequisites.log || \
           (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
 	@ echo "Prerequisites setup succeeded"
 
 prerequisites_clean:
-	@ ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
-	@ rm -rf $(PREREQUISITES_STATE_DIR)
+	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
+	$(Q) rm -rf $(PREREQUISITES_STATE_DIR)
 
 .PHONY: prerequisites_clean prerequisites clean build unittests_run $(BUILD_DIRS_ALL) $(JERRY_TARGETS) $(FLASH_TARGETS)

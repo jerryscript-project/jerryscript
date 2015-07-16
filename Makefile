@@ -77,6 +77,24 @@
    QLOG := >/dev/null
   endif
 
+ # Toolchain overrride
+  CMAKE_TOOLCHAIN_OPTIONS :=
+  ifdef CC
+   CMAKE_TOOLCHAIN_OPTIONS += -DCMAKE_C_COMPILER=$(CC)
+  endif
+  ifdef CXX
+   CMAKE_TOOLCHAIN_OPTIONS += -DCMAKE_CXX_COMPILER=$(CXX)
+  endif
+  ifdef EXTRA_CFLAGS
+   CMAKE_TOOLCHAIN_OPTIONS += -DEXTRA_COMPILE_FLAGS="$(EXTRA_CFLAGS)"
+  endif
+  ifdef AR
+   CMAKE_TOOLCHAIN_OPTIONS += -DCMAKE_AR=$(AR)
+  endif
+  ifdef RANLIB
+   CMAKE_TOOLCHAIN_OPTIONS += -DCMAKE_RANLIB=$(RANLIB)
+  endif
+
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
   USE_COMPILER_DEFAULT_LIBC ?= NO
@@ -91,6 +109,7 @@
  # Compiler to use for external build
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
  EXTERNAL_CXX_COMPILER ?= arm-none-eabi-g++
+ CMAKE_TOOLCHAIN_OPTIONS += -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC)
 
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
@@ -176,7 +195,7 @@ $(BUILD_DIRS_NATIVE): prerequisites
           mkdir -p $@; \
           echo "$$TOOLCHAIN" > $@/toolchain.config
 	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+          (cmake $(CMAKE_TOOLCHAIN_OPTIONS) -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
 
 .PHONY: $(BUILD_DIRS_STM32F3)

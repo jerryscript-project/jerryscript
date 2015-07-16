@@ -17,7 +17,7 @@ project (Jerry CXX C ASM)
 
 # Require g++ of version >= 4.7.0
  if(NOT CMAKE_COMPILER_IS_GNUCXX)
-  message(FATAL_ERROR "g++ compiler is required")
+  message(WARNING "g++ compiler is required")
  else()
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
                   OUTPUT_VARIABLE GNU_CXX_VERSION
@@ -32,10 +32,14 @@ project (Jerry CXX C ASM)
  get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
  get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
  get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
- string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
- string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
- set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
- set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
+ if(NOT DEFINED CMAKE_AR)
+  string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
+  set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
+ endif()
+ if(NOT DEFINED CMAKE_RANLIB)
+  string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
+  set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
+ endif()
 
 # Imported and third-party targets prefix
  set(PREFIX_IMPORTED_LIB imported_)
@@ -202,8 +206,12 @@ project (Jerry CXX C ASM)
 
  # LTO
   if("${ENABLE_LTO}" STREQUAL "ON")
-   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto -fno-fat-lto-objects")
-   set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -flto")
+   if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto -fno-fat-lto-objects")
+    set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -flto")
+   else()
+    message(FATAL_ERROR "LTO is only supported for g++ (consider using LTO=OFF)")
+   endif()
   endif()
 
  # Turn off stack protector
@@ -213,11 +221,17 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
 
  # Warnings
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic -Wlogical-op")
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wfatal-errors")
+  if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
+   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wlogical-op")
+  endif()
+
+ # Extra flags
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} ${EXTRA_COMPILE_FLAGS}")
 
  # Static build
   set(LINKER_FLAGS_STATIC "-static")
@@ -226,7 +240,9 @@ project (Jerry CXX C ASM)
   set(CXX_FLAGS_JERRY "-std=c++11 -fno-exceptions -fno-rtti")
 
   # Turn off implicit template instantiation
-   set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
+   if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
+   endif()
 
  # C
   set(C_FLAGS_JERRY "-std=c99")

@@ -299,7 +299,7 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_date_prototype_to_string (this_arg);
 } /* ecma_builtin_date_prototype_to_locale_string */
 
 /**
@@ -314,7 +314,7 @@ ecma_builtin_date_prototype_to_locale_string (ecma_value_t this_arg) /**< this a
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_locale_date_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_date_prototype_to_date_string (this_arg);
 } /* ecma_builtin_date_prototype_to_locale_date_string */
 
 /**
@@ -329,7 +329,7 @@ ecma_builtin_date_prototype_to_locale_date_string (ecma_value_t this_arg) /**< t
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_locale_time_string (ecma_value_t this_arg) /**< this argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg);
+  return ecma_builtin_date_prototype_to_time_string (this_arg);
 } /* ecma_builtin_date_prototype_to_locale_time_string */
 
 /**

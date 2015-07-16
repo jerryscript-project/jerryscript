@@ -556,6 +556,11 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
   if (ecma_is_completion_value_empty (ret_value))
   {
+    if (!ecma_number_is_nan (*prim_value_num_p) && ecma_number_is_infinity (*prim_value_num_p))
+    {
+      *prim_value_num_p = ecma_number_make_nan ();
+    }
+
     ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_CLASS);
     class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_DATE_UL;

@@ -19,6 +19,13 @@
 #include "ecma-helpers.h"
 
 #define MS_PER_DAY ((ecma_number_t) 86400000)
+#define MS_PER_YEAR ((ecma_number_t) 365 * MS_PER_DAY)
+#define START_OF_GREGORIAN_CALENDAR ((ecma_number_t) (-1970 * MS_PER_YEAR \
+  - (1970 / 4) * MS_PER_DAY \
+  + (1970 / 100) * MS_PER_DAY \
+  - (1970 / 400) * MS_PER_DAY \
+  - MS_PER_DAY))
+
 /**
  * Unit test's main function.
  */
@@ -62,6 +69,7 @@ main (int __attr_unused___ argc,
   /* int ecma_date_year_from_time (time) */
 
   JERRY_ASSERT (ecma_date_year_from_time (0) == 1970);
+  JERRY_ASSERT (ecma_date_year_from_time (0) == 1970);
   JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY) == 1970);
   JERRY_ASSERT (ecma_date_year_from_time ((MS_PER_DAY) * (ecma_number_t) 365 - 1) == 1970);
   JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) 365) == 1971);
@@ -69,6 +77,10 @@ main (int __attr_unused___ argc,
                 == 2014);
   JERRY_ASSERT (ecma_date_year_from_time (MS_PER_DAY * (ecma_number_t) (365.25 * (2015 - 1970)))
                 == 2015);
+  JERRY_ASSERT (ecma_date_year_from_time (-MS_PER_YEAR) == 1969);
+  JERRY_ASSERT (ecma_date_year_from_time (-1970 * MS_PER_YEAR) == 1);
+  JERRY_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR - 1) == -1);
 
   /* int ecma_date_day_within_year (time) */
 
@@ -76,11 +88,17 @@ main (int __attr_unused___ argc,
 
   /* int ecma_date_month_from_time  (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_month_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_month_from_time (0) == 0);
+  JERRY_ASSERT (ecma_date_month_from_time (-MS_PER_DAY) == 11);
+  JERRY_ASSERT (ecma_date_month_from_time (31 * MS_PER_DAY) == 1);
 
   /* int ecma_date_date_from_time  (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_date_from_time (START_OF_GREGORIAN_CALENDAR) == 1);
+  JERRY_ASSERT (ecma_date_date_from_time (0) == 1);
+  JERRY_ASSERT (ecma_date_date_from_time (-MS_PER_DAY) == 31);
+  JERRY_ASSERT (ecma_date_date_from_time (31 * MS_PER_DAY) == 1);
 
   /* int ecma_date_week_day (ecma_number_t time) */
 
@@ -104,19 +122,31 @@ main (int __attr_unused___ argc,
 
   /* ecma_number_t ecma_date_hour_from_time (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_hour_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_hour_from_time (0) == 0);
+  JERRY_ASSERT (ecma_date_hour_from_time (-MS_PER_DAY) == 0);
+  JERRY_ASSERT (ecma_date_hour_from_time (-1) == 23);
 
   /* ecma_number_t ecma_date_min_from_time (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_min_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_min_from_time (0) == 0);
+  JERRY_ASSERT (ecma_date_min_from_time (-MS_PER_DAY) == 0);
+  JERRY_ASSERT (ecma_date_min_from_time (-1) == 59);
 
   /* ecma_number_t ecma_date_sec_from_time (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_sec_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_sec_from_time (0) == 0);
+  JERRY_ASSERT (ecma_date_sec_from_time (-MS_PER_DAY) == 0);
+  JERRY_ASSERT (ecma_date_sec_from_time (-1) == 59);
 
   /* ecma_number_t ecma_date_ms_from_time (time) */
 
-  /* FIXME: Implement */
+  JERRY_ASSERT (ecma_date_ms_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
+  JERRY_ASSERT (ecma_date_ms_from_time (0) == 0);
+  JERRY_ASSERT (ecma_date_ms_from_time (-MS_PER_DAY) == 0);
+  JERRY_ASSERT (ecma_date_ms_from_time (-1) == 999);
 
   /* ecma_number_t ecma_date_make_time (hour, min, sec, ms) */
 
@@ -125,6 +155,7 @@ main (int __attr_unused___ argc,
   /* ecma_number_t ecma_date_make_day (year, month, date) */
 
   JERRY_ASSERT (ecma_date_make_day (1970, 0, 1) == 0);
+  JERRY_ASSERT (ecma_date_make_day (1970, -1, 1) == -31);
   JERRY_ASSERT (ecma_date_make_day (1970, 0, 2.5) == 1);
   JERRY_ASSERT (ecma_date_make_day (1970, 1, 35) == 65);
   JERRY_ASSERT (ecma_date_make_day (1970, 13, 35) == 430);

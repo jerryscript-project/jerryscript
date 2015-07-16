@@ -44,6 +44,7 @@ catch (e)
 }
 
 assert (new Date (NaN).toTimeString () == "Invalid Date");
+assert (Date (Number.POSITIVE_INFINITY).toString () === "Invalid Date");
 assert (new Date ("2015-02-13").toTimeString () == "00:00:00.000");
 assert (new Date ("2015-07-08T11:29:05.023").toTimeString () == "11:29:05.023");
 

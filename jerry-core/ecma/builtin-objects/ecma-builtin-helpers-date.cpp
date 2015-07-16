@@ -548,8 +548,9 @@ ecma_date_hour_from_time (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_HOUR),
-                               ECMA_DATE_HOURS_PER_DAY);
+  ecma_number_t hour = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_HOUR),
+                                             ECMA_DATE_HOURS_PER_DAY);
+  return (hour < 0) ? ECMA_DATE_HOURS_PER_DAY + hour : hour;
 } /* ecma_date_hour_from_time */
 
 /**
@@ -578,8 +579,9 @@ ecma_date_min_from_time (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_MINUTE),
-                               ECMA_DATE_MINUTES_PER_HOUR);
+  ecma_number_t min = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_MINUTE),
+                                            ECMA_DATE_MINUTES_PER_HOUR);
+  return (min < 0) ? ECMA_DATE_MINUTES_PER_HOUR + min : min;
 } /* ecma_date_min_from_time */
 
 /**
@@ -608,8 +610,9 @@ ecma_date_sec_from_time (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_SECOND),
-                               ECMA_DATE_SECONDS_PER_MINUTE);
+  ecma_number_t sec = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_SECOND),
+                                            ECMA_DATE_SECONDS_PER_MINUTE);
+  return (sec < 0) ? ECMA_DATE_SECONDS_PER_MINUTE + sec : sec;
 } /* ecma_date_sec_from_time */
 
 /**
@@ -638,7 +641,8 @@ ecma_date_ms_from_time (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_SECOND);
+  ecma_number_t milli = (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_SECOND);
+  return (milli < 0) ? ECMA_DATE_MS_PER_SECOND + milli : milli;
 } /* ecma_date_ms_from_time */
 
 /**
@@ -725,6 +729,7 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
   ecma_number_t dt = ecma_number_trunc (date);
   ecma_number_t ym = y + (ecma_number_t) floor (m / 12);
   ecma_number_t mn = (ecma_number_t) fmod (m, 12);
+  mn = (mn < 0) ? 12 + mn : mn;
   ecma_number_t time = ecma_date_time_from_year (ym);
 
   JERRY_ASSERT (ecma_date_year_from_time (time) == ym);

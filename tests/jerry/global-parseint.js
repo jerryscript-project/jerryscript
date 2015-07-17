@@ -27,6 +27,7 @@ assert(parseInt("ABC", 16) === 2748);
 assert(parseInt("12A3") === 12);
 assert(parseInt("12.34") === 12);
 assert(isNaN(parseInt("AB")));
+assert(isNaN(parseInt("")));
 
 var bool = true;
 var obj = new Object();

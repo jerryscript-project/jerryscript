@@ -73,6 +73,7 @@ lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
     lit_utf8_byte_t c = utf8_buf_p[idx++];
     if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
     {
+      is_prev_code_point_high_surrogate = false;
       continue;
     }
 

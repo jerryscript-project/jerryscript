@@ -1881,12 +1881,11 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
   /* 3. */
   uint32_t len = ecma_number_to_uint32 (len_number);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = ecma_int32_to_number (-1);
-
   /* 4. */
   if (len == 0)
   {
+    ecma_number_t *num_p = ecma_alloc_number ();
+    *num_p = ecma_int32_to_number (-1);
     ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
   }
   else
@@ -1894,18 +1893,16 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
     /* 5. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
 
+    ecma_number_t found_index = ecma_int32_to_number (-1);
+
     uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len);
 
     /* 6. */
-    if (from_idx >= len)
-    {
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-    }
-    else
+    if (from_idx < len)
     {
       JERRY_ASSERT (from_idx < len);
 
-      for (; from_idx < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); from_idx++)
+      for (; from_idx < len && found_index < 0 && ecma_is_completion_value_empty (ret_value); from_idx++)
       {
         ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (from_idx);
 
@@ -1918,7 +1915,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
           /* 9.b.ii */
           if (ecma_op_strict_equality_compare (arg1, get_value))
           {
-            *num_p = ecma_uint32_to_number (from_idx);
+            found_index = ecma_uint32_to_number (from_idx);
           }
 
           ECMA_FINALIZE (get_value);
@@ -1926,15 +1923,13 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
 
         ecma_deref_ecma_string (idx_str_p);
       }
+    }
 
-      if (ecma_is_completion_value_empty (ret_value))
-      {
-        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
-      }
-      else
-      {
-        ecma_dealloc_number (num_p);
-      }
+    if (ecma_is_completion_value_empty (ret_value))
+    {
+      ecma_number_t *num_p = ecma_alloc_number ();
+      *num_p = found_index;
+      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_from_idx);

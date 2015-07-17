@@ -41,6 +41,15 @@ try {
   assert(e instanceof TypeError);
 }
 
+try {
+  var a = new Array();
+  a.length = 10;
+  a.reduceRight(func);
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError)
+}
+
 // various checks
 assert([].reduceRight(func, 1) === 1);
 

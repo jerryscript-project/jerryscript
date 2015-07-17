@@ -187,13 +187,19 @@ ecma_date_year_from_time (ecma_number_t time) /**< time value */
   /* ECMA-262 v5, 15.9.1.1 define the largest year that is
    * representable (285616) forward from 01 January, 1970 UTC.
    */
-  ecma_number_t year = (ecma_number_t) (285616 + 1970);
+  ecma_number_t year = (ecma_number_t) (1970 + 285616);
+  ecma_number_t lower_year_boundary = (ecma_number_t) (1970 - 285616);
 
   while (ecma_date_time_from_year (year) > time)
   {
-    if (ecma_date_time_from_year ((ecma_number_t) floor (year / 2)) > time)
+    ecma_number_t year_boundary = (ecma_number_t) floor (lower_year_boundary + (year - lower_year_boundary) / 2);
+    if (ecma_date_time_from_year (year_boundary) > time)
     {
-      year = (ecma_number_t) floor (year / 2);
+      year = year_boundary;
+    }
+    else
+    {
+      lower_year_boundary = year_boundary;
     }
     year--;
   }

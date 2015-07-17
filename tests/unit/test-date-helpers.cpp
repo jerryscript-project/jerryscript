@@ -81,6 +81,7 @@ main (int __attr_unused___ argc,
   JERRY_ASSERT (ecma_date_year_from_time (-1970 * MS_PER_YEAR) == 1);
   JERRY_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
   JERRY_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR - 1) == -1);
+  JERRY_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR - 3 * MS_PER_YEAR) == -3);
 
   /* int ecma_date_day_within_year (time) */
 

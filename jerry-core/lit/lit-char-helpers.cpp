@@ -313,6 +313,52 @@ lit_char_hex_to_int (ecma_char_t c) /**< code unit, corresponding to
 } /* lit_char_hex_to_int */
 
 /**
+ * Parse the next number_of_characters hexadecimal character,
+ * and construct a code point from them. The buffer must
+ * be zero terminated.
+ *
+ * @return true if decoding was successful, false otherwise
+ */
+bool
+lit_read_code_point_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
+                              lit_utf8_size_t number_of_characters, /**< number of characters to be read */
+                              lit_code_point_t *out_code_point_p) /**< @out: decoded result */
+{
+  lit_code_point_t code_point = 0;
+
+  JERRY_ASSERT (number_of_characters >= 2 && number_of_characters <= 4);
+
+  for (lit_utf8_size_t i = 0; i < number_of_characters; i++)
+  {
+    code_point <<= 4;
+
+    if (*buf_p >= LIT_CHAR_ASCII_DIGITS_BEGIN
+        && *buf_p <= LIT_CHAR_ASCII_DIGITS_END)
+    {
+      code_point |= (uint32_t) (*buf_p - LIT_CHAR_ASCII_DIGITS_BEGIN);
+    }
+    else if (*buf_p >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN
+             && *buf_p <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END)
+    {
+      code_point |= (uint32_t) (*buf_p - (LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN - 10));
+    }
+    else if (*buf_p >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN
+             && *buf_p <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_END)
+    {
+      code_point |= (uint32_t) (*buf_p - (LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN - 10));
+    }
+    else
+    {
+      return false;
+    }
+
+    buf_p++;
+  }
+  *out_code_point_p = code_point;
+  return true;
+} /* lit_read_code_point_from_hex */
+
+/**
  * Check if specified character is a word character (part of IsWordChar abstract operation)
  *
  * See also: ECMA-262 v5, 15.10.2.6 (IsWordChar)

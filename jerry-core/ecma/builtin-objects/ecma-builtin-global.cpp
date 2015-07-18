@@ -24,6 +24,7 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 #include "lit-strings.h"
 #include "vm.h"
@@ -517,53 +518,6 @@ static uint8_t unescaped_uri_component_set[16] =
  */
 #define URI_ENCODED_BYTE_SIZE (3)
 
-#define ECMA_BUILTIN_HEX_TO_BYTE_ERROR (0x100)
-
-/**
- * Helper function to decode a hexadecimal byte from a string.
- *
- * @return the decoded byte value
- *         It returns with ECMA_BUILTIN_HEX_TO_BYTE_ERROR if a parse error is occured.
- */
-static uint32_t
-ecma_builtin_global_object_hex_to_byte (lit_utf8_byte_t *source_p) /**< source string */
-{
-  uint32_t decoded_byte = 0;
-
-  /*
-   * Zero terminated string, so length check is not needed.
-   */
-  if (*source_p != '%')
-  {
-    return ECMA_BUILTIN_HEX_TO_BYTE_ERROR;
-  }
-
-  for (lit_utf8_size_t i = 0; i < 2; i++)
-  {
-    source_p++;
-    decoded_byte <<= 4;
-
-    if (*source_p >= '0' && *source_p <= '9')
-    {
-      decoded_byte |= (uint32_t) (*source_p - '0');
-    }
-    else if (*source_p >= 'a' && *source_p <= 'f')
-    {
-      decoded_byte |= (uint32_t) (*source_p - ('a' - 10));
-    }
-    else if (*source_p >= 'A' && *source_p <= 'F')
-    {
-      decoded_byte |= (uint32_t) (*source_p - ('A' - 10));
-    }
-    else
-    {
-      return ECMA_BUILTIN_HEX_TO_BYTE_ERROR;
-    }
-  }
-
-  return decoded_byte;
-} /* ecma_builtin_global_object_hex_to_byte */
-
 /**
  * Helper function to decode URI.
  *
@@ -586,12 +540,13 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
   lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
   MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_size,
+                          input_size + 1,
                           lit_utf8_byte_t);
 
   ecma_string_to_utf8_string (input_string_p,
                               input_start_p,
                               (ssize_t) (input_size));
+  input_start_p[input_size] = LIT_BYTE_NULL;
 
   lit_utf8_byte_t *input_char_p = input_start_p;
   lit_utf8_byte_t *input_end_p = input_start_p + input_size;
@@ -616,8 +571,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
       continue;
     }
 
-    uint32_t decoded_byte = ecma_builtin_global_object_hex_to_byte (input_char_p);
-    if (decoded_byte == ECMA_BUILTIN_HEX_TO_BYTE_ERROR)
+    lit_code_point_t decoded_byte;
+
+    if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
       break;
@@ -667,7 +623,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         continue;
       }
 
-      uint32_t decoded_byte = ecma_builtin_global_object_hex_to_byte (input_char_p);
+      lit_code_point_t decoded_byte;
+
+      lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte);
       input_char_p += URI_ENCODED_BYTE_SIZE;
 
       if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
@@ -704,7 +662,8 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         ecma_char_t character = lit_utf8_iterator_read_next (&characters);
 
         /* Surrogate fragments are allowed in JS, but not accepted by URI decoding. */
-        if (character >= LIT_UTF16_HIGH_SURROGATE_MIN && character <= LIT_UTF16_LOW_SURROGATE_MAX)
+        if (lit_is_code_unit_low_surrogate (character)
+            || lit_is_code_unit_high_surrogate (character))
         {
           valid_utf8 = false;
           break;

@@ -40,6 +40,14 @@ str = '"str"';
 assert (JSON.parse (str) == "str");
 str = '"\\b\\f\\n\\t\\r"'
 assert (JSON.parse (str) === "\b\f\n\t\r");
+/* Note: \u is parsed by the lexer, \\u is by the JSON parser. */
+str = '"\\u0000\\u001f"';
+assert (JSON.parse (str) === "\x00\x1f");
+str = '"\\ud801\\udc00\\ud801\udc00\ud801\\udc00\ud801\udc00"';
+assert (JSON.parse (str) === "\ud801\udc00\ud801\udc00\ud801\udc00\ud801\udc00");
+/* These surrogates do not form a valid surrogate pairs. */
+str = '"\\ud801,\\udc00,\\ud801,\udc00,\ud801,\\udc00,\ud801,\udc00"';
+assert (JSON.parse (str) === "\ud801,\udc00,\ud801,\udc00,\ud801,\udc00,\ud801,\udc00");
 
 check_parse_error ('undefined');
 check_parse_error ('falses');
@@ -52,6 +60,9 @@ check_parse_error ('3e+a');
 check_parse_error ('55e4,');
 check_parse_error ('5 true');
 check_parse_error ("'str'");
+check_parse_error ('\x00');
+check_parse_error ('"\x00"');
+check_parse_error ('"\x1f"');
 
 // Checking objects
 str = ' { "x": 0, "yy": null, "zzz": { "A": 4.0, "BB": { "1": 63e-1 }, "CCC" : false } } ';

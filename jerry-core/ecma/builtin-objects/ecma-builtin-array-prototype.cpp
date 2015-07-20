@@ -2384,7 +2384,11 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
 
     if (ecma_is_completion_value_empty (ret_value))
     {
+      ECMA_TRY_CATCH (set_length_value,
+                      ecma_builtin_array_prototype_helper_set_length (new_array_p, ecma_uint32_to_number (len)),
+                      ret_value);
       ret_value = new_array;
+      ECMA_FINALIZE (set_length_value);
     }
     else
     {

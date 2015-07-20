@@ -52,6 +52,10 @@ assert ([1, 4, 9].map(func).equals([1,5,11]));
 
 assert ([1, "X", 10].map(func).equals([1, "X1", 12]));
 
+var arr = [1,2,3];
+arr.length = 5;
+assert(arr.map(func).length === arr.length);
+
 var long_array = [0, 1];
 assert (long_array.map(func).equals([0,2]));
 

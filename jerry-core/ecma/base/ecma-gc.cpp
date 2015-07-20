@@ -29,13 +29,18 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
-#include "ecma-stack.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
+#include "vm-stack.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
+
+/**
+ * TODO:
+ *      Extract GC to a separate component
+ */
 
 /**
  * An object's GC color
@@ -427,13 +432,13 @@ ecma_gc_run (void)
 
   /* if some object is referenced from a register variable (i.e. it is root),
    * start recursive marking traverse from the object */
-  for (ecma_stack_frame_t *frame_iter_p = ecma_stack_get_top_frame ();
+  for (vm_stack_frame_t *frame_iter_p = vm_stack_get_top_frame ();
        frame_iter_p != NULL;
        frame_iter_p = frame_iter_p->prev_frame_p)
   {
     for (int32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
     {
-      ecma_value_t reg_value = ecma_stack_frame_get_reg_value (frame_iter_p, reg_index);
+      ecma_value_t reg_value = vm_stack_frame_get_reg_value (frame_iter_p, reg_index);
 
       if (ecma_is_value_object (reg_value))
       {

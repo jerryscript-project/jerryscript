@@ -19,7 +19,6 @@
 #include "ecma-init-finalize.h"
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
-#include "ecma-stack.h"
 #include "mem-allocator.h"
 
 /** \addtogroup ecma ECMA
@@ -37,7 +36,6 @@ ecma_init (void)
 {
   ecma_init_builtins ();
   ecma_lcache_init ();
-  ecma_stack_init ();
   ecma_init_environment ();
 
   mem_register_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
@@ -52,7 +50,6 @@ ecma_finalize (void)
   mem_unregister_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
 
   ecma_finalize_environment ();
-  ecma_stack_finalize ();
   ecma_finalize_builtins ();
   ecma_lcache_invalidate_all ();
   ecma_gc_run ();

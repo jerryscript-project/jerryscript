@@ -17,8 +17,8 @@
 #define OPCODES_H
 
 #include "ecma-globals.h"
-#include "ecma-stack.h"
 #include "jrt.h"
+#include "vm-stack.h"
 
 /* Maximum opcodes number in bytecode.  */
 #define MAX_OPCODES (256*256 - 1)
@@ -138,7 +138,7 @@ typedef struct
   idx_t min_reg_num; /**< minimum idx used for register identification */
   idx_t max_reg_num; /**< maximum idx used for register identification */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
-  ecma_stack_frame_t stack_frame; /**< ecma-stack frame associated with the context */
+  vm_stack_frame_t stack_frame; /**< stack frame associated with the context */
 
 #ifdef MEM_STATS
   size_t context_peak_allocated_heap_bytes;

@@ -19,11 +19,11 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "ecma-stack.h"
 #include "jrt.h"
-#include "vm.h"
 #include "jrt-libc-includes.h"
 #include "mem-allocator.h"
+#include "vm.h"
+#include "vm-stack.h"
 
 /**
  * Top (current) interpreter context
@@ -348,6 +348,8 @@ vm_init (const opcode_t *program_p, /**< pointer to byte-code program */
 
   JERRY_ASSERT (__program == NULL);
 
+  vm_stack_init ();
+
   __program = program_p;
 } /* vm_init */
 
@@ -357,6 +359,8 @@ vm_init (const opcode_t *program_p, /**< pointer to byte-code program */
 void
 vm_finalize (void)
 {
+  vm_stack_finalize ();
+
   __program = NULL;
 } /* vm_finalize */
 
@@ -544,7 +548,7 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
   frame_ctx.min_reg_num = min_reg_num;
   frame_ctx.max_reg_num = max_reg_num;
   frame_ctx.tmp_num_p = ecma_alloc_number ();
-  ecma_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num);
+  vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num);
 
   vm_frame_ctx_t *prev_context_p = vm_top_context_p;
   vm_top_context_p = &frame_ctx;
@@ -560,7 +564,7 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
 
   vm_top_context_p = prev_context_p;
 
-  ecma_stack_free_frame (&frame_ctx.stack_frame);
+  vm_stack_free_frame (&frame_ctx.stack_frame);
 
   ecma_dealloc_number (frame_ctx.tmp_num_p);
 

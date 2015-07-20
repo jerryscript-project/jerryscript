@@ -130,11 +130,6 @@
 #endif /* CONFIG_ECMA_CHAR_ENCODING */
 
 /**
- * Number of ecma-values inlined into stack frame
- */
-#define CONFIG_ECMA_STACK_FRAME_INLINED_VALUES_NUMBER (16)
-
-/**
  * Disable ECMA lookup cache
  */
 // #define CONFIG_ECMA_LCACHE_DISABLE
@@ -161,6 +156,11 @@
 #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 #define CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
+
+/**
+ * Number of ecma-values inlined into VM stack frame
+ */
+#define CONFIG_VM_STACK_FRAME_INLINED_VALUES_NUMBER (16)
 
 /**
  * Run GC after execution of each opcode

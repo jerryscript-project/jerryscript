@@ -81,8 +81,8 @@ get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 
   if (is_reg_variable (frame_ctx_p, var_idx))
   {
-    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                             var_idx - frame_ctx_p->min_reg_num);
+    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
+                                                           var_idx - frame_ctx_p->min_reg_num);
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
@@ -135,8 +135,8 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
   {
     ret_value = ecma_make_empty_completion_value ();
 
-    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                             var_idx - frame_ctx_p->min_reg_num);
+    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
+                                                           var_idx - frame_ctx_p->min_reg_num);
 
     if (ecma_is_value_number (reg_value)
         && ecma_is_value_number (value))
@@ -150,8 +150,8 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
         ecma_free_value (reg_value, false);
       }
 
-      ecma_stack_frame_set_reg_value (&frame_ctx_p->stack_frame,
-                                      var_idx - frame_ctx_p->min_reg_num,
+      vm_stack_frame_set_reg_value (&frame_ctx_p->stack_frame,
+                                    var_idx - frame_ctx_p->min_reg_num,
                                       ecma_copy_value (value, false));
     }
   }

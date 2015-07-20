@@ -59,10 +59,10 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
  *         false - otherwise.
  */
 bool
-is_reg_variable (int_data_t *int_data, /**< interpreter context */
+is_reg_variable (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                  idx_t var_idx) /**< variable identifier */
 {
-  return (var_idx >= int_data->min_reg_num && var_idx <= int_data->max_reg_num);
+  return (var_idx >= frame_ctx_p->min_reg_num && var_idx <= frame_ctx_p->max_reg_num);
 } /* is_reg_variable */
 
 /**
@@ -72,17 +72,17 @@ is_reg_variable (int_data_t *int_data, /**< interpreter context */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-get_variable_value (int_data_t *int_data, /**< interpreter context */
+get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                     idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                           See also: do_strict_eval_arguments_check */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (is_reg_variable (int_data, var_idx))
+  if (is_reg_variable (frame_ctx_p, var_idx))
   {
-    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&int_data->stack_frame,
-                                                             var_idx - int_data->min_reg_num);
+    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
+                                                             var_idx - frame_ctx_p->min_reg_num);
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
@@ -91,11 +91,11 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->opcodes_p, int_data->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->opcodes_p, frame_ctx_p->pos);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
+    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                         &var_name_string);
 
     if (do_eval_or_arguments_check)
@@ -103,13 +103,13 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
 #ifndef JERRY_NDEBUG
       do_strict_eval_arguments_check (ref_base_lex_env_p,
                                       &var_name_string,
-                                      int_data->is_strict);
+                                      frame_ctx_p->is_strict);
 #endif /* !JERRY_NDEBUG */
     }
 
     ret_value = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
                                                 &var_name_string,
-                                                int_data->is_strict);
+                                                frame_ctx_p->is_strict);
 
     ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);
   }
@@ -124,19 +124,19 @@ get_variable_value (int_data_t *int_data, /**< interpreter context */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-set_variable_value (int_data_t *int_data, /**< interpreter context */
+set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                     opcode_counter_t lit_oc, /**< opcode counter for literal */
                     idx_t var_idx, /**< variable identifier */
                     ecma_value_t value) /**< value to set */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (is_reg_variable (int_data, var_idx))
+  if (is_reg_variable (frame_ctx_p, var_idx))
   {
     ret_value = ecma_make_empty_completion_value ();
 
-    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&int_data->stack_frame,
-                                                             var_idx - int_data->min_reg_num);
+    ecma_value_t reg_value = ecma_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
+                                                             var_idx - frame_ctx_p->min_reg_num);
 
     if (ecma_is_value_number (reg_value)
         && ecma_is_value_number (value))
@@ -150,30 +150,30 @@ set_variable_value (int_data_t *int_data, /**< interpreter context */
         ecma_free_value (reg_value, false);
       }
 
-      ecma_stack_frame_set_reg_value (&int_data->stack_frame,
-                                      var_idx - int_data->min_reg_num,
+      ecma_stack_frame_set_reg_value (&frame_ctx_p->stack_frame,
+                                      var_idx - frame_ctx_p->min_reg_num,
                                       ecma_copy_value (value, false));
     }
   }
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data->opcodes_p, lit_oc);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->opcodes_p, lit_oc);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data->lex_env_p,
+    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                         &var_name_string);
 
 #ifndef JERRY_NDEBUG
     do_strict_eval_arguments_check (ref_base_lex_env_p,
                                     &var_name_string,
-                                    int_data->is_strict);
+                                    frame_ctx_p->is_strict);
 #endif /* !JERRY_NDEBUG */
 
     ret_value = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
                                                 &var_name_string,
-                                                int_data->is_strict,
+                                                frame_ctx_p->is_strict,
                                                 value);
 
     ecma_check_that_ecma_string_need_not_be_freed (&var_name_string);

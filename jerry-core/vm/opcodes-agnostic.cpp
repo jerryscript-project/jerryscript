@@ -25,7 +25,7 @@
  */
 ecma_completion_value_t
 opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
-                         int_data_t *int_data) /**< interpreter context */
+                         vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_true_jmp_down.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_down.opcode_1,
@@ -33,19 +33,19 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (frame_ctx_p, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT ((uint32_t) int_data->pos + offset < MAX_OPCODES);
-    int_data->pos = (opcode_counter_t) (int_data->pos + offset);
+    JERRY_ASSERT ((uint32_t) frame_ctx_p->pos + offset < MAX_OPCODES);
+    frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos + offset);
   }
   else
   {
-    int_data->pos++;
+    frame_ctx_p->pos++;
   }
 
   ret_value = ecma_make_empty_completion_value ();
@@ -58,7 +58,7 @@ opfunc_is_true_jmp_down (opcode_t opdata, /**< operation data */
 /* Likewise to opfunc_is_true_jmp_down, but jumps up.  */
 ecma_completion_value_t
 opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
-                       int_data_t *int_data) /**< interpreter context */
+                       vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_true_jmp_up.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_true_jmp_up.opcode_1,
@@ -66,19 +66,19 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (frame_ctx_p, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
-    int_data->pos = (opcode_counter_t) (int_data->pos - offset);
+    JERRY_ASSERT ((uint32_t) frame_ctx_p->pos >= offset);
+    frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos - offset);
   }
   else
   {
-    int_data->pos++;
+    frame_ctx_p->pos++;
   }
 
   ret_value = ecma_make_empty_completion_value ();
@@ -97,7 +97,7 @@ opfunc_is_true_jmp_up (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
-                          int_data_t *int_data) /**< interpreter context */
+                          vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_false_jmp_down.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_down.opcode_1,
@@ -105,19 +105,19 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (frame_ctx_p, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT ((uint32_t) int_data->pos + offset < MAX_OPCODES);
-    int_data->pos = (opcode_counter_t) (int_data->pos + offset);
+    JERRY_ASSERT ((uint32_t) frame_ctx_p->pos + offset < MAX_OPCODES);
+    frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos + offset);
   }
   else
   {
-    int_data->pos++;
+    frame_ctx_p->pos++;
   }
 
   ret_value = ecma_make_empty_completion_value ();
@@ -130,7 +130,7 @@ opfunc_is_false_jmp_down (opcode_t opdata, /**< operation data */
 /* Likewise to opfunc_is_false_jmp_down, but jumps up.  */
 ecma_completion_value_t
 opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
-                        int_data_t *int_data) /**< interpreter context */
+                        vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t cond_var_idx = opdata.data.is_false_jmp_up.value;
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.is_false_jmp_up.opcode_1,
@@ -138,19 +138,19 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (cond_value, get_variable_value (int_data, cond_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (cond_value, get_variable_value (frame_ctx_p, cond_var_idx, false), ret_value);
 
   ecma_completion_value_t to_bool_completion = ecma_op_to_boolean (cond_value);
   JERRY_ASSERT (ecma_is_completion_value_normal (to_bool_completion));
 
   if (!ecma_is_completion_value_normal_true (to_bool_completion))
   {
-    JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
-    int_data->pos = (opcode_counter_t) (int_data->pos - offset);
+    JERRY_ASSERT ((uint32_t) frame_ctx_p->pos >= offset);
+    frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos - offset);
   }
   else
   {
-    int_data->pos++;
+    frame_ctx_p->pos++;
   }
 
   ret_value = ecma_make_empty_completion_value ();
@@ -168,14 +168,14 @@ opfunc_is_false_jmp_up (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp_down (opcode_t opdata, /**< operation data */
-                 int_data_t *int_data) /**< interpreter context */
+                 vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
                                                                     opdata.data.jmp_down.opcode_2);
 
-  JERRY_ASSERT (((uint32_t) int_data->pos + offset < MAX_OPCODES));
+  JERRY_ASSERT (((uint32_t) frame_ctx_p->pos + offset < MAX_OPCODES));
 
-  int_data->pos = (opcode_counter_t) (int_data->pos + offset);
+  frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos + offset);
 
   return ecma_make_empty_completion_value ();
 }
@@ -188,13 +188,13 @@ opfunc_jmp_down (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp_up (opcode_t opdata, /**< operation data */
-               int_data_t *int_data) /**< interpreter context */
+               vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const opcode_counter_t offset = calc_opcode_counter_from_idx_idx (opdata.data.jmp_up.opcode_1,
                                                                     opdata.data.jmp_up.opcode_2);
-  JERRY_ASSERT ((uint32_t) int_data->pos >= offset);
+  JERRY_ASSERT ((uint32_t) frame_ctx_p->pos >= offset);
 
-  int_data->pos = (opcode_counter_t) (int_data->pos - offset);
+  frame_ctx_p->pos = (opcode_counter_t) (frame_ctx_p->pos - offset);
 
   return ecma_make_empty_completion_value ();
 }
@@ -207,9 +207,9 @@ opfunc_jmp_up (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_jmp_break_continue (opcode_t opdata, /**< operation data */
-                           int_data_t *int_data) /**< interpreter context */
+                           vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  opcode_counter_t target = int_data->pos;
+  opcode_counter_t target = frame_ctx_p->pos;
   target = (opcode_counter_t) (target + calc_opcode_counter_from_idx_idx (opdata.data.jmp_down.opcode_1,
                                                                           opdata.data.jmp_down.opcode_2));
 

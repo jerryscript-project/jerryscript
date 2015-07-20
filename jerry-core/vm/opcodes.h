@@ -123,7 +123,7 @@ typedef enum : idx_t
 struct opcode_t;
 
 /**
- * Interpreter context
+ * Context of interpreter, related to a JS stack frame
  */
 typedef struct
 {
@@ -149,7 +149,7 @@ typedef struct
   mem_heap_stats_t heap_stats_context_enter;
   mem_pools_stats_t pools_stats_context_enter;
 #endif /* MEM_STATS */
-} int_data_t;
+} vm_frame_ctx_t;
 
 /**
  * Description of a run scope
@@ -168,7 +168,7 @@ typedef struct
 } vm_run_scope_t;
 
 opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
-opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, int_data_t *int_data);
+opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, vm_frame_ctx_t *frame_ctx_p);
 
 #define OP_CALLS_AND_ARGS(p, a)                                              \
         p##_3 (a, call_n, lhs, function_var_idx, arg_list)                   \
@@ -313,11 +313,11 @@ enum __opcode_idx
 };
 #undef __OP_ENUM_FIELD
 
-#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (opcode_t, int_data_t*);
+#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (opcode_t, vm_frame_ctx_t*);
 OP_LIST (OP_FUNC_DECL)
 #undef __OP_FUNC_DECL
 
-typedef ecma_completion_value_t (*opfunc) (opcode_t, int_data_t *);
+typedef ecma_completion_value_t (*opfunc) (opcode_t, vm_frame_ctx_t *);
 
 #define GETOP_DECL_0(a, name) \
         opcode_t getop_##name (void);

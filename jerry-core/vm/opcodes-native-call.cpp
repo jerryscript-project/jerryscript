@@ -29,16 +29,16 @@
  */
 ecma_completion_value_t
 opfunc_native_call (opcode_t opdata, /**< operation data */
-                    int_data_t *int_data) /**< interpreter context */
+                    vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.native_call.lhs;
   const idx_t native_call_id_idx = opdata.data.native_call.name;
   const idx_t args_number = opdata.data.native_call.arg_list;
-  const opcode_counter_t lit_oc = int_data->pos;
+  const opcode_counter_t lit_oc = frame_ctx_p->pos;
 
   JERRY_ASSERT (native_call_id_idx < OPCODE_NATIVE_CALL__COUNT);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   JERRY_STATIC_ASSERT (OPCODE_NATIVE_CALL__COUNT < (1u << (sizeof (native_call_id_idx) * JERRY_BITSINBYTE)));
 
@@ -47,7 +47,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
   MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
 
   ecma_length_t args_read;
-  ecma_completion_value_t get_arg_completion = fill_varg_list (int_data,
+  ecma_completion_value_t get_arg_completion = fill_varg_list (frame_ctx_p,
                                                                args_number,
                                                                arg_values,
                                                                &args_read);
@@ -104,7 +104,7 @@ opfunc_native_call (opcode_t opdata, /**< operation data */
 
           mem_heap_free_block (utf8_str_p);
 
-          ret_value = set_variable_value (int_data, lit_oc, dst_var_idx,
+          ret_value = set_variable_value (frame_ctx_p, lit_oc, dst_var_idx,
                                           ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
           ECMA_FINALIZE (str_value);

@@ -26,7 +26,7 @@
  */
 ecma_completion_value_t
 opfunc_equal_value (opcode_t opdata, /**< operation data */
-                    int_data_t *int_data) /**< interpreter context */
+                    vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.equal_value.dst;
   const idx_t left_var_idx = opdata.data.equal_value.var_left;
@@ -34,8 +34,8 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_equality_compare (left_value,
                                                      right_value),
@@ -43,14 +43,14 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
 
   JERRY_ASSERT (ecma_is_value_boolean (compare_result));
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx,
                                   compare_result);
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_equal_value */
@@ -65,7 +65,7 @@ opfunc_equal_value (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_not_equal_value (opcode_t opdata, /**< operation data */
-                        int_data_t *int_data) /**< interpreter context */
+                        vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.not_equal_value.dst;
   const idx_t left_var_idx = opdata.data.not_equal_value.var_left;
@@ -73,8 +73,8 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_equality_compare (left_value, right_value),
                   ret_value);
@@ -83,7 +83,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
 
   bool is_equal = ecma_is_value_true (compare_result);
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
                                                           : ECMA_SIMPLE_VALUE_TRUE));
 
@@ -91,7 +91,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_not_equal_value */
@@ -106,7 +106,7 @@ opfunc_not_equal_value (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_equal_value_type (opcode_t opdata, /**< operation data */
-                         int_data_t *int_data) /**< interpreter context */
+                         vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.equal_value_type.dst;
   const idx_t left_var_idx = opdata.data.equal_value_type.var_left;
@@ -114,19 +114,19 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
                                                           : ECMA_SIMPLE_VALUE_FALSE));
 
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_equal_value_type */
@@ -141,7 +141,7 @@ opfunc_equal_value_type (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
-                             int_data_t *int_data) /**< interpreter context */
+                             vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.not_equal_value_type.dst;
   const idx_t left_var_idx = opdata.data.not_equal_value_type.var_left;
@@ -149,12 +149,12 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx,
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx,
                                   ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
                                                           : ECMA_SIMPLE_VALUE_TRUE));
 
@@ -162,7 +162,7 @@ opfunc_not_equal_value_type (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_not_equal_value_type */

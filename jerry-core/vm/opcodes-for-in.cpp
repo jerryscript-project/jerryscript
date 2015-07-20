@@ -183,7 +183,7 @@ vm_helper_for_in_enumerate_properties_names (ecma_object_t *obj_p) /**< starting
  */
 ecma_completion_value_t
 opfunc_for_in (opcode_t opdata, /**< operation data */
-               int_data_t *int_data_p) /**< interpreter context */
+               vm_frame_ctx_t *int_data_p) /**< interpreter context */
 {
   const idx_t expr_idx = opdata.data.for_in.expr;
   const idx_t block_end_oc_idx_1 = opdata.data.for_in.oc_idx_1;

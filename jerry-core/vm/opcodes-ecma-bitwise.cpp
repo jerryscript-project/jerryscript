@@ -42,7 +42,7 @@ typedef enum
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
+do_number_bitwise_logic (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                          idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
                          ecma_value_t left_value, /**< left value */
@@ -53,7 +53,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-  ecma_number_t* res_p = int_data->tmp_num_p;
+  ecma_number_t* res_p = frame_ctx_p->tmp_num_p;
 
   int32_t left_int32 = ecma_number_to_int32 (num_left);
   // int32_t right_int32 = ecma_number_to_int32 (num_right);
@@ -100,7 +100,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos,
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos,
                                   dst_var_idx,
                                   ecma_make_number_value (res_p));
 
@@ -120,7 +120,7 @@ do_number_bitwise_logic (int_data_t *int_data, /**< interpreter context */
  */
 ecma_completion_value_t
 opfunc_b_and (opcode_t opdata, /**< operation data */
-              int_data_t *int_data) /**< interpreter context */
+              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_and.dst;
   const idx_t left_var_idx = opdata.data.b_and.var_left;
@@ -128,10 +128,10 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_logic_and,
                                        left_value,
@@ -140,7 +140,7 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_and */
@@ -155,7 +155,7 @@ opfunc_b_and (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_or (opcode_t opdata, /**< operation data */
-             int_data_t *int_data) /**< interpreter context */
+             vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_or.dst;
   const idx_t left_var_idx = opdata.data.b_or.var_left;
@@ -163,10 +163,10 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_logic_or,
                                        left_value,
@@ -175,7 +175,7 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_or */
@@ -190,7 +190,7 @@ opfunc_b_or (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_xor (opcode_t opdata, /**< operation data */
-              int_data_t *int_data) /**< interpreter context */
+              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_xor.dst;
   const idx_t left_var_idx = opdata.data.b_xor.var_left;
@@ -198,10 +198,10 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_logic_xor,
                                        left_value,
@@ -210,7 +210,7 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_xor */
@@ -225,7 +225,7 @@ opfunc_b_xor (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_left (opcode_t opdata, /**< operation data */
-                     int_data_t *int_data) /**< interpreter context */
+                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_left.dst;
   const idx_t left_var_idx = opdata.data.b_shift_left.var_left;
@@ -233,10 +233,10 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_shift_left,
                                        left_value,
@@ -245,7 +245,7 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_left */
@@ -260,7 +260,7 @@ opfunc_b_shift_left (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_right (opcode_t opdata, /**< operation data */
-                      int_data_t *int_data) /**< interpreter context */
+                      vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_right.dst;
   const idx_t left_var_idx = opdata.data.b_shift_right.var_left;
@@ -268,10 +268,10 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_shift_right,
                                        left_value,
@@ -280,7 +280,7 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_right */
@@ -295,7 +295,7 @@ opfunc_b_shift_right (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
-                      int_data_t *int_data) /**< interpreter context */
+                      vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_shift_uright.dst;
   const idx_t left_var_idx = opdata.data.b_shift_uright.var_left;
@@ -303,10 +303,10 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_shift_uright,
                                        left_value,
@@ -315,7 +315,7 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_shift_uright */
@@ -330,16 +330,16 @@ opfunc_b_shift_uright (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_b_not (opcode_t opdata, /**< operation data */
-              int_data_t *int_data) /**< interpreter context */
+              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.b_not.dst;
   const idx_t right_var_idx = opdata.data.b_not.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
-  ret_value = do_number_bitwise_logic (int_data,
+  ret_value = do_number_bitwise_logic (frame_ctx_p,
                                        dst_var_idx,
                                        number_bitwise_not,
                                        right_value,
@@ -347,7 +347,7 @@ opfunc_b_not (opcode_t opdata, /**< operation data */
 
   ECMA_FINALIZE (right_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_b_not */

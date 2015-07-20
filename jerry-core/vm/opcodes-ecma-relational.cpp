@@ -26,7 +26,7 @@
  */
 ecma_completion_value_t
 opfunc_less_than (opcode_t opdata, /**< operation data */
-                  int_data_t *int_data) /**< interpreter context */
+                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.less_than.dst;
   const idx_t left_var_idx = opdata.data.less_than.var_left;
@@ -34,8 +34,8 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (left_value, right_value, true),
                   ret_value);
@@ -53,13 +53,13 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_less_than */
@@ -74,7 +74,7 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_greater_than (opcode_t opdata, /**< operation data */
-                     int_data_t *int_data) /**< interpreter context */
+                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.greater_than.dst;
   const idx_t left_var_idx = opdata.data.greater_than.var_left;
@@ -82,8 +82,8 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (right_value, left_value, false),
                   ret_value);
@@ -101,13 +101,13 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_greater_than */
@@ -122,7 +122,7 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
-                           int_data_t *int_data) /**< interpreter context */
+                           vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.less_or_equal_than.dst;
   const idx_t left_var_idx = opdata.data.less_or_equal_than.var_left;
@@ -130,8 +130,8 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (right_value, left_value, false),
                   ret_value);
@@ -156,13 +156,13 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_less_or_equal_than */
@@ -177,7 +177,7 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
-                              int_data_t *int_data) /**< interpreter context */
+                              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t dst_var_idx = opdata.data.greater_or_equal_than.dst;
   const idx_t left_var_idx = opdata.data.greater_or_equal_than.var_left;
@@ -185,8 +185,8 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (left_value, right_value, true),
                   ret_value);
@@ -211,13 +211,13 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
     }
   }
 
-  ret_value = set_variable_value (int_data, int_data->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
 
   ECMA_FINALIZE (compare_result);
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_greater_or_equal_than */
@@ -232,7 +232,7 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
-                   int_data_t *int_data __attr_unused___) /**< interpreter context */
+                   vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.instanceof.dst;
   const idx_t left_var_idx = opdata.data.instanceof.var_left;
@@ -240,8 +240,8 @@ opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   if (!ecma_is_value_object (right_value))
   {
@@ -255,7 +255,7 @@ opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
                     ecma_op_object_has_instance (right_value_obj_p, left_value),
                     ret_value);
 
-    ret_value = set_variable_value (int_data, int_data->pos, dst_idx, is_instance_of);
+    ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_idx, is_instance_of);
 
     ECMA_FINALIZE (is_instance_of);
   }
@@ -263,7 +263,7 @@ opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_instanceof */
@@ -278,7 +278,7 @@ opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
  */
 ecma_completion_value_t
 opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
-           int_data_t *int_data __attr_unused___) /**< interpreter context */
+           vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
 {
   const idx_t dst_idx = opdata.data.in.dst;
   const idx_t left_var_idx = opdata.data.in.var_left;
@@ -286,8 +286,8 @@ opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (int_data, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (int_data, right_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
+  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   if (!ecma_is_value_object (right_value))
   {
@@ -310,7 +310,7 @@ opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
       is_in = ECMA_SIMPLE_VALUE_FALSE;
     }
 
-    ret_value = set_variable_value (int_data, int_data->pos,
+    ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos,
                                     dst_idx,
                                     ecma_make_simple_value (is_in));
 
@@ -320,7 +320,7 @@ opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
   ECMA_FINALIZE (right_value);
   ECMA_FINALIZE (left_value);
 
-  int_data->pos++;
+  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_in */

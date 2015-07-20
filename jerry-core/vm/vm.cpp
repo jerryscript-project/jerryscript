@@ -28,7 +28,7 @@
 /**
  * Top (current) interpreter context
  */
-int_data_t *vm_top_context_p = NULL;
+vm_frame_ctx_t *vm_top_context_p = NULL;
 
 #define __INIT_OP_FUNC(name, arg1, arg2, arg3) [ __op__idx_##name ] = opfunc_##name,
 static const opfunc __opfuncs[LAST_OP] =
@@ -106,7 +106,7 @@ interp_mem_get_stats (mem_heap_stats_t *out_heap_stats_p,
 }
 
 static void
-interp_mem_stats_context_enter (int_data_t *int_data_p,
+interp_mem_stats_context_enter (vm_frame_ctx_t *int_data_p,
                                 opcode_counter_t block_position)
 {
   if (likely (!interp_mem_stats_enabled))
@@ -144,7 +144,7 @@ interp_mem_stats_context_enter (int_data_t *int_data_p,
 }
 
 static void
-interp_mem_stats_context_exit (int_data_t *int_data_p,
+interp_mem_stats_context_exit (vm_frame_ctx_t *int_data_p,
                                opcode_counter_t block_position)
 {
   if (likely (!interp_mem_stats_enabled))
@@ -245,7 +245,7 @@ interp_mem_stats_opcode_enter (const opcode_t *opcodes_p,
 }
 
 static void
-interp_mem_stats_opcode_exit (int_data_t *int_data_p,
+interp_mem_stats_opcode_exit (vm_frame_ctx_t *int_data_p,
                               opcode_counter_t opcode_position,
                               mem_heap_stats_t *heap_stats_before_p,
                               mem_pools_stats_t *pools_stats_before_p)
@@ -430,7 +430,7 @@ vm_run_global (void)
  *         Otherwise - the completion value is discarded and normal empty completion value is returned.
  */
 ecma_completion_value_t
-vm_loop (int_data_t *int_data_p, /**< interpreter context */
+vm_loop (vm_frame_ctx_t *int_data_p, /**< interpreter context */
          vm_run_scope_t *run_scope_p) /**< current run scope,
                                        *   or NULL - if there is no active run scope */
 {
@@ -533,39 +533,39 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
 
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
-  int_data_t int_data;
-  int_data.opcodes_p = opcodes_p;
-  int_data.pos = (opcode_counter_t) (start_pos + 1);
-  int_data.this_binding = this_binding_value;
-  int_data.lex_env_p = lex_env_p;
-  int_data.is_strict = is_strict;
-  int_data.is_eval_code = is_eval_code;
-  int_data.is_call_in_direct_eval_form = false;
-  int_data.min_reg_num = min_reg_num;
-  int_data.max_reg_num = max_reg_num;
-  int_data.tmp_num_p = ecma_alloc_number ();
-  ecma_stack_add_frame (&int_data.stack_frame, regs, regs_num);
+  vm_frame_ctx_t frame_ctx;
+  frame_ctx.opcodes_p = opcodes_p;
+  frame_ctx.pos = (opcode_counter_t) (start_pos + 1);
+  frame_ctx.this_binding = this_binding_value;
+  frame_ctx.lex_env_p = lex_env_p;
+  frame_ctx.is_strict = is_strict;
+  frame_ctx.is_eval_code = is_eval_code;
+  frame_ctx.is_call_in_direct_eval_form = false;
+  frame_ctx.min_reg_num = min_reg_num;
+  frame_ctx.max_reg_num = max_reg_num;
+  frame_ctx.tmp_num_p = ecma_alloc_number ();
+  ecma_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num);
 
-  int_data_t *prev_context_p = vm_top_context_p;
-  vm_top_context_p = &int_data;
+  vm_frame_ctx_t *prev_context_p = vm_top_context_p;
+  vm_top_context_p = &frame_ctx;
 
 #ifdef MEM_STATS
-  interp_mem_stats_context_enter (&int_data, start_pos);
+  interp_mem_stats_context_enter (&frame_ctx, start_pos);
 #endif /* MEM_STATS */
 
-  completion = vm_loop (&int_data, NULL);
+  completion = vm_loop (&frame_ctx, NULL);
 
   JERRY_ASSERT (ecma_is_completion_value_throw (completion)
                 || ecma_is_completion_value_return (completion));
 
   vm_top_context_p = prev_context_p;
 
-  ecma_stack_free_frame (&int_data.stack_frame);
+  ecma_stack_free_frame (&frame_ctx.stack_frame);
 
-  ecma_dealloc_number (int_data.tmp_num_p);
+  ecma_dealloc_number (frame_ctx.tmp_num_p);
 
 #ifdef MEM_STATS
-  interp_mem_stats_context_exit (&int_data, start_pos);
+  interp_mem_stats_context_exit (&frame_ctx, start_pos);
 #endif /* MEM_STATS */
 
   MEM_FINALIZE_LOCAL_ARRAY (regs);

@@ -78,7 +78,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     }
   }
 
-  if (arguments_list_len == 0)
+  if (arguments_list_len == 0 || ecma_is_value_undefined (arguments_list_p[0]))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
     ret_value = ecma_op_create_regexp_object (magic_str_p, NULL);

@@ -16,8 +16,11 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
+#include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
+#include "ecma-try-catch-macro.h"
 #include "fdlibm-math.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
@@ -857,6 +860,143 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
 
   return ecma_make_normal_completion_value (ecma_make_number_value (value_p));
 } /* ecma_date_set_internal_property */
+
+/**
+ * Insert leading zeros to a string of a number if needed.
+ */
+void
+ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< input/output string */
+                                ecma_number_t num, /**< input number */
+                                uint32_t length) /**< length of string of number */
+{
+  JERRY_ASSERT (length >= 1);
+
+  /* If the length is bigger than the number of digits in num, then insert leding zeros. */
+  uint32_t first_index = length - 1u;
+  ecma_number_t power_i = (ecma_number_t) pow (10, first_index);
+  for (uint32_t i = first_index; i > 0 && num < power_i; i--, power_i /= 10)
+  {
+    ecma_string_t *zero_str_p = ecma_new_ecma_string_from_uint32 (0);
+    ecma_string_t *concat_p = ecma_concat_ecma_strings (zero_str_p, *str_p);
+    ecma_deref_ecma_string (zero_str_p);
+    ecma_deref_ecma_string (*str_p);
+    *str_p = concat_p;
+  }
+} /* ecma_date_insert_leading_zeros */
+
+/**
+ * Insert a number to the start of a string with a specific separator character and
+ * fix length. If the length is bigger than the number of digits in num, then insert leding zeros.
+ */
+void
+ecma_date_insert_num_with_sep (ecma_string_t **str_p, /**< input/output string */
+                               ecma_number_t num, /**< input number */
+                               lit_magic_string_id_t magic_str_id, /**< separator character id */
+                               uint32_t length) /**< length of string of number */
+{
+  ecma_string_t *magic_string_p = ecma_get_magic_string (magic_str_id);
+
+  ecma_string_t *concat_p = ecma_concat_ecma_strings (magic_string_p, *str_p);
+  ecma_deref_ecma_string (magic_string_p);
+  ecma_deref_ecma_string (*str_p);
+  *str_p = concat_p;
+
+  ecma_string_t *num_str_p = ecma_new_ecma_string_from_number (num);
+  concat_p = ecma_concat_ecma_strings (num_str_p, *str_p);
+  ecma_deref_ecma_string (num_str_p);
+  ecma_deref_ecma_string (*str_p);
+  *str_p = concat_p;
+
+  ecma_date_insert_leading_zeros (str_p, num, length);
+} /* ecma_date_insert_num_with_sep */
+
+/**
+ * Common function to create a time zone specific string.
+ *
+ * Used by:
+ *        - The Date.prototype.toString routine.
+ *        - The Date.prototype.toISOString routine.
+ *        - The Date.prototype.toUTCString routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_to_string (ecma_value_t this_arg, /**< this argument */
+                     ecma_date_timezone_t timezone) /**< timezone */
+{
+  TODO ("Add support for local time zone output.");
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+  {
+    ret_value = ecma_raise_type_error ("Incompatible type");
+  }
+  else
+  {
+    ECMA_TRY_CATCH (obj_this,
+                    ecma_op_to_object (this_arg),
+                    ret_value);
+
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+    ecma_property_t *prim_value_prop_p;
+    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                 prim_value_prop_p->u.internal_property.value);
+
+    if (ecma_number_is_nan (*prim_value_num_p))
+    {
+      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+    }
+    else
+    {
+      ecma_string_t *output_str_p;
+      ecma_number_t milliseconds = ecma_date_ms_from_time (*prim_value_num_p);
+
+      if (timezone == ECMA_DATE_UTC)
+      {
+        output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+        ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
+      }
+      else
+      {
+        output_str_p = ecma_new_ecma_string_from_number (milliseconds);
+        ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
+      }
+
+      ecma_number_t seconds = ecma_date_sec_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
+
+      ecma_number_t minutes = ecma_date_min_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+      ecma_number_t hours = ecma_date_hour_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+      ecma_number_t day = ecma_date_date_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, day, LIT_MAGIC_STRING_TIME_SEP_U, 2);
+
+      /*
+       * Note:
+       *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
+       *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
+       */
+      ecma_number_t month = ecma_date_month_from_time (*prim_value_num_p) + 1;
+      ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
+
+      ecma_number_t year = ecma_date_year_from_time (*prim_value_num_p);
+      ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
+
+      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+    }
+
+    ECMA_FINALIZE (obj_this);
+  }
+
+  return ret_value;
+} /* ecma_date_create_formatted_string */
 
 /**
  * @}

@@ -17,7 +17,6 @@
 #include "jsp-mm.h"
 #include "scopes-tree.h"
 
-#define OPCODE(op) (__op__idx_##op)
 #define HASH_SIZE 128
 
 static hash_table lit_id_to_uid = null_hash;
@@ -232,53 +231,53 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
      and '0' otherwise.  */
   switch (om->op.op_idx)
   {
-    case OPCODE (prop_getter):
-    case OPCODE (prop_setter):
-    case OPCODE (delete_prop):
-    case OPCODE (b_shift_left):
-    case OPCODE (b_shift_right):
-    case OPCODE (b_shift_uright):
-    case OPCODE (b_and):
-    case OPCODE (b_or):
-    case OPCODE (b_xor):
-    case OPCODE (equal_value):
-    case OPCODE (not_equal_value):
-    case OPCODE (equal_value_type):
-    case OPCODE (not_equal_value_type):
-    case OPCODE (less_than):
-    case OPCODE (greater_than):
-    case OPCODE (less_or_equal_than):
-    case OPCODE (greater_or_equal_than):
-    case OPCODE (instanceof):
-    case OPCODE (in):
-    case OPCODE (addition):
-    case OPCODE (substraction):
-    case OPCODE (division):
-    case OPCODE (multiplication):
-    case OPCODE (remainder):
+    case VM_OP_PROP_GETTER:
+    case VM_OP_PROP_SETTER:
+    case VM_OP_DELETE_PROP:
+    case VM_OP_B_SHIFT_LEFT:
+    case VM_OP_B_SHIFT_RIGHT:
+    case VM_OP_B_SHIFT_URIGHT:
+    case VM_OP_B_AND:
+    case VM_OP_B_OR:
+    case VM_OP_B_XOR:
+    case VM_OP_EQUAL_VALUE:
+    case VM_OP_NOT_EQUAL_VALUE:
+    case VM_OP_EQUAL_VALUE_TYPE:
+    case VM_OP_NOT_EQUAL_VALUE_TYPE:
+    case VM_OP_LESS_THAN:
+    case VM_OP_GREATER_THAN:
+    case VM_OP_LESS_OR_EQUAL_THAN:
+    case VM_OP_GREATER_OR_EQUAL_THAN:
+    case VM_OP_INSTANCEOF:
+    case VM_OP_IN:
+    case VM_OP_ADDITION:
+    case VM_OP_SUBSTRACTION:
+    case VM_OP_DIVISION:
+    case VM_OP_MULTIPLICATION:
+    case VM_OP_REMAINDER:
     {
       change_uid (om, lit_ids, 0x111);
       break;
     }
-    case OPCODE (call_n):
-    case OPCODE (native_call):
-    case OPCODE (construct_n):
-    case OPCODE (func_expr_n):
-    case OPCODE (delete_var):
-    case OPCODE (typeof):
-    case OPCODE (b_not):
-    case OPCODE (logical_not):
-    case OPCODE (post_incr):
-    case OPCODE (post_decr):
-    case OPCODE (pre_incr):
-    case OPCODE (pre_decr):
-    case OPCODE (unary_plus):
-    case OPCODE (unary_minus):
+    case VM_OP_CALL_N:
+    case VM_OP_NATIVE_CALL:
+    case VM_OP_CONSTRUCT_N:
+    case VM_OP_FUNC_EXPR_N:
+    case VM_OP_DELETE_VAR:
+    case VM_OP_TYPEOF:
+    case VM_OP_B_NOT:
+    case VM_OP_LOGICAL_NOT:
+    case VM_OP_POST_INCR:
+    case VM_OP_POST_DECR:
+    case VM_OP_PRE_INCR:
+    case VM_OP_PRE_DECR:
+    case VM_OP_UNARY_PLUS:
+    case VM_OP_UNARY_MINUS:
     {
       change_uid (om, lit_ids, 0x110);
       break;
     }
-    case OPCODE (assignment):
+    case VM_OP_ASSIGNMENT:
     {
       switch (om->op.data.assignment.type_value_right)
       {
@@ -301,34 +300,33 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
       }
       break;
     }
-    case OPCODE (func_decl_n):
-    case OPCODE (array_decl):
-    case OPCODE (obj_decl):
-    case OPCODE (this_binding):
-    case OPCODE (with):
-    case OPCODE (for_in):
-    case OPCODE (throw_value):
-    case OPCODE (is_true_jmp_up):
-    case OPCODE (is_true_jmp_down):
-    case OPCODE (is_false_jmp_up):
-    case OPCODE (is_false_jmp_down):
-    case OPCODE (var_decl):
-    case OPCODE (retval):
+    case VM_OP_FUNC_DECL_N:
+    case VM_OP_ARRAY_DECL:
+    case VM_OP_OBJ_DECL:
+    case VM_OP_THIS_BINDING:
+    case VM_OP_WITH:
+    case VM_OP_FOR_IN:
+    case VM_OP_THROW_VALUE:
+    case VM_OP_IS_TRUE_JMP_UP:
+    case VM_OP_IS_TRUE_JMP_DOWN:
+    case VM_OP_IS_FALSE_JMP_UP:
+    case VM_OP_IS_FALSE_JMP_DOWN:
+    case VM_OP_VAR_DECL:
+    case VM_OP_RETVAL:
     {
       change_uid (om, lit_ids, 0x100);
       break;
     }
-    case OPCODE (ret):
-    case OPCODE (try_block):
-    case OPCODE (jmp_up):
-    case OPCODE (jmp_down):
-    case OPCODE (nop):
-    case OPCODE (reg_var_decl):
+    case VM_OP_RET:
+    case VM_OP_TRY_BLOCK:
+    case VM_OP_JMP_UP:
+    case VM_OP_JMP_DOWN:
+    case VM_OP_REG_VAR_DECL:
     {
       change_uid (om, lit_ids, 0x000);
       break;
     }
-    case OPCODE (meta):
+    case VM_OP_META:
     {
       switch (om->op.data.meta.type)
       {
@@ -372,53 +370,53 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
   op_meta *om = extract_op_meta (tree, opc_index);
   switch (om->op.op_idx)
   {
-    case OPCODE (prop_getter):
-    case OPCODE (prop_setter):
-    case OPCODE (delete_prop):
-    case OPCODE (b_shift_left):
-    case OPCODE (b_shift_right):
-    case OPCODE (b_shift_uright):
-    case OPCODE (b_and):
-    case OPCODE (b_or):
-    case OPCODE (b_xor):
-    case OPCODE (equal_value):
-    case OPCODE (not_equal_value):
-    case OPCODE (equal_value_type):
-    case OPCODE (not_equal_value_type):
-    case OPCODE (less_than):
-    case OPCODE (greater_than):
-    case OPCODE (less_or_equal_than):
-    case OPCODE (greater_or_equal_than):
-    case OPCODE (instanceof):
-    case OPCODE (in):
-    case OPCODE (addition):
-    case OPCODE (substraction):
-    case OPCODE (division):
-    case OPCODE (multiplication):
-    case OPCODE (remainder):
+    case VM_OP_PROP_GETTER:
+    case VM_OP_PROP_SETTER:
+    case VM_OP_DELETE_PROP:
+    case VM_OP_B_SHIFT_LEFT:
+    case VM_OP_B_SHIFT_RIGHT:
+    case VM_OP_B_SHIFT_URIGHT:
+    case VM_OP_B_AND:
+    case VM_OP_B_OR:
+    case VM_OP_B_XOR:
+    case VM_OP_EQUAL_VALUE:
+    case VM_OP_NOT_EQUAL_VALUE:
+    case VM_OP_EQUAL_VALUE_TYPE:
+    case VM_OP_NOT_EQUAL_VALUE_TYPE:
+    case VM_OP_LESS_THAN:
+    case VM_OP_GREATER_THAN:
+    case VM_OP_LESS_OR_EQUAL_THAN:
+    case VM_OP_GREATER_OR_EQUAL_THAN:
+    case VM_OP_INSTANCEOF:
+    case VM_OP_IN:
+    case VM_OP_ADDITION:
+    case VM_OP_SUBSTRACTION:
+    case VM_OP_DIVISION:
+    case VM_OP_MULTIPLICATION:
+    case VM_OP_REMAINDER:
     {
       insert_uids_to_lit_id_map (om, 0x111);
       break;
     }
-    case OPCODE (call_n):
-    case OPCODE (native_call):
-    case OPCODE (construct_n):
-    case OPCODE (func_expr_n):
-    case OPCODE (delete_var):
-    case OPCODE (typeof):
-    case OPCODE (b_not):
-    case OPCODE (logical_not):
-    case OPCODE (post_incr):
-    case OPCODE (post_decr):
-    case OPCODE (pre_incr):
-    case OPCODE (pre_decr):
-    case OPCODE (unary_plus):
-    case OPCODE (unary_minus):
+    case VM_OP_CALL_N:
+    case VM_OP_NATIVE_CALL:
+    case VM_OP_CONSTRUCT_N:
+    case VM_OP_FUNC_EXPR_N:
+    case VM_OP_DELETE_VAR:
+    case VM_OP_TYPEOF:
+    case VM_OP_B_NOT:
+    case VM_OP_LOGICAL_NOT:
+    case VM_OP_POST_INCR:
+    case VM_OP_POST_DECR:
+    case VM_OP_PRE_INCR:
+    case VM_OP_PRE_DECR:
+    case VM_OP_UNARY_PLUS:
+    case VM_OP_UNARY_MINUS:
     {
       insert_uids_to_lit_id_map (om, 0x110);
       break;
     }
-    case OPCODE (assignment):
+    case VM_OP_ASSIGNMENT:
     {
       switch (om->op.data.assignment.type_value_right)
       {
@@ -441,33 +439,32 @@ count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
       }
       break;
     }
-    case OPCODE (func_decl_n):
-    case OPCODE (array_decl):
-    case OPCODE (obj_decl):
-    case OPCODE (this_binding):
-    case OPCODE (with):
-    case OPCODE (throw_value):
-    case OPCODE (is_true_jmp_up):
-    case OPCODE (is_true_jmp_down):
-    case OPCODE (is_false_jmp_up):
-    case OPCODE (is_false_jmp_down):
-    case OPCODE (var_decl):
-    case OPCODE (retval):
+    case VM_OP_FUNC_DECL_N:
+    case VM_OP_ARRAY_DECL:
+    case VM_OP_OBJ_DECL:
+    case VM_OP_THIS_BINDING:
+    case VM_OP_WITH:
+    case VM_OP_THROW_VALUE:
+    case VM_OP_IS_TRUE_JMP_UP:
+    case VM_OP_IS_TRUE_JMP_DOWN:
+    case VM_OP_IS_FALSE_JMP_UP:
+    case VM_OP_IS_FALSE_JMP_DOWN:
+    case VM_OP_VAR_DECL:
+    case VM_OP_RETVAL:
     {
       insert_uids_to_lit_id_map (om, 0x100);
       break;
     }
-    case OPCODE (ret):
-    case OPCODE (try_block):
-    case OPCODE (jmp_up):
-    case OPCODE (jmp_down):
-    case OPCODE (nop):
-    case OPCODE (reg_var_decl):
+    case VM_OP_RET:
+    case VM_OP_TRY_BLOCK:
+    case VM_OP_JMP_UP:
+    case VM_OP_JMP_DOWN:
+    case VM_OP_REG_VAR_DECL:
     {
       insert_uids_to_lit_id_map (om, 0x000);
       break;
     }
-    case OPCODE (meta):
+    case VM_OP_META:
     {
       switch (om->op.data.meta.type)
       {
@@ -525,12 +522,12 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree)
   for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
   {
     op_meta *om = extract_op_meta (tree, opc_index);
-    if (om->op.op_idx != OPCODE (var_decl)
-        && om->op.op_idx != OPCODE (meta) && !header)
+    if (om->op.op_idx != VM_OP_VAR_DECL
+        && om->op.op_idx != VM_OP_META && !header)
     {
       break;
     }
-    if (om->op.op_idx == OPCODE (reg_var_decl))
+    if (om->op.op_idx == VM_OP_REG_VAR_DECL)
     {
       header = false;
     }
@@ -572,12 +569,12 @@ merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
   for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
   {
     op_meta *om = extract_op_meta (tree, opc_index);
-    if (om->op.op_idx != OPCODE (var_decl)
-        && om->op.op_idx != OPCODE (meta) && !header)
+    if (om->op.op_idx != VM_OP_VAR_DECL
+        && om->op.op_idx != VM_OP_META && !header)
     {
       break;
     }
-    if (om->op.op_idx == OPCODE (reg_var_decl))
+    if (om->op.op_idx == VM_OP_REG_VAR_DECL)
     {
       header = false;
     }

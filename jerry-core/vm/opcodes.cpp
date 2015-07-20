@@ -45,30 +45,6 @@
  *      corresponding to the instruction, containing the idx argument.
  */
 
-#define OP_UNIMPLEMENTED_LIST(op) \
-    static char __attr_unused___ unimplemented_list_end
-
-#define DEFINE_UNIMPLEMENTED_OP(op) \
-  ecma_completion_value_t opfunc_ ## op (opcode_t opdata, vm_frame_ctx_t *frame_ctx_p) \
-  { \
-    JERRY_UNIMPLEMENTED_REF_UNUSED_VARS (opdata, frame_ctx_p); \
-  }
-
-OP_UNIMPLEMENTED_LIST (DEFINE_UNIMPLEMENTED_OP);
-#undef DEFINE_UNIMPLEMENTED_OP
-
-/**
- * 'Nop' opcode handler.
- */
-ecma_completion_value_t
-opfunc_nop (opcode_t opdata __attr_unused___, /**< operation data */
-            vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
-{
-  frame_ctx_p->pos++;
-
-  return ecma_make_empty_completion_value ();
-} /* opfunc_nop */
-
 /**
  * 'Assignment' opcode handler.
  *
@@ -719,7 +695,7 @@ vm_helper_call_get_call_flags_and_this_arg (vm_frame_ctx_t *int_data_p, /**< int
   idx_t this_arg_var_idx = INVALID_VALUE;
 
   opcode_t next_opcode = vm_get_opcode (int_data_p->opcodes_p, int_data_p->pos);
-  if (next_opcode.op_idx == __op__idx_meta
+  if (next_opcode.op_idx == VM_OP_META
       && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
   {
     call_flags = (opcode_call_flags_t) next_opcode.data.meta.data_1;
@@ -1081,7 +1057,7 @@ opfunc_obj_decl (opcode_t opdata, /**< operation data */
     if (ecma_is_completion_value_empty (evaluate_prop_completion))
     {
       opcode_t next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-      JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+      JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
 
       const opcode_meta_type type = (opcode_meta_type) next_opcode.data.meta.type;
       JERRY_ASSERT (type == OPCODE_META_TYPE_VARG_PROP_DATA
@@ -1456,7 +1432,7 @@ opfunc_with (opcode_t opdata, /**< operation data */
 
 #ifndef JERRY_NDEBUG
   opcode_t meta_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, with_end_oc);
-  JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (meta_opcode.op_idx == VM_OP_META);
   JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
 #endif /* !JERRY_NDEBUG */
 
@@ -1855,34 +1831,39 @@ read_meta_opcode_counter (opcode_meta_type expected_type, /**< expected type of 
   return calc_opcode_counter_from_idx_idx (data_1, data_2);
 } /* read_meta_opcode_counter */
 
-#define GETOP_DEF_1(a, name, field1) \
-        opcode_t getop_##name (idx_t arg1) \
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+        opcode_t getop_##opcode_name (void) \
         { \
           opcode_t opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
+          opdata.op_idx = VM_OP_##opcode_name_uppercase; \
+          return opdata; \
+        }
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+        opcode_t getop_##opcode_name (idx_t arg1_v) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = VM_OP_##opcode_name_uppercase; \
+          opdata.data.opcode_name.arg1 = arg1_v; \
+          return opdata; \
+        }
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+        opcode_t getop_##opcode_name (idx_t arg1_v, idx_t arg2_v) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = VM_OP_##opcode_name_uppercase; \
+          opdata.data.opcode_name.arg1 = arg1_v; \
+          opdata.data.opcode_name.arg2 = arg2_v; \
+          return opdata; \
+        }
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+        opcode_t getop_##opcode_name (idx_t arg1_v, idx_t arg2_v, idx_t arg3_v) \
+        { \
+          opcode_t opdata; \
+          opdata.op_idx = VM_OP_##opcode_name_uppercase; \
+          opdata.data.opcode_name.arg1 = arg1_v; \
+          opdata.data.opcode_name.arg2 = arg2_v; \
+          opdata.data.opcode_name.arg3 = arg3_v; \
           return opdata; \
         }
 
-#define GETOP_DEF_2(a, name, field1, field2) \
-        opcode_t getop_##name (idx_t arg1, idx_t arg2) \
-        { \
-          opcode_t opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
-          opdata.data.name.field2 = arg2; \
-          return opdata; \
-        }
-
-#define GETOP_DEF_3(a, name, field1, field2, field3) \
-        opcode_t getop_##name (idx_t arg1, idx_t arg2, idx_t arg3) \
-        { \
-          opcode_t opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          opdata.data.name.field1 = arg1; \
-          opdata.data.name.field2 = arg2; \
-          opdata.data.name.field3 = arg3; \
-          return opdata; \
-        }
-
-OP_ARGS_LIST (GETOP_DEF)
+#include "vm-opcodes.inc.h"

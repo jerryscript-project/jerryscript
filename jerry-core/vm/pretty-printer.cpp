@@ -25,24 +25,32 @@
 #include "serializer.h"
 #include "lit-literal.h"
 
-#define NAME_TO_ID(op) (__op__idx_##op)
-
-#define __OPCODE_STR(name, arg1, arg2, arg3) \
-  #name,
-
-#define __OPCODE_SIZE(name, arg1, arg2, arg3) \
-  (uint8_t) (sizeof (__op_##name) + 1),
-
 static const char* opcode_names[] =
 {
-  OP_LIST (OPCODE_STR)
-  ""
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  #opcode_name,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  #opcode_name,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  #opcode_name,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  #opcode_name,
+
+#include "vm-opcodes.inc.h"
 };
 
 static uint8_t opcode_sizes[] =
 {
-  OP_LIST (OPCODE_SIZE)
-  0
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  0,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  1,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  2,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  3,
+
+#include "vm-opcodes.inc.h"
 };
 
 static char buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
@@ -150,7 +158,7 @@ pp_printf (const char *format, opcode_t opcode, lit_cpointer_t lit_ids[], opcode
 }
 
 #define PP_OP(op_name, format) \
-  case NAME_TO_ID (op_name): pp_printf (format, opm.op, opm.lit_id, oc, 1); break;
+  case op_name: pp_printf (format, opm.op, opm.lit_id, oc, 1); break;
 #define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
 #define OC(i, j) __extension__({ raw_opcode* raw = (raw_opcode *) &opm.op; \
                                  calc_opcode_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
@@ -164,12 +172,10 @@ dump_asm (opcode_counter_t oc, opcode_t opcode)
   uint8_t i = 0;
   uint8_t opcode_id = opcode.op_idx;
   printf ("%3d: %20s ", oc, opcode_names[opcode_id]);
-  if (opcode_id != NAME_TO_ID (nop) && opcode_id != NAME_TO_ID (ret))
+
+  for (i = 1; i < opcode_sizes[opcode_id]; i++)
   {
-    for (i = 1; i < opcode_sizes[opcode_id]; i++)
-    {
-      printf ("%4d ", ((raw_opcode *) &opcode)->uids[i]);
-    }
+    printf ("%4d ", ((raw_opcode *) &opcode)->uids[i]);
   }
 
   for (; i < 4; i++)
@@ -189,58 +195,57 @@ pp_op_meta (const opcode_t *opcodes_p,
 
   switch (opm.op.op_idx)
   {
-    PP_OP (addition, "%s = %s + %s;");
-    PP_OP (substraction, "%s = %s - %s;");
-    PP_OP (division, "%s = %s / %s;");
-    PP_OP (multiplication, "%s = %s * %s;");
-    PP_OP (remainder, "%s = %s %% %s;");
-    PP_OP (unary_minus, "%s = -%s;");
-    PP_OP (unary_plus, "%s = +%s;");
-    PP_OP (b_shift_left, "%s = %s << %s;");
-    PP_OP (b_shift_right, "%s = %s >> %s;");
-    PP_OP (b_shift_uright, "%s = %s >>> %s;");
-    PP_OP (b_and, "%s = %s & %s;");
-    PP_OP (b_or, "%s = %s | %s;");
-    PP_OP (b_xor, "%s = %s ^ %s;");
-    PP_OP (b_not, "%s = ~ %s;");
-    PP_OP (logical_not, "%s = ! %s;");
-    PP_OP (equal_value, "%s = %s == %s;");
-    PP_OP (not_equal_value, "%s = %s != %s;");
-    PP_OP (equal_value_type, "%s = %s === %s;");
-    PP_OP (not_equal_value_type, "%s = %s !== %s;");
-    PP_OP (less_than, "%s = %s < %s;");
-    PP_OP (greater_than, "%s = %s > %s;");
-    PP_OP (less_or_equal_than, "%s = %s <= %s;");
-    PP_OP (greater_or_equal_than, "%s = %s >= %s;");
-    PP_OP (instanceof, "%s = %s instanceof %s;");
-    PP_OP (in, "%s = %s in %s;");
-    PP_OP (post_incr, "%s = %s++;");
-    PP_OP (post_decr, "%s = %s--;");
-    PP_OP (pre_incr, "%s = ++%s;");
-    PP_OP (pre_decr, "%s = --%s;");
-    PP_OP (throw_value, "throw %s;");
-    PP_OP (reg_var_decl, "var %s .. %s;");
-    PP_OP (var_decl, "var %s;");
-    PP_OP (nop, ";");
-    PP_OP (retval, "return %s;");
-    PP_OP (ret, "ret;");
-    PP_OP (prop_getter, "%s = %s[%s];");
-    PP_OP (prop_setter, "%s[%s] = %s;");
-    PP_OP (this_binding, "%s = this;");
-    PP_OP (delete_var, "%s = delete %s;");
-    PP_OP (delete_prop, "%s = delete %s.%s;");
-    PP_OP (typeof, "%s = typeof %s;");
-    PP_OP (with, "with (%s);");
-    PP_OP (for_in, "for_in (%s);");
-    case NAME_TO_ID (is_true_jmp_up): printf ("if (%s) goto %d;", VAR (1), oc - OC (2, 3)); break;
-    case NAME_TO_ID (is_false_jmp_up): printf ("if (%s == false) goto %d;", VAR (1), oc - OC (2, 3)); break;
-    case NAME_TO_ID (is_true_jmp_down): printf ("if (%s) goto %d;", VAR (1), oc + OC (2, 3)); break;
-    case NAME_TO_ID (is_false_jmp_down): printf ("if (%s == false) goto %d;", VAR (1), oc + OC (2, 3)); break;
-    case NAME_TO_ID (jmp_up): printf ("goto %d;", oc - OC (1, 2)); break;
-    case NAME_TO_ID (jmp_down): printf ("goto %d;", oc + OC (1, 2)); break;
-    case NAME_TO_ID (jmp_break_continue): printf ("goto_nested %d;", oc + OC (1, 2)); break;
-    case NAME_TO_ID (try_block): printf ("try (end: %d);", oc + OC (1, 2)); break;
-    case NAME_TO_ID (assignment):
+    PP_OP (VM_OP_ADDITION, "%s = %s + %s;");
+    PP_OP (VM_OP_SUBSTRACTION, "%s = %s - %s;");
+    PP_OP (VM_OP_DIVISION, "%s = %s / %s;");
+    PP_OP (VM_OP_MULTIPLICATION, "%s = %s * %s;");
+    PP_OP (VM_OP_REMAINDER, "%s = %s %% %s;");
+    PP_OP (VM_OP_UNARY_MINUS, "%s = -%s;");
+    PP_OP (VM_OP_UNARY_PLUS, "%s = +%s;");
+    PP_OP (VM_OP_B_SHIFT_LEFT, "%s = %s << %s;");
+    PP_OP (VM_OP_B_SHIFT_RIGHT, "%s = %s >> %s;");
+    PP_OP (VM_OP_B_SHIFT_URIGHT, "%s = %s >>> %s;");
+    PP_OP (VM_OP_B_AND, "%s = %s & %s;");
+    PP_OP (VM_OP_B_OR, "%s = %s | %s;");
+    PP_OP (VM_OP_B_XOR, "%s = %s ^ %s;");
+    PP_OP (VM_OP_B_NOT, "%s = ~ %s;");
+    PP_OP (VM_OP_LOGICAL_NOT, "%s = ! %s;");
+    PP_OP (VM_OP_EQUAL_VALUE, "%s = %s == %s;");
+    PP_OP (VM_OP_NOT_EQUAL_VALUE, "%s = %s != %s;");
+    PP_OP (VM_OP_EQUAL_VALUE_TYPE, "%s = %s === %s;");
+    PP_OP (VM_OP_NOT_EQUAL_VALUE_TYPE, "%s = %s !== %s;");
+    PP_OP (VM_OP_LESS_THAN, "%s = %s < %s;");
+    PP_OP (VM_OP_GREATER_THAN, "%s = %s > %s;");
+    PP_OP (VM_OP_LESS_OR_EQUAL_THAN, "%s = %s <= %s;");
+    PP_OP (VM_OP_GREATER_OR_EQUAL_THAN, "%s = %s >= %s;");
+    PP_OP (VM_OP_INSTANCEOF, "%s = %s instanceof %s;");
+    PP_OP (VM_OP_IN, "%s = %s in %s;");
+    PP_OP (VM_OP_POST_INCR, "%s = %s++;");
+    PP_OP (VM_OP_POST_DECR, "%s = %s--;");
+    PP_OP (VM_OP_PRE_INCR, "%s = ++%s;");
+    PP_OP (VM_OP_PRE_DECR, "%s = --%s;");
+    PP_OP (VM_OP_THROW_VALUE, "throw %s;");
+    PP_OP (VM_OP_REG_VAR_DECL, "var %s .. %s;");
+    PP_OP (VM_OP_VAR_DECL, "var %s;");
+    PP_OP (VM_OP_RETVAL, "return %s;");
+    PP_OP (VM_OP_RET, "ret;");
+    PP_OP (VM_OP_PROP_GETTER, "%s = %s[%s];");
+    PP_OP (VM_OP_PROP_SETTER, "%s[%s] = %s;");
+    PP_OP (VM_OP_THIS_BINDING, "%s = this;");
+    PP_OP (VM_OP_DELETE_VAR, "%s = delete %s;");
+    PP_OP (VM_OP_DELETE_PROP, "%s = delete %s.%s;");
+    PP_OP (VM_OP_TYPEOF, "%s = typeof %s;");
+    PP_OP (VM_OP_WITH, "with (%s);");
+    PP_OP (VM_OP_FOR_IN, "for_in (%s);");
+    case VM_OP_IS_TRUE_JMP_UP: printf ("if (%s) goto %d;", VAR (1), oc - OC (2, 3)); break;
+    case VM_OP_IS_FALSE_JMP_UP: printf ("if (%s == false) goto %d;", VAR (1), oc - OC (2, 3)); break;
+    case VM_OP_IS_TRUE_JMP_DOWN: printf ("if (%s) goto %d;", VAR (1), oc + OC (2, 3)); break;
+    case VM_OP_IS_FALSE_JMP_DOWN: printf ("if (%s == false) goto %d;", VAR (1), oc + OC (2, 3)); break;
+    case VM_OP_JMP_UP: printf ("goto %d;", oc - OC (1, 2)); break;
+    case VM_OP_JMP_DOWN: printf ("goto %d;", oc + OC (1, 2)); break;
+    case VM_OP_JMP_BREAK_CONTINUE: printf ("goto_nested %d;", oc + OC (1, 2)); break;
+    case VM_OP_TRY_BLOCK: printf ("try (end: %d);", oc + OC (1, 2)); break;
+    case VM_OP_ASSIGNMENT:
     {
       printf ("%s = ", VAR (1));
       switch (opm.op.data.assignment.type_value_right)
@@ -267,14 +272,14 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (call_n):
+    case VM_OP_CALL_N:
     {
       vargs_num = opm.op.data.call_n.arg_list;
       seen_vargs = 0;
 
       break;
     }
-    case NAME_TO_ID (native_call):
+    case VM_OP_NATIVE_CALL:
     {
       if (opm.op.data.native_call.arg_list == 0)
       {
@@ -297,7 +302,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (construct_n):
+    case VM_OP_CONSTRUCT_N:
     {
       if (opm.op.data.construct_n.arg_list == 0)
       {
@@ -310,7 +315,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (func_decl_n):
+    case VM_OP_FUNC_DECL_N:
     {
       if (opm.op.data.func_decl_n.arg_list == 0)
       {
@@ -323,7 +328,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (func_expr_n):
+    case VM_OP_FUNC_EXPR_N:
     {
       if (opm.op.data.func_expr_n.arg_list == 0)
       {
@@ -343,7 +348,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (array_decl):
+    case VM_OP_ARRAY_DECL:
     {
       if (opm.op.data.array_decl.list == 0)
       {
@@ -356,7 +361,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (obj_decl):
+    case VM_OP_OBJ_DECL:
     {
       if (opm.op.data.obj_decl.list == 0)
       {
@@ -369,7 +374,7 @@ pp_op_meta (const opcode_t *opcodes_p,
       }
       break;
     }
-    case NAME_TO_ID (meta):
+    case VM_OP_META:
     {
       switch (opm.op.data.meta.type)
       {
@@ -398,13 +403,13 @@ pp_op_meta (const opcode_t *opcodes_p,
               start--;
               switch (serializer_get_opcode (opcodes_p, start).op_idx)
               {
-                case NAME_TO_ID (call_n):
-                case NAME_TO_ID (native_call):
-                case NAME_TO_ID (construct_n):
-                case NAME_TO_ID (func_decl_n):
-                case NAME_TO_ID (func_expr_n):
-                case NAME_TO_ID (array_decl):
-                case NAME_TO_ID (obj_decl):
+                case VM_OP_CALL_N:
+                case VM_OP_NATIVE_CALL:
+                case VM_OP_CONSTRUCT_N:
+                case VM_OP_FUNC_DECL_N:
+                case VM_OP_FUNC_EXPR_N:
+                case VM_OP_ARRAY_DECL:
+                case VM_OP_OBJ_DECL:
                 {
                   found = true;
                   break;
@@ -414,12 +419,12 @@ pp_op_meta (const opcode_t *opcodes_p,
             opcode_t start_op = serializer_get_opcode (opcodes_p, start);
             switch (start_op.op_idx)
             {
-              case NAME_TO_ID (call_n):
+              case VM_OP_CALL_N:
               {
                 pp_printf ("%s = %s (", start_op, NULL, start, 1);
                 break;
               }
-              case NAME_TO_ID (native_call):
+              case VM_OP_NATIVE_CALL:
               {
                 pp_printf ("%s = ", start_op, NULL, start, 1);
                 switch (start_op.data.native_call.name)
@@ -434,17 +439,17 @@ pp_op_meta (const opcode_t *opcodes_p,
                 }
                 break;
               }
-              case NAME_TO_ID (construct_n):
+              case VM_OP_CONSTRUCT_N:
               {
                 pp_printf ("%s = new %s (", start_op, NULL, start, 1);
                 break;
               }
-              case NAME_TO_ID (func_decl_n):
+              case VM_OP_FUNC_DECL_N:
               {
                 pp_printf ("function %s (", start_op, NULL, start, 1);
                 break;
               }
-              case NAME_TO_ID (func_expr_n):
+              case VM_OP_FUNC_EXPR_N:
               {
                 if (start_op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
                 {
@@ -456,12 +461,12 @@ pp_op_meta (const opcode_t *opcodes_p,
                 }
                 break;
               }
-              case NAME_TO_ID (array_decl):
+              case VM_OP_ARRAY_DECL:
               {
                 pp_printf ("%s = [", start_op, NULL, start, 1);
                 break;
               }
-              case NAME_TO_ID (obj_decl):
+              case VM_OP_OBJ_DECL:
               {
                 pp_printf ("%s = {", start_op, NULL, start, 1);
                 break;
@@ -477,7 +482,7 @@ pp_op_meta (const opcode_t *opcodes_p,
 
               switch (meta_op.op_idx)
               {
-                case NAME_TO_ID (meta):
+                case VM_OP_META:
                 {
                   switch (meta_op.data.meta.type)
                   {
@@ -531,12 +536,12 @@ pp_op_meta (const opcode_t *opcodes_p,
             }
             switch (start_op.op_idx)
             {
-              case NAME_TO_ID (array_decl):
+              case VM_OP_ARRAY_DECL:
               {
                 printf ("];");
                 break;
               }
-              case NAME_TO_ID (obj_decl):
+              case VM_OP_OBJ_DECL:
               {
                 printf ("};");
                 break;

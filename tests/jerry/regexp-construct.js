@@ -86,3 +86,15 @@ assert (r.ignoreCase == true);
 assert (r.multiline == true);
 
 assert(Object.prototype.toString.call(RegExp.prototype) === '[object RegExp]');
+
+
+/* The 'undefined' argument for the RegExp constructor should not be converted to string,
+ * and it should behave just like when there is no argument.
+ */
+r1 = new RegExp();
+r2 = new RegExp(undefined);
+var foo;
+r3 = new RegExp(foo)
+
+assert (r1.source === r2.source);
+assert (r2.source === r3.source);

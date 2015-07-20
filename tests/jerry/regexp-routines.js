@@ -48,3 +48,21 @@ catch (e)
 {
 	assert (e instanceof TypeError);
 }
+
+
+/* Test continous calls to the exec method to see how does the match
+ * updates the lastIndex propertyand see if the match restarts.
+ */
+var re = new RegExp("a", "g");
+result = re.exec("a");
+assert (result.length === 1);
+assert (result[0] === "a");
+assert (re.lastIndex === 1);
+
+assert (re.exec("a") === null);
+assert (re.lastIndex === 0);
+
+result = re.exec("a");
+assert (result.length === 1);
+assert (result[0] === "a");
+assert (re.lastIndex === 1);

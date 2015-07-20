@@ -208,3 +208,37 @@ assert (d.getUTCDate() == 31);
 d.setTime(0);
 assert (d.setUTCFullYear(1970) == 0);
 assert (d.getUTCFullYear() == 1970);
+
+/* Without argument */
+d = new Date();
+assert (isNaN (d.setTime()));
+assert (isNaN (d.setMilliseconds()));
+assert (isNaN (d.setUTCMilliseconds()));
+assert (isNaN (d.setSeconds()));
+assert (isNaN (d.setUTCSeconds()));
+assert (isNaN (d.setMinutes()));
+assert (isNaN (d.setUTCMinutes()));
+assert (isNaN (d.setHours()));
+assert (isNaN (d.setUTCHours()));
+assert (isNaN (d.setDate()));
+assert (isNaN (d.getUTCDate()));
+assert (isNaN (d.setMonth()));
+assert (isNaN (d.setUTCMonth()));
+assert (isNaN (d.setFullYear()));
+assert (isNaN (d.setUTCFullYear()));
+
+assert (isNaN (Date.prototype.setTime()));
+assert (isNaN (Date.prototype.setMilliseconds()));
+assert (isNaN (Date.prototype.setUTCMilliseconds()));
+assert (isNaN (Date.prototype.setSeconds()));
+assert (isNaN (Date.prototype.setUTCSeconds()));
+assert (isNaN (Date.prototype.setMinutes()));
+assert (isNaN (Date.prototype.setUTCMinutes()));
+assert (isNaN (Date.prototype.setHours()));
+assert (isNaN (Date.prototype.setUTCHours()));
+assert (isNaN (Date.prototype.setDate()));
+assert (isNaN (Date.prototype.getUTCDate()));
+assert (isNaN (Date.prototype.setMonth()));
+assert (isNaN (Date.prototype.setUTCMonth()));
+assert (isNaN (Date.prototype.setFullYear()));
+assert (isNaN (Date.prototype.setUTCFullYear()));

@@ -1462,6 +1462,11 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
         else
         {
           delete_count = ecma_number_is_infinity (delete_num) ? len : ecma_number_to_uint32 (delete_num);
+
+          if (delete_count > len - start)
+          {
+            delete_count = len - start;
+          }
         }
       }
       else

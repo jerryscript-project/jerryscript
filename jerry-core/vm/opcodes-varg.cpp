@@ -45,7 +45,7 @@ fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
     if (ecma_is_completion_value_empty (evaluate_arg_completion))
     {
       opcode_t next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-      JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+      JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 
       const idx_t varg_var_idx = next_opcode.data.meta.data_1;
@@ -92,7 +92,7 @@ fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
        param_index++)
   {
     opcode_t next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-    JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+    JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
     JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_VARG);
 
     const lit_cpointer_t param_name_lit_idx = serializer_get_literal_cp_by_uid (next_opcode.data.meta.data_1,

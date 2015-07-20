@@ -30,24 +30,38 @@
  */
 vm_frame_ctx_t *vm_top_context_p = NULL;
 
-#define __INIT_OP_FUNC(name, arg1, arg2, arg3) [ __op__idx_##name ] = opfunc_##name,
-static const opfunc __opfuncs[LAST_OP] =
+static const opfunc __opfuncs[VM_OP__COUNT] =
 {
-  OP_LIST (INIT_OP_FUNC)
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  [ VM_OP_ ## opcode_name_uppercase ] = opfunc_ ## opcode_name,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  [ VM_OP_ ## opcode_name_uppercase ] = opfunc_ ## opcode_name,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  [ VM_OP_ ## opcode_name_uppercase ] = opfunc_ ## opcode_name,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  [ VM_OP_ ## opcode_name_uppercase ] = opfunc_ ## opcode_name,
+
+#include "vm-opcodes.inc.h"
 };
-#undef __INIT_OP_FUNC
 
 JERRY_STATIC_ASSERT (sizeof (opcode_t) <= 4);
 
 const opcode_t *__program = NULL;
 
 #ifdef MEM_STATS
-#define __OP_FUNC_NAME(name, arg1, arg2, arg3) #name,
-static const char *__op_names[LAST_OP] =
+static const char *__op_names[VM_OP__COUNT] =
 {
-  OP_LIST (OP_FUNC_NAME)
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  #opcode_name,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  #opcode_name,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  #opcode_name,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  #opcode_name,
+
+#include "vm-opcodes.inc.h"
 };
-#undef __OP_FUNC_NAME
 
 #define INTERP_MEM_PRINT_INDENTATION_STEP (5)
 #define INTERP_MEM_PRINT_INDENTATION_MAX  (125)
@@ -527,7 +541,7 @@ vm_run_from_pos (const opcode_t *opcodes_p, /**< byte-code array */
   ecma_completion_value_t completion;
 
   const opcode_t *curr = &opcodes_p[start_pos];
-  JERRY_ASSERT (curr->op_idx == __op__idx_reg_var_decl);
+  JERRY_ASSERT (curr->op_idx == VM_OP_REG_VAR_DECL);
 
   const idx_t min_reg_num = curr->data.reg_var_decl.min;
   const idx_t max_reg_num = curr->data.reg_var_decl.max;
@@ -597,7 +611,7 @@ vm_get_scope_flags (const opcode_t *opcodes_p, /**< byte-code array */
                     opcode_counter_t counter) /**< opcode counter */
 {
   opcode_t flags_opcode = vm_get_opcode (opcodes_p, counter);
-  JERRY_ASSERT (flags_opcode.op_idx == __op__idx_meta
+  JERRY_ASSERT (flags_opcode.op_idx == VM_OP_META
                 && flags_opcode.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
   return (opcode_scope_code_flags_t) flags_opcode.data.meta.data_1;
 } /* vm_get_scope_flags */

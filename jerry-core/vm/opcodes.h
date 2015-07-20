@@ -118,6 +118,27 @@ typedef enum : idx_t
 } opcode_special_reg_t;
 
 /**
+ * Types of byte-code instruction arguments, used for instruction description
+ *
+ * See also:
+ *          vm-opcodes.inc.h
+ */
+typedef enum
+{
+  VM_OP_ARG_TYPE_EMPTY         = (1u << 0), /**< empty argument (no value) */
+  VM_OP_ARG_TYPE_REGISTER      = (1u << 1), /**< register variable (index) */
+  VM_OP_ARG_TYPE_IDENTIFIER    = (1u << 2), /**< identifier - named variable (string literal) */
+  VM_OP_ARG_TYPE_STRING        = (1u << 3), /**< string constant value (string literal) */
+  VM_OP_ARG_TYPE_NUMBER        = (1u << 4), /**< number constant value (number literal) */
+  VM_OP_ARG_TYPE_INTEGER_CONST = (1u << 5), /**< a 8-bit integer constant (any idx_t) */
+  VM_OP_ARG_TYPE_TYPE_OF_NEXT  = (1u << 6), /**< opcode_arg_type_operand value,
+                                             *   representing type of argument encoded in next idx */
+
+  /** variable - an identifier or a register */
+  VM_OP_ARG_TYPE_VARIABLE      = (VM_OP_ARG_TYPE_REGISTER | VM_OP_ARG_TYPE_IDENTIFIER)
+} vm_op_arg_type_t;
+
+/**
  * Forward declaration of opcode structure
  */
 struct opcode_t;
@@ -170,180 +191,75 @@ typedef struct
 opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
 opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, vm_frame_ctx_t *frame_ctx_p);
 
-#define OP_CALLS_AND_ARGS(p, a)                                              \
-        p##_3 (a, call_n, lhs, function_var_idx, arg_list)                   \
-        p##_3 (a, native_call, lhs, name, arg_list)                          \
-        p##_3 (a, construct_n, lhs, name_lit_idx, arg_list)                  \
-        p##_2 (a, func_decl_n, name_lit_idx, arg_list)                       \
-        p##_3 (a, func_expr_n, lhs, name_lit_idx, arg_list)                  \
-        p##_1 (a, retval, ret_value)                                         \
-        p##_0 (a, ret)
-
-#define OP_INITS(p, a)                                                       \
-        p##_2 (a, array_decl, lhs, list)                                     \
-        p##_3 (a, prop_getter, lhs, obj, prop)                               \
-        p##_3 (a, prop_setter, obj, prop, rhs)                               \
-        p##_2 (a, obj_decl, lhs, list)                                       \
-        p##_1 (a, this_binding, lhs)                                         \
-        p##_2 (a, delete_var, lhs, name)                                     \
-        p##_3 (a, delete_prop, lhs, base, name)                              \
-        p##_2 (a, typeof, lhs, obj)                                          \
-        p##_3 (a, for_in, expr, oc_idx_1, oc_idx_2)                          \
-        p##_3 (a, with, expr, oc_idx_1, oc_idx_2)                            \
-        p##_2 (a, try_block, oc_idx_1, oc_idx_2)                             \
-        p##_1 (a, throw_value, var)
-
-#define OP_ASSIGNMENTS(p, a)                                                 \
-        p##_3 (a, assignment, var_left, type_value_right, value_right)
-
-#define OP_B_SHIFTS(p, a)                                                    \
-        p##_3 (a, b_shift_left, dst, var_left, var_right)                    \
-        p##_3 (a, b_shift_right, dst, var_left, var_right)                   \
-        p##_3 (a, b_shift_uright, dst, var_left, var_right)
-
-#define OP_B_BITWISE(p, a)                                                   \
-        p##_3 (a, b_and, dst, var_left, var_right)                           \
-        p##_3 (a, b_or, dst, var_left, var_right)                            \
-        p##_3 (a, b_xor, dst, var_left, var_right)                           \
-        p##_2 (a, b_not, dst, var_right)
-
-#define OP_B_LOGICAL(p, a)                                                   \
-        p##_2 (a, logical_not, dst, var_right)
-
-#define OP_EQUALITY(p, a)                                                    \
-        p##_3 (a, equal_value, dst, var_left, var_right)                     \
-        p##_3 (a, not_equal_value, dst, var_left, var_right)                 \
-        p##_3 (a, equal_value_type, dst, var_left, var_right)                \
-        p##_3 (a, not_equal_value_type, dst, var_left, var_right)
-
-#define OP_RELATIONAL(p, a)                                                  \
-        p##_3 (a, less_than, dst, var_left, var_right)                       \
-        p##_3 (a, greater_than, dst, var_left, var_right)                    \
-        p##_3 (a, less_or_equal_than, dst, var_left, var_right)              \
-        p##_3 (a, greater_or_equal_than, dst, var_left, var_right)           \
-        p##_3 (a, instanceof, dst, var_left, var_right)                      \
-        p##_3 (a, in, dst, var_left, var_right)
-
-#define OP_ARITHMETIC(p, a)                                                  \
-        p##_2 (a, post_incr, dst, var_right)                                 \
-        p##_2 (a, post_decr, dst, var_right)                                 \
-        p##_2 (a, pre_incr, dst, var_right)                                  \
-        p##_2 (a, pre_decr, dst, var_right)                                  \
-        p##_3 (a, addition, dst, var_left, var_right)                        \
-        p##_3 (a, substraction, dst, var_left, var_right)                    \
-        p##_3 (a, division, dst, var_left, var_right)                        \
-        p##_3 (a, multiplication, dst, var_left, var_right)                  \
-        p##_3 (a, remainder, dst, var_left, var_right)                       \
-        p##_2 (a, unary_minus, dst, var)                                     \
-        p##_2 (a, unary_plus, dst, var)
-
-#define OP_JUMPS(p, a)                                                       \
-        p##_2 (a, jmp_up, opcode_1, opcode_2)                                \
-        p##_2 (a, jmp_down, opcode_1, opcode_2)                              \
-        p##_0 (a, nop)                                                       \
-        p##_3 (a, is_true_jmp_up, value, opcode_1, opcode_2)                 \
-        p##_3 (a, is_true_jmp_down, value, opcode_1, opcode_2)               \
-        p##_3 (a, is_false_jmp_up, value, opcode_1, opcode_2)                \
-        p##_3 (a, is_false_jmp_down, value, opcode_1, opcode_2)              \
-        p##_2 (a, jmp_break_continue, opcode_1, opcode_2)
-
-#define OP_LIST_FULL(p, a)                                                   \
-        OP_CALLS_AND_ARGS (p, a)                                             \
-        OP_INITS (p, a)                                                      \
-        OP_ASSIGNMENTS (p, a)                                                \
-        OP_B_LOGICAL (p, a)                                                  \
-        OP_B_BITWISE (p, a)                                                  \
-        OP_B_SHIFTS (p, a)                                                   \
-        OP_EQUALITY (p, a)                                                   \
-        OP_RELATIONAL (p, a)                                                 \
-        OP_ARITHMETIC (p, a)                                                 \
-        OP_JUMPS (p, a)                                                      \
-        p##_1 (a, var_decl, variable_name)                                   \
-        p##_2 (a, reg_var_decl, min, max)                                    \
-        p##_3 (a, meta, type, data_1, data_2)
-
-#define OP_LIST(a) OP_LIST_FULL (OP, a)
-#define OP_ARGS_LIST(a) OP_LIST_FULL (a, void)
-
-#define OP_DATA_0(action, name) \
-        typedef struct \
-        { \
-          idx_t __do_not_use; \
-        } __op_##name;
-
-#define OP_DATA_1(action, name, arg1) \
-        typedef struct \
-        { \
-          idx_t arg1; \
-        } __op_##name;
-
-#define OP_DATA_2(action, name, arg1, arg2) \
-        typedef struct \
-        { \
-          idx_t arg1; \
-          idx_t arg2; \
-        } __op_##name;
-
-#define OP_DATA_3(action, name, arg1, arg2, arg3) \
-        typedef struct \
-        { \
-          idx_t arg1; \
-          idx_t arg2; \
-          idx_t arg3; \
-        } __op_##name;
-
-OP_ARGS_LIST (OP_DATA)
-
-#define __OP_STRUCT_FIELD(name, arg1, arg2, arg3) __op_##name name;
 typedef struct opcode_t
 {
   idx_t op_idx;
   union
   {
-    OP_LIST (OP_STRUCT_FIELD)
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+    struct \
+    { \
+      idx_t arg1; \
+    } opcode_name;
+
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+    struct \
+    { \
+      idx_t arg1; \
+      idx_t arg2; \
+    } opcode_name;
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+    struct \
+    { \
+      idx_t arg1; \
+      idx_t arg2; \
+      idx_t arg3; \
+    } opcode_name;
+
+#include "vm-opcodes.inc.h"
   } data;
 } opcode_t;
-#undef __OP_STRUCT_FIELD
 
-#define __OP_ENUM_FIELD(name, arg1, arg2, arg3) __op__idx_##name ,
 enum __opcode_idx
 {
-  OP_LIST (OP_ENUM_FIELD)
-  LAST_OP
-};
-#undef __OP_ENUM_FIELD
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  VM_OP_ ## opcode_name_uppercase,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  VM_OP_ ## opcode_name_uppercase,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  VM_OP_ ## opcode_name_uppercase,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  VM_OP_ ## opcode_name_uppercase,
 
-#define __OP_FUNC_DECL(name, arg1, arg2, arg3) ecma_completion_value_t opfunc_##name (opcode_t, vm_frame_ctx_t*);
-OP_LIST (OP_FUNC_DECL)
-#undef __OP_FUNC_DECL
+#include "vm-opcodes.inc.h"
+
+  VM_OP__COUNT /**< number of opcodes */
+};
+
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+
+#include "vm-opcodes.inc.h"
 
 typedef ecma_completion_value_t (*opfunc) (opcode_t, vm_frame_ctx_t *);
 
-#define GETOP_DECL_0(a, name) \
-        opcode_t getop_##name (void);
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+        opcode_t getop_##opcode_name (void);
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+        opcode_t getop_##opcode_name (idx_t);
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+        opcode_t getop_##opcode_name (idx_t, idx_t);
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+        opcode_t getop_##opcode_name (idx_t, idx_t, idx_t);
 
-#define GETOP_DECL_1(a, name, arg1) \
-        opcode_t getop_##name (idx_t);
+#include "vm-opcodes.inc.h"
 
-#define GETOP_DECL_2(a, name, arg1, arg2) \
-        opcode_t getop_##name (idx_t, idx_t);
-
-#define GETOP_DECL_3(a, name, arg1, arg2, arg3) \
-        opcode_t getop_##name (idx_t, idx_t, idx_t);
-
-#define GETOP_DEF_0(a, name) \
-        opcode_t getop_##name (void) \
-        { \
-          opcode_t opdata; \
-          opdata.op_idx = __op__idx_##name; \
-          return opdata; \
-        }
-
-OP_ARGS_LIST (GETOP_DECL)
-#undef GETOP_DECL_0
-#undef GETOP_DECL_1
-#undef GETOP_DECL_2
-#undef GETOP_DECL_3
 
 typedef struct
 {

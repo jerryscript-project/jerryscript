@@ -44,7 +44,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
   frame_ctx_p->pos = try_end_oc;
 
   opcode_t next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-  JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH)
   {
@@ -55,7 +55,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
     if (ecma_is_completion_value_throw (try_completion))
     {
       next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-      JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+      JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
       JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
       lit_cpointer_t catch_exc_val_var_name_lit_cp = serializer_get_literal_cp_by_uid (next_opcode.data.meta.data_1,
@@ -99,7 +99,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
   }
 
   next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos);
-  JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
 
   if (next_opcode.data.meta.type == OPCODE_META_TYPE_FINALLY)
   {
@@ -122,7 +122,7 @@ opfunc_try_block (opcode_t opdata, /**< operation data */
   }
 
   next_opcode = vm_get_opcode (frame_ctx_p->opcodes_p, frame_ctx_p->pos++);
-  JERRY_ASSERT (next_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
   JERRY_ASSERT (next_opcode.data.meta.type == OPCODE_META_TYPE_END_TRY_CATCH_FINALLY);
 
   return try_completion;

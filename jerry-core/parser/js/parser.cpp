@@ -2949,9 +2949,18 @@ preparse_scope (bool is_global)
     }
   }
 
-  while (!token_is (end_tt))
+  size_t nesting_level = 0;
+  while (nesting_level > 0 || !token_is (end_tt))
   {
-    if (token_is (TOK_NAME))
+    if (token_is (TOK_OPEN_BRACE))
+    {
+      nesting_level++;
+    }
+    else if (token_is (TOK_CLOSE_BRACE))
+    {
+      nesting_level--;
+    }
+    else if (token_is (TOK_NAME))
     {
       if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (token_data_as_lit_cp ()), "arguments"))
       {

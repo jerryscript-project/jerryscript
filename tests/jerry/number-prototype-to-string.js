@@ -43,6 +43,7 @@ assert((-0.0001).toString(4) === "-0.000000122031232023223013010030231")
 assert((-0).toString(16) === "0");
 assert((1e+73).toString(35) === "2nx1mg1l0w4ujlpt449c5qfrkkmtpgpsfsc2prlaqtnjbli2")
 assert((-1e+73).toString(35) === "-2nx1mg1l0w4ujlpt449c5qfrkkmtpgpsfsc2prlaqtnjbli2")
+assert((1).toString(undefined) === "1")
 
 assert((123400).toString(2) === "11110001000001000");
 assert((123400).toString(3) === "20021021101");

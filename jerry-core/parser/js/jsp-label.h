@@ -43,7 +43,7 @@ typedef enum
  *      Jump instructions with target identified by some specific label,
  *      are linked into singly-linked list.
  *
- *      Pointer to a next element of the list is represented with opcode counter.
+ *      Pointer to a next element of the list is represented with instruction counter.
  *      stored in instructions linked into the list.
  *
  */
@@ -51,13 +51,13 @@ typedef struct jsp_label_t
 {
   jsp_label_type_flag_t type_mask; /**< label type mask */
   token id; /**< label name (TOK_NAME), if type is LABEL_NAMED */
-  opcode_counter_t continue_tgt_oc; /**< target opcode counter for continues on the label */
-  opcode_counter_t breaks_list_oc; /**< opcode counter of first 'break' instruction in the list
-                                    *   of instructions with the target identified by the label */
-  opcode_counter_t breaks_number; /**< number of 'break' instructions in the list */
-  opcode_counter_t continues_list_oc; /**< opcode counter of first 'continue' instruction in the list
-                                       *   of instructions with the target identified by the label */
-  opcode_counter_t continues_number; /**< number of 'continue' instructions in the list */
+  vm_instr_counter_t continue_tgt_oc; /**< target instruction counter for continues on the label */
+  vm_instr_counter_t breaks_list_oc; /**< instruction counter of first 'break' instruction in the list
+                                      *   of instructions with the target identified by the label */
+  vm_instr_counter_t breaks_number; /**< number of 'break' instructions in the list */
+  vm_instr_counter_t continues_list_oc; /**< instruction counter of first 'continue' instruction in the list
+                                         *   of instructions with the target identified by the label */
+  vm_instr_counter_t continues_number; /**< number of 'continue' instructions in the list */
   jsp_label_t *next_label_p; /**< next label in current label set stack */
   bool is_nested_jumpable_border : 1; /**< flag, indicating that this and outer labels
                                        *   are not currently accessible with simple jumps,
@@ -70,12 +70,12 @@ extern void jsp_label_finalize (void);
 extern void jsp_label_remove_all_labels (void);
 
 extern void jsp_label_push (jsp_label_t *out_label_p, jsp_label_type_flag_t type_mask, token id);
-extern void jsp_label_rewrite_jumps_and_pop (jsp_label_t *label_p, opcode_counter_t break_tgt_oc);
+extern void jsp_label_rewrite_jumps_and_pop (jsp_label_t *label_p, vm_instr_counter_t break_tgt_oc);
 
 extern jsp_label_t *jsp_label_find (jsp_label_type_flag_t type_mask, token id, bool *out_is_simply_jumpable_p);
 
 extern void jsp_label_add_jump (jsp_label_t *label_p, bool is_simply_jumpable, bool is_break);
-extern void jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, opcode_counter_t tgt_oc);
+extern void jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, vm_instr_counter_t tgt_oc);
 
 extern bool jsp_label_raise_nested_jumpable_border (void);
 extern void jsp_label_remove_nested_jumpable_border (void);

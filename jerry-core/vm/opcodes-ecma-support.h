@@ -18,6 +18,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtins.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -35,7 +36,7 @@
 
 bool is_reg_variable (vm_frame_ctx_t *frame_ctx_p, idx_t var_idx);
 ecma_completion_value_t get_variable_value (vm_frame_ctx_t *, idx_t, bool);
-ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, opcode_counter_t, idx_t, ecma_value_t);
+ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, vm_instr_counter_t, idx_t, ecma_value_t);
 ecma_completion_value_t fill_varg_list (vm_frame_ctx_t *frame_ctx_p,
                                         ecma_length_t args_number,
                                         ecma_value_t args_values[],

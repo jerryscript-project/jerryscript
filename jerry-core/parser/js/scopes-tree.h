@@ -29,7 +29,7 @@
 typedef struct
 {
   lit_cpointer_t lit_id[3];
-  opcode_t op;
+  vm_instr_t op;
 } op_meta;
 
 typedef struct tree_header
@@ -42,8 +42,8 @@ typedef struct tree_header
 typedef struct
 {
   tree_header t;
-  linked_list opcodes;
-  opcode_counter_t opcodes_num;
+  linked_list instrs;
+  vm_instr_counter_t instrs_num;
   unsigned strict_mode:1;
 } scopes_tree_int;
 
@@ -51,14 +51,14 @@ typedef scopes_tree_int * scopes_tree;
 
 scopes_tree scopes_tree_init (scopes_tree);
 void scopes_tree_free (scopes_tree);
-opcode_counter_t scopes_tree_opcodes_num (scopes_tree);
+vm_instr_counter_t scopes_tree_instrs_num (scopes_tree);
 void scopes_tree_add_op_meta (scopes_tree, op_meta);
-void scopes_tree_set_op_meta (scopes_tree, opcode_counter_t, op_meta);
-void scopes_tree_set_opcodes_num (scopes_tree, opcode_counter_t);
-op_meta scopes_tree_op_meta (scopes_tree, opcode_counter_t);
+void scopes_tree_set_op_meta (scopes_tree, vm_instr_counter_t, op_meta);
+void scopes_tree_set_instrs_num (scopes_tree, vm_instr_counter_t);
+op_meta scopes_tree_op_meta (scopes_tree, vm_instr_counter_t);
 size_t scopes_tree_count_literals_in_blocks (scopes_tree);
-opcode_counter_t scopes_tree_count_opcodes (scopes_tree);
-opcode_t *scopes_tree_raw_data (scopes_tree, uint8_t *, size_t, lit_id_hash_table *);
+vm_instr_counter_t scopes_tree_count_instructions (scopes_tree);
+vm_instr_t *scopes_tree_raw_data (scopes_tree, uint8_t *, size_t, lit_id_hash_table *);
 void scopes_tree_set_strict_mode (scopes_tree, bool);
 bool scopes_tree_strict_mode (scopes_tree);
 

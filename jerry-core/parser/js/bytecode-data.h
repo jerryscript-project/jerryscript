@@ -27,7 +27,7 @@
  *
  * Literal id is its index in 'literals' array of bytecode_data_t structure.
  *
- * Bytecode, which is kept in the 'opcodes' field, is divided into blocks
+ * Bytecode, which is kept in the 'instrs' field, is divided into blocks
  * of 'BLOCK_SIZE' operands. Every block has its own numbering of literals.
  * Literal uid could be in range [0, 127] in every block.
  *
@@ -42,27 +42,27 @@ typedef struct __attribute__ ((aligned (MEM_ALIGNMENT)))
 {
   mem_cpointer_t lit_id_hash_cp; /**< pointer to literal identifiers hash table
                                   *   See also: lit_id_hash_table_init */
-  mem_cpointer_t next_opcodes_cp; /**< pointer to next byte-code memory region */
-  opcode_counter_t instructions_number; /**< number of instructions in the byte-code array */
-} opcodes_header_t;
+  mem_cpointer_t next_instrs_cp; /**< pointer to next byte-code memory region */
+  vm_instr_counter_t instructions_number; /**< number of instructions in the byte-code array */
+} insts_data_header_t;
 
 typedef struct
 {
   const ecma_char_t *strings_buffer;
-  const opcode_t *opcodes;
-  opcode_counter_t opcodes_count;
+  const vm_instr_t *instrs_p;
+  vm_instr_counter_t instrs_count;
 } bytecode_data_t;
 
 /**
- * Macros to get a pointer to bytecode header by pointer to opcodes start
+ * Macros to get a pointer to bytecode header by pointer to instructions array start
  */
-#define GET_BYTECODE_HEADER(opcodes) ((opcodes_header_t *) (((uint8_t *) (opcodes)) - sizeof (opcodes_header_t)))
+#define GET_BYTECODE_HEADER(instrs) ((insts_data_header_t *) (((uint8_t *) (instrs)) - sizeof (insts_data_header_t)))
 
 /**
  * Macros to get a hash table corresponding to a bytecode region
  */
-#define GET_HASH_TABLE_FOR_BYTECODE(opcodes) (MEM_CP_GET_POINTER (lit_id_hash_table, \
-                                                                  GET_BYTECODE_HEADER (opcodes)->lit_id_hash_cp))
+#define GET_HASH_TABLE_FOR_BYTECODE(instrs) (MEM_CP_GET_POINTER (lit_id_hash_table, \
+                                                                 GET_BYTECODE_HEADER (instrs)->lit_id_hash_cp))
 
 
 #endif // BYTECODE_DATA_H

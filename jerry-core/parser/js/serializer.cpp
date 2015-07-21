@@ -20,14 +20,14 @@
 
 static bytecode_data_t bytecode_data;
 static scopes_tree current_scope;
-static bool print_opcodes;
+static bool print_instrs;
 
 static void
-serializer_print_opcodes (const opcode_t *opcodes_p,
-                          size_t opcodes_count);
+serializer_print_instrs (const vm_instr_t *instrs_p,
+                         size_t instrs_count);
 
 op_meta
-serializer_get_op_meta (opcode_counter_t oc)
+serializer_get_op_meta (vm_instr_counter_t oc)
 {
   JERRY_ASSERT (current_scope);
   return scopes_tree_op_meta (current_scope, oc);
@@ -38,22 +38,22 @@ serializer_get_op_meta (opcode_counter_t oc)
  *
  * @return byte-code instruction
  */
-opcode_t
-serializer_get_opcode (const opcode_t *opcodes_p, /**< pointer to byte-code array (or NULL,
+vm_instr_t
+serializer_get_instr (const vm_instr_t *instrs_p, /**< pointer to byte-code array (or NULL,
                                                    *   if instruction should be taken from
                                                    *   instruction list of current scope) */
-                       opcode_counter_t oc) /**< opcode counter of the intruction */
+                      vm_instr_counter_t oc) /**< position of the intruction */
 {
-  if (opcodes_p == NULL)
+  if (instrs_p == NULL)
   {
     return serializer_get_op_meta (oc).op;
   }
   else
   {
-    JERRY_ASSERT (oc < GET_BYTECODE_HEADER (opcodes_p)->instructions_number);
-    return opcodes_p[oc];
+    JERRY_ASSERT (oc < GET_BYTECODE_HEADER (instrs_p)->instructions_number);
+    return instrs_p[oc];
   }
-} /* serializer_get_opcode */
+} /* serializer_get_instr */
 
 /**
  * Convert literal id (operand value of instruction) to compressed pointer to literal
@@ -66,10 +66,10 @@ serializer_get_opcode (const opcode_t *opcodes_p, /**< pointer to byte-code arra
  */
 lit_cpointer_t
 serializer_get_literal_cp_by_uid (uint8_t id, /**< literal idx */
-                                  const opcode_t *opcodes_p, /**< pointer to bytecode */
-                                  opcode_counter_t oc) /**< position in the bytecode */
+                                  const vm_instr_t *instrs_p, /**< pointer to bytecode */
+                                  vm_instr_counter_t oc) /**< position in the bytecode */
 {
-  lit_id_hash_table *lit_id_hash = GET_HASH_TABLE_FOR_BYTECODE (opcodes_p == NULL ? bytecode_data.opcodes : opcodes_p);
+  lit_id_hash_table *lit_id_hash = GET_HASH_TABLE_FOR_BYTECODE (instrs_p == NULL ? bytecode_data.instrs_p : instrs_p);
   if (lit_id_hash == null_hash)
   {
     return INVALID_LITERAL;
@@ -89,84 +89,84 @@ serializer_set_scope (scopes_tree new_scope)
   current_scope = new_scope;
 }
 
-const opcode_t *
+const vm_instr_t *
 serializer_merge_scopes_into_bytecode (void)
 {
-  bytecode_data.opcodes_count = scopes_tree_count_opcodes (current_scope);
+  bytecode_data.instrs_count = scopes_tree_count_instructions (current_scope);
 
   const size_t buckets_count = scopes_tree_count_literals_in_blocks (current_scope);
-  const size_t blocks_count = (size_t) bytecode_data.opcodes_count / BLOCK_SIZE + 1;
-  const opcode_counter_t opcodes_count = scopes_tree_count_opcodes (current_scope);
+  const size_t blocks_count = (size_t) bytecode_data.instrs_count / BLOCK_SIZE + 1;
+  const vm_instr_counter_t instrs_count = scopes_tree_count_instructions (current_scope);
 
-  const size_t opcodes_array_size = JERRY_ALIGNUP (sizeof (opcodes_header_t) + opcodes_count * sizeof (opcode_t),
-                                                   MEM_ALIGNMENT);
+  const size_t bytecode_array_size = JERRY_ALIGNUP (sizeof (insts_data_header_t) + instrs_count * sizeof (vm_instr_t),
+                                                    MEM_ALIGNMENT);
   const size_t lit_id_hash_table_size = JERRY_ALIGNUP (lit_id_hash_table_get_size_for_table (buckets_count,
                                                                                              blocks_count),
                                                        MEM_ALIGNMENT);
 
-  uint8_t *buffer_p = (uint8_t*) mem_heap_alloc_block (opcodes_array_size + lit_id_hash_table_size,
+  uint8_t *buffer_p = (uint8_t*) mem_heap_alloc_block (bytecode_array_size + lit_id_hash_table_size,
                                                        MEM_HEAP_ALLOC_LONG_TERM);
 
-  lit_id_hash_table *lit_id_hash = lit_id_hash_table_init (buffer_p + opcodes_array_size,
+  lit_id_hash_table *lit_id_hash = lit_id_hash_table_init (buffer_p + bytecode_array_size,
                                                            lit_id_hash_table_size,
                                                            buckets_count, blocks_count);
 
-  const opcode_t *opcodes_p = scopes_tree_raw_data (current_scope, buffer_p, opcodes_array_size, lit_id_hash);
+  const vm_instr_t *instrs_p = scopes_tree_raw_data (current_scope, buffer_p, bytecode_array_size, lit_id_hash);
 
-  opcodes_header_t *header_p = (opcodes_header_t*) buffer_p;
-  MEM_CP_SET_POINTER (header_p->next_opcodes_cp, bytecode_data.opcodes);
-  header_p->instructions_number = opcodes_count;
-  bytecode_data.opcodes = opcodes_p;
+  insts_data_header_t *header_p = (insts_data_header_t*) buffer_p;
+  MEM_CP_SET_POINTER (header_p->next_instrs_cp, bytecode_data.instrs_p);
+  header_p->instructions_number = instrs_count;
+  bytecode_data.instrs_p = instrs_p;
 
-  if (print_opcodes)
+  if (print_instrs)
   {
     lit_dump_literals ();
-    serializer_print_opcodes (opcodes_p, bytecode_data.opcodes_count);
+    serializer_print_instrs (instrs_p, bytecode_data.instrs_count);
   }
 
-  return opcodes_p;
+  return instrs_p;
 }
 
 void
 serializer_dump_op_meta (op_meta op)
 {
-  JERRY_ASSERT (scopes_tree_opcodes_num (current_scope) < MAX_OPCODES);
+  JERRY_ASSERT (scopes_tree_instrs_num (current_scope) < MAX_OPCODES);
 
   scopes_tree_add_op_meta (current_scope, op);
 
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
-  if (print_opcodes)
+  if (print_instrs)
   {
-    pp_op_meta (NULL, (opcode_counter_t) (scopes_tree_opcodes_num (current_scope) - 1), op, false);
+    pp_op_meta (NULL, (vm_instr_counter_t) (scopes_tree_instrs_num (current_scope) - 1), op, false);
   }
 #endif
 }
 
-opcode_counter_t
-serializer_get_current_opcode_counter (void)
+vm_instr_counter_t
+serializer_get_current_instr_counter (void)
 {
-  return scopes_tree_opcodes_num (current_scope);
+  return scopes_tree_instrs_num (current_scope);
 }
 
-opcode_counter_t
-serializer_count_opcodes_in_subscopes (void)
+vm_instr_counter_t
+serializer_count_instrs_in_subscopes (void)
 {
-  return (opcode_counter_t) (scopes_tree_count_opcodes (current_scope) - scopes_tree_opcodes_num (current_scope));
-}
-
-void
-serializer_set_writing_position (opcode_counter_t oc)
-{
-  scopes_tree_set_opcodes_num (current_scope, oc);
+  return (vm_instr_counter_t) (scopes_tree_count_instructions (current_scope) - scopes_tree_instrs_num (current_scope));
 }
 
 void
-serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
+serializer_set_writing_position (vm_instr_counter_t oc)
+{
+  scopes_tree_set_instrs_num (current_scope, oc);
+}
+
+void
+serializer_rewrite_op_meta (const vm_instr_counter_t loc, op_meta op)
 {
   scopes_tree_set_op_meta (current_scope, loc, op);
 
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
-  if (print_opcodes)
+  if (print_instrs)
   {
     pp_op_meta (NULL, loc, op, true);
   }
@@ -174,25 +174,25 @@ serializer_rewrite_op_meta (const opcode_counter_t loc, op_meta op)
 }
 
 static void
-serializer_print_opcodes (const opcode_t *opcodes_p,
-                          size_t opcodes_count)
+serializer_print_instrs (const vm_instr_t *instrs_p,
+                         size_t instrs_count)
 {
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
-  for (opcode_counter_t loc = 0; loc < opcodes_count; loc++)
+  for (vm_instr_counter_t loc = 0; loc < instrs_count; loc++)
   {
     op_meta opm;
 
-    opm.op = opcodes_p[loc];
+    opm.op = instrs_p[loc];
     for (int i = 0; i < 3; i++)
     {
       opm.lit_id[i] = NOT_A_LITERAL;
     }
 
-    pp_op_meta (opcodes_p, loc, opm, false);
+    pp_op_meta (instrs_p, loc, opm, false);
   }
 #else
-  (void) opcodes_p;
-  (void) opcodes_count;
+  (void) instrs_p;
+  (void) instrs_count;
 #endif
 }
 
@@ -200,17 +200,17 @@ void
 serializer_init ()
 {
   current_scope = NULL;
-  print_opcodes = false;
+  print_instrs = false;
 
   bytecode_data.strings_buffer = NULL;
-  bytecode_data.opcodes = NULL;
+  bytecode_data.instrs_p = NULL;
 
   lit_init ();
 }
 
-void serializer_set_show_opcodes (bool show_opcodes)
+void serializer_set_show_instrs (bool show_instrs)
 {
-  print_opcodes = show_opcodes;
+  print_instrs = show_instrs;
 }
 
 void
@@ -223,10 +223,10 @@ serializer_free (void)
 
   lit_finalize ();
 
-  while (bytecode_data.opcodes != NULL)
+  while (bytecode_data.instrs_p != NULL)
   {
-    opcodes_header_t *header_p = GET_BYTECODE_HEADER (bytecode_data.opcodes);
-    bytecode_data.opcodes = MEM_CP_GET_POINTER (opcode_t, header_p->next_opcodes_cp);
+    insts_data_header_t *header_p = GET_BYTECODE_HEADER (bytecode_data.instrs_p);
+    bytecode_data.instrs_p = MEM_CP_GET_POINTER (vm_instr_t, header_p->next_instrs_cp);
 
     mem_heap_free_block (header_p);
   }

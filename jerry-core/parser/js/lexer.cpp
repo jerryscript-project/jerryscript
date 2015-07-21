@@ -1826,7 +1826,8 @@ lexer_is_no_escape_sequences_in_token_string (token tok) /**< token of type TOK_
 void
 lexer_init (const jerry_api_char_t *source, /**< script source */
             size_t source_size, /**< script source size in bytes */
-            bool show_opcodes) /**< flag indicating if to dump opcodes */
+            bool is_print_source_code) /**< flag indicating whether to dump
+                                        *   processed source code */
 {
   empty_token.type = TOK_EMPTY;
   empty_token.uid = 0;
@@ -1848,9 +1849,9 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
   lexer_set_strict_mode (false);
 
 #ifndef JERRY_NDEBUG
-  allow_dump_lines = show_opcodes;
+  allow_dump_lines = is_print_source_code;
 #else /* JERRY_NDEBUG */
-  (void) show_opcodes;
+  (void) is_print_source_code;
   allow_dump_lines = false;
 #endif /* JERRY_NDEBUG */
 } /* lexer_init */

@@ -182,15 +182,15 @@ vm_helper_for_in_enumerate_properties_names (ecma_object_t *obj_p) /**< starting
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_for_in (opcode_t opdata, /**< operation data */
+opfunc_for_in (vm_instr_t instr, /**< instruction */
                vm_frame_ctx_t *int_data_p) /**< interpreter context */
 {
-  const idx_t expr_idx = opdata.data.for_in.expr;
-  const idx_t block_end_oc_idx_1 = opdata.data.for_in.oc_idx_1;
-  const idx_t block_end_oc_idx_2 = opdata.data.for_in.oc_idx_2;
-  const opcode_counter_t for_in_end_oc = (opcode_counter_t) (
-    calc_opcode_counter_from_idx_idx (block_end_oc_idx_1,
-                                      block_end_oc_idx_2) + int_data_p->pos);
+  const idx_t expr_idx = instr.data.for_in.expr;
+  const idx_t block_end_oc_idx_1 = instr.data.for_in.oc_idx_1;
+  const idx_t block_end_oc_idx_2 = instr.data.for_in.oc_idx_2;
+  const vm_instr_counter_t for_in_end_oc = (vm_instr_counter_t) (
+    vm_calc_instr_counter_from_idx_idx (block_end_oc_idx_1,
+                                        block_end_oc_idx_2) + int_data_p->pos);
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -203,9 +203,9 @@ opfunc_for_in (opcode_t opdata, /**< operation data */
 
   int_data_p->pos++;
 
-  opcode_t meta_opcode = vm_get_opcode (int_data_p->opcodes_p, for_in_end_oc);
-  JERRY_ASSERT (meta_opcode.op_idx == VM_OP_META);
-  JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_FOR_IN);
+  vm_instr_t meta_instr = vm_get_instr (int_data_p->instrs_p, for_in_end_oc);
+  JERRY_ASSERT (meta_instr.op_idx == VM_OP_META);
+  JERRY_ASSERT (meta_instr.data.meta.type == OPCODE_META_TYPE_END_FOR_IN);
 
   /* 3. */
   if (!ecma_is_value_undefined (expr_value)
@@ -225,8 +225,8 @@ opfunc_for_in (opcode_t opdata, /**< operation data */
     {
       ecma_collection_iterator_init (&names_iterator, names_p);
 
-      const opcode_counter_t for_in_body_begin_oc = int_data_p->pos;
-      const opcode_counter_t for_in_body_end_oc = for_in_end_oc;
+      const vm_instr_counter_t for_in_body_begin_oc = int_data_p->pos;
+      const vm_instr_counter_t for_in_body_end_oc = for_in_end_oc;
 
       while (ecma_collection_iterator_next (&names_iterator))
       {
@@ -270,7 +270,7 @@ opfunc_for_in (opcode_t opdata, /**< operation data */
     ECMA_FINALIZE (obj_expr_value);
   }
 
-  int_data_p->pos = (opcode_counter_t) (for_in_end_oc + 1u);
+  int_data_p->pos = (vm_instr_counter_t) (for_in_end_oc + 1u);
 
   ECMA_FINALIZE (expr_value);
 

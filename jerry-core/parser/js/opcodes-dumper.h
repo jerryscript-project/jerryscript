@@ -186,12 +186,12 @@ operand dump_prop_setter_or_bitwise_or_res (operand, operand);
 void dumper_set_break_target (void);
 void dumper_set_continue_target (void);
 void dumper_set_next_interation_target (void);
-opcode_counter_t
+vm_instr_counter_t
 dump_simple_or_nested_jump_for_rewrite (bool is_simple_jump,
-                                        opcode_counter_t next_jump_for_tg_oc);
-opcode_counter_t
-rewrite_simple_or_nested_jump_and_get_next (opcode_counter_t jump_oc,
-                                            opcode_counter_t target_oc);
+                                        vm_instr_counter_t next_jump_for_tg_oc);
+vm_instr_counter_t
+rewrite_simple_or_nested_jump_and_get_next (vm_instr_counter_t jump_oc,
+                                            vm_instr_counter_t target_oc);
 void dump_continue_iterations_check (operand);
 
 void start_dumping_case_clauses (void);
@@ -207,12 +207,12 @@ operand dump_delete_res (operand, bool, locus);
 void dump_typeof (operand, operand);
 operand dump_typeof_res (operand);
 
-opcode_counter_t dump_with_for_rewrite (operand);
-void rewrite_with (opcode_counter_t);
+vm_instr_counter_t dump_with_for_rewrite (operand);
+void rewrite_with (vm_instr_counter_t);
 void dump_with_end (void);
 
-opcode_counter_t dump_for_in_for_rewrite (operand);
-void rewrite_for_in (opcode_counter_t);
+vm_instr_counter_t dump_for_in_for_rewrite (operand);
+void rewrite_for_in (vm_instr_counter_t);
 void dump_for_in_end (void);
 
 void dump_try_for_rewrite (void);
@@ -227,8 +227,8 @@ void dump_throw (operand);
 bool dumper_variable_declaration_exists (lit_cpointer_t);
 void dump_variable_declaration (lit_cpointer_t);
 
-opcode_counter_t dump_scope_code_flags_for_rewrite (void);
-void rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc,
+vm_instr_counter_t dump_scope_code_flags_for_rewrite (void);
+void rewrite_scope_code_flags (vm_instr_counter_t scope_code_flags_oc,
                                opcode_scope_code_flags_t scope_flags);
 
 void dump_reg_var_decl_for_rewrite (void);

@@ -264,36 +264,36 @@ VM_OP_2 (unary_plus,            UNARY_PLUS,
          var,                   VM_OP_ARG_TYPE_VARIABLE)
 
 VM_OP_2 (jmp_up,                JMP_UP,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_2 (jmp_down,              JMP_DOWN,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_2 (jmp_break_continue,    JMP_BREAK_CONTINUE,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_3 (is_true_jmp_up,        IS_TRUE_JMP_UP,
          value,                 VM_OP_ARG_TYPE_VARIABLE,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_3 (is_true_jmp_down,      IS_TRUE_JMP_DOWN,
          value,                 VM_OP_ARG_TYPE_VARIABLE,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_3 (is_false_jmp_up,       IS_FALSE_JMP_UP,
          value,                 VM_OP_ARG_TYPE_VARIABLE,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_3 (is_false_jmp_down,     IS_FALSE_JMP_DOWN,
          value,                 VM_OP_ARG_TYPE_VARIABLE,
-         opcode_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
-         opcode_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
+         oc_idx_1,              VM_OP_ARG_TYPE_INTEGER_CONST,
+         oc_idx_2,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_1 (var_decl,              VAR_DECL,
          variable_name,         VM_OP_ARG_TYPE_STRING)

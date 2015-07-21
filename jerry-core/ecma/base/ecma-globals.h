@@ -174,7 +174,7 @@ typedef uint32_t ecma_completion_value_t;
  * Break / continue jump target
  */
 #define ECMA_COMPLETION_VALUE_TARGET_POS (0)
-#define ECMA_COMPLETION_VALUE_TARGET_WIDTH ((uint32_t) sizeof (opcode_counter_t) * JERRY_BITSINBYTE)
+#define ECMA_COMPLETION_VALUE_TARGET_WIDTH ((uint32_t) sizeof (vm_instr_counter_t) * JERRY_BITSINBYTE)
 
 /**
  * Type (ecma_completion_type_t)

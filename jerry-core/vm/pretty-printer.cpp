@@ -94,9 +94,9 @@ tmp_id_to_str (idx_t id)
 }
 
 static const char *
-var_to_str (opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint8_t current_arg)
+var_to_str (vm_instr_t instr, lit_cpointer_t lit_ids[], vm_instr_counter_t oc, uint8_t current_arg)
 {
-  raw_opcode raw = *(raw_opcode*) &opcode;
+  raw_instr raw = *(raw_instr*) &instr;
   if (raw.uids[current_arg] == LITERAL_TO_REWRITE)
   {
     if (lit_ids == NULL)
@@ -117,7 +117,7 @@ var_to_str (opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint
 }
 
 static void
-pp_printf (const char *format, opcode_t opcode, lit_cpointer_t lit_ids[], opcode_counter_t oc, uint8_t start_arg)
+pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_instr_counter_t oc, uint8_t start_arg)
 {
   uint8_t current_arg = start_arg;
   JERRY_ASSERT (current_arg <= 3);
@@ -136,14 +136,14 @@ pp_printf (const char *format, opcode_t opcode, lit_cpointer_t lit_ids[], opcode
       case 'd':
       {
         JERRY_ASSERT (current_arg <= 3);
-        raw_opcode raw = *(raw_opcode*) &opcode;
+        raw_instr raw = *(raw_instr*) &instr;
         printf ("%d", raw.uids[current_arg]);
         break;
       }
       case 's':
       {
         JERRY_ASSERT (current_arg <= 3);
-        printf ("%s", var_to_str (opcode, lit_ids, oc, current_arg));
+        printf ("%s", var_to_str (instr, lit_ids, oc, current_arg));
         break;
       }
       default:
@@ -160,22 +160,22 @@ pp_printf (const char *format, opcode_t opcode, lit_cpointer_t lit_ids[], opcode
 #define PP_OP(op_name, format) \
   case op_name: pp_printf (format, opm.op, opm.lit_id, oc, 1); break;
 #define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
-#define OC(i, j) __extension__({ raw_opcode* raw = (raw_opcode *) &opm.op; \
-                                 calc_opcode_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
+#define OC(i, j) __extension__({ raw_instr* raw = (raw_instr *) &opm.op; \
+                                 vm_calc_instr_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
 
 static int vargs_num = 0;
 static int seen_vargs = 0;
 
 static void
-dump_asm (opcode_counter_t oc, opcode_t opcode)
+dump_asm (vm_instr_counter_t oc, vm_instr_t instr)
 {
   uint8_t i = 0;
-  uint8_t opcode_id = opcode.op_idx;
+  uint8_t opcode_id = instr.op_idx;
   printf ("%3d: %20s ", oc, opcode_names[opcode_id]);
 
   for (i = 1; i < opcode_sizes[opcode_id]; i++)
   {
-    printf ("%4d ", ((raw_opcode *) &opcode)->uids[i]);
+    printf ("%4d ", ((raw_instr *) &instr)->uids[i]);
   }
 
   for (; i < 4; i++)
@@ -185,8 +185,8 @@ dump_asm (opcode_counter_t oc, opcode_t opcode)
 }
 
 void
-pp_op_meta (const opcode_t *opcodes_p,
-            opcode_counter_t oc,
+pp_op_meta (const vm_instr_t *instrs_p,
+            vm_instr_counter_t oc,
             op_meta opm,
             bool rewrite)
 {
@@ -397,11 +397,11 @@ pp_op_meta (const opcode_t *opcodes_p,
           if (seen_vargs == vargs_num)
           {
             bool found = false;
-            opcode_counter_t start = oc;
+            vm_instr_counter_t start = oc;
             while ((int16_t) start >= 0 && !found)
             {
               start--;
-              switch (serializer_get_opcode (opcodes_p, start).op_idx)
+              switch (serializer_get_instr (instrs_p, start).op_idx)
               {
                 case VM_OP_CALL_N:
                 case VM_OP_NATIVE_CALL:
@@ -416,7 +416,7 @@ pp_op_meta (const opcode_t *opcodes_p,
                 }
               }
             }
-            opcode_t start_op = serializer_get_opcode (opcodes_p, start);
+            vm_instr_t start_op = serializer_get_instr (instrs_p, start);
             switch (start_op.op_idx)
             {
               case VM_OP_CALL_N:
@@ -476,9 +476,9 @@ pp_op_meta (const opcode_t *opcodes_p,
                 JERRY_UNREACHABLE ();
               }
             }
-            for (opcode_counter_t counter = start; counter <= oc; counter++)
+            for (vm_instr_counter_t counter = start; counter <= oc; counter++)
             {
-              opcode_t meta_op = serializer_get_opcode (opcodes_p, counter);
+              vm_instr_t meta_op = serializer_get_instr (instrs_p, counter);
 
               switch (meta_op.op_idx)
               {

@@ -25,12 +25,12 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_less_than (opcode_t opdata, /**< operation data */
+opfunc_less_than (vm_instr_t instr, /**< instruction */
                   vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = opdata.data.less_than.dst;
-  const idx_t left_var_idx = opdata.data.less_than.var_left;
-  const idx_t right_var_idx = opdata.data.less_than.var_right;
+  const idx_t dst_var_idx = instr.data.less_than.dst;
+  const idx_t left_var_idx = instr.data.less_than.var_left;
+  const idx_t right_var_idx = instr.data.less_than.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -73,12 +73,12 @@ opfunc_less_than (opcode_t opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_greater_than (opcode_t opdata, /**< operation data */
+opfunc_greater_than (vm_instr_t instr, /**< instruction */
                      vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = opdata.data.greater_than.dst;
-  const idx_t left_var_idx = opdata.data.greater_than.var_left;
-  const idx_t right_var_idx = opdata.data.greater_than.var_right;
+  const idx_t dst_var_idx = instr.data.greater_than.dst;
+  const idx_t left_var_idx = instr.data.greater_than.var_left;
+  const idx_t right_var_idx = instr.data.greater_than.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -121,12 +121,12 @@ opfunc_greater_than (opcode_t opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
+opfunc_less_or_equal_than (vm_instr_t instr, /**< instruction */
                            vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = opdata.data.less_or_equal_than.dst;
-  const idx_t left_var_idx = opdata.data.less_or_equal_than.var_left;
-  const idx_t right_var_idx = opdata.data.less_or_equal_than.var_right;
+  const idx_t dst_var_idx = instr.data.less_or_equal_than.dst;
+  const idx_t left_var_idx = instr.data.less_or_equal_than.var_left;
+  const idx_t right_var_idx = instr.data.less_or_equal_than.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -176,12 +176,12 @@ opfunc_less_or_equal_than (opcode_t opdata, /**< operation data */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
+opfunc_greater_or_equal_than (vm_instr_t instr, /**< instruction */
                               vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = opdata.data.greater_or_equal_than.dst;
-  const idx_t left_var_idx = opdata.data.greater_or_equal_than.var_left;
-  const idx_t right_var_idx = opdata.data.greater_or_equal_than.var_right;
+  const idx_t dst_var_idx = instr.data.greater_or_equal_than.dst;
+  const idx_t left_var_idx = instr.data.greater_or_equal_than.var_left;
+  const idx_t right_var_idx = instr.data.greater_or_equal_than.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -231,12 +231,12 @@ opfunc_greater_or_equal_than (opcode_t opdata, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
+opfunc_instanceof (vm_instr_t instr __attr_unused___, /**< instruction */
                    vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
 {
-  const idx_t dst_idx = opdata.data.instanceof.dst;
-  const idx_t left_var_idx = opdata.data.instanceof.var_left;
-  const idx_t right_var_idx = opdata.data.instanceof.var_right;
+  const idx_t dst_idx = instr.data.instanceof.dst;
+  const idx_t left_var_idx = instr.data.instanceof.var_left;
+  const idx_t right_var_idx = instr.data.instanceof.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -277,12 +277,12 @@ opfunc_instanceof (opcode_t opdata __attr_unused___, /**< operation data */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_in (opcode_t opdata __attr_unused___, /**< operation data */
+opfunc_in (vm_instr_t instr __attr_unused___, /**< instruction */
            vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
 {
-  const idx_t dst_idx = opdata.data.in.dst;
-  const idx_t left_var_idx = opdata.data.in.var_left;
-  const idx_t right_var_idx = opdata.data.in.var_right;
+  const idx_t dst_idx = instr.data.in.dst;
+  const idx_t left_var_idx = instr.data.in.var_left;
+  const idx_t right_var_idx = instr.data.in.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

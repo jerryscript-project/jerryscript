@@ -21,8 +21,7 @@
 #include "vm.h"
 #include "scopes-tree.h"
 
-void pp_opcode (opcode_counter_t, opcode_t, bool);
-void pp_op_meta (const opcode_t*, opcode_counter_t, op_meta, bool);
+void pp_op_meta (const vm_instr_t*, vm_instr_counter_t, op_meta, bool);
 #endif // JERRY_ENABLE_PRETTY_PRINTER
 
 #endif // PRETTY_PRINTER

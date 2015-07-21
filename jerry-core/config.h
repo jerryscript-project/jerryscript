@@ -163,7 +163,7 @@
 #define CONFIG_VM_STACK_FRAME_INLINED_VALUES_NUMBER (16)
 
 /**
- * Run GC after execution of each opcode
+ * Run GC after execution of each byte-code instruction
  */
 // #define CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
 

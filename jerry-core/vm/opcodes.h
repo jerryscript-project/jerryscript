@@ -35,8 +35,15 @@
 #define OP_3(action, name, field1, field2, field3) \
         __##action (name, field1, field2, field3)
 
-typedef uint16_t opcode_counter_t; /** opcode counters */
-typedef uint8_t idx_t; /** index values */
+/**
+ * Instruction counter / position
+ */
+typedef uint16_t vm_instr_counter_t;
+
+/**
+ * Opcode / argument value in an instruction
+ */
+typedef uint8_t idx_t;
 
 /**
  * Descriptor of assignment's second argument
@@ -139,17 +146,17 @@ typedef enum
 } vm_op_arg_type_t;
 
 /**
- * Forward declaration of opcode structure
+ * Forward declaration of instruction structure
  */
-struct opcode_t;
+struct vm_instr_t;
 
 /**
  * Context of interpreter, related to a JS stack frame
  */
 typedef struct
 {
-  const opcode_t *opcodes_p; /**< pointer to array containing currently executed bytecode */
-  opcode_counter_t pos; /**< current opcode to execute */
+  const vm_instr_t *instrs_p; /**< currently executed byte-code array */
+  vm_instr_counter_t pos; /**< current position instruction to execute */
   ecma_value_t this_binding; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
@@ -178,20 +185,20 @@ typedef struct
  * Note:
  *      Run scope represents boundaries of byte-code block to run.
  *
- *      Jumps within of the current run scope are performed by just changing opcode counter,
+ *      Jumps within of the current run scope are performed by just changing instruction counter,
  *      and outside of the run scope - by returning corresponding ECMA_COMPLETION_TYPE_BREAK_CONTINUE
  *      completion value.
  */
 typedef struct
 {
-  const opcode_counter_t start_oc; /**< opcode counter of the first instruction of the scope */
-  const opcode_counter_t end_oc; /**< opcode counter of the last instruction of the scope */
+  const vm_instr_counter_t start_oc; /**< instruction counter of the first instruction of the scope */
+  const vm_instr_counter_t end_oc; /**< instruction counter of the last instruction of the scope */
 } vm_run_scope_t;
 
-opcode_counter_t calc_opcode_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
-opcode_counter_t read_meta_opcode_counter (opcode_meta_type expected_type, vm_frame_ctx_t *frame_ctx_p);
+vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
+vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type expected_type, vm_frame_ctx_t *int_data);
 
-typedef struct opcode_t
+typedef struct vm_instr_t
 {
   idx_t op_idx;
   union
@@ -218,9 +225,9 @@ typedef struct opcode_t
 
 #include "vm-opcodes.inc.h"
   } data;
-} opcode_t;
+} vm_instr_t;
 
-enum __opcode_idx
+typedef enum
 {
 #define VM_OP_0(opcode_name, opcode_name_uppercase) \
   VM_OP_ ## opcode_name_uppercase,
@@ -234,29 +241,29 @@ enum __opcode_idx
 #include "vm-opcodes.inc.h"
 
   VM_OP__COUNT /**< number of opcodes */
-};
+} vm_op_t;
 
 #define VM_OP_0(opcode_name, opcode_name_uppercase) \
-  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
 #define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
-  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
 #define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
-  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
 #define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
-  ecma_completion_value_t opfunc_##opcode_name (opcode_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
 
 #include "vm-opcodes.inc.h"
 
-typedef ecma_completion_value_t (*opfunc) (opcode_t, vm_frame_ctx_t *);
+typedef ecma_completion_value_t (*opfunc) (vm_instr_t, vm_frame_ctx_t *);
 
 #define VM_OP_0(opcode_name, opcode_name_uppercase) \
-        opcode_t getop_##opcode_name (void);
+        vm_instr_t getop_##opcode_name (void);
 #define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
-        opcode_t getop_##opcode_name (idx_t);
+        vm_instr_t getop_##opcode_name (idx_t);
 #define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
-        opcode_t getop_##opcode_name (idx_t, idx_t);
+        vm_instr_t getop_##opcode_name (idx_t, idx_t);
 #define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
-        opcode_t getop_##opcode_name (idx_t, idx_t, idx_t);
+        vm_instr_t getop_##opcode_name (idx_t, idx_t, idx_t);
 
 #include "vm-opcodes.inc.h"
 
@@ -264,6 +271,6 @@ typedef ecma_completion_value_t (*opfunc) (opcode_t, vm_frame_ctx_t *);
 typedef struct
 {
   uint8_t uids[4];
-} raw_opcode;
+} raw_instr;
 
 #endif /* OPCODES_H */

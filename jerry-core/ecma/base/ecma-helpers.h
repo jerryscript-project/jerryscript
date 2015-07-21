@@ -84,7 +84,7 @@ extern ecma_completion_value_t ecma_make_throw_obj_completion_value (ecma_object
 extern ecma_completion_value_t ecma_make_empty_completion_value (void);
 extern ecma_completion_value_t ecma_make_return_completion_value (ecma_value_t value);
 extern ecma_completion_value_t ecma_make_meta_completion_value (void);
-extern ecma_completion_value_t ecma_make_jump_completion_value (opcode_counter_t target);
+extern ecma_completion_value_t ecma_make_jump_completion_value (vm_instr_counter_t target);
 extern ecma_value_t ecma_get_completion_value_value (ecma_completion_value_t completion_value);
 extern ecma_number_t* __attr_const___
 ecma_get_number_from_completion_value (ecma_completion_value_t completion_value);
@@ -92,7 +92,7 @@ extern ecma_string_t* __attr_const___
 ecma_get_string_from_completion_value (ecma_completion_value_t completion_value);
 extern ecma_object_t* __attr_const___
 ecma_get_object_from_completion_value (ecma_completion_value_t completion_value);
-extern opcode_counter_t
+extern vm_instr_counter_t
 ecma_get_jump_target_from_completion_value (ecma_completion_value_t completion_value);
 extern ecma_completion_value_t ecma_copy_completion_value (ecma_completion_value_t value);
 extern void ecma_free_completion_value (ecma_completion_value_t completion_value);

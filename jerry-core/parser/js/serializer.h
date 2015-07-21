@@ -23,18 +23,18 @@
 #include "scopes-tree.h"
 
 void serializer_init ();
-void serializer_set_show_opcodes (bool show_opcodes);
-op_meta serializer_get_op_meta (opcode_counter_t);
-opcode_t serializer_get_opcode (const opcode_t*, opcode_counter_t);
-lit_cpointer_t serializer_get_literal_cp_by_uid (uint8_t, const opcode_t*, opcode_counter_t);
+void serializer_set_show_instrs (bool show_instrs);
+op_meta serializer_get_op_meta (vm_instr_counter_t);
+vm_instr_t serializer_get_instr (const vm_instr_t*, vm_instr_counter_t);
+lit_cpointer_t serializer_get_literal_cp_by_uid (uint8_t, const vm_instr_t*, vm_instr_counter_t);
 void serializer_set_strings_buffer (const ecma_char_t *);
 void serializer_set_scope (scopes_tree);
-const opcode_t *serializer_merge_scopes_into_bytecode (void);
+const vm_instr_t *serializer_merge_scopes_into_bytecode (void);
 void serializer_dump_op_meta (op_meta);
-opcode_counter_t serializer_get_current_opcode_counter (void);
-opcode_counter_t serializer_count_opcodes_in_subscopes (void);
-void serializer_set_writing_position (opcode_counter_t);
-void serializer_rewrite_op_meta (opcode_counter_t, op_meta);
+vm_instr_counter_t serializer_get_current_instr_counter (void);
+vm_instr_counter_t serializer_count_instrs_in_subscopes (void);
+void serializer_set_writing_position (vm_instr_counter_t);
+void serializer_rewrite_op_meta (vm_instr_counter_t, op_meta);
 void serializer_free (void);
 
 #endif // SERIALIZER_H

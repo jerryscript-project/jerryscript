@@ -20,7 +20,7 @@
 #define HASH_SIZE 128
 
 static hash_table lit_id_to_uid = null_hash;
-static opcode_counter_t global_oc;
+static vm_instr_counter_t global_oc;
 static idx_t next_uid;
 
 static void
@@ -33,7 +33,7 @@ static idx_t
 get_uid (op_meta *op, uint8_t i)
 {
   JERRY_ASSERT (i < 4);
-  raw_opcode *raw = (raw_opcode *) &op->op;
+  raw_instr *raw = (raw_instr *) &op->op;
   return raw->uids[i + 1];
 }
 
@@ -41,57 +41,57 @@ static void
 set_uid (op_meta *op, uint8_t i, idx_t uid)
 {
   JERRY_ASSERT (i < 4);
-  raw_opcode *raw = (raw_opcode *) &op->op;
+  raw_instr *raw = (raw_instr *) &op->op;
   raw->uids[i + 1] = uid;
 }
 
-opcode_counter_t
-scopes_tree_opcodes_num (scopes_tree t)
+vm_instr_counter_t
+scopes_tree_instrs_num (scopes_tree t)
 {
   assert_tree (t);
-  return t->opcodes_num;
+  return t->instrs_num;
 }
 
 void
 scopes_tree_add_op_meta (scopes_tree tree, op_meta op)
 {
   assert_tree (tree);
-  linked_list_set_element (tree->opcodes, tree->opcodes_num++, &op);
+  linked_list_set_element (tree->instrs, tree->instrs_num++, &op);
 }
 
 void
-scopes_tree_set_op_meta (scopes_tree tree, opcode_counter_t oc, op_meta op)
+scopes_tree_set_op_meta (scopes_tree tree, vm_instr_counter_t oc, op_meta op)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->opcodes_num);
-  linked_list_set_element (tree->opcodes, oc, &op);
+  JERRY_ASSERT (oc < tree->instrs_num);
+  linked_list_set_element (tree->instrs, oc, &op);
 }
 
 void
-scopes_tree_set_opcodes_num (scopes_tree tree, opcode_counter_t oc)
+scopes_tree_set_instrs_num (scopes_tree tree, vm_instr_counter_t oc)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->opcodes_num);
-  tree->opcodes_num = oc;
+  JERRY_ASSERT (oc < tree->instrs_num);
+  tree->instrs_num = oc;
 }
 
 op_meta
-scopes_tree_op_meta (scopes_tree tree, opcode_counter_t oc)
+scopes_tree_op_meta (scopes_tree tree, vm_instr_counter_t oc)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->opcodes_num);
-  return *(op_meta *) linked_list_element (tree->opcodes, oc);
+  JERRY_ASSERT (oc < tree->instrs_num);
+  return *(op_meta *) linked_list_element (tree->instrs, oc);
 }
 
-opcode_counter_t
-scopes_tree_count_opcodes (scopes_tree t)
+vm_instr_counter_t
+scopes_tree_count_instructions (scopes_tree t)
 {
   assert_tree (t);
-  opcode_counter_t res = t->opcodes_num;
+  vm_instr_counter_t res = t->instrs_num;
   for (uint8_t i = 0; i < t->t.children_num; i++)
   {
-    res = (opcode_counter_t) (
-      res + scopes_tree_count_opcodes (
+    res = (vm_instr_counter_t) (
+      res + scopes_tree_count_instructions (
         *(scopes_tree *) linked_list_element (t->t.children, i)));
   }
   return res;
@@ -213,18 +213,18 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
 }
 
 static op_meta *
-extract_op_meta (scopes_tree tree, opcode_counter_t opc_index)
+extract_op_meta (scopes_tree tree, vm_instr_counter_t instr_pos)
 {
-  return (op_meta *) linked_list_element (tree->opcodes, opc_index);
+  return (op_meta *) linked_list_element (tree->instrs, instr_pos);
 }
 
-static opcode_t
-generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table *lit_ids)
+static vm_instr_t
+generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_table *lit_ids)
 {
   start_new_block_if_necessary ();
-  op_meta *om = extract_op_meta (tree, opc_index);
-  /* Now we should change uids of opcodes.
-     Since different opcodes has different literals/tmps in different places,
+  op_meta *om = extract_op_meta (tree, instr_pos);
+  /* Now we should change uids of instructions.
+     Since different instructions has different literals/tmps in different places,
      we should change only them.
      For each case possible literal positions are shown as 0xYYY literal,
      where Y is set to '1' when there is a possible literal in this position,
@@ -363,11 +363,11 @@ generate_opcode (scopes_tree tree, opcode_counter_t opc_index, lit_id_hash_table
 }
 
 static idx_t
-count_new_literals_in_opcode (scopes_tree tree, opcode_counter_t opc_index)
+count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
 {
   start_new_block_if_necessary ();
   idx_t current_uid = next_uid;
-  op_meta *om = extract_op_meta (tree, opc_index);
+  op_meta *om = extract_op_meta (tree, instr_pos);
   switch (om->op.op_idx)
   {
     case VM_OP_PROP_GETTER:
@@ -517,11 +517,11 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree)
   global_oc = 0;
 
   assert_tree (tree);
-  opcode_counter_t opc_index;
+  vm_instr_counter_t instr_pos;
   bool header = true;
-  for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
+  for (instr_pos = 0; instr_pos < tree->instrs_num; instr_pos++)
   {
-    op_meta *om = extract_op_meta (tree, opc_index);
+    op_meta *om = extract_op_meta (tree, instr_pos);
     if (om->op.op_idx != VM_OP_VAR_DECL
         && om->op.op_idx != VM_OP_META && !header)
     {
@@ -531,15 +531,15 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree)
     {
       header = false;
     }
-    result += count_new_literals_in_opcode (tree, opc_index);
+    result += count_new_literals_in_instr (tree, instr_pos);
   }
   for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
   {
     result += scopes_tree_count_literals_in_blocks (*(scopes_tree *) linked_list_element (tree->t.children, child_id));
   }
-  for (; opc_index < tree->opcodes_num; opc_index++)
+  for (; instr_pos < tree->instrs_num; instr_pos++)
   {
-    result += count_new_literals_in_opcode (tree, opc_index);
+    result += count_new_literals_in_instr (tree, instr_pos);
   }
 
   return result;
@@ -555,20 +555,20 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree)
 
    Header and var_decls are dumped first,
    then we shall recursively dump function declaration,
-   and finally, other opcodes.
+   and finally, other instructions.
 
-   For each opcodes block (size of block is defined in bytecode-data.h)
+   For each instructions block (size of block is defined in bytecode-data.h)
    literal indexes 'hash' table is filled. */
 static void
-merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
+merge_subscopes (scopes_tree tree, vm_instr_t *data, lit_id_hash_table *lit_ids)
 {
   assert_tree (tree);
   JERRY_ASSERT (data);
-  opcode_counter_t opc_index;
+  vm_instr_counter_t instr_pos;
   bool header = true;
-  for (opc_index = 0; opc_index < tree->opcodes_num; opc_index++)
+  for (instr_pos = 0; instr_pos < tree->instrs_num; instr_pos++)
   {
-    op_meta *om = extract_op_meta (tree, opc_index);
+    op_meta *om = extract_op_meta (tree, instr_pos);
     if (om->op.op_idx != VM_OP_VAR_DECL
         && om->op.op_idx != VM_OP_META && !header)
     {
@@ -578,7 +578,7 @@ merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
     {
       header = false;
     }
-    data[global_oc] = generate_opcode (tree, opc_index, lit_ids);
+    data[global_oc] = generate_instr (tree, instr_pos, lit_ids);
     global_oc++;
   }
   for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
@@ -586,9 +586,9 @@ merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
     merge_subscopes (*(scopes_tree *) linked_list_element (tree->t.children, child_id),
                      data, lit_ids);
   }
-  for (; opc_index < tree->opcodes_num; opc_index++)
+  for (; instr_pos < tree->instrs_num; instr_pos++)
   {
-    data[global_oc] = generate_opcode (tree, opc_index, lit_ids);
+    data[global_oc] = generate_instr (tree, instr_pos, lit_ids);
     global_oc++;
   }
 }
@@ -596,11 +596,11 @@ merge_subscopes (scopes_tree tree, opcode_t *data, lit_id_hash_table *lit_ids)
 /* Postparser.
    Init literal indexes 'hash' table.
    Reorder function declarations.
-   Rewrite opcodes' temporary uids with their keys in literal indexes 'hash' table. */
-opcode_t *
+   Rewrite instructions' temporary uids with their keys in literal indexes 'hash' table. */
+vm_instr_t *
 scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code array */
                       uint8_t *buffer_p, /**< buffer for byte-code array and literal identifiers hash table */
-                      size_t opcodes_array_size, /**< size of space for byte-code array */
+                      size_t instructions_array_size, /**< size of space for byte-code array */
                       lit_id_hash_table *lit_ids) /**< literal identifiers hash table */
 {
   JERRY_ASSERT (lit_ids);
@@ -614,14 +614,14 @@ scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code
   global_oc = 0;
 
   /* Dump bytecode and fill literal indexes 'hash' table. */
-  JERRY_ASSERT (opcodes_array_size >=
-                sizeof (opcodes_header_t) + (size_t) (scopes_tree_count_opcodes (tree)) * sizeof (opcode_t));
+  JERRY_ASSERT (instructions_array_size >=
+                sizeof (insts_data_header_t) + (size_t) (scopes_tree_count_instructions (tree)) * sizeof (vm_instr_t));
 
-  opcodes_header_t *opcodes_data = (opcodes_header_t *) buffer_p;
-  memset (opcodes_data, 0, opcodes_array_size);
+  insts_data_header_t *opcodes_data = (insts_data_header_t *) buffer_p;
+  memset (opcodes_data, 0, instructions_array_size);
 
-  opcode_t *opcodes = (opcode_t *)(((uint8_t*) opcodes_data) + sizeof (opcodes_header_t));
-  merge_subscopes (tree, opcodes, lit_ids);
+  vm_instr_t *instrs = (vm_instr_t *)(((uint8_t*) opcodes_data) + sizeof (insts_data_header_t));
+  merge_subscopes (tree, instrs, lit_ids);
   if (lit_id_to_uid != null_hash)
   {
     hash_table_free (lit_id_to_uid);
@@ -630,7 +630,7 @@ scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code
 
   MEM_CP_SET_POINTER (opcodes_data->lit_id_hash_cp, lit_ids);
 
-  return opcodes;
+  return instrs;
 } /* scopes_tree_raw_data */
 
 void
@@ -666,9 +666,9 @@ scopes_tree_init (scopes_tree parent)
     JERRY_ASSERT (*(scopes_tree *) added == tree);
     parent->t.children_num++;
   }
-  tree->opcodes_num = 0;
+  tree->instrs_num = 0;
   tree->strict_mode = 0;
-  tree->opcodes = linked_list_init (sizeof (op_meta));
+  tree->instrs = linked_list_init (sizeof (op_meta));
   return tree;
 }
 
@@ -684,6 +684,6 @@ scopes_tree_free (scopes_tree tree)
     }
     linked_list_free (tree->t.children);
   }
-  linked_list_free (tree->opcodes);
+  linked_list_free (tree->instrs);
   jsp_mm_free (tree);
 }

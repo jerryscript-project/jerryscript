@@ -464,14 +464,14 @@ ecma_get_completion_value_value_field (ecma_completion_value_t completion_value)
 /**
  * Get target of break / continue completion value
  *
- * @return opcode counter
+ * @return instruction counter
  */
-static opcode_counter_t
+static vm_instr_counter_t
 ecma_get_completion_value_target (ecma_completion_value_t completion_value) /**< completion value */
 {
-  return (opcode_counter_t) jrt_extract_bit_field (completion_value,
-                                                   ECMA_COMPLETION_VALUE_TARGET_POS,
-                                                   ECMA_COMPLETION_VALUE_TARGET_WIDTH);
+  return (vm_instr_counter_t) jrt_extract_bit_field (completion_value,
+                                                     ECMA_COMPLETION_VALUE_TARGET_POS,
+                                                     ECMA_COMPLETION_VALUE_TARGET_WIDTH);
 } /* ecma_get_completion_value_target */
 
 /**
@@ -514,7 +514,7 @@ ecma_set_completion_value_value_field (ecma_completion_value_t completion_value,
 static ecma_completion_value_t __attr_const___
 ecma_set_completion_value_target (ecma_completion_value_t completion_value, /**< completion value
                                                                              * to set field in */
-                                  opcode_counter_t target) /**< break / continue target */
+                                  vm_instr_counter_t target) /**< break / continue target */
 {
   return (ecma_completion_value_t) jrt_set_bit_field_value (completion_value,
                                                             target,
@@ -645,7 +645,7 @@ ecma_make_meta_completion_value (void)
  * @return completion value
  */
 ecma_completion_value_t __attr_const___
-ecma_make_jump_completion_value (opcode_counter_t target) /**< target break / continue */
+ecma_make_jump_completion_value (vm_instr_counter_t target) /**< target break / continue */
 {
   ecma_completion_value_t completion_value = 0;
 
@@ -712,9 +712,9 @@ ecma_get_object_from_completion_value (ecma_completion_value_t completion_value)
 /**
  * Get break / continue target from completion value
  *
- * @return opcode counter
+ * @return instruction counter
  */
-opcode_counter_t
+vm_instr_counter_t
 ecma_get_jump_target_from_completion_value (ecma_completion_value_t completion_value) /**< completion
                                                                                        *   value */
 {

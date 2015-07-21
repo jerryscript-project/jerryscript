@@ -23,7 +23,7 @@
  * @{
  *
  * \addtogroup lit_id_hash_table Literal identifiers hash table
- * The hash table connects pairs (opcode block, idx_t value) with literal identifiers.
+ * The hash table connects pairs (instruction block, idx_t value) with literal identifiers.
  * @{
  */
 
@@ -36,7 +36,7 @@ lit_id_hash_table *
 lit_id_hash_table_init (uint8_t *table_buffer_p, /**< buffer to initialize hash table in */
                         size_t buffer_size, /**< size of the buffer */
                         size_t buckets_count, /**< number of pairs */
-                        size_t blocks_count) /**< number of opcode blocks */
+                        size_t blocks_count) /**< number of instruction blocks */
 {
   const size_t header_size = JERRY_ALIGNUP (sizeof (lit_id_hash_table), MEM_ALIGNMENT);
   const size_t raw_buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t) * buckets_count, MEM_ALIGNMENT);
@@ -62,7 +62,7 @@ lit_id_hash_table_init (uint8_t *table_buffer_p, /**< buffer to initialize hash 
  */
 size_t
 lit_id_hash_table_get_size_for_table (size_t buckets_count, /**< number of pairs */
-                                      size_t blocks_count) /**< number of opcode blocks */
+                                      size_t blocks_count) /**< number of instructions blocks */
 {
   const size_t header_size = JERRY_ALIGNUP (sizeof (lit_id_hash_table), MEM_ALIGNMENT);
   const size_t raw_buckets_size = JERRY_ALIGNUP (sizeof (lit_cpointer_t) * buckets_count, MEM_ALIGNMENT);
@@ -88,7 +88,7 @@ lit_id_hash_table_free (lit_id_hash_table *table_p) /**< table's header */
 void
 lit_id_hash_table_insert (lit_id_hash_table *table_p, /**< table's header */
                           idx_t uid, /**< value of byte-code instruction's argument */
-                          opcode_counter_t oc, /**< opcode counter of the instruction */
+                          vm_instr_counter_t oc, /**< instruction counter of the instruction */
                           lit_cpointer_t lit_cp) /**< literal identifier */
 {
   JERRY_ASSERT (table_p != NULL);
@@ -112,7 +112,7 @@ lit_id_hash_table_insert (lit_id_hash_table *table_p, /**< table's header */
 lit_cpointer_t
 lit_id_hash_table_lookup (lit_id_hash_table *table_p, /**< table's header */
                           idx_t uid, /**< value of byte-code instruction's argument */
-                          opcode_counter_t oc) /**< opcode counter of the instruction */
+                          vm_instr_counter_t oc) /**< instruction counter of the instruction */
 {
   JERRY_ASSERT (table_p != NULL);
 

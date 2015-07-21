@@ -255,13 +255,13 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
       utf8_string_buffer_pos += sz;
     }
 
-    const opcode_t* opcodes_p;
+    const vm_instr_t* instrs_p;
     jsp_status_t parse_status;
 
     parse_status = parser_parse_new_function ((const jerry_api_char_t **) utf8_string_params_p,
                                               utf8_string_params_size,
                                               params_count,
-                                              &opcodes_p);
+                                              &instrs_p);
 
     if (parse_status == JSP_STATUS_SYNTAX_ERROR)
     {
@@ -277,7 +277,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
       bool is_strict = false;
       bool do_instantiate_arguments_object = true;
 
-      opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
+      opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (instrs_p,
                                                                   0);
 
       if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
@@ -302,7 +302,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
                                                                   glob_lex_env_p,
                                                                   is_strict,
                                                                   do_instantiate_arguments_object,
-                                                                  opcodes_p,
+                                                                  instrs_p,
                                                                   1);
 
       ecma_deref_object (glob_lex_env_p);

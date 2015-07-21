@@ -105,8 +105,8 @@ jsp_label_push (jsp_label_t *out_label_p, /**< out: place where label structure
  */
 void
 jsp_label_rewrite_jumps_and_pop (jsp_label_t *label_p, /**< label to remove (should be on top of stack) */
-                                 opcode_counter_t break_tgt_oc) /**< target opcode counter
-                                                                 *  for breaks on the label */
+                                 vm_instr_counter_t break_tgt_oc) /**< target instruction counter
+                                                                   *   for breaks on the label */
 {
   JERRY_ASSERT (label_p != NULL);
   JERRY_ASSERT (break_tgt_oc != MAX_OPCODES);
@@ -228,7 +228,7 @@ jsp_label_add_jump (jsp_label_t *label_p, /**< label to register jump for */
  */
 void
 jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, /**< the outermost label to setup target for */
-                                 opcode_counter_t tgt_oc) /**< target */
+                                 vm_instr_counter_t tgt_oc) /**< target */
 {
   /* There are no labels that could not be targeted with 'break' jumps */
   JERRY_ASSERT (tgt_oc != MAX_OPCODES);

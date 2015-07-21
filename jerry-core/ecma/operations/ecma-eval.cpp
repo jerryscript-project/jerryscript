@@ -86,7 +86,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 
   ecma_completion_value_t completion;
 
-  const opcode_t *opcodes_p;
+  const vm_instr_t *instrs_p;
   jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
@@ -94,7 +94,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   parse_status = parser_parse_eval (code_p,
                                     code_buffer_size,
                                     is_strict_call,
-                                    &opcodes_p);
+                                    &instrs_p);
 
   if (parse_status == JSP_STATUS_SYNTAX_ERROR)
   {
@@ -108,10 +108,10 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   {
     JERRY_ASSERT (parse_status == JSP_STATUS_OK);
 
-    opcode_counter_t first_opcode_index = 0u;
+    vm_instr_counter_t first_instr_index = 0u;
     bool is_strict_prologue = false;
-    opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (opcodes_p,
-                                                                first_opcode_index++);
+    opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (instrs_p,
+                                                                first_instr_index++);
     if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
     {
       is_strict_prologue = true;
@@ -142,8 +142,8 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
       lex_env_p = strict_lex_env_p;
     }
 
-    completion = vm_run_from_pos (opcodes_p,
-                                  first_opcode_index,
+    completion = vm_run_from_pos (instrs_p,
+                                  first_instr_index,
                                   this_binding,
                                   lex_env_p,
                                   is_strict,

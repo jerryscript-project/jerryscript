@@ -67,7 +67,11 @@ ROUTINE (LIT_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_string_prototype_object
 ROUTINE (LIT_MAGIC_STRING_CHAR_AT_UL, ecma_builtin_string_prototype_object_char_at, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_CHAR_CODE_AT_UL, ecma_builtin_string_prototype_object_char_code_at, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_LOCALE_COMPARE_UL, ecma_builtin_string_prototype_object_locale_compare, 1, 1)
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_MATCH, ecma_builtin_string_prototype_object_match, 1, 1)
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+
 ROUTINE (LIT_MAGIC_STRING_REPLACE, ecma_builtin_string_prototype_object_replace, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_SEARCH, ecma_builtin_string_prototype_object_search, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_SPLIT, ecma_builtin_string_prototype_object_split, 2, 2)

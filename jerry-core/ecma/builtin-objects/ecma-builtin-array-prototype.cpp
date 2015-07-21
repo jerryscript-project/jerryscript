@@ -895,15 +895,18 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
       ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, curr_idx_str_p), ret_value);
 
       ecma_string_t *to_idx_str_p = ecma_new_ecma_string_from_uint32 (n);
-      /*
-       * 10.c.ii
-       * Using [[Put]] is equivalent to using [[DefineOwnProperty]] as specified the standard,
-       * so we use [[Put]] instead for simplicity. No need for a try-catch block since it is called
-       * with is_throw = false.
-       */
-      ecma_completion_value_t put_comp_value = ecma_op_object_put (new_array_p, to_idx_str_p, get_value, false);
-      JERRY_ASSERT (ecma_is_completion_value_normal (put_comp_value));
-      ecma_free_completion_value (put_comp_value);
+
+      /* 10.c.ii */
+      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+      ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                                       to_idx_str_p,
+                                                                       get_value,
+                                                                       true, /* Writable */
+                                                                       true, /* Enumerable */
+                                                                       true, /* Configurable */
+                                                                       false);
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+
       ecma_deref_ecma_string (to_idx_str_p);
 
       ECMA_FINALIZE (get_value);
@@ -1477,16 +1480,17 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
 
       ecma_string_t *idx_str_new_p = ecma_new_ecma_string_from_uint32 (k);
 
-      /* 9.c.ii
-       * Using [[Put]] is equivalent to using [[DefineOwnProperty]] as specified the standard,
-       * so we use [[Put]] instead for simplicity. No need for a try-catch block since it is called
-       * with is_throw = false.
-       */
-      ECMA_TRY_CATCH (put_value,
-                      ecma_op_object_put (new_array_p, idx_str_new_p, get_value, false),
-                      ret_value);
+      /* 9.c.ii */
+      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+      ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                                       idx_str_new_p,
+                                                                       get_value,
+                                                                       true, /* Writable */
+                                                                       true, /* Enumerable */
+                                                                       true, /* Configurable */
+                                                                       false);
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
 
-      ECMA_FINALIZE (put_value);
       ecma_deref_ecma_string (idx_str_new_p);
       ECMA_FINALIZE (get_value);
     }
@@ -2365,15 +2369,16 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
 
         ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
-        /* 8.c.iii
-         * By definition we should use [[DefineOwnProperty]] here, but since [[Put]] will create the
-         * same property that we need, we can use it for simplicity. No need for a try-catch block
-         * since it is called with is_throw = false.
-         * ecma_op_to_boolean always returns a simple value, so no need to free.
-        */
-        ecma_completion_value_t put_comp_value = ecma_op_object_put (new_array_p, index_str_p, mapped_value, false);
-        JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp_value));
-        ecma_free_completion_value (put_comp_value);
+        /* 8.c.iii */
+        /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+        ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                                         index_str_p,
+                                                                         mapped_value,
+                                                                         true, /* Writable */
+                                                                         true, /* Enumerable */
+                                                                         true, /* Configurable */
+                                                                         false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
 
         ECMA_FINALIZE (mapped_value);
         ECMA_FINALIZE (current_value);
@@ -2486,17 +2491,16 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
         if (ecma_is_completion_value_normal_true (ecma_op_to_boolean (call_value)))
         {
           ecma_string_t *to_index_string_p = ecma_new_ecma_string_from_uint32 (new_array_index);
-          /*
-           * By definition we should use [[DefineOwnProperty]] here, but since [[Put]] will create the
-           * same property that we need, we can use it for simplicity. No need for a try-catch block
-           * since it is called with is_throw = false.
-          */
-          ecma_completion_value_t put_comp_value = ecma_op_object_put (new_array_p,
-                                                                       to_index_string_p,
-                                                                       get_value,
-                                                                       false);
-          JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp_value));
-          ecma_free_completion_value (put_comp_value);
+
+          /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+          ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                                           to_index_string_p,
+                                                                           get_value,
+                                                                           true, /* Writable */
+                                                                           true, /* Enumerable */
+                                                                           true, /* Configurable */
+                                                                           false);
+          JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
 
           ecma_deref_ecma_string (to_index_string_p);
           new_array_index++;

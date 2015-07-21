@@ -144,6 +144,13 @@ assert(result.length === 1)
 assert(result[0] === "bar")
 assert(array[0] === "y")
 
+var arr = [1,2];
+Array.prototype[0] = 3;
+var newArr = arr.splice(0, 1);
+delete Array.prototype[0];
+assert(newArr.hasOwnProperty("0"));
+assert(newArr[0] === 1);
+
 // Checking behavior when unable to get length
 var obj = {splice : Array.prototype.splice};
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

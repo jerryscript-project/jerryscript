@@ -35,6 +35,13 @@ extern ecma_completion_value_t ecma_builtin_helper_array_concat_value (ecma_obje
                                                                        ecma_value_t);
 extern uint32_t ecma_builtin_helper_array_index_normalize (ecma_number_t index, uint32_t length);
 extern uint32_t ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length);
+extern ecma_completion_value_t ecma_builtin_helper_def_prop (ecma_object_t *obj_p,
+                                                             ecma_string_t *index_p,
+                                                             ecma_value_t value,
+                                                             bool writable,
+                                                             bool enumerable,
+                                                             bool configurable,
+                                                             bool is_throw);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 

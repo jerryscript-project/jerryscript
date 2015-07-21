@@ -62,6 +62,13 @@ assert (long_array.map(func).equals([0,2]));
 long_array[100] = 1;
 assert (long_array.map(func).equals([0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,101]));
 
+var arr = [1,2];
+Array.prototype[0] = 3;
+var newArr = arr.map(function(value) { return value; });
+delete Array.prototype[0];
+assert(newArr.hasOwnProperty("0"));
+assert(newArr[0] === 1);
+
 // check behavior when unable to get length
 var obj = {};
 Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });

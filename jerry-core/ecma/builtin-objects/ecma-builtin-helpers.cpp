@@ -506,6 +506,54 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
 } /* ecma_builtin_helper_string_index_normalize */
 
 /**
+ * Helper function for using [[DefineOwnProperty]].
+ *
+ * See also:
+ *          ECMA-262 v5, 8.12.9
+ *          ECMA-262 v5, 15.4.5.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
+                              ecma_string_t *index_p, /**< index string */
+                              ecma_value_t value, /**< value */
+                              bool writable, /**< writable */
+                              bool enumerable, /**< enumerable */
+                              bool configurable, /**< configurable */
+                              bool is_throw) /**< is_throw */
+{
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+
+  prop_desc.is_value_defined = true;
+  prop_desc.value = value;
+
+  if (writable)
+  {
+    prop_desc.is_writable_defined = true;
+    prop_desc.is_writable = true;
+  }
+
+  if (enumerable)
+  {
+    prop_desc.is_enumerable_defined = true;
+    prop_desc.is_enumerable = true;
+  }
+
+  if (configurable)
+  {
+    prop_desc.is_configurable_defined = true;
+    prop_desc.is_configurable = true;
+  }
+
+  return ecma_op_object_define_own_property (obj_p,
+                                             index_p,
+                                             &prop_desc,
+                                             is_throw);
+} /* ecma_builtin_helper_def_prop */
+
+/**
  * @}
  * @}
  * @}

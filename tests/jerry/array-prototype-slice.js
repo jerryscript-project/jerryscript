@@ -79,6 +79,13 @@ array[4294967293] = "bar";
 var result = array.slice(-4294967297, -4294967296);
 assert(result.length === 0);
 
+var arr = [1,2];
+Array.prototype[0] = 3;
+var newArr = arr.slice(0, 1);
+delete Array.prototype[0];
+assert(newArr.hasOwnProperty("0"));
+assert(newArr[0] === 1);
+
 // Checking behavior when unable to get length
 var obj = { slice : Array.prototype.slice };
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

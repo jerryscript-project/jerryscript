@@ -44,6 +44,13 @@ assert(filtered[1] === 3);
 assert(filtered[2] === 5);
 assert(filtered[3] === 7);
 
+var arr = [1,2];
+Array.prototype[0] = 3;
+var newArr = arr.filter(function() { return true; });
+delete Array.prototype[0];
+assert(newArr.hasOwnProperty("0"));
+assert(newArr[0] === 1);
+
 // Checking behavior when unable to get length
 var obj = {};
 Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });

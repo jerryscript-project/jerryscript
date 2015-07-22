@@ -133,6 +133,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       int32_t num_digits;
       int32_t exponent;
       bool is_negative = false;
+      bool should_round = false;
 
       if (ecma_number_is_negative (this_arg_number))
       {
@@ -148,11 +149,17 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       /* Calculate the scale of the number in the specified radix. */
       int scale = (int) -floor ((log (10) / log (radix)) * exponent);
 
+      if (scale < 0)
+      {
+        is_scale_negative = true;
+        scale = -scale;
+      }
+
       int buff_size;
 
       if (is_scale_negative)
       {
-        buff_size = (int) floor ((log (this_arg_number) / log (10))) + 1;
+        buff_size = (int) floor (log (this_arg_number) / log (radix)) + 1;
       }
       else
       {
@@ -162,12 +169,6 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       if (is_negative)
       {
         buff_size++;
-      }
-
-      if (scale < 0)
-      {
-        is_scale_negative = true;
-        scale = -scale;
       }
 
       /* Normalize the number, so that it is as close to 0 exponent as possible. */
@@ -185,6 +186,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
       uint64_t whole = (uint64_t) this_arg_number;
       ecma_number_t fraction = this_arg_number - (ecma_number_t) whole;
+
+      if (!ecma_number_is_zero (fraction) && is_scale_negative)
+      {
+        /* Add one extra digit for rounding. */
+        buff_size++;
+        should_round = true;
+      }
 
       MEM_DEFINE_LOCAL_ARRAY (buff, buff_size, lit_utf8_byte_t);
       int buff_index = 0;
@@ -207,29 +215,26 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
         buff[buff_index - i - 1] = swap;
       }
 
-      bool should_round = false;
+      int required_digits = buff_size;
+      if (is_negative)
+      {
+        required_digits--;
+      }
+
+      if (!is_scale_negative)
+      {
+        /* Leave space for leading zeros / radix point. */
+        required_digits -= scale + 1;
+      }
+
       /* Calculate digits for fractional part. */
-      for (int iter_count = 0;
-           iter_count < ECMA_NUMBER_FRACTION_WIDTH && (fraction != 0 || is_scale_negative);
-           iter_count++)
+      while (buff_index < required_digits && (fraction != 0 || is_scale_negative))
       {
         fraction *= (ecma_number_t) radix;
         lit_utf8_byte_t digit = (lit_utf8_byte_t) floor (fraction);
 
         buff[buff_index++] = digit;
         fraction -= (ecma_number_t) floor (fraction);
-
-        if (iter_count == scale && is_scale_negative)
-        {
-          /*
-           * When scale is negative, that means the original number did not have a fractional part,
-           * but by normalizing it, we introduced one. In this case, when the iteration count reaches
-           * the scale, we already have the number, but it may be incorrect, so we calculate
-           * one extra digit that we round off just to make sure.
-           */
-          should_round = true;
-          break;
-        }
       }
 
       if (should_round)

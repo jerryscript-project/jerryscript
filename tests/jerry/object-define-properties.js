@@ -131,7 +131,7 @@ var props = {
     writable: true,
   },
   get bar() {
-    throw TypeError;
+    throw new TypeError("foo");
     return { value : 2, writable : true };
   },
   prop2: {
@@ -149,6 +149,7 @@ try {
   assert (false);
 } catch (e) {
   assert (e instanceof TypeError);
+  assert (e.message === "foo");
 }
 
 // Define get method which deletes a property

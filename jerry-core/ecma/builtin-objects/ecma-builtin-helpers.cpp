@@ -154,10 +154,15 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
     if (ecma_op_is_callable (to_locale_value))
     {
       ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
-      ret_value = ecma_op_function_call (locale_func_obj_p,
-                                         ecma_make_object_value (index_obj_p),
-                                         NULL,
-                                         0);
+      ECMA_TRY_CATCH (call_value,
+                      ecma_op_function_call (locale_func_obj_p,
+                                             ecma_make_object_value (index_obj_p),
+                                             NULL,
+                                             0),
+                      ret_value);
+      ret_value = ecma_op_to_string (call_value);
+      ECMA_FINALIZE (call_value);
+
     }
     else
     {

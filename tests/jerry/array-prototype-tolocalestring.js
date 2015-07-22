@@ -26,6 +26,11 @@ var test_ok = {
 assert ([3, test_ok, 4, test_ok].toLocaleString() === "3,1,4,1");
 
 
+var obj = { toLocaleString: function() {} };
+var test_non_str_locale = [undefined, obj, null, obj, obj];
+
+assert(test_non_str_locale.toLocaleString() === ",undefined,,undefined,undefined");
+
 var test_fail = {
   toLocaleString: "FAIL"
 };

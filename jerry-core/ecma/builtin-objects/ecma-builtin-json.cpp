@@ -41,21 +41,22 @@
 
 /*
  * FIXME:
- *       Replace usage of isalpha and isdigit functions in the module with lit_char helpers and remove the functions.
+ *       Replace usage of ecma_builtin_json_isalpha and ecma_builtin_json_isdigit functions in the module with lit_char
+ *       helpers and remove the functions.
  *
  *       Related issue: #424
  */
 
 /** Checks for an alphabetic character. */
 static int
-isalpha (int c)
+ecma_builtin_json_isalpha (int c)
 {
   return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 /** Checks for a digit (0 through 9).  */
 static int
-isdigit (int c)
+ecma_builtin_json_isdigit (int c)
 {
   return c >= '0' && c <= '9';
 }
@@ -128,7 +129,8 @@ ecma_builtin_json_check_id (lit_utf8_byte_t *string_p, /**< start position */
     id_p++;
     if (*id_p == '\0')
     {
-      return !isalpha (*string_p) && !isdigit (*string_p) && *string_p != '$' && *string_p != '_';
+      return (!ecma_builtin_json_isalpha (*string_p) && !ecma_builtin_json_isdigit (*string_p)
+              && *string_p != '$' && *string_p != '_');
     }
   }
   while (*string_p == *id_p);
@@ -285,24 +287,24 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
   if (*current_p == '0')
   {
     current_p++;
-    if (isdigit (*current_p))
+    if (ecma_builtin_json_isdigit (*current_p))
     {
       return;
     }
   }
-  else if (isdigit (*current_p))
+  else if (ecma_builtin_json_isdigit (*current_p))
   {
     do
     {
       current_p++;
     }
-    while (isdigit (*current_p));
+    while (ecma_builtin_json_isdigit (*current_p));
   }
 
   if (*current_p == '.')
   {
     current_p++;
-    if (!isdigit (*current_p))
+    if (!ecma_builtin_json_isdigit (*current_p))
     {
       return;
     }
@@ -311,7 +313,7 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (isdigit (*current_p));
+    while (ecma_builtin_json_isdigit (*current_p));
   }
 
   if (*current_p == 'e' || *current_p == 'E')
@@ -322,7 +324,7 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
       current_p++;
     }
 
-    if (!isdigit (*current_p))
+    if (!ecma_builtin_json_isdigit (*current_p))
     {
       return;
     }
@@ -331,7 +333,7 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (isdigit (*current_p));
+    while (ecma_builtin_json_isdigit (*current_p));
   }
   token_p->type = number_token;
   token_p->u.number = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (current_p - start_p));
@@ -436,7 +438,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     }
     default:
     {
-      if (*current_p == '-' || isdigit (*current_p))
+      if (*current_p == '-' || ecma_builtin_json_isdigit (*current_p))
       {
         token_p->current_p = current_p;
         ecma_builtin_json_parse_number (token_p);

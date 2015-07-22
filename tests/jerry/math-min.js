@@ -27,3 +27,13 @@ assert(Math['min'] () === Infinity);
 
 assert(Math['min'] (0.0, -0.0) === -0.0);
 assert(Math['min'] (-0.0, 0.0) === -0.0);
+
+assert(Math['min'] (2, -Infinity) === -Infinity);
+assert(Math['min'] (-Infinity, 2) === -Infinity);
+assert(Math['min'] (2, Infinity) === 2);
+assert(Math['min'] (Infinity, 2) === 2);
+
+assert(Math['min'] (-2, Infinity) === -2);
+assert(Math['min'] (Infinity, -2) === -2);
+assert(Math['min'] (-2, -Infinity) === -Infinity);
+assert(Math['min'] (-Infinity, -2) === -Infinity);

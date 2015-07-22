@@ -554,14 +554,20 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         break;
       }
+      case RE_TOK_DIGIT:
+      case RE_TOK_NOT_DIGIT:
+      case RE_TOK_WHITE:
+      case RE_TOK_NOT_WHITE:
+      case RE_TOK_WORD_CHAR:
+      case RE_TOK_NOT_WORD_CHAR:
       case RE_TOK_START_CHAR_CLASS:
       case RE_TOK_START_INV_CHAR_CLASS:
       {
         JERRY_DDLOG ("Compile a character class\n");
         re_append_opcode (bc_ctx_p,
-                          re_ctx_p->current_token.type == RE_TOK_START_CHAR_CLASS
-                                                       ? RE_OP_CHAR_CLASS
-                                                       : RE_OP_INV_CHAR_CLASS);
+                          re_ctx_p->current_token.type == RE_TOK_START_INV_CHAR_CLASS
+                                                       ? RE_OP_INV_CHAR_CLASS
+                                                       : RE_OP_CHAR_CLASS);
         uint32_t offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 
         ECMA_TRY_CATCH (empty,
@@ -578,6 +584,11 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         }
 
         ECMA_FINALIZE (empty);
+
+        if (ecma_is_completion_value_throw (ret_value))
+        {
+          return ret_value; /* error */
+        }
         break;
       }
       case RE_TOK_END_GROUP:
@@ -648,15 +659,13 @@ re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
   re_ctx.bytecode_ctx_p = &bc_ctx;
 
   lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
-  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size + 1, lit_utf8_byte_t);
+  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size, lit_utf8_byte_t);
 
   ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, (ssize_t) pattern_str_size);
-  FIXME ("Update regexp compiler so that zero symbol is not needed.");
-  pattern_start_p[pattern_str_size] = LIT_BYTE_NULL;
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (pattern_start_p, pattern_str_size);
 
   re_parser_ctx_t parser_ctx;
-  parser_ctx.pattern_start_p = pattern_start_p;
-  parser_ctx.current_char_p = pattern_start_p;
+  parser_ctx.iter = iter;
   parser_ctx.num_of_groups = -1;
   re_ctx.parser_ctx_p = &parser_ctx;
 

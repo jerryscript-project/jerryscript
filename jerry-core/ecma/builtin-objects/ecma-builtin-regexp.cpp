@@ -119,7 +119,16 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
     if (ecma_is_completion_value_empty (ret_value))
     {
-      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+      if (ecma_string_get_length (pattern_string_p) == 0)
+      {
+        ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+        ret_value = ecma_op_create_regexp_object (magic_str_p, flags_string_p);
+        ecma_deref_ecma_string (magic_str_p);
+      }
+      else
+      {
+        ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+      }
     }
 
     if (flags_string_p != NULL)

@@ -79,14 +79,12 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     /* Convert ecma_String_t *to regexp_bytecode_t* */
     lit_utf8_size_t input_str_size = ecma_string_get_size (input_str_p);
 
-    MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_str_size + 1, lit_utf8_byte_t);
+    MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_str_size, lit_utf8_byte_t);
 
     ecma_string_to_utf8_string (input_str_p, input_utf8_buffer_p, (ssize_t) input_str_size);
+    lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_utf8_buffer_p, input_str_size);
 
-    FIXME ("Update ecma_regexp_exec_helper so that zero symbol is not needed.");
-    input_utf8_buffer_p[input_str_size] = LIT_BYTE_NULL;
-
-    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, input_utf8_buffer_p, input_str_size);
+    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, &iter);
 
     MEM_FINALIZE_LOCAL_ARRAY (input_utf8_buffer_p);
 

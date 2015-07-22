@@ -30,4 +30,87 @@ assert (r == "abcdefghjklmnopqrstuvwxyz");
 r = new RegExp ("[A-Z]*").exec("abcdefghjklmnopqrstuvwxyz");
 assert (r == "");
 
-// FIXME: Add more tescase when Unicode support is finished!
+r = new RegExp ("[^a-z]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[^A-Z]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("\\d*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("\\D*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("\\w*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("\\W*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("\\s*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("\\S*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\d]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[\\D]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\w]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\W]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[\\s]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[\\S]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[^\\d]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[^\\D]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[^\\w]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("[^\\W]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[^\\s]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[^\\S]*").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "");
+
+r = new RegExp ("\\d*").exec("0123456789");
+assert (r == "0123456789");
+
+try
+{
+  r = new RegExp("[");
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof SyntaxError);
+  assert (e.message === "invalid character class");
+}
+
+try
+{
+  r = new RegExp("[\\");
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof SyntaxError);
+  assert (e.message === "invalid character class");
+}

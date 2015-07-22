@@ -59,16 +59,10 @@ typedef enum
   */
 #define RE_MAX_RE_DECESC_DIGITS 9
 
-/* FIXME: depends on unicode support */
-#define RE_CHAR_UNDEF ((ecma_char_t)-1)
-
-#define RE_CONTROL_CHAR_NUL  0x0000 /* \0 */
-#define RE_CONTROL_CHAR_BEL  0x0008 /* \b */
-#define RE_CONTROL_CHAR_TAB  0x0009 /* \t */
-#define RE_CONTROL_CHAR_EOL  0x000a /* \n */
-#define RE_CONTROL_CHAR_VT   0x000b /* \v */
-#define RE_CONTROL_CHAR_FF   0x000c /* \f */
-#define RE_CONTROL_CHAR_CR   0x000d /* \r */
+/**
+  * Undefined character (out of the range of the codeunit)
+  */
+#define RE_CHAR_UNDEF 0xFFFFFFFF
 
 /**
  * RegExp token type
@@ -87,8 +81,7 @@ typedef struct
   */
 typedef struct
 {
-  lit_utf8_byte_t *pattern_start_p; /**< start of input pattern string */
-  lit_utf8_byte_t *current_char_p; /**< current character in input pattern */
+  lit_utf8_iterator_t iter; /**< iterator of input pattern */
   int num_of_groups; /**< number of groups */
   uint32_t num_of_classes; /**< number of character classes */
 } re_parser_ctx_t;

@@ -44,7 +44,7 @@
  */
 typedef struct
 {
-  const lit_utf8_byte_t **saved_p; /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
+  lit_utf8_iterator_t *saved_p; /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
   const lit_utf8_byte_t *input_start_p; /**< start of input pattern string */
   const lit_utf8_byte_t *input_end_p; /**< end of input pattern string */
   uint32_t match_limit; /**< matching limit counter */
@@ -61,8 +61,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str
 extern ecma_completion_value_t
 ecma_regexp_exec_helper (ecma_object_t *obj_p,
                          re_bytecode_t *bc_p,
-                         const lit_utf8_byte_t *str_p,
-                         lit_utf8_size_t str_size);
+                         lit_utf8_iterator_t *iter_p);
 
 /**
  * @}

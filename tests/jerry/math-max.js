@@ -27,3 +27,13 @@ assert(Math['max'] () === -Infinity);
 
 assert(Math['max'] (0.0, -0.0) === 0.0);
 assert(Math['max'] (-0.0, 0.0) === 0.0);
+
+assert(Math['max'] (2, Infinity) === Infinity);
+assert(Math['max'] (Infinity, 2) === Infinity);
+assert(Math['max'] (2, -Infinity) === 2);
+assert(Math['max'] (-Infinity, 2) === 2);
+
+assert(Math['max'] (-2, Infinity) === Infinity);
+assert(Math['max'] (Infinity, -2) === Infinity);
+assert(Math['max'] (-2, -Infinity) === -2);
+assert(Math['max'] (-Infinity, -2) === -2);

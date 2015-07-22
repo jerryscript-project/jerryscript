@@ -362,11 +362,12 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
           ret_num = arg_num;
         }
       }
-      else if (ecma_number_is_infinity (ret_num)) /* ret_num is negative infinity */
+      else if (ecma_number_is_infinity (ret_num))
       {
-        JERRY_ASSERT (ecma_number_is_negative (ret_num));
-
-        ret_num = arg_num;
+        if (ecma_number_is_negative (ret_num))
+        {
+          ret_num = arg_num;
+        }
       }
       else
       {
@@ -443,11 +444,12 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
           ret_num = arg_num;
         }
       }
-      else if (ecma_number_is_infinity (ret_num)) /* ret_num is positive infinity */
+      else if (ecma_number_is_infinity (ret_num))
       {
-        JERRY_ASSERT (!ecma_number_is_negative (ret_num));
-
-        ret_num = arg_num;
+        if (!ecma_number_is_negative (ret_num))
+        {
+          ret_num = arg_num;
+        }
       }
       else
       {

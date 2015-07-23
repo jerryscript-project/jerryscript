@@ -327,10 +327,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
           && !ecma_number_is_nan (time))
       {
         lit_utf8_iterator_incr (&iter);
-        time = ecma_date_utc (ecma_date_make_time (hours,
-                                                   minutes,
-                                                   seconds,
-                                                   milliseconds));
+        time = ecma_date_make_time (hours, minutes, seconds, milliseconds);
       }
       else if (!lit_utf8_iterator_is_eos (&iter)
                && (lit_utf8_iterator_peek_next (&iter) == '+'

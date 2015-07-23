@@ -115,3 +115,5 @@ assert (Date (Number.NaN) == Date ());
 // Fixme: remove these cases when TZA and DST are supported.
 assert (new Date ("2015-07-08T11:29:05.023-02:00").toString() == "2015-07-08T13:29:05.023");
 assert (new Date ("2015-07-08T11:29:05.023-02:00").toLocaleString() == "2015-07-08T13:29:05.023");
+
+assert (new Date ("2015-07-08T11:29:05.023Z").toISOString() == "2015-07-08T11:29:05.023Z");

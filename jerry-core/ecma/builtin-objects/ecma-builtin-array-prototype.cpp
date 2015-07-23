@@ -57,19 +57,18 @@
  */
 static ecma_completion_value_t
 ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< object*/
-                                                uint32_t length) /**< new length */
+                                                ecma_number_t length) /**< new length */
 {
   ecma_completion_value_t ret_value;
   ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ecma_number_t *len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (length);
+  *len_p = length;
 
   ret_value = ecma_op_object_put (object,
                                   magic_string_length_p,
                                   ecma_make_number_value (len_p),
                                   true),
-
   ecma_dealloc_number (len_p);
   ecma_deref_ecma_string (magic_string_length_p);
 
@@ -571,7 +570,7 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
   {
     /* 4.a */
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, 0),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ECMA_NUMBER_ZERO),
                     ret_value);
 
     /* 4.b */
@@ -593,7 +592,7 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
 
     /* 5.d */
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, len),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
                     ret_value);
 
     ret_value = ecma_make_normal_completion_value (ecma_copy_value (get_value, true));
@@ -644,61 +643,38 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
   /* 3. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (length_var, length_value, ret_value);
 
-  uint32_t n = ecma_number_to_uint32 (length_var);
+  ecma_number_t n = ecma_uint32_to_number (ecma_number_to_uint32 (length_var));
 
   /* 5. */
   for (uint32_t index = 0;
-       index < arguments_number;
+       index < arguments_number && ecma_is_completion_value_empty (ret_value);
        index++, n++)
   {
     /* 5.a */
     ecma_value_t e_value = argument_list_p[index];
 
     /* 5.b */
-    ecma_string_t *n_str_p = ecma_new_ecma_string_from_uint32 (n);
+    ecma_string_t *n_str_p = ecma_new_ecma_string_from_number (n);
 
-    ecma_completion_value_t completion = ecma_op_object_put (obj_p, n_str_p, e_value, true);
+    ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, n_str_p, e_value, true), ret_value);
+    ECMA_FINALIZE (put_value);
 
     ecma_deref_ecma_string (n_str_p);
-
-    if (unlikely (ecma_is_completion_value_throw (completion)))
-    {
-      ret_value = completion;
-      break;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
-      ecma_free_completion_value (completion);
-    }
   }
 
   /* 6. */
   if (ecma_is_completion_value_empty (ret_value))
   {
-    ecma_number_t *num_length_p = ecma_alloc_number ();
-    *num_length_p = ecma_uint32_to_number (n);
+    ECMA_TRY_CATCH (set_length_value,
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, n),
+                    ret_value);
 
-    ecma_value_t num_length_value = ecma_make_number_value (num_length_p);
+    ecma_number_t *ret_num_p = ecma_alloc_number ();
+    *ret_num_p = n;
 
-    ecma_completion_value_t completion = ecma_op_object_put (obj_p,
-                                                             length_str_p,
-                                                             num_length_value,
-                                                             true);
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
 
-    if (unlikely (ecma_is_completion_value_throw (completion)))
-    {
-      ret_value = completion;
-
-      ecma_dealloc_number (num_length_p);
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
-      ecma_free_completion_value (completion);
-
-      ret_value = ecma_make_normal_completion_value (num_length_value);
-    }
+    ECMA_FINALIZE (set_length_value)
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (length_var);
@@ -844,7 +820,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
   if (len == 0)
   {
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, 0),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ECMA_NUMBER_ZERO),
                     ret_value);
 
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
@@ -899,7 +875,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
 
       /* 9. */
       ECMA_TRY_CATCH (set_length_value,
-                      ecma_builtin_array_prototype_helper_set_length (obj_p, len),
+                      ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
                       ret_value);
       /* 10. */
       ret_value = ecma_make_normal_completion_value (ecma_copy_value (first_value, true));
@@ -1727,7 +1703,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   if (ecma_is_completion_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, new_len),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (new_len)),
                     ret_value);
 
     ECMA_FINALIZE (set_length_value);
@@ -1790,7 +1766,8 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
     /* 6.a */
     ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (k - 1);
     /* 6.b */
-    ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (k + args_number - 1);
+    ecma_number_t new_idx = ecma_uint32_to_number (k) + ecma_uint32_to_number (args_number) - 1;
+    ecma_string_t *to_str_p = ecma_new_ecma_string_from_number (new_idx);
 
     /* 6.c */
     if (ecma_op_object_get_property (obj_p, from_str_p) != NULL)
@@ -1827,13 +1804,13 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
 
   if (ecma_is_completion_value_empty (ret_value))
   {
+    ecma_number_t new_len = ecma_uint32_to_number (len) + ecma_uint32_to_number (args_number);
     /* 10. */
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, len + args_number),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, new_len),
                     ret_value);
-
     ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = ecma_uint32_to_number (len + args_number);
+    *num_p = new_len;
     ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
 
     ECMA_FINALIZE (set_length_value);

@@ -131,6 +131,19 @@ assert (array10[0] == undefined);
 assert (array10[1] == -127);
 assert (array10[2] == "sunshine");
 
+var array = [];
+array[4294967294] = "foo";
+var result = array.splice(4294967294, 1, "x")
+assert(result.length === 1)
+assert(result[0] === "foo")
+assert(array[4294967294] === "x")
+
+array[0] = "bar";
+var result = array.splice(-4294967295, 1, "y");
+assert(result.length === 1)
+assert(result[0] === "bar")
+assert(array[0] === "y")
+
 // Checking behavior when unable to get length
 var obj = {splice : Array.prototype.splice};
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

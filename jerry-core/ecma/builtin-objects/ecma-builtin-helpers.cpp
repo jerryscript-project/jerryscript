@@ -299,20 +299,28 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
     }
     else
     {
-      const int32_t int_index = ecma_number_to_int32 (index);
-
-      if (int_index < 0)
+      if (ecma_number_is_negative (index))
       {
-        const uint32_t uint_index = (uint32_t) - int_index;
-        norm_index = uint_index > length ? 0 : length - uint_index;
+        ecma_number_t index_neg = ecma_number_negate (index);
+
+        if (index_neg > length)
+        {
+          norm_index = 0;
+        }
+        else
+        {
+          norm_index = length - ecma_number_to_uint32 (index_neg);
+        }
       }
       else
       {
-        norm_index = (uint32_t) int_index;
-
-        if (norm_index > length)
+        if (index > length)
         {
           norm_index = length;
+        }
+        else
+        {
+          norm_index = ecma_number_to_uint32 (index);
         }
       }
     }

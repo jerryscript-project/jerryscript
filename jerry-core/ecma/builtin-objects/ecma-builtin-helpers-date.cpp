@@ -449,6 +449,7 @@ ecma_date_local_tza ()
    *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
    *        Introduce system macros at first.
    */
+  TODO ("Implement time functions in jerry-libc.");
   return ECMA_NUMBER_ZERO;
 } /* ecma_date_local_tza */
 
@@ -473,6 +474,7 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
    *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
    *        Introduce system macros at first.
    */
+  TODO ("Implement time functions in jerry-libc.");
   return ECMA_NUMBER_ZERO;
 } /* ecma_date_daylight_saving_ta */
 
@@ -934,17 +936,20 @@ ecma_date_value_to_string (ecma_number_t datetime_num, /**<datetime */
   else
   {
     ecma_string_t *output_str_p;
-    ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_num);
+    ecma_number_t milliseconds;
 
-    if (timezone == ECMA_DATE_UTC)
+    if (timezone == ECMA_DATE_LOCAL)
     {
-      output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-      ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
-    }
-    else
-    {
+      datetime_num = ecma_date_local_time (datetime_num);
+      milliseconds = ecma_date_ms_from_time (datetime_num);
       output_str_p = ecma_new_ecma_string_from_number (milliseconds);
       ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
+    }
+    else /* ECMA_DATE_UTC */
+    {
+      milliseconds = ecma_date_ms_from_time (datetime_num);
+      output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+      ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
     }
 
     ecma_number_t seconds = ecma_date_sec_from_time (datetime_num);
@@ -991,7 +996,6 @@ ecma_completion_value_t
 ecma_date_object_to_string (ecma_value_t this_arg, /**< this argument */
                             ecma_date_timezone_t timezone) /**< timezone */
 {
-  TODO ("Add support for local time zone output.");
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   if (!ecma_is_value_object (this_arg)

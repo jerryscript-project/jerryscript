@@ -52,6 +52,12 @@ assert (d.valueOf() == 8.64e+15);
 d = new Date(8.64e+15 + 1);
 assert (isNaN(d.valueOf()));
 
+d = new Date(20000000, 0, 1);
+assert (isNaN(d.valueOf()));
+
+d = new Date(0, 20000000, 1);
+assert (isNaN(d.valueOf()));
+
 var Obj = function (val)
 {
   this.value = val;

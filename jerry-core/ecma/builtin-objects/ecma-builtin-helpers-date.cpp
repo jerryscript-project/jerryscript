@@ -726,6 +726,7 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
                     ecma_number_t month, /**< month value */
                     ecma_number_t date) /**< date value */
 {
+  /* 1. */
   if (ecma_number_is_nan (year)
       || ecma_number_is_nan (month)
       || ecma_number_is_nan (date)
@@ -736,25 +737,66 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
     return ecma_number_make_nan ();
   }
 
+  /* 2., 3., 4. */
   ecma_number_t y = ecma_number_trunc (year);
   ecma_number_t m = ecma_number_trunc (month);
   ecma_number_t dt = ecma_number_trunc (date);
+  /* 5. */
   ecma_number_t ym = y + (ecma_number_t) floor (m / 12);
+  /* 6. */
   ecma_number_t mn = (ecma_number_t) fmod (m, 12);
   mn = (mn < 0) ? 12 + mn : mn;
+
+  /* 7. */
   ecma_number_t time = ecma_date_time_from_year (ym);
+  int32_t step = 182;
+  int32_t delta = step;
 
-  JERRY_ASSERT (ecma_date_year_from_time (time) == ym);
-
-  while (ecma_date_month_from_time (time) < mn)
+  /**
+   * The algorithm below searches the following date: ym-mn-1
+   * To find this time it starts from the beggining of the year (ym)
+   * then increase it by ECMA_DATE_MS_PER_DAY until it reaches the
+   * right date.
+   */
+  if (ecma_date_year_from_time (time) == ym)
   {
-    time += ECMA_DATE_MS_PER_DAY;
+    /**
+     * Binary search to get the closest day in the previous month.
+     * It has to use integer days so sometimes the found time
+     * needs some more increasing which is done day by day below.
+     */
+    while (delta)
+    {
+      if (ecma_date_month_from_time (time + step * ECMA_DATE_MS_PER_DAY) < mn)
+      {
+        step += delta;
+      }
+      else
+      {
+        step -= delta;
+      }
+      delta = delta / 2;
+    }
+
+    if (ecma_date_month_from_time (time + step) < mn)
+    {
+      time += step * ECMA_DATE_MS_PER_DAY;
+    }
+
+    /* Get the month's first day */
+    while (ecma_date_month_from_time (time) < mn)
+    {
+      time += ECMA_DATE_MS_PER_DAY;
+    }
+
+    if (ecma_date_month_from_time (time) == mn && ecma_date_date_from_time (time) == 1)
+    {
+      /* 8. */
+      return ecma_date_day (time) + dt - ((ecma_number_t) 1.0);
+    }
   }
 
-  JERRY_ASSERT (ecma_date_month_from_time (time) == mn);
-  JERRY_ASSERT (ecma_date_date_from_time (time) == 1);
-
-  return ecma_date_day (time) + dt - ((ecma_number_t) 1.0);
+  return ecma_number_make_nan ();
 } /* ecma_date_make_day */
 
 /**

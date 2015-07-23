@@ -56,13 +56,13 @@ extern ecma_completion_value_t ecma_builtin_helper_def_prop (ecma_object_t *obj_
  *          ECMA-262 v5, 15.9.1.1, 15.9.1.10
  */
 /* Hours in a day. */
-#define ECMA_DATE_HOURS_PER_DAY         24
+#define ECMA_DATE_HOURS_PER_DAY         ((ecma_number_t) 24)
 /* Minutes in an hour. */
-#define ECMA_DATE_MINUTES_PER_HOUR      60
+#define ECMA_DATE_MINUTES_PER_HOUR      ((ecma_number_t) 60)
 /* Seconds in a minute. */
-#define ECMA_DATE_SECONDS_PER_MINUTE    60
+#define ECMA_DATE_SECONDS_PER_MINUTE    ((ecma_number_t) 60)
 /* Milliseconds in a second. */
-#define ECMA_DATE_MS_PER_SECOND         1000
+#define ECMA_DATE_MS_PER_SECOND         ((ecma_number_t) 1000)
 /* ECMA_DATE_MS_PER_MINUTE == 60000 */
 #define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
 /* ECMA_DATE_MS_PER_HOUR == 3600000 */

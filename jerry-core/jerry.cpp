@@ -274,10 +274,13 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
  */
 
 /**
- * Copy string characters to specified buffer, append zero character at end of the buffer.
+ * Copy string characters to specified buffer.
+ *
+ * Note:
+ *   '\0' could occur in characters.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
- *         otherwise (in case size of buffer is insuficcient) - negative number, which is calculated
+ *         otherwise (in case size of buffer is insufficient) - negative number, which is calculated
  *         as negation of buffer size, that is required to hold the string's content.
  */
 ssize_t
@@ -287,22 +290,7 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string
 {
   jerry_assert_api_available ();
 
-  if (buffer_size > 0)
-  {
-    buffer_size--;
-  }
-  ssize_t ret_val = ecma_string_to_utf8_string (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
-  if (ret_val >= 0)
-  {
-    buffer_p[ret_val] = 0;
-    ret_val++;
-  }
-  else
-  {
-    ret_val--;
-  }
-
-  return ret_val;
+  return ecma_string_to_utf8_string (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
 } /* jerry_api_string_to_char_buffer */
 
 /**

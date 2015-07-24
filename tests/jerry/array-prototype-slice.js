@@ -58,6 +58,27 @@ assert (array7[3] == -127);
 
 assert (array8.length == 0);
 
+var array = [];
+array[4294967293] = "foo";
+array.length = 4294967295;
+var result = array.slice(4294967293, -1)
+assert(result.length === 1)
+assert(result[0] === "foo")
+
+array[0] = "bar";
+var result = array.slice(-4294967295, -4294967294)
+assert(result.length === 1)
+assert(result[0] === "bar")
+
+var array = [];
+array[0] = "foo";
+var result = array.slice(4294967296, 4294967297);
+assert(result.length === 0);
+
+array[4294967293] = "bar";
+var result = array.slice(-4294967297, -4294967296);
+assert(result.length === 0);
+
 // Checking behavior when unable to get length
 var obj = { slice : Array.prototype.slice };
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

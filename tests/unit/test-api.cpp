@@ -120,10 +120,10 @@ handler (const jerry_api_object_t *function_obj_p,
 
   JERRY_ASSERT (args_p[0].type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (args_p[0].v_string, NULL, 0);
-  JERRY_ASSERT (sz == -2);
+  JERRY_ASSERT (sz == -1);
   sz = jerry_api_string_to_char_buffer (args_p[0].v_string, (jerry_api_char_t *) buffer, -sz);
-  JERRY_ASSERT (sz == 2);
-  JERRY_ASSERT (!strcmp (buffer, "1"));
+  JERRY_ASSERT (sz == 1);
+  JERRY_ASSERT (!strncmp (buffer, "1", (size_t) sz));
 
   JERRY_ASSERT (args_p[1].type == JERRY_API_DATA_TYPE_BOOLEAN);
   JERRY_ASSERT (args_p[1].v_bool == true);
@@ -249,6 +249,12 @@ main (void)
 
   global_obj_p = jerry_api_get_global ();
 
+  // Test corner case for jerry_api_string_to_char_buffer
+  test_api_init_api_value_string (&args[0], "");
+  sz = jerry_api_string_to_char_buffer (args[0].v_string, NULL, 0);
+  JERRY_ASSERT (sz == 0);
+  jerry_api_release_value (&args[0]);
+
   // Get global.t
   is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"t", &val_t);
   JERRY_ASSERT (is_ok
@@ -296,11 +302,11 @@ main (void)
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -5);
+  JERRY_ASSERT (sz == -4);
   sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
-  JERRY_ASSERT (sz == 5);
+  JERRY_ASSERT (sz == 4);
   jerry_api_release_value (&res);
-  JERRY_ASSERT (!strcmp (buffer, "abcd"));
+  JERRY_ASSERT (!strncmp (buffer, "abcd", (size_t) sz));
 
   // Get global.A
   is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"A", &val_A);
@@ -378,11 +384,11 @@ main (void)
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_STRING);
   sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -20);
+  JERRY_ASSERT (sz == -19);
   sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
-  JERRY_ASSERT (sz == 20);
+  JERRY_ASSERT (sz == 19);
   jerry_api_release_value (&res);
-  JERRY_ASSERT (!strcmp (buffer, "string from handler"));
+  JERRY_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
 
   // Create native handler bound function object and set it to 'external_construct' variable
   external_construct_p = jerry_api_create_external_function (handler_construct);

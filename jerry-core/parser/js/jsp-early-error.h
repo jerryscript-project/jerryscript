@@ -76,12 +76,12 @@ void jsp_early_error_init (void);
 void jsp_early_error_free (void);
 
 void jsp_early_error_start_checking_of_prop_names (void);
-void jsp_early_error_add_prop_name (operand, prop_type);
+void jsp_early_error_add_prop_name (jsp_operand_t, prop_type);
 void jsp_early_error_check_for_duplication_of_prop_names (bool, locus);
 
 void jsp_early_error_start_checking_of_vargs (void);
-void jsp_early_error_add_varg (operand);
-void jsp_early_error_check_for_eval_and_arguments_in_strict_mode (operand, bool, locus);
+void jsp_early_error_add_varg (jsp_operand_t);
+void jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t, bool, locus);
 void jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool, locus);
 
 void jsp_early_error_check_delete (bool, locus);

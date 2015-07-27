@@ -20,7 +20,6 @@
 #include "lit-strings.h"
 
 #define INVALID_VALUE 255
-#define EVAL_RET_VALUE 128
 #define INVALID_LITERAL (rcs_cpointer_t::null_cp ())
 
 /* Keywords.  */

@@ -24,8 +24,6 @@
 #include "lit-id-hash-table.h"
 #include "lit-literal.h"
 
-#define NOT_A_LITERAL (lit_cpointer_t::null_cp ())
-
 typedef struct
 {
   lit_cpointer_t lit_id[3];

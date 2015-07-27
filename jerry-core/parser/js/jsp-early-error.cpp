@@ -114,10 +114,10 @@ jsp_early_error_start_checking_of_prop_names (void)
 }
 
 void
-jsp_early_error_add_prop_name (operand op, prop_type pt)
+jsp_early_error_add_prop_name (jsp_operand_t op, prop_type pt)
 {
-  JERRY_ASSERT (op.type == OPERAND_LITERAL);
-  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), pt));
+  JERRY_ASSERT (op.is_literal_operand ());
+  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.get_literal ()), pt));
 }
 
 void
@@ -199,21 +199,21 @@ jsp_early_error_start_checking_of_vargs (void)
   STACK_PUSH (size_t_stack, STACK_SIZE (props));
 }
 
-void jsp_early_error_add_varg (operand op)
+void jsp_early_error_add_varg (jsp_operand_t op)
 {
-  JERRY_ASSERT (op.type == OPERAND_LITERAL);
-  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.data.lit_id), VARG));
+  JERRY_ASSERT (op.is_literal_operand ());
+  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.get_literal ()), VARG));
 }
 
 static void
-emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
+emit_error_on_eval_and_arguments (jsp_operand_t op, locus loc __attr_unused___)
 {
-  if (op.type == OPERAND_LITERAL)
+  if (op.is_literal_operand ())
   {
-    if (lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.data.lit_id),
+    if (lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.get_literal ()),
                                      lit_get_magic_string_utf8 (LIT_MAGIC_STRING_ARGUMENTS),
                                      lit_get_magic_string_size (LIT_MAGIC_STRING_ARGUMENTS))
-        || lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.data.lit_id),
+        || lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.get_literal ()),
                                         lit_get_magic_string_utf8 (LIT_MAGIC_STRING_EVAL),
                                         lit_get_magic_string_size (LIT_MAGIC_STRING_EVAL)))
     {
@@ -223,7 +223,7 @@ emit_error_on_eval_and_arguments (operand op, locus loc __attr_unused___)
 }
 
 void
-jsp_early_error_check_for_eval_and_arguments_in_strict_mode (operand op, bool is_strict, locus loc)
+jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t op, bool is_strict, locus loc)
 {
   if (is_strict)
   {

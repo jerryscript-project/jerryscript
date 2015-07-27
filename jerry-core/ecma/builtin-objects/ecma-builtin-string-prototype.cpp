@@ -340,7 +340,7 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
   const lit_utf8_size_t original_size = ecma_string_get_size (original_str_p);
 
   /* 4b, 6 */
-  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len);
+  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, true);
 
   /* 7 */
   ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
@@ -444,7 +444,7 @@ ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this_arg, /**< 
                                                     ecma_value_t arg1, /**< routine's first argument */
                                                     ecma_value_t arg2) /**< routine's second argument */
 {
-  ECMA_BUILTIN_CP_UNIMPLEMENTED (this_arg, arg1, arg2);
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, false);
 } /* ecma_builtin_string_prototype_object_last_index_of */
 
 /**
@@ -1722,7 +1722,7 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
 
   ecma_length_t start = 0, end = len;
 
-  start = ecma_builtin_helper_string_index_normalize (start_num, len);
+  start = ecma_builtin_helper_string_index_normalize (start_num, len, true);
 
   /* 5, 7 */
   if (ecma_is_value_undefined (arg2))
@@ -1735,7 +1735,7 @@ ecma_builtin_string_prototype_object_substring (ecma_value_t this_arg, /**< this
                                  arg2,
                                  ret_value);
 
-    end = ecma_builtin_helper_string_index_normalize (end_num, len);
+    end = ecma_builtin_helper_string_index_normalize (end_num, len, true);
 
     ECMA_OP_TO_NUMBER_FINALIZE (end_num);
   }

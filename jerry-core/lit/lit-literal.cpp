@@ -61,6 +61,7 @@ lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string t
                                      lit_utf8_size_t str_size) /**< length of the string */
 {
   JERRY_ASSERT (str_p || !str_size);
+
   for (lit_magic_string_id_t msi = (lit_magic_string_id_t) 0;
        msi < LIT_MAGIC_STRING__COUNT;
        msi = (lit_magic_string_id_t) (msi + 1))
@@ -105,12 +106,20 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
                                  lit_utf8_size_t str_size)        /**< length of the string */
 {
   JERRY_ASSERT (str_p || !str_size);
+
+  lit_string_hash_t str_hash = lit_utf8_string_calc_hash_last_bytes (str_p, str_size);
+
   for (literal_t lit = lit_storage.get_first (); lit != NULL; lit = lit_storage.get_next (lit))
   {
     rcs_record_t::type_t type = lit->get_type ();
 
     if (type == LIT_STR_T)
     {
+      if (static_cast<lit_charset_record_t *>(lit)->get_hash () != str_hash)
+      {
+        continue;
+      }
+
       if (static_cast<lit_charset_record_t *>(lit)->get_length () != str_size)
       {
         continue;
@@ -126,7 +135,7 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
       lit_magic_string_id_t magic_id = lit_magic_record_get_magic_str_id (lit);
       const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (magic_id);
 
-      if (lit_zt_utf8_string_size (magic_str_p) != str_size)
+      if (lit_get_magic_string_size (magic_id) != str_size)
       {
         continue;
       }
@@ -141,7 +150,7 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
       lit_magic_string_ex_id_t magic_id = lit_magic_record_ex_get_magic_str_id (lit);
       const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_ex_utf8 (magic_id);
 
-      if (lit_zt_utf8_string_size (magic_str_p) != str_size)
+      if (lit_get_magic_string_ex_size (magic_id) != str_size)
       {
         continue;
       }

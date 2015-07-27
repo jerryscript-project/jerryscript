@@ -607,7 +607,7 @@ lit_string_hash_t
 lit_utf8_string_calc_hash_last_bytes (const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
                                       lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
 {
-  JERRY_ASSERT (utf8_buf_p != NULL);
+  JERRY_ASSERT (utf8_buf_p != NULL || utf8_buf_size == 0);
 
   lit_utf8_byte_t byte1 = (utf8_buf_size > 0) ? utf8_buf_p[utf8_buf_size - 1] : (lit_utf8_byte_t) 0;
   lit_utf8_byte_t byte2 = (utf8_buf_size > 1) ? utf8_buf_p[utf8_buf_size - 2] : (lit_utf8_byte_t) 0;

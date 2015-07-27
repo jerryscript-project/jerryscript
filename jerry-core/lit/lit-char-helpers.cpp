@@ -15,6 +15,8 @@
 
 #include "lit-char-helpers.h"
 
+#include "lit-strings.h"
+
 /**
  * Check if specified character is one of the Format-Control characters
  *
@@ -111,6 +113,10 @@ lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
       || (c >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && c <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END))
   {
     return true;
+  }
+  else if (c <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    return false;
   }
 
   /* Lu */

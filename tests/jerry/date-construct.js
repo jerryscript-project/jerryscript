@@ -31,20 +31,8 @@ catch (e)
 
 assert (isNaN(Date.prototype.valueOf.call(Date.prototype)));
 
-d = Date("abcd");
+d = new Date("abcd");
 assert (isNaN(d.valueOf()));
-
-d = Date();
-assert (!isNaN(d.valueOf()));
-
-d = Date("2015-01-01");
-assert (d.valueOf() == 1420070400000);
-
-d = Date(1420070400000);
-assert (d.valueOf() == 1420070400000);
-
-d = Date(2015,0,1,0,0,0,0);
-assert (d.valueOf() == 1420070400000);
 
 d = new Date();
 assert (!isNaN(d.valueOf()));
@@ -82,3 +70,9 @@ catch (e)
   assert (e instanceof ReferenceError);
   assert (e.message === "valueOf-1");
 }
+
+assert (typeof Date (2015) == "string");
+assert (typeof Date() != typeof (new Date ()));
+assert (Date (Number.NaN) == Date ());
+// Fixme: remove this case when Date() gives the current time.
+assert (Date (2015,1,2) == "1970-01-01T00:00:00.000");

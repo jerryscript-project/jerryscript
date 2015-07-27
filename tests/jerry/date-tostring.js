@@ -44,7 +44,7 @@ catch (e)
 }
 
 assert (new Date (NaN).toTimeString () == "Invalid Date");
-assert (Date (Number.POSITIVE_INFINITY).toString () === "Invalid Date");
+assert (new Date (Number.POSITIVE_INFINITY).toString () === "Invalid Date");
 assert (new Date ("2015-02-13").toTimeString () == "00:00:00.000");
 assert (new Date ("2015-07-08T11:29:05.023").toTimeString () == "11:29:05.023");
 
@@ -105,3 +105,9 @@ catch (e)
 
 date_time = new Date ("2015-07-08T11:29:05.023").toJSON ();
 assert (new Date (date_time) == "2015-07-08T11:29:05.023");
+
+assert (typeof Date (2015) == "string");
+assert (typeof Date() != typeof (new Date ()));
+assert (Date () == (new Date ()).toString ());
+assert (Date (2015, 1, 1) == (new Date ()).toString ());
+assert (Date (Number.NaN) == Date ());

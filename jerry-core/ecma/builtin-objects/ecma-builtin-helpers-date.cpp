@@ -911,7 +911,73 @@ ecma_date_insert_num_with_sep (ecma_string_t **str_p, /**< input/output string *
 } /* ecma_date_insert_num_with_sep */
 
 /**
- * Common function to create a time zone specific string.
+ * Common function to create a time zone specific string from a numeric value.
+ *
+ * Used by:
+ *        - The Date routine.
+ *        - The ecma_date_object_to_string helper routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_value_to_string (ecma_number_t datetime_num, /**<datetime */
+                           ecma_date_timezone_t timezone) /**< timezone */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  if (ecma_number_is_nan (datetime_num))
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+  }
+  else
+  {
+    ecma_string_t *output_str_p;
+    ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_num);
+
+    if (timezone == ECMA_DATE_UTC)
+    {
+      output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+      ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
+    }
+    else
+    {
+      output_str_p = ecma_new_ecma_string_from_number (milliseconds);
+      ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
+    }
+
+    ecma_number_t seconds = ecma_date_sec_from_time (datetime_num);
+    ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
+
+    ecma_number_t minutes = ecma_date_min_from_time (datetime_num);
+    ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+    ecma_number_t hours = ecma_date_hour_from_time (datetime_num);
+    ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
+
+    ecma_number_t day = ecma_date_date_from_time (datetime_num);
+    ecma_date_insert_num_with_sep (&output_str_p, day, LIT_MAGIC_STRING_TIME_SEP_U, 2);
+
+    /*
+     * Note:
+     *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
+     *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
+     */
+    ecma_number_t month = ecma_date_month_from_time (datetime_num) + 1;
+    ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
+
+    ecma_number_t year = ecma_date_year_from_time (datetime_num);
+    ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
+
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+  }
+
+  return ret_value;
+} /* ecma_date_value_to_string */
+
+/**
+ * Common function to create a time zone specific string for objects.
  *
  * Used by:
  *        - The Date.prototype.toString routine.
@@ -922,8 +988,8 @@ ecma_date_insert_num_with_sep (ecma_string_t **str_p, /**< input/output string *
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_date_to_string (ecma_value_t this_arg, /**< this argument */
-                     ecma_date_timezone_t timezone) /**< timezone */
+ecma_date_object_to_string (ecma_value_t this_arg, /**< this argument */
+                            ecma_date_timezone_t timezone) /**< timezone */
 {
   TODO ("Add support for local time zone output.");
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -935,68 +1001,16 @@ ecma_date_to_string (ecma_value_t this_arg, /**< this argument */
   }
   else
   {
-    ECMA_TRY_CATCH (obj_this,
-                    ecma_op_to_object (this_arg),
-                    ret_value);
-
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *prim_value_prop_p;
-    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                     ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
     ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
                                                                  prim_value_prop_p->u.internal_property.value);
-
-    if (ecma_number_is_nan (*prim_value_num_p))
-    {
-      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
-    }
-    else
-    {
-      ecma_string_t *output_str_p;
-      ecma_number_t milliseconds = ecma_date_ms_from_time (*prim_value_num_p);
-
-      if (timezone == ECMA_DATE_UTC)
-      {
-        output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-        ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
-      }
-      else
-      {
-        output_str_p = ecma_new_ecma_string_from_number (milliseconds);
-        ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
-      }
-
-      ecma_number_t seconds = ecma_date_sec_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
-
-      ecma_number_t minutes = ecma_date_min_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-      ecma_number_t hours = ecma_date_hour_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-      ecma_number_t day = ecma_date_date_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, day, LIT_MAGIC_STRING_TIME_SEP_U, 2);
-
-      /*
-       * Note:
-       *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
-       *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
-       */
-      ecma_number_t month = ecma_date_month_from_time (*prim_value_num_p) + 1;
-      ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
-
-      ecma_number_t year = ecma_date_year_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
-    }
-
-    ECMA_FINALIZE (obj_this);
+    ret_value = ecma_date_value_to_string (*prim_value_num_p, timezone);
   }
 
   return ret_value;
-} /* ecma_date_create_formatted_string */
+} /* ecma_date_object_to_string */
 
 /**
  * @}

@@ -55,7 +55,7 @@
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_to_string (this_arg, ECMA_DATE_LOCAL);
+  return ecma_date_object_to_string (this_arg, ECMA_DATE_LOCAL);
 } /* ecma_builtin_date_prototype_to_string */
 
 /**
@@ -1101,7 +1101,7 @@ ecma_builtin_date_prototype_set_utc_full_year (ecma_value_t this_arg, /**< this 
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_to_string (this_arg, ECMA_DATE_UTC);
+  return ecma_date_object_to_string (this_arg, ECMA_DATE_UTC);
 } /* ecma_builtin_date_prototype_to_utc_string */
 
 /**
@@ -1116,7 +1116,7 @@ ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argu
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_to_string (this_arg, ECMA_DATE_UTC);
+  return ecma_date_object_to_string (this_arg, ECMA_DATE_UTC);
 } /* ecma_builtin_date_prototype_to_iso_string */
 
 /**

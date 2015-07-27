@@ -529,7 +529,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       ECMA_TRY_CATCH (prim_value, ecma_op_to_number (arguments_list_p[0]), ret_value);
 
       prim_value_num_p = ecma_alloc_number ();
-      *prim_value_num_p = *ecma_get_number_from_value (prim_value);
+      *prim_value_num_p = ecma_date_time_clip (*ecma_get_number_from_value (prim_value));
 
       ECMA_FINALIZE (prim_value);
     }

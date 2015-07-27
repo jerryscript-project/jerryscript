@@ -57,3 +57,9 @@ assert (d.valueOf() == 1420070400000);
 
 d = new Date(2015,0,1,0,0,0,0);
 assert (d.valueOf() == 1420070400000);
+
+d = new Date(8.64e+15);
+assert (d.valueOf() == 8.64e+15);
+
+d = new Date(8.64e+15 + 1);
+assert (isNaN(d.valueOf()));

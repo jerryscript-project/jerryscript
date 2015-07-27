@@ -424,147 +424,229 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
   lit_utf8_size_t str_size = ecma_string_get_size (number_str_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size + 1, lit_utf8_byte_t);
-
-  ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                     utf8_string_buff,
-                                                     (ssize_t) str_size);
-  JERRY_ASSERT (bytes_copied >= 0);
-  utf8_string_buff[str_size] = LIT_BYTE_NULL;
-
-  /* 2. Find first non whitespace char. */
-  lit_utf8_size_t start = 0;
-  for (lit_utf8_size_t i = 0; i < str_size; i++)
+  if (str_size > 0)
   {
-    if (!lit_char_is_white_space (utf8_string_buff[i])
-        && !lit_char_is_line_terminator (utf8_string_buff[i]))
+    MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size, lit_utf8_byte_t);
+
+    ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
+                                                       utf8_string_buff,
+                                                       (ssize_t) str_size);
+    JERRY_ASSERT (bytes_copied >= 0);
+    lit_utf8_iterator_t iter = lit_utf8_iterator_create (utf8_string_buff, str_size);
+
+    lit_utf8_iterator_seek_eos (&iter);
+
+    lit_utf8_iterator_pos_t start = lit_utf8_iterator_get_pos (&iter);
+    lit_utf8_iterator_pos_t end = lit_utf8_iterator_get_pos (&iter);
+
+    lit_utf8_iterator_seek_bos (&iter);
+
+
+    /* 2. Find first non whitespace char and set starting position. */
+    while (!lit_utf8_iterator_is_eos (&iter))
     {
-      start = i;
-      break;
+      ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+
+      if (!lit_char_is_white_space (current_char)
+          && !lit_char_is_line_terminator (current_char))
+      {
+        lit_utf8_iterator_decr (&iter);
+        start = lit_utf8_iterator_get_pos (&iter);
+        break;
+      }
     }
-  }
 
-  bool sign = false;
+    bool sign = false;
+    ecma_char_t current;
 
-  /* Check if sign is present. */
-  if (utf8_string_buff[start] == '-')
-  {
-    sign = true;
-    start++;
-  }
-  else if (utf8_string_buff[start] == '+')
-  {
-    start++;
-  }
-
-  ecma_number_t *ret_num_p = ecma_alloc_number ();
-
-  /* Check if string is equal to "Infinity". */
-  const lit_utf8_byte_t *infinity_utf8_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
-
-  for (lit_utf8_size_t i = 0; infinity_utf8_str_p[i] == utf8_string_buff[start + i]; i++)
-  {
-    if (infinity_utf8_str_p[i + 1] == 0)
+    if (!lit_utf8_iterator_is_eos (&iter))
     {
-      *ret_num_p = ecma_number_make_infinity (sign);
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
-      break;
+      /* Check if sign is present. */
+      current = lit_utf8_iterator_read_next (&iter);
+      if (current == LIT_CHAR_MINUS)
+      {
+        sign = true;
+      }
+
+      if (current == LIT_CHAR_MINUS || current == LIT_CHAR_PLUS)
+      {
+        /* Set starting position to be after the sign character. */
+        start = lit_utf8_iterator_get_pos (&iter);
+      }
+      else
+      {
+        lit_utf8_iterator_decr (&iter);
+      }
     }
-  }
 
-  if (ecma_is_completion_value_empty (ret_value))
-  {
-    lit_utf8_size_t current = start;
-    lit_utf8_size_t end = str_size;
-    bool has_whole_part = false;
-    bool has_fraction_part = false;
+    ecma_number_t *ret_num_p = ecma_alloc_number ();
 
-    if (lit_char_is_decimal_digit (utf8_string_buff[current]))
+    const lit_utf8_byte_t *infinity_utf8_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
+    lit_utf8_iterator_t infinity_iter = lit_utf8_iterator_create (infinity_utf8_str_p,
+                                                                  sizeof (*infinity_utf8_str_p));
+
+    JERRY_ASSERT (!lit_utf8_iterator_is_eos (&infinity_iter));
+
+    /* Check if string is equal to "Infinity". */
+    while (!lit_utf8_iterator_is_eos (&iter)
+           && (lit_utf8_iterator_read_next (&iter) == lit_utf8_iterator_read_next (&infinity_iter)))
     {
-      has_whole_part = true;
+      if (lit_utf8_iterator_is_eos (&infinity_iter))
+      {
+        /* String matched Infinity. */
+        *ret_num_p = ecma_number_make_infinity (sign);
+        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+        break;
+      }
+    }
+
+    /* Reset to starting position. */
+    lit_utf8_iterator_seek (&iter, start);
+
+    if (ecma_is_completion_value_empty (ret_value) && !lit_utf8_iterator_is_eos (&iter))
+    {
+      current = lit_utf8_iterator_read_next (&iter);
+
+      bool has_whole_part = false;
+      bool has_fraction_part = false;
 
       /* Check digits of whole part. */
-      for (lit_utf8_size_t i = current; i < str_size; i++, current++)
+      if (lit_char_is_decimal_digit (current))
       {
-        if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
+        has_whole_part = true;
+
+        while (!lit_utf8_iterator_is_eos (&iter))
         {
-          break;
-        }
-      }
-    }
-
-    end = current;
-
-    /* Check decimal point. */
-    if (utf8_string_buff[current] == '.')
-    {
-      current++;
-
-      if (lit_char_is_decimal_digit (utf8_string_buff[current]))
-      {
-        has_fraction_part = true;
-
-        /* Check digits of fractional part. */
-        for (lit_utf8_size_t i = current; i < str_size; i++, current++)
-        {
-          if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
+          current = lit_utf8_iterator_read_next (&iter);
+          if (!lit_char_is_decimal_digit (current))
           {
+            lit_utf8_iterator_decr (&iter);
             break;
           }
         }
-
-        end = current;
       }
-    }
-
-    /* Check exponent. */
-    if ((utf8_string_buff[current] == 'e' || utf8_string_buff[current] == 'E')
-        && (has_whole_part || has_fraction_part))
-    {
-      current++;
-
-      /* Check sign of exponent. */
-      if (utf8_string_buff[current] == '-' || utf8_string_buff[current] == '+')
+      else
       {
-        current++;
+        lit_utf8_iterator_decr (&iter);
       }
 
-      if (lit_char_is_decimal_digit (utf8_string_buff[current]))
+      /* Set end position to the end of whole part. */
+      end = lit_utf8_iterator_get_pos (&iter);
+      if (!lit_utf8_iterator_is_eos (&iter))
       {
+        current = lit_utf8_iterator_read_next (&iter);
+      }
 
-        /* Check digits of exponent part. */
-        for (lit_utf8_size_t i = current; i < str_size; i++, current++)
+      /* Check decimal point. */
+      if (current == LIT_CHAR_DOT && !lit_utf8_iterator_is_eos (&iter))
+      {
+        current = lit_utf8_iterator_read_next (&iter);
+
+        if (lit_char_is_decimal_digit (current))
         {
-          if (!lit_char_is_decimal_digit (utf8_string_buff[current]))
+          has_fraction_part = true;
+
+          /* Check digits of fractional part. */
+          while (!lit_utf8_iterator_is_eos (&iter))
           {
-            break;
+            current = lit_utf8_iterator_read_next (&iter);
+            if (!lit_char_is_decimal_digit (current))
+            {
+              lit_utf8_iterator_decr (&iter);
+              break;
+            }
           }
+
+          /* Set end position to end of fraction part. */
+          end = lit_utf8_iterator_get_pos (&iter);
+        }
+        else
+        {
+          lit_utf8_iterator_decr (&iter);
+        }
+      }
+      else
+      {
+        lit_utf8_iterator_decr (&iter);
+      }
+
+      if (!lit_utf8_iterator_is_eos (&iter))
+      {
+        current = lit_utf8_iterator_read_next (&iter);
+      }
+
+      /* Check exponent. */
+      if ((current == LIT_CHAR_LOWERCASE_E || current == LIT_CHAR_UPPERCASE_E)
+          && (has_whole_part || has_fraction_part)
+          && !lit_utf8_iterator_is_eos (&iter))
+      {
+        current = lit_utf8_iterator_read_next (&iter);
+
+        /* Check sign of exponent. */
+        if ((current == LIT_CHAR_PLUS || current == LIT_CHAR_MINUS)
+             && !lit_utf8_iterator_is_eos (&iter))
+        {
+          current = lit_utf8_iterator_read_next (&iter);
         }
 
-        end = current;
+        if (lit_char_is_decimal_digit (current))
+        {
+          /* Check digits of exponent part. */
+          while (!lit_utf8_iterator_is_eos (&iter))
+          {
+            current = lit_utf8_iterator_read_next (&iter);
+            if (!lit_char_is_decimal_digit (current))
+            {
+              lit_utf8_iterator_decr (&iter);
+              break;
+            }
+          }
+
+          /* Set end position to end of exponent part. */
+          end = lit_utf8_iterator_get_pos (&iter);
+        }
+      }
+      else
+      {
+        lit_utf8_iterator_decr (&iter);
+      }
+
+      /* String did not contain a valid number. */
+      if (start.offset == end.offset)
+      {
+        *ret_num_p = ecma_number_make_nan ();
+        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+      }
+      else
+      {
+        /* 5. */
+        *ret_num_p = ecma_utf8_string_to_number (utf8_string_buff + start.offset,
+                                                 (lit_utf8_size_t) (end.offset - start.offset));
+
+        if (sign)
+        {
+          *ret_num_p *= -1;
+        }
+
+        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
       }
     }
-
-    if (start == end)
+    /* String ended after sign character, or was empty after removing leading whitespace. */
+    else if (ecma_is_completion_value_empty (ret_value))
     {
       *ret_num_p = ecma_number_make_nan ();
       ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
     }
-    else
-    {
-      /* 5. */
-      *ret_num_p = ecma_utf8_string_to_number (utf8_string_buff + start, end - start);
-
-      if (sign)
-      {
-        *ret_num_p *= -1;
-      }
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
-    }
+    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
+  }
+  /* String length is zero. */
+  else
+  {
+    ecma_number_t *ret_num_p = ecma_alloc_number ();
+    *ret_num_p = ecma_number_make_nan ();
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
   ECMA_FINALIZE (string_var);
 
   return ret_value;

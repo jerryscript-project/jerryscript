@@ -1223,15 +1223,18 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
     ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (obj_p, magic_str_p);
-    ecma_number_t *lastindex_num_p = ecma_get_number_from_value (lastindex_prop_p->u.named_data_property.value);
-    index = ecma_number_to_int32 (*lastindex_num_p);
+
+    ECMA_OP_TO_NUMBER_TRY_CATCH (lastindex_num, lastindex_prop_p->u.named_data_property.value, ret_value)
+    index = ecma_number_to_int32 (lastindex_num);
 
     JERRY_ASSERT (iter_p->buf_pos.offset == 0 && !iter_p->buf_pos.is_non_bmp_middle);
     if (!lit_utf8_iterator_is_eos (iter_p)
-        && *lastindex_num_p <= input_str_len)
+        && index <= (int32_t) input_str_len
+        && index > 0)
     {
-      lit_utf8_iterator_advance (iter_p, (ecma_length_t) *lastindex_num_p);
+      lit_utf8_iterator_advance (iter_p, (ecma_length_t) index);
     }
+    ECMA_OP_TO_NUMBER_FINALIZE (lastindex_num);
     ecma_deref_ecma_string (magic_str_p);
   }
 

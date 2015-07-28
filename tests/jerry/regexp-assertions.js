@@ -150,3 +150,27 @@ assert (t == "");
 
 t = new RegExp ("(?!.)").exec("a");
 assert (t == "");
+
+t = new RegExp ("abc","g");
+t.lastIndex = {toString: function () { return "4"}};
+var result = t.exec("abc   abc");
+assert(result[0] === "abc");
+assert(result.index === 6);
+
+t = new RegExp ("abc","g");
+t.lastIndex = {valueOf: function () { return "4"}};
+var result = t.exec("abc   abc");
+assert(result[0] === "abc");
+assert(result.index === 6);
+
+t = new RegExp ("abc","g");
+t.lastIndex = "2"
+var result = t.exec("abc   abc");
+assert(result[0] === "abc");
+assert(result.index === 6);
+
+t = new RegExp ("abc","g");
+t.lastIndex = -12;
+result = t.exec("abc   abc");
+assert(!result);
+assert(t.lastIndex === 0);

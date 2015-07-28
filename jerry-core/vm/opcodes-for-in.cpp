@@ -204,7 +204,7 @@ opfunc_for_in (opcode_t opdata, /**< operation data */
   int_data_p->pos++;
 
   opcode_t meta_opcode = vm_get_opcode (int_data_p->opcodes_p, for_in_end_oc);
-  JERRY_ASSERT (meta_opcode.op_idx == __op__idx_meta);
+  JERRY_ASSERT (meta_opcode.op_idx == VM_OP_META);
   JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_FOR_IN);
 
   /* 3. */

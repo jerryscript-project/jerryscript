@@ -22,8 +22,6 @@
 
 static idx_t temp_name, max_temp_name;
 
-#define OPCODE(name) (__op__idx_##name)
-
 enum
 {
   U8_global_size
@@ -585,7 +583,7 @@ dump_triple_address (opcode_t (*getop) (idx_t, idx_t, idx_t), operand res, opera
 static void
 dump_prop_setter_op_meta (op_meta last, operand op)
 {
-  JERRY_ASSERT (last.op.op_idx == OPCODE (prop_getter));
+  JERRY_ASSERT (last.op.op_idx == VM_OP_PROP_GETTER);
   switch (op.type)
   {
     case OPERAND_LITERAL:
@@ -638,7 +636,7 @@ static operand
 dump_triple_address_and_prop_setter_res (void (*dumper) (operand, operand, operand),
                                          op_meta last, operand op)
 {
-  JERRY_ASSERT (last.op.op_idx == OPCODE (prop_getter));
+  JERRY_ASSERT (last.op.op_idx == VM_OP_PROP_GETTER);
   const operand obj = create_operand_from_tmp_and_lit (last.op.data.prop_getter.obj, last.lit_id[1]);
   const operand prop = create_operand_from_tmp_and_lit (last.op.data.prop_getter.prop, last.lit_id[2]);
   const operand tmp = dump_prop_getter_res (obj, prop);
@@ -652,7 +650,7 @@ dump_prop_setter_or_triple_address_res (void (*dumper) (operand, operand, operan
                                          operand res, operand op)
 {
   const op_meta last = STACK_TOP (prop_getters);
-  if (last.op.op_idx == OPCODE (prop_getter))
+  if (last.op.op_idx == VM_OP_PROP_GETTER)
   {
     res = dump_triple_address_and_prop_setter_res (dumper, last, op);
   }
@@ -1123,10 +1121,10 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
   op_meta om = serializer_get_op_meta (STACK_TOP (varg_headers));
   switch (om.op.op_idx)
   {
-    case OPCODE (func_expr_n):
-    case OPCODE (construct_n):
-    case OPCODE (call_n):
-    case OPCODE (native_call):
+    case VM_OP_FUNC_EXPR_N:
+    case VM_OP_CONSTRUCT_N:
+    case VM_OP_CALL_N:
+    case VM_OP_NATIVE_CALL:
     {
       const operand res = tmp_operand ();
       om.op.data.func_expr_n.arg_list = args_count;
@@ -1135,15 +1133,15 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
       STACK_DROP (varg_headers, 1);
       return res;
     }
-    case OPCODE (func_decl_n):
+    case VM_OP_FUNC_DECL_N:
     {
       om.op.data.func_decl_n.arg_list = args_count;
       serializer_rewrite_op_meta (STACK_TOP (varg_headers), om);
       STACK_DROP (varg_headers, 1);
       return empty_operand ();
     }
-    case OPCODE (array_decl):
-    case OPCODE (obj_decl):
+    case VM_OP_ARRAY_DECL:
+    case VM_OP_OBJ_DECL:
     {
       const operand res = tmp_operand ();
       om.op.data.obj_decl.list = args_count;
@@ -1501,7 +1499,7 @@ dump_delete (operand res, operand op, bool is_strict, locus loc)
       const op_meta last_op_meta = last_dumped_op_meta ();
       switch (last_op_meta.op.op_idx)
       {
-        case OPCODE (prop_getter):
+        case VM_OP_PROP_GETTER:
         {
           const opcode_counter_t oc = (opcode_counter_t) (serializer_get_current_opcode_counter () - 1);
           serializer_set_writing_position (oc);
@@ -1950,7 +1948,7 @@ rewrite_logical_and_checks (void)
   for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (logical_and_checks); i++)
   {
     op_meta jmp_op_meta = serializer_get_op_meta (STACK_ELEMENT (logical_and_checks, i));
-    JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_false_jmp_down));
+    JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_IS_FALSE_JMP_DOWN);
     idx_t id1, id2;
     split_opcode_counter (get_diff_from (STACK_ELEMENT (logical_and_checks, i)), &id1, &id2);
     jmp_op_meta.op.data.is_false_jmp_down.opcode_1 = id1;
@@ -1994,7 +1992,7 @@ rewrite_logical_or_checks (void)
   for (uint8_t i = STACK_TOP (U8); i < STACK_SIZE (logical_or_checks); i++)
   {
     op_meta jmp_op_meta = serializer_get_op_meta (STACK_ELEMENT (logical_or_checks, i));
-    JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_true_jmp_down));
+    JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_IS_TRUE_JMP_DOWN);
     idx_t id1, id2;
     split_opcode_counter (get_diff_from (STACK_ELEMENT (logical_or_checks, i)), &id1, &id2);
     jmp_op_meta.op.data.is_true_jmp_down.opcode_1 = id1;
@@ -2030,7 +2028,7 @@ void
 rewrite_conditional_check (void)
 {
   op_meta jmp_op_meta = serializer_get_op_meta (STACK_TOP (conditional_checks));
-  JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_false_jmp_down));
+  JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_IS_FALSE_JMP_DOWN);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (conditional_checks)), &id1, &id2);
   jmp_op_meta.op.data.is_false_jmp_down.opcode_1 = id1;
@@ -2051,7 +2049,7 @@ void
 rewrite_jump_to_end (void)
 {
   op_meta jmp_op_meta = serializer_get_op_meta (STACK_TOP (jumps_to_end));
-  JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (jmp_down));
+  JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_JMP_DOWN);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (jumps_to_end)), &id1, &id2);
   jmp_op_meta.op.data.jmp_down.opcode_1 = id1;
@@ -2064,7 +2062,7 @@ void
 start_dumping_assignment_expression (void)
 {
   const op_meta last = last_dumped_op_meta ();
-  if (last.op.op_idx == OPCODE (prop_getter))
+  if (last.op.op_idx == VM_OP_PROP_GETTER)
   {
     serializer_set_writing_position ((opcode_counter_t) (serializer_get_current_opcode_counter () - 1));
   }
@@ -2075,7 +2073,7 @@ operand
 dump_prop_setter_or_variable_assignment_res (operand res, operand op)
 {
   const op_meta last = STACK_TOP (prop_getters);
-  if (last.op.op_idx == OPCODE (prop_getter))
+  if (last.op.op_idx == VM_OP_PROP_GETTER)
   {
     dump_prop_setter_op_meta (last, op);
   }
@@ -2247,10 +2245,10 @@ rewrite_simple_or_nested_jump_and_get_next (opcode_counter_t jump_oc, /**< posit
 {
   op_meta jump_op_meta = serializer_get_op_meta (jump_oc);
 
-  bool is_simple_jump = (jump_op_meta.op.op_idx == OPCODE (jmp_down));
+  bool is_simple_jump = (jump_op_meta.op.op_idx == VM_OP_JMP_DOWN);
 
   JERRY_ASSERT (is_simple_jump
-                || (jump_op_meta.op.op_idx == OPCODE (jmp_break_continue)));
+                || (jump_op_meta.op.op_idx == VM_OP_JMP_BREAK_CONTINUE));
 
   idx_t id1, id2, id1_prev, id2_prev;
   split_opcode_counter ((opcode_counter_t) (target_oc - jump_oc), &id1, &id2);
@@ -2265,7 +2263,7 @@ rewrite_simple_or_nested_jump_and_get_next (opcode_counter_t jump_oc, /**< posit
   }
   else
   {
-    JERRY_ASSERT (jump_op_meta.op.op_idx == OPCODE (jmp_break_continue));
+    JERRY_ASSERT (jump_op_meta.op.op_idx == VM_OP_JMP_BREAK_CONTINUE);
 
     id1_prev = jump_op_meta.op.data.jmp_break_continue.opcode_1;
     id2_prev = jump_op_meta.op.data.jmp_break_continue.opcode_2;
@@ -2311,7 +2309,7 @@ rewrite_case_clause (void)
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (jmp_oc), &id1, &id2);
   op_meta jmp_op_meta = serializer_get_op_meta (jmp_oc);
-  JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (is_true_jmp_down));
+  JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_IS_TRUE_JMP_DOWN);
   jmp_op_meta.op.data.is_true_jmp_down.opcode_1 = id1;
   jmp_op_meta.op.data.is_true_jmp_down.opcode_2 = id2;
   serializer_rewrite_op_meta (jmp_oc, jmp_op_meta);
@@ -2325,7 +2323,7 @@ rewrite_default_clause (void)
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (jmp_oc), &id1, &id2);
   op_meta jmp_op_meta = serializer_get_op_meta (jmp_oc);
-  JERRY_ASSERT (jmp_op_meta.op.op_idx == OPCODE (jmp_down));
+  JERRY_ASSERT (jmp_op_meta.op.op_idx == VM_OP_JMP_DOWN);
   jmp_op_meta.op.data.jmp_down.opcode_1 = id1;
   jmp_op_meta.op.data.jmp_down.opcode_2 = id2;
   serializer_rewrite_op_meta (jmp_oc, jmp_op_meta);
@@ -2463,7 +2461,7 @@ void
 rewrite_try (void)
 {
   op_meta try_op_meta = serializer_get_op_meta (STACK_TOP (tries));
-  JERRY_ASSERT (try_op_meta.op.op_idx == OPCODE (try_block));
+  JERRY_ASSERT (try_op_meta.op.op_idx == VM_OP_TRY_BLOCK);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (tries)), &id1, &id2);
   try_op_meta.op.data.try_block.oc_idx_1 = id1;
@@ -2487,7 +2485,7 @@ void
 rewrite_catch (void)
 {
   op_meta catch_op_meta = serializer_get_op_meta (STACK_TOP (catches));
-  JERRY_ASSERT (catch_op_meta.op.op_idx == OPCODE (meta)
+  JERRY_ASSERT (catch_op_meta.op.op_idx == VM_OP_META
                 && catch_op_meta.op.data.meta.type == OPCODE_META_TYPE_CATCH);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (catches)), &id1, &id2);
@@ -2509,7 +2507,7 @@ void
 rewrite_finally (void)
 {
   op_meta finally_op_meta = serializer_get_op_meta (STACK_TOP (finallies));
-  JERRY_ASSERT (finally_op_meta.op.op_idx == OPCODE (meta)
+  JERRY_ASSERT (finally_op_meta.op.op_idx == VM_OP_META
                 && finally_op_meta.op.data.meta.type == OPCODE_META_TYPE_FINALLY);
   idx_t id1, id2;
   split_opcode_counter (get_diff_from (STACK_TOP (finallies)), &id1, &id2);
@@ -2540,7 +2538,7 @@ dumper_variable_declaration_exists (lit_cpointer_t lit_id)
        oc > 0; oc--)
   {
     const op_meta var_decl_op_meta = serializer_get_op_meta (oc);
-    if (var_decl_op_meta.op.op_idx != OPCODE (var_decl))
+    if (var_decl_op_meta.op.op_idx != VM_OP_VAR_DECL)
     {
       break;
     }
@@ -2589,7 +2587,7 @@ rewrite_scope_code_flags (opcode_counter_t scope_code_flags_oc, /**< position of
   JERRY_ASSERT ((idx_t) scope_flags == scope_flags);
 
   op_meta opm = serializer_get_op_meta (scope_code_flags_oc);
-  JERRY_ASSERT (opm.op.op_idx == OPCODE (meta));
+  JERRY_ASSERT (opm.op.op_idx == VM_OP_META);
   JERRY_ASSERT (opm.op.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
   JERRY_ASSERT (opm.op.data.meta.data_1 == INVALID_VALUE);
   JERRY_ASSERT (opm.op.data.meta.data_2 == INVALID_VALUE);
@@ -2616,7 +2614,7 @@ rewrite_reg_var_decl (void)
 {
   opcode_counter_t reg_var_decl_oc = STACK_TOP (reg_var_decls);
   op_meta opm = serializer_get_op_meta (reg_var_decl_oc);
-  JERRY_ASSERT (opm.op.op_idx == OPCODE (reg_var_decl));
+  JERRY_ASSERT (opm.op.op_idx == VM_OP_REG_VAR_DECL);
   opm.op.data.reg_var_decl.max = max_temp_name;
   serializer_rewrite_op_meta (reg_var_decl_oc, opm);
   STACK_DROP (reg_var_decls, 1);

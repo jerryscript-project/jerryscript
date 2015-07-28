@@ -61,8 +61,6 @@ STATIC_STACK (scopes, scopes_tree)
 #define EMIT_ERROR(type, MESSAGE) PARSE_ERROR(type, MESSAGE, tok.loc)
 #define EMIT_ERROR_VARG(type, MESSAGE, ...) PARSE_ERROR_VARG(type, MESSAGE, tok.loc, __VA_ARGS__)
 
-#define OPCODE_IS(OP, ID) (OP.op_idx == __op__idx_##ID)
-
 static operand parse_expression (bool, jsp_eval_ret_store_t);
 static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);

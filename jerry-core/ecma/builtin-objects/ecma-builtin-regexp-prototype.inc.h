@@ -26,6 +26,18 @@
 # define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
 #endif /* !OBJECT_VALUE */
 
+#ifndef NUMBER_VALUE
+# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !NUMBER_VALUE */
+
+#ifndef SIMPLE_VALUE
+# define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !SIMPLE_VALUE */
+
+#ifndef STRING_VALUE
+# define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable)
+#endif /* !STRING_VALUE */
+
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
@@ -39,6 +51,40 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.1
+STRING_VALUE (LIT_MAGIC_STRING_SOURCE,
+              LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.2
+SIMPLE_VALUE (LIT_MAGIC_STRING_GLOBAL,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.3
+SIMPLE_VALUE (LIT_MAGIC_STRING_IGNORECASE_UL,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+// ECMA-262 v5, 15.10.7.4
+SIMPLE_VALUE (LIT_MAGIC_STRING_MULTILINE,
+              ECMA_SIMPLE_VALUE_FALSE,
+              ECMA_PROPERTY_NOT_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
+
+// ECMA-262 v5, 15.10.7.5
+NUMBER_VALUE (LIT_MAGIC_STRING_LASTINDEX_UL,
+              0,
+              ECMA_PROPERTY_WRITABLE,
+              ECMA_PROPERTY_NOT_ENUMERABLE,
+              ECMA_PROPERTY_NOT_CONFIGURABLE)
 
 ROUTINE (LIT_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)

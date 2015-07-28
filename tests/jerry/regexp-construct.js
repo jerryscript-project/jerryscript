@@ -136,3 +136,28 @@ assert (r.source == "(?:)");
 assert (r.global == false);
 assert (r.ignoreCase == false);
 assert (r.multiline == false);
+
+/* RegExp properties */
+assert (RegExp.length === 2);
+assert (RegExp.prototype.source === "(?:)");
+assert (RegExp.prototype.global === false);
+assert (RegExp.prototype.ignoreCase === false);
+assert (RegExp.prototype.multiline === false);
+
+RegExp.prototype.source = "a";
+RegExp.prototype.global = true;
+RegExp.prototype.ignoreCase = true;
+RegExp.prototype.multiline = true;
+assert (RegExp.prototype.source === "(?:)");
+assert (RegExp.prototype.global === false);
+assert (RegExp.prototype.ignoreCase === false);
+assert (RegExp.prototype.multiline === false);
+
+delete RegExp.prototype.source;
+delete RegExp.prototype.global;
+delete RegExp.prototype.ignoreCase;
+delete RegExp.prototype.multiline;
+assert (RegExp.prototype.source === "(?:)");
+assert (RegExp.prototype.global === false);
+assert (RegExp.prototype.ignoreCase === false);
+assert (RegExp.prototype.multiline === false);

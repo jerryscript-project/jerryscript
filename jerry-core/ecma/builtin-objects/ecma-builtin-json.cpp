@@ -39,27 +39,6 @@
 #define BUILTIN_UNDERSCORED_ID json
 #include "ecma-builtin-internal-routines-template.inc.h"
 
-/*
- * FIXME:
- *       Replace usage of isalpha and isdigit functions in the module with lit_char helpers and remove the functions.
- *
- *       Related issue: #424
- */
-
-/** Checks for an alphabetic character. */
-static int
-isalpha (int c)
-{
-  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
-
-/** Checks for a digit (0 through 9).  */
-static int
-isdigit (int c)
-{
-  return c >= '0' && c <= '9';
-}
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -126,9 +105,16 @@ ecma_builtin_json_check_id (lit_utf8_byte_t *string_p, /**< start position */
   {
     string_p++;
     id_p++;
-    if (*id_p == '\0')
+    if (*id_p == LIT_CHAR_NULL)
     {
-      return !isalpha (*string_p) && !isdigit (*string_p) && *string_p != '$' && *string_p != '_';
+      /* JSON lexer accepts input strings such as falsenull and
+       * returns with multiple tokens (false and null in this case).
+       * This is different from normal lexers, whose return with a
+       * single identifier. The falsenull input will still cause an
+       * error eventually, since a separator must always be present
+       * between two JSON values regardless of the current expression
+       * type. */
+      return true;
     }
   }
   while (*string_p == *id_p);
@@ -147,49 +133,49 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
 
   token_p->u.string.start_p = current_p;
 
-  while (*current_p != '"')
+  while (*current_p != LIT_CHAR_DOUBLE_QUOTE)
   {
     if (*current_p <= 0x1f)
     {
       return;
     }
-    if (*current_p == '\\')
+    if (*current_p == LIT_CHAR_BACKSLASH)
     {
       current_p++;
       switch (*current_p)
       {
-        case '"':
-        case '/':
-        case '\\':
+        case LIT_CHAR_DOUBLE_QUOTE:
+        case LIT_CHAR_SLASH:
+        case LIT_CHAR_BACKSLASH:
         {
           break;
         }
-        case 'b':
+        case LIT_CHAR_LOWERCASE_B:
         {
-          *current_p = '\b';
+          *current_p = LIT_CHAR_BS;
           break;
         }
-        case 'f':
+        case LIT_CHAR_LOWERCASE_F:
         {
-          *current_p = '\f';
+          *current_p = LIT_CHAR_FF;
           break;
         }
-        case 'n':
+        case LIT_CHAR_LOWERCASE_N:
         {
-          *current_p = '\n';
+          *current_p = LIT_CHAR_LF;
           break;
         }
-        case 'r':
+        case LIT_CHAR_LOWERCASE_R:
         {
-          *current_p = '\r';
+          *current_p = LIT_CHAR_CR;
           break;
         }
-        case 't':
+        case LIT_CHAR_LOWERCASE_T:
         {
-          *current_p = '\t';
+          *current_p = LIT_CHAR_TAB;
           break;
         }
-        case 'u':
+        case LIT_CHAR_LOWERCASE_U:
         {
           lit_code_point_t code_point;
 
@@ -277,52 +263,32 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
   lit_utf8_byte_t *current_p = token_p->current_p;
   lit_utf8_byte_t *start_p = current_p;
 
-  if (*current_p == '-')
+  if (*current_p == LIT_CHAR_MINUS)
   {
     current_p++;
   }
 
-  if (*current_p == '0')
+  if (*current_p == LIT_CHAR_0)
   {
     current_p++;
-    if (isdigit (*current_p))
+    if (lit_char_is_decimal_digit (*current_p))
     {
       return;
     }
   }
-  else if (isdigit (*current_p))
+  else if (lit_char_is_decimal_digit (*current_p))
   {
     do
     {
       current_p++;
     }
-    while (isdigit (*current_p));
+    while (lit_char_is_decimal_digit (*current_p));
   }
 
-  if (*current_p == '.')
+  if (*current_p == LIT_CHAR_DOT)
   {
     current_p++;
-    if (!isdigit (*current_p))
-    {
-      return;
-    }
-
-    do
-    {
-      current_p++;
-    }
-    while (isdigit (*current_p));
-  }
-
-  if (*current_p == 'e' || *current_p == 'E')
-  {
-    current_p++;
-    if (*current_p == '+' || *current_p == '-')
-    {
-      current_p++;
-    }
-
-    if (!isdigit (*current_p))
+    if (!lit_char_is_decimal_digit (*current_p))
     {
       return;
     }
@@ -331,7 +297,27 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (isdigit (*current_p));
+    while (lit_char_is_decimal_digit (*current_p));
+  }
+
+  if (*current_p == LIT_CHAR_LOWERCASE_E || *current_p == LIT_CHAR_UPPERCASE_E)
+  {
+    current_p++;
+    if (*current_p == LIT_CHAR_PLUS || *current_p == LIT_CHAR_MINUS)
+    {
+      current_p++;
+    }
+
+    if (!lit_char_is_decimal_digit (*current_p))
+    {
+      return;
+    }
+
+    do
+    {
+      current_p++;
+    }
+    while (lit_char_is_decimal_digit (*current_p));
   }
   token_p->type = number_token;
   token_p->u.number = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (current_p - start_p));
@@ -354,8 +340,8 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
   /*
    * No need for end check since the string is zero terminated.
    */
-  while (*current_p == ' ' || *current_p == '\r'
-         || *current_p == '\n' || *current_p == '\t')
+  while (*current_p == LIT_CHAR_SP || *current_p == LIT_CHAR_CR
+         || *current_p == LIT_CHAR_LF || *current_p == LIT_CHAR_TAB)
   {
     current_p++;
   }
@@ -368,43 +354,43 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
 
   switch (*current_p)
   {
-    case '{':
+    case LIT_CHAR_LEFT_BRACE:
     {
       token_p->type = left_brace_token;
       token_p->current_p = current_p + 1;
       return;
     }
-    case '}':
+    case LIT_CHAR_RIGHT_BRACE:
     {
       token_p->type = right_brace_token;
       token_p->current_p = current_p + 1;
       return;
     }
-    case '[':
+    case LIT_CHAR_LEFT_SQUARE:
     {
       token_p->type = left_square_token;
       token_p->current_p = current_p + 1;
       return;
     }
-    case ',':
+    case LIT_CHAR_COMMA:
     {
       token_p->type = comma_token;
       token_p->current_p = current_p + 1;
       return;
     }
-    case ':':
+    case LIT_CHAR_COLON:
     {
       token_p->type = colon_token;
       token_p->current_p = current_p + 1;
       return;
     }
-    case '"':
+    case LIT_CHAR_DOUBLE_QUOTE:
     {
       token_p->current_p = current_p + 1;
       ecma_builtin_json_parse_string (token_p);
       return;
     }
-    case 'n':
+    case LIT_CHAR_LOWERCASE_N:
     {
       if (ecma_builtin_json_check_id (current_p, "null"))
       {
@@ -414,7 +400,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
       }
       break;
     }
-    case 't':
+    case LIT_CHAR_LOWERCASE_T:
     {
       if (ecma_builtin_json_check_id (current_p, "true"))
       {
@@ -424,7 +410,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
       }
       break;
     }
-    case 'f':
+    case LIT_CHAR_LOWERCASE_F:
     {
       if (ecma_builtin_json_check_id (current_p, "false"))
       {
@@ -436,7 +422,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     }
     default:
     {
-      if (*current_p == '-' || isdigit (*current_p))
+      if (*current_p == LIT_CHAR_MINUS || lit_char_is_decimal_digit (*current_p))
       {
         token_p->current_p = current_p;
         ecma_builtin_json_parse_number (token_p);
@@ -462,15 +448,15 @@ ecma_builtin_json_check_right_square_token (ecma_json_token_t *token_p) /**< tok
   /*
    * No need for end check since the string is zero terminated.
    */
-  while (*current_p == ' ' || *current_p == '\r'
-         || *current_p == '\n' || *current_p == '\t')
+  while (*current_p == LIT_CHAR_SP || *current_p == LIT_CHAR_CR
+         || *current_p == LIT_CHAR_LF || *current_p == LIT_CHAR_TAB)
   {
     current_p++;
   }
 
   token_p->current_p = current_p;
 
-  if (*current_p == ']')
+  if (*current_p == LIT_CHAR_RIGHT_SQUARE)
   {
     token_p->current_p = current_p + 1;
     return true;
@@ -1107,7 +1093,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
 
       for (int32_t i = 0; i < space; i++)
       {
-        space_buff[i] = ' ';
+        space_buff[i] = LIT_CHAR_SP;
       }
 
       context_p.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
@@ -1228,7 +1214,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
     lit_utf8_byte_t c = zt_string_buff[i];
 
     /* 2.a */
-    if (c == '\\' || c == '\"')
+    if (c == LIT_CHAR_BACKSLASH || c == LIT_CHAR_DOUBLE_QUOTE)
     {
       ecma_string_t *backslash_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BACKSLASH_CHAR);
 
@@ -1247,7 +1233,8 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
       product_str_p = tmp_str_p;
     }
     /* 2.b */
-    else if (c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
+    else if (c == LIT_CHAR_BS || c == LIT_CHAR_FF || c == LIT_CHAR_LF
+             || c == LIT_CHAR_CR || c == LIT_CHAR_TAB)
     {
       ecma_string_t *backslash_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BACKSLASH_CHAR);
 
@@ -1258,33 +1245,33 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
       product_str_p = tmp_str_p;
 
       /* 2.b.ii */
-      lit_utf8_byte_t abbrev = ' ';
+      lit_utf8_byte_t abbrev = LIT_CHAR_SP;
 
       switch (c)
       {
-        case '\b':
+        case LIT_CHAR_BS:
         {
-          abbrev = 'b';
+          abbrev = LIT_CHAR_LOWERCASE_B;
           break;
         }
-        case '\f':
+        case LIT_CHAR_FF:
         {
-          abbrev = 'f';
+          abbrev = LIT_CHAR_LOWERCASE_F;
           break;
         }
-        case '\n':
+        case LIT_CHAR_LF:
         {
-          abbrev = 'n';
+          abbrev = LIT_CHAR_LOWERCASE_N;
           break;
         }
-        case '\r':
+        case LIT_CHAR_CR:
         {
-          abbrev = 'r';
+          abbrev = LIT_CHAR_LOWERCASE_R;
           break;
         }
-        case '\t':
+        case LIT_CHAR_TAB:
         {
-          abbrev = 't';
+          abbrev = LIT_CHAR_LOWERCASE_T;
           break;
         }
       }
@@ -1309,7 +1296,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
       product_str_p = tmp_str_p;
 
       /* 2.c.ii */
-      lit_utf8_byte_t u_ch = 'u';
+      lit_utf8_byte_t u_ch = LIT_CHAR_LOWERCASE_U;
       ecma_string_t *u_ch_str_p = ecma_new_ecma_string_from_utf8 (&u_ch, 1);
 
       tmp_str_p = ecma_concat_ecma_strings (product_str_p, u_ch_str_p);

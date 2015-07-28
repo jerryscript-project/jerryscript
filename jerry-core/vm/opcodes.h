@@ -257,6 +257,14 @@ typedef struct vm_instr_t
     } opcode_name;
 
 #include "vm-opcodes.inc.h"
+
+    /**
+     * Opcode-independent arguments accessor
+     *
+     * Note:
+     *      If opcode is statically known, opcode-specific way of accessing arguments should be used.
+     */
+    vm_idx_t raw_args[3];
   } data;
 } vm_instr_t;
 
@@ -299,11 +307,5 @@ typedef ecma_completion_value_t (*opfunc) (vm_instr_t, vm_frame_ctx_t *);
         vm_instr_t getop_##opcode_name (vm_idx_t, vm_idx_t, vm_idx_t);
 
 #include "vm-opcodes.inc.h"
-
-
-typedef struct
-{
-  uint8_t uids[4];
-} raw_instr;
 
 #endif /* OPCODES_H */

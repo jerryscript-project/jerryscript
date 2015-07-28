@@ -95,23 +95,22 @@ tmp_id_to_str (vm_idx_t id)
 static const char *
 var_to_str (vm_instr_t instr, lit_cpointer_t lit_ids[], vm_instr_counter_t oc, uint8_t current_arg)
 {
-  raw_instr raw = *(raw_instr*) &instr;
-  if (raw.uids[current_arg] == VM_IDX_REWRITE_LITERAL_UID)
+  JERRY_ASSERT (current_arg >= 1 && current_arg <= 3);
+
+  if (instr.data.raw_args[current_arg - 1] == VM_IDX_REWRITE_LITERAL_UID)
   {
-    if (lit_ids == NULL)
-    {
-      return "hz";
-    }
+    JERRY_ASSERT (lit_ids != NULL);
     JERRY_ASSERT (lit_ids[current_arg - 1].packed_value != MEM_CP_NULL);
+
     return lit_cp_to_str (lit_ids[current_arg - 1]);
   }
-  else if (raw.uids[current_arg] >= 128)
+  else if (instr.data.raw_args[current_arg - 1] >= 128)
   {
-    return tmp_id_to_str (raw.uids[current_arg]);
+    return tmp_id_to_str (instr.data.raw_args[current_arg - 1]);
   }
   else
   {
-    return lit_cp_to_str (serializer_get_literal_cp_by_uid (raw.uids[current_arg], NULL, oc));
+    return lit_cp_to_str (serializer_get_literal_cp_by_uid (instr.data.raw_args[current_arg - 1], NULL, oc));
   }
 }
 
@@ -134,14 +133,12 @@ pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_in
     {
       case 'd':
       {
-        JERRY_ASSERT (current_arg <= 3);
-        raw_instr raw = *(raw_instr*) &instr;
-        printf ("%d", raw.uids[current_arg]);
+        JERRY_ASSERT (current_arg >= 1 && current_arg <= 3);
+        printf ("%d", instr.data.raw_args[current_arg - 1]);
         break;
       }
       case 's':
       {
-        JERRY_ASSERT (current_arg <= 3);
         printf ("%s", var_to_str (instr, lit_ids, oc, current_arg));
         break;
       }
@@ -159,8 +156,8 @@ pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_in
 #define PP_OP(op_name, format) \
   case op_name: pp_printf (format, opm.op, opm.lit_id, oc, 1); break;
 #define VAR(i) var_to_str (opm.op, opm.lit_id, oc, i)
-#define OC(i, j) __extension__({ raw_instr* raw = (raw_instr *) &opm.op; \
-                                 vm_calc_instr_counter_from_idx_idx (raw->uids[i], raw->uids[j]); })
+#define OC(i, j) __extension__({ vm_calc_instr_counter_from_idx_idx (opm.op.data.raw_args[i - 1], \
+                                                                     opm.op.data.raw_args[j - 1]); })
 
 static int vargs_num = 0;
 static int seen_vargs = 0;
@@ -174,7 +171,7 @@ dump_asm (vm_instr_counter_t oc, vm_instr_t instr)
 
   for (i = 1; i <= opcode_sizes[opcode_id]; i++)
   {
-    printf ("%4d ", ((raw_instr *) &instr)->uids[i]);
+    printf ("%4d ", instr.data.raw_args[i - 1]);
   }
 
   for (; i < 4; i++)

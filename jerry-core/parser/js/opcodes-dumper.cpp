@@ -311,9 +311,8 @@ dumper_try_replace_var_with_reg (scopes_tree tree, /**< a function scope, create
       {
         om.lit_id[arg_index] = NOT_A_LITERAL;
 
-        raw_instr *raw_p = (raw_instr *) (&om.op);
-        JERRY_ASSERT (raw_p->uids[arg_index + 1] == VM_IDX_REWRITE_LITERAL_UID);
-        raw_p->uids[arg_index + 1] = reg;
+        JERRY_ASSERT (om.op.data.raw_args[arg_index] == VM_IDX_REWRITE_LITERAL_UID);
+        om.op.data.raw_args[arg_index] = reg;
       }
     }
 

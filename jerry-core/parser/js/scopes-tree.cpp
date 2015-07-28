@@ -30,19 +30,17 @@ assert_tree (scopes_tree t)
 }
 
 static vm_idx_t
-get_uid (op_meta *op, uint8_t i)
+get_uid (op_meta *op, size_t i)
 {
-  JERRY_ASSERT (i < 4);
-  raw_instr *raw = (raw_instr *) &op->op;
-  return raw->uids[i + 1];
+  JERRY_ASSERT (i < 3);
+  return op->op.data.raw_args[i];
 }
 
 static void
-set_uid (op_meta *op, uint8_t i, vm_idx_t uid)
+set_uid (op_meta *op, size_t i, vm_idx_t uid)
 {
-  JERRY_ASSERT (i < 4);
-  raw_instr *raw = (raw_instr *) &op->op;
-  raw->uids[i + 1] = uid;
+  JERRY_ASSERT (i < 3);
+  op->op.data.raw_args[i] = uid;
 }
 
 vm_instr_counter_t

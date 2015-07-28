@@ -101,7 +101,6 @@ try
 catch (e)
 {
   assert (e instanceof SyntaxError);
-  assert (e.message === "invalid character class");
 }
 
 try
@@ -112,5 +111,4 @@ try
 catch (e)
 {
   assert (e instanceof SyntaxError);
-  assert (e.message === "invalid character class");
 }

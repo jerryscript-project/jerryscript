@@ -27,28 +27,48 @@
 /**
  * Lookup a character in the input string.
  *
- * @return unicode codeunit
+ * @return true, if lookup number of characters ahead are hex digits
+ *         false, otherwise
  */
-static ecma_char_t
-re_lookup (lit_utf8_iterator_t iter, /**< input string iterator */
-           uint32_t lookup) /**< size of lookup */
+static bool
+re_hex_lookup (lit_utf8_iterator_t iter, /**< input string iterator */
+               uint32_t lookup) /**< size of lookup */
 {
-  ecma_char_t ch = 0;
-  for (uint32_t i = 0; i <= lookup; i++)
+  ecma_char_t ch;
+  bool is_digit = true;
+  for (uint32_t i = 0; is_digit && i < lookup; i++)
   {
     if (!lit_utf8_iterator_is_eos (&iter))
     {
       ch = lit_utf8_iterator_read_next (&iter);
+      is_digit = lit_char_is_hex_digit (ch);
     }
     else
     {
-      ch = 0;
-      break;
+      return false;
     }
   }
 
-  return ch;
-} /* re_lookup */
+  return is_digit;
+} /* re_hex_lookup */
+
+/**
+ * Consume non greedy (question mark) character if present.
+ *
+ * @return true, if non-greedy character found
+ *         false, otherwise
+ */
+static bool __attr_always_inline___
+re_parse_non_greedy_char (lit_utf8_iterator_t *iter_p) /**< RegExp pattern */
+{
+  if (!lit_utf8_iterator_is_eos (iter_p) && lit_utf8_iterator_peek_next (iter_p) == LIT_CHAR_QUESTION)
+  {
+    lit_utf8_iterator_advance (iter_p, 1);
+    return true;
+  }
+
+  return false;
+} /* re_parse_non_greedy_char */
 
 /**
  * Parse RegExp iterators
@@ -57,120 +77,106 @@ re_lookup (lit_utf8_iterator_t iter, /**< input string iterator */
  *         Returned value must be freed with ecma_free_completion_value
  */
 static ecma_completion_value_t
-re_parse_iterator (lit_utf8_iterator_t iter, /**< RegExp pattern */
-                   re_token_t *re_token_p, /**< output token */
-                   uint32_t lookup, /**< size of lookup */
-                   uint32_t *advance_p) /**< output length of current advance */
+re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
+                   re_token_t *re_token_p) /**< out: output token */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  lit_utf8_iterator_t *iter_p = &(parser_ctx_p->iter);
+  re_token_p->qmin = 1;
+  re_token_p->qmax = 1;
+  re_token_p->greedy = true;
 
-  ecma_char_t ch0 = re_lookup (iter, lookup);
-  ecma_char_t ch1 = re_lookup (iter, lookup + 1);
+  if (lit_utf8_iterator_is_eos (iter_p))
+  {
+    return ret_value;
+  }
 
-  switch (ch0)
+  ecma_char_t ch = lit_utf8_iterator_peek_next (iter_p);
+
+  switch (ch)
   {
     case LIT_CHAR_QUESTION:
     {
+      lit_utf8_iterator_advance (iter_p, 1);
       re_token_p->qmin = 0;
       re_token_p->qmax = 1;
-
-      if (ch1 == LIT_CHAR_QUESTION)
-      {
-        *advance_p = 2;
-        re_token_p->greedy = false;
-      }
-      else
-      {
-        *advance_p = 1;
-        re_token_p->greedy = true;
-      }
+      re_token_p->greedy = !re_parse_non_greedy_char (iter_p);
       break;
     }
     case LIT_CHAR_ASTERISK:
     {
+      lit_utf8_iterator_advance (iter_p, 1);
       re_token_p->qmin = 0;
       re_token_p->qmax = RE_ITERATOR_INFINITE;
-
-      if (ch1 == LIT_CHAR_QUESTION)
-      {
-        *advance_p = 2;
-        re_token_p->greedy = false;
-      }
-      else
-      {
-        *advance_p = 1;
-        re_token_p->greedy = true;
-      }
+      re_token_p->greedy = !re_parse_non_greedy_char (iter_p);
       break;
     }
     case LIT_CHAR_PLUS:
     {
+      lit_utf8_iterator_advance (iter_p, 1);
       re_token_p->qmin = 1;
       re_token_p->qmax = RE_ITERATOR_INFINITE;
-
-      if (ch1 == LIT_CHAR_QUESTION)
-      {
-        *advance_p = 2;
-        re_token_p->greedy = false;
-      }
-      else
-      {
-        *advance_p = 1;
-        re_token_p->greedy = true;
-      }
+      re_token_p->greedy = !re_parse_non_greedy_char (iter_p);
       break;
     }
     case LIT_CHAR_LEFT_BRACE:
     {
+      lit_utf8_iterator_advance (iter_p, 1);
       uint32_t qmin = 0;
       uint32_t qmax = RE_ITERATOR_INFINITE;
       uint32_t digits = 0;
 
       while (true)
       {
-        (*advance_p)++;
-        ch1 = re_lookup (iter, lookup + *advance_p);
+        if (lit_utf8_iterator_is_eos (iter_p))
+        {
+          return ecma_raise_syntax_error ("invalid quantifier");
+        }
 
-        if (lit_char_is_decimal_digit (ch1))
+        ch = lit_utf8_iterator_read_next (iter_p);
+
+        if (lit_char_is_decimal_digit (ch))
         {
           if (digits >= ECMA_NUMBER_MAX_DIGITS)
           {
-            ret_value = ecma_raise_syntax_error ("RegExp quantifier error: too many digits.");
-            return ret_value;
+            return ecma_raise_syntax_error ("RegExp quantifier error: too many digits.");
           }
           digits++;
-          qmin = qmin * 10 + lit_char_hex_to_int (ch1);
+          qmin = qmin * 10 + lit_char_hex_to_int (ch);
         }
-        else if (ch1 == LIT_CHAR_COMMA)
+        else if (ch == LIT_CHAR_COMMA)
         {
           if (qmax != RE_ITERATOR_INFINITE)
           {
-            ret_value = ecma_raise_syntax_error ("RegExp quantifier error: double comma.");
-            return ret_value;
+            return ecma_raise_syntax_error ("RegExp quantifier error: double comma.");
           }
-          if ((re_lookup (iter, lookup + *advance_p + 1)) == LIT_CHAR_RIGHT_BRACE)
+
+          if (lit_utf8_iterator_is_eos (iter_p))
+          {
+            return ecma_raise_syntax_error ("invalid quantifier");
+          }
+
+          if (lit_utf8_iterator_peek_next (iter_p) == LIT_CHAR_RIGHT_BRACE)
           {
             if (digits == 0)
             {
-              ret_value = ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
-              return ret_value;
+              return ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
             }
 
+            lit_utf8_iterator_advance (iter_p, 1);
             re_token_p->qmin = qmin;
             re_token_p->qmax = RE_ITERATOR_INFINITE;
-            *advance_p += 2;
             break;
           }
           qmax = qmin;
           qmin = 0;
           digits = 0;
         }
-        else if (ch1 == LIT_CHAR_RIGHT_BRACE)
+        else if (ch == LIT_CHAR_RIGHT_BRACE)
         {
           if (digits == 0)
           {
-            ret_value = ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
-            return ret_value;
+            return ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
           }
 
           if (qmax != RE_ITERATOR_INFINITE)
@@ -184,35 +190,19 @@ re_parse_iterator (lit_utf8_iterator_t iter, /**< RegExp pattern */
             re_token_p->qmax = qmin;
           }
 
-          *advance_p += 1;
           break;
         }
         else
         {
-          ret_value = ecma_raise_syntax_error ("RegExp quantifier error: unknown char.");
-          return ret_value;
+          return ecma_raise_syntax_error ("RegExp quantifier error: unknown char.");
         }
       }
 
-      if ((re_lookup (iter, lookup + *advance_p)) == LIT_CHAR_QUESTION)
-      {
-        re_token_p->greedy = false;
-        *advance_p += 1;
-      }
-      else
-      {
-        re_token_p->greedy = true;
-      }
-      break;
-
-      JERRY_UNREACHABLE ();
+      re_token_p->greedy = !re_parse_non_greedy_char (iter_p);
       break;
     }
     default:
     {
-      re_token_p->qmin = 1;
-      re_token_p->qmax = 1;
-      re_token_p->greedy = true;
       break;
     }
   }
@@ -240,9 +230,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
 
   while (!lit_utf8_iterator_is_eos (&iter))
   {
-    ecma_char_t ch0 = lit_utf8_iterator_read_next (&iter);
-
-    switch (ch0)
+    switch (lit_utf8_iterator_read_next (&iter))
     {
       case LIT_CHAR_BACKSLASH:
       {
@@ -288,25 +276,28 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
                                                                 *   which adds the char-ranges
                                                                 *   to the bytecode */
                      void* re_ctx_p, /**< regexp compiler context */
-                     re_token_t *out_token_p) /**< output token */
+                     re_token_t *out_token_p) /**< out: output token */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
   re_token_type_t token_type = ((re_compiler_ctx_t *) re_ctx_p)->current_token.type;
   out_token_p->qmax = out_token_p->qmin = 1;
   uint32_t start = RE_CHAR_UNDEF;
   bool is_range = false;
   parser_ctx_p->num_of_classes = 0;
+  lit_utf8_iterator_t *iter_p = &(parser_ctx_p->iter);
+  if (lit_utf8_iterator_peek_prev (iter_p) != LIT_CHAR_LEFT_SQUARE)
+  {
+    lit_utf8_iterator_read_prev (iter_p);
+    lit_utf8_iterator_read_prev (iter_p);
+  }
 
   do
   {
-    if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
+    if (lit_utf8_iterator_is_eos (iter_p))
     {
-      ret_value = ecma_raise_syntax_error ("invalid character class");
-      return ret_value;
+      return ecma_raise_syntax_error ("invalid character class, end of string");
     }
 
-    uint32_t ch = lit_utf8_iterator_read_next (&(parser_ctx_p->iter));
+    uint32_t ch = lit_utf8_iterator_read_next (iter_p);
 
     if (ch == LIT_CHAR_RIGHT_SQUARE)
     {
@@ -318,7 +309,14 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
     }
     else if (ch == LIT_CHAR_MINUS)
     {
-      if (start != RE_CHAR_UNDEF && !is_range && re_lookup (parser_ctx_p->iter, 0) != LIT_CHAR_RIGHT_SQUARE)
+      if (lit_utf8_iterator_is_eos (iter_p))
+      {
+        return ecma_raise_syntax_error ("invalid character class, end of string after '-'");
+      }
+
+      if (start != RE_CHAR_UNDEF
+          && !is_range
+          && lit_utf8_iterator_peek_next (iter_p) != LIT_CHAR_RIGHT_SQUARE)
       {
         is_range = true;
         continue;
@@ -326,13 +324,12 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
     }
     else if (ch == LIT_CHAR_BACKSLASH)
     {
-      if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
+      if (lit_utf8_iterator_is_eos (iter_p))
       {
-        ret_value = ecma_raise_syntax_error ("invalid character class");
-        return ret_value;
+        return ecma_raise_syntax_error ("invalid character class, end of string after '\\'");
       }
 
-      ch = lit_utf8_iterator_read_next (&(parser_ctx_p->iter));
+      ch = lit_utf8_iterator_read_next (iter_p);
 
       if (ch == LIT_CHAR_LOWERCASE_B)
       {
@@ -360,19 +357,12 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       }
       else if (ch == LIT_CHAR_LOWERCASE_C)
       {
-        if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
+        if (lit_utf8_iterator_is_eos (iter_p))
         {
-          ret_value = ecma_raise_syntax_error ("decode error");
-          return ret_value;
+          return ecma_raise_syntax_error ("invalid character class, end of string after '\\c'");
         }
 
-        if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
-        {
-          ret_value = ecma_raise_syntax_error ("invalid character class");
-          return ret_value;
-        }
-
-        ch = lit_utf8_iterator_read_next (&(parser_ctx_p->iter));
+        ch = lit_utf8_iterator_read_next (iter_p);
 
         if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
             || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
@@ -384,30 +374,28 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       else if (ch == LIT_CHAR_LOWERCASE_X)
       {
         lit_code_point_t code_point;
-        const lit_utf8_byte_t *hex_start = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
+        const lit_utf8_byte_t *hex_start_p = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
 
-        if (!lit_read_code_point_from_hex (hex_start, 2, &code_point))
+        if (!lit_read_code_point_from_hex (hex_start_p, 2, &code_point))
         {
-          ret_value = ecma_raise_syntax_error ("decode error");
-          return ret_value;
+          return ecma_raise_syntax_error ("invalid character class, end of string after '\\x'");
         }
 
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 2);
+        lit_utf8_iterator_advance (iter_p, 2);
 
         append_char_class (re_ctx_p, code_point, code_point);
       }
       else if (ch == LIT_CHAR_LOWERCASE_U)
       {
         lit_code_point_t code_point;
-        const lit_utf8_byte_t *hex_start = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
+        const lit_utf8_byte_t *hex_start_p = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
 
-        if (!lit_read_code_point_from_hex (hex_start, 4, &code_point))
+        if (!lit_read_code_point_from_hex (hex_start_p, 4, &code_point))
         {
-          ret_value = ecma_raise_syntax_error ("decode error");
-          return ret_value;
+          return ecma_raise_syntax_error ("invalid character class, end of string after '\\u'");
         }
 
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 4);
+        lit_utf8_iterator_advance (iter_p, 4);
 
         append_char_class (re_ctx_p, code_point, code_point);
       }
@@ -479,8 +467,13 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       else if (ch <= LIT_UTF16_CODE_UNIT_MAX
                && lit_char_is_decimal_digit ((ecma_char_t) ch))
       {
+        if (lit_utf8_iterator_is_eos (iter_p))
+        {
+          return ecma_raise_syntax_error ("invalid character class, end of string after '\\<digits>'");
+        }
+
         if (ch != LIT_CHAR_0
-            || lit_char_is_decimal_digit (re_lookup (parser_ctx_p->iter, 1)))
+            || lit_char_is_decimal_digit (lit_utf8_iterator_peek_next (iter_p)))
         {
           /* FIXME: octal support */
         }
@@ -499,8 +492,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       {
         if (is_range)
         {
-          ret_value = ecma_raise_syntax_error ("invalid character class range");
-          return ret_value;
+          return ecma_raise_syntax_error ("invalid character class, invalid range");
         }
         else
         {
@@ -517,8 +509,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         {
           if (start > ch)
           {
-            ret_value = ecma_raise_syntax_error ("invalid character class range");
-            return ret_value;
+            return ecma_raise_syntax_error ("invalid character class, wrong order");
           }
           else
           {
@@ -541,17 +532,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
   }
   while (token_type == RE_TOK_START_CHAR_CLASS || token_type == RE_TOK_START_INV_CHAR_CLASS);
 
-  uint32_t advance = 0;
-  ECMA_TRY_CATCH (empty,
-                  re_parse_iterator (parser_ctx_p->iter,
-                                     out_token_p,
-                                     0,
-                                     &advance),
-                  ret_value);
-  lit_utf8_iterator_advance (&(parser_ctx_p->iter), advance);
-  ECMA_FINALIZE (empty);
-
-  return ret_value;
+  return re_parse_iterator (parser_ctx_p, out_token_p);
 } /* re_parse_char_class */
 
 /**
@@ -562,183 +543,164 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
  */
 ecma_completion_value_t
 re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-                     re_token_t *out_token_p) /**< output token */
+                     re_token_t *out_token_p) /**< out: output token */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  lit_utf8_iterator_t *iter_p = &(parser_ctx_p->iter);
 
-  if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
+  if (lit_utf8_iterator_is_eos (iter_p))
   {
     out_token_p->type = RE_TOK_EOF;
     return ret_value;
   }
 
-  uint32_t advance = 0;
-  ecma_char_t ch0 = lit_utf8_iterator_peek_next (&(parser_ctx_p->iter));
+  ecma_char_t ch = lit_utf8_iterator_read_next (iter_p);
 
-  switch (ch0)
+  switch (ch)
   {
     case LIT_CHAR_VLINE:
     {
-      advance = 1;
       out_token_p->type = RE_TOK_ALTERNATIVE;
       break;
     }
     case LIT_CHAR_CIRCUMFLEX:
     {
-      advance = 1;
       out_token_p->type = RE_TOK_ASSERT_START;
       break;
     }
     case LIT_CHAR_DOLLAR_SIGN:
     {
-      advance = 1;
       out_token_p->type = RE_TOK_ASSERT_END;
       break;
     }
     case LIT_CHAR_DOT:
     {
-      ECMA_TRY_CATCH (empty,
-                      re_parse_iterator (parser_ctx_p->iter,
-                                         out_token_p,
-                                         1,
-                                         &advance),
-                      ret_value);
-      advance += 1;
       out_token_p->type = RE_TOK_PERIOD;
-      ECMA_FINALIZE (empty);
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
       break;
     }
     case LIT_CHAR_BACKSLASH:
     {
-      out_token_p->type = RE_TOK_CHAR;
-      ecma_char_t ch1 = re_lookup (parser_ctx_p->iter, 1);
-
-      if (ch1 == LIT_CHAR_LOWERCASE_B)
+      if (lit_utf8_iterator_is_eos (iter_p))
       {
-        advance = 2;
+        return ecma_raise_syntax_error ("invalid regular experssion");
+      }
+
+      out_token_p->type = RE_TOK_CHAR;
+      ch = lit_utf8_iterator_read_next (iter_p);
+
+      if (ch == LIT_CHAR_LOWERCASE_B)
+      {
         out_token_p->type = RE_TOK_ASSERT_WORD_BOUNDARY;
       }
-      else if (ch1 == LIT_CHAR_UPPERCASE_B)
+      else if (ch == LIT_CHAR_UPPERCASE_B)
       {
-        advance = 2;
         out_token_p->type = RE_TOK_ASSERT_NOT_WORD_BOUNDARY;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_F)
+      else if (ch == LIT_CHAR_LOWERCASE_F)
       {
         out_token_p->value = LIT_CHAR_FF;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_N)
+      else if (ch == LIT_CHAR_LOWERCASE_N)
       {
         out_token_p->value = LIT_CHAR_LF;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_T)
+      else if (ch == LIT_CHAR_LOWERCASE_T)
       {
         out_token_p->value = LIT_CHAR_TAB;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_R)
+      else if (ch == LIT_CHAR_LOWERCASE_R)
       {
         out_token_p->value = LIT_CHAR_CR;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_V)
+      else if (ch == LIT_CHAR_LOWERCASE_V)
       {
         out_token_p->value = LIT_CHAR_VTAB;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_C)
+      else if (ch == LIT_CHAR_LOWERCASE_C)
       {
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 2);
-
-        if (lit_utf8_iterator_is_eos (&(parser_ctx_p->iter)))
+        if (lit_utf8_iterator_is_eos (iter_p))
         {
-          ret_value = ecma_raise_syntax_error ("invalid character class");
-          return ret_value;
+          out_token_p->value = ch;
+          break;
         }
 
-        ecma_char_t ch2 = lit_utf8_iterator_read_next (&(parser_ctx_p->iter));
+        ch = lit_utf8_iterator_read_next (iter_p);
 
-        if ((ch2 >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch2 <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
-            || (ch2 >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch2 <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
+        if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
+            || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
         {
-          out_token_p->type = RE_TOK_CHAR;
-          out_token_p->value = (ch2 % 32);
+          out_token_p->value = (ch % 32);
         }
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_X
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 2))
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 3)))
+      else if (ch == LIT_CHAR_LOWERCASE_X
+               && re_hex_lookup (*iter_p, 2))
       {
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 2);
-
         lit_code_point_t code_point;
-        const lit_utf8_byte_t *hex_start = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
+        const lit_utf8_byte_t *hex_start_p = iter_p->buf_p + iter_p->buf_pos.offset;
 
-        if (!lit_read_code_point_from_hex (hex_start, 2, &code_point))
+        if (!lit_read_code_point_from_hex (hex_start_p, 2, &code_point))
         {
-          ret_value = ecma_raise_syntax_error ("decode error");
-          return ret_value;
+          return ecma_raise_syntax_error ("decode error");
         }
 
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 2);
-
-        out_token_p->type = RE_TOK_CHAR;
         out_token_p->value = code_point;
+        lit_utf8_iterator_advance (iter_p, 2);
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_U
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 2))
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 3))
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 4))
-               && lit_char_is_hex_digit (re_lookup (parser_ctx_p->iter, 5)))
+      else if (ch == LIT_CHAR_LOWERCASE_U
+               && re_hex_lookup (*iter_p, 4))
       {
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 2);
-
         lit_code_point_t code_point;
-        const lit_utf8_byte_t *hex_start = parser_ctx_p->iter.buf_p + parser_ctx_p->iter.buf_pos.offset;
+        const lit_utf8_byte_t *hex_start_p = iter_p->buf_p + iter_p->buf_pos.offset;
 
-        if (!lit_read_code_point_from_hex (hex_start, 4, &code_point))
+        if (!lit_read_code_point_from_hex (hex_start_p, 4, &code_point))
         {
-          ret_value = ecma_raise_syntax_error ("decode error");
-          return ret_value;
+          return ecma_raise_syntax_error ("decode error");
         }
 
-        lit_utf8_iterator_advance (&(parser_ctx_p->iter), 4);
-
-        out_token_p->type = RE_TOK_CHAR;
         out_token_p->value = code_point;
+        lit_utf8_iterator_advance (iter_p, 4);
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_D)
+      else if (ch == LIT_CHAR_LOWERCASE_D)
       {
         out_token_p->type = RE_TOK_DIGIT;
+        break;
       }
-      else if (ch1 == LIT_CHAR_UPPERCASE_D)
+      else if (ch == LIT_CHAR_UPPERCASE_D)
       {
         out_token_p->type = RE_TOK_NOT_DIGIT;
+        break;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_S)
+      else if (ch == LIT_CHAR_LOWERCASE_S)
       {
         out_token_p->type = RE_TOK_WHITE;
+        break;
       }
-      else if (ch1 == LIT_CHAR_UPPERCASE_S)
+      else if (ch == LIT_CHAR_UPPERCASE_S)
       {
         out_token_p->type = RE_TOK_NOT_WHITE;
+        break;
       }
-      else if (ch1 == LIT_CHAR_LOWERCASE_W)
+      else if (ch == LIT_CHAR_LOWERCASE_W)
       {
         out_token_p->type = RE_TOK_WORD_CHAR;
+        break;
       }
-      else if (ch1 == LIT_CHAR_UPPERCASE_W)
+      else if (ch == LIT_CHAR_UPPERCASE_W)
       {
         out_token_p->type = RE_TOK_NOT_WORD_CHAR;
+        break;
       }
-      else if (lit_char_is_decimal_digit (ch1))
+      else if (lit_char_is_decimal_digit (ch))
       {
-        if (ch1 == LIT_CHAR_0)
+        if (ch == LIT_CHAR_0)
         {
-          if (lit_char_is_decimal_digit (re_lookup (parser_ctx_p->iter, 2)))
+          if (!lit_utf8_iterator_is_eos (iter_p)
+              && lit_char_is_decimal_digit (lit_utf8_iterator_peek_next (iter_p)))
           {
-            ret_value = ecma_raise_syntax_error ("RegExp escape pattern error.");
-            break;
+            return ecma_raise_syntax_error ("RegExp escape pattern error.");
           }
 
-          advance = 2;
           out_token_p->value = LIT_UNICODE_CODE_POINT_NULL;
         }
         else
@@ -750,6 +712,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
           if (parser_ctx_p->num_of_groups)
           {
+            lit_utf8_iterator_read_prev (iter_p);
             uint32_t number = 0;
             int index = 0;
 
@@ -760,12 +723,16 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
                 ret_value = ecma_raise_syntax_error ("RegExp escape pattern error: decimal escape too long.");
                 return ret_value;
               }
+              if (lit_utf8_iterator_is_eos (iter_p))
+              {
+                break;
+              }
 
-              advance++;
-              ecma_char_t digit = re_lookup (parser_ctx_p->iter,
-                                             advance);
+              ecma_char_t digit = lit_utf8_iterator_read_next (iter_p);
+
               if (!lit_char_is_decimal_digit (digit))
               {
+                lit_utf8_iterator_read_prev (iter_p);
                 break;
               }
               number = number * 10 + lit_char_hex_to_int (digit);
@@ -782,81 +749,81 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
           }
           else
           {
-            out_token_p->value = ch1;
+            out_token_p->value = ch;
           }
         }
       }
       else
       {
-        advance = 2;
-        out_token_p->value = ch1;
+        out_token_p->value = ch;
       }
 
-      uint32_t iter_adv = 0;
-      ECMA_TRY_CATCH (empty,
-                      re_parse_iterator (parser_ctx_p->iter,
-                                         out_token_p,
-                                         advance,
-                                         &iter_adv),
-                      ret_value);
-      advance += iter_adv;
-      ECMA_FINALIZE (empty);
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
       break;
     }
     case LIT_CHAR_LEFT_PAREN:
     {
-      if (re_lookup (parser_ctx_p->iter, 1) == LIT_CHAR_QUESTION)
+      if (lit_utf8_iterator_is_eos (iter_p))
       {
-        ecma_char_t ch2 = re_lookup (parser_ctx_p->iter, 2);
+        return ecma_raise_syntax_error ("Unterminated group");
+      }
 
-        if (ch2 == LIT_CHAR_EQUALS)
+      if (lit_utf8_iterator_peek_next (iter_p) == LIT_CHAR_QUESTION)
+      {
+        lit_utf8_iterator_advance (iter_p, 1);
+        if (lit_utf8_iterator_is_eos (iter_p))
+        {
+          return ecma_raise_syntax_error ("Invalid group");
+        }
+
+        ch = lit_utf8_iterator_read_next (iter_p);
+
+        if (ch == LIT_CHAR_EQUALS)
         {
           /* (?= */
-          advance = 3;
           out_token_p->type = RE_TOK_ASSERT_START_POS_LOOKAHEAD;
         }
-        else if (ch2 == LIT_CHAR_EXCLAMATION)
+        else if (ch == LIT_CHAR_EXCLAMATION)
         {
           /* (?! */
-          advance = 3;
           out_token_p->type = RE_TOK_ASSERT_START_NEG_LOOKAHEAD;
         }
-        else if (ch2 == LIT_CHAR_COLON)
+        else if (ch == LIT_CHAR_COLON)
         {
           /* (?: */
-          advance = 3;
           out_token_p->type = RE_TOK_START_NON_CAPTURE_GROUP;
+        }
+        else
+        {
+          return ecma_raise_syntax_error ("Invalid group");
         }
       }
       else
       {
         /* ( */
-        advance = 1;
         out_token_p->type = RE_TOK_START_CAPTURE_GROUP;
       }
       break;
     }
     case LIT_CHAR_RIGHT_PAREN:
     {
-      ECMA_TRY_CATCH (empty,
-                      re_parse_iterator (parser_ctx_p->iter,
-                                         out_token_p,
-                                         1,
-                                         &advance),
-                      ret_value);
-      advance += 1;
       out_token_p->type = RE_TOK_END_GROUP;
-      ECMA_FINALIZE (empty);
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
       break;
     }
     case LIT_CHAR_LEFT_SQUARE:
     {
-      advance = 1;
       out_token_p->type = RE_TOK_START_CHAR_CLASS;
-      if (re_lookup (parser_ctx_p->iter, 1) == LIT_CHAR_CIRCUMFLEX)
+
+      if (lit_utf8_iterator_is_eos (iter_p))
       {
-        advance = 2;
+        return ecma_raise_syntax_error ("invalid character class");
+      }
+
+      if (lit_utf8_iterator_peek_next (iter_p) == LIT_CHAR_CIRCUMFLEX)
+      {
         out_token_p->type = RE_TOK_START_INV_CHAR_CLASS;
+        lit_utf8_iterator_advance (iter_p, 1);
       }
       break;
     }
@@ -867,34 +834,20 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     case LIT_CHAR_PLUS:
     case LIT_CHAR_LEFT_BRACE:
     {
-      ret_value = ecma_raise_syntax_error ("Invalid RegExp token.");
-      return ret_value;
+      return ecma_raise_syntax_error ("Invalid RegExp token.");
     }
     case LIT_CHAR_NULL:
     {
-      advance = 0;
       out_token_p->type = RE_TOK_EOF;
       break;
     }
     default:
     {
-      ECMA_TRY_CATCH (empty,
-                      re_parse_iterator (parser_ctx_p->iter,
-                                         out_token_p,
-                                         1,
-                                         &advance),
-                      ret_value);
-      advance += 1;
       out_token_p->type = RE_TOK_CHAR;
-      out_token_p->value = ch0;
-      ECMA_FINALIZE (empty);
+      out_token_p->value = ch;
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
       break;
     }
-  }
-
-  if (ecma_is_completion_value_empty (ret_value))
-  {
-    lit_utf8_iterator_advance (&(parser_ctx_p->iter), advance);
   }
 
   return ret_value;

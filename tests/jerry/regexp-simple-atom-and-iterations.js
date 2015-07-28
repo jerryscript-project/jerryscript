@@ -53,3 +53,6 @@ assert (r.exec ("aaaaaaa") == "aaaaaa");
 
 r = new RegExp (".*");
 assert (r.exec ("abcdefghijkl") == "abcdefghijkl");
+
+r = /\n/;
+assert (r.exec ("\n") == "\n");

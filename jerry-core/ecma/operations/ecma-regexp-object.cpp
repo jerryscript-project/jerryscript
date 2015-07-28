@@ -286,7 +286,39 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         ecma_char_t ch2 = lit_utf8_iterator_read_next (&iter);
         JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
 
-        if (ch1 != ch2)
+        if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
+        {
+          ecma_char_t ch1_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+          ecma_char_t ch2_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+          lit_utf8_size_t ch1_length = lit_char_to_lower_case (ch1,
+                                                               ch1_buffer,
+                                                               LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+          lit_utf8_size_t ch2_length = lit_char_to_lower_case (ch2,
+                                                               ch2_buffer,
+                                                               LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+          JERRY_ASSERT (ch1_length >= 1 && ch1_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+          JERRY_ASSERT (ch2_length >= 1 && ch2_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+          if (ch1_length != ch2_length)
+          {
+            JERRY_DDLOG ("fail\n");
+            re_ctx_p->recursion_depth--;
+            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
+          }
+
+          for (lit_utf8_size_t i = 0; i < ch1_length; i++)
+          {
+            if (ch1_buffer[i] != ch2_buffer[i])
+            {
+              JERRY_DDLOG ("fail\n");
+              re_ctx_p->recursion_depth--;
+              return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
+            }
+          }
+        }
+        else if (ch1 != ch2)
         {
           JERRY_DDLOG ("fail\n");
           re_ctx_p->recursion_depth--;

@@ -40,7 +40,7 @@ instrs_equal (const vm_instr_t *instrs1, vm_instr_t *instrs2, uint16_t size)
   uint16_t i;
   for (i = 0; i < size; i++)
   {
-    if (memcmp (&instrs1[i], &instrs2[i], instr_fields_num[instrs1[i].op_idx] * sizeof (idx_t)) != 0)
+    if (memcmp (&instrs1[i], &instrs2[i], instr_fields_num[instrs1[i].op_idx] * sizeof (vm_idx_t)) != 0)
     {
       return false;
     }
@@ -77,8 +77,8 @@ main (int __attr_unused___ argc,
     getop_meta (OPCODE_META_TYPE_SCOPE_CODE_FLAGS, // [ ]
                 OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
                 | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
-                INVALID_VALUE),
-    getop_reg_var_decl (OPCODE_REG_FIRST, OPCODE_REG_GENERAL_FIRST, 0),
+                VM_IDX_EMPTY),
+    getop_reg_var_decl (VM_REG_FIRST, VM_REG_GENERAL_FIRST, 0),
     getop_var_decl (0),             // var a;
     getop_assignment (130, 1, 1),   // $tmp0 = 1;
     getop_assignment (0, 6, 130),   // a = $tmp0;

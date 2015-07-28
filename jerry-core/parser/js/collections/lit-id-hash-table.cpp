@@ -23,7 +23,7 @@
  * @{
  *
  * \addtogroup lit_id_hash_table Literal identifiers hash table
- * The hash table connects pairs (instruction block, idx_t value) with literal identifiers.
+ * The hash table connects pairs (instruction block, vm_idx_t value) with literal identifiers.
  * @{
  */
 
@@ -87,7 +87,7 @@ lit_id_hash_table_free (lit_id_hash_table *table_p) /**< table's header */
  */
 void
 lit_id_hash_table_insert (lit_id_hash_table *table_p, /**< table's header */
-                          idx_t uid, /**< value of byte-code instruction's argument */
+                          vm_idx_t uid, /**< value of byte-code instruction's argument */
                           vm_instr_counter_t oc, /**< instruction counter of the instruction */
                           lit_cpointer_t lit_cp) /**< literal identifier */
 {
@@ -111,7 +111,7 @@ lit_id_hash_table_insert (lit_id_hash_table *table_p, /**< table's header */
  */
 lit_cpointer_t
 lit_id_hash_table_lookup (lit_id_hash_table *table_p, /**< table's header */
-                          idx_t uid, /**< value of byte-code instruction's argument */
+                          vm_idx_t uid, /**< value of byte-code instruction's argument */
                           vm_instr_counter_t oc) /**< instruction counter of the instruction */
 {
   JERRY_ASSERT (table_p != NULL);

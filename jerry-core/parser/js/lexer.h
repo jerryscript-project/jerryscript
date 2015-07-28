@@ -19,7 +19,6 @@
 #include "lit-literal.h"
 #include "lit-strings.h"
 
-#define INVALID_VALUE 255
 #define INVALID_LITERAL (rcs_cpointer_t::null_cp ())
 
 /* Keywords.  */

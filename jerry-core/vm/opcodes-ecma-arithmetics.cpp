@@ -43,7 +43,7 @@ typedef enum
  */
 static ecma_completion_value_t
 do_number_arithmetic (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                      idx_t dst_var_idx, /**< destination variable identifier */
+                      vm_idx_t dst_var_idx, /**< destination variable identifier */
                       number_arithmetic_op op, /**< number arithmetic operation */
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /** right value */
@@ -106,9 +106,9 @@ ecma_completion_value_t
 opfunc_addition (vm_instr_t instr, /**< instruction */
                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.addition.dst;
-  const idx_t left_var_idx = instr.data.addition.var_left;
-  const idx_t right_var_idx = instr.data.addition.var_right;
+  const vm_idx_t dst_var_idx = instr.data.addition.dst;
+  const vm_idx_t left_var_idx = instr.data.addition.var_left;
+  const vm_idx_t right_var_idx = instr.data.addition.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -172,9 +172,9 @@ ecma_completion_value_t
 opfunc_substraction (vm_instr_t instr, /**< instruction */
                      vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.substraction.dst;
-  const idx_t left_var_idx = instr.data.substraction.var_left;
-  const idx_t right_var_idx = instr.data.substraction.var_right;
+  const vm_idx_t dst_var_idx = instr.data.substraction.dst;
+  const vm_idx_t left_var_idx = instr.data.substraction.var_left;
+  const vm_idx_t right_var_idx = instr.data.substraction.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -207,9 +207,9 @@ ecma_completion_value_t
 opfunc_multiplication (vm_instr_t instr, /**< instruction */
                        vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.multiplication.dst;
-  const idx_t left_var_idx = instr.data.multiplication.var_left;
-  const idx_t right_var_idx = instr.data.multiplication.var_right;
+  const vm_idx_t dst_var_idx = instr.data.multiplication.dst;
+  const vm_idx_t left_var_idx = instr.data.multiplication.var_left;
+  const vm_idx_t right_var_idx = instr.data.multiplication.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -242,9 +242,9 @@ ecma_completion_value_t
 opfunc_division (vm_instr_t instr, /**< instruction */
                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.division.dst;
-  const idx_t left_var_idx = instr.data.division.var_left;
-  const idx_t right_var_idx = instr.data.division.var_right;
+  const vm_idx_t dst_var_idx = instr.data.division.dst;
+  const vm_idx_t left_var_idx = instr.data.division.var_left;
+  const vm_idx_t right_var_idx = instr.data.division.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -277,9 +277,9 @@ ecma_completion_value_t
 opfunc_remainder (vm_instr_t instr, /**< instruction */
                   vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.remainder.dst;
-  const idx_t left_var_idx = instr.data.remainder.var_left;
-  const idx_t right_var_idx = instr.data.remainder.var_right;
+  const vm_idx_t dst_var_idx = instr.data.remainder.dst;
+  const vm_idx_t left_var_idx = instr.data.remainder.var_left;
+  const vm_idx_t right_var_idx = instr.data.remainder.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -312,8 +312,8 @@ ecma_completion_value_t
 opfunc_unary_plus (vm_instr_t instr, /**< instruction */
                    vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.remainder.dst;
-  const idx_t var_idx = instr.data.remainder.var_left;
+  const vm_idx_t dst_var_idx = instr.data.remainder.dst;
+  const vm_idx_t var_idx = instr.data.remainder.var_left;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -349,8 +349,8 @@ ecma_completion_value_t
 opfunc_unary_minus (vm_instr_t instr, /**< instruction */
                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.remainder.dst;
-  const idx_t var_idx = instr.data.remainder.var_left;
+  const vm_idx_t dst_var_idx = instr.data.remainder.dst;
+  const vm_idx_t var_idx = instr.data.remainder.var_left;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

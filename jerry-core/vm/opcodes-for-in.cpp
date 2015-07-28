@@ -185,9 +185,9 @@ ecma_completion_value_t
 opfunc_for_in (vm_instr_t instr, /**< instruction */
                vm_frame_ctx_t *int_data_p) /**< interpreter context */
 {
-  const idx_t expr_idx = instr.data.for_in.expr;
-  const idx_t block_end_oc_idx_1 = instr.data.for_in.oc_idx_1;
-  const idx_t block_end_oc_idx_2 = instr.data.for_in.oc_idx_2;
+  const vm_idx_t expr_idx = instr.data.for_in.expr;
+  const vm_idx_t block_end_oc_idx_1 = instr.data.for_in.oc_idx_1;
+  const vm_idx_t block_end_oc_idx_2 = instr.data.for_in.oc_idx_2;
   const vm_instr_counter_t for_in_end_oc = (vm_instr_counter_t) (
     vm_calc_instr_counter_from_idx_idx (block_end_oc_idx_1,
                                         block_end_oc_idx_2) + int_data_p->pos);
@@ -238,7 +238,7 @@ opfunc_for_in (vm_instr_t instr, /**< instruction */
         {
           ecma_completion_value_t completion = set_variable_value (int_data_p,
                                                                    int_data_p->pos,
-                                                                   OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME,
+                                                                   VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME,
                                                                    name_value);
           JERRY_ASSERT (ecma_is_completion_value_empty (completion));
 

@@ -803,7 +803,7 @@ parse_literal (void)
     case TOK_REGEXP: return dump_regexp_assignment_res (token_data_as_lit_cp ());
     case TOK_NULL: return dump_null_assignment_res ();
     case TOK_BOOL: return dump_boolean_assignment_res ((bool) token_data ());
-    case TOK_SMALL_INT: return dump_smallint_assignment_res ((idx_t) token_data ());
+    case TOK_SMALL_INT: return dump_smallint_assignment_res ((vm_idx_t) token_data ());
     default:
     {
       EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Expected literal");
@@ -2073,7 +2073,7 @@ jsp_parse_for_in_statement_iterator (jsp_operand_t *base_p, /**< out: base value
  *                        tmp <- Collection (Expression)
  *                        for_in instruction (tmp, instruction counter of for-in end mark)
  *                         {
- *                          Assignment of OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME to
+ *                          Assignment of VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME to
  *                          Iterator (VariableDeclarationNoIn / LeftHandSideExpression)
  *                         }
  *                         Body (Statement)
@@ -2127,7 +2127,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
   // Dump for-in instruction
   vm_instr_counter_t for_in_oc = dump_for_in_for_rewrite (collection);
 
-  // Dump assignment VariableDeclarationNoIn / LeftHandSideExpression <- OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME
+  // Dump assignment VariableDeclarationNoIn / LeftHandSideExpression <- VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME
   lexer_seek (iterator_loc);
   tok = lexer_next_token ();
 

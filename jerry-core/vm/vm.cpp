@@ -543,9 +543,9 @@ vm_run_from_pos (const vm_instr_t *instrs_p, /**< byte-code array */
   const vm_instr_t *curr = &instrs_p[start_pos];
   JERRY_ASSERT (curr->op_idx == VM_OP_REG_VAR_DECL);
 
-  const idx_t min_reg_idx = curr->data.reg_var_decl.min;
-  const idx_t max_reg_idx = curr->data.reg_var_decl.max;
-  const idx_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
+  const vm_idx_t min_reg_idx = curr->data.reg_var_decl.min;
+  const vm_idx_t max_reg_idx = curr->data.reg_var_decl.max;
+  const vm_idx_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
   JERRY_ASSERT (max_reg_idx >= min_reg_idx);
 
   int32_t regs_num = max_reg_idx - min_reg_idx + 1;

@@ -89,10 +89,19 @@ public:
    * @return constructed operand
    */
   static jsp_operand_t
-  make_reg_operand (idx_t reg_index) /**< register index */
+  make_reg_operand (vm_idx_t reg_index) /**< register index */
   {
-    JERRY_ASSERT (reg_index != INVALID_VALUE
-                  && reg_index != LITERAL_TO_REWRITE);
+    /*
+     * The following check currently leads to 'comparison is always true
+     * due to limited range of data type' warning, so it is turned off.
+     *
+     * If VM_IDX_GENERAL_VALUE_FIRST is changed to value greater than 0,
+     * the check should be restored.
+     */
+    // JERRY_ASSERT (reg_index >= VM_IDX_GENERAL_VALUE_FIRST);
+    static_assert (VM_IDX_GENERAL_VALUE_FIRST == 0, "See comment above");
+
+    JERRY_ASSERT (reg_index <= VM_IDX_GENERAL_VALUE_LAST);
 
     jsp_operand_t ret;
 
@@ -142,12 +151,12 @@ public:
   } /* is_literal_operand */
 
   /**
-   * Get idx_t for operand
+   * Get idx for operand
    *
-   * @return LITERAL_TO_REWRITE (for jsp_operand_t::LITERAL),
+   * @return VM_IDX_REWRITE_LITERAL_UID (for jsp_operand_t::LITERAL),
    *         or register index (for jsp_operand_t::TMP).
    */
-  idx_t
+  vm_idx_t
   get_idx (void) const
   {
     JERRY_ASSERT (_type != jsp_operand_t::UNINITIALIZED);
@@ -158,13 +167,13 @@ public:
     }
     else if (_type == jsp_operand_t::LITERAL)
     {
-      return LITERAL_TO_REWRITE;
+      return VM_IDX_REWRITE_LITERAL_UID;
     }
     else
     {
       JERRY_ASSERT (_type == jsp_operand_t::EMPTY);
 
-      return INVALID_VALUE;
+      return VM_IDX_EMPTY;
     }
   } /* get_idx */
 
@@ -198,7 +207,7 @@ public:
 private:
   union
   {
-    idx_t uid; /**< byte-code register index (for jsp_operand_t::TMP) */
+    vm_idx_t uid; /**< byte-code register index (for jsp_operand_t::TMP) */
     lit_cpointer_t lit_id; /**< literal (for jsp_operand_t::LITERAL) */
   } _data;
 
@@ -243,8 +252,8 @@ void dump_number_assignment (jsp_operand_t, lit_cpointer_t);
 jsp_operand_t dump_number_assignment_res (lit_cpointer_t);
 void dump_regexp_assignment (jsp_operand_t, lit_cpointer_t);
 jsp_operand_t dump_regexp_assignment_res (lit_cpointer_t);
-void dump_smallint_assignment (jsp_operand_t, idx_t);
-jsp_operand_t dump_smallint_assignment_res (idx_t);
+void dump_smallint_assignment (jsp_operand_t, vm_idx_t);
+jsp_operand_t dump_smallint_assignment_res (vm_idx_t);
 void dump_undefined_assignment (jsp_operand_t);
 jsp_operand_t dump_undefined_assignment_res (void);
 void dump_null_assignment (jsp_operand_t);

@@ -68,9 +68,9 @@ lit_cp_to_str (lit_cpointer_t cp)
 }
 
 static const char *
-tmp_id_to_str (idx_t id)
+tmp_id_to_str (vm_idx_t id)
 {
-  JERRY_ASSERT (id != LITERAL_TO_REWRITE);
+  JERRY_ASSERT (id != VM_IDX_REWRITE_LITERAL_UID);
   JERRY_ASSERT (id >= 128);
   clear_temp_buffer ();
   strncpy (buff, "tmp", 3);
@@ -96,7 +96,7 @@ static const char *
 var_to_str (vm_instr_t instr, lit_cpointer_t lit_ids[], vm_instr_counter_t oc, uint8_t current_arg)
 {
   raw_instr raw = *(raw_instr*) &instr;
-  if (raw.uids[current_arg] == LITERAL_TO_REWRITE)
+  if (raw.uids[current_arg] == VM_IDX_REWRITE_LITERAL_UID)
   {
     if (lit_ids == NULL)
     {
@@ -309,7 +309,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
     {
       if (opm.op.data.func_expr_n.arg_list == 0)
       {
-        if (opm.op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
+        if (opm.op.data.func_expr_n.name_lit_idx == VM_IDX_EMPTY)
         {
           printf ("%s = function ();", VAR (1));
         }
@@ -416,7 +416,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
               }
               case VM_OP_FUNC_EXPR_N:
               {
-                if (start_op.data.func_expr_n.name_lit_idx == INVALID_VALUE)
+                if (start_op.data.func_expr_n.name_lit_idx == VM_IDX_EMPTY)
                 {
                   pp_printf ("%s = function (", start_op, NULL, start, 1);
                 }
@@ -556,24 +556,25 @@ pp_op_meta (const vm_instr_t *instrs_p,
         }
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
-          if (opm.op.data.meta.data_1 != INVALID_VALUE)
+          if (opm.op.data.meta.data_1 != VM_IDX_REWRITE_GENERAL_CASE
+              && opm.op.data.meta.data_1 != VM_IDX_EMPTY)
           {
-            idx_t scope_flags = opm.op.data.meta.data_1;
+            vm_idx_t scope_flags = opm.op.data.meta.data_1;
 
             if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
             {
               printf ("[use strict] ");
-              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
+              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
             }
             if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
             {
               printf ("[no 'arguments'] ");
-              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER);
+              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER);
             }
             if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER)
             {
               printf ("[no 'eval'] ");
-              scope_flags &= (idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
+              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
             }
 
             JERRY_ASSERT (scope_flags == 0);

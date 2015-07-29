@@ -78,17 +78,10 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     }
   }
 
-  if (arguments_list_len == 0 || ecma_is_value_undefined (arguments_list_p[0]))
+  if (ecma_is_value_object (pattern_value)
+      && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
-    ret_value = ecma_op_create_regexp_object (magic_str_p, NULL);
-    ecma_deref_ecma_string (magic_str_p);
-  }
-  else if (ecma_is_value_object (pattern_value)
-           && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == LIT_MAGIC_STRING_REGEXP_UL)
-  {
-    if (arguments_list_len == 1
-        || (arguments_list_len > 1 && ecma_is_value_undefined (flags_value)))
+    if (ecma_is_value_undefined (flags_value))
     {
       ret_value = ecma_make_normal_completion_value (ecma_copy_value (pattern_value, true));
     }
@@ -99,15 +92,32 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
   else
   {
-    ECMA_TRY_CATCH (regexp_str_value,
-                    ecma_op_to_string (pattern_value),
-                    ret_value);
-
-    ecma_string_t *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
-
+    ecma_string_t *pattern_string_p = NULL;
     ecma_string_t *flags_string_p = NULL;
 
-    if (arguments_list_len > 1)
+    if (!ecma_is_value_undefined (pattern_value))
+    {
+      ECMA_TRY_CATCH (regexp_str_value,
+                      ecma_op_to_string (pattern_value),
+                      ret_value);
+
+      if (ecma_string_get_length (ecma_get_string_from_value (regexp_str_value)) == 0)
+      {
+        pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+      }
+      else
+      {
+        pattern_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
+      }
+
+      ECMA_FINALIZE (regexp_str_value);
+    }
+    else
+    {
+      pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+    }
+
+    if (ecma_is_completion_value_empty (ret_value) && !ecma_is_value_undefined (flags_value))
     {
       ECMA_TRY_CATCH (flags_str_value,
                       ecma_op_to_string (flags_value),
@@ -119,24 +129,18 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
     if (ecma_is_completion_value_empty (ret_value))
     {
-      if (ecma_string_get_length (pattern_string_p) == 0)
-      {
-        ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
-        ret_value = ecma_op_create_regexp_object (magic_str_p, flags_string_p);
-        ecma_deref_ecma_string (magic_str_p);
-      }
-      else
-      {
-        ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
-      }
+      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+    }
+
+    if (pattern_string_p != NULL)
+    {
+      ecma_deref_ecma_string (pattern_string_p);
     }
 
     if (flags_string_p != NULL)
     {
       ecma_deref_ecma_string (flags_string_p);
     }
-
-    ECMA_FINALIZE (regexp_str_value);
   }
 
   return ret_value;

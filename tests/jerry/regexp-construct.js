@@ -87,7 +87,6 @@ assert (r.multiline == true);
 
 assert(Object.prototype.toString.call(RegExp.prototype) === '[object RegExp]');
 
-
 /* The 'undefined' argument for the RegExp constructor should not be converted to string,
  * and it should behave just like when there is no argument.
  */
@@ -98,3 +97,42 @@ r3 = new RegExp(foo)
 
 assert (r1.source === r2.source);
 assert (r2.source === r3.source);
+
+r = new RegExp ("foo", undefined);
+assert (r.source === "foo");
+assert (r.global === false);
+assert (r.ignoreCase === false);
+assert (r.multiline === false);
+
+r = new RegExp ("foo", void 0);
+assert (r.source === "foo");
+assert (r.global === false);
+assert (r.ignoreCase === false);
+assert (r.multiline === false);
+
+try {
+	new RegExp (undefined, "ii");
+	assert (false);
+} catch (e) {
+	assert (e instanceof SyntaxError);
+}
+
+try {
+	new RegExp ("", "gg");
+	assert (false);
+} catch (e) {
+	assert (e instanceof SyntaxError);
+}
+
+try {
+	new RegExp (void 0, "mm");
+	assert (false);
+} catch (e) {
+	assert (e instanceof SyntaxError);
+}
+
+r = new RegExp (undefined, undefined);
+assert (r.source == "(?:)");
+assert (r.global == false);
+assert (r.ignoreCase == false);
+assert (r.multiline == false);

@@ -16,6 +16,7 @@
 
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
+#include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
 #include "mem-heap.h"
@@ -446,7 +447,8 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
                      re_ctx_p->current_token.value, re_ctx_p->current_token.qmin, re_ctx_p->current_token.qmax);
 
         re_append_opcode (bc_ctx_p, RE_OP_CHAR);
-        re_append_u32 (bc_ctx_p, re_ctx_p->current_token.value);
+        re_append_u32 (bc_ctx_p, re_canonicalize ((ecma_char_t) re_ctx_p->current_token.value,
+                                                   re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
 
         if ((re_ctx_p->current_token.qmin != 1) || (re_ctx_p->current_token.qmax != 1))
         {

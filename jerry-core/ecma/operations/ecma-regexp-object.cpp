@@ -55,13 +55,6 @@
 #define RE_GLOBAL_END_IDX   1
 
 /**
- * RegExp flags
- */
-#define RE_FLAG_GLOBAL              (1 << 0) /* ECMA-262 v5, 15.10.7.2 */
-#define RE_FLAG_IGNORE_CASE         (1 << 1) /* ECMA-262 v5, 15.10.7.3 */
-#define RE_FLAG_MULTILINE           (1 << 2) /* ECMA-262 v5, 15.10.7.4 */
-
-/**
  * Parse RegExp flags (global, ignoreCase, multiline)
  *
  * See also: ECMA-262 v5, 15.10.4.1
@@ -230,6 +223,53 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
 } /* ecma_op_create_regexp_object */
 
 /**
+ * RegExp Canonicalize abstract operation
+ *
+ * See also: ECMA-262 v5, 15.10.2.8
+ *
+ * @return ecma_char_t canonicalized character
+ */
+ecma_char_t __attr_always_inline___
+re_canonicalize (ecma_char_t ch, /**< character */
+                 bool is_ignorecase) /**< IgnoreCase flag */
+{
+  ecma_char_t ret_value = ch;
+
+  if (is_ignorecase)
+  {
+    if (ch < 128)
+    {
+      /* ASCII fast path. */
+      if (ch >= LIT_CHAR_LOWERCASE_A && ch <= LIT_CHAR_LOWERCASE_Z)
+      {
+        ret_value = (ecma_char_t) (ch - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+      }
+    }
+    else
+    {
+      /* 2. */
+      ecma_char_t u[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+      lit_utf8_size_t size = lit_char_to_upper_case (ch, u, LIT_MAXIMUM_OTHER_CASE_LENGTH);
+
+      /* 3. */
+      if (size == 1)
+      {
+        /* 4. */
+        ecma_char_t cu = u[0];
+        /* 5. */
+        if (cu >= 128)
+        {
+          /* 6. */
+          ret_value = cu;
+        }
+      }
+    }
+  }
+
+  return ret_value;
+} /* re_canonicalize */
+
+/**
  * Recursive function for RegExp matching. Tests for a regular expression
  * match and returns a MatchResult value.
  *
@@ -282,43 +322,12 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        ecma_char_t ch1 = (ecma_char_t) re_get_value (&bc_p);
-        ecma_char_t ch2 = lit_utf8_iterator_read_next (&iter);
+        bool is_ignorecase = re_ctx_p->flags & RE_FLAG_IGNORE_CASE;
+        ecma_char_t ch1 = (ecma_char_t) re_get_value (&bc_p); /* Already canonicalized. */
+        ecma_char_t ch2 = re_canonicalize (lit_utf8_iterator_read_next (&iter), is_ignorecase);
         JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
 
-        if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
-        {
-          ecma_char_t ch1_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-          ecma_char_t ch2_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-          lit_utf8_size_t ch1_length = lit_char_to_lower_case (ch1,
-                                                               ch1_buffer,
-                                                               LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-          lit_utf8_size_t ch2_length = lit_char_to_lower_case (ch2,
-                                                               ch2_buffer,
-                                                               LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-          JERRY_ASSERT (ch1_length >= 1 && ch1_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
-          JERRY_ASSERT (ch2_length >= 1 && ch2_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-          if (ch1_length != ch2_length)
-          {
-            JERRY_DDLOG ("fail\n");
-            re_ctx_p->recursion_depth--;
-            return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
-          }
-
-          for (lit_utf8_size_t i = 0; i < ch1_length; i++)
-          {
-            if (ch1_buffer[i] != ch2_buffer[i])
-            {
-              JERRY_DDLOG ("fail\n");
-              re_ctx_p->recursion_depth--;
-              return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
-            }
-          }
-        }
-        else if (ch1 != ch2)
+        if (ch1 != ch2)
         {
           JERRY_DDLOG ("fail\n");
           re_ctx_p->recursion_depth--;
@@ -520,7 +529,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_CHAR_CLASS:
       case RE_OP_INV_CHAR_CLASS:
       {
-        uint32_t curr_ch, num_of_ranges;
+        uint32_t num_of_ranges;
         bool is_match;
 
         JERRY_DDLOG ("Execute RE_OP_CHAR_CLASS/RE_OP_INV_CHAR_CLASS, ");
@@ -531,16 +540,16 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        curr_ch = lit_utf8_iterator_read_next (&iter);
+        bool is_ignorecase = re_ctx_p->flags & RE_FLAG_IGNORE_CASE;
+        ecma_char_t curr_ch = re_canonicalize (lit_utf8_iterator_read_next (&iter), is_ignorecase);
 
         num_of_ranges = re_get_value (&bc_p);
         is_match = false;
 
         while (num_of_ranges)
         {
-          uint32_t ch1, ch2;
-          ch1 = (uint32_t) re_get_value (&bc_p);
-          ch2 = (uint32_t) re_get_value (&bc_p);
+          ecma_char_t ch1 = re_canonicalize ((ecma_char_t) re_get_value (&bc_p), is_ignorecase);
+          ecma_char_t ch2 = re_canonicalize ((ecma_char_t) re_get_value (&bc_p), is_ignorecase);
           JERRY_DDLOG ("num_of_ranges=%d, ch1=%d, ch2=%d, curr_ch=%d; ",
                        num_of_ranges, ch1, ch2, curr_ch);
 

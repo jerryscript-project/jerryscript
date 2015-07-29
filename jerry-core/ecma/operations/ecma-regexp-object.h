@@ -40,6 +40,13 @@
 #define RE_EXECUTE_MATCH_LIMIT      10000
 
 /**
+ * RegExp flags
+ */
+#define RE_FLAG_GLOBAL              (1 << 0) /* ECMA-262 v5, 15.10.7.2 */
+#define RE_FLAG_IGNORE_CASE         (1 << 1) /* ECMA-262 v5, 15.10.7.3 */
+#define RE_FLAG_MULTILINE           (1 << 2) /* ECMA-262 v5, 15.10.7.4 */
+
+/**
  * RegExp executor context
  */
 typedef struct
@@ -60,6 +67,10 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str
 
 extern ecma_completion_value_t
 ecma_regexp_exec_helper (ecma_value_t, ecma_value_t, bool);
+
+extern ecma_char_t
+re_canonicalize (ecma_char_t ch,
+                 bool is_ignorecase);
 
 /**
  * @}

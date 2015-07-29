@@ -108,6 +108,11 @@ extern bool lit_char_is_unicode_connector_punctuation (ecma_char_t);
 #define LIT_CHAR_QUESTION     ((ecma_char_t) '?') /* question mark */
 #define LIT_CHAR_COLON        ((ecma_char_t) ':') /* colon */
 
+/*
+ * Special characters for String.prototype.replace.
+ */
+#define LIT_CHAR_GRAVE_ACCENT ((ecma_char_t) '`') /* grave accent */
+
 /**
  * Uppercase ASCII letters
  */

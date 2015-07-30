@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2014-2015 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,4 +29,4 @@ switch ("key") {
     break;
 }
 
-assert(matchesCount === 1 ? 1 : 0);
+assert (matchesCount === 1);

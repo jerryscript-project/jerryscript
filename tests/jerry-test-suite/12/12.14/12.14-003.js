@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2014-2015 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function test()
+function test ()
 {
     try {
         throw 1;
     } catch (e) {
-        return e === 1 ? 0 : 1;
+        return (e === 1);
     }
 
-    return 1;
+    return false;
 }
 
-assert (test);
+assert (test ());

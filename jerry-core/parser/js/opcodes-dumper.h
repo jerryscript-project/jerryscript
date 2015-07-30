@@ -81,7 +81,7 @@ void dump_variable_assignment (operand, operand);
 operand dump_variable_assignment_res (operand);
 
 void dump_varg_header_for_rewrite (varg_list_type, operand);
-operand rewrite_varg_header_set_args_count (uint8_t);
+operand rewrite_varg_header_set_args_count (size_t);
 void dump_call_additional_info (opcode_call_flags_t, operand);
 void dump_varg (operand);
 

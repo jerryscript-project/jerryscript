@@ -326,26 +326,30 @@ pp_op_meta (const vm_instr_t *instrs_p,
     }
     case VM_OP_ARRAY_DECL:
     {
-      if (opm.op.data.array_decl.list == 0)
+      if (opm.op.data.array_decl.list_1 == 0
+          && opm.op.data.array_decl.list_2 == 0)
       {
         printf ("%s = [];", VAR (1));
       }
       else
       {
-        vargs_num = opm.op.data.array_decl.list;
+        vargs_num = (((int) opm.op.data.array_decl.list_1 << JERRY_BITSINBYTE)
+                     + (int) opm.op.data.array_decl.list_2);
         seen_vargs = 0;
       }
       break;
     }
     case VM_OP_OBJ_DECL:
     {
-      if (opm.op.data.obj_decl.list == 0)
+      if (opm.op.data.obj_decl.list_1 == 0
+          && opm.op.data.obj_decl.list_2 == 0)
       {
         printf ("%s = {};", VAR (1));
       }
       else
       {
-        vargs_num = opm.op.data.obj_decl.list;
+        vargs_num = (((int) opm.op.data.obj_decl.list_1 << JERRY_BITSINBYTE)
+                     + (int) opm.op.data.obj_decl.list_2);
         seen_vargs = 0;
       }
       break;

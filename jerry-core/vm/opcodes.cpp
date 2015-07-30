@@ -976,10 +976,14 @@ opfunc_array_decl (vm_instr_t instr, /**< instruction */
                    vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t lhs_var_idx = instr.data.array_decl.lhs;
-  const idx_t args_number = instr.data.array_decl.list;
+  const idx_t args_number_high_byte = instr.data.array_decl.list_1;
+  const idx_t args_number_low_byte = instr.data.array_decl.list_2;
   const vm_instr_counter_t lit_oc = frame_ctx_p->pos;
 
   frame_ctx_p->pos++;
+
+  ecma_length_t args_number = (((ecma_length_t) args_number_high_byte << JERRY_BITSINBYTE)
+                               + (ecma_length_t) args_number_low_byte);
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -1039,10 +1043,14 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   const idx_t lhs_var_idx = instr.data.obj_decl.lhs;
-  const idx_t args_number = instr.data.obj_decl.list;
+  const idx_t args_number_high_byte = instr.data.obj_decl.list_1;
+  const idx_t args_number_low_byte = instr.data.obj_decl.list_2;
   const vm_instr_counter_t obj_lit_oc = frame_ctx_p->pos;
 
   frame_ctx_p->pos++;
+
+  ecma_length_t args_number = (((ecma_length_t) args_number_high_byte << JERRY_BITSINBYTE)
+                               + (ecma_length_t) args_number_low_byte);
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

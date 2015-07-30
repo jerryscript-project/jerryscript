@@ -316,13 +316,15 @@ create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
     case VARG_ARRAY_DECL:
     {
       JERRY_ASSERT (obj == NULL);
-      ret = create_op_meta_for_obj (getop_array_decl, res);
+      operand empty = empty_operand ();
+      ret = create_op_meta_for_res_and_obj (getop_array_decl, res, &empty);
       break;
     }
     case VARG_OBJ_DECL:
     {
       JERRY_ASSERT (obj == NULL);
-      ret = create_op_meta_for_obj (getop_obj_decl, res);
+      operand empty = empty_operand ();
+      ret = create_op_meta_for_res_and_obj (getop_obj_decl, res, &empty);
       break;
     }
   }
@@ -1045,8 +1047,16 @@ dump_varg_header_for_rewrite (varg_list_type vlt, operand obj)
 }
 
 operand
-rewrite_varg_header_set_args_count (uint8_t args_count)
+rewrite_varg_header_set_args_count (size_t args_count)
 {
+  /*
+   * FIXME:
+   *       Remove formal parameters / arguments number from instruction,
+   *       after ecma-values collection would become extendable (issue #310).
+   *       In the case, each 'varg' instruction would just append corresponding
+   *       argument / formal parameter name to values collection.
+   */
+
   op_meta om = serializer_get_op_meta (STACK_TOP (varg_headers));
   switch (om.op.op_idx)
   {
@@ -1055,7 +1065,13 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
     case VM_OP_CALL_N:
     {
       const operand res = tmp_operand ();
-      om.op.data.func_expr_n.arg_list = args_count;
+      if (args_count > 255)
+      {
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                     "No more than 255 formal parameters / arguments are currently supported",
+                     LIT_ITERATOR_POS_ZERO);
+      }
+      om.op.data.func_expr_n.arg_list = (idx_t) args_count;
       om.op.data.func_expr_n.lhs = res.data.uid;
       serializer_rewrite_op_meta (STACK_TOP (varg_headers), om);
       STACK_DROP (varg_headers, 1);
@@ -1063,7 +1079,13 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
     }
     case VM_OP_FUNC_DECL_N:
     {
-      om.op.data.func_decl_n.arg_list = args_count;
+      if (args_count > 255)
+      {
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                     "No more than 255 formal parameters are currently supported",
+                     LIT_ITERATOR_POS_ZERO);
+      }
+      om.op.data.func_decl_n.arg_list = (idx_t) args_count;
       serializer_rewrite_op_meta (STACK_TOP (varg_headers), om);
       STACK_DROP (varg_headers, 1);
       return empty_operand ();
@@ -1071,8 +1093,15 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
     case VM_OP_ARRAY_DECL:
     case VM_OP_OBJ_DECL:
     {
+      if (args_count > 65535)
+      {
+        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                     "No more than 65535 formal parameters are currently supported",
+                     LIT_ITERATOR_POS_ZERO);
+      }
       const operand res = tmp_operand ();
-      om.op.data.obj_decl.list = args_count;
+      om.op.data.obj_decl.list_1 = (idx_t) (args_count >> 8);
+      om.op.data.obj_decl.list_2 = (idx_t) (args_count & 0xffu);
       om.op.data.obj_decl.lhs = res.data.uid;
       serializer_rewrite_op_meta (STACK_TOP (varg_headers), om);
       STACK_DROP (varg_headers, 1);

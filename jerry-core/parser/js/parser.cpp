@@ -64,7 +64,7 @@ static operand parse_expression (bool, jsp_eval_ret_store_t);
 static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
 static void parse_source_element_list (bool);
-static operand parse_argument_list (varg_list_type, operand, uint8_t *, operand *);
+static operand parse_argument_list (varg_list_type, operand, operand *);
 
 static bool
 token_is (token_type tt)
@@ -385,7 +385,7 @@ parse_property_assignment (void)
     jsp_early_error_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
 
     skip_newlines ();
-    const operand func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL, NULL);
+    const operand func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL);
 
     dump_function_end_for_rewrite ();
 
@@ -430,10 +430,10 @@ parse_property_assignment (void)
     For each ALT dumps appropriate bytecode. Uses OBJ during dump if neccesary.
     Result tmp. */
 static operand
-parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, operand *this_arg_p)
+parse_argument_list (varg_list_type vlt, operand obj, operand *this_arg_p)
 {
   token_type close_tt = TOK_CLOSE_PAREN;
-  uint8_t args_num = 0;
+  size_t args_num = 0;
 
   JERRY_ASSERT (!(vlt != VARG_CALL_EXPR && this_arg_p != NULL));
 
@@ -594,11 +594,6 @@ parse_argument_list (varg_list_type vlt, operand obj, uint8_t *args_count, opera
     dumper_finish_varg_code_sequence ();
   }
 
-  if (args_count != NULL)
-  {
-    *args_count = args_num;
-  }
-
   operand res;
   switch (vlt)
   {
@@ -654,7 +649,7 @@ parse_function_declaration (void)
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
   jsp_early_error_start_checking_of_vargs ();
-  parse_argument_list (VARG_FUNC_DECL, name, NULL, NULL);
+  parse_argument_list (VARG_FUNC_DECL, name, NULL);
 
   dump_function_end_for_rewrite ();
 
@@ -705,13 +700,13 @@ parse_function_expression (void)
     jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_outer_scope_strict, tok.loc);
 
     skip_newlines ();
-    res = parse_argument_list (VARG_FUNC_EXPR, name, NULL, NULL);
+    res = parse_argument_list (VARG_FUNC_EXPR, name, NULL);
   }
   else
   {
     lexer_save_token (tok);
     skip_newlines ();
-    res = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL, NULL);
+    res = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL);
   }
 
   dump_function_end_for_rewrite ();
@@ -750,7 +745,7 @@ parse_function_expression (void)
 static operand
 parse_array_literal (void)
 {
-  return parse_argument_list (VARG_ARRAY_DECL, empty_operand (), NULL, NULL);
+  return parse_argument_list (VARG_ARRAY_DECL, empty_operand (), NULL);
 }
 
 /* object_literal
@@ -759,7 +754,7 @@ parse_array_literal (void)
 static operand
 parse_object_literal (void)
 {
-  return parse_argument_list (VARG_OBJ_DECL, empty_operand (), NULL, NULL);
+  return parse_argument_list (VARG_OBJ_DECL, empty_operand (), NULL);
 }
 
 /* literal
@@ -871,7 +866,7 @@ parse_member_expression (operand *this_arg, operand *prop_gl)
     skip_newlines ();
     if (token_is (TOK_OPEN_PAREN))
     {
-      expr = parse_argument_list (VARG_CONSTRUCT_EXPR, expr, NULL, NULL);
+      expr = parse_argument_list (VARG_CONSTRUCT_EXPR, expr, NULL);
     }
     else
     {
@@ -976,7 +971,7 @@ parse_call_expression (operand *this_arg_gl, operand *prop_gl)
     return expr;
   }
 
-  expr = parse_argument_list (VARG_CALL_EXPR, expr, NULL, &this_arg);
+  expr = parse_argument_list (VARG_CALL_EXPR, expr, &this_arg);
   this_arg = empty_operand ();
 
   skip_newlines ();
@@ -985,7 +980,7 @@ parse_call_expression (operand *this_arg_gl, operand *prop_gl)
   {
     if (tok.type == TOK_OPEN_PAREN)
     {
-      expr = parse_argument_list (VARG_CALL_EXPR, expr, NULL, &this_arg);
+      expr = parse_argument_list (VARG_CALL_EXPR, expr, &this_arg);
       skip_newlines ();
     }
     else

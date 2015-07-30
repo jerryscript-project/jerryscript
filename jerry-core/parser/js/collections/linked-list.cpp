@@ -29,15 +29,16 @@ do { \
   JERRY_ASSERT (header); \
 } while (0);
 
-static size_t linked_list_block_size (uint16_t element_size)
+static size_t linked_list_block_size ()
 {
-  return jsp_mm_recommend_size (sizeof (linked_list_header) + element_size) - sizeof (linked_list_header);
+  return jsp_mm_recommend_size (sizeof (linked_list_header) + 1) - sizeof (linked_list_header);
 }
 
 linked_list
 linked_list_init (uint16_t element_size)
 {
-  size_t size = sizeof (linked_list_header) + linked_list_block_size (element_size);
+  JERRY_ASSERT (element_size <= linked_list_block_size ());
+  size_t size = sizeof (linked_list_header) + linked_list_block_size ();
   linked_list list = (linked_list) jsp_mm_alloc (size);
   if (list == null_list)
   {
@@ -68,7 +69,7 @@ linked_list_element (linked_list list, size_t element_num)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
-  size_t block_size = linked_list_block_size (header->element_size);
+  size_t block_size = linked_list_block_size ();
   linked_list raw = list + sizeof (linked_list_header);
   if (block_size < header->element_size * (element_num + 1))
   {
@@ -91,7 +92,7 @@ linked_list_set_element (linked_list list, size_t element_num, void *element)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
-  size_t block_size = linked_list_block_size (header->element_size);
+  size_t block_size = linked_list_block_size ();
   uint8_t *raw = (uint8_t *) (header + 1);
   if (block_size < header->element_size * (element_num + 1))
   {

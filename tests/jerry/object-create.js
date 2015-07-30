@@ -116,7 +116,7 @@ var props = {
 
 var obj3 = Object.create(obj, props);
 assert (obj3.prop1 === 1);
-assert (obj3.protoFunction());
+assert (obj3.protoFunction() === 3);
 try {
   assert (obj3.hey === undefined);
   obj3.hey();

@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2014-2015 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
 var a = 0xffffffff;
 var _a = a;
 var b = 4;
-assert(a >>>= b === _a >>> b)
+assert ((a >>>= b) === (_a >>> b));

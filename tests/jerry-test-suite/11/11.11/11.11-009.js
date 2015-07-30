@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2014-2015 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,5 +13,5 @@
 // limitations under the License.
 
 var a = NaN;
-var b = new Object();
-assert((!a && b))
+var b = new Object ();
+assert ((!a && b) === b);

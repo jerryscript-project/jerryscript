@@ -113,7 +113,7 @@ read_sources (const char *script_file_names[],
 /**
  * Provide the 'assert' implementation for the engine.
  *
- * @return true - if the argument was not a boolean value or it was boolean true.
+ * @return true - if only one argument was passed and the argument is a boolean true.
  */
 static bool
 assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** < function object */
@@ -122,17 +122,18 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
                 const jerry_api_value_t args_p[], /** < function arguments */
                 const jerry_api_length_t args_cnt) /** < number of function arguments */
 {
-  if (args_cnt > 0
+  if (args_cnt == 1
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
-      && args_p[0].v_bool != true)
+      && args_p[0].v_bool == true)
+  {
+    return true;
+  }
+  else
   {
     JERRY_ERROR_MSG ("Script assertion failed\n");
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
-
-  return true;
 } /* assert_handler */
-
 
 int
 main (int argc,

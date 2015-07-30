@@ -135,6 +135,90 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
   }
 } /* assert_handler */
 
+/**
+ * Provide the 'print' implementation for the engine.
+ *
+ * @return true
+ */
+static bool
+print_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** < function object */
+               const jerry_api_value_t *this_p __attr_unused___, /** < this arg */
+               jerry_api_value_t *ret_val_p __attr_unused___, /** < return argument */
+               const jerry_api_value_t args_p[], /** < function arguments */
+               const jerry_api_length_t args_cnt) /** < number of function arguments */
+{
+  for (jerry_api_length_t i = 0; i < args_cnt; i++)
+  {
+    switch (args_p[i].type)
+    {
+      case JERRY_API_DATA_TYPE_UNDEFINED:
+      {
+        printf ("undefined");
+        break;
+      }
+      case JERRY_API_DATA_TYPE_NULL:
+      {
+        printf ("null");
+        break;
+      }
+      case JERRY_API_DATA_TYPE_BOOLEAN:
+      {
+        printf ("%s", args_p[i].v_bool ? "true" : "false");
+        break;
+      }
+      case JERRY_API_DATA_TYPE_FLOAT32:
+      {
+        printf ("%f", args_p[i].v_float32);
+        break;
+      }
+      case JERRY_API_DATA_TYPE_FLOAT64:
+      {
+        printf ("%lf", args_p[i].v_float64);
+        break;
+      }
+      case JERRY_API_DATA_TYPE_STRING:
+      {
+        /*
+         * TODO:
+         *      Support print of unicode strings
+         */
+        constexpr size_t str_buffer_size_for_chars = 1024;
+        jerry_api_char_t str_buffer[str_buffer_size_for_chars + 1 /* for null character */];
+        ssize_t sz = jerry_api_string_to_char_buffer (args_p[i].v_string, str_buffer, str_buffer_size_for_chars);
+        if (sz < 0)
+        {
+          printf ("'<<<string is too long for current <print> implementation>>>'");
+        }
+        else
+        {
+          str_buffer[sz] = '\0';
+          printf ("%s", str_buffer);
+        }
+        break;
+      }
+      case JERRY_API_DATA_TYPE_OBJECT:
+      {
+        printf ("[Object]");
+        break;
+      }
+      default:
+      {
+        printf ("'<<<argument type is unsupported in current <print> implementation>>>'");
+        break;
+      }
+    }
+
+    if (i < args_cnt - 1)
+    {
+      printf (" ");
+    }
+  }
+
+  printf ("\n");
+
+  return true;
+} /* print_handler */
+
 int
 main (int argc,
       char **argv)
@@ -273,13 +357,30 @@ main (int argc,
                                                                (jerry_api_char_t *) "assert",
                                                                &assert_value);
 
-      jerry_api_release_value (&assert_value);
-      jerry_api_release_object (global_obj_p);
-
       if (!is_assert_added)
       {
         JERRY_ERROR_MSG ("Failed to register 'assert' method.");
       }
+
+      jerry_api_release_value (&assert_value);
+
+      jerry_api_object_t *print_func_p = jerry_api_create_external_function (print_handler);
+      jerry_api_value_t print_value;
+      print_value.type = JERRY_API_DATA_TYPE_OBJECT;
+      print_value.v_object = print_func_p;
+
+      bool is_print_added = jerry_api_set_object_field_value (global_obj_p,
+                                                              (jerry_api_char_t *) "print",
+                                                              &print_value);
+
+      if (!is_print_added)
+      {
+        JERRY_ERROR_MSG ("Failed to register 'print' method.");
+      }
+
+      jerry_api_release_value (&print_value);
+
+      jerry_api_release_object (global_obj_p);
 
       jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 

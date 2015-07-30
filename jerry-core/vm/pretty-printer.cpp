@@ -291,7 +291,6 @@ pp_op_meta (const vm_instr_t *instrs_p,
           case OPCODE_NATIVE_CALL_LED_OFF: printf ("LEDOff ();"); break;
           case OPCODE_NATIVE_CALL_LED_ONCE: printf ("LEDOnce ();"); break;
           case OPCODE_NATIVE_CALL_WAIT: printf ("wait ();"); break;
-          case OPCODE_NATIVE_CALL_PRINT: printf ("print ();"); break;
           default: JERRY_UNREACHABLE ();
         }
       }
@@ -434,7 +433,6 @@ pp_op_meta (const vm_instr_t *instrs_p,
                   case OPCODE_NATIVE_CALL_LED_OFF: printf ("LEDOff ("); break;
                   case OPCODE_NATIVE_CALL_LED_ONCE: printf ("LEDOnce ("); break;
                   case OPCODE_NATIVE_CALL_WAIT: printf ("wait ("); break;
-                  case OPCODE_NATIVE_CALL_PRINT: printf ("print ("); break;
                   default: JERRY_UNREACHABLE ();
                 }
                 break;

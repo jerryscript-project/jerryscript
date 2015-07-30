@@ -248,10 +248,7 @@ name_to_native_call_id (operand obj)
   {
     return OPCODE_NATIVE_CALL_WAIT;
   }
-  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "print"))
-  {
-    return OPCODE_NATIVE_CALL_PRINT;
-  }
+
   return OPCODE_NATIVE_CALL__COUNT;
 }
 

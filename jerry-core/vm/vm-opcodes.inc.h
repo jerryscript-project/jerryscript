@@ -38,11 +38,6 @@ VM_OP_3 (call_n,                CALL_N,
          function_var_idx,      VM_OP_ARG_TYPE_VARIABLE,
          arg_list,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
-VM_OP_3 (native_call,           NATIVE_CALL,
-         lhs,                   VM_OP_ARG_TYPE_VARIABLE,
-         name,                  VM_OP_ARG_TYPE_INTEGER_CONST,
-         arg_list,              VM_OP_ARG_TYPE_INTEGER_CONST)
-
 VM_OP_3 (construct_n,           CONSTRUCT_N,
          lhs,                   VM_OP_ARG_TYPE_VARIABLE,
          name_lit_idx,          VM_OP_ARG_TYPE_VARIABLE,

@@ -260,7 +260,6 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
       break;
     }
     case VM_OP_CALL_N:
-    case VM_OP_NATIVE_CALL:
     case VM_OP_CONSTRUCT_N:
     case VM_OP_FUNC_EXPR_N:
     case VM_OP_DELETE_VAR:
@@ -399,7 +398,6 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
       break;
     }
     case VM_OP_CALL_N:
-    case VM_OP_NATIVE_CALL:
     case VM_OP_CONSTRUCT_N:
     case VM_OP_FUNC_EXPR_N:
     case VM_OP_DELETE_VAR:

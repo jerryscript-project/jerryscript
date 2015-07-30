@@ -172,6 +172,10 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   {
     ret_value = ecma_make_normal_completion_value (ecma_make_number_value (prim_value_p));
   }
+  else
+  {
+    ecma_dealloc_number (prim_value_p);
+  }
 
   return ret_value;
 } /* ecma_date_construct_helper */

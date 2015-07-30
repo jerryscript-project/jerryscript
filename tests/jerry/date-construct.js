@@ -63,3 +63,22 @@ assert (d.valueOf() == 8.64e+15);
 
 d = new Date(8.64e+15 + 1);
 assert (isNaN(d.valueOf()));
+
+var Obj = function (val)
+{
+  this.value = val;
+  this.valueOf = function () { throw new ReferenceError ("valueOf-" + this.value); };
+  this.toString = function () { throw new ReferenceError ("toString-"+ this.value); };
+};
+
+try
+{
+  d = new Date (new Obj (1), new Obj (2));
+  // Should not be reached.
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof ReferenceError);
+  assert (e.message === "valueOf-1");
+}

@@ -18,7 +18,6 @@
 #include "serializer.h"
 #include "stack.h"
 #include "jsp-early-error.h"
-#include "opcodes-native-call.h"
 
 static idx_t temp_name, max_temp_name;
 
@@ -221,43 +220,6 @@ tmp_operand (void)
   return ret;
 }
 
-static uint8_t
-name_to_native_call_id (operand obj)
-{
-  if (obj.type != OPERAND_LITERAL)
-  {
-    return OPCODE_NATIVE_CALL__COUNT;
-  }
-  if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDToggle"))
-  {
-    return OPCODE_NATIVE_CALL_LED_TOGGLE;
-  }
-  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOn"))
-  {
-    return OPCODE_NATIVE_CALL_LED_ON;
-  }
-  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOff"))
-  {
-    return OPCODE_NATIVE_CALL_LED_OFF;
-  }
-  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "LEDOnce"))
-  {
-    return OPCODE_NATIVE_CALL_LED_ONCE;
-  }
-  else if (lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.data.lit_id), "wait"))
-  {
-    return OPCODE_NATIVE_CALL_WAIT;
-  }
-
-  return OPCODE_NATIVE_CALL__COUNT;
-}
-
-static bool
-is_native_call (operand obj)
-{
-  return name_to_native_call_id (obj) < OPCODE_NATIVE_CALL__COUNT;
-}
-
 static op_meta
 create_op_meta_for_res_and_obj (vm_instr_t (*getop) (idx_t, idx_t, idx_t), operand *res, operand *obj)
 {
@@ -332,29 +294,6 @@ create_op_meta_for_obj (vm_instr_t (*getop) (idx_t, idx_t), operand *obj)
 }
 
 static op_meta
-create_op_meta_for_native_call (operand res, operand obj)
-{
-  JERRY_ASSERT (is_native_call (obj));
-  op_meta ret;
-  switch (res.type)
-  {
-    case OPERAND_TMP:
-    {
-      const vm_instr_t instr = getop_native_call (res.data.uid, name_to_native_call_id (obj), INVALID_VALUE);
-      ret = create_op_meta_000 (instr);
-      break;
-    }
-    case OPERAND_LITERAL:
-    {
-      const vm_instr_t instr = getop_native_call (LITERAL_TO_REWRITE, name_to_native_call_id (obj), INVALID_VALUE);
-      ret = create_op_meta_100 (instr, res.data.lit_id);
-      break;
-    }
-  }
-  return ret;
-}
-
-static op_meta
 create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
 {
   op_meta ret;
@@ -365,14 +304,7 @@ create_op_meta_for_vlt (varg_list_type vlt, operand *res, operand *obj)
     case VARG_CALL_EXPR:
     {
       JERRY_ASSERT (obj != NULL);
-      if (is_native_call (*obj))
-      {
-        ret = create_op_meta_for_native_call (*res, *obj);
-      }
-      else
-      {
-        ret = create_op_meta_for_res_and_obj (getop_call_n, res, obj);
-      }
+      ret = create_op_meta_for_res_and_obj (getop_call_n, res, obj);
       break;
     }
     case VARG_FUNC_DECL:
@@ -1121,7 +1053,6 @@ rewrite_varg_header_set_args_count (uint8_t args_count)
     case VM_OP_FUNC_EXPR_N:
     case VM_OP_CONSTRUCT_N:
     case VM_OP_CALL_N:
-    case VM_OP_NATIVE_CALL:
     {
       const operand res = tmp_operand ();
       om.op.data.func_expr_n.arg_list = args_count;

@@ -19,7 +19,6 @@
 #include "pretty-printer.h"
 #include "jrt-libc-includes.h"
 #include "lexer.h"
-#include "opcodes-native-call.h"
 #include "ecma-helpers.h"
 #include "ecma-globals.h"
 #include "serializer.h"
@@ -279,28 +278,6 @@ pp_op_meta (const vm_instr_t *instrs_p,
 
       break;
     }
-    case VM_OP_NATIVE_CALL:
-    {
-      if (opm.op.data.native_call.arg_list == 0)
-      {
-        printf ("%s = ", VAR (1));
-        switch (opm.op.data.native_call.name)
-        {
-          case OPCODE_NATIVE_CALL_LED_TOGGLE: printf ("LEDToggle ();"); break;
-          case OPCODE_NATIVE_CALL_LED_ON: printf ("LEDOn ();"); break;
-          case OPCODE_NATIVE_CALL_LED_OFF: printf ("LEDOff ();"); break;
-          case OPCODE_NATIVE_CALL_LED_ONCE: printf ("LEDOnce ();"); break;
-          case OPCODE_NATIVE_CALL_WAIT: printf ("wait ();"); break;
-          default: JERRY_UNREACHABLE ();
-        }
-      }
-      else
-      {
-        vargs_num = opm.op.data.native_call.arg_list;
-        seen_vargs = 0;
-      }
-      break;
-    }
     case VM_OP_CONSTRUCT_N:
     {
       if (opm.op.data.construct_n.arg_list == 0)
@@ -403,7 +380,6 @@ pp_op_meta (const vm_instr_t *instrs_p,
               switch (serializer_get_instr (instrs_p, start).op_idx)
               {
                 case VM_OP_CALL_N:
-                case VM_OP_NATIVE_CALL:
                 case VM_OP_CONSTRUCT_N:
                 case VM_OP_FUNC_DECL_N:
                 case VM_OP_FUNC_EXPR_N:
@@ -421,20 +397,6 @@ pp_op_meta (const vm_instr_t *instrs_p,
               case VM_OP_CALL_N:
               {
                 pp_printf ("%s = %s (", start_op, NULL, start, 1);
-                break;
-              }
-              case VM_OP_NATIVE_CALL:
-              {
-                pp_printf ("%s = ", start_op, NULL, start, 1);
-                switch (start_op.data.native_call.name)
-                {
-                  case OPCODE_NATIVE_CALL_LED_TOGGLE: printf ("LEDToggle ("); break;
-                  case OPCODE_NATIVE_CALL_LED_ON: printf ("LEDOn ("); break;
-                  case OPCODE_NATIVE_CALL_LED_OFF: printf ("LEDOff ("); break;
-                  case OPCODE_NATIVE_CALL_LED_ONCE: printf ("LEDOnce ("); break;
-                  case OPCODE_NATIVE_CALL_WAIT: printf ("wait ("); break;
-                  default: JERRY_UNREACHABLE ();
-                }
                 break;
               }
               case VM_OP_CONSTRUCT_N:

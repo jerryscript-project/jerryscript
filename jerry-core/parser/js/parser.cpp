@@ -21,7 +21,6 @@
 #include "jsp-mm.h"
 #include "opcodes.h"
 #include "opcodes-dumper.h"
-#include "opcodes-native-call.h"
 #include "parser.h"
 #include "re-parser.h"
 #include "scopes-tree.h"

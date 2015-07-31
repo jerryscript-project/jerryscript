@@ -56,3 +56,21 @@ assert (r.exec ("abcdefghijkl") == "abcdefghijkl");
 
 r = /\n/;
 assert (r.exec ("\n") == "\n");
+
+assert (/[\12]+/.exec ("1\n\n\n\n\n2") == "\n\n\n\n\n");
+assert (/[\1284]+/.exec ("1\n\n8\n4\n\n2") == "\n\n8\n4\n\n");
+assert (/[\89]12/.exec ("1\9128123") == "912");
+assert (/[\11]/.exec ("1\n\n\t\n\n2") == "\t");
+assert (/[\142][\143][\144]/.exec ("abcde") == "bcd");
+
+assert (/\12+/.exec ("1\n\n\n\n\n2") == "\n\n\n\n\n");
+assert (/\11/.exec ("1\n\n\t\n\n2") == "\t");
+assert (/\142\143\144/.exec ("abcde") == "bcd");
+assert (/\942\143\144/.exec ("a942cde") == "942cd");
+assert (/\14234/.exec ("b34") == "b34");
+
+assert (/(\d+)\2([abc]+)\1\2/.exec("123abc123abc") == "123abc123abc,123,abc");
+assert (/([abc]+)\40([d-f]+)\12\1/.exec("abc def\nabc") == "abc def\nabc,abc,def");
+
+var expected = "8765432911,8,7,6,5,4,3,2,9,1";
+assert (/(\d)(\d)(\d)(\d)(\d)(\d)(\d)(\d)\9(\d)\9/.exec("8765432911") == expected);

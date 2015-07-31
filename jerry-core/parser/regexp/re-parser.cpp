@@ -71,6 +71,27 @@ re_parse_non_greedy_char (lit_utf8_iterator_t *iter_p) /**< RegExp pattern */
 } /* re_parse_non_greedy_char */
 
 /**
+ * Parse a max 3 digit long octal number from input string iterator.
+ *
+ * @return uint32_t - parsed octal number
+ */
+static uint32_t
+re_parse_octal (lit_utf8_iterator_t *iter) /**< input string iterator */
+{
+  uint32_t number = 0;
+  for (int index = 0;
+       index < 3
+       && !lit_utf8_iterator_is_eos (iter)
+       && lit_char_is_octal_digit (lit_utf8_iterator_peek_next (iter));
+       index++)
+  {
+    number = number * 8 + lit_char_hex_to_int (lit_utf8_iterator_read_next (iter));
+  }
+
+  return number;
+} /* re_parse_octal */
+
+/**
  * Parse RegExp iterators
  *
  * @return completion value
@@ -465,26 +486,13 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         ch = RE_CHAR_UNDEF;
       }
       else if (ch <= LIT_UTF16_CODE_UNIT_MAX
-               && lit_char_is_decimal_digit ((ecma_char_t) ch))
+               && lit_char_is_octal_digit ((ecma_char_t) ch)
+               && ch != LIT_CHAR_0)
       {
-        if (lit_utf8_iterator_is_eos (iter_p))
-        {
-          return ecma_raise_syntax_error ("invalid character class, end of string after '\\<digits>'");
-        }
-
-        if (ch != LIT_CHAR_0
-            || lit_char_is_decimal_digit (lit_utf8_iterator_peek_next (iter_p)))
-        {
-          /* FIXME: octal support */
-        }
+        lit_utf8_iterator_decr (iter_p);
+        ch = re_parse_octal (iter_p);
       }
-      /* FIXME: depends on the unicode support
-      else if (!jerry_unicode_identifier (ch))
-      {
-        JERRY_ERROR_MSG ("RegExp escape pattern error. (Char class)");
-      }
-      */
-    }
+    } /* ch == LIT_CHAR_BACKSLASH */
 
     if (ch == RE_CHAR_UNDEF)
     {
@@ -745,12 +753,43 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
             {
               out_token_p->type = RE_TOK_BACKREFERENCE;
             }
+            else
+            /* Invalid backreference, fallback to octal */
+            {
+              /* Rewind to start of number. */
+              while (index-- > 0)
+              {
+                lit_utf8_iterator_decr (iter_p);
+              }
 
+              /* Try to reparse as octal. */
+              ecma_char_t digit = lit_utf8_iterator_peek_next (iter_p);
+
+              if (!lit_char_is_octal_digit (digit))
+              {
+                /* Not octal, keep digit character value. */
+                number = lit_utf8_iterator_read_next (iter_p);
+              }
+              else
+              {
+                number = re_parse_octal (iter_p);
+              }
+            }
             out_token_p->value = number;
           }
           else
+          /* Invalid backreference, fallback to octal if possible */
           {
-            out_token_p->value = ch;
+            if (!lit_char_is_octal_digit (ch))
+            {
+              /* Not octal, keep character value. */
+              out_token_p->value = ch;
+            }
+            else
+            {
+              lit_utf8_iterator_decr (iter_p);
+              out_token_p->value = re_parse_octal (iter_p);
+            }
           }
         }
       }

@@ -14,6 +14,12 @@
 // limitations under the License.
 
 assert (new Date (NaN) == "Invalid Date");
+assert (new Date (Infinity, 1, 1, 0, 0, 0) == "Invalid Date");
+assert (new Date (2015, Infinity, 1, 0, 0, 0) == "Invalid Date");
+assert (new Date (2015, 7, 1, 0, Infinity, 0) == "Invalid Date");
+assert (new Date (NaN, 1, 1, 0, 0, 0) == "Invalid Date");
+assert (new Date (2015, NaN, 1, 0, 0, 0) == "Invalid Date");
+assert (new Date (2015, 7, 1, 0, NaN, 0) == "Invalid Date");
 assert (new Date ("2015-02-13") == "2015-02-13T00:00:00.000");
 assert (new Date ("2015-07-08T11:29:05.023") == "2015-07-08T11:29:05.023");
 

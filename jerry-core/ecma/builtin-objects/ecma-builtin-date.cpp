@@ -141,7 +141,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    if (!ecma_number_is_nan (year))
+    if (!ecma_number_is_nan (year) && !ecma_number_is_infinity (year))
     {
       /* 8. */
       int32_t y = ecma_number_to_int32 (year);

@@ -27,56 +27,44 @@
  *         of last expression evaluated
  */
 ecma_completion_value_t
-fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                ecma_length_t args_number, /**< number of arguments */
-                ecma_value_t arg_values[], /**< out: arguments' values */
-                ecma_length_t *out_arg_number_p) /**< out: number of arguments
-                                                      successfully read */
+vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
+                   ecma_length_t args_number, /**< number of arguments */
+                   ecma_collection_header_t *arg_collection_p) /** collection to fill with argument values */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   ecma_length_t arg_index;
   for (arg_index = 0;
        arg_index < args_number && ecma_is_completion_value_empty (ret_value);
-       )
+       arg_index++)
   {
-    ecma_completion_value_t evaluate_arg_completion = vm_loop (frame_ctx_p, NULL);
+    ECMA_TRY_CATCH (evaluate_arg,
+                    vm_loop (frame_ctx_p, NULL),
+                    ret_value);
 
-    if (ecma_is_completion_value_empty (evaluate_arg_completion))
-    {
-      vm_instr_t next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
-      JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
-      JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
+    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
+    JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
 
-      const idx_t varg_var_idx = next_instr.data.meta.data_1;
+    const idx_t varg_var_idx = next_instr.data.meta.data_1;
 
-      ecma_completion_value_t get_arg_completion = get_variable_value (frame_ctx_p, varg_var_idx, false);
+    ECMA_TRY_CATCH (get_arg,
+                    get_variable_value (frame_ctx_p, varg_var_idx, false),
+                    ret_value);
 
-      if (ecma_is_completion_value_normal (get_arg_completion))
-      {
-        arg_values[arg_index++] = ecma_get_completion_value_value (get_arg_completion);
-      }
-      else
-      {
-        JERRY_ASSERT (ecma_is_completion_value_throw (get_arg_completion));
+    ecma_append_to_values_collection (arg_collection_p,
+                                      ecma_get_completion_value_value (get_arg_completion),
+                                      true);
 
-        ret_value = get_arg_completion;
-      }
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_throw (evaluate_arg_completion));
-
-      ret_value = evaluate_arg_completion;
-    }
+    ECMA_FINALIZE (get_arg);
 
     frame_ctx_p->pos++;
+
+    ECMA_FINALIZE (evaluate_arg);
   }
 
-  *out_arg_number_p = arg_index;
-
   return ret_value;
-} /* fill_varg_list */
+} /* vm_fill_varg_list */
 
 /**
  * Fill parameters' list

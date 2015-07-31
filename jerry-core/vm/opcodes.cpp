@@ -814,13 +814,12 @@ opfunc_call_n (vm_instr_t instr, /**< instruction */
                                                                         function_var_idx,
                                                                         &call_flags);
 
-  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number_idx, ecma_value_t);
+  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
 
-  ecma_length_t args_read;
-  ecma_completion_value_t get_arg_completion = fill_varg_list (frame_ctx_p,
-                                                               args_number_idx,
-                                                               arg_values,
-                                                               &args_read);
+  ecma_completion_value_t get_arg_completion = vm_fill_varg_list (frame_ctx_p,
+                                                                  args_number_idx,
+                                                                  arg_collection_p);
+  ecma_length_t args_read = arg_collection_p->unit_number;
 
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
@@ -839,11 +838,24 @@ opfunc_call_n (vm_instr_t instr, /**< instruction */
 
       ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
 
+      MEM_DEFINE_LOCAL_ARRAY (arg_values, args_read, ecma_value_t);
+
+      ecma_collection_iterator_t arg_collection_iter;
+      ecma_collection_iterator_init (&arg_collection_iter,
+                                     arg_collection_p);
+
+      for (ecma_length_t arg_index = 0;
+           ecma_collection_iterator_next (&arg_collection_iter);
+           arg_index++)
+      {
+        arg_values[arg_index] = *arg_collection_iter.current_value_p;
+      }
+
       ECMA_TRY_CATCH (call_ret_value,
                       ecma_op_function_call (func_obj_p,
                                              this_value,
                                              arg_values,
-                                             args_number_idx),
+                                             args_read),
                       ret_value);
 
       ret_value = set_variable_value (frame_ctx_p, lit_oc,
@@ -851,6 +863,8 @@ opfunc_call_n (vm_instr_t instr, /**< instruction */
                                       call_ret_value);
 
       ECMA_FINALIZE (call_ret_value);
+
+      MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
       if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
       {
@@ -870,15 +884,7 @@ opfunc_call_n (vm_instr_t instr, /**< instruction */
     ret_value = get_arg_completion;
   }
 
-  for (ecma_length_t arg_index = 0;
-       arg_index < args_read;
-       arg_index++)
-  {
-    ecma_free_value (arg_values[arg_index], true);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
-
+  ecma_free_values_collection (arg_collection_p, true);
   ecma_free_value (this_value, true);
 
   ECMA_FINALIZE (func_value);
@@ -908,15 +914,14 @@ opfunc_construct_n (vm_instr_t instr, /**< instruction */
                   get_variable_value (frame_ctx_p, constructor_name_lit_idx, false),
                   ret_value);
 
-  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
-
   frame_ctx_p->pos++;
 
-  ecma_length_t args_read;
-  ecma_completion_value_t get_arg_completion = fill_varg_list (frame_ctx_p,
-                                                               args_number,
-                                                               arg_values,
-                                                               &args_read);
+  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
+
+  ecma_completion_value_t get_arg_completion = vm_fill_varg_list (frame_ctx_p,
+                                                                  args_number,
+                                                                  arg_collection_p);
+  ecma_length_t args_read = arg_collection_p->unit_number;
 
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
@@ -930,6 +935,19 @@ opfunc_construct_n (vm_instr_t instr, /**< instruction */
     {
       ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
 
+      MEM_DEFINE_LOCAL_ARRAY (arg_values, args_read, ecma_value_t);
+
+      ecma_collection_iterator_t arg_collection_iter;
+      ecma_collection_iterator_init (&arg_collection_iter,
+                                     arg_collection_p);
+
+      for (ecma_length_t arg_index = 0;
+           ecma_collection_iterator_next (&arg_collection_iter);
+           arg_index++)
+      {
+        arg_values[arg_index] = *arg_collection_iter.current_value_p;
+      }
+
       ECMA_TRY_CATCH (construction_ret_value,
                       ecma_op_function_construct (constructor_obj_p,
                                                   arg_values,
@@ -940,6 +958,8 @@ opfunc_construct_n (vm_instr_t instr, /**< instruction */
                                       construction_ret_value);
 
       ECMA_FINALIZE (construction_ret_value);
+
+      MEM_FINALIZE_LOCAL_ARRAY (arg_values);
     }
   }
   else
@@ -949,14 +969,7 @@ opfunc_construct_n (vm_instr_t instr, /**< instruction */
     ret_value = get_arg_completion;
   }
 
-  for (ecma_length_t arg_index = 0;
-       arg_index < args_read;
-       arg_index++)
-  {
-    ecma_free_value (arg_values[arg_index], true);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+  ecma_free_values_collection (arg_collection_p, true);
 
   ECMA_FINALIZE (constructor_value);
 
@@ -987,17 +1000,29 @@ opfunc_array_decl (vm_instr_t instr, /**< instruction */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_number, ecma_value_t);
+  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
 
-  ecma_length_t args_read;
-  ecma_completion_value_t get_arg_completion = fill_varg_list (frame_ctx_p,
-                                                               args_number,
-                                                               arg_values,
-                                                               &args_read);
+  ecma_completion_value_t get_arg_completion = vm_fill_varg_list (frame_ctx_p,
+                                                                  args_number,
+                                                                  arg_collection_p);
+  ecma_length_t args_read = arg_collection_p->unit_number;
 
   if (ecma_is_completion_value_empty (get_arg_completion))
   {
     JERRY_ASSERT (args_read == args_number);
+
+    MEM_DEFINE_LOCAL_ARRAY (arg_values, args_read, ecma_value_t);
+
+    ecma_collection_iterator_t arg_collection_iter;
+    ecma_collection_iterator_init (&arg_collection_iter,
+                                   arg_collection_p);
+
+    for (ecma_length_t arg_index = 0;
+         ecma_collection_iterator_next (&arg_collection_iter);
+         arg_index++)
+    {
+      arg_values[arg_index] = *arg_collection_iter.current_value_p;
+    }
 
     ECMA_TRY_CATCH (array_obj_value,
                     ecma_op_create_array_object (arg_values,
@@ -1010,6 +1035,8 @@ opfunc_array_decl (vm_instr_t instr, /**< instruction */
                                     array_obj_value);
 
     ECMA_FINALIZE (array_obj_value);
+
+    MEM_FINALIZE_LOCAL_ARRAY (arg_values);
   }
   else
   {
@@ -1018,14 +1045,7 @@ opfunc_array_decl (vm_instr_t instr, /**< instruction */
     ret_value = get_arg_completion;
   }
 
-  for (ecma_length_t arg_index = 0;
-       arg_index < args_read;
-       arg_index++)
-  {
-    ecma_free_value (arg_values[arg_index], true);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
+  ecma_free_values_collection (arg_collection_p, true);
 
   return ret_value;
 } /* opfunc_array_decl */

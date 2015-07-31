@@ -37,10 +37,9 @@
 bool is_reg_variable (vm_frame_ctx_t *frame_ctx_p, idx_t var_idx);
 ecma_completion_value_t get_variable_value (vm_frame_ctx_t *, idx_t, bool);
 ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, vm_instr_counter_t, idx_t, ecma_value_t);
-ecma_completion_value_t fill_varg_list (vm_frame_ctx_t *frame_ctx_p,
-                                        ecma_length_t args_number,
-                                        ecma_value_t args_values[],
-                                        ecma_length_t *out_arg_number_p);
+ecma_completion_value_t vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p,
+                                           ecma_length_t args_number,
+                                           ecma_collection_header_t *args_values_p);
 void fill_params_list (vm_frame_ctx_t *frame_ctx_p,
                        ecma_length_t params_number,
                        ecma_string_t* params_names[]);

@@ -1213,11 +1213,15 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = re_get_value (&bc_p);
 
+  /* We create an invalid iterator, that will be used to identify unused result values. */
+  lit_utf8_iterator_t unused_iter = lit_utf8_iterator_create (NULL, 0);
+  unused_iter.buf_p = (lit_utf8_byte_t *) 1;
+
   MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, lit_utf8_iterator_t);
 
   for (uint32_t i = 0; i < re_ctx.num_of_captures + re_ctx.num_of_non_captures; i++)
   {
-    saved_p[i] = lit_utf8_iterator_create (NULL, 0);
+    saved_p[i] = unused_iter;
   }
   re_ctx.saved_p = saved_p;
 
@@ -1317,9 +1321,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       {
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i / 2);
 
-        /* Note: 'iterator.buf_p == NULL' means the input is empty string */
-        if (((re_ctx.saved_p[i].buf_p && re_ctx.saved_p[i + 1].buf_p)
-              || (!iterator.buf_p && !re_ctx.saved_p[i].buf_p && !re_ctx.saved_p[i + 1].buf_p))
+        /* Note: 'iter_p->buf_p == NULL' means the input is empty string */
+        if ((re_ctx.saved_p[i].buf_p != unused_iter.buf_p && re_ctx.saved_p[i + 1].buf_p != unused_iter.buf_p)
             && re_ctx.saved_p[i + 1].buf_pos.offset >= re_ctx.saved_p[i].buf_pos.offset)
         {
           ecma_length_t capture_str_len;

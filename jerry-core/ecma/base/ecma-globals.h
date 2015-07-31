@@ -752,11 +752,11 @@ typedef struct
   /** Number of elements in the collection */
   ecma_length_t unit_number;
 
-  /** Compressed pointer to next chunk with collection's data */
-  mem_cpointer_t next_chunk_cp;
+  /** Compressed pointer to first chunk with collection's data */
+  mem_cpointer_t first_chunk_cp;
 
-  /** Place for the collection's data */
-  uint8_t data[ sizeof (uint64_t) - sizeof (mem_cpointer_t) - sizeof (ecma_length_t) ];
+  /** Compressed pointer to last chunk with collection's data */
+  mem_cpointer_t last_chunk_cp;
 } ecma_collection_header_t;
 
 /**

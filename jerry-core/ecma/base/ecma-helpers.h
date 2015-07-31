@@ -187,12 +187,14 @@ extern void ecma_number_to_decimal (ecma_number_t num,
                                     int32_t *out_decimal_exp_p);
 
 /* ecma-helpers-values-collection.cpp */
-
 extern ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t values_buffer[],
                                                              ecma_length_t values_number,
                                                              bool do_ref_if_object);
-extern void ecma_free_values_collection (ecma_collection_header_t* header_p, bool do_deref_if_object);
-extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t* string_ptrs_buffer[],
+extern void ecma_free_values_collection (ecma_collection_header_t *header_p, bool do_deref_if_object);
+extern void ecma_append_to_values_collection (ecma_collection_header_t *header_p,
+                                              ecma_value_t v,
+                                              bool do_ref_if_object);
+extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t *string_ptrs_buffer[],
                                                               ecma_length_t strings_number);
 
 /**

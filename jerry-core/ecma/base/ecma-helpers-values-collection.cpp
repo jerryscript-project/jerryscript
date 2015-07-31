@@ -30,35 +30,39 @@
  *
  * @return pointer to the collection's header
  */
-ecma_collection_header_t*
+ecma_collection_header_t *
 ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values */
                             ecma_length_t values_number, /**< number of ecma-values */
                             bool do_ref_if_object) /**< if the value is object value,
                                                         increase reference counter of the object */
 {
-  JERRY_ASSERT (values_buffer != NULL);
-  JERRY_ASSERT (values_number > 0);
+  JERRY_ASSERT (values_buffer != NULL || values_number == 0);
 
-  ecma_collection_header_t* header_p = ecma_alloc_collection_header ();
+  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+
+  ecma_collection_header_t *header_p = ecma_alloc_collection_header ();
 
   header_p->unit_number = values_number;
 
-  mem_cpointer_t* next_chunk_cp_p = &header_p->next_chunk_cp;
-  ecma_value_t* cur_value_buf_iter_p = (ecma_value_t*) header_p->data;
-  ecma_value_t* cur_value_buf_end_p = cur_value_buf_iter_p + sizeof (header_p->data) / sizeof (ecma_value_t);
+  mem_cpointer_t *next_chunk_cp_p = &header_p->first_chunk_cp;
+  ecma_collection_chunk_t *last_chunk_p = NULL;
+  ecma_value_t *cur_value_buf_iter_p = NULL;
+  ecma_value_t *cur_value_buf_end_p = NULL;
 
   for (ecma_length_t value_index = 0;
        value_index < values_number;
        value_index++)
   {
-    if (unlikely (cur_value_buf_iter_p == cur_value_buf_end_p))
+    if (cur_value_buf_iter_p == cur_value_buf_end_p)
     {
       ecma_collection_chunk_t *chunk_p = ecma_alloc_collection_chunk ();
       ECMA_SET_POINTER (*next_chunk_cp_p, chunk_p);
       next_chunk_cp_p = &chunk_p->next_chunk_cp;
 
-      cur_value_buf_iter_p = (ecma_value_t*) chunk_p->data;
-      cur_value_buf_end_p = cur_value_buf_iter_p + sizeof (chunk_p->data) / sizeof (ecma_value_t);
+      cur_value_buf_iter_p = (ecma_value_t *) chunk_p->data;
+      cur_value_buf_end_p = cur_value_buf_iter_p + values_in_chunk;
+
+      last_chunk_p = chunk_p;
     }
 
     JERRY_ASSERT (cur_value_buf_iter_p + 1 <= cur_value_buf_end_p);
@@ -67,6 +71,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values
   }
 
   *next_chunk_cp_p = ECMA_NULL_POINTER;
+  ECMA_SET_POINTER (header_p->last_chunk_cp, last_chunk_p);
 
   return header_p;
 } /* ecma_new_values_collection */
@@ -75,46 +80,34 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values
  * Free the collection of ecma-values.
  */
 void
-ecma_free_values_collection (ecma_collection_header_t* header_p, /**< collection's header */
+ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
                              bool do_deref_if_object) /**< if the value is object value,
                                                            decrement reference counter of the object */
 {
   JERRY_ASSERT (header_p != NULL);
 
-  ecma_value_t* cur_value_buf_iter_p = (ecma_value_t*) header_p->data;
-  ecma_value_t* cur_value_buf_end_p = cur_value_buf_iter_p + sizeof (header_p->data) / sizeof (ecma_value_t);
-
-  ecma_length_t string_index = 0;
-  while (cur_value_buf_iter_p != cur_value_buf_end_p
-         && string_index < header_p->unit_number)
-  {
-    JERRY_ASSERT (cur_value_buf_iter_p < cur_value_buf_end_p);
-
-    ecma_free_value (*cur_value_buf_iter_p, do_deref_if_object);
-
-    cur_value_buf_iter_p++;
-    string_index++;
-  }
+  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                                       header_p->next_chunk_cp);
+                                                       header_p->first_chunk_cp);
+  ecma_length_t value_index = 0;
 
   while (chunk_p != NULL)
   {
-    JERRY_ASSERT (string_index < header_p->unit_number);
+    JERRY_ASSERT (value_index < header_p->unit_number);
 
-    cur_value_buf_iter_p = (ecma_value_t*) chunk_p->data;
-    cur_value_buf_end_p = cur_value_buf_iter_p + sizeof (chunk_p->data) / sizeof (ecma_value_t);
+    ecma_value_t *cur_value_buf_iter_p = (ecma_value_t *) chunk_p->data;
+    ecma_value_t *cur_value_buf_end_p = cur_value_buf_iter_p + values_in_chunk;
 
     while (cur_value_buf_iter_p != cur_value_buf_end_p
-           && string_index < header_p->unit_number)
+           && value_index < header_p->unit_number)
     {
       JERRY_ASSERT (cur_value_buf_iter_p < cur_value_buf_end_p);
 
       ecma_free_value (*cur_value_buf_iter_p, do_deref_if_object);
 
       cur_value_buf_iter_p++;
-      string_index++;
+      value_index++;
     }
 
     ecma_collection_chunk_t *next_chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
@@ -127,12 +120,78 @@ ecma_free_values_collection (ecma_collection_header_t* header_p, /**< collection
 } /* ecma_free_values_collection */
 
 /**
+ * Append new value to ecma-values collection
+ */
+void
+ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
+                                  ecma_value_t v, /**< ecma-value to append */
+                                  bool do_ref_if_object) /**< if the value is object value,
+                                                              increase reference counter of the object */
+{
+  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+
+  size_t values_number = header_p->unit_number;
+  size_t pos_of_new_value_in_chunk = values_number % values_in_chunk;
+
+  values_number++;
+
+  if ((ecma_length_t) values_number == values_number)
+  {
+    header_p->unit_number = (ecma_length_t) values_number;
+  }
+  else
+  {
+    jerry_fatal (ERR_OUT_OF_MEMORY);
+  }
+
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                                       header_p->last_chunk_cp);
+
+  if (pos_of_new_value_in_chunk == 0)
+  {
+    /* all chunks are currently filled with values */
+
+    chunk_p = ecma_alloc_collection_chunk ();
+    chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
+
+    if (header_p->last_chunk_cp == ECMA_NULL_POINTER)
+    {
+      JERRY_ASSERT (header_p->first_chunk_cp == ECMA_NULL_POINTER);
+
+      ECMA_SET_NON_NULL_POINTER (header_p->first_chunk_cp, chunk_p);
+    }
+    else
+    {
+      ecma_collection_chunk_t *last_chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                         header_p->last_chunk_cp);
+
+      JERRY_ASSERT (last_chunk_p->next_chunk_cp == ECMA_NULL_POINTER);
+
+      ECMA_SET_NON_NULL_POINTER (last_chunk_p->next_chunk_cp, chunk_p);
+    }
+
+    ECMA_SET_NON_NULL_POINTER (header_p->last_chunk_cp, chunk_p);
+  }
+  else
+  {
+    /* last chunk can be appended with the new value */
+    JERRY_ASSERT (chunk_p != NULL);
+  }
+
+  ecma_value_t *values_p = (ecma_value_t *) chunk_p->data;
+
+  JERRY_ASSERT ((uint8_t *) (values_p + pos_of_new_value_in_chunk + 1) <= (uint8_t *) (chunk_p + 1));
+
+  values_p[pos_of_new_value_in_chunk] = ecma_copy_value (v, do_ref_if_object);
+} /* ecma_append_to_values_collection */
+
+/**
  * Allocate a collection of ecma-strings.
  *
  * @return pointer to the collection's header
  */
-ecma_collection_header_t*
-ecma_new_strings_collection (ecma_string_t* string_ptrs_buffer[], /**< pointers to ecma-strings */
+ecma_collection_header_t *
+ecma_new_strings_collection (ecma_string_t *string_ptrs_buffer[], /**< pointers to ecma-strings */
                              ecma_length_t strings_number) /**< number of ecma-strings */
 {
   JERRY_ASSERT (string_ptrs_buffer != NULL);
@@ -166,11 +225,10 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< cont
                                ecma_collection_header_t *collection_p) /**< header of collection */
 {
   iterator_p->header_p = collection_p;
-  iterator_p->next_chunk_cp = collection_p->next_chunk_cp;
+  iterator_p->next_chunk_cp = collection_p->first_chunk_cp;
   iterator_p->current_index = 0;
   iterator_p->current_value_p = NULL;
-  iterator_p->current_chunk_end_p = ((ecma_value_t*) iterator_p->header_p->data
-                                     + sizeof (iterator_p->header_p->data) / sizeof (ecma_value_t));
+  iterator_p->current_chunk_end_p = NULL;
 } /* ecma_collection_iterator_init */
 
 /**
@@ -187,14 +245,21 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
     return false;
   }
 
+  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+
   if (iterator_p->current_value_p == NULL)
   {
     JERRY_ASSERT (iterator_p->current_index == 0);
-    iterator_p->current_value_p = (ecma_value_t*) iterator_p->header_p->data;
+
+    ecma_collection_chunk_t *first_chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                        iterator_p->header_p->first_chunk_cp);
+
+    iterator_p->next_chunk_cp = first_chunk_p->next_chunk_cp;
+    iterator_p->current_value_p = (ecma_value_t *) &first_chunk_p->data;
+    iterator_p->current_chunk_end_p = (iterator_p->current_value_p + values_in_chunk);
   }
   else
   {
-
     if (iterator_p->current_index + 1 == iterator_p->header_p->unit_number)
     {
       return false;
@@ -213,8 +278,8 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
     JERRY_ASSERT (next_chunk_p != NULL);
 
     iterator_p->next_chunk_cp = next_chunk_p->next_chunk_cp;
-    iterator_p->current_value_p = (ecma_value_t*) &next_chunk_p->data;
-    iterator_p->current_chunk_end_p = iterator_p->current_value_p + sizeof (next_chunk_p->data) / sizeof (ecma_value_t);
+    iterator_p->current_value_p = (ecma_value_t *) &next_chunk_p->data;
+    iterator_p->current_chunk_end_p = iterator_p->current_value_p + values_in_chunk;
   }
   else
   {

@@ -71,15 +71,15 @@ ecma_new_chars_collection (const lit_utf8_byte_t chars_buffer[], /**< utf-8 char
 
   collection_p->unit_number = chars_size;
 
-  mem_cpointer_t* next_chunk_cp_p = &collection_p->next_chunk_cp;
-  lit_utf8_byte_t *cur_char_buf_iter_p = (lit_utf8_byte_t *) collection_p->data;
-  lit_utf8_byte_t *cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data);
+  mem_cpointer_t* next_chunk_cp_p = &collection_p->first_chunk_cp;
+  lit_utf8_byte_t *cur_char_buf_iter_p = NULL;
+  lit_utf8_byte_t *cur_char_buf_end_p = NULL;
 
   for (lit_utf8_size_t byte_index = 0;
        byte_index < chars_size;
        byte_index++)
   {
-    if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
+    if (cur_char_buf_iter_p == cur_char_buf_end_p)
     {
       ecma_collection_chunk_t *chunk_p = ecma_alloc_collection_chunk ();
       ECMA_SET_NON_NULL_POINTER (*next_chunk_cp_p, chunk_p);
@@ -115,10 +115,10 @@ ecma_get_chars_collection_length (const ecma_collection_header_t *header_p) /**<
 
   const ecma_length_t chars_number = header_p->unit_number;
 
-  const lit_utf8_byte_t *cur_char_buf_iter_p = (lit_utf8_byte_t *) header_p->data;
-  const lit_utf8_byte_t *cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (header_p->data);
+  const lit_utf8_byte_t *cur_char_buf_iter_p = NULL;
+  const lit_utf8_byte_t *cur_char_buf_end_p = NULL;
 
-  mem_cpointer_t next_chunk_cp = header_p->next_chunk_cp;
+  mem_cpointer_t next_chunk_cp = header_p->first_chunk_cp;
   lit_utf8_size_t skip_bytes = 0;
   ecma_length_t length = 0;
 
@@ -127,7 +127,7 @@ ecma_get_chars_collection_length (const ecma_collection_header_t *header_p) /**<
        char_index < chars_number;
        char_index++)
   {
-    if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
+    if (cur_char_buf_iter_p == cur_char_buf_end_p)
     {
       const ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, next_chunk_cp);
 
@@ -176,19 +176,19 @@ ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< f
 
   const ecma_length_t chars_number = header1_p->unit_number;
 
-  const lit_utf8_byte_t *cur_char_buf1_iter_p = (lit_utf8_byte_t *) header1_p->data;
-  const lit_utf8_byte_t *cur_char_buf1_end_p = cur_char_buf1_iter_p + sizeof (header1_p->data);
-  const lit_utf8_byte_t *cur_char_buf2_iter_p = (lit_utf8_byte_t *) header2_p->data;
-  const lit_utf8_byte_t *cur_char_buf2_end_p = cur_char_buf2_iter_p + sizeof (header2_p->data);
+  const lit_utf8_byte_t *cur_char_buf1_iter_p = NULL;
+  const lit_utf8_byte_t *cur_char_buf1_end_p = NULL;
+  const lit_utf8_byte_t *cur_char_buf2_iter_p = NULL;
+  const lit_utf8_byte_t *cur_char_buf2_end_p = NULL;
 
-  mem_cpointer_t next_chunk1_cp = header1_p->next_chunk_cp;
-  mem_cpointer_t next_chunk2_cp = header2_p->next_chunk_cp;
+  mem_cpointer_t next_chunk1_cp = header1_p->first_chunk_cp;
+  mem_cpointer_t next_chunk2_cp = header2_p->first_chunk_cp;
 
   for (ecma_length_t char_index = 0;
        char_index < chars_number;
        char_index++)
   {
-    if (unlikely (cur_char_buf1_iter_p == cur_char_buf1_end_p))
+    if (cur_char_buf1_iter_p == cur_char_buf1_end_p)
     {
       JERRY_ASSERT (cur_char_buf2_iter_p == cur_char_buf2_end_p);
 
@@ -229,10 +229,10 @@ ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< c
   ecma_collection_header_t *new_header_p = ecma_alloc_collection_header ();
   *new_header_p = *collection_p;
 
-  mem_cpointer_t* next_chunk_cp_p = &new_header_p->next_chunk_cp;
+  mem_cpointer_t* next_chunk_cp_p = &new_header_p->first_chunk_cp;
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                                       collection_p->next_chunk_cp);
+                                                       collection_p->first_chunk_cp);
 
   while (chunk_p != NULL)
   {
@@ -265,15 +265,15 @@ ecma_copy_chars_collection_to_buffer (const ecma_collection_header_t *collection
 
   const lit_utf8_size_t chars_number = collection_p->unit_number;
 
-  mem_cpointer_t next_chunk_cp = collection_p->next_chunk_cp;
-  const lit_utf8_byte_t *cur_char_buf_iter_p = (lit_utf8_byte_t *) collection_p->data;
-  const lit_utf8_byte_t *cur_char_buf_end_p = cur_char_buf_iter_p + sizeof (collection_p->data);
+  mem_cpointer_t next_chunk_cp = collection_p->first_chunk_cp;
+  const lit_utf8_byte_t *cur_char_buf_iter_p = NULL;
+  const lit_utf8_byte_t *cur_char_buf_end_p = NULL;
 
   for (lit_utf8_size_t char_index = 0;
        char_index < chars_number;
        char_index++)
   {
-    if (unlikely (cur_char_buf_iter_p == cur_char_buf_end_p))
+    if (cur_char_buf_iter_p == cur_char_buf_end_p)
     {
       const ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, next_chunk_cp);
 
@@ -300,7 +300,7 @@ ecma_free_chars_collection (ecma_collection_header_t* collection_p) /**< collect
   JERRY_ASSERT (collection_p != NULL);
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                                       collection_p->next_chunk_cp);
+                                                       collection_p->first_chunk_cp);
 
   while (chunk_p != NULL)
   {

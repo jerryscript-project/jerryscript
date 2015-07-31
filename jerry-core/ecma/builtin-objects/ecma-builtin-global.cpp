@@ -48,6 +48,98 @@
  */
 
 /**
+ * The implementation-defined Global object's 'print' routine
+ *
+ * The routine converts all of its arguments to strings and outputs them using 'printf'.
+ *
+ * Code points, with except of <NUL> character, that are representable with one utf8-byte
+ * are outputted as is, using '%c' format argument, and other code points are outputted as '\uhhll',
+ * where hh and ll are values of code point's high and low bytes, correspondingly.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< this argument */
+                                  const ecma_value_t args[], /**< arguments list */
+                                  ecma_length_t args_number) /**< number of arguments */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /*
+   * TODO:
+   *      Move the 'print' routine out of engine core.
+   */
+
+  for (ecma_length_t arg_index = 0;
+       ecma_is_completion_value_empty (ret_value) && arg_index < args_number;
+       arg_index++)
+  {
+    ECMA_TRY_CATCH (str_value,
+                    ecma_op_to_string (args[arg_index]),
+                    ret_value);
+
+    ecma_string_t *str_p = ecma_get_string_from_value (str_value);
+
+    lit_utf8_size_t utf8_str_size = ecma_string_get_size (str_p);
+
+    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p,
+                            utf8_str_size,
+                            lit_utf8_byte_t);
+
+    ssize_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, (ssize_t) utf8_str_size);
+    JERRY_ASSERT (actual_sz == (ssize_t) utf8_str_size);
+
+    lit_utf8_iterator_t str_iter = lit_utf8_iterator_create (utf8_str_p, utf8_str_size);
+
+    while (!lit_utf8_iterator_is_eos (&str_iter))
+    {
+      ecma_char_t code_point = lit_utf8_iterator_read_next (&str_iter);
+
+      if (code_point == LIT_CHAR_NULL)
+      {
+        printf ("\\u0000");
+      }
+      else if (code_point <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+      {
+        printf ("%c", (char) code_point);
+      }
+      else
+      {
+        JERRY_STATIC_ASSERT (sizeof (code_point) == 2);
+
+        uint32_t byte_high = (uint32_t) jrt_extract_bit_field (code_point,
+                                                               JERRY_BITSINBYTE,
+                                                               JERRY_BITSINBYTE);
+        uint32_t byte_low = (uint32_t) jrt_extract_bit_field (code_point,
+                                                              0,
+                                                              JERRY_BITSINBYTE);
+
+        printf ("\\u%02x%02x", byte_high, byte_low);
+      }
+    }
+
+    if (arg_index < args_number - 1)
+    {
+      printf (" ");
+    }
+
+    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+
+    ECMA_FINALIZE (str_value);
+  }
+
+  printf ("\n");
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  }
+
+  return ret_value;
+} /* ecma_builtin_global_object_print */
+
+/**
  * The Global object's 'eval' routine
  *
  * See also:

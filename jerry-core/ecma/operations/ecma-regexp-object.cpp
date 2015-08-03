@@ -297,13 +297,6 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
   while ((op = re_get_opcode (&bc_p)))
   {
-    if (re_ctx_p->match_limit >= RE_EXECUTE_MATCH_LIMIT)
-    {
-      ret_value = ecma_raise_range_error ("RegExp executor steps limit is exceeded.");
-      return ret_value;
-    }
-    re_ctx_p->match_limit++;
-
     switch (op)
     {
       case RE_OP_MATCH:
@@ -1245,7 +1238,6 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   re_matcher_ctx_t re_ctx;
   re_ctx.input_start_p = iterator.buf_p;
   re_ctx.input_end_p = iterator.buf_p + iterator.buf_size;
-  re_ctx.match_limit = 0;
   re_ctx.recursion_depth = 0;
 
   /* 1. Read bytecode header and init regexp matcher context. */

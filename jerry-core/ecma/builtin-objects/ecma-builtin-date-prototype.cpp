@@ -55,7 +55,27 @@
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_object_to_string (this_arg, ECMA_DATE_LOCAL);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (prim_value,
+                  ecma_date_get_primitive_value (this_arg),
+                  ret_value);
+
+  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+
+  if (ecma_number_is_nan (*prim_num_p))
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+  }
+  else
+  {
+    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_LOCAL);
+  }
+
+  ECMA_FINALIZE (prim_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_string */
 
 /**
@@ -1101,7 +1121,27 @@ ecma_builtin_date_prototype_set_utc_full_year (ecma_value_t this_arg, /**< this 
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_object_to_string (this_arg, ECMA_DATE_UTC);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (prim_value,
+                  ecma_date_get_primitive_value (this_arg),
+                  ret_value);
+
+  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+
+  if (ecma_number_is_nan (*prim_num_p))
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+  }
+  else
+  {
+    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_UTC);
+  }
+
+  ECMA_FINALIZE (prim_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_utc_string */
 
 /**
@@ -1116,7 +1156,27 @@ ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argu
 static ecma_completion_value_t
 ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_date_object_to_string (this_arg, ECMA_DATE_UTC);
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (prim_value,
+                  ecma_date_get_primitive_value (this_arg),
+                  ret_value);
+
+  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+
+  if (ecma_number_is_nan (*prim_num_p))
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+  }
+  else
+  {
+    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_UTC);
+  }
+
+  ECMA_FINALIZE (prim_value);
+
+  return ret_value;
 } /* ecma_builtin_date_prototype_to_iso_string */
 
 /**

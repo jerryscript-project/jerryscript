@@ -1164,10 +1164,9 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
 
   ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
 
-  if (ecma_number_is_nan (*prim_num_p))
+  if (ecma_number_is_nan (*prim_num_p) || ecma_number_is_infinity (*prim_num_p))
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (magic_str_p));
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
   }
   else
   {

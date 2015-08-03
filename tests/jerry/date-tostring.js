@@ -65,9 +65,28 @@ catch (e)
   assert (e.message === "Incompatible type");
 }
 
-assert (new Date (NaN).toISOString () == "Invalid Date");
 assert (new Date ("2015-07-16").toISOString () == "2015-07-16T00:00:00.000Z");
 assert (new Date ("2015-07-16T11:29:05.023").toISOString () == "2015-07-16T11:29:05.023Z");
+
+try
+{
+  new Date (NaN).toISOString ();
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof RangeError);
+}
+
+try
+{
+  new Date (Number.POSITIVE_INFINITY).toISOString ();
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof RangeError);
+}
 
 try
 {

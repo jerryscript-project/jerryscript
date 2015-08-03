@@ -120,3 +120,12 @@ assert (decodeURI ({ x:1 }) === "[object Object]");
 assert (encodeURI (void 0) === "undefined");
 assert (encodeURI (216.000e1) === "2160");
 
+// Combining surrogate fragments
+
+assert (decodeURI("\ud800\udc00 \ud800 \udc00") === "\ud800\udc00 \ud800 \udc00");
+assert (decodeURI("%f0%90%80%80") === "\ud800\udc00");
+assert (decodeURI("\ud800%f0%90%80%80\ud800") === "\ud800\ud800\udc00\ud800");
+assert (decodeURI("\udc00%f0%90%80%80\udc00") === "\udc00\ud800\udc00\udc00");
+
+checkDecodeURIParseError ("\ud800%ed%b0%80");
+checkDecodeURIParseError ("%ed%a0%80\udc00");

@@ -825,10 +825,9 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
         out_token_p->type = RE_TOK_START_INV_CHAR_CLASS;
         lit_utf8_iterator_advance (iter_p, 1);
       }
+
       break;
     }
-    case LIT_CHAR_RIGHT_SQUARE:
-    case LIT_CHAR_RIGHT_BRACE:
     case LIT_CHAR_QUESTION:
     case LIT_CHAR_ASTERISK:
     case LIT_CHAR_PLUS:

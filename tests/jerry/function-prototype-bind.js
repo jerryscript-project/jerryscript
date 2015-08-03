@@ -115,6 +115,9 @@ assert (foo == 3);
 assert (foo instanceof Number);
 assert (foo.prototype === undefined);
 
+var func = Number.prototype.toString.bind('foo');
+assert (func instanceof Function);
+
 try {
   var this_obj = this.constructor;
   var bound = this_obj.bind(null, "foo");

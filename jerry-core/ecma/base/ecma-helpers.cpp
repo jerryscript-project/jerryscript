@@ -801,8 +801,13 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
+    {
+      break;
+    }
+
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS:
     {
+      ecma_free_value (property_value, false);
       break;
     }
 

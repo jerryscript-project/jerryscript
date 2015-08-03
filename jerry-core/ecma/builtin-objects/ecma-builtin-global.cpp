@@ -665,6 +665,13 @@ static uint8_t unescaped_uri_component_set[16] =
  */
 #define URI_ENCODED_BYTE_SIZE (3)
 
+/*
+ * These two types shows wheter the byte is present in
+ * the original stream or decoded from a %xx sequence.
+ */
+#define URI_DECODE_ORIGINAL_BYTE 0
+#define URI_DECODE_DECODED_BYTE 1
+
 /**
  * Helper function to decode URI.
  *
@@ -753,22 +760,26 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
   if (ecma_is_completion_value_empty (ret_value))
   {
     MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                            output_size,
+                            output_size * 2,
                             lit_utf8_byte_t);
 
     input_char_p = input_start_p;
     lit_utf8_byte_t *output_char_p = output_start_p;
+    lit_utf8_byte_t *output_type_p = output_start_p + output_size;
 
     while (input_char_p < input_end_p)
     {
       /* Input decode. */
       if (*input_char_p != '%')
       {
+        *output_type_p++ = URI_DECODE_ORIGINAL_BYTE;
         *output_char_p = *input_char_p;
         output_char_p++;
         input_char_p++;
         continue;
       }
+
+      *output_type_p++ = URI_DECODE_DECODED_BYTE;
 
       lit_code_point_t decoded_byte;
 
@@ -804,16 +815,38 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
     if (valid_utf8)
     {
       lit_utf8_iterator_t characters = lit_utf8_iterator_create (output_start_p, output_size);
+      output_type_p = output_start_p + output_size;
+
       while (!lit_utf8_iterator_is_eos (&characters))
       {
+        bool original_byte = output_type_p[characters.buf_pos.offset] == URI_DECODE_ORIGINAL_BYTE;
+
         ecma_char_t character = lit_utf8_iterator_read_next (&characters);
 
         /* Surrogate fragments are allowed in JS, but not accepted by URI decoding. */
-        if (lit_is_code_unit_low_surrogate (character)
-            || lit_is_code_unit_high_surrogate (character))
+        if (!original_byte)
         {
-          valid_utf8 = false;
-          break;
+          if (lit_is_code_unit_high_surrogate (character))
+          {
+            /* Note: stray high/low surrogate pairs are not allowed in the stream. */
+            if (lit_utf8_iterator_is_eos (&characters))
+            {
+              valid_utf8 = false;
+              break;
+            }
+
+            if (output_type_p[characters.buf_pos.offset] == URI_DECODE_ORIGINAL_BYTE
+                || !lit_is_code_unit_low_surrogate (lit_utf8_iterator_read_next (&characters)))
+            {
+              valid_utf8 = false;
+              break;
+            }
+          }
+          else if (lit_is_code_unit_low_surrogate (character))
+          {
+            valid_utf8 = false;
+            break;
+          }
         }
       }
     }

@@ -37,6 +37,8 @@ assert(array.indexOf("foo", NaN) === 0);
 assert(array.indexOf("foo", Infinity) === -1);
 assert(array.indexOf("foo", -Infinity) === 0);
 
+assert([true].indexOf(true, -0) === 0);
+
 // Checking behavior when length is zero
 var obj = { indexOf : Array.prototype.indexOf, length : 0 };
 assert(obj.indexOf("foo") === -1);

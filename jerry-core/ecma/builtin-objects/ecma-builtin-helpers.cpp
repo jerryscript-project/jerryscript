@@ -298,7 +298,11 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
   if (!ecma_number_is_nan (index))
   {
 
-    if (ecma_number_is_infinity (index))
+    if (ecma_number_is_zero (index))
+    {
+      norm_index = 0;
+    }
+    else if (ecma_number_is_infinity (index))
     {
       norm_index = ecma_number_is_negative (index) ? 0 : length;
     }

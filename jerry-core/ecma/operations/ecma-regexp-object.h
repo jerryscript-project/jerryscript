@@ -59,9 +59,7 @@ extern ecma_completion_value_t
 ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str_p);
 
 extern ecma_completion_value_t
-ecma_regexp_exec_helper (ecma_object_t *obj_p,
-                         re_bytecode_t *bc_p,
-                         lit_utf8_iterator_t *iter_p);
+ecma_regexp_exec_helper (ecma_value_t, ecma_value_t, bool);
 
 /**
  * @}

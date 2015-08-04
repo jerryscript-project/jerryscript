@@ -159,7 +159,7 @@ export SHELL=/bin/bash
 all: precommit
 
 .PHONY: $(BUILD_DIRS_NATIVE)
-$(BUILD_DIRS_NATIVE): prerequisites
+$(BUILD_DIRS_NATIVE):
 	$(Q) if [ "$$TOOLCHAIN" == "" ]; \
           then \
             arch=`uname -m`; \

@@ -161,6 +161,18 @@ extern EXTERN_C
 jerry_api_string_t *jerry_api_create_string_sz (const jerry_api_char_t *, jerry_api_size_t);
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_object (void);
+
+extern EXTERN_C
+jerry_api_object_t* jerry_api_create_array_object (jerry_api_size_t);
+extern EXTERN_C
+bool jerry_api_set_array_index_value (jerry_api_object_t *array_obj_p,
+                                      jerry_api_length_t index,
+                                      jerry_api_value_t *value_p);
+extern EXTERN_C
+bool jerry_api_get_array_index_value (jerry_api_object_t *array_obj_p,
+                                      jerry_api_length_t index,
+                                      jerry_api_value_t *value_p);
+
 extern EXTERN_C
 jerry_api_object_t* jerry_api_create_error (jerry_api_error_t error_type,
                                             const jerry_api_char_t *message_p);

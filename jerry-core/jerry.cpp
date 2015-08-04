@@ -16,6 +16,7 @@
 #include <stdio.h>
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
@@ -428,6 +429,85 @@ jerry_api_create_object (void)
 
   return ecma_op_create_object_object_noarg ();
 } /* jerry_api_create_object */
+
+/**
+ * Create an array object
+ *
+ * Note:
+ *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *
+ * @return pointer to created array object
+ */
+jerry_api_object_t *
+jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
+{
+  JERRY_ASSERT (size > 0);
+
+  ecma_number_t *length_num_p = ecma_alloc_number ();
+  *length_num_p = ecma_uint32_to_number (size);
+  ecma_value_t array_length = ecma_make_number_value (length_num_p);
+
+  jerry_api_length_t argument_size = 1;
+  ecma_completion_value_t new_array_completion = ecma_op_create_array_object (&array_length, argument_size, true);
+  JERRY_ASSERT (ecma_is_completion_value_normal (new_array_completion));
+  ecma_value_t val = ecma_get_completion_value_value (new_array_completion);
+  jerry_api_object_t *obj_p = ecma_get_object_from_value (val);
+
+  ecma_free_value (array_length, true);
+  return obj_p;
+} /* jerry_api_create_array_object */
+
+/**
+ * Set value of field in the specified array object
+ *
+ * @return true, if field value was set successfully
+ *         throw exception, otherwise
+ */
+bool
+jerry_api_set_array_index_value (jerry_api_object_t *array_obj_p, /* array object */
+                                 jerry_api_length_t index, /* index to be written */
+                                 jerry_api_value_t *value_p) /* value to set*/
+{
+  ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
+  ecma_value_t value;
+  jerry_api_convert_api_value_to_ecma_value (&value, value_p);
+  ecma_completion_value_t set_completion = ecma_op_object_put (array_obj_p, str_idx_p, value, false);
+  JERRY_ASSERT (ecma_is_completion_value_normal (set_completion));
+
+  ecma_free_completion_value (set_completion);
+  ecma_deref_ecma_string (str_idx_p);
+  ecma_free_value (value, true);
+
+  return true;
+} /* jerry_api_set_array_index_value */
+
+/**
+ * Get value of field in the specified array object
+ *
+ * Note:
+ *      if value was retrieved successfully, it should be freed
+ *      with jerry_api_release_value just when it becomes unnecessary.
+ *
+ * @return true, if field value was retrieved successfully, i.e. upon the call:
+ *                - there is field with specified name in the object;
+ *         throw exception - otherwise.
+ */
+bool
+jerry_api_get_array_index_value (jerry_api_object_t *array_obj_p, /* array object */
+                                 jerry_api_length_t index, /* index to be written */
+                                 jerry_api_value_t *value_p) /* output value at index */
+{
+  ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
+  ecma_completion_value_t get_completion = ecma_op_object_get (array_obj_p, str_idx_p);
+  JERRY_ASSERT (ecma_is_completion_value_normal (get_completion));
+  ecma_value_t val = ecma_get_completion_value_value (get_completion);
+  jerry_api_convert_ecma_value_to_api_value (value_p, val);
+
+  ecma_free_completion_value (get_completion);
+  ecma_deref_ecma_string (str_idx_p);
+
+  return true;
+} /* jerry_api_get_array_index_value */
 
 /**
  * Create an error object

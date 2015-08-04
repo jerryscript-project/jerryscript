@@ -516,6 +516,21 @@ main (void)
 
   jerry_api_release_object (obj_p);
 
+
+  // Test: Array Object API
+  jerry_api_object_t *array_obj_p = jerry_api_create_array_object (10);
+
+  jerry_api_value_t v_in;
+  test_api_init_api_value_float64 (&v_in, 10.5);
+  jerry_api_set_array_index_value (array_obj_p, 5, &v_in);
+  jerry_api_value_t v_out;
+  jerry_api_get_array_index_value (array_obj_p, 5, &v_out);
+
+  JERRY_ASSERT (v_out.type == JERRY_API_DATA_TYPE_FLOAT64 && v_out.v_float64 == 10.5);
+
+  jerry_api_release_object (array_obj_p);
+
+
   // Test: eval
   const char *eval_code_src_p = "(function () { return 123; })";
   jerry_completion_code_t status = jerry_api_eval ((jerry_api_char_t *) eval_code_src_p,

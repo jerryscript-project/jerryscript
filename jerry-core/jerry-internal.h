@@ -27,8 +27,7 @@ extern ecma_completion_value_t
 jerry_dispatch_external_function (ecma_object_t *function_object_p,
                                   ecma_external_pointer_t handler_p,
                                   ecma_value_t this_arg_value,
-                                  const ecma_value_t args_p[],
-                                  ecma_length_t args_count);
+                                  ecma_collection_header_t *arg_collection_p);
 
 extern void
 jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p,

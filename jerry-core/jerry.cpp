@@ -556,20 +556,25 @@ ecma_completion_value_t
 jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< external function object */
                                   ecma_external_pointer_t handler_p, /**< pointer to the function's native handler */
                                   ecma_value_t this_arg_value, /**< 'this' argument */
-                                  const ecma_value_t args_p[], /**< arguments list */
-                                  ecma_length_t args_count) /**< number of arguments */
+                                  ecma_collection_header_t *arg_collection_p) /**< arguments collection */
 {
   jerry_assert_api_available ();
 
-  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (uint32_t));
+  const ecma_length_t args_count = (arg_collection_p != NULL ? arg_collection_p->unit_number : 0);
 
   ecma_completion_value_t completion_value;
 
   MEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_api_value_t);
 
+  ecma_collection_iterator_t args_iterator;
+  ecma_collection_iterator_init (&args_iterator, arg_collection_p);
+
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    jerry_api_convert_ecma_value_to_api_value (&api_arg_values[i], args_p[i]);
+    bool is_moved = ecma_collection_iterator_next (&args_iterator);
+    JERRY_ASSERT (is_moved);
+
+    jerry_api_convert_ecma_value_to_api_value (&api_arg_values[i], *args_iterator.current_value_p);
   }
 
   jerry_api_value_t api_this_arg_value, api_ret_value;
@@ -982,11 +987,16 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   bool is_successful = true;
 
-  MEM_DEFINE_LOCAL_ARRAY (arg_values, args_count, ecma_value_t);
+  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    jerry_api_convert_api_value_to_ecma_value (&arg_values[i], &args_p[i]);
+    ecma_value_t arg_value;
+    jerry_api_convert_api_value_to_ecma_value (&arg_value, &args_p[i]);
+
+    ecma_append_to_values_collection (arg_collection_p, arg_value, true);
+
+    ecma_free_value (arg_value, true);
   }
 
   ecma_completion_value_t call_completion;
@@ -996,9 +1006,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
     JERRY_ASSERT (this_arg_p == NULL);
     JERRY_ASSERT (jerry_api_is_constructor (function_object_p));
 
-    call_completion = ecma_op_function_construct (function_object_p,
-                                                  arg_values,
-                                                  args_count);
+    call_completion = ecma_op_function_construct (function_object_p, arg_collection_p);
   }
   else
   {
@@ -1017,9 +1025,10 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
     call_completion = ecma_op_function_call (function_object_p,
                                              this_arg_val,
-                                             arg_values,
-                                             args_count);
+                                             arg_collection_p);
   }
+
+  ecma_free_values_collection (arg_collection_p, true);
 
   if (!ecma_is_completion_value_normal (call_completion))
   {
@@ -1036,13 +1045,6 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
   }
 
   ecma_free_completion_value (call_completion);
-
-  for (uint32_t i = 0; i < args_count; i++)
-  {
-    ecma_free_value (arg_values[i], true);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (arg_values);
 
   return is_successful;
 } /* jerry_api_invoke_function */

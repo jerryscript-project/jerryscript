@@ -45,13 +45,14 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                  ecma_object_t *lex_env_p, /**< lexical environment the Arguments
                                                                 object is created for */
                                  ecma_collection_header_t *formal_params_p, /**< formal parameters collection */
-                                 const ecma_value_t *arguments_list_p, /**< list of arguments */
-                                 ecma_length_t arguments_list_length, /**< length of arguments' list */
+                                 ecma_collection_header_t *arg_collection_p, /**< arguments collection */
                                  bool is_strict) /**< flag indicating whether strict mode is enabled */
 {
+  const ecma_length_t arguments_number = arg_collection_p != NULL ? arg_collection_p->unit_number : 0;
+
   // 1.
   ecma_number_t *len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (arguments_list_length);
+  *len_p = ecma_uint32_to_number (arguments_number);
 
   // 2., 3., 6.
   ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
@@ -90,14 +91,20 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ecma_dealloc_number (len_p);
 
   // 11.a, 11.b
+  ecma_collection_iterator_t args_iterator;
+  ecma_collection_iterator_init (&args_iterator, arg_collection_p);
+
   for (ecma_length_t indx = 0;
-       indx < arguments_list_length;
+       indx < arguments_number;
        indx++)
   {
+    bool is_moved = ecma_collection_iterator_next (&args_iterator);
+    JERRY_ASSERT (is_moved);
+
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_value_defined = true;
-      prop_desc.value = arguments_list_p[indx];
+      prop_desc.value = *args_iterator.current_value_p;
 
       prop_desc.is_writable_defined = true;
       prop_desc.is_writable = true;
@@ -128,7 +135,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ecma_collection_iterator_init (&formal_params_iterator, formal_params_p);
 
     if (!is_strict
-        && arguments_list_length > 0
+        && arguments_number > 0
         && formal_params_number > 0)
     {
       // 8.

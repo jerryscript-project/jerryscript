@@ -174,8 +174,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
     {
       return ecma_op_function_call (getter_p,
                                     ecma_make_object_value (obj_p),
-                                    NULL,
-                                    0);
+                                    NULL);
     }
   }
 
@@ -314,10 +313,10 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
     ECMA_TRY_CATCH (call_ret,
-                    ecma_op_function_call (setter_p,
-                                           ecma_make_object_value (obj_p),
-                                           &value,
-                                           1),
+                    ecma_op_function_call_array_args (setter_p,
+                                                      ecma_make_object_value (obj_p),
+                                                      &value,
+                                                      1),
                     ret_value);
 
     ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
@@ -569,7 +568,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
       call_completion = ecma_op_function_call (func_obj_p,
                                                ecma_make_object_value (obj_p),
-                                               NULL, 0);
+                                               NULL);
     }
 
     ecma_free_completion_value (function_value_get_completion);

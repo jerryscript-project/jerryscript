@@ -1045,10 +1045,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       arguments_list[length + 1] = ecma_copy_value (context_p->input_string, true);
 
       ECMA_TRY_CATCH (result_value,
-                      ecma_op_function_call (context_p->replace_function_p,
-                                             context_p->regexp_or_search_string,
-                                             arguments_list,
-                                             length + 2),
+                      ecma_op_function_call_array_args (context_p->replace_function_p,
+                                                        context_p->regexp_or_search_string,
+                                                        arguments_list,
+                                                        length + 2),
                       ret_value);
 
       ECMA_TRY_CATCH (to_string_value,

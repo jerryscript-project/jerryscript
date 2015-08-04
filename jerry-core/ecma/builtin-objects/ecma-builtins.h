@@ -41,12 +41,10 @@ extern void ecma_finalize_builtins (void);
 extern ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p,
                             ecma_value_t this_arg,
-                            const ecma_value_t *arguments_list_p,
-                            ecma_length_t arguments_list_len);
+                            ecma_collection_header_t *arg_collection_p);
 extern ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
-                                 const ecma_value_t *arguments_list_p,
-                                 ecma_length_t arguments_list_len);
+                                 ecma_collection_header_t *arg_collection_p);
 extern ecma_property_t*
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p,
                                           ecma_string_t *string_p);

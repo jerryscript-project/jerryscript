@@ -113,7 +113,7 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
     /* 4. */
     ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
 
-    return_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+    return_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL);
   }
 
   ECMA_FINALIZE (join_value);
@@ -1013,10 +1013,10 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
         ecma_value_t compare_args[] = {j, k};
 
         ECMA_TRY_CATCH (call_value,
-                        ecma_op_function_call (comparefn_obj_p,
-                                               ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                               compare_args,
-                                               2),
+                        ecma_op_function_call_array_args (comparefn_obj_p,
+                                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                          compare_args,
+                                                          2),
                         ret_value);
 
         if (!ecma_is_value_number (call_value))
@@ -2069,7 +2069,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
         /* 7.c.ii */
-        ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
+        ECMA_TRY_CATCH (call_value, ecma_op_function_call_array_args (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
         if (ecma_is_completion_value_normal_false (ecma_op_to_boolean (call_value)))
@@ -2170,7 +2170,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
         /* 7.c.ii */
-        ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
+        ECMA_TRY_CATCH (call_value, ecma_op_function_call_array_args (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
         if (ecma_is_completion_value_normal_true (ecma_op_to_boolean (call_value)))
@@ -2270,7 +2270,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
 
         /* 7.c.ii */
         ecma_value_t call_args[] = {current_value, current_index, obj_this};
-        ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
+        ECMA_TRY_CATCH (call_value, ecma_op_function_call_array_args (func_object_p, arg2, call_args, 3), ret_value);
 
         ECMA_FINALIZE (call_value);
         ECMA_FINALIZE (current_value);
@@ -2367,7 +2367,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
         current_index = ecma_make_number_value (num_p);
         ecma_value_t call_args[] = {current_value, current_index, obj_this};
 
-        ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
+        ECMA_TRY_CATCH (mapped_value, ecma_op_function_call_array_args (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 8.c.iii */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
@@ -2485,7 +2485,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
         /* 9.c.ii */
-        ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
+        ECMA_TRY_CATCH (call_value, ecma_op_function_call_array_args (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 9.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
         if (ecma_is_completion_value_normal_true (ecma_op_to_boolean (call_value)))
@@ -2643,10 +2643,10 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
           ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
 
           ECMA_TRY_CATCH (call_value,
-                          ecma_op_function_call (func_object_p,
-                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                                 call_args,
-                                                 4),
+                          ecma_op_function_call_array_args (func_object_p,
+                                                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                            call_args,
+                                                            4),
                           ret_value);
 
           ecma_free_value (accumulator, true);
@@ -2787,10 +2787,10 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
           ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
 
           ECMA_TRY_CATCH (call_value,
-                          ecma_op_function_call (func_object_p,
-                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                                 call_args,
-                                                 4),
+                          ecma_op_function_call_array_args (func_object_p,
+                                                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                            call_args,
+                                                            4),
                           ret_value);
 
           ecma_free_value (accumulator, true);

@@ -284,7 +284,7 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< cont
                                ecma_collection_header_t *collection_p) /**< header of collection */
 {
   iterator_p->header_p = collection_p;
-  iterator_p->next_chunk_cp = collection_p->first_chunk_cp;
+  iterator_p->next_chunk_cp = (collection_p != NULL ? collection_p->first_chunk_cp : MEM_CP_NULL);
   iterator_p->current_index = 0;
   iterator_p->current_value_p = NULL;
   iterator_p->current_chunk_end_p = NULL;
@@ -299,7 +299,8 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< cont
 bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< context of iterator */
 {
-  if (unlikely (iterator_p->header_p->unit_number == 0))
+  if (iterator_p->header_p == NULL
+      || unlikely (iterator_p->header_p->unit_number == 0))
   {
     return false;
   }

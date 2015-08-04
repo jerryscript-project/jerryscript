@@ -110,7 +110,7 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
   {
     /* 4. */
     ecma_object_t *to_string_func_obj_p = ecma_get_object_from_value (to_string_val);
-    return_value = ecma_op_function_call (to_string_func_obj_p, this_arg, NULL, 0);
+    return_value = ecma_op_function_call (to_string_func_obj_p, this_arg, NULL);
   }
   ECMA_FINALIZE (to_string_val);
 

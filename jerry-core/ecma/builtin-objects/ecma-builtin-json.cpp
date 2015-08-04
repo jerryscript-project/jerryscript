@@ -793,10 +793,10 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
    /*
     * The completion value can be anything including exceptions.
     */
-    ret_value = ecma_op_function_call (reviver_p,
-                                       ecma_make_object_value (holder_p),
-                                       arguments_list,
-                                       2);
+    ret_value = ecma_op_function_call_array_args (reviver_p,
+                                                  ecma_make_object_value (holder_p),
+                                                  arguments_list,
+                                                  2);
   }
   else
   {
@@ -1353,7 +1353,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
       ecma_object_t *toJSON_obj_p = ecma_get_object_from_value (toJSON);
 
       ECMA_TRY_CATCH (func_ret_val,
-                      ecma_op_function_call (toJSON_obj_p, my_val, call_args, 1),
+                      ecma_op_function_call_array_args (toJSON_obj_p, my_val, call_args, 1),
                       ret_value);
 
       ecma_free_value (my_val, true);
@@ -1375,7 +1375,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
     ecma_value_t call_args[] = { key_value, my_val };
 
     ECMA_TRY_CATCH (func_ret_val,
-                    ecma_op_function_call (context_p->replacer_function_p, holder_value, call_args, 2),
+                    ecma_op_function_call_array_args (context_p->replacer_function_p, holder_value, call_args, 2),
                     ret_value);
 
     ecma_free_value (my_val, true);

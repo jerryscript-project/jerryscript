@@ -42,13 +42,18 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p);
 extern ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p,
                        ecma_value_t this_arg_value,
-                       const ecma_value_t* arguments_list_p,
-                       ecma_length_t arguments_list_len);
+                       ecma_collection_header_t *arg_collection_p);
+
+extern ecma_completion_value_t
+ecma_op_function_call_array_args (ecma_object_t *func_obj_p,
+                                  ecma_value_t this_arg_value,
+                                  const ecma_value_t* arguments_list_p,
+                                  ecma_length_t arguments_list_len);
+
 
 extern ecma_completion_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p,
-                            const ecma_value_t* arguments_list_p,
-                            ecma_length_t arguments_list_len);
+                            ecma_collection_header_t *arg_collection_p);
 
 extern ecma_completion_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p,

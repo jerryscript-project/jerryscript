@@ -1937,24 +1937,25 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
 
   /* 3 */
   const lit_utf8_size_t size = ecma_string_get_size (original_string_p);
-  const ecma_length_t length = ecma_string_get_size (original_string_p);
 
   /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
   lit_utf8_byte_t *original_utf8_str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (size + 1,
                                                                                    MEM_HEAP_ALLOC_SHORT_TERM);
   ecma_string_to_utf8_string (original_string_p, original_utf8_str_p, (ssize_t) size);
 
+  const ecma_length_t length = lit_utf8_string_length (original_utf8_str_p, size);
+
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (original_utf8_str_p, size);
+
   uint32_t prefix = 0, postfix = 0;
   uint32_t new_len = 0;
 
-  while (prefix < length)
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
-    ecma_char_t next_char = lit_utf8_string_code_unit_at (original_utf8_str_p,
-                                                          size,
-                                                          prefix);
+    ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
 
-    if (lit_char_is_white_space (next_char)
-        || lit_char_is_line_terminator (next_char))
+    if (lit_char_is_white_space (current_char)
+        || lit_char_is_line_terminator (current_char))
     {
       prefix++;
     }
@@ -1964,13 +1965,13 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
     }
   }
 
-  while (postfix < length - prefix)
+  lit_utf8_iterator_seek_eos (&iter);
+  while (!lit_utf8_iterator_is_bos (&iter))
   {
-    ecma_char_t next_char = lit_utf8_string_code_unit_at (original_utf8_str_p,
-                                                          size,
-                                                          length - postfix - 1);
-    if (lit_char_is_white_space (next_char)
-        || lit_char_is_line_terminator (next_char))
+    ecma_char_t current_char = lit_utf8_iterator_read_prev (&iter);
+
+    if (lit_char_is_white_space (current_char)
+        || lit_char_is_line_terminator (current_char))
     {
       postfix++;
     }
@@ -1979,8 +1980,7 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
       break;
     }
   }
-
-  new_len = prefix < size ? size - prefix - postfix : 0;
+  new_len = prefix < length ? length - prefix - postfix : 0;
 
   ecma_string_t *new_str_p = ecma_string_substr (original_string_p, prefix, prefix + new_len);
 

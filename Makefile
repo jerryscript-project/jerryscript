@@ -176,7 +176,12 @@ $(BUILD_DIRS_NATIVE):
           mkdir -p $@; \
           echo "$$TOOLCHAIN" > $@/toolchain.config
 	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LOG=$(LOG) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+          (cmake \
+             -DENABLE_VALGRIND=$(VALGRIND) \
+             -DENABLE_LOG=$(LOG) \
+             -DENABLE_LTO=$(LTO) \
+             -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC) \
+             -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
 
 .PHONY: $(BUILD_DIRS_STM32F3)

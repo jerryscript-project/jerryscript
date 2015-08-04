@@ -66,4 +66,13 @@ assert("          ".trim() === "");
 
 assert("".trim() === "");
 
-// FIXME: add unicode tests when unicode support available
+assert("\uf389".trim() === "\uf389");
+assert(String.prototype.trim.call('\uf389') === "\uf389");
+assert("\u20291\u00D0".trim() === "1\u00D0");
+assert("\u20291\u00A0".trim() === "1");
+
+assert("\u0009\u000B\u000C\u0020\u00A01".trim() === "1");
+assert("\u000A\u000D\u2028\u202911".trim() === "11");
+
+assert("\u0009\u000B\u000C\u0020\u00A01\u0009\u000B\u000C\u0020\u00A0".trim() === "1");
+assert("\u000A\u000D\u2028\u202911\u000A\u000D\u2028\u2029".trim() === "11");

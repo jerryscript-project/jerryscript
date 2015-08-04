@@ -40,7 +40,7 @@ ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, vm_instr_counter_t
 ecma_completion_value_t vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p,
                                            ecma_length_t args_number,
                                            ecma_collection_header_t *args_values_p);
-void fill_params_list (vm_frame_ctx_t *frame_ctx_p,
-                       ecma_length_t params_number,
-                       ecma_string_t* params_names[]);
+extern void vm_fill_params_list (vm_frame_ctx_t *frame_ctx_p,
+                                 ecma_length_t params_number,
+                                 ecma_collection_header_t *formal_params_collection_p);
 #endif /* OPCODES_ECMA_SUPPORT_H */

@@ -70,9 +70,10 @@ vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
  * Fill parameters' list
  */
 void
-fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                  ecma_length_t params_number, /**< number of parameters */
-                  ecma_string_t* params_names[]) /**< out: parameters' names */
+vm_fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
+                     ecma_length_t params_number, /**< number of parameters */
+                     ecma_collection_header_t *formal_params_collection_p) /**< collection to fill with
+                                                                            *   parameters' names */
 {
   uint32_t param_index;
   for (param_index = 0;
@@ -87,10 +88,16 @@ fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                                                                                 frame_ctx_p->instrs_p,
                                                                                 frame_ctx_p->pos);
 
-    params_names[param_index] = ecma_new_ecma_string_from_lit_cp (param_name_lit_idx);
+
+    ecma_string_t *param_name_str_p = ecma_new_ecma_string_from_lit_cp (param_name_lit_idx);
+    ecma_value_t param_name_value = ecma_make_string_value (param_name_str_p);
+
+    ecma_append_to_values_collection (formal_params_collection_p, param_name_value, false);
+
+    ecma_deref_ecma_string (param_name_str_p);
 
     frame_ctx_p->pos++;
   }
 
   JERRY_ASSERT (param_index == params_number);
-} /* fill_params_list */
+} /* vm_fill_params_list */

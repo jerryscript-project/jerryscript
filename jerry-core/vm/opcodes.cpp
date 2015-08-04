@@ -478,8 +478,7 @@ opfunc_var_decl (vm_instr_t instr, /**< instruction */
 static ecma_completion_value_t
 function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                       lit_cpointer_t function_name_lit_cp, /**< compressed pointer to literal with function name */
-                      ecma_string_t* args_names[], /**< names of arguments */
-                      ecma_length_t args_number) /**< number of arguments */
+                      ecma_collection_header_t *formal_params_collection_p) /** formal parameters collection */
 {
   bool is_strict = frame_ctx_p->is_strict;
   bool do_instantiate_arguments_object = true;
@@ -510,8 +509,7 @@ function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                                                                     function_name_string_p,
                                                                     frame_ctx_p->instrs_p,
                                                                     frame_ctx_p->pos,
-                                                                    args_names,
-                                                                    args_number,
+                                                                    formal_params_collection_p,
                                                                     is_strict,
                                                                     do_instantiate_arguments_object,
                                                                     is_configurable_bindings);
@@ -543,23 +541,13 @@ opfunc_func_decl_n (vm_instr_t instr, /**< instruction */
 
   ecma_completion_value_t ret_value;
 
-  MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
+  ecma_collection_header_t *formal_params_collection_p = ecma_new_values_collection (NULL, 0, false);
 
-  fill_params_list (frame_ctx_p, params_number, params_names);
+  vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
 
   ret_value = function_declaration (frame_ctx_p,
                                     function_name_lit_cp,
-                                    params_names,
-                                    params_number);
-
-  for (uint32_t param_index = 0;
-       param_index < params_number;
-       param_index++)
-  {
-    ecma_deref_ecma_string (params_names[param_index]);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (params_names);
+                                    formal_params_collection_p);
 
   return ret_value;
 } /* opfunc_func_decl_n */
@@ -587,9 +575,9 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
 
   vm_instr_counter_t function_code_end_oc;
 
-  MEM_DEFINE_LOCAL_ARRAY (params_names, params_number, ecma_string_t*);
+  ecma_collection_header_t *formal_params_collection_p = ecma_new_values_collection (NULL, 0, false);
 
-  fill_params_list (frame_ctx_p, params_number, params_names);
+  vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
 
   bool is_strict = frame_ctx_p->is_strict;
   bool do_instantiate_arguments_object = true;
@@ -634,8 +622,7 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
     ecma_ref_object (scope_p);
   }
 
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (params_names,
-                                                              params_number,
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
                                                               scope_p,
                                                               is_strict,
                                                               do_instantiate_arguments_object,
@@ -656,15 +643,6 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
 
   ecma_deref_object (func_obj_p);
   ecma_deref_object (scope_p);
-
-  for (uint32_t param_index = 0;
-       param_index < params_number;
-       param_index++)
-  {
-    ecma_deref_ecma_string (params_names[param_index]);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (params_names);
 
   frame_ctx_p->pos = function_code_end_oc;
 

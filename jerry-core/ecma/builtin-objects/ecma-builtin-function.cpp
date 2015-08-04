@@ -306,8 +306,11 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
       /* 11. */
       ecma_object_t *glob_lex_env_p = ecma_get_global_environment ();
 
-      ecma_object_t *func_obj_p = ecma_op_create_function_object (params_count > 1u ? string_params_p : NULL,
-                                                                  (ecma_length_t) (params_count - 1u),
+      ecma_collection_header_t *formal_params_collection_p;
+      formal_params_collection_p = ecma_new_strings_collection (params_count > 1u ? string_params_p : NULL,
+                                                                (ecma_length_t) (params_count - 1u));
+
+      ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
                                                                   glob_lex_env_p,
                                                                   is_strict,
                                                                   do_instantiate_arguments_object,

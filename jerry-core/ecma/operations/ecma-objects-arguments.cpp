@@ -138,6 +138,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       MEM_DEFINE_LOCAL_ARRAY (formal_params, formal_params_number, ecma_string_t *);
 
       JERRY_ASSERT (formal_params_iterator.current_value_p == NULL);
+
       uint32_t param_index;
       for (param_index = 0;
            ecma_collection_iterator_next (&formal_params_iterator);
@@ -149,10 +150,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
         JERRY_ASSERT (ecma_is_value_string (*formal_params_iterator.current_value_p));
         ecma_string_t *param_name_p = ecma_get_string_from_value (*formal_params_iterator.current_value_p);
 
-        /*
-         * Formal parameter list is stored in reversed order
-         */
-        formal_params[formal_params_number - 1u - param_index] = param_name_p;
+        formal_params[param_index] = param_name_p;
       }
       JERRY_ASSERT (param_index == formal_params_number);
 

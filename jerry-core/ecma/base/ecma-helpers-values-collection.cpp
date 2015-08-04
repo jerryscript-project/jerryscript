@@ -258,25 +258,20 @@ ecma_collection_header_t *
 ecma_new_strings_collection (ecma_string_t *string_ptrs_buffer[], /**< pointers to ecma-strings */
                              ecma_length_t strings_number) /**< number of ecma-strings */
 {
-  JERRY_ASSERT (string_ptrs_buffer != NULL);
-  JERRY_ASSERT (strings_number > 0);
+  JERRY_ASSERT (string_ptrs_buffer != NULL || strings_number == 0);
 
   ecma_collection_header_t *new_collection_p;
 
-  MEM_DEFINE_LOCAL_ARRAY (values_buffer, strings_number, ecma_value_t);
+  new_collection_p = ecma_new_values_collection (NULL, 0, false);
 
   for (ecma_length_t string_index = 0;
        string_index < strings_number;
        string_index++)
   {
-    values_buffer[string_index] = ecma_make_string_value (string_ptrs_buffer[string_index]);
+    ecma_append_to_values_collection (new_collection_p,
+                                      ecma_make_string_value (string_ptrs_buffer[string_index]),
+                                      false);
   }
-
-  new_collection_p = ecma_new_values_collection (values_buffer,
-                                                 strings_number,
-                                                 false);
-
-  MEM_FINALIZE_LOCAL_ARRAY (values_buffer);
 
   return new_collection_p;
 } /* ecma_new_strings_collection */

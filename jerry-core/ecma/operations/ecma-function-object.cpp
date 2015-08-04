@@ -215,8 +215,12 @@ ecma_function_bind_merge_arg_lists (ecma_object_t *func_obj_p, /**< Function obj
  * @return pointer to newly created Function object
  */
 ecma_object_t*
-ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< formal parameters list */
-                                ecma_length_t formal_parameters_number, /**< formal parameters list's length */
+ecma_op_create_function_object (ecma_collection_header_t *formal_params_collection_p, /**< formal parameters collection
+                                                                                       *   Warning:
+                                                                                       *     the collection should not
+                                                                                       *     be changed / used / freed
+                                                                                       *     by caller after passing it
+                                                                                       *     to the routine */
                                 ecma_object_t *scope_p, /**< function's scope */
                                 bool is_strict, /**< 'strict' flag */
                                 bool do_instantiate_arguments_object, /**< should an Arguments object be instantiated
@@ -253,26 +257,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
   // 10., 11.
   ecma_property_t *formal_parameters_prop_p = ecma_create_internal_property (f,
                                                                              ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
-  if (formal_parameters_number != 0)
-  {
-    /*
-     * Reverse formal parameter list
-     */
-    for (ecma_length_t i = 0; i < formal_parameters_number / 2; i++)
-    {
-      ecma_string_t *tmp_p = formal_parameter_list_p[i];
-      formal_parameter_list_p[i] = formal_parameter_list_p[formal_parameters_number - 1u - i];
-      formal_parameter_list_p[formal_parameters_number - 1u - i] = tmp_p;
-    }
-
-    ecma_collection_header_t *formal_parameters_collection_p = ecma_new_strings_collection (formal_parameter_list_p,
-                                                                                            formal_parameters_number);
-    ECMA_SET_POINTER (formal_parameters_prop_p->u.internal_property.value, formal_parameters_collection_p);
-  }
-  else
-  {
-    JERRY_ASSERT (formal_parameters_prop_p->u.internal_property.value == ECMA_NULL_POINTER);
-  }
+  ECMA_SET_POINTER (formal_parameters_prop_p->u.internal_property.value, formal_params_collection_p);
 
   // 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
@@ -285,7 +270,7 @@ ecma_op_create_function_object (ecma_string_t* formal_parameter_list_p[], /**< f
 
   // 14.
   ecma_number_t* len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (formal_parameters_number);
+  *len_p = ecma_uint32_to_number (formal_params_collection_p != NULL ? formal_params_collection_p->unit_number : 0);
 
   // 15.
   ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
@@ -478,12 +463,12 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
      *
      * In the case, redundant SetMutableBinding invocation could be avoided.
      */
-    for (ssize_t n = (ssize_t) formal_parameters_count - 1;
-         n >= 0;
-         n--)
+    for (ecma_length_t n = 0;
+         n < formal_parameters_count;
+         n++)
     {
       ecma_value_t v;
-      if (n >= (ssize_t) arguments_list_len)
+      if (n >= arguments_list_len)
       {
         v = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }
@@ -510,19 +495,19 @@ ecma_function_call_setup_args_variables (ecma_object_t *func_obj_p, /**< Functio
         }
 
         JERRY_ASSERT (ecma_is_completion_value_empty (completion));
-
-        completion = ecma_op_set_mutable_binding (env_p,
-                                                  formal_parameter_name_string_p,
-                                                  v,
-                                                  is_strict);
-
-        if (ecma_is_completion_value_throw (completion))
-        {
-          return completion;
-        }
-
-        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
       }
+
+      ecma_completion_value_t completion = ecma_op_set_mutable_binding (env_p,
+                                                                        formal_parameter_name_string_p,
+                                                                        v,
+                                                                        is_strict);
+
+      if (ecma_is_completion_value_throw (completion))
+      {
+        return completion;
+      }
+
+      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
     }
   }
 
@@ -1023,8 +1008,12 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                               const vm_instr_t *instrs_p, /**< byte-code array */
                               vm_instr_counter_t function_first_instr_pos, /**< position of first instruction
                                                                             *   of function code */
-                              ecma_string_t* formal_parameter_list_p[], /**< formal parameters list */
-                              ecma_length_t formal_parameter_list_length, /**< length of formal parameters list */
+                              ecma_collection_header_t *formal_params_collection_p, /**< formal parameters collection
+                                                                                     *   Warning:
+                                                                                     *     the collection should not
+                                                                                     *     be changed / used / freed
+                                                                                     *     by caller after passing it
+                                                                                     *     to the routine */
                               bool is_strict, /**< flag indicating if function is declared in strict mode code */
                               bool do_instantiate_arguments_object, /**< flag, indicating whether an Arguments object
                                                                      *   should be instantiated for the function object
@@ -1033,8 +1022,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                               *   is declared in eval code */
 {
   // b.
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_parameter_list_p,
-                                                              formal_parameter_list_length,
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
                                                               lex_env_p,
                                                               is_strict,
                                                               do_instantiate_arguments_object,

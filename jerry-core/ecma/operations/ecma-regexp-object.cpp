@@ -1176,19 +1176,45 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
-                         re_bytecode_t *bc_p, /**< start of the RegExp bytecode */
-                         lit_utf8_iterator_t *iter_p) /**< input string iterator */
+ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
+                         ecma_value_t input_string, /**< input string */
+                         bool ignore_global) /**< ignore global flag */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  JERRY_ASSERT (ecma_is_value_object (regexp_value));
+  JERRY_ASSERT (ecma_is_value_string (input_string));
+
+  ecma_object_t *regexp_object_p = ecma_get_object_from_value (regexp_value);
+
+  JERRY_ASSERT (ecma_object_get_class_name (regexp_object_p) == LIT_MAGIC_STRING_REGEXP_UL);
+
+  ecma_property_t *bytecode_prop_p = ecma_get_internal_property (regexp_object_p,
+                                                                 ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+  re_bytecode_t *bc_p = ECMA_GET_POINTER (re_bytecode_t, bytecode_prop_p->u.internal_property.value);
+
+  ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
+  lit_utf8_size_t input_string_size = ecma_string_get_size (input_string_p);
+
+  MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_string_size, lit_utf8_byte_t);
+
+  ecma_string_to_utf8_string (input_string_p, input_utf8_buffer_p, (ssize_t) input_string_size);
+  lit_utf8_iterator_t iterator = lit_utf8_iterator_create (input_utf8_buffer_p, input_string_size);
+
   re_matcher_ctx_t re_ctx;
-  re_ctx.input_start_p = iter_p->buf_p;
-  re_ctx.input_end_p = iter_p->buf_p + iter_p->buf_size;
+  re_ctx.input_start_p = iterator.buf_p;
+  re_ctx.input_end_p = iterator.buf_p + iterator.buf_size;
   re_ctx.match_limit = 0;
   re_ctx.recursion_depth = 0;
 
   /* 1. Read bytecode header and init regexp matcher context. */
   re_ctx.flags = (uint8_t) re_get_value (&bc_p);
+
+  if (ignore_global)
+  {
+    re_ctx.flags &= (uint8_t) ~RE_FLAG_GLOBAL;
+  }
+
   JERRY_DDLOG ("Exec with flags [global: %d, ignoreCase: %d, multiline: %d]\n",
                re_ctx.flags & RE_FLAG_GLOBAL,
                re_ctx.flags & RE_FLAG_IGNORE_CASE,
@@ -1217,22 +1243,22 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
   bool is_match = false;
   re_ctx.num_of_iterations_p = num_of_iter_p;
   int32_t index = 0;
-  ecma_length_t input_str_len = lit_utf8_string_length (iter_p->buf_p, iter_p->buf_size);
+  ecma_length_t input_str_len = lit_utf8_string_length (iterator.buf_p, iterator.buf_size);
 
-  if (iter_p->buf_p && re_ctx.flags & RE_FLAG_GLOBAL)
+  if (iterator.buf_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-    ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (obj_p, magic_str_p);
+    ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (regexp_object_p, magic_str_p);
 
     ECMA_OP_TO_NUMBER_TRY_CATCH (lastindex_num, lastindex_prop_p->u.named_data_property.value, ret_value)
     index = ecma_number_to_int32 (lastindex_num);
 
-    JERRY_ASSERT (iter_p->buf_pos.offset == 0 && !iter_p->buf_pos.is_non_bmp_middle);
-    if (!lit_utf8_iterator_is_eos (iter_p)
+    JERRY_ASSERT (iterator.buf_pos.offset == 0 && !iterator.buf_pos.is_non_bmp_middle);
+    if (!lit_utf8_iterator_is_eos (&iterator)
         && index <= (int32_t) input_str_len
         && index > 0)
     {
-      lit_utf8_iterator_advance (iter_p, (ecma_length_t) index);
+      lit_utf8_iterator_advance (&iterator, (ecma_length_t) index);
     }
     ECMA_OP_TO_NUMBER_FINALIZE (lastindex_num);
     ecma_deref_ecma_string (magic_str_p);
@@ -1245,19 +1271,22 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
   {
     if (index < 0 || index > (int32_t) input_str_len)
     {
-      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-      ecma_number_t *lastindex_num_p = ecma_alloc_number ();
-      *lastindex_num_p = ECMA_NUMBER_ZERO;
-      ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
-      ecma_dealloc_number (lastindex_num_p);
-      ecma_deref_ecma_string (magic_str_p);
+      if (re_ctx.flags & RE_FLAG_GLOBAL)
+      {
+        ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
+        ecma_number_t *lastindex_num_p = ecma_alloc_number ();
+        *lastindex_num_p = ECMA_NUMBER_ZERO;
+        ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
+        ecma_dealloc_number (lastindex_num_p);
+        ecma_deref_ecma_string (magic_str_p);
+      }
 
       is_match = false;
       break;
     }
     else
     {
-      ECMA_TRY_CATCH (match_value, re_match_regexp (&re_ctx, bc_p, *iter_p, &sub_iter), ret_value);
+      ECMA_TRY_CATCH (match_value, re_match_regexp (&re_ctx, bc_p, iterator, &sub_iter), ret_value);
 
       if (ecma_is_value_true (match_value))
       {
@@ -1265,9 +1294,9 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
         break;
       }
 
-      if (!lit_utf8_iterator_is_eos (iter_p))
+      if (!lit_utf8_iterator_is_eos (&iterator))
       {
-        lit_utf8_iterator_advance (iter_p, 1);
+        lit_utf8_iterator_advance (&iterator, 1);
       }
       index++;
 
@@ -1275,12 +1304,12 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
     }
   }
 
-  if (iter_p->buf_p && re_ctx.flags & RE_FLAG_GLOBAL)
+  if (iterator.buf_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
     ecma_number_t *lastindex_num_p = ecma_alloc_number ();
     *lastindex_num_p = sub_iter.buf_pos.offset;
-    ecma_op_object_put (obj_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
+    ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
     ecma_dealloc_number (lastindex_num_p);
     ecma_deref_ecma_string (magic_str_p);
   }
@@ -1299,9 +1328,9 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
       {
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i / 2);
 
-        /* Note: 'iter_p->buf_p == NULL' means the input is empty string */
+        /* Note: 'iterator.buf_p == NULL' means the input is empty string */
         if (((re_ctx.saved_p[i].buf_p && re_ctx.saved_p[i + 1].buf_p)
-              || (!iter_p->buf_p && !re_ctx.saved_p[i].buf_p && !re_ctx.saved_p[i + 1].buf_p))
+              || (!iterator.buf_p && !re_ctx.saved_p[i].buf_p && !re_ctx.saved_p[i + 1].buf_p))
             && re_ctx.saved_p[i + 1].buf_pos.offset >= re_ctx.saved_p[i].buf_pos.offset)
         {
           ecma_length_t capture_str_len;
@@ -1336,8 +1365,10 @@ ecma_regexp_exec_helper (ecma_object_t *obj_p, /**< RegExp object */
       ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
     }
   }
+
   MEM_FINALIZE_LOCAL_ARRAY (num_of_iter_p);
   MEM_FINALIZE_LOCAL_ARRAY (saved_p);
+  MEM_FINALIZE_LOCAL_ARRAY (input_utf8_buffer_p);
 
   return ret_value;
 } /* ecma_regexp_exec_helper */

@@ -67,30 +67,13 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   {
     ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-    re_bytecode_t *bytecode_p = ECMA_GET_POINTER (re_bytecode_t, bytecode_prop_p->u.internal_property.value);
-
     ECMA_TRY_CATCH (input_str_value,
                     ecma_op_to_string (arg),
                     ret_value);
 
-    ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
-
-    /* Convert ecma_String_t *to regexp_bytecode_t* */
-    lit_utf8_size_t input_str_size = ecma_string_get_size (input_str_p);
-
-    MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_str_size, lit_utf8_byte_t);
-
-    ecma_string_to_utf8_string (input_str_p, input_utf8_buffer_p, (ssize_t) input_str_size);
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (input_utf8_buffer_p, input_str_size);
-
-    ret_value = ecma_regexp_exec_helper (obj_p, bytecode_p, &iter);
-
-    MEM_FINALIZE_LOCAL_ARRAY (input_utf8_buffer_p);
+    ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
 
     ECMA_FINALIZE (input_str_value);
-
     ECMA_FINALIZE (obj_this);
   }
 

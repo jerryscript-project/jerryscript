@@ -62,11 +62,6 @@ typedef enum
 } re_opcode_t;
 
 /**
- * Recursion limit of RegExp compiler
- */
-#define RE_COMPILE_RECURSION_LIMIT  100
-
-/**
  * Check if a RegExp opcode is a capture group or not
  */
 #define RE_IS_CAPTURE_GROUP(x) (((x) < RE_OP_NON_CAPTURE_GROUP_START) ? 1 : 0)
@@ -92,7 +87,6 @@ typedef struct
 typedef struct
 {
   uint8_t flags; /**< RegExp flags */
-  uint32_t recursion_depth; /**< recursion depth */
   uint32_t num_of_captures; /**< number of capture groups */
   uint32_t num_of_non_captures; /**< number of non-capture groups */
   uint32_t highest_backref; /**< highest backreference */

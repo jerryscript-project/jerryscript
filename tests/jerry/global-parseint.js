@@ -34,6 +34,10 @@ assert(parseInt("\u00a0123") === 123);
 assert(parseInt("\u20291  123\u00D0") === 1);
 assert(parseInt("\u00a0123", 13) === 198);
 assert(parseInt("\u2029123  1\u00D0", 11) === 146);
+assert(isNaN(parseInt("\u0009")));
+assert(isNaN(parseInt("\u00A0")));
+assert(parseInt("\u00A0\u00A0-1") === parseInt("-1"));
+assert(parseInt("\u00A01") === parseInt("1"));
 
 var bool = true;
 var obj = new Object();

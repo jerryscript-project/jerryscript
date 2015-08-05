@@ -236,160 +236,177 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
       }
     }
 
-    /* 3. */
-    int sign = 1;
-
-    /* 4. */
-    ecma_char_t current = lit_utf8_iterator_read_next (&iter);
-    if (current == LIT_CHAR_MINUS)
+    if (!lit_utf8_iterator_is_eos (&iter))
     {
-      sign = -1;
-    }
+      /* 3. */
+      int sign = 1;
 
-    /* 5. */
-    if (current == LIT_CHAR_MINUS || current == LIT_CHAR_PLUS)
-    {
-      start = lit_utf8_iterator_get_pos (&iter);
-      if (!lit_utf8_iterator_is_eos (&iter))
+      /* 4. */
+      ecma_char_t current = lit_utf8_iterator_read_next (&iter);
+      if (current == LIT_CHAR_MINUS)
       {
-        current = lit_utf8_iterator_read_next (&iter);
+        sign = -1;
       }
-    }
 
-    /* 6. */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (radix_num, radix, ret_value);
-    int32_t rad = ecma_number_to_int32 (radix_num);
-
-    /* 7.*/
-    bool strip_prefix = true;
-
-    /* 8. */
-    if (rad != 0)
-    {
-      /* 8.a */
-      if (rad < 2 || rad > 36)
+      /* 5. */
+      if (current == LIT_CHAR_MINUS || current == LIT_CHAR_PLUS)
       {
-        ecma_number_t *ret_num_p = ecma_alloc_number ();
-        *ret_num_p = ecma_number_make_nan ();
-        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
-      }
-      /* 8.b */
-      else if (rad != 16)
-      {
-        strip_prefix = false;
-      }
-    }
-    /* 9. */
-    else
-    {
-      rad = 10;
-    }
-
-    if (ecma_is_completion_value_empty (ret_value))
-    {
-      /* 10. */
-      if (strip_prefix)
-      {
-        if (end.offset - start.offset >= 2 && current == LIT_CHAR_0)
+        start = lit_utf8_iterator_get_pos (&iter);
+        if (!lit_utf8_iterator_is_eos (&iter))
         {
-          ecma_char_t next = lit_utf8_iterator_peek_next (&iter);
-          if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
-          {
-            /* Skip the 'x' or 'X' characters. */
-            lit_utf8_iterator_incr (&iter);
-            start = lit_utf8_iterator_get_pos (&iter);
+          current = lit_utf8_iterator_read_next (&iter);
+        }
+      }
 
-            rad = 16;
+      /* 6. */
+      ECMA_OP_TO_NUMBER_TRY_CATCH (radix_num, radix, ret_value);
+      int32_t rad = ecma_number_to_int32 (radix_num);
+
+      /* 7.*/
+      bool strip_prefix = true;
+
+      /* 8. */
+      if (rad != 0)
+      {
+        /* 8.a */
+        if (rad < 2 || rad > 36)
+        {
+          ecma_number_t *ret_num_p = ecma_alloc_number ();
+          *ret_num_p = ecma_number_make_nan ();
+          ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+        }
+        /* 8.b */
+        else if (rad != 16)
+        {
+          strip_prefix = false;
+        }
+      }
+      /* 9. */
+      else
+      {
+        rad = 10;
+      }
+
+      if (ecma_is_completion_value_empty (ret_value))
+      {
+        /* 10. */
+        if (strip_prefix)
+        {
+          if (end.offset - start.offset >= 2 && current == LIT_CHAR_0)
+          {
+            ecma_char_t next = lit_utf8_iterator_peek_next (&iter);
+            if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
+            {
+              /* Skip the 'x' or 'X' characters. */
+              lit_utf8_iterator_incr (&iter);
+              start = lit_utf8_iterator_get_pos (&iter);
+
+              rad = 16;
+            }
           }
         }
+
+        /* 11. Check if characters are in [0, Radix - 1]. We also convert them to number values in the process. */
+        lit_utf8_iterator_seek (&iter, start);
+        while (!lit_utf8_iterator_is_eos (&iter))
+        {
+          ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+          int32_t current_number;
+
+          if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
+          {
+            current_number = current_char - LIT_CHAR_LOWERCASE_A + 10;
+          }
+          else if ((current_char >= LIT_CHAR_UPPERCASE_A && current_char <= LIT_CHAR_UPPERCASE_Z))
+          {
+            current_number = current_char - LIT_CHAR_UPPERCASE_A + 10;
+          }
+          else if (lit_char_is_decimal_digit (current_char))
+          {
+            current_number = current_char - LIT_CHAR_0;
+          }
+          else
+          {
+            /* Not a valid number char, set value to radix so it fails to pass as a valid character. */
+            current_number = rad;
+          }
+
+          if (!(current_number < rad))
+          {
+            lit_utf8_iterator_decr (&iter);
+            end = lit_utf8_iterator_get_pos (&iter);
+            break;
+          }
+        }
+
+        /* 12. */
+        if (end.offset - start.offset == 0)
+        {
+          ecma_number_t *ret_num_p = ecma_alloc_number ();
+          *ret_num_p = ecma_number_make_nan ();
+          ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+        }
       }
 
-      /* 11. Check if characters are in [0, Radix - 1]. We also convert them to number values in the process. */
-      lit_utf8_iterator_seek (&iter, start);
-      while (!lit_utf8_iterator_is_eos (&iter))
+      if (ecma_is_completion_value_empty (ret_value))
       {
-        ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
-        int32_t current_number;
+        ecma_number_t *value_p = ecma_alloc_number ();
+        *value_p = 0;
+        ecma_number_t multiplier = 1.0f;
 
-        if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
+        /* 13. and 14. */
+        if (end.offset < str_size)
         {
-          current_number = current_char - LIT_CHAR_LOWERCASE_A + 10;
-        }
-        else if ((current_char >= LIT_CHAR_UPPERCASE_A && current_char <= LIT_CHAR_UPPERCASE_Z))
-        {
-          current_number = current_char - LIT_CHAR_UPPERCASE_A + 10;
-        }
-        else if (lit_char_is_decimal_digit (current_char))
-        {
-          current_number = current_char - LIT_CHAR_0;
+          lit_utf8_iterator_seek (&iter, end);
         }
         else
         {
-          /* Not a valid number char, set value to radix so it fails to pass as a valid character. */
-          current_number = rad;
+          lit_utf8_iterator_seek_eos (&iter);
         }
-
-        if (!(current_number < rad))
+        while (lit_utf8_iterator_get_pos (&iter).offset > start.offset)
         {
-          lit_utf8_iterator_decr (&iter);
-          end = lit_utf8_iterator_get_pos (&iter);
-          break;
+          ecma_char_t current_char = lit_utf8_iterator_read_prev (&iter);
+          ecma_number_t current_number;
+
+          if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
+          {
+            current_number =  (ecma_number_t) current_char - LIT_CHAR_LOWERCASE_A + 10;
+          }
+          else if ((current_char >= LIT_CHAR_UPPERCASE_A && current_char <= LIT_CHAR_UPPERCASE_Z))
+          {
+            current_number =  (ecma_number_t) current_char - LIT_CHAR_UPPERCASE_A + 10;
+          }
+          else if (lit_char_is_decimal_digit (current_char))
+          {
+            current_number =  (ecma_number_t) current_char - LIT_CHAR_0;
+          }
+          else
+          {
+            JERRY_UNREACHABLE ();
+          }
+
+          *value_p += current_number * multiplier;
+          multiplier *= (ecma_number_t) rad;
         }
+
+        /* 15. */
+        if (sign < 0)
+        {
+          *value_p *= (ecma_number_t) sign;
+        }
+
+        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (value_p));
       }
 
-      /* 12. */
-      if (end.offset - start.offset == 0)
-      {
-        ecma_number_t *ret_num_p = ecma_alloc_number ();
-        *ret_num_p = ecma_number_make_nan ();
-        ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
-      }
+      ECMA_OP_TO_NUMBER_FINALIZE (radix_num);
     }
-
-    if (ecma_is_completion_value_empty (ret_value))
+    else
     {
-      ecma_number_t *value_p = ecma_alloc_number ();
-      *value_p = 0;
-      ecma_number_t multiplier = 1.0f;
-
-      /* 13. and 14. */
-      lit_utf8_iterator_seek (&iter, end);
-      while (lit_utf8_iterator_get_pos (&iter).offset > start.offset)
-      {
-        ecma_char_t current_char = lit_utf8_iterator_read_prev (&iter);
-        ecma_number_t current_number;
-
-        if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
-        {
-          current_number =  (ecma_number_t) current_char - LIT_CHAR_LOWERCASE_A + 10;
-        }
-        else if ((current_char >= LIT_CHAR_UPPERCASE_A && current_char <= LIT_CHAR_UPPERCASE_Z))
-        {
-          current_number =  (ecma_number_t) current_char - LIT_CHAR_UPPERCASE_A + 10;
-        }
-        else if (lit_char_is_decimal_digit (current_char))
-        {
-          current_number =  (ecma_number_t) current_char - LIT_CHAR_0;
-        }
-        else
-        {
-          JERRY_UNREACHABLE ();
-        }
-
-        *value_p += current_number * multiplier;
-        multiplier *= (ecma_number_t) rad;
-      }
-
-      /* 15. */
-      if (sign < 0)
-      {
-        *value_p *= (ecma_number_t) sign;
-      }
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (value_p));
+      ecma_number_t *ret_num_p = ecma_alloc_number ();
+      *ret_num_p = ecma_number_make_nan ();
+      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
     }
 
-    ECMA_OP_TO_NUMBER_FINALIZE (radix_num);
     MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
   }
   else

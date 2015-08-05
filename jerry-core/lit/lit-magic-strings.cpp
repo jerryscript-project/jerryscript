@@ -93,17 +93,17 @@ lit_get_magic_string_ex_count (void)
 const lit_utf8_byte_t *
 lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 {
-  switch (id)
+  static const lit_utf8_byte_t *magic_strings[] =
   {
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
-     case id: return (lit_utf8_byte_t*) utf8_string;
+    (lit_utf8_byte_t *) utf8_string,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
+  };
 
-    case LIT_MAGIC_STRING__COUNT: break;
-  }
+  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
 
-  JERRY_UNREACHABLE ();
+  return magic_strings[id];
 } /* lit_get_magic_string_utf8 */
 
 /**

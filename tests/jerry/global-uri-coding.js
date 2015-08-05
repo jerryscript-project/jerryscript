@@ -46,6 +46,8 @@ assert (encodeURIComponent ("OPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}\x7
 assert (encodeURI ("\xe9") == "%C3%A9");
 assert (encodeURI ("\ud7ff") == "%ED%9F%BF");
 assert (encodeURI ("\ue000") == "%EE%80%80");
+assert (encodeURI ("\ud800\udc00") == "%F0%90%80%80");
+assert (encodeURI (String.fromCharCode(0xd800, 0xdc00)) == "%F0%90%80%80");
 
 checkEncodeURIParseError ("\ud800");
 checkEncodeURIParseError ("\udfff");

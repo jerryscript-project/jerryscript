@@ -27,7 +27,7 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
 /* The Object object (15.2.1) */
 BUILTIN (ECMA_BUILTIN_ID_OBJECT,
          ECMA_OBJECT_TYPE_FUNCTION,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
          true,
          object)

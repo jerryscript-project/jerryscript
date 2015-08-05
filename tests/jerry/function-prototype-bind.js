@@ -119,15 +119,6 @@ var func = Number.prototype.toString.bind('foo');
 assert (func instanceof Function);
 
 try {
-  var this_obj = this.constructor;
-  var bound = this_obj.bind(null, "foo");
-  var foo = new bound();
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
   var math = Math.sin;
   var bound = math.bind(null, 0);
   var foo = new bound();

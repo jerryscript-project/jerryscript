@@ -31,3 +31,5 @@ assert (Function_A.prototype.isPrototypeOf (Array) === false)
 
 assert (Function_A.prototype.isPrototypeOf.call(0, 0) === false);
 assert (Function_A.prototype.isPrototypeOf.call(Function_A, 0) === false);
+
+assert (Function.prototype.isPrototypeOf (Object) === true)

@@ -47,9 +47,9 @@ assert (match_equals ("hello".match(/l/g), ["l", "l"]));
 assert ("".match(/a/g) == void 0);
 
 assert ("".match() !== void 0 );
-// FIXME: uncomment when #435 landed.
-//assert (match_equals ("".match(), [""]));
-//assert (match_equals ("".match(undefined), [""]));
+
+assert (match_equals ("".match(), [""]));
+assert (match_equals ("".match(undefined), [""]));
 assert (match_equals ("".match(""), [""]));
 
 assert (match_equals ("test 1, test 2, test 3, test 45".match(/[0-9]+/g), ["1", "2", "3", "45"]));

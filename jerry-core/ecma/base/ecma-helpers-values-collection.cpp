@@ -186,6 +186,70 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
 } /* ecma_append_to_values_collection */
 
 /**
+ * Remove last element of the collection
+ *
+ * Warning:
+ *         the function invalidates all iterators that are configured to access the passed collection
+ */
+void
+ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
+                                               bool do_deref_if_object) /**< if the value to remove
+                                                                         *   is object value, decrement
+                                                                         *   reference counter of the object */
+{
+  JERRY_ASSERT (header_p != NULL && header_p->unit_number > 0);
+
+  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  size_t values_number = header_p->unit_number;
+  size_t pos_of_value_to_remove_in_chunk = (values_number - 1u) % values_in_chunk;
+
+  ecma_collection_chunk_t *last_chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                     header_p->last_chunk_cp);
+
+  ecma_value_t *values_p = (ecma_value_t *) last_chunk_p->data;
+  JERRY_ASSERT ((uint8_t *) (values_p + pos_of_value_to_remove_in_chunk + 1) <= (uint8_t *) (last_chunk_p + 1));
+
+  ecma_value_t value_to_remove = values_p[pos_of_value_to_remove_in_chunk];
+
+  ecma_free_value (value_to_remove, do_deref_if_object);
+
+  header_p->unit_number--;
+
+  if (pos_of_value_to_remove_in_chunk == 0)
+  {
+    ecma_collection_chunk_t *chunk_to_remove_p = last_chunk_p;
+
+    /* free last chunk */
+    if (header_p->first_chunk_cp == header_p->last_chunk_cp)
+    {
+      header_p->first_chunk_cp = ECMA_NULL_POINTER;
+      header_p->last_chunk_cp = ECMA_NULL_POINTER;
+    }
+    else
+    {
+      ecma_collection_chunk_t *chunk_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                         header_p->first_chunk_cp);
+
+      while (chunk_iter_p->next_chunk_cp != header_p->last_chunk_cp)
+      {
+        chunk_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                  chunk_iter_p->next_chunk_cp);
+      }
+
+      ecma_collection_chunk_t *new_last_chunk_p = chunk_iter_p;
+
+      JERRY_ASSERT (ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                               new_last_chunk_p->next_chunk_cp) == chunk_to_remove_p);
+
+      ECMA_SET_NON_NULL_POINTER (header_p->last_chunk_cp, new_last_chunk_p);
+      new_last_chunk_p->next_chunk_cp = ECMA_NULL_POINTER;
+    }
+
+    ecma_dealloc_collection_chunk (chunk_to_remove_p);
+  }
+} /* ecma_remove_last_value_from_values_collection */
+
+/**
  * Allocate a collection of ecma-strings.
  *
  * @return pointer to the collection's header

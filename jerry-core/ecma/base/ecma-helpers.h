@@ -194,6 +194,8 @@ extern void ecma_free_values_collection (ecma_collection_header_t *header_p, boo
 extern void ecma_append_to_values_collection (ecma_collection_header_t *header_p,
                                               ecma_value_t v,
                                               bool do_ref_if_object);
+extern void ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_p,
+                                                           bool do_deref_if_object);
 extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t *string_ptrs_buffer[],
                                                               ecma_length_t strings_number);
 

@@ -557,13 +557,13 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region t
 
   JERRY_ASSERT (mem_heap.allocated_bytes <= mem_heap.heap_size);
 
-  if (mem_heap.allocated_bytes >= mem_heap.limit)
+  if (mem_heap.allocated_bytes > mem_heap.limit)
   {
     mem_heap.limit = JERRY_MIN (mem_heap.heap_size,
                                 JERRY_MAX (mem_heap.limit + CONFIG_MEM_HEAP_DESIRED_LIMIT,
                                            mem_heap.allocated_bytes));
-    JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_bytes);
   }
+  JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_bytes);
 
   /* appropriate block found, allocating space */
   size_t new_block_size_in_chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
@@ -681,7 +681,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
                                                                                  *   (one-chunked or general) */
                                            mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
-  if (mem_heap.allocated_bytes + size_in_bytes >= mem_heap.limit)
+  if (mem_heap.allocated_bytes + size_in_bytes > mem_heap.limit)
   {
     mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
   }
@@ -788,11 +788,15 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
   JERRY_ASSERT (mem_heap.allocated_bytes >= bytes);
   mem_heap.allocated_bytes -= bytes;
 
+  /*
+   * TODO:
+   *      Investigate possible improvements of the "GC start threshold" mechanism (issue #535).
+   */
   if (mem_heap.allocated_bytes * 3 <= mem_heap.limit)
   {
     mem_heap.limit /= 2;
   }
-  else if (mem_heap.allocated_bytes + CONFIG_MEM_HEAP_DESIRED_LIMIT <= mem_heap.limit)
+  else if (mem_heap.allocated_bytes + 2 * CONFIG_MEM_HEAP_DESIRED_LIMIT <= mem_heap.limit)
   {
     mem_heap.limit -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
   }

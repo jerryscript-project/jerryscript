@@ -1293,24 +1293,17 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
   else if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
   {
     prop_desc.get_p = ecma_get_named_accessor_property_getter (prop_p);
+    prop_desc.is_get_defined = true;
     if (prop_desc.get_p != NULL)
     {
-      prop_desc.is_get_defined = true;
       ecma_ref_object (prop_desc.get_p);
     }
-    else
-    {
-      prop_desc.is_get_defined = false;
-    }
+
     prop_desc.set_p = ecma_get_named_accessor_property_setter (prop_p);
+    prop_desc.is_set_defined = true;
     if (prop_desc.set_p != NULL)
     {
-      prop_desc.is_set_defined = true;
       ecma_ref_object (prop_desc.set_p);
-    }
-    else
-    {
-      prop_desc.is_set_defined = false;
     }
   }
 

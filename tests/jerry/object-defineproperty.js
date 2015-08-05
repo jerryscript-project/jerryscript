@@ -38,3 +38,20 @@ try {
     assert (desc.value === 2010);
     assert (typeof (desc.get) === 'undefined');
 }
+
+obj = {};
+var setter = function () {};
+
+Object.defineProperty(obj, "prop", {
+    set: setter,
+    configurable: true
+});
+
+var desc1 = Object.getOwnPropertyDescriptor(obj, "prop");
+
+Object.defineProperty(obj, "prop", {
+    set: undefined
+});
+
+var desc2 = Object.getOwnPropertyDescriptor(obj, "prop");
+assert (desc1.set === setter && desc2.set === undefined);

@@ -36,7 +36,7 @@ typedef uint16_t mem_cpointer_t;
 /**
  * Representation of NULL value for compressed pointers
  */
-#define MEM_CP_NULL 0
+#define MEM_CP_NULL ((mem_cpointer_t) 0)
 
 /**
  * Required alignment for allocated units/blocks

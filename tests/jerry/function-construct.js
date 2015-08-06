@@ -98,6 +98,20 @@ catch (e)
   assert (e instanceof TypeError);
 }
 
+var p = { toString : function() { throw 1; } };
+var body = { toString : function() { throw "body"; } };
+
+try
+{
+  new Function (p, body);
+  // Should not be reached.
+  assert (false);
+}
+catch (e)
+{
+  assert (e === 1);
+}
+
 // Check SyntaxError handling
 try
 {

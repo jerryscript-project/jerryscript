@@ -625,12 +625,13 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
           break;
         }
 
-        ch = lit_utf8_iterator_read_next (iter_p);
+        ch = lit_utf8_iterator_peek_next (iter_p);
 
         if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
             || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
         {
           out_token_p->value = (ch % 32);
+          lit_utf8_iterator_advance (iter_p, 1);
         }
       }
       else if (ch == LIT_CHAR_LOWERCASE_X

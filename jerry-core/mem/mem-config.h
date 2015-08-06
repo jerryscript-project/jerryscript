@@ -39,11 +39,6 @@
 #define MEM_POOL_CHUNK_SIZE ((size_t) (CONFIG_MEM_POOL_CHUNK_SIZE))
 
 /**
- * Log2 of maximum number of chunks in a pool
- */
-#define MEM_POOL_MAX_CHUNKS_NUMBER_LOG (CONFIG_MEM_POOL_MAX_CHUNKS_NUMBER_LOG)
-
-/**
  * Logarithm of required alignment for allocated units/blocks
  */
 #define MEM_ALIGNMENT_LOG   3

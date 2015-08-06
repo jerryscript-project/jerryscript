@@ -20,16 +20,15 @@
 #define JERRY_MEM_POOL_INTERNAL
 
 #include "mem-allocator.h"
-#include "mem-pool.h"
 #include "mem-poolman.h"
 
 #include "test-common.h"
 
 // Iterations count
-const uint32_t test_iters = 16384;
+const uint32_t test_iters = 1024;
 
 // Subiterations count
-const uint32_t test_max_sub_iters = 32;
+const uint32_t test_max_sub_iters = 1024;
 
 uint8_t *ptrs[test_max_sub_iters];
 
@@ -90,6 +89,8 @@ main (int __attr_unused___ argc,
           stats.peak_pools_count,
           stats.peak_allocated_chunks);
 #endif /* MEM_STATS */
+
+  mem_finalize (false);
 
   return 0;
 } /* main */

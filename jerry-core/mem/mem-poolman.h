@@ -33,6 +33,7 @@ extern void mem_pools_init (void);
 extern void mem_pools_finalize (void);
 extern uint8_t* mem_pools_alloc (void);
 extern void mem_pools_free (uint8_t *chunk_p);
+extern void mem_pools_collect_empty (void);
 
 #ifdef MEM_STATS
 /**

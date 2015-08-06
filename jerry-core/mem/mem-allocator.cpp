@@ -166,6 +166,8 @@ mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t s
   {
     mem_try_give_memory_back_callback (severity);
   }
+
+  mem_pools_collect_empty ();
 } /* mem_run_try_to_give_memory_back_callbacks */
 
 #ifndef JERRY_NDEBUG

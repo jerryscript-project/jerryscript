@@ -131,6 +131,10 @@ ecma_builtin_function_helper_get_arguments (const ecma_value_t *arguments_list_p
   {
     ret_value = ecma_make_normal_completion_value (ecma_make_string_value (arguments_str_p));
   }
+  else
+  {
+    ecma_deref_ecma_string (arguments_str_p);
+  }
 
   return ret_value;
 } /* ecma_builtin_function_helper_get_arguments */

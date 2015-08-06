@@ -71,6 +71,15 @@ assert (f (1,2,3,4) === 10);
 f = new Function ("a" , "b", "c,d", "return a + b + c + d;");
 assert (f (1,2,3,4) === 10);
 
+var f = new Function (" a\t ,  b", "\u0020c", "return a + b + c;");
+assert (f (1,2,3) === 6);
+
+f = new Function ("a, \n b  \u0020", "c \t, d\n", "return a + b + c + d;");
+assert (f (1,2,3,4) === 10);
+
+f = new Function (" a\t" , "\nb ", " \u0020c , d ", "return a + b + c + d;");
+assert (f (1,2,3,4) === 10);
+
 try
 {
   new Function ({

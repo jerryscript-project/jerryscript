@@ -27,6 +27,7 @@
 #include "ecma-lcache.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 #include "serializer.h"
 #include "vm.h"
@@ -1878,6 +1879,81 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
 
   JERRY_UNREACHABLE ();
 } /* ecma_string_substr */
+
+/**
+ * Trim leading and trailing whitespace characters from string.
+ *
+ * @return trimmed ecma string
+ */
+ecma_string_t *
+ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string */
+{
+  ecma_string_t *ret_string_p;
+
+  lit_utf8_size_t buffer_size = ecma_string_get_size (string_p);
+
+  if (buffer_size > 0)
+  {
+    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
+    ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+
+    lit_utf8_iterator_t front = lit_utf8_iterator_create (utf8_str_p, buffer_size);
+
+    lit_utf8_iterator_t back = lit_utf8_iterator_create (utf8_str_p, buffer_size);
+    lit_utf8_iterator_seek_eos (&back);
+
+    lit_utf8_iterator_pos_t start = lit_utf8_iterator_get_pos (&back);
+    lit_utf8_iterator_pos_t end = lit_utf8_iterator_get_pos (&front);
+
+    ecma_char_t current;
+
+    /* Trim front. */
+    while (!lit_utf8_iterator_is_eos (&front))
+    {
+      current = lit_utf8_iterator_read_next (&front);
+      if (!lit_char_is_white_space (current)
+          && !lit_char_is_line_terminator (current))
+      {
+        lit_utf8_iterator_decr (&front);
+        start = lit_utf8_iterator_get_pos (&front);
+        break;
+      }
+    }
+
+    /* Trim back. */
+    while (!lit_utf8_iterator_is_bos (&back))
+    {
+      current = lit_utf8_iterator_read_prev (&back);
+      if (!lit_char_is_white_space (current)
+          && !lit_char_is_line_terminator (current))
+      {
+        lit_utf8_iterator_incr (&back);
+        end = lit_utf8_iterator_get_pos (&back);
+        break;
+      }
+    }
+
+    /* Construct new string. */
+    if (end.offset > start.offset)
+    {
+      ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_str_p + start.offset,
+                                                     (lit_utf8_size_t) (end.offset - start.offset));
+    }
+    else
+    {
+      ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+    }
+
+    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+  }
+  else
+  {
+    ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  return ret_string_p;
+
+} /* ecma_string_trim */
 
 /**
  * @}

@@ -190,6 +190,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
     lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
     ecma_length_t last_separator = lit_utf8_iterator_get_index (&iter);
     ecma_length_t end_position;
+    ecma_string_t *param_str_p;
 
     while (!lit_utf8_iterator_is_eos (&iter))
     {
@@ -200,7 +201,9 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
         lit_utf8_iterator_decr (&iter);
         end_position = lit_utf8_iterator_get_index (&iter);
 
-        string_params_p[params_count] = ecma_string_substr (arguments_str_p, last_separator,  end_position);
+        param_str_p = ecma_string_substr (arguments_str_p, last_separator,  end_position);
+        string_params_p[params_count] = ecma_string_trim (param_str_p);
+        ecma_deref_ecma_string (param_str_p);
 
         lit_utf8_iterator_incr (&iter);
         last_separator = lit_utf8_iterator_get_index (&iter);
@@ -210,7 +213,9 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
     }
 
     end_position = lit_utf8_string_length (start_p, str_size);
-    string_params_p[params_count] = ecma_string_substr (arguments_str_p, last_separator, end_position);
+    param_str_p = ecma_string_substr (arguments_str_p, last_separator, end_position);
+    string_params_p[params_count] = ecma_string_trim (param_str_p);
+    ecma_deref_ecma_string (param_str_p);
     params_count++;
 
     MEM_FINALIZE_LOCAL_ARRAY (start_p);

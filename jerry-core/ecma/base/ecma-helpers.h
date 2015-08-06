@@ -147,6 +147,7 @@ extern bool ecma_is_ex_string_magic (const ecma_string_t *string_p, lit_magic_st
 
 extern lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
 extern ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, ecma_length_t, ecma_length_t);
+extern ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
 
 /* ecma-helpers-number.cpp */
 extern const ecma_number_t ecma_number_relative_eps;

@@ -892,13 +892,13 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
 } /* ecma_builtin_json_parse */
 
 static ecma_completion_value_t
-ecma_builtin_json_str (ecma_string_t *key_p, ecma_object_t *holder_p, stringify_context_t *context_p);
+ecma_builtin_json_str (ecma_string_t *key_p, ecma_object_t *holder_p, ecma_json_stringify_context_t *context_p);
 
 static ecma_completion_value_t
-ecma_builtin_json_object (ecma_object_t *obj_p, stringify_context_t *context_p);
+ecma_builtin_json_object (ecma_object_t *obj_p, ecma_json_stringify_context_t *context_p);
 
 static ecma_completion_value_t
-ecma_builtin_json_array (ecma_object_t *obj_p, stringify_context_t *context_p);
+ecma_builtin_json_array (ecma_object_t *obj_p, ecma_json_stringify_context_t *context_p);
 
 /**
  * The JSON object's 'stringify' routine
@@ -917,20 +917,16 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  stringify_context_t context;
+  ecma_json_stringify_context_t context;
 
   /* 1. */
-  context.occurence_stack.block_start_p = NULL;
-  context.occurence_stack.block_end_p = NULL;
-  context.occurence_stack.current_p = NULL;
+  context.occurence_stack_p = ecma_new_values_collection (NULL, 0, false);
 
   /* 2. */
   context.indent_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
   /* 3. */
-  context.property_list.block_start_p = NULL;
-  context.property_list.block_end_p = NULL;
-  context.property_list.current_p = NULL;
+  context.property_list_p = ecma_new_values_collection (NULL, 0, false);
 
   context.replacer_function_p = NULL;
 
@@ -1011,15 +1007,10 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
         /* 4.b.ii.5 */
         if (!ecma_is_value_undefined (item))
         {
-          ecma_string_t *item_str_p = ecma_get_string_from_value (item);
-
-          if (!list_has_ecma_string_element (&context.property_list, item_str_p))
+          if (!ecma_has_string_value_in_collection (context.property_list_p, item))
           {
-            list_append (&context.property_list, item_str_p);
-          }
-          else
-          {
-            ecma_deref_ecma_string (item_str_p);
+            ecma_append_to_values_collection (context.property_list_p, item, true);
+            ecma_deref_ecma_string (ecma_get_string_from_value (item));
           }
         }
 
@@ -1154,8 +1145,8 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
   ecma_deref_ecma_string (context.indent_str_p);
   ecma_deref_ecma_string (context.gap_str_p);
 
-  free_list_with_ecma_string_content (&context.property_list);
-  free_list (&context.occurence_stack);
+  ecma_free_values_collection (context.property_list_p, true);
+  ecma_free_values_collection (context.occurence_stack_p, true);
 
   return ret_value;
 } /* ecma_builtin_json_stringify */
@@ -1332,7 +1323,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
 static ecma_completion_value_t
 ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                        ecma_object_t *holder_p, /**< the object*/
-                       stringify_context_t *context_p) /**< context*/
+                       ecma_json_stringify_context_t *context_p) /**< context*/
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -1522,10 +1513,12 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
  */
 static ecma_completion_value_t
 ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
-                          stringify_context_t *context_p) /**< context*/
+                          ecma_json_stringify_context_t *context_p) /**< context*/
 {
+  ecma_value_t obj_value = ecma_make_object_value (obj_p);
+
   /* 1. */
-  if (list_has_element (&context_p->occurence_stack, obj_p))
+  if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
     return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
@@ -1533,7 +1526,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   /* 2. */
-  list_append (&context_p->occurence_stack, obj_p);
+  ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);
 
   /* 3. */
   ecma_string_t *stepback_p = context_p->indent_str_p;
@@ -1541,21 +1534,18 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   /* 4. */
   context_p->indent_str_p = ecma_concat_ecma_strings (context_p->indent_str_p, context_p->gap_str_p);
 
-  list_ctx_t property_keys;
-  {
-    property_keys.block_start_p = NULL;
-    property_keys.block_end_p = NULL;
-    property_keys.current_p = NULL;
-  }
+  ecma_collection_header_t *property_keys_p;
 
   /* 5. */
-  if (!list_is_empty (&context_p->property_list))
+  if (context_p->property_list_p->unit_number > 0)
   {
-    property_keys = context_p->property_list;
+    property_keys_p = context_p->property_list_p;
   }
   /* 6. */
   else
   {
+    property_keys_p = ecma_new_values_collection (NULL, 0, true);
+
     for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
          property_p != NULL;
          property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
@@ -1563,31 +1553,30 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_enumerable (property_p))
       {
         ecma_string_t *prop_key = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                           property_p->u.named_data_property.name_p);
+                                                             property_p->u.named_data_property.name_p);
 
         JERRY_ASSERT (prop_key != NULL);
 
-        list_append (&property_keys, ecma_copy_or_ref_ecma_string (prop_key));
+        ecma_append_to_values_collection (property_keys_p, ecma_make_string_value (prop_key), true);
       }
     }
   }
 
   /* 7. */
-  list_ctx_t partial;
-  {
-    partial.block_start_p = NULL;
-    partial.block_end_p = NULL;
-    partial.current_p = NULL;
-  }
+  ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
 
   /* 8. */
-  for (void **key_p = property_keys.block_start_p;
-       key_p < property_keys.current_p && ecma_is_completion_value_empty (ret_value);
-       key_p++)
+  ecma_collection_iterator_t iterator;
+  ecma_collection_iterator_init (&iterator, property_keys_p);
+
+  while (ecma_collection_iterator_next (&iterator) && ecma_is_completion_value_empty (ret_value))
   {
+    ecma_value_t value = *iterator.current_value_p;
+    ecma_string_t *key_p = ecma_get_string_from_value (value);
+
     /* 8.a */
     ECMA_TRY_CATCH (str_val,
-                    ecma_builtin_json_str ((ecma_string_t *) *key_p, obj_p, context_p),
+                    ecma_builtin_json_str (key_p, obj_p, context_p),
                     ret_value);
 
     /* 8.b */
@@ -1598,7 +1587,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       ecma_string_t *tmp_str_p;
 
       /* 8.b.i */
-      ecma_completion_value_t str_comp_val = ecma_builtin_json_quote ((ecma_string_t *) *key_p);
+      ecma_completion_value_t str_comp_val = ecma_builtin_json_quote (key_p);
       JERRY_ASSERT (ecma_is_completion_value_normal (str_comp_val));
 
       ecma_string_t *member_str_p = ecma_get_string_from_value (str_comp_val);
@@ -1628,26 +1617,28 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       member_str_p = tmp_str_p;
 
       /* 8.b.v */
-      list_append (&partial, member_str_p);
+      ecma_value_t member_value = ecma_make_string_value (member_str_p);
+      ecma_append_to_values_collection (partial_p, member_value, true);
+      ecma_deref_ecma_string (member_str_p);
     }
 
     ECMA_FINALIZE (str_val);
   }
 
-  if (list_is_empty (&context_p->property_list))
+  if (context_p->property_list_p->unit_number == 0)
   {
-    free_list_with_ecma_string_content (&property_keys);
+    ecma_free_values_collection (property_keys_p, true);
   }
 
   if (!ecma_is_completion_value_empty (ret_value))
   {
-    free_list_with_ecma_string_content (&partial);
+    ecma_free_values_collection (partial_p, true);
     ecma_deref_ecma_string (stepback_p);
     return ret_value;
   }
 
   /* 9. */
-  if (list_is_empty (&partial))
+  if (partial_p->unit_number == 0)
   {
     ecma_string_t *left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
     ecma_string_t *right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
@@ -1671,7 +1662,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
       ret_value = ecma_builtin_helper_json_create_non_formatted_json (left_brace_str_p,
                                                                       right_brace_str_p,
-                                                                      &partial);
+                                                                      partial_p);
 
       ecma_deref_ecma_string (left_brace_str_p);
       ecma_deref_ecma_string (right_brace_str_p);
@@ -1685,7 +1676,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       ret_value = ecma_builtin_helper_json_create_formatted_json (left_brace_str_p,
                                                                   right_brace_str_p,
                                                                   stepback_p,
-                                                                  &partial,
+                                                                  partial_p,
                                                                   context_p);
 
       ecma_deref_ecma_string (left_brace_str_p);
@@ -1693,10 +1684,10 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     }
   }
 
-  free_list_with_ecma_string_content (&partial);
+  ecma_free_values_collection (partial_p, true);
 
   /* 11. */
-  list_remove_last_element (&context_p->occurence_stack);
+  ecma_remove_last_value_from_values_collection (context_p->occurence_stack_p, true);
 
   /* 12. */
   ecma_deref_ecma_string (context_p->indent_str_p);
@@ -1717,10 +1708,12 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
  */
 static ecma_completion_value_t
 ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
-                         stringify_context_t *context_p) /**< context*/
+                         ecma_json_stringify_context_t *context_p) /**< context*/
 {
+  ecma_value_t obj_value = ecma_make_object_value (obj_p);
+
   /* 1. */
-  if (list_has_element (&context_p->occurence_stack, obj_p))
+  if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
     return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }
@@ -1728,7 +1721,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   /* 2. */
-  list_append (&context_p->occurence_stack, obj_p);
+  ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);
 
   /* 3. */
   ecma_string_t *stepback_p = context_p->indent_str_p;
@@ -1737,12 +1730,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   context_p->indent_str_p = ecma_concat_ecma_strings (context_p->indent_str_p, context_p->gap_str_p);
 
   /* 5. */
-  list_ctx_t partial;
-  {
-    partial.block_start_p = NULL;
-    partial.block_end_p = NULL;
-    partial.current_p = NULL;
-  }
+  ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
 
   ecma_string_t *length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
@@ -1773,13 +1761,14 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
     /* 8.b */
     if (ecma_is_value_undefined (str_val))
     {
-      list_append (&partial, ecma_get_magic_string (LIT_MAGIC_STRING_NULL));
+      ecma_string_t *null_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
+      ecma_append_to_values_collection (partial_p, ecma_make_string_value (null_str_p), true);
+      ecma_deref_ecma_string (null_str_p);
     }
     /* 8.c */
     else
     {
-      ecma_string_t *str_val_p = ecma_get_string_from_value (str_val);
-      list_append (&partial, ecma_copy_or_ref_ecma_string (str_val_p));
+      ecma_append_to_values_collection (partial_p, str_val, true);
     }
 
     ECMA_FINALIZE (str_val);
@@ -1789,7 +1778,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   if (ecma_is_completion_value_empty (ret_value))
   {
     /* 9. */
-    if (list_is_empty (&partial))
+    if (partial_p->unit_number == 0)
     {
       ecma_string_t *left_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
       ecma_string_t *right_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
@@ -1812,7 +1801,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
 
         ret_value = ecma_builtin_helper_json_create_non_formatted_json (left_square_str_p,
                                                                         right_square_str_p,
-                                                                        &partial);
+                                                                        partial_p);
 
         ecma_deref_ecma_string (left_square_str_p);
         ecma_deref_ecma_string (right_square_str_p);
@@ -1826,7 +1815,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
         ret_value = ecma_builtin_helper_json_create_formatted_json (left_square_str_p,
                                                                     right_square_str_p,
                                                                     stepback_p,
-                                                                    &partial,
+                                                                    partial_p,
                                                                     context_p);
 
         ecma_deref_ecma_string (left_square_str_p);
@@ -1839,10 +1828,10 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ECMA_FINALIZE (array_length);
 
   ecma_deref_ecma_string (length_str_p);
-  free_list_with_ecma_string_content (&partial);
+  ecma_free_values_collection (partial_p, true);
 
   /* 11. */
-  list_remove_last_element (&context_p->occurence_stack);
+  ecma_remove_last_value_from_values_collection (context_p->occurence_stack_p, true);
 
   /* 12. */
   ecma_deref_ecma_string (context_p->indent_str_p);

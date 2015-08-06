@@ -26,173 +26,72 @@
 #include "ecma-builtin-helpers.h"
 #include "lit-char-helpers.h"
 
-#define LIST_BLOCK_SIZE 256UL
-
 /**
- * Allocate memory for elements.
+ * Check the object value existance in the collection.
  *
- * @return pointer to current position of the allocated memory.
- */
-void **
-realloc_list (list_ctx_t *ctx_p) /**< list context */
-{
-  size_t old_block_size = static_cast<size_t> (ctx_p->block_end_p - ctx_p->block_start_p);
-  size_t new_block_size = old_block_size + LIST_BLOCK_SIZE;
-
-  size_t current_ptr_offset = static_cast<size_t> (ctx_p->current_p - ctx_p->block_start_p);
-  void **new_block_start_p = (void **) mem_heap_alloc_block (new_block_size, MEM_HEAP_ALLOC_SHORT_TERM);
-
-  if (ctx_p->current_p)
-  {
-    memcpy (new_block_start_p, ctx_p->block_start_p, static_cast<size_t> (current_ptr_offset));
-    mem_heap_free_block (ctx_p->block_start_p);
-  }
-
-  ctx_p->block_start_p = new_block_start_p;
-  ctx_p->block_end_p = new_block_start_p + new_block_size;
-  ctx_p->current_p = new_block_start_p + current_ptr_offset;
-
-  return ctx_p->current_p;
-} /* realloc_list */
-
-/**
- * Append element to the list.
- */
-void
-list_append (list_ctx_t *ctx_p, /**< list context */
-             void *element_p) /**< element that should be stored */
-{
-  void **current_p = ctx_p->current_p;
-
-  if (current_p + 1 > ctx_p->block_end_p)
-  {
-    current_p = realloc_list (ctx_p);
-  }
-
-  *current_p = element_p;
-
-  ctx_p->current_p++;
-} /* list_append */
-
-/**
- * Check the element existance in the list.
+ * Used by:
+ *         - ecma_builtin_json_object step 1
+ *         - ecma_builtin_json_array step 1
  *
- * @return true if the list already has the value.
+ * @return true, if the object is already in the collection.
  */
 bool
-list_has_element (list_ctx_t *ctx_p, /**< list context */
-                  void *element_p) /**< element that should be checked */
+ecma_has_object_value_in_collection (ecma_collection_header_t *collection_p, /**< collection */
+                                     ecma_value_t object_value) /**< object value */
 {
-  for (void **current_p = ctx_p->block_start_p;
-       current_p < ctx_p->current_p;
-       current_p++)
+  JERRY_ASSERT (ecma_is_value_object (object_value));
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (object_value);
+
+  ecma_collection_iterator_t iterator;
+  ecma_collection_iterator_init (&iterator, collection_p);
+
+  while (ecma_collection_iterator_next (&iterator))
   {
-    if (*current_p == element_p)
+    ecma_value_t value = *iterator.current_value_p;
+    ecma_object_t *current_p = ecma_get_object_from_value (value);
+
+    if (current_p == obj_p)
     {
       return true;
     }
   }
 
   return false;
-} /* list_has_element */
+} /* ecma_has_object_value_in_collection */
 
 /**
- * Check the element existance in the list for ecma strings.
+ * Check the string value existance in the collection.
  *
- * @return true if the list already has the value.
+ * Used by:
+ *         - ecma_builtin_json_stringify step 4.b.ii.5
+ *
+ * @return true, if the string is already in the collection.
  */
 bool
-list_has_ecma_string_element (list_ctx_t *ctx_p, /**< list context */
-                              ecma_string_t *string_p) /**< element that should be checked */
+ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, /**< collection */
+                                     ecma_value_t string_value) /**< string value */
 {
-  for (void **current_p = ctx_p->block_start_p;
-       current_p < ctx_p->current_p;
-       current_p++)
+  JERRY_ASSERT (ecma_is_value_string (string_value));
+
+  ecma_string_t *string_p = ecma_get_string_from_value (string_value);
+
+  ecma_collection_iterator_t iterator;
+  ecma_collection_iterator_init (&iterator, collection_p);
+
+  while (ecma_collection_iterator_next (&iterator))
   {
-    if (ecma_compare_ecma_strings ((ecma_string_t *) *current_p, string_p))
+    ecma_value_t value = *iterator.current_value_p;
+    ecma_string_t *current_p = ecma_get_string_from_value (value);
+
+    if (ecma_compare_ecma_strings (current_p, string_p))
     {
       return true;
     }
   }
 
   return false;
-} /* list_has_element */
-
-/**
- * Check the state of the list allocation.
- *
- * @return true if the list is already allocated.
- */
-static bool
-list_is_allocated (list_ctx_t *ctx_p) /**< list context */
-{
-  return ctx_p->block_start_p < ctx_p->block_end_p;
-} /* list_is_allocated */
-
-/**
- * Check if the list is empty.
- *
- * @return true if the list is empty.
- */
-bool
-list_is_empty (list_ctx_t *ctx_p)
-{
-  return ctx_p->block_start_p == ctx_p->current_p;
-} /* list_is_empty */
-
-/**
- * Set the current memory position to the previous element.
- */
-void
-list_remove_last_element (list_ctx_t *ctx_p) /**< list context */
-{
-  if (list_is_empty (ctx_p))
-  {
-    return;
-  }
-  *ctx_p->current_p = NULL;
-
-  ctx_p->current_p--;
-} /* list_remove_last_element */
-
-/**
- * Free the allocated list.
- */
-void
-free_list (list_ctx_t *ctx_p) /**< list context */
-{
-  if (!list_is_allocated (ctx_p))
-  {
-    return;
-  }
-
-  mem_heap_free_block (ctx_p->block_start_p);
-
-  ctx_p->block_start_p = NULL;
-  ctx_p->block_end_p = NULL;
-  ctx_p->current_p = NULL;
-} /* free_list */
-
-/**
- * Free the stored ecma string elements and the list.
- */
-void
-free_list_with_ecma_string_content (list_ctx_t *ctx_p) /**< list context */
-{
-  if (!list_is_allocated (ctx_p))
-  {
-    return;
-  }
-
-  for (void **current_p = ctx_p->block_start_p;
-       current_p < ctx_p->current_p;
-       current_p++)
-  {
-    ecma_deref_ecma_string ((ecma_string_t *) *current_p);
-  }
-
-  free_list (ctx_p);
-} /* free_list_with_ecma_string_content */
+} /* ecma_has_string_value_in_collection*/
 
 /**
  * Common function to concatenate key-value pairs into an ecma-string.
@@ -208,21 +107,27 @@ free_list_with_ecma_string_content (list_ctx_t *ctx_p) /**< list context */
  *         Returned value must be freed with ecma_deref_ecma_string.
  */
 ecma_string_t *
-ecma_builtin_helper_json_create_separated_properties (list_ctx_t *partial_p, /**< list of key-value pairs*/
+ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *partial_p, /**< key-value pairs*/
                                                       ecma_string_t *separator_p) /**< separator*/
 {
   ecma_string_t *properties_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   ecma_string_t *tmp_str_p;
 
+  ecma_collection_iterator_t iterator;
+  ecma_collection_iterator_init (&iterator, partial_p);
+
   uint32_t index = 0;
 
-  for (void **current_p = partial_p->block_start_p;
-       current_p < partial_p->current_p;
-       current_p++, index++)
+  while (ecma_collection_iterator_next (&iterator))
   {
+    ecma_value_t name_value = *iterator.current_value_p;
+    ecma_string_t *current_p = ecma_get_string_from_value (name_value);
+
     if (index == 0)
     {
-      tmp_str_p = ecma_concat_ecma_strings (properties_str_p, (ecma_string_t *) *current_p);
+      index++;
+
+      tmp_str_p = ecma_concat_ecma_strings (properties_str_p, current_p);
       ecma_deref_ecma_string (properties_str_p);
       properties_str_p = tmp_str_p;
       continue;
@@ -232,7 +137,7 @@ ecma_builtin_helper_json_create_separated_properties (list_ctx_t *partial_p, /**
     ecma_deref_ecma_string (properties_str_p);
     properties_str_p = tmp_str_p;
 
-    tmp_str_p = ecma_concat_ecma_strings (properties_str_p, (ecma_string_t *) *current_p);
+    tmp_str_p = ecma_concat_ecma_strings (properties_str_p, current_p);
     ecma_deref_ecma_string (properties_str_p);
     properties_str_p = tmp_str_p;
   }
@@ -257,8 +162,8 @@ ecma_completion_value_t
 ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /**< left bracket*/
                                                 ecma_string_t *right_bracket_p, /**< right bracket*/
                                                 ecma_string_t *stepback_p, /**< stepback*/
-                                                list_ctx_t *partial_p, /**< list of key-value pairs*/
-                                                stringify_context_t *context_p) /**< context*/
+                                                ecma_collection_header_t *partial_p, /**< key-value pairs*/
+                                                ecma_json_stringify_context_t *context_p) /**< context*/
 {
   /* 10.b */
   ecma_string_t *comma_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
@@ -326,7 +231,7 @@ ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /
 ecma_completion_value_t
 ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_p, /**< left bracket*/
                                                     ecma_string_t *right_bracket_p, /**< right bracket*/
-                                                    list_ctx_t *partial_p) /**< list of key-value pairs*/
+                                                    ecma_collection_header_t *partial_p) /**< key-value pairs*/
 {
   /* 10.a */
   ecma_string_t *comma_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);

@@ -130,44 +130,47 @@ extern ecma_completion_value_t ecma_date_get_primitive_value (ecma_value_t this_
 
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
-typedef struct
-{
-  void **block_start_p;
-  void **block_end_p;
-  void **current_p;
-} list_ctx_t;
-
-typedef struct
-{
-  list_ctx_t property_list;
-  list_ctx_t occurence_stack;
-
-  ecma_string_t *indent_str_p;
-  ecma_string_t *gap_str_p;
-  ecma_object_t *replacer_function_p;
-} stringify_context_t;
-
 /* ecma-builtin-helper-json.cpp */
-extern void **realloc_list (list_ctx_t *ctx);
-extern void list_append (list_ctx_t *ctx, void *element);
-extern void free_list (list_ctx_t *ctx);
-extern bool list_has_element (list_ctx_t *ctx, void *element);
-extern bool list_has_ecma_string_element (list_ctx_t *ctx, ecma_string_t *string_p);
-extern bool list_is_empty (list_ctx_t *ctx);
-extern void list_remove_last_element (list_ctx_t *ctx);
-extern void free_list_with_ecma_string_content (list_ctx_t *ctx);
 
-extern ecma_string_t *ecma_builtin_helper_json_create_separated_properties (list_ctx_t *partial_p,
-                                                                            ecma_string_t *separator_p);
-extern ecma_completion_value_t ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p,
-                                                                               ecma_string_t *right_bracket_p,
-                                                                               ecma_string_t *stepback_p,
-                                                                               list_ctx_t *partial_p,
-                                                                               stringify_context_t *context_p);
-extern ecma_completion_value_t ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_p,
-                                                                                   ecma_string_t *right_bracket_p,
-                                                                                   list_ctx_t *partial_p);
+/**
+ * Context for JSON.stringify()
+ */
+typedef struct
+{
+  /** Collection for property keys. */
+  ecma_collection_header_t *property_list_p;
+
+  /** Collection for traversing objects. */
+  ecma_collection_header_t *occurence_stack_p;
+
+  /** The actual indentation text. */
+  ecma_string_t *indent_str_p;
+
+  /** The indentation text. */
+  ecma_string_t *gap_str_p;
+
+  /** The replacer function. */
+  ecma_object_t *replacer_function_p;
+} ecma_json_stringify_context_t;
+
+extern bool ecma_has_object_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t object_value);
+extern bool ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t string_value);
+
 extern ecma_string_t *ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t value);
+
+extern ecma_string_t *
+ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *partial_p,
+                                                      ecma_string_t *separator_p);
+extern ecma_completion_value_t
+ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p,
+                                                ecma_string_t *right_bracket_p,
+                                                ecma_string_t *stepback_p,
+                                                ecma_collection_header_t *partial_p,
+                                                ecma_json_stringify_context_t *context_p);
+extern ecma_completion_value_t
+ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_p,
+                                                    ecma_string_t *right_bracket_p,
+                                                    ecma_collection_header_t *partial_p);
 
 /**
  * @}

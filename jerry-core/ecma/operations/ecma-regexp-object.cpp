@@ -207,10 +207,11 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_dealloc_number (lastindex_num_p);
 
   /* Set bytecode internal property. */
-  ecma_property_t *bytecode = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+  ecma_property_t *bytecode_prop_p;
+  bytecode_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
   /* Compile bytecode. */
-  ECMA_TRY_CATCH (empty, re_compile_bytecode (bytecode, pattern_p, flags), ret_value);
+  ECMA_TRY_CATCH (empty, re_compile_bytecode (bytecode_prop_p, pattern_p, flags), ret_value);
   ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
   ECMA_FINALIZE (empty);
 
@@ -1071,9 +1072,10 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 /**
  * Define the necessary properties for the result array (index, input, length).
  */
-static void
+void
 re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
-                                re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
+                                ecma_string_t *input_str_p, /**< input string */
+                                uint32_t num_of_elements, /**< Number of array elements */
                                 int32_t index) /** index of matching */
 {
   /* Set index property of the result array */
@@ -1111,9 +1113,6 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
     ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
 
     array_item_prop_desc.is_value_defined = true;
-    ecma_string_t *input_str_p = ecma_new_ecma_string_from_utf8 (re_ctx_p->input_start_p,
-                                                                 (lit_utf8_size_t) (re_ctx_p->input_end_p -
-                                                                                    re_ctx_p->input_start_p));
     array_item_prop_desc.value = ecma_make_string_value (input_str_p);
 
     array_item_prop_desc.is_writable_defined = true;
@@ -1129,8 +1128,6 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
                                         result_prop_str_p,
                                         &array_item_prop_desc,
                                         true);
-
-    ecma_deref_ecma_string (input_str_p);
   }
   ecma_deref_ecma_string (result_prop_str_p);
 
@@ -1142,7 +1139,7 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
     array_item_prop_desc.is_value_defined = true;
 
     ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = (ecma_number_t) (re_ctx_p->num_of_captures / 2);
+    *num_p = (ecma_number_t) (num_of_elements);
     array_item_prop_desc.value = ecma_make_number_value (num_p);
 
     array_item_prop_desc.is_writable_defined = false;
@@ -1315,7 +1312,9 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       ecma_completion_value_t result_array = ecma_op_create_array_object (0, 0, false);
       ecma_object_t *result_array_obj_p = ecma_get_object_from_completion_value (result_array);
 
-      re_set_result_array_properties (result_array_obj_p, &re_ctx, index);
+      ecma_string_t *input_str_p = ecma_new_ecma_string_from_utf8 (iterator.buf_p, iterator.buf_size);
+      re_set_result_array_properties (result_array_obj_p, input_str_p, re_ctx.num_of_captures / 2, index);
+      ecma_deref_ecma_string (input_str_p);
 
       for (uint32_t i = 0; i < re_ctx.num_of_captures; i += 2)
       {

@@ -59,6 +59,11 @@ ecma_regexp_exec_helper (ecma_value_t, ecma_value_t, bool);
 extern ecma_char_t
 re_canonicalize (ecma_char_t ch,
                  bool is_ignorecase);
+extern void
+re_set_result_array_properties (ecma_object_t *array_obj_p,
+                                ecma_string_t *input_str_p,
+                                uint32_t num_of_elements,
+                                int32_t index);
 
 /**
  * @}

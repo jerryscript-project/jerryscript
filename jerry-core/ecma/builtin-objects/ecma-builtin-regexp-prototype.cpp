@@ -15,6 +15,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -72,7 +73,44 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
                     ecma_op_to_string (arg),
                     ret_value);
 
-    ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
+    ecma_property_t *bytecode_prop_p;
+    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
+    bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+
+    void *bytecode_p = ECMA_GET_POINTER (void, bytecode_prop_p->u.internal_property.value);
+
+    if (bytecode_p == NULL)
+    {
+      /* Missing bytecode means empty RegExp: '/(?:)/', so always return empty string. */
+      ecma_completion_value_t result_array = ecma_op_create_array_object (0, 0, false);
+      ecma_object_t *result_array_obj_p = ecma_get_object_from_completion_value (result_array);
+      ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
+      re_set_result_array_properties (result_array_obj_p,
+                                      input_str_p,
+                                      1,
+                                      0);
+
+      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (0);
+      ecma_string_t *capture_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+
+      ECMA_TRY_CATCH (put_res_value,
+                      ecma_op_object_put (result_array_obj_p,
+                                          index_str_p,
+                                          ecma_make_string_value (capture_str_p),
+                                          true),
+                      ret_value);
+
+      ret_value = result_array;
+
+      ECMA_FINALIZE (put_res_value)
+
+      ecma_deref_ecma_string (capture_str_p);
+      ecma_deref_ecma_string (index_str_p);
+    }
+    else
+    {
+      ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
+    }
 
     ECMA_FINALIZE (input_str_value);
     ECMA_FINALIZE (obj_this);

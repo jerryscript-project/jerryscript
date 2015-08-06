@@ -167,8 +167,18 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_prop_num_value_p);
       break;
     }
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+    case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
+    {
+      ecma_property_t *bytecode_prop_p;
+      bytecode_prop_p = ecma_create_internal_property (object_obj_p,
+                                                       ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+      bytecode_prop_p->u.internal_property.value = ECMA_NULL_POINTER;
+      break;
+    }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
     default:
     {
       break;

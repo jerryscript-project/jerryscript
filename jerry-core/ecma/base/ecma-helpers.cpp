@@ -829,8 +829,12 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     }
     case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
     {
-      void *bytecode_p = ECMA_GET_NON_NULL_POINTER (void, property_value);
-      mem_heap_free_block (bytecode_p);
+      void *bytecode_p = ECMA_GET_POINTER (void, property_value);
+
+      if (bytecode_p)
+      {
+        mem_heap_free_block (bytecode_p);
+      }
     }
   }
 

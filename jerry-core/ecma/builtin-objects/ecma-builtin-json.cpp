@@ -1028,122 +1028,132 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
     }
   }
 
-  ecma_value_t space = ecma_copy_value (arg3, true);
-
-  /* 5. */
-  if (ecma_is_value_object (arg3))
+  if (ecma_is_completion_value_empty (ret_value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg3);
-    lit_magic_string_id_t class_name = ecma_object_get_class_name (obj_p);
+    ecma_value_t space = ecma_copy_value (arg3, true);
 
-    /* 5.a */
-    if (class_name == LIT_MAGIC_STRING_NUMBER_UL)
+    /* 5. */
+    if (ecma_is_value_object (arg3))
     {
-      ECMA_TRY_CATCH (val,
-                      ecma_op_to_number (arg3),
-                      ret_value);
+      ecma_object_t *obj_p = ecma_get_object_from_value (arg3);
+      lit_magic_string_id_t class_name = ecma_object_get_class_name (obj_p);
 
-      ecma_free_value (space, true);
-      space = ecma_copy_value (val, true);
-
-      ECMA_FINALIZE (val);
-    }
-    /* 5.b */
-    else if (class_name == LIT_MAGIC_STRING_STRING_UL)
-    {
-      ECMA_TRY_CATCH (val,
-                      ecma_op_to_string (arg3),
-                      ret_value);
-
-      ecma_free_value (space, true);
-      space = ecma_copy_value (val, true);
-
-      ECMA_FINALIZE (val);
-    }
-  }
-
-  /* 6. */
-  if (ecma_is_value_number (space))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (array_length_num,
-                                 arg3,
-                                 ret_value);
-
-    /* 6.a */
-    int32_t num_of_spaces = ecma_number_to_int32 (array_length_num);
-    int32_t space = (num_of_spaces > 10) ? 10 : num_of_spaces;
-
-    /* 6.b */
-    if (space < 1)
-    {
-      context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    }
-    else
-    {
-      MEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
-
-      for (int32_t i = 0; i < space; i++)
+      /* 5.a */
+      if (class_name == LIT_MAGIC_STRING_NUMBER_UL)
       {
-        space_buff[i] = LIT_CHAR_SP;
+        ECMA_TRY_CATCH (val,
+                        ecma_op_to_number (arg3),
+                        ret_value);
+
+        ecma_free_value (space, true);
+        space = ecma_copy_value (val, true);
+
+        ECMA_FINALIZE (val);
       }
+      /* 5.b */
+      else if (class_name == LIT_MAGIC_STRING_STRING_UL)
+      {
+        ECMA_TRY_CATCH (val,
+                        ecma_op_to_string (arg3),
+                        ret_value);
 
-      context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
+        ecma_free_value (space, true);
+        space = ecma_copy_value (val, true);
 
-      MEM_FINALIZE_LOCAL_ARRAY (space_buff);
+        ECMA_FINALIZE (val);
+      }
     }
 
-    ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);
-  }
-  /* 7. */
-  else if (ecma_is_value_string (space))
-  {
-    ecma_string_t *space_str_p = ecma_get_string_from_value (space);
-    ecma_length_t num_of_chars = ecma_string_get_length (space_str_p);
-
-    if (num_of_chars < 10)
+    if (ecma_is_completion_value_empty (ret_value))
     {
-      context.gap_str_p = ecma_copy_or_ref_ecma_string (space_str_p);
+      /* 6. */
+      if (ecma_is_value_number (space))
+      {
+        ECMA_OP_TO_NUMBER_TRY_CATCH (array_length_num,
+                                     arg3,
+                                     ret_value);
+
+        /* 6.a */
+        int32_t num_of_spaces = ecma_number_to_int32 (array_length_num);
+        int32_t space = (num_of_spaces > 10) ? 10 : num_of_spaces;
+
+        /* 6.b */
+        if (space < 1)
+        {
+          context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+        }
+        else
+        {
+          MEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
+
+          for (int32_t i = 0; i < space; i++)
+          {
+            space_buff[i] = LIT_CHAR_SP;
+          }
+
+          context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
+
+          MEM_FINALIZE_LOCAL_ARRAY (space_buff);
+        }
+
+        ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);
+      }
+      /* 7. */
+      else if (ecma_is_value_string (space))
+      {
+        ecma_string_t *space_str_p = ecma_get_string_from_value (space);
+        ecma_length_t num_of_chars = ecma_string_get_length (space_str_p);
+
+        if (num_of_chars < 10)
+        {
+          context.gap_str_p = ecma_copy_or_ref_ecma_string (space_str_p);
+        }
+        else
+        {
+          context.gap_str_p = ecma_string_substr (space_str_p, 0, 10);
+        }
+      }
+      /* 8. */
+      else
+      {
+        context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+      }
     }
-    else
+
+    ecma_free_value (space, true);
+
+    if (ecma_is_completion_value_empty (ret_value))
     {
-      context.gap_str_p = ecma_string_substr (space_str_p, 0, 10);
+      /* 9. */
+      ecma_object_t *obj_wrapper_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+      ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+
+      /* 10. */
+      ecma_completion_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
+                                                                 empty_str_p,
+                                                                 arg1,
+                                                                 false);
+
+      JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp_val));
+      ecma_free_completion_value (put_comp_val);
+
+      /* 11. */
+      ECMA_TRY_CATCH (str_val,
+                      ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
+                      ret_value);
+
+      ret_value = ecma_make_normal_completion_value (ecma_copy_value (str_val, true));
+
+      ECMA_FINALIZE (str_val);
+
+      ecma_deref_object (obj_wrapper_p);
+      ecma_deref_ecma_string (empty_str_p);
     }
+
+    ecma_deref_ecma_string (context.gap_str_p);
   }
-  /* 8. */
-  else
-  {
-    context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-  }
-
-  ecma_free_value (space, true);
-
-  /* 9. */
-  ecma_object_t *obj_wrapper_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
-  ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-
-  /* 10. */
-  ecma_completion_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
-                                                             empty_str_p,
-                                                             arg1,
-                                                             false);
-
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp_val));
-  ecma_free_completion_value (put_comp_val);
-
-  /* 11. */
-  ECMA_TRY_CATCH (str_val,
-                  ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
-                  ret_value);
-
-  ret_value = ecma_make_normal_completion_value (ecma_copy_value (str_val, true));
-
-  ECMA_FINALIZE (str_val);
-
-  ecma_deref_object (obj_wrapper_p);
-  ecma_deref_ecma_string (empty_str_p);
 
   ecma_deref_ecma_string (context.indent_str_p);
-  ecma_deref_ecma_string (context.gap_str_p);
 
   ecma_free_values_collection (context.property_list_p, true);
   ecma_free_values_collection (context.occurence_stack_p, true);

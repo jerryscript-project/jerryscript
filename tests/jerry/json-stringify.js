@@ -133,6 +133,21 @@ assert (JSON.stringify (object, replacer_function) == '{"c":3,"b":"JSON","a":"FO
 filter = ["a", "b"];
 assert (JSON.stringify (object, filter) == '{"a":"JSON","b":"JSON"}');
 
+number = new Number(2.2);
+number.toString = {};
+number.valueOf = [];
+
+try
+{
+  JSON.stringify([], [number]);
+  // Should not be reached.
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof TypeError);
+}
+
 // Throw error in the replacer function
 function replacer_thrower (key, value)
 {

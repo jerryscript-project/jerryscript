@@ -93,7 +93,7 @@ operand dump_prop_getter_res (operand, operand);
 void dump_prop_setter (operand, operand, operand);
 
 void dump_function_end_for_rewrite (void);
-void rewrite_function_end (varg_list_type);
+void rewrite_function_end ();
 
 void dump_this (operand);
 operand dump_this_res (void);

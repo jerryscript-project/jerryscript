@@ -379,10 +379,15 @@ parse_property_assignment (void)
       return;
     }
 
-    bool is_outer_scope_strict = is_strict_mode ();
+    STACK_DECLARE_USAGE (scopes);
 
     const operand name = parse_property_name ();
     jsp_early_error_add_prop_name (name, is_setter ? PROP_SET : PROP_GET);
+
+    STACK_PUSH (scopes, scopes_tree_init (NULL));
+    serializer_set_scope (STACK_TOP (scopes));
+    scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
+    lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
     skip_newlines ();
     const operand func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL);
@@ -404,12 +409,20 @@ parse_property_assignment (void)
     token_after_newlines_must_be (TOK_CLOSE_BRACE);
 
     dump_ret ();
-    rewrite_function_end (VARG_FUNC_EXPR);
+    rewrite_function_end ();
 
     inside_function = was_in_function;
 
-    scopes_tree_set_strict_mode (STACK_TOP (scopes), is_outer_scope_strict);
+    scopes_tree fe_scope_tree = STACK_TOP (scopes);
+
+    STACK_DROP (scopes, 1);
+    serializer_set_scope (STACK_TOP (scopes));
     lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
+    serializer_dump_subscope (fe_scope_tree);
+    scopes_tree_free (fe_scope_tree);
+
+    STACK_CHECK_USAGE (scopes);
 
     if (is_setter)
     {
@@ -664,7 +677,7 @@ parse_function_declaration (void)
   next_token_must_be (TOK_CLOSE_BRACE);
 
   dump_ret ();
-  rewrite_function_end (VARG_FUNC_DECL);
+  rewrite_function_end ();
 
   inside_function = was_in_function;
 
@@ -685,19 +698,23 @@ parse_function_declaration (void)
 static operand
 parse_function_expression (void)
 {
+  STACK_DECLARE_USAGE (scopes);
   assert_keyword (KW_FUNCTION);
 
   operand res;
 
-  bool is_outer_scope_strict = is_strict_mode ();
-
   jsp_early_error_start_checking_of_vargs ();
+
+  STACK_PUSH (scopes, scopes_tree_init (NULL));
+  serializer_set_scope (STACK_TOP (scopes));
+  scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
+  lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
   skip_newlines ();
   if (token_is (TOK_NAME))
   {
     const operand name = literal_operand (token_data_as_lit_cp ());
-    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_outer_scope_strict, tok.loc);
+    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
 
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL);
@@ -727,17 +744,21 @@ parse_function_expression (void)
   next_token_must_be (TOK_CLOSE_BRACE);
 
   dump_ret ();
-  rewrite_function_end (VARG_FUNC_EXPR);
+  rewrite_function_end ();
 
   inside_function = was_in_function;
 
   jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
-  scopes_tree_set_strict_mode (STACK_TOP (scopes), is_outer_scope_strict);
+  serializer_set_scope (STACK_HEAD (scopes, 2));
+  serializer_dump_subscope (STACK_TOP (scopes));
+  scopes_tree_free (STACK_TOP (scopes));
+  STACK_DROP (scopes, 1);
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
+  STACK_CHECK_USAGE (scopes);
   return res;
-}
+} /* parse_function_expression */
 
 /* array_literal
   : '[' LT!* assignment_expression? (LT!* ',' (LT!* assignment_expression)?)* LT!* ']' LT!*

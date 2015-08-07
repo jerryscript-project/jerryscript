@@ -29,6 +29,7 @@ vm_instr_t serializer_get_instr (const vm_instr_t*, vm_instr_counter_t);
 lit_cpointer_t serializer_get_literal_cp_by_uid (uint8_t, const vm_instr_t*, vm_instr_counter_t);
 void serializer_set_strings_buffer (const ecma_char_t *);
 void serializer_set_scope (scopes_tree);
+void serializer_dump_subscope (scopes_tree);
 const vm_instr_t *serializer_merge_scopes_into_bytecode (void);
 void serializer_dump_op_meta (op_meta);
 vm_instr_counter_t serializer_get_current_instr_counter (void);

@@ -1269,19 +1269,14 @@ dump_function_end_for_rewrite (void)
 }
 
 void
-rewrite_function_end (varg_list_type vlt)
+rewrite_function_end ()
 {
   vm_instr_counter_t oc;
-  if (vlt == VARG_FUNC_DECL)
   {
     oc = (vm_instr_counter_t) (get_diff_from (STACK_TOP (function_ends))
                                + serializer_count_instrs_in_subscopes ());
   }
-  else
-  {
-    JERRY_ASSERT (vlt == VARG_FUNC_EXPR);
-    oc = (vm_instr_counter_t) (get_diff_from (STACK_TOP (function_ends)));
-  }
+
   idx_t id1, id2;
   split_instr_counter (oc, &id1, &id2);
   const vm_instr_t instr = getop_meta (OPCODE_META_TYPE_FUNCTION_END, id1, id2);

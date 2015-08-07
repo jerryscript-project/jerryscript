@@ -89,6 +89,44 @@ serializer_set_scope (scopes_tree new_scope)
   current_scope = new_scope;
 }
 
+/**
+ * Dump scope to current scope
+ *
+ * NOTE:
+ *   This function is used for processing of function expressions as they should not be hoisted.
+ *   After parsing a function expression, it is immediately dumped to current scope via call of this function.
+ */
+void
+serializer_dump_subscope (scopes_tree tree) /**< scope to dump */
+{
+  JERRY_ASSERT (tree != NULL);
+  vm_instr_counter_t instr_pos;
+  bool header = true;
+  for (instr_pos = 0; instr_pos < tree->instrs_num; instr_pos++)
+  {
+    op_meta *om = (op_meta *) linked_list_element (tree->instrs, instr_pos);
+    if (om->op.op_idx != VM_OP_VAR_DECL
+        && om->op.op_idx != VM_OP_META && !header)
+    {
+      break;
+    }
+    if (om->op.op_idx == VM_OP_REG_VAR_DECL)
+    {
+      header = false;
+    }
+    scopes_tree_add_op_meta (current_scope, *om);
+  }
+  for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
+  {
+    serializer_dump_subscope (*(scopes_tree *) linked_list_element (tree->t.children, child_id));
+  }
+  for (; instr_pos < tree->instrs_num; instr_pos++)
+  {
+    op_meta *om = (op_meta *) linked_list_element (tree->instrs, instr_pos);
+    scopes_tree_add_op_meta (current_scope, *om);
+  }
+} /* serializer_dump_subscope */
+
 const vm_instr_t *
 serializer_merge_scopes_into_bytecode (void)
 {

@@ -279,10 +279,38 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
      * See also: ecma_object_get_class_name
      */
 
-    /* 17. */
     ecma_number_t *length_p = ecma_alloc_number ();
-    *length_p = 0;
+    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
+    /* 15. */
+    if (ecma_object_get_class_name (this_arg_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)
+    {
+      ecma_completion_value_t get_len_completion = ecma_op_object_get (this_arg_obj_p,
+                                                                       magic_string_length_p);
+      JERRY_ASSERT (ecma_is_completion_value_normal (get_len_completion));
+
+      ecma_value_t len_value = ecma_get_completion_value_value (get_len_completion);
+      JERRY_ASSERT (ecma_is_value_number (len_value));
+
+      const ecma_length_t bound_arg_count = arg_count > 1 ? arg_count - 1 : 0;
+
+      /* 15.a */
+      *length_p = *ecma_get_number_from_value (len_value) - ecma_uint32_to_number (bound_arg_count);
+      ecma_free_completion_value (get_len_completion);
+
+      /* 15.b */
+      if (ecma_number_is_negative (*length_p))
+      {
+        *length_p = ECMA_NUMBER_ZERO;
+      }
+    }
+    else
+    {
+      /* 16. */
+      *length_p = ECMA_NUMBER_ZERO;
+    }
+
+    /* 17. */
     ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
     {
       length_prop_desc.is_value_defined = true;
@@ -297,7 +325,6 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       length_prop_desc.is_configurable_defined = true;
       length_prop_desc.is_configurable = false;
     }
-    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
     ecma_completion_value_t completion = ecma_op_object_define_own_property (function_p,
                                                                              magic_string_length_p,
                                                                              &length_prop_desc,

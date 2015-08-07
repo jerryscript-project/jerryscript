@@ -126,3 +126,15 @@ try {
 } catch (e) {
   assert (e instanceof TypeError);
 }
+
+var foo = function(x, y) { }
+
+var bound = foo.bind(null);
+assert(bound.length === 2);
+
+bound = foo.bind(null, 9);
+assert(bound.length === 1);
+
+bound = foo.bind(null, 9, 8);
+assert(bound.length === 0);
+

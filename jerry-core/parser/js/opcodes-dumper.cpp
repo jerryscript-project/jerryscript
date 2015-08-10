@@ -1331,9 +1331,32 @@ dump_post_decrement_res (operand op)
   return res;
 }
 
+/**
+ * Check if operand of prefix operation is correct
+ */
+static void
+check_operand_in_prefix_operation (operand obj) /**< operand, which type should be Reference */
+{
+  const op_meta last = last_dumped_op_meta ();
+  if (last.op.op_idx != VM_OP_PROP_GETTER)
+  {
+    if (obj.type == OPERAND_TMP)
+    {
+      /*
+       * FIXME:
+       *       Implement correct handling of references through parser operands
+       */
+      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE,
+                   "Invalid left-hand-side expression in prefix operation",
+                   LIT_ITERATOR_POS_ZERO);
+    }
+  }
+} /* check_operand_in_prefix_operation */
+
 void
 dump_pre_increment (operand res, operand obj)
 {
+  check_operand_in_prefix_operation (obj);
   dump_double_address (getop_pre_incr, res, obj);
 }
 
@@ -1348,6 +1371,7 @@ dump_pre_increment_res (operand op)
 void
 dump_pre_decrement (operand res, operand obj)
 {
+  check_operand_in_prefix_operation (obj);
   dump_double_address (getop_pre_decr, res, obj);
 }
 

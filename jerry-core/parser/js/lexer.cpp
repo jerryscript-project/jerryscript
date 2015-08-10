@@ -23,7 +23,7 @@
 #include "lit-strings.h"
 #include "jsp-early-error.h"
 
-static token saved_token, prev_token, sent_token, empty_token;
+static token saved_token, prev_token, sent_token, empty_token, prev_non_lf_token;
 
 static bool allow_dump_lines = false, strict_mode;
 static size_t buffer_size = 0;
@@ -1090,22 +1090,23 @@ lexer_parse_regexp (void)
   token result;
   bool is_char_class = false;
 
-  /* Eat up '/' */
   JERRY_ASSERT (LA (0) == LIT_CHAR_SLASH);
-  consume_char ();
   new_token ();
+
+  /* Eat up '/' */
+  consume_char ();
 
   while (true)
   {
-    ecma_char_t c = (ecma_char_t) LA (0);
-
-    if (c == LIT_CHAR_NULL)
+    if (lit_utf8_iterator_is_eos (&src_iter))
     {
-      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed string", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unterminated RegExp literal", token_start_pos);
     }
-    else if (lit_char_is_line_terminator (c))
+
+    ecma_char_t c = (ecma_char_t) LA (0);
+    if (lit_char_is_line_terminator (c))
     {
-      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "RegExp literal shall not contain newline character", token_start_pos);
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "RegExp literal should not contain newline character", token_start_pos);
     }
     else if (c == LIT_CHAR_BACKSLASH)
     {
@@ -1140,16 +1141,15 @@ lexer_parse_regexp (void)
   {
     ecma_char_t c = (ecma_char_t) LA (0);
 
-    if (c == LIT_CHAR_NULL
-        || !lit_char_is_word_char (c)
-        || lit_char_is_line_terminator (c))
+    if (!lit_char_is_word_char (c) || lit_char_is_line_terminator (c))
     {
       break;
     }
+
     consume_char ();
   }
 
-  result = lexer_create_token_for_charset (TOK_REGEXP, TOK_START (), TOK_SIZE ());
+  result = lexer_create_token_for_charset (TOK_REGEXP, TOK_START () + 1, TOK_SIZE () - 1);
 
   is_token_parse_in_progress = false;
   return result;
@@ -1294,16 +1294,16 @@ lexer_parse_token (void)
   }
 
   if (c == LIT_CHAR_SLASH
-      && !(sent_token.type == TOK_NAME
-           || sent_token.type == TOK_NULL
-           || sent_token.type == TOK_BOOL
-           || sent_token.type == TOK_CLOSE_BRACE
-           || sent_token.type == TOK_CLOSE_SQUARE
-           || sent_token.type == TOK_CLOSE_PAREN
-           || sent_token.type == TOK_SMALL_INT
-           || sent_token.type == TOK_NUMBER
-           || sent_token.type == TOK_STRING
-           || sent_token.type == TOK_REGEXP))
+      && !(prev_non_lf_token.type == TOK_NAME
+           || prev_non_lf_token.type == TOK_NULL
+           || prev_non_lf_token.type == TOK_BOOL
+           || prev_non_lf_token.type == TOK_CLOSE_BRACE
+           || prev_non_lf_token.type == TOK_CLOSE_SQUARE
+           || prev_non_lf_token.type == TOK_CLOSE_PAREN
+           || prev_non_lf_token.type == TOK_SMALL_INT
+           || prev_non_lf_token.type == TOK_NUMBER
+           || prev_non_lf_token.type == TOK_STRING
+           || prev_non_lf_token.type == TOK_REGEXP))
   {
     return lexer_parse_regexp ();
   }
@@ -1506,6 +1506,10 @@ lexer_next_token (void)
   {
     dump_current_line ();
   }
+  else
+  {
+    prev_non_lf_token = sent_token;
+  }
 
 end:
   return sent_token;
@@ -1516,6 +1520,7 @@ lexer_save_token (token tok)
 {
   JERRY_ASSERT (is_empty (saved_token));
   saved_token = tok;
+  prev_non_lf_token = tok;
 }
 
 token
@@ -1531,6 +1536,7 @@ lexer_seek (lit_utf8_iterator_pos_t locus)
 
   lit_utf8_iterator_seek (&src_iter, locus);
   saved_token = empty_token;
+  prev_non_lf_token = empty_token;
 }
 
 /**
@@ -1833,7 +1839,7 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
   empty_token.uid = 0;
   empty_token.loc = LIT_ITERATOR_POS_ZERO;
 
-  saved_token = prev_token = sent_token = empty_token;
+  saved_token = prev_token = sent_token = prev_non_lf_token = empty_token;
 
   if (!lit_is_utf8_string_valid (source, (lit_utf8_size_t) source_size))
   {

@@ -37,3 +37,5 @@ assert (1 / (-1 % -1) < 0);
 assert (1 / (-1 % 1) < 0);
 assert (1 / (1 % -1) > 0);
 assert (1 / (1 % 1) > 0);
+
+assert (eval ("x\n\n=\n\n6\n\n/\n\n3") === 2)

@@ -265,7 +265,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
       }
       case LIT_CHAR_RIGHT_SQUARE:
       {
-        if (!char_class_in)
+        if (char_class_in)
         {
           char_class_in--;
         }
@@ -378,18 +378,22 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       }
       else if (ch == LIT_CHAR_LOWERCASE_C)
       {
-        if (lit_utf8_iterator_is_eos (iter_p))
+        if (!lit_utf8_iterator_is_eos (iter_p))
         {
-          return ecma_raise_syntax_error ("invalid character class, end of string after '\\c'");
-        }
+          ch = lit_utf8_iterator_peek_next (iter_p);
 
-        ch = lit_utf8_iterator_read_next (iter_p);
-
-        if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
-            || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
-        {
-          /* See ECMA-262 v5, 15.10.2.10 (Point 3) */
-          ch = (ch % 32);
+          if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
+              || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END)
+              || (ch >= LIT_CHAR_0 && ch <= LIT_CHAR_9))
+          {
+            /* See ECMA-262 v5, 15.10.2.10 (Point 3) */
+            ch = (ch % 32);
+            lit_utf8_iterator_incr (iter_p);
+          }
+          else
+          {
+            ch = LIT_CHAR_LOWERCASE_C;
+          }
         }
       }
       else if (ch == LIT_CHAR_LOWERCASE_X)
@@ -627,19 +631,26 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       }
       else if (ch == LIT_CHAR_LOWERCASE_C)
       {
-        if (lit_utf8_iterator_is_eos (iter_p))
+        if (!lit_utf8_iterator_is_eos (iter_p))
         {
-          out_token_p->value = ch;
-          break;
+          ch = lit_utf8_iterator_peek_next (iter_p);
+
+          if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
+              || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
+          {
+            out_token_p->value = (ch % 32);
+            lit_utf8_iterator_incr (iter_p);
+          }
+          else
+          {
+            out_token_p->value = LIT_CHAR_BACKSLASH;
+            lit_utf8_iterator_decr (iter_p);
+          }
         }
-
-        ch = lit_utf8_iterator_peek_next (iter_p);
-
-        if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
-            || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
+        else
         {
-          out_token_p->value = (ch % 32);
-          lit_utf8_iterator_advance (iter_p, 1);
+          out_token_p->value = LIT_CHAR_BACKSLASH;
+          lit_utf8_iterator_decr (iter_p);
         }
       }
       else if (ch == LIT_CHAR_LOWERCASE_X

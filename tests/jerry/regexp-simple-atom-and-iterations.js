@@ -74,3 +74,18 @@ assert (/([abc]+)\40([d-f]+)\12\1/.exec("abc def\nabc") == "abc def\nabc,abc,def
 
 var expected = "8765432911,8,7,6,5,4,3,2,9,1";
 assert (/(\d)(\d)(\d)(\d)(\d)(\d)(\d)(\d)\9(\d)\9/.exec("8765432911") == expected);
+
+r = /\c/;
+assert (r.exec ("\\c") == "\\c");
+
+r = /[\c]/;
+assert (r.exec ("c") == "c");
+
+r = /[\c1]/;
+assert (r.exec ("\u0011") == "\u0011");
+
+r = /\c3/;
+assert (r.exec ("\\c3") == "\\c3");
+
+r = /\cIasd/;
+assert (r.exec ("\tasd") == "\tasd");

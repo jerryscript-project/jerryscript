@@ -994,26 +994,25 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                                                          ecma_value_t match_value) /**< returned match value */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_string_t *length_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
+
+  ECMA_TRY_CATCH (match_length_value,
+                  ecma_op_object_get (match_object_p, length_string_p),
+                  ret_value);
+
+  JERRY_ASSERT (ecma_is_value_number (match_length_value));
+
+  ecma_number_t *match_length_number_p = ecma_get_number_from_value (match_length_value);
+  ecma_length_t match_length = (ecma_length_t) (*match_length_number_p);
+
+  JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (*match_length_number_p) == match_length);
+  JERRY_ASSERT (match_length >= 1);
 
   if (context_p->is_replace_callable)
   {
-    ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
-    ecma_string_t *length_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-
-    ECMA_TRY_CATCH (length_value,
-                    ecma_op_object_get (match_object_p, length_string_p),
-                    ret_value);
-
-    JERRY_ASSERT (ecma_is_value_number (length_value));
-
-    ecma_number_t *length_number_p = ecma_get_number_from_value (length_value);
-    ecma_length_t length = (ecma_length_t) (*length_number_p);
-
-    JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (*length_number_p) == length);
-    JERRY_ASSERT (length >= 1);
-
     MEM_DEFINE_LOCAL_ARRAY (arguments_list,
-                            length + 2,
+                            match_length + 2,
                             ecma_value_t);
 
     /* An error might occure during the array copy and
@@ -1021,7 +1020,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
     ecma_length_t values_copied = 0;
 
     for (ecma_length_t i = 0;
-         (i < length) && ecma_is_completion_value_empty (ret_value);
+         (i < match_length) && ecma_is_completion_value_empty (ret_value);
          i++)
     {
       ecma_string_t *index_p = ecma_new_ecma_string_from_uint32 (i);
@@ -1041,14 +1040,14 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       ecma_number_t *index_number_p = ecma_alloc_number ();
 
       *index_number_p = context_p->match_start;
-      arguments_list[length] = ecma_make_number_value (index_number_p);
-      arguments_list[length + 1] = ecma_copy_value (context_p->input_string, true);
+      arguments_list[match_length] = ecma_make_number_value (index_number_p);
+      arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string, true);
 
       ECMA_TRY_CATCH (result_value,
                       ecma_op_function_call_array_args (context_p->replace_function_p,
                                                         context_p->regexp_or_search_string,
                                                         arguments_list,
-                                                        length + 2),
+                                                        match_length + 2),
                       ret_value);
 
       ECMA_TRY_CATCH (to_string_value,
@@ -1060,7 +1059,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       ECMA_FINALIZE (to_string_value);
       ECMA_FINALIZE (result_value);
 
-      ecma_free_value (arguments_list[length + 1], true);
+      ecma_free_value (arguments_list[match_length + 1], true);
       ecma_dealloc_number (index_number_p);
     }
 
@@ -1070,11 +1069,23 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
     }
 
     MEM_FINALIZE_LOCAL_ARRAY (arguments_list);
-    ECMA_FINALIZE (length_value);
-    ecma_deref_ecma_string (length_string_p);
   }
   else
   {
+    /* Although the ECMA standard does not specify how $nn (n is a decimal
+     * number) captures should be replaced if nn is greater than the maximum
+     * capture index, we follow the test-262 expected behaviour:
+     *
+     * if maximum capture index is < 10
+     *   we replace only those $n and $0n captures, where n < maximum capture index
+     * otherwise
+     *   we replace only those $nn captures, where nn < maximum capture index
+     *
+     * other $n $nn sequences left unchanged
+     *
+     * example: "<xy>".replace(/(x)y/, "$1,$2,$01,$12") === "<x,$2,x,x2>"
+     */
+
     ecma_string_t *result_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
     ecma_length_t previous_start = 0;
@@ -1098,20 +1109,42 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
           {
             current_position++;
           }
-          else if (action == LIT_CHAR_0)
+          else if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
           {
-            lit_utf8_iterator_incr (&replace_iterator);
-            ecma_char_t next_character = lit_utf8_iterator_peek_next (&replace_iterator);
-            if (!(next_character >= LIT_CHAR_1 && next_character <= LIT_CHAR_9))
+            uint32_t index = 0;
+
+            index = (uint32_t) (action - LIT_CHAR_0);
+
+            if (index >= match_length)
             {
               action = LIT_CHAR_NULL;
             }
-            lit_utf8_iterator_decr (&replace_iterator);
+            else if (index == 0 || match_length > 10)
+            {
+              lit_utf8_iterator_incr (&replace_iterator);
+
+              ecma_char_t next_character = lit_utf8_iterator_peek_next (&replace_iterator);
+
+              if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
+              {
+                uint32_t full_index = index * 10 + (uint32_t) (next_character - LIT_CHAR_0);
+                if (full_index > 0 && full_index < match_length)
+                {
+                  index = match_length;
+                }
+              }
+
+              lit_utf8_iterator_decr (&replace_iterator);
+
+              if (index == 0)
+              {
+                action = LIT_CHAR_NULL;
+              }
+            }
           }
           else if (action != LIT_CHAR_AMPERSAND
                    && action != LIT_CHAR_GRAVE_ACCENT
-                   && action != LIT_CHAR_SINGLE_QUOTE
-                   && !(action >= LIT_CHAR_1 && action <= LIT_CHAR_9))
+                   && action != LIT_CHAR_SINGLE_QUOTE)
           {
             action = LIT_CHAR_NULL;
           }
@@ -1159,14 +1192,23 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
           if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
           {
             index = (uint32_t) (action - LIT_CHAR_0);
-            action = lit_utf8_iterator_peek_next (&replace_iterator);
-            if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
+
+            if ((match_length > 10 || index == 0)
+                && !lit_utf8_iterator_is_eos (&replace_iterator))
             {
-              index = index * 10 + (uint32_t) (action - LIT_CHAR_0);
-              lit_utf8_iterator_incr (&replace_iterator);
-              current_position++;
+              action = lit_utf8_iterator_peek_next (&replace_iterator);
+              if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
+              {
+                uint32_t full_index = index * 10 + (uint32_t) (action - LIT_CHAR_0);
+                if (full_index < match_length)
+                {
+                  index = full_index;
+                  lit_utf8_iterator_incr (&replace_iterator);
+                  current_position++;
+                }
+              }
             }
-            JERRY_ASSERT (index != 0);
+            JERRY_ASSERT (index > 0 && index < match_length);
           }
 
           ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
@@ -1214,6 +1256,9 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       ret_value = ecma_make_normal_completion_value (ecma_make_string_value (result_string_p));
     }
   }
+
+  ECMA_FINALIZE (match_length_value);
+  ecma_deref_ecma_string (length_string_p);
 
   return ret_value;
 } /* ecma_builtin_string_prototype_object_replace_get_string */

@@ -72,6 +72,24 @@ catch (e)
 assert ("\ud801\udc00".replace("\ud801", "#") === "#\udc00");
 assert ("\ud801\udc00".replace("\udc00", "#") === "\ud801#");
 
+var global = this;
+
+function case1()
+{
+  assert(this === global);
+  return "y";
+}
+
+function case2()
+{
+  "use strict";
+  assert(this === undefined);
+  return "y";
+}
+
+assert ("x".replace("x", case1) === "y");
+assert ("x".replace("x", case2) === "y");
+
 var regexp = /r/g;
 
 Object.defineProperty(regexp, "lastIndex", {

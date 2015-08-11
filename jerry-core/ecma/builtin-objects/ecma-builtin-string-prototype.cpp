@@ -1045,7 +1045,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
       ECMA_TRY_CATCH (result_value,
                       ecma_op_function_call_array_args (context_p->replace_function_p,
-                                                        context_p->regexp_or_search_string,
+                                                        ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                                                         arguments_list,
                                                         match_length + 2),
                       ret_value);

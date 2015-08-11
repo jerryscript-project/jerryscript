@@ -17,8 +17,14 @@ assert ("abcabc".replace("bc", ":") === "a:abc");
 assert ("hello".replace("", ":") === ":hello");
 
 assert ("xabcxabcx".replace (/abc/g, "[$&][$`][$']") === "x[abc][x][xabcx]x[abc][xabcx][x]x");
-assert ("abc".replace (/a(b)c|d()/, "[$1][$01][$2][$02][$99][$123][$012]") === "[b][b][][][][3][b2]");
+assert ("abc".replace (/a(b)c|d()/, "[$1][$01][$2][$02][$99][$123][$012]") === "[b][b][][][$99][b23][b2]");
 assert ("abc".replace("abc", "$x$$5$0$00$") === "$x$5$0$00$");
+
+assert ("#x#".replace("x", "$1") === "#$1#");
+assert ("#x#".replace(/(x)/, "$1$2") === "#x$2#");
+assert ("#x#".replace(/(x)/, "$01$02$11$20") === "#x$02x1$20#");
+assert ("#xy#".replace(/(x)((((((((((y))))))))))/, "$07|$20|$11|$12|$110|$99|$011") === "#y|y0|y|x2|y0|y9|x1#");
+assert ("#xy#".replace(/(x)((((((((y))))))))/, "$00|$01|$011|$090|$10|$99") === "#$00|x|x1|y0|x0|y9#");
 
 assert ("a true true story".replace(true) === "a undefined true story");
 assert ("1234".replace(23, 32) === "1324");

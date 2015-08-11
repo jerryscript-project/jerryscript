@@ -3026,6 +3026,12 @@ preparse_scope (bool is_global)
         }
 
         skip_newlines ();
+
+        if (!token_is (TOK_COMMA)
+            && !token_is (TOK_EQ))
+        {
+          is_in_var_declaration_list = false;
+        }
       }
       else if (is_in_var_declaration_list)
       {

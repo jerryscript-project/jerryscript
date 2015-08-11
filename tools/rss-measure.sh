@@ -38,7 +38,7 @@ function print_entry()
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
 
-  eval "echo -e \"\$$OUT\"" | awk -v entry="$1" '{ if ($1 != "") { n += 1; if ($1 > max) { max = $1; } } } END { if (n == 0) { exit; }; printf "%s:%8d Kb\n", entry,  max; }';
+  eval "echo -e \"\$$OUT\"" | awk -v entry="$1" '{ if ($1 != "") { n += 1; if ($1 > max) { max = $1; } } } END { if (n == 0) { exit; }; printf "%d\n",  max; }';
 }
 
 function run_test()
@@ -52,6 +52,8 @@ function run_test()
 
     sleep $SLEEP
   done
+
+  wait "$PID" || exit 1
 }
 
 run_test

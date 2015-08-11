@@ -172,7 +172,7 @@ dump_asm (vm_instr_counter_t oc, vm_instr_t instr)
   uint8_t opcode_id = instr.op_idx;
   printf ("%3d: %20s ", oc, opcode_names[opcode_id]);
 
-  for (i = 1; i < opcode_sizes[opcode_id]; i++)
+  for (i = 1; i <= opcode_sizes[opcode_id]; i++)
   {
     printf ("%4d ", ((raw_instr *) &instr)->uids[i]);
   }

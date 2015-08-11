@@ -38,7 +38,7 @@ catch (e)
 }
 var x = y;
 
-do var z while (0);
+do var z; while (0);
 
 for (var i, j = function () {var p;}; i === undefined; i = null)
 {

@@ -2684,6 +2684,10 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     {
       skip_newlines ();
     }
+    else
+    {
+      insert_semicolon ();
+    }
     return;
   }
   if (is_keyword (KW_FUNCTION))

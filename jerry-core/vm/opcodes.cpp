@@ -1810,6 +1810,7 @@ vm_read_instr_counter_from_meta (opcode_meta_type expected_type, /**< expected t
         vm_instr_t getop_##opcode_name (void) \
         { \
           vm_instr_t instr; \
+          memset (&instr, 0, sizeof(instr)); \
           instr.op_idx = VM_OP_##opcode_name_uppercase; \
           return instr; \
         }
@@ -1817,6 +1818,7 @@ vm_read_instr_counter_from_meta (opcode_meta_type expected_type, /**< expected t
         vm_instr_t getop_##opcode_name (idx_t arg1_v) \
         { \
           vm_instr_t instr; \
+          memset (&instr, 0, sizeof(instr)); \
           instr.op_idx = VM_OP_##opcode_name_uppercase; \
           instr.data.opcode_name.arg1 = arg1_v; \
           return instr; \
@@ -1825,6 +1827,7 @@ vm_read_instr_counter_from_meta (opcode_meta_type expected_type, /**< expected t
         vm_instr_t getop_##opcode_name (idx_t arg1_v, idx_t arg2_v) \
         { \
           vm_instr_t instr; \
+          memset (&instr, 0, sizeof(instr)); \
           instr.op_idx = VM_OP_##opcode_name_uppercase; \
           instr.data.opcode_name.arg1 = arg1_v; \
           instr.data.opcode_name.arg2 = arg2_v; \

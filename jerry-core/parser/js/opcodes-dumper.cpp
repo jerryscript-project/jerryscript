@@ -2507,31 +2507,36 @@ dump_throw (operand op)
   dump_single_address (getop_throw_value, op);
 }
 
+/**
+ * Checks if variable is already declared
+ *
+ * @return true if variable declaration already exists
+ *         false otherwise
+ */
 bool
-dumper_variable_declaration_exists (lit_cpointer_t lit_id)
+dumper_variable_declaration_exists (lit_cpointer_t lit_id) /**< literal which holds variable's name */
 {
-  for (vm_instr_counter_t oc = (vm_instr_counter_t) (serializer_get_current_instr_counter () - 1);
-       oc > 0; oc--)
+  vm_instr_counter_t var_decls_count = (vm_instr_counter_t) serializer_get_current_var_decls_counter ();
+  for (vm_instr_counter_t oc = (vm_instr_counter_t) (0); oc < var_decls_count; oc++)
   {
-    const op_meta var_decl_op_meta = serializer_get_op_meta (oc);
-    if (var_decl_op_meta.op.op_idx != VM_OP_VAR_DECL)
-    {
-      break;
-    }
+    const op_meta var_decl_op_meta = serializer_get_var_decl (oc);
     if (var_decl_op_meta.lit_id[0].packed_value == lit_id.packed_value)
     {
       return true;
     }
   }
   return false;
-}
+} /* dumper_variable_declaration_exists */
 
+/**
+ * Dump instruction designating variable declaration
+ */
 void
-dump_variable_declaration (lit_cpointer_t lit_id)
+dump_variable_declaration (lit_cpointer_t lit_id) /**< literal which holds variable's name */
 {
   const vm_instr_t instr = getop_var_decl (LITERAL_TO_REWRITE);
-  serializer_dump_op_meta (create_op_meta_100 (instr, lit_id));
-}
+  serializer_dump_var_decl (create_op_meta_100 (instr, lit_id));
+} /* dump_variable_declaration */
 
 /**
  * Dump template of 'meta' instruction for scope's code flags.

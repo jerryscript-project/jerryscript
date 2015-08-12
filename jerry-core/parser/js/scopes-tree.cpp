@@ -49,21 +49,44 @@ vm_instr_counter_t
 scopes_tree_instrs_num (scopes_tree t)
 {
   assert_tree (t);
-  return t->instrs_num;
+  return t->instrs_count;
 }
+
+/**
+ * Get number of variable declarations in the scope
+ *
+ * @return number of variable declarations
+ */
+vm_instr_counter_t
+scopes_tree_var_decls_num (scopes_tree t) /**< scope */
+{
+  assert_tree (t);
+  return t->var_decls_cout;
+} /* scopes_tree_var_decls_num */
 
 void
 scopes_tree_add_op_meta (scopes_tree tree, op_meta op)
 {
   assert_tree (tree);
-  linked_list_set_element (tree->instrs, tree->instrs_num++, &op);
+  linked_list_set_element (tree->instrs, tree->instrs_count++, &op);
 }
+
+/**
+ * Add variable declaration to a scope
+ */
+void
+scopes_tree_add_var_decl (scopes_tree tree, /**< scope, to which variable declaration is added */
+                          op_meta op) /**< variable declaration instruction */
+{
+  assert_tree (tree);
+  linked_list_set_element (tree->var_decls, tree->var_decls_cout++, &op);
+} /* scopes_tree_add_var_decl */
 
 void
 scopes_tree_set_op_meta (scopes_tree tree, vm_instr_counter_t oc, op_meta op)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->instrs_num);
+  JERRY_ASSERT (oc < tree->instrs_count);
   linked_list_set_element (tree->instrs, oc, &op);
 }
 
@@ -71,23 +94,37 @@ void
 scopes_tree_set_instrs_num (scopes_tree tree, vm_instr_counter_t oc)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->instrs_num);
-  tree->instrs_num = oc;
+  JERRY_ASSERT (oc < tree->instrs_count);
+  tree->instrs_count = oc;
 }
 
 op_meta
 scopes_tree_op_meta (scopes_tree tree, vm_instr_counter_t oc)
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->instrs_num);
+  JERRY_ASSERT (oc < tree->instrs_count);
   return *(op_meta *) linked_list_element (tree->instrs, oc);
 }
+
+/**
+ * Get variable declaration for the specified scope
+ *
+ * @return instruction, declaring a variable
+ */
+op_meta
+scopes_tree_var_decl (scopes_tree tree, /**< scope, from which variable declaration is retrieved */
+                      vm_instr_counter_t oc) /**< number of variable declaration in the scope */
+{
+  assert_tree (tree);
+  JERRY_ASSERT (oc < tree->var_decls_cout);
+  return *(op_meta *) linked_list_element (tree->var_decls, oc);
+} /* scopes_tree_var_decl */
 
 vm_instr_counter_t
 scopes_tree_count_instructions (scopes_tree t)
 {
   assert_tree (t);
-  vm_instr_counter_t res = t->instrs_num;
+  vm_instr_counter_t res = (vm_instr_counter_t) (t->instrs_count + t->var_decls_cout);
   for (uint8_t i = 0; i < t->t.children_num; i++)
   {
     res = (vm_instr_counter_t) (
@@ -212,24 +249,37 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
   }
 }
 
+/**
+ * Get instruction from instruction list
+ *
+ * @return instruction at specified position
+ */
 static op_meta *
-extract_op_meta (scopes_tree tree, vm_instr_counter_t instr_pos)
+extract_op_meta (linked_list instr_list, /**< instruction list */
+                 vm_instr_counter_t instr_pos) /**< position inside the list */
 {
-  return (op_meta *) linked_list_element (tree->instrs, instr_pos);
-}
+  return (op_meta *) linked_list_element (instr_list, instr_pos);
+} /* extract_op_meta */
 
+/**
+ * Add instruction to an instruction list
+ *
+ * @return generated instruction
+ */
 static vm_instr_t
-generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_table *lit_ids)
+generate_instr (linked_list instr_list, /**< instruction list */
+                vm_instr_counter_t instr_pos, /**< position where to generate an instruction */
+                lit_id_hash_table *lit_ids) /**< hash table binding operand identifiers and literals */
 {
   start_new_block_if_necessary ();
-  op_meta *om = extract_op_meta (tree, instr_pos);
+  op_meta *om_p = extract_op_meta (instr_list, instr_pos);
   /* Now we should change uids of instructions.
      Since different instructions has different literals/tmps in different places,
      we should change only them.
      For each case possible literal positions are shown as 0xYYY literal,
      where Y is set to '1' when there is a possible literal in this position,
      and '0' otherwise.  */
-  switch (om->op.op_idx)
+  switch (om_p->op.op_idx)
   {
     case VM_OP_PROP_GETTER:
     case VM_OP_PROP_SETTER:
@@ -256,7 +306,7 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
     case VM_OP_MULTIPLICATION:
     case VM_OP_REMAINDER:
     {
-      change_uid (om, lit_ids, 0x111);
+      change_uid (om_p, lit_ids, 0x111);
       break;
     }
     case VM_OP_CALL_N:
@@ -273,18 +323,18 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
     case VM_OP_UNARY_PLUS:
     case VM_OP_UNARY_MINUS:
     {
-      change_uid (om, lit_ids, 0x110);
+      change_uid (om_p, lit_ids, 0x110);
       break;
     }
     case VM_OP_ASSIGNMENT:
     {
-      switch (om->op.data.assignment.type_value_right)
+      switch (om_p->op.data.assignment.type_value_right)
       {
         case OPCODE_ARG_TYPE_SIMPLE:
         case OPCODE_ARG_TYPE_SMALLINT:
         case OPCODE_ARG_TYPE_SMALLINT_NEGATE:
         {
-          change_uid (om, lit_ids, 0x100);
+          change_uid (om_p, lit_ids, 0x100);
           break;
         }
         case OPCODE_ARG_TYPE_NUMBER:
@@ -293,7 +343,7 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
         case OPCODE_ARG_TYPE_STRING:
         case OPCODE_ARG_TYPE_VARIABLE:
         {
-          change_uid (om, lit_ids, 0x101);
+          change_uid (om_p, lit_ids, 0x101);
           break;
         }
       }
@@ -313,7 +363,7 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
     case VM_OP_VAR_DECL:
     case VM_OP_RETVAL:
     {
-      change_uid (om, lit_ids, 0x100);
+      change_uid (om_p, lit_ids, 0x100);
       break;
     }
     case VM_OP_RET:
@@ -322,24 +372,24 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
     case VM_OP_JMP_DOWN:
     case VM_OP_REG_VAR_DECL:
     {
-      change_uid (om, lit_ids, 0x000);
+      change_uid (om_p, lit_ids, 0x000);
       break;
     }
     case VM_OP_META:
     {
-      switch (om->op.data.meta.type)
+      switch (om_p->op.data.meta.type)
       {
         case OPCODE_META_TYPE_VARG_PROP_DATA:
         case OPCODE_META_TYPE_VARG_PROP_GETTER:
         case OPCODE_META_TYPE_VARG_PROP_SETTER:
         {
-          change_uid (om, lit_ids, 0x011);
+          change_uid (om_p, lit_ids, 0x011);
           break;
         }
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
         {
-          change_uid (om, lit_ids, 0x010);
+          change_uid (om_p, lit_ids, 0x010);
           break;
         }
         case OPCODE_META_TYPE_UNDEFINED:
@@ -351,23 +401,27 @@ generate_instr (scopes_tree tree, vm_instr_counter_t instr_pos, lit_id_hash_tabl
         case OPCODE_META_TYPE_CALL_SITE_INFO:
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
-          change_uid (om, lit_ids, 0x000);
+          change_uid (om_p, lit_ids, 0x000);
           break;
         }
       }
       break;
     }
   }
-  return om->op;
-}
+  return om_p->op;
+} /* generate_instr */
 
+/**
+ * Count number of literals in instruction which were not seen previously
+ *
+ * @return number of new literals
+ */
 static idx_t
-count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
+count_new_literals_in_instr (op_meta *om_p) /**< instruction */
 {
   start_new_block_if_necessary ();
   idx_t current_uid = next_uid;
-  op_meta *om = extract_op_meta (tree, instr_pos);
-  switch (om->op.op_idx)
+  switch (om_p->op.op_idx)
   {
     case VM_OP_PROP_GETTER:
     case VM_OP_PROP_SETTER:
@@ -394,7 +448,7 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
     case VM_OP_MULTIPLICATION:
     case VM_OP_REMAINDER:
     {
-      insert_uids_to_lit_id_map (om, 0x111);
+      insert_uids_to_lit_id_map (om_p, 0x111);
       break;
     }
     case VM_OP_CALL_N:
@@ -411,18 +465,18 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
     case VM_OP_UNARY_PLUS:
     case VM_OP_UNARY_MINUS:
     {
-      insert_uids_to_lit_id_map (om, 0x110);
+      insert_uids_to_lit_id_map (om_p, 0x110);
       break;
     }
     case VM_OP_ASSIGNMENT:
     {
-      switch (om->op.data.assignment.type_value_right)
+      switch (om_p->op.data.assignment.type_value_right)
       {
         case OPCODE_ARG_TYPE_SIMPLE:
         case OPCODE_ARG_TYPE_SMALLINT:
         case OPCODE_ARG_TYPE_SMALLINT_NEGATE:
         {
-          insert_uids_to_lit_id_map (om, 0x100);
+          insert_uids_to_lit_id_map (om_p, 0x100);
           break;
         }
         case OPCODE_ARG_TYPE_NUMBER:
@@ -431,7 +485,7 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
         case OPCODE_ARG_TYPE_STRING:
         case OPCODE_ARG_TYPE_VARIABLE:
         {
-          insert_uids_to_lit_id_map (om, 0x101);
+          insert_uids_to_lit_id_map (om_p, 0x101);
           break;
         }
       }
@@ -450,7 +504,7 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
     case VM_OP_VAR_DECL:
     case VM_OP_RETVAL:
     {
-      insert_uids_to_lit_id_map (om, 0x100);
+      insert_uids_to_lit_id_map (om_p, 0x100);
       break;
     }
     case VM_OP_RET:
@@ -459,24 +513,24 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
     case VM_OP_JMP_DOWN:
     case VM_OP_REG_VAR_DECL:
     {
-      insert_uids_to_lit_id_map (om, 0x000);
+      insert_uids_to_lit_id_map (om_p, 0x000);
       break;
     }
     case VM_OP_META:
     {
-      switch (om->op.data.meta.type)
+      switch (om_p->op.data.meta.type)
       {
         case OPCODE_META_TYPE_VARG_PROP_DATA:
         case OPCODE_META_TYPE_VARG_PROP_GETTER:
         case OPCODE_META_TYPE_VARG_PROP_SETTER:
         {
-          insert_uids_to_lit_id_map (om, 0x011);
+          insert_uids_to_lit_id_map (om_p, 0x011);
           break;
         }
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER:
         {
-          insert_uids_to_lit_id_map (om, 0x010);
+          insert_uids_to_lit_id_map (om_p, 0x010);
           break;
         }
         case OPCODE_META_TYPE_UNDEFINED:
@@ -488,7 +542,7 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
         case OPCODE_META_TYPE_CALL_SITE_INFO:
         case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
         {
-          insert_uids_to_lit_id_map (om, 0x000);
+          insert_uids_to_lit_id_map (om_p, 0x000);
           break;
         }
       }
@@ -496,16 +550,23 @@ count_new_literals_in_instr (scopes_tree tree, vm_instr_counter_t instr_pos)
     }
   }
   return (idx_t) (next_uid - current_uid);
-}
+} /* count_new_literals_in_instr */
 
-/* Before filling literal indexes 'hash' table we shall initiate it with number of neccesary literal indexes.
-   Since bytecode is divided into blocks and id of the block is a part of hash key, we shall divide bytecode
-   into blocks and count unique literal indexes used in each block. */
+/**
+ * Count slots needed for a scope's hash table
+ *
+ * Before filling literal indexes 'hash' table we shall initiate it with number of neccesary literal indexes.
+ * Since bytecode is divided into blocks and id of the block is a part of hash key, we shall divide bytecode
+ *  into blocks and count unique literal indexes used in each block.
+ *
+ * @return total number of literals in scope
+ */
 size_t
-scopes_tree_count_literals_in_blocks (scopes_tree tree)
+scopes_tree_count_literals_in_blocks (scopes_tree tree) /**< scope */
 {
   assert_tree (tree);
   size_t result = 0;
+
   if (lit_id_to_uid != null_hash)
   {
     hash_table_free (lit_id_to_uid);
@@ -517,79 +578,99 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree)
   assert_tree (tree);
   vm_instr_counter_t instr_pos;
   bool header = true;
-  for (instr_pos = 0; instr_pos < tree->instrs_num; instr_pos++)
+  for (instr_pos = 0; instr_pos < tree->instrs_count; instr_pos++)
   {
-    op_meta *om = extract_op_meta (tree, instr_pos);
-    if (om->op.op_idx != VM_OP_VAR_DECL
-        && om->op.op_idx != VM_OP_META && !header)
+    op_meta *om_p = extract_op_meta (tree->instrs, instr_pos);
+    if (om_p->op.op_idx != VM_OP_META && !header)
     {
       break;
     }
-    if (om->op.op_idx == VM_OP_REG_VAR_DECL)
+    if (om_p->op.op_idx == VM_OP_REG_VAR_DECL)
     {
       header = false;
     }
-    result += count_new_literals_in_instr (tree, instr_pos);
+    result += count_new_literals_in_instr (om_p);
   }
+
+  for (vm_instr_counter_t var_decl_pos = 0; var_decl_pos < tree->var_decls_cout; var_decl_pos++)
+  {
+    op_meta *om_p = extract_op_meta (tree->var_decls, var_decl_pos);
+    result += count_new_literals_in_instr (om_p);
+  }
+
   for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
   {
     result += scopes_tree_count_literals_in_blocks (*(scopes_tree *) linked_list_element (tree->t.children, child_id));
   }
-  for (; instr_pos < tree->instrs_num; instr_pos++)
+
+  for (; instr_pos < tree->instrs_count; instr_pos++)
   {
-    result += count_new_literals_in_instr (tree, instr_pos);
+    op_meta *om_p = extract_op_meta (tree->instrs, instr_pos);
+    result += count_new_literals_in_instr (om_p);
   }
 
   return result;
-}
+} /* scopes_tree_count_literals_in_blocks */
 
-/* This function performs functions hoisting.
-
-   Each scope consists of four parts:
-   1) Header with 'use strict' marker and reg_var_decl opcode
-   2) Variable declarations, dumped by the preparser
-   3) Function declarations
-   4) Computational code
-
-   Header and var_decls are dumped first,
-   then we shall recursively dump function declaration,
-   and finally, other instructions.
-
-   For each instructions block (size of block is defined in bytecode-data.h)
-   literal indexes 'hash' table is filled. */
+/*
+ * This function performs functions hoisting.
+ *
+ *  Each scope consists of four parts:
+ *  1) Header with 'use strict' marker and reg_var_decl opcode
+ *  2) Variable declarations, dumped by the preparser
+ *  3) Function declarations
+ *  4) Computational code
+ *
+ *  Header and var_decls are dumped first,
+ *  then we shall recursively dump function declaration,
+ *  and finally, other instructions.
+ *
+ *  For each instructions block (size of block is defined in bytecode-data.h)
+ *  literal indexes 'hash' table is filled.
+ */
 static void
-merge_subscopes (scopes_tree tree, vm_instr_t *data, lit_id_hash_table *lit_ids)
+merge_subscopes (scopes_tree tree, /**< scopes tree to merge */
+                 vm_instr_t *data_p, /**< instruction array, where the scopes are merged to */
+                 lit_id_hash_table *lit_ids_p) /**< literal indexes 'hash' table */
 {
   assert_tree (tree);
-  JERRY_ASSERT (data);
+  JERRY_ASSERT (data_p);
   vm_instr_counter_t instr_pos;
   bool header = true;
-  for (instr_pos = 0; instr_pos < tree->instrs_num; instr_pos++)
+  for (instr_pos = 0; instr_pos < tree->instrs_count; instr_pos++)
   {
-    op_meta *om = extract_op_meta (tree, instr_pos);
-    if (om->op.op_idx != VM_OP_VAR_DECL
-        && om->op.op_idx != VM_OP_META && !header)
+    op_meta *om_p = extract_op_meta (tree->instrs, instr_pos);
+    if (om_p->op.op_idx != VM_OP_VAR_DECL
+        && om_p->op.op_idx != VM_OP_META && !header)
     {
       break;
     }
-    if (om->op.op_idx == VM_OP_REG_VAR_DECL)
+    if (om_p->op.op_idx == VM_OP_REG_VAR_DECL)
     {
       header = false;
     }
-    data[global_oc] = generate_instr (tree, instr_pos, lit_ids);
+    data_p[global_oc] = generate_instr (tree->instrs, instr_pos, lit_ids_p);
     global_oc++;
   }
+
+  for (vm_instr_counter_t var_decl_pos = 0; var_decl_pos < tree->var_decls_cout; var_decl_pos++)
+  {
+    data_p[global_oc] = generate_instr (tree->var_decls, var_decl_pos, lit_ids_p);
+    global_oc++;
+  }
+
   for (uint8_t child_id = 0; child_id < tree->t.children_num; child_id++)
   {
     merge_subscopes (*(scopes_tree *) linked_list_element (tree->t.children, child_id),
-                     data, lit_ids);
+                     data_p, lit_ids_p);
   }
-  for (; instr_pos < tree->instrs_num; instr_pos++)
+
+  for (; instr_pos < tree->instrs_count; instr_pos++)
   {
-    data[global_oc] = generate_instr (tree, instr_pos, lit_ids);
+    data_p[global_oc] = generate_instr (tree->instrs, instr_pos, lit_ids_p);
     global_oc++;
   }
-}
+} /* merge_subscopes */
 
 /* Postparser.
    Init literal indexes 'hash' table.
@@ -631,12 +712,36 @@ scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code
   return instrs;
 } /* scopes_tree_raw_data */
 
+/**
+ * Set up a flag, indicating that scope should be executed in strict mode
+ */
 void
-scopes_tree_set_strict_mode (scopes_tree tree, bool strict_mode)
+scopes_tree_set_strict_mode (scopes_tree tree, /**< scope */
+                             bool strict_mode) /**< value of the strict mode flag */
 {
   assert_tree (tree);
-  tree->strict_mode = strict_mode ? 1 : 0;
-}
+  tree->strict_mode = strict_mode;
+} /* scopes_tree_set_strict_mode */
+
+/**
+ * Set up a flag, indicating that "arguments" is used inside a scope
+ */
+void
+scopes_tree_set_arguments_used (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->ref_arguments = true;
+} /* merge_subscopes */
+
+/**
+ * Set up a flag, indicating that "eval" is used inside a scope
+ */
+void
+scopes_tree_set_eval_used (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->ref_eval = true;
+} /* scopes_tree_set_eval_used */
 
 bool
 scopes_tree_strict_mode (scopes_tree tree)
@@ -645,8 +750,13 @@ scopes_tree_strict_mode (scopes_tree tree)
   return (bool) tree->strict_mode;
 }
 
+/**
+ * Initialize a scope
+ *
+ * @return initialized scope
+ */
 scopes_tree
-scopes_tree_init (scopes_tree parent)
+scopes_tree_init (scopes_tree parent) /**< parent scope */
 {
   scopes_tree tree = (scopes_tree) jsp_mm_alloc (sizeof (scopes_tree_int));
   memset (tree, 0, sizeof (scopes_tree_int));
@@ -664,11 +774,15 @@ scopes_tree_init (scopes_tree parent)
     JERRY_ASSERT (*(scopes_tree *) added == tree);
     parent->t.children_num++;
   }
-  tree->instrs_num = 0;
-  tree->strict_mode = 0;
+  tree->instrs_count = 0;
+  tree->strict_mode = false;
+  tree->ref_eval = false;
+  tree->ref_arguments = false;
   tree->instrs = linked_list_init (sizeof (op_meta));
+  tree->var_decls_cout = 0;
+  tree->var_decls = linked_list_init (sizeof (op_meta));
   return tree;
-}
+} /* scopes_tree_init */
 
 void
 scopes_tree_free (scopes_tree tree)
@@ -683,5 +797,6 @@ scopes_tree_free (scopes_tree tree)
     linked_list_free (tree->t.children);
   }
   linked_list_free (tree->instrs);
+  linked_list_free (tree->var_decls);
   jsp_mm_free (tree);
 }

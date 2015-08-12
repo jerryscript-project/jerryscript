@@ -39,12 +39,19 @@ typedef struct tree_header
   uint8_t children_num;
 } tree_header;
 
+/**
+ * Structure for holding scope information during parsing
+ */
 typedef struct
 {
-  tree_header t;
-  linked_list instrs;
-  vm_instr_counter_t instrs_num;
-  unsigned strict_mode:1;
+  tree_header t; /**< header */
+  linked_list instrs; /**< instructions */
+  vm_instr_counter_t instrs_count; /**< count of instructions */
+  linked_list var_decls; /**< instructions for variable declarations */
+  uint8_t var_decls_cout; /**< number of instructions for variable declarations */
+  bool strict_mode: 1; /**< flag, indicating that scope's code should be executed in strict mode */
+  bool ref_arguments: 1; /**< flag, indicating that "arguments" variable is used inside the scope */
+  bool ref_eval: 1; /**< flag, indicating that "eval" is used inside the scope */
 } scopes_tree_int;
 
 typedef scopes_tree_int * scopes_tree;
@@ -52,14 +59,19 @@ typedef scopes_tree_int * scopes_tree;
 scopes_tree scopes_tree_init (scopes_tree);
 void scopes_tree_free (scopes_tree);
 vm_instr_counter_t scopes_tree_instrs_num (scopes_tree);
+vm_instr_counter_t scopes_tree_var_decls_num (scopes_tree);
 void scopes_tree_add_op_meta (scopes_tree, op_meta);
+void scopes_tree_add_var_decl (scopes_tree, op_meta);
 void scopes_tree_set_op_meta (scopes_tree, vm_instr_counter_t, op_meta);
 void scopes_tree_set_instrs_num (scopes_tree, vm_instr_counter_t);
 op_meta scopes_tree_op_meta (scopes_tree, vm_instr_counter_t);
+op_meta scopes_tree_var_decl (scopes_tree, vm_instr_counter_t);
 size_t scopes_tree_count_literals_in_blocks (scopes_tree);
 vm_instr_counter_t scopes_tree_count_instructions (scopes_tree);
 vm_instr_t *scopes_tree_raw_data (scopes_tree, uint8_t *, size_t, lit_id_hash_table *);
 void scopes_tree_set_strict_mode (scopes_tree, bool);
+void scopes_tree_set_arguments_used (scopes_tree);
+void scopes_tree_set_eval_used (scopes_tree);
 bool scopes_tree_strict_mode (scopes_tree);
 
 #endif /* SCOPES_TREE_H */

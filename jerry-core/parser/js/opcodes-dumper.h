@@ -33,6 +33,8 @@ public:
     EMPTY, /**< empty operand */
     LITERAL, /**< operand contains literal value */
     TMP, /**< operand contains byte-code register index */
+    IDX_CONST, /**< operand contains an integer constant that fits vm_idx_t */
+    UNKNOWN, /**< operand, representing unknown value that would be rewritten later */
     UNINITIALIZED /**< uninitialized operand
                    *
                    *   Note:
@@ -64,6 +66,37 @@ public:
 
     return ret;
   } /* make_empty_operand */
+
+  /**
+   * Construct unknown operand
+   *
+   * @return constructed operand
+   */
+  static jsp_operand_t
+  make_unknown_operand (void)
+  {
+    jsp_operand_t ret;
+
+    ret._type = jsp_operand_t::UNKNOWN;
+
+    return ret;
+  } /* make_unknown_operand */
+
+  /**
+   * Construct idx-constant operand
+   *
+   * @return constructed operand
+   */
+  static jsp_operand_t
+  make_idx_const_operand (vm_idx_t cnst) /**< integer in vm_idx_t range */
+  {
+    jsp_operand_t ret;
+
+    ret._type = jsp_operand_t::IDX_CONST;
+    ret._data.idx_const = cnst;
+
+    return ret;
+  } /* make_idx_const_operand */
 
   /**
    * Construct literal operand
@@ -123,6 +156,32 @@ public:
 
     return (_type == jsp_operand_t::EMPTY);
   } /* is_empty_operand */
+
+  /**
+   * Is it unknown operand?
+   *
+   * @return true / false
+   */
+  bool
+  is_unknown_operand (void) const
+  {
+    JERRY_ASSERT (_type != jsp_operand_t::UNINITIALIZED);
+
+    return (_type == jsp_operand_t::UNKNOWN);
+  } /* is_unknown_operand */
+
+  /**
+   * Is it idx-constant operand?
+   *
+   * @return true / false
+   */
+  bool
+  is_idx_const_operand (void) const
+  {
+    JERRY_ASSERT (_type != jsp_operand_t::UNINITIALIZED);
+
+    return (_type == jsp_operand_t::IDX_CONST);
+  } /* is_idx_const_operand */
 
   /**
    * Is it byte-code register operand?
@@ -204,9 +263,22 @@ public:
     }
   } /* get_literal */
 
+  /**
+   * Get constant from idx-constant operand
+   *
+   * @return an integer
+   */
+  vm_idx_t
+  get_idx_const (void) const
+  {
+    JERRY_ASSERT (is_idx_const_operand ());
+
+    return _data.idx_const;
+  } /* get_idx_const */
 private:
   union
   {
+    vm_idx_t idx_const; /**< idx constant value (for jsp_operand_t::IDX_CONST) */
     vm_idx_t uid; /**< byte-code register index (for jsp_operand_t::TMP) */
     lit_cpointer_t lit_id; /**< literal (for jsp_operand_t::LITERAL) */
   } _data;

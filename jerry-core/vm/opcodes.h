@@ -297,15 +297,4 @@ typedef enum
 
 typedef ecma_completion_value_t (*opfunc) (vm_instr_t, vm_frame_ctx_t *);
 
-#define VM_OP_0(opcode_name, opcode_name_uppercase) \
-        vm_instr_t getop_##opcode_name (void);
-#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
-        vm_instr_t getop_##opcode_name (vm_idx_t);
-#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
-        vm_instr_t getop_##opcode_name (vm_idx_t, vm_idx_t);
-#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
-        vm_instr_t getop_##opcode_name (vm_idx_t, vm_idx_t, vm_idx_t);
-
-#include "vm-opcodes.inc.h"
-
 #endif /* OPCODES_H */

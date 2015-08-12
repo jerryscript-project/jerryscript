@@ -24,10 +24,17 @@
 #include "lit-id-hash-table.h"
 #include "lit-literal.h"
 
+/**
+ * Intermediate instruction descriptor that additionally to byte-code instruction
+ * holds information about literals, associated with corresponding arguments
+ * of the instruction.
+ */
 typedef struct
 {
-  lit_cpointer_t lit_id[3];
-  vm_instr_t op;
+  lit_cpointer_t lit_id[3]; /**< literals, corresponding to arguments
+                             *   (NOT_A_LITERAL - if not literal is associated
+                             *   with corresponding argument) */
+  vm_instr_t op; /**< byte-code instruction */
 } op_meta;
 
 typedef struct tree_header

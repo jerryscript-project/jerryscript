@@ -49,6 +49,49 @@ instrs_equal (const vm_instr_t *instrs1, vm_instr_t *instrs2, uint16_t size)
   return true;
 }
 
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (void) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = VM_IDX_EMPTY; \
+          instr.data.raw_args[1] = VM_IDX_EMPTY; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg_1, arg1_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = VM_IDX_EMPTY; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg_1, arg1_type, arg_2, arg2_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v, vm_idx_t arg2_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = arg2_v; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg_1, arg1_type, arg_2, arg2_type, arg3_name, arg3_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v, vm_idx_t arg2_v, vm_idx_t arg3_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = arg2_v; \
+          instr.data.raw_args[2] = arg3_v; \
+          return instr; \
+        }
+
+#include "vm-opcodes.inc.h"
+
 /**
  * Unit test's main function.
  */

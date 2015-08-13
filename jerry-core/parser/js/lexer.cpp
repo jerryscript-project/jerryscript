@@ -980,9 +980,10 @@ lexer_parse_number (void)
       const lit_utf8_byte_t *fp_buf_p = TOK_START ();
       /* token is constructed at end of function */
 
-      for (i = 0; i < tok_length; i++)
+      ecma_number_t mult = 1.0f;
+      for (i = tok_length; i > 0; i--, mult *= 10)
       {
-        fp_res = fp_res * 10 + (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i]);
+        fp_res += (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i - 1]) * mult;
       }
     }
   }

@@ -70,7 +70,7 @@ ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument
   }
   else
   {
-    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_LOCAL);
+    ret_value = ecma_date_value_to_string (*prim_num_p);
   }
 
   ECMA_FINALIZE (prim_value);
@@ -1136,7 +1136,7 @@ ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argu
   }
   else
   {
-    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_UTC);
+    ret_value = ecma_date_value_to_utc_string (*prim_num_p);
   }
 
   ECMA_FINALIZE (prim_value);
@@ -1170,7 +1170,7 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
   }
   else
   {
-    ret_value = ecma_date_value_to_string (*prim_num_p, ECMA_DATE_UTC);
+    ret_value = ecma_date_value_to_iso_string (*prim_num_p);
   }
 
   ECMA_FINALIZE (prim_value);

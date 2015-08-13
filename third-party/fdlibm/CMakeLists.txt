@@ -28,6 +28,13 @@ set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-error=maybe-uninitialized
 set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-error=unused-but-set-variable")
 set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-error=unused-variable")
 set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-error=conversion")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-sign-conversion")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-sign-compare")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-parentheses")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-maybe-uninitialized")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-unknown-pragmas")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-unused-but-set-variable")
+set(COMPILE_FLAGS_FDLIBM "${COMPILE_FLAGS_FDLIBM} -Wno-unused-variable")
 
 # Include directories
 set(INCLUDE_FDLIBM ${CMAKE_SOURCE_DIR}/third-party/fdlibm/include)

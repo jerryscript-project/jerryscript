@@ -78,8 +78,8 @@ ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_array_prototype_object_some, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_array_prototype_object_for_each, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_MAP, ecma_builtin_array_prototype_object_map, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2, 1)
-ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, 2, 1)
-ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, NON_FIXED, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

@@ -76,3 +76,13 @@ assert (long_array.reduceRight(func,10) === 11);
 
 long_array[10000] = 1;
 assert (long_array.reduceRight(func,10) === 12);
+
+var accessed = false;
+function callbackfn(prevVal, curVal, idx, obj) {
+    accessed = true;
+    return typeof prevVal === "undefined";
+}
+
+var obj = { 0: 11, length: 1 };
+
+assert (Array.prototype.reduceRight.call(obj, callbackfn, undefined) === true && accessed);

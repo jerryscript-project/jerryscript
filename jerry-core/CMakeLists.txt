@@ -180,6 +180,7 @@ project (JerryCore CXX C ASM)
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_CORE})
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_FDLIBM})
    target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+   target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 
    if("${BUILD_MODE}" STREQUAL "UNITTESTS")
     target_compile_definitions(${TARGET_NAME}.jerry-core INTERFACE ${DEFINES_JERRY})

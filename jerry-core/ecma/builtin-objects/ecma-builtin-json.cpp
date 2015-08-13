@@ -15,6 +15,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -597,34 +598,15 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
       bool parse_comma = false;
       uint32_t length = 0;
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
-      ecma_object_t *array_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
-#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
-      ecma_object_t *array_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+      ecma_completion_value_t array_construction = ecma_op_create_array_object (NULL, 0, false);
+      JERRY_ASSERT (ecma_is_completion_value_normal (array_construction));
 
-      ecma_object_t *array_p = ecma_create_object (array_prototype_p, true, ECMA_OBJECT_TYPE_ARRAY);
-      ecma_deref_object (array_prototype_p);
-
-      ecma_property_t *class_prop_p = ecma_create_internal_property (array_p, ECMA_INTERNAL_PROPERTY_CLASS);
-      class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_ARRAY_UL;
+      ecma_object_t *array_p = ecma_get_object_from_value (ecma_get_completion_value_value (array_construction));
 
       while (true)
       {
         if (ecma_builtin_json_check_right_square_token (token_p))
         {
-          ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-          ecma_number_t *length_num_p = ecma_alloc_number ();
-          *length_num_p = ecma_uint32_to_number (length);
-
-          ecma_property_t *length_prop_p = ecma_create_named_data_property (array_p,
-                                                                            length_magic_string_p,
-                                                                            true,
-                                                                            false,
-                                                                            false);
-          ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_num_p));
-          ecma_deref_ecma_string (length_magic_string_p);
-
           return ecma_make_object_value (array_p);
         }
 
@@ -644,13 +626,33 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           break;
         }
 
-        ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (length);
-        ecma_property_t *property_p = ecma_create_named_data_property (array_p, name_p,
-                                                                       true, true, true);
-        ecma_deref_ecma_string (name_p);
+        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+        {
+          prop_desc.is_value_defined = true;
+          prop_desc.value = value;
 
-        ecma_named_data_property_assign_value (array_p, property_p, value);
+          prop_desc.is_writable_defined = true;
+          prop_desc.is_writable = true;
+
+          prop_desc.is_enumerable_defined = true;
+          prop_desc.is_enumerable = true;
+
+          prop_desc.is_configurable_defined = true;
+          prop_desc.is_configurable = true;
+        }
+
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length);
+
+        ecma_completion_value_t completion = ecma_op_object_define_own_property (array_p,
+                                                                                 index_str_p,
+                                                                                 &prop_desc,
+                                                                                 false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+
+        ecma_deref_ecma_string (index_str_p);
+
         ecma_free_value (value, true);
+
         length++;
         parse_comma = true;
       }
@@ -1125,7 +1127,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
     if (ecma_is_completion_value_empty (ret_value))
     {
       /* 9. */
-      ecma_object_t *obj_wrapper_p = ecma_create_object (NULL, true, ECMA_OBJECT_TYPE_GENERAL);
+      ecma_object_t *obj_wrapper_p = ecma_op_create_object_object_noarg ();
       ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
       /* 10. */

@@ -476,7 +476,7 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p __attr_unu
                   ecma_builtin_date_now (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED)),
                   ret_value);
 
-  ret_value = ecma_date_value_to_string (*ecma_get_number_from_value (now_val), ECMA_DATE_LOCAL);
+  ret_value = ecma_date_value_to_string (*ecma_get_number_from_value (now_val));
 
   ECMA_FINALIZE (now_val);
 

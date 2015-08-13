@@ -20,8 +20,8 @@ assert (new Date (2015, 7, 1, 0, Infinity, 0) == "Invalid Date");
 assert (new Date (NaN, 1, 1, 0, 0, 0) == "Invalid Date");
 assert (new Date (2015, NaN, 1, 0, 0, 0) == "Invalid Date");
 assert (new Date (2015, 7, 1, 0, NaN, 0) == "Invalid Date");
-assert (new Date ("2015-02-13") == "2015-02-13T00:00:00.000");
-assert (new Date ("2015-07-08T11:29:05.023") == "2015-07-08T11:29:05.023");
+assert (new Date ("2015-02-13") == "Fri Feb 13 2015 00:00:00 GMT+0000");
+assert (new Date ("2015-07-08T11:29:05.023") == "Wed Jul 08 2015 11:29:05 GMT+0000");
 
 try
 {
@@ -33,6 +33,16 @@ catch (e)
   assert (e instanceof TypeError);
   assert (e.message === "Incompatible type");
 }
+
+var date = new Date(0);
+assert (date.toString() === "Thu Jan 01 1970 00:00:00 GMT+0000");
+assert (date.toUTCString() === "Thu, 01 Jan 1970 00:00:00 GMT");
+assert (date.toISOString() === "1970-01-01T00:00:00.000Z");
+
+date = new Date("2015-08-12T09:40:20.000Z")
+assert (date.toString() === "Wed Aug 12 2015 09:40:20 GMT+0000");
+assert (date.toUTCString() === "Wed, 12 Aug 2015 09:40:20 GMT");
+assert (date.toISOString() === "2015-08-12T09:40:20.000Z");
 
 assert (new Date (NaN).toDateString () == "Invalid Date");
 assert (new Date ("2015-02-13").toDateString () == "2015-02-13");
@@ -100,8 +110,8 @@ catch (e)
 }
 
 assert (new Date (NaN).toUTCString () == "Invalid Date");
-assert (new Date ("2015-07-16").toUTCString () == "2015-07-16T00:00:00.000Z");
-assert (new Date ("2015-07-16T11:29:05.023").toUTCString () == "2015-07-16T11:29:05.023Z");
+assert (new Date ("2015-07-16").toUTCString () == "Thu, 16 Jul 2015 00:00:00 GMT");
+assert (new Date ("2015-07-16T11:29:05.023").toUTCString () == "Thu, 16 Jul 2015 11:29:05 GMT");
 
 try
 {
@@ -129,7 +139,7 @@ catch (e)
 }
 
 date_time = new Date ("2015-07-08T11:29:05.023").toJSON ();
-assert (new Date (date_time) == "2015-07-08T11:29:05.023");
+assert (new Date (date_time).toISOString () == "2015-07-08T11:29:05.023Z");
 
 assert (typeof Date (2015) == "string");
 assert (typeof Date() != typeof (new Date ()));
@@ -138,7 +148,7 @@ assert (Date (2015, 1, 1) == (new Date ()).toString ());
 assert (Date (Number.NaN) == Date ());
 
 // Fixme: remove these cases when TZA and DST are supported.
-assert (new Date ("2015-07-08T11:29:05.023-02:00").toString() == "2015-07-08T13:29:05.023");
-assert (new Date ("2015-07-08T11:29:05.023-02:00").toLocaleString() == "2015-07-08T13:29:05.023");
+assert (new Date ("2015-07-08T11:29:05.023-02:00").toString () == "Wed Jul 08 2015 13:29:05 GMT+0000");
+assert (new Date ("2015-07-08T11:29:05.023-02:00").toLocaleString () == "Wed Jul 08 2015 13:29:05 GMT+0000");
 
 assert (new Date ("2015-07-08T11:29:05.023Z").toISOString() == "2015-07-08T11:29:05.023Z");

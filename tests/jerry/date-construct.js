@@ -74,5 +74,6 @@ catch (e)
 assert (typeof Date (2015) == "string");
 assert (typeof Date() != typeof (new Date ()));
 assert (Date (Number.NaN) == Date ());
+
 // Fixme: remove this case when Date() gives the current time.
-assert (Date (2015,1,2) == "1970-01-01T00:00:00.000");
+assert (Date (2015,1,2) == "Thu Jan 01 1970 00:00:00 GMT+0000");

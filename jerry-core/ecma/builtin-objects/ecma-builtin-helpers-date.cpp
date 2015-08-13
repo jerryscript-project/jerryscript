@@ -22,6 +22,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "fdlibm-math.h"
+#include "lit-char-helpers.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
@@ -913,37 +914,229 @@ ecma_date_insert_num_with_sep (ecma_string_t **str_p, /**< input/output string *
 } /* ecma_date_insert_num_with_sep */
 
 /**
+ * Common function to copy utf8 characters.
+ *
+ * @return next destination buffer position
+ */
+static lit_utf8_byte_t *
+ecma_date_value_copy_utf8_bytes (lit_utf8_byte_t *dest_p, /**< destination buffer */
+                                 const char *source_p) /**< source buffer */
+{
+  while (*source_p != LIT_CHAR_NULL)
+  {
+    *dest_p++ = (lit_utf8_byte_t) *source_p++;
+  }
+  return dest_p;
+} /* ecma_date_value_copy_utf8_bytes */
+
+/**
+ * Common function to generate fixed width, right aligned decimal numbers.
+ *
+ * @return next destination buffer position
+ */
+static lit_utf8_byte_t *
+ecma_date_value_number_to_bytes (lit_utf8_byte_t *dest_p, /**< destination buffer */
+                                 int32_t number, /**< number */
+                                 int32_t width) /**< width */
+{
+  dest_p += width;
+  lit_utf8_byte_t *result_p = dest_p;
+
+  do
+  {
+    dest_p--;
+    *dest_p = (lit_utf8_byte_t) ((number % 10) + (int32_t) LIT_CHAR_0);
+    number /= 10;
+  }
+  while (--width > 0);
+
+  return result_p;
+} /* ecma_date_value_number_to_bytes */
+
+/**
+ * Common function to get the 3 character abbreviation of a week day.
+ *
+ * @return next destination buffer position
+ */
+static lit_utf8_byte_t *
+ecma_date_value_week_day_to_abbreviation (lit_utf8_byte_t *dest_p, /**< destination buffer */
+                                          ecma_number_t datetime_number) /**< datetime */
+{
+  const char *abbreviations_p[8] =
+  {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "---"
+  };
+
+  int32_t day = (int32_t) ecma_date_week_day (datetime_number);
+
+  if (day < 0 || day > 6)
+  {
+    /* Just for safety, it should never happen. */
+    day = 7;
+  }
+
+  return ecma_date_value_copy_utf8_bytes (dest_p, abbreviations_p[day]);
+} /* ecma_date_value_week_day_to_abbreviation */
+
+/**
+ * Common function to get the 3 character abbreviation of a month.
+ *
+ * @return next destination buffer position
+ */
+static lit_utf8_byte_t *
+ecma_date_value_month_to_abbreviation (lit_utf8_byte_t *dest_p, /**< destination buffer */
+                                       ecma_number_t datetime_number) /**< datetime */
+{
+  const char *abbreviations_p[13] =
+  {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "---"
+  };
+
+  int32_t month = (int32_t) ecma_date_month_from_time (datetime_number);
+
+  if (month < 0 || month > 11)
+  {
+    /* Just for safety, it should never happen. */
+    month = 12;
+  }
+
+  return ecma_date_value_copy_utf8_bytes (dest_p, abbreviations_p[(int) month]);
+} /* ecma_date_value_month_to_abbreviation */
+
+/**
+ * The common 17 character long part of ecma_date_value_to_string and ecma_date_value_to_utc_string.
+ *
+ * @return next destination buffer position
+ */
+static lit_utf8_byte_t *
+ecma_date_value_to_string_common (lit_utf8_byte_t *dest_p, /**< destination buffer */
+                                  ecma_number_t datetime_number) /**< datetime */
+{
+  ecma_number_t year = ecma_date_year_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) year, 4);
+  *dest_p++ = LIT_CHAR_SP;
+
+  ecma_number_t hours = ecma_date_hour_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) hours, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t minutes = ecma_date_min_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) minutes, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t seconds = ecma_date_sec_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) seconds, 2);
+
+  return ecma_date_value_copy_utf8_bytes (dest_p, " GMT");
+} /* ecma_date_value_to_string_common */
+
+/**
+ * Length of string created by ecma_date_value_to_string
+ */
+#define ECMA_DATE_VALUE_TO_STRING_LENGTH 33
+
+/**
  * Common function to create a time zone specific string from a numeric value.
  *
  * Used by:
  *        - The Date routine.
  *        - The Date.prototype.toString routine.
- *        - The Date.prototype.toISOString routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
+{
+  lit_utf8_byte_t character_buffer[ECMA_DATE_VALUE_TO_STRING_LENGTH];
+  lit_utf8_byte_t *dest_p = character_buffer;
+
+  datetime_number = ecma_date_local_time (datetime_number);
+
+  dest_p = ecma_date_value_week_day_to_abbreviation (dest_p, datetime_number);
+  *dest_p++ = LIT_CHAR_SP;
+
+  dest_p = ecma_date_value_month_to_abbreviation (dest_p, datetime_number);
+  *dest_p++ = LIT_CHAR_SP;
+
+  ecma_number_t day = ecma_date_date_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) day, 2);
+  *dest_p++ = LIT_CHAR_SP;
+
+  dest_p = ecma_date_value_to_string_common (dest_p, datetime_number);
+
+  int32_t time_zone = (int32_t) (ecma_date_local_tza () + ecma_date_daylight_saving_ta (datetime_number));
+  *dest_p++ = (time_zone >= 0) ? LIT_CHAR_PLUS : LIT_CHAR_MINUS;
+
+  dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone / 60, 2);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone % 60, 2);
+
+  JERRY_ASSERT (dest_p - character_buffer == ECMA_DATE_VALUE_TO_STRING_LENGTH);
+
+  ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
+                                                                 ECMA_DATE_VALUE_TO_STRING_LENGTH);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
+} /* ecma_date_value_to_string */
+
+/**
+ * Length of string created by ecma_date_value_to_utc_string
+ */
+#define ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH 29
+
+/**
+ * Common function to create a time zone specific string from a numeric value.
+ *
+ * Used by:
  *        - The Date.prototype.toUTCString routine.
  *
  * @return completion value
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_date_value_to_string (ecma_number_t datetime_num, /**<datetime */
-                           ecma_date_timezone_t timezone) /**< timezone */
+ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
+{
+  lit_utf8_byte_t character_buffer[ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH];
+  lit_utf8_byte_t *dest_p = character_buffer;
+
+  dest_p = ecma_date_value_week_day_to_abbreviation (dest_p, datetime_number);
+  *dest_p++ = LIT_CHAR_COMMA;
+  *dest_p++ = LIT_CHAR_SP;
+
+  ecma_number_t day = ecma_date_date_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) day, 2);
+  *dest_p++ = LIT_CHAR_SP;
+
+  dest_p = ecma_date_value_month_to_abbreviation (dest_p, datetime_number);
+  *dest_p++ = LIT_CHAR_SP;
+
+  dest_p = ecma_date_value_to_string_common (dest_p, datetime_number);
+
+  JERRY_ASSERT (dest_p - character_buffer == ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH);
+
+  ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
+                                                                 ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
+} /* ecma_date_value_to_utc_string */
+
+/**
+ * Common function to create a time zone specific string from a numeric value.
+ *
+ * Used by:
+ *        - The Date.prototype.toISOString routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_value_to_iso_string (ecma_number_t datetime_num) /**<datetime */
 {
   ecma_string_t *output_str_p;
-  ecma_number_t milliseconds;
 
-  if (timezone == ECMA_DATE_LOCAL)
-  {
-    datetime_num = ecma_date_local_time (datetime_num);
-    milliseconds = ecma_date_ms_from_time (datetime_num);
-    output_str_p = ecma_new_ecma_string_from_number (milliseconds);
-    ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
-  }
-  else /* ECMA_DATE_UTC */
-  {
-    milliseconds = ecma_date_ms_from_time (datetime_num);
-    output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
-  }
+  ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_num);
+  output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
 
   ecma_number_t seconds = ecma_date_sec_from_time (datetime_num);
   ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
@@ -969,7 +1162,7 @@ ecma_date_value_to_string (ecma_number_t datetime_num, /**<datetime */
   ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
 
   return ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
-} /* ecma_date_value_to_string */
+} /* ecma_date_value_to_iso_string */
 
 /**
  * Common function to get the primitive value of the Date object.

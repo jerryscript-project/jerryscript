@@ -125,7 +125,9 @@ extern void ecma_date_insert_num_with_sep (ecma_string_t **str_p,
                                            lit_magic_string_id_t magic_str_id,
                                            uint32_t length);
 
-extern ecma_completion_value_t ecma_date_value_to_string (ecma_number_t datetime_num, ecma_date_timezone_t timezone);
+extern ecma_completion_value_t ecma_date_value_to_string (ecma_number_t datetime_num);
+extern ecma_completion_value_t ecma_date_value_to_utc_string (ecma_number_t datetime_num);
+extern ecma_completion_value_t ecma_date_value_to_iso_string (ecma_number_t datetime_num);
 extern ecma_completion_value_t ecma_date_get_primitive_value (ecma_value_t this_arg);
 
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */

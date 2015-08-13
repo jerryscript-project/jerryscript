@@ -41,6 +41,10 @@ var arr = [];
 arr[4294967294] = "foo";
 assert(arr.lastIndexOf("foo", -1) === 4294967294)
 
+var arr = [1,2];
+assert(arr.lastIndexOf(2, undefined) === -1);
+assert(arr.lastIndexOf(2) === 1);
+
 // Checking behavior when unable to get length
 var obj = { lastIndexOf : Array.prototype.lastIndexOf}
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });

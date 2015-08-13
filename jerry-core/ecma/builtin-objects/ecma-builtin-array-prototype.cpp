@@ -1862,10 +1862,11 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
  */
 static ecma_completion_value_t
 ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< this argument */
-                                                   ecma_value_t arg1, /**< searchElement */
-                                                   ecma_value_t arg2) /**< fromIndex */
+                                                   const ecma_value_t args[], /**< arguments list */
+                                                   ecma_length_t args_number) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t search_element = (args_number > 0) ? args[0] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -1898,9 +1899,9 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
     uint32_t from_idx = len - 1;
 
     /* 5. */
-    if (!ecma_is_value_undefined (arg2))
+    if (args_number > 1)
     {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
+      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, args[1], ret_value);
 
       if (!ecma_number_is_nan (arg_from_idx))
       {
@@ -1972,7 +1973,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
         ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, idx_str_p), ret_value);
 
         /* 8.b.ii */
-        if (ecma_op_strict_equality_compare (arg1, get_value))
+        if (ecma_op_strict_equality_compare (search_element, get_value))
         {
           *num_p = ecma_uint32_to_number (from_idx);
         }

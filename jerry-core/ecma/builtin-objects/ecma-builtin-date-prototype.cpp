@@ -116,22 +116,7 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
     }
     else
     {
-      ecma_number_t day = ecma_date_date_from_time (*prim_value_num_p);
-      ecma_string_t *output_str_p = ecma_new_ecma_string_from_number (day);
-      ecma_date_insert_leading_zeros (&output_str_p, day, 2);
-
-      /*
-       * Note:
-       *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
-       *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
-       */
-      ecma_number_t month = ecma_date_month_from_time (*prim_value_num_p) + 1;
-      ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
-
-      ecma_number_t year = ecma_date_year_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+      ret_value = ecma_date_value_to_date_string (*prim_value_num_p);
     }
 
     ECMA_FINALIZE (obj_this);
@@ -178,20 +163,7 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
     }
     else
     {
-      ecma_number_t milliseconds = ecma_date_ms_from_time (*prim_value_num_p);
-      ecma_string_t *output_str_p = ecma_new_ecma_string_from_number (milliseconds);
-      ecma_date_insert_leading_zeros (&output_str_p, milliseconds, 3);
-
-      ecma_number_t seconds = ecma_date_sec_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
-
-      ecma_number_t minutes = ecma_date_min_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-      ecma_number_t hours = ecma_date_hour_from_time (*prim_value_num_p);
-      ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+      ret_value = ecma_date_value_to_time_string (*prim_value_num_p);
     }
 
     ECMA_FINALIZE (obj_this);

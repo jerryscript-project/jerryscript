@@ -930,32 +930,6 @@ ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< input/output string 
 } /* ecma_date_insert_leading_zeros */
 
 /**
- * Insert a number to the start of a string with a specific separator character and
- * fix length. If the length is bigger than the number of digits in num, then insert leding zeros.
- */
-void
-ecma_date_insert_num_with_sep (ecma_string_t **str_p, /**< input/output string */
-                               ecma_number_t num, /**< input number */
-                               lit_magic_string_id_t magic_str_id, /**< separator character id */
-                               uint32_t length) /**< length of string of number */
-{
-  ecma_string_t *magic_string_p = ecma_get_magic_string (magic_str_id);
-
-  ecma_string_t *concat_p = ecma_concat_ecma_strings (magic_string_p, *str_p);
-  ecma_deref_ecma_string (magic_string_p);
-  ecma_deref_ecma_string (*str_p);
-  *str_p = concat_p;
-
-  ecma_string_t *num_str_p = ecma_new_ecma_string_from_number (num);
-  concat_p = ecma_concat_ecma_strings (num_str_p, *str_p);
-  ecma_deref_ecma_string (num_str_p);
-  ecma_deref_ecma_string (*str_p);
-  *str_p = concat_p;
-
-  ecma_date_insert_leading_zeros (str_p, num, length);
-} /* ecma_date_insert_num_with_sep */
-
-/**
  * Common function to copy utf8 characters.
  *
  * @return next destination buffer position
@@ -1073,11 +1047,6 @@ ecma_date_value_to_string_common (lit_utf8_byte_t *dest_p, /**< destination buff
 } /* ecma_date_value_to_string_common */
 
 /**
- * Length of string created by ecma_date_value_to_string
- */
-#define ECMA_DATE_VALUE_TO_STRING_LENGTH 33
-
-/**
  * Common function to create a time zone specific string from a numeric value.
  *
  * Used by:
@@ -1090,7 +1059,12 @@ ecma_date_value_to_string_common (lit_utf8_byte_t *dest_p, /**< destination buff
 ecma_completion_value_t
 ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
 {
-  lit_utf8_byte_t character_buffer[ECMA_DATE_VALUE_TO_STRING_LENGTH];
+  /*
+   * Character length of the result string.
+   */
+  constexpr uint32_t result_string_length = 33;
+
+  lit_utf8_byte_t character_buffer[result_string_length];
   lit_utf8_byte_t *dest_p = character_buffer;
 
   datetime_number = ecma_date_local_time (datetime_number);
@@ -1113,18 +1087,13 @@ ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
   dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone / 60, 2);
   dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone % 60, 2);
 
-  JERRY_ASSERT (dest_p - character_buffer == ECMA_DATE_VALUE_TO_STRING_LENGTH);
+  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
-                                                                 ECMA_DATE_VALUE_TO_STRING_LENGTH);
+                                                                 result_string_length);
 
   return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
 } /* ecma_date_value_to_string */
-
-/**
- * Length of string created by ecma_date_value_to_utc_string
- */
-#define ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH 29
 
 /**
  * Common function to create a time zone specific string from a numeric value.
@@ -1138,7 +1107,12 @@ ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
 ecma_completion_value_t
 ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
 {
-  lit_utf8_byte_t character_buffer[ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH];
+  /*
+   * Character length of the result string.
+   */
+  constexpr uint32_t result_string_length = 29;
+
+  lit_utf8_byte_t character_buffer[result_string_length];
   lit_utf8_byte_t *dest_p = character_buffer;
 
   dest_p = ecma_date_value_week_day_to_abbreviation (dest_p, datetime_number);
@@ -1154,16 +1128,16 @@ ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
 
   dest_p = ecma_date_value_to_string_common (dest_p, datetime_number);
 
-  JERRY_ASSERT (dest_p - character_buffer == ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH);
+  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
-                                                                 ECMA_DATE_VALUE_TO_UTC_STRING_LENGTH);
+                                                                 result_string_length);
 
   return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
 } /* ecma_date_value_to_utc_string */
 
 /**
- * Common function to create a time zone specific string from a numeric value.
+ * Common function to create a ISO specific string from a numeric value.
  *
  * Used by:
  *        - The Date.prototype.toISOString routine.
@@ -1172,39 +1146,143 @@ ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_date_value_to_iso_string (ecma_number_t datetime_num) /**<datetime */
+ecma_date_value_to_iso_string (ecma_number_t datetime_number) /**<datetime */
 {
-  ecma_string_t *output_str_p;
+  /*
+   * Character length of the result string.
+   */
+  constexpr uint32_t result_string_length = 24;
 
-  ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_num);
-  output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-  ecma_date_insert_num_with_sep (&output_str_p, milliseconds, LIT_MAGIC_STRING_Z_CHAR, 3);
+  lit_utf8_byte_t character_buffer[result_string_length];
+  lit_utf8_byte_t *dest_p = character_buffer;
 
-  ecma_number_t seconds = ecma_date_sec_from_time (datetime_num);
-  ecma_date_insert_num_with_sep (&output_str_p, seconds, LIT_MAGIC_STRING_DOT_CHAR, 2);
-
-  ecma_number_t minutes = ecma_date_min_from_time (datetime_num);
-  ecma_date_insert_num_with_sep (&output_str_p, minutes, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-  ecma_number_t hours = ecma_date_hour_from_time (datetime_num);
-  ecma_date_insert_num_with_sep (&output_str_p, hours, LIT_MAGIC_STRING_COLON_CHAR, 2);
-
-  ecma_number_t day = ecma_date_date_from_time (datetime_num);
-  ecma_date_insert_num_with_sep (&output_str_p, day, LIT_MAGIC_STRING_TIME_SEP_U, 2);
+  ecma_number_t year = ecma_date_year_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) year, 4);
+  *dest_p++ = LIT_CHAR_MINUS;
 
   /*
    * Note:
    *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
    *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
    */
-  ecma_number_t month = ecma_date_month_from_time (datetime_num) + 1;
-  ecma_date_insert_num_with_sep (&output_str_p, month, LIT_MAGIC_STRING_MINUS_CHAR, 2);
+  ecma_number_t month = ecma_date_month_from_time (datetime_number) + 1;
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) month, 2);
+  *dest_p++ = LIT_CHAR_MINUS;
 
-  ecma_number_t year = ecma_date_year_from_time (datetime_num);
-  ecma_date_insert_num_with_sep (&output_str_p, year, LIT_MAGIC_STRING_MINUS_CHAR, 4);
+  ecma_number_t day = ecma_date_date_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) day, 2);
+  *dest_p++ = LIT_CHAR_UPPERCASE_T;
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+  ecma_number_t hours = ecma_date_hour_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) hours, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t minutes = ecma_date_min_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) minutes, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t seconds = ecma_date_sec_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) seconds, 2);
+  *dest_p++ = LIT_CHAR_DOT;
+
+  ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) milliseconds, 3);
+  *dest_p++ = LIT_CHAR_UPPERCASE_Z;
+
+  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+
+  ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
+                                                                 result_string_length);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
 } /* ecma_date_value_to_iso_string */
+
+/**
+ * Common function to create a date string from a numeric value.
+ *
+ * Used by:
+ *        - The Date.prototype.toDateString routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_value_to_date_string (ecma_number_t datetime_number) /**<datetime */
+{
+  /*
+   * Character length of the result string.
+   */
+  constexpr uint32_t result_string_length = 10;
+
+  lit_utf8_byte_t character_buffer[result_string_length];
+  lit_utf8_byte_t *dest_p = character_buffer;
+
+  ecma_number_t year = ecma_date_year_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) year, 4);
+  *dest_p++ = LIT_CHAR_MINUS;
+
+  /*
+   * Note:
+   *      'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a number from 0 to 11,
+   *      but we have to print the month from 1 to 12 for ISO 8601 standard (ECMA 262 v5, 15.9.1.15).
+   */
+  ecma_number_t month = ecma_date_month_from_time (datetime_number) + 1;
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) month, 2);
+  *dest_p++ = LIT_CHAR_MINUS;
+
+  ecma_number_t day = ecma_date_date_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) day, 2);
+
+  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+
+  ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
+                                                                 result_string_length);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (date_string_p));
+} /* ecma_date_value_to_date_string */
+
+/**
+ * Common function to create a time string from a numeric value.
+ *
+ * Used by:
+ *        - The Date.prototype.toTimeString routine.
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+ecma_completion_value_t
+ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
+{
+  /*
+   * Character length of the result string.
+   */
+  constexpr uint32_t result_string_length = 12;
+
+  lit_utf8_byte_t character_buffer[result_string_length];
+  lit_utf8_byte_t *dest_p = character_buffer;
+
+  ecma_number_t hours = ecma_date_hour_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) hours, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t minutes = ecma_date_min_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) minutes, 2);
+  *dest_p++ = LIT_CHAR_COLON;
+
+  ecma_number_t seconds = ecma_date_sec_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) seconds, 2);
+  *dest_p++ = LIT_CHAR_DOT;
+
+  ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_number);
+  dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) milliseconds, 3);
+
+  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+
+  ecma_string_t *time_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
+                                                                 result_string_length);
+
+  return ecma_make_normal_completion_value (ecma_make_string_value (time_string_p));
+} /* ecma_date_value_to_time_string */
 
 /**
  * Common function to get the primitive value of the Date object.

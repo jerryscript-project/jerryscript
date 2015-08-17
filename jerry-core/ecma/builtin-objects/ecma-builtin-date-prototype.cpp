@@ -1219,6 +1219,105 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+
+/**
+ * The Date.prototype object's 'getYear' routine
+ *
+ * See also:
+ *          ECMA-262 v5, AnnexB.B.2.4
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_date_prototype_get_year (ecma_value_t this_arg) /**< this argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t *this_num_p = ecma_get_number_from_value (value);
+  /* 2. */
+  if (ecma_number_is_nan (*this_num_p))
+  {
+    ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
+  }
+  else
+  {
+    /* 3. */
+    ecma_number_t *ret_num_p = ecma_alloc_number ();
+    *ret_num_p = ecma_date_year_from_time (ecma_date_local_time (*this_num_p)) - 1900;
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+  }
+  ECMA_FINALIZE (value);
+
+  return ret_value;
+} /* ecma_builtin_date_prototype_get_year */
+
+/**
+ * The Date.prototype object's 'setYear' routine
+ *
+ * See also:
+ *          ECMA-262 v5, AnnexB.B.2.5
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument */
+                                      ecma_value_t year) /**< year argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
+  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  if (ecma_number_is_nan (t))
+  {
+    t = ECMA_NUMBER_ZERO;
+  }
+
+  /* 2. */
+  ecma_number_t y = ecma_number_make_nan ();
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (year_value, year, ret_value);
+  y = year_value;
+
+  /* 3. */
+  if (ecma_number_is_nan (y))
+  {
+    ret_value = ecma_date_set_internal_property (this_arg, 0, y, ECMA_DATE_UTC);
+  }
+  else
+  {
+    /* 4. */
+    if (y >= 0 && y <= 99)
+    {
+      y += 1900;
+    }
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (year_value);
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 5-8. */
+    ecma_number_t m = ecma_date_month_from_time (t);
+    ecma_number_t dt = ecma_date_date_from_time (t);
+    ret_value = ecma_date_set_internal_property (this_arg,
+                                                 ecma_date_make_day (y, m, dt),
+                                                 ecma_date_time_within_day (t),
+                                                 ECMA_DATE_UTC);
+  }
+  ECMA_FINALIZE (this_time_value);
+
+  return ret_value;
+} /* ecma_builtin_date_prototype_set_year */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+
 /**
  * @}
  * @}

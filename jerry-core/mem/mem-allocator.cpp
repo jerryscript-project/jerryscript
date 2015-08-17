@@ -28,12 +28,6 @@
 #include "mem-allocator-internal.h"
 
 /**
- * Area for heap
- */
-static uint8_t mem_heap_area[ MEM_HEAP_AREA_SIZE ] __attribute__ ((aligned (JERRY_MAX (MEM_ALIGNMENT,
-                                                                                       MEM_HEAP_CHUNK_SIZE))));
-
-/**
  * The 'try to give memory back' callback
  */
 static mem_try_give_memory_back_callback_t mem_try_give_memory_back_callback = NULL;
@@ -44,7 +38,7 @@ static mem_try_give_memory_back_callback_t mem_try_give_memory_back_callback = N
 void
 mem_init (void)
 {
-  mem_heap_init (mem_heap_area, sizeof (mem_heap_area));
+  mem_heap_init ();
   mem_pools_init ();
 } /* mem_init */
 
@@ -85,50 +79,27 @@ mem_finalize (bool is_show_mem_stats) /**< show heap memory stats
 } /* mem_finalize */
 
 /**
- * Get base pointer for allocation area.
- */
-static uintptr_t
-mem_get_base_pointer (void)
-{
-  return (uintptr_t) mem_heap_area;
-} /* mem_get_base_pointer */
-
-/**
- * Compress pointer.
+ * Compress pointer
+ *
+ * @return packed pointer
  */
 uintptr_t
-mem_compress_pointer (const void *pointer) /**< pointer to compress */
+mem_compress_pointer (const void *pointer_p) /**< pointer to compress */
 {
-  JERRY_ASSERT (pointer != NULL);
+  JERRY_ASSERT (mem_is_heap_pointer (pointer_p));
 
-  uintptr_t int_ptr = (uintptr_t) pointer;
-
-  JERRY_ASSERT (int_ptr % MEM_ALIGNMENT == 0);
-
-  int_ptr -= mem_get_base_pointer ();
-  int_ptr >>= MEM_ALIGNMENT_LOG;
-
-  JERRY_ASSERT ((int_ptr & ~((1u << MEM_HEAP_OFFSET_LOG) - 1)) == 0);
-
-  JERRY_ASSERT (int_ptr != MEM_CP_NULL);
-
-  return int_ptr;
+  return mem_heap_compress_pointer (pointer_p);
 } /* mem_compress_pointer */
 
 /**
- * Decompress pointer.
+ * Decompress pointer
+ *
+ * @return unpacked pointer
  */
 void*
 mem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
-  JERRY_ASSERT (compressed_pointer != MEM_CP_NULL);
-
-  uintptr_t int_ptr = compressed_pointer;
-
-  int_ptr <<= MEM_ALIGNMENT_LOG;
-  int_ptr += mem_get_base_pointer ();
-
-  return (void*) int_ptr;
+  return mem_heap_decompress_pointer (compressed_pointer);
 } /* mem_decompress_pointer */
 
 /**
@@ -169,25 +140,6 @@ mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t s
 
   mem_pools_collect_empty ();
 } /* mem_run_try_to_give_memory_back_callbacks */
-
-#ifndef JERRY_NDEBUG
-/**
- * Check whether the pointer points to the heap
- *
- * Note:
- *      the routine should be used only for assertion checks
- *
- * @return true - if pointer points to the heap,
- *         false - otherwise
- */
-bool
-mem_is_heap_pointer (void *pointer) /**< pointer */
-{
-  uint8_t *uint8_pointer = (uint8_t*) pointer;
-
-  return (uint8_pointer >= mem_heap_area && uint8_pointer <= (mem_heap_area + MEM_HEAP_AREA_SIZE));
-} /* mem_is_heap_pointer */
-#endif /* !JERRY_NDEBUG */
 
 #ifdef MEM_STATS
 /**

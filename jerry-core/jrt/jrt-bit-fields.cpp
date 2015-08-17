@@ -23,9 +23,9 @@
  */
 uint64_t __attr_const___
 jrt_extract_bit_field (uint64_t container, /**< container to extract bit-field from */
-                       uint32_t lsb, /**< least significant bit of the value
-                                      *   to be extracted */
-                       uint32_t width) /**< width of the bit-field to be extracted */
+                       size_t lsb, /**< least significant bit of the value
+                                    *   to be extracted */
+                       size_t width) /**< width of the bit-field to be extracted */
 {
   JERRY_ASSERT (lsb < JERRY_BITSINBYTE * sizeof (uint64_t));
   JERRY_ASSERT (width < JERRY_BITSINBYTE * sizeof (uint64_t));
@@ -45,9 +45,9 @@ jrt_extract_bit_field (uint64_t container, /**< container to extract bit-field f
 uint64_t __attr_const___
 jrt_set_bit_field_value (uint64_t container, /**< container to insert bit-field to */
                          uint64_t new_bit_field_value, /**< value of bit-field to insert */
-                         uint32_t lsb, /**< least significant bit of the value
-                                        *   to be extracted */
-                         uint32_t width) /**< width of the bit-field to be extracted */
+                         size_t lsb, /**< least significant bit of the value
+                                      *   to be extracted */
+                         size_t width) /**< width of the bit-field to be extracted */
 {
   JERRY_ASSERT (lsb < JERRY_BITSINBYTE * sizeof (uint64_t));
   JERRY_ASSERT (width < JERRY_BITSINBYTE * sizeof (uint64_t));

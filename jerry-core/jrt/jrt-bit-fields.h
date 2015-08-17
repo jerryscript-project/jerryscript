@@ -16,9 +16,8 @@
 #ifndef JERRY_BIT_FIELDS_H
 #define JERRY_BIT_FIELDS_H
 
-extern uint64_t __attr_const___ jrt_extract_bit_field (uint64_t value, uint32_t lsb,
-                                                           uint32_t width);
+extern uint64_t __attr_const___ jrt_extract_bit_field (uint64_t value, size_t lsb, size_t width);
 extern uint64_t __attr_const___ jrt_set_bit_field_value (uint64_t value, uint64_t bit_field_value,
-                                                             uint32_t lsb, uint32_t width);
+                                                         size_t lsb, size_t width);
 
 #endif /* !JERRY_BIT_FIELDS_H */

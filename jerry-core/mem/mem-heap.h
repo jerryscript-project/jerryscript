@@ -39,13 +39,16 @@ typedef enum
   MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
 } mem_heap_alloc_term_t;
 
-extern void mem_heap_init (uint8_t *heap_start, size_t heap_size);
+extern void mem_heap_init (void);
 extern void mem_heap_finalize (void);
 extern void* mem_heap_alloc_block (size_t size_in_bytes, mem_heap_alloc_term_t alloc_term);
 extern void* mem_heap_alloc_chunked_block (mem_heap_alloc_term_t alloc_term);
 extern void mem_heap_free_block (void *ptr);
 extern void* mem_heap_get_chunked_block_start (void *ptr);
 extern size_t mem_heap_get_chunked_block_data_size (void);
+extern uintptr_t mem_heap_compress_pointer (const void *pointer);
+extern void* mem_heap_decompress_pointer (uintptr_t compressed_pointer);
+extern bool mem_is_heap_pointer (const void *pointer);
 extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t minimum_allocation_size);
 extern void mem_heap_print (bool dump_block_headers, bool dump_block_data, bool dump_stats);
 

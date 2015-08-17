@@ -125,6 +125,15 @@
 // #define CONFIG_ECMA_LCACHE_DISABLE
 
 /**
+ * Share of newly allocated since last GC objects among all currently allocated objects,
+ * after achieving which, GC is started upon low severity try-give-memory-back requests.
+ *
+ * Share is calculated as the following:
+ *                1.0 / CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC
+ */
+#define CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC (16)
+
+/**
  * Link Global Environment to an empty declarative lexical environment
  * instead of lexical environment bound to Global Object.
  */

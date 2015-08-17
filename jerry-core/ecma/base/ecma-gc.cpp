@@ -72,6 +72,16 @@ static ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT];
  */
 static bool ecma_gc_visited_flip_flag = false;
 
+/**
+ * Number of currently allocated objects
+ */
+static size_t ecma_gc_objects_number = 0;
+
+/**
+ * Number of newly allocated objects since last GC session
+ */
+static size_t ecma_gc_new_objects_since_last_gc = 0;
+
 static void ecma_gc_mark (ecma_object_t *object_p);
 static void ecma_gc_sweep (ecma_object_t *object_p);
 
@@ -180,6 +190,11 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
 void
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
+  ecma_gc_objects_number++;
+  ecma_gc_new_objects_since_last_gc++;
+
+  JERRY_ASSERT (ecma_gc_new_objects_since_last_gc <= ecma_gc_objects_number);
+
   ecma_gc_set_object_refs (object_p, 1);
 
   ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY]);
@@ -406,6 +421,9 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     }
   }
 
+  JERRY_ASSERT (ecma_gc_objects_number > 0);
+  ecma_gc_objects_number--;
+
   ecma_dealloc_object (object_p);
 } /* ecma_gc_sweep */
 
@@ -415,6 +433,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (void)
 {
+  ecma_gc_new_objects_since_last_gc = 0;
+
   JERRY_ASSERT (ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] == NULL);
 
   /* if some object is referenced from stack or globals (i.e. it is root), mark it */
@@ -517,12 +537,19 @@ ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity)
 {
   if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
   {
-    ecma_gc_run ();
+    /*
+     * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
+     * Otherwise, probability to free sufficient space is considered to be low.
+     */
+    if (ecma_gc_new_objects_since_last_gc * CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC > ecma_gc_objects_number)
+    {
+      ecma_gc_run ();
+    }
   }
   else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM
            || severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
   {
-    /* we have already done simple GC as requests come in ascending severity order */
+    ecma_gc_run ();
   }
   else
   {

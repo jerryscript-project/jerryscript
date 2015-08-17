@@ -133,6 +133,8 @@ assert (JSON.stringify (object, replacer_function) == '{"c":3,"b":"JSON","a":"FO
 filter = ["a", "b"];
 assert (JSON.stringify (object, filter) == '{"a":"JSON","b":"JSON"}');
 
+assert (JSON.stringify ([], [ 'foo', 'foo' ]) === '[]');
+
 number = new Number(2.2);
 number.toString = {};
 number.valueOf = [];

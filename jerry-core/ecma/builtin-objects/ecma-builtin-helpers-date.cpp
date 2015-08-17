@@ -1087,7 +1087,7 @@ ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
   dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone / 60, 2);
   dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone % 60, 2);
 
-  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+  JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
                                                                  result_string_length);
@@ -1128,7 +1128,7 @@ ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
 
   dest_p = ecma_date_value_to_string_common (dest_p, datetime_number);
 
-  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+  JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
                                                                  result_string_length);
@@ -1189,7 +1189,7 @@ ecma_date_value_to_iso_string (ecma_number_t datetime_number) /**<datetime */
   dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) milliseconds, 3);
   *dest_p++ = LIT_CHAR_UPPERCASE_Z;
 
-  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+  JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
                                                                  result_string_length);
@@ -1233,7 +1233,7 @@ ecma_date_value_to_date_string (ecma_number_t datetime_number) /**<datetime */
   ecma_number_t day = ecma_date_date_from_time (datetime_number);
   dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) day, 2);
 
-  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+  JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 
   ecma_string_t *date_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
                                                                  result_string_length);
@@ -1276,7 +1276,7 @@ ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
   ecma_number_t milliseconds = ecma_date_ms_from_time (datetime_number);
   dest_p = ecma_date_value_number_to_bytes (dest_p, (int32_t) milliseconds, 3);
 
-  JERRY_ASSERT (dest_p - character_buffer == result_string_length);
+  JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 
   ecma_string_t *time_string_p = ecma_new_ecma_string_from_utf8 (character_buffer,
                                                                  result_string_length);

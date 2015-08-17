@@ -1014,6 +1014,10 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
             ecma_append_to_values_collection (context.property_list_p, item, true);
             ecma_deref_ecma_string (ecma_get_string_from_value (item));
           }
+          else
+          {
+            ecma_free_value (item, true);
+          }
         }
 
         ECMA_FINALIZE (value);

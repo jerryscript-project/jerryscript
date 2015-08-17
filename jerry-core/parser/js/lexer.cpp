@@ -384,11 +384,6 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
               && (lit_utf8_iterator_is_eos (&source_str_iter)
                   || !lit_char_is_octal_digit (lit_utf8_iterator_peek_next (&source_str_iter))))
           {
-            if (!lit_utf8_iterator_is_eos (&source_str_iter))
-            {
-              lit_utf8_iterator_incr (&source_str_iter);
-            }
-
             converted_char = LIT_CHAR_NULL;
           }
           else
@@ -1031,11 +1026,7 @@ lexer_parse_string (void)
     c = LA (0);
     consume_char ();
 
-    if (c == LIT_CHAR_NULL)
-    {
-      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed string", token_start_pos);
-    }
-    else if (lit_char_is_line_terminator (c))
+    if (lit_char_is_line_terminator (c))
     {
       PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "String literal shall not contain newline character", token_start_pos);
     }
@@ -1057,7 +1048,12 @@ lexer_parse_string (void)
       }
     }
   }
-  while (c != end_char);
+  while (c != end_char && !lit_utf8_iterator_is_eos (&src_iter));
+
+  if (c == LIT_CHAR_NULL)
+  {
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed string", token_start_pos);
+  }
 
   const lit_utf8_size_t charset_size = TOK_SIZE () - 2;
 

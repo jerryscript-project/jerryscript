@@ -629,6 +629,8 @@ mem_pools_stat_alloc_pool (void)
   {
     mem_pools_stats.global_peak_pools_count = mem_pools_stats.pools_count;
   }
+
+  mem_pools_stats.free_chunks += MEM_POOL_CHUNKS_NUMBER;
 } /* mem_pools_stat_alloc_pool */
 
 /**
@@ -637,6 +639,10 @@ mem_pools_stat_alloc_pool (void)
 static void
 mem_pools_stat_free_pool (void)
 {
+  JERRY_ASSERT (mem_pools_stats.free_chunks >= MEM_POOL_CHUNKS_NUMBER);
+
+  mem_pools_stats.free_chunks -= MEM_POOL_CHUNKS_NUMBER;
+
   JERRY_ASSERT (mem_pools_stats.pools_count > 0);
 
   mem_pools_stats.pools_count--;

@@ -344,8 +344,12 @@ lit_literal_storage_t::dump ()
         }
         else
         {
-          lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-          ecma_number_to_utf8_string (lit_p->get_number (), buff, sizeof (buff));
+          lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1u];
+          memset (buff, 0, sizeof (buff));
+
+          lit_utf8_size_t sz = ecma_number_to_utf8_string (lit_p->get_number (), buff, sizeof (buff));
+          JERRY_ASSERT (sz <= ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+
           printf ("%s : NUMBER", buff);
         }
 

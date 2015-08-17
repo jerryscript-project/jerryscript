@@ -65,6 +65,14 @@ re_set_result_array_properties (ecma_object_t *array_obj_p,
                                 uint32_t num_of_elements,
                                 int32_t index);
 
+extern ecma_completion_value_t
+re_parse_regexp_flags (ecma_string_t *flags_str_p, uint8_t *flags_p);
+
+extern void
+re_initialize_props (ecma_object_t *re_obj_p,
+                     ecma_string_t *source_p,
+                     uint8_t flags);
+
 /**
  * @}
  * @}

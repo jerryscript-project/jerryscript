@@ -45,6 +45,173 @@
  * @{
  */
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+
+/**
+ * The RegExp.prototype object's 'compile' routine
+ *
+ * See also:
+ *          ECMA-262 v5, B.2.5.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t pattern_arg, /**< pattern or RegExp object */
+                                       ecma_value_t flags_arg) /**< flags */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
+
+  if (ecma_object_get_class_name (this_obj_p) != LIT_MAGIC_STRING_REGEXP_UL)
+  {
+    /* Compile can only be called on RegExp objects. */
+    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  }
+  else
+  {
+    ecma_string_t *pattern_string_p = NULL;
+    uint8_t flags = 0;
+
+    if (ecma_is_value_object (pattern_arg)
+        && ecma_object_get_class_name (ecma_get_object_from_value (pattern_arg)) == LIT_MAGIC_STRING_REGEXP_UL)
+    {
+      if (!ecma_is_value_undefined (flags_arg))
+      {
+        ret_value = ecma_raise_type_error ("Invalid argument of RegExp compile.");
+      }
+      else
+      {
+        /* Compile from existing RegExp pbject. */
+        ecma_object_t *target_p = ecma_get_object_from_value (pattern_arg);
+
+        /* Get source. */
+        ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
+        ecma_property_t *prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+        pattern_string_p = ecma_get_string_from_value (ecma_get_named_data_property_value (prop_p));
+        ecma_deref_ecma_string (magic_string_p);
+
+        /* Get flags. */
+        magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
+        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+
+        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        {
+          flags |= RE_FLAG_GLOBAL;
+        }
+
+        ecma_deref_ecma_string (magic_string_p);
+        magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
+        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+
+        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        {
+          flags |= RE_FLAG_IGNORE_CASE;
+        }
+
+        ecma_deref_ecma_string (magic_string_p);
+        magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
+        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+
+        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        {
+          flags |= RE_FLAG_MULTILINE;
+        }
+
+        ecma_deref_ecma_string (magic_string_p);
+
+        /* Get bytecode property. */
+        ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
+                                                                 ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+        re_bytecode_t *old_bc_p = ECMA_GET_NON_NULL_POINTER (re_bytecode_t,
+                                                             bc_prop_p->u.internal_property.value);
+
+        FIXME ("We currently have to re-compile the bytecode, because we can't copy it without knowing its length.")
+        re_bytecode_t *new_bc_p = NULL;
+        ecma_completion_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
+        /* Should always succeed, since we're compiling from a source that has been compiled previously. */
+        JERRY_ASSERT (ecma_is_completion_value_empty (bc_comp));
+
+        mem_heap_free_block (old_bc_p);
+        ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
+
+        re_initialize_props (this_obj_p, pattern_string_p, flags);
+
+        ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+      }
+    }
+    else
+    {
+      /* Get source string. */
+      if (!ecma_is_value_undefined (pattern_arg))
+      {
+        ECMA_TRY_CATCH (regexp_str_value,
+                        ecma_op_to_string (pattern_arg),
+                        ret_value);
+
+        if (ecma_string_get_length (ecma_get_string_from_value (regexp_str_value)) == 0)
+        {
+          pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+        }
+        else
+        {
+          pattern_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
+        }
+
+        ECMA_FINALIZE (regexp_str_value);
+      }
+      else
+      {
+        pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+      }
+
+      /* Parse flags. */
+      if (ecma_is_completion_value_empty (ret_value) && !ecma_is_value_undefined (flags_arg))
+      {
+        ECMA_TRY_CATCH (flags_str_value,
+                        ecma_op_to_string (flags_arg),
+                        ret_value);
+
+        ECMA_TRY_CATCH (flags_dummy,
+                        re_parse_regexp_flags (ecma_get_string_from_value (flags_str_value), &flags),
+                        ret_value);
+        ECMA_FINALIZE (flags_dummy);
+        ECMA_FINALIZE (flags_str_value);
+      }
+
+      if (ecma_is_completion_value_empty (ret_value))
+      {
+        ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
+                                                                 ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+        re_bytecode_t *old_bc_p = ECMA_GET_NON_NULL_POINTER (re_bytecode_t,
+                                                             bc_prop_p->u.internal_property.value);
+
+        /* Try to compile bytecode from new source. */
+        re_bytecode_t *new_bc_p = NULL;
+        ECMA_TRY_CATCH (bc_dummy, re_compile_bytecode (&new_bc_p, pattern_string_p, flags), ret_value);
+
+        /* Replace old bytecode with new one. */
+        mem_heap_free_block (old_bc_p);
+        ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
+        re_initialize_props (this_obj_p, pattern_string_p, flags);
+        ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+        ECMA_FINALIZE (bc_dummy);
+      }
+
+      if (pattern_string_p != NULL)
+      {
+        ecma_deref_ecma_string (pattern_string_p);
+      }
+    }
+  }
+
+  return ret_value;
+} /* ecma_builtin_regexp_prototype_compile */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+
 /**
  * The RegExp.prototype object's 'exec' routine
  *

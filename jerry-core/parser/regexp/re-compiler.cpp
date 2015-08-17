@@ -633,7 +633,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
+re_compile_bytecode (re_bytecode_t **out_bytecode_p, /**< out:pointer to bytecode */
                      ecma_string_t *pattern_str_p, /**< pattern */
                      uint8_t flags) /**< flags */
 {
@@ -684,11 +684,20 @@ re_compile_bytecode (ecma_property_t *bytecode_p, /**< bytecode */
   }
   ECMA_FINALIZE (empty);
 
-  /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
-  JERRY_ASSERT (bc_ctx.block_start_p != NULL);
-  ECMA_SET_POINTER (bytecode_p->u.internal_property.value, bc_ctx.block_start_p);
-
   MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
+
+  if (!ecma_is_completion_value_empty (ret_value))
+  {
+    /* Compilation failed, free bytecode. */
+    mem_heap_free_block (bc_ctx.block_start_p);
+    *out_bytecode_p = NULL;
+  }
+  else
+  {
+    /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
+    JERRY_ASSERT (bc_ctx.block_start_p != NULL);
+    *out_bytecode_p = bc_ctx.block_start_p;
+  }
 
 #ifdef JERRY_ENABLE_LOG
   re_dump_bytecode (&bc_ctx);

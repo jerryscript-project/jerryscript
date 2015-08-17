@@ -66,3 +66,48 @@ result = re.exec("a");
 assert (result.length === 1);
 assert (result[0] === "a");
 assert (re.lastIndex === 1);
+
+var re1 = /foo/gim;
+var re2 = /bar/g;
+
+try {
+	re2.compile("asd", "ggim");
+	assert (false);
+} catch (e) {
+	assert (e instanceof SyntaxError);
+	assert (re2 == "/bar/g");
+}
+
+try {
+	re2.compile("[", undefined);
+	assert (false);
+} catch (e) {
+	assert (e instanceof SyntaxError);
+	assert (re2 == "/bar/g");
+}
+
+try {
+	re2.compile(re1, "im");
+	assert (false);
+} catch (e) {
+	assert (e instanceof TypeError);
+	assert (re2 == "/bar/g");
+}
+
+re2.lastIndex = 2;
+re2.compile("asd", "im");
+
+assert (re2 == "/asd/im");
+assert (re2.global === false);
+assert (re2.ignoreCase === true);
+assert (re2.multiline === true);
+assert (re2.source === "asd");
+assert (re2.lastIndex === 0);
+
+re2.compile(re1);
+assert (re2.toString() === re1.toString());
+assert (re2.global === re1.global);
+assert (re2.ignoreCase === re1.ignoreCase);
+assert (re2.multiline === re1.multiline);
+assert (re2.source === re1.source);
+assert (re2.lastIndex === 0);

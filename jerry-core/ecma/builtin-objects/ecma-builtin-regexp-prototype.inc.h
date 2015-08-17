@@ -86,6 +86,9 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LASTINDEX_UL,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_NOT_CONFIGURABLE)
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_COMPILE, ecma_builtin_regexp_prototype_compile, 2, 1)
+#endif
 ROUTINE (LIT_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)

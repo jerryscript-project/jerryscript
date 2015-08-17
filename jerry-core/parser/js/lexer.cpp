@@ -1155,6 +1155,12 @@ lexer_parse_regexp (void)
   return result;
 } /* lexer_parse_regexp */
 
+/**
+ * Parse a comment
+ *
+ * @return true if newline was met during parsing
+ *         false - otherwise
+ */
 static bool
 lexer_parse_comment (void)
 {
@@ -1170,7 +1176,7 @@ lexer_parse_comment (void)
   consume_char ();
   consume_char ();
 
-  while (true)
+  while (!lit_utf8_iterator_is_eos (&src_iter))
   {
     c = LA (0);
 
@@ -1179,10 +1185,6 @@ lexer_parse_comment (void)
       if (lit_char_is_line_terminator (c))
       {
         return true;
-      }
-      else if (c == LIT_CHAR_NULL)
-      {
-        return false;
       }
     }
     else
@@ -1199,14 +1201,17 @@ lexer_parse_comment (void)
       {
         was_newlines = true;
       }
-      else if (c == LIT_CHAR_NULL)
-      {
-        PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed multiline comment", lit_utf8_iterator_get_pos (&src_iter));
-      }
     }
 
     consume_char ();
   }
+
+  if (multiline)
+  {
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unclosed multiline comment", lit_utf8_iterator_get_pos (&src_iter));
+  }
+
+  return false;
 } /* lexer_parse_comment */
 
 /**

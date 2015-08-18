@@ -68,6 +68,11 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   {
     exit (code);
   }
+
+  /* to make compiler happy for some RTOS: 'control reaches end of non-void function' */
+  while (true)
+  {
+  }
 } /* jerry_fatal */
 
 /**

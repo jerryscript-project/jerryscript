@@ -23,10 +23,24 @@
 static bool
 instrs_equal (const vm_instr_t *instrs1, vm_instr_t *instrs2, uint16_t size)
 {
+  static const uint8_t instr_fields_num[] =
+  {
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+    1,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+    2,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+    3,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+    4,
+
+#include "vm-opcodes.inc.h"
+  };
+
   uint16_t i;
   for (i = 0; i < size; i++)
   {
-    if (memcmp (&instrs1[i], &instrs2[i], sizeof (vm_instr_t)) != 0)
+    if (memcmp (&instrs1[i], &instrs2[i], instr_fields_num[instrs1[i].op_idx] * sizeof (idx_t)) != 0)
     {
       return false;
     }

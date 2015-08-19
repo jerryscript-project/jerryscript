@@ -40,16 +40,6 @@ REPEATS="$3"
 TIMEOUT="$4"
 BENCH_FOLDER="$5"
 
-if [ ! -x "${ENGINE_OLD}" ]
-then
-  exit_err "\"${ENGINE_OLD}\" is not an executable file..."
-fi
-
-if [ ! -x "${ENGINE_NEW}" ]
-then
-  exit_err "\"${ENGINE_NEW}\" is not an executable file..."
-fi
-
 if [ "${REPEATS}" -lt 1 ]
 then
   exit_err "REPEATS must be greater than 0"

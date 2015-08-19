@@ -597,28 +597,48 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
   return bytes_count;
 } /* lit_read_code_point_from_utf8 */
 
-
 /**
- * Calculate hash from last LIT_STRING_HASH_LAST_BYTES_COUNT characters from the buffer.
+ * Calc hash using the specified hash_basis.
+ *
+ * NOTE:
+ *   This is implementation of FNV-1a hash function, which is released into public domain.
+ *   Constants used, are carefully picked primes by the authors.
+ *   More info: http://www.isthe.com/chongo/tech/comp/fnv/
  *
  * @return ecma-string's hash
  */
-lit_string_hash_t
-lit_utf8_string_calc_hash_last_bytes (const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
-                                      lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
+lit_string_hash_t __attr_always_inline___
+lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, /**< hash to be combined with */
+                              const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
+                              lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
 {
   JERRY_ASSERT (utf8_buf_p != NULL || utf8_buf_size == 0);
 
-  lit_utf8_byte_t byte1 = (utf8_buf_size > 0) ? utf8_buf_p[utf8_buf_size - 1] : (lit_utf8_byte_t) 0;
-  lit_utf8_byte_t byte2 = (utf8_buf_size > 1) ? utf8_buf_p[utf8_buf_size - 2] : (lit_utf8_byte_t) 0;
+  uint32_t hash = hash_basis;
 
-  uint32_t t1 = (uint32_t) byte1 + (uint32_t) byte2;
-  uint32_t t2 = t1 * 0x24418b66;
-  uint32_t t3 = (t2 >> 16) ^ (t2 & 0xffffu);
-  uint32_t t4 = (t3 >> 8) ^ (t3 & 0xffu);
+  for (uint32_t i = 0; i < utf8_buf_size; i++)
+  {
+    // 16777619 is 32 bit FNV_prime = 2^24 + 2^8 + 0x93 = 16777619
+    hash = (hash ^ utf8_buf_p[i]) * 16777619;
+  }
 
-  return (lit_string_hash_t) t4;
-} /* lit_utf8_string_calc_hash_last_bytes */
+  return (lit_string_hash_t) hash;
+} /* lit_utf8_string_hash_combine */
+
+/**
+ * Calculate hash from the buffer.
+ *
+ * @return ecma-string's hash
+ */
+lit_string_hash_t __attr_always_inline___
+lit_utf8_string_calc_hash (const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
+                           lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
+{
+  JERRY_ASSERT (utf8_buf_p != NULL || utf8_buf_size == 0);
+
+  // 32 bit offset_basis for FNV = 2166136261
+  return lit_utf8_string_hash_combine ((lit_string_hash_t) 2166136261, utf8_buf_p, utf8_buf_size);
+} /* lit_utf8_string_calc_hash */
 
 /**
  * Return code unit at the specified position in string

@@ -107,7 +107,7 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
 {
   JERRY_ASSERT (str_p || !str_size);
 
-  lit_string_hash_t str_hash = lit_utf8_string_calc_hash_last_bytes (str_p, str_size);
+  lit_string_hash_t str_hash = lit_utf8_string_calc_hash (str_p, str_size);
 
   for (literal_t lit = lit_storage.get_first (); lit != NULL; lit = lit_storage.get_next (lit))
   {

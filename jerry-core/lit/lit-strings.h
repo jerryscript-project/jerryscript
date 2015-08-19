@@ -159,7 +159,8 @@ lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *);
 ecma_length_t lit_utf8_string_length (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* hash */
-lit_string_hash_t lit_utf8_string_calc_hash_last_bytes (const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_string_hash_t lit_utf8_string_calc_hash (const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_string_hash_t lit_utf8_string_hash_combine (lit_string_hash_t, const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* code unit access */
 ecma_char_t lit_utf8_string_code_unit_at (const lit_utf8_byte_t *, lit_utf8_size_t, ecma_length_t);

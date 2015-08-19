@@ -373,8 +373,8 @@ ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p, /**< descri
   string_p->refs = 1;
   string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING;
-  string_p->hash = lit_utf8_string_calc_hash_last_bytes (lit_get_magic_string_utf8 (magic_string_id),
-                                                         lit_get_magic_string_size (magic_string_id));
+  string_p->hash = lit_utf8_string_calc_hash (lit_get_magic_string_utf8 (magic_string_id),
+                                              lit_get_magic_string_size (magic_string_id));
 
   string_p->u.common_field = 0;
   string_p->u.magic_string_id = magic_string_id;
@@ -397,8 +397,8 @@ ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p, /**< des
   string_p->refs = 1;
   string_p->is_stack_var = (is_stack_var != 0);
   string_p->container = ECMA_STRING_CONTAINER_MAGIC_STRING_EX;
-  string_p->hash = lit_utf8_string_calc_hash_last_bytes (lit_get_magic_string_ex_utf8 (magic_string_ex_id),
-                                                         lit_get_magic_string_ex_size (magic_string_ex_id));
+  string_p->hash = lit_utf8_string_calc_hash (lit_get_magic_string_ex_utf8 (magic_string_ex_id),
+                                              lit_get_magic_string_ex_size (magic_string_ex_id));
 
   string_p->u.common_field = 0;
   string_p->u.magic_string_ex_id = magic_string_ex_id;
@@ -434,7 +434,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
-  string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (string_p, string_size);
+  string_desc_p->hash = lit_utf8_string_calc_hash (string_p, string_size);
 
   string_desc_p->u.common_field = 0;
   ecma_collection_header_t *collection_p = ecma_new_chars_collection (string_p, string_size);
@@ -470,33 +470,12 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_UINT32_IN_DESC;
 
-  uint32_t last_two_digits = uint32_number % 100;
-  uint32_t digit_pl = last_two_digits / 10;
-  uint32_t digit_l = last_two_digits % 10;
-
-  FIXME (/* Use digit to char conversion routine */);
-  const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-  const bool is_one_char_or_more = (uint32_number >= 10);
-  const lit_utf8_byte_t last_chars[LIT_STRING_HASH_LAST_BYTES_COUNT] =
-  {
-    is_one_char_or_more ? digits[digit_pl] : digits[digit_l],
-    is_one_char_or_more ? digits[digit_l] : (lit_utf8_byte_t) '\0'
-  };
-
-  /* Only last two chars are really used for hash calculation */
-  string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (last_chars,
-                                                              is_one_char_or_more ? 2 : 1);
-
-#ifndef JERRY_NDEBUG
   lit_utf8_byte_t byte_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
   ssize_t bytes_copied = ecma_uint32_to_utf8_string (uint32_number,
                                                      byte_buf,
                                                      ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
-  JERRY_ASSERT ((ssize_t) ((lit_utf8_size_t) bytes_copied) == bytes_copied);
 
-  JERRY_ASSERT (string_desc_p->hash == lit_utf8_string_calc_hash_last_bytes (byte_buf,
-                                                                             (lit_utf8_size_t) bytes_copied));
-#endif /* !JERRY_NDEBUG */
+  string_desc_p->hash = lit_utf8_string_calc_hash (byte_buf, (lit_utf8_size_t) bytes_copied);
 
   string_desc_p->u.common_field = 0;
   string_desc_p->u.uint32_number = uint32_number;
@@ -537,7 +516,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
-  string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (str_buf, str_size);
+  string_desc_p->hash = lit_utf8_string_calc_hash (str_buf, str_size);
 
   string_desc_p->u.common_field = 0;
   ecma_number_t *num_p = ecma_alloc_number ();
@@ -617,7 +596,6 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
-
 /**
  * Concatenate ecma-strings
  *
@@ -659,56 +637,30 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   string1_p = ecma_copy_or_ref_ecma_string (string1_p);
   string2_p = ecma_copy_or_ref_ecma_string (string2_p);
 
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
+  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
+
   ecma_char_t str1_last_code_unit = ecma_string_get_char_at_pos (string1_p, ecma_string_get_length (string1_p) - 1);
   ecma_char_t str2_first_code_unit = ecma_string_get_char_at_pos (string2_p, 0);
 
   string_desc_p->u.concatenation.is_surrogate_pair_sliced = (lit_is_code_unit_high_surrogate (str1_last_code_unit)
                                                              && lit_is_code_unit_low_surrogate (str2_first_code_unit));
 
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
-
-  JERRY_STATIC_ASSERT (LIT_STRING_HASH_LAST_BYTES_COUNT == 2);
-
-  if (str2_size >= LIT_STRING_HASH_LAST_BYTES_COUNT)
+  if (!string_desc_p->u.concatenation.is_surrogate_pair_sliced)
   {
-    if (str2_size >= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT + LIT_STRING_HASH_LAST_BYTES_COUNT
-        || !string_desc_p->u.concatenation.is_surrogate_pair_sliced)
-    {
-      string_desc_p->hash = string2_p->hash;
-    }
-    else
-    {
-      const lit_utf8_size_t bytes_buf_size = str2_size + 1;
-      lit_utf8_byte_t bytes_buf[LIT_UTF8_MAX_BYTES_IN_CODE_POINT + 1];
-
-      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (str1_last_code_unit,
-                                                                              str2_first_code_unit);
-      lit_utf8_size_t idx = lit_code_point_to_utf8 (code_point, bytes_buf);
-      JERRY_ASSERT (idx = LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
-
-      if (str2_size > LIT_UTF8_MAX_BYTES_IN_CODE_UNIT)
-      {
-        bytes_buf[idx] = ecma_string_get_byte_at_pos (string2_p, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-      }
-
-      string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (bytes_buf + bytes_buf_size -
-                                                                  LIT_STRING_HASH_LAST_BYTES_COUNT,
-                                                                  LIT_STRING_HASH_LAST_BYTES_COUNT);
-    }
-
+    lit_utf8_size_t buffer_size = ecma_string_get_size (string2_p);
+    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
+    ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
+    string_desc_p->hash = lit_utf8_string_hash_combine (string1_p->hash, utf8_str_p, buffer_size);
+    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }
   else
   {
-    JERRY_ASSERT (str2_size == 1);
-
-    lit_utf8_byte_t bytes_buf[LIT_STRING_HASH_LAST_BYTES_COUNT] =
-    {
-      ecma_string_get_byte_at_pos (string1_p, str1_size - 1u),
-      ecma_string_get_byte_at_pos (string2_p, 0)
-    };
-
-    string_desc_p->hash = lit_utf8_string_calc_hash_last_bytes (bytes_buf, LIT_STRING_HASH_LAST_BYTES_COUNT);
+    lit_utf8_size_t buffer_size = ecma_string_get_size (string_desc_p);
+    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
+    ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
+    string_desc_p->hash = lit_utf8_string_calc_hash (utf8_str_p, buffer_size);
+    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }
 
   return string_desc_p;

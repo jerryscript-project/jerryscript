@@ -235,7 +235,7 @@ lit_literal_storage_t::create_charset_record (const lit_utf8_byte_t *str, /**< s
 
   ret->set_alignment_bytes_count (alignment);
   ret->set_charset (str, buf_size);
-  ret->set_hash (lit_utf8_string_calc_hash_last_bytes (str, ret->get_length ()));
+  ret->set_hash (lit_utf8_string_calc_hash (str, ret->get_length ()));
 
   return ret;
 } /* lit_literal_storage_t::create_charset_record */
@@ -478,4 +478,3 @@ template lit_charset_record_t *rcs_recordset_t::alloc_record<lit_charset_record_
                                                                                     size_t size);
 template lit_magic_record_t *rcs_recordset_t::alloc_record<lit_magic_record_t> (rcs_record_t::type_t type);
 template lit_number_record_t *rcs_recordset_t::alloc_record<lit_number_record_t> (rcs_record_t::type_t type);
-

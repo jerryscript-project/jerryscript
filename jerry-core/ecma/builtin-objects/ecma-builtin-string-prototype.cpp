@@ -2557,6 +2557,76 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   return ret_value;
 } /* ecma_builtin_string_prototype_object_trim */
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+
+/**
+ * The String.prototype object's 'substr' routine
+ *
+ * See also:
+ *          ECMA-262 v5, B.2.3
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this argument */
+                                             ecma_value_t start, /**< routine's first argument */
+                                             ecma_value_t length) /**< routine's second argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (check_coercible_val,
+                  ecma_op_check_object_coercible (this_arg),
+                  ret_value);
+
+  /* 1. */
+  ECMA_TRY_CATCH (to_string_val, ecma_op_to_string (this_arg), ret_value);
+  ecma_string_t *this_string_p = ecma_get_string_from_value (to_string_val);
+
+  /* 2. */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num, start, ret_value);
+  if (ecma_number_is_nan (start_num))
+  {
+    start_num = 0;
+  }
+
+  /* 3. */
+  ecma_number_t length_num = ecma_number_make_infinity (false);
+  if (!ecma_is_value_undefined (length))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (len, length, ret_value);
+    length_num = ecma_number_is_nan (len) ? 0 : len;
+
+    ECMA_OP_TO_NUMBER_FINALIZE (len);
+  }
+
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    /* 4. */
+    ecma_number_t this_len = (ecma_number_t) ecma_string_get_length (this_string_p);
+
+    /* 5. */
+    ecma_number_t from_num = (start_num < 0) ? JERRY_MAX (this_len + start_num, 0) : start_num;
+    uint32_t from = ecma_builtin_helper_string_index_normalize (from_num, ecma_number_to_uint32 (this_len), true);
+
+    /* 6-7. */
+    ecma_number_t to_num = JERRY_MAX (JERRY_MIN (JERRY_MAX (length_num, 0), this_len - from_num), 0);
+    uint32_t to = from + ecma_builtin_helper_string_index_normalize (to_num, ecma_number_to_uint32 (this_len), true);
+
+    /* 8. */
+    ecma_string_t *new_str_p = ecma_string_substr (this_string_p, from, to);
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
+  ECMA_FINALIZE (to_string_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
+} /* ecma_builtin_string_prototype_object_substr */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+
 /**
  * @}
  * @}

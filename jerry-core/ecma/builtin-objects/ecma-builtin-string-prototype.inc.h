@@ -82,6 +82,10 @@ ROUTINE (LIT_MAGIC_STRING_TO_UPPER_CASE_UL, ecma_builtin_string_prototype_object
 ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_UPPER_CASE_UL, ecma_builtin_string_prototype_object_to_locale_upper_case, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_TRIM, ecma_builtin_string_prototype_object_trim, 0, 0)
 
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_SUBSTR, ecma_builtin_string_prototype_object_substr, 2, 2)
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE

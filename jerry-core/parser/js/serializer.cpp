@@ -291,6 +291,37 @@ void serializer_set_show_instrs (bool show_instrs)
   print_instrs = show_instrs;
 }
 
+/**
+ * Deletes bytecode and associated hash table
+ */
+void
+serializer_remove_instructions (const vm_instr_t *instrs_p) /**< pointer to instructions which should be deleted */
+{
+  insts_data_header_t *prev_header = NULL;
+  const vm_instr_t *cur_instrs_p = bytecode_data.instrs_p;
+  while (cur_instrs_p != NULL)
+  {
+    insts_data_header_t *cur_header_p = GET_BYTECODE_HEADER (cur_instrs_p);
+
+    if (cur_instrs_p == instrs_p)
+    {
+      if (prev_header)
+      {
+        prev_header->next_instrs_cp = cur_header_p->next_instrs_cp;
+      }
+      else
+      {
+        bytecode_data.instrs_p = MEM_CP_GET_POINTER (vm_instr_t, cur_header_p->next_instrs_cp);
+      }
+      mem_heap_free_block (cur_header_p);
+      break;
+    }
+
+    prev_header = GET_BYTECODE_HEADER (cur_instrs_p);
+    cur_instrs_p = MEM_CP_GET_POINTER (vm_instr_t, cur_header_p->next_instrs_cp);
+  }
+} /* serializer_remove_instructions */
+
 void
 serializer_free (void)
 {

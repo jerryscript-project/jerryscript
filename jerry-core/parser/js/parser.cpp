@@ -50,6 +50,10 @@ static token tok;
 static bool inside_eval = false;
 static bool inside_function = false;
 static bool parser_show_instrs = false;
+/**
+ * flag, indicating that code contains function declarations or function expressions
+ */
+static bool code_contains_functions = false;
 
 enum
 {
@@ -379,6 +383,8 @@ parse_property_assignment (void)
       return;
     }
 
+    code_contains_functions = true;
+
     STACK_DECLARE_USAGE (scopes);
 
     const operand name = parse_property_name ();
@@ -646,6 +652,8 @@ parse_function_declaration (void)
 {
   STACK_DECLARE_USAGE (scopes);
 
+  code_contains_functions = true;
+
   assert_keyword (KW_FUNCTION);
 
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
@@ -700,6 +708,8 @@ parse_function_expression (void)
 {
   STACK_DECLARE_USAGE (scopes);
   assert_keyword (KW_FUNCTION);
+
+  code_contains_functions = true;
 
   operand res;
 
@@ -3031,6 +3041,7 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
 
   inside_function = in_function;
   inside_eval = in_eval;
+  code_contains_functions = false;
 
 #ifndef JERRY_NDEBUG
   volatile bool is_parse_finished = false;
@@ -3196,6 +3207,17 @@ parser_parse_new_function (const jerry_api_char_t **params, /**< array of argume
                                false,
                                out_instrs_p);
 } /* parser_parse_new_function */
+
+/**
+ * Indicates whether code contains functions
+ *
+ * @return true/false
+ */
+bool
+parser_is_code_contains_functions ()
+{
+  return code_contains_functions;
+} /* parser_is_code_contains_functions */
 
 /**
  * Tell parser whether to dump bytecode

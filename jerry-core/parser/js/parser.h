@@ -32,5 +32,6 @@ void parser_set_show_instrs (bool);
 jsp_status_t parser_parse_script (const jerry_api_char_t *, size_t, const vm_instr_t **);
 jsp_status_t parser_parse_eval (const jerry_api_char_t *, size_t, bool, const vm_instr_t **);
 jsp_status_t parser_parse_new_function (const jerry_api_char_t **, const size_t *, size_t, const vm_instr_t **);
+bool parser_is_code_contains_functions ();
 
 #endif /* PARSER_H */

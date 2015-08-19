@@ -158,6 +158,11 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
       JERRY_ASSERT (ecma_is_completion_value_throw (completion));
     }
 
+    if (!parser_is_code_contains_functions ())
+    {
+      serializer_remove_instructions (instrs_p);
+    }
+
     ecma_deref_object (lex_env_p);
     ecma_free_value (this_binding, true);
   }

@@ -39,6 +39,7 @@ vm_instr_counter_t serializer_get_current_var_decls_counter (void);
 vm_instr_counter_t serializer_count_instrs_in_subscopes (void);
 void serializer_set_writing_position (vm_instr_counter_t);
 void serializer_rewrite_op_meta (vm_instr_counter_t, op_meta);
+void serializer_remove_instructions (const vm_instr_t *instrs_p);
 void serializer_free (void);
 
 #endif // SERIALIZER_H

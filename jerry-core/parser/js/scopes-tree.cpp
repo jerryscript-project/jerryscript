@@ -743,6 +743,46 @@ scopes_tree_set_eval_used (scopes_tree tree) /**< scope */
   tree->ref_eval = true;
 } /* scopes_tree_set_eval_used */
 
+/**
+ * Set up a flag, indicating that 'with' statement is contained in a scope
+ */
+void
+scopes_tree_set_contains_with (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_with = true;
+} /* scopes_tree_set_contains_with */
+
+/**
+ * Set up a flag, indicating that 'try' statement is contained in a scope
+ */
+void
+scopes_tree_set_contains_try (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_try = true;
+} /* scopes_tree_set_contains_try */
+
+/**
+ * Set up a flag, indicating that 'delete' operator is contained in a scope
+ */
+void
+scopes_tree_set_contains_delete (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_delete = true;
+} /* scopes_tree_set_contains_delete */
+
+/**
+ * Set up a flag, indicating that there is a function declaration / expression inside a scope
+ */
+void
+scopes_tree_set_contains_functions (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_functions = true;
+} /* scopes_tree_set_contains_functions */
+
 bool
 scopes_tree_strict_mode (scopes_tree tree)
 {
@@ -756,7 +796,8 @@ scopes_tree_strict_mode (scopes_tree tree)
  * @return initialized scope
  */
 scopes_tree
-scopes_tree_init (scopes_tree parent) /**< parent scope */
+scopes_tree_init (scopes_tree parent, /**< parent scope */
+                  scope_type_t type) /**< scope type */
 {
   scopes_tree tree = (scopes_tree) jsp_mm_alloc (sizeof (scopes_tree_int));
   memset (tree, 0, sizeof (scopes_tree_int));
@@ -775,9 +816,14 @@ scopes_tree_init (scopes_tree parent) /**< parent scope */
     parent->t.children_num++;
   }
   tree->instrs_count = 0;
+  tree->type = type;
   tree->strict_mode = false;
-  tree->ref_eval = false;
   tree->ref_arguments = false;
+  tree->ref_eval = false;
+  tree->contains_with = false;
+  tree->contains_try = false;
+  tree->contains_delete = false;
+  tree->contains_functions = false;
   tree->instrs = linked_list_init (sizeof (op_meta));
   tree->var_decls_cout = 0;
   tree->var_decls = linked_list_init (sizeof (op_meta));

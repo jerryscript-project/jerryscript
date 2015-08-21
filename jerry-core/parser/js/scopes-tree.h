@@ -40,6 +40,16 @@ typedef struct tree_header
 } tree_header;
 
 /**
+ * Scope type
+ */
+typedef enum
+{
+  SCOPE_TYPE_GLOBAL, /**< the Global code scope */
+  SCOPE_TYPE_FUNCTION, /**< a function code scope */
+  SCOPE_TYPE_EVAL /**< an eval code scope */
+} scope_type_t;
+
+/**
  * Structure for holding scope information during parsing
  */
 typedef struct
@@ -49,14 +59,24 @@ typedef struct
   vm_instr_counter_t instrs_count; /**< count of instructions */
   linked_list var_decls; /**< instructions for variable declarations */
   uint8_t var_decls_cout; /**< number of instructions for variable declarations */
+  scope_type_t type : 2; /**< scope type */
   bool strict_mode: 1; /**< flag, indicating that scope's code should be executed in strict mode */
-  bool ref_arguments: 1; /**< flag, indicating that "arguments" variable is used inside the scope */
-  bool ref_eval: 1; /**< flag, indicating that "eval" is used inside the scope */
+  bool ref_arguments: 1; /**< flag, indicating that "arguments" variable is used inside the scope
+                          *   (not depends on subscopes) */
+  bool ref_eval: 1; /**< flag, indicating that "eval" is used inside the scope
+                          *   (not depends on subscopes) */
+  bool contains_with: 1; /**< flag, indicationg whether 'with' statement is contained in the scope
+                          *   (not depends on subscopes) */
+  bool contains_try: 1; /**< flag, indicationg whether 'try' statement is contained in the scope
+                         *   (not depends on subscopes) */
+  bool contains_delete: 1; /**< flag, indicationg whether 'delete' operator is contained in the scope
+                            *   (not depends on subscopes) */
+  bool contains_functions: 1; /**< flag, indicating that the scope contains a function declaration / expression */
 } scopes_tree_int;
 
 typedef scopes_tree_int * scopes_tree;
 
-scopes_tree scopes_tree_init (scopes_tree);
+scopes_tree scopes_tree_init (scopes_tree, scope_type_t);
 void scopes_tree_free (scopes_tree);
 vm_instr_counter_t scopes_tree_instrs_num (scopes_tree);
 vm_instr_counter_t scopes_tree_var_decls_num (scopes_tree);
@@ -72,6 +92,10 @@ vm_instr_t *scopes_tree_raw_data (scopes_tree, uint8_t *, size_t, lit_id_hash_ta
 void scopes_tree_set_strict_mode (scopes_tree, bool);
 void scopes_tree_set_arguments_used (scopes_tree);
 void scopes_tree_set_eval_used (scopes_tree);
+void scopes_tree_set_contains_with (scopes_tree);
+void scopes_tree_set_contains_try (scopes_tree);
+void scopes_tree_set_contains_delete (scopes_tree);
+void scopes_tree_set_contains_functions (scopes_tree);
 bool scopes_tree_strict_mode (scopes_tree);
 
 #endif /* SCOPES_TREE_H */

@@ -63,7 +63,7 @@ STATIC_STACK (scopes, scopes_tree)
 static operand parse_expression (bool, jsp_eval_ret_store_t);
 static void parse_statement (jsp_label_t *outermost_stmt_label_p);
 static operand parse_assignment_expression (bool);
-static void parse_source_element_list (bool);
+static void parse_source_element_list (bool, bool);
 static operand parse_argument_list (varg_list_type, operand, operand *);
 
 static bool
@@ -404,7 +404,7 @@ parse_property_assignment (void)
 
     jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
-    parse_source_element_list (false);
+    parse_source_element_list (false, true);
 
     jsp_label_restore_set (masked_label_set_p);
 
@@ -677,7 +677,7 @@ parse_function_declaration (void)
   bool was_in_function = inside_function;
   inside_function = true;
 
-  parse_source_element_list (false);
+  parse_source_element_list (false, true);
 
   next_token_must_be (TOK_CLOSE_BRACE);
 
@@ -743,7 +743,7 @@ parse_function_expression (void)
 
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
-  parse_source_element_list (false);
+  parse_source_element_list (false, true);
 
   jsp_label_restore_set (masked_label_set_p);
 
@@ -2965,7 +2965,10 @@ check_directive_prologue_for_use_strict ()
  *   ;
  */
 static void
-parse_source_element_list (bool is_global) /**< flag, indicating that we parsing global context */
+parse_source_element_list (bool is_global, /**< flag, indicating that we parsing global context */
+                           bool is_try_replace_local_vars_with_regs) /**< flag, indicating whether
+                                                                      *   to try moving local function
+                                                                      *   variables to registers */
 {
   const token_type end_tt = is_global ? TOK_EOF : TOK_CLOSE_BRACE;
 
@@ -3014,7 +3017,68 @@ parse_source_element_list (bool is_global) /**< flag, indicating that we parsing
   {
     scope_flags = (opcode_scope_code_flags_t) (scope_flags | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
   }
+
   rewrite_scope_code_flags (scope_code_flags_oc, scope_flags);
+
+#ifdef CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER
+  if (is_try_replace_local_vars_with_regs
+      && fe_scope_tree->type == SCOPE_TYPE_FUNCTION)
+  {
+    bool may_replace_vars_with_regs = (!inside_eval
+                                       && !fe_scope_tree->ref_eval /* 'eval' can reference variables in a way,
+                                                                    * that can't be figured out through static
+                                                                    * analysis */
+                                       && !fe_scope_tree->ref_arguments /* 'arguments' variable, if declared,
+                                                                         * should not be moved to a register,
+                                                                         * as it is currently declared in
+                                                                         * function's lexical environment
+                                                                         * (generally, the problem is the same,
+                                                                         *   as with function's arguments) */
+                                       && !fe_scope_tree->contains_with /* 'with' create new lexical environment
+                                                                         *  and so can change way identifier
+                                                                         *  is evaluated */
+                                       && !fe_scope_tree->contains_try /* same for 'catch' */
+                                       && !fe_scope_tree->contains_delete /* 'delete' handles variable's names,
+                                                                           * not values */
+                                       && !fe_scope_tree->contains_functions); /* nested functions can reference
+                                                                                * variables of current function */
+
+    if (may_replace_vars_with_regs)
+    {
+      /* no subscopes, as no function declarations / eval etc. in the scope */
+      JERRY_ASSERT (fe_scope_tree->t.children_num == 0);
+
+      bool are_all_vars_replaced = true;
+      for (vm_instr_counter_t var_decl_pos = 0;
+           var_decl_pos < fe_scope_tree->var_decls_cout;
+           var_decl_pos++)
+      {
+        op_meta *om_p = (op_meta *) linked_list_element (fe_scope_tree->var_decls, var_decl_pos);
+
+        if (!dumper_try_replace_var_with_reg (fe_scope_tree, om_p))
+        {
+          are_all_vars_replaced = false;
+        }
+      }
+
+      if (are_all_vars_replaced)
+      {
+        /*
+         * All local variables were replaced with registers, so variable declarations could be removed.
+         *
+         * TODO:
+         *      Support removal of a particular variable declaration, without removing the whole list.
+         */
+
+        linked_list_free (fe_scope_tree->var_decls);
+        fe_scope_tree->var_decls = linked_list_init (sizeof (op_meta));
+        fe_scope_tree->var_decls_cout = 0;
+      }
+    }
+  }
+#else /* CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER */
+  (void) is_try_replace_local_vars_with_regs;
+#endif /* !CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER */
 
   rewrite_reg_var_decl ();
   dumper_finish_scope ();
@@ -3087,7 +3151,22 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
     lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
     skip_newlines ();
-    parse_source_element_list (true);
+
+    /*
+     * We don't try to perform replacement of local variables with registers for global code, eval code,
+     * and code of dynamically constructed functions.
+     *
+     * For global and eval code the replacement can be connected with side effects,
+     * that currently can only be figured out in runtime. For example, a variable
+     * can be redefined as accessor property of the Global object.
+     *
+     * For dynamically constructed functions replacement is not performed due to missing
+     * information about argument names (the names array is not passed to parser_parse_program).
+     * This could be solved by providing general way to iterate argument names during the optimization,
+     * or by expanding the optimization to run-time. In the second case, argument values could also
+     * be moved to registers.
+     */
+    parse_source_element_list (true, false);
 
     skip_newlines ();
     JERRY_ASSERT (token_is (TOK_EOF));

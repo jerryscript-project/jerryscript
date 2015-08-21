@@ -64,7 +64,7 @@ main (int __attr_unused___ argc,
                 OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
                 | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
                 INVALID_VALUE),
-    getop_reg_var_decl (OPCODE_REG_FIRST, OPCODE_REG_GENERAL_FIRST),
+    getop_reg_var_decl (OPCODE_REG_FIRST, OPCODE_REG_GENERAL_FIRST, 0),
     getop_var_decl (0),             // var a;
     getop_assignment (130, 1, 1),   // $tmp0 = 1;
     getop_assignment (0, 6, 130),   // a = $tmp0;

@@ -167,4 +167,9 @@
  */
 // #define CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
 
+/**
+ * Flag, indicating whether to enable parser-time byte-code optimizations
+ */
+#define CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER
+
 #endif /* !CONFIG_H */

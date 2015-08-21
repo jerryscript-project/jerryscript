@@ -19,6 +19,7 @@
 #include "opcodes.h"
 #include "ecma-globals.h"
 #include "lexer.h"
+#include "scopes-tree.h"
 
 typedef enum __attr_packed___
 {
@@ -54,6 +55,8 @@ bool operand_is_empty (operand);
 
 void dumper_init (void);
 void dumper_free (void);
+
+bool dumper_try_replace_var_with_reg (scopes_tree, op_meta *);
 
 void dumper_new_statement (void);
 void dumper_new_scope (void);

@@ -163,8 +163,8 @@ typedef struct
   bool is_eval_code; /**< is current code executed with eval */
   bool is_call_in_direct_eval_form; /** flag, indicating if there is call of 'Direct call to eval' form in
                                      *  process (see also: OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) */
-  idx_t min_reg_num; /**< minimum idx used for register identification */
-  idx_t max_reg_num; /**< maximum idx used for register identification */
+  idx_t min_reg_idx; /**< minimum idx used for register identification */
+  idx_t max_reg_idx; /**< maximum idx used for register identification */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
   vm_stack_frame_t stack_frame; /**< stack frame associated with the context */
 

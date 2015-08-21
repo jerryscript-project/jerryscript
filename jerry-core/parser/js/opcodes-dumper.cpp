@@ -19,7 +19,32 @@
 #include "stack.h"
 #include "jsp-early-error.h"
 
-static idx_t temp_name, max_temp_name;
+/**
+ * Register allocator's counter
+ */
+static idx_t jsp_reg_next;
+
+/**
+ * Maximum identifier of a register, allocated for intermediate value storage
+ *
+ * See also:
+ *          dumper_new_scope, dumper_finish_scope
+ */
+static idx_t jsp_reg_max_for_temps;
+
+/**
+ * Maximum identifier of a register, allocated for storage of a variable value.
+ *
+ * The value can be INVALID_VALUE, indicating that no registers were allocated for variable values.
+ *
+ * Note:
+ *      Registers for variable values are always allocated after registers for temporary values,
+ *      so the value, if not equal to INVALID_VALUE, is always greater than jsp_reg_max_for_temps.
+ *
+ * See also:
+ *          dumper_try_replace_var_with_reg
+ */
+static idx_t jsp_reg_max_for_local_var;
 
 enum
 {
@@ -101,9 +126,9 @@ STATIC_STACK (finallies, vm_instr_counter_t)
 
 enum
 {
-  temp_names_global_size
+  jsp_reg_id_stack_global_size
 };
-STATIC_STACK (temp_names, idx_t)
+STATIC_STACK (jsp_reg_id_stack, idx_t)
 
 enum
 {
@@ -112,24 +137,16 @@ enum
 STATIC_STACK (reg_var_decls, vm_instr_counter_t)
 
 /**
- * Reset counter of register variables allocator
- * to identifier of first general register
- */
-static void
-reset_temp_name (void)
-{
-  temp_name = OPCODE_REG_GENERAL_FIRST;
-} /* reset_temp_name */
-
-/**
- * Allocate next register variable
+ * Allocate next register for intermediate value
  *
- * @return identifier of the allocated variable
+ * @return identifier of the allocated register
  */
 static idx_t
-next_temp_name (void)
+jsp_alloc_reg_for_temp (void)
 {
-  idx_t next_reg = temp_name++;
+  JERRY_ASSERT (jsp_reg_max_for_local_var == INVALID_VALUE);
+
+  idx_t next_reg = jsp_reg_next++;
 
   if (next_reg > OPCODE_REG_GENERAL_LAST)
   {
@@ -140,13 +157,172 @@ next_temp_name (void)
     PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Not enough register variables", LIT_ITERATOR_POS_ZERO);
   }
 
-  if (max_temp_name < next_reg)
+  if (jsp_reg_max_for_temps < next_reg)
   {
-    max_temp_name = next_reg;
+    jsp_reg_max_for_temps = next_reg;
   }
 
   return next_reg;
-} /* next_temp_name */
+} /* jsp_alloc_reg_for_temp */
+
+#ifdef CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER
+/**
+ * Try to move local variable to a register
+ *
+ * Note:
+ *      First instruction of the scope should be either func_decl_n or func_expr_n, as the scope is function scope,
+ *      and the optimization is not applied to 'new Function ()'-like constructed functions.
+ *
+ * See also:
+ *          parse_source_element_list
+ *          parser_parse_program
+ *
+ * @return true, if optimization performed successfully, i.e.:
+ *                - there is a free register to use;
+ *                - the variable name is not equal to any of the function's argument names;
+ *         false - otherwise.
+ */
+bool
+dumper_try_replace_var_with_reg (scopes_tree tree, /**< a function scope, created for
+                                                    *   function declaration or function expresssion */
+                                 op_meta *var_decl_om_p) /**< operation meta of corresponding variable declaration */
+{
+  JERRY_ASSERT (tree->type == SCOPE_TYPE_FUNCTION);
+
+  JERRY_ASSERT (var_decl_om_p->op.op_idx == VM_OP_VAR_DECL);
+  JERRY_ASSERT (var_decl_om_p->lit_id[0].packed_value != NOT_A_LITERAL.packed_value);
+  JERRY_ASSERT (var_decl_om_p->lit_id[1].packed_value == NOT_A_LITERAL.packed_value);
+  JERRY_ASSERT (var_decl_om_p->lit_id[2].packed_value == NOT_A_LITERAL.packed_value);
+
+  vm_instr_counter_t instr_pos = 0;
+
+  op_meta header_opm = scopes_tree_op_meta (tree, instr_pos++);
+  JERRY_ASSERT (header_opm.op.op_idx == VM_OP_FUNC_EXPR_N || header_opm.op.op_idx == VM_OP_FUNC_DECL_N);
+
+  while (true)
+  {
+    op_meta meta_opm = scopes_tree_op_meta (tree, instr_pos++);
+    JERRY_ASSERT (meta_opm.op.op_idx == VM_OP_META);
+
+    opcode_meta_type meta_type = (opcode_meta_type) meta_opm.op.data.meta.type;
+
+    if (meta_type == OPCODE_META_TYPE_FUNCTION_END)
+    {
+      /* marker of function argument list end reached */
+      break;
+    }
+    else
+    {
+      JERRY_ASSERT (meta_type == OPCODE_META_TYPE_VARG);
+
+      /* the varg specifies argument name, and so should be a string literal */
+      JERRY_ASSERT (meta_opm.op.data.meta.data_1 == LITERAL_TO_REWRITE);
+      JERRY_ASSERT (meta_opm.lit_id[1].packed_value != NOT_A_LITERAL.packed_value);
+
+      if (meta_opm.lit_id[1].packed_value == var_decl_om_p->lit_id[0].packed_value)
+      {
+        /*
+         * Optimization is not performed, because the variable's name is equal to an argument name,
+         * and the argument's value would be initialized by its name in run-time.
+         *
+         * See also:
+         *          parser_parse_program
+         */
+        return false;
+      }
+    }
+  }
+
+  if (jsp_reg_max_for_local_var == INVALID_VALUE)
+  {
+    jsp_reg_max_for_local_var = jsp_reg_max_for_temps;
+  }
+
+  if (jsp_reg_max_for_local_var == OPCODE_REG_GENERAL_LAST)
+  {
+    /* not enough registers */
+    return false;
+  }
+  JERRY_ASSERT (jsp_reg_max_for_local_var < OPCODE_REG_GENERAL_LAST);
+
+  idx_t reg = ++jsp_reg_max_for_local_var;
+
+  lit_cpointer_t lit_cp = var_decl_om_p->lit_id[0];
+
+  for (vm_instr_counter_t instr_pos = 0;
+       instr_pos < tree->instrs_count;
+       instr_pos++)
+  {
+    op_meta om = scopes_tree_op_meta (tree, instr_pos);
+
+    vm_op_t opcode = (vm_op_t) om.op.op_idx;
+
+    int args_num = 0;
+
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+    if (opcode == VM_OP_ ## opcode_name_uppercase) \
+    { \
+      args_num = 0; \
+    }
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+    if (opcode == VM_OP_ ## opcode_name_uppercase) \
+    { \
+      JERRY_STATIC_ASSERT (((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
+      args_num = 1; \
+    }
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+    if (opcode == VM_OP_ ## opcode_name_uppercase) \
+    { \
+      JERRY_STATIC_ASSERT (((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
+      JERRY_STATIC_ASSERT (((arg2_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
+      args_num = 2; \
+    }
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+    if (opcode == VM_OP_ ## opcode_name_uppercase) \
+    { \
+      JERRY_STATIC_ASSERT (((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
+      \
+      /*
+       * See also:
+       *          The loop below
+       */ \
+      \
+      JERRY_ASSERT ((opcode == VM_OP_ASSIGNMENT && (arg2_type) == VM_OP_ARG_TYPE_TYPE_OF_NEXT) \
+                    || (opcode != VM_OP_ASSIGNMENT && ((arg2_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0)); \
+      JERRY_STATIC_ASSERT (((arg3_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
+      args_num = 3; \
+    }
+
+#include "vm-opcodes.inc.h"
+
+    for (int arg_index = 0; arg_index < args_num; arg_index++)
+    {
+      /*
+       * This is the only opcode with statically unspecified argument type (checked by assertions above)
+       */
+      if (opcode == VM_OP_ASSIGNMENT
+          && arg_index == 1
+          && om.op.data.assignment.type_value_right != VM_OP_ARG_TYPE_VARIABLE)
+      {
+        break;
+      }
+
+      if (om.lit_id[arg_index].packed_value == lit_cp.packed_value)
+      {
+        om.lit_id[arg_index] = NOT_A_LITERAL;
+
+        raw_instr *raw_p = (raw_instr *) (&om.op);
+        JERRY_ASSERT (raw_p->uids[arg_index + 1] == LITERAL_TO_REWRITE);
+        raw_p->uids[arg_index + 1] = reg;
+      }
+    }
+
+    scopes_tree_set_op_meta (tree, instr_pos, om);
+  }
+
+  return true;
+} /* dumper_try_replace_var_with_reg */
+#endif /* CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER */
 
 static op_meta
 create_op_meta (vm_instr_t op, lit_cpointer_t lit_id1, lit_cpointer_t lit_id2, lit_cpointer_t lit_id3)
@@ -215,7 +391,7 @@ tmp_operand (void)
   operand ret;
 
   ret.type = OPERAND_TMP;
-  ret.data.uid = next_temp_name ();
+  ret.data.uid = jsp_alloc_reg_for_temp ();
 
   return ret;
 }
@@ -672,25 +848,30 @@ operand_is_empty (operand op)
 void
 dumper_new_statement (void)
 {
-  reset_temp_name ();
+  jsp_reg_next = OPCODE_REG_GENERAL_FIRST;
 }
 
 void
 dumper_new_scope (void)
 {
-  STACK_PUSH (temp_names, temp_name);
-  STACK_PUSH (temp_names, max_temp_name);
-  reset_temp_name ();
-  max_temp_name = temp_name;
+  JERRY_ASSERT (jsp_reg_max_for_local_var == INVALID_VALUE);
+
+  STACK_PUSH (jsp_reg_id_stack, jsp_reg_next);
+  STACK_PUSH (jsp_reg_id_stack, jsp_reg_max_for_temps);
+
+  jsp_reg_next = OPCODE_REG_GENERAL_FIRST;
+  jsp_reg_max_for_temps = jsp_reg_next;
 }
 
 void
 dumper_finish_scope (void)
 {
-  max_temp_name = STACK_TOP (temp_names);
-  STACK_DROP (temp_names, 1);
-  temp_name = STACK_TOP (temp_names);
-  STACK_DROP (temp_names, 1);
+  JERRY_ASSERT (jsp_reg_max_for_local_var == INVALID_VALUE);
+
+  jsp_reg_max_for_temps = STACK_TOP (jsp_reg_id_stack);
+  STACK_DROP (jsp_reg_id_stack, 1);
+  jsp_reg_next = STACK_TOP (jsp_reg_id_stack);
+  STACK_DROP (jsp_reg_id_stack, 1);
 }
 
 /**
@@ -712,7 +893,7 @@ dumper_finish_scope (void)
 void
 dumper_start_varg_code_sequence (void)
 {
-  STACK_PUSH (temp_names, temp_name);
+  STACK_PUSH (jsp_reg_id_stack, jsp_reg_next);
 } /* dumper_start_varg_code_sequence */
 
 /**
@@ -724,8 +905,8 @@ dumper_start_varg_code_sequence (void)
 void
 dumper_finish_varg_code_sequence (void)
 {
-  temp_name = STACK_TOP (temp_names);
-  STACK_DROP (temp_names, 1);
+  jsp_reg_next = STACK_TOP (jsp_reg_id_stack);
+  STACK_DROP (jsp_reg_id_stack, 1);
 } /* dumper_finish_varg_code_sequence */
 
 /**
@@ -2606,7 +2787,7 @@ void
 dump_reg_var_decl_for_rewrite (void)
 {
   STACK_PUSH (reg_var_decls, serializer_get_current_instr_counter ());
-  serializer_dump_op_meta (create_op_meta_000 (getop_reg_var_decl (OPCODE_REG_FIRST, INVALID_VALUE)));
+  serializer_dump_op_meta (create_op_meta_000 (getop_reg_var_decl (OPCODE_REG_FIRST, INVALID_VALUE, INVALID_VALUE)));
 }
 
 void
@@ -2615,7 +2796,20 @@ rewrite_reg_var_decl (void)
   vm_instr_counter_t reg_var_decl_oc = STACK_TOP (reg_var_decls);
   op_meta opm = serializer_get_op_meta (reg_var_decl_oc);
   JERRY_ASSERT (opm.op.op_idx == VM_OP_REG_VAR_DECL);
-  opm.op.data.reg_var_decl.max = max_temp_name;
+
+  if (jsp_reg_max_for_local_var != INVALID_VALUE)
+  {
+    JERRY_ASSERT (jsp_reg_max_for_local_var >= jsp_reg_max_for_temps);
+    opm.op.data.reg_var_decl.local_var_regs_num = (idx_t) (jsp_reg_max_for_local_var - jsp_reg_max_for_temps);
+    opm.op.data.reg_var_decl.max = jsp_reg_max_for_local_var;
+
+    jsp_reg_max_for_local_var = INVALID_VALUE;
+  }
+  else
+  {
+    opm.op.data.reg_var_decl.max = jsp_reg_max_for_temps;
+    opm.op.data.reg_var_decl.local_var_regs_num = 0;
+  }
   serializer_rewrite_op_meta (reg_var_decl_oc, opm);
   STACK_DROP (reg_var_decls, 1);
 }
@@ -2629,8 +2823,10 @@ dump_retval (operand op)
 void
 dumper_init (void)
 {
-  max_temp_name = 0;
-  reset_temp_name ();
+  jsp_reg_next = OPCODE_REG_GENERAL_FIRST;
+  jsp_reg_max_for_temps = OPCODE_REG_GENERAL_FIRST;
+  jsp_reg_max_for_local_var = INVALID_VALUE;
+
   STACK_INIT (U8);
   STACK_INIT (varg_headers);
   STACK_INIT (function_ends);
@@ -2644,7 +2840,7 @@ dumper_init (void)
   STACK_INIT (catches);
   STACK_INIT (finallies);
   STACK_INIT (tries);
-  STACK_INIT (temp_names);
+  STACK_INIT (jsp_reg_id_stack);
   STACK_INIT (reg_var_decls);
 }
 
@@ -2664,6 +2860,6 @@ dumper_free (void)
   STACK_FREE (catches);
   STACK_FREE (finallies);
   STACK_FREE (tries);
-  STACK_FREE (temp_names);
+  STACK_FREE (jsp_reg_id_stack);
   STACK_FREE (reg_var_decls);
 }

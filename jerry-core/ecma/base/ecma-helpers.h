@@ -58,6 +58,7 @@ extern bool ecma_is_value_undefined (ecma_value_t value);
 extern bool ecma_is_value_null (ecma_value_t value);
 extern bool ecma_is_value_boolean (ecma_value_t value);
 extern bool ecma_is_value_true (ecma_value_t value);
+extern bool ecma_is_value_array_hole (ecma_value_t value);
 
 extern bool ecma_is_value_number (ecma_value_t value);
 extern bool ecma_is_value_string (ecma_value_t value);

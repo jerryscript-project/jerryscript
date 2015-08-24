@@ -131,6 +131,11 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
        index < array_items_count;
        index++)
   {
+    if (ecma_is_value_array_hole (array_items_p[index]))
+    {
+      continue;
+    }
+
     ecma_string_t* item_name_string_p = ecma_new_ecma_string_from_uint32 (index);
 
     ecma_property_descriptor_t item_prop_desc = ecma_make_empty_property_descriptor ();

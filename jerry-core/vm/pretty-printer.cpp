@@ -263,6 +263,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
             case ECMA_SIMPLE_VALUE_FALSE: printf ("false"); break;
             case ECMA_SIMPLE_VALUE_TRUE: printf ("true"); break;
             case ECMA_SIMPLE_VALUE_UNDEFINED: printf ("undefined"); break;
+            case ECMA_SIMPLE_VALUE_ARRAY_HOLE: printf ("hole"); break;
             default: JERRY_UNREACHABLE ();
           }
           printf (": SIMPLE;");

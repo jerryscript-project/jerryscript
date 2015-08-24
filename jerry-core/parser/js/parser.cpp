@@ -581,7 +581,7 @@ parse_argument_list (varg_list_type vlt, operand obj, operand *this_arg_p)
     {
       if (token_is (TOK_COMMA))
       {
-        op = dump_undefined_assignment_res ();
+        op = dump_array_hole_assignment_res ();
         dump_varg (op);
       }
       else

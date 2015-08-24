@@ -747,6 +747,25 @@ dumper_is_eval_literal (operand obj) /**< byte-code operand */
   return is_eval_lit;
 } /* dumper_is_eval_literal */
 
+/**
+ * Dump assignment of an array-hole simple value to a register
+ *
+ * @return register number, to which the value vas assigned
+ */
+operand
+dump_array_hole_assignment_res (void)
+{
+  operand op = tmp_operand ();
+
+  const vm_instr_t instr = getop_assignment (op.data.uid,
+                                             OPCODE_ARG_TYPE_SIMPLE,
+                                             ECMA_SIMPLE_VALUE_ARRAY_HOLE);
+  const op_meta om = create_op_meta_000 (instr);
+  serializer_dump_op_meta (om);
+
+  return op;
+} /* dump_array_hole_assignment_res */
+
 void
 dump_boolean_assignment (operand op, bool is_true)
 {

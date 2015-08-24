@@ -152,3 +152,6 @@ for (i = 0; i < 1024; i++)
 {
   assert (arr[i] === i + 1);
 }
+
+var elision = [0,,2 ,3];
+assert (elision.hasOwnProperty(1) == false);

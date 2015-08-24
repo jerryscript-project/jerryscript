@@ -63,6 +63,7 @@ void dumper_finish_varg_code_sequence (void);
 
 extern bool dumper_is_eval_literal (operand);
 
+operand dump_array_hole_assignment_res (void);
 void dump_boolean_assignment (operand, bool);
 operand dump_boolean_assignment_res (bool);
 void dump_string_assignment (operand, lit_cpointer_t);

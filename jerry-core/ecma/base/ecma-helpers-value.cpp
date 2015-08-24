@@ -156,6 +156,19 @@ ecma_is_value_true (ecma_value_t value) /**< ecma-value */
 } /* ecma_is_value_true */
 
 /**
+ * Check if the value is array hole.
+ *
+ * @return true - if the value contains ecma-array-hole simple value,
+ *         false - otherwise.
+ */
+bool __attr_pure___ __attr_always_inline___
+ecma_is_value_array_hole (ecma_value_t value) /**< ecma-value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
+          && ecma_get_value_value_field (value) == ECMA_SIMPLE_VALUE_ARRAY_HOLE);
+} /* ecma_is_value_array_hole */
+
+/**
  * Check if the value is ecma-number.
  *
  * @return true - if the value contains ecma-number value,

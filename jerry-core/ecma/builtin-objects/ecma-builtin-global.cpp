@@ -731,7 +731,7 @@ ecma_builtin_global_object_is_finite (ecma_value_t this_arg __attr_unused___, /*
  */
 static bool
 ecma_builtin_global_object_character_is_in (uint32_t character, /**< character */
-                                            uint8_t *bitset) /**< character set */
+                                            const uint8_t *bitset) /**< character set */
 {
   JERRY_ASSERT (character < 128);
   return (bitset[character >> 3] & (1 << (character & 0x7))) != 0;
@@ -742,7 +742,7 @@ ecma_builtin_global_object_character_is_in (uint32_t character, /**< character *
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped URI set.
  */
-static uint8_t unescaped_uri_set[16] =
+static const uint8_t unescaped_uri_set[16] =
 {
   0x0, 0x0, 0x0, 0x0, 0xda, 0xff, 0xff, 0xaf,
   0xff, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
@@ -753,7 +753,7 @@ static uint8_t unescaped_uri_set[16] =
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped component URI set.
  */
-static uint8_t unescaped_uri_component_set[16] =
+static const uint8_t unescaped_uri_component_set[16] =
 {
   0x0, 0x0, 0x0, 0x0, 0x82, 0x67, 0xff, 0x3,
   0xfe, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
@@ -779,7 +779,7 @@ static uint8_t unescaped_uri_component_set[16] =
  */
 static ecma_completion_value_t
 ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___, /**< uri argument */
-                                              uint8_t *reserved_uri_bitset) /**< reserved characters bitset */
+                                              const uint8_t *reserved_uri_bitset) /**< reserved characters bitset */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -1011,7 +1011,7 @@ ecma_builtin_global_object_byte_to_hex (lit_utf8_byte_t *dest_p, /**< destinatio
 {
   JERRY_ASSERT (byte < 256);
 
-  dest_p[0] = '%';
+  dest_p[0] = LIT_CHAR_PERCENT;
   ecma_char_t hex_digit = (ecma_char_t) (byte >> 4);
   dest_p[1] = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
   hex_digit = (lit_utf8_byte_t) (byte & 0xf);
@@ -1026,7 +1026,7 @@ ecma_builtin_global_object_byte_to_hex (lit_utf8_byte_t *dest_p, /**< destinatio
  */
 static ecma_completion_value_t
 ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argument */
-                                              uint8_t* unescaped_uri_bitset) /**< unescaped bitset */
+                                              const uint8_t *unescaped_uri_bitset_p) /**< unescaped bitset */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -1066,7 +1066,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     /* Input validation. */
     if (*input_char_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
     {
-      if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset))
+      if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset_p))
       {
         output_length++;
       }
@@ -1114,7 +1114,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
       if (*input_char_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
       {
-        if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset))
+        if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset_p))
         {
           *output_char_p++ = *input_char_p;
         }
@@ -1179,6 +1179,153 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg __attr_un
 {
   return ecma_builtin_global_object_encode_uri_helper (uri_component, unescaped_uri_component_set);
 } /* ecma_builtin_global_object_encode_uri_component */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+
+/*
+ * Maximum value of a byte.
+ */
+#define ECMA_ESCAPE_MAXIMUM_BYTE_VALUE (255)
+
+/*
+ * Format is a percent sign followed by lowercase u and four hex digits.
+ */
+#define ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE (6)
+
+/*
+ * Escape characters bitset:
+ *   One bit for each character between 0 - 127.
+ *   Bit is set if the character does not need to be converted to %xx form.
+ *   These characters are: a-z A-Z 0-9 @ * _ + - . /
+ */
+static const uint8_t ecma_escape_set[16] =
+{
+  0x0, 0x0, 0x0, 0x0, 0x0, 0xec, 0xff, 0x3,
+  0xff, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x7
+};
+
+/**
+ * The Global object's 'escape' routine
+ *
+ * See also:
+ *          ECMA-262 v5, B.2.1
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< this argument */
+                                   ecma_value_t arg) /**< routine's first argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  ECMA_TRY_CATCH (string,
+                  ecma_op_to_string (arg),
+                  ret_value);
+
+  ecma_string_t *input_string_p = ecma_get_string_from_value (string);
+  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
+
+  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
+                          input_size,
+                          lit_utf8_byte_t);
+
+  ecma_string_to_utf8_string (input_string_p,
+                              input_start_p,
+                              (ssize_t) (input_size));
+
+  /*
+   * The escape routine has two major phases: first we compute
+   * the length of the output, then we encode the input.
+   */
+  lit_utf8_iterator_t iterator = lit_utf8_iterator_create (input_start_p, input_size);
+  lit_utf8_size_t output_length = 0;
+
+  while (!lit_utf8_iterator_is_eos (&iterator))
+  {
+    ecma_char_t chr = lit_utf8_iterator_read_next (&iterator);
+
+    if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      if (ecma_builtin_global_object_character_is_in ((uint32_t) chr, ecma_escape_set))
+      {
+        output_length++;
+      }
+      else
+      {
+        output_length += URI_ENCODED_BYTE_SIZE;
+      }
+    }
+    else if (chr > ECMA_ESCAPE_MAXIMUM_BYTE_VALUE)
+    {
+      output_length += ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE;
+    }
+    else
+    {
+      output_length += URI_ENCODED_BYTE_SIZE;
+    }
+  }
+
+  MEM_DEFINE_LOCAL_ARRAY (output_start_p,
+                          output_length,
+                          lit_utf8_byte_t);
+
+  lit_utf8_byte_t *output_char_p = output_start_p;
+
+  lit_utf8_iterator_seek_bos (&iterator);
+
+  while (!lit_utf8_iterator_is_eos (&iterator))
+  {
+    ecma_char_t chr = lit_utf8_iterator_read_next (&iterator);
+
+    if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      if (ecma_builtin_global_object_character_is_in ((uint32_t) chr, ecma_escape_set))
+      {
+        *output_char_p = (lit_utf8_byte_t) chr;
+        output_char_p++;
+      }
+      else
+      {
+        ecma_builtin_global_object_byte_to_hex (output_char_p, (lit_utf8_byte_t) chr);
+        output_char_p += URI_ENCODED_BYTE_SIZE;
+      }
+    }
+    else if (chr > ECMA_ESCAPE_MAXIMUM_BYTE_VALUE)
+    {
+      /*
+       * Although ecma_builtin_global_object_byte_to_hex inserts a percent (%) sign
+       * the follow-up changes overwrites it. We call this function twice to
+       * produce four hexadecimal characters (%uxxxx format).
+       */
+      ecma_builtin_global_object_byte_to_hex (output_char_p + 3, (lit_utf8_byte_t) (chr & 0xff));
+      ecma_builtin_global_object_byte_to_hex (output_char_p + 1, (lit_utf8_byte_t) (chr >> JERRY_BITSINBYTE));
+      output_char_p[0] = LIT_CHAR_PERCENT;
+      output_char_p[1] = LIT_CHAR_LOWERCASE_U;
+      output_char_p += ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE;
+    }
+    else
+    {
+      ecma_builtin_global_object_byte_to_hex (output_char_p, (lit_utf8_byte_t) chr);
+      output_char_p += URI_ENCODED_BYTE_SIZE;
+    }
+  }
+
+  JERRY_ASSERT (output_start_p + output_length == output_char_p);
+
+  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length);
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
+
+  MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+
+  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+
+  ECMA_FINALIZE (string);
+  return ret_value;
+} /* ecma_builtin_global_object_escape */
+
+#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

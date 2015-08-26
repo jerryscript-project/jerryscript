@@ -650,7 +650,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   {
     lit_utf8_size_t buffer_size = ecma_string_get_size (string2_p);
     MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-    ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
+    ecma_string_to_utf8_string (string2_p, utf8_str_p, (ssize_t) buffer_size);
     string_desc_p->hash = lit_utf8_string_hash_combine (string1_p->hash, utf8_str_p, buffer_size);
     MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }

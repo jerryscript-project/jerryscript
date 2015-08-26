@@ -351,13 +351,47 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
             case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
-            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
-            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS:
-            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS:
             {
               break;
             }
 
+            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma-value */
+            {
+              if (ecma_is_value_object (property_value))
+              {
+                ecma_object_t *obj_p = ecma_get_object_from_value (property_value);
+
+                ecma_gc_set_object_visited (obj_p, true);
+              }
+
+              break;
+            }
+
+            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma-values */
+            {
+              ecma_collection_header_t *bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                      property_value);
+
+              ecma_collection_iterator_t bound_args_iterator;
+              ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
+
+              for (ecma_length_t i = 0; i < bound_arg_list_p->unit_number; i++)
+              {
+                bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
+                JERRY_ASSERT (is_moved);
+
+                if (ecma_is_value_object (*bound_args_iterator.current_value_p))
+                {
+                  ecma_object_t *obj_p = ecma_get_object_from_value (*bound_args_iterator.current_value_p);
+
+                  ecma_gc_set_object_visited (obj_p, true);
+                }
+              }
+
+              break;
+            }
+
+            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION: /* an object */
             case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
             case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
             {

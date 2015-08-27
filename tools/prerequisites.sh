@@ -142,7 +142,7 @@ function setup_cppcheck() {
   (
     cd "$TMP_DIR/$NAME" || exit 1
     make -j HAVE_RULES=yes CFGDIR="$DEST/cfg" || exit 1
-  ) || fail_msg "$FAIL_MSG. Failed to build cppcheck 1.66."
+  ) || fail_msg "$FAIL_MSG. Failed to build cppcheck."
 
   mkdir "$DEST" || fail_msg "$FAIL_MSG. Failed to create '$DEST' directory."
   mkdir "$DEST/cfg" || fail_msg "$FAIL_MSG. Failed to create '$DEST/cfg' directory."
@@ -229,10 +229,10 @@ setup_from_zip "stm32f4" \
                "8e67f7b930c6c02bd7f89a266c8d1cae3b530510b7979fbfc0ee0d57e7f88b81" \
                "STM32F4-Discovery_FW_V1.1.0/*"
 
-setup_cppcheck "cppcheck-1.66" \
+setup_cppcheck "cppcheck-1.69" \
                "./third-party/cppcheck" \
-               "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.66/cppcheck-1.66.tar.bz2" \
-               "9469c23d39df5f03301fb0f9c29d75e9d63ed80d486cc6633145e3c95293c1b7"
+               "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.69/cppcheck-1.69.tar.bz2" \
+               "4bd5c8031258ef29764a4c92666384238a625beecbb2aceeb7065ec388c7532e"
 
 setup_vera "vera++-1.2.1" \
            "./third-party/vera++" \

@@ -1154,7 +1154,7 @@ dump_call_additional_info (opcode_call_flags_t flags, /**< call flags */
 
   const vm_instr_t instr = getop_meta (OPCODE_META_TYPE_CALL_SITE_INFO,
                                        flags,
-                                       (idx_t) (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG
+                                       (idx_t) ((flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
                                                 ? this_arg.data.uid
                                                 : INVALID_VALUE));
 

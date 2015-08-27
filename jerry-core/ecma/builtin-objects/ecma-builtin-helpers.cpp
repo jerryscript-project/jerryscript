@@ -593,9 +593,10 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                               original_size,
                               lit_utf8_byte_t);
 
-      ecma_string_to_utf8_string (original_str_p,
-                                  original_str_utf8_p,
-                                  (ssize_t) (original_size));
+      ssize_t sz = ecma_string_to_utf8_string (original_str_p,
+                                               original_str_utf8_p,
+                                               (ssize_t) (original_size));
+      JERRY_ASSERT (sz >= 0);
 
       lit_utf8_iterator_t original_it = lit_utf8_iterator_create (original_str_utf8_p, original_size);
 
@@ -607,9 +608,10 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                               search_size,
                               lit_utf8_byte_t);
 
-      ecma_string_to_utf8_string (search_str_p,
-                                  search_str_utf8_p,
-                                  (ssize_t) (search_size));
+      ssize_t sz = ecma_string_to_utf8_string (search_str_p,
+                                               search_str_utf8_p,
+                                               (ssize_t) (search_size));
+      JERRY_ASSERT (sz >= 0);
 
       lit_utf8_iterator_t search_it = lit_utf8_iterator_create (search_str_utf8_p, search_size);
 

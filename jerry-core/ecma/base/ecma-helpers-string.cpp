@@ -649,17 +649,27 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   if (!string_desc_p->u.concatenation.is_surrogate_pair_sliced)
   {
     lit_utf8_size_t buffer_size = ecma_string_get_size (string2_p);
+
     MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-    ecma_string_to_utf8_string (string2_p, utf8_str_p, (ssize_t) buffer_size);
+
+    ssize_t sz = ecma_string_to_utf8_string (string2_p, utf8_str_p, (ssize_t) buffer_size);
+    JERRY_ASSERT (sz > 0);
+
     string_desc_p->hash = lit_utf8_string_hash_combine (string1_p->hash, utf8_str_p, buffer_size);
+
     MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }
   else
   {
     lit_utf8_size_t buffer_size = ecma_string_get_size (string_desc_p);
+
     MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-    ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
+
+    ssize_t sz = ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
+    JERRY_ASSERT (sz > 0);
+
     string_desc_p->hash = lit_utf8_string_calc_hash (utf8_str_p, buffer_size);
+
     MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }
 
@@ -985,7 +995,7 @@ ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
  *         otherwise (in case size of buffer is insufficient) - negative number, which is calculated
  *         as negation of buffer size, that is required to hold the string's content.
  */
-ssize_t
+ssize_t __attr_return_value_should_be_checked___
 ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                             lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                         * (can be NULL if buffer_size == 0) */
@@ -1586,7 +1596,8 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+  ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+  JERRY_ASSERT (sz > 0);
 
   ch = lit_utf8_string_code_unit_at (utf8_str_p, buffer_size, index);;
 
@@ -1611,7 +1622,8 @@ ecma_string_get_byte_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+  ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+  JERRY_ASSERT (sz > 0);
 
   byte = utf8_str_p[index];
 
@@ -1801,7 +1813,8 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
     lit_utf8_size_t buffer_size = ecma_string_get_size (string_p);
     MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+    ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+    JERRY_ASSERT (sz >= 0);
 
     /**
      * II. Extract substring
@@ -1847,7 +1860,9 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
   if (buffer_size > 0)
   {
     MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-    ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+
+    ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
+    JERRY_ASSERT (sz >= 0);
 
     lit_utf8_iterator_t front = lit_utf8_iterator_create (utf8_str_p, buffer_size);
 

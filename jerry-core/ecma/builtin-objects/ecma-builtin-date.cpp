@@ -208,7 +208,9 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
   lit_utf8_size_t date_str_size = ecma_string_get_size (date_str_p);
   MEM_DEFINE_LOCAL_ARRAY (date_start_p, date_str_size, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (date_str_p, date_start_p, (ssize_t) date_str_size);
+  ssize_t sz = ecma_string_to_utf8_string (date_str_p, date_start_p, (ssize_t) date_str_size);
+  JERRY_ASSERT (sz >= 0);
+
   lit_utf8_iterator_t iter = lit_utf8_iterator_create (date_start_p, date_str_size);
 
   /* 1. read year */

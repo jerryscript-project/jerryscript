@@ -94,7 +94,9 @@ ecma_builtin_function_helper_get_arguments (const ecma_value_t *arguments_list_p
     lit_utf8_size_t str_size = ecma_string_get_size (str_p);
     MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (str_p, start_p, (ssize_t) str_size);
+    ssize_t sz = ecma_string_to_utf8_string (str_p, start_p, (ssize_t) str_size);
+    JERRY_ASSERT (sz >= 0);
+
     lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
 
     while (!lit_utf8_iterator_is_eos (&iter))
@@ -190,7 +192,9 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
 
     MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
+    ssize_t sz = ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
+    JERRY_ASSERT (sz >= 0);
+
     lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
     ecma_length_t last_separator = lit_utf8_iterator_get_index (&iter);
     ecma_length_t end_position;

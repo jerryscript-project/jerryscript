@@ -796,9 +796,11 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
                           input_size + 1,
                           lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (input_string_p,
-                              input_start_p,
-                              (ssize_t) (input_size));
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
+                                           input_start_p,
+                                           (ssize_t) (input_size));
+  JERRY_ASSERT (sz >= 0);
+
   input_start_p[input_size] = LIT_BYTE_NULL;
 
   lit_utf8_byte_t *input_char_p = input_start_p;
@@ -1043,9 +1045,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
                           input_size,
                           lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (input_string_p,
-                              input_start_p,
-                              (ssize_t) (input_size));
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
+                                           input_start_p,
+                                           (ssize_t) (input_size));
+  JERRY_ASSERT (sz >= 0);
 
   /*
    * The URI encoding has two major phases: first we validate the input,
@@ -1230,9 +1233,10 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
                           input_size,
                           lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (input_string_p,
-                              input_start_p,
-                              (ssize_t) (input_size));
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
+                                           input_start_p,
+                                           (ssize_t) (input_size));
+  JERRY_ASSERT (sz >= 0);
 
   /*
    * The escape routine has two major phases: first we compute

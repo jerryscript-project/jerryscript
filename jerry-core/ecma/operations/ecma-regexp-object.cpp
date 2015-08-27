@@ -71,7 +71,9 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
   lit_utf8_size_t flags_str_size = ecma_string_get_size (flags_str_p);
   MEM_DEFINE_LOCAL_ARRAY (flags_start_p, flags_str_size, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (flags_str_p, flags_start_p, (ssize_t) flags_str_size);
+  ssize_t sz = ecma_string_to_utf8_string (flags_str_p, flags_start_p, (ssize_t) flags_str_size);
+  JERRY_ASSERT (sz >= 0);
+
   lit_utf8_iterator_t iter = lit_utf8_iterator_create (flags_start_p, flags_str_size);
 
   while (!lit_utf8_iterator_is_eos (&iter)
@@ -1236,7 +1238,9 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   MEM_DEFINE_LOCAL_ARRAY (input_utf8_buffer_p, input_string_size, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (input_string_p, input_utf8_buffer_p, (ssize_t) input_string_size);
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p, input_utf8_buffer_p, (ssize_t) input_string_size);
+  JERRY_ASSERT (sz >= 0);
+
   lit_utf8_iterator_t iterator = lit_utf8_iterator_create (input_utf8_buffer_p, input_string_size);
 
   re_matcher_ctx_t re_ctx;

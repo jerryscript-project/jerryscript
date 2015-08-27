@@ -364,9 +364,10 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                               original_size,
                               lit_utf8_byte_t);
 
-      ecma_string_to_utf8_string (original_str_p,
-                                  original_str_utf8_p,
-                                  (ssize_t) (original_size));
+      ssize_t sz = ecma_string_to_utf8_string (original_str_p,
+                                               original_str_utf8_p,
+                                               (ssize_t) (original_size));
+      JERRY_ASSERT (sz >= 0);
 
       lit_utf8_iterator_t original_it = lit_utf8_iterator_create (original_str_utf8_p, original_size);
 
@@ -378,9 +379,10 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                               search_size,
                               lit_utf8_byte_t);
 
-      ecma_string_to_utf8_string (search_str_p,
-                                  search_str_utf8_p,
-                                  (ssize_t) (search_size));
+      ssize_t sz = ecma_string_to_utf8_string (search_str_p,
+                                               search_str_utf8_p,
+                                               (ssize_t) (search_size));
+      JERRY_ASSERT (sz >= 0);
 
       lit_utf8_iterator_t search_it = lit_utf8_iterator_create (search_str_utf8_p, search_size);
 
@@ -888,9 +890,10 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
                             search_size,
                             lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (search_string_p,
-                                search_start_p,
-                                (ssize_t) (search_size));
+    ssize_t sz = ecma_string_to_utf8_string (search_string_p,
+                                             search_start_p,
+                                             (ssize_t) (search_size));
+    JERRY_ASSERT (sz >= 0);
 
     ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
     lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
@@ -899,9 +902,10 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
                             input_size,
                             lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (input_string_p,
-                                input_start_p,
-                                (ssize_t) (input_size));
+    ssize_t sz = ecma_string_to_utf8_string (input_string_p,
+                                             input_start_p,
+                                             (ssize_t) (input_size));
+    JERRY_ASSERT (sz >= 0);
 
     lit_utf8_iterator_t search_iterator = lit_utf8_iterator_create (search_start_p, search_size);
     lit_utf8_iterator_t input_iterator = lit_utf8_iterator_create (input_start_p, input_size);
@@ -1409,9 +1413,10 @@ ecma_builtin_string_prototype_object_replace_main (ecma_builtin_replace_search_c
                             replace_size,
                             lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (replace_string_p,
-                                replace_start_p,
-                                (ssize_t) (replace_size));
+    ssize_t sz = ecma_string_to_utf8_string (replace_string_p,
+                                             replace_start_p,
+                                             (ssize_t) (replace_size));
+    JERRY_ASSERT (sz >= 0);
 
     context_p->replace_string_p = replace_string_p;
     context_p->replace_iterator = lit_utf8_iterator_create (replace_start_p, replace_size);
@@ -2284,9 +2289,10 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
                           input_size,
                           lit_utf8_byte_t);
 
-  ecma_string_to_utf8_string (input_string_p,
-                              input_start_p,
-                              (ssize_t) (input_size));
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
+                                           input_start_p,
+                                           (ssize_t) (input_size));
+  JERRY_ASSERT (sz >= 0);
 
   /*
    * The URI encoding has two major phases: first we compute
@@ -2503,7 +2509,8 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
   lit_utf8_byte_t *original_utf8_str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (size + 1,
                                                                                    MEM_HEAP_ALLOC_SHORT_TERM);
-  ecma_string_to_utf8_string (original_string_p, original_utf8_str_p, (ssize_t) size);
+  ssize_t sz = ecma_string_to_utf8_string (original_string_p, original_utf8_str_p, (ssize_t) size);
+  JERRY_ASSERT (sz >= 0);
 
   const ecma_length_t length = lit_utf8_string_length (original_utf8_str_p, size);
 

@@ -127,9 +127,12 @@ extern void ecma_deref_ecma_string (ecma_string_t *string_p);
 extern void ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 extern bool ecma_string_get_array_index (const ecma_string_t *str_p, uint32_t *index);
-extern ssize_t ecma_string_to_utf8_string (const ecma_string_t *string_desc_p,
-                                           lit_utf8_byte_t *buffer_p,
-                                           ssize_t buffer_size);
+
+extern ssize_t __attr_return_value_should_be_checked___
+ecma_string_to_utf8_string (const ecma_string_t *string_desc_p,
+                            lit_utf8_byte_t *buffer_p,
+                            ssize_t buffer_size);
+
 extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *string1_p,
                                                     const ecma_string_t *string2_p);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *string1_p,

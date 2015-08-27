@@ -154,7 +154,8 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
     lit_utf8_size_t re_utf8_buffer_size = ecma_string_get_size (string_p);
     MEM_DEFINE_LOCAL_ARRAY (re_utf8_buffer_p, re_utf8_buffer_size, lit_utf8_byte_t);
 
-    ecma_string_to_utf8_string (string_p, re_utf8_buffer_p, (ssize_t) re_utf8_buffer_size);
+    ssize_t sz = ecma_string_to_utf8_string (string_p, re_utf8_buffer_p, (ssize_t) re_utf8_buffer_size);
+    JERRY_ASSERT (sz >= 0);
 
     lit_utf8_byte_t *ch_p = re_utf8_buffer_p;
     lit_utf8_byte_t *last_slash_p = NULL;

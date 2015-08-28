@@ -1364,6 +1364,103 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
   return ret_value;
 } /* ecma_builtin_global_object_escape */
 
+/**
+ * The Global object's 'unescape' routine
+ *
+ * See also:
+ *          ECMA-262 v5, B.2.2
+ *
+ * @return completion value
+ *         Returned value must be freed with ecma_free_completion_value.
+ */
+static ecma_completion_value_t
+ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**< this argument */
+                                     ecma_value_t arg) /**< routine's first argument */
+{
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  /* 1. */
+  ECMA_TRY_CATCH (string, ecma_op_to_string (arg), ret_value);
+  ecma_string_t *input_string_p = ecma_get_string_from_value (string);
+  /* 2. */
+  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
+
+  /* 3. */
+  MEM_DEFINE_LOCAL_ARRAY (input_start_p, input_size, lit_utf8_byte_t);
+  ssize_t sz = ecma_string_to_utf8_string (input_string_p, input_start_p, (ssize_t) (input_size));
+  JERRY_ASSERT (sz >= 0);
+
+  lit_utf8_byte_t *input_curr_p = input_start_p;
+  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  /* 4. */
+  /* The length of input string is always greater than output string
+   * so we re-use the input string buffer.
+   * The %xx is three byte long, and the maximum encoded value is 0xff,
+   * which maximum encoded length is two byte. Similar to this, the maximum
+   * encoded length of %uxxxx is four byte. */
+  lit_utf8_byte_t *output_char_p = input_start_p;
+
+  /* The state of parsing that tells us where we are in an escape pattern.
+   * 0    we are outside of pattern,
+   * 1    found '%', start of pattern,
+   * 2    found first hex digit of '%xy' pattern
+   * 3    found valid '%xy' pattern
+   * 4    found 'u', start of '%uwxyz' pattern
+   * 5-7  found hex digits of '%uwxyz' pattern
+   * 8    found valid '%uwxyz' pattern
+   */
+  uint8_t status = 0;
+  ecma_char_t hex_digits = 0;
+  /* 5. */
+  while (input_curr_p < input_end_p)
+  {
+    /* 6. */
+    ecma_char_t chr = lit_utf8_read_next (&input_curr_p);
+
+    /* 7-8. */
+    if (status == 0 && chr == LIT_CHAR_PERCENT)
+    {
+      /* Found '%' char, start of escape sequence. */
+      status = 1;
+    }
+    /* 9-10. */
+    else if (status == 1 && chr == LIT_CHAR_LOWERCASE_U)
+    {
+      /* Found 'u' char after '%'. */
+      status = 4;
+    }
+    else if (status > 0 && lit_char_is_hex_digit (chr))
+    {
+      /* Found hexadecimal digit in escape sequence. */
+      hex_digits = (ecma_char_t) (hex_digits * 16 + (ecma_char_t) lit_char_hex_to_int (chr));
+      status++;
+    }
+
+    /* 11-17. Found valid '%uwxyz' or '%xy' escape. */
+    if (status == 8 || status == 3)
+    {
+      output_char_p -= (status == 3) ? 2 : 5;
+      status = 0;
+      chr = hex_digits;
+      hex_digits = 0;
+    }
+
+    /* Copying character. */
+    lit_utf8_size_t lit_size = lit_code_unit_to_utf8 (chr, output_char_p);
+    output_char_p += lit_size;
+    JERRY_ASSERT (output_char_p <= input_curr_p);
+  }
+
+  lit_utf8_size_t output_length = (lit_utf8_size_t) (output_char_p - input_start_p);
+  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (input_start_p, output_length);
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
+
+  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+
+  ECMA_FINALIZE (string);
+  return ret_value;
+} /* ecma_builtin_global_object_unescape */
+
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 /**

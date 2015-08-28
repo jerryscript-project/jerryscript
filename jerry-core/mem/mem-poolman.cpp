@@ -134,14 +134,17 @@ static void mem_pools_stat_free_chunk (void);
  */
 #ifdef JERRY_VALGRIND
 # include "memcheck.h"
-
-# define VALGRIND_NOACCESS_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
-# define VALGRIND_UNDEFINED_SPACE(p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
-# define VALGRIND_DEFINED_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
+# define VALGRIND_NOACCESS_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
+# define VALGRIND_UNDEFINED_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
+# define VALGRIND_DEFINED_SPACE(p, s)    (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
+# define VALGRIND_MALLOCLIKE_SPACE(p, s) (void)VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
+# define VALGRIND_FREELIKE_SPACE(p)            VALGRIND_FREELIKE_BLOCK((p), 0)
 #else /* JERRY_VALGRIND */
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
+# define VALGRIND_MALLOCLIKE_SPACE(p, s)
+# define VALGRIND_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND */
 
 /**
@@ -520,6 +523,7 @@ mem_pools_alloc (void)
 
       mem_check_pools ();
 
+      VALGRIND_MALLOCLIKE_SPACE (chunk_p, MEM_POOL_CHUNK_SIZE);
       return (uint8_t *) chunk_p;
     }
     else
@@ -545,6 +549,7 @@ mem_pools_free (uint8_t *chunk_p) /**< pointer to the chunk */
   chunk_to_free_p->u.free.next_p = mem_free_chunk_p;
   mem_free_chunk_p = chunk_to_free_p;
 
+  VALGRIND_FREELIKE_SPACE (chunk_to_free_p);
   VALGRIND_NOACCESS_SPACE (chunk_to_free_p, MEM_POOL_CHUNK_SIZE);
 
 #ifndef JERRY_NDEBUG

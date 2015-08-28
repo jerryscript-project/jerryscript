@@ -40,12 +40,14 @@
 #ifdef JERRY_VALGRIND
 # include "memcheck.h"
 
-# define VALGRIND_NOACCESS_STRUCT(s)    (void)VALGRIND_MAKE_MEM_NOACCESS((s), sizeof (*(s)))
-# define VALGRIND_UNDEFINED_STRUCT(s)   (void)VALGRIND_MAKE_MEM_UNDEFINED((s), sizeof (*(s)))
-# define VALGRIND_DEFINED_STRUCT(s)     (void)VALGRIND_MAKE_MEM_DEFINED((s), sizeof (*(s)))
-# define VALGRIND_NOACCESS_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
-# define VALGRIND_UNDEFINED_SPACE(p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
-# define VALGRIND_DEFINED_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
+# define VALGRIND_NOACCESS_STRUCT(s)     (void)VALGRIND_MAKE_MEM_NOACCESS((s), sizeof (*(s)))
+# define VALGRIND_UNDEFINED_STRUCT(s)    (void)VALGRIND_MAKE_MEM_UNDEFINED((s), sizeof (*(s)))
+# define VALGRIND_DEFINED_STRUCT(s)      (void)VALGRIND_MAKE_MEM_DEFINED((s), sizeof (*(s)))
+# define VALGRIND_NOACCESS_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
+# define VALGRIND_UNDEFINED_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
+# define VALGRIND_DEFINED_SPACE(p, s)    (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
+# define VALGRIND_MALLOCLIKE_SPACE(p, s) (void)VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
+# define VALGRIND_FREELIKE_SPACE(p)            VALGRIND_FREELIKE_BLOCK((p), 0)
 #else /* JERRY_VALGRIND */
 # define VALGRIND_NOACCESS_STRUCT(s)
 # define VALGRIND_UNDEFINED_STRUCT(s)
@@ -53,6 +55,8 @@
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
+# define VALGRIND_MALLOCLIKE_SPACE(p, s)
+# define VALGRIND_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND */
 
 /**
@@ -691,6 +695,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
 
   if (likely (data_space_p != NULL))
   {
+    VALGRIND_MALLOCLIKE_SPACE (data_space_p, size_in_bytes);
     return data_space_p;
   }
 
@@ -704,6 +709,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
 
     if (data_space_p != NULL)
     {
+      VALGRIND_MALLOCLIKE_SPACE (data_space_p, size_in_bytes);
       return data_space_p;
     }
   }
@@ -769,6 +775,7 @@ void
 mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the block */
 {
   uint8_t *uint8_ptr = (uint8_t*) ptr;
+  VALGRIND_FREELIKE_SPACE (ptr);
 
   /* checking that uint8_ptr points to the heap */
   JERRY_ASSERT (uint8_ptr >= mem_heap.heap_start

@@ -15,7 +15,7 @@
 #
 # Target naming scheme
 #
-#   Main targets: {debug,release}.{linux,stm32f{4}}[.flash]
+#   Main targets: {debug,release}.{linux,darwin,stm32f{4}}[.flash]
 #
 #    Target mode part (before dot):
 #       debug:         - JERRY_NDEBUG; - optimizations; + debug symbols; + -Werror  | debug build
@@ -23,10 +23,11 @@
 #
 #    Target system and modifiers part (after first dot):
 #       linux - target system is linux
+#       darwin - target system is Mac OS X
 #       mcu_stm32f{3,4} - target is STM32F{3,4} board
 #
 #       Modifiers can be added after '-' sign.
-#        For list of modifiers for PC target - see TARGET_PC_MODS, for MCU target - TARGET_MCU_MODS.
+#        For list of modifiers for NATIVE target - see TARGET_NATIVE_MODS, for MCU target - TARGET_MCU_MODS.
 #
 #    Target action part (optional, after second dot):
 #       flash - flash specified mcu target binary
@@ -77,9 +78,14 @@
    QLOG := >/dev/null
   endif
 
+export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr [:upper:] [:lower:])
+
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
   USE_COMPILER_DEFAULT_LIBC ?= NO
+  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
+   USE_COMPILER_DEFAULT_LIBC = YES
+  endif
  # List of include paths for external libraries (semicolon-separated)
   EXTERNAL_LIBS_INTERFACE ?=
  # External libc interface
@@ -95,30 +101,28 @@
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
 
-export TARGET_PC_SYSTEMS = linux
-
-export TARGET_PC_MODS = cp cp_minimal mem_stats mfp cp_minimal-mfp mfp-mem_stats
+export TARGET_NATIVE_MODS = cp cp_minimal mem_stats mfp cp_minimal-mfp mfp-mem_stats
 
 export TARGET_MCU_MODS = cp cp_minimal
 
-export TARGET_PC_SYSTEMS_MODS = $(TARGET_PC_SYSTEMS) \
-                                $(foreach __MOD,$(TARGET_PC_MODS),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+export TARGET_NATIVE_SYSTEMS_MODS = $(TARGET_NATIVE_SYSTEMS) \
+                                $(foreach __MOD,$(TARGET_NATIVE_MODS),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS),$(__SYSTEM)-$(__MOD)))
 
 export TARGET_STM32F3_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f3-$(__MOD))
 export TARGET_STM32F4_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f4-$(__MOD))
 
 # Target list
-export JERRY_LINUX_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
-                             $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_PC_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+export JERRY_NATIVE_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
+                             $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
 
 export JERRY_STM32F3_TARGETS = $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F3_MODS),$(__MODE).$(__SYSTEM)))
 
 export JERRY_STM32F4_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM))) \
                                $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM)))
 
-export JERRY_TARGETS = $(JERRY_LINUX_TARGETS) $(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS) unittests
+export JERRY_TARGETS = $(JERRY_NATIVE_TARGETS) $(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS) unittests
 
-export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_LINUX_TARGETS),$(__TARGET).check)
+export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_NATIVE_TARGETS),$(__TARGET).check)
 export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS),$(__TARGET).flash)
 
 export OUT_DIR = ./build/bin
@@ -127,7 +131,7 @@ export PREREQUISITES_STATE_DIR = ./build/prerequisites
 export SHELL=/bin/bash
 
 # Precommit check targets
- PRECOMMIT_CHECK_TARGETS_LIST := debug.linux release.linux
+ PRECOMMIT_CHECK_TARGETS_LIST := debug.$(TARGET_NATIVE_SYSTEMS) release.$(TARGET_NATIVE_SYSTEMS)
 
 # Building all options combinations
  OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
@@ -167,7 +171,7 @@ $(BUILD_DIRS_NATIVE):
             then \
               readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el"; \
             fi; \
-            TOOLCHAIN="build/configs/toolchain_linux_$$arch.cmake"; \
+            TOOLCHAIN="build/configs/toolchain_$(TARGET_NATIVE_SYSTEMS)_$$arch.cmake"; \
           fi; \
           if [ -d "$@" ]; \
           then \
@@ -198,8 +202,8 @@ $(BUILD_DIRS_STM32F4): prerequisites
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
-.PHONY: $(JERRY_LINUX_TARGETS)
-$(JERRY_LINUX_TARGETS): $(BUILD_DIR)/native
+.PHONY: $(JERRY_NATIVE_TARGETS)
+$(JERRY_NATIVE_TARGETS): $(BUILD_DIR)/native
 	$(Q) mkdir -p $(OUT_DIR)/$@
 	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
@@ -223,7 +227,7 @@ $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native $(JERRY_LINUX_TARGETS) unittests VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+	$(Q) ($(MAKE) -C $(BUILD_DIR)/native $(JERRY_NATIVE_TARGETS) unittests VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 
 .PHONY: $(JERRY_STM32F3_TARGETS)

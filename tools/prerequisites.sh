@@ -85,7 +85,7 @@ function setup_from_zip() {
 
   wget --no-check-certificate -O "$TMP_DIR/$NAME.zip" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' zip archive."
 
-  echo "$CHECKSUM  $TMP_DIR/$NAME.zip" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
+  echo "$CHECKSUM  $TMP_DIR/$NAME.zip" | $SHA256SUM --check || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
   unzip "$TMP_DIR/$NAME.zip" -d "$TMP_DIR/$NAME" || fail_msg "$FAIL_MSG. Failed to unpack zip archive."
   mkdir "$DEST" || fail_msg "$FAIL_MSG. Failed to create '$DEST' directory."
@@ -135,7 +135,7 @@ function setup_cppcheck() {
 
   wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.bz2" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
 
-  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.bz2" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
+  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.bz2" | $SHA256SUM --check || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
   tar xjvf "$TMP_DIR/$NAME.tar.bz2" -C "$TMP_DIR" || fail_msg "$FAIL_MSG. Failed to unpack archive."
 
@@ -190,7 +190,7 @@ function setup_vera() {
 
   wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.gz" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
 
-  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.gz" | sha256sum --check --strict || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
+  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.gz" | $SHA256SUM --check || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
 
   tar xzvf "$TMP_DIR/$NAME.tar.gz" -C "$TMP_DIR" || fail_msg "$FAIL_MSG. Failed to unpack archive."
 
@@ -207,7 +207,17 @@ function setup_vera() {
   chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
 }
 
-TMP_DIR=`mktemp -d --tmpdir=./`
+# Platrofm dependent settings
+HOST_OS=`uname -s`
+
+if [ "$HOST_OS" == "Darwin" ]
+then
+	SHA256SUM="shasum -a 256"
+	TMP_DIR=`mktemp -d -t jerryscript`
+else
+	SHA256SUM="sha256sum --strict"
+	TMP_DIR=`mktemp -d --tmpdir=./`
+fi
 
 if [ "$CLEAN_MODE" == "yes" ]
 then

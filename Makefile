@@ -223,7 +223,7 @@ unittests: $(BUILD_DIR)/native
 .PHONY: $(BUILD_ALL)_native
 $(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
 	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+	$(Q) [ "$(USE_COMPILER_DEFAULT_LIBC)" = "YES" ] || ($(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
 	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)

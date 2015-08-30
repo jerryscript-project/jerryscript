@@ -83,9 +83,6 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr [:upper:] [:lower:])
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
   USE_COMPILER_DEFAULT_LIBC ?= NO
-  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
-   USE_COMPILER_DEFAULT_LIBC = YES
-  endif
  # List of include paths for external libraries (semicolon-separated)
   EXTERNAL_LIBS_INTERFACE ?=
  # External libc interface

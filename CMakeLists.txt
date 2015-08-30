@@ -216,6 +216,7 @@ project (Jerry CXX C ASM)
  if(CMAKE_COMPILER_IS_GNUCXX)
   set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
  endif()
+ set(LINKER_FLAGS_COMMON_DARWIN "-lSystem")
 
  # Turn off linking to compiler's default libc, in case jerry-libc is used
  if(${USE_JERRY_LIBC})
@@ -238,13 +239,15 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
 
  # Warnings
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic -Wlogical-op")
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wfatal-errors")
   if(CMAKE_COMPILER_IS_GNUCXX)
-    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror")
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wlogical-op")
+  else()
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wno-nested-anon-types")
   endif()
 
  # Static build
@@ -399,7 +402,7 @@ endif()
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
     if("${PLATFORM}" STREQUAL "DARWIN")
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-		                   ${FDLIBM_TARGET_NAME} -lSystem ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
+		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
 	else()
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
 		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)

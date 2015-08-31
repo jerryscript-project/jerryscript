@@ -62,7 +62,8 @@ vm_stack_get_top_frame (void);
 extern void
 vm_stack_add_frame (vm_stack_frame_t *frame_p,
                       ecma_value_t *regs_p,
-                      int32_t regs_num);
+                      int32_t regs_num,
+                      int32_t local_vars_regs_num);
 extern void vm_stack_free_frame (vm_stack_frame_t *frame_p);
 extern ecma_value_t vm_stack_frame_get_reg_value (vm_stack_frame_t *frame_p, int32_t reg_index);
 extern void vm_stack_frame_set_reg_value (vm_stack_frame_t *frame_p, int32_t reg_index, ecma_value_t value);

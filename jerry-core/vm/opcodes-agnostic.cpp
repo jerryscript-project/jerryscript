@@ -27,7 +27,7 @@ ecma_completion_value_t
 opfunc_is_true_jmp_down (vm_instr_t instr, /**< instruction */
                          vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t cond_var_idx = instr.data.is_true_jmp_down.value;
+  const vm_idx_t cond_var_idx = instr.data.is_true_jmp_down.value;
   const vm_instr_counter_t offset = vm_calc_instr_counter_from_idx_idx (instr.data.is_true_jmp_down.oc_idx_1,
                                                                         instr.data.is_true_jmp_down.oc_idx_2);
 
@@ -60,7 +60,7 @@ ecma_completion_value_t
 opfunc_is_true_jmp_up (vm_instr_t instr, /**< instruction */
                        vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t cond_var_idx = instr.data.is_true_jmp_up.value;
+  const vm_idx_t cond_var_idx = instr.data.is_true_jmp_up.value;
   const vm_instr_counter_t offset = vm_calc_instr_counter_from_idx_idx (instr.data.is_true_jmp_up.oc_idx_1,
                                                                         instr.data.is_true_jmp_up.oc_idx_2);
 
@@ -99,7 +99,7 @@ ecma_completion_value_t
 opfunc_is_false_jmp_down (vm_instr_t instr, /**< instruction */
                           vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t cond_var_idx = instr.data.is_false_jmp_down.value;
+  const vm_idx_t cond_var_idx = instr.data.is_false_jmp_down.value;
   const vm_instr_counter_t offset = vm_calc_instr_counter_from_idx_idx (instr.data.is_false_jmp_down.oc_idx_1,
                                                                         instr.data.is_false_jmp_down.oc_idx_2);
 
@@ -132,7 +132,7 @@ ecma_completion_value_t
 opfunc_is_false_jmp_up (vm_instr_t instr, /**< instruction */
                         vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t cond_var_idx = instr.data.is_false_jmp_up.value;
+  const vm_idx_t cond_var_idx = instr.data.is_false_jmp_up.value;
   const vm_instr_counter_t offset = vm_calc_instr_counter_from_idx_idx (instr.data.is_false_jmp_up.oc_idx_1,
                                                                         instr.data.is_false_jmp_up.oc_idx_2);
 

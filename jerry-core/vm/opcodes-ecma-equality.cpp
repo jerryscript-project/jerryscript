@@ -28,9 +28,9 @@ ecma_completion_value_t
 opfunc_equal_value (vm_instr_t instr, /**< instruction */
                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.equal_value.dst;
-  const idx_t left_var_idx = instr.data.equal_value.var_left;
-  const idx_t right_var_idx = instr.data.equal_value.var_right;
+  const vm_idx_t dst_var_idx = instr.data.equal_value.dst;
+  const vm_idx_t left_var_idx = instr.data.equal_value.var_left;
+  const vm_idx_t right_var_idx = instr.data.equal_value.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -67,9 +67,9 @@ ecma_completion_value_t
 opfunc_not_equal_value (vm_instr_t instr, /**< instruction */
                         vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.not_equal_value.dst;
-  const idx_t left_var_idx = instr.data.not_equal_value.var_left;
-  const idx_t right_var_idx = instr.data.not_equal_value.var_right;
+  const vm_idx_t dst_var_idx = instr.data.not_equal_value.dst;
+  const vm_idx_t left_var_idx = instr.data.not_equal_value.var_left;
+  const vm_idx_t right_var_idx = instr.data.not_equal_value.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -108,9 +108,9 @@ ecma_completion_value_t
 opfunc_equal_value_type (vm_instr_t instr, /**< instruction */
                          vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.equal_value_type.dst;
-  const idx_t left_var_idx = instr.data.equal_value_type.var_left;
-  const idx_t right_var_idx = instr.data.equal_value_type.var_right;
+  const vm_idx_t dst_var_idx = instr.data.equal_value_type.dst;
+  const vm_idx_t left_var_idx = instr.data.equal_value_type.var_left;
+  const vm_idx_t right_var_idx = instr.data.equal_value_type.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -143,9 +143,9 @@ ecma_completion_value_t
 opfunc_not_equal_value_type (vm_instr_t instr, /**< instruction */
                              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.not_equal_value_type.dst;
-  const idx_t left_var_idx = instr.data.not_equal_value_type.var_left;
-  const idx_t right_var_idx = instr.data.not_equal_value_type.var_right;
+  const vm_idx_t dst_var_idx = instr.data.not_equal_value_type.dst;
+  const vm_idx_t left_var_idx = instr.data.not_equal_value_type.var_left;
+  const vm_idx_t right_var_idx = instr.data.not_equal_value_type.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

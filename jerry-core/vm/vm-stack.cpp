@@ -76,7 +76,9 @@ vm_stack_get_top_frame (void)
 void
 vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
                     ecma_value_t *regs_p, /**< array of register variables' values */
-                    int32_t regs_num) /**< number of register variables */
+                    int32_t regs_num, /**< total number of register variables */
+                    int32_t local_vars_regs_num) /**< number of register variables,
+                                                  *   used for local variables */
 {
   frame_p->prev_frame_p = vm_stack_top_frame_p;
   vm_stack_top_frame_p = frame_p;
@@ -87,9 +89,16 @@ vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
   frame_p->regs_p = regs_p;
   frame_p->regs_number = regs_num;
 
-  for (int32_t i = 0; i < regs_num; i++)
+  for (int32_t i = 0; i < regs_num - local_vars_regs_num; i++)
   {
     regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  }
+
+  for (int32_t i = regs_num - local_vars_regs_num;
+       i < regs_num;
+       i++)
+  {
+    regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 } /* vm_stack_add_frame */
 

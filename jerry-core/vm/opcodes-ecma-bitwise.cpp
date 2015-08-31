@@ -43,7 +43,7 @@ typedef enum
  */
 static ecma_completion_value_t
 do_number_bitwise_logic (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                         idx_t dst_var_idx, /**< destination variable identifier */
+                         vm_idx_t dst_var_idx, /**< destination variable identifier */
                          number_bitwise_logic_op op, /**< number bitwise logic operation */
                          ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /** right value */
@@ -122,9 +122,9 @@ ecma_completion_value_t
 opfunc_b_and (vm_instr_t instr, /**< instruction */
               vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_and.dst;
-  const idx_t left_var_idx = instr.data.b_and.var_left;
-  const idx_t right_var_idx = instr.data.b_and.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_and.dst;
+  const vm_idx_t left_var_idx = instr.data.b_and.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_and.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -157,9 +157,9 @@ ecma_completion_value_t
 opfunc_b_or (vm_instr_t instr, /**< instruction */
              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_or.dst;
-  const idx_t left_var_idx = instr.data.b_or.var_left;
-  const idx_t right_var_idx = instr.data.b_or.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_or.dst;
+  const vm_idx_t left_var_idx = instr.data.b_or.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_or.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -192,9 +192,9 @@ ecma_completion_value_t
 opfunc_b_xor (vm_instr_t instr, /**< instruction */
               vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_xor.dst;
-  const idx_t left_var_idx = instr.data.b_xor.var_left;
-  const idx_t right_var_idx = instr.data.b_xor.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_xor.dst;
+  const vm_idx_t left_var_idx = instr.data.b_xor.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_xor.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -227,9 +227,9 @@ ecma_completion_value_t
 opfunc_b_shift_left (vm_instr_t instr, /**< instruction */
                      vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_shift_left.dst;
-  const idx_t left_var_idx = instr.data.b_shift_left.var_left;
-  const idx_t right_var_idx = instr.data.b_shift_left.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_shift_left.dst;
+  const vm_idx_t left_var_idx = instr.data.b_shift_left.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_shift_left.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -262,9 +262,9 @@ ecma_completion_value_t
 opfunc_b_shift_right (vm_instr_t instr, /**< instruction */
                       vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_shift_right.dst;
-  const idx_t left_var_idx = instr.data.b_shift_right.var_left;
-  const idx_t right_var_idx = instr.data.b_shift_right.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_shift_right.dst;
+  const vm_idx_t left_var_idx = instr.data.b_shift_right.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_shift_right.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -297,9 +297,9 @@ ecma_completion_value_t
 opfunc_b_shift_uright (vm_instr_t instr, /**< instruction */
                       vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_shift_uright.dst;
-  const idx_t left_var_idx = instr.data.b_shift_uright.var_left;
-  const idx_t right_var_idx = instr.data.b_shift_uright.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_shift_uright.dst;
+  const vm_idx_t left_var_idx = instr.data.b_shift_uright.var_left;
+  const vm_idx_t right_var_idx = instr.data.b_shift_uright.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -332,8 +332,8 @@ ecma_completion_value_t
 opfunc_b_not (vm_instr_t instr, /**< instruction */
               vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t dst_var_idx = instr.data.b_not.dst;
-  const idx_t right_var_idx = instr.data.b_not.var_right;
+  const vm_idx_t dst_var_idx = instr.data.b_not.dst;
+  const vm_idx_t right_var_idx = instr.data.b_not.var_right;
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

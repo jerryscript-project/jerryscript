@@ -23,10 +23,24 @@
 static bool
 instrs_equal (const vm_instr_t *instrs1, vm_instr_t *instrs2, uint16_t size)
 {
+  static const uint8_t instr_fields_num[] =
+  {
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+    1,
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
+    2,
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
+    3,
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
+    4,
+
+#include "vm-opcodes.inc.h"
+  };
+
   uint16_t i;
   for (i = 0; i < size; i++)
   {
-    if (memcmp (&instrs1[i], &instrs2[i], sizeof (vm_instr_t)) != 0)
+    if (memcmp (&instrs1[i], &instrs2[i], instr_fields_num[instrs1[i].op_idx] * sizeof (vm_idx_t)) != 0)
     {
       return false;
     }
@@ -34,6 +48,49 @@ instrs_equal (const vm_instr_t *instrs1, vm_instr_t *instrs2, uint16_t size)
 
   return true;
 }
+
+#define VM_OP_0(opcode_name, opcode_name_uppercase) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (void) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = VM_IDX_EMPTY; \
+          instr.data.raw_args[1] = VM_IDX_EMPTY; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_1(opcode_name, opcode_name_uppercase, arg_1, arg1_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = VM_IDX_EMPTY; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_2(opcode_name, opcode_name_uppercase, arg_1, arg1_type, arg_2, arg2_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v, vm_idx_t arg2_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = arg2_v; \
+          instr.data.raw_args[2] = VM_IDX_EMPTY; \
+          return instr; \
+        }
+#define VM_OP_3(opcode_name, opcode_name_uppercase, arg_1, arg1_type, arg_2, arg2_type, arg3_name, arg3_type) \
+        static vm_instr_t __attr_unused___ getop_##opcode_name (vm_idx_t arg1_v, vm_idx_t arg2_v, vm_idx_t arg3_v) \
+        { \
+          vm_instr_t instr; \
+          instr.op_idx = VM_OP_##opcode_name_uppercase; \
+          instr.data.raw_args[0] = arg1_v; \
+          instr.data.raw_args[1] = arg2_v; \
+          instr.data.raw_args[2] = arg3_v; \
+          return instr; \
+        }
+
+#include "vm-opcodes.inc.h"
 
 /**
  * Unit test's main function.
@@ -63,8 +120,8 @@ main (int __attr_unused___ argc,
     getop_meta (OPCODE_META_TYPE_SCOPE_CODE_FLAGS, // [ ]
                 OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
                 | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
-                INVALID_VALUE),
-    getop_reg_var_decl (OPCODE_REG_FIRST, OPCODE_REG_GENERAL_FIRST),
+                VM_IDX_EMPTY),
+    getop_reg_var_decl (VM_REG_FIRST, VM_REG_GENERAL_FIRST, 0),
     getop_var_decl (0),             // var a;
     getop_assignment (130, 1, 1),   // $tmp0 = 1;
     getop_assignment (0, 6, 130),   // a = $tmp0;

@@ -20,8 +20,6 @@
 #include "lit-literal-storage.h"
 #include "lit-magic-strings.h"
 
-#define LITERAL_TO_REWRITE (INVALID_VALUE - 1)
-
 void lit_init ();
 void lit_finalize ();
 void lit_dump_literals ();

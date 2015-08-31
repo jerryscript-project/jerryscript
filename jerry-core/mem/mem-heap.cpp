@@ -25,6 +25,7 @@
  */
 
 #include "jrt.h"
+#include "jrt-bit-fields.h"
 #include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-config.h"
@@ -40,126 +41,173 @@
 #ifdef JERRY_VALGRIND
 # include "memcheck.h"
 
-# define VALGRIND_NOACCESS_STRUCT(s)    (void)VALGRIND_MAKE_MEM_NOACCESS((s), sizeof (*(s)))
-# define VALGRIND_UNDEFINED_STRUCT(s)   (void)VALGRIND_MAKE_MEM_UNDEFINED((s), sizeof (*(s)))
-# define VALGRIND_DEFINED_STRUCT(s)     (void)VALGRIND_MAKE_MEM_DEFINED((s), sizeof (*(s)))
 # define VALGRIND_NOACCESS_SPACE(p, s)  (void)VALGRIND_MAKE_MEM_NOACCESS((p), (s))
 # define VALGRIND_UNDEFINED_SPACE(p, s) (void)VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
 # define VALGRIND_DEFINED_SPACE(p, s)   (void)VALGRIND_MAKE_MEM_DEFINED((p), (s))
 #else /* JERRY_VALGRIND */
-# define VALGRIND_NOACCESS_STRUCT(s)
-# define VALGRIND_UNDEFINED_STRUCT(s)
-# define VALGRIND_DEFINED_STRUCT(s)
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
 #endif /* JERRY_VALGRIND */
 
 /**
- * State of the block to initialize (argument of mem_init_block_header)
- *
- * @see mem_init_block_header
- */
-typedef enum
-{
-  MEM_BLOCK_FREE,     /**< initializing free block */
-  MEM_BLOCK_ALLOCATED /**< initializing allocated block */
-} mem_block_state_t;
-
-/**
  * Length type of the block
- *
- * @see mem_init_block_header
  */
 typedef enum : uint8_t
 {
-  ONE_CHUNKED, /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
-  GENERAL      /**< general (may be multi-chunk) block */
+  GENERAL     = 0, /**< general (may be multi-chunk) block
+                    *
+                    *   Note:
+                    *         As zero is used for initialization in mem_heap_init,
+                    *         0 value for the GENERAL is necessary
+                    */
+  ONE_CHUNKED = 1  /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
 } mem_block_length_type_t;
-
-/**
- * Linked list direction descriptors
- */
-typedef enum
-{
-  MEM_DIRECTION_PREV = 0,  /**< direction from right to left */
-  MEM_DIRECTION_NEXT = 1,  /**< direction from left to right */
-  MEM_DIRECTION_COUNT = 2  /**< count of possible directions */
-} mem_direction_t;
-
-/**
- * Offset in the heap
- */
-#if MEM_HEAP_OFFSET_LOG <= 16
-typedef uint16_t mem_heap_offset_t;
-#elif MEM_HEAP_OFFSET_LOG <= 32
-typedef uint32_t mem_heap_offset_t;
-#else /* MEM_HEAP_OFFSET_LOG > 32 */
-# error "MEM_HEAP_OFFSET_LOG > 32 is not supported"
-#endif /* MEM_HEAP_OFFSET_LOG > 32 */
-JERRY_STATIC_ASSERT (sizeof (mem_heap_offset_t) * JERRY_BITSINBYTE >= MEM_HEAP_OFFSET_LOG);
-
-/**
- * Description of heap memory block layout
- */
-typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) mem_block_header_t
-{
-  mem_heap_offset_t allocated_bytes : MEM_HEAP_OFFSET_LOG; /**< allocated area size - for allocated blocks;
-                                                                0 - for free blocks */
-  mem_heap_offset_t prev_p : MEM_HEAP_OFFSET_LOG; /**< previous block's offset;
-                                                   *   0 - if the block is the first block */
-  mem_heap_offset_t next_p : MEM_HEAP_OFFSET_LOG; /**< next block's offset;
-                                                   *   0 - if the block is the last block */
-  mem_block_length_type_t length_type; /**< length type of the block (one-chunked or general) */
-} mem_block_header_t;
-
-#if MEM_HEAP_OFFSET_LOG <= 16
-/**
- * Check that block header's size is not more than 8 bytes
- */
-JERRY_STATIC_ASSERT (sizeof (mem_block_header_t) <= sizeof (uint64_t));
-#endif /* MEM_HEAP_OFFSET_LOG <= 16 */
-
-/**
- * Chunk should have enough space for block header
- */
-JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE >= sizeof (mem_block_header_t));
 
 /**
  * Chunk size should satisfy the required alignment value
  */
 JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0);
 
+typedef enum
+{
+  MEM_HEAP_BITMAP_IS_ALLOCATED, /**< bitmap of 'chunk allocated' flags */
+  MEM_HEAP_BITMAP_IS_FIRST_IN_BLOCK, /**< bitmap of 'chunk is first in allocated block' flags */
+
+  MEM_HEAP_BITMAP__COUNT /**< number of bitmaps */
+} mem_heap_bitmap_t;
+
 /**
- * Description of heap state
+ * Type of bitmap storage item, used to store one or several bitmap blocks
+ */
+typedef size_t mem_heap_bitmap_storage_item_t;
+
+/**
+ * Mask of a single bit at specified offset in a bitmap storage item
+ */
+#define MEM_HEAP_BITMAP_ITEM_BIT(offset) (((mem_heap_bitmap_storage_item_t) 1u) << (offset))
+
+/**
+ * Number of bits in a bitmap storage item
+ */
+#define MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM (sizeof (mem_heap_bitmap_storage_item_t) * JERRY_BITSINBYTE)
+
+/**
+ * Full bit mask for a bitmap storage item
+ */
+#define MEM_HEAP_BITMAP_STORAGE_ALL_BITS_MASK ((mem_heap_bitmap_storage_item_t) -1)
+
+/**
+ * Number of chunks in heap
+ *
+ *                           bits_in_heap
+ * ALIGN_DOWN (-----------------------------------------, bits_in_bitmap_storage_item)
+ *               bitmap_bits_per_chunk + bits_in_chunk
+ */
+#define MEM_HEAP_CHUNKS_NUM JERRY_ALIGNDOWN (JERRY_BITSINBYTE * MEM_HEAP_SIZE / \
+                                             (MEM_HEAP_BITMAP__COUNT + JERRY_BITSINBYTE * MEM_HEAP_CHUNK_SIZE), \
+                                             MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM)
+
+/**
+ * Size of heap data area
+ */
+#define MEM_HEAP_AREA_SIZE (MEM_HEAP_CHUNKS_NUM * MEM_HEAP_CHUNK_SIZE)
+
+/**
+ * Number of bits in heap's bitmap
+ */
+#define MEM_HEAP_BITMAP_BITS (MEM_HEAP_CHUNKS_NUM * 1u)
+
+/**
+ * Overall number of bitmap bits is multiple of number of bits in a bitmap storage item
+ */
+JERRY_STATIC_ASSERT (MEM_HEAP_BITMAP_BITS % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM == 0);
+
+/**
+ * Number of bitmap storage items
+ */
+#define MEM_HEAP_BITMAP_STORAGE_ITEMS (MEM_HEAP_BITMAP_BITS / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM)
+
+/**
+ * Heap structure
  */
 typedef struct
 {
-  uint8_t* heap_start; /**< first address of heap space */
-  size_t heap_size; /**< heap space size */
-  mem_block_header_t* first_block_p; /**< first block of the heap */
-  mem_block_header_t* last_block_p;  /**< last block of the heap */
-  size_t allocated_chunks; /**< total number of allocated heap chunks */
-  size_t limit; /**< current limit of heap usage, that is upon being reached,
-                 *   causes call of "try give memory back" callbacks */
-} mem_heap_state_t;
+  /**
+   * Heap bitmaps
+   *
+   * The bitmaps consist of chunks with unique correspondence to the heap chunks
+   */
+  mem_heap_bitmap_storage_item_t bitmaps[MEM_HEAP_BITMAP__COUNT][MEM_HEAP_BITMAP_STORAGE_ITEMS];
+
+  /**
+   * Heap area
+   */
+  uint8_t area[MEM_HEAP_AREA_SIZE] __attribute__ ((aligned (JERRY_MAX (MEM_ALIGNMENT, MEM_HEAP_CHUNK_SIZE))));
+} mem_heap_t;
 
 /**
- * Heap state
+ * Heap
  */
-mem_heap_state_t mem_heap;
+mem_heap_t mem_heap;
 
-static size_t mem_get_block_chunks_count (const mem_block_header_t *block_header_p);
-static size_t mem_get_block_data_space_size (const mem_block_header_t *block_header_p);
+/**
+ * Check size of heap is corresponding to configuration
+ */
+JERRY_STATIC_ASSERT (sizeof (mem_heap) <= MEM_HEAP_SIZE);
+
+/**
+ * Bitmap of 'is allocated' flags
+ */
+#define MEM_HEAP_IS_ALLOCATED_BITMAP (mem_heap.bitmaps[MEM_HEAP_BITMAP_IS_ALLOCATED])
+
+/**
+ * Bitmap of 'is first in block' flags
+ */
+#define MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP (mem_heap.bitmaps[MEM_HEAP_BITMAP_IS_FIRST_IN_BLOCK])
+
+/**
+ * Total number of allocated heap chunks
+ */
+size_t mem_heap_allocated_chunks;
+
+/**
+ * Current limit of heap usage, that is upon being reached, causes call of "try give memory back" callbacks
+ */
+size_t mem_heap_limit;
+
+#if defined (JERRY_VALGRIND) || defined (MEM_STATS) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
+
+# define MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY
+
+/**
+ * Number of bytes, allocated in heap block
+ *
+ * The array contains one entry per heap chunk with:
+ *  - number of allocated bytes, if the chunk is at start of an allocated block;
+ *  - 0, if the chunk is at start of free block;
+ *  - -1, if the chunk is not at start of a block.
+ */
+ssize_t mem_heap_allocated_bytes[MEM_HEAP_CHUNKS_NUM];
+#else /* JERRY_VALGRIND || MEM_STATS || !JERRY_DISABLE_HEAVY_DEBUG */
+# ifdef MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY
+#  error "!"
+# endif /* MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY */
+#endif /* !JERRY_VALGRIND && !MEM_STATS && JERRY_DISABLE_HEAVY_DEBUG */
+
+#ifndef JERRY_NDEBUG
+/**
+ * Length types for allocated chunks
+ *
+ * The array contains one entry per heap chunk with:
+ *  - length type of corresponding block, if the chunk is at start of an allocated block;
+ *  - GENERAL length type for rest chunks.
+ */
+mem_block_length_type_t mem_heap_length_types[MEM_HEAP_CHUNKS_NUM];
+#endif /* !JERRY_NDEBUG */
+
 static size_t mem_get_block_chunks_count_from_data_size (size_t block_allocated_size);
-static bool mem_is_block_free (const mem_block_header_t *block_header_p);
 
-static void mem_init_block_header (uint8_t *first_chunk_p,
-                                   size_t size_in_chunks,
-                                   mem_block_state_t block_state,
-                                   mem_block_length_type_t length_type,
-                                   mem_block_header_t *prev_block_p,
-                                   mem_block_header_t *next_block_p);
 static void mem_check_heap (void);
 
 #ifdef MEM_STATS
@@ -169,207 +217,17 @@ static void mem_check_heap (void);
 static mem_heap_stats_t mem_heap_stats;
 
 static void mem_heap_stat_init (void);
-static void mem_heap_stat_alloc_block (mem_block_header_t *block_header_p);
-static void mem_heap_stat_free_block (mem_block_header_t *block_header_p);
-static void mem_heap_stat_free_block_split (void);
-static void mem_heap_stat_free_block_merge (void);
+static void mem_heap_stat_alloc (size_t first_chunk_index, size_t chunks_num);
+static void mem_heap_stat_free (size_t first_chunk_index, size_t chunks_num);
 
 #  define MEM_HEAP_STAT_INIT() mem_heap_stat_init ()
-#  define MEM_HEAP_STAT_ALLOC_BLOCK(v) mem_heap_stat_alloc_block (v)
-#  define MEM_HEAP_STAT_FREE_BLOCK(v) mem_heap_stat_free_block (v)
-#  define MEM_HEAP_STAT_FREE_BLOCK_SPLIT() mem_heap_stat_free_block_split ()
-#  define MEM_HEAP_STAT_FREE_BLOCK_MERGE() mem_heap_stat_free_block_merge ()
+#  define MEM_HEAP_STAT_ALLOC(v1, v2) mem_heap_stat_alloc (v1, v2)
+#  define MEM_HEAP_STAT_FREE(v1, v2) mem_heap_stat_free (v1, v2)
 #else /* !MEM_STATS */
 #  define MEM_HEAP_STAT_INIT()
-#  define MEM_HEAP_STAT_ALLOC_BLOCK(v)
-#  define MEM_HEAP_STAT_FREE_BLOCK(v)
-#  define MEM_HEAP_STAT_FREE_BLOCK_SPLIT()
-#  define MEM_HEAP_STAT_FREE_BLOCK_MERGE()
+#  define MEM_HEAP_STAT_ALLOC(v1, v2)
+#  define MEM_HEAP_STAT_FREE(v1, v2)
 #endif /* !MEM_STATS */
-
-/**
- * Measure distance between blocks.
- *
- * Warning:
- *         another_block_p should be greater than block_p.
- *
- * @return size in bytes between beginning of two blocks
- */
-static mem_heap_offset_t
-mem_get_blocks_distance (const mem_block_header_t* block_p, /**< block to measure offset from */
-                         const mem_block_header_t* another_block_p) /**< block offset is measured for */
-{
-  JERRY_ASSERT (another_block_p >= block_p);
-
-  size_t distance = (size_t) ((uint8_t*) another_block_p - (uint8_t*)block_p);
-
-  JERRY_ASSERT (distance == (mem_heap_offset_t) distance);
-
-  return (mem_heap_offset_t) distance;
-} /* mem_get_blocks_distance */
-
-/**
- * Get value for neighbour field.
- *
- * Note:
- *      If second_block_p is next neighbour of first_block_p,
- *         then first_block_p->next_p = ret_val
- *              second_block_p->prev_p = ret_val
- *
- * @return offset value for prev_p / next_p field
- */
-static mem_heap_offset_t
-mem_get_block_neighbour_field (const mem_block_header_t* first_block_p, /**< first of the blocks
-                                                                             in forward direction */
-                               const mem_block_header_t* second_block_p) /**< second of the blocks
-                                                                              in forward direction */
-{
-  JERRY_ASSERT (first_block_p != NULL
-                || second_block_p != NULL);
-
-  if (first_block_p == NULL
-      || second_block_p == NULL)
-  {
-    return 0;
-  }
-  else
-  {
-    JERRY_ASSERT (first_block_p < second_block_p);
-
-    return mem_get_blocks_distance (first_block_p, second_block_p);
-  }
-} /* mem_get_block_neighbour_field */
-
-/**
- * Set previous for the block
- */
-static void
-mem_set_block_prev (mem_block_header_t *block_p, /**< block to set previous for */
-                    mem_block_header_t *prev_block_p) /**< previous block (or NULL) */
-{
-  mem_heap_offset_t offset = mem_get_block_neighbour_field (prev_block_p, block_p);
-
-  block_p->prev_p = (offset) & MEM_HEAP_OFFSET_MASK;
-} /* mem_set_block_prev */
-
-/**
- * Set next for the block
- */
-static void
-mem_set_block_next (mem_block_header_t *block_p, /**< block to set next for */
-                    mem_block_header_t *next_block_p) /**< next block or NULL */
-{
-  mem_heap_offset_t offset = mem_get_block_neighbour_field (block_p, next_block_p);
-
-  block_p->next_p = (offset) & MEM_HEAP_OFFSET_MASK;
-} /* mem_set_block_next */
-
-/**
- * Set allocated bytes for the block
- */
-static void
-mem_set_block_allocated_bytes (mem_block_header_t *block_p, /**< block to set allocated bytes field for */
-                               size_t allocated_bytes) /**< number of bytes allocated in the block */
-{
-  block_p->allocated_bytes = allocated_bytes & MEM_HEAP_OFFSET_MASK;
-
-  JERRY_ASSERT (block_p->allocated_bytes == allocated_bytes);
-} /* mem_set_block_allocated_bytes */
-
-/**
- * Set the block's length type
- */
-static void
-mem_set_block_set_length_type (mem_block_header_t *block_p, /**< block to set length type field for */
-                               mem_block_length_type_t length_type) /**< length type of the block */
-{
-  block_p->length_type = length_type;
-} /* mem_set_block_set_length_type */
-
-/**
- * Get block located at specified offset from specified block.
- *
- * @return pointer to block header, located offset bytes after specified block (if dir is next),
- *         pointer to block header, located offset bytes before specified block (if dir is prev).
- */
-static mem_block_header_t*
-mem_get_block_by_offset (const mem_block_header_t* block_p, /**< block */
-                         mem_heap_offset_t offset, /**< offset */
-                         mem_direction_t dir) /**< direction of offset */
-{
-  const uint8_t* uint8_block_p = (uint8_t*) block_p;
-
-  if (dir == MEM_DIRECTION_NEXT)
-  {
-    return (mem_block_header_t*) (uint8_block_p + offset);
-  }
-  else
-  {
-    return (mem_block_header_t*) (uint8_block_p - offset);
-  }
-} /* mem_get_block_by_offset */
-
-/**
- * Get next block in specified direction.
- *
- * @return pointer to next block in direction specified by dir,
- *         or NULL - if the block is last in specified direction.
- */
-static mem_block_header_t*
-mem_get_next_block_by_direction (const mem_block_header_t* block_p, /**< block */
-                                 mem_direction_t dir) /**< direction */
-{
-  mem_heap_offset_t offset = (dir == MEM_DIRECTION_NEXT ? block_p->next_p : block_p->prev_p);
-  if (offset != 0)
-  {
-    return mem_get_block_by_offset (block_p,
-                                    offset,
-                                    dir);
-  }
-  else
-  {
-    return NULL;
-  }
-} /* mem_get_next_block_by_direction */
-
-/**
- * get chunk count, used by the block.
- *
- * @return chunks count
- */
-static size_t
-mem_get_block_chunks_count (const mem_block_header_t *block_header_p) /**< block header */
-{
-  JERRY_ASSERT (block_header_p != NULL);
-
-  const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_header_p, MEM_DIRECTION_NEXT);
-  size_t dist_till_block_end;
-
-  if (next_block_p == NULL)
-  {
-    dist_till_block_end = (size_t) (mem_heap.heap_start + mem_heap.heap_size - (uint8_t*) block_header_p);
-  }
-  else
-  {
-    dist_till_block_end = (size_t) ((uint8_t*) next_block_p - (uint8_t*) block_header_p);
-  }
-
-  JERRY_ASSERT (dist_till_block_end <= mem_heap.heap_size);
-  JERRY_ASSERT (dist_till_block_end % MEM_HEAP_CHUNK_SIZE == 0);
-
-  return dist_till_block_end / MEM_HEAP_CHUNK_SIZE;
-} /* mem_get_block_chunks_count */
-
-/**
- * Calculate block's data space size
- *
- * @return size of block area that can be used to store data
- */
-static size_t
-mem_get_block_data_space_size (const mem_block_header_t *block_header_p) /**< block header */
-{
-  return mem_get_block_chunks_count (block_header_p) * MEM_HEAP_CHUNK_SIZE - sizeof (mem_block_header_t);
-} /* mem_get_block_data_space_size */
 
 /**
  * Calculate minimum chunks count needed for block with specified size of allocated data area.
@@ -379,56 +237,83 @@ mem_get_block_data_space_size (const mem_block_header_t *block_header_p) /**< bl
 static size_t
 mem_get_block_chunks_count_from_data_size (size_t block_allocated_size) /**< size of block's allocated area */
 {
-  return JERRY_ALIGNUP (sizeof (mem_block_header_t) + block_allocated_size, MEM_HEAP_CHUNK_SIZE) / MEM_HEAP_CHUNK_SIZE;
+  return JERRY_ALIGNUP (block_allocated_size, MEM_HEAP_CHUNK_SIZE) / MEM_HEAP_CHUNK_SIZE;
 } /* mem_get_block_chunks_count_from_data_size */
 
 /**
- * Check whether specified block is free.
+ * Get index of a heap chunk from its starting address
  *
- * @return true - if block is free,
- *         false - otherwise
+ * @return heap chunk index
  */
-static bool
-mem_is_block_free (const mem_block_header_t *block_header_p) /**< block header */
+static size_t
+mem_heap_get_chunk_from_address (const void *chunk_start_p) /**< address of a chunk's beginning */
 {
-  return (block_header_p->allocated_bytes == 0);
-} /* mem_is_block_free */
+  uintptr_t heap_start_uintptr = (uintptr_t) mem_heap.area;
+  uintptr_t chunk_start_uintptr = (uintptr_t) chunk_start_p;
+
+  uintptr_t chunk_offset = chunk_start_uintptr - heap_start_uintptr;
+
+  JERRY_ASSERT (chunk_offset % MEM_HEAP_CHUNK_SIZE == 0);
+
+  return (chunk_offset / MEM_HEAP_CHUNK_SIZE);
+} /* mem_heap_get_chunk_from_address */
+
+/**
+ * Mark specified chunk allocated
+ */
+static void
+mem_heap_mark_chunk_allocated (size_t chunk_index, /**< index of the heap chunk (bitmap's chunk index is the same) */
+                               bool is_first_in_block) /**< is the chunk first in its block */
+{
+  JERRY_ASSERT (chunk_index < MEM_HEAP_CHUNKS_NUM);
+
+  mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (chunk_index % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM);
+
+  JERRY_ASSERT ((MEM_HEAP_IS_ALLOCATED_BITMAP[chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM] & bit) == 0);
+  JERRY_ASSERT ((MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM] & bit) == 0);
+
+  MEM_HEAP_IS_ALLOCATED_BITMAP[chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM] |= bit;
+
+  if (is_first_in_block)
+  {
+    MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM] |= bit;
+  }
+} /* mem_heap_mark_chunk_allocated */
 
 /**
  * Startup initialization of heap
- *
- * Note:
- *      heap start and size should be aligned on MEM_HEAP_CHUNK_SIZE
  */
 void
-mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
-               size_t heap_size)    /**< heap space size */
+mem_heap_init (void)
 {
-  JERRY_ASSERT (heap_start != NULL);
-  JERRY_ASSERT (heap_size != 0);
-
   JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
-  JERRY_ASSERT ((uintptr_t) heap_start % MEM_ALIGNMENT == 0);
-  JERRY_ASSERT ((uintptr_t) heap_start % MEM_HEAP_CHUNK_SIZE == 0);
-  JERRY_ASSERT (heap_size % MEM_HEAP_CHUNK_SIZE == 0);
+  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_ALIGNMENT == 0);
+  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE == 0);
+  JERRY_STATIC_ASSERT (MEM_HEAP_AREA_SIZE % MEM_HEAP_CHUNK_SIZE == 0);
 
-  JERRY_ASSERT (heap_size <= (1u << MEM_HEAP_OFFSET_LOG));
+  JERRY_ASSERT (MEM_HEAP_AREA_SIZE <= (1u << MEM_HEAP_OFFSET_LOG));
 
-  mem_heap.heap_start = heap_start;
-  mem_heap.heap_size = heap_size;
-  mem_heap.limit = CONFIG_MEM_HEAP_DESIRED_LIMIT;
+  mem_heap_limit = CONFIG_MEM_HEAP_DESIRED_LIMIT;
 
-  VALGRIND_NOACCESS_SPACE (heap_start, heap_size);
+  VALGRIND_NOACCESS_SPACE (mem_heap.area, MEM_HEAP_AREA_SIZE);
 
-  mem_init_block_header (mem_heap.heap_start,
-                         0,
-                         MEM_BLOCK_FREE,
-                         mem_block_length_type_t::GENERAL,
-                         NULL,
-                         NULL);
+  memset (MEM_HEAP_IS_ALLOCATED_BITMAP, 0, sizeof (MEM_HEAP_IS_ALLOCATED_BITMAP));
+  memset (MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP, 0, sizeof (MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP));
 
-  mem_heap.first_block_p = (mem_block_header_t*) mem_heap.heap_start;
-  mem_heap.last_block_p = mem_heap.first_block_p;
+#ifdef MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY
+  memset (mem_heap_allocated_bytes, -1, sizeof (mem_heap_allocated_bytes));
+
+  for (size_t i = 0; i < MEM_HEAP_CHUNKS_NUM; i++)
+  {
+#ifndef JERRY_NDEBUG
+    JERRY_ASSERT (mem_heap_length_types[i] == mem_block_length_type_t::GENERAL);
+#endif /* !JERRY_NDEBUG */
+
+    JERRY_ASSERT (mem_heap_allocated_bytes[i] == -1);
+  }
+#endif /* MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY */
+
+  VALGRIND_NOACCESS_SPACE (&mem_heap, sizeof (mem_heap));
 
   MEM_HEAP_STAT_INIT ();
 } /* mem_heap_init */
@@ -439,52 +324,10 @@ mem_heap_init (uint8_t *heap_start, /**< first address of heap space */
 void
 mem_heap_finalize (void)
 {
-  VALGRIND_DEFINED_SPACE (mem_heap.heap_start, mem_heap.heap_size);
+  JERRY_ASSERT (mem_heap_allocated_chunks == 0);
 
-  JERRY_ASSERT (mem_heap.first_block_p == mem_heap.last_block_p);
-  JERRY_ASSERT (mem_is_block_free (mem_heap.first_block_p));
-
-  VALGRIND_NOACCESS_SPACE (mem_heap.heap_start, mem_heap.heap_size);
-
-  memset (&mem_heap, 0, sizeof (mem_heap));
+  VALGRIND_NOACCESS_SPACE (&mem_heap, sizeof (mem_heap));
 } /* mem_heap_finalize */
-
-/**
- * Initialize block header located in the specified first chunk of the block
- */
-static void
-mem_init_block_header (uint8_t *first_chunk_p, /**< address of the first chunk to use for the block */
-                       size_t allocated_bytes, /**< size of block's allocated area */
-                       mem_block_state_t block_state, /**< state of the block (allocated or free) */
-                       mem_block_length_type_t length_type, /**< length type of the block (one-chunked or general) */
-                       mem_block_header_t *prev_block_p, /**< previous block */
-                       mem_block_header_t *next_block_p) /**< next block */
-{
-  mem_block_header_t *block_header_p = (mem_block_header_t*) first_chunk_p;
-
-  VALGRIND_UNDEFINED_STRUCT (block_header_p);
-
-  mem_set_block_prev (block_header_p, prev_block_p);
-  mem_set_block_next (block_header_p, next_block_p);
-  mem_set_block_allocated_bytes (block_header_p, allocated_bytes);
-  mem_set_block_set_length_type (block_header_p, length_type);
-
-  JERRY_ASSERT (allocated_bytes <= mem_get_block_data_space_size (block_header_p));
-
-  if (block_state == MEM_BLOCK_FREE)
-  {
-    JERRY_ASSERT (allocated_bytes == 0);
-    JERRY_ASSERT (length_type == mem_block_length_type_t::GENERAL);
-    JERRY_ASSERT (mem_is_block_free (block_header_p));
-  }
-  else
-  {
-    JERRY_ASSERT (allocated_bytes != 0);
-    JERRY_ASSERT (!mem_is_block_free (block_header_p));
-  }
-
-  VALGRIND_NOACCESS_STRUCT (block_header_p);
-} /* mem_init_block_header */
 
 /**
  * Allocation of memory region.
@@ -501,155 +344,120 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region t
                                                                            *   (one-chunked or general) */
                                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
-  mem_block_header_t *block_p;
-  mem_direction_t direction;
-
   JERRY_ASSERT (size_in_bytes != 0);
   JERRY_ASSERT (length_type != mem_block_length_type_t::ONE_CHUNKED
                 || size_in_bytes == mem_heap_get_chunked_block_data_size ());
 
   mem_check_heap ();
 
-  if (alloc_term == MEM_HEAP_ALLOC_LONG_TERM)
-  {
-    block_p = mem_heap.first_block_p;
-    direction = MEM_DIRECTION_NEXT;
-  }
-  else
-  {
-    JERRY_ASSERT (alloc_term == MEM_HEAP_ALLOC_SHORT_TERM);
+  bool is_direction_forward = (alloc_term == MEM_HEAP_ALLOC_LONG_TERM);
 
-    block_p = mem_heap.last_block_p;
-    direction = MEM_DIRECTION_PREV;
-  }
+  /* searching for appropriate free area, considering requested direction */
 
-  /* searching for appropriate block */
-  while (block_p != NULL)
+  const size_t req_chunks_num = mem_get_block_chunks_count_from_data_size (size_in_bytes);
+  JERRY_ASSERT (req_chunks_num > 0);
+
+  size_t found_chunks_num = 0;
+  size_t first_chunk = MEM_HEAP_CHUNKS_NUM;
+
+  VALGRIND_DEFINED_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
+
+  for (size_t i = 0;
+       i < MEM_HEAP_BITMAP_STORAGE_ITEMS && found_chunks_num != req_chunks_num;
+       i++)
   {
-    VALGRIND_DEFINED_STRUCT (block_p);
+    const size_t bitmap_item_index = (is_direction_forward ? i : MEM_HEAP_BITMAP_STORAGE_ITEMS - i - 1);
 
-    if (mem_is_block_free (block_p))
+    mem_heap_bitmap_storage_item_t item = MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index];
+
+    if (item != MEM_HEAP_BITMAP_STORAGE_ALL_BITS_MASK)
     {
-      if (mem_get_block_data_space_size (block_p) >= size_in_bytes)
+      for (size_t j = 0; j < MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM; j++)
       {
-        break;
+        const size_t bit_index = (is_direction_forward ? j : MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM - j - 1);
+        mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (bit_index);
+
+        if ((item & bit) == 0)
+        {
+          found_chunks_num++;
+
+          if (found_chunks_num == req_chunks_num)
+          {
+            first_chunk = bitmap_item_index * MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM + bit_index;
+
+            if (is_direction_forward)
+            {
+              first_chunk -= req_chunks_num - 1u;
+            }
+
+            break;
+          }
+        }
+        else
+        {
+          found_chunks_num = 0;
+        }
       }
     }
     else
     {
-      JERRY_ASSERT (!mem_is_block_free (block_p));
+      found_chunks_num = 0;
     }
-
-    mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, direction);
-
-    VALGRIND_NOACCESS_STRUCT (block_p);
-
-    block_p = next_block_p;
   }
 
-  if (block_p == NULL)
+  VALGRIND_NOACCESS_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
+
+  if (found_chunks_num != req_chunks_num)
   {
+    JERRY_ASSERT (found_chunks_num < req_chunks_num);
+
     /* not enough free space */
     return NULL;
   }
 
-  /* appropriate block found, allocating space */
-  size_t new_block_size_in_chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
-  size_t found_block_size_in_chunks = mem_get_block_chunks_count (block_p);
+  JERRY_ASSERT (req_chunks_num <= found_chunks_num);
 
-  JERRY_ASSERT (new_block_size_in_chunks <= found_block_size_in_chunks);
+#ifdef MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY
+  mem_heap_allocated_bytes[first_chunk] = (ssize_t) size_in_bytes;
+#endif /* MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY */
 
-  mem_heap.allocated_chunks += new_block_size_in_chunks;
+  mem_heap_allocated_chunks += req_chunks_num;
 
-  JERRY_ASSERT (mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE <= mem_heap.heap_size);
+  JERRY_ASSERT (mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE <= MEM_HEAP_AREA_SIZE);
 
-  if (mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE >= mem_heap.limit)
+  if (mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE >= mem_heap_limit)
   {
-    mem_heap.limit = JERRY_MIN (mem_heap.heap_size,
-                                JERRY_MAX (mem_heap.limit + CONFIG_MEM_HEAP_DESIRED_LIMIT,
-                                           mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE));
-    JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE);
+    mem_heap_limit = JERRY_MIN (MEM_HEAP_AREA_SIZE,
+                                JERRY_MAX (mem_heap_limit + CONFIG_MEM_HEAP_DESIRED_LIMIT,
+                                           mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE));
+    JERRY_ASSERT (mem_heap_limit >= mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE);
   }
 
-  mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
-  mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
+  VALGRIND_DEFINED_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
 
-  if (new_block_size_in_chunks < found_block_size_in_chunks)
+  mem_heap_mark_chunk_allocated (first_chunk, true);
+#ifndef JERRY_NDEBUG
+  mem_heap_length_types[first_chunk] = length_type;
+#endif /* !JERRY_NDEBUG */
+
+  for (size_t chunk_index = first_chunk + 1u;
+       chunk_index < first_chunk + req_chunks_num;
+       chunk_index++)
   {
-    MEM_HEAP_STAT_FREE_BLOCK_SPLIT ();
+    mem_heap_mark_chunk_allocated (chunk_index, false);
 
-    if (direction == MEM_DIRECTION_PREV)
-    {
-      prev_block_p = block_p;
-      uint8_t *block_end_p = (uint8_t*) block_p + found_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
-      block_p = (mem_block_header_t*) (block_end_p - new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE);
-
-      VALGRIND_DEFINED_STRUCT (prev_block_p);
-
-      mem_set_block_next (prev_block_p, block_p);
-
-      VALGRIND_NOACCESS_STRUCT (prev_block_p);
-
-      if (next_block_p == NULL)
-      {
-        mem_heap.last_block_p = block_p;
-      }
-      else
-      {
-        VALGRIND_DEFINED_STRUCT (next_block_p);
-
-        mem_set_block_prev (next_block_p, block_p);
-
-        VALGRIND_NOACCESS_STRUCT (next_block_p);
-      }
-    }
-    else
-    {
-      uint8_t *new_free_block_first_chunk_p = (uint8_t*) block_p + new_block_size_in_chunks * MEM_HEAP_CHUNK_SIZE;
-      mem_init_block_header (new_free_block_first_chunk_p,
-                             0,
-                             MEM_BLOCK_FREE,
-                             mem_block_length_type_t::GENERAL,
-                             block_p,
-                             next_block_p);
-
-      mem_block_header_t *new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
-
-      if (next_block_p == NULL)
-      {
-        mem_heap.last_block_p = new_free_block_p;
-      }
-      else
-      {
-        VALGRIND_DEFINED_STRUCT (next_block_p);
-
-        mem_block_header_t* new_free_block_p = (mem_block_header_t*) new_free_block_first_chunk_p;
-        mem_set_block_prev (next_block_p, new_free_block_p);
-
-        VALGRIND_NOACCESS_STRUCT (next_block_p);
-      }
-
-      next_block_p = new_free_block_p;
-    }
+#ifndef JERRY_NDEBUG
+    JERRY_ASSERT (length_type == mem_block_length_type_t::GENERAL
+                  && mem_heap_length_types[chunk_index] == length_type);
+#endif /* !JERRY_NDEBUG */
   }
 
-  mem_init_block_header ((uint8_t*) block_p,
-                         size_in_bytes,
-                         MEM_BLOCK_ALLOCATED,
-                         length_type,
-                         prev_block_p,
-                         next_block_p);
+  VALGRIND_NOACCESS_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
 
-  VALGRIND_DEFINED_STRUCT (block_p);
-
-  MEM_HEAP_STAT_ALLOC_BLOCK (block_p);
-
-  JERRY_ASSERT (mem_get_block_data_space_size (block_p) >= size_in_bytes);
-
-  VALGRIND_NOACCESS_STRUCT (block_p);
+  MEM_HEAP_STAT_ALLOC (first_chunk, req_chunks_num);
 
   /* return data space beginning address */
-  uint8_t *data_space_p = (uint8_t*) (block_p + 1);
+  uint8_t *data_space_p = (uint8_t *) mem_heap.area + (first_chunk * MEM_HEAP_CHUNK_SIZE);
   JERRY_ASSERT ((uintptr_t) data_space_p % MEM_ALIGNMENT == 0);
 
   VALGRIND_UNDEFINED_SPACE (data_space_p, size_in_bytes);
@@ -682,7 +490,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
                                            mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   size_t chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
-  if ((mem_heap.allocated_chunks + chunks) * MEM_HEAP_CHUNK_SIZE >= mem_heap.limit)
+  if ((mem_heap_allocated_chunks + chunks) * MEM_HEAP_CHUNK_SIZE >= mem_heap_limit)
   {
     mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
   }
@@ -771,105 +579,109 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
   uint8_t *uint8_ptr = (uint8_t*) ptr;
 
   /* checking that uint8_ptr points to the heap */
-  JERRY_ASSERT (uint8_ptr >= mem_heap.heap_start
-                && uint8_ptr <= mem_heap.heap_start + mem_heap.heap_size);
+  JERRY_ASSERT (uint8_ptr >= mem_heap.area && uint8_ptr <= (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
 
   mem_check_heap ();
 
-  mem_block_header_t *block_p = (mem_block_header_t*) uint8_ptr - 1;
+  JERRY_ASSERT (mem_heap_limit >= mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE);
 
-  VALGRIND_DEFINED_STRUCT (block_p);
+  size_t chunk_index = mem_heap_get_chunk_from_address (ptr);
 
-  mem_block_header_t *prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
-  mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
+  size_t chunks = 0;
+  bool is_block_end_reached = false;
 
-  JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE);
+  VALGRIND_DEFINED_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
 
-  size_t chunks = mem_get_block_chunks_count_from_data_size (mem_get_block_data_space_size (block_p));
-  JERRY_ASSERT (mem_heap.allocated_chunks >= chunks);
-  mem_heap.allocated_chunks -= chunks;
-
-  if (mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE * 3 <= mem_heap.limit)
+  for (size_t bitmap_item_index = chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+       bitmap_item_index < MEM_HEAP_BITMAP_STORAGE_ITEMS && !is_block_end_reached;
+       bitmap_item_index++)
   {
-    mem_heap.limit /= 2;
-  }
-  else if (mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE + CONFIG_MEM_HEAP_DESIRED_LIMIT <= mem_heap.limit)
-  {
-    mem_heap.limit -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
-  }
+    mem_heap_bitmap_storage_item_t item_allocated = MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index];
+    mem_heap_bitmap_storage_item_t item_first_in_block = MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index];
 
-  JERRY_ASSERT (mem_heap.limit >= mem_heap.allocated_chunks * MEM_HEAP_CHUNK_SIZE);
-
-  MEM_HEAP_STAT_FREE_BLOCK (block_p);
-
-  VALGRIND_NOACCESS_SPACE (uint8_ptr, block_p->allocated_bytes);
-
-  JERRY_ASSERT (!mem_is_block_free (block_p));
-
-  /* marking the block free */
-  block_p->allocated_bytes = 0;
-  block_p->length_type = mem_block_length_type_t::GENERAL;
-
-  if (next_block_p != NULL)
-  {
-    VALGRIND_DEFINED_STRUCT (next_block_p);
-
-    if (mem_is_block_free (next_block_p))
+    if (item_first_in_block == 0
+        && item_allocated == MEM_HEAP_BITMAP_STORAGE_ALL_BITS_MASK)
     {
-      /* merge with the next block */
-      MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
+      JERRY_ASSERT (chunks != 0);
+      MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] = 0;
 
-      mem_block_header_t *next_next_block_p = mem_get_next_block_by_direction (next_block_p, MEM_DIRECTION_NEXT);
+      chunks += MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+    }
+    else
+    {
+      size_t bit_index;
 
-      VALGRIND_NOACCESS_STRUCT (next_block_p);
-
-      next_block_p = next_next_block_p;
-
-      VALGRIND_DEFINED_STRUCT (next_block_p);
-
-      mem_set_block_next (block_p, next_block_p);
-      if (next_block_p != NULL)
+      if (chunks == 0)
       {
-        mem_set_block_prev (next_block_p, block_p);
+        bit_index = chunk_index % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+        mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (bit_index);
+
+        JERRY_ASSERT ((item_first_in_block & bit) != 0);
+        item_first_in_block &= ~bit;
+
+        MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index] = item_first_in_block;
       }
       else
       {
-        mem_heap.last_block_p = block_p;
+        bit_index = 0;
       }
-    }
 
-    VALGRIND_NOACCESS_STRUCT (next_block_p);
+      while (bit_index < MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM)
+      {
+        mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (bit_index);
+
+        if ((item_allocated & bit) == 0
+            || (item_first_in_block & bit) != 0)
+        {
+          is_block_end_reached = true;
+          break;
+        }
+        else
+        {
+          JERRY_ASSERT ((item_allocated & bit) != 0);
+
+          item_allocated &= ~bit;
+
+          chunks++;
+          bit_index++;
+        }
+      }
+
+      MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] = item_allocated;
+    }
   }
 
-  if (prev_block_p != NULL)
+  VALGRIND_NOACCESS_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
+
+#ifdef JERRY_VALGRIND
+  VALGRIND_CHECK_MEM_IS_ADDRESSABLE (ptr, mem_heap_allocated_bytes[chunk_index]);
+#endif /* JERRY_VALGRIND */
+
+  VALGRIND_NOACCESS_SPACE (ptr, chunks * MEM_HEAP_CHUNK_SIZE);
+
+  JERRY_ASSERT (mem_heap_allocated_chunks >= chunks);
+  mem_heap_allocated_chunks -= chunks;
+
+  if (mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE * 3 <= mem_heap_limit)
   {
-    VALGRIND_DEFINED_STRUCT (prev_block_p);
-
-    if (mem_is_block_free (prev_block_p))
-    {
-      /* merge with the previous block */
-      MEM_HEAP_STAT_FREE_BLOCK_MERGE ();
-
-      mem_set_block_next (prev_block_p, next_block_p);
-      if (next_block_p != NULL)
-      {
-        VALGRIND_DEFINED_STRUCT (next_block_p);
-
-        mem_block_header_t* prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
-        mem_set_block_prev (next_block_p, prev_block_p);
-
-        VALGRIND_NOACCESS_STRUCT (next_block_p);
-      }
-      else
-      {
-        mem_heap.last_block_p = prev_block_p;
-      }
-    }
-
-    VALGRIND_NOACCESS_STRUCT (prev_block_p);
+    mem_heap_limit /= 2;
+  }
+  else if (mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE + CONFIG_MEM_HEAP_DESIRED_LIMIT <= mem_heap_limit)
+  {
+    mem_heap_limit -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
   }
 
-  VALGRIND_NOACCESS_STRUCT (block_p);
+  JERRY_ASSERT (mem_heap_limit >= mem_heap_allocated_chunks * MEM_HEAP_CHUNK_SIZE);
+
+  MEM_HEAP_STAT_FREE (chunk_index, chunks);
+
+#ifdef MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY
+  mem_heap_allocated_bytes[chunk_index] = 0;
+#endif /* MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY */
+
+#ifndef JERRY_NDEBUG
+  mem_heap_length_types[chunk_index] = mem_block_length_type_t::GENERAL;
+#endif /* !JERRY_NDEBUG */
 
   mem_check_heap ();
 } /* mem_heap_free_block */
@@ -892,58 +704,21 @@ void*
 mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 {
   JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
-  JERRY_ASSERT (((uintptr_t) mem_heap.heap_start % MEM_HEAP_CHUNK_SIZE) == 0);
+  JERRY_STATIC_ASSERT (((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE) == 0);
 
-  JERRY_ASSERT (mem_heap.heap_start <= ptr
-                && ptr < mem_heap.heap_start + mem_heap.heap_size);
+  JERRY_ASSERT (mem_heap.area <= ptr && ptr < (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
 
   uintptr_t uintptr = (uintptr_t) ptr;
   uintptr_t uintptr_chunk_aligned = JERRY_ALIGNDOWN (uintptr, MEM_HEAP_CHUNK_SIZE);
 
-  JERRY_ASSERT (uintptr > uintptr_chunk_aligned);
+  JERRY_ASSERT (uintptr >= uintptr_chunk_aligned);
 
-  mem_block_header_t *block_p = (mem_block_header_t *) uintptr_chunk_aligned;
+#ifndef JERRY_NDEBUG
+  size_t chunk_index = mem_heap_get_chunk_from_address ((void*) uintptr_chunk_aligned);
+  JERRY_ASSERT (mem_heap_length_types[chunk_index] == mem_block_length_type_t::ONE_CHUNKED);
+#endif /* !JERRY_NDEBUG */
 
-#ifndef JERRY_DISABLE_HEAVY_DEBUG
-  VALGRIND_DEFINED_STRUCT (block_p);
-  JERRY_ASSERT (block_p->length_type == mem_block_length_type_t::ONE_CHUNKED);
-  VALGRIND_NOACCESS_STRUCT (block_p);
-
-  const mem_block_header_t *block_iter_p = mem_heap.first_block_p;
-  bool is_found = false;
-
-  /* searching for corresponding block */
-  while (block_iter_p != NULL)
-  {
-    VALGRIND_DEFINED_STRUCT (block_iter_p);
-
-    const mem_block_header_t *next_block_p = mem_get_next_block_by_direction (block_iter_p,
-                                                                              MEM_DIRECTION_NEXT);
-    is_found = (ptr > block_iter_p
-                && (ptr < next_block_p
-                    || next_block_p == NULL));
-
-    if (is_found)
-    {
-      JERRY_ASSERT (!mem_is_block_free (block_iter_p));
-      JERRY_ASSERT (block_iter_p + 1 <= ptr);
-      JERRY_ASSERT (ptr < ((uint8_t*) (block_iter_p + 1) + block_iter_p->allocated_bytes));
-    }
-
-    VALGRIND_NOACCESS_STRUCT (block_iter_p);
-
-    if (is_found)
-    {
-      break;
-    }
-
-    block_iter_p = next_block_p;
-  }
-
-  JERRY_ASSERT (is_found && block_p == block_iter_p);
-#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
-
-  return (void*) (block_p + 1);
+  return (void*) uintptr_chunk_aligned;
 } /* mem_heap_get_chunked_block_start */
 
 /**
@@ -952,7 +727,7 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 size_t
 mem_heap_get_chunked_block_data_size (void)
 {
-  return (MEM_HEAP_CHUNK_SIZE - sizeof (mem_block_header_t));
+  return MEM_HEAP_CHUNK_SIZE;
 } /* mem_heap_get_chunked_block_data_size */
 
 /**
@@ -963,12 +738,108 @@ mem_heap_get_chunked_block_data_size (void)
 size_t __attr_pure___
 mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum allocation size */
 {
-  size_t minimum_allocation_size_with_block_header = minimum_allocation_size + sizeof (mem_block_header_t);
-  size_t heap_chunk_aligned_allocation_size = JERRY_ALIGNUP (minimum_allocation_size_with_block_header,
-                                                             MEM_HEAP_CHUNK_SIZE);
-
-  return heap_chunk_aligned_allocation_size - sizeof (mem_block_header_t);
+  return JERRY_ALIGNUP (minimum_allocation_size, MEM_HEAP_CHUNK_SIZE);
 } /* mem_heap_recommend_allocation_size */
+
+/**
+ * Compress pointer
+ *
+ * @return packed heap pointer
+ */
+uintptr_t
+mem_heap_compress_pointer (const void *pointer_p) /**< pointer to compress */
+{
+  JERRY_ASSERT (pointer_p != NULL);
+
+  uintptr_t int_ptr = (uintptr_t) pointer_p;
+  uintptr_t heap_start = (uintptr_t) &mem_heap;
+
+  JERRY_ASSERT (int_ptr % MEM_ALIGNMENT == 0);
+
+  int_ptr -= heap_start;
+  int_ptr >>= MEM_ALIGNMENT_LOG;
+
+  JERRY_ASSERT ((int_ptr & ~((1u << MEM_HEAP_OFFSET_LOG) - 1)) == 0);
+
+  JERRY_ASSERT (int_ptr != MEM_CP_NULL);
+
+  return int_ptr;
+} /* mem_heap_compress_pointer */
+
+/**
+ * Decompress pointer
+ *
+ * @return unpacked heap pointer
+ */
+void*
+mem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
+{
+  JERRY_ASSERT (compressed_pointer != MEM_CP_NULL);
+
+  uintptr_t int_ptr = compressed_pointer;
+  uintptr_t heap_start = (uintptr_t) &mem_heap;
+
+  int_ptr <<= MEM_ALIGNMENT_LOG;
+  int_ptr += heap_start;
+
+  return (void*) int_ptr;
+} /* mem_heap_decompress_pointer */
+
+#ifndef JERRY_NDEBUG
+/**
+ * Check whether the pointer points to the heap
+ *
+ * Note:
+ *      the routine should be used only for assertion checks
+ *
+ * @return true - if pointer points to the heap,
+ *         false - otherwise
+ */
+bool
+mem_is_heap_pointer (const void *pointer) /**< pointer */
+{
+  uint8_t *uint8_pointer = (uint8_t*) pointer;
+
+  return (uint8_pointer >= mem_heap.area && uint8_pointer <= ((uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE));
+} /* mem_is_heap_pointer */
+#endif /* !JERRY_NDEBUG */
+
+/**
+ * Print heap block
+ */
+static void
+mem_heap_print_block (bool dump_block_data, /**< print block with data (true)
+                                             *   or print only block header (false) */
+                      size_t start_chunk, /**< starting chunk of block */
+                      size_t chunks_num, /**< number of chunks in the block */
+                      bool is_free) /**< is the block free? */
+{
+  printf ("Block (%p): state=%s, size in chunks=%lu\n",
+          (uint8_t *) mem_heap.area + start_chunk * MEM_HEAP_CHUNK_SIZE,
+          is_free ? "free" : "allocated",
+          (unsigned long) chunks_num);
+
+  if (dump_block_data)
+  {
+    uint8_t *block_data_p = (uint8_t*) mem_heap.area;
+    uint8_t *block_data_end_p = block_data_p + start_chunk * MEM_HEAP_CHUNK_SIZE;
+
+#ifdef JERRY_VALGRIND
+    VALGRIND_DISABLE_ERROR_REPORTING;
+#endif /* JERRY_VALGRIND */
+
+    while (block_data_p != block_data_end_p)
+    {
+      printf ("0x%02x ", *block_data_p++);
+    }
+
+#ifdef JERRY_VALGRIND
+    VALGRIND_ENABLE_ERROR_REPORTING;
+#endif /* JERRY_VALGRIND */
+
+    printf ("\n");
+  }
+} /* mem_heap_print_block */
 
 /**
  * Print heap
@@ -985,41 +856,35 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
 
   if (dump_block_headers)
   {
-    printf ("Heap: start=%p size=%lu, first block->%p, last block->%p\n",
-            mem_heap.heap_start,
-            (unsigned long) mem_heap.heap_size,
-            (void*) mem_heap.first_block_p,
-            (void*) mem_heap.last_block_p);
+    VALGRIND_DEFINED_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
 
-    for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
-         block_p != NULL;
-         block_p = next_block_p)
+    printf ("Heap: start=%p size=%lu\n",
+            mem_heap.area,
+            (unsigned long) MEM_HEAP_AREA_SIZE);
+
+    bool is_free = true;
+    size_t start_chunk = 0;
+    size_t chunk_index;
+
+    for (chunk_index = 0; chunk_index < MEM_HEAP_CHUNKS_NUM; chunk_index++)
     {
-      VALGRIND_DEFINED_STRUCT (block_p);
+      size_t bitmap_item_index = chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+      size_t item_bit_index = chunk_index % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+      mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (item_bit_index);
 
-      printf ("Block (%p): state=%s, size in chunks=%lu, previous block->%p next block->%p\n",
-              (void*) block_p,
-              mem_is_block_free (block_p) ? "free" : "allocated",
-              (unsigned long) mem_get_block_chunks_count (block_p),
-              (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV),
-              (void*) mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT));
-
-      if (dump_block_data)
+      if ((MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index] & bit) != 0
+          || (((MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] & bit) == 0) != is_free))
       {
-        uint8_t *block_data_p = (uint8_t*) (block_p + 1);
-        for (uint32_t offset = 0;
-             offset < mem_get_block_data_space_size (block_p);
-             offset++)
-        {
-          printf ("%02x ", block_data_p[ offset ]);
-        }
-        printf ("\n");
+        mem_heap_print_block (dump_block_data, start_chunk, chunk_index - start_chunk, is_free);
+
+        start_chunk = chunk_index;
+        is_free = ((MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] & bit) == 0);
       }
-
-      next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
-
-      VALGRIND_NOACCESS_STRUCT (block_p);
     }
+
+    VALGRIND_NOACCESS_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
+
+    mem_heap_print_block (dump_block_data, start_chunk, chunk_index - start_chunk, is_free);
   }
 
 #ifdef MEM_STATS
@@ -1028,23 +893,17 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
     printf ("Heap stats:\n");
     printf ("  Heap size = %zu bytes\n"
             "  Chunk size = %zu bytes\n"
-            "  Blocks count = %zu\n"
-            "  Allocated blocks count = %zu\n"
             "  Allocated chunks count = %zu\n"
             "  Allocated = %zu bytes\n"
             "  Waste = %zu bytes\n"
-            "  Peak allocated blocks count = %zu\n"
             "  Peak allocated chunks count = %zu\n"
-            "  Peak allocated= %zu bytes\n"
+            "  Peak allocated = %zu bytes\n"
             "  Peak waste = %zu bytes\n",
             mem_heap_stats.size,
             MEM_HEAP_CHUNK_SIZE,
-            mem_heap_stats.blocks,
-            mem_heap_stats.allocated_blocks,
             mem_heap_stats.allocated_chunks,
             mem_heap_stats.allocated_bytes,
             mem_heap_stats.waste_bytes,
-            mem_heap_stats.peak_allocated_blocks,
             mem_heap_stats.peak_allocated_chunks,
             mem_heap_stats.peak_allocated_bytes,
             mem_heap_stats.peak_waste_bytes);
@@ -1063,78 +922,35 @@ static void
 mem_check_heap (void)
 {
 #ifndef JERRY_DISABLE_HEAVY_DEBUG
-  JERRY_ASSERT ((uint8_t*) mem_heap.first_block_p == mem_heap.heap_start);
-  JERRY_ASSERT (mem_heap.heap_size % MEM_HEAP_CHUNK_SIZE == 0);
-
-  bool is_last_block_was_met = false;
-  size_t chunks_num = 0;
   size_t allocated_chunks_num = 0;
 
-  for (mem_block_header_t *block_p = mem_heap.first_block_p, *next_block_p;
-       block_p != NULL;
-       block_p = next_block_p)
+  VALGRIND_DEFINED_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
+
+  for (size_t chunk_index = 0; chunk_index < MEM_HEAP_CHUNKS_NUM; chunk_index++)
   {
-    VALGRIND_DEFINED_STRUCT (block_p);
+    size_t bitmap_item_index = chunk_index / MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+    size_t item_bit_index = chunk_index % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM;
+    mem_heap_bitmap_storage_item_t bit = MEM_HEAP_BITMAP_ITEM_BIT (item_bit_index);
 
-    JERRY_ASSERT (block_p->length_type != mem_block_length_type_t::ONE_CHUNKED
-                  || block_p->allocated_bytes == mem_heap_get_chunked_block_data_size ());
-
-    chunks_num += mem_get_block_chunks_count (block_p);
-
-    if (!mem_is_block_free (block_p))
+    if ((MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index] & bit) != 0)
     {
-      allocated_chunks_num += mem_get_block_chunks_count (block_p);
+      JERRY_ASSERT ((MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] & bit) != 0);
     }
 
-    next_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_NEXT);
-
-    if (block_p == mem_heap.last_block_p)
+    if ((MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] & bit) != 0)
     {
-      is_last_block_was_met = true;
+      if (mem_heap_length_types[chunk_index] == mem_block_length_type_t::ONE_CHUNKED)
+      {
+        JERRY_ASSERT ((MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index] & bit) != 0);
+      }
 
-      JERRY_ASSERT (next_block_p == NULL);
+      allocated_chunks_num++;
     }
-    else
-    {
-      JERRY_ASSERT (next_block_p != NULL);
-    }
-
-    VALGRIND_NOACCESS_STRUCT (block_p);
   }
 
-  JERRY_ASSERT (chunks_num * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
-  JERRY_ASSERT (allocated_chunks_num == mem_heap.allocated_chunks);
-  JERRY_ASSERT (is_last_block_was_met);
+  VALGRIND_NOACCESS_SPACE (mem_heap.bitmaps, sizeof (mem_heap.bitmaps));
 
-  bool is_first_block_was_met = false;
-  chunks_num = 0;
-
-  for (mem_block_header_t *block_p = mem_heap.last_block_p, *prev_block_p;
-       block_p != NULL;
-       block_p = prev_block_p)
-  {
-    VALGRIND_DEFINED_STRUCT (block_p);
-
-    chunks_num += mem_get_block_chunks_count (block_p);
-
-    prev_block_p = mem_get_next_block_by_direction (block_p, MEM_DIRECTION_PREV);
-
-    if (block_p == mem_heap.first_block_p)
-    {
-      is_first_block_was_met = true;
-
-      JERRY_ASSERT (prev_block_p == NULL);
-    }
-    else
-    {
-      JERRY_ASSERT (prev_block_p != NULL);
-    }
-
-    VALGRIND_NOACCESS_STRUCT (block_p);
-  }
-
-  JERRY_ASSERT (chunks_num * MEM_HEAP_CHUNK_SIZE == mem_heap.heap_size);
-  JERRY_ASSERT (is_first_block_was_met);
+  JERRY_ASSERT (allocated_chunks_num == mem_heap_allocated_chunks);
 #endif /* !JERRY_DISABLE_HEAVY_DEBUG */
 } /* mem_check_heap */
 
@@ -1155,7 +971,6 @@ void
 mem_heap_stats_reset_peak (void)
 {
   mem_heap_stats.peak_allocated_chunks = mem_heap_stats.allocated_chunks;
-  mem_heap_stats.peak_allocated_blocks = mem_heap_stats.allocated_blocks;
   mem_heap_stats.peak_allocated_bytes = mem_heap_stats.allocated_bytes;
   mem_heap_stats.peak_waste_bytes = mem_heap_stats.waste_bytes;
 } /* mem_heap_stats_reset_peak */
@@ -1168,35 +983,23 @@ mem_heap_stat_init ()
 {
   memset (&mem_heap_stats, 0, sizeof (mem_heap_stats));
 
-  mem_heap_stats.size = mem_heap.heap_size;
-  mem_heap_stats.blocks = 1;
+  mem_heap_stats.size = MEM_HEAP_AREA_SIZE;
 } /* mem_heap_stat_init */
 
 /**
- * Account block allocation
+ * Account allocation
  */
 static void
-mem_heap_stat_alloc_block (mem_block_header_t *block_header_p) /**< allocated block */
+mem_heap_stat_alloc (size_t first_chunk_index, /**< first chunk of the allocated area */
+                     size_t chunks_num) /**< number of chunks in the area */
 {
-  JERRY_ASSERT (!mem_is_block_free (block_header_p));
-
-  const size_t chunks = mem_get_block_chunks_count (block_header_p);
-  const size_t bytes = block_header_p->allocated_bytes;
+  const size_t chunks = chunks_num;
+  const size_t bytes = (size_t) mem_heap_allocated_bytes[first_chunk_index];
   const size_t waste_bytes = chunks * MEM_HEAP_CHUNK_SIZE - bytes;
 
-  mem_heap_stats.allocated_blocks++;
   mem_heap_stats.allocated_chunks += chunks;
   mem_heap_stats.allocated_bytes += bytes;
   mem_heap_stats.waste_bytes += waste_bytes;
-
-  if (mem_heap_stats.allocated_blocks > mem_heap_stats.peak_allocated_blocks)
-  {
-    mem_heap_stats.peak_allocated_blocks = mem_heap_stats.allocated_blocks;
-  }
-  if (mem_heap_stats.allocated_blocks > mem_heap_stats.global_peak_allocated_blocks)
-  {
-    mem_heap_stats.global_peak_allocated_blocks = mem_heap_stats.allocated_blocks;
-  }
 
   if (mem_heap_stats.allocated_chunks > mem_heap_stats.peak_allocated_chunks)
   {
@@ -1225,55 +1028,32 @@ mem_heap_stat_alloc_block (mem_block_header_t *block_header_p) /**< allocated bl
     mem_heap_stats.global_peak_waste_bytes = mem_heap_stats.waste_bytes;
   }
 
-  JERRY_ASSERT (mem_heap_stats.allocated_blocks <= mem_heap_stats.blocks);
   JERRY_ASSERT (mem_heap_stats.allocated_bytes <= mem_heap_stats.size);
   JERRY_ASSERT (mem_heap_stats.allocated_chunks <= mem_heap_stats.size / MEM_HEAP_CHUNK_SIZE);
-} /* mem_heap_stat_alloc_block */
+} /* mem_heap_stat_alloc */
 
 /**
- * Account block freeing
+ * Account freeing
  */
 static void
-mem_heap_stat_free_block (mem_block_header_t *block_header_p) /**< block to be freed */
+mem_heap_stat_free (size_t first_chunk_index, /**< first chunk of the freed area */
+                    size_t chunks_num) /**< number of chunks in the area */
 {
-  JERRY_ASSERT (!mem_is_block_free (block_header_p));
-
-  const size_t chunks = mem_get_block_chunks_count (block_header_p);
-  const size_t bytes = block_header_p->allocated_bytes;
+  const size_t chunks = chunks_num;
+  const size_t bytes = (size_t) mem_heap_allocated_bytes[first_chunk_index];
   const size_t waste_bytes = chunks * MEM_HEAP_CHUNK_SIZE - bytes;
 
-  JERRY_ASSERT (mem_heap_stats.allocated_blocks <= mem_heap_stats.blocks);
   JERRY_ASSERT (mem_heap_stats.allocated_bytes <= mem_heap_stats.size);
   JERRY_ASSERT (mem_heap_stats.allocated_chunks <= mem_heap_stats.size / MEM_HEAP_CHUNK_SIZE);
 
-  JERRY_ASSERT (mem_heap_stats.allocated_blocks >= 1);
   JERRY_ASSERT (mem_heap_stats.allocated_chunks >= chunks);
   JERRY_ASSERT (mem_heap_stats.allocated_bytes >= bytes);
   JERRY_ASSERT (mem_heap_stats.waste_bytes >= waste_bytes);
 
-  mem_heap_stats.allocated_blocks--;
   mem_heap_stats.allocated_chunks -= chunks;
   mem_heap_stats.allocated_bytes -= bytes;
   mem_heap_stats.waste_bytes -= waste_bytes;
-} /* mem_heap_stat_free_block */
-
-/**
- * Account free block split
- */
-static void
-mem_heap_stat_free_block_split (void)
-{
-  mem_heap_stats.blocks++;
-} /* mem_heap_stat_free_block_split */
-
-/**
- * Account free block merge
- */
-static void
-mem_heap_stat_free_block_merge (void)
-{
-  mem_heap_stats.blocks--;
-} /* mem_heap_stat_free_block_merge */
+} /* mem_heap_stat_free */
 #endif /* MEM_STATS */
 
 /**

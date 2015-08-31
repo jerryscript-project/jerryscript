@@ -46,7 +46,7 @@ vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
     JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
     JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
 
-    const idx_t varg_var_idx = next_instr.data.meta.data_1;
+    const vm_idx_t varg_var_idx = next_instr.data.meta.data_1;
 
     ECMA_TRY_CATCH (get_arg,
                     get_variable_value (frame_ctx_p, varg_var_idx, false),

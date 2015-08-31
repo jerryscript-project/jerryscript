@@ -21,7 +21,7 @@
 
 static hash_table lit_id_to_uid = null_hash;
 static vm_instr_counter_t global_oc;
-static idx_t next_uid;
+static vm_idx_t next_uid;
 
 static void
 assert_tree (scopes_tree t)
@@ -29,20 +29,18 @@ assert_tree (scopes_tree t)
   JERRY_ASSERT (t != NULL);
 }
 
-static idx_t
-get_uid (op_meta *op, uint8_t i)
+static vm_idx_t
+get_uid (op_meta *op, size_t i)
 {
-  JERRY_ASSERT (i < 4);
-  raw_instr *raw = (raw_instr *) &op->op;
-  return raw->uids[i + 1];
+  JERRY_ASSERT (i < 3);
+  return op->op.data.raw_args[i];
 }
 
 static void
-set_uid (op_meta *op, uint8_t i, idx_t uid)
+set_uid (op_meta *op, size_t i, vm_idx_t uid)
 {
-  JERRY_ASSERT (i < 4);
-  raw_instr *raw = (raw_instr *) &op->op;
-  raw->uids[i + 1] = uid;
+  JERRY_ASSERT (i < 3);
+  op->op.data.raw_args[i] = uid;
 }
 
 vm_instr_counter_t
@@ -151,7 +149,7 @@ start_new_block_if_necessary (void)
       hash_table_free (lit_id_to_uid);
       lit_id_to_uid = null_hash;
     }
-    lit_id_to_uid = hash_table_init (sizeof (lit_cpointer_t), sizeof (idx_t), HASH_SIZE, lit_id_hash);
+    lit_id_to_uid = hash_table_init (sizeof (lit_cpointer_t), sizeof (vm_idx_t), HASH_SIZE, lit_id_hash);
   }
 }
 
@@ -188,16 +186,16 @@ change_uid (op_meta *om, lit_id_hash_table *lit_ids, uint16_t mask)
   {
     if (is_possible_literal (mask, i))
     {
-      if (get_uid (om, i) == LITERAL_TO_REWRITE)
+      if (get_uid (om, i) == VM_IDX_REWRITE_LITERAL_UID)
       {
         JERRY_ASSERT (om->lit_id[i].packed_value != MEM_CP_NULL);
         lit_cpointer_t lit_id = om->lit_id[i];
-        idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
+        vm_idx_t *uid = (vm_idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
           hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
           lit_id_hash_table_insert (lit_ids, next_uid, global_oc, lit_id);
-          uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
+          uid = (vm_idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
           JERRY_ASSERT (uid != NULL);
           JERRY_ASSERT (*uid == next_uid);
           next_uid++;
@@ -223,15 +221,15 @@ insert_uids_to_lit_id_map (op_meta *om, uint16_t mask)
   {
     if (is_possible_literal (mask, i))
     {
-      if (get_uid (om, i) == LITERAL_TO_REWRITE)
+      if (get_uid (om, i) == VM_IDX_REWRITE_LITERAL_UID)
       {
         JERRY_ASSERT (om->lit_id[i].packed_value != MEM_CP_NULL);
         lit_cpointer_t lit_id = om->lit_id[i];
-        idx_t *uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
+        vm_idx_t *uid = (vm_idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
         if (uid == NULL)
         {
           hash_table_insert (lit_id_to_uid, &lit_id, &next_uid);
-          uid = (idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
+          uid = (vm_idx_t *) hash_table_lookup (lit_id_to_uid, &lit_id);
           JERRY_ASSERT (uid != NULL);
           JERRY_ASSERT (*uid == next_uid);
           next_uid++;
@@ -416,11 +414,11 @@ generate_instr (linked_list instr_list, /**< instruction list */
  *
  * @return number of new literals
  */
-static idx_t
+static vm_idx_t
 count_new_literals_in_instr (op_meta *om_p) /**< instruction */
 {
   start_new_block_if_necessary ();
-  idx_t current_uid = next_uid;
+  vm_idx_t current_uid = next_uid;
   switch (om_p->op.op_idx)
   {
     case VM_OP_PROP_GETTER:
@@ -549,7 +547,7 @@ count_new_literals_in_instr (op_meta *om_p) /**< instruction */
       break;
     }
   }
-  return (idx_t) (next_uid - current_uid);
+  return (vm_idx_t) (next_uid - current_uid);
 } /* count_new_literals_in_instr */
 
 /**
@@ -743,6 +741,46 @@ scopes_tree_set_eval_used (scopes_tree tree) /**< scope */
   tree->ref_eval = true;
 } /* scopes_tree_set_eval_used */
 
+/**
+ * Set up a flag, indicating that 'with' statement is contained in a scope
+ */
+void
+scopes_tree_set_contains_with (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_with = true;
+} /* scopes_tree_set_contains_with */
+
+/**
+ * Set up a flag, indicating that 'try' statement is contained in a scope
+ */
+void
+scopes_tree_set_contains_try (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_try = true;
+} /* scopes_tree_set_contains_try */
+
+/**
+ * Set up a flag, indicating that 'delete' operator is contained in a scope
+ */
+void
+scopes_tree_set_contains_delete (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_delete = true;
+} /* scopes_tree_set_contains_delete */
+
+/**
+ * Set up a flag, indicating that there is a function declaration / expression inside a scope
+ */
+void
+scopes_tree_set_contains_functions (scopes_tree tree) /**< scope */
+{
+  assert_tree (tree);
+  tree->contains_functions = true;
+} /* scopes_tree_set_contains_functions */
+
 bool
 scopes_tree_strict_mode (scopes_tree tree)
 {
@@ -756,7 +794,8 @@ scopes_tree_strict_mode (scopes_tree tree)
  * @return initialized scope
  */
 scopes_tree
-scopes_tree_init (scopes_tree parent) /**< parent scope */
+scopes_tree_init (scopes_tree parent, /**< parent scope */
+                  scope_type_t type) /**< scope type */
 {
   scopes_tree tree = (scopes_tree) jsp_mm_alloc (sizeof (scopes_tree_int));
   memset (tree, 0, sizeof (scopes_tree_int));
@@ -775,9 +814,14 @@ scopes_tree_init (scopes_tree parent) /**< parent scope */
     parent->t.children_num++;
   }
   tree->instrs_count = 0;
+  tree->type = type;
   tree->strict_mode = false;
-  tree->ref_eval = false;
   tree->ref_arguments = false;
+  tree->ref_eval = false;
+  tree->contains_with = false;
+  tree->contains_try = false;
+  tree->contains_delete = false;
+  tree->contains_functions = false;
   tree->instrs = linked_list_init (sizeof (op_meta));
   tree->var_decls_cout = 0;
   tree->var_decls = linked_list_init (sizeof (op_meta));

@@ -60,9 +60,9 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
  */
 bool
 is_reg_variable (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                 idx_t var_idx) /**< variable identifier */
+                 vm_idx_t var_idx) /**< variable identifier */
 {
-  return (var_idx >= frame_ctx_p->min_reg_num && var_idx <= frame_ctx_p->max_reg_num);
+  return (var_idx >= frame_ctx_p->min_reg_idx && var_idx <= frame_ctx_p->max_reg_idx);
 } /* is_reg_variable */
 
 /**
@@ -73,7 +73,7 @@ is_reg_variable (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
  */
 ecma_completion_value_t
 get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                    idx_t var_idx, /**< variable identifier */
+                    vm_idx_t var_idx, /**< variable identifier */
                     bool do_eval_or_arguments_check) /** run 'strict eval or arguments reference' check
                                                           See also: do_strict_eval_arguments_check */
 {
@@ -82,7 +82,7 @@ get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
   if (is_reg_variable (frame_ctx_p, var_idx))
   {
     ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                           var_idx - frame_ctx_p->min_reg_num);
+                                                           var_idx - frame_ctx_p->min_reg_idx);
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
@@ -126,7 +126,7 @@ get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 ecma_completion_value_t
 set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                     vm_instr_counter_t lit_oc, /**< instruction counter for literal */
-                    idx_t var_idx, /**< variable identifier */
+                    vm_idx_t var_idx, /**< variable identifier */
                     ecma_value_t value) /**< value to set */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -136,7 +136,7 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
     ret_value = ecma_make_empty_completion_value ();
 
     ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                           var_idx - frame_ctx_p->min_reg_num);
+                                                           var_idx - frame_ctx_p->min_reg_idx);
 
     if (ecma_is_value_number (reg_value)
         && ecma_is_value_number (value))
@@ -151,8 +151,8 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
       }
 
       vm_stack_frame_set_reg_value (&frame_ctx_p->stack_frame,
-                                    var_idx - frame_ctx_p->min_reg_num,
-                                      ecma_copy_value (value, false));
+                                    var_idx - frame_ctx_p->min_reg_idx,
+                                    ecma_copy_value (value, false));
     }
   }
   else

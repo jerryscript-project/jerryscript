@@ -26,7 +26,7 @@
 /**
  * Size of heap
  */
-#define MEM_HEAP_AREA_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
+#define MEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
 
 /**
  * Size of heap chunk

@@ -30,8 +30,8 @@ ecma_completion_value_t
 opfunc_try_block (vm_instr_t instr, /**< instruction */
                   vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  const idx_t block_end_oc_idx_1 = instr.data.try_block.oc_idx_1;
-  const idx_t block_end_oc_idx_2 = instr.data.try_block.oc_idx_2;
+  const vm_idx_t block_end_oc_idx_1 = instr.data.try_block.oc_idx_1;
+  const vm_idx_t block_end_oc_idx_2 = instr.data.try_block.oc_idx_2;
   const vm_instr_counter_t try_end_oc = (vm_instr_counter_t) (
     vm_calc_instr_counter_from_idx_idx (block_end_oc_idx_1, block_end_oc_idx_2) + frame_ctx_p->pos);
 

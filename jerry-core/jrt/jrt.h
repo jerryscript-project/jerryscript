@@ -144,11 +144,11 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(comment, ...) \
   do \
   { \
-    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
     if (false) \
     { \
       jerry_ref_unused_variables (0, __VA_ARGS__); \
     } \
+    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
   } while (0)
 #else /* !JERRY_NDEBUG */
 #define JERRY_UNREACHABLE() \
@@ -166,11 +166,11 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 #define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(comment, ...) \
   do \
   { \
-    jerry_unimplemented (comment, NULL, NULL, 0); \
     if (false) \
     { \
       jerry_ref_unused_variables (0, __VA_ARGS__); \
     } \
+    jerry_unimplemented (comment, NULL, NULL, 0); \
   } while (0)
 #endif /* JERRY_NDEBUG */
 

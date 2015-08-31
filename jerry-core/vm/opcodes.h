@@ -41,9 +41,56 @@
 typedef uint16_t vm_instr_counter_t;
 
 /**
- * Opcode / argument value in an instruction
+ * Opcode / argument value in an instruction ("idx")
  */
-typedef uint8_t idx_t;
+typedef uint8_t vm_idx_t;
+
+/**
+ * Description of vm_idx_t possible value ranges and special values
+ */
+enum : vm_idx_t
+{
+  VM_IDX_GENERAL_VALUE_FIRST = 0, /**< first idx value that can be used for any argument value */
+  VM_IDX_GENERAL_VALUE_LAST  = 252, /**< last idx value that can be used for any argument value */
+
+  /*
+   * Special values
+   */
+  VM_IDX_REWRITE_GENERAL_CASE = 253, /**< intermediate value, used during byte-code generation,
+                                      *   indicating that the idx would be rewritten with a value
+                                      *   other than in-block literal identifier */
+  VM_IDX_REWRITE_LITERAL_UID = 254, /**< intermediate value, used during byte-code generation,
+                                     *   indicating that the idx would be rewritten with in-block
+                                     *   literal identifier */
+  VM_IDX_EMPTY = 255, /**< empty idx value, used when corresponding instruction argument is not set */
+
+  /*
+   * Literals (variable names / strings / numbers) ranges
+   */
+  VM_IDX_LITERAL_FIRST = VM_IDX_GENERAL_VALUE_FIRST, /**< index of first possible literals-related idx value */
+  VM_IDX_LITERAL_LAST  = VM_IDX_LITERAL_FIRST + 127, /**< index of last possible literals-related idx value */
+
+  /*
+   * Registers (temp variables) ranges
+   */
+  VM_IDX_REG_FIRST = VM_IDX_LITERAL_LAST + 1, /** identifier of first special register */
+  VM_IDX_REG_LAST = VM_IDX_GENERAL_VALUE_LAST, /**< identifier of last register */
+};
+
+/**
+ * Ranges of registers (temporary variables)
+ */
+typedef enum : vm_idx_t
+{
+  VM_REG_FIRST = VM_IDX_REG_FIRST, /** identifier of first special register */
+  VM_REG_LAST = VM_IDX_REG_LAST, /**< identifier of last register */
+
+  VM_REG_SPECIAL_EVAL_RET = VM_REG_FIRST, /**< eval return value */
+  VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< variable, containing property name,
+                                        *   at start of for-in loop body */
+  VM_REG_GENERAL_FIRST, /** identifier of first non-special register */
+  VM_REG_GENERAL_LAST = VM_IDX_REG_LAST /** identifier of last non-special register */
+} vm_reg_t;
 
 /**
  * Descriptor of assignment's second argument
@@ -84,7 +131,7 @@ typedef enum
   OPCODE_META_TYPE_END_FOR_IN /**< end of for-in statement */
 } opcode_meta_type;
 
-typedef enum : idx_t
+typedef enum : vm_idx_t
 {
   OPCODE_CALL_FLAGS__EMPTY                   = (0u),      /**< initializer for empty flag set */
   OPCODE_CALL_FLAGS_HAVE_THIS_ARG            = (1u << 0), /**< flag, indicating that call is performed
@@ -100,7 +147,7 @@ typedef enum : idx_t
 /**
  * Flags indicating various properties of a scope's code
  */
-typedef enum : idx_t
+typedef enum : vm_idx_t
 {
   OPCODE_SCOPE_CODE_FLAGS__EMPTY                       = (0u),      /**< initializer for empty flag set */
   OPCODE_SCOPE_CODE_FLAGS_STRICT                       = (1u << 0), /**< code is strict mode code */
@@ -109,20 +156,6 @@ typedef enum : idx_t
   OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER      = (1u << 2)  /**< code doesn't reference
                                                                      *   'eval' identifier */
 } opcode_scope_code_flags_t;
-
-/**
- * Enumeration of registers (temp variables) ranges
- */
-typedef enum : idx_t
-{
-  OPCODE_REG_FIRST = 128, /** identifier of first special register */
-  OPCODE_REG_SPECIAL_EVAL_RET = OPCODE_REG_FIRST, /**< eval return value */
-  OPCODE_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< variable, containing property name,
-                                            *   at start of for-in loop body */
-  OPCODE_REG_GENERAL_FIRST, /** identifier of first non-special register */
-  OPCODE_REG_GENERAL_LAST = 253, /** identifier of last non-special register */
-  OPCODE_REG_LAST = OPCODE_REG_GENERAL_FIRST /**< identifier of last register */
-} opcode_special_reg_t;
 
 /**
  * Types of byte-code instruction arguments, used for instruction description
@@ -137,7 +170,7 @@ typedef enum
   VM_OP_ARG_TYPE_IDENTIFIER    = (1u << 2), /**< identifier - named variable (string literal) */
   VM_OP_ARG_TYPE_STRING        = (1u << 3), /**< string constant value (string literal) */
   VM_OP_ARG_TYPE_NUMBER        = (1u << 4), /**< number constant value (number literal) */
-  VM_OP_ARG_TYPE_INTEGER_CONST = (1u << 5), /**< a 8-bit integer constant (any idx_t) */
+  VM_OP_ARG_TYPE_INTEGER_CONST = (1u << 5), /**< a 8-bit integer constant (any vm_idx_t) */
   VM_OP_ARG_TYPE_TYPE_OF_NEXT  = (1u << 6), /**< opcode_arg_type_operand value,
                                              *   representing type of argument encoded in next idx */
 
@@ -163,8 +196,8 @@ typedef struct
   bool is_eval_code; /**< is current code executed with eval */
   bool is_call_in_direct_eval_form; /** flag, indicating if there is call of 'Direct call to eval' form in
                                      *  process (see also: OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) */
-  idx_t min_reg_num; /**< minimum idx used for register identification */
-  idx_t max_reg_num; /**< maximum idx used for register identification */
+  vm_idx_t min_reg_idx; /**< minimum idx used for register identification */
+  vm_idx_t max_reg_idx; /**< maximum idx used for register identification */
   ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
   vm_stack_frame_t stack_frame; /**< stack frame associated with the context */
 
@@ -195,35 +228,43 @@ typedef struct
   const vm_instr_counter_t end_oc; /**< instruction counter of the last instruction of the scope */
 } vm_run_scope_t;
 
-vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const idx_t oc_idx_1, const idx_t oc_idx_2);
+vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const vm_idx_t oc_idx_1, const vm_idx_t oc_idx_2);
 vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type expected_type, vm_frame_ctx_t *int_data);
 
 typedef struct vm_instr_t
 {
-  idx_t op_idx;
+  vm_idx_t op_idx;
   union
   {
 #define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
     struct \
     { \
-      idx_t arg1; \
+      vm_idx_t arg1; \
     } opcode_name;
 
 #define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
     struct \
     { \
-      idx_t arg1; \
-      idx_t arg2; \
+      vm_idx_t arg1; \
+      vm_idx_t arg2; \
     } opcode_name;
 #define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
     struct \
     { \
-      idx_t arg1; \
-      idx_t arg2; \
-      idx_t arg3; \
+      vm_idx_t arg1; \
+      vm_idx_t arg2; \
+      vm_idx_t arg3; \
     } opcode_name;
 
 #include "vm-opcodes.inc.h"
+
+    /**
+     * Opcode-independent arguments accessor
+     *
+     * Note:
+     *      If opcode is statically known, opcode-specific way of accessing arguments should be used.
+     */
+    vm_idx_t raw_args[3];
   } data;
 } vm_instr_t;
 
@@ -255,22 +296,5 @@ typedef enum
 #include "vm-opcodes.inc.h"
 
 typedef ecma_completion_value_t (*opfunc) (vm_instr_t, vm_frame_ctx_t *);
-
-#define VM_OP_0(opcode_name, opcode_name_uppercase) \
-        vm_instr_t getop_##opcode_name (void);
-#define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
-        vm_instr_t getop_##opcode_name (idx_t);
-#define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
-        vm_instr_t getop_##opcode_name (idx_t, idx_t);
-#define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
-        vm_instr_t getop_##opcode_name (idx_t, idx_t, idx_t);
-
-#include "vm-opcodes.inc.h"
-
-
-typedef struct
-{
-  uint8_t uids[4];
-} raw_instr;
 
 #endif /* OPCODES_H */

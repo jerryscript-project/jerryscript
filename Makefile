@@ -309,14 +309,10 @@ clean:
 	$(Q) rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
 
 .PHONY: prerequisites
-prerequisites: $(PREREQUISITES_STATE_DIR)/.prerequisites
-
-$(PREREQUISITES_STATE_DIR)/.prerequisites:
-	@ echo "Setting up prerequisites... (log file: $(PREREQUISITES_STATE_DIR)/prerequisites.log)"
+prerequisites:
 	$(Q) mkdir -p $(PREREQUISITES_STATE_DIR)
 	$(Q) (./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites 2>&1 | tee $(PREREQUISITES_STATE_DIR)/prerequisites.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
-	@ echo "Prerequisites setup succeeded"
 
 .PHONY: prerequisites_clean
 prerequisites_clean:

@@ -34,9 +34,9 @@
 #include "ecma-try-catch-macro.h"
 #include "serializer.h"
 
-bool is_reg_variable (vm_frame_ctx_t *frame_ctx_p, idx_t var_idx);
-ecma_completion_value_t get_variable_value (vm_frame_ctx_t *, idx_t, bool);
-ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, vm_instr_counter_t, idx_t, ecma_value_t);
+bool is_reg_variable (vm_frame_ctx_t *frame_ctx_p, vm_idx_t var_idx);
+ecma_completion_value_t get_variable_value (vm_frame_ctx_t *, vm_idx_t, bool);
+ecma_completion_value_t set_variable_value (vm_frame_ctx_t *, vm_instr_counter_t, vm_idx_t, ecma_value_t);
 ecma_completion_value_t vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p,
                                            ecma_length_t args_number,
                                            ecma_collection_header_t *args_values_p);

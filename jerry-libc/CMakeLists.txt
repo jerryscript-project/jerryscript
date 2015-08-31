@@ -40,6 +40,8 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
  # Platform-specific
   # Linux
    set(DEFINES_LIBC_LINUX __TARGET_HOST)
+  # Darwin
+   set(DEFINES_LIBC_DARWIN __TARGET_HOST)
   # MCU
    set(DEFINES_LIBC_MCU __TARGET_MCU)
    # stm32f3
@@ -57,6 +59,9 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
    # Linux
      set(INCLUDE_THIRD_PARTY_LINUX )
 
+   # Darwin
+     set(INCLUDE_THIRD_PARTY_DARWIN )
+
    # MCU
     # STM32F3
      set(INCLUDE_THIRD_PARTY_MCU_STM32F3
@@ -73,6 +78,9 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
  # Platform-specific
   # Linux
    file(GLOB SOURCE_LIBC_LINUX target/linux/*.c target/linux/*.S)
+
+  # Darwin
+   file(GLOB SOURCE_LIBC_DARWIN target/darwin/*.c target/darwin/*.S)
 
   # MCU
    # stm32f3

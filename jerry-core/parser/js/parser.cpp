@@ -3024,8 +3024,7 @@ parse_source_element_list (bool is_global, /**< flag, indicating that we parsing
   if (is_try_replace_local_vars_with_regs
       && fe_scope_tree->type == SCOPE_TYPE_FUNCTION)
   {
-    bool may_replace_vars_with_regs = (!inside_eval
-                                       && !fe_scope_tree->ref_eval /* 'eval' can reference variables in a way,
+    bool may_replace_vars_with_regs = (!fe_scope_tree->ref_eval /* 'eval' can reference variables in a way,
                                                                     * that can't be figured out through static
                                                                     * analysis */
                                        && !fe_scope_tree->ref_arguments /* 'arguments' variable, if declared,

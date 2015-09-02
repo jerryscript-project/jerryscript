@@ -627,53 +627,44 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
-  string_desc_p->refs = 1;
-  string_desc_p->is_stack_var = false;
-  string_desc_p->container = ECMA_STRING_CONTAINER_CONCATENATION;
-
-  string_desc_p->u.common_field = 0;
-
-  string1_p = ecma_copy_or_ref_ecma_string (string1_p);
-  string2_p = ecma_copy_or_ref_ecma_string (string2_p);
-
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string1_cp, string1_p);
-  ECMA_SET_NON_NULL_POINTER (string_desc_p->u.concatenation.string2_cp, string2_p);
-
   ecma_char_t str1_last_code_unit = ecma_string_get_char_at_pos (string1_p, ecma_string_get_length (string1_p) - 1);
   ecma_char_t str2_first_code_unit = ecma_string_get_char_at_pos (string2_p, 0);
 
-  string_desc_p->u.concatenation.is_surrogate_pair_sliced = (lit_is_code_unit_high_surrogate (str1_last_code_unit)
-                                                             && lit_is_code_unit_low_surrogate (str2_first_code_unit));
+  bool is_surrogate_pair_sliced = (lit_is_code_unit_high_surrogate (str1_last_code_unit)
+                                   && lit_is_code_unit_low_surrogate (str2_first_code_unit));
 
-  if (!string_desc_p->u.concatenation.is_surrogate_pair_sliced)
+  lit_utf8_size_t buffer_size = str1_size + str2_size - (lit_utf8_size_t) (is_surrogate_pair_sliced ?
+                                                                           LIT_UTF8_CESU8_SURROGATE_SIZE_DIF : 0);
+
+  lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (buffer_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+  ssize_t bytes_copied1, bytes_copied2;
+
+  bytes_copied1 = ecma_string_to_utf8_string (string1_p, str_p, (ssize_t) str1_size);
+  JERRY_ASSERT (bytes_copied1 > 0);
+
+  if (!is_surrogate_pair_sliced)
   {
-    lit_utf8_size_t buffer_size = ecma_string_get_size (string2_p);
-
-    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (string2_p, utf8_str_p, (ssize_t) buffer_size);
-    JERRY_ASSERT (sz > 0);
-
-    string_desc_p->hash = lit_utf8_string_hash_combine (string1_p->hash, utf8_str_p, buffer_size);
-
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+    bytes_copied2 = ecma_string_to_utf8_string (string2_p, str_p + str1_size, (ssize_t) str2_size);
+    JERRY_ASSERT (bytes_copied2 > 0);
   }
   else
   {
-    lit_utf8_size_t buffer_size = ecma_string_get_size (string_desc_p);
+    bytes_copied2 = ecma_string_to_utf8_string (string2_p,
+                                                str_p + str1_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT + 1,
+                                                (ssize_t) buffer_size - bytes_copied1
+                                                + LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+    JERRY_ASSERT (bytes_copied2 > 0);
 
-    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (string_desc_p, utf8_str_p, (ssize_t) buffer_size);
-    JERRY_ASSERT (sz > 0);
-
-    string_desc_p->hash = lit_utf8_string_calc_hash (utf8_str_p, buffer_size);
-
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+    lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (str1_last_code_unit,
+                                                                                      str2_first_code_unit);
+    lit_code_point_to_utf8 (surrogate_code_point, str_p + str1_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
   }
+  ecma_string_t *str_concat_p = ecma_new_ecma_string_from_utf8 (str_p, buffer_size);
 
-  return string_desc_p;
+  mem_heap_free_block ((void*) str_p);
+
+  return str_concat_p;
 } /* ecma_concat_ecma_strings */
 
 /**
@@ -702,16 +693,6 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
 
       new_str_p->refs = 1;
       new_str_p->is_stack_var = false;
-
-      break;
-    }
-
-    case ECMA_STRING_CONTAINER_CONCATENATION:
-    {
-      ecma_string_t *part1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_desc_p->u.concatenation.string1_cp);
-      ecma_string_t *part2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_desc_p->u.concatenation.string2_cp);
-
-      new_str_p = ecma_concat_ecma_strings (part1_p, part2_p);
 
       break;
     }
@@ -840,20 +821,6 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
       break;
     }
-    case ECMA_STRING_CONTAINER_CONCATENATION:
-    {
-      ecma_string_t *string1_p, *string2_p;
-
-      string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                             string_p->u.concatenation.string1_cp);
-      string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                             string_p->u.concatenation.string2_cp);
-
-      ecma_deref_ecma_string (string1_p);
-      ecma_deref_ecma_string (string2_p);
-
-      break;
-    }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
@@ -924,7 +891,6 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_HEAP_CHUNKS:
-    case ECMA_STRING_CONTAINER_CONCATENATION:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
@@ -1052,54 +1018,7 @@ ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string
 
       break;
     }
-    case ECMA_STRING_CONTAINER_CONCATENATION:
-    {
-      const ecma_string_t *string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  string_desc_p->u.concatenation.string1_cp);
-      const ecma_string_t *string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  string_desc_p->u.concatenation.string2_cp);
 
-      lit_utf8_byte_t *dest_p = buffer_p;
-
-      ssize_t bytes_copied1, bytes_copied2;
-
-      bytes_copied1 = ecma_string_to_utf8_string (string1_p, dest_p, buffer_size);
-      JERRY_ASSERT (bytes_copied1 > 0);
-
-      dest_p += ecma_string_get_size (string1_p);
-
-      if (!string_desc_p->u.concatenation.is_surrogate_pair_sliced)
-      {
-        bytes_copied2 = ecma_string_to_utf8_string (string2_p, dest_p, buffer_size - bytes_copied1);
-        JERRY_ASSERT (bytes_copied2 > 0);
-      }
-      else
-      {
-        dest_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
-
-        ecma_char_t high_surrogate = lit_utf8_string_code_unit_at (dest_p, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT, 0);
-        JERRY_ASSERT (lit_is_code_unit_high_surrogate (high_surrogate));
-
-        bytes_copied2 = ecma_string_to_utf8_string (string2_p,
-                                                    dest_p + 1,
-                                                    buffer_size - bytes_copied1 + LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-        JERRY_ASSERT (bytes_copied2 > 0);
-
-        ecma_char_t low_surrogate = lit_utf8_string_code_unit_at (dest_p + 1, LIT_UTF8_MAX_BYTES_IN_CODE_UNIT, 0);
-        JERRY_ASSERT (lit_is_code_unit_low_surrogate (low_surrogate));
-
-        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (high_surrogate,
-                                                                                          low_surrogate);
-        lit_code_point_to_utf8 (surrogate_code_point, dest_p);
-      }
-
-      JERRY_ASSERT (required_buffer_size == (bytes_copied1 + bytes_copied2 -
-                                             (string_desc_p->u.concatenation.is_surrogate_pair_sliced
-                                              ? LIT_UTF8_CESU8_SURROGATE_SIZE_DIF
-                                              : 0)));
-
-      break;
-    }
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       const lit_magic_string_id_t id = string_desc_p->u.magic_string_id;
@@ -1209,11 +1128,6 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
                                                                                          string2_p->u.collection_cp);
 
         return ecma_compare_chars_collection (chars_collection1_p, chars_collection2_p);
-      }
-      case ECMA_STRING_CONTAINER_CONCATENATION:
-      {
-        /* long path */
-        break;
       }
       case ECMA_STRING_CONTAINER_LIT_TABLE:
       {
@@ -1469,24 +1383,14 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
     return (ecma_length_t) ecma_number_to_utf8_string (*num_p, buffer, sizeof (buffer));
   }
-  else if (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
+  else
   {
+    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
+
     const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
                                                                                      string_p->u.collection_cp);
 
     return ecma_get_chars_collection_length (collection_header_p);
-  }
-  else
-  {
-    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_CONCATENATION);
-
-    const ecma_string_t *string1_p, *string2_p;
-
-    string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string1_cp);
-    string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string2_cp);
-
-    return (ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p) -
-            string_p->u.concatenation.is_surrogate_pair_sliced);
   }
 } /* ecma_string_get_length */
 
@@ -1555,26 +1459,14 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
                                        buffer,
                                        sizeof (buffer));
   }
-  else if (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
+  else
   {
+    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
+
     const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
                                                                                      string_p->u.collection_cp);
 
     return collection_header_p->unit_number;
-  }
-  else
-  {
-    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_CONCATENATION);
-
-    const ecma_string_t *string1_p, *string2_p;
-
-    string1_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string1_cp);
-    string2_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, string_p->u.concatenation.string2_cp);
-
-    return (ecma_string_get_size (string1_p) + ecma_string_get_size (string2_p) -
-           (lit_utf8_size_t) (string_p->u.concatenation.is_surrogate_pair_sliced
-                              ? LIT_UTF8_CESU8_SURROGATE_SIZE_DIF
-                              : 0));
   }
 } /* ecma_string_get_size */
 
@@ -1715,11 +1607,6 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
 
     return true;
   }
-  else if (string_p->container == ECMA_STRING_CONTAINER_CONCATENATION
-           && ecma_string_get_length (string_p) <= LIT_MAGIC_STRING_LENGTH_LIMIT)
-  {
-    return ecma_is_string_magic_longpath (string_p, out_id_p);
-  }
   else
   {
     /*
@@ -1752,11 +1639,6 @@ ecma_is_ex_string_magic (const ecma_string_t *string_p, /**< ecma-string */
     *out_id_p = (lit_magic_string_ex_id_t) string_p->u.magic_string_ex_id;
 
     return true;
-  }
-  else if (string_p->container == ECMA_STRING_CONTAINER_CONCATENATION
-           && ecma_string_get_length (string_p) <= LIT_MAGIC_STRING_LENGTH_LIMIT)
-  {
-    return ecma_is_ex_string_magic_longpath (string_p, out_id_p);
   }
   else
   {

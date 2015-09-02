@@ -783,7 +783,6 @@ typedef enum
   ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
-  ECMA_STRING_CONTAINER_CONCATENATION, /**< the ecma-string is concatenation of two specified ecma-strings */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX /**< the ecma-string is equal to one of external magic strings */
 } ecma_string_container_t;
@@ -830,19 +829,6 @@ typedef struct ecma_string_t
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;
-
-    /** Representation of concatenation */
-    struct
-    {
-      mem_cpointer_t string1_cp : ECMA_POINTER_FIELD_WIDTH;
-      mem_cpointer_t string2_cp : ECMA_POINTER_FIELD_WIDTH;
-
-      /**
-       * Flag indicating that last code_unit of first string in concatenation is high surrogate
-       * and first code_unit of second string is low surrogate
-       */
-      unsigned int is_surrogate_pair_sliced : 1;
-    } concatenation;
 
     /** Identifier of magic string */
     lit_magic_string_id_t magic_string_id;

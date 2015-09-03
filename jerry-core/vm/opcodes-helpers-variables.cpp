@@ -14,6 +14,7 @@
  */
 
 #include "opcodes-ecma-support.h"
+#include "opcodes.h"
 
 #ifndef JERRY_NDEBUG
 /**
@@ -91,7 +92,9 @@ get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx,
+                                                              frame_ctx_p->bytecode_header_p,
+                                                              frame_ctx_p->pos);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
@@ -158,7 +161,7 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
   else
   {
     ecma_string_t var_name_string;
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->instrs_p, lit_oc);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->bytecode_header_p, lit_oc);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
     ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 

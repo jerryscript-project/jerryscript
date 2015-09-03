@@ -18,10 +18,11 @@
 
 #include "jrt.h"
 #ifdef JERRY_ENABLE_PRETTY_PRINTER
+#include "bytecode-data.h"
 #include "vm.h"
 #include "scopes-tree.h"
 
-void pp_op_meta (const vm_instr_t*, vm_instr_counter_t, op_meta, bool);
+void pp_op_meta (const bytecode_data_header_t *, vm_instr_counter_t, op_meta, bool);
 #endif // JERRY_ENABLE_PRETTY_PRINTER
 
 #endif // PRETTY_PRINTER

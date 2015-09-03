@@ -77,7 +77,9 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
   }
   else if (type_value_right == OPCODE_ARG_TYPE_STRING)
   {
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr,
+                                                              frame_ctx_p->bytecode_header_p,
+                                                              frame_ctx_p->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
     ret_value = set_variable_value (frame_ctx_p,
@@ -106,7 +108,9 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
   {
     ecma_number_t *num_p = frame_ctx_p->tmp_num_p;
 
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr,
+                                                              frame_ctx_p->bytecode_header_p,
+                                                              frame_ctx_p->pos);
     literal_t lit = lit_get_literal_by_cp (lit_cp);
     JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
 
@@ -121,7 +125,9 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
   {
     ecma_number_t *num_p = frame_ctx_p->tmp_num_p;
 
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr, frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr,
+                                                              frame_ctx_p->bytecode_header_p,
+                                                              frame_ctx_p->pos);
     literal_t lit = lit_get_literal_by_cp (lit_cp);
     JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
 
@@ -147,7 +153,7 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
   {
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
     lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (src_val_descr,
-                                                              frame_ctx_p->instrs_p,
+                                                              frame_ctx_p->bytecode_header_p,
                                                               frame_ctx_p->pos);
     ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
@@ -438,7 +444,7 @@ opfunc_var_decl (vm_instr_t instr, /**< instruction */
                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
   lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (instr.data.var_decl.variable_name,
-                                                            frame_ctx_p->instrs_p,
+                                                            frame_ctx_p->bytecode_header_p,
                                                             frame_ctx_p->pos);
   JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
@@ -489,7 +495,8 @@ function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
     vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FUNCTION_END, frame_ctx_p) + frame_ctx_p->pos);
   frame_ctx_p->pos++;
 
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->instrs_p, frame_ctx_p->pos++);
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->bytecode_header_p->instrs_p,
+                                                              frame_ctx_p->pos++);
 
   if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
   {
@@ -508,7 +515,7 @@ function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 
   ecma_completion_value_t ret_value = ecma_op_function_declaration (frame_ctx_p->lex_env_p,
                                                                     function_name_string_p,
-                                                                    frame_ctx_p->instrs_p,
+                                                                    frame_ctx_p->bytecode_header_p,
                                                                     frame_ctx_p->pos,
                                                                     formal_params_collection_p,
                                                                     is_strict,
@@ -535,7 +542,7 @@ opfunc_func_decl_n (vm_instr_t instr, /**< instruction */
   const ecma_length_t params_number = instr.data.func_decl_n.arg_list;
 
   lit_cpointer_t function_name_lit_cp = serializer_get_literal_cp_by_uid (function_name_idx,
-                                                                          frame_ctx_p->instrs_p,
+                                                                          frame_ctx_p->bytecode_header_p,
                                                                           frame_ctx_p->pos);
 
   frame_ctx_p->pos++;
@@ -587,7 +594,7 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
                                                                                 frame_ctx_p) + frame_ctx_p->pos);
   frame_ctx_p->pos++;
 
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->instrs_p,
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->bytecode_header_p->instrs_p,
                                                               frame_ctx_p->pos++);
 
   if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
@@ -610,7 +617,7 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
     scope_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
 
     lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (function_name_lit_idx,
-                                                              frame_ctx_p->instrs_p,
+                                                              frame_ctx_p->bytecode_header_p,
                                                               lit_oc);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
@@ -627,7 +634,7 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
                                                               scope_p,
                                                               is_strict,
                                                               do_instantiate_arguments_object,
-                                                              frame_ctx_p->instrs_p,
+                                                              frame_ctx_p->bytecode_header_p,
                                                               frame_ctx_p->pos);
 
   ret_value = set_variable_value (frame_ctx_p, lit_oc,
@@ -673,7 +680,7 @@ vm_helper_call_get_call_flags_and_this_arg (vm_frame_ctx_t *int_data_p, /**< int
   opcode_call_flags_t call_flags = OPCODE_CALL_FLAGS__EMPTY;
   vm_idx_t this_arg_var_idx = VM_IDX_EMPTY;
 
-  vm_instr_t next_opcode = vm_get_instr (int_data_p->instrs_p, int_data_p->pos);
+  vm_instr_t next_opcode = vm_get_instr (int_data_p->bytecode_header_p->instrs_p, int_data_p->pos);
   if (next_opcode.op_idx == VM_OP_META
       && next_opcode.data.meta.type == OPCODE_META_TYPE_CALL_SITE_INFO)
   {
@@ -732,7 +739,9 @@ vm_helper_call_get_call_flags_and_this_arg (vm_frame_ctx_t *int_data_p, /**< int
 
       /* 6.b.i */
       ecma_string_t var_name_string;
-      lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, int_data_p->instrs_p, var_idx_lit_oc);
+      lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx,
+                                                                int_data_p->bytecode_header_p,
+                                                                var_idx_lit_oc);
       ecma_new_ecma_string_on_stack_from_lit_cp (&var_name_string, lit_cp);
 
       ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (int_data_p->lex_env_p,
@@ -1032,7 +1041,7 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
 
     if (ecma_is_completion_value_empty (evaluate_prop_completion))
     {
-      vm_instr_t next_opcode = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+      vm_instr_t next_opcode = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
       JERRY_ASSERT (next_opcode.op_idx == VM_OP_META);
 
       const opcode_meta_type type = (opcode_meta_type) next_opcode.data.meta.type;
@@ -1407,7 +1416,7 @@ opfunc_with (vm_instr_t instr, /**< instruction */
   frame_ctx_p->lex_env_p = new_env_p;
 
 #ifndef JERRY_NDEBUG
-  vm_instr_t meta_opcode = vm_get_instr (frame_ctx_p->instrs_p, with_end_oc);
+  vm_instr_t meta_opcode = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, with_end_oc);
   JERRY_ASSERT (meta_opcode.op_idx == VM_OP_META);
   JERRY_ASSERT (meta_opcode.data.meta.type == OPCODE_META_TYPE_END_WITH);
 #endif /* !JERRY_NDEBUG */
@@ -1496,7 +1505,9 @@ evaluate_arg_for_typeof (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context *
   }
   else
   {
-    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx, frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (var_idx,
+                                                              frame_ctx_p->bytecode_header_p,
+                                                              frame_ctx_p->pos);
     JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
     ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
@@ -1612,7 +1623,7 @@ opfunc_delete_var (vm_instr_t instr, /**< instruction */
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (name_lit_idx, frame_ctx_p->instrs_p, lit_oc);
+  lit_cpointer_t lit_cp = serializer_get_literal_cp_by_uid (name_lit_idx, frame_ctx_p->bytecode_header_p, lit_oc);
   JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
 
   ecma_string_t *name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
@@ -1798,7 +1809,7 @@ vm_instr_counter_t
 vm_read_instr_counter_from_meta (opcode_meta_type expected_type, /**< expected type of meta instruction */
                                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
 {
-  vm_instr_t meta_opcode = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+  vm_instr_t meta_opcode = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
   JERRY_ASSERT (meta_opcode.data.meta.type == expected_type);
 
   const vm_idx_t data_1 = meta_opcode.data.meta.data_1;

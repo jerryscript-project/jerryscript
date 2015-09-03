@@ -184,11 +184,16 @@ typedef enum
 struct vm_instr_t;
 
 /**
+ * Forward declaration of bytecode data header structure
+ */
+struct bytecode_data_header_t;
+
+/**
  * Context of interpreter, related to a JS stack frame
  */
 typedef struct
 {
-  const vm_instr_t *instrs_p; /**< currently executed byte-code array */
+  const bytecode_data_header_t *bytecode_header_p; /**< currently executed byte-code data */
   vm_instr_counter_t pos; /**< current position instruction to execute */
   ecma_value_t this_binding; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */

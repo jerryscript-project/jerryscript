@@ -101,7 +101,7 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  const vm_instr_t *instrs_p;
+  const bytecode_data_header_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   mem_init ();
@@ -111,9 +111,9 @@ main (int __attr_unused___ argc,
 
   serializer_init ();
   parser_set_show_instrs (true);
-  parse_status = parser_parse_script ((jerry_api_char_t *) program1, strlen (program1), &instrs_p);
+  parse_status = parser_parse_script ((jerry_api_char_t *) program1, strlen (program1), &bytecode_data_p);
 
-  JERRY_ASSERT (parse_status == JSP_STATUS_OK && instrs_p != NULL);
+  JERRY_ASSERT (parse_status == JSP_STATUS_OK && bytecode_data_p != NULL);
 
   vm_instr_t instrs[] =
   {
@@ -128,7 +128,7 @@ main (int __attr_unused___ argc,
     getop_ret ()                    // return;
   };
 
-  JERRY_ASSERT (instrs_equal (instrs_p, instrs, 5));
+  JERRY_ASSERT (instrs_equal (bytecode_data_p->instrs_p, instrs, 5));
 
   serializer_free ();
 
@@ -137,9 +137,9 @@ main (int __attr_unused___ argc,
 
   serializer_init ();
   parser_set_show_instrs (true);
-  parse_status = parser_parse_script ((jerry_api_char_t *) program2, strlen (program2), &instrs_p);
+  parse_status = parser_parse_script ((jerry_api_char_t *) program2, strlen (program2), &bytecode_data_p);
 
-  JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR && instrs_p == NULL);
+  JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR && bytecode_data_p == NULL);
 
   serializer_free ();
 

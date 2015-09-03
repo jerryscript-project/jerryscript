@@ -691,21 +691,17 @@ scopes_tree_raw_data (scopes_tree tree, /**< scopes tree to convert to byte-code
   global_oc = 0;
 
   /* Dump bytecode and fill literal indexes 'hash' table. */
-  JERRY_ASSERT (instructions_array_size >=
-                sizeof (insts_data_header_t) + (size_t) (scopes_tree_count_instructions (tree)) * sizeof (vm_instr_t));
+  JERRY_ASSERT (instructions_array_size >= (size_t) (scopes_tree_count_instructions (tree)) * sizeof (vm_instr_t));
 
-  insts_data_header_t *opcodes_data = (insts_data_header_t *) buffer_p;
-  memset (opcodes_data, 0, instructions_array_size);
+  vm_instr_t *instrs = (vm_instr_t *) buffer_p;
+  memset (instrs, 0, instructions_array_size);
 
-  vm_instr_t *instrs = (vm_instr_t *)(((uint8_t*) opcodes_data) + sizeof (insts_data_header_t));
   merge_subscopes (tree, instrs, lit_ids);
   if (lit_id_to_uid != null_hash)
   {
     hash_table_free (lit_id_to_uid);
     lit_id_to_uid = null_hash;
   }
-
-  MEM_CP_SET_POINTER (opcodes_data->lit_id_hash_cp, lit_ids);
 
   return instrs;
 } /* scopes_tree_raw_data */

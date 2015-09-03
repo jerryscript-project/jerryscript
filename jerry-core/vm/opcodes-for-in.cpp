@@ -203,7 +203,7 @@ opfunc_for_in (vm_instr_t instr, /**< instruction */
 
   int_data_p->pos++;
 
-  vm_instr_t meta_instr = vm_get_instr (int_data_p->instrs_p, for_in_end_oc);
+  vm_instr_t meta_instr = vm_get_instr (int_data_p->bytecode_header_p->instrs_p, for_in_end_oc);
   JERRY_ASSERT (meta_instr.op_idx == VM_OP_META);
   JERRY_ASSERT (meta_instr.data.meta.type == OPCODE_META_TYPE_END_FOR_IN);
 

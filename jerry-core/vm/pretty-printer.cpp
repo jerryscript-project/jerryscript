@@ -181,7 +181,7 @@ dump_asm (vm_instr_counter_t oc, vm_instr_t instr)
 }
 
 void
-pp_op_meta (const vm_instr_t *instrs_p,
+pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
             vm_instr_counter_t oc,
             op_meta opm,
             bool rewrite)
@@ -379,7 +379,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
             while ((int16_t) start >= 0 && !found)
             {
               start--;
-              switch (serializer_get_instr (instrs_p, start).op_idx)
+              switch (serializer_get_instr (bytecode_data_p, start).op_idx)
               {
                 case VM_OP_CALL_N:
                 case VM_OP_CONSTRUCT_N:
@@ -393,7 +393,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
                 }
               }
             }
-            vm_instr_t start_op = serializer_get_instr (instrs_p, start);
+            vm_instr_t start_op = serializer_get_instr (bytecode_data_p, start);
             switch (start_op.op_idx)
             {
               case VM_OP_CALL_N:
@@ -440,7 +440,7 @@ pp_op_meta (const vm_instr_t *instrs_p,
             }
             for (vm_instr_counter_t counter = start; counter <= oc; counter++)
             {
-              vm_instr_t meta_op = serializer_get_instr (instrs_p, counter);
+              vm_instr_t meta_op = serializer_get_instr (bytecode_data_p, counter);
 
               switch (meta_op.op_idx)
               {

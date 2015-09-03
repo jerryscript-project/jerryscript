@@ -17,7 +17,6 @@
 #define BYTECODE_DATA_H
 
 #include "opcodes.h"
-#include "lit-id-hash-table.h"
 #include "mem-allocator.h"
 
 /*
@@ -33,36 +32,18 @@
  *
  * To map uid to literal id 'lit_id_hash' table is used.
  */
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE 64u
 
 /**
  * Header of byte-code memory region, containing byte-code array and literal identifiers hash table
  */
-typedef struct __attribute__ ((aligned (MEM_ALIGNMENT)))
+typedef struct __attribute__ ((aligned (MEM_ALIGNMENT))) bytecode_data_header_t
 {
+  vm_instr_t *instrs_p; /**< pointer to the bytecode */
+  vm_instr_counter_t instrs_count; /**< number of instructions in the byte-code array */
   mem_cpointer_t lit_id_hash_cp; /**< pointer to literal identifiers hash table
                                   *   See also: lit_id_hash_table_init */
-  mem_cpointer_t next_instrs_cp; /**< pointer to next byte-code memory region */
-  vm_instr_counter_t instructions_number; /**< number of instructions in the byte-code array */
-} insts_data_header_t;
+  mem_cpointer_t next_header_cp; /**< pointer to next instructions data header */
+} bytecode_data_header_t;
 
-typedef struct
-{
-  const ecma_char_t *strings_buffer;
-  const vm_instr_t *instrs_p;
-  vm_instr_counter_t instrs_count;
-} bytecode_data_t;
-
-/**
- * Macros to get a pointer to bytecode header by pointer to instructions array start
- */
-#define GET_BYTECODE_HEADER(instrs) ((insts_data_header_t *) (((uint8_t *) (instrs)) - sizeof (insts_data_header_t)))
-
-/**
- * Macros to get a hash table corresponding to a bytecode region
- */
-#define GET_HASH_TABLE_FOR_BYTECODE(instrs) (MEM_CP_GET_POINTER (lit_id_hash_table, \
-                                                                 GET_BYTECODE_HEADER (instrs)->lit_id_hash_cp))
-
-
-#endif // BYTECODE_DATA_H
+#endif /* BYTECODE_DATA_H */

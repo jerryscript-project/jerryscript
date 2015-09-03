@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-gc.h"
@@ -24,6 +25,7 @@
 #include "mem-allocator.h"
 #include "vm.h"
 #include "vm-stack.h"
+#include "opcodes.h"
 
 /**
  * Top (current) interpreter context
@@ -46,7 +48,7 @@ static const opfunc __opfuncs[VM_OP__COUNT] =
 
 JERRY_STATIC_ASSERT (sizeof (vm_instr_t) <= 4);
 
-const vm_instr_t *__program = NULL;
+const bytecode_data_header_t *__program = NULL;
 
 #ifdef MEM_STATS
 static const char *__op_names[VM_OP__COUNT] =
@@ -295,7 +297,7 @@ interp_mem_stats_opcode_exit (vm_frame_ctx_t *frame_ctx_p,
   frame_ctx_p->context_peak_allocated_pool_chunks = JERRY_MAX (frame_ctx_p->context_peak_allocated_pool_chunks,
                                                               pools_stats_after.allocated_chunks);
 
-  vm_instr_t instr = vm_get_instr (frame_ctx_p->instrs_p, instr_position);
+  vm_instr_t instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, instr_position);
 
   printf ("%s Allocated heap bytes:  %5u -> %5u (%+5d, local %5u, peak %5u)\n",
           indent_prefix,
@@ -351,7 +353,7 @@ interp_mem_stats_opcode_exit (vm_frame_ctx_t *frame_ctx_p,
  * Initialize interpreter.
  */
 void
-vm_init (const vm_instr_t *program_p, /**< pointer to byte-code program */
+vm_init (const bytecode_data_header_t *program_p, /**< pointer to byte-code data */
          bool dump_mem_stats) /** dump per-instruction memory usage change statistics */
 {
 #ifdef MEM_STATS
@@ -394,7 +396,7 @@ vm_run_global (void)
   bool is_strict = false;
   vm_instr_counter_t start_pos = 0;
 
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (__program,
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (__program->instrs_p,
                                                               start_pos++);
 
   if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
@@ -443,11 +445,11 @@ vm_run_global (void)
  * @return completion value
  */
 ecma_completion_value_t
-vm_run_eval (const vm_instr_t *instrs_p, /**< instructions array */
+vm_run_eval (const bytecode_data_header_t *bytecode_data_p, /**< byte-code data header */
              bool is_direct) /**< is eval called directly? */
 {
   vm_instr_counter_t first_instr_index = 0u;
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (instrs_p,
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_data_p->instrs_p,
                                                               first_instr_index++);
   bool is_strict = ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT) != 0);
 
@@ -474,7 +476,7 @@ vm_run_eval (const vm_instr_t *instrs_p, /**< instructions array */
     lex_env_p = strict_lex_env_p;
   }
 
-  ecma_completion_value_t completion = vm_run_from_pos (instrs_p,
+  ecma_completion_value_t completion = vm_run_from_pos (bytecode_data_p,
                                                         first_instr_index,
                                                         this_binding,
                                                         lex_env_p,
@@ -529,12 +531,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                     || (run_scope_p->start_oc <= frame_ctx_p->pos
                         && frame_ctx_p->pos <= run_scope_p->end_oc));
 
-      const vm_instr_t *curr = &frame_ctx_p->instrs_p[frame_ctx_p->pos];
+      const vm_instr_t *curr = &frame_ctx_p->bytecode_header_p->instrs_p[frame_ctx_p->pos];
 
 #ifdef MEM_STATS
       const vm_instr_counter_t instr_pos = frame_ctx_p->pos;
 
-      interp_mem_stats_opcode_enter (frame_ctx_p->instrs_p,
+      interp_mem_stats_opcode_enter (frame_ctx_p->bytecode_header_p->instrs_p,
                                      instr_pos,
                                      &heap_stats_before,
                                      &pools_stats_before);
@@ -590,7 +592,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
  * Run the code, starting from specified instruction position
  */
 ecma_completion_value_t
-vm_run_from_pos (const vm_instr_t *instrs_p, /**< byte-code array */
+vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data header */
                  vm_instr_counter_t start_pos, /**< position of starting instruction */
                  ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
                  ecma_object_t *lex_env_p, /**< lexical environment to use */
@@ -599,6 +601,7 @@ vm_run_from_pos (const vm_instr_t *instrs_p, /**< byte-code array */
 {
   ecma_completion_value_t completion;
 
+  const vm_instr_t *instrs_p = header_p->instrs_p;
   const vm_instr_t *curr = &instrs_p[start_pos];
   JERRY_ASSERT (curr->op_idx == VM_OP_REG_VAR_DECL);
 
@@ -612,7 +615,7 @@ vm_run_from_pos (const vm_instr_t *instrs_p, /**< byte-code array */
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
   vm_frame_ctx_t frame_ctx;
-  frame_ctx.instrs_p = instrs_p;
+  frame_ctx.bytecode_header_p = header_p;
   frame_ctx.pos = (vm_instr_counter_t) (start_pos + 1);
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.lex_env_p = lex_env_p;

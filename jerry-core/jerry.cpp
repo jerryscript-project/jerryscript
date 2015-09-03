@@ -1403,12 +1403,12 @@ jerry_parse (const jerry_api_char_t* source_p, /**< script source */
 
   parser_set_show_instrs (is_show_instructions);
 
-  const vm_instr_t *instrs_p;
+  const bytecode_data_header_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   parse_status = parser_parse_script (source_p,
                                       source_size,
-                                      &instrs_p);
+                                      &bytecode_data_p);
 
   if (parse_status != JSP_STATUS_OK)
   {
@@ -1427,7 +1427,7 @@ jerry_parse (const jerry_api_char_t* source_p, /**< script source */
 
   bool is_show_mem_stats_per_instruction = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
 
-  vm_init (instrs_p, is_show_mem_stats_per_instruction);
+  vm_init (bytecode_data_p, is_show_mem_stats_per_instruction);
 
   return true;
 } /* jerry_parse */

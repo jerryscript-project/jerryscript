@@ -42,7 +42,7 @@ vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                     vm_loop (frame_ctx_p, NULL),
                     ret_value);
 
-    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
     JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
     JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
 
@@ -80,12 +80,12 @@ vm_fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
        param_index < params_number;
        param_index++)
   {
-    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
     JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
     JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
 
     const lit_cpointer_t param_name_lit_idx = serializer_get_literal_cp_by_uid (next_instr.data.meta.data_1,
-                                                                                frame_ctx_p->instrs_p,
+                                                                                frame_ctx_p->bytecode_header_p,
                                                                                 frame_ctx_p->pos);
 
 

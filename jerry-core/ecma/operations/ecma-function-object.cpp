@@ -216,7 +216,7 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
                                 bool is_strict, /**< 'strict' flag */
                                 bool do_instantiate_arguments_object, /**< should an Arguments object be instantiated
                                                                        *   for the function object upon call */
-                                const vm_instr_t *instrs_p, /**< byte-code array */
+                                const bytecode_data_header_t *bytecode_data_p, /**< byte-code array */
                                 vm_instr_counter_t first_instr_pos) /**< position of first instruction
                                                                      *   of function's body */
 {
@@ -252,7 +252,7 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
 
   // 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-  MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->u.internal_property.value, instrs_p);
+  MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->u.internal_property.value, bytecode_data_p);
 
   ecma_property_t *code_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET);
   code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
@@ -824,7 +824,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       // 8.
       bool is_strict;
       bool do_instantiate_args_obj;
-      const vm_instr_t *instrs_p = MEM_CP_GET_POINTER (const vm_instr_t, bytecode_prop_p->u.internal_property.value);
+      const bytecode_data_header_t *bytecode_data_p;
+      bytecode_data_p = MEM_CP_GET_POINTER (const bytecode_data_header_t, bytecode_prop_p->u.internal_property.value);
       vm_instr_counter_t code_first_instr_pos = ecma_unpack_code_internal_property_value (code_prop_value,
                                                                                           &is_strict,
                                                                                           &do_instantiate_args_obj);
@@ -862,7 +863,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                do_instantiate_args_obj),
                       ret_value);
 
-      ecma_completion_value_t completion = vm_run_from_pos (instrs_p,
+      ecma_completion_value_t completion = vm_run_from_pos (bytecode_data_p,
                                                             code_first_instr_pos,
                                                             this_binding,
                                                             local_env_p,
@@ -1105,7 +1106,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 ecma_completion_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment */
                               ecma_string_t *function_name_p, /**< function name */
-                              const vm_instr_t *instrs_p, /**< byte-code array */
+                              const bytecode_data_header_t *bytecode_data_p, /**< byte-code data */
                               vm_instr_counter_t function_first_instr_pos, /**< position of first instruction
                                                                             *   of function code */
                               ecma_collection_header_t *formal_params_collection_p, /**< formal parameters collection
@@ -1126,7 +1127,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                               lex_env_p,
                                                               is_strict,
                                                               do_instantiate_arguments_object,
-                                                              instrs_p,
+                                                              bytecode_data_p,
                                                               function_first_instr_pos);
 
   // c.

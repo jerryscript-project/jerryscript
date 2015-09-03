@@ -86,7 +86,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 
   ecma_completion_value_t completion;
 
-  const vm_instr_t *instrs_p;
+  const bytecode_data_header_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
@@ -95,7 +95,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   parse_status = parser_parse_eval (code_p,
                                     code_buffer_size,
                                     is_strict_call,
-                                    &instrs_p,
+                                    &bytecode_data_p,
                                     &code_contains_functions);
 
   if (parse_status == JSP_STATUS_SYNTAX_ERROR)
@@ -110,11 +110,11 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   {
     JERRY_ASSERT (parse_status == JSP_STATUS_OK);
 
-    completion = vm_run_eval (instrs_p, is_direct);
+    completion = vm_run_eval (bytecode_data_p, is_direct);
 
     if (!code_contains_functions)
     {
-      serializer_remove_instructions (instrs_p);
+      serializer_remove_bytecode_data (bytecode_data_p);
     }
   }
 

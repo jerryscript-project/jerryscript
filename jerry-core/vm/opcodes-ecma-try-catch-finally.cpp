@@ -43,7 +43,7 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
                 || (ecma_is_completion_value_empty (try_completion) && frame_ctx_p->pos == try_end_oc));
   frame_ctx_p->pos = try_end_oc;
 
-  vm_instr_t next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+  vm_instr_t next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
   JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
 
   if (next_instr.data.meta.type == OPCODE_META_TYPE_CATCH)
@@ -54,12 +54,12 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
 
     if (ecma_is_completion_value_throw (try_completion))
     {
-      next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+      next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
       JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
       JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
       lit_cpointer_t catch_exc_val_var_name_lit_cp = serializer_get_literal_cp_by_uid (next_instr.data.meta.data_1,
-                                                                                       frame_ctx_p->instrs_p,
+                                                                                       frame_ctx_p->bytecode_header_p,
                                                                                        frame_ctx_p->pos);
       frame_ctx_p->pos++;
 
@@ -98,7 +98,7 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
     frame_ctx_p->pos = catch_end_oc;
   }
 
-  next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos);
+  next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
   JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
 
   if (next_instr.data.meta.type == OPCODE_META_TYPE_FINALLY)
@@ -121,7 +121,7 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
     }
   }
 
-  next_instr = vm_get_instr (frame_ctx_p->instrs_p, frame_ctx_p->pos++);
+  next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos++);
   JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
   JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_END_TRY_CATCH_FINALLY);
 

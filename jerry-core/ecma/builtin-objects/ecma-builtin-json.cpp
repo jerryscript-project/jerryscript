@@ -186,7 +186,7 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
           }
 
           current_p += 5;
-          write_p += lit_code_point_to_utf8 (code_point, write_p);
+          write_p += lit_code_point_to_cesu8 (code_point, write_p);
           continue;
           /* FALLTHRU */
         }
@@ -198,57 +198,6 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
     }
     *write_p++ = *current_p++;
   }
-
-  /*
-   * Post processing surrogate pairs.
-   *
-   * The general issue is, that surrogate fragments can come from
-   * the original stream and can be constructed by \u sequences
-   * as well. We need to construct code points from them.
-   *
-   * Example: JSON.parse ('"\\ud801\udc00"') === "\ud801\udc00"
-   *          The first \u is parsed by JSON, the second is by the lexer.
-   *
-   * The rewrite happens in-place, since the write pointer is always
-   * precede the read-pointer. We also cannot create an UTF8 iterator,
-   * because the lit_is_utf8_string_valid assertion may fail.
-   */
-
-  lit_utf8_byte_t *read_p = token_p->u.string.start_p;
-  lit_utf8_byte_t *read_end_p = write_p;
-  write_p = read_p;
-
-  while (read_p < read_end_p)
-  {
-    lit_code_point_t code_point;
-    read_p += lit_read_code_point_from_utf8 (read_p,
-                                             (lit_utf8_size_t) (read_end_p - read_p),
-                                             &code_point);
-
-    /* The lit_is_code_unit_high_surrogate expects ecma_char_t argument
-       so code_points above maximum UTF16 code unit must not be tested. */
-    if (read_p < read_end_p
-        && code_point <= LIT_UTF16_CODE_UNIT_MAX
-        && lit_is_code_unit_high_surrogate ((ecma_char_t) code_point))
-    {
-      lit_code_point_t next_code_point;
-      lit_utf8_size_t next_code_point_size = lit_read_code_point_from_utf8 (read_p,
-                                                                            (lit_utf8_size_t) (read_end_p - read_p),
-                                                                            &next_code_point);
-
-      if (next_code_point <= LIT_UTF16_CODE_UNIT_MAX
-          && lit_is_code_unit_low_surrogate ((ecma_char_t) next_code_point))
-      {
-        code_point = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) code_point,
-                                                               (ecma_char_t) next_code_point);
-        read_p += next_code_point_size;
-      }
-    }
-    write_p += lit_code_point_to_utf8 (code_point, write_p);
-  }
-
-  JERRY_ASSERT (lit_is_utf8_string_valid (token_p->u.string.start_p,
-                                          (lit_utf8_size_t) (write_p - token_p->u.string.start_p)));
 
   token_p->u.string.size = (lit_utf8_size_t) (write_p - token_p->u.string.start_p);
   token_p->current_p = current_p + 1;

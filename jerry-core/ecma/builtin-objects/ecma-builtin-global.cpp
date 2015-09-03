@@ -852,6 +852,10 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         output_size++;
       }
     }
+    else if ((decoded_byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
+    {
+      output_size += 3;
+    }
     else
     {
       output_size++;
@@ -861,26 +865,22 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
   if (ecma_is_completion_value_empty (ret_value))
   {
     MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                            output_size * 2,
+                            output_size,
                             lit_utf8_byte_t);
 
     input_char_p = input_start_p;
     lit_utf8_byte_t *output_char_p = output_start_p;
-    lit_utf8_byte_t *output_type_p = output_start_p + output_size;
 
     while (input_char_p < input_end_p)
     {
       /* Input decode. */
       if (*input_char_p != '%')
       {
-        *output_type_p++ = URI_DECODE_ORIGINAL_BYTE;
         *output_char_p = *input_char_p;
         output_char_p++;
         input_char_p++;
         continue;
       }
-
-      *output_type_p++ = URI_DECODE_DECODED_BYTE;
 
       lit_code_point_t decoded_byte;
 
@@ -898,68 +898,95 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         }
         else
         {
-          *output_char_p = (lit_utf8_byte_t) decoded_byte;
-          output_char_p++;
+          *output_char_p++ = (lit_utf8_byte_t) decoded_byte;
         }
       }
       else
       {
-        *output_char_p = (lit_utf8_byte_t) decoded_byte;
-        output_char_p++;
-      }
-    }
+        uint32_t bytes_count;
 
-    JERRY_ASSERT (output_start_p + output_size == output_char_p);
-
-    bool valid_utf8 = lit_is_utf8_string_valid (output_start_p, output_size);
-
-    if (valid_utf8)
-    {
-      lit_utf8_iterator_t characters = lit_utf8_iterator_create (output_start_p, output_size);
-      output_type_p = output_start_p + output_size;
-
-      while (!lit_utf8_iterator_is_eos (&characters))
-      {
-        bool original_byte = output_type_p[characters.buf_pos.offset] == URI_DECODE_ORIGINAL_BYTE;
-
-        ecma_char_t character = lit_utf8_iterator_read_next (&characters);
-
-        /* Surrogate fragments are allowed in JS, but not accepted by URI decoding. */
-        if (!original_byte)
+        if ((decoded_byte & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
         {
-          if (lit_is_code_unit_high_surrogate (character))
-          {
-            /* Note: stray high/low surrogate pairs are not allowed in the stream. */
-            if (lit_utf8_iterator_is_eos (&characters))
-            {
-              valid_utf8 = false;
-              break;
-            }
+          bytes_count = 2;
+        }
+        else if ((decoded_byte & LIT_UTF8_3_BYTE_MASK) == LIT_UTF8_3_BYTE_MARKER)
+        {
+          bytes_count = 3;
+        }
+        else if ((decoded_byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
+        {
+          bytes_count = 4;
+        }
+        else
+        {
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+          break;
+        }
 
-            if (output_type_p[characters.buf_pos.offset] == URI_DECODE_ORIGINAL_BYTE
-                || !lit_is_code_unit_low_surrogate (lit_utf8_iterator_read_next (&characters)))
-            {
-              valid_utf8 = false;
-              break;
-            }
-          }
-          else if (lit_is_code_unit_low_surrogate (character))
+        lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
+        octets[0] = (lit_utf8_byte_t) decoded_byte;
+        bool is_valid = true;
+
+        for (uint32_t i = 1; i < bytes_count; i++)
+        {
+          if (input_char_p >= input_end_p || *input_char_p != '%')
           {
-            valid_utf8 = false;
+            is_valid = false;
             break;
           }
+          else
+          {
+            lit_code_point_t cp;
+            lit_read_code_point_from_hex (input_char_p + 1, 2, &cp);
+
+            if ((cp & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
+            {
+              is_valid = false;
+              break;
+            }
+
+            octets[i] = (lit_utf8_byte_t) cp;
+            input_char_p += URI_ENCODED_BYTE_SIZE;
+          }
         }
+
+        if (!is_valid)
+        {
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+          break;
+        }
+
+        lit_code_point_t cp;
+        lit_read_code_point_from_utf8 (octets, bytes_count, &cp);
+
+        if ((bytes_count == 2 && cp <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+            || (bytes_count == 3 && cp <= LIT_UTF8_2_BYTE_CODE_POINT_MAX)
+            || (bytes_count == 4 && cp <= LIT_UTF8_3_BYTE_CODE_POINT_MAX)
+            || lit_is_code_unit_high_surrogate ((ecma_char_t) cp)
+            || lit_is_code_unit_low_surrogate ((ecma_char_t) cp)
+            || cp > LIT_UNICODE_CODE_POINT_MAX)
+        {
+          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+          break;
+        }
+
+        output_char_p += lit_code_point_to_cesu8 (cp, output_char_p);
       }
     }
 
-    if (valid_utf8)
+    if (ecma_is_completion_value_empty (ret_value))
     {
-      ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
-    }
-    else
-    {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+      JERRY_ASSERT (output_start_p + output_size == output_char_p);
+
+      if (lit_is_cesu8_string_valid (output_start_p, output_size))
+      {
+        ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
+        ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_string_p));
+      }
+      else
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+      }
     }
 
     MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
@@ -1056,20 +1083,53 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
    */
 
   lit_utf8_byte_t *input_char_p = input_start_p;
-  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
   lit_utf8_size_t output_length = 0;
+  lit_code_point_t cp;
+  ecma_char_t ch;
+  lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
 
   while (input_char_p < input_end_p)
   {
-    /*
-     * We expect that the input is a valid UTF-8 sequence,
-     * so we only need to reject stray surrogate pairs.
-     */
+    /* Input validation, we need to reject stray surrogates. */
+    input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
 
-    /* Input validation. */
-    if (*input_char_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    if (lit_is_code_unit_low_surrogate (ch))
     {
-      if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset_p))
+      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+      break;
+    }
+
+    cp = ch;
+
+    if (lit_is_code_unit_high_surrogate (ch))
+    {
+      if (input_char_p == input_end_p)
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+        break;
+      }
+
+      ecma_char_t next_ch;
+      lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
+
+      if (lit_is_code_unit_low_surrogate (next_ch))
+      {
+        cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
+        input_char_p += read_size;
+      }
+      else
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+        break;
+      }
+    }
+
+    lit_utf8_size_t utf_size = lit_code_point_to_utf8 (cp, octets);
+
+    if (utf_size == 1)
+    {
+      if (ecma_builtin_global_object_character_is_in (octets[0], unescaped_uri_bitset_p))
       {
         output_length++;
       }
@@ -1078,28 +1138,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
         output_length += URI_ENCODED_BYTE_SIZE;
       }
     }
-    else if (*input_char_p == (LIT_UTF8_3_BYTE_MARKER + (LIT_UTF16_HIGH_SURROGATE_MARKER >> 12)))
-    {
-      /* The next character is in the [0xd000, 0xdfff] range. */
-      output_length += URI_ENCODED_BYTE_SIZE;
-      input_char_p++;
-      JERRY_ASSERT (input_char_p < input_end_p);
-      JERRY_ASSERT ((*input_char_p & LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_EXTRA_BYTE_MARKER);
-
-      /* If this condition is true, the next character is >= LIT_UTF16_HIGH_SURROGATE_MIN. */
-      if (*input_char_p & 0x20)
-      {
-        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
-        break;
-      }
-      output_length += URI_ENCODED_BYTE_SIZE;
-    }
     else
     {
-      output_length += URI_ENCODED_BYTE_SIZE;
+      output_length += utf_size * URI_ENCODED_BYTE_SIZE;
     }
-
-    input_char_p++;
   }
 
   if (ecma_is_completion_value_empty (ret_value))
@@ -1114,26 +1156,43 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     while (input_char_p < input_end_p)
     {
       /* Input decode. */
+      input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
+      cp = ch;
 
-      if (*input_char_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+      if (lit_is_code_unit_high_surrogate (ch))
       {
-        if (ecma_builtin_global_object_character_is_in (*input_char_p, unescaped_uri_bitset_p))
+        ecma_char_t next_ch;
+        lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
+
+        if (lit_is_code_unit_low_surrogate (next_ch))
         {
-          *output_char_p++ = *input_char_p;
+          cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
+          input_char_p += read_size;
+        }
+      }
+
+      lit_utf8_size_t utf_size = lit_code_point_to_utf8 (cp, octets);
+
+      if (utf_size == 1)
+      {
+        if (ecma_builtin_global_object_character_is_in (octets[0], unescaped_uri_bitset_p))
+        {
+          *output_char_p++ = octets[0];
         }
         else
         {
-          ecma_builtin_global_object_byte_to_hex (output_char_p, *input_char_p);
+          ecma_builtin_global_object_byte_to_hex (output_char_p, octets[0]);
           output_char_p += URI_ENCODED_BYTE_SIZE;
         }
       }
       else
       {
-        ecma_builtin_global_object_byte_to_hex (output_char_p, *input_char_p);
-        output_char_p += URI_ENCODED_BYTE_SIZE;
+        for (uint32_t i = 0; i < utf_size; i++)
+        {
+          ecma_builtin_global_object_byte_to_hex (output_char_p, octets[i]);
+          output_char_p += URI_ENCODED_BYTE_SIZE;
+        }
       }
-
-      input_char_p++;
     }
 
     JERRY_ASSERT (output_start_p + output_length == output_char_p);

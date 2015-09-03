@@ -57,7 +57,7 @@ lit_dump_literals ()
  */
 literal_t
 lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string to initialize the record,
-                                                                  * could be non-zero-terminated */
+                                                                    * could be non-zero-terminated */
                                      lit_utf8_size_t str_size) /**< length of the string */
 {
   JERRY_ASSERT (str_p || !str_size);

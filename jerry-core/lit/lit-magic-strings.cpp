@@ -182,7 +182,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
 
 
 /**
- * Check if passed utf-8 string equals to one of magic strings
+ * Check if passed cesu-8 string equals to one of magic strings
  * and if equal magic string was found, return it's id in 'out_id_p' argument.
  *
  * @return true - if magic string equal to passed string was found,

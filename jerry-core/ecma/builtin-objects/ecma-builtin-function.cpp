@@ -97,11 +97,13 @@ ecma_builtin_function_helper_get_arguments (const ecma_value_t *arguments_list_p
     ssize_t sz = ecma_string_to_utf8_string (str_p, start_p, (ssize_t) str_size);
     JERRY_ASSERT (sz >= 0);
 
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
+    lit_utf8_byte_t *current_p = start_p;
+    const lit_utf8_byte_t *string_end_p = start_p + str_size;
 
-    while (!lit_utf8_iterator_is_eos (&iter))
+    while (current_p < string_end_p)
     {
-      ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+      ecma_char_t current_char;
+      current_p += lit_read_code_unit_from_utf8 (current_p, &current_char);
 
       if (current_char == ',')
       {
@@ -197,33 +199,36 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
       ssize_t sz = ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
       JERRY_ASSERT (sz >= 0);
 
-      lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
-      ecma_length_t last_separator = lit_utf8_iterator_get_index (&iter);
-      ecma_length_t end_position;
+      lit_utf8_byte_t *current_p = start_p;
+      lit_utf8_byte_t *last_separator = start_p;
+      lit_utf8_byte_t *end_position;
+      const lit_utf8_byte_t *string_end_p = start_p + str_size;
       ecma_string_t *param_str_p;
 
-      while (!lit_utf8_iterator_is_eos (&iter))
+      while (current_p < string_end_p)
       {
-        ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+        ecma_char_t current_char;
+        lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (current_p, &current_char);
 
         if (current_char == ',')
         {
-          lit_utf8_iterator_decr (&iter);
-          end_position = lit_utf8_iterator_get_index (&iter);
+          end_position = current_p;
 
-          param_str_p = ecma_string_substr (arguments_str_p, last_separator,  end_position);
+          param_str_p = ecma_new_ecma_string_from_utf8 (last_separator,
+                                                        (lit_utf8_size_t) (end_position - last_separator));
           string_params_p[params_count] = ecma_string_trim (param_str_p);
           ecma_deref_ecma_string (param_str_p);
 
-          lit_utf8_iterator_incr (&iter);
-          last_separator = lit_utf8_iterator_get_index (&iter);
-
+          last_separator = current_p + read_size;
           params_count++;
         }
+
+        current_p += read_size;
       }
 
-      end_position = lit_utf8_string_length (start_p, str_size);
-      param_str_p = ecma_string_substr (arguments_str_p, last_separator, end_position);
+      end_position = (lit_utf8_byte_t *) string_end_p;
+      param_str_p = ecma_new_ecma_string_from_utf8 (last_separator,
+                                                    (lit_utf8_size_t) (end_position - last_separator));
       string_params_p[params_count] = ecma_string_trim (param_str_p);
       ecma_deref_ecma_string (param_str_p);
       params_count++;

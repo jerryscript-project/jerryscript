@@ -160,16 +160,60 @@ lexer_create_token_for_charset (token_type tt, /**< token type */
 {
   JERRY_ASSERT (charset_p != NULL);
 
-  literal_t lit = lit_find_literal_by_utf8_string (charset_p, size);
-  if (lit != NULL)
+  lit_utf8_iterator_t iter = lit_utf8_iterator_create (charset_p, (lit_utf8_size_t) size);
+  lit_utf8_size_t new_size = 0;
+  lit_utf8_size_t new_length = 0;
+  bool should_convert = false;
+
+  while (!lit_utf8_iterator_is_eos (&iter))
   {
-    return create_token_from_lit (tt, lit);
+    if (iter.buf_pos.is_non_bmp_middle)
+    {
+      should_convert = true;
+    }
+    lit_utf8_iterator_incr (&iter);
+    new_size += LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
   }
 
-  lit = lit_create_literal_from_utf8_string (charset_p, size);
+  lit_utf8_byte_t *converted_str_p;
+
+  if (should_convert)
+  {
+    lit_utf8_iterator_seek_bos (&iter);
+    converted_str_p = (lit_utf8_byte_t *) jsp_mm_alloc (new_size);
+
+    while (!lit_utf8_iterator_is_eos (&iter))
+    {
+      ecma_char_t ch = lit_utf8_iterator_read_next (&iter);
+      new_length += lit_code_unit_to_utf8 (ch, converted_str_p + new_length);
+    }
+  }
+  else
+  {
+    converted_str_p = (lit_utf8_byte_t *) charset_p;
+    new_length = size;
+    JERRY_ASSERT (lit_is_cesu8_string_valid (converted_str_p, new_length));
+  }
+
+  literal_t lit = lit_find_literal_by_utf8_string (converted_str_p, new_length);
+  if (lit != NULL)
+  {
+    if (should_convert)
+    {
+      jsp_mm_free (converted_str_p);
+    }
+
+    return create_token_from_lit (tt, lit);
+  }
+  lit = lit_create_literal_from_utf8_string (converted_str_p, new_length);
   JERRY_ASSERT (lit->get_type () == LIT_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_EX_T);
+
+  if (should_convert)
+  {
+    jsp_mm_free (converted_str_p);
+  }
 
   return create_token_from_lit (tt, lit);
 } /* lexer_create_token_for_charset */
@@ -1550,6 +1594,7 @@ lexer_locus_to_line_and_column (lit_utf8_iterator_pos_t locus, /**< iterator pos
                                 size_t *column) /**< @out: column number */
 {
   JERRY_ASSERT ((lit_utf8_size_t) (locus.offset + locus.is_non_bmp_middle) <= buffer_size);
+
   lit_utf8_iterator_t iter = lit_utf8_iterator_create (buffer_start, (lit_utf8_size_t) buffer_size);
   lit_utf8_iterator_pos_t iter_pos = lit_utf8_iterator_get_pos (&iter);
 

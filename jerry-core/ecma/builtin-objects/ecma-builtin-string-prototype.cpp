@@ -2306,25 +2306,8 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   {
     ecma_char_t character = lit_utf8_iterator_read_next (&input_iterator);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-    lit_utf8_byte_t utf8_byte_buffer[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
+    lit_utf8_byte_t utf8_byte_buffer[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
     lit_utf8_size_t character_length;
-
-    /*
-     * We need to keep surrogate pairs. Surrogates are never converted,
-     * regardless they form a valid pair or not.
-     */
-    if (lit_is_code_unit_high_surrogate (character))
-    {
-      ecma_char_t next_character = lit_utf8_iterator_peek_next (&input_iterator);
-
-      if (lit_is_code_unit_low_surrogate (next_character))
-      {
-        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (character, next_character);
-        output_length += lit_code_point_to_utf8 (surrogate_code_point, utf8_byte_buffer);
-        lit_utf8_iterator_incr (&input_iterator);
-        continue;
-      }
-    }
 
     if (lower_case)
     {
@@ -2364,23 +2347,6 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
     lit_utf8_size_t character_length;
 
-    /*
-     * We need to keep surrogate pairs. Surrogates are never converted,
-     * regardless they form a valid pair or not.
-     */
-    if (lit_is_code_unit_high_surrogate (character))
-    {
-      ecma_char_t next_character = lit_utf8_iterator_peek_next (&input_iterator);
-
-      if (lit_is_code_unit_low_surrogate (next_character))
-      {
-        lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (character, next_character);
-        output_char_p += lit_code_point_to_utf8 (surrogate_code_point, output_char_p);
-        lit_utf8_iterator_incr (&input_iterator);
-        continue;
-      }
-    }
-
     if (lower_case)
     {
       character_length = lit_char_to_lower_case (character,
@@ -2398,7 +2364,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
     for (lit_utf8_size_t i = 0; i < character_length; i++)
     {
-      output_char_p += lit_code_point_to_utf8 (character_buffer[i], output_char_p);
+      output_char_p += lit_code_unit_to_utf8 (character_buffer[i], output_char_p);
     }
   }
 
@@ -2503,60 +2469,8 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
 
   ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
 
-  /* 3 */
-  const lit_utf8_size_t size = ecma_string_get_size (original_string_p);
-
-  /* Workaround: avoid repeated call of ecma_string_get_char_at_pos() because its overhead */
-  lit_utf8_byte_t *original_utf8_str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (size + 1,
-                                                                                   MEM_HEAP_ALLOC_SHORT_TERM);
-  ssize_t sz = ecma_string_to_utf8_string (original_string_p, original_utf8_str_p, (ssize_t) size);
-  JERRY_ASSERT (sz >= 0);
-
-  const ecma_length_t length = lit_utf8_string_length (original_utf8_str_p, size);
-
-  lit_utf8_iterator_t iter = lit_utf8_iterator_create (original_utf8_str_p, size);
-
-  uint32_t prefix = 0, postfix = 0;
-  uint32_t new_len = 0;
-
-  while (!lit_utf8_iterator_is_eos (&iter))
-  {
-    ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
-
-    if (lit_char_is_white_space (current_char)
-        || lit_char_is_line_terminator (current_char))
-    {
-      prefix++;
-    }
-    else
-    {
-      break;
-    }
-  }
-
-  lit_utf8_iterator_seek_eos (&iter);
-  while (!lit_utf8_iterator_is_bos (&iter))
-  {
-    ecma_char_t current_char = lit_utf8_iterator_read_prev (&iter);
-
-    if (lit_char_is_white_space (current_char)
-        || lit_char_is_line_terminator (current_char))
-    {
-      postfix++;
-    }
-    else
-    {
-      break;
-    }
-  }
-  new_len = prefix < length ? length - prefix - postfix : 0;
-
-  ecma_string_t *new_str_p = ecma_string_substr (original_string_p, prefix, prefix + new_len);
-
-  /* 4 */
-  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (new_str_p));
-
-  mem_heap_free_block (original_utf8_str_p);
+  ecma_string_t *trimmed_string_p = ecma_string_trim (original_string_p);
+  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (trimmed_string_p));
 
   ECMA_FINALIZE (to_string_val);
   ECMA_FINALIZE (check_coercible_val);

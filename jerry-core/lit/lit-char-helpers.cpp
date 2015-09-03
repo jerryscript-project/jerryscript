@@ -360,6 +360,7 @@ lit_read_code_point_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with cha
 
     buf_p++;
   }
+
   *out_code_point_p = code_point;
   return true;
 } /* lit_read_code_point_from_hex */

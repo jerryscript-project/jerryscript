@@ -67,15 +67,13 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
   }
   else
   {
-    lit_utf8_size_t utf8_buf_size = args_number * LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+    lit_utf8_size_t utf8_buf_size = args_number * LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
 
     MEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
                             utf8_buf_size,
                             lit_utf8_byte_t);
 
     lit_utf8_size_t utf8_buf_used = 0;
-    lit_utf8_size_t last_code_unit_size = 0;
-    ecma_char_t high_surrogate = 0;
 
     for (ecma_length_t arg_index = 0;
          arg_index < args_number && ecma_is_completion_value_empty (ret_value);
@@ -86,36 +84,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
       uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
       ecma_char_t code_unit = (uint16_t) uint32_char_code;
 
-      if (high_surrogate && lit_is_code_unit_low_surrogate (code_unit))
-      {
-        JERRY_ASSERT (last_code_unit_size > 0);
-        JERRY_ASSERT (utf8_buf_used >= last_code_unit_size);
-
-        utf8_buf_used -= last_code_unit_size;
-
-        JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
-
-        lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (high_surrogate, code_unit);
-
-        last_code_unit_size = lit_code_point_to_utf8 (code_point, utf8_buf_p + utf8_buf_used);
-      }
-      else
-      {
-        JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-        last_code_unit_size = lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
-      }
-
-      utf8_buf_used += last_code_unit_size;
+      JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+      utf8_buf_used += lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
       JERRY_ASSERT (utf8_buf_used <= utf8_buf_size);
-
-      if (lit_is_code_unit_high_surrogate (code_unit))
-      {
-        high_surrogate = code_unit;
-      }
-      else
-      {
-        high_surrogate = 0;
-      }
 
       ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
     }

@@ -414,7 +414,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
                                 lit_utf8_size_t string_size) /**< string size */
 {
   JERRY_ASSERT (string_p != NULL || string_size == 0);
-  JERRY_ASSERT (lit_is_utf8_string_valid (string_p, string_size));
+  JERRY_ASSERT (lit_is_cesu8_string_valid (string_p, string_size));
 
   lit_magic_string_id_t magic_string_id;
   if (lit_is_utf8_string_magic (string_p, string_size, &magic_string_id))
@@ -444,7 +444,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
 } /* ecma_new_ecma_string_from_utf8 */
 
 /**
- * Allocate new ecma-string and fill it with utf-8 character which represents specified code unit
+ * Allocate new ecma-string and fill it with cesu-8 character which represents specified code unit
  *
  * @return pointer to ecma-string descriptor
  */
@@ -627,14 +627,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     jerry_fatal (ERR_OUT_OF_MEMORY);
   }
 
-  ecma_char_t str1_last_code_unit = ecma_string_get_char_at_pos (string1_p, ecma_string_get_length (string1_p) - 1);
-  ecma_char_t str2_first_code_unit = ecma_string_get_char_at_pos (string2_p, 0);
-
-  bool is_surrogate_pair_sliced = (lit_is_code_unit_high_surrogate (str1_last_code_unit)
-                                   && lit_is_code_unit_low_surrogate (str2_first_code_unit));
-
-  lit_utf8_size_t buffer_size = str1_size + str2_size - (lit_utf8_size_t) (is_surrogate_pair_sliced ?
-                                                                           LIT_UTF8_CESU8_SURROGATE_SIZE_DIF : 0);
+  lit_utf8_size_t buffer_size = str1_size + str2_size;
 
   lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) mem_heap_alloc_block (buffer_size, MEM_HEAP_ALLOC_SHORT_TERM);
 
@@ -643,23 +636,9 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   bytes_copied1 = ecma_string_to_utf8_string (string1_p, str_p, (ssize_t) str1_size);
   JERRY_ASSERT (bytes_copied1 > 0);
 
-  if (!is_surrogate_pair_sliced)
-  {
-    bytes_copied2 = ecma_string_to_utf8_string (string2_p, str_p + str1_size, (ssize_t) str2_size);
-    JERRY_ASSERT (bytes_copied2 > 0);
-  }
-  else
-  {
-    bytes_copied2 = ecma_string_to_utf8_string (string2_p,
-                                                str_p + str1_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT + 1,
-                                                (ssize_t) buffer_size - bytes_copied1
-                                                + LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-    JERRY_ASSERT (bytes_copied2 > 0);
+  bytes_copied2 = ecma_string_to_utf8_string (string2_p, str_p + str1_size, (ssize_t) str2_size);
+  JERRY_ASSERT (bytes_copied2 > 0);
 
-    lit_code_point_t surrogate_code_point = lit_convert_surrogate_pair_to_code_point (str1_last_code_unit,
-                                                                                      str2_first_code_unit);
-    lit_code_point_to_utf8 (surrogate_code_point, str_p + str1_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-  }
   ecma_string_t *str_concat_p = ecma_new_ecma_string_from_utf8 (str_p, buffer_size);
 
   mem_heap_free_block ((void*) str_p);
@@ -955,7 +934,7 @@ ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
 } /* ecma_string_is_array_index */
 
 /**
- * Convert ecma-string's contents to a utf-8 string and put it to the buffer.
+ * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.
  *
  * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
  *         otherwise (in case size of buffer is insufficient) - negative number, which is calculated
@@ -1018,7 +997,6 @@ ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string
 
       break;
     }
-
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       const lit_magic_string_id_t id = string_desc_p->u.magic_string_id;
@@ -1491,7 +1469,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
   ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
   JERRY_ASSERT (sz > 0);
 
-  ch = lit_utf8_string_code_unit_at (utf8_str_p, buffer_size, index);;
+  ch = lit_utf8_string_code_unit_at (utf8_str_p, buffer_size, index);
 
   MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
 
@@ -1682,10 +1660,7 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
   JERRY_ASSERT (end_pos <= string_length);
 #endif
 
-  const ecma_length_t span = (start_pos > end_pos) ? 0 : end_pos - start_pos;
-  const lit_utf8_size_t utf8_str_size = LIT_UTF8_MAX_BYTES_IN_CODE_UNIT * span;
-
-  if (utf8_str_size)
+  if (start_pos < end_pos)
   {
     /**
      * I. Dump original string to plain buffer
@@ -1701,20 +1676,22 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
     /**
      * II. Extract substring
      */
-    MEM_DEFINE_LOCAL_ARRAY (utf8_substr_buffer, utf8_str_size, lit_utf8_byte_t);
+    lit_utf8_byte_t *start_p = utf8_str_p;
+    end_pos -= start_pos;
 
-    lit_utf8_size_t utf8_substr_buffer_offset = 0;
-    for (ecma_length_t idx = 0; idx < span; idx++)
+    while (start_pos--)
     {
-      ecma_char_t code_unit = lit_utf8_string_code_unit_at (utf8_str_p, buffer_size, start_pos + idx);
-
-      JERRY_ASSERT (utf8_str_size >= utf8_substr_buffer_offset + LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-      utf8_substr_buffer_offset += lit_code_unit_to_utf8 (code_unit, utf8_substr_buffer + utf8_substr_buffer_offset);
+      start_p += lit_get_unicode_char_size_by_utf8_first_byte (*start_p);
     }
 
-    ecma_string_p = ecma_new_ecma_string_from_utf8 (utf8_substr_buffer, utf8_substr_buffer_offset);
+    lit_utf8_byte_t *end_p = start_p;
+    while (end_pos--)
+    {
+      end_p += lit_get_unicode_char_size_by_utf8_first_byte (*end_p);
+    }
 
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_substr_buffer);
+    ecma_string_p = ecma_new_ecma_string_from_utf8 (start_p, (lit_utf8_size_t) (end_p - start_p));
+
     MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
 
     return ecma_string_p;
@@ -1746,47 +1723,47 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
     ssize_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, (ssize_t) buffer_size);
     JERRY_ASSERT (sz >= 0);
 
-    lit_utf8_iterator_t front = lit_utf8_iterator_create (utf8_str_p, buffer_size);
-
-    lit_utf8_iterator_t back = lit_utf8_iterator_create (utf8_str_p, buffer_size);
-    lit_utf8_iterator_seek_eos (&back);
-
-    lit_utf8_iterator_pos_t start = lit_utf8_iterator_get_pos (&back);
-    lit_utf8_iterator_pos_t end = lit_utf8_iterator_get_pos (&front);
-
-    ecma_char_t current;
+    ecma_char_t ch;
+    lit_utf8_size_t read_size;
+    lit_utf8_byte_t *nonws_start_p = utf8_str_p + buffer_size;
+    lit_utf8_byte_t *current_p = utf8_str_p;
 
     /* Trim front. */
-    while (!lit_utf8_iterator_is_eos (&front))
+    while (current_p < nonws_start_p)
     {
-      current = lit_utf8_iterator_read_next (&front);
-      if (!lit_char_is_white_space (current)
-          && !lit_char_is_line_terminator (current))
+      read_size = lit_read_code_unit_from_utf8 (current_p, &ch);
+
+      if (!lit_char_is_white_space (ch)
+          && !lit_char_is_line_terminator (ch))
       {
-        lit_utf8_iterator_decr (&front);
-        start = lit_utf8_iterator_get_pos (&front);
+        nonws_start_p = current_p;
         break;
       }
+
+      current_p += read_size;
     }
 
+    current_p = utf8_str_p + buffer_size;
+
     /* Trim back. */
-    while (!lit_utf8_iterator_is_bos (&back))
+    while (current_p > utf8_str_p)
     {
-      current = lit_utf8_iterator_read_prev (&back);
-      if (!lit_char_is_white_space (current)
-          && !lit_char_is_line_terminator (current))
+      read_size = lit_read_prev_code_unit_from_utf8 (current_p, &ch);
+
+      if (!lit_char_is_white_space (ch)
+          && !lit_char_is_line_terminator (ch))
       {
-        lit_utf8_iterator_incr (&back);
-        end = lit_utf8_iterator_get_pos (&back);
         break;
       }
+
+      current_p -= read_size;
     }
 
     /* Construct new string. */
-    if (end.offset > start.offset)
+    if (current_p > nonws_start_p)
     {
-      ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_str_p + start.offset,
-                                                     (lit_utf8_size_t) (end.offset - start.offset));
+      ret_string_p = ecma_new_ecma_string_from_utf8 (nonws_start_p,
+                                                     (lit_utf8_size_t) (current_p - nonws_start_p));
     }
     else
     {

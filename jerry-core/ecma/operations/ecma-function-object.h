@@ -44,6 +44,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p,
                        ecma_value_t this_arg_value,
                        ecma_collection_header_t *arg_collection_p);
 
+extern ecma_property_t*
+ecma_op_function_object_get_own_property (ecma_object_t *obj_p,
+                                          ecma_string_t *property_name_p);
+
 extern ecma_completion_value_t
 ecma_op_function_call_array_args (ecma_object_t *func_obj_p,
                                   ecma_value_t this_arg_value,

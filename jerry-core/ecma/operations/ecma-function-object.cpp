@@ -260,71 +260,23 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
                                                                                    first_instr_pos);
 
   // 14.
-  ecma_number_t* len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (formal_params_collection_p != NULL ? formal_params_collection_p->unit_number : 0);
-
   // 15.
-  ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
-  length_prop_desc.is_value_defined = true;
-  length_prop_desc.value = ecma_make_number_value (len_p);
-
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_completion_value_t completion = ecma_op_object_define_own_property (f,
-                                                                           magic_string_length_p,
-                                                                           &length_prop_desc,
-                                                                           false);
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
-                || ecma_is_completion_value_normal_false (completion));
-
-  ecma_dealloc_number (len_p);
-  len_p = NULL;
-
   // 16.
-  ecma_object_t *proto_p = ecma_op_create_object_object_noarg ();
-
   // 17.
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-  {
-    prop_desc.is_value_defined = true;
-    prop_desc.value = ecma_make_object_value (f);
-
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = true;
-
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = false;
-
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = true;
-  }
-
-  ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
-  ecma_op_object_define_own_property (proto_p,
-                                      magic_string_constructor_p,
-                                      &prop_desc,
-                                      false);
-  ecma_deref_ecma_string (magic_string_constructor_p);
-
   // 18.
-  prop_desc.value = ecma_make_object_value (proto_p);
-  prop_desc.is_configurable = false;
-  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_op_object_define_own_property (f,
-                                      magic_string_prototype_p,
-                                      &prop_desc,
-                                      false);
-  ecma_deref_ecma_string (magic_string_prototype_p);
-
-  ecma_deref_object (proto_p);
+  /*
+   * 'length' and 'prototype' properties are instantiated lazily
+   *
+   * See also: ecma_op_function_object_get_own_property
+   *           ecma_op_function_try_lazy_instantiate_property
+   */
 
   // 19.
   if (is_strict)
   {
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
-    prop_desc = ecma_make_empty_property_descriptor ();
+    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_enumerable_defined = true;
       prop_desc.is_enumerable = false;
@@ -358,6 +310,151 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
 
   return f;
 } /* ecma_op_create_function_object */
+
+/**
+ * Lazy instantation of non-builtin ecma function object's properties
+ *
+ * Warning:
+ *         Only non-configurable properties could be instantiated lazily in this function,
+ *         as configurable properties could be deleted and it would be incorrect
+ *         to reinstantiate them in the function in second time.
+ *
+ * @return pointer to newly instantiated property, if a property was instantiated,
+ *         NULL - otherwise
+ */
+static ecma_property_t *
+ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the function object */
+                                                ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT (!ecma_get_object_is_builtin (obj_p));
+
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+
+  bool is_length_property = ecma_compare_ecma_strings (magic_string_length_p, property_name_p);
+
+  ecma_deref_ecma_string (magic_string_length_p);
+
+  if (is_length_property)
+  {
+    /* ECMA-262 v5, 13.2, 14-15 */
+
+    // 14
+    ecma_number_t *len_p = ecma_alloc_number ();
+
+    ecma_property_t *formal_parameters_prop_p = ecma_get_internal_property (obj_p,
+                                                                            ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS);
+    ecma_collection_header_t *formal_parameters_p;
+    formal_parameters_p = ECMA_GET_POINTER (ecma_collection_header_t,
+                                            formal_parameters_prop_p->u.internal_property.value);
+    *len_p = ecma_uint32_to_number (formal_parameters_p != NULL ? formal_parameters_p->unit_number : 0);
+
+    // 15
+    ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
+                                                                      property_name_p,
+                                                                      false,
+                                                                      false,
+                                                                      false);
+
+    ecma_named_data_property_assign_value (obj_p, length_prop_p, ecma_make_number_value (len_p));
+
+    ecma_dealloc_number (len_p);
+
+    JERRY_ASSERT (!ecma_is_property_configurable (length_prop_p));
+    return length_prop_p;
+  }
+
+  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
+
+  bool is_prototype_property = ecma_compare_ecma_strings (magic_string_prototype_p, property_name_p);
+
+  ecma_deref_ecma_string (magic_string_prototype_p);
+
+  if (is_prototype_property)
+  {
+    /* ECMA-262 v5, 13.2, 16-18 */
+
+    // 16.
+    ecma_object_t *proto_p = ecma_op_create_object_object_noarg ();
+
+    // 17.
+    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+    {
+      prop_desc.is_value_defined = true;
+      prop_desc.value = ecma_make_object_value (obj_p);
+
+      prop_desc.is_writable_defined = true;
+      prop_desc.is_writable = true;
+
+      prop_desc.is_enumerable_defined = true;
+      prop_desc.is_enumerable = false;
+
+      prop_desc.is_configurable_defined = true;
+      prop_desc.is_configurable = true;
+    }
+
+    ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
+    ecma_op_object_define_own_property (proto_p,
+                                        magic_string_constructor_p,
+                                        &prop_desc,
+                                        false);
+    ecma_deref_ecma_string (magic_string_constructor_p);
+
+    // 18.
+    ecma_property_t *prototype_prop_p = ecma_create_named_data_property (obj_p,
+                                                                         property_name_p,
+                                                                         true,
+                                                                         false,
+                                                                         false);
+
+    ecma_named_data_property_assign_value (obj_p, prototype_prop_p, ecma_make_object_value (proto_p));
+
+    ecma_deref_object (proto_p);
+
+    JERRY_ASSERT (!ecma_is_property_configurable (prototype_prop_p));
+    return prototype_prop_p;
+  }
+
+  return NULL;
+} /* ecma_op_function_try_lazy_instantiate_property */
+
+/**
+ * Implementation-defined extension of [[GetOwnProperty]] ecma function object's operation
+ *
+ * Note:
+ *      The [[GetOwnProperty]] is used only for lazy property instantiation,
+ *      i.e. externally visible behaviour of [[GetOwnProperty]] is specification-defined
+ *
+ * @return pointer to a property - if it already existed
+ *           or was lazy instantiated in context of
+ *           current invocation,
+ *         NULL (i.e. ecma-undefined) - otherwise.
+ */
+ecma_property_t*
+ecma_op_function_object_get_own_property (ecma_object_t *obj_p, /**< the function object */
+                                          ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+
+  ecma_property_t *prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
+
+  if (prop_p != NULL)
+  {
+    return prop_p;
+  }
+  else if (!ecma_get_object_is_builtin (obj_p))
+  {
+    prop_p = ecma_op_function_try_lazy_instantiate_property (obj_p, property_name_p);
+
+    /*
+     * Only non-configurable properties could be instantiated lazily in the function,
+     * as configurable properties could be deleted and it would be incorrect
+     * to reinstantiate them in the function in second time.
+     */
+    JERRY_ASSERT (prop_p == NULL || !ecma_is_property_configurable (prop_p));
+  }
+
+  return prop_p;
+} /* ecma_op_function_object_get_own_property */
 
 /**
  * External function object creation operation.

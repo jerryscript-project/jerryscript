@@ -112,12 +112,18 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
   {
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_ARRAY:
-    case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
+
+      break;
+    }
+
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      prop_p = ecma_op_function_object_get_own_property (obj_p, property_name_p);
 
       break;
     }

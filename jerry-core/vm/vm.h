@@ -23,6 +23,8 @@
 extern void vm_init (const vm_instr_t* program_p, bool dump_mem_stats);
 extern void vm_finalize (void);
 extern jerry_completion_code_t vm_run_global (void);
+extern ecma_completion_value_t vm_run_eval (const vm_instr_t *instrs_p,
+                                            bool is_direct);
 extern ecma_completion_value_t vm_loop (vm_frame_ctx_t *frame_ctx_p, vm_run_scope_t *run_scope_p);
 extern ecma_completion_value_t vm_run_from_pos (const vm_instr_t *instrs_p,
                                                 vm_instr_counter_t start_pos,

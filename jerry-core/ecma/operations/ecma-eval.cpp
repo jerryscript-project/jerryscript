@@ -110,63 +110,12 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   {
     JERRY_ASSERT (parse_status == JSP_STATUS_OK);
 
-    vm_instr_counter_t first_instr_index = 0u;
-    bool is_strict_prologue = false;
-    opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (instrs_p,
-                                                                first_instr_index++);
-    if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-    {
-      is_strict_prologue = true;
-    }
-
-    bool is_strict = (is_strict_call || is_strict_prologue);
-
-    ecma_value_t this_binding;
-    ecma_object_t *lex_env_p;
-
-    /* ECMA-262 v5, 10.4.2 */
-    if (is_direct)
-    {
-      this_binding = vm_get_this_binding ();
-      lex_env_p = vm_get_lex_env ();
-    }
-    else
-    {
-      this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
-      lex_env_p = ecma_get_global_environment ();
-    }
-
-    if (is_strict)
-    {
-      ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
-      ecma_deref_object (lex_env_p);
-
-      lex_env_p = strict_lex_env_p;
-    }
-
-    completion = vm_run_from_pos (instrs_p,
-                                  first_instr_index,
-                                  this_binding,
-                                  lex_env_p,
-                                  is_strict,
-                                  true);
-
-    if (ecma_is_completion_value_return (completion))
-    {
-      completion = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_throw (completion));
-    }
+    completion = vm_run_eval (instrs_p, is_direct);
 
     if (!code_contains_functions)
     {
       serializer_remove_instructions (instrs_p);
     }
-
-    ecma_deref_object (lex_env_p);
-    ecma_free_value (this_binding, true);
   }
 
   return completion;

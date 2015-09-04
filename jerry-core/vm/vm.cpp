@@ -438,6 +438,65 @@ vm_run_global (void)
 } /* vm_run_global */
 
 /**
+ * Run specified eval-mode bytecode
+ *
+ * @return completion value
+ */
+ecma_completion_value_t
+vm_run_eval (const vm_instr_t *instrs_p, /**< instructions array */
+             bool is_direct) /**< is eval called directly? */
+{
+  vm_instr_counter_t first_instr_index = 0u;
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (instrs_p,
+                                                              first_instr_index++);
+  bool is_strict = ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT) != 0);
+
+  ecma_value_t this_binding;
+  ecma_object_t *lex_env_p;
+
+  /* ECMA-262 v5, 10.4.2 */
+  if (is_direct)
+  {
+    this_binding = vm_get_this_binding ();
+    lex_env_p = vm_get_lex_env ();
+  }
+  else
+  {
+    this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+    lex_env_p = ecma_get_global_environment ();
+  }
+
+  if (is_strict)
+  {
+    ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
+    ecma_deref_object (lex_env_p);
+
+    lex_env_p = strict_lex_env_p;
+  }
+
+  ecma_completion_value_t completion = vm_run_from_pos (instrs_p,
+                                                        first_instr_index,
+                                                        this_binding,
+                                                        lex_env_p,
+                                                        is_strict,
+                                                        true);
+
+  if (ecma_is_completion_value_return (completion))
+  {
+    completion = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_completion_value_throw (completion));
+  }
+
+  ecma_deref_object (lex_env_p);
+  ecma_free_value (this_binding, true);
+
+  return completion;
+} /* vm_run_eval */
+
+/**
  * Run interpreter loop using specified context
  *
  * Note:

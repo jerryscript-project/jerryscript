@@ -145,8 +145,7 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
   if (unlikely (prop_p == NULL))
   {
-    if (is_builtin
-        && type != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+    if (is_builtin)
     {
       prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
     }

@@ -346,7 +346,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
             case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
-            case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID: /* an integer */
+            case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
             case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
             case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */

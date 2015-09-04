@@ -240,8 +240,8 @@ typedef enum
 
   /** Implementation-defined identifier of built-in routine
       that corresponds to a built-in function object
-      ([[Built-in routine ID]]) */
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID,
+      ([[Built-in routine's description]]) */
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC,
 
   /** Identifier of implementation-defined extension object */
   ECMA_INTERNAL_PROPERTY_EXTENSION_ID,

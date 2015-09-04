@@ -291,43 +291,91 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
 
-  ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (object_p,
-                                                                    ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
-  ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+  const ecma_object_type_t type = ecma_get_object_type (object_p);
 
-  JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
-
-  switch (builtin_id)
+  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
+    ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+
+    bool is_length_property = ecma_compare_ecma_strings (string_p, magic_string_length_p);
+
+    ecma_deref_ecma_string (magic_string_length_p);
+
+    if (is_length_property)
+    {
+      /*
+       * Lazy instantiation of 'length' property
+       *
+       * Note:
+       *      We don't need to mark that the property was already lazy instantiated,
+       *      as it is non-configurable and so can't be deleted
+       */
+
+      ecma_property_t *desc_prop_p = ecma_get_internal_property (object_p,
+                                                               ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
+      uint64_t builtin_routine_desc = desc_prop_p->u.internal_property.value;
+
+      JERRY_STATIC_ASSERT (sizeof (uint8_t) * JERRY_BITSINBYTE == ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
+      uint8_t length_prop_value = (uint8_t) jrt_extract_bit_field (builtin_routine_desc,
+                                                                   ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS,
+                                                                   ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
+
+      ecma_property_t *len_prop_p = ecma_create_named_data_property (object_p,
+                                                                     string_p,
+                                                                     false, false, false);
+
+
+      ecma_number_t *len_p = ecma_alloc_number ();
+      *len_p = length_prop_value;
+
+      ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (len_p));
+
+      JERRY_ASSERT (!ecma_is_property_configurable (len_prop_p));
+      return len_prop_p;
+    }
+
+    return NULL;
+  }
+  else
+  {
+    ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (object_p,
+                                                                      ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+    ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+    JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
+
+    switch (builtin_id)
+    {
 #define BUILTIN(builtin_id, \
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
                 lowercase_name) \
-    case builtin_id: \
-    { \
-      return ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (object_p, \
-                                                                              string_p); \
-    }
+      case builtin_id: \
+      { \
+        return ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (object_p, \
+                                                                                string_p); \
+      }
 #include "ecma-builtins.inc.h"
 
-    case ECMA_BUILTIN_ID__COUNT:
-    {
-      JERRY_UNREACHABLE ();
-    }
+      case ECMA_BUILTIN_ID__COUNT:
+      {
+        JERRY_UNREACHABLE ();
+      }
 
-    default:
-    {
+      default:
+      {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
-      JERRY_UNREACHABLE ();
+        JERRY_UNREACHABLE ();
 #else /* CONFIG_ECMA_COMPACT_PROFILE */
-      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+        JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+      }
     }
-  }
 
-  JERRY_UNREACHABLE ();
+    JERRY_UNREACHABLE ();
+  }
 } /* ecma_builtin_try_to_instantiate_property */
 
 /**
@@ -343,9 +391,8 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
                                                                                   with the routine */
                                                uint16_t routine_id, /**< builtin-wide identifier of the built-in
                                                                          object's routine property */
-                                               ecma_number_t length_prop_num_value) /**< ecma-number - value
-                                                                                         of 'length' property
-                                                                                         of function object to create */
+                                               uint8_t length_prop_value) /**< value of 'length' property
+                                                                               of function object to create */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -363,23 +410,16 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
                                           routine_id,
                                           ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                           ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
-  ecma_property_t *routine_id_prop_p = ecma_create_internal_property (func_obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID);
+  packed_value = jrt_set_bit_field_value (packed_value,
+                                          length_prop_value,
+                                          ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS,
+                                          ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
+
+  ecma_property_t *routine_desc_prop_p = ecma_create_internal_property (func_obj_p,
+                                                                        ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
 
   JERRY_ASSERT ((uint32_t) packed_value == packed_value);
-  routine_id_prop_p->u.internal_property.value = (uint32_t) packed_value;
-
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_property_t *len_prop_p = ecma_create_named_data_property (func_obj_p,
-                                                                 magic_string_length_p,
-                                                                 false, false, false);
-
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  ecma_number_t* len_p = ecma_alloc_number ();
-  *len_p = length_prop_num_value;
-
-  ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (len_p));
+  routine_desc_prop_p->u.internal_property.value = (uint32_t) packed_value;
 
   return func_obj_p;
 } /* ecma_builtin_make_function_object_for_routine */
@@ -414,16 +454,16 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 
   if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
-    ecma_property_t *id_prop_p = ecma_get_internal_property (obj_p,
-                                                             ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_ID);
-    uint64_t packed_built_in_and_routine_id = id_prop_p->u.internal_property.value;
+    ecma_property_t *desc_prop_p = ecma_get_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
+    uint64_t builtin_routine_desc = desc_prop_p->u.internal_property.value;
 
-    uint64_t built_in_id_field = jrt_extract_bit_field (packed_built_in_and_routine_id,
+    uint64_t built_in_id_field = jrt_extract_bit_field (builtin_routine_desc,
                                                         ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS,
                                                         ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH);
     JERRY_ASSERT (built_in_id_field < ECMA_BUILTIN_ID__COUNT);
 
-    uint64_t routine_id_field = jrt_extract_bit_field (packed_built_in_and_routine_id,
+    uint64_t routine_id_field = jrt_extract_bit_field (builtin_routine_desc,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
     JERRY_ASSERT ((uint16_t) routine_id_field == routine_id_field);

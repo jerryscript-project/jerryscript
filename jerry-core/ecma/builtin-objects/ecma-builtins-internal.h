@@ -24,32 +24,44 @@
 #include "ecma-globals.h"
 
 /**
- * Position of built-in object's id field in [[Built-in routine ID]] internal property
+ * Position of built-in object's id field in [[Built-in routine's description]] internal property
  */
 #define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS   (0)
 
 /**
- * Width of built-in object's id field in [[Built-in routine ID]] internal property
+ * Width of built-in object's id field in [[Built-in routine's description]] internal property
  */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH (16)
+#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH (8)
 
 /**
- * Position of built-in routine's id field in [[Built-in routine ID]] internal property
+ * Position of built-in routine's id field in [[Built-in routine's description]] internal property
  */
 #define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS \
   (ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS + \
    ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH)
 
 /**
- * Width of built-in routine's id field in [[Built-in routine ID]] internal property
+ * Width of built-in routine's id field in [[Built-in routine's description]] internal property
  */
 #define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH (16)
+
+/**
+ * Position of built-in routine's length field in [[Built-in routine's description]] internal property
+ */
+#define ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS \
+  (ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS + \
+   ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH)
+
+/**
+ * Width of built-in routine's id field in [[Built-in routine's description]] internal property
+ */
+#define ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH (8)
 
 /* ecma-builtins.c */
 extern ecma_object_t*
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
                                                uint16_t routine_id,
-                                               ecma_number_t length_prop_num_value);
+                                               uint8_t length_prop_num_value);
 extern int32_t
 ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t ids[],
                                                       ecma_length_t array_length,

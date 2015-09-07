@@ -97,7 +97,7 @@ export TARGET_RELEASE_MODES = release
 
 export TARGET_PC_SYSTEMS = linux
 
-export TARGET_PC_MODS = cp cp_minimal mem_stats
+export TARGET_PC_MODS = cp cp_minimal mem_stats mem_stress_test
 
 export TARGET_MCU_MODS = cp cp_minimal
 

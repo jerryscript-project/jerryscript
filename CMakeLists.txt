@@ -154,10 +154,14 @@ project (Jerry CXX C ASM)
  # Memory statistics
   set(MODIFIER_SUFFIX_MEMORY_STATISTICS -mem_stats)
 
+ # Memory management stress-test mode
+  set(MODIFIER_SUFFIX_MEM_STRESS_TEST -mem_stress_test)
+
 # Modifier lists
  # Linux
   set(MODIFIERS_LISTS_LINUX
      "FULL_PROFILE"
+     "FULL_PROFILE MEM_STRESS_TEST"
      "COMPACT_PROFILE"
      "COMPACT_PROFILE_MINIMAL"
      "FULL_PROFILE MEMORY_STATISTICS"

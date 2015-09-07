@@ -489,6 +489,10 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
                                                                                  *   (one-chunked or general) */
                                            mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
+#ifdef MEM_GC_BEFORE_EACH_ALLOC
+  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+#endif /* MEM_GC_BEFORE_EACH_ALLOC */
+
   size_t chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
   if ((mem_heap_allocated_chunks + chunks) * MEM_HEAP_CHUNK_SIZE >= mem_heap_limit)
   {

@@ -24,13 +24,14 @@
  * Memory pool manager implementation
  */
 
-#define JERRY_MEM_POOL_INTERNAL
-
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "mem-allocator.h"
 #include "mem-heap.h"
 #include "mem-poolman.h"
+
+#define MEM_ALLOCATOR_INTERNAL
+#include "mem-allocator-internal.h"
 
 /**
  * Size of a pool
@@ -521,6 +522,10 @@ mem_pools_alloc_longpath (void)
 uint8_t* __attr_always_inline___
 mem_pools_alloc (void)
 {
+#ifdef MEM_GC_BEFORE_EACH_ALLOC
+  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+#endif /* MEM_GC_BEFORE_EACH_ALLOC */
+
   mem_check_pools ();
 
   do

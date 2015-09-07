@@ -190,43 +190,46 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
     lit_utf8_size_t str_size = ecma_string_get_size (arguments_str_p);
     strings_buffer_size = str_size;
 
-    MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
-    JERRY_ASSERT (sz >= 0);
-
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
-    ecma_length_t last_separator = lit_utf8_iterator_get_index (&iter);
-    ecma_length_t end_position;
-    ecma_string_t *param_str_p;
-
-    while (!lit_utf8_iterator_is_eos (&iter))
+    if (str_size != 0)
     {
-      ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+      MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
 
-      if (current_char == ',')
+      ssize_t sz = ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
+      JERRY_ASSERT (sz >= 0);
+
+      lit_utf8_iterator_t iter = lit_utf8_iterator_create (start_p, str_size);
+      ecma_length_t last_separator = lit_utf8_iterator_get_index (&iter);
+      ecma_length_t end_position;
+      ecma_string_t *param_str_p;
+
+      while (!lit_utf8_iterator_is_eos (&iter))
       {
-        lit_utf8_iterator_decr (&iter);
-        end_position = lit_utf8_iterator_get_index (&iter);
+        ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
 
-        param_str_p = ecma_string_substr (arguments_str_p, last_separator,  end_position);
-        string_params_p[params_count] = ecma_string_trim (param_str_p);
-        ecma_deref_ecma_string (param_str_p);
+        if (current_char == ',')
+        {
+          lit_utf8_iterator_decr (&iter);
+          end_position = lit_utf8_iterator_get_index (&iter);
 
-        lit_utf8_iterator_incr (&iter);
-        last_separator = lit_utf8_iterator_get_index (&iter);
+          param_str_p = ecma_string_substr (arguments_str_p, last_separator,  end_position);
+          string_params_p[params_count] = ecma_string_trim (param_str_p);
+          ecma_deref_ecma_string (param_str_p);
 
-        params_count++;
+          lit_utf8_iterator_incr (&iter);
+          last_separator = lit_utf8_iterator_get_index (&iter);
+
+          params_count++;
+        }
       }
+
+      end_position = lit_utf8_string_length (start_p, str_size);
+      param_str_p = ecma_string_substr (arguments_str_p, last_separator, end_position);
+      string_params_p[params_count] = ecma_string_trim (param_str_p);
+      ecma_deref_ecma_string (param_str_p);
+      params_count++;
+
+      MEM_FINALIZE_LOCAL_ARRAY (start_p);
     }
-
-    end_position = lit_utf8_string_length (start_p, str_size);
-    param_str_p = ecma_string_substr (arguments_str_p, last_separator, end_position);
-    string_params_p[params_count] = ecma_string_trim (param_str_p);
-    ecma_deref_ecma_string (param_str_p);
-    params_count++;
-
-    MEM_FINALIZE_LOCAL_ARRAY (start_p);
 
     ECMA_TRY_CATCH (str_arg_value,
                     ecma_op_to_string (arguments_list_p[arguments_list_len - 1]),

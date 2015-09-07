@@ -133,6 +133,7 @@ public:
   bool is_equal (lit_charset_record_t *);
   bool is_equal_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 
+  uint32_t dump_for_snapshot (uint8_t *buffer_p, size_t buffer_size, size_t *in_out_buffer_offset_p);
 private:
   /**
    * Set record's size (the value of the 'length' field in the header)
@@ -244,6 +245,25 @@ public:
     return (magic_string_id_t) id;
   } /* get_magic_str_id */
 
+  /**
+   * Dump magic string record to specified snapshot buffer
+   *
+   * @return number of bytes dumped,
+   *         or 0 - upon dump failure
+   */
+  template <typename magic_string_id_t>
+  uint32_t dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to */
+                              size_t buffer_size, /**< buffer size */
+                              size_t *in_out_buffer_offset_p) const /**< in-out: buffer write offset */
+  {
+    magic_string_id_t id = get_magic_str_id<magic_string_id_t> ();
+    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, id))
+    {
+      return 0;
+    }
+
+    return ((uint32_t) sizeof (id));
+  } /* dump_for_snapshot */
 private:
   /**
    * Set record's size (the value of the 'length' field in the header)
@@ -377,6 +397,9 @@ public:
     return it.read<ecma_number_t> ();
   } /* get_number */
 
+  uint32_t dump_for_snapshot (uint8_t *buffer_p,
+                              size_t buffer_size,
+                              size_t *in_out_buffer_offset_p) const;
 private:
   /**
    * Set record's size (the value of the 'length' field in the header)
@@ -410,16 +433,22 @@ class lit_literal_storage_t : public rcs_recordset_t
 public:
   enum
   {
-    LIT_STR = _first_type_id,
+    LIT_TYPE_FIRST = _first_type_id,
+
+    LIT_STR = LIT_TYPE_FIRST,
     LIT_MAGIC_STR,
     LIT_MAGIC_STR_EX,
-    LIT_NUMBER
+    LIT_NUMBER,
+
+    LIT_TYPE_LAST = LIT_NUMBER
   };
 
   lit_charset_record_t *create_charset_record (const lit_utf8_byte_t *, lit_utf8_size_t);
   lit_magic_record_t *create_magic_record (lit_magic_string_id_t);
   lit_magic_record_t *create_magic_record_ex (lit_magic_string_ex_id_t);
   lit_number_record_t *create_number_record (ecma_number_t);
+
+  uint32_t count_literals (void);
 
   void dump ();
 
@@ -433,5 +462,30 @@ private:
 #define LIT_MAGIC_STR_T (lit_literal_storage_t::LIT_MAGIC_STR)
 #define LIT_MAGIC_STR_EX_T (lit_literal_storage_t::LIT_MAGIC_STR_EX)
 #define LIT_NUMBER_T (lit_literal_storage_t::LIT_NUMBER)
+
+#ifdef JERRY_ENABLE_SNAPSHOT
+/**
+ * Map from literal identifiers to the literal offsets in snapshot (or reverse)
+ */
+typedef struct
+{
+  lit_cpointer_t literal_id; /**< identifier of literal in literal storage */
+  uint32_t literal_offset; /**< offset of the literal in snapshot */
+} lit_mem_to_snapshot_id_map_entry_t;
+
+extern bool
+lit_dump_literals_for_snapshot (uint8_t *buffer_p,
+                                size_t buffer_size,
+                                size_t *in_out_buffer_offset_p,
+                                lit_mem_to_snapshot_id_map_entry_t **out_map_p,
+                                uint32_t *out_map_num_p,
+                                uint32_t *out_lit_table_size_p);
+extern bool lit_load_literals_from_snapshot (const uint8_t *lit_table_p,
+                                             uint32_t lit_table_size,
+                                             lit_mem_to_snapshot_id_map_entry_t **out_map_p,
+                                             uint32_t *out_map_num_p,
+                                             bool is_copy);
+#endif /* JERRY_ENABLE_SNAPSHOT */
+
 
 #endif /* LIT_LITERAL_STORAGE_H */

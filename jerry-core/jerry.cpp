@@ -269,6 +269,48 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
   }
 } /* jerry_api_convert_api_value_to_ecma_value */
 
+/**
+ * Convert completion of 'eval' to API value and completion code
+ *
+ * Note:
+ *      if the output value contains string / object, it should be freed
+ *      with jerry_api_release_string / jerry_api_release_object,
+ *      just when it becomes unnecessary.
+ *
+ * @return completion code
+ */
+static jerry_completion_code_t
+jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< out: api value */
+                                             ecma_completion_value_t completion) /**< completion of 'eval'-mode
+                                                                                  *   code execution */
+{
+  jerry_completion_code_t ret_code;
+
+  if (ecma_is_completion_value_normal (completion))
+  {
+    ret_code = JERRY_COMPLETION_CODE_OK;
+
+    jerry_api_convert_ecma_value_to_api_value (retval_p,
+                                               ecma_get_completion_value_value (completion));
+  }
+  else
+  {
+    jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+    if (ecma_is_completion_value_throw (completion))
+    {
+      ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+
+      ret_code = JERRY_COMPLETION_CODE_OK;
+    }
+  }
+
+  return ret_code;
+} /* jerry_api_convert_eval_completion_to_retval */
 
 /**
  * @}
@@ -1268,28 +1310,7 @@ jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
                                                                   is_direct,
                                                                   is_strict);
 
-  if (ecma_is_completion_value_normal (completion))
-  {
-    status = JERRY_COMPLETION_CODE_OK;
-
-    jerry_api_convert_ecma_value_to_api_value (retval_p,
-                                               ecma_get_completion_value_value (completion));
-  }
-  else
-  {
-    jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
-
-    if (ecma_is_completion_value_throw (completion))
-    {
-      status = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_completion_value_empty (completion));
-
-      status = JERRY_COMPLETION_CODE_OK;
-    }
-  }
+  status = jerry_api_convert_eval_completion_to_retval (retval_p, completion);
 
   ecma_free_completion_value (completion);
 
@@ -1539,3 +1560,239 @@ jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
 {
   lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_external_magic_strings */
+
+/**
+ * Generate snapshot from specified source
+ *
+ * @return size of snapshot, if it was generated succesfully
+ *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
+ *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT),
+ *         0 - otherwise.
+ */
+size_t
+jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script source */
+                               size_t source_size, /**< script source size */
+                               bool is_for_global, /**< snapshot would be executed as global (true)
+                                                    *   or eval (false) */
+                               uint8_t *buffer_p, /**< buffer to dump snapshot to */
+                               size_t buffer_size) /**< the buffer's size */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT
+  jsp_status_t parse_status;
+  const bytecode_data_header_t *bytecode_data_p;
+
+  if (is_for_global)
+  {
+    parse_status = parser_parse_script (source_p, source_size, &bytecode_data_p);
+  }
+  else
+  {
+    bool code_contains_functions;
+
+    parse_status = parser_parse_eval (source_p,
+                                      source_size,
+                                      false,
+                                      &bytecode_data_p,
+                                      &code_contains_functions);
+  }
+
+  if (parse_status != JSP_STATUS_OK)
+  {
+    return 0;
+  }
+
+  size_t buffer_write_offset = 0;
+
+  jerry_snapshot_header_t header;
+  header.is_run_global = is_for_global;
+
+  uint64_t version = JERRY_SNAPSHOT_VERSION;
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      &buffer_write_offset,
+                                      version))
+  {
+    return 0;
+  }
+
+  size_t header_offset = buffer_write_offset;
+
+  if (buffer_write_offset + sizeof (jerry_snapshot_header_t) > buffer_size)
+  {
+    return 0;
+  }
+  buffer_write_offset += sizeof (jerry_snapshot_header_t);
+
+  lit_mem_to_snapshot_id_map_entry_t* lit_map_p = NULL;
+  uint32_t literals_num;
+
+  if (!lit_dump_literals_for_snapshot (buffer_p,
+                                       buffer_size,
+                                       &buffer_write_offset,
+                                       &lit_map_p,
+                                       &literals_num,
+                                       &header.lit_table_size))
+  {
+    JERRY_ASSERT (lit_map_p == NULL);
+    return 0;
+  }
+
+  size_t bytecode_offset = sizeof (version) + sizeof (jerry_snapshot_header_t) + header.lit_table_size;
+  JERRY_ASSERT (JERRY_ALIGNUP (bytecode_offset, MEM_ALIGNMENT) == bytecode_offset);
+
+  bool is_ok = serializer_dump_bytecode_with_idx_map (buffer_p,
+                                                      buffer_size,
+                                                      &buffer_write_offset,
+                                                      bytecode_data_p,
+                                                      lit_map_p,
+                                                      literals_num,
+                                                      &header.bytecode_size,
+                                                      &header.idx_to_lit_map_size);
+
+  if (lit_map_p != NULL)
+  {
+    mem_heap_free_block (lit_map_p);
+  }
+
+  if (!is_ok)
+  {
+    return 0;
+  }
+
+  is_ok = jrt_write_to_buffer_by_offset (buffer_p, buffer_size, &header_offset, header);
+  JERRY_ASSERT (is_ok && header_offset < buffer_write_offset);
+
+  return buffer_write_offset;
+#else /* JERRY_ENABLE_SNAPSHOT */
+  (void) source_p;
+  (void) source_size;
+  (void) is_for_global;
+  (void) buffer_p;
+  (void) buffer_size;
+
+  return 0;
+#endif /* !JERRY_ENABLE_SNAPSHOT */
+} /* jerry_parse_and_save_snapshot */
+
+/**
+ * Execute snapshot from specified buffer
+ *
+ * @return completion code
+ */
+jerry_completion_code_t
+jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
+                     size_t snapshot_size, /**< size of snapshot */
+                     bool is_copy, /**< flag, indicating whether the passed snapshot
+                                    *   buffer should be copied to engine's memory,
+                                    *   so engine should not reference the buffer
+                                    *   after the function returns (in the case, the passed
+                                    *   buffer could be freed after the call);
+                                    *   otherwise (if flag not set) - the buffer could be freed
+                                    *   only after engine stops (i.e. after call to jerry_cleanup). */
+                     jerry_api_value_t *retval_p) /**< out: returned value (ECMA-262 'undefined' if code is executed
+                                                   *        as global scope code) */
+{
+  jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+#ifdef JERRY_ENABLE_SNAPSHOT
+  JERRY_ASSERT (snapshot_p != NULL);
+
+  const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
+  size_t snapshot_read = 0;
+  uint64_t version;
+
+  if (!jrt_read_from_buffer_by_offset (snapshot_data_p,
+                                       snapshot_size,
+                                       &snapshot_read,
+                                       &version))
+  {
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  if (version != JERRY_SNAPSHOT_VERSION)
+  {
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
+  }
+
+  const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) (snapshot_data_p + snapshot_read);
+  if (snapshot_read + sizeof (jerry_snapshot_header_t) > snapshot_size)
+  {
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  snapshot_read += sizeof (jerry_snapshot_header_t);
+
+  if (snapshot_read + header_p->lit_table_size > snapshot_size)
+  {
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
+  uint32_t literals_num;
+
+  if (!lit_load_literals_from_snapshot (snapshot_data_p + snapshot_read,
+                                        header_p->lit_table_size,
+                                        &lit_map_p,
+                                        &literals_num,
+                                        is_copy))
+  {
+    JERRY_ASSERT (lit_map_p == NULL);
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  snapshot_read += header_p->lit_table_size;
+
+  if (snapshot_read + header_p->bytecode_size + header_p->idx_to_lit_map_size > snapshot_size)
+  {
+    mem_heap_free_block (lit_map_p);
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  const bytecode_data_header_t *bytecode_data_p;
+  bytecode_data_p = serializer_load_bytecode_with_idx_map (snapshot_data_p + snapshot_read,
+                                                           header_p->bytecode_size,
+                                                           header_p->idx_to_lit_map_size,
+                                                           lit_map_p,
+                                                           literals_num,
+                                                           is_copy);
+
+  if (lit_map_p != NULL)
+  {
+    mem_heap_free_block (lit_map_p);
+  }
+
+  if (bytecode_data_p == NULL)
+  {
+    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
+  }
+
+  jerry_completion_code_t ret_code;
+
+  if (header_p->is_run_global)
+  {
+    vm_init (bytecode_data_p, false);
+
+    ret_code = vm_run_global ();
+
+    vm_finalize ();
+  }
+  else
+  {
+    /* vm should be already initialized */
+    ecma_completion_value_t completion = vm_run_eval (bytecode_data_p, false);
+
+    ret_code = jerry_api_convert_eval_completion_to_retval (retval_p, completion);
+
+    ecma_free_completion_value (completion);
+  }
+
+  return ret_code;
+#else /* JERRY_ENABLE_SNAPSHOT */
+  (void) snapshot_p;
+  (void) snapshot_size;
+  (void) is_copy;
+  (void) retval_p;
+
+  return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
+#endif /* !JERRY_ENABLE_SNAPSHOT */
+} /* jerry_exec_snapshot */

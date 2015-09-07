@@ -446,7 +446,7 @@ vm_run_global (void)
  */
 ecma_completion_value_t
 vm_run_eval (const bytecode_data_header_t *bytecode_data_p, /**< byte-code data header */
-             bool is_direct) /**< is eval called directly? */
+             bool is_direct) /**< is eval called in direct mode? */
 {
   vm_instr_counter_t first_instr_index = 0u;
   opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_data_p->instrs_p,

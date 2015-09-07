@@ -36,8 +36,10 @@
  */
 typedef enum
 {
-  JERRY_COMPLETION_CODE_OK                  = 0, /**< successful completion */
-  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION = 1, /**< exception occured and it was not handled */
+  JERRY_COMPLETION_CODE_OK                       = 0, /**< successful completion */
+  JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION      = 1, /**< exception occured and it was not handled */
+  JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION = 2, /**< snapshot version mismatch */
+  JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT  = 3, /**< snapshot format is not valid */
 } jerry_completion_code_t;
 
 /**
@@ -255,6 +257,19 @@ extern EXTERN_C
 void jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
                                             uint32_t count,
                                             const jerry_api_length_t* str_lengths);
+
+extern EXTERN_C
+size_t jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p,
+                                      size_t source_size,
+                                      bool is_for_global_or_eval,
+                                      uint8_t *buffer_p,
+                                      size_t buffer_size);
+
+extern EXTERN_C
+jerry_completion_code_t jerry_exec_snapshot (const void *snapshot_p,
+                                             size_t snapshot_size,
+                                             bool is_copy,
+                                             jerry_api_value_t *retval_p);
 
 /**
  * @}

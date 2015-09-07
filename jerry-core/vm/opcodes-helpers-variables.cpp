@@ -14,7 +14,6 @@
  */
 
 #include "opcodes-ecma-support.h"
-#include "opcodes.h"
 
 #ifndef JERRY_NDEBUG
 /**

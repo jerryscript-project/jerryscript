@@ -44,4 +44,26 @@ void serializer_rewrite_op_meta (vm_instr_counter_t, op_meta);
 void serializer_remove_bytecode_data (const bytecode_data_header_t *);
 void serializer_free (void);
 
-#endif // SERIALIZER_H
+#ifdef JERRY_ENABLE_SNAPSHOT
+/*
+ * Snapshot-related
+ */
+bool serializer_dump_bytecode_with_idx_map (uint8_t *buffer_p,
+                                            size_t buffer_size,
+                                            size_t *in_out_buffer_offset_p,
+                                            const bytecode_data_header_t *bytecode_data_p,
+                                            const lit_mem_to_snapshot_id_map_entry_t *lit_map_p,
+                                            uint32_t literals_num,
+                                            uint32_t *out_bytecode_size_p,
+                                            uint32_t *out_idx_to_lit_map_size_p);
+
+const bytecode_data_header_t *
+serializer_load_bytecode_with_idx_map (const uint8_t *bytecode_and_idx_map_p,
+                                       uint32_t bytecode_size,
+                                       uint32_t idx_to_lit_map_size,
+                                       const lit_mem_to_snapshot_id_map_entry_t *lit_map_p,
+                                       uint32_t literals_num,
+                                       bool is_copy);
+#endif /* JERRY_ENABLE_SNAPSHOT */
+
+#endif /* SERIALIZER_H */

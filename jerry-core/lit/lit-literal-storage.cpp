@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "lit-literal-storage.h"
 #include "ecma-helpers.h"
+#include "jrt.h"
+#include "lit-literal-storage.h"
 #include "lit-literal.h"
 #include "lit-magic-strings.h"
 
@@ -220,6 +221,63 @@ lit_charset_record_t::is_equal_utf8_string (const lit_utf8_byte_t *str, /**< str
 } /* lit_charset_record_t::equal_non_zt */
 
 /**
+ * Dump charset record to specified snapshot buffer
+ *
+ * @return number of bytes dumped,
+ *         or 0 - upon dump failure
+ */
+uint32_t
+lit_charset_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to */
+                                         size_t buffer_size, /**< buffer size */
+                                         size_t *in_out_buffer_offset_p) /**< in-out: buffer write offset */
+{
+  lit_utf8_size_t length = get_length ();
+  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, length))
+  {
+    return 0;
+  }
+
+  rcs_record_iterator_t it_this (&lit_storage, this);
+
+  it_this.skip (header_size ());
+
+  for (lit_utf8_size_t i = 0; i < length; i++)
+  {
+    lit_utf8_byte_t next_byte = it_this.read<lit_utf8_byte_t> ();
+    it_this.skip<lit_utf8_byte_t> ();
+
+    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, next_byte))
+    {
+      return 0;
+    }
+  }
+
+  return ((uint32_t) sizeof (length) + length * (uint32_t) sizeof (lit_utf8_byte_t));
+} /* lit_charset_record_t::dump_for_snapshot */
+
+/**
+ * Dump number record to specified snapshot buffer
+ *
+ * @return number of bytes dumped,
+ *         or 0 - upon dump failure
+ */
+uint32_t
+lit_number_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to */
+                                        size_t buffer_size, /**< buffer size */
+                                        size_t *in_out_buffer_offset_p) const /**< in-out: buffer write offset */
+{
+  /* dumping as double (not ecma_number_t), because ecma_number_t can be float or double,
+   * depending on engine compile-time configuration */
+  double num = get_number ();
+  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, num))
+  {
+    return 0;
+  }
+
+  return ((uint32_t) sizeof (num));
+} /* lit_number_record_t::dump_for_snapshot */
+
+/**
  * Create charset record in the literal storage
  *
  * @return  pointer to the created record
@@ -284,6 +342,29 @@ lit_literal_storage_t::create_number_record (ecma_number_t num) /**< number */
 
   return ret;
 } /* lit_literal_storage_t::create_number_record */
+
+/**
+ * Count literal records in the storage
+ *
+ * @return number of literals
+ */
+uint32_t
+lit_literal_storage_t::count_literals (void)
+{
+  uint32_t num = 0;
+
+  for (literal_t lit = lit_storage.get_first (); lit != NULL; lit = lit_storage.get_next (lit))
+  {
+    rcs_record_t::type_t type = lit->get_type ();
+
+    if (type >= _first_type_id)
+    {
+      num++;
+    }
+  }
+
+  return num;
+} /* lit_literal_storage_t::count_literals */
 
 /**
  * Dump the contents of the literal storage
@@ -460,6 +541,317 @@ lit_literal_storage_t::get_record_size (rcs_record_t* rec_p) /**< pointer to a r
   }
 } /* lit_literal_storage_t::get_record_size */
 
+#ifdef JERRY_ENABLE_SNAPSHOT
+/**
+ * Dump literals to specified snapshot buffer
+ *
+ * @return true, if dump was performed successfully (i.e. buffer size is sufficient),
+ *         false - otherwise.
+ */
+bool
+lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer */
+                                size_t buffer_size, /**< size of the buffer */
+                                size_t *in_out_buffer_offset_p, /**< in-out: write position in the buffer */
+                                lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< out: map from literal identifiers
+                                                                                 *        to the literal offsets
+                                                                                 *        in snapshot */
+
+                                uint32_t *out_map_num_p, /**< out: number of literals */
+                                uint32_t *out_lit_table_size_p) /**< out: number of bytes, dumped to snapshot buffer */
+{
+  uint32_t literals_num = lit_storage.count_literals ();
+  uint32_t lit_table_size = 0;
+
+  *out_map_p = NULL;
+  *out_map_num_p = 0;
+  *out_lit_table_size_p = 0;
+
+  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, literals_num))
+  {
+    return false;
+  }
+  lit_table_size += (uint32_t) sizeof (literals_num);
+
+  if (literals_num != 0)
+  {
+    bool is_ok = true;
+
+    size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
+    lit_mem_to_snapshot_id_map_entry_t *id_map_p;
+    id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block (id_map_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+    uint32_t literal_index = 0;
+
+    for (literal_t lit = lit_storage.get_first ();
+         lit != NULL;
+         lit = lit_storage.get_next (lit))
+    {
+      rcs_record_t::type_t type = lit->get_type ();
+
+      if (!(type >= lit_literal_storage_t::LIT_TYPE_FIRST
+            && type <= lit_literal_storage_t::LIT_TYPE_LAST))
+      {
+        continue;
+      }
+
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, type))
+      {
+        is_ok = false;
+        break;
+      }
+
+      uint32_t sz;
+
+      if (type == LIT_STR_T)
+      {
+        lit_charset_record_t *rec_p = static_cast<lit_charset_record_t *> (lit);
+
+        sz = rec_p->dump_for_snapshot (buffer_p, buffer_size, in_out_buffer_offset_p);
+      }
+      else if (type == LIT_MAGIC_STR_T
+               || type == LIT_MAGIC_STR_EX_T)
+      {
+        lit_magic_record_t *rec_p = static_cast<lit_magic_record_t *> (lit);
+
+        if (type == LIT_MAGIC_STR_T)
+        {
+          sz = rec_p->dump_for_snapshot<lit_magic_string_id_t> (buffer_p, buffer_size, in_out_buffer_offset_p);
+        }
+        else
+        {
+          JERRY_ASSERT (type == LIT_MAGIC_STR_EX_T);
+
+          sz = rec_p->dump_for_snapshot<lit_magic_string_ex_id_t> (buffer_p, buffer_size, in_out_buffer_offset_p);
+        }
+      }
+      else
+      {
+        JERRY_ASSERT (type == LIT_NUMBER_T);
+
+        lit_number_record_t *rec_p = static_cast<lit_number_record_t *> (lit);
+
+        sz = rec_p->dump_for_snapshot (buffer_p, buffer_size, in_out_buffer_offset_p);
+      }
+
+      if (sz == 0)
+      {
+        /* write failed */
+        is_ok = false;
+        break;
+      }
+      else
+      {
+        lit_cpointer_t lit_cp = lit_cpointer_t::compress (lit);
+        id_map_p[literal_index].literal_id = lit_cp;
+        id_map_p[literal_index].literal_offset = lit_table_size;
+
+        lit_table_size += (uint32_t) sizeof (type);
+        lit_table_size += sz;
+      }
+
+      literal_index++;
+    }
+
+    if (!is_ok)
+    {
+      mem_heap_free_block (id_map_p);
+
+      return false;
+    }
+    else
+    {
+      JERRY_ASSERT (literal_index == literals_num);
+
+      *out_map_p = id_map_p;
+    }
+  }
+
+  uint32_t aligned_size = JERRY_ALIGNUP (lit_table_size, MEM_ALIGNMENT);
+
+  if (aligned_size != lit_table_size)
+  {
+    JERRY_ASSERT (aligned_size > lit_table_size);
+
+    uint8_t padding = 0;
+    uint32_t padding_bytes_num = (uint32_t) (aligned_size - lit_table_size);
+
+    for (uint32_t i = 0; i < padding_bytes_num; i++)
+    {
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, padding))
+      {
+        return false;
+      }
+    }
+  }
+
+  *out_map_num_p = literals_num;
+  *out_lit_table_size_p = aligned_size;
+
+  return true;
+} /* lit_dump_literals_for_snapshot */
+
+/**
+ * Load literals from snapshot
+ *
+ * @return true, if load was performed successfully (i.e. literals dump in the snapshot is consistent),
+ *         false - otherwise (i.e. snapshot is incorrect).
+ */
+bool
+lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with literal table in snapshot */
+                                 uint32_t lit_table_size, /**< size of literal table in snapshot */
+                                 lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< out: map from literal offsets
+                                                                                  *   in snapshot to identifiers
+                                                                                  *   of loaded literals in literal
+                                                                                  *   storage */
+                                 uint32_t *out_map_num_p, /**< out: literals number */
+                                 bool is_copy) /** flag, indicating whether the passed in-snapshot data
+                                                *  should be copied to engine's memory (true),
+                                                *  or it can be referenced until engine is stopped
+                                                *  (i.e. until call to jerry_cleanup) */
+{
+  /* currently, always performing literals copy */
+  (void) is_copy;
+
+  *out_map_p = NULL;
+  *out_map_num_p = 0;
+
+  size_t lit_table_read = 0;
+
+  uint32_t literals_num;
+  if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                       lit_table_size,
+                                       &lit_table_read,
+                                       &literals_num))
+  {
+    return false;
+  }
+
+  if (literals_num == 0)
+  {
+    return true;
+  }
+
+  size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
+  lit_mem_to_snapshot_id_map_entry_t *id_map_p;
+  id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block (id_map_size, MEM_HEAP_ALLOC_SHORT_TERM);
+
+  bool is_ok = true;
+
+  for (uint32_t lit_index = 0; lit_index < literals_num; lit_index++)
+  {
+    uint32_t offset = (uint32_t) lit_table_read;
+    JERRY_ASSERT (offset == lit_table_read);
+
+    rcs_record_t::type_t type;
+    if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                         lit_table_size,
+                                         &lit_table_read,
+                                         &type))
+    {
+      is_ok = false;
+      break;
+    }
+
+    literal_t lit;
+
+    if (type == LIT_STR_T)
+    {
+      lit_utf8_size_t length;
+      if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                           lit_table_size,
+                                           &lit_table_read,
+                                           &length)
+          || (lit_table_read + length > lit_table_size))
+      {
+        is_ok = false;
+        break;
+      }
+
+      lit = lit_find_or_create_literal_from_utf8_string (lit_table_p + lit_table_read, length);
+      lit_table_read += length;
+    }
+    else if (type == LIT_MAGIC_STR_T)
+    {
+      lit_magic_string_id_t id;
+      if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                           lit_table_size,
+                                           &lit_table_read,
+                                           &id))
+      {
+        is_ok = false;
+        break;
+      }
+
+      const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (id);
+      lit_utf8_size_t magic_str_sz = lit_get_magic_string_size (id);
+
+      /*
+       * TODO:
+       *      Consider searching literal storage by magic string identifier instead of by its value
+       */
+      lit = lit_find_or_create_literal_from_utf8_string (magic_str_p, magic_str_sz);
+    }
+    else if (type == LIT_MAGIC_STR_EX_T)
+    {
+      lit_magic_string_ex_id_t id;
+      if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                           lit_table_size,
+                                           &lit_table_read,
+                                           &id))
+      {
+        is_ok = false;
+        break;
+      }
+
+      const lit_utf8_byte_t *magic_str_ex_p = lit_get_magic_string_ex_utf8 (id);
+      lit_utf8_size_t magic_str_ex_sz = lit_get_magic_string_ex_size (id);
+
+      /*
+       * TODO:
+       *      Consider searching literal storage by magic string identifier instead of by its value
+       */
+      lit = lit_find_or_create_literal_from_utf8_string (magic_str_ex_p, magic_str_ex_sz);
+    }
+    else if (type == LIT_NUMBER_T)
+    {
+      double num;
+      if (!jrt_read_from_buffer_by_offset (lit_table_p,
+                                           lit_table_size,
+                                           &lit_table_read,
+                                           &num))
+      {
+        is_ok = false;
+        break;
+      }
+
+      lit = lit_find_or_create_literal_from_num ((ecma_number_t) num);
+    }
+    else
+    {
+      is_ok = false;
+      break;
+    }
+
+    id_map_p[lit_index].literal_offset = offset;
+    id_map_p[lit_index].literal_id = lit_cpointer_t::compress (lit);
+  }
+
+  if (is_ok)
+  {
+    *out_map_p = id_map_p;
+    *out_map_num_p = literals_num;
+
+    return true;
+  }
+  else
+  {
+    mem_heap_free_block (id_map_p);
+
+    return false;
+  }
+} /* lit_load_literals_from_snapshot */
+#endif /* JERRY_ENABLE_SNAPSHOT */
+
 template void rcs_record_iterator_t::skip<uint8_t> ();
 template void rcs_record_iterator_t::skip<uint16_t> ();
 template void rcs_record_iterator_t::skip<uint32_t> ();
@@ -477,6 +869,8 @@ template lit_magic_string_id_t lit_magic_record_t::get_magic_str_id<lit_magic_st
 template lit_magic_string_ex_id_t lit_magic_record_t::get_magic_str_id<lit_magic_string_ex_id_t>() const;
 template void lit_magic_record_t::set_magic_str_id<lit_magic_string_id_t>(lit_magic_string_id_t);
 template void lit_magic_record_t::set_magic_str_id<lit_magic_string_ex_id_t>(lit_magic_string_ex_id_t);
+template uint32_t lit_magic_record_t::dump_for_snapshot<lit_magic_string_id_t>(uint8_t *, size_t, size_t *) const;
+template uint32_t lit_magic_record_t::dump_for_snapshot<lit_magic_string_ex_id_t>(uint8_t *, size_t, size_t *) const;
 
 template lit_charset_record_t *rcs_recordset_t::alloc_record<lit_charset_record_t> (rcs_record_t::type_t type,
                                                                                     size_t size);

@@ -16,7 +16,6 @@
 #ifndef VM_H
 #define VM_H
 
-#include "bytecode-data.h"
 #include "ecma-globals.h"
 #include "jrt.h"
 #include "opcodes.h"

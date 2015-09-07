@@ -26,9 +26,9 @@
 #define JERRY_MAX_COMMAND_LINE_ARGS (64)
 
 /**
- * Maximum size of source code buffer
+ * Maximum size of source code / snapshots buffer
  */
-#define JERRY_SOURCE_BUFFER_SIZE (1048576)
+#define JERRY_BUFFER_SIZE (1048576)
 
 /**
  * Standalone Jerry exit codes
@@ -36,7 +36,7 @@
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
-static uint8_t source_buffer[ JERRY_SOURCE_BUFFER_SIZE ];
+static uint8_t buffer[ JERRY_BUFFER_SIZE ];
 
 static const jerry_api_char_t *
 read_sources (const char *script_file_names[],
@@ -44,7 +44,7 @@ read_sources (const char *script_file_names[],
               size_t *out_source_size_p)
 {
   int i;
-  uint8_t *source_buffer_tail = source_buffer;
+  uint8_t *source_buffer_tail = buffer;
 
   for (i = 0; i < files_count; i++)
   {
@@ -76,7 +76,7 @@ read_sources (const char *script_file_names[],
 
     const size_t current_source_size = (size_t)script_len;
 
-    if (source_buffer_tail + current_source_size >= source_buffer + sizeof (source_buffer))
+    if (source_buffer_tail + current_source_size >= buffer + sizeof (buffer))
     {
       fclose (file);
       break;
@@ -102,13 +102,66 @@ read_sources (const char *script_file_names[],
   }
   else
   {
-    const size_t source_size = (size_t) (source_buffer_tail - source_buffer);
+    const size_t source_size = (size_t) (source_buffer_tail - buffer);
 
     *out_source_size_p = source_size;
 
-    return (const jerry_api_char_t *) source_buffer;
+    return (const jerry_api_char_t *) buffer;
   }
 }
+
+static bool
+read_snapshot (const char *snapshot_file_name_p,
+               size_t *out_snapshot_size_p)
+{
+  JERRY_ASSERT (snapshot_file_name_p != NULL);
+  JERRY_ASSERT (out_snapshot_size_p != NULL);
+
+  *out_snapshot_size_p = 0;
+
+  FILE *file = fopen (snapshot_file_name_p, "r");
+
+  if (file == NULL)
+  {
+    return false;
+  }
+
+  int fseek_status = fseek (file, 0, SEEK_END);
+
+  if (fseek_status != 0)
+  {
+    fclose (file);
+    return false;
+  }
+
+  long snapshot_len = ftell (file);
+
+  if (snapshot_len < 0)
+  {
+    fclose (file);
+    return false;
+  }
+
+  rewind (file);
+
+  if ((size_t) snapshot_len > sizeof (buffer))
+  {
+    fclose (file);
+    return false;
+  }
+
+  size_t bytes_read = fread (buffer, 1u, (size_t) snapshot_len, file);
+  if (bytes_read < (size_t) snapshot_len)
+  {
+    fclose (file);
+    return false;
+  }
+
+  *out_snapshot_size_p = (size_t) snapshot_len;
+
+  fclose (file);
+  return true;
+} /* read_snapshot */
 
 /**
  * Provide the 'assert' implementation for the engine.
@@ -158,6 +211,13 @@ main (int argc,
 
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
 
+  const char *exec_snapshot_file_names[JERRY_MAX_COMMAND_LINE_ARGS];
+  int exec_snapshots_count = 0;
+
+  bool is_dump_snapshot_mode = false;
+  bool is_dump_snapshot_mode_for_global_or_eval = false;
+  const char *dump_snapshot_file_name_p = NULL;
+
 #ifdef JERRY_ENABLE_LOG
   const char *log_file_name = NULL;
 #endif /* JERRY_ENABLE_LOG */
@@ -189,6 +249,38 @@ main (int argc,
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_FLAG_SHOW_OPCODES;
+    }
+    else if (!strcmp ("--dump-snapshot-for-global", argv[i])
+             || !strcmp ("--dump-snapshot-for-eval", argv[i]))
+    {
+      is_dump_snapshot_mode = true;
+      is_dump_snapshot_mode_for_global_or_eval = !strcmp ("--dump-snapshot-for-global", argv[i]);
+
+      flags |= JERRY_FLAG_PARSE_ONLY;
+
+      if (dump_snapshot_file_name_p == NULL
+          && ++i < argc)
+      {
+        dump_snapshot_file_name_p = argv[i];
+      }
+      else
+      {
+        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+    }
+    else if (!strcmp ("--exec-snapshot", argv[i]))
+    {
+      if (++i < argc)
+      {
+        JERRY_ASSERT (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
+        exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
+      }
+      else
+      {
+        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
@@ -230,90 +322,162 @@ main (int argc,
     }
   }
 
-  if (files_counter == 0)
+  if (is_dump_snapshot_mode)
+  {
+    if (files_counter == 0)
+    {
+      JERRY_ERROR_MSG ("--dump-snapshot argument is passed, but no script was specified on command line\n");
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+
+    if (exec_snapshots_count != 0)
+    {
+      JERRY_ERROR_MSG ("--dump-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+  }
+
+  if (files_counter == 0
+      && exec_snapshots_count == 0)
   {
     return JERRY_STANDALONE_EXIT_CODE_OK;
   }
   else
   {
-    size_t source_size;
-    const jerry_api_char_t *source_p = read_sources (file_names, files_counter, &source_size);
-
-    if (source_p == NULL)
+#ifdef JERRY_ENABLE_LOG
+    if (log_file_name)
     {
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      jerry_log_file = fopen (log_file_name, "w");
+      if (jerry_log_file == NULL)
+      {
+        JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
     }
     else
     {
-#ifdef JERRY_ENABLE_LOG
-      if (log_file_name)
-      {
-        jerry_log_file = fopen (log_file_name, "w");
-        if (jerry_log_file == NULL)
-        {
-          JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
-          return JERRY_STANDALONE_EXIT_CODE_FAIL;
-        }
-      }
-      else
-      {
-        jerry_log_file = stdout;
-      }
+      jerry_log_file = stdout;
+    }
 #endif /* JERRY_ENABLE_LOG */
 
-      jerry_init (flags);
+    jerry_init (flags);
 
-      jerry_api_object_t *global_obj_p = jerry_api_get_global ();
-      jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
-      jerry_api_value_t assert_value;
-      assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
-      assert_value.v_object = assert_func_p;
+    jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+    jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
+    jerry_api_value_t assert_value;
+    assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
+    assert_value.v_object = assert_func_p;
 
-      bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
-                                                               (jerry_api_char_t *) "assert",
-                                                               &assert_value);
+    bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
+                                                             (jerry_api_char_t *) "assert",
+                                                             &assert_value);
 
-      jerry_api_release_value (&assert_value);
-      jerry_api_release_object (global_obj_p);
+    jerry_api_release_value (&assert_value);
+    jerry_api_release_object (global_obj_p);
 
-      if (!is_assert_added)
+    if (!is_assert_added)
+    {
+      JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+    }
+
+    jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
+
+    bool is_ok = true;
+    for (int i = 0; i < exec_snapshots_count; i++)
+    {
+      size_t snapshot_size;
+
+      if (!read_snapshot (exec_snapshot_file_names[i], &snapshot_size))
       {
-        JERRY_ERROR_MSG ("Failed to register 'assert' method.");
-      }
-
-      jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
-
-      if (!jerry_parse (source_p, source_size))
-      {
-        /* unhandled SyntaxError */
         ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
       }
       else
       {
-        if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
+        jerry_api_value_t ret_value;
+        ret_code = jerry_exec_snapshot ((void *) buffer,
+                                        snapshot_size,
+                                        true,
+                                        &ret_value);
+        JERRY_ASSERT (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
+      }
+
+      if (ret_code != JERRY_COMPLETION_CODE_OK)
+      {
+        is_ok = false;
+
+        break;
+      }
+    }
+
+    if (is_ok)
+    {
+      size_t source_size;
+      const jerry_api_char_t *source_p = NULL;
+
+      if (files_counter != 0)
+      {
+        source_p = read_sources (file_names, files_counter, &source_size);
+
+        if (source_p == NULL)
         {
-          ret_code = jerry_run ();
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
         }
       }
 
-      jerry_cleanup ();
+      if (source_p != NULL)
+      {
+        if (is_dump_snapshot_mode)
+        {
+          static uint8_t snapshot_dump_buffer[ JERRY_BUFFER_SIZE ];
+
+          size_t snapshot_size = jerry_parse_and_save_snapshot (source_p,
+                                                                source_size,
+                                                                is_dump_snapshot_mode_for_global_or_eval,
+                                                                snapshot_dump_buffer,
+                                                                JERRY_BUFFER_SIZE);
+          if (snapshot_size == 0)
+          {
+            ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+          }
+          else
+          {
+            FILE *snapshot_file_p = fopen (dump_snapshot_file_name_p, "w");
+            fwrite (snapshot_dump_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
+            fclose (snapshot_file_p);
+          }
+        }
+        else
+        {
+          if (!jerry_parse (source_p, source_size))
+          {
+            /* unhandled SyntaxError */
+            ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+          }
+          else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
+          {
+            ret_code = jerry_run ();
+          }
+        }
+      }
+    }
+
+    jerry_cleanup ();
 
 #ifdef JERRY_ENABLE_LOG
-      if (jerry_log_file && jerry_log_file != stdout)
-      {
-        fclose (jerry_log_file);
-        jerry_log_file = NULL;
-      }
+    if (jerry_log_file && jerry_log_file != stdout)
+    {
+      fclose (jerry_log_file);
+      jerry_log_file = NULL;
+    }
 #endif /* JERRY_ENABLE_LOG */
 
-      if (ret_code == JERRY_COMPLETION_CODE_OK)
-      {
-        return JERRY_STANDALONE_EXIT_CODE_OK;
-      }
-      else
-      {
-        return JERRY_STANDALONE_EXIT_CODE_FAIL;
-      }
+    if (ret_code == JERRY_COMPLETION_CODE_OK)
+    {
+      return JERRY_STANDALONE_EXIT_CODE_OK;
+    }
+    else
+    {
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
 }

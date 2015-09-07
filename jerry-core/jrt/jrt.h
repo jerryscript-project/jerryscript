@@ -17,6 +17,8 @@
 #define JERRY_GLOBALS_H
 
 #include <stdio.h>
+#include <string.h>
+
 #include "jerry.h"
 #include "jrt-types.h"
 
@@ -226,5 +228,61 @@ inline void* operator new (size_t, void* where)
 {
   return where;
 } /* operator new */
+
+/**
+ * Read data of specified type (T) from specified buffer
+ *
+ * Note:
+ *      Offset is in-out and is incremented if the read operation completes successfully.
+ *
+ * @return true, if read was successful, i.e. offset + sizeof (T) doesn't exceed buffer size,
+ *         false - otherwise.
+ */
+template<typename T>
+bool __attr_always_inline___
+jrt_read_from_buffer_by_offset (const uint8_t *buffer_p, /**< buffer */
+                                size_t buffer_size, /**< size of buffer */
+                                size_t *in_out_buffer_offset_p, /**< in: offset to read from,
+                                                                 *   out: offset, incremented on sizeof (T) */
+                                T *out_data_p) /**< out: data */
+{
+  if (*in_out_buffer_offset_p + sizeof (T) > buffer_size)
+  {
+    return false;
+  }
+
+  memcpy (out_data_p, buffer_p + *in_out_buffer_offset_p, sizeof (T));
+  *in_out_buffer_offset_p += sizeof (T);
+
+  return true;
+} /* jrt_read_from_buffer_by_offset */
+
+/**
+ * Write data of specified type (T) to specified buffer
+ *
+ * Note:
+ *      Offset is in-out and is incremented if the write operation completes successfully.
+ *
+ * @return true, if write was successful, i.e. offset + sizeof (T) doesn't exceed buffer size,
+ *         false - otherwise.
+ */
+template<typename T>
+bool __attr_always_inline___
+jrt_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
+                               size_t buffer_size, /**< size of buffer */
+                               size_t *in_out_buffer_offset_p, /**< in: offset to read from,
+                                                                *   out: offset, incremented on sizeof (T) */
+                               T data) /**< data */
+{
+  if (*in_out_buffer_offset_p + sizeof (T) > buffer_size)
+  {
+    return false;
+  }
+
+  memcpy (buffer_p + *in_out_buffer_offset_p, &data, sizeof (T));
+  *in_out_buffer_offset_p += sizeof (T);
+
+  return true;
+} /* jrt_write_to_buffer_by_offset */
 
 #endif /* !JERRY_GLOBALS_H */

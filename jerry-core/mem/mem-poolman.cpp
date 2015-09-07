@@ -280,19 +280,43 @@ mem_pools_collect_empty (void)
 
     bool is_chunk_moved_to_local_list = false;
 
+#ifdef JERRY_VALGRIND
+    /*
+     * If the chunk is not free, there may be undefined bytes at hint_magic_num and list_id fields.
+     *
+     * Although, it is correct for the routine, valgrind issues warning about using uninitialized data
+     * in conditional expression. To suppress the false-positive warning, the chunk is temporarily marked
+     * as defined, and after reading hint magic number and list identifier, valgrind state of the chunk is restored.
+     */
+    uint8_t vbits[MEM_POOL_CHUNK_SIZE];
+    unsigned status;
+
+    status = VALGRIND_GET_VBITS (pool_start_p, vbits, MEM_POOL_CHUNK_SIZE);
+    JERRY_ASSERT (status == 0 || status == 1);
+
+    VALGRIND_DEFINED_SPACE (pool_start_p, MEM_POOL_CHUNK_SIZE);
+#endif /* JERRY_VALGRIND */
+
     /*
      * The magic number doesn't guarantee that the chunk is actually a pool header,
      * so it is only optimization to reduce number of unnecessary iterations over
      * pool lists.
      */
-    if (pool_start_p->u.pool_gc.hint_magic_num == hint_magic_num_value)
+    uint16_t magic_num_field = pool_start_p->u.pool_gc.hint_magic_num;
+    uint8_t id_to_search_in = pool_start_p->u.pool_gc.list_id;
+
+#ifdef JERRY_VALGRIND
+    status = VALGRIND_SET_VBITS (pool_start_p, vbits, MEM_POOL_CHUNK_SIZE);
+    JERRY_ASSERT (status == 0 || status == 1);
+#endif /* JERRY_VALGRIND */
+
+    if (magic_num_field == hint_magic_num_value)
     {
       /*
        * Maybe, the first chunk is free.
        *
        * If it is so, it is included in the list of pool's first free chunks.
        */
-      uint8_t id_to_search_in = pool_start_p->u.pool_gc.list_id;
 
       if (id_to_search_in < pool_lists_number)
       {

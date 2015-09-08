@@ -26,52 +26,35 @@
  * @{
  */
 
-extern bool ecma_op_is_callable (ecma_value_t value);
-extern bool ecma_is_constructor (ecma_value_t value);
+extern bool ecma_op_is_callable (ecma_value_t);
+extern bool ecma_is_constructor (ecma_value_t);
 
-extern ecma_object_t*
-ecma_op_create_function_object (ecma_collection_header_t *formal_params_collection_p,
-                                ecma_object_t *scope_p,
-                                bool is_strict,
-                                bool do_instantiate_arguments_object,
-                                const bytecode_data_header_t *bytecode_data_p,
-                                vm_instr_counter_t first_opcode_idx);
-extern ecma_object_t*
-ecma_op_create_external_function_object (ecma_external_pointer_t code_p);
+extern ecma_object_t *
+ecma_op_create_function_object (ecma_collection_header_t *, ecma_object_t *,
+                                bool, bool, const bytecode_data_header_t *, vm_instr_counter_t);
+extern ecma_object_t *
+ecma_op_create_external_function_object (ecma_external_pointer_t);
 
 extern ecma_completion_value_t
-ecma_op_function_call (ecma_object_t *func_obj_p,
-                       ecma_value_t this_arg_value,
-                       ecma_collection_header_t *arg_collection_p);
+ecma_op_function_call (ecma_object_t *, ecma_value_t, ecma_collection_header_t *);
 
-extern ecma_property_t*
-ecma_op_function_object_get_own_property (ecma_object_t *obj_p,
-                                          ecma_string_t *property_name_p);
+
+extern ecma_property_t *
+ecma_op_function_object_get_own_property (ecma_object_t *, ecma_string_t *);
 
 extern ecma_completion_value_t
-ecma_op_function_call_array_args (ecma_object_t *func_obj_p,
-                                  ecma_value_t this_arg_value,
-                                  const ecma_value_t* arguments_list_p,
-                                  ecma_length_t arguments_list_len);
+ecma_op_function_call_array_args (ecma_object_t *, ecma_value_t, const ecma_value_t *, ecma_length_t);
 
 
 extern ecma_completion_value_t
-ecma_op_function_construct (ecma_object_t *func_obj_p,
-                            ecma_collection_header_t *arg_collection_p);
+ecma_op_function_construct (ecma_object_t *, ecma_collection_header_t *);
 
 extern ecma_completion_value_t
-ecma_op_function_has_instance (ecma_object_t *func_obj_p,
-                               ecma_value_t value);
+ecma_op_function_has_instance (ecma_object_t *, ecma_value_t);
 
 extern ecma_completion_value_t
-ecma_op_function_declaration (ecma_object_t *lex_env_p,
-                              ecma_string_t *function_name_p,
-                              const bytecode_data_header_t *bytecode_data_p,
-                              vm_instr_counter_t function_code_opcode_idx,
-                              ecma_collection_header_t *formal_params_collection_p,
-                              bool is_strict,
-                              bool do_instantiate_arguments_object,
-                              bool is_configurable_bindings);
+ecma_op_function_declaration (ecma_object_t *, ecma_string_t *, const bytecode_data_header_t *, vm_instr_counter_t,
+                              ecma_collection_header_t *, bool, bool, bool);
 
 /**
  * @}

@@ -86,8 +86,8 @@ void jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool, locus);
 
 void jsp_early_error_check_delete (bool, locus);
 
-jmp_buf * jsp_early_error_get_early_error_longjmp_label (void);
-void __attribute__((noreturn)) jsp_early_error_raise_error (jsp_early_error_t type);
+jmp_buf *jsp_early_error_get_early_error_longjmp_label (void);
+void __attribute__((noreturn)) jsp_early_error_raise_error (jsp_early_error_t);
 jsp_early_error_t jsp_early_error_get_type (void);
 
 #endif /* JSP_EARLY_ERROR_H */

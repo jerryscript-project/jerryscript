@@ -62,7 +62,7 @@ public:
   node_t *get_last (void) const;
 
   node_t *get_prev (node_t *) const;
-  node_t *get_next (node_t *node_p) const;
+  node_t *get_next (node_t *) const;
 
   node_t *append_new (void);
   node_t *insert_new (node_t *);
@@ -70,7 +70,7 @@ public:
   void remove (node_t *);
 
   node_t *get_node_from_pointer (void *) const;
-  uint8_t* get_data_space (node_t *) const;
+  uint8_t *get_data_space (node_t *) const;
 
   static size_t get_data_space_size (void);
 
@@ -83,8 +83,8 @@ private:
   void assert_list_is_correct (void) const;
   void assert_node_is_correct (const node_t *) const;
 
-  node_t* head_p; /**< head node of list */
-  node_t* tail_p; /**< tail node of list */
+  node_t *head_p; /**< head node of list */
+  node_t *tail_p; /**< tail node of list */
 };
 
 /**

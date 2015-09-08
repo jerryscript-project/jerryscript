@@ -41,16 +41,16 @@ typedef enum
 
 extern void mem_heap_init (void);
 extern void mem_heap_finalize (void);
-extern void* mem_heap_alloc_block (size_t size_in_bytes, mem_heap_alloc_term_t alloc_term);
-extern void* mem_heap_alloc_chunked_block (mem_heap_alloc_term_t alloc_term);
-extern void mem_heap_free_block (void *ptr);
-extern void* mem_heap_get_chunked_block_start (void *ptr);
+extern void *mem_heap_alloc_block (size_t, mem_heap_alloc_term_t);
+extern void *mem_heap_alloc_chunked_block (mem_heap_alloc_term_t);
+extern void mem_heap_free_block (void *);
+extern void *mem_heap_get_chunked_block_start (void *);
 extern size_t mem_heap_get_chunked_block_data_size (void);
-extern uintptr_t mem_heap_compress_pointer (const void *pointer);
-extern void* mem_heap_decompress_pointer (uintptr_t compressed_pointer);
-extern bool mem_is_heap_pointer (const void *pointer);
-extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t minimum_allocation_size);
-extern void mem_heap_print (bool dump_block_headers, bool dump_block_data, bool dump_stats);
+extern uintptr_t mem_heap_compress_pointer (const void *);
+extern void *mem_heap_decompress_pointer (uintptr_t);
+extern bool mem_is_heap_pointer (const void *);
+extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t);
+extern void mem_heap_print (bool, bool, bool);
 
 #ifdef MEM_STATS
 /**
@@ -79,7 +79,7 @@ typedef struct
   size_t global_peak_waste_bytes; /**< non-resettable peak bytes waste */
 } mem_heap_stats_t;
 
-extern void mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p);
+extern void mem_heap_get_stats (mem_heap_stats_t *);
 extern void mem_heap_stats_reset_peak (void);
 #endif /* MEM_STATS */
 

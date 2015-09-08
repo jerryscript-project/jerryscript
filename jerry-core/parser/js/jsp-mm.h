@@ -28,7 +28,7 @@
 extern void jsp_mm_init (void);
 extern void jsp_mm_finalize (void);
 extern size_t jsp_mm_recommend_size (size_t);
-extern void * jsp_mm_alloc (size_t);
+extern void *jsp_mm_alloc (size_t);
 extern void jsp_mm_free (void *);
 extern void jsp_mm_free_all (void);
 

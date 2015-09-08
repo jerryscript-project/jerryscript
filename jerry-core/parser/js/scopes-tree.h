@@ -79,7 +79,7 @@ typedef struct
   bool contains_functions: 1; /**< flag, indicating that the scope contains a function declaration / expression */
 } scopes_tree_int;
 
-typedef scopes_tree_int * scopes_tree;
+typedef scopes_tree_int *scopes_tree;
 
 scopes_tree scopes_tree_init (scopes_tree, scope_type_t);
 void scopes_tree_free (scopes_tree);

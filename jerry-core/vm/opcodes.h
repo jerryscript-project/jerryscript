@@ -203,7 +203,7 @@ typedef struct
                                      *  process (see also: OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) */
   vm_idx_t min_reg_idx; /**< minimum idx used for register identification */
   vm_idx_t max_reg_idx; /**< maximum idx used for register identification */
-  ecma_number_t* tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
+  ecma_number_t *tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
   vm_stack_frame_t stack_frame; /**< stack frame associated with the context */
 
 #ifdef MEM_STATS
@@ -233,8 +233,8 @@ typedef struct
   const vm_instr_counter_t end_oc; /**< instruction counter of the last instruction of the scope */
 } vm_run_scope_t;
 
-vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const vm_idx_t oc_idx_1, const vm_idx_t oc_idx_2);
-vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type expected_type, vm_frame_ctx_t *int_data);
+vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const vm_idx_t, const vm_idx_t);
+vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type, vm_frame_ctx_t *);
 
 typedef struct vm_instr_t
 {
@@ -290,13 +290,13 @@ typedef enum
 } vm_op_t;
 
 #define VM_OP_0(opcode_name, opcode_name_uppercase) \
-  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t *);
 #define VM_OP_1(opcode_name, opcode_name_uppercase, arg1, arg1_type) \
-  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t *);
 #define VM_OP_2(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type) \
-  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t *);
 #define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
-  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t*);
+  ecma_completion_value_t opfunc_##opcode_name (vm_instr_t, vm_frame_ctx_t *);
 
 #include "vm-opcodes.inc.h"
 

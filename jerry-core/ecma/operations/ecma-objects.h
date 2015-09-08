@@ -26,28 +26,19 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p);
-extern ecma_property_t *ecma_op_object_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
-extern ecma_property_t *ecma_op_object_get_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
-extern ecma_completion_value_t ecma_op_object_put (ecma_object_t *obj_p,
-                                                   ecma_string_t *property_name_p,
-                                                   ecma_value_t value,
-                                                   bool is_throw);
-extern bool ecma_op_object_can_put (ecma_object_t *obj_p, ecma_string_t *property_name_p);
-extern ecma_completion_value_t ecma_op_object_delete (ecma_object_t *obj_p,
-                                                      ecma_string_t *property_name_p,
-                                                      bool is_throw);
-extern ecma_completion_value_t ecma_op_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
+extern ecma_completion_value_t ecma_op_object_get (ecma_object_t *, ecma_string_t *);
+extern ecma_property_t *ecma_op_object_get_own_property (ecma_object_t *, ecma_string_t *);
+extern ecma_property_t *ecma_op_object_get_property (ecma_object_t *, ecma_string_t *);
+extern ecma_completion_value_t ecma_op_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
+extern bool ecma_op_object_can_put (ecma_object_t *, ecma_string_t *);
+extern ecma_completion_value_t ecma_op_object_delete (ecma_object_t *, ecma_string_t *, bool);
+extern ecma_completion_value_t ecma_op_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
 extern ecma_completion_value_t
-ecma_op_object_define_own_property (ecma_object_t *obj_p,
-                                    ecma_string_t *property_name_p,
-                                    const ecma_property_descriptor_t* property_desc_p,
-                                    bool is_throw);
-extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *obj_p,
-                                                            ecma_value_t value);
-extern bool ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
+ecma_op_object_define_own_property (ecma_object_t *, ecma_string_t *, const ecma_property_descriptor_t *, bool);
+extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *, ecma_value_t);
+extern bool ecma_op_object_is_prototype_of (ecma_object_t *, ecma_object_t *);
 
-extern lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
+extern lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *);
 
 /**
  * @}

@@ -58,14 +58,11 @@
 #define ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH (8)
 
 /* ecma-builtins.c */
-extern ecma_object_t*
-ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id,
-                                               uint16_t routine_id,
-                                               uint8_t length_prop_num_value);
+extern ecma_object_t *
+ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t, uint16_t, uint8_t);
 extern int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t ids[],
-                                                      ecma_length_t array_length,
-                                                      lit_magic_string_id_t key);
+ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t[],
+                                                      ecma_length_t, lit_magic_string_id_t);
 
 #define BUILTIN(builtin_id, \
                 object_type, \
@@ -74,19 +71,19 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_
                 is_static, \
                 lowercase_name) \
 extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *arguments_list_p, \
-                                                   ecma_length_t arguments_list_len); \
+ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *, \
+                                                   ecma_length_t); \
 extern ecma_completion_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *arguments_list_p, \
-                                                        ecma_length_t arguments_list_len); \
+ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *, \
+                                                        ecma_length_t); \
 extern ecma_completion_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
-                                                      const ecma_value_t arguments_list[], \
-                                                      ecma_length_t arguments_number); \
-extern ecma_property_t* \
-ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *obj_p, \
-                                                                 ecma_string_t *prop_name_p); \
+                                                      const ecma_value_t [], \
+                                                      ecma_length_t); \
+extern ecma_property_t * \
+ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *, \
+                                                                 ecma_string_t *); \
 extern void \
 ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
 #include "ecma-builtins.inc.h"

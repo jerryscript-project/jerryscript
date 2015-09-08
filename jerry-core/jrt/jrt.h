@@ -82,12 +82,9 @@
  */
 extern uint32_t jerry_unreferenced_expression;
 
-extern void __noreturn jerry_assert_fail (const char *assertion, const char *file, const char *function,
-                                          const uint32_t line);
-extern void __noreturn jerry_unreachable (const char *comment, const char *file, const char *function,
-                                          const uint32_t line);
-extern void __noreturn jerry_unimplemented (const char *comment, const char *file, const char *function,
-                                            const uint32_t line);
+extern void __noreturn jerry_assert_fail (const char *, const char *, const char *, const uint32_t);
+extern void __noreturn jerry_unreachable (const char *, const char *, const char *, const uint32_t);
+extern void __noreturn jerry_unimplemented (const char *, const char *, const char *, const uint32_t);
 
 #if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
 #define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
@@ -186,12 +183,12 @@ template<typename... values> extern void jerry_ref_unused_variables (const value
 /**
  * Exit
  */
-extern void __noreturn jerry_fatal (jerry_fatal_code_t code);
+extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 
 /**
  * sizeof, offsetof, ...
  */
-#define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name*)NULL)->member_name)
+#define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name *)NULL)->member_name)
 
 /**
  * Alignment
@@ -224,7 +221,7 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t code);
  * It is proposed to use placement new operator. Generally it is available via #include <new>,
  * To fix the unavailability of the header in some configurations placement new operator is implemented here.
  */
-inline void* operator new (size_t, void* where)
+inline void *operator new (size_t, void *where)
 {
   return where;
 } /* operator new */

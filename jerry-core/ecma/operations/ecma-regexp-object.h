@@ -51,27 +51,21 @@ typedef struct
 } re_matcher_ctx_t;
 
 extern ecma_completion_value_t
-ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str_p);
+ecma_op_create_regexp_object (ecma_string_t *, ecma_string_t *);
 
 extern ecma_completion_value_t
 ecma_regexp_exec_helper (ecma_value_t, ecma_value_t, bool);
 
 extern ecma_char_t
-re_canonicalize (ecma_char_t ch,
-                 bool is_ignorecase);
+re_canonicalize (ecma_char_t, bool);
 extern void
-re_set_result_array_properties (ecma_object_t *array_obj_p,
-                                ecma_string_t *input_str_p,
-                                uint32_t num_of_elements,
-                                int32_t index);
+re_set_result_array_properties (ecma_object_t *, ecma_string_t *, uint32_t, int32_t);
 
 extern ecma_completion_value_t
-re_parse_regexp_flags (ecma_string_t *flags_str_p, uint8_t *flags_p);
+re_parse_regexp_flags (ecma_string_t *, uint8_t *);
 
 extern void
-re_initialize_props (ecma_object_t *re_obj_p,
-                     ecma_string_t *source_p,
-                     uint8_t flags);
+re_initialize_props (ecma_object_t *, ecma_string_t *, uint8_t);
 
 /**
  * @}

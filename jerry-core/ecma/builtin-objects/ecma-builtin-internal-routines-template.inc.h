@@ -97,7 +97,7 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
  * @return pointer property, if one was instantiated,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *obj_p, /**< object */
                                                                    ecma_string_t *prop_name_p) /**< property's name */
 {

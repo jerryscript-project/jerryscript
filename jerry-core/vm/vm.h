@@ -20,27 +20,23 @@
 #include "jrt.h"
 #include "opcodes.h"
 
-extern void vm_init (const bytecode_data_header_t *program_p, bool dump_mem_stats);
+extern void vm_init (const bytecode_data_header_t *, bool);
 extern void vm_finalize (void);
 extern jerry_completion_code_t vm_run_global (void);
-extern ecma_completion_value_t vm_run_eval (const bytecode_data_header_t *bytecode_data_p,
-                                            bool is_direct);
-extern ecma_completion_value_t vm_loop (vm_frame_ctx_t *frame_ctx_p, vm_run_scope_t *run_scope_p);
-extern ecma_completion_value_t vm_run_from_pos (const bytecode_data_header_t *header_p,
-                                                vm_instr_counter_t start_pos,
-                                                ecma_value_t this_binding_value,
-                                                ecma_object_t *lex_env_p,
-                                                bool is_strict,
-                                                bool is_eval_code);
+extern ecma_completion_value_t vm_run_eval (const bytecode_data_header_t *, bool);
 
-extern vm_instr_t vm_get_instr (const vm_instr_t*, vm_instr_counter_t counter);
-extern opcode_scope_code_flags_t vm_get_scope_flags (const vm_instr_t*, vm_instr_counter_t counter);
+extern ecma_completion_value_t vm_loop (vm_frame_ctx_t *, vm_run_scope_t *);
+extern ecma_completion_value_t vm_run_from_pos (const bytecode_data_header_t *, vm_instr_counter_t,
+                                                ecma_value_t, ecma_object_t *, bool, bool);
+
+extern vm_instr_t vm_get_instr (const vm_instr_t *, vm_instr_counter_t);
+extern opcode_scope_code_flags_t vm_get_scope_flags (const vm_instr_t *, vm_instr_counter_t);
 
 extern bool vm_is_strict_mode (void);
 extern bool vm_is_direct_eval_form_call (void);
 
 extern ecma_value_t vm_get_this_binding (void);
-extern ecma_object_t* vm_get_lex_env (void);
+extern ecma_object_t *vm_get_lex_env (void);
 
 #endif /* VM_H */
 

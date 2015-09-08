@@ -440,11 +440,9 @@ void dumper_set_break_target (void);
 void dumper_set_continue_target (void);
 void dumper_set_next_interation_target (void);
 vm_instr_counter_t
-dump_simple_or_nested_jump_for_rewrite (bool is_simple_jump,
-                                        vm_instr_counter_t next_jump_for_tg_oc);
+dump_simple_or_nested_jump_for_rewrite (bool, vm_instr_counter_t);
 vm_instr_counter_t
-rewrite_simple_or_nested_jump_and_get_next (vm_instr_counter_t jump_oc,
-                                            vm_instr_counter_t target_oc);
+rewrite_simple_or_nested_jump_and_get_next (vm_instr_counter_t, vm_instr_counter_t);
 void dump_continue_iterations_check (jsp_operand_t);
 
 void start_dumping_case_clauses (void);
@@ -481,13 +479,12 @@ bool dumper_variable_declaration_exists (lit_cpointer_t);
 void dump_variable_declaration (lit_cpointer_t);
 
 vm_instr_counter_t dump_scope_code_flags_for_rewrite (void);
-void rewrite_scope_code_flags (vm_instr_counter_t scope_code_flags_oc,
-                               opcode_scope_code_flags_t scope_flags);
+void rewrite_scope_code_flags (vm_instr_counter_t, opcode_scope_code_flags_t);
 
 void dump_reg_var_decl_for_rewrite (void);
 void rewrite_reg_var_decl (void);
 
 void dump_ret (void);
-void dump_retval (jsp_operand_t op);
+void dump_retval (jsp_operand_t);
 
 #endif /* OPCODES_DUMPER_H */

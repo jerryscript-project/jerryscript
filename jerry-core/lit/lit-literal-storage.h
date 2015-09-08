@@ -133,7 +133,7 @@ public:
   bool is_equal (lit_charset_record_t *);
   bool is_equal_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 
-  uint32_t dump_for_snapshot (uint8_t *buffer_p, size_t buffer_size, size_t *in_out_buffer_offset_p);
+  uint32_t dump_for_snapshot (uint8_t *, size_t, size_t *);
 private:
   /**
    * Set record's size (the value of the 'length' field in the header)
@@ -397,9 +397,7 @@ public:
     return it.read<ecma_number_t> ();
   } /* get_number */
 
-  uint32_t dump_for_snapshot (uint8_t *buffer_p,
-                              size_t buffer_size,
-                              size_t *in_out_buffer_offset_p) const;
+  uint32_t dump_for_snapshot (uint8_t *, size_t, size_t *) const;
 private:
   /**
    * Set record's size (the value of the 'length' field in the header)
@@ -474,17 +472,10 @@ typedef struct
 } lit_mem_to_snapshot_id_map_entry_t;
 
 extern bool
-lit_dump_literals_for_snapshot (uint8_t *buffer_p,
-                                size_t buffer_size,
-                                size_t *in_out_buffer_offset_p,
-                                lit_mem_to_snapshot_id_map_entry_t **out_map_p,
-                                uint32_t *out_map_num_p,
-                                uint32_t *out_lit_table_size_p);
-extern bool lit_load_literals_from_snapshot (const uint8_t *lit_table_p,
-                                             uint32_t lit_table_size,
-                                             lit_mem_to_snapshot_id_map_entry_t **out_map_p,
-                                             uint32_t *out_map_num_p,
-                                             bool is_copy);
+lit_dump_literals_for_snapshot (uint8_t *, size_t, size_t *, lit_mem_to_snapshot_id_map_entry_t **,
+                                uint32_t *, uint32_t *);
+extern bool lit_load_literals_from_snapshot (const uint8_t *, uint32_t, lit_mem_to_snapshot_id_map_entry_t **,
+                                             uint32_t *, bool);
 #endif /* JERRY_ENABLE_SNAPSHOT */
 
 

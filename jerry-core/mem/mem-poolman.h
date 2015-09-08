@@ -31,8 +31,8 @@
 
 extern void mem_pools_init (void);
 extern void mem_pools_finalize (void);
-extern uint8_t* mem_pools_alloc (void);
-extern void mem_pools_free (uint8_t *chunk_p);
+extern uint8_t *mem_pools_alloc (void);
+extern void mem_pools_free (uint8_t *);
 extern void mem_pools_collect_empty (void);
 
 #ifdef MEM_STATS
@@ -63,7 +63,7 @@ typedef struct
   size_t free_chunks;
 } mem_pools_stats_t;
 
-extern void mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p);
+extern void mem_pools_get_stats (mem_pools_stats_t *);
 extern void mem_pools_stats_reset_peak (void);
 #endif /* MEM_STATS */
 

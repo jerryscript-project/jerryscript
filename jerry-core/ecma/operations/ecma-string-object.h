@@ -26,12 +26,10 @@
  */
 
 extern ecma_completion_value_t
-ecma_op_create_string_object (const ecma_value_t *arguments_list_p,
-                              ecma_length_t arguments_list_len);
+ecma_op_create_string_object (const ecma_value_t *, ecma_length_t);
 
-extern ecma_property_t*
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p,
-                                        ecma_string_t *property_name_p);
+extern ecma_property_t *
+ecma_op_string_object_get_own_property (ecma_object_t *, ecma_string_t *);
 
 /**
  * @}

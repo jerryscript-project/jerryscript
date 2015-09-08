@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_create_number_object (ecma_value_t arg);
+extern ecma_completion_value_t ecma_op_create_number_object (ecma_value_t);
 
 /**
  * @}

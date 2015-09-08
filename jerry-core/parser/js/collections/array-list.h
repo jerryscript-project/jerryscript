@@ -18,7 +18,7 @@
 
 #include "jrt.h"
 
-typedef uint8_t* array_list;
+typedef uint8_t *array_list;
 #define null_list NULL
 
 array_list array_list_init (uint8_t);

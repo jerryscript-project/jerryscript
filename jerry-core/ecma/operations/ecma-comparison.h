@@ -26,13 +26,9 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_abstract_equality_compare (ecma_value_t x,
-                                                                  ecma_value_t y);
-extern bool ecma_op_strict_equality_compare (ecma_value_t x,
-                                             ecma_value_t y);
-extern ecma_completion_value_t ecma_op_abstract_relational_compare (ecma_value_t x,
-                                                                    ecma_value_t y,
-                                                                    bool left_first);
+extern ecma_completion_value_t ecma_op_abstract_equality_compare (ecma_value_t, ecma_value_t);
+extern bool ecma_op_strict_equality_compare (ecma_value_t, ecma_value_t);
+extern ecma_completion_value_t ecma_op_abstract_relational_compare (ecma_value_t, ecma_value_t, bool);
 
 /**
  * @}

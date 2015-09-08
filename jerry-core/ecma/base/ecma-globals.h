@@ -559,10 +559,10 @@ typedef struct
   ecma_value_t value;
 
   /** [[Get]] */
-  ecma_object_t* get_p;
+  ecma_object_t *get_p;
 
   /** [[Set]] */
-  ecma_object_t* set_p;
+  ecma_object_t *set_p;
 
   /** [[Writable]] */
   bool is_writable;

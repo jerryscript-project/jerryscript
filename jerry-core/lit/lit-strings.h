@@ -172,20 +172,13 @@ lit_utf8_size_t lit_code_point_to_utf8 (lit_code_point_t, lit_utf8_byte_t *);
 lit_code_point_t lit_convert_surrogate_pair_to_code_point (ecma_char_t, ecma_char_t);
 
 /* comparison */
-bool lit_compare_utf8_strings (const lit_utf8_byte_t *,
-                               lit_utf8_size_t,
-                               const lit_utf8_byte_t *,
-                               lit_utf8_size_t);
+bool lit_compare_utf8_strings (const lit_utf8_byte_t *, lit_utf8_size_t, const lit_utf8_byte_t *, lit_utf8_size_t);
 
-bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p,
-                                          lit_utf8_size_t,
-                                          const lit_utf8_byte_t *string2_p,
-                                          lit_utf8_size_t);
+bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *, lit_utf8_size_t,
+                                          const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* read code point from buffer */
-lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *,
-                                               lit_utf8_size_t,
-                                               lit_code_point_t *);
+lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *, lit_utf8_size_t, lit_code_point_t *);
 
 /* print */
 void lit_put_ecma_char (ecma_char_t);

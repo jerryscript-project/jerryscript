@@ -96,13 +96,13 @@ typedef struct
 } re_compiler_ctx_t;
 
 ecma_completion_value_t
-re_compile_bytecode (re_bytecode_t **out_bytecode_p, ecma_string_t *pattern_str_p, uint8_t flags);
+re_compile_bytecode (re_bytecode_t **, ecma_string_t *, uint8_t);
 
 re_opcode_t
-re_get_opcode (re_bytecode_t **bc_p);
+re_get_opcode (re_bytecode_t **);
 
 uint32_t
-re_get_value (re_bytecode_t **bc_p);
+re_get_value (re_bytecode_t **);
 
 #endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 #endif /* RE_COMPILER_H */

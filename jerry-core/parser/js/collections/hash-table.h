@@ -27,7 +27,7 @@
 
 #include "mem-heap.h"
 
-typedef void* hash_table;
+typedef void *hash_table;
 #define null_hash NULL
 
 hash_table hash_table_init (uint8_t, uint8_t, uint16_t, uint16_t (*hash) (void *));

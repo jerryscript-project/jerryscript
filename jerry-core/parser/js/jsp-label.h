@@ -69,19 +69,19 @@ extern void jsp_label_finalize (void);
 
 extern void jsp_label_remove_all_labels (void);
 
-extern void jsp_label_push (jsp_label_t *out_label_p, jsp_label_type_flag_t type_mask, token id);
-extern void jsp_label_rewrite_jumps_and_pop (jsp_label_t *label_p, vm_instr_counter_t break_tgt_oc);
+extern void jsp_label_push (jsp_label_t *, jsp_label_type_flag_t, token);
+extern void jsp_label_rewrite_jumps_and_pop (jsp_label_t *, vm_instr_counter_t);
 
-extern jsp_label_t *jsp_label_find (jsp_label_type_flag_t type_mask, token id, bool *out_is_simply_jumpable_p);
+extern jsp_label_t *jsp_label_find (jsp_label_type_flag_t, token, bool *);
 
-extern void jsp_label_add_jump (jsp_label_t *label_p, bool is_simply_jumpable, bool is_break);
-extern void jsp_label_setup_continue_target (jsp_label_t *outermost_label_p, vm_instr_counter_t tgt_oc);
+extern void jsp_label_add_jump (jsp_label_t *, bool, bool);
+extern void jsp_label_setup_continue_target (jsp_label_t *, vm_instr_counter_t);
 
 extern bool jsp_label_raise_nested_jumpable_border (void);
 extern void jsp_label_remove_nested_jumpable_border (void);
 
 extern jsp_label_t *jsp_label_mask_set (void);
-extern void jsp_label_restore_set (jsp_label_t *masked_label_set_list_p);
+extern void jsp_label_restore_set (jsp_label_t *);
 
 /**
  * @}

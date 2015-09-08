@@ -24,7 +24,7 @@
  * @{
  */
 
-extern void mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t severity);
+extern void mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t);
 
 /**
  * @}

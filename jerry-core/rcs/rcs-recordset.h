@@ -89,7 +89,7 @@ public:
     typedef uint8_t type_t;
 
     type_t get_type (void) const;
-    void set_type (type_t type);
+    void set_type (type_t);
 
     /**
      * Dynamic storage-specific extended compressed pointer
@@ -117,8 +117,8 @@ public:
         uint16_t packed_value;
       };
 
-      static cpointer_t compress (record_t *pointer_p);
-      static record_t *decompress (cpointer_t pointer_cp);
+      static cpointer_t compress (record_t *);
+      static record_t *decompress (cpointer_t);
 
       static cpointer_t null_cp ();
 
@@ -139,11 +139,11 @@ public:
   protected:
     void check_this (void) const;
 
-    uint32_t get_field (uint32_t field_pos, uint32_t field_width) const;
-    void set_field (uint32_t field_pos, uint32_t field_width, size_t value);
+    uint32_t get_field (uint32_t, uint32_t) const;
+    void set_field (uint32_t, uint32_t, size_t);
 
-    record_t *get_pointer (uint32_t field_pos, uint32_t field_width) const;
-    void set_pointer (uint32_t field_pos, uint32_t field_width, record_t* pointer_p);
+    record_t *get_pointer (uint32_t, uint32_t) const;
+    void set_pointer (uint32_t, uint32_t, record_t *);
 
     /**
      * Offset of a derived record's fields, in bits
@@ -152,7 +152,7 @@ public:
   };
 
   record_t *get_first (void);
-  record_t *get_next (record_t *rec_p);
+  record_t *get_next (record_t *);
 
 private:
   friend class rcs_record_iterator_t;
@@ -167,12 +167,10 @@ private:
    */
   rcs_chunked_list_t _chunk_list;
 
-  void alloc_record_in_place (record_t* place_p,
-                              size_t free_size,
-                              record_t* next_record_p);
+  void alloc_record_in_place (record_t *, size_t, record_t *);
 
-  void init_free_record (record_t *free_rec_p, size_t size, record_t *prev_rec_p);
-  bool is_record_free (record_t *record_p);
+  void init_free_record (record_t *, size_t, record_t *);
+  bool is_record_free (record_t *);
 
 protected:
   /**
@@ -207,14 +205,14 @@ protected:
     return rec_p;
   } /* alloc_record */
 
-  record_t *alloc_space_for_record (size_t bytes, record_t **out_prev_rec_p);
-  void free_record (record_t *record_p);
+  record_t *alloc_space_for_record (size_t, record_t **);
+  void free_record (record_t *);
 
-  virtual record_t *get_prev (record_t *rec_p);
+  virtual record_t *get_prev (record_t *);
 
-  virtual void set_prev (record_t *rec_p, record_t *prev_rec_p);
+  virtual void set_prev (record_t *, record_t *);
 
-  virtual size_t get_record_size (record_t *rec_p);
+  virtual size_t get_record_size (record_t *);
 
   void assert_state_is_correct (void);
 }; /* rcs_recordset_t */
@@ -273,7 +271,7 @@ protected:
                    * increment current position so that 'size' bytes would be skipped. */
   } access_t;
 
-  void access (access_t access_type, void *data, size_t size);
+  void access (access_t, void *, size_t);
 
 public:
   /**
@@ -338,8 +336,8 @@ public:
   } /* reset */
 
 private:
-  rcs_record_t* _record_start_p; /**< start of current record */
-  uint8_t* _current_pos_p; /**< pointer to current offset in current record */
+  rcs_record_t *_record_start_p; /**< start of current record */
+  uint8_t *_current_pos_p; /**< pointer to current offset in current record */
   size_t _current_offset; /**< current offset */
   rcs_recordset_t *_recordset_p; /**< recordset containing the record */
 }; /* rcs_record_iterator_t */
@@ -351,10 +349,10 @@ class rcs_free_record_t : public rcs_record_t
 {
 public:
   size_t get_size (void) const;
-  void set_size (size_t size);
+  void set_size (size_t);
 
-  rcs_record_t* get_prev (void) const;
-  void set_prev (rcs_record_t* prev_rec_p);
+  rcs_record_t *get_prev (void) const;
+  void set_prev (rcs_record_t *);
 private:
   /**
    * Offset of 'length' field, in bits

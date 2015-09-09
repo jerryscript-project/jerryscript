@@ -1330,7 +1330,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 #endif /* !JERRY_ENABLE_LOG */
   }
 
-  if (flags & (JERRY_FLAG_MEM_STATS))
+  if (flags & (JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
   {
 #ifndef MEM_STATS
     flags &= ~(JERRY_FLAG_MEM_STATS
@@ -1339,13 +1339,6 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 
     JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
 #endif /* !MEM_STATS */
-  }
-  else if (flags & (JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
-  {
-    flags &= ~(JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE);
-
-    JERRY_WARNING_MSG (
-      "Ignoring detailed memory statistics options because memory statistics dump mode is not enabled.\n");
   }
 
   jerry_flags = flags;

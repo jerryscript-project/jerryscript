@@ -216,7 +216,7 @@ extern bool lit_char_is_hex_digit (ecma_char_t);
 extern uint32_t lit_char_hex_to_int (ecma_char_t);
 
 /* read a hex encoded code point from a zero terminated buffer */
-bool lit_read_code_point_from_hex (const lit_utf8_byte_t *, lit_utf8_size_t, lit_code_point_t *);
+bool lit_read_code_point_from_hex (lit_utf8_byte_t *, lit_utf8_size_t, lit_code_point_t *);
 
 /**
  * Null character

@@ -1145,11 +1145,12 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
 
   JERRY_ASSERT (bytes_copied > 0 || !string_size);
 
-  lit_utf8_iterator_t iter = lit_utf8_iterator_create (string_buff, string_size);
+  lit_utf8_byte_t *str_p = string_buff;
+  const lit_utf8_byte_t *str_end_p = str_p + string_size;
 
-  while (!lit_utf8_iterator_is_eos (&iter))
+  while (str_p < str_end_p)
   {
-    ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+    ecma_char_t current_char = lit_utf8_read_next (&str_p);
 
     /* 2.a */
     if (current_char == LIT_CHAR_BACKSLASH || current_char == LIT_CHAR_DOUBLE_QUOTE)

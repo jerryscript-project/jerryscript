@@ -133,25 +133,18 @@ bool lit_is_code_unit_high_surrogate (ecma_char_t);
 lit_utf8_iterator_t lit_utf8_iterator_create (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 void lit_utf8_iterator_seek_bos (lit_utf8_iterator_t *);
-void lit_utf8_iterator_seek_eos (lit_utf8_iterator_t *);
 
 lit_utf8_iterator_pos_t lit_utf8_iterator_get_pos (const lit_utf8_iterator_t *);
 void lit_utf8_iterator_seek (lit_utf8_iterator_t *, lit_utf8_iterator_pos_t);
 
-ecma_length_t lit_utf8_iterator_get_index (const lit_utf8_iterator_t *);
-
 ecma_char_t lit_utf8_iterator_peek_next (const lit_utf8_iterator_t *);
-ecma_char_t lit_utf8_iterator_peek_prev (const lit_utf8_iterator_t *);
 
 void lit_utf8_iterator_incr (lit_utf8_iterator_t *);
-void lit_utf8_iterator_decr (lit_utf8_iterator_t *);
 void lit_utf8_iterator_advance (lit_utf8_iterator_t *, ecma_length_t);
 
 ecma_char_t lit_utf8_iterator_read_next (lit_utf8_iterator_t *);
-ecma_char_t lit_utf8_iterator_read_prev (lit_utf8_iterator_t *);
 
 bool lit_utf8_iterator_is_eos (const lit_utf8_iterator_t *);
-bool lit_utf8_iterator_is_bos (const lit_utf8_iterator_t *);
 
 /* size */
 lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *);

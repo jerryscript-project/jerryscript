@@ -107,29 +107,31 @@ main (int __attr_unused___ argc,
 
   mem_init ();
 
-  lit_utf8_byte_t utf8_string[max_bytes_in_string];
+  lit_utf8_byte_t cesu8_string[max_bytes_in_string];
   ecma_char_t code_units[max_code_units_in_string];
-  lit_utf8_iterator_pos_t saved_positions[max_code_units_in_string];
+  lit_utf8_byte_t *saved_positions[max_code_units_in_string];
 
   for (int i = 0; i < test_iters; i++)
   {
-    lit_utf8_size_t utf8_string_size = (i == 0) ? 0 : (lit_utf8_size_t) (rand () % max_bytes_in_string);
-    ecma_length_t length = generate_cesu8_string (utf8_string, utf8_string_size);
+    lit_utf8_size_t cesu8_string_size = (i == 0) ? 0 : (lit_utf8_size_t) (rand () % max_bytes_in_string);
+    ecma_length_t length = generate_cesu8_string (cesu8_string, cesu8_string_size);
 
-    JERRY_ASSERT (lit_utf8_string_length (utf8_string, utf8_string_size) == length);
+    JERRY_ASSERT (lit_utf8_string_length (cesu8_string, cesu8_string_size) == length);
 
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (utf8_string, utf8_string_size);
+    lit_utf8_byte_t *curr_p = cesu8_string;
+    const lit_utf8_byte_t *end_p = cesu8_string + cesu8_string_size;
+
     ecma_length_t calculated_length = 0;
-
     ecma_length_t code_units_count = 0;
-    while (!lit_utf8_iterator_is_eos (&iter))
+
+    while (curr_p < end_p)
     {
-      code_units[code_units_count] = lit_utf8_iterator_peek_next (&iter);
-      saved_positions[code_units_count] = lit_utf8_iterator_get_pos (&iter);
+      code_units[code_units_count] = lit_utf8_peek_next (curr_p);
+      saved_positions[code_units_count] = curr_p;
       code_units_count++;
       calculated_length++;
 
-      lit_utf8_iterator_incr (&iter);
+      lit_utf8_incr (&curr_p);
     }
 
     JERRY_ASSERT (length == calculated_length);
@@ -139,53 +141,52 @@ main (int __attr_unused___ argc,
       for (int j = 0; j < test_subiters; j++)
       {
         ecma_length_t index = (ecma_length_t) rand () % code_units_count;
-        lit_utf8_iterator_seek (&iter, saved_positions[index]);
-        JERRY_ASSERT (lit_utf8_iterator_peek_next (&iter) == code_units[index]);
-        JERRY_ASSERT (lit_utf8_iterator_get_index (&iter) == index);
+        curr_p = saved_positions[index];
+        JERRY_ASSERT (lit_utf8_peek_next (curr_p) == code_units[index]);
       }
     }
 
-    lit_utf8_iterator_seek_eos (&iter);
-    while (!lit_utf8_iterator_is_bos (&iter))
+    curr_p = (lit_utf8_byte_t *) end_p;
+    while (curr_p > cesu8_string)
     {
       JERRY_ASSERT (code_units_count > 0);
       calculated_length--;
-      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_iterator_peek_prev (&iter));
-      lit_utf8_iterator_decr (&iter);
+      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_peek_prev (curr_p));
+      lit_utf8_decr (&curr_p);
     }
 
     JERRY_ASSERT (calculated_length == 0);
 
-    while (!lit_utf8_iterator_is_eos (&iter))
+    while (curr_p < end_p)
     {
-      ecma_char_t code_unit = lit_utf8_iterator_read_next (&iter);
+      ecma_char_t code_unit = lit_utf8_read_next (&curr_p);
       JERRY_ASSERT (code_unit == code_units[calculated_length]);
       calculated_length++;
     }
 
     JERRY_ASSERT (length == calculated_length);
 
-    while (!lit_utf8_iterator_is_bos (&iter))
+    while (curr_p > cesu8_string)
     {
       JERRY_ASSERT (code_units_count > 0);
       calculated_length--;
-      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_iterator_read_prev (&iter));
+      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_read_prev (&curr_p));
     }
 
     JERRY_ASSERT (calculated_length == 0);
   }
 
   /* Overlong-encoded code point */
-  lit_utf8_byte_t invalid_utf8_string_1[] = {0xC0, 0x82};
-  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_utf8_string_1, sizeof (invalid_utf8_string_1)));
+  lit_utf8_byte_t invalid_cesu8_string_1[] = {0xC0, 0x82};
+  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
 
   /* Overlong-encoded code point */
-  lit_utf8_byte_t invalid_utf8_string_2[] = {0xE0, 0x80, 0x81};
-  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_utf8_string_2, sizeof (invalid_utf8_string_2)));
+  lit_utf8_byte_t invalid_cesu8_string_2[] = {0xE0, 0x80, 0x81};
+  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
 
   /* Pair of surrogates: 0xD901 0xDFF0 which encode Unicode character 0x507F0 */
-  lit_utf8_byte_t invalid_utf8_string_3[] = {0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0};
-  JERRY_ASSERT (lit_is_cesu8_string_valid (invalid_utf8_string_3, sizeof (invalid_utf8_string_3)));
+  lit_utf8_byte_t invalid_cesu8_string_3[] = {0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0};
+  JERRY_ASSERT (lit_is_cesu8_string_valid (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
 
   /* Isolated high surrogate 0xD901 */
   lit_utf8_byte_t valid_utf8_string_1[] = {0xED, 0xA4, 0x81};

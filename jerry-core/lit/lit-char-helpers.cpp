@@ -326,7 +326,7 @@ lit_char_hex_to_int (ecma_char_t c) /**< code unit, corresponding to
  * @return true if decoding was successful, false otherwise
  */
 bool
-lit_read_code_point_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
+lit_read_code_point_from_hex (lit_utf8_byte_t *buf_p, /**< buffer with characters */
                               lit_utf8_size_t number_of_characters, /**< number of characters to be read */
                               lit_code_point_t *out_code_point_p) /**< @out: decoded result */
 {

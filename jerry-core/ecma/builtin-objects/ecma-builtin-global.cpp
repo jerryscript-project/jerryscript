@@ -90,11 +90,12 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
     ssize_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, (ssize_t) utf8_str_size);
     JERRY_ASSERT (actual_sz == (ssize_t) utf8_str_size);
 
-    lit_utf8_iterator_t str_iter = lit_utf8_iterator_create (utf8_str_p, utf8_str_size);
+    lit_utf8_byte_t *utf8_str_curr_p = utf8_str_p;
+    const lit_utf8_byte_t *utf8_str_end_p = utf8_str_p + utf8_str_size;
 
-    while (!lit_utf8_iterator_is_eos (&str_iter))
+    while (utf8_str_curr_p < utf8_str_end_p)
     {
-      ecma_char_t code_point = lit_utf8_iterator_read_next (&str_iter);
+      ecma_char_t code_point = lit_utf8_read_next (&utf8_str_curr_p);
 
       if (code_point == LIT_CHAR_NULL)
       {
@@ -207,42 +208,40 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
 
   if (str_size > 0)
   {
-    MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size, lit_utf8_byte_t);
+    MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
 
     ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                       utf8_string_buff,
+                                                       string_buff,
                                                        (ssize_t) str_size);
     JERRY_ASSERT (bytes_copied >= 0);
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (utf8_string_buff, str_size);
+    lit_utf8_byte_t *string_curr_p = string_buff;
+    lit_utf8_byte_t *string_end_p = string_buff + str_size;
 
     /* 2. Remove leading whitespace. */
-    lit_utf8_iterator_seek_eos (&iter);
 
-    lit_utf8_iterator_pos_t start = lit_utf8_iterator_get_pos (&iter);
-    lit_utf8_iterator_pos_t end = lit_utf8_iterator_get_pos (&iter);
+    lit_utf8_byte_t *start_p = string_end_p;
+    lit_utf8_byte_t *end_p = string_end_p;
 
-    lit_utf8_iterator_seek_bos (&iter);
-
-    while (!lit_utf8_iterator_is_eos (&iter))
+    while (string_curr_p < string_end_p)
     {
-      ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+      ecma_char_t current_char = lit_utf8_read_next (&string_curr_p);
 
       if (!lit_char_is_white_space (current_char)
           && !lit_char_is_line_terminator (current_char))
       {
-        lit_utf8_iterator_read_prev (&iter);
-        start = lit_utf8_iterator_get_pos (&iter);
+        lit_utf8_decr (&string_curr_p);
+        start_p = string_curr_p;
         break;
       }
     }
 
-    if (!lit_utf8_iterator_is_eos (&iter))
+    if (string_curr_p < string_end_p)
     {
       /* 3. */
       int sign = 1;
 
       /* 4. */
-      ecma_char_t current = lit_utf8_iterator_read_next (&iter);
+      ecma_char_t current = lit_utf8_read_next (&string_curr_p);
       if (current == LIT_CHAR_MINUS)
       {
         sign = -1;
@@ -251,10 +250,10 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
       /* 5. */
       if (current == LIT_CHAR_MINUS || current == LIT_CHAR_PLUS)
       {
-        start = lit_utf8_iterator_get_pos (&iter);
-        if (!lit_utf8_iterator_is_eos (&iter))
+        start_p = string_curr_p;
+        if (string_curr_p < string_end_p)
         {
-          current = lit_utf8_iterator_read_next (&iter);
+          current = lit_utf8_read_next (&string_curr_p);
         }
       }
 
@@ -292,25 +291,23 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
         /* 10. */
         if (strip_prefix)
         {
-          if (end.offset - start.offset >= 2 && current == LIT_CHAR_0)
+          if (end_p - start_p >= 2 && current == LIT_CHAR_0)
           {
-            ecma_char_t next = lit_utf8_iterator_peek_next (&iter);
+            ecma_char_t next = *string_curr_p;
             if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
             {
               /* Skip the 'x' or 'X' characters. */
-              lit_utf8_iterator_incr (&iter);
-              start = lit_utf8_iterator_get_pos (&iter);
-
+              start_p = ++string_curr_p;
               rad = 16;
             }
           }
         }
 
         /* 11. Check if characters are in [0, Radix - 1]. We also convert them to number values in the process. */
-        lit_utf8_iterator_seek (&iter, start);
-        while (!lit_utf8_iterator_is_eos (&iter))
+        string_curr_p = start_p;
+        while (string_curr_p < string_end_p)
         {
-          ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+          ecma_char_t current_char = *string_curr_p++;
           int32_t current_number;
 
           if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
@@ -333,14 +330,13 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
 
           if (!(current_number < rad))
           {
-            lit_utf8_iterator_decr (&iter);
-            end = lit_utf8_iterator_get_pos (&iter);
+            end_p = --string_curr_p;
             break;
           }
         }
 
         /* 12. */
-        if (end.offset - start.offset == 0)
+        if (end_p == start_p)
         {
           ecma_number_t *ret_num_p = ecma_alloc_number ();
           *ret_num_p = ecma_number_make_nan ();
@@ -355,17 +351,11 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
         ecma_number_t multiplier = 1.0f;
 
         /* 13. and 14. */
-        if (end.offset < str_size)
+        string_curr_p = end_p;
+
+        while (string_curr_p > start_p)
         {
-          lit_utf8_iterator_seek (&iter, end);
-        }
-        else
-        {
-          lit_utf8_iterator_seek_eos (&iter);
-        }
-        while (lit_utf8_iterator_get_pos (&iter).offset > start.offset)
-        {
-          ecma_char_t current_char = lit_utf8_iterator_read_prev (&iter);
+          ecma_char_t current_char = *(--string_curr_p);
           ecma_number_t current_number;
 
           if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
@@ -407,7 +397,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
       ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
+    MEM_FINALIZE_LOCAL_ARRAY (string_buff);
   }
   else
   {
@@ -443,32 +433,29 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
 
   if (str_size > 0)
   {
-    MEM_DEFINE_LOCAL_ARRAY (utf8_string_buff, str_size, lit_utf8_byte_t);
+    MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
 
     ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                       utf8_string_buff,
+                                                       string_buff,
                                                        (ssize_t) str_size);
     JERRY_ASSERT (bytes_copied >= 0);
-    lit_utf8_iterator_t iter = lit_utf8_iterator_create (utf8_string_buff, str_size);
 
-    lit_utf8_iterator_seek_eos (&iter);
+    lit_utf8_byte_t *str_curr_p = string_buff;
+    lit_utf8_byte_t *str_end_p = string_buff + str_size;
 
-    lit_utf8_iterator_pos_t start = lit_utf8_iterator_get_pos (&iter);
-    lit_utf8_iterator_pos_t end = lit_utf8_iterator_get_pos (&iter);
-
-    lit_utf8_iterator_seek_bos (&iter);
-
+    lit_utf8_byte_t *start_p = str_end_p;
+    lit_utf8_byte_t *end_p = str_end_p;
 
     /* 2. Find first non whitespace char and set starting position. */
-    while (!lit_utf8_iterator_is_eos (&iter))
+    while (str_curr_p < str_end_p)
     {
-      ecma_char_t current_char = lit_utf8_iterator_read_next (&iter);
+      ecma_char_t current_char = lit_utf8_read_next (&str_curr_p);
 
       if (!lit_char_is_white_space (current_char)
           && !lit_char_is_line_terminator (current_char))
       {
-        lit_utf8_iterator_decr (&iter);
-        start = lit_utf8_iterator_get_pos (&iter);
+        lit_utf8_decr (&str_curr_p);
+        start_p = str_curr_p;
         break;
       }
     }
@@ -476,10 +463,10 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     bool sign = false;
     ecma_char_t current;
 
-    if (!lit_utf8_iterator_is_eos (&iter))
+    if (str_curr_p < str_end_p)
     {
       /* Check if sign is present. */
-      current = lit_utf8_iterator_read_next (&iter);
+      current = *str_curr_p;
       if (current == LIT_CHAR_MINUS)
       {
         sign = true;
@@ -488,27 +475,21 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       if (current == LIT_CHAR_MINUS || current == LIT_CHAR_PLUS)
       {
         /* Set starting position to be after the sign character. */
-        start = lit_utf8_iterator_get_pos (&iter);
-      }
-      else
-      {
-        lit_utf8_iterator_decr (&iter);
+        start_p = ++str_curr_p;
       }
     }
 
     ecma_number_t *ret_num_p = ecma_alloc_number ();
 
-    const lit_utf8_byte_t *infinity_utf8_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
-    lit_utf8_iterator_t infinity_iter = lit_utf8_iterator_create (infinity_utf8_str_p,
-                                                                  sizeof (*infinity_utf8_str_p));
-
-    JERRY_ASSERT (!lit_utf8_iterator_is_eos (&infinity_iter));
+    const lit_utf8_byte_t *infinity_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
+    lit_utf8_byte_t *infinity_str_curr_p = (lit_utf8_byte_t *) infinity_str_p;
+    lit_utf8_byte_t *infinity_str_end_p = infinity_str_curr_p + sizeof (*infinity_str_p);
 
     /* Check if string is equal to "Infinity". */
-    while (!lit_utf8_iterator_is_eos (&iter)
-           && (lit_utf8_iterator_read_next (&iter) == lit_utf8_iterator_read_next (&infinity_iter)))
+    while (str_curr_p < str_end_p
+           && *str_curr_p++ == *infinity_str_curr_p++)
     {
-      if (lit_utf8_iterator_is_eos (&infinity_iter))
+      if (infinity_str_curr_p == infinity_str_end_p)
       {
         /* String matched Infinity. */
         *ret_num_p = ecma_number_make_infinity (sign);
@@ -518,11 +499,11 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     }
 
     /* Reset to starting position. */
-    lit_utf8_iterator_seek (&iter, start);
+    str_curr_p = start_p;
 
-    if (ecma_is_completion_value_empty (ret_value) && !lit_utf8_iterator_is_eos (&iter))
+    if (ecma_is_completion_value_empty (ret_value) && str_curr_p < str_end_p)
     {
-      current = lit_utf8_iterator_read_next (&iter);
+      current = *str_curr_p;
 
       bool has_whole_part = false;
       bool has_fraction_part = false;
@@ -531,105 +512,93 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       if (lit_char_is_decimal_digit (current))
       {
         has_whole_part = true;
+        str_curr_p++;
 
-        while (!lit_utf8_iterator_is_eos (&iter))
+        while (str_curr_p < str_end_p)
         {
-          current = lit_utf8_iterator_read_next (&iter);
+          current = *str_curr_p++;
           if (!lit_char_is_decimal_digit (current))
           {
-            lit_utf8_iterator_decr (&iter);
+            str_curr_p--;
             break;
           }
         }
       }
-      else
-      {
-        lit_utf8_iterator_decr (&iter);
-      }
+
 
       /* Set end position to the end of whole part. */
-      end = lit_utf8_iterator_get_pos (&iter);
-      if (!lit_utf8_iterator_is_eos (&iter))
+      end_p = str_curr_p;
+      if (str_curr_p < str_end_p)
       {
-        current = lit_utf8_iterator_read_next (&iter);
+        current = *str_curr_p;
       }
 
       /* Check decimal point. */
-      if (current == LIT_CHAR_DOT && !lit_utf8_iterator_is_eos (&iter))
+      if (current == LIT_CHAR_DOT && str_curr_p < str_end_p)
       {
-        current = lit_utf8_iterator_read_next (&iter);
+        current = *(++str_curr_p);
 
         if (lit_char_is_decimal_digit (current))
         {
           has_fraction_part = true;
+          str_curr_p++;
 
           /* Check digits of fractional part. */
-          while (!lit_utf8_iterator_is_eos (&iter))
+          while (str_curr_p < str_end_p)
           {
-            current = lit_utf8_iterator_read_next (&iter);
+            current = *str_curr_p++;
             if (!lit_char_is_decimal_digit (current))
             {
-              lit_utf8_iterator_decr (&iter);
+              str_curr_p--;
               break;
             }
           }
 
           /* Set end position to end of fraction part. */
-          end = lit_utf8_iterator_get_pos (&iter);
+          end_p = str_curr_p;
         }
-        else
-        {
-          lit_utf8_iterator_decr (&iter);
-        }
-      }
-      else
-      {
-        lit_utf8_iterator_decr (&iter);
       }
 
-      if (!lit_utf8_iterator_is_eos (&iter))
+
+      if (str_curr_p < str_end_p)
       {
-        current = lit_utf8_iterator_read_next (&iter);
+        current = *str_curr_p++;
       }
 
       /* Check exponent. */
       if ((current == LIT_CHAR_LOWERCASE_E || current == LIT_CHAR_UPPERCASE_E)
           && (has_whole_part || has_fraction_part)
-          && !lit_utf8_iterator_is_eos (&iter))
+          && str_curr_p < str_end_p)
       {
-        current = lit_utf8_iterator_read_next (&iter);
+        current = *str_curr_p++;
 
         /* Check sign of exponent. */
         if ((current == LIT_CHAR_PLUS || current == LIT_CHAR_MINUS)
-             && !lit_utf8_iterator_is_eos (&iter))
+             && str_curr_p < str_end_p)
         {
-          current = lit_utf8_iterator_read_next (&iter);
+          current = *str_curr_p++;
         }
 
         if (lit_char_is_decimal_digit (current))
         {
           /* Check digits of exponent part. */
-          while (!lit_utf8_iterator_is_eos (&iter))
+          while (str_curr_p < str_end_p)
           {
-            current = lit_utf8_iterator_read_next (&iter);
+            current = *str_curr_p++;
             if (!lit_char_is_decimal_digit (current))
             {
-              lit_utf8_iterator_decr (&iter);
+              str_curr_p--;
               break;
             }
           }
 
           /* Set end position to end of exponent part. */
-          end = lit_utf8_iterator_get_pos (&iter);
+          end_p = str_curr_p;
         }
-      }
-      else
-      {
-        lit_utf8_iterator_decr (&iter);
       }
 
       /* String did not contain a valid number. */
-      if (start.offset == end.offset)
+      if (start_p == end_p)
       {
         *ret_num_p = ecma_number_make_nan ();
         ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
@@ -637,8 +606,8 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       else
       {
         /* 5. */
-        *ret_num_p = ecma_utf8_string_to_number (utf8_string_buff + start.offset,
-                                                 (lit_utf8_size_t) (end.offset - start.offset));
+        *ret_num_p = ecma_utf8_string_to_number (start_p,
+                                                 (lit_utf8_size_t) (end_p - start_p));
 
         if (sign)
         {
@@ -654,7 +623,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       *ret_num_p = ecma_number_make_nan ();
       ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
     }
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buff);
+    MEM_FINALIZE_LOCAL_ARRAY (string_buff);
   }
   /* String length is zero. */
   else
@@ -1301,12 +1270,13 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
    * The escape routine has two major phases: first we compute
    * the length of the output, then we encode the input.
    */
-  lit_utf8_iterator_t iterator = lit_utf8_iterator_create (input_start_p, input_size);
+  lit_utf8_byte_t *input_curr_p = input_start_p;
+  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
   lit_utf8_size_t output_length = 0;
 
-  while (!lit_utf8_iterator_is_eos (&iterator))
+  while (input_curr_p < input_end_p)
   {
-    ecma_char_t chr = lit_utf8_iterator_read_next (&iterator);
+    ecma_char_t chr = lit_utf8_read_next (&input_curr_p);
 
     if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
     {
@@ -1335,11 +1305,11 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
 
   lit_utf8_byte_t *output_char_p = output_start_p;
 
-  lit_utf8_iterator_seek_bos (&iterator);
+  input_curr_p = input_start_p;
 
-  while (!lit_utf8_iterator_is_eos (&iterator))
+  while (input_curr_p < input_end_p)
   {
-    ecma_char_t chr = lit_utf8_iterator_read_next (&iterator);
+    ecma_char_t chr = lit_utf8_read_next (&input_curr_p);
 
     if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
     {

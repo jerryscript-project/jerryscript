@@ -383,19 +383,15 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
   uint32_t alterantive_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
+  bool should_loop = true;
 
-  while (true)
+  while (ecma_is_completion_value_empty (ret_value) && should_loop)
   {
     ECMA_TRY_CATCH (empty,
                     re_parse_next_token (re_ctx_p->parser_ctx_p,
                                          &(re_ctx_p->current_token)),
                     ret_value);
-    ECMA_FINALIZE (empty);
 
-    if (!ecma_is_completion_value_empty (ret_value))
-    {
-      return ret_value; /* error */
-    }
     uint32_t new_atom_start_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 
     switch (re_ctx_p->current_token.type)
@@ -411,10 +407,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         {
           re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, true);
         }
-        else
-        {
-          return ret_value; /* error */
-        }
+
         break;
       }
       case RE_TOK_START_NON_CAPTURE_GROUP:
@@ -428,10 +421,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         {
           re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
         }
-        else
-        {
-          return ret_value; /* error */
-        }
+
         break;
       }
       case RE_TOK_CHAR:
@@ -506,10 +496,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
           re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         }
-        else
-        {
-          return ret_value; /* error */
-        }
+
         break;
       }
       case RE_TOK_ASSERT_START_NEG_LOOKAHEAD:
@@ -526,10 +513,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
           re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         }
-        else
-        {
-          return ret_value; /* error */
-        }
+
         break;
       }
       case RE_TOK_BACKREFERENCE:
@@ -580,10 +564,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
         ECMA_FINALIZE (empty);
 
-        if (ecma_is_completion_value_throw (ret_value))
-        {
-          return ret_value; /* error */
-        }
         break;
       }
       case RE_TOK_END_GROUP:
@@ -597,9 +577,9 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         else
         {
           re_insert_u32 (bc_ctx_p, alterantive_offset, re_get_bytecode_length (bc_ctx_p) - alterantive_offset);
+          should_loop = false;
         }
-
-        return ret_value;
+        break;
       }
       case RE_TOK_EOF:
       {
@@ -610,19 +590,20 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         else
         {
           re_insert_u32 (bc_ctx_p, alterantive_offset, re_get_bytecode_length (bc_ctx_p) - alterantive_offset);
+          should_loop = false;
         }
 
-        return ret_value;
+        break;
       }
       default:
       {
         ret_value = ecma_raise_syntax_error ("Unexpected RegExp token.");
-        return ret_value;
+        break;
       }
     }
+    ECMA_FINALIZE (empty);
   }
 
-  JERRY_UNREACHABLE ();
   return ret_value;
 } /* re_parse_alternative */
 
@@ -656,10 +637,10 @@ re_compile_bytecode (re_bytecode_t **out_bytecode_p, /**< out:pointer to bytecod
   ssize_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, (ssize_t) pattern_str_size);
   JERRY_ASSERT (sz >= 0);
 
-  lit_utf8_iterator_t iter = lit_utf8_iterator_create (pattern_start_p, pattern_str_size);
-
   re_parser_ctx_t parser_ctx;
-  parser_ctx.iter = iter;
+  parser_ctx.input_start_p = pattern_start_p;
+  parser_ctx.input_curr_p = pattern_start_p;
+  parser_ctx.input_end_p = pattern_start_p + pattern_str_size;
   parser_ctx.num_of_groups = -1;
   re_ctx.parser_ctx_p = &parser_ctx;
 

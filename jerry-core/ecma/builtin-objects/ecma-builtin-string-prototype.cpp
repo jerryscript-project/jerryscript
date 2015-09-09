@@ -369,10 +369,9 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                                                (ssize_t) (original_size));
       JERRY_ASSERT (sz >= 0);
 
-      lit_utf8_iterator_t original_it = lit_utf8_iterator_create (original_str_utf8_p, original_size);
-
       ecma_length_t index = start;
-      lit_utf8_iterator_advance (&original_it, index);
+
+      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p + index;
 
       /* create utf8 string from search string */
       MEM_DEFINE_LOCAL_ARRAY (search_str_utf8_p,
@@ -384,7 +383,7 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                                                (ssize_t) (search_size));
       JERRY_ASSERT (sz >= 0);
 
-      lit_utf8_iterator_t search_it = lit_utf8_iterator_create (search_str_utf8_p, search_size);
+      lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
 
       /* iterate original string and try to match at each position */
       bool found = false;
@@ -392,10 +391,10 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
       while (!found && index <= original_len - search_len)
       {
         ecma_length_t match_len = 0;
-        lit_utf8_iterator_pos_t stored_original_pos = lit_utf8_iterator_get_pos (&original_it);
+        lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
 
         while (match_len < search_len &&
-               lit_utf8_iterator_read_next (&original_it) == lit_utf8_iterator_read_next (&search_it))
+               lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&search_str_curr_p))
         {
           match_len++;
         }
@@ -409,9 +408,9 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
         else
         {
           /* reset iterators */
-          lit_utf8_iterator_seek_bos (&search_it);
-          lit_utf8_iterator_seek (&original_it, stored_original_pos);
-          lit_utf8_iterator_incr (&original_it);
+          search_str_curr_p = search_str_utf8_p;
+          original_str_curr_p = stored_original_str_curr_p;
+          lit_utf8_incr (&original_str_curr_p);
         }
         index++;
       }
@@ -765,7 +764,7 @@ typedef struct
 
   /* Replace value string part. */
   ecma_string_t *replace_string_p; /**< replace string */
-  lit_utf8_iterator_t replace_iterator; /**< replace string iterator */
+  lit_utf8_byte_t *replace_str_curr_p; /**< replace string iterator */
 } ecma_builtin_replace_search_ctx_t;
 
 /**
@@ -907,42 +906,44 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
                                              (ssize_t) (input_size));
     JERRY_ASSERT (sz >= 0);
 
-    lit_utf8_iterator_t search_iterator = lit_utf8_iterator_create (search_start_p, search_size);
-    lit_utf8_iterator_t input_iterator = lit_utf8_iterator_create (input_start_p, input_size);
+    lit_utf8_byte_t *search_str_curr_p = search_start_p;
+    lit_utf8_byte_t *input_str_curr_p = input_start_p;
 
     ecma_length_t match_start = 0;
     ecma_length_t match_end = 0;
     bool match_found = false;
 
-    if (lit_utf8_iterator_is_eos (&search_iterator))
+    if (!search_size)
     {
       /* Empty string, always matches. */
       match_found = true;
     }
     else
     {
-      ecma_char_t first_char = lit_utf8_iterator_read_next (&search_iterator);
+      const lit_utf8_byte_t *input_str_end_p = input_start_p + input_size;
+      const lit_utf8_byte_t *search_str_end_p = search_start_p + search_size;
+      ecma_char_t first_char = lit_utf8_read_next (&search_str_curr_p);
 
-      while (!lit_utf8_iterator_is_eos (&input_iterator))
+      while (input_str_curr_p < input_str_end_p)
       {
-        if (lit_utf8_iterator_read_next (&input_iterator) == first_char)
+        if (lit_utf8_read_next (&input_str_curr_p) == first_char)
         {
-          /* Local copy to preserve the original value of the iterators. */
-          lit_utf8_iterator_t nested_search_iterator = search_iterator;
-          lit_utf8_iterator_t nested_input_iterator = input_iterator;
+          /* Local copy to preserve the original value. */
+          lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
+          lit_utf8_byte_t *nested_input_str_curr_p = input_str_curr_p;
           match_end = match_start + 1;
 
           match_found = true;
-          while (!lit_utf8_iterator_is_eos (&nested_search_iterator))
+          while (nested_search_str_curr_p < search_str_end_p)
           {
-            if (lit_utf8_iterator_is_eos (&nested_input_iterator))
+            if (nested_input_str_curr_p >= input_str_end_p)
             {
               match_found = false;
               break;
             }
 
-            ecma_char_t search_character = lit_utf8_iterator_read_next (&nested_search_iterator);
-            ecma_char_t input_character = lit_utf8_iterator_read_next (&nested_input_iterator);
+            ecma_char_t search_character = lit_utf8_read_next (&nested_search_str_curr_p);
+            ecma_char_t input_character = lit_utf8_read_next (&nested_input_str_curr_p);
 
             if (search_character != input_character)
             {
@@ -1095,19 +1096,18 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
     ecma_length_t previous_start = 0;
     ecma_length_t current_position = 0;
 
-    lit_utf8_iterator_t replace_iterator = context_p->replace_iterator;
+    lit_utf8_byte_t *replace_str_curr_p = context_p->replace_str_curr_p;
+    lit_utf8_byte_t *replace_str_end_p = replace_str_curr_p + ecma_string_get_size (context_p->replace_string_p);
 
-    JERRY_ASSERT (lit_utf8_iterator_is_bos (&replace_iterator));
-
-    while (!lit_utf8_iterator_is_eos (&replace_iterator))
+    while (replace_str_curr_p < replace_str_end_p)
     {
       ecma_char_t action = LIT_CHAR_NULL;
 
-      if (lit_utf8_iterator_read_next (&replace_iterator) == LIT_CHAR_DOLLAR_SIGN)
+      if (*replace_str_curr_p++ == LIT_CHAR_DOLLAR_SIGN)
       {
-        if (!lit_utf8_iterator_is_eos (&replace_iterator))
+        if (replace_str_curr_p < replace_str_end_p)
         {
-          action = lit_utf8_iterator_peek_next (&replace_iterator);
+          action = *replace_str_curr_p;
 
           if (action == LIT_CHAR_DOLLAR_SIGN)
           {
@@ -1125,9 +1125,9 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
             }
             else if (index == 0 || match_length > 10)
             {
-              lit_utf8_iterator_incr (&replace_iterator);
+              replace_str_curr_p++;
 
-              ecma_char_t next_character = lit_utf8_iterator_peek_next (&replace_iterator);
+              ecma_char_t next_character = *replace_str_curr_p;
 
               if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
               {
@@ -1138,7 +1138,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                 }
               }
 
-              lit_utf8_iterator_decr (&replace_iterator);
+              replace_str_curr_p--;
 
               if (index == 0)
               {
@@ -1162,7 +1162,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                                                                                       previous_start,
                                                                                       current_position,
                                                                                       true);
-        lit_utf8_iterator_incr (&replace_iterator);
+        replace_str_curr_p++;
 
         if (action == LIT_CHAR_DOLLAR_SIGN)
         {
@@ -1198,16 +1198,16 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
             index = (uint32_t) (action - LIT_CHAR_0);
 
             if ((match_length > 10 || index == 0)
-                && !lit_utf8_iterator_is_eos (&replace_iterator))
+                && replace_str_curr_p < replace_str_end_p)
             {
-              action = lit_utf8_iterator_peek_next (&replace_iterator);
+              action = *replace_str_curr_p;
               if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
               {
                 uint32_t full_index = index * 10 + (uint32_t) (action - LIT_CHAR_0);
                 if (full_index < match_length)
                 {
                   index = full_index;
-                  lit_utf8_iterator_incr (&replace_iterator);
+                  replace_str_curr_p++;
                   current_position++;
                 }
               }
@@ -1419,7 +1419,7 @@ ecma_builtin_string_prototype_object_replace_main (ecma_builtin_replace_search_c
     JERRY_ASSERT (sz >= 0);
 
     context_p->replace_string_p = replace_string_p;
-    context_p->replace_iterator = lit_utf8_iterator_create (replace_start_p, replace_size);
+    context_p->replace_str_curr_p = replace_start_p;
 
     ret_value = ecma_builtin_string_prototype_object_replace_loop (context_p);
 
@@ -2300,11 +2300,12 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
    */
 
   lit_utf8_size_t output_length = 0;
-  lit_utf8_iterator_t input_iterator = lit_utf8_iterator_create (input_start_p, input_size);
+  lit_utf8_byte_t *input_str_curr_p = input_start_p;
+  const lit_utf8_byte_t *input_str_end_p = input_start_p + input_size;
 
-  while (!lit_utf8_iterator_is_eos (&input_iterator))
+  while (input_str_curr_p < input_str_end_p)
   {
-    ecma_char_t character = lit_utf8_iterator_read_next (&input_iterator);
+    ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
     lit_utf8_byte_t utf8_byte_buffer[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
     lit_utf8_size_t character_length;
@@ -2339,11 +2340,11 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   lit_utf8_byte_t *output_char_p = output_start_p;
 
   /* Encoding the output. */
-  lit_utf8_iterator_seek_bos (&input_iterator);
+  input_str_curr_p = input_start_p;
 
-  while (!lit_utf8_iterator_is_eos (&input_iterator))
+  while (input_str_curr_p < input_str_end_p)
   {
-    ecma_char_t character = lit_utf8_iterator_read_next (&input_iterator);
+    ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
     lit_utf8_size_t character_length;
 

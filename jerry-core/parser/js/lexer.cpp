@@ -177,7 +177,7 @@ lexer_create_token_for_charset (token_type tt, /**< token type */
 
   lit_utf8_byte_t *converted_str_p;
 
-  if (should_convert)
+  if (unlikely (should_convert))
   {
     lit_utf8_iterator_seek_bos (&iter);
     converted_str_p = (lit_utf8_byte_t *) jsp_mm_alloc (new_size);
@@ -198,7 +198,7 @@ lexer_create_token_for_charset (token_type tt, /**< token type */
   literal_t lit = lit_find_literal_by_utf8_string (converted_str_p, new_length);
   if (lit != NULL)
   {
-    if (should_convert)
+    if (unlikely (should_convert))
     {
       jsp_mm_free (converted_str_p);
     }
@@ -210,7 +210,7 @@ lexer_create_token_for_charset (token_type tt, /**< token type */
                 || lit->get_type () == LIT_MAGIC_STR_T
                 || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
-  if (should_convert)
+  if (unlikely (should_convert))
   {
     jsp_mm_free (converted_str_p);
   }

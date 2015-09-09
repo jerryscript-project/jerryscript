@@ -598,10 +598,9 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                                                (ssize_t) (original_size));
       JERRY_ASSERT (sz >= 0);
 
-      lit_utf8_iterator_t original_it = lit_utf8_iterator_create (original_str_utf8_p, original_size);
-
       ecma_length_t index = start;
-      lit_utf8_iterator_advance (&original_it, index);
+
+      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p + index;
 
       /* create utf8 string from search string */
       MEM_DEFINE_LOCAL_ARRAY (search_str_utf8_p,
@@ -613,7 +612,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                                                (ssize_t) (search_size));
       JERRY_ASSERT (sz >= 0);
 
-      lit_utf8_iterator_t search_it = lit_utf8_iterator_create (search_str_utf8_p, search_size);
+      lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
 
       /* iterate original string and try to match at each position */
       bool searching = true;
@@ -622,11 +621,11 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
       {
         /* match as long as possible */
         ecma_length_t match_len = 0;
-        lit_utf8_iterator_t stored_original_it = original_it;
+        lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
 
         while (match_len < search_len &&
                index + match_len < original_len &&
-               lit_utf8_iterator_read_next (&original_it) == lit_utf8_iterator_read_next (&search_it))
+               lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&search_str_curr_p))
         {
           match_len++;
         }
@@ -640,14 +639,14 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
         else
         {
           /* inc/dec index and update iterators and search condition */
-          lit_utf8_iterator_seek_bos (&search_it);
-          original_it = stored_original_it;
+          search_str_curr_p = search_str_utf8_p;
+          original_str_curr_p = stored_original_str_curr_p;
 
           if (firstIndex)
           {
             if ((searching = (index <= original_len - search_len)))
             {
-              lit_utf8_iterator_incr (&original_it);
+              lit_utf8_incr (&original_str_curr_p);
               index++;
             }
           }
@@ -655,7 +654,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
           {
             if ((searching = (index > 0)))
             {
-              lit_utf8_iterator_decr (&original_it);
+              lit_utf8_decr (&original_str_curr_p);
               index--;
             }
           }

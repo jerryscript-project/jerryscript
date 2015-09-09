@@ -15,27 +15,34 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (Jerry CXX C ASM)
 
-# Require g++ of version >= 4.7.0
- if(NOT CMAKE_COMPILER_IS_GNUCXX)
-  message(FATAL_ERROR "g++ compiler is required")
- else()
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
-                  OUTPUT_VARIABLE GNU_CXX_VERSION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Determining platform
+ set(PLATFORM "${CMAKE_SYSTEM_NAME}")
+ string(TOUPPER "${PLATFORM}" PLATFORM)
 
-  if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
-   message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
-  endif()
+# Compiler configuration
+ if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
+  # Require g++ of version >= 4.7.0
+   if(NOT CMAKE_COMPILER_IS_GNUCXX)
+    message(FATAL_ERROR "g++ compiler is required")
+   else()
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
+                    OUTPUT_VARIABLE GNU_CXX_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
+     message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
+    endif()
+   endif()
+
+  # Use gcc-ar and gcc-ranlib to support LTO
+   get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
+   get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
+   get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
+   string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
+   string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
+   set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
+   set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
  endif()
-
-# Use gcc-ar and gcc-ranlib to support LTO
- get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
- get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
- get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
- string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
- string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
- set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
- set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
 
 # Imported and third-party targets prefix
  set(PREFIX_IMPORTED_LIB imported_)
@@ -58,16 +65,18 @@ project (Jerry CXX C ASM)
  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
  set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 
-# Determining platform and defining options
+# Defining options
  option(ENABLE_VALGRIND "Enable valgrind helpers in memory allocators" OFF)
  option(ENABLE_LTO      "Enable LTO build" ON)
  option(ENABLE_LOG      "Enable LOG build" OFF)
 
- set(PLATFORM "${CMAKE_SYSTEM_NAME}")
- string(TOUPPER "${PLATFORM}" PLATFORM)
-
  if("${PLATFORM}" STREQUAL "LINUX")
   set(PLATFORM_EXT "LINUX")
+  set(EXTERNAL_BUILD FALSE)
+
+  option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" ON)
+ elseif("${PLATFORM}" STREQUAL "DARWIN")
+  set(PLATFORM_EXT "DARWIN")
   set(EXTERNAL_BUILD FALSE)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" ON)
@@ -170,6 +179,17 @@ project (Jerry CXX C ASM)
      "COMPACT_PROFILE_MINIMAL MINIMAL_FOOTPRINT"
      "COMPACT_PROFILE_MINIMAL MEMORY_STATISTICS")
 
+ # Darwin
+  set(MODIFIERS_LISTS_DARWIN
+     "FULL_PROFILE"
+     "COMPACT_PROFILE"
+     "COMPACT_PROFILE_MINIMAL"
+     "FULL_PROFILE MINIMAL_FOOTPRINT"
+     "FULL_PROFILE MINIMAL_FOOTPRINT MEMORY_STATISTICS"
+     "FULL_PROFILE MEMORY_STATISTICS"
+     "COMPACT_PROFILE_MINIMAL MINIMAL_FOOTPRINT"
+     "COMPACT_PROFILE_MINIMAL MEMORY_STATISTICS")
+
  # MCU
   # stm32f3
    set(MODIFIERS_LISTS_MCU_STM32F3
@@ -193,7 +213,10 @@ project (Jerry CXX C ASM)
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
- set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
+ if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
+  set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
+ endif()
+ set(LINKER_FLAGS_COMMON_DARWIN "-lSystem")
 
  # Turn off linking to compiler's default libc, in case jerry-libc is used
  if(${USE_JERRY_LIBC})
@@ -202,7 +225,10 @@ project (Jerry CXX C ASM)
 
  # LTO
   if("${ENABLE_LTO}" STREQUAL "ON")
-   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto -fno-fat-lto-objects")
+   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -flto")
+   if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -fno-fat-lto-objects")
+   endif()
    set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -flto")
   endif()
 
@@ -213,20 +239,28 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
 
  # Warnings
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic -Wlogical-op")
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wfatal-errors")
+  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wfatal-errors")
+  if(CMAKE_COMPILER_IS_GNUCXX)
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wlogical-op")
+  else()
+    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wno-nested-anon-types")
+  endif()
 
  # Static build
-  set(LINKER_FLAGS_STATIC "-static")
+  if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
+   set(LINKER_FLAGS_STATIC "-static")
+  endif()
 
  # C++
   set(CXX_FLAGS_JERRY "-std=c++11 -fno-exceptions -fno-rtti")
-
   # Turn off implicit template instantiation
-   set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
+   if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
+   endif()
 
  # C
   set(C_FLAGS_JERRY "-std=c99")
@@ -258,6 +292,9 @@ project (Jerry CXX C ASM)
    # Linux
     set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-linux.cpp)
 
+   # Darwin
+    set(SOURCE_JERRY_STANDALONE_MAIN_DARWIN main-darwin.cpp)
+
    # MCU
     # stm32f3
      set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main-mcu.cpp)
@@ -269,6 +306,16 @@ project (Jerry CXX C ASM)
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
 
 # Imported libraries
+if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+ # libclang_rt.osx
+  add_library(${PREFIX_IMPORTED_LIB}libclang_rt.osx STATIC IMPORTED)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=
+                  OUTPUT_VARIABLE IMPORTED_LIBCLANG_RT_LOCATION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(IMPORTED_LIBCLANG_RT_LOCATION "${IMPORTED_LIBCLANG_RT_LOCATION}/lib/darwin/libclang_rt.osx.a")
+  set_property(TARGET ${PREFIX_IMPORTED_LIB}libclang_rt.osx
+               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBCLANG_RT_LOCATION})
+else()
  # libgcc
   add_library(${PREFIX_IMPORTED_LIB}libgcc STATIC IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc.a
@@ -289,6 +336,7 @@ project (Jerry CXX C ASM)
    set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc_eh
                 PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
   endif()
+endif()
 
 # Platform-specific configuration
  set(MODIFIERS_LISTS ${MODIFIERS_LISTS_${PLATFORM_EXT}})
@@ -338,7 +386,7 @@ project (Jerry CXX C ASM)
                         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
      add_custom_target(mcu_header_with_script_to_run.${TARGET_NAME} DEPENDS ${MCU_SCRIPT_GENERATED_HEADER})
      set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_MCU_SCRIPT_HEADER="${MCU_SCRIPT_GENERATED_HEADER}")
-    elseif("${PLATFORM}" STREQUAL "LINUX")
+    elseif(("${PLATFORM}" STREQUAL "LINUX") OR ("${PLATFORM}" STREQUAL "DARWIN"))
      if("${ENABLE_LOG}" STREQUAL "ON")
       set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
      endif()
@@ -352,8 +400,13 @@ project (Jerry CXX C ASM)
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-                          ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+     target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
+		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
+	else()
+     target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
+		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+	endif()
 
     add_cppcheck_target(${TARGET_NAME})
 
@@ -406,7 +459,7 @@ project (Jerry CXX C ASM)
  declare_targets_for_build_mode(RELEASE)
 
  # Unit tests declaration
-  if("${PLATFORM}" STREQUAL "LINUX")
+  if(("${PLATFORM}" STREQUAL "LINUX") OR ("${PLATFORM}" STREQUAL "DARWIN"))
    add_custom_target(unittests)
    add_custom_target(cppcheck.unittests)
 
@@ -427,8 +480,14 @@ project (Jerry CXX C ASM)
                  PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
-    target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
-                          ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
+                            ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
+	else()
+      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
+                            ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+    endif()
 
     add_cppcheck_target(${TARGET_NAME})
 

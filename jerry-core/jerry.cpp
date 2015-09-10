@@ -1338,6 +1338,11 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
                | JERRY_FLAG_MEM_STATS_SEPARATE);
 
     JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
+#else /* !MEM_STATS */
+    if (flags & (JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
+    {
+      flags |= JERRY_FLAG_MEM_STATS;
+    }
 #endif /* !MEM_STATS */
   }
 

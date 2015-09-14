@@ -98,7 +98,7 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr [:upper:] [:lower:])
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release
 
-export TARGET_NATIVE_MODS = cp cp_minimal mem_stats mfp cp_minimal-mfp mfp-mem_stats
+export TARGET_NATIVE_MODS = cp cp_minimal mem_stats mem_stress_test
 
 export TARGET_MCU_MODS = cp cp_minimal
 

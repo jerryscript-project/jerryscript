@@ -1343,7 +1343,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
     {
       flags |= JERRY_FLAG_MEM_STATS;
     }
-#endif /* !MEM_STATS */
+#endif /* MEM_STATS */
   }
 
   jerry_flags = flags;

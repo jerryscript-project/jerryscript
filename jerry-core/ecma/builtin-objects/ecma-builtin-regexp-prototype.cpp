@@ -124,8 +124,6 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         /* Get bytecode property. */
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-        re_bytecode_t *old_bc_p = ECMA_GET_NON_NULL_POINTER (re_bytecode_t,
-                                                             bc_prop_p->u.internal_property.value);
 
         FIXME ("We currently have to re-compile the bytecode, because we can't copy it without knowing its length.")
         re_bytecode_t *new_bc_p = NULL;
@@ -133,7 +131,13 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */
         JERRY_ASSERT (ecma_is_completion_value_empty (bc_comp));
 
-        mem_heap_free_block (old_bc_p);
+        re_bytecode_t *old_bc_p = ECMA_GET_POINTER (re_bytecode_t,
+                                                    bc_prop_p->u.internal_property.value);
+        if (old_bc_p != NULL)
+        {
+          mem_heap_free_block (old_bc_p);
+        }
+
         ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
 
         re_initialize_props (this_obj_p, pattern_string_p, flags);
@@ -184,15 +188,20 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
       {
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-        re_bytecode_t *old_bc_p = ECMA_GET_NON_NULL_POINTER (re_bytecode_t,
-                                                             bc_prop_p->u.internal_property.value);
-
         /* Try to compile bytecode from new source. */
         re_bytecode_t *new_bc_p = NULL;
         ECMA_TRY_CATCH (bc_dummy, re_compile_bytecode (&new_bc_p, pattern_string_p, flags), ret_value);
 
-        /* Replace old bytecode with new one. */
-        mem_heap_free_block (old_bc_p);
+
+        re_bytecode_t *old_bc_p = ECMA_GET_POINTER (re_bytecode_t,
+                                                    bc_prop_p->u.internal_property.value);
+
+        if (old_bc_p != NULL)
+        {
+          /* Replace old bytecode with new one. */
+          mem_heap_free_block (old_bc_p);
+        }
+
         ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
         re_initialize_props (this_obj_p, pattern_string_p, flags);
         ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));

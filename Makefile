@@ -78,7 +78,7 @@
    QLOG := >/dev/null
   endif
 
-export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr [:upper:] [:lower:])
+export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)

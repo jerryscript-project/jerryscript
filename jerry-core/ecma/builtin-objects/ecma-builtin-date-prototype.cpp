@@ -347,24 +347,32 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  /* 1. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (t, time, ret_value);
-  ecma_number_t *value_p = ecma_alloc_number ();
-  *value_p = ecma_date_time_clip (t);
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+  {
+    ret_value = ecma_raise_type_error ("Incompatible type");
+  }
+  else
+  {
+    /* 1. */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (t, time, ret_value);
+    ecma_number_t *value_p = ecma_alloc_number ();
+    *value_p = ecma_date_time_clip (t);
 
-  /* 2. */
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    /* 2. */
+    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                     ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-  ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+    ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
                                                                prim_value_prop_p->u.internal_property.value);
-  *prim_value_num_p = *value_p;
+    *prim_value_num_p = *value_p;
 
-  /* 3. */
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (value_p));
-  ECMA_OP_TO_NUMBER_FINALIZE (t);
+    /* 3. */
+    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (value_p));
+    ECMA_OP_TO_NUMBER_FINALIZE (t);
+  }
 
   return ret_value;
 } /* ecma_builtin_date_prototype_set_time */

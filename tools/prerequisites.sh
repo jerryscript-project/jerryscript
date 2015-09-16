@@ -207,7 +207,6 @@ function setup_vera() {
   chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
 }
 
-TMP_DIR=`mktemp -d --tmpdir=./`
 HOST_OS=`uname -s`
 
 if [ "$HOST_OS" == "Darwin" ]

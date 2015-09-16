@@ -21,17 +21,18 @@ project (Jerry CXX C ASM)
 
 # Compiler configuration
  if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
-  # Require g++ of version >= 4.7.0
-   if(NOT CMAKE_COMPILER_IS_GNUCXX)
-    message(FATAL_ERROR "g++ compiler is required")
-   else()
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
-                    OUTPUT_VARIABLE GNU_CXX_VERSION
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(NOT CMAKE_COMPILER_IS_GNUCXX)
+   message(FATAL_ERROR "g++ compiler is required")
+  endif()
+ endif()
 
-    if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
-     message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
-    endif()
+ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  # Require g++ of version >= 4.7.0
+   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
+                   OUTPUT_VARIABLE GNU_CXX_VERSION
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+   if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
+    message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
    endif()
 
   # Use gcc-ar and gcc-ranlib to support LTO
@@ -239,7 +240,7 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wfatal-errors")
-  if(CMAKE_COMPILER_IS_GNUCXX)
+  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wlogical-op")
   else()
     set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wno-nested-anon-types")
@@ -253,7 +254,7 @@ project (Jerry CXX C ASM)
  # C++
   set(CXX_FLAGS_JERRY "-std=c++11 -fno-exceptions -fno-rtti")
   # Turn off implicit template instantiation
-   if(CMAKE_COMPILER_IS_GNUCXX)
+   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
    endif()
 
@@ -301,7 +302,7 @@ project (Jerry CXX C ASM)
   file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
 
 # Imported libraries
-if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
  # libclang_rt.osx
   add_library(${PREFIX_IMPORTED_LIB}libclang_rt.osx STATIC IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=
@@ -395,7 +396,7 @@ endif()
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
-    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
 		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
 	else()
@@ -476,7 +477,7 @@ endif()
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
 
-    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCXX))
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
       target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
 	else()

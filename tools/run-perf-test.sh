@@ -107,6 +107,7 @@ function run-suite()
   done
 }
 
+date
 printf "%40s | %28s | %28s |\n" "Benchmark" "RSS<br>(+ is better)" "Perf<br>(+ is better)"
 printf "%40s | %28s | %28s |\n" "---------" "---" "----"
 
@@ -119,3 +120,4 @@ perf_rel_gmean=$(echo "$perf_rel_mult" "$perf_n" | awk '{print $1 ^ (1.0 / $2);}
 perf_percent_gmean=$(echo "$perf_rel_gmean" | awk '{print (1.0 - $1) * 100;}')
 
 printf "%40s | %28s | %28s |\n" "Geometric mean:" "RSS reduction: $mem_percent_gmean%" "Speed up: $perf_percent_gmean%"
+date

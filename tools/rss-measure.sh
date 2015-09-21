@@ -17,6 +17,7 @@
 JERRY=$1
 TEST=$2
 SLEEP=0.1
+OS=`uname -s | tr [:upper:] [:lower:]`
 
 Rss_OUT=""
 
@@ -25,7 +26,12 @@ function collect_entry()
   OUT_NAME="$1_OUT";
   OUT=$OUT_NAME;
 
-  SUM=$(grep -o -e "^[0-9a-f][0-9a-f]*.*" -e "^Rss.*" /proc/$PID/smaps 2>/dev/null | grep -A 1 -- "r[w-]-p " | grep "^Rss"|awk '{s += $2;} END {print s;}')
+  if [ "$OS" == "darwin" ]
+  then
+    SUM=`ps -o rss $PID | grep [0-9]`
+  else
+    SUM=$(grep -o -e "^[0-9a-f][0-9a-f]*.*" -e "^Rss.*" /proc/$PID/smaps 2>/dev/null | grep -A 1 -- "r[w-]-p " | grep "^Rss"|awk '{s += $2;} END {print s;}')
+  fi;
 
   if [ "$SUM" != "" ];
   then

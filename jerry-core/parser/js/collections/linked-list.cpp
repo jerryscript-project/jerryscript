@@ -57,11 +57,13 @@ linked_list_free (linked_list list)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
-  if (header->next)
+
+  while (header != null_list)
   {
-    linked_list_free ((linked_list) header->next);
+    linked_list_header *next_header_p = header->next;
+    jsp_mm_free ((linked_list) header);
+    header = next_header_p;
   }
-  jsp_mm_free (list);
 }
 
 void *
@@ -69,45 +71,53 @@ linked_list_element (linked_list list, size_t element_num)
 {
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
+
   size_t block_size = linked_list_block_size ();
-  linked_list raw = list + sizeof (linked_list_header);
-  if (block_size < header->element_size * (element_num + 1))
+  size_t element_count = element_num;
+
+  while (block_size < header->element_size * (element_count + 1))
   {
-    if (header->next)
-    {
-      return linked_list_element ((linked_list) header->next,
-                                  element_num - (block_size / header->element_size));
-    }
-    else
+    header = header->next;
+
+    if (header == null_list)
     {
       return NULL;
     }
+
+    element_count = element_count - (block_size / header->element_size);
   }
-  raw += header->element_size * element_num;
-  return raw;
+
+  uint8_t *raw_start_p = (linked_list) header + sizeof (linked_list_header);
+
+  return raw_start_p + (header->element_size * element_count);
 }
 
 void
 linked_list_set_element (linked_list list, size_t element_num, void *element)
 {
+  if (element == NULL)
+  {
+    return;
+  }
+
   ASSERT_LIST (list);
   linked_list_header *header = (linked_list_header *) list;
+
   size_t block_size = linked_list_block_size ();
-  uint8_t *raw = (uint8_t *) (header + 1);
-  if (block_size < header->element_size * (element_num + 1))
+  size_t element_count = element_num;
+
+  while (block_size < header->element_size * (element_count + 1))
   {
     if (header->next == null_list)
     {
       header->next = (linked_list_header *) linked_list_init (header->element_size);
     }
-    linked_list_set_element ((linked_list) header->next,
-                             element_num - (block_size / header->element_size),
-                             element);
-    return;
+
+    header = header->next;
+    element_count = element_count - (block_size / header->element_size);
   }
-  if (element == NULL)
-  {
-    return;
-  }
-  memcpy (raw + element_num * header->element_size, element, header->element_size);
+
+  uint8_t *raw_start_p = (linked_list) header + sizeof (linked_list_header);
+
+  memcpy (raw_start_p + element_count * header->element_size, element, header->element_size);
 }

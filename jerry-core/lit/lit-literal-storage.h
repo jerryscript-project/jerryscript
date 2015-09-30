@@ -88,7 +88,7 @@ public:
   void
   set_alignment_bytes_count (size_t count) /**< count of the alignment bytes */
   {
-    JERRY_ASSERT (count <= RCS_DYN_STORAGE_ALIGNMENT);
+    JERRY_ASSERT (count <= RCS_DYN_STORAGE_LENGTH_UNIT);
     set_field (_alignment_field_pos, _alignment_field_width, count);
   } /* set_alignment_bytes_count */
 
@@ -141,9 +141,9 @@ private:
   void
   set_size (size_t size) /**< size in bytes */
   {
-    JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_ALIGNMENT) == size);
+    JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_LENGTH_UNIT) == size);
 
-    set_field (_length_field_pos, _length_field_width, size >> RCS_DYN_STORAGE_ALIGNMENT_LOG);
+    set_field (_length_field_pos, _length_field_width, size >> RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
   } /* set_size */
 
   /**
@@ -163,12 +163,12 @@ private:
    * Offset and length of 'alignment' field, in bits
    */
   static const uint32_t _alignment_field_pos = _fields_offset_begin;
-  static const uint32_t _alignment_field_width = 2u;
+  static const uint32_t _alignment_field_width = RCS_DYN_STORAGE_LENGTH_UNIT_LOG;
 
   /**
    * Offset and length of 'hash' field, in bits
    */
-  static const uint32_t _hash_field_pos = _alignment_field_pos + _alignment_field_width + 2u;
+  static const uint32_t _hash_field_pos = _alignment_field_pos + _alignment_field_width;
   static const uint32_t _hash_field_width = 8u;
 
   /**

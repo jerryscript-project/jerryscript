@@ -33,9 +33,6 @@
 // Maximum number of elements in a type-one record
 #define test_max_type_one_record_elements 64
 
-// Element size in a type-one record
-#define test_element_size_type_one_record (sizeof (uint16_t))
-
 class test_rcs_record_type_one_t : public rcs_record_t
 {
 public:
@@ -52,9 +49,9 @@ public:
 
   void set_size (size_t size)
   {
-    JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_ALIGNMENT) == size);
+    JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_LENGTH_UNIT) == size);
 
-    set_field (length_field_pos, length_field_width, size >> RCS_DYN_STORAGE_ALIGNMENT_LOG);
+    set_field (length_field_pos, length_field_width, size >> RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
   }
 
   rcs_record_t* get_prev () const
@@ -67,15 +64,16 @@ public:
     set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
   }
 
+  typedef uint16_t element_t;
+
+  static const size_t header_size = 2 * RCS_DYN_STORAGE_LENGTH_UNIT;
+  static const size_t element_size = sizeof (test_rcs_record_type_one_t::element_t);
 private:
   static const uint32_t length_field_pos = _fields_offset_begin;
   static const uint32_t length_field_width = 12u;
 
   static const uint32_t prev_field_pos = length_field_pos + length_field_width;
   static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
-
-  static const size_t header_size = 2 * RCS_DYN_STORAGE_LENGTH_UNIT;
-  static const size_t element_size = test_element_size_type_one_record;
 };
 
 class test_rcs_record_type_two_t : public rcs_record_t
@@ -106,11 +104,10 @@ public:
     set_pointer (prev_field_pos, prev_field_width, prev_rec_p);
   }
 
+  static const size_t header_size = RCS_DYN_STORAGE_LENGTH_UNIT;
 private:
   static const uint32_t prev_field_pos = _fields_offset_begin;
   static const uint32_t prev_field_width = rcs_cpointer_t::bit_field_width;
-
-  static const size_t header_size = RCS_DYN_STORAGE_LENGTH_UNIT;
 };
 
 class test_rcs_recordset_t : public rcs_recordset_t
@@ -224,7 +221,7 @@ main (int __attr_unused___ argc,
   {
     test_rcs_record_type_one_t *type_one_records[test_sub_iters];
     uint32_t type_one_record_element_counts[test_sub_iters];
-    uint16_t type_one_record_elements[test_sub_iters][test_max_type_one_record_elements];
+    test_rcs_record_type_one_t::element_t type_one_record_elements[test_sub_iters][test_max_type_one_record_elements];
     int type_one_records_number = 0;
 
     test_rcs_record_type_two_t *type_two_records[test_sub_iters];
@@ -243,11 +240,12 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (type_one_records[type_one_records_number] != NULL);
 
         rcs_record_iterator_t it (&storage, type_one_records[type_one_records_number]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[type_one_records_number]; it.skip<uint16_t>(), i++)
+        it.skip (test_rcs_record_type_one_t::header_size); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[type_one_records_number];
+             it.skip<test_rcs_record_type_one_t::element_t>(), i++)
         {
-          uint16_t val = (uint16_t)rand ();
+          test_rcs_record_type_one_t::element_t val = (test_rcs_record_type_one_t::element_t) rand ();
           type_one_record_elements[type_one_records_number][i] = val;
           it.write (val);
         }
@@ -255,12 +253,13 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (type_one_records[type_one_records_number] != NULL);
 
         it.reset ();
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[type_one_records_number]; it.skip<uint16_t>(), i++)
+        it.skip (test_rcs_record_type_one_t::header_size); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[type_one_records_number];
+             it.skip<test_rcs_record_type_one_t::element_t>(), i++)
         {
-          uint16_t val = type_one_record_elements[type_one_records_number][i];
-          JERRY_ASSERT (val == it.read<uint16_t> ());
+          test_rcs_record_type_one_t::element_t val = type_one_record_elements[type_one_records_number][i];
+          JERRY_ASSERT (val == it.read<test_rcs_record_type_one_t::element_t> ());
         }
 
         type_one_records_number++;
@@ -287,16 +286,20 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_one_records_number);
 
         rcs_record_iterator_t it (&storage, type_one_records[index_to_free]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[index_to_free]; it.skip<uint16_t>(), i++)
+        it.skip (test_rcs_record_type_one_t::header_size); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[index_to_free];
+             it.skip<test_rcs_record_type_one_t::element_t>(), i++)
         {
-          uint16_t val = type_one_record_elements[index_to_free][i];
-          JERRY_ASSERT (it.read <uint16_t> () == val);
+          test_rcs_record_type_one_t::element_t val = type_one_record_elements[index_to_free][i];
+          JERRY_ASSERT (it.read <test_rcs_record_type_one_t::element_t> () == val);
         }
 
-        JERRY_ASSERT (JERRY_ALIGNUP (type_one_record_element_counts[index_to_free]*2 + 8, RCS_DYN_STORAGE_ALIGNMENT) ==
-                type_one_records[index_to_free]->get_size ());
+        JERRY_ASSERT (JERRY_ALIGNUP (type_one_record_element_counts[index_to_free]
+                                     * sizeof (test_rcs_record_type_one_t::element_t)
+                                     + test_rcs_record_type_one_t::header_size,
+                                     RCS_DYN_STORAGE_LENGTH_UNIT)
+                      == type_one_records[index_to_free]->get_size ());
       }
 
       bool free_type_one;
@@ -326,12 +329,13 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_one_records_number);
 
         rcs_record_iterator_t it (&storage, type_one_records[index_to_free]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[index_to_free]; it.skip<uint16_t>(), i++)
+        it.skip (test_rcs_record_type_one_t::header_size); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[index_to_free];
+             it.skip<test_rcs_record_type_one_t::element_t>(), i++)
         {
-          uint16_t val = type_one_record_elements[index_to_free][i];
-          JERRY_ASSERT (it.read <uint16_t> () == val);
+          test_rcs_record_type_one_t::element_t val = type_one_record_elements[index_to_free][i];
+          JERRY_ASSERT (it.read <test_rcs_record_type_one_t::element_t> () == val);
         }
 
         // free the record
@@ -343,7 +347,7 @@ main (int __attr_unused___ argc,
           type_one_records[index_to_free] = type_one_records[index_to_free + 1];
           type_one_record_element_counts[index_to_free] = type_one_record_element_counts[index_to_free + 1];
           memcpy (type_one_record_elements[index_to_free], type_one_record_elements[index_to_free + 1],
-                  test_max_type_one_record_elements * test_element_size_type_one_record);
+                  test_max_type_one_record_elements * sizeof (test_rcs_record_type_one_t::element_t));
 
           index_to_free++;
         }

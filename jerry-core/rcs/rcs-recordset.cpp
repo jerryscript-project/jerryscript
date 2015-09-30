@@ -53,29 +53,43 @@ rcs_recordset_t::record_t::set_type (rcs_record_t::type_t type) /**< record type
  * @return dynamic storage-specific extended compressed pointer
  */
 rcs_cpointer_t
-rcs_recordset_t::record_t::cpointer_t::compress (rcs_record_t* pointer) /**< pointer to compress */
+rcs_recordset_t::record_t::cpointer_t::compress (rcs_record_t *pointer) /**< pointer to compress */
 {
   rcs_cpointer_t cpointer;
 
+  cpointer.packed_value = 0;
+
   uintptr_t base_pointer = JERRY_ALIGNDOWN ((uintptr_t) pointer, MEM_ALIGNMENT);
-  uintptr_t diff = (uintptr_t) pointer - base_pointer;
 
-  JERRY_ASSERT (diff < MEM_ALIGNMENT);
-  JERRY_ASSERT (jrt_extract_bit_field (diff, 0, RCS_DYN_STORAGE_ALIGNMENT_LOG) == 0);
-
-  uintptr_t ext_part = (uintptr_t) jrt_extract_bit_field (diff,
-                                                          RCS_DYN_STORAGE_ALIGNMENT_LOG,
-                                                          MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_ALIGNMENT_LOG);
-
-  if ((void*) base_pointer == NULL)
+  if ((void *) base_pointer == NULL)
   {
     cpointer.value.base_cp = MEM_CP_NULL;
   }
   else
   {
-    cpointer.value.base_cp = mem_compress_pointer ((void*) base_pointer) & MEM_CP_MASK;
+    cpointer.value.base_cp = mem_compress_pointer ((void *) base_pointer) & MEM_CP_MASK;
   }
-  cpointer.value.ext = ext_part & ((1ull << (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_ALIGNMENT_LOG)) - 1);
+
+#if MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG
+  /*
+   * If alignment of a unit in recordset storage is less than required by MEM_ALIGNMENT_LOG,
+   * then mem_cpointer_t can't store pointer to the unit, and so, rcs_cpointer_t stores
+   * mem_cpointer_t to block, aligned to MEM_ALIGNMENT, and also extension with difference
+   * between positions of the MEM_ALIGNMENT-aligned block and the unit.
+   */
+  uintptr_t diff = (uintptr_t) pointer - base_pointer;
+
+  JERRY_ASSERT (diff < MEM_ALIGNMENT);
+  JERRY_ASSERT (jrt_extract_bit_field (diff, 0, RCS_DYN_STORAGE_LENGTH_UNIT_LOG) == 0);
+
+  uintptr_t ext_part = (uintptr_t) jrt_extract_bit_field (diff,
+                                                          RCS_DYN_STORAGE_LENGTH_UNIT_LOG,
+                                                          MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
+
+  cpointer.value.ext = ext_part & ((1ull << (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG)) - 1);
+#endif /* MEM_ALIGNMENT > RCS_DYN_STORAGE_LENGTH_UNIT_LOG */
+
+  JERRY_ASSERT (decompress (cpointer) == pointer);
 
   return cpointer;
 } /* rcs_recordset_t::record_t::cpointer_t::compress */
@@ -99,9 +113,20 @@ rcs_recordset_t::record_t::cpointer_t::decompress (rcs_cpointer_t compressed_poi
     base_pointer = (uint8_t*) mem_decompress_pointer (compressed_pointer.value.base_cp);
   }
 
-  uintptr_t diff = (uintptr_t) compressed_pointer.value.ext << RCS_DYN_STORAGE_ALIGNMENT_LOG;
+  uintptr_t diff = 0;
 
-  return (rcs_recordset_t::record_t*) (base_pointer + diff);
+#if MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG
+  /*
+   * See also:
+   *          rcs_recordset_t::record_t::cpointer_t::compress
+   */
+
+  diff = (uintptr_t) compressed_pointer.value.ext << RCS_DYN_STORAGE_LENGTH_UNIT_LOG;
+#endif /* MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG */
+
+  rcs_record_t *rec_p = (rcs_record_t *) (base_pointer + diff);
+
+  return rec_p;
 } /* rcs_recordset_t::record_t::cpointer_t::decompress */
 
 /**
@@ -128,7 +153,7 @@ const
 
   uintptr_t ptr = (uintptr_t) this;
 
-  JERRY_ASSERT (JERRY_ALIGNUP (ptr, RCS_DYN_STORAGE_ALIGNMENT) == ptr);
+  JERRY_ASSERT (JERRY_ALIGNUP (ptr, RCS_DYN_STORAGE_LENGTH_UNIT) == ptr);
 } /* rcs_recordset_t::record_t::check_this */
 
 /**
@@ -143,7 +168,7 @@ const
 {
   check_this ();
 
-  JERRY_ASSERT (sizeof (uint32_t) == RCS_DYN_STORAGE_LENGTH_UNIT);
+  JERRY_ASSERT (sizeof (uint32_t) <= RCS_DYN_STORAGE_LENGTH_UNIT);
   JERRY_ASSERT (field_pos + field_width <= RCS_DYN_STORAGE_LENGTH_UNIT * JERRY_BITSINBYTE);
 
   uint32_t value = *reinterpret_cast<const uint32_t*> (this);
@@ -160,7 +185,7 @@ rcs_recordset_t::record_t::set_field (uint32_t field_pos, /**< offset, in bits *
 {
   check_this ();
 
-  JERRY_ASSERT (sizeof (uint32_t) == RCS_DYN_STORAGE_LENGTH_UNIT);
+  JERRY_ASSERT (sizeof (uint32_t) <= RCS_DYN_STORAGE_LENGTH_UNIT);
   JERRY_ASSERT (field_pos + field_width <= RCS_DYN_STORAGE_LENGTH_UNIT * JERRY_BITSINBYTE);
 
   uint32_t prev_value = *reinterpret_cast<uint32_t*> (this);
@@ -215,7 +240,7 @@ rcs_recordset_t::alloc_record_in_place (rcs_record_t* place_p, /**< where to ini
                                                            *   and next allocated record */
                                         rcs_record_t* next_record_p) /**< next allocated record */
 {
-  const size_t node_data_space_size = _chunk_list.get_data_space_size ();
+  const size_t node_data_space_size = get_node_data_space_size ();
 
   if (next_record_p != NULL)
   {
@@ -226,7 +251,7 @@ rcs_recordset_t::alloc_record_in_place (rcs_record_t* place_p, /**< where to ini
     else
     {
       rcs_chunked_list_t::node_t* node_p = _chunk_list.get_node_from_pointer (next_record_p);
-      uint8_t* node_data_space_p = _chunk_list.get_data_space (node_p);
+      uint8_t* node_data_space_p = get_node_data_space (node_p);
 
       JERRY_ASSERT ((uint8_t*) next_record_p < node_data_space_p + node_data_space_size);
 
@@ -242,7 +267,7 @@ rcs_recordset_t::alloc_record_in_place (rcs_record_t* place_p, /**< where to ini
         JERRY_ASSERT (size_passed_back < free_size && size_passed_back + node_data_space_size > free_size);
 
         node_p = _chunk_list.get_prev (node_p);
-        node_data_space_p = _chunk_list.get_data_space (node_p);
+        node_data_space_p = get_node_data_space (node_p);
 
         free_rec_p = (rcs_record_t*) (node_data_space_p + node_data_space_size - \
                                       (free_size - size_passed_back));
@@ -265,8 +290,8 @@ rcs_recordset_t::alloc_record_in_place (rcs_record_t* place_p, /**< where to ini
       next_node_p = _chunk_list.get_next (node_p);
     }
 
-    uint8_t* node_data_space_p = _chunk_list.get_data_space (node_p);
-    const size_t node_data_space_size = _chunk_list.get_data_space_size ();
+    uint8_t* node_data_space_p = get_node_data_space (node_p);
+    const size_t node_data_space_size = get_node_data_space_size ();
 
     rcs_record_t* free_rec_p = (rcs_record_t*) (node_data_space_p + node_data_space_size \
                                                 - free_size);
@@ -301,6 +326,35 @@ rcs_recordset_t::is_record_free (rcs_record_t *record_p) /**< a record */
 } /* rcs_recordset_t::is_record_free */
 
 /**
+ * Get the node's data space
+ *
+ * @return pointer to beginning of the node's data space
+ */
+uint8_t *
+rcs_recordset_t::get_node_data_space (rcs_chunked_list_t::node_t *node_p) /**< the node */
+const
+{
+  uintptr_t unaligned_data_space_beg = (uintptr_t) _chunk_list.get_node_data_space (node_p);
+  uintptr_t aligned_data_space_beg = JERRY_ALIGNUP (unaligned_data_space_beg, RCS_DYN_STORAGE_LENGTH_UNIT);
+
+  JERRY_ASSERT (unaligned_data_space_beg + rcs_chunked_list_t::get_node_data_space_size ()
+                == aligned_data_space_beg + rcs_recordset_t::get_node_data_space_size ());
+
+  return (uint8_t *) aligned_data_space_beg;
+} /* rcs_recordset_t::get_node_data_space */
+
+/**
+ * Get size of a node's data space
+ *
+ * @return size
+ */
+size_t
+rcs_recordset_t::get_node_data_space_size (void)
+{
+  return JERRY_ALIGNDOWN (rcs_chunked_list_t::get_node_data_space_size (), RCS_DYN_STORAGE_LENGTH_UNIT);
+} /* rcs_recordset_t::get_node_data_space_size */
+
+/**
  * Allocate record of specified size
  *
  * @return record identifier
@@ -313,10 +367,10 @@ rcs_recordset_t::alloc_space_for_record (size_t bytes, /**< size */
 {
   assert_state_is_correct ();
 
-  JERRY_ASSERT (JERRY_ALIGNUP (bytes, RCS_DYN_STORAGE_ALIGNMENT) == bytes);
+  JERRY_ASSERT (JERRY_ALIGNUP (bytes, RCS_DYN_STORAGE_LENGTH_UNIT) == bytes);
   JERRY_ASSERT (out_prev_rec_p != NULL);
 
-  const size_t node_data_space_size = _chunk_list.get_data_space_size ();
+  const size_t node_data_space_size = get_node_data_space_size ();
 
   *out_prev_rec_p = NULL;
 
@@ -340,7 +394,7 @@ rcs_recordset_t::alloc_space_for_record (size_t bytes, /**< size */
       else
       {
         rcs_chunked_list_t::node_t* node_p = _chunk_list.get_node_from_pointer (rec_p);
-        uint8_t* node_data_space_p = _chunk_list.get_data_space (node_p);
+        uint8_t* node_data_space_p = get_node_data_space (node_p);
         uint8_t* node_data_space_end_p = node_data_space_p + node_data_space_size;
 
         uint8_t* rec_space_p = (uint8_t*) rec_p;
@@ -379,7 +433,7 @@ rcs_recordset_t::alloc_space_for_record (size_t bytes, /**< size */
   /* free record of sufficient size was not found */
 
   rcs_chunked_list_t::node_t *node_p = _chunk_list.append_new ();
-  rcs_record_t* new_rec_p = (rcs_record_t*) _chunk_list.get_data_space (node_p);
+  rcs_record_t* new_rec_p = (rcs_record_t*) get_node_data_space (node_p);
 
   size_t allocated_size = node_data_space_size;
 
@@ -442,7 +496,7 @@ rcs_recordset_t::free_record (rcs_record_t* record_p) /**< record to free */
     node_to_p = _chunk_list.get_node_from_pointer (rec_to_p);
   }
 
-  const size_t node_data_space_size = _chunk_list.get_data_space_size ();
+  const size_t node_data_space_size = get_node_data_space_size ();
 
   uint8_t* rec_from_beg_p = (uint8_t*) rec_from_p;
   uint8_t* rec_to_beg_p = (uint8_t*) rec_to_p;
@@ -467,10 +521,10 @@ rcs_recordset_t::free_record (rcs_record_t* record_p) /**< record to free */
 
     JERRY_ASSERT (_chunk_list.get_next (node_from_p) == node_to_p);
 
-    size_t node_from_space = (size_t) (_chunk_list.get_data_space (node_from_p) +
+    size_t node_from_space = (size_t) (get_node_data_space (node_from_p) +
                                        node_data_space_size - rec_from_beg_p);
     size_t node_to_space = (size_t) (node_to_p != NULL
-                                     ? rec_to_beg_p - _chunk_list.get_data_space (node_to_p)
+                                     ? rec_to_beg_p - get_node_data_space (node_to_p)
                                      : 0);
 
     free_size = node_from_space + node_to_space;
@@ -510,7 +564,7 @@ rcs_recordset_t::get_first (void)
   }
   else
   {
-    return (rcs_record_t*) _chunk_list.get_data_space (first_node_p);
+    return (rcs_record_t*) get_node_data_space (first_node_p);
   }
 } /* rcs_recordset_t::get_first */
 
@@ -539,8 +593,8 @@ rcs_recordset_t::get_next (rcs_record_t* rec_p) /**< record */
 {
   rcs_chunked_list_t::node_t* node_p = _chunk_list.get_node_from_pointer (rec_p);
 
-  const uint8_t* data_space_begin_p = _chunk_list.get_data_space (node_p);
-  const size_t data_space_size = _chunk_list.get_data_space_size ();
+  const uint8_t* data_space_begin_p = get_node_data_space (node_p);
+  const size_t data_space_size = get_node_data_space_size ();
 
   const uint8_t* record_start_p = (const uint8_t*) rec_p;
   size_t record_size = get_record_size (rec_p);
@@ -575,7 +629,7 @@ rcs_recordset_t::get_next (rcs_record_t* rec_p) /**< record */
     }
     else
     {
-      return (rcs_record_t*) (_chunk_list.get_data_space (node_p) + record_size_left);
+      return (rcs_record_t*) (get_node_data_space (node_p) + record_size_left);
     }
   }
 } /* rcs_recordset_t::get_next */
@@ -643,7 +697,7 @@ rcs_recordset_t::assert_state_is_correct (void)
     while (node_p != next_node_p)
     {
       node_p = _chunk_list.get_next (node_p);
-      node_size_sum += _chunk_list.get_data_space_size ();
+      node_size_sum += get_node_data_space_size ();
     }
   }
 
@@ -671,14 +725,14 @@ rcs_record_iterator_t::access (access_t access_type, /**< type of access: read, 
                                void *data, /**< in/out data to read or write */
                                size_t size) /**< size of the data in bytes */
 {
-  const size_t node_data_space_size = _recordset_p->_chunk_list.get_data_space_size ();
+  const size_t node_data_space_size = _recordset_p->get_node_data_space_size ();
   JERRY_ASSERT (2 * node_data_space_size >= size);
   const size_t record_size = _recordset_p->get_record_size (_record_start_p);
 
   JERRY_ASSERT (!finished ());
 
   rcs_chunked_list_t::node_t *current_node_p = _recordset_p->_chunk_list.get_node_from_pointer (_current_pos_p);
-  uint8_t *current_node_data_space_p = _recordset_p->_chunk_list.get_data_space (current_node_p);
+  uint8_t *current_node_data_space_p = _recordset_p->get_node_data_space (current_node_p);
   size_t left_in_node = node_data_space_size - (size_t)(_current_pos_p - current_node_data_space_p);
 
   JERRY_ASSERT (_current_offset + size <= record_size);
@@ -709,7 +763,7 @@ rcs_record_iterator_t::access (access_t access_type, /**< type of access: read, 
       {
         current_node_p = _recordset_p->_chunk_list.get_next (current_node_p);
         JERRY_ASSERT (current_node_p);
-        _current_pos_p = _recordset_p->_chunk_list.get_data_space (current_node_p);
+        _current_pos_p = _recordset_p->get_node_data_space (current_node_p);
       }
       else
       {
@@ -733,7 +787,7 @@ rcs_record_iterator_t::access (access_t access_type, /**< type of access: read, 
 
     rcs_chunked_list_t::node_t *next_node_p = _recordset_p->_chunk_list.get_next (current_node_p);
     JERRY_ASSERT (next_node_p != NULL);
-    uint8_t *next_node_data_space_p = _recordset_p->_chunk_list.get_data_space (next_node_p);
+    uint8_t *next_node_data_space_p = _recordset_p->get_node_data_space (next_node_p);
 
     if (access_type == ACCESS_READ)
     {
@@ -781,9 +835,9 @@ const
 void
 rcs_free_record_t::set_size (size_t size) /**< size to set */
 {
-  JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_ALIGNMENT) == size);
+  JERRY_ASSERT (JERRY_ALIGNUP (size, RCS_DYN_STORAGE_LENGTH_UNIT) == size);
 
-  set_field (_length_field_pos, _length_field_width, size >> RCS_DYN_STORAGE_ALIGNMENT_LOG);
+  set_field (_length_field_pos, _length_field_width, size >> RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
 } /* rcs_free_record_t::set_size */
 
 /**

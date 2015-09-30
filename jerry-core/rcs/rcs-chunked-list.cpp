@@ -223,14 +223,14 @@ const
  *
  * @return pointer to beginning of the node's data space
  */
-uint8_t*
-rcs_chunked_list_t::get_data_space (rcs_chunked_list_t::node_t* node_p) /**< the node */
+uint8_t *
+rcs_chunked_list_t::get_node_data_space (rcs_chunked_list_t::node_t *node_p) /**< the node */
 const
 {
   assert_node_is_correct (node_p);
 
-  return (uint8_t*) (node_p + 1);
-} /* rcs_chunked_list_t::get_data_space */
+  return (uint8_t *) (node_p + 1);
+} /* rcs_chunked_list_t::get_node_data_space */
 
 /**
  * Get size of a node's data space
@@ -238,10 +238,10 @@ const
  * @return size
  */
 size_t
-rcs_chunked_list_t::get_data_space_size (void)
+rcs_chunked_list_t::get_node_data_space_size (void)
 {
   return rcs_chunked_list_t::get_node_size () - sizeof (node_t);
-} /* rcs_chunked_list_t::get_data_space_size */
+} /* rcs_chunked_list_t::get_node_data_space_size */
 
 /**
  * Set previous node for the specified node

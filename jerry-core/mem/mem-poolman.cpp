@@ -95,8 +95,18 @@ typedef struct mem_pool_chunk_t
                                                *   in the pool containing this chunk */
       uint8_t list_id; /**< identifier of a pool list */
     } pool_gc;
+
+    /**
+     * The field is added to make sizeof (mem_pool_chunk_t) equal to MEM_POOL_CHUNK_SIZE
+     */
+    uint8_t allocated_area[MEM_POOL_CHUNK_SIZE];
   } u;
 } mem_pool_chunk_t;
+
+/**
+ * The condition is assumed when using pointer arithmetics on (mem_pool_chunk_t *) pointer type
+ */
+JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_t) == MEM_POOL_CHUNK_SIZE);
 
 /**
  * List of free pool chunks

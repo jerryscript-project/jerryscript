@@ -54,11 +54,6 @@ typedef uint16_t mem_cpointer_t;
 #define MEM_CP_MASK ((1ull << MEM_CP_WIDTH) - 1)
 
 /**
- * Heap offset value mask
- */
-#define MEM_HEAP_OFFSET_MASK ((1ull << MEM_HEAP_OFFSET_LOG) - 1)
-
-/**
  * Severity of a 'try give memory back' request
  *
  * The request are posted sequentially beginning from

@@ -70,9 +70,9 @@ public:
   void remove (node_t *);
 
   node_t *get_node_from_pointer (void *) const;
-  uint8_t *get_data_space (node_t *) const;
+  uint8_t *get_node_data_space (node_t *) const;
 
-  static size_t get_data_space_size (void);
+  static size_t get_node_data_space_size (void);
 
 private:
   void set_prev (node_t *, node_t *);

@@ -26,6 +26,7 @@
 #include "ecma-init-finalize.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-try-catch-macro.h"
 #include "lit-magic-strings.h"
 #include "parser.h"
 #include "serializer.h"
@@ -897,6 +898,63 @@ bool jerry_api_get_object_field_value (jerry_api_object_t *object_p,
                                               lit_zt_utf8_string_size (field_name_p),
                                               field_value_p);
 }
+
+/**
+ * Applies the given function to the every fields in the objects
+ *
+ * @return true, if object fields traversal was performed successfully, i.e.:
+ *                - no unhandled exceptions were thrown in object fields traversal;
+ *                - object fields traversal was stopped on callback that returned false;
+ *         false - otherwise,
+ *                 if getter of field threw a exception or unhandled exceptions were thrown during traversal;
+ */
+bool
+jerry_api_foreach_object_field (jerry_api_object_t *object_p, /**< object */
+                               jerry_object_field_foreach_t foreach_p, /**< foreach function */
+                               void *user_data_p) /**< user data for foreach function */
+{
+  jerry_assert_api_available ();
+
+  ecma_collection_iterator_t names_iter;
+  ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, false, true, true);
+  ecma_collection_iterator_init (&names_iter, names_p);
+
+  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+
+  bool continuous = true;
+
+  while (ecma_is_completion_value_empty (ret_value)
+         && continuous
+         && ecma_collection_iterator_next (&names_iter))
+  {
+    ecma_string_t *property_name_p = ecma_get_string_from_value (*names_iter.current_value_p);
+
+    ECMA_TRY_CATCH (property_value, ecma_op_object_get (object_p, property_name_p), ret_value);
+
+    jerry_api_value_t field_value;
+    jerry_api_convert_ecma_value_to_api_value (&field_value, property_value);
+
+    continuous = foreach_p (property_name_p, &field_value, user_data_p);
+
+    jerry_api_release_value (&field_value);
+
+    ECMA_FINALIZE (property_value);
+  }
+
+  ecma_free_values_collection (names_p, true);
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    return true;
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
+
+    ecma_free_completion_value (ret_value);
+
+    return false;
+  }
+} /* jerry_api_foreach_object_field */
 
 /**
  * Get value of field in the specified object

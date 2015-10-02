@@ -140,6 +140,13 @@ typedef bool (*jerry_external_handler_t) (const jerry_api_object_t *function_obj
  */
 typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 
+/**
+ * function type applied for each fields in objects
+ */
+typedef bool (*jerry_object_field_foreach_t) (const jerry_api_string_t *field_name_p,
+                                              const jerry_api_value_t *field_value_p,
+                                              void *user_data_p);
+
 extern EXTERN_C ssize_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t *, jerry_api_char_t *, ssize_t);
 extern EXTERN_C
@@ -199,6 +206,9 @@ bool jerry_api_set_object_field_value (jerry_api_object_t *, const jerry_api_cha
 extern EXTERN_C
 bool jerry_api_set_object_field_value_sz (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_size_t,
                                           const jerry_api_value_t *);
+
+extern EXTERN_C
+bool jerry_api_foreach_object_field (jerry_api_object_t *, jerry_object_field_foreach_t, void *);
 
 extern EXTERN_C
 bool jerry_api_get_object_native_handle (jerry_api_object_t *, uintptr_t *);

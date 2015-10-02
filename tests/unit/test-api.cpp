@@ -15,6 +15,7 @@
 
 #include "jerry.h"
 #include "jerry-api.h"
+#include "config.h"
 
 #include "test-common.h"
 
@@ -54,6 +55,9 @@ const char *test_source = (
                            "function throw_reference_error() { "
                            " throw new ReferenceError ();"
                            "} "
+                           "p = {'alpha':32, 'bravo':false, 'charlie':{}, 'delta':123.45, 'echo':'foobar'};"
+                           "np = {}; Object.defineProperty (np, 'foxtrot', { "
+                           "get: function() { throw 'error'; }, enumerable: true }) "
                            );
 
 bool test_api_is_free_callback_was_called = false;
@@ -231,8 +235,81 @@ const jerry_api_char_ptr_t magic_string_items[] =
 #undef JERRY_MAGIC_STRING_DEF
 };
 
+static bool foreach (const jerry_api_string_t *name,
+                     const jerry_api_value_t *value, void *user_data)
+{
+  char str_buf_p[128];
+  ssize_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
+  str_buf_p[sz] = '\0';
 
+  if (!strncmp (str_buf_p, "alpha", (size_t)sz))
+  {
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT32);
+    JERRY_ASSERT (value->v_float32 == 32.0f);
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT64);
+    JERRY_ASSERT (value->v_float64 == 32.0);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+  }
+  else if (!strncmp (str_buf_p, "bravo", (size_t)sz))
+  {
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_BOOLEAN);
+    JERRY_ASSERT (value->v_bool == false);
+  }
+  else if (!strncmp (str_buf_p, "charlie", (size_t)sz))
+  {
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_OBJECT);
+  }
+  else if (!strncmp (str_buf_p, "delta", (size_t)sz))
+  {
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT32);
+    JERRY_ASSERT (value->v_float32 == 123.45f);
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT64);
+    JERRY_ASSERT (value->v_float64 == 123.45);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+  }
+  else if (!strncmp (str_buf_p, "echo", (size_t)sz))
+  {
+    JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_STRING);
+    ssize_t echo_sz = jerry_api_string_to_char_buffer (value->v_string, (jerry_api_char_t *)str_buf_p, 128);
+    str_buf_p[echo_sz] = '\0';
+    JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t)echo_sz));
+  }
+  else
+  {
+    JERRY_ASSERT (false);
+  }
 
+  JERRY_ASSERT (!strncmp ((const char*)user_data, "user_data", 9));
+  return true;
+}
+
+static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_value_t *, void *)
+{
+  char str_buf_p[128];
+  ssize_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
+  str_buf_p[sz] = '\0';
+
+  if (!strncmp (str_buf_p, "foxtrot", (size_t)sz))
+  {
+    JERRY_ASSERT (false);
+  }
+  return true;
+}
+
+static bool foreach_subset (const jerry_api_string_t *, const jerry_api_value_t *, void *user_data)
+{
+  int *count_p = reinterpret_cast<int *>(user_data);
+  if (*count_p == 3)
+  {
+    return false;
+  }
+  (*count_p)++;
+  return true;
+}
 int
 main (void)
 {
@@ -242,7 +319,7 @@ main (void)
 
   bool is_ok, is_exception;
   ssize_t sz;
-  jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field;
+  jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_api_value_t val_external, val_external_construct, val_call_external;
   jerry_api_object_t* global_obj_p, *obj_p;
   jerry_api_object_t* external_func_p, *external_construct_p;
@@ -351,6 +428,24 @@ main (void)
                 && res.type == JERRY_API_DATA_TYPE_FLOAT64
                 && res.v_float64 == 12.0);
   jerry_api_release_value (&res);
+
+  // foreach properties
+  jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "p", &val_p);
+  is_ok = jerry_api_foreach_object_field (val_p.v_object, foreach, (void*)"user_data");
+  JERRY_ASSERT (is_ok);
+
+  // break foreach at third element
+  int count = 0;
+  is_ok = jerry_api_foreach_object_field (val_p.v_object, foreach_subset, &count);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (count == 3);
+  jerry_api_release_value (&val_p);
+
+  // foreach with throw test
+  jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "np", &val_np);
+  is_ok = !jerry_api_foreach_object_field (val_np.v_object, foreach_exception, NULL);
+  JERRY_ASSERT (is_ok);
+  jerry_api_release_value (&val_np);
 
   // Get a.foo
   is_ok = jerry_api_get_object_field_value (val_a.v_object, (jerry_api_char_t *) "foo", &val_a_foo);

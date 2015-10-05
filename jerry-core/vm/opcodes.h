@@ -82,15 +82,25 @@ enum : vm_idx_t
  */
 typedef enum : vm_idx_t
 {
-  VM_REG_FIRST = VM_IDX_REG_FIRST, /** identifier of first special register */
-  VM_REG_LAST = VM_IDX_REG_LAST, /**< identifier of last register */
+  VM_REG_FIRST = VM_IDX_REG_FIRST, /** first register */
+  VM_REG_LAST = VM_IDX_REG_LAST, /**< last register */
 
-  VM_REG_SPECIAL_EVAL_RET = VM_REG_FIRST, /**< eval return value */
+  VM_REG_SPECIAL_FIRST = VM_REG_FIRST, /**< first special register */
+
+  VM_REG_SPECIAL_EVAL_RET = VM_REG_SPECIAL_FIRST, /**< eval return value */
   VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< variable, containing property name,
                                         *   at start of for-in loop body */
-  VM_REG_GENERAL_FIRST, /** identifier of first non-special register */
-  VM_REG_GENERAL_LAST = VM_IDX_REG_LAST /** identifier of last non-special register */
+
+  VM_REG_SPECIAL_LAST = VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< last special register */
+
+  VM_REG_GENERAL_FIRST, /** first non-special register */
+  VM_REG_GENERAL_LAST = VM_IDX_REG_LAST /** last non-special register */
 } vm_reg_t;
+
+/**
+ * Number of special VM registers
+ */
+#define VM_SPECIAL_REGS_NUMBER (VM_REG_SPECIAL_LAST - VM_REG_SPECIAL_FIRST + 1u)
 
 /**
  * Descriptor of assignment's second argument
@@ -201,8 +211,6 @@ typedef struct
   bool is_eval_code; /**< is current code executed with eval */
   bool is_call_in_direct_eval_form; /** flag, indicating if there is call of 'Direct call to eval' form in
                                      *  process (see also: OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) */
-  vm_idx_t min_reg_idx; /**< minimum idx used for register identification */
-  vm_idx_t max_reg_idx; /**< maximum idx used for register identification */
   ecma_number_t *tmp_num_p; /**< an allocated number (to reduce temporary allocations) */
   vm_stack_frame_t stack_frame; /**< stack frame associated with the context */
 

@@ -295,9 +295,8 @@ VM_OP_3 (is_false_jmp_down,     IS_FALSE_JMP_DOWN,
 VM_OP_1 (var_decl,              VAR_DECL,
          variable_name,         VM_OP_ARG_TYPE_STRING)
 
-VM_OP_3 (reg_var_decl,          REG_VAR_DECL,
-         min,                   VM_OP_ARG_TYPE_REGISTER,
-         max,                   VM_OP_ARG_TYPE_REGISTER,
+VM_OP_2 (reg_var_decl,          REG_VAR_DECL,
+         tmp_regs_num,          VM_OP_ARG_TYPE_INTEGER_CONST,
          local_var_regs_num,    VM_OP_ARG_TYPE_INTEGER_CONST)
 
 VM_OP_3 (meta,                  META,

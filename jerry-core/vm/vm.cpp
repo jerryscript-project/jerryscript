@@ -605,12 +605,10 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
   const vm_instr_t *curr = &instrs_p[start_pos];
   JERRY_ASSERT (curr->op_idx == VM_OP_REG_VAR_DECL);
 
-  const vm_idx_t min_reg_idx = curr->data.reg_var_decl.min;
-  const vm_idx_t max_reg_idx = curr->data.reg_var_decl.max;
-  const vm_idx_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
-  JERRY_ASSERT (max_reg_idx >= min_reg_idx);
+  const uint32_t tmp_regs_num = curr->data.reg_var_decl.tmp_regs_num;
+  const uint32_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
 
-  int32_t regs_num = max_reg_idx - min_reg_idx + 1;
+  uint32_t regs_num = VM_SPECIAL_REGS_NUMBER + tmp_regs_num + local_var_regs_num;
 
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
@@ -622,9 +620,8 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
   frame_ctx.is_strict = is_strict;
   frame_ctx.is_eval_code = is_eval_code;
   frame_ctx.is_call_in_direct_eval_form = false;
-  frame_ctx.min_reg_idx = min_reg_idx;
-  frame_ctx.max_reg_idx = max_reg_idx;
   frame_ctx.tmp_num_p = ecma_alloc_number ();
+
   vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num);
 
   vm_frame_ctx_t *prev_context_p = vm_top_context_p;

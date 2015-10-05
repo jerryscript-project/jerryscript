@@ -490,9 +490,9 @@ ecma_gc_run (void)
        frame_iter_p != NULL;
        frame_iter_p = frame_iter_p->prev_frame_p)
   {
-    for (int32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
+    for (uint32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
     {
-      ecma_value_t reg_value = vm_stack_frame_get_reg_value (frame_iter_p, reg_index);
+      ecma_value_t reg_value = vm_stack_frame_get_reg_value (frame_iter_p, VM_REG_FIRST + reg_index);
 
       if (ecma_is_value_object (reg_value))
       {

@@ -76,9 +76,9 @@ vm_stack_get_top_frame (void)
 void
 vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
                     ecma_value_t *regs_p, /**< array of register variables' values */
-                    int32_t regs_num, /**< total number of register variables */
-                    int32_t local_vars_regs_num) /**< number of register variables,
-                                                  *   used for local variables */
+                    uint32_t regs_num, /**< total number of register variables */
+                    uint32_t local_vars_regs_num) /**< number of register variables,
+                                                   *   used for local variables */
 {
   frame_p->prev_frame_p = vm_stack_top_frame_p;
   vm_stack_top_frame_p = frame_p;
@@ -89,12 +89,14 @@ vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
   frame_p->regs_p = regs_p;
   frame_p->regs_number = regs_num;
 
-  for (int32_t i = 0; i < regs_num - local_vars_regs_num; i++)
+  JERRY_ASSERT (regs_num >= VM_SPECIAL_REGS_NUMBER);
+
+  for (uint32_t i = 0; i < regs_num - local_vars_regs_num; i++)
   {
     regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   }
 
-  for (int32_t i = regs_num - local_vars_regs_num;
+  for (uint32_t i = regs_num - local_vars_regs_num;
        i < regs_num;
        i++)
   {
@@ -121,7 +123,7 @@ vm_stack_free_frame (vm_stack_frame_t *frame_p) /**< frame to initialize */
     vm_stack_pop (frame_p);
   }
 
-  for (int32_t reg_index = 0;
+  for (uint32_t reg_index = 0;
        reg_index < frame_p->regs_number;
        reg_index++)
   {
@@ -136,11 +138,11 @@ vm_stack_free_frame (vm_stack_frame_t *frame_p) /**< frame to initialize */
  */
 ecma_value_t
 vm_stack_frame_get_reg_value (vm_stack_frame_t *frame_p, /**< frame */
-                              int32_t reg_index) /**< index of register variable */
+                              uint32_t reg_index) /**< index of register variable */
 {
-  JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
+  JERRY_ASSERT (reg_index >= VM_REG_FIRST && reg_index < VM_REG_FIRST + frame_p->regs_number);
 
-  return frame_p->regs_p[reg_index];
+  return frame_p->regs_p[reg_index - VM_REG_FIRST];
 } /* vm_stack_frame_get_reg_value */
 
 /**
@@ -148,12 +150,12 @@ vm_stack_frame_get_reg_value (vm_stack_frame_t *frame_p, /**< frame */
  */
 void
 vm_stack_frame_set_reg_value (vm_stack_frame_t *frame_p, /**< frame */
-                              int32_t reg_index, /**< index of register variable */
+                              uint32_t reg_index, /**< index of register variable */
                               ecma_value_t value) /**< ecma-value */
 {
-  JERRY_ASSERT (reg_index >= 0 && reg_index < frame_p->regs_number);
+  JERRY_ASSERT (reg_index >= VM_REG_FIRST && reg_index < VM_REG_FIRST + frame_p->regs_number);
 
-  frame_p->regs_p[reg_index] = value;
+  frame_p->regs_p[reg_index - VM_REG_FIRST] = value;
 } /* vm_stack_frame_set_reg_value */
 
 /**

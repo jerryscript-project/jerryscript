@@ -52,7 +52,7 @@ typedef struct vm_stack_frame_t
   ecma_value_t inlined_values[VM_STACK_FRAME_INLINED_VALUES_NUMBER]; /**< place for values inlined into stack frame
                                                                       *   (instead of being placed on heap) */
   ecma_value_t *regs_p; /**< register variables */
-  int32_t regs_number; /**< number of register variables */
+  uint32_t regs_number; /**< number of register variables */
 } vm_stack_frame_t;
 
 extern void vm_stack_init (void);
@@ -60,10 +60,10 @@ extern void vm_stack_finalize (void);
 extern vm_stack_frame_t *
 vm_stack_get_top_frame (void);
 extern void
-vm_stack_add_frame (vm_stack_frame_t *, ecma_value_t *, int32_t, int32_t);
+vm_stack_add_frame (vm_stack_frame_t *, ecma_value_t *, uint32_t, uint32_t);
 extern void vm_stack_free_frame (vm_stack_frame_t *);
-extern ecma_value_t vm_stack_frame_get_reg_value (vm_stack_frame_t *, int32_t);
-extern void vm_stack_frame_set_reg_value (vm_stack_frame_t *, int32_t, ecma_value_t);
+extern ecma_value_t vm_stack_frame_get_reg_value (vm_stack_frame_t *, uint32_t);
+extern void vm_stack_frame_set_reg_value (vm_stack_frame_t *, uint32_t, ecma_value_t);
 extern void vm_stack_push_value (vm_stack_frame_t *, ecma_value_t);
 extern ecma_value_t vm_stack_top_value (vm_stack_frame_t *);
 extern void vm_stack_pop (vm_stack_frame_t *);

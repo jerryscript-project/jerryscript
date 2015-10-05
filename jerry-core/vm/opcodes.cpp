@@ -689,7 +689,7 @@ vm_helper_call_get_call_flags_and_this_arg (vm_frame_ctx_t *int_data_p, /**< int
     if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
     {
       this_arg_var_idx = next_opcode.data.meta.data_2;
-      JERRY_ASSERT (is_reg_variable (int_data_p, this_arg_var_idx));
+      JERRY_ASSERT (vm_is_reg_variable (this_arg_var_idx));
 
       JERRY_ASSERT ((call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM) == 0);
     }
@@ -718,7 +718,7 @@ vm_helper_call_get_call_flags_and_this_arg (vm_frame_ctx_t *int_data_p, /**< int
      * See also:
      *          parse_argument_list
      */
-    if (!is_reg_variable (int_data_p, var_idx))
+    if (!vm_is_reg_variable (var_idx))
     {
       /*
        * FIXME [PERF]:
@@ -1050,7 +1050,7 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
                     || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
 
       const vm_idx_t prop_name_var_idx = next_opcode.data.meta.data_1;
-      JERRY_ASSERT (is_reg_variable (frame_ctx_p, prop_name_var_idx));
+      JERRY_ASSERT (vm_is_reg_variable (prop_name_var_idx));
 
       const vm_idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
 
@@ -1495,7 +1495,7 @@ evaluate_arg_for_typeof (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context *
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (is_reg_variable (frame_ctx_p, var_idx))
+  if (vm_is_reg_variable (var_idx))
   {
     // 2.b
     ret_value = get_variable_value (frame_ctx_p,

@@ -59,11 +59,10 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
  *         false - otherwise.
  */
 bool
-is_reg_variable (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-                 vm_idx_t var_idx) /**< variable identifier */
+vm_is_reg_variable (vm_idx_t var_idx) /**< variable identifier */
 {
-  return (var_idx >= frame_ctx_p->min_reg_idx && var_idx <= frame_ctx_p->max_reg_idx);
-} /* is_reg_variable */
+  return (var_idx >= VM_REG_FIRST && var_idx <= VM_REG_LAST);
+} /* vm_is_reg_variable */
 
 /**
  * Get variable's value.
@@ -79,10 +78,9 @@ get_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (is_reg_variable (frame_ctx_p, var_idx))
+  if (vm_is_reg_variable (var_idx))
   {
-    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                           var_idx - frame_ctx_p->min_reg_idx);
+    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame, var_idx);
 
     JERRY_ASSERT (!ecma_is_value_empty (reg_value));
 
@@ -133,12 +131,11 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  if (is_reg_variable (frame_ctx_p, var_idx))
+  if (vm_is_reg_variable (var_idx))
   {
     ret_value = ecma_make_empty_completion_value ();
 
-    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame,
-                                                           var_idx - frame_ctx_p->min_reg_idx);
+    ecma_value_t reg_value = vm_stack_frame_get_reg_value (&frame_ctx_p->stack_frame, var_idx);
 
     if (ecma_is_value_number (reg_value)
         && ecma_is_value_number (value))
@@ -152,9 +149,7 @@ set_variable_value (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
         ecma_free_value (reg_value, false);
       }
 
-      vm_stack_frame_set_reg_value (&frame_ctx_p->stack_frame,
-                                    var_idx - frame_ctx_p->min_reg_idx,
-                                    ecma_copy_value (value, false));
+      vm_stack_frame_set_reg_value (&frame_ctx_p->stack_frame, var_idx, ecma_copy_value (value, false));
     }
   }
   else

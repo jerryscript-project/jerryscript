@@ -121,11 +121,11 @@ main (int __attr_unused___ argc,
                 OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
                 | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
                 VM_IDX_EMPTY),
-    getop_reg_var_decl (VM_REG_FIRST, VM_REG_GENERAL_FIRST, 0),
-    getop_var_decl (0),             // var a;
-    getop_assignment (130, 1, 1),   // $tmp0 = 1;
-    getop_assignment (0, 6, 130),   // a = $tmp0;
-    getop_ret ()                    // return;
+    getop_reg_var_decl (1u, 0u),
+    getop_var_decl (0),                              // var a;
+    getop_assignment (VM_REG_GENERAL_FIRST, 1, 1),   // $tmp0 = 1;
+    getop_assignment (0, 6, VM_REG_GENERAL_FIRST),   // a = $tmp0;
+    getop_ret ()                                     // return;
   };
 
   JERRY_ASSERT (instrs_equal (bytecode_data_p->instrs_p, instrs, 5));

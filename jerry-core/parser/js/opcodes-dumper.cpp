@@ -2398,8 +2398,7 @@ void
 dump_reg_var_decl_for_rewrite (void)
 {
   STACK_PUSH (reg_var_decls, serializer_get_current_instr_counter ());
-  dump_triple_address (VM_OP_REG_VAR_DECL,
-                       jsp_operand_t::make_idx_const_operand (VM_REG_FIRST),
+  dump_double_address (VM_OP_REG_VAR_DECL,
                        jsp_operand_t::make_unknown_operand (),
                        jsp_operand_t::make_unknown_operand ());
 }
@@ -2412,17 +2411,17 @@ rewrite_reg_var_decl (void)
   op_meta opm = serializer_get_op_meta (reg_var_decl_oc);
   JERRY_ASSERT (opm.op.op_idx == VM_OP_REG_VAR_DECL);
 
+  opm.op.data.reg_var_decl.tmp_regs_num = (vm_idx_t) (jsp_reg_max_for_temps - VM_REG_GENERAL_FIRST + 1);
+
   if (jsp_reg_max_for_local_var != VM_IDX_EMPTY)
   {
     JERRY_ASSERT (jsp_reg_max_for_local_var >= jsp_reg_max_for_temps);
     opm.op.data.reg_var_decl.local_var_regs_num = (vm_idx_t) (jsp_reg_max_for_local_var - jsp_reg_max_for_temps);
-    opm.op.data.reg_var_decl.max = jsp_reg_max_for_local_var;
 
     jsp_reg_max_for_local_var = VM_IDX_EMPTY;
   }
   else
   {
-    opm.op.data.reg_var_decl.max = jsp_reg_max_for_temps;
     opm.op.data.reg_var_decl.local_var_regs_num = 0;
   }
 

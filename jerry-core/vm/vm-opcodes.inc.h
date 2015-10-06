@@ -78,9 +78,6 @@ VM_OP_3 (prop_setter,           PROP_SETTER,
          prop,                  VM_OP_ARG_TYPE_VARIABLE,
          rhs,                   VM_OP_ARG_TYPE_VARIABLE)
 
-VM_OP_1 (this_binding,          THIS_BINDING,
-         lhs,                   VM_OP_ARG_TYPE_VARIABLE)
-
 VM_OP_2 (delete_var,            DELETE_VAR,
          lhs,                   VM_OP_ARG_TYPE_VARIABLE,
          name,                  VM_OP_ARG_TYPE_VARIABLE)

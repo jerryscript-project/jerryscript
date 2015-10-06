@@ -350,7 +350,6 @@ generate_instr (linked_list instr_list, /**< instruction list */
     case VM_OP_FUNC_DECL_N:
     case VM_OP_ARRAY_DECL:
     case VM_OP_OBJ_DECL:
-    case VM_OP_THIS_BINDING:
     case VM_OP_WITH:
     case VM_OP_FOR_IN:
     case VM_OP_THROW_VALUE:
@@ -492,7 +491,6 @@ count_new_literals_in_instr (op_meta *om_p) /**< instruction */
     case VM_OP_FUNC_DECL_N:
     case VM_OP_ARRAY_DECL:
     case VM_OP_OBJ_DECL:
-    case VM_OP_THIS_BINDING:
     case VM_OP_WITH:
     case VM_OP_THROW_VALUE:
     case VM_OP_IS_TRUE_JMP_UP:

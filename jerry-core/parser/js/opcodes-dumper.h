@@ -348,7 +348,6 @@ void dump_prop_setter (jsp_operand_t, jsp_operand_t, jsp_operand_t);
 void dump_function_end_for_rewrite (void);
 void rewrite_function_end ();
 
-void dump_this (jsp_operand_t);
 jsp_operand_t dump_this_res (void);
 
 void dump_post_increment (jsp_operand_t, jsp_operand_t);

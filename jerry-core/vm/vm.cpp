@@ -615,7 +615,6 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
   vm_frame_ctx_t frame_ctx;
   frame_ctx.bytecode_header_p = header_p;
   frame_ctx.pos = (vm_instr_counter_t) (start_pos + 1);
-  frame_ctx.this_binding = this_binding_value;
   frame_ctx.lex_env_p = lex_env_p;
   frame_ctx.is_strict = is_strict;
   frame_ctx.is_eval_code = is_eval_code;
@@ -623,6 +622,9 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
   frame_ctx.tmp_num_p = ecma_alloc_number ();
 
   vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num);
+  vm_stack_frame_set_reg_value (&frame_ctx.stack_frame,
+                                VM_REG_SPECIAL_THIS_BINDING,
+                                ecma_copy_value (this_binding_value, false));
 
   vm_frame_ctx_t *prev_context_p = vm_top_context_p;
   vm_top_context_p = &frame_ctx;
@@ -729,7 +731,9 @@ vm_get_this_binding (void)
 {
   JERRY_ASSERT (vm_top_context_p != NULL);
 
-  return ecma_copy_value (vm_top_context_p->this_binding, true);
+  return ecma_copy_value (vm_stack_frame_get_reg_value (&vm_top_context_p->stack_frame,
+                                                        VM_REG_SPECIAL_THIS_BINDING),
+                                                        true);
 } /* vm_get_this_binding */
 
 /**

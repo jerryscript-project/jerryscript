@@ -55,7 +55,7 @@ do_strict_eval_arguments_check (ecma_object_t *ref_base_lex_env_p, /**< base of 
 /**
  * Check if the variable is register variable.
  *
- * @return true - if var_idx is register variable in current interpreter context,
+ * @return true - if var_idx is a register variable,
  *         false - otherwise.
  */
 bool

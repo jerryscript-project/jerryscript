@@ -1182,18 +1182,10 @@ rewrite_function_end ()
   STACK_DROP (function_ends, 1);
 }
 
-void
-dump_this (jsp_operand_t op)
-{
-  dump_single_address (VM_OP_THIS_BINDING, op);
-}
-
 jsp_operand_t
 dump_this_res (void)
 {
-  const jsp_operand_t res = tmp_operand ();
-  dump_this (res);
-  return res;
+  return jsp_operand_t::make_reg_operand (VM_REG_SPECIAL_THIS_BINDING);
 }
 
 void

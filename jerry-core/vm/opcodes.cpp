@@ -1351,32 +1351,6 @@ opfunc_logical_not (vm_instr_t instr, /**< instruction */
 } /* opfunc_logical_not */
 
 /**
- * 'This' opcode handler.
- *
- * See also: ECMA-262 v5, 11.1.1
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
- */
-ecma_completion_value_t
-opfunc_this_binding (vm_instr_t instr, /**< instruction */
-                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
-{
-  const vm_idx_t dst_var_idx = instr.data.this_binding.lhs;
-  const vm_instr_counter_t lit_oc = frame_ctx_p->pos;
-
-  frame_ctx_p->pos++;
-
-  ecma_completion_value_t ret_value;
-
-  ret_value = set_variable_value (frame_ctx_p, lit_oc,
-                                  dst_var_idx,
-                                  frame_ctx_p->this_binding);
-
-  return ret_value;
-} /* opfunc_this_binding */
-
-/**
  * 'With' opcode handler.
  *
  * See also: ECMA-262 v5, 12.10

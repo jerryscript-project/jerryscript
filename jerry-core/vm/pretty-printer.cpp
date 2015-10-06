@@ -227,7 +227,6 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
     PP_OP (VM_OP_RET, "ret;");
     PP_OP (VM_OP_PROP_GETTER, "%s = %s[%s];");
     PP_OP (VM_OP_PROP_SETTER, "%s[%s] = %s;");
-    PP_OP (VM_OP_THIS_BINDING, "%s = this;");
     PP_OP (VM_OP_DELETE_VAR, "%s = delete %s;");
     PP_OP (VM_OP_DELETE_PROP, "%s = delete %s.%s;");
     PP_OP (VM_OP_TYPEOF, "%s = typeof %s;");

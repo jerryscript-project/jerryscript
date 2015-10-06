@@ -90,8 +90,9 @@ typedef enum : vm_idx_t
   VM_REG_SPECIAL_EVAL_RET = VM_REG_SPECIAL_FIRST, /**< eval return value */
   VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< variable, containing property name,
                                         *   at start of for-in loop body */
+  VM_REG_SPECIAL_THIS_BINDING, /**< value of ThisBinding */
 
-  VM_REG_SPECIAL_LAST = VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME, /**< last special register */
+  VM_REG_SPECIAL_LAST = VM_REG_SPECIAL_THIS_BINDING, /**< last special register */
 
   VM_REG_GENERAL_FIRST, /** first non-special register */
   VM_REG_GENERAL_LAST = VM_IDX_REG_LAST /** last non-special register */
@@ -205,7 +206,6 @@ typedef struct
 {
   const bytecode_data_header_t *bytecode_header_p; /**< currently executed byte-code data */
   vm_instr_counter_t pos; /**< current position instruction to execute */
-  ecma_value_t this_binding; /**< this binding for current context */
   ecma_object_t *lex_env_p; /**< current lexical environment */
   bool is_strict; /**< is current code execution mode strict? */
   bool is_eval_code; /**< is current code executed with eval */

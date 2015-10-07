@@ -63,7 +63,6 @@ typedef struct
   linked_list instrs; /**< instructions */
   vm_instr_counter_t instrs_count; /**< count of instructions */
   linked_list var_decls; /**< instructions for variable declarations */
-  uint8_t var_decls_cout; /**< number of instructions for variable declarations */
   scope_type_t type : 2; /**< scope type */
   bool strict_mode: 1; /**< flag, indicating that scope's code should be executed in strict mode */
   bool ref_arguments: 1; /**< flag, indicating that "arguments" variable is used inside the scope

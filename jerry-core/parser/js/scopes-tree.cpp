@@ -59,7 +59,7 @@ vm_instr_counter_t
 scopes_tree_var_decls_num (scopes_tree t) /**< scope */
 {
   assert_tree (t);
-  return t->var_decls_cout;
+  return linked_list_get_length (t->var_decls);
 } /* scopes_tree_var_decls_num */
 
 void
@@ -77,7 +77,7 @@ scopes_tree_add_var_decl (scopes_tree tree, /**< scope, to which variable declar
                           op_meta op) /**< variable declaration instruction */
 {
   assert_tree (tree);
-  linked_list_set_element (tree->var_decls, tree->var_decls_cout++, &op);
+  linked_list_set_element (tree->var_decls, linked_list_get_length (tree->var_decls), &op);
 } /* scopes_tree_add_var_decl */
 
 void
@@ -114,7 +114,7 @@ scopes_tree_var_decl (scopes_tree tree, /**< scope, from which variable declarat
                       vm_instr_counter_t oc) /**< number of variable declaration in the scope */
 {
   assert_tree (tree);
-  JERRY_ASSERT (oc < tree->var_decls_cout);
+  JERRY_ASSERT (oc < linked_list_get_length (tree->var_decls));
   return *(op_meta *) linked_list_element (tree->var_decls, oc);
 } /* scopes_tree_var_decl */
 
@@ -122,7 +122,7 @@ vm_instr_counter_t
 scopes_tree_count_instructions (scopes_tree t)
 {
   assert_tree (t);
-  vm_instr_counter_t res = (vm_instr_counter_t) (t->instrs_count + t->var_decls_cout);
+  vm_instr_counter_t res = (vm_instr_counter_t) (t->instrs_count + linked_list_get_length (t->var_decls));
   for (uint8_t i = 0; i < t->t.children_num; i++)
   {
     res = (vm_instr_counter_t) (
@@ -588,7 +588,9 @@ scopes_tree_count_literals_in_blocks (scopes_tree tree) /**< scope */
     result += count_new_literals_in_instr (om_p);
   }
 
-  for (vm_instr_counter_t var_decl_pos = 0; var_decl_pos < tree->var_decls_cout; var_decl_pos++)
+  for (vm_instr_counter_t var_decl_pos = 0;
+       var_decl_pos < linked_list_get_length (tree->var_decls);
+       var_decl_pos++)
   {
     op_meta *om_p = extract_op_meta (tree->var_decls, var_decl_pos);
     result += count_new_literals_in_instr (om_p);
@@ -649,7 +651,9 @@ merge_subscopes (scopes_tree tree, /**< scopes tree to merge */
     global_oc++;
   }
 
-  for (vm_instr_counter_t var_decl_pos = 0; var_decl_pos < tree->var_decls_cout; var_decl_pos++)
+  for (vm_instr_counter_t var_decl_pos = 0;
+       var_decl_pos < linked_list_get_length (tree->var_decls);
+       var_decl_pos++)
   {
     data_p[global_oc] = generate_instr (tree->var_decls, var_decl_pos, lit_ids_p);
     global_oc++;
@@ -817,7 +821,6 @@ scopes_tree_init (scopes_tree parent, /**< parent scope */
   tree->contains_delete = false;
   tree->contains_functions = false;
   tree->instrs = linked_list_init (sizeof (op_meta));
-  tree->var_decls_cout = 0;
   tree->var_decls = linked_list_init (sizeof (op_meta));
   return tree;
 } /* scopes_tree_init */

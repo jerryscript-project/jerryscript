@@ -3085,7 +3085,7 @@ parse_source_element_list (bool is_global, /**< flag, indicating that we parsing
 
       bool are_all_vars_replaced = true;
       for (vm_instr_counter_t var_decl_pos = 0;
-           var_decl_pos < fe_scope_tree->var_decls_cout;
+           var_decl_pos < linked_list_get_length (fe_scope_tree->var_decls);
            var_decl_pos++)
       {
         op_meta *om_p = (op_meta *) linked_list_element (fe_scope_tree->var_decls, var_decl_pos);
@@ -3107,7 +3107,6 @@ parse_source_element_list (bool is_global, /**< flag, indicating that we parsing
 
         linked_list_free (fe_scope_tree->var_decls);
         fe_scope_tree->var_decls = linked_list_init (sizeof (op_meta));
-        fe_scope_tree->var_decls_cout = 0;
       }
     }
   }

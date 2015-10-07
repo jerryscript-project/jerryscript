@@ -133,7 +133,9 @@ serializer_dump_subscope (scopes_tree tree) /**< scope to dump */
     }
     scopes_tree_add_op_meta (current_scope, *om_p);
   }
-  for (vm_instr_counter_t var_decl_pos = 0; var_decl_pos < tree->var_decls_cout; var_decl_pos++)
+  for (vm_instr_counter_t var_decl_pos = 0;
+       var_decl_pos < linked_list_get_length (tree->var_decls);
+       var_decl_pos++)
   {
     op_meta *om_p = (op_meta *) linked_list_element (tree->var_decls, var_decl_pos);
     scopes_tree_add_op_meta (current_scope, *om_p);
@@ -217,7 +219,8 @@ serializer_dump_op_meta (op_meta op)
 void
 serializer_dump_var_decl (op_meta op) /**< variable declaration instruction */
 {
-  JERRY_ASSERT (scopes_tree_instrs_num (current_scope) + current_scope->var_decls_cout < MAX_OPCODES);
+  JERRY_ASSERT (scopes_tree_instrs_num (current_scope)
+                + linked_list_get_length (current_scope->var_decls) < MAX_OPCODES);
 
   scopes_tree_add_var_decl (current_scope, op);
 } /* serializer_dump_var_decl */

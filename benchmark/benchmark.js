@@ -152,7 +152,6 @@ $(document).ajaxStop(function () {
         fontSize: 20,
         bold: true
       },
-      fontName: 'consolas',
       legend: { position: 'bottom' },
       backgroundColor: '#f8f8f8',
       hAxis: {

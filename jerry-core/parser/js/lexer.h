@@ -171,7 +171,7 @@ typedef struct
 
 void lexer_init (const jerry_api_char_t *, size_t, bool);
 
-token lexer_next_token (void);
+token lexer_next_token (bool);
 void lexer_save_token (token);
 token lexer_prev_token (void);
 

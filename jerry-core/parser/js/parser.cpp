@@ -95,8 +95,18 @@ token_data_as_lit_cp (void)
 static void
 skip_token (void)
 {
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
 }
+
+/**
+ * In case a regexp token is scanned as a division operator, rescan it
+ */
+static void
+rescan_regexp_token (void)
+{
+  lexer_seek (tok.loc);
+  tok = lexer_next_token (true);
+} /* rescan_regexp_token */
 
 static void
 assert_keyword (keyword kw)
@@ -252,7 +262,7 @@ jsp_find_next_token_before_the_locus (token_type token_to_find, /**< token to se
         if (lit_utf8_iterator_pos_cmp (tok.loc, end_loc) >= 0)
         {
           lexer_seek (end_loc);
-          tok = lexer_next_token ();
+          tok = lexer_next_token (false);
 
           return false;
         }
@@ -830,6 +840,13 @@ parse_primary_expression (void)
 
   switch (tok.type)
   {
+    case TOK_DIV:
+    case TOK_DIV_EQ:
+    {
+      // must be a regexp literal so rescan the token
+      rescan_regexp_token ();
+      /* FALLTHRU */
+    }
     case TOK_NULL:
     case TOK_BOOL:
     case TOK_SMALL_INT:
@@ -2129,7 +2146,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
 
   // Dump assignment VariableDeclarationNoIn / LeftHandSideExpression <- VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME
   lexer_seek (iterator_loc);
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
 
   jsp_operand_t iterator_base, iterator_identifier, for_in_special_reg;
   for_in_special_reg = jsp_create_operand_for_in_special_reg ();
@@ -2146,7 +2163,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
 
   // Body
   lexer_seek (for_body_statement_loc);
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
 
   parse_statement (NULL);
 
@@ -2164,7 +2181,7 @@ jsp_parse_for_in_statement (jsp_label_t *outermost_stmt_label_p, /**< outermost 
   dump_for_in_end ();
 
   lexer_seek (loop_end_loc);
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
   if (tok.type != TOK_CLOSE_BRACE)
   {
     lexer_save_token (tok);
@@ -2201,13 +2218,13 @@ jsp_parse_for_or_for_in_statement (jsp_label_t *outermost_stmt_label_p) /**< out
   for_body_statement_loc = tok.loc;
 
   lexer_seek (for_open_paren_loc);
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
 
   bool is_plain_for = jsp_find_next_token_before_the_locus (TOK_SEMICOLON,
                                                             for_body_statement_loc,
                                                             true);
   lexer_seek (for_open_paren_loc);
-  tok = lexer_next_token ();
+  tok = lexer_next_token (false);
 
   if (is_plain_for)
   {

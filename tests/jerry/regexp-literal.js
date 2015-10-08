@@ -65,3 +65,21 @@ try {
 } catch (e) {
 	assert(e instanceof SyntaxError);
 }
+
+try {
+	eval("var x = /aaa/");
+} catch (e) {
+	assert (false);
+}
+
+try {
+	eval("{}/a/g");
+} catch (e) {
+	assert (false);
+}
+
+try {
+	eval("var a, g; +{}/a/g");
+} catch (e) {
+	assert (false);
+}

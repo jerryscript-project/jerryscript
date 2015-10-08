@@ -1262,10 +1262,15 @@ lexer_parse_comment (void)
  *      Currently, lexer token doesn't fully correspond to Token, defined in ECMA-262, v5, 7.5.
  *      For example, there is no new-line token type in the token definition of ECMA-262 v5.
  *
+ * Note:
+ *      For Lexer alone, it is hard to find out a token is whether a regexp or a division.
+ *      Parser must set maybe_regexp to true if a regexp is expected.
+ *      Otherwise, a division is expected.
+ *
  * @return constructed token
  */
 static token
-lexer_parse_token (void)
+lexer_parse_token (bool maybe_regexp) /**< read '/' as regexp? */
 {
   ecma_char_t c = LA (0);
 
@@ -1335,21 +1340,11 @@ lexer_parse_token (void)
     }
     else
     {
-      return lexer_parse_token ();
+      return lexer_parse_token (maybe_regexp);
     }
   }
 
-  if (c == LIT_CHAR_SLASH
-      && !(prev_non_lf_token.type == TOK_NAME
-           || prev_non_lf_token.type == TOK_NULL
-           || prev_non_lf_token.type == TOK_BOOL
-           || prev_non_lf_token.type == TOK_CLOSE_BRACE
-           || prev_non_lf_token.type == TOK_CLOSE_SQUARE
-           || prev_non_lf_token.type == TOK_CLOSE_PAREN
-           || prev_non_lf_token.type == TOK_SMALL_INT
-           || prev_non_lf_token.type == TOK_NUMBER
-           || prev_non_lf_token.type == TOK_STRING
-           || prev_non_lf_token.type == TOK_REGEXP))
+  if (c == LIT_CHAR_SLASH && maybe_regexp)
   {
     return lexer_parse_regexp ();
   }
@@ -1517,7 +1512,7 @@ lexer_parse_token (void)
 } /* lexer_parse_token */
 
 token
-lexer_next_token (void)
+lexer_next_token (bool maybe_regexp) /**< read '/' as regexp? */
 {
   lit_utf8_iterator_pos_t src_pos = lit_utf8_iterator_get_pos (&src_iter);
   if (src_pos.offset == 0 && !src_pos.is_non_bmp_middle)
@@ -1546,7 +1541,7 @@ lexer_next_token (void)
   }
 
   prev_token = sent_token;
-  sent_token = lexer_parse_token ();
+  sent_token = lexer_parse_token (maybe_regexp);
 
   if (sent_token.type == TOK_NEWLINE)
   {

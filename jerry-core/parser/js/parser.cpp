@@ -2429,6 +2429,9 @@ parse_switch_statement (void)
   start_dumping_case_clauses ();
   const locus start_loc = tok.loc;
   bool was_default = false;
+  size_t default_body_index = 0;
+  array_list body_locs = array_list_init (sizeof (locus));
+
   // First, generate table of jumps
   skip_newlines ();
   while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
@@ -2440,6 +2443,7 @@ parse_switch_statement (void)
       next_token_must_be (TOK_COLON);
       dump_case_clause_check_for_rewrite (switch_expr, case_expr);
       skip_newlines ();
+      array_list_append (body_locs, (void*) &tok.loc);
       skip_case_clause_body ();
     }
     else if (is_keyword (KW_DEFAULT))
@@ -2451,6 +2455,8 @@ parse_switch_statement (void)
       was_default = true;
       token_after_newlines_must_be (TOK_COLON);
       skip_newlines ();
+      default_body_index = array_list_len (body_locs);
+      array_list_append (body_locs, (void*) &tok.loc);
       skip_case_clause_body ();
     }
   }
@@ -2471,34 +2477,28 @@ parse_switch_statement (void)
 
   // Second, parse case clauses' bodies and rewrite jumps
   skip_newlines ();
-  while (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+  for (size_t i = 0; i < array_list_len (body_locs); i++)
   {
-    if (is_keyword (KW_CASE))
+    locus loc = * (locus*) array_list_element (body_locs, i);
+    lexer_seek (loc);
+    skip_newlines ();
+    if (was_default && default_body_index == i)
     {
-      while (!token_is (TOK_COLON))
-      {
-        skip_newlines ();
-      }
-      rewrite_case_clause ();
-      skip_newlines ();
-      if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
-      {
-        continue;
-      }
-      parse_statement_list ();
-    }
-    else if (is_keyword (KW_DEFAULT))
-    {
-      token_after_newlines_must_be (TOK_COLON);
-      skip_newlines ();
       rewrite_default_clause ();
       if (is_keyword (KW_CASE))
       {
         continue;
       }
-      parse_statement_list ();
-      continue;
     }
+    else
+    {
+      rewrite_case_clause ();
+      if (is_keyword (KW_CASE) || is_keyword (KW_DEFAULT))
+      {
+        continue;
+      }
+    }
+    parse_statement_list ();
     skip_newlines ();
   }
   current_token_must_be (TOK_CLOSE_BRACE);
@@ -2508,6 +2508,7 @@ parse_switch_statement (void)
                                    serializer_get_current_instr_counter ());
 
   finish_dumping_case_clauses ();
+  array_list_free (body_locs);
 }
 
 /* catch_clause

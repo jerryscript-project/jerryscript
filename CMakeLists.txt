@@ -34,15 +34,6 @@ project (Jerry CXX C ASM)
    if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
     message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
    endif()
-
-  # Use gcc-ar and gcc-ranlib to support LTO
-   get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
-   get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
-   get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
-   string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
-   string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
-   set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
-   set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
  endif()
 
 # Imported and third-party targets prefix
@@ -96,6 +87,19 @@ project (Jerry CXX C ASM)
   set(EXTERNAL_MEM_HEAP_SIZE_KB "256" CACHE STRING "Size of memory heap, in kilobytes")
  else()
   message(FATAL_ERROR "Platform '${PLATFORM}' is not supported")
+ endif()
+
+ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  if("${ENABLE_LTO}" STREQUAL "ON")
+   # Use gcc-ar and gcc-ranlib to support LTO
+   get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
+   get_filename_component(DIRECTORY_GCC ${PATH_TO_GCC} DIRECTORY)
+   get_filename_component(FILE_NAME_GCC ${PATH_TO_GCC} NAME)
+   string(REPLACE "gcc" "gcc-ar" CMAKE_AR ${FILE_NAME_GCC})
+   string(REPLACE "gcc" "gcc-ranlib" CMAKE_RANLIB ${FILE_NAME_GCC})
+   set(CMAKE_AR ${DIRECTORY_GCC}/${CMAKE_AR})
+   set(CMAKE_RANLIB ${DIRECTORY_GCC}/${CMAKE_RANLIB})
+  endif()
  endif()
 
 # Intermediate files

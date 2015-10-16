@@ -2462,10 +2462,7 @@ parse_switch_statement (void)
   }
   current_token_must_be (TOK_CLOSE_BRACE);
 
-  if (was_default)
-  {
-    dump_default_clause_check_for_rewrite ();
-  }
+  dump_default_clause_check_for_rewrite ();
 
   lexer_seek (start_loc);
   next_token_must_be (TOK_OPEN_BRACE);
@@ -2501,6 +2498,12 @@ parse_switch_statement (void)
     parse_statement_list ();
     skip_newlines ();
   }
+
+  if (!was_default)
+  {
+    rewrite_default_clause ();
+  }
+
   current_token_must_be (TOK_CLOSE_BRACE);
   skip_token ();
 

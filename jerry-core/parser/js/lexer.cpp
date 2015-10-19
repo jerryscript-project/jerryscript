@@ -969,6 +969,13 @@ lexer_parse_number (void)
             consume_char ();
           }
 
+          if (!lit_char_is_decimal_digit (LA (0)))
+          {
+            PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX,
+                         "Exponential mark in a numeric literal should followed by a singed interger",
+                         lit_utf8_iterator_get_pos (&src_iter));
+          }
+
           continue;
         }
       }

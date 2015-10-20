@@ -778,8 +778,7 @@ typedef struct
 typedef enum
 {
   ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
-  ECMA_STRING_CONTAINER_HEAP_CHUNKS, /**< actual data is on the heap
-                                          in a ecma_collection_chunk_t chain */
+  ECMA_STRING_CONTAINER_STRING_DATA, /**< actual data is on the heap */
   ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
@@ -794,6 +793,18 @@ FIXME (Move to library that should define the type (literal.h /* ? */))
  */
 typedef rcs_record_t *literal_t;
 typedef rcs_cpointer_t lit_cpointer_t;
+
+#define ECMA_STRING_DATA_EXTRA_SIZE (2 * sizeof (uint16_t))
+
+/**
+ * ECMA string data descriptor
+ */
+typedef struct ecma_string_data_t
+{
+  uint16_t size;
+  uint16_t length;
+  lit_utf8_byte_t data;
+} ecma_string_data_t;
 
 /**
  * ECMA string-value descriptor
@@ -822,7 +833,7 @@ typedef struct ecma_string_t
     lit_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
-    mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;
+    mem_cpointer_t data_cp : ECMA_POINTER_FIELD_WIDTH;
 
     /** Compressed pointer to an ecma_number_t */
     mem_cpointer_t number_cp : ECMA_POINTER_FIELD_WIDTH;

@@ -2831,6 +2831,11 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
       }
     }
 
+    if (token_is (TOK_CLOSE_BRACE))
+    {
+      lexer_save_token (tok);
+    }
+
     JERRY_ASSERT (label_p != NULL);
 
     jsp_label_add_jump (label_p, is_simply_jumpable, is_break);
@@ -2845,7 +2850,7 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     }
 
     skip_token ();
-    if (!token_is (TOK_SEMICOLON) && !token_is (TOK_NEWLINE))
+    if (!token_is (TOK_SEMICOLON) && !token_is (TOK_NEWLINE) && !token_is (TOK_CLOSE_BRACE))
     {
       const jsp_operand_t op = parse_expression (true, JSP_EVAL_RET_STORE_NOT_DUMP);
       dump_retval (op);
@@ -2855,6 +2860,11 @@ parse_statement (jsp_label_t *outermost_stmt_label_p) /**< outermost (first) lab
     else
     {
       dump_ret ();
+
+      if (token_is (TOK_CLOSE_BRACE))
+      {
+        lexer_save_token (tok);
+      }
       return;
     }
   }

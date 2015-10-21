@@ -425,7 +425,7 @@ void rewrite_conditional_check (void);
 void dump_jump_to_end_for_rewrite (void);
 void rewrite_jump_to_end (void);
 
-void start_dumping_assignment_expression (void);
+void start_dumping_assignment_expression (jsp_operand_t, locus);
 jsp_operand_t dump_prop_setter_or_variable_assignment_res (jsp_operand_t, jsp_operand_t);
 jsp_operand_t dump_prop_setter_or_addition_res (jsp_operand_t, jsp_operand_t);
 jsp_operand_t dump_prop_setter_or_multiplication_res (jsp_operand_t, jsp_operand_t);

@@ -628,25 +628,23 @@ dump_prop_setter_or_triple_address_res (vm_op_t opcode,
                                         jsp_operand_t res,
                                         jsp_operand_t op)
 {
-  const op_meta last = STACK_TOP (prop_getters);
-  if (last.op.op_idx == VM_OP_PROP_GETTER)
+  if (res.is_register_operand ())
   {
+    /*
+     * Left-hand-side must be a member expression and corresponding prop_getter
+     * op is on top of the stack.
+     */
+    const op_meta last = STACK_TOP (prop_getters);
+    JERRY_ASSERT (last.op.op_idx == VM_OP_PROP_GETTER);
+
     res = dump_triple_address_and_prop_setter_res (opcode, last, op);
+
+    STACK_DROP (prop_getters, 1);
   }
   else
   {
-    if (res.is_register_operand ())
-    {
-      /*
-       * FIXME:
-       *       Implement correct handling of references through parser operands
-       */
-      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", LIT_ITERATOR_POS_ZERO);
-    }
-
     dump_triple_address (opcode, res, res, op);
   }
-  STACK_DROP (prop_getters, 1);
   return res;
 }
 
@@ -1865,37 +1863,60 @@ rewrite_jump_to_end (void)
 }
 
 void
-start_dumping_assignment_expression (void)
+start_dumping_assignment_expression (jsp_operand_t lhs, locus loc __attr_unused___)
 {
-  const op_meta last = last_dumped_op_meta ();
-  if (last.op.op_idx == VM_OP_PROP_GETTER)
+  if (lhs.is_register_operand ())
   {
-    serializer_set_writing_position ((vm_instr_counter_t) (serializer_get_current_instr_counter () - 1));
+    /*
+     * Having left-handside of assignment expression as a temporary register
+     * means it's either a member expression or something else. Under the condition,
+     * only member expression could be a L-value for assignment expression, otherwise
+     * it's an invalid lhs expression.
+     */
+
+    const op_meta last = last_dumped_op_meta ();
+
+    if (last.op.op_idx == VM_OP_PROP_GETTER)
+    {
+      /*
+       * If lhs is a member expression, last dumped op code should be
+       * prop_getter. For we are going to use the expression as L-value, it will
+       * be a prop_setter later, save the op to stack.
+       */
+      serializer_set_writing_position ((vm_instr_counter_t) (serializer_get_current_instr_counter () - 1));
+      STACK_PUSH (prop_getters, last);
+    }
+    else
+    {
+      /*
+       * If lhs is a temporary register operand but not a member expression, It
+       * is an invalid left-hand-side expression.
+       */
+      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", loc);
+    }
   }
-  STACK_PUSH (prop_getters, last);
 }
 
 jsp_operand_t
 dump_prop_setter_or_variable_assignment_res (jsp_operand_t res, jsp_operand_t op)
 {
-  const op_meta last = STACK_TOP (prop_getters);
-  if (last.op.op_idx == VM_OP_PROP_GETTER)
+  if (res.is_register_operand ())
   {
+    /*
+     * Left-hand-side must be a member expression and corresponding prop_getter
+     * op is on top of the stack.
+     */
+    const op_meta last = STACK_TOP (prop_getters);
+    JERRY_ASSERT (last.op.op_idx == VM_OP_PROP_GETTER);
+
     dump_prop_setter_op_meta (last, op);
+
+    STACK_DROP (prop_getters, 1);
   }
   else
   {
-    if (res.is_register_operand ())
-    {
-      /*
-       * FIXME:
-       *       Implement correct handling of references through parser operands
-       */
-      PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", LIT_ITERATOR_POS_ZERO);
-    }
     dump_variable_assignment (res, op);
   }
-  STACK_DROP (prop_getters, 1);
   return op;
 }
 

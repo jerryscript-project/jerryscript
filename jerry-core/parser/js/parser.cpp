@@ -1730,6 +1730,7 @@ static jsp_operand_t
 parse_assignment_expression (bool in_allowed)
 {
   bool is_conditional = false;
+  locus loc_expr = tok.loc;
   jsp_operand_t expr = parse_conditional_expression (in_allowed, &is_conditional);
   if (is_conditional)
   {
@@ -1755,7 +1756,7 @@ parse_assignment_expression (bool in_allowed)
   {
     jsp_early_error_check_for_eval_and_arguments_in_strict_mode (expr, is_strict_mode (), tok.loc);
     skip_newlines ();
-    start_dumping_assignment_expression ();
+    start_dumping_assignment_expression (expr, loc_expr);
     const jsp_operand_t assign_expr = parse_assignment_expression (in_allowed);
 
     if (tt == TOK_EQ)

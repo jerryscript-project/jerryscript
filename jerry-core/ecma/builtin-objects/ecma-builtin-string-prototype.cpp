@@ -665,28 +665,17 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
                             ecma_op_object_get (exec_obj_p, index_zero_string_p),
                             ret_value);
 
-            /* 8.f.iii.5. */
-            ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-            {
-              prop_desc.is_value_defined = true;
-              prop_desc.value = match_string_value;
-
-              prop_desc.is_writable_defined = true;
-              prop_desc.is_writable = true;
-
-              prop_desc.is_enumerable_defined = true;
-              prop_desc.is_enumerable = true;
-
-              prop_desc.is_configurable_defined = true;
-              prop_desc.is_configurable = true;
-            }
-
             ecma_string_t *current_index_str_p = ecma_new_ecma_string_from_uint32 (n);
 
-            ecma_completion_value_t completion = ecma_op_object_define_own_property (new_array_obj_p,
-                                                                                     current_index_str_p,
-                                                                                     &prop_desc,
-                                                                                     false);
+            /* 8.f.iii.5. */
+            ecma_completion_value_t completion = ecma_builtin_helper_def_prop (new_array_obj_p,
+                                                                               current_index_str_p,
+                                                                               match_string_value,
+                                                                               true, /* Writable */
+                                                                               true, /* Enumerable */
+                                                                               true, /* Configurable */
+                                                                               false); /* Failure handling */
+
             JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
             ecma_deref_ecma_string (current_index_str_p);

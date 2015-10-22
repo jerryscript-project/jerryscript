@@ -424,25 +424,14 @@ ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object 
                                          ecma_string_t *property_name_p, /**< property name */
                                          ecma_value_t value) /**< value */
 {
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-  {
-    prop_desc.is_value_defined = true;
-    prop_desc.value = value;
+  ecma_completion_value_t completion_value = ecma_builtin_helper_def_prop (obj_p,
+                                                                           property_name_p,
+                                                                           value,
+                                                                           true, /* Writable */
+                                                                           true, /* Enumerable */
+                                                                           true, /* Configurable */
+                                                                           false); /* Failure handling */
 
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = true;
-
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = true;
-
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = true;
-  }
-
-  ecma_completion_value_t completion_value = ecma_op_object_define_own_property (obj_p,
-                                                                                 property_name_p,
-                                                                                 &prop_desc,
-                                                                                 false);
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion_value)
                 || ecma_is_completion_value_normal_false (completion_value));
 } /* ecma_builtin_json_define_value_property */
@@ -575,27 +564,16 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           break;
         }
 
-        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-        {
-          prop_desc.is_value_defined = true;
-          prop_desc.value = value;
-
-          prop_desc.is_writable_defined = true;
-          prop_desc.is_writable = true;
-
-          prop_desc.is_enumerable_defined = true;
-          prop_desc.is_enumerable = true;
-
-          prop_desc.is_configurable_defined = true;
-          prop_desc.is_configurable = true;
-        }
-
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length);
 
-        ecma_completion_value_t completion = ecma_op_object_define_own_property (array_p,
-                                                                                 index_str_p,
-                                                                                 &prop_desc,
-                                                                                 false);
+        ecma_completion_value_t completion = ecma_builtin_helper_def_prop (array_p,
+                                                                           index_str_p,
+                                                                           value,
+                                                                           true, /* Writable */
+                                                                           true, /* Enumerable */
+                                                                           true, /* Configurable */
+                                                                           false); /* Failure handling */
+
         JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
         ecma_deref_ecma_string (index_str_p);

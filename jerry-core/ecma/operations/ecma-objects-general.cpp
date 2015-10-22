@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -327,29 +328,14 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
   }
   else
   {
-    // 6.
-
-    // a.
-    ecma_property_descriptor_t new_desc = ecma_make_empty_property_descriptor ();
-    {
-      new_desc.is_value_defined = true;
-      new_desc.value = value;
-
-      new_desc.is_writable_defined = true;
-      new_desc.is_writable = true;
-
-      new_desc.is_enumerable_defined = true;
-      new_desc.is_enumerable = true;
-
-      new_desc.is_configurable_defined = true;
-      new_desc.is_configurable = true;
-    }
-
-    // b.
-    return ecma_op_object_define_own_property (obj_p,
-                                               property_name_p,
-                                               &new_desc,
-                                               is_throw);
+    // 6.a., 6.b.
+    return ecma_builtin_helper_def_prop (obj_p,
+                                         property_name_p,
+                                         value,
+                                         true, /* Writable */
+                                         true, /* Enumerable */
+                                         true, /* Configurable */
+                                         is_throw); /* Failure handling */
   }
 
   JERRY_UNREACHABLE ();

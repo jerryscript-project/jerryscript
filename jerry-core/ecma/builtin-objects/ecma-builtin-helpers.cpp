@@ -236,25 +236,13 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
 
-    ecma_property_descriptor_t item_prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      item_prop_desc.is_value_defined = true;
-      item_prop_desc.value = ecma_make_string_value (property_name_p);
-
-      item_prop_desc.is_writable_defined = true;
-      item_prop_desc.is_writable = true;
-
-      item_prop_desc.is_enumerable_defined = true;
-      item_prop_desc.is_enumerable = true;
-
-      item_prop_desc.is_configurable_defined = true;
-      item_prop_desc.is_configurable = true;
-    }
-
-    ecma_completion_value_t completion = ecma_op_object_define_own_property (new_array_p,
-                                                                             index_string_p,
-                                                                             &item_prop_desc,
-                                                                             false);
+    ecma_completion_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
+                                                                       index_string_p,
+                                                                       ecma_make_string_value (property_name_p),
+                                                                       true, /* Writable */
+                                                                       true, /* Enumerable */
+                                                                       true, /* Configurable */
+                                                                       false); /* Failure handling */
 
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
@@ -394,27 +382,16 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
                                             array_index_string_p),
                         ret_value);
 
-        ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-        {
-          prop_desc.is_value_defined = true;
-          prop_desc.value = get_value;
-
-          prop_desc.is_writable_defined = true;
-          prop_desc.is_writable = true;
-
-          prop_desc.is_enumerable_defined = true;
-          prop_desc.is_enumerable = true;
-
-          prop_desc.is_configurable_defined = true;
-          prop_desc.is_configurable = true;
-        }
-
         /* 5.b.iii.3.b */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-        ecma_completion_value_t put_comp = ecma_op_object_define_own_property (obj_p,
-                                                                               new_array_index_string_p,
-                                                                               &prop_desc,
-                                                                               false);
+        ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
+                                                                         new_array_index_string_p,
+                                                                         get_value,
+                                                                         true, /* Writable */
+                                                                         true, /* Enumerable */
+                                                                         true, /* Configurable */
+                                                                         false); /* Failure handling */
+
         JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
 
         ECMA_FINALIZE (get_value);
@@ -434,27 +411,16 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
   {
     ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 ((*length_p)++);
 
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_value_defined = true;
-      prop_desc.value = value;
-
-      prop_desc.is_writable_defined = true;
-      prop_desc.is_writable = true;
-
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = true;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = true;
-    }
-
     /* 5.c.i */
     /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-    ecma_completion_value_t put_comp = ecma_op_object_define_own_property (obj_p,
-                                                                           new_array_index_string_p,
-                                                                           &prop_desc,
-                                                                           false);
+    ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
+                                                                     new_array_index_string_p,
+                                                                     value,
+                                                                     true, /* Writable */
+                                                                     true, /* Enumerable */
+                                                                     true, /* Configurable */
+                                                                     false); /* Failure handling */
+
     JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
 
     ecma_deref_ecma_string (new_array_index_string_p);
@@ -701,23 +667,14 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
   prop_desc.is_value_defined = true;
   prop_desc.value = value;
 
-  if (writable)
-  {
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = true;
-  }
+  prop_desc.is_writable_defined = true;
+  prop_desc.is_writable = writable;
 
-  if (enumerable)
-  {
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = true;
-  }
+  prop_desc.is_enumerable_defined = true;
+  prop_desc.is_enumerable = enumerable;
 
-  if (configurable)
-  {
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = true;
-  }
+  prop_desc.is_configurable_defined = true;
+  prop_desc.is_configurable = configurable;
 
   return ecma_op_object_define_own_property (obj_p,
                                              index_p,

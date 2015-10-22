@@ -16,6 +16,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -1144,27 +1145,16 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   /* Set index property of the result array */
   ecma_string_t *result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
   {
-    ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
-
-    array_item_prop_desc.is_value_defined = true;
-
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = (ecma_number_t) index;
-    array_item_prop_desc.value = ecma_make_number_value (num_p);
 
-    array_item_prop_desc.is_writable_defined = true;
-    array_item_prop_desc.is_writable = true;
-
-    array_item_prop_desc.is_enumerable_defined = true;
-    array_item_prop_desc.is_enumerable = true;
-
-    array_item_prop_desc.is_configurable_defined = true;
-    array_item_prop_desc.is_configurable = true;
-
-    ecma_op_object_define_own_property (array_obj_p,
-                                        result_prop_str_p,
-                                        &array_item_prop_desc,
-                                        true);
+    ecma_builtin_helper_def_prop (array_obj_p,
+                                  result_prop_str_p,
+                                  ecma_make_number_value (num_p),
+                                  true, /* Writable */
+                                  true, /* Enumerable */
+                                  true, /* Configurable */
+                                  true); /* Failure handling */
 
     ecma_dealloc_number (num_p);
   }
@@ -1172,26 +1162,15 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
 
   /* Set input property of the result array */
   result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INPUT);
-  {
-    ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
 
-    array_item_prop_desc.is_value_defined = true;
-    array_item_prop_desc.value = ecma_make_string_value (input_str_p);
+  ecma_builtin_helper_def_prop (array_obj_p,
+                                result_prop_str_p,
+                                ecma_make_string_value (input_str_p),
+                                true, /* Writable */
+                                true, /* Enumerable */
+                                true, /* Configurable */
+                                true); /* Failure handling */
 
-    array_item_prop_desc.is_writable_defined = true;
-    array_item_prop_desc.is_writable = true;
-
-    array_item_prop_desc.is_enumerable_defined = true;
-    array_item_prop_desc.is_enumerable = true;
-
-    array_item_prop_desc.is_configurable_defined = true;
-    array_item_prop_desc.is_configurable = true;
-
-    ecma_op_object_define_own_property (array_obj_p,
-                                        result_prop_str_p,
-                                        &array_item_prop_desc,
-                                        true);
-  }
   ecma_deref_ecma_string (result_prop_str_p);
 
   /* Set length property of the result array */
@@ -1204,10 +1183,6 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = (ecma_number_t) (num_of_elements);
     array_item_prop_desc.value = ecma_make_number_value (num_p);
-
-    array_item_prop_desc.is_writable_defined = false;
-    array_item_prop_desc.is_enumerable_defined = false;
-    array_item_prop_desc.is_configurable_defined = false;
 
     ecma_op_object_define_own_property (array_obj_p,
                                         result_prop_str_p,

@@ -21,6 +21,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -66,25 +67,15 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_ARGUMENTS_UL;
 
   // 7.
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-  {
-    prop_desc.is_value_defined = true;
-    prop_desc.value = ecma_make_number_value (len_p);
-
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = true;
-
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = false;
-
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = true;
-  }
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_completion_value_t completion = ecma_op_object_define_own_property (obj_p,
-                                                                           length_magic_string_p,
-                                                                           &prop_desc,
-                                                                           false);
+  ecma_completion_value_t completion = ecma_builtin_helper_def_prop (obj_p,
+                                                                     length_magic_string_p,
+                                                                     ecma_make_number_value (len_p),
+                                                                     true, /* Writable */
+                                                                     false, /* Enumerable */
+                                                                     true, /* Configurable */
+                                                                     false); /* Failure handling */
+
   JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
   ecma_deref_ecma_string (length_magic_string_p);
 
@@ -101,31 +92,21 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     bool is_moved = ecma_collection_iterator_next (&args_iterator);
     JERRY_ASSERT (is_moved);
 
-    prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_value_defined = true;
-      prop_desc.value = *args_iterator.current_value_p;
-
-      prop_desc.is_writable_defined = true;
-      prop_desc.is_writable = true;
-
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = true;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = true;
-    }
-
     ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 (indx);
+    completion = ecma_builtin_helper_def_prop (obj_p,
+                                               indx_string_p,
+                                               *args_iterator.current_value_p,
+                                               true, /* Writable */
+                                               true, /* Enumerable */
+                                               true, /* Configurable */
+                                               false); /* Failure handling */
 
-    completion = ecma_op_object_define_own_property (obj_p,
-                                                     indx_string_p,
-                                                     &prop_desc,
-                                                     false);
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
     ecma_deref_ecma_string (indx_string_p);
   }
+
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
   if (formal_params_p != NULL)
   {
@@ -186,14 +167,11 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
         {
           ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 ((uint32_t) indx);
 
-          prop_desc = ecma_make_empty_property_descriptor ();
-          {
-            prop_desc.is_value_defined = true;
-            prop_desc.value = ecma_make_string_value (name_p);
+          prop_desc.is_value_defined = true;
+          prop_desc.value = ecma_make_string_value (name_p);
 
-            prop_desc.is_configurable_defined = true;
-            prop_desc.is_configurable = true;
-          }
+          prop_desc.is_configurable_defined = true;
+          prop_desc.is_configurable = true;
 
           completion = ecma_op_object_define_own_property (map_p,
                                                            indx_string_p,
@@ -232,27 +210,16 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   // 13.
   if (!is_strict)
   {
-    prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_value_defined = true;
-      prop_desc.value = ecma_make_object_value (func_obj_p);
-
-      prop_desc.is_writable_defined = true;
-      prop_desc.is_writable = true;
-
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = false;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = true;
-    }
-
     ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
 
-    completion = ecma_op_object_define_own_property (obj_p,
-                                                     callee_magic_string_p,
-                                                     &prop_desc,
-                                                     false);
+    completion = ecma_builtin_helper_def_prop (obj_p,
+                                               callee_magic_string_p,
+                                               ecma_make_object_value (func_obj_p),
+                                               true, /* Writable */
+                                               false, /* Enumerable */
+                                               true, /* Configurable */
+                                               false); /* Failure handling */
+
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
     ecma_deref_ecma_string (callee_magic_string_p);

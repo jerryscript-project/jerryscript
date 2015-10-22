@@ -15,6 +15,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -299,24 +300,13 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     }
 
     /* 17. */
-    ecma_property_descriptor_t length_prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      length_prop_desc.is_value_defined = true;
-      length_prop_desc.value = ecma_make_number_value (length_p);
-
-      length_prop_desc.is_writable_defined = true;
-      length_prop_desc.is_writable = false;
-
-      length_prop_desc.is_enumerable_defined = true;
-      length_prop_desc.is_enumerable = false;
-
-      length_prop_desc.is_configurable_defined = true;
-      length_prop_desc.is_configurable = false;
-    }
-    ecma_completion_value_t completion = ecma_op_object_define_own_property (function_p,
-                                                                             magic_string_length_p,
-                                                                             &length_prop_desc,
-                                                                             false);
+    ecma_completion_value_t completion = ecma_builtin_helper_def_prop (function_p,
+                                                                       magic_string_length_p,
+                                                                       ecma_make_number_value (length_p),
+                                                                       false, /* Writable */
+                                                                       false, /* Enumerable */
+                                                                       false, /* Configurable */
+                                                                       false); /* Failure handling */
 
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
                   || ecma_is_completion_value_normal_false (completion));

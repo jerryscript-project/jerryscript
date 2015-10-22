@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -377,26 +378,15 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     ecma_object_t *proto_p = ecma_op_create_object_object_noarg ();
 
     // 17.
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_value_defined = true;
-      prop_desc.value = ecma_make_object_value (obj_p);
-
-      prop_desc.is_writable_defined = true;
-      prop_desc.is_writable = true;
-
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = false;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = true;
-    }
-
     ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
-    ecma_op_object_define_own_property (proto_p,
-                                        magic_string_constructor_p,
-                                        &prop_desc,
-                                        false);
+    ecma_builtin_helper_def_prop (proto_p,
+                                  magic_string_constructor_p,
+                                  ecma_make_object_value (obj_p),
+                                  true, /* Writable */
+                                  false, /* Enumerable */
+                                  true, /* Configurable */
+                                  false); /* Failure handling */
+
     ecma_deref_ecma_string (magic_string_constructor_p);
 
     // 18.
@@ -485,26 +475,15 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
                                                            (ecma_external_pointer_t) code_p);
   JERRY_ASSERT (is_created);
 
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-  {
-    prop_desc.is_value_defined = true;
-    prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = true;
-
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = false;
-
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = false;
-  }
-
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_op_object_define_own_property (function_obj_p,
-                                      magic_string_prototype_p,
-                                      &prop_desc,
-                                      false);
+  ecma_builtin_helper_def_prop (function_obj_p,
+                                magic_string_prototype_p,
+                                ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                true, /* Writable */
+                                false, /* Enumerable */
+                                false, /* Configurable */
+                                false); /* Failure handling */
+
   ecma_deref_ecma_string (magic_string_prototype_p);
 
   return function_obj_p;
@@ -1153,25 +1132,15 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
 
     if (ecma_is_property_configurable (existing_prop_p))
     {
-      ecma_property_descriptor_t property_desc = ecma_make_empty_property_descriptor ();
-      {
-        property_desc.is_value_defined = true;
-        property_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ecma_completion_value_t completion;
+      completion = ecma_builtin_helper_def_prop (glob_obj_p,
+                                                 function_name_p,
+                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                 true, /* Writable */
+                                                 true, /* Enumerable */
+                                                 is_configurable_bindings, /* Configurable */
+                                                 true); /* Failure handling */
 
-        property_desc.is_writable_defined = true;
-        property_desc.is_writable = true;
-
-        property_desc.is_enumerable_defined = true;
-        property_desc.is_enumerable = true;
-
-        property_desc.is_configurable_defined = true;
-        property_desc.is_configurable = is_configurable_bindings;
-      }
-
-      ecma_completion_value_t completion = ecma_op_object_define_own_property (glob_obj_p,
-                                                                               function_name_p,
-                                                                               &property_desc,
-                                                                               true);
       JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
     }
     else if (existing_prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)

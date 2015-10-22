@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -161,25 +162,14 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_value_defined = true;
-      prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-
-      prop_desc.is_writable_defined = true;
-      prop_desc.is_writable = true;
-
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = true;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = is_deletable;
-    }
-
-    ecma_completion_value_t completion = ecma_op_object_define_own_property (binding_obj_p,
-                                                                             name_p,
-                                                                             &prop_desc,
-                                                                             true);
+    ecma_completion_value_t completion;
+    completion = ecma_builtin_helper_def_prop (binding_obj_p,
+                                               name_p,
+                                               ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                               true, /* Writable */
+                                               true, /* Enumerable */
+                                               is_deletable, /* Configurable */
+                                               true); /* Failure handling */
 
     if (ecma_is_completion_value_throw (completion))
     {

@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -138,25 +139,13 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
     ecma_string_t* item_name_string_p = ecma_new_ecma_string_from_uint32 (index);
 
-    ecma_property_descriptor_t item_prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      item_prop_desc.is_value_defined = true;
-      item_prop_desc.value = array_items_p[index];
-
-      item_prop_desc.is_writable_defined = true;
-      item_prop_desc.is_writable = true;
-
-      item_prop_desc.is_enumerable_defined = true;
-      item_prop_desc.is_enumerable = true;
-
-      item_prop_desc.is_configurable_defined = true;
-      item_prop_desc.is_configurable = true;
-    }
-
-    ecma_op_object_define_own_property (obj_p,
-                                        item_name_string_p,
-                                        &item_prop_desc,
-                                        false);
+    ecma_builtin_helper_def_prop (obj_p,
+                                  item_name_string_p,
+                                  array_items_p[index],
+                                  true, /* Writable */
+                                  true, /* Enumerable */
+                                  true, /* Configurable */
+                                  false); /* Failure handling */
 
     ecma_deref_ecma_string (item_name_string_p);
   }

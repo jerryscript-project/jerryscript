@@ -47,10 +47,31 @@ public:
    */
   jsp_operand_t (void)
   {
-#ifndef JERRY_NDEBUG
     _type = jsp_operand_t::UNINITIALIZED;
-#endif /* !JERRY_NDEBUG */
+    _is_to_be_freed = true;
   } /* jsp_operand_t */
+
+  /**
+   * Copy constructor
+   *
+   * NOTE:
+   *     When copy of an operand is created, the new operand becomes responsible for clearing its register
+   *     (only for TMP operands)
+   */
+  jsp_operand_t (const jsp_operand_t &op) : /**< operand, which copy is created */
+  _data (op._data)
+  {
+    _type = op._type;
+    _is_to_be_freed = op._is_to_be_freed;
+
+    op._is_to_be_freed = false;
+  } /* jsp_operand_t */
+
+  jsp_operand_t& operator= (const jsp_operand_t &op);
+
+  void free_reg () const;
+
+  ~jsp_operand_t ();
 
   /**
    * Construct empty operand
@@ -143,6 +164,26 @@ public:
 
     return ret;
   } /* make_reg_operand */
+
+
+  /**
+   * Creates a copy of an operand
+   *
+   * NOTE:
+   *   For TMP operands: responsibility for freeing occupied register remains at the original operand.
+   *
+   * @return copy of an operand
+   */
+  static jsp_operand_t
+  dup_operand (const jsp_operand_t &op) /**< operand to copy */
+  {
+    jsp_operand_t op_copy;
+    op_copy._type = op._type;
+    op_copy._data = op._data;
+    op_copy._is_to_be_freed = false;
+
+    return op_copy;
+  } /* dup_operand */
 
   /**
    * Is it empty operand?
@@ -275,6 +316,7 @@ public:
 
     return _data.idx_const;
   } /* get_idx_const */
+
 private:
   union
   {
@@ -284,6 +326,8 @@ private:
   } _data;
 
   type_t _type; /**< type of operand */
+  mutable bool _is_to_be_freed; /**< flag, indicating if the register occupied by the operand
+                                 * should be freed in destructor (only for TMP operands)*/
 };
 
 typedef enum __attr_packed___
@@ -300,7 +344,7 @@ jsp_operand_t empty_operand (void);
 jsp_operand_t literal_operand (lit_cpointer_t);
 jsp_operand_t eval_ret_operand (void);
 jsp_operand_t jsp_create_operand_for_in_special_reg (void);
-bool operand_is_empty (jsp_operand_t);
+bool operand_is_empty (jsp_operand_t &);
 
 void dumper_init (void);
 void dumper_free (void);
@@ -313,7 +357,7 @@ void dumper_finish_scope (void);
 void dumper_start_varg_code_sequence (void);
 void dumper_finish_varg_code_sequence (void);
 
-extern bool dumper_is_eval_literal (jsp_operand_t);
+extern bool dumper_is_eval_literal (const jsp_operand_t &);
 
 jsp_operand_t dump_array_hole_assignment_res (void);
 void dump_boolean_assignment (jsp_operand_t, bool);
@@ -422,7 +466,7 @@ void rewrite_conditional_check (void);
 void dump_jump_to_end_for_rewrite (void);
 void rewrite_jump_to_end (void);
 
-void start_dumping_assignment_expression (void);
+void start_dumping_assignment_expression (const jsp_operand_t &);
 jsp_operand_t dump_prop_setter_or_variable_assignment_res (jsp_operand_t, jsp_operand_t);
 jsp_operand_t dump_prop_setter_or_addition_res (jsp_operand_t, jsp_operand_t);
 jsp_operand_t dump_prop_setter_or_multiplication_res (jsp_operand_t, jsp_operand_t);
@@ -452,7 +496,6 @@ void rewrite_case_clause (void);
 void rewrite_default_clause (void);
 void finish_dumping_case_clauses (void);
 
-void dump_delete (jsp_operand_t, jsp_operand_t, bool, locus);
 jsp_operand_t dump_delete_res (jsp_operand_t, bool, locus);
 
 void dump_typeof (jsp_operand_t, jsp_operand_t);

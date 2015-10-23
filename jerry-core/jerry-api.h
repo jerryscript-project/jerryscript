@@ -230,6 +230,9 @@ extern EXTERN_C
 jerry_api_object_t *jerry_api_get_global (void);
 
 extern EXTERN_C
+void jerry_api_gc (void);
+
+extern EXTERN_C
 void jerry_register_external_magic_strings (const jerry_api_char_ptr_t *, uint32_t, const jerry_api_length_t *);
 
 extern EXTERN_C

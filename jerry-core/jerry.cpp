@@ -1376,6 +1376,17 @@ jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
 } /* jerry_api_eval */
 
 /**
+ * Perform GC
+ */
+void
+jerry_api_gc (void)
+{
+  jerry_assert_api_available ();
+
+  ecma_gc_run ();
+} /* jerry_api_gc */
+
+/**
  * Jerry engine initialization
  */
 void

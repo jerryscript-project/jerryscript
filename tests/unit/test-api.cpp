@@ -660,6 +660,9 @@ main (void)
   // cleanup.
   jerry_api_release_object (global_obj_p);
 
+  // TEST: run gc.
+  jerry_api_gc ();
+
   jerry_cleanup ();
 
   JERRY_ASSERT (test_api_is_free_callback_was_called);

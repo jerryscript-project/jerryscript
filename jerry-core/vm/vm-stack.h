@@ -60,7 +60,7 @@ extern void vm_stack_finalize (void);
 extern vm_stack_frame_t *
 vm_stack_get_top_frame (void);
 extern void
-vm_stack_add_frame (vm_stack_frame_t *, ecma_value_t *, uint32_t, uint32_t);
+vm_stack_add_frame (vm_stack_frame_t *, ecma_value_t *, uint32_t, uint32_t, uint32_t, ecma_collection_header_t *);
 extern void vm_stack_free_frame (vm_stack_frame_t *);
 extern ecma_value_t vm_stack_frame_get_reg_value (vm_stack_frame_t *, uint32_t);
 extern void vm_stack_frame_set_reg_value (vm_stack_frame_t *, uint32_t, ecma_value_t);

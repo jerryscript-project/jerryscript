@@ -305,7 +305,10 @@ bool operand_is_empty (jsp_operand_t);
 void dumper_init (void);
 void dumper_free (void);
 
-bool dumper_try_replace_var_with_reg (scopes_tree, op_meta *);
+void dumper_start_move_of_vars_to_regs ();
+bool dumper_start_move_of_args_to_regs (uint32_t args_num);
+bool dumper_try_replace_identifier_name_with_reg (scopes_tree, op_meta *);
+void dumper_alloc_reg_for_unused_arg (void);
 
 void dumper_new_statement (void);
 void dumper_new_scope (void);
@@ -347,6 +350,7 @@ void dump_prop_setter (jsp_operand_t, jsp_operand_t, jsp_operand_t);
 
 void dump_function_end_for_rewrite (void);
 void rewrite_function_end ();
+void dumper_decrement_function_end_pos (void);
 
 jsp_operand_t dump_this_res (void);
 
@@ -474,14 +478,13 @@ void rewrite_finally (void);
 void dump_end_try_catch_finally (void);
 void dump_throw (jsp_operand_t);
 
-bool dumper_variable_declaration_exists (lit_cpointer_t);
 void dump_variable_declaration (lit_cpointer_t);
 
 vm_instr_counter_t dump_scope_code_flags_for_rewrite (void);
 void rewrite_scope_code_flags (vm_instr_counter_t, opcode_scope_code_flags_t);
 
-void dump_reg_var_decl_for_rewrite (void);
-void rewrite_reg_var_decl (void);
+vm_instr_counter_t dump_reg_var_decl_for_rewrite (void);
+void rewrite_reg_var_decl (vm_instr_counter_t);
 
 void dump_ret (void);
 void dump_retval (jsp_operand_t);

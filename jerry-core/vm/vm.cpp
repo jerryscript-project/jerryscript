@@ -411,7 +411,8 @@ vm_run_global (void)
                                                         ecma_make_object_value (glob_obj_p),
                                                         lex_env_p,
                                                         is_strict,
-                                                        false);
+                                                        false,
+                                                        NULL);
 
   jerry_completion_code_t ret_code;
 
@@ -479,7 +480,8 @@ vm_run_eval (const bytecode_data_header_t *bytecode_data_p, /**< byte-code data 
                                                         this_binding,
                                                         lex_env_p,
                                                         is_strict,
-                                                        true);
+                                                        true,
+                                                        NULL);
 
   if (ecma_is_completion_value_return (completion))
   {
@@ -595,7 +597,13 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
                  ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
                  ecma_object_t *lex_env_p, /**< lexical environment to use */
                  bool is_strict, /**< is the code is strict mode code (ECMA-262 v5, 10.1.1) */
-                 bool is_eval_code) /**< is the code is eval code (ECMA-262 v5, 10.1) */
+                 bool is_eval_code, /**< is the code is eval code (ECMA-262 v5, 10.1) */
+                 ecma_collection_header_t *arg_collection_p) /**<
+                                                              * - collection of function call arguments,
+                                                              *   if arguments for the called function
+                                                              *   are placed on registers;
+                                                              * - NULL - otherwise.
+                                                              */
 {
   ecma_completion_value_t completion;
 
@@ -605,8 +613,9 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
 
   const uint32_t tmp_regs_num = curr->data.reg_var_decl.tmp_regs_num;
   const uint32_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
+  const uint32_t arg_regs_num = curr->data.reg_var_decl.arg_regs_num;
 
-  uint32_t regs_num = VM_SPECIAL_REGS_NUMBER + tmp_regs_num + local_var_regs_num;
+  uint32_t regs_num = VM_SPECIAL_REGS_NUMBER + tmp_regs_num + local_var_regs_num + arg_regs_num;
 
   MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
 
@@ -619,7 +628,7 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
   frame_ctx.is_call_in_direct_eval_form = false;
   frame_ctx.tmp_num_p = ecma_alloc_number ();
 
-  vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num);
+  vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num, arg_regs_num, arg_collection_p);
   vm_stack_frame_set_reg_value (&frame_ctx.stack_frame,
                                 VM_REG_SPECIAL_THIS_BINDING,
                                 ecma_copy_value (this_binding_value, false));
@@ -675,6 +684,22 @@ vm_get_scope_flags (const bytecode_data_header_t *bytecode_header_p, /**< byte-c
                 && flags_instr.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
   return (opcode_scope_code_flags_t) flags_instr.data.meta.data_1;
 } /* vm_get_scope_flags */
+
+/**
+ * Get arguments number, encoded in specified reg_var_decl instruction
+ *
+ * @return value of "arguments number" reg_var_decl's parameter
+ */
+uint8_t
+vm_get_scope_args_num (const bytecode_data_header_t *bytecode_header_p, /**< byte-code data */
+                       vm_instr_counter_t reg_var_decl_oc) /**< position of reg_var_decl instruction */
+{
+  const vm_instr_t *instrs_p = bytecode_header_p->instrs_p;
+  const vm_instr_t *reg_var_decl_instr_p = &instrs_p[reg_var_decl_oc];
+  JERRY_ASSERT (reg_var_decl_instr_p->op_idx == VM_OP_REG_VAR_DECL);
+
+  return reg_var_decl_instr_p->data.reg_var_decl.arg_regs_num;
+} /* vm_get_scope_args_num */
 
 /**
  * Check whether currently executed code is strict mode code

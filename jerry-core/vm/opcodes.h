@@ -164,8 +164,12 @@ typedef enum : vm_idx_t
   OPCODE_SCOPE_CODE_FLAGS_STRICT                       = (1u << 0), /**< code is strict mode code */
   OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER = (1u << 1), /**< code doesn't reference
                                                                      *   'arguments' identifier */
-  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER      = (1u << 2)  /**< code doesn't reference
+  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER      = (1u << 2), /**< code doesn't reference
                                                                      *   'eval' identifier */
+  OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS       = (1u << 3), /**< function's arguments are moved to registers,
+                                                                     *   so should be initialized in vm registers,
+                                                                     *   and not in lexical environment */
+  OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV                   = (1u << 4)  /**< no lex. env. is necessary for the function */
 } opcode_scope_code_flags_t;
 
 /**

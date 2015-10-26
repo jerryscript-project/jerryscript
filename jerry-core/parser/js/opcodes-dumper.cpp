@@ -42,9 +42,23 @@ static vm_idx_t jsp_reg_max_for_temps;
  *      so the value, if not equal to VM_IDX_EMPTY, is always greater than jsp_reg_max_for_temps.
  *
  * See also:
- *          dumper_try_replace_var_with_reg
+ *          dumper_try_replace_identifier_name_with_reg
  */
 static vm_idx_t jsp_reg_max_for_local_var;
+
+/**
+ * Maximum identifier of a register, allocated for storage of an argument value.
+ *
+ * The value can be VM_IDX_EMPTY, indicating that no registers were allocated for argument values.
+ *
+ * Note:
+ *      Registers for argument values are always allocated after registers for variable values,
+ *      so the value, if not equal to VM_IDX_EMPTY, is always greater than jsp_reg_max_for_local_var.
+ *
+ * See also:
+ *          dumper_try_replace_identifier_name_with_reg
+ */
+static vm_idx_t jsp_reg_max_for_args;
 
 enum
 {
@@ -130,12 +144,6 @@ enum
 };
 STATIC_STACK (jsp_reg_id_stack, vm_idx_t)
 
-enum
-{
-  reg_var_decls_global_size
-};
-STATIC_STACK (reg_var_decls, vm_instr_counter_t)
-
 /**
  * Allocate next register for intermediate value
  *
@@ -145,6 +153,7 @@ static vm_idx_t
 jsp_alloc_reg_for_temp (void)
 {
   JERRY_ASSERT (jsp_reg_max_for_local_var == VM_IDX_EMPTY);
+  JERRY_ASSERT (jsp_reg_max_for_args == VM_IDX_EMPTY);
 
   vm_idx_t next_reg = jsp_reg_next++;
 
@@ -167,6 +176,51 @@ jsp_alloc_reg_for_temp (void)
 
 #ifdef CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER
 /**
+ * Start move of variable values to registers optimization pass
+ */
+void
+dumper_start_move_of_vars_to_regs ()
+{
+  JERRY_ASSERT (jsp_reg_max_for_local_var == VM_IDX_EMPTY);
+  JERRY_ASSERT (jsp_reg_max_for_args == VM_IDX_EMPTY);
+
+  jsp_reg_max_for_local_var = jsp_reg_max_for_temps;
+} /* dumper_start_move_of_vars_to_regs */
+
+/**
+ * Start move of argument values to registers optimization pass
+ *
+ * @return true - if optimization can be performed successfully (i.e. there are enough free registers),
+ *         false - otherwise.
+ */
+bool
+dumper_start_move_of_args_to_regs (uint32_t args_num) /**< number of arguments */
+{
+  JERRY_ASSERT (jsp_reg_max_for_args == VM_IDX_EMPTY);
+
+  if (jsp_reg_max_for_local_var == VM_IDX_EMPTY)
+  {
+    if (args_num + jsp_reg_max_for_temps >= VM_REG_GENERAL_LAST)
+    {
+      return false;
+    }
+
+    jsp_reg_max_for_args = jsp_reg_max_for_temps;
+  }
+  else
+  {
+    if (args_num + jsp_reg_max_for_local_var >= VM_REG_GENERAL_LAST)
+    {
+      return false;
+    }
+
+    jsp_reg_max_for_args = jsp_reg_max_for_local_var;
+  }
+
+  return true;
+} /* dumper_start_move_of_args_to_regs */
+
+/**
  * Try to move local variable to a register
  *
  * Note:
@@ -183,71 +237,62 @@ jsp_alloc_reg_for_temp (void)
  *         false - otherwise.
  */
 bool
-dumper_try_replace_var_with_reg (scopes_tree tree, /**< a function scope, created for
-                                                    *   function declaration or function expresssion */
-                                 op_meta *var_decl_om_p) /**< operation meta of corresponding variable declaration */
+dumper_try_replace_identifier_name_with_reg (scopes_tree tree, /**< a function scope, created for
+                                                                *   function declaration or function expresssion */
+                                             op_meta *om_p) /**< operation meta of corresponding
+                                                             *   variable declaration */
 {
   JERRY_ASSERT (tree->type == SCOPE_TYPE_FUNCTION);
 
-  JERRY_ASSERT (var_decl_om_p->op.op_idx == VM_OP_VAR_DECL);
-  JERRY_ASSERT (var_decl_om_p->lit_id[0].packed_value != NOT_A_LITERAL.packed_value);
-  JERRY_ASSERT (var_decl_om_p->lit_id[1].packed_value == NOT_A_LITERAL.packed_value);
-  JERRY_ASSERT (var_decl_om_p->lit_id[2].packed_value == NOT_A_LITERAL.packed_value);
+  lit_cpointer_t lit_cp;
+  bool is_arg;
 
-  vm_instr_counter_t instr_pos = 0;
-
-  op_meta header_opm = scopes_tree_op_meta (tree, instr_pos++);
-  JERRY_ASSERT (header_opm.op.op_idx == VM_OP_FUNC_EXPR_N || header_opm.op.op_idx == VM_OP_FUNC_DECL_N);
-
-  while (true)
+  if (om_p->op.op_idx == VM_OP_VAR_DECL)
   {
-    op_meta meta_opm = scopes_tree_op_meta (tree, instr_pos++);
-    JERRY_ASSERT (meta_opm.op.op_idx == VM_OP_META);
+    JERRY_ASSERT (om_p->lit_id[0].packed_value != NOT_A_LITERAL.packed_value);
+    JERRY_ASSERT (om_p->lit_id[1].packed_value == NOT_A_LITERAL.packed_value);
+    JERRY_ASSERT (om_p->lit_id[2].packed_value == NOT_A_LITERAL.packed_value);
 
-    opcode_meta_type meta_type = (opcode_meta_type) meta_opm.op.data.meta.type;
+    lit_cp = om_p->lit_id[0];
 
-    if (meta_type == OPCODE_META_TYPE_FUNCTION_END)
+    is_arg = false;
+  }
+  else
+  {
+    JERRY_ASSERT (om_p->op.op_idx == VM_OP_META);
+
+    JERRY_ASSERT (om_p->op.data.meta.type == OPCODE_META_TYPE_VARG);
+    JERRY_ASSERT (om_p->lit_id[0].packed_value == NOT_A_LITERAL.packed_value);
+    JERRY_ASSERT (om_p->lit_id[1].packed_value != NOT_A_LITERAL.packed_value);
+    JERRY_ASSERT (om_p->lit_id[2].packed_value == NOT_A_LITERAL.packed_value);
+
+    lit_cp = om_p->lit_id[1];
+
+    is_arg = true;
+  }
+
+  vm_idx_t reg;
+
+  if (is_arg)
+  {
+    JERRY_ASSERT (jsp_reg_max_for_args != VM_IDX_EMPTY);
+    JERRY_ASSERT (jsp_reg_max_for_args < VM_REG_GENERAL_LAST);
+
+    reg = ++jsp_reg_max_for_args;
+  }
+  else
+  {
+    JERRY_ASSERT (jsp_reg_max_for_local_var != VM_IDX_EMPTY);
+
+    if (jsp_reg_max_for_local_var == VM_REG_GENERAL_LAST)
     {
-      /* marker of function argument list end reached */
-      break;
+      /* not enough registers */
+      return false;
     }
-    else
-    {
-      JERRY_ASSERT (meta_type == OPCODE_META_TYPE_VARG);
+    JERRY_ASSERT (jsp_reg_max_for_local_var < VM_REG_GENERAL_LAST);
 
-      /* the varg specifies argument name, and so should be a string literal */
-      JERRY_ASSERT (meta_opm.op.data.meta.data_1 == VM_IDX_REWRITE_LITERAL_UID);
-      JERRY_ASSERT (meta_opm.lit_id[1].packed_value != NOT_A_LITERAL.packed_value);
-
-      if (meta_opm.lit_id[1].packed_value == var_decl_om_p->lit_id[0].packed_value)
-      {
-        /*
-         * Optimization is not performed, because the variable's name is equal to an argument name,
-         * and the argument's value would be initialized by its name in run-time.
-         *
-         * See also:
-         *          parser_parse_program
-         */
-        return false;
-      }
-    }
+    reg = ++jsp_reg_max_for_local_var;
   }
-
-  if (jsp_reg_max_for_local_var == VM_IDX_EMPTY)
-  {
-    jsp_reg_max_for_local_var = jsp_reg_max_for_temps;
-  }
-
-  if (jsp_reg_max_for_local_var == VM_REG_GENERAL_LAST)
-  {
-    /* not enough registers */
-    return false;
-  }
-  JERRY_ASSERT (jsp_reg_max_for_local_var < VM_REG_GENERAL_LAST);
-
-  vm_idx_t reg = ++jsp_reg_max_for_local_var;
-
-  lit_cpointer_t lit_cp = var_decl_om_p->lit_id[0];
 
   for (vm_instr_counter_t instr_pos = 0;
        instr_pos < tree->instrs_count;
@@ -320,8 +365,20 @@ dumper_try_replace_var_with_reg (scopes_tree tree, /**< a function scope, create
   }
 
   return true;
-} /* dumper_try_replace_var_with_reg */
+} /* dumper_try_replace_identifier_name_with_reg */
 #endif /* CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER */
+
+/**
+ * Just allocate register for argument that is never used due to duplicated argument names
+ */
+void
+dumper_alloc_reg_for_unused_arg (void)
+{
+  JERRY_ASSERT (jsp_reg_max_for_args != VM_IDX_EMPTY);
+  JERRY_ASSERT (jsp_reg_max_for_args < VM_REG_GENERAL_LAST);
+
+  ++jsp_reg_max_for_args;
+} /* dumper_alloc_reg_for_unused_arg */
 
 /**
  * Generate instruction with specified opcode and operands
@@ -650,6 +707,7 @@ void
 dumper_new_scope (void)
 {
   JERRY_ASSERT (jsp_reg_max_for_local_var == VM_IDX_EMPTY);
+  JERRY_ASSERT (jsp_reg_max_for_args == VM_IDX_EMPTY);
 
   STACK_PUSH (jsp_reg_id_stack, jsp_reg_next);
   STACK_PUSH (jsp_reg_id_stack, jsp_reg_max_for_temps);
@@ -662,6 +720,7 @@ void
 dumper_finish_scope (void)
 {
   JERRY_ASSERT (jsp_reg_max_for_local_var == VM_IDX_EMPTY);
+  JERRY_ASSERT (jsp_reg_max_for_args == VM_IDX_EMPTY);
 
   jsp_reg_max_for_temps = STACK_TOP (jsp_reg_id_stack);
   STACK_DROP (jsp_reg_id_stack, 1);
@@ -1181,6 +1240,23 @@ rewrite_function_end ()
 
   STACK_DROP (function_ends, 1);
 }
+
+/**
+ * Decrement position of 'function_end' instruction (the position is stored in "function_ends" stack)
+ *
+ * Note:
+ *      The operation is used upon deleting a 'varg' meta, describing element of a function's formal parameters list
+ */
+void
+dumper_decrement_function_end_pos (void)
+{
+  vm_instr_counter_t oc = STACK_TOP (function_ends);
+
+  oc--;
+
+  STACK_DROP (function_ends, 1);
+  STACK_PUSH (function_ends, oc);
+} /* dumper_decrement_function_end_pos */
 
 jsp_operand_t
 dump_this_res (void)
@@ -2309,27 +2385,6 @@ dump_throw (jsp_operand_t op)
 }
 
 /**
- * Checks if variable is already declared
- *
- * @return true if variable declaration already exists
- *         false otherwise
- */
-bool
-dumper_variable_declaration_exists (lit_cpointer_t lit_id) /**< literal which holds variable's name */
-{
-  vm_instr_counter_t var_decls_count = (vm_instr_counter_t) serializer_get_current_var_decls_counter ();
-  for (vm_instr_counter_t oc = (vm_instr_counter_t) (0); oc < var_decls_count; oc++)
-  {
-    const op_meta var_decl_op_meta = serializer_get_var_decl (oc);
-    if (var_decl_op_meta.lit_id[0].packed_value == lit_id.packed_value)
-    {
-      return true;
-    }
-  }
-  return false;
-} /* dumper_variable_declaration_exists */
-
-/**
  * Dump instruction designating variable declaration
  */
 void
@@ -2386,20 +2441,30 @@ dump_ret (void)
   serializer_dump_op_meta (jsp_dmp_create_op_meta_0 (VM_OP_RET));
 }
 
-void
+/**
+ * Dump 'reg_var_decl' instruction template
+ *
+ * @return position of the dumped instruction
+ */
+vm_instr_counter_t
 dump_reg_var_decl_for_rewrite (void)
 {
-  STACK_PUSH (reg_var_decls, serializer_get_current_instr_counter ());
-  dump_double_address (VM_OP_REG_VAR_DECL,
+  vm_instr_counter_t oc = serializer_get_current_instr_counter ();
+
+  dump_triple_address (VM_OP_REG_VAR_DECL,
+                       jsp_operand_t::make_unknown_operand (),
                        jsp_operand_t::make_unknown_operand (),
                        jsp_operand_t::make_unknown_operand ());
-}
 
+  return oc;
+} /* dump_reg_var_decl_for_rewrite */
+
+/**
+ * Rewrite 'reg_var_decl' instruction's template with current scope's register counts
+ */
 void
-rewrite_reg_var_decl (void)
+rewrite_reg_var_decl (vm_instr_counter_t reg_var_decl_oc) /**< position of dumped 'reg_var_decl' template */
 {
-  vm_instr_counter_t reg_var_decl_oc = STACK_TOP (reg_var_decls);
-
   op_meta opm = serializer_get_op_meta (reg_var_decl_oc);
   JERRY_ASSERT (opm.op.op_idx == VM_OP_REG_VAR_DECL);
 
@@ -2417,10 +2482,28 @@ rewrite_reg_var_decl (void)
     opm.op.data.reg_var_decl.local_var_regs_num = 0;
   }
 
-  serializer_rewrite_op_meta (reg_var_decl_oc, opm);
+  if (jsp_reg_max_for_args != VM_IDX_EMPTY)
+  {
+    if (jsp_reg_max_for_local_var != VM_IDX_EMPTY)
+    {
+      JERRY_ASSERT (jsp_reg_max_for_args >= jsp_reg_max_for_local_var);
+      opm.op.data.reg_var_decl.arg_regs_num = (vm_idx_t) (jsp_reg_max_for_args - jsp_reg_max_for_local_var);
+    }
+    else
+    {
+      JERRY_ASSERT (jsp_reg_max_for_args >= jsp_reg_max_for_temps);
+      opm.op.data.reg_var_decl.arg_regs_num = (vm_idx_t) (jsp_reg_max_for_args - jsp_reg_max_for_temps);
+    }
 
-  STACK_DROP (reg_var_decls, 1);
-}
+    jsp_reg_max_for_args = VM_IDX_EMPTY;
+  }
+  else
+  {
+    opm.op.data.reg_var_decl.arg_regs_num = 0;
+  }
+
+  serializer_rewrite_op_meta (reg_var_decl_oc, opm);
+} /* rewrite_reg_var_decl */
 
 void
 dump_retval (jsp_operand_t op)
@@ -2434,6 +2517,7 @@ dumper_init (void)
   jsp_reg_next = VM_REG_GENERAL_FIRST;
   jsp_reg_max_for_temps = VM_REG_GENERAL_FIRST;
   jsp_reg_max_for_local_var = VM_IDX_EMPTY;
+  jsp_reg_max_for_args = VM_IDX_EMPTY;
 
   STACK_INIT (U8);
   STACK_INIT (varg_headers);
@@ -2449,7 +2533,6 @@ dumper_init (void)
   STACK_INIT (finallies);
   STACK_INIT (tries);
   STACK_INIT (jsp_reg_id_stack);
-  STACK_INIT (reg_var_decls);
 }
 
 void
@@ -2469,5 +2552,4 @@ dumper_free (void)
   STACK_FREE (finallies);
   STACK_FREE (tries);
   STACK_FREE (jsp_reg_id_stack);
-  STACK_FREE (reg_var_decls);
 }

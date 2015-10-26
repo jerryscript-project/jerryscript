@@ -77,8 +77,13 @@ void
 vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
                     ecma_value_t *regs_p, /**< array of register variables' values */
                     uint32_t regs_num, /**< total number of register variables */
-                    uint32_t local_vars_regs_num) /**< number of register variables,
+                    uint32_t local_vars_regs_num, /**< number of register variables,
                                                    *   used for local variables */
+                    uint32_t arg_regs_num, /**< number of register variables,
+                                            *   used for arguments */
+                    ecma_collection_header_t *arguments_p) /**< collection of arguments
+                                                            *   (for case, their values
+                                                            *    are moved to registers) */
 {
   frame_p->prev_frame_p = vm_stack_top_frame_p;
   vm_stack_top_frame_p = frame_p;
@@ -91,16 +96,29 @@ vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
 
   JERRY_ASSERT (regs_num >= VM_SPECIAL_REGS_NUMBER);
 
-  for (uint32_t i = 0; i < regs_num - local_vars_regs_num; i++)
+  for (uint32_t i = 0; i < regs_num - local_vars_regs_num - arg_regs_num; i++)
   {
     regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   }
 
-  for (uint32_t i = regs_num - local_vars_regs_num;
+  for (uint32_t i = regs_num - local_vars_regs_num - arg_regs_num;
        i < regs_num;
        i++)
   {
     regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  if (arg_regs_num != 0)
+  {
+    ecma_collection_iterator_t args_iterator;
+    ecma_collection_iterator_init (&args_iterator, arguments_p);
+
+    for (uint32_t i = regs_num - arg_regs_num;
+         i < regs_num && ecma_collection_iterator_next (&args_iterator);
+         i++)
+    {
+      regs_p[i] = ecma_copy_value (*args_iterator.current_value_p, false);
+    }
   }
 } /* vm_stack_add_frame */
 

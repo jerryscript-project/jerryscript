@@ -118,6 +118,20 @@ scopes_tree_var_decl (scopes_tree tree, /**< scope, from which variable declarat
   return *(op_meta *) linked_list_element (tree->var_decls, oc);
 } /* scopes_tree_var_decl */
 
+/**
+ * Remove specified instruction from scopes tree node's instructions list
+ */
+void
+scopes_tree_remove_op_meta (scopes_tree tree, /**< scopes tree node */
+                            vm_instr_counter_t oc) /**< position of instruction to remove */
+{
+  assert_tree (tree);
+  JERRY_ASSERT (oc < tree->instrs_count);
+
+  linked_list_remove_element (tree->instrs, oc);
+  tree->instrs_count--;
+} /* scopes_tree_remove_op_meta */
+
 vm_instr_counter_t
 scopes_tree_count_instructions (scopes_tree t)
 {
@@ -131,6 +145,35 @@ scopes_tree_count_instructions (scopes_tree t)
   }
   return res;
 }
+
+/**
+ * Checks if variable declaration exists in the scope
+ *
+ * @return true / false
+ */
+bool
+scopes_tree_variable_declaration_exists (scopes_tree tree, /**< scope */
+                                         lit_cpointer_t lit_id) /**< literal which holds variable's name */
+{
+  assert_tree (tree);
+
+  for (vm_instr_counter_t oc = 0u;
+       oc < linked_list_get_length (tree->var_decls);
+       oc++)
+  {
+    const op_meta* var_decl_om_p = (op_meta *) linked_list_element (tree->var_decls, oc);
+
+    JERRY_ASSERT (var_decl_om_p->op.op_idx == VM_OP_VAR_DECL);
+    JERRY_ASSERT (var_decl_om_p->op.data.var_decl.variable_name == VM_IDX_REWRITE_LITERAL_UID);
+
+    if (var_decl_om_p->lit_id[0].packed_value == lit_id.packed_value)
+    {
+      return true;
+    }
+  }
+
+  return false;
+} /* scopes_tree_variable_declaration_exists */
 
 static uint16_t
 lit_id_hash (void * lit_id)

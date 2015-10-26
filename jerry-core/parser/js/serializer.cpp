@@ -35,18 +35,6 @@ serializer_get_op_meta (vm_instr_counter_t oc)
 }
 
 /**
- * Get variable declaration of the current scope
- *
- * @return variable declaration instruction
- */
-op_meta
-serializer_get_var_decl (vm_instr_counter_t oc) /**< index of variable declaration */
-{
-  JERRY_ASSERT (current_scope);
-  return scopes_tree_var_decl (current_scope, oc);
-} /* serializer_get_var_decl */
-
-/**
  * Get byte-code instruction from current scope, or specified byte-code array
  *
  * @return byte-code instruction
@@ -230,17 +218,6 @@ serializer_get_current_instr_counter (void)
 {
   return scopes_tree_instrs_num (current_scope);
 }
-
-/**
- * Get number of variable declarations in the current scope
- *
- * @return count of variable declarations
- */
-vm_instr_counter_t
-serializer_get_current_var_decls_counter (void)
-{
-  return scopes_tree_var_decls_num (current_scope);
-} /* serializer_get_current_var_decls_counter */
 
 vm_instr_counter_t
 serializer_count_instrs_in_subscopes (void)

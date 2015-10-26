@@ -221,7 +221,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
     PP_OP (VM_OP_PRE_INCR, "%s = ++%s;");
     PP_OP (VM_OP_PRE_DECR, "%s = --%s;");
     PP_OP (VM_OP_THROW_VALUE, "throw %s;");
-    PP_OP (VM_OP_REG_VAR_DECL, "%d tmp regs, %d local variable regs");
+    PP_OP (VM_OP_REG_VAR_DECL, "%d tmp regs, %d local variable regs, %d argument variable regs");
     PP_OP (VM_OP_VAR_DECL, "var %s;");
     PP_OP (VM_OP_RETVAL, "return %s;");
     PP_OP (VM_OP_RET, "ret;");
@@ -571,6 +571,16 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
             {
               printf ("[no 'eval'] ");
               scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
+            }
+            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS)
+            {
+              printf ("[arguments are placed on registers] ");
+              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS);
+            }
+            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV)
+            {
+              printf ("[no lexical environment should be created for the scope] ");
+              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV);
             }
 
             JERRY_ASSERT (scope_flags == 0);

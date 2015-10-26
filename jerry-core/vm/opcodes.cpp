@@ -487,29 +487,11 @@ function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                       lit_cpointer_t function_name_lit_cp, /**< compressed pointer to literal with function name */
                       ecma_collection_header_t *formal_params_collection_p) /** formal parameters collection */
 {
-  bool is_strict = frame_ctx_p->is_strict;
-  bool do_instantiate_arguments_object = true;
   const bool is_configurable_bindings = frame_ctx_p->is_eval_code;
 
   const vm_instr_counter_t function_code_end_oc = (vm_instr_counter_t) (
     vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FUNCTION_END, frame_ctx_p) + frame_ctx_p->pos);
   frame_ctx_p->pos++;
-
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->bytecode_header_p->instrs_p,
-                                                              frame_ctx_p->pos++);
-
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-  {
-    is_strict = true;
-  }
-  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
-  {
-    /* the code doesn't use 'arguments' identifier
-     * and doesn't perform direct call to eval,
-     * so Arguments object can't be referenced */
-    do_instantiate_arguments_object = false;
-  }
 
   ecma_string_t *function_name_string_p = ecma_new_ecma_string_from_lit_cp (function_name_lit_cp);
 
@@ -518,8 +500,7 @@ function_declaration (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                                                                     frame_ctx_p->bytecode_header_p,
                                                                     frame_ctx_p->pos,
                                                                     formal_params_collection_p,
-                                                                    is_strict,
-                                                                    do_instantiate_arguments_object,
+                                                                    frame_ctx_p->is_strict,
                                                                     is_configurable_bindings);
   ecma_deref_ecma_string (function_name_string_p);
 
@@ -587,28 +568,9 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
 
   vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
 
-  bool is_strict = frame_ctx_p->is_strict;
-  bool do_instantiate_arguments_object = true;
-
   function_code_end_oc = (vm_instr_counter_t) (vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FUNCTION_END,
                                                                                 frame_ctx_p) + frame_ctx_p->pos);
   frame_ctx_p->pos++;
-
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (frame_ctx_p->bytecode_header_p->instrs_p,
-                                                              frame_ctx_p->pos++);
-
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-  {
-    is_strict = true;
-  }
-  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
-  {
-    /* the code doesn't use 'arguments' identifier
-     * and doesn't perform direct call to eval,
-     * so Arguments object can't be referenced */
-    do_instantiate_arguments_object = false;
-  }
 
   ecma_object_t *scope_p;
   ecma_string_t *function_name_string_p = NULL;
@@ -632,8 +594,7 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
 
   ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
                                                               scope_p,
-                                                              is_strict,
-                                                              do_instantiate_arguments_object,
+                                                              frame_ctx_p->is_strict,
                                                               frame_ctx_p->bytecode_header_p,
                                                               frame_ctx_p->pos);
 

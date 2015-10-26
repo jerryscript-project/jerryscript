@@ -214,13 +214,30 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
                                                                                        *     by caller after passing it
                                                                                        *     to the routine */
                                 ecma_object_t *scope_p, /**< function's scope */
-                                bool is_strict, /**< 'strict' flag */
-                                bool do_instantiate_arguments_object, /**< should an Arguments object be instantiated
-                                                                       *   for the function object upon call */
-                                const bytecode_data_header_t *bytecode_data_p, /**< byte-code array */
+                                bool is_decl_in_strict_mode, /**< is function declared in strict mode code? */
+                                const bytecode_data_header_t *bytecode_header_p, /**< byte-code */
                                 vm_instr_counter_t first_instr_pos) /**< position of first instruction
                                                                      *   of function's body */
 {
+  bool is_strict_mode_code = is_decl_in_strict_mode;
+  bool do_instantiate_arguments_object = true;
+
+  vm_instr_counter_t instr_pos = first_instr_pos;
+  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_header_p, instr_pos++);
+
+  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+  {
+    is_strict_mode_code = true;
+  }
+  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
+      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+  {
+    /* the code doesn't use 'arguments' identifier
+     * and doesn't perform direct call to eval,
+     * so Arguments object can't be referenced */
+    do_instantiate_arguments_object = false;
+  }
+
   // 1., 4., 13.
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -253,12 +270,12 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
 
   // 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-  MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->u.internal_property.value, bytecode_data_p);
+  MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->u.internal_property.value, bytecode_header_p);
 
   ecma_property_t *code_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET);
-  code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict,
+  code_prop_p->u.internal_property.value = ecma_pack_code_internal_property_value (is_strict_mode_code,
                                                                                    do_instantiate_arguments_object,
-                                                                                   first_instr_pos);
+                                                                                   instr_pos);
 
   // 14.
   // 15.
@@ -273,7 +290,7 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
    */
 
   // 19.
-  if (is_strict)
+  if (is_strict_mode_code)
   {
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
@@ -1132,18 +1149,15 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                                                      *     be changed / used / freed
                                                                                      *     by caller after passing it
                                                                                      *     to the routine */
-                              bool is_strict, /**< flag indicating if function is declared in strict mode code */
-                              bool do_instantiate_arguments_object, /**< flag, indicating whether an Arguments object
-                                                                     *   should be instantiated for the function object
-                                                                     *   upon call */
+                              bool is_decl_in_strict_mode, /**< flag, indicating if function is
+                                                            *   declared in strict mode code */
                               bool is_configurable_bindings) /**< flag indicating whether function
                                                               *   is declared in eval code */
 {
   // b.
   ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
                                                               lex_env_p,
-                                                              is_strict,
-                                                              do_instantiate_arguments_object,
+                                                              is_decl_in_strict_mode,
                                                               bytecode_data_p,
                                                               function_first_instr_pos);
 
@@ -1205,7 +1219,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
     ret_value = ecma_op_set_mutable_binding (lex_env_p,
                                              function_name_p,
                                              ecma_make_object_value (func_obj_p),
-                                             is_strict);
+                                             is_decl_in_strict_mode);
   }
   else
   {

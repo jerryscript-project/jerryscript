@@ -530,9 +530,18 @@ opfunc_func_decl_n (vm_instr_t instr, /**< instruction */
 
   ecma_completion_value_t ret_value;
 
-  ecma_collection_header_t *formal_params_collection_p = ecma_new_strings_collection (NULL, 0);
+  ecma_collection_header_t *formal_params_collection_p;
 
-  vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
+  if (params_number != 0)
+  {
+    formal_params_collection_p = ecma_new_strings_collection (NULL, 0);
+
+    vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
+  }
+  else
+  {
+    formal_params_collection_p = NULL;
+  }
 
   ret_value = function_declaration (frame_ctx_p,
                                     function_name_lit_cp,
@@ -564,9 +573,18 @@ opfunc_func_expr_n (vm_instr_t instr, /**< instruction */
 
   vm_instr_counter_t function_code_end_oc;
 
-  ecma_collection_header_t *formal_params_collection_p = ecma_new_strings_collection (NULL, 0);
+  ecma_collection_header_t *formal_params_collection_p;
 
-  vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
+  if (params_number != 0)
+  {
+    formal_params_collection_p = ecma_new_strings_collection (NULL, 0);
+
+    vm_fill_params_list (frame_ctx_p, params_number, formal_params_collection_p);
+  }
+  else
+  {
+    formal_params_collection_p = NULL;
+  }
 
   function_code_end_oc = (vm_instr_counter_t) (vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FUNCTION_END,
                                                                                 frame_ctx_p) + frame_ctx_p->pos);

@@ -125,6 +125,7 @@ jsp_early_error_check_for_duplication_of_prop_names (bool is_strict, locus loc _
 {
   if (STACK_SIZE (props) - STACK_TOP (size_t_stack) < 2)
   {
+    STACK_DROP (props, (size_t) (STACK_SIZE (props) - STACK_TOP (size_t_stack)));
     STACK_DROP (size_t_stack, 1);
     return;
   }

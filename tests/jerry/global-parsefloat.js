@@ -23,6 +23,8 @@ assert(parseFloat("1.2e3") === 1200);
 assert(parseFloat("+1.2e3") === 1200);
 assert(parseFloat("-1.2e3") === -1200);
 assert(parseFloat("   \n\t  1.2e3") === 1200);
+assert(parseFloat("03.02e1") === 30.2);
+assert(parseFloat("003.") === 3);
 assert(parseFloat(".2e3") === 200);
 assert(parseFloat("1.e3") === 1000);
 assert(parseFloat("1.2e") === 1.2);

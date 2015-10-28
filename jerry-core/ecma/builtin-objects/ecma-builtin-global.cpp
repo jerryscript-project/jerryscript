@@ -531,31 +531,35 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       if (str_curr_p < str_end_p)
       {
         current = *str_curr_p;
-      }
 
-      /* Check decimal point. */
-      if (current == LIT_CHAR_DOT && str_curr_p < str_end_p)
-      {
-        current = *(++str_curr_p);
-
-        if (lit_char_is_decimal_digit (current))
+        /* Check decimal point. */
+        if (current == LIT_CHAR_DOT)
         {
-          has_fraction_part = true;
           str_curr_p++;
 
-          /* Check digits of fractional part. */
-          while (str_curr_p < str_end_p)
+          if (str_curr_p < str_end_p)
           {
-            current = *str_curr_p++;
-            if (!lit_char_is_decimal_digit (current))
+            current = *str_curr_p;
+
+            if (lit_char_is_decimal_digit (current))
             {
-              str_curr_p--;
-              break;
+              has_fraction_part = true;
+
+              /* Check digits of fractional part. */
+              while (str_curr_p < str_end_p)
+              {
+                current = *str_curr_p++;
+                if (!lit_char_is_decimal_digit (current))
+                {
+                  str_curr_p--;
+                  break;
+                }
+              }
+
+              /* Set end position to end of fraction part. */
+              end_p = str_curr_p;
             }
           }
-
-          /* Set end position to end of fraction part. */
-          end_p = str_curr_p;
         }
       }
 

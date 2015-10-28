@@ -328,6 +328,7 @@ serializer_remove_bytecode_data (const bytecode_data_header_t *bytecode_data_p) 
     }
 
     prev_header = cur_header_p;
+    cur_header_p = MEM_CP_GET_POINTER (bytecode_data_header_t, cur_header_p->next_header_cp);
   }
 } /* serializer_remove_instructions */
 

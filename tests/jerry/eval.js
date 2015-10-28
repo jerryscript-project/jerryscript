@@ -117,3 +117,8 @@ catch(e)
 {
   assert (e instanceof SyntaxError);
 }
+
+// nested eval with function expressions
+code = 'eval("(function (){})")';
+code = "eval ('" + code + "')";
+eval (code);

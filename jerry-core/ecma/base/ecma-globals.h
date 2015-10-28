@@ -619,7 +619,7 @@ typedef double ecma_number_t;
 /**
  * Maximum number of significant digits that ecma-number can store
  */
-#define ECMA_NUMBER_MAX_DIGITS  (18)
+#define ECMA_NUMBER_MAX_DIGITS  (19)
 
 /**
  * Width of sign field

@@ -580,14 +580,9 @@ ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t severity)
       ecma_gc_run ();
     }
   }
-  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM
-           || severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
-  {
-    ecma_gc_run ();
-  }
   else
   {
-    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 
     /* Freeing as much memory as we currently can */
     ecma_lcache_invalidate_all ();

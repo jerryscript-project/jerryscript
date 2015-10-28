@@ -536,7 +536,7 @@ uint8_t* __attr_always_inline___
 mem_pools_alloc (void)
 {
 #ifdef MEM_GC_BEFORE_EACH_ALLOC
-  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 #endif /* MEM_GC_BEFORE_EACH_ALLOC */
 
   mem_check_pools ();

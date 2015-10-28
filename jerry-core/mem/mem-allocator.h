@@ -62,17 +62,15 @@ typedef uint16_t mem_cpointer_t;
  * Severity of a 'try give memory back' request
  *
  * The request are posted sequentially beginning from
- * low to critical until enough memory is freed.
+ * low to high until enough memory is freed.
  *
- * If not enough memory is freed upon a critical request
+ * If not enough memory is freed upon a high request
  * then the engine is shut down with ERR_OUT_OF_MEMORY.
  */
 typedef enum
 {
   MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW, /* 'low' severity */
-  MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM, /* 'medium' severity */
   MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH, /* 'high' severity */
-  MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL /* 'critical' severity */
 } mem_try_give_memory_back_severity_t;
 
 /**

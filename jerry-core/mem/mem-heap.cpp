@@ -531,7 +531,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
   VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
 
 #ifdef MEM_GC_BEFORE_EACH_ALLOC
-  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+  mem_run_try_to_give_memory_back_callbacks (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 #endif /* MEM_GC_BEFORE_EACH_ALLOC */
 
   size_t chunks = mem_get_block_chunks_count_from_data_size (size_in_bytes);
@@ -549,14 +549,14 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
   }
 
   for (mem_try_give_memory_back_severity_t severity = MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
-       severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL;
+       severity <= MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH;
        severity = (mem_try_give_memory_back_severity_t) (severity + 1))
   {
     mem_run_try_to_give_memory_back_callbacks (severity);
 
     data_space_p = mem_heap_alloc_block_internal (size_in_bytes, length_type, alloc_term);
 
-    if (data_space_p != NULL)
+    if (likely (data_space_p != NULL))
     {
       VALGRIND_FREYA_MALLOCLIKE_SPACE (data_space_p, size_in_bytes);
       return data_space_p;

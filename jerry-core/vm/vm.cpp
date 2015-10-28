@@ -103,7 +103,7 @@ interp_mem_get_stats (mem_heap_stats_t *out_heap_stats_p,
   }
 
   /* Requesting to free as much memory as we currently can */
-  ecma_try_to_give_back_some_memory (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+  ecma_try_to_give_back_some_memory (MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 
   if (reset_peak_before)
   {

@@ -42,17 +42,9 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
   {
     p = 8;
   }
-  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_MEDIUM)
-  {
-    p = 4;
-  }
-  else if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH)
-  {
-    p = 2;
-  }
   else
   {
-    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_CRITICAL);
+    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 
     p = 1;
   }

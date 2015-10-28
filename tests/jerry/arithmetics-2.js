@@ -43,3 +43,11 @@ assert (++o.p === 2);
 assert (o.p === 2);
 assert (--o.p === 1);
 assert (o.p === 1);
+
+try {
+  eval ('++ ++ a');
+  assert (false);
+}
+catch (e) {
+  assert (e instanceof ReferenceError);
+}

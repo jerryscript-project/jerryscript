@@ -1225,7 +1225,7 @@ check_operand_in_prefix_operation (jsp_operand_t obj) /**< operand, which type s
   const op_meta last = last_dumped_op_meta ();
   if (last.op.op_idx != VM_OP_PROP_GETTER)
   {
-    if (obj.is_empty_operand ())
+    if (obj.is_register_operand ())
     {
       /*
        * FIXME:

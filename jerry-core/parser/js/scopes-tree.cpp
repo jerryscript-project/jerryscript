@@ -712,7 +712,7 @@ scopes_tree_set_strict_mode (scopes_tree tree, /**< scope */
                              bool strict_mode) /**< value of the strict mode flag */
 {
   assert_tree (tree);
-  tree->strict_mode = strict_mode;
+  tree->strict_mode = strict_mode?1:0;
 } /* scopes_tree_set_strict_mode */
 
 /**

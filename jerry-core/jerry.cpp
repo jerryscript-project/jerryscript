@@ -1602,7 +1602,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
   size_t buffer_write_offset = 0;
 
   jerry_snapshot_header_t header;
-  header.is_run_global = is_for_global;
+  header.is_run_global = is_for_global?1:0;
 
   uint64_t version = JERRY_SNAPSHOT_VERSION;
   if (!jrt_write_to_buffer_by_offset (buffer_p,

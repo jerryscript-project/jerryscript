@@ -401,6 +401,8 @@ parse_property_assignment (void)
     scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
     lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
+    jsp_early_error_start_checking_of_vargs ();
+
     skip_newlines ();
     const jsp_operand_t func = parse_argument_list (VARG_FUNC_EXPR, empty_operand (), NULL);
 
@@ -424,6 +426,8 @@ parse_property_assignment (void)
     rewrite_function_end ();
 
     inside_function = was_in_function;
+
+    jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
     scopes_tree fe_scope_tree = STACK_TOP (scopes);
 
@@ -572,7 +576,6 @@ parse_argument_list (varg_list_type vlt, jsp_operand_t obj, jsp_operand_t *this_
       current_token_must_be (TOK_NAME);
       op = literal_operand (token_data_as_lit_cp ());
       jsp_early_error_add_varg (op);
-      jsp_early_error_check_for_eval_and_arguments_in_strict_mode (op, is_strict_mode (), tok.loc);
       dump_varg (op);
       skip_newlines ();
     }
@@ -662,19 +665,18 @@ parse_function_declaration (void)
 
   jsp_label_t *masked_label_set_p = jsp_label_mask_set ();
 
-  token_after_newlines_must_be (TOK_NAME);
-  const jsp_operand_t name = literal_operand (token_data_as_lit_cp ());
-
-  jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
-
-  skip_newlines ();
-
   scopes_tree_set_contains_functions (STACK_TOP (scopes));
 
   STACK_PUSH (scopes, scopes_tree_init (STACK_TOP (scopes), SCOPE_TYPE_FUNCTION));
   serializer_set_scope (STACK_TOP (scopes));
   scopes_tree_set_strict_mode (STACK_TOP (scopes), scopes_tree_strict_mode (STACK_HEAD (scopes, 2)));
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
+
+  token_after_newlines_must_be (TOK_NAME);
+
+  const jsp_operand_t name = literal_operand (token_data_as_lit_cp ());
+
+  skip_newlines ();
 
   jsp_early_error_start_checking_of_vargs ();
   parse_argument_list (VARG_FUNC_DECL, name, NULL);
@@ -696,6 +698,7 @@ parse_function_declaration (void)
 
   inside_function = was_in_function;
 
+  jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
   jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
   STACK_DROP (scopes, 1);
@@ -728,10 +731,11 @@ parse_function_expression (void)
   lexer_set_strict_mode (scopes_tree_strict_mode (STACK_TOP (scopes)));
 
   skip_newlines ();
+
+  jsp_operand_t name = empty_operand ();
   if (token_is (TOK_NAME))
   {
-    const jsp_operand_t name = literal_operand (token_data_as_lit_cp ());
-    jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
+    name = literal_operand (token_data_as_lit_cp ());
 
     skip_newlines ();
     res = parse_argument_list (VARG_FUNC_EXPR, name, NULL);
@@ -765,6 +769,7 @@ parse_function_expression (void)
 
   inside_function = was_in_function;
 
+  jsp_early_error_check_for_eval_and_arguments_in_strict_mode (name, is_strict_mode (), tok.loc);
   jsp_early_error_check_for_syntax_errors_in_formal_param_list (is_strict_mode (), tok.loc);
 
   serializer_set_scope (STACK_HEAD (scopes, 2));

@@ -207,46 +207,47 @@ void jsp_early_error_add_varg (jsp_operand_t op)
 }
 
 static void
-emit_error_on_eval_and_arguments (jsp_operand_t op, locus loc __attr_unused___)
+emit_error_on_eval_and_arguments (literal_t lit, locus loc __attr_unused___)
 {
-  if (op.is_literal_operand ())
+  if (lit_literal_equal_type_utf8 (lit,
+                                   lit_get_magic_string_utf8 (LIT_MAGIC_STRING_ARGUMENTS),
+                                   lit_get_magic_string_size (LIT_MAGIC_STRING_ARGUMENTS))
+      || lit_literal_equal_type_utf8 (lit,
+                                      lit_get_magic_string_utf8 (LIT_MAGIC_STRING_EVAL),
+                                      lit_get_magic_string_size (LIT_MAGIC_STRING_EVAL)))
   {
-    if (lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.get_literal ()),
-                                     lit_get_magic_string_utf8 (LIT_MAGIC_STRING_ARGUMENTS),
-                                     lit_get_magic_string_size (LIT_MAGIC_STRING_ARGUMENTS))
-        || lit_literal_equal_type_utf8 (lit_get_literal_by_cp (op.get_literal ()),
-                                        lit_get_magic_string_utf8 (LIT_MAGIC_STRING_EVAL),
-                                        lit_get_magic_string_size (LIT_MAGIC_STRING_EVAL)))
-    {
-      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "'eval' and 'arguments' are not allowed here in strict mode", loc);
-    }
+    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "'eval' and 'arguments' are not allowed here in strict mode", loc);
   }
 }
 
 void
 jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t op, bool is_strict, locus loc)
 {
-  if (is_strict)
+  if (is_strict
+      && op.is_literal_operand ())
   {
-    emit_error_on_eval_and_arguments (op, loc);
+    emit_error_on_eval_and_arguments (lit_get_literal_by_cp (op.get_literal ()), loc);
   }
 }
 
 /* 13.1, 15.3.2 */
 void
-jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc __attr_unused___)
+jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc)
 {
   if (is_strict
-      && STACK_SIZE (props) - STACK_TOP (size_t_stack) >= 2)
+      && STACK_SIZE (props) - STACK_TOP (size_t_stack) >= 1)
   {
-    for (size_t i = (STACK_TOP (size_t_stack) + 1u); i < STACK_SIZE (props); i++)
+    for (size_t i = STACK_TOP (size_t_stack); i < STACK_SIZE (props); i++)
     {
       JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
       literal_t previous = STACK_ELEMENT (props, i).lit;
       JERRY_ASSERT (previous->get_type () == LIT_STR_T
                     || previous->get_type () == LIT_MAGIC_STR_T
                     || previous->get_type () == LIT_MAGIC_STR_EX_T);
-      for (size_t j = STACK_TOP (size_t_stack); j < i; j++)
+
+      emit_error_on_eval_and_arguments (previous, loc);
+
+      for (size_t j = i + 1; j < STACK_SIZE (props); j++)
       {
         JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
         literal_t current = STACK_ELEMENT (props, j).lit;

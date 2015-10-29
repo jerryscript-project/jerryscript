@@ -122,3 +122,13 @@ catch (e)
 {
   assert (e instanceof SyntaxError);
 }
+
+try
+{
+  new Function ('a;b', 'return;');
+  assert (false);
+}
+catch (e)
+{
+  assert (e instanceof SyntaxError);
+}

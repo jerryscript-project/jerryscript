@@ -16,6 +16,7 @@
 #include "ecma-alloc.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-eval.h"
 #include "ecma-gc.h"
 #include "ecma-function-object.h"
 #include "ecma-lex-env.h"
@@ -65,21 +66,38 @@ ecma_builtin_function_dispatch_call (const ecma_value_t *arguments_list_p, /**< 
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_builtin_function_helper_get_arguments (const ecma_value_t *arguments_list_p, /** < arguments list */
-                                            ecma_length_t arguments_list_len, /** < number of arguments */
-                                            ecma_length_t *out_total_number_of_args_p) /** < out: number of
-                                                                                        * arguments found */
+ecma_builtin_function_helper_get_function_expression (const ecma_value_t *arguments_list_p, /** < arguments list */
+                                                      ecma_length_t arguments_list_len) /** < number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
-  JERRY_ASSERT (out_total_number_of_args_p != NULL);
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  /* We are only processing the function arguments skipping the function body */
-  ecma_length_t number_of_function_args = (arguments_list_len == 0 ? 0 : arguments_list_len - 1);
-  ecma_string_t *arguments_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  ecma_string_t *left_parenthesis_str_p, *right_parenthesis_str_p;
+  ecma_string_t *left_brace_str_p, *right_brace_str_p;
+  ecma_string_t *comma_str_p;
+  ecma_string_t *function_kw_str_p, *empty_str_p;
+  ecma_string_t *expr_str_p, *concated_str_p;
 
-  ecma_string_t *separator_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
+  left_parenthesis_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LEFT_PARENTHESIS_CHAR);
+  right_parenthesis_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_RIGHT_PARENTHESIS_CHAR);
+
+  left_brace_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
+  right_brace_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
+
+  comma_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
+
+  function_kw_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_FUNCTION);
+  empty_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
+
+  /* First, we only process the function arguments skipping the function body */
+  ecma_length_t number_of_function_args = (arguments_list_len == 0 ? 0 : arguments_list_len - 1);
+
+  expr_str_p = ecma_concat_ecma_strings (left_parenthesis_str_p, function_kw_str_p);
+
+  concated_str_p = ecma_concat_ecma_strings (expr_str_p, left_parenthesis_str_p);
+  ecma_deref_ecma_string (expr_str_p);
+  expr_str_p = concated_str_p;
 
   for (ecma_length_t idx = 0;
        idx < number_of_function_args && ecma_is_completion_value_empty (ret_value);
@@ -91,57 +109,73 @@ ecma_builtin_function_helper_get_arguments (const ecma_value_t *arguments_list_p
 
     ecma_string_t *str_p = ecma_get_string_from_value (str_arg_value);
 
-    lit_utf8_size_t str_size = ecma_string_get_size (str_p);
-    MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (str_p, start_p, (ssize_t) str_size);
-    JERRY_ASSERT (sz >= 0);
-
-    lit_utf8_byte_t *current_p = start_p;
-    const lit_utf8_byte_t *string_end_p = start_p + str_size;
-
-    while (current_p < string_end_p)
-    {
-      ecma_char_t current_char;
-      current_p += lit_read_code_unit_from_utf8 (current_p, &current_char);
-
-      if (current_char == ',')
-      {
-        (*out_total_number_of_args_p)++;
-      }
-    }
-
-    MEM_FINALIZE_LOCAL_ARRAY (start_p);
-
-    ecma_string_t *concated_str_p = ecma_concat_ecma_strings (arguments_str_p, str_p);
-    ecma_deref_ecma_string (arguments_str_p);
-    arguments_str_p = concated_str_p;
+    concated_str_p = ecma_concat_ecma_strings (expr_str_p, str_p);
+    ecma_deref_ecma_string (expr_str_p);
+    expr_str_p = concated_str_p;
 
     if (idx < number_of_function_args - 1)
     {
-      ecma_string_t *concated_str_p = ecma_concat_ecma_strings (arguments_str_p, separator_string_p);
-      ecma_deref_ecma_string (arguments_str_p);
-      arguments_str_p = concated_str_p;
+      concated_str_p = ecma_concat_ecma_strings (expr_str_p, comma_str_p);
+      ecma_deref_ecma_string (expr_str_p);
+      expr_str_p = concated_str_p;
     }
-
-    (*out_total_number_of_args_p)++;
 
     ECMA_FINALIZE (str_arg_value);
   }
 
-  ecma_deref_ecma_string (separator_string_p);
+  if (ecma_is_completion_value_empty (ret_value))
+  {
+    concated_str_p = ecma_concat_ecma_strings (expr_str_p, right_parenthesis_str_p);
+    ecma_deref_ecma_string (expr_str_p);
+    expr_str_p = concated_str_p;
+
+    concated_str_p = ecma_concat_ecma_strings (expr_str_p, left_brace_str_p);
+    ecma_deref_ecma_string (expr_str_p);
+    expr_str_p = concated_str_p;
+
+    if (arguments_list_len != 0)
+    {
+      ECMA_TRY_CATCH (str_arg_value,
+                      ecma_op_to_string (arguments_list_p[arguments_list_len - 1]),
+                      ret_value);
+
+      ecma_string_t *body_str_p = ecma_get_string_from_value (str_arg_value);
+
+      concated_str_p = ecma_concat_ecma_strings (expr_str_p, body_str_p);
+      ecma_deref_ecma_string (expr_str_p);
+      expr_str_p = concated_str_p;
+
+      ECMA_FINALIZE (str_arg_value);
+    }
+
+    concated_str_p = ecma_concat_ecma_strings (expr_str_p, right_brace_str_p);
+    ecma_deref_ecma_string (expr_str_p);
+    expr_str_p = concated_str_p;
+
+    concated_str_p = ecma_concat_ecma_strings (expr_str_p, right_parenthesis_str_p);
+    ecma_deref_ecma_string (expr_str_p);
+    expr_str_p = concated_str_p;
+  }
+
+  ecma_deref_ecma_string (left_parenthesis_str_p);
+  ecma_deref_ecma_string (right_parenthesis_str_p);
+  ecma_deref_ecma_string (left_brace_str_p);
+  ecma_deref_ecma_string (right_brace_str_p);
+  ecma_deref_ecma_string (comma_str_p);
+  ecma_deref_ecma_string (function_kw_str_p);
+  ecma_deref_ecma_string (empty_str_p);
 
   if (ecma_is_completion_value_empty (ret_value))
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (arguments_str_p));
+    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (expr_str_p));
   }
   else
   {
-    ecma_deref_ecma_string (arguments_str_p);
+    ecma_deref_ecma_string (expr_str_p);
   }
 
   return ret_value;
-} /* ecma_builtin_function_helper_get_arguments */
+} /* ecma_builtin_function_helper_get_function_expression */
 
 /**
  * Handle calling [[Construct]] of built-in Function object
@@ -159,192 +193,14 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ecma_length_t total_number_of_function_args = 0;
-
   ECMA_TRY_CATCH (arguments_value,
-                  ecma_builtin_function_helper_get_arguments (arguments_list_p,
-                                                              arguments_list_len,
-                                                              &total_number_of_function_args),
+                  ecma_builtin_function_helper_get_function_expression (arguments_list_p,
+                                                                        arguments_list_len),
                   ret_value);
 
-  ecma_string_t *arguments_str_p = ecma_get_string_from_value (arguments_value);
+  ecma_string_t *function_expression_p = ecma_get_string_from_value (arguments_value);
 
-  /* Last string, if any, is the function's body, and the rest, if any - are the function's parameter names */
-  MEM_DEFINE_LOCAL_ARRAY (string_params_p,
-                          arguments_list_len == 0 ? 1 : total_number_of_function_args + 1,
-                          ecma_string_t *);
-  uint32_t params_count;
-
-  size_t strings_buffer_size;
-
-  if (arguments_list_len == 0)
-  {
-    /* 3. */
-    string_params_p[0] = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-    strings_buffer_size = lit_get_magic_string_size (LIT_MAGIC_STRING__EMPTY);
-    params_count = 1;
-  }
-  else
-  {
-    /* 4., 5., 6. */
-    params_count = 0;
-
-    lit_utf8_size_t str_size = ecma_string_get_size (arguments_str_p);
-    strings_buffer_size = str_size;
-
-    if (str_size != 0)
-    {
-      MEM_DEFINE_LOCAL_ARRAY (start_p, str_size, lit_utf8_byte_t);
-
-      ssize_t sz = ecma_string_to_utf8_string (arguments_str_p, start_p, (ssize_t) str_size);
-      JERRY_ASSERT (sz >= 0);
-
-      lit_utf8_byte_t *current_p = start_p;
-      lit_utf8_byte_t *last_separator = start_p;
-      lit_utf8_byte_t *end_position;
-      const lit_utf8_byte_t *string_end_p = start_p + str_size;
-      ecma_string_t *param_str_p;
-
-      while (current_p < string_end_p)
-      {
-        ecma_char_t current_char;
-        lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (current_p, &current_char);
-
-        if (current_char == ',')
-        {
-          end_position = current_p;
-
-          param_str_p = ecma_new_ecma_string_from_utf8 (last_separator,
-                                                        (lit_utf8_size_t) (end_position - last_separator));
-          string_params_p[params_count] = ecma_string_trim (param_str_p);
-          ecma_deref_ecma_string (param_str_p);
-
-          last_separator = current_p + read_size;
-          params_count++;
-        }
-
-        current_p += read_size;
-      }
-
-      end_position = (lit_utf8_byte_t *) string_end_p;
-      param_str_p = ecma_new_ecma_string_from_utf8 (last_separator,
-                                                    (lit_utf8_size_t) (end_position - last_separator));
-      string_params_p[params_count] = ecma_string_trim (param_str_p);
-      ecma_deref_ecma_string (param_str_p);
-      params_count++;
-
-      MEM_FINALIZE_LOCAL_ARRAY (start_p);
-    }
-
-    ECMA_TRY_CATCH (str_arg_value,
-                    ecma_op_to_string (arguments_list_p[arguments_list_len - 1]),
-                    ret_value);
-
-    ecma_string_t *str_p = ecma_get_string_from_value (str_arg_value);
-    string_params_p[params_count] = ecma_copy_or_ref_ecma_string (str_p);
-    strings_buffer_size += ecma_string_get_size (str_p);
-    params_count++;
-
-    ECMA_FINALIZE (str_arg_value);
-  }
-
-  if (ecma_is_completion_value_empty (ret_value))
-  {
-    JERRY_ASSERT (params_count >= 1);
-
-    MEM_DEFINE_LOCAL_ARRAY (utf8_string_params_p,
-                            params_count,
-                            lit_utf8_byte_t *);
-    MEM_DEFINE_LOCAL_ARRAY (utf8_string_params_size,
-                            params_count,
-                            size_t);
-    MEM_DEFINE_LOCAL_ARRAY (utf8_string_buffer_p,
-                            strings_buffer_size,
-                            lit_utf8_byte_t);
-
-    ssize_t utf8_string_buffer_pos = 0;
-    for (uint32_t i = 0; i < params_count; i++)
-    {
-      ssize_t sz = ecma_string_to_utf8_string (string_params_p[i],
-                                               &utf8_string_buffer_p[utf8_string_buffer_pos],
-                                               (ssize_t) strings_buffer_size - utf8_string_buffer_pos);
-      JERRY_ASSERT (sz >= 0);
-
-      utf8_string_params_p[i] = utf8_string_buffer_p + utf8_string_buffer_pos;
-      utf8_string_params_size[i] = (size_t) sz;
-
-      utf8_string_buffer_pos += sz;
-    }
-
-    const bytecode_data_header_t* bytecode_data_p;
-    jsp_status_t parse_status;
-
-    parse_status = parser_parse_new_function ((const jerry_api_char_t **) utf8_string_params_p,
-                                              utf8_string_params_size,
-                                              params_count,
-                                              &bytecode_data_p);
-
-    if (parse_status == JSP_STATUS_SYNTAX_ERROR)
-    {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
-    }
-    else if (parse_status == JSP_STATUS_REFERENCE_ERROR)
-    {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
-    }
-    else
-    {
-      JERRY_ASSERT (parse_status == JSP_STATUS_OK);
-      bool is_strict = false;
-      bool do_instantiate_arguments_object = true;
-
-      opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_data_p->instrs_p,
-                                                                  0);
-
-      if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-      {
-        is_strict = true;
-      }
-
-      if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-          && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
-      {
-        /* the code doesn't use 'arguments' identifier
-         * and doesn't perform direct call to eval,
-         * so Arguments object can't be referenced */
-        do_instantiate_arguments_object = false;
-      }
-
-      /* 11. */
-      ecma_object_t *glob_lex_env_p = ecma_get_global_environment ();
-
-      ecma_collection_header_t *formal_params_collection_p;
-      formal_params_collection_p = ecma_new_strings_collection (params_count > 1u ? string_params_p : NULL,
-                                                                (ecma_length_t) (params_count - 1u));
-
-      ecma_object_t *func_obj_p = ecma_op_create_function_object (formal_params_collection_p,
-                                                                  glob_lex_env_p,
-                                                                  is_strict,
-                                                                  do_instantiate_arguments_object,
-                                                                  bytecode_data_p,
-                                                                  1);
-
-      ecma_deref_object (glob_lex_env_p);
-
-      ret_value = ecma_make_normal_completion_value (ecma_make_object_value (func_obj_p));
-    }
-
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_buffer_p);
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_params_size);
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_string_params_p);
-  }
-
-  for (uint32_t i = 0; i < params_count; i++)
-  {
-    ecma_deref_ecma_string (string_params_p[i]);
-  }
-
-  MEM_FINALIZE_LOCAL_ARRAY (string_params_p);
+  ret_value = ecma_op_eval (function_expression_p, false, false);
 
   ECMA_FINALIZE (arguments_value);
 

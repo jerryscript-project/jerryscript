@@ -44,6 +44,11 @@ extern ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *, ecma_collection_header_t *);
 extern ecma_property_t *
 ecma_builtin_try_to_instantiate_property (ecma_object_t *, ecma_string_t *);
+extern void
+ecma_builtin_list_lazy_property_names (ecma_object_t *,
+                                       bool,
+                                       ecma_collection_header_t *,
+                                       ecma_collection_header_t *);
 extern bool
 ecma_builtin_is (ecma_object_t *, ecma_builtin_id_t);
 extern ecma_object_t *

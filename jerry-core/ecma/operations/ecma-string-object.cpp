@@ -120,7 +120,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_property_t*
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the string object */
+ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String object */
                                         ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
@@ -201,6 +201,55 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< the string ob
 
   return new_prop_p;
 } /* ecma_op_string_object_get_own_property */
+
+/**
+ * List names of a String object's lazy instantiated properties
+ *
+ * See also:
+ *          ecma_op_string_object_get_own_property
+ *
+ * @return string values collection
+ */
+void
+ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */
+                                         bool separate_enumerable, /**< true -  list enumerable properties
+                                                                    *           into main collection,
+                                                                    *           and non-enumerable to collection of
+                                                                    *           'skipped non-enumerable' properties,
+                                                                    *   false - list all properties into main
+                                                                    *           collection.
+                                                                    */
+                                         ecma_collection_header_t *main_collection_p, /**< 'main'
+                                                                                       *   collection */
+                                         ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                           *   'non-enumerable'
+                                                                                           *   collection
+                                                                                                        */
+{
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
+
+  ecma_collection_header_t *for_enumerable_p = main_collection_p;
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
+  (void) for_non_enumerable_p;
+
+  ecma_property_t* prim_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
+  ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                               prim_value_prop_p->u.internal_property.value);
+
+  ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+
+  for (ecma_length_t i = 0; i < length; i++)
+  {
+    ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
+
+    /* the properties are enumerable (ECMA-262 v5, 15.5.5.2.9) */
+    ecma_append_to_values_collection (for_enumerable_p, ecma_make_string_value (name_p), true);
+
+    ecma_deref_ecma_string (name_p);
+  }
+} /* ecma_op_string_list_lazy_property_names */
 
 /**
  * @}

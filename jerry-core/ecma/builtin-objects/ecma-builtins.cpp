@@ -379,6 +379,83 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 } /* ecma_builtin_try_to_instantiate_property */
 
 /**
+ * List names of a built-in object's lazy instantiated properties
+ *
+ * See also:
+ *          ecma_builtin_try_to_instantiate_property
+ */
+void
+ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
+                                       bool separate_enumerable, /**< true -  list enumerable properties into
+                                                                  *           main collection, and non-enumerable
+                                                                  *           to collection of 'skipped non-enumerable'
+                                                                  *           properties,
+                                                                  *   false - list all properties into main collection.
+                                                                  */
+                                       ecma_collection_header_t *main_collection_p, /**< 'main' collection */
+                                       ecma_collection_header_t *non_enum_collection_p) /**< skipped 'non-enumerable'
+                                                                                         *   collection */
+{
+  const ecma_object_type_t type = ecma_get_object_type (object_p);
+
+  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    ecma_collection_header_t *for_enumerable_p = main_collection_p;
+    (void) for_enumerable_p;
+
+    ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+    /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
+    ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_deref_ecma_string (name_p);
+  }
+  else
+  {
+    ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (object_p,
+                                                                      ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
+    ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+
+    JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
+
+    switch (builtin_id)
+    {
+#define BUILTIN(builtin_id, \
+                object_type, \
+                object_prototype_builtin_id, \
+                is_extensible, \
+                is_static, \
+                lowercase_name) \
+      case builtin_id: \
+                       { \
+                         ecma_builtin_ ## lowercase_name ## _list_lazy_property_names (object_p, \
+                                                                                       separate_enumerable, \
+                                                                                       main_collection_p, \
+                                                                                       non_enum_collection_p); \
+                         return; \
+                       }
+#include "ecma-builtins.inc.h"
+
+      case ECMA_BUILTIN_ID__COUNT:
+      {
+        JERRY_UNREACHABLE ();
+      }
+
+      default:
+      {
+#ifdef CONFIG_ECMA_COMPACT_PROFILE
+        JERRY_UNREACHABLE ();
+#else /* CONFIG_ECMA_COMPACT_PROFILE */
+        JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+      }
+    }
+
+    JERRY_UNREACHABLE ();
+  }
+} /* ecma_builtin_list_and_lazy_property_names */
+
+/**
  * Construct a Function object for specified built-in routine
  *
  * See also: ECMA-262 v5, 15

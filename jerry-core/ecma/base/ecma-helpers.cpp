@@ -344,6 +344,9 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
 
 /**
  * Get object's/lexical environment's property list.
+ *
+ * See also:
+ *          ecma_op_object_get_property_names
  */
 ecma_property_t* __attr_pure___
 ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
@@ -362,6 +365,9 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 
 /**
  * Set object's/lexical environment's property list.
+ *
+ * See also:
+ *          ecma_op_object_get_property_names
  */
 static void
 ecma_set_property_list (ecma_object_t *object_p, /**< object or lexical environment */
@@ -526,6 +532,10 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
 
   ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
+  /*
+   * See also:
+   *          ecma_op_object_get_property_names
+   */
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);
@@ -568,6 +578,10 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
 
   ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
 
+  /*
+   * See also:
+   *          ecma_op_object_get_property_names
+   */
   ecma_property_t *list_head_p = ecma_get_property_list (obj_p);
   ECMA_SET_POINTER (prop_p->next_property_p, list_head_p);
   ecma_set_property_list (obj_p, prop_p);

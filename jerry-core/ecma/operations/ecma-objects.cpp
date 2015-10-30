@@ -519,6 +519,273 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /** < base object */
 } /* ecma_op_object_is_prototype_of */
 
 /**
+ * Get collection of property names
+ *
+ * Order of names in the collection:
+ *  - integer indices in ascending order
+ *  - other indices in creation order (for built-ins - in the order the properties are listed in specification).
+ *
+ * Note:
+ *      Implementation of the routine assumes that new properties are appended to beginning of corresponding object's
+ *      property list, and the list is not reordered (in other words, properties are stored in order that is reversed
+ *      to the properties' addition order).
+ *
+ * @return collection of strings - property names
+ */
+ecma_collection_header_t *
+ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
+                                   bool is_array_indices_only, /**< true - exclude properties with names
+                                                                *          that are not indices */
+                                   bool is_enumerable_only, /**< true - exclude non-enumerable properties */
+                                   bool is_with_prototype_chain) /**< true - list properties from prototype chain,
+                                                                  *   false - list only own properties */
+{
+  ecma_collection_header_t *ret_p = ecma_new_strings_collection (NULL, 0);
+  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_strings_collection (NULL, 0);
+
+  const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
+  uint32_t names_hashes_bitmap[(1u << LIT_STRING_HASH_BITS) / bitmap_row_size];
+
+  memset (names_hashes_bitmap, 0, sizeof (names_hashes_bitmap));
+
+  for (ecma_object_t *prototype_chain_iter_p = obj_p;
+       prototype_chain_iter_p != NULL;
+       prototype_chain_iter_p = is_with_prototype_chain ? ecma_get_object_prototype (prototype_chain_iter_p)
+                                                        : NULL)
+  {
+    ecma_length_t string_named_properties_count = 0;
+    ecma_length_t array_index_named_properties_count = 0;
+    ecma_length_t skipped_non_enumerable_properties_count = 0;
+
+    /* First pass: counting properties */
+    for (ecma_property_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
+         prop_iter_p != NULL;
+         prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
+    {
+      if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA
+          || prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+      {
+        ecma_string_t *name_p;
+
+        if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA)
+        {
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_data_property.name_p);
+        }
+        else
+        {
+          JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_accessor_property.name_p);
+        }
+
+        if (!(is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p)))
+        {
+          uint32_t index;
+
+          if (ecma_string_get_array_index (name_p, &index))
+          {
+            /* name_p is a valid array index */
+            array_index_named_properties_count++;
+          }
+          else if (!is_array_indices_only)
+          {
+            string_named_properties_count++;
+          }
+        }
+        else
+        {
+          JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p));
+
+          skipped_non_enumerable_properties_count++;
+        }
+      }
+      else
+      {
+        JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_INTERNAL);
+      }
+    }
+
+    /* Second pass: collecting properties names into arrays */
+    MEM_DEFINE_LOCAL_ARRAY (names_p,
+                            array_index_named_properties_count + string_named_properties_count,
+                            ecma_string_t *);
+    MEM_DEFINE_LOCAL_ARRAY (array_index_names_p, array_index_named_properties_count, uint32_t);
+
+    uint32_t name_pos = array_index_named_properties_count + string_named_properties_count;
+    uint32_t array_index_name_pos = 0;
+
+    for (ecma_property_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
+         prop_iter_p != NULL;
+         prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
+    {
+      if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA
+          || prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+      {
+        ecma_string_t *name_p;
+
+        if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA)
+        {
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_data_property.name_p);
+        }
+        else
+        {
+          JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_accessor_property.name_p);
+        }
+
+        if (!(is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p)))
+        {
+          uint32_t index;
+
+          if (ecma_string_get_array_index (name_p, &index))
+          {
+            JERRY_ASSERT (array_index_name_pos < array_index_named_properties_count);
+
+            uint32_t insertion_pos = 0;
+            while (insertion_pos < array_index_name_pos
+                   && index <= array_index_names_p[insertion_pos])
+            {
+              insertion_pos++;
+            }
+
+            if (insertion_pos == array_index_name_pos)
+            {
+              array_index_names_p[array_index_name_pos++] = index;
+            }
+            else
+            {
+              JERRY_ASSERT (insertion_pos < array_index_name_pos);
+
+              uint32_t move_pos = ++array_index_name_pos;
+
+              while (move_pos != insertion_pos)
+              {
+                array_index_names_p[move_pos] = array_index_names_p[move_pos - 1u];
+
+                move_pos--;
+              }
+
+              array_index_names_p[insertion_pos] = index;
+            }
+          }
+          else if (!is_array_indices_only)
+          {
+            /*
+             * Filling from end to begin, as list of object's properties is sorted
+             * in order that is reverse to properties creation order
+             */
+
+            JERRY_ASSERT (name_pos > 0
+                          && name_pos <= array_index_named_properties_count + string_named_properties_count);
+            names_p[--name_pos] = ecma_copy_or_ref_ecma_string (name_p);
+          }
+        }
+        else
+        {
+          JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p));
+
+          ecma_append_to_values_collection (skipped_non_enumerable_p,
+                                            ecma_make_string_value (name_p),
+                                            true);
+
+          lit_string_hash_t hash = name_p->hash;
+          uint32_t bitmap_row = hash / bitmap_row_size;
+          uint32_t bitmap_column = hash % bitmap_row_size;
+
+          if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
+          {
+            names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+          }
+        }
+      }
+      else
+      {
+        JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_INTERNAL);
+      }
+    }
+
+    for (uint32_t i = 0; i < array_index_named_properties_count; i++)
+    {
+      JERRY_ASSERT (name_pos > 0
+                    && name_pos <= array_index_named_properties_count + string_named_properties_count);
+      names_p[--name_pos] = ecma_new_ecma_string_from_uint32 (array_index_names_p[i]);
+    }
+
+    JERRY_ASSERT (name_pos == 0);
+
+    MEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
+
+    for (uint32_t i = 0;
+         i < array_index_named_properties_count + string_named_properties_count;
+         i++)
+    {
+      bool is_append;
+
+      ecma_string_t *name_p = names_p[i];
+
+      lit_string_hash_t hash = name_p->hash;
+      uint32_t bitmap_row = hash / bitmap_row_size;
+      uint32_t bitmap_column = hash % bitmap_row_size;
+
+      if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
+      {
+        /* no name with the hash is in constructed collection */
+        is_append = true;
+
+        names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+      }
+      else
+      {
+        /* name with same hash already occured */
+        bool is_equal_found = false;
+
+        ecma_collection_iterator_t iter;
+        ecma_collection_iterator_init (&iter, ret_p);
+
+        while (ecma_collection_iterator_next (&iter))
+        {
+          ecma_string_t *iter_name_p = ecma_get_string_from_value (*iter.current_value_p);
+
+          if (ecma_compare_ecma_strings (name_p, iter_name_p))
+          {
+            is_equal_found = true;
+          }
+        }
+
+        ecma_collection_iterator_init (&iter, skipped_non_enumerable_p);
+        while (ecma_collection_iterator_next (&iter))
+        {
+          ecma_string_t *iter_name_p = ecma_get_string_from_value (*iter.current_value_p);
+
+          if (ecma_compare_ecma_strings (name_p, iter_name_p))
+          {
+            is_equal_found = true;
+          }
+        }
+
+        is_append = !is_equal_found;
+      }
+
+      if (is_append)
+      {
+        JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0);
+
+        ecma_append_to_values_collection (ret_p, ecma_make_string_value (names_p[i]), true);
+      }
+
+      ecma_deref_ecma_string (name_p);
+    }
+
+    MEM_FINALIZE_LOCAL_ARRAY (names_p);
+  }
+
+  ecma_free_values_collection (skipped_non_enumerable_p, true);
+
+  return ret_p;
+} /* ecma_op_object_get_property_names */
+
+/**
  * Get [[Class]] string of specified object
  *
  * @return class name magic string

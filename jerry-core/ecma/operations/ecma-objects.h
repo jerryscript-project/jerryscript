@@ -37,6 +37,7 @@ extern ecma_completion_value_t
 ecma_op_object_define_own_property (ecma_object_t *, ecma_string_t *, const ecma_property_descriptor_t *, bool);
 extern ecma_completion_value_t ecma_op_object_has_instance (ecma_object_t *, ecma_value_t);
 extern bool ecma_op_object_is_prototype_of (ecma_object_t *, ecma_object_t *);
+extern ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *, bool, bool, bool);
 
 extern lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *);
 

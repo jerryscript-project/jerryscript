@@ -32,6 +32,12 @@ extern bool ecma_is_constructor (ecma_value_t);
 extern ecma_object_t *
 ecma_op_create_function_object (ecma_collection_header_t *, ecma_object_t *,
                                 bool, bool, const bytecode_data_header_t *, vm_instr_counter_t);
+
+extern void
+ecma_op_function_list_lazy_property_names (bool,
+                                           ecma_collection_header_t *,
+                                           ecma_collection_header_t *);
+
 extern ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_pointer_t);
 

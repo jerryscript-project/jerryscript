@@ -313,6 +313,44 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
 } /* ecma_op_create_function_object */
 
 /**
+ * List names of a Function object's lazy instantiated properties,
+ * adding them to corresponding string collections
+ *
+ * See also:
+ *          ecma_op_function_try_lazy_instantiate_property
+ */
+void
+ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties into
+                                                                      *          main collection and non-enumerable
+                                                                      *          to collection of 'skipped
+                                                                      *          non-enumerable' properties,
+                                                                      *   false - list all properties into main
+                                                                      *           collection.
+                                                                      */
+                                           ecma_collection_header_t *main_collection_p, /**< 'main' collection */
+                                           ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                             *   'non-enumerable'
+                                                                                             *   collection */
+{
+  ecma_collection_header_t *for_enumerable_p = main_collection_p;
+  (void) for_enumerable_p;
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  ecma_string_t *name_p;
+
+  /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+
+  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+} /* ecma_op_function_list_lazy_property_names */
+
+/**
  * Lazy instantation of non-builtin ecma function object's properties
  *
  * Warning:

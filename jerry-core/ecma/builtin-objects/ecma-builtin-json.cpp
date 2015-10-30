@@ -625,91 +625,45 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (value_get);
 
-    uint32_t no_properties = 0;
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, false, true, false);
 
-    /*
-     * The following algorithm works with arrays and objects as well.
-     */
-    for (ecma_property_t *property_p = ecma_get_property_list (object_p);
-         property_p != NULL;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    ecma_collection_iterator_t iter;
+    ecma_collection_iterator_init (&iter, props_p);
+
+    while (ecma_collection_iterator_next (&iter)
+           && ecma_is_completion_value_empty (ret_value))
     {
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+
+      ECMA_TRY_CATCH (value_walk,
+                      ecma_builtin_json_walk (reviver_p,
+                                              object_p,
+                                              property_name_p),
+                      ret_value);
+
       /*
-       * All properties must be named data or internal properties, since we constructed them.
+       * We cannot optimize this function since any members
+       * can be changed (deleted) by the reviver function.
        */
-      JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA
-                    || property_p->type == ECMA_PROPERTY_INTERNAL);
-
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA
-          && ecma_is_property_enumerable (property_p))
+      if (ecma_is_value_undefined (value_walk))
       {
-        no_properties++;
+        ecma_completion_value_t delete_val = ecma_op_general_object_delete (object_p,
+                                                                            property_name_p,
+                                                                            false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (delete_val)
+                      || ecma_is_completion_value_normal_false (delete_val));
       }
+      else
+      {
+        ecma_builtin_json_define_value_property (object_p,
+                                                 property_name_p,
+                                                 value_walk);
+      }
+
+      ECMA_FINALIZE (value_walk);
     }
 
-    if (no_properties > 0)
-    {
-      MEM_DEFINE_LOCAL_ARRAY (property_names_p, no_properties, ecma_string_t *);
-
-      uint32_t property_index = no_properties;
-      for (ecma_property_t *property_p = ecma_get_property_list (object_p);
-           property_p != NULL;
-           property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
-      {
-        if (property_p->type == ECMA_PROPERTY_NAMEDDATA
-            && ecma_is_property_enumerable (property_p))
-        {
-          ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                      property_p->u.named_data_property.name_p);
-         /*
-          * The property list must be in creation order.
-          */
-          property_index--;
-          property_names_p[property_index] = ecma_copy_or_ref_ecma_string (property_name_p);
-        }
-      }
-
-      JERRY_ASSERT (property_index == 0);
-
-      for (property_index = 0;
-           property_index < no_properties && ecma_is_completion_value_empty (ret_value);
-           property_index++)
-      {
-        ECMA_TRY_CATCH (value_walk,
-                        ecma_builtin_json_walk (reviver_p,
-                                                object_p,
-                                                property_names_p[property_index]),
-                        ret_value);
-
-        /*
-         * We cannot optimize this function since any members
-         * can be changed (deleted) by the reviver function.
-         */
-        if (ecma_is_value_undefined (value_walk))
-        {
-          ecma_completion_value_t delete_val = ecma_op_general_object_delete (object_p,
-                                                                              property_names_p[property_index],
-                                                                              false);
-          JERRY_ASSERT (ecma_is_completion_value_normal_true (delete_val)
-                        || ecma_is_completion_value_normal_false (delete_val));
-        }
-        else
-        {
-          ecma_builtin_json_define_value_property (object_p,
-                                                   property_names_p[property_index],
-                                                   value_walk);
-        }
-
-        ECMA_FINALIZE (value_walk);
-      }
-
-      for (uint32_t i = 0; i < no_properties; i++)
-      {
-        ecma_deref_ecma_string (property_names_p[i]);
-      }
-
-      MEM_FINALIZE_LOCAL_ARRAY (property_names_p);
-    }
+    ecma_free_values_collection (props_p, true);
   }
 
   if (ecma_is_completion_value_empty (ret_value))
@@ -1492,20 +1446,25 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   {
     property_keys_p = ecma_new_values_collection (NULL, 0, true);
 
-    for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
-         property_p != NULL;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, true, false);
+
+    ecma_collection_iterator_t iter;
+    ecma_collection_iterator_init (&iter, props_p);
+
+    while (ecma_collection_iterator_next (&iter))
     {
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_enumerable (property_p))
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+
+      JERRY_ASSERT (ecma_is_property_enumerable (property_p));
+
+      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
       {
-        ecma_string_t *prop_key = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                             property_p->u.named_data_property.name_p);
-
-        JERRY_ASSERT (prop_key != NULL);
-
-        ecma_append_to_values_collection (property_keys_p, ecma_make_string_value (prop_key), true);
+        ecma_append_to_values_collection (property_keys_p, *iter.current_value_p, true);
       }
     }
+
+    ecma_free_values_collection (props_p, true);
   }
 
   /* 7. */

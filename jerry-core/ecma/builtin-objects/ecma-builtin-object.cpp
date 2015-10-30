@@ -199,27 +199,16 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
     // 2.
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
 
-    ecma_property_t *property_p;
-    for (property_p = ecma_get_property_list (obj_p);
-         property_p != NULL && ecma_is_completion_value_empty (ret_value);
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
-    {
-      ecma_string_t *property_name_p;
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_data_property.name_p);
-      }
-      else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_accessor_property.name_p);
-      }
-      else
-      {
-        continue;
-      }
+    ecma_collection_iterator_t iter;
+    ecma_collection_iterator_init (&iter, props_p);
+
+    while (ecma_collection_iterator_next (&iter)
+           && ecma_is_completion_value_empty (ret_value))
+    {
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
       // 2.a
       ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
@@ -241,6 +230,8 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
 
       ecma_free_property_descriptor (&prop_desc);
     }
+
+    ecma_free_values_collection (props_p, true);
 
     if (ecma_is_completion_value_empty (ret_value))
     {
@@ -280,28 +271,17 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
     // 2.
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
 
-    ecma_property_t *property_p;
-    for (property_p = ecma_get_property_list (obj_p);
-         property_p != NULL && ecma_is_completion_value_empty (ret_value);
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
-    {
-      ecma_string_t *property_name_p;
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_data_property.name_p);
-      }
-      else
-      if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_accessor_property.name_p);
-      }
-      else
-      {
-        continue;
-      }
+
+    ecma_collection_iterator_t iter;
+    ecma_collection_iterator_init (&iter, props_p);
+
+    while (ecma_collection_iterator_next (&iter)
+           && ecma_is_completion_value_empty (ret_value))
+    {
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
       // 2.a
       ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
@@ -329,6 +309,8 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
 
       ecma_free_property_descriptor (&prop_desc);
     }
+
+    ecma_free_values_collection (props_p, true);
 
     if (ecma_is_completion_value_empty (ret_value))
     {
@@ -396,41 +378,45 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-    ecma_property_t *property_p;
 
-    // This will be the result if the other steps doesn't change it.
-    bool sealed = false;
+    bool is_sealed;
 
     // 3.
-    // The pseudo code contains multiple early return but this way we get the same
-    // result.
-    if (!ecma_get_object_extensible (obj_p))
+    if (ecma_get_object_extensible (obj_p))
     {
-      sealed = true;
+      is_sealed = false;
     }
-
-    // 2.
-    for (property_p = ecma_get_property_list (obj_p);
-         property_p != NULL && sealed;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    else
     {
-      if (property_p->type == ECMA_PROPERTY_INTERNAL)
+      /* the value can be updated in the loop below */
+      is_sealed = true;
+
+      // 2.
+      ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
+
+      ecma_collection_iterator_t iter;
+      ecma_collection_iterator_init (&iter, props_p);
+
+      while (ecma_collection_iterator_next (&iter))
       {
-        continue;
+        ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+
+        // 2.a
+        ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+
+        // 2.b
+        if (ecma_is_property_configurable (property_p))
+        {
+          is_sealed = false;
+          break;
+        }
       }
 
-      JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-
-      // 2.b
-      if (ecma_is_property_configurable (property_p))
-      {
-        sealed = false;
-        break;
-      }
+      ecma_free_values_collection (props_p, true);
     }
 
     // 4.
-    ret_value = ecma_make_simple_completion_value (sealed
+    ret_value = ecma_make_simple_completion_value (is_sealed
                                                    ? ECMA_SIMPLE_VALUE_TRUE
                                                    : ECMA_SIMPLE_VALUE_FALSE);
   }
@@ -461,48 +447,53 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-    ecma_property_t *property_p;
 
-    // This will be the result if the other steps doesn't change it.
-    bool frozen = false;
+    bool is_frozen;
 
     // 3.
-    // The pseudo code contains multiple early return but this way we get the same
-    // result.
-    if (!ecma_get_object_extensible (obj_p))
+    if (ecma_get_object_extensible (obj_p))
     {
-      frozen = true;
+      is_frozen = false;
     }
-
-    // 2.
-    for (property_p = ecma_get_property_list (obj_p);
-         property_p != NULL && frozen;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+    else
     {
-      if (property_p->type == ECMA_PROPERTY_INTERNAL)
+      is_frozen = true;
+
+      // 2.
+      ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
+
+      ecma_collection_iterator_t iter;
+      ecma_collection_iterator_init (&iter, props_p);
+
+      while (ecma_collection_iterator_next (&iter))
       {
-        continue;
+        ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+
+        // 2.a
+        ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+
+        JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+
+        // 2.b
+        if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
+        {
+          is_frozen = false;
+          break;
+        }
+
+        // 2.c
+        if (ecma_is_property_configurable (property_p))
+        {
+          is_frozen = false;
+          break;
+        }
       }
 
-      JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-
-      // 2.b
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
-      {
-        frozen = false;
-        break;
-      }
-
-      // 2.c
-      if (ecma_is_property_configurable (property_p))
-      {
-        frozen = false;
-        break;
-      }
+      ecma_free_values_collection (props_p, true);
     }
 
     // 4.
-    ret_value = ecma_make_simple_completion_value (frozen
+    ret_value = ecma_make_simple_completion_value (is_frozen
                                                    ? ECMA_SIMPLE_VALUE_TRUE
                                                    : ECMA_SIMPLE_VALUE_FALSE);
   }
@@ -716,69 +707,30 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
                     ret_value);
 
     ecma_object_t *props_p = ecma_get_object_from_value (props);
-    ecma_property_t *property_p;
-
-    // First we need to know how many properties should be stored
-    uint32_t property_number = 0;
-    for (property_p = ecma_get_property_list (props_p);
-         property_p != NULL;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
-    {
-      if ((property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
-          && ecma_is_property_enumerable (property_p))
-      {
-        property_number++;
-      }
-    }
-
     // 3.
-    MEM_DEFINE_LOCAL_ARRAY (property_names_p, property_number, ecma_string_t*);
+    ecma_collection_header_t *prop_names_p = ecma_op_object_get_property_names (props_p, false, true, false);
+    uint32_t property_number = prop_names_p->unit_number;
 
-    uint32_t index = 0;
-    for (property_p = ecma_get_property_list (props_p);
-         property_p != NULL;
-         property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
-    {
-      ecma_string_t *property_name_p;
-
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_data_property.name_p);
-      }
-      else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
-      {
-        property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_accessor_property.name_p);
-      }
-      else
-      {
-        continue;
-      }
-
-      if (ecma_is_property_enumerable (property_p))
-      {
-        property_names_p[index++] = ecma_copy_or_ref_ecma_string (property_name_p);
-      }
-    }
+    ecma_collection_iterator_t iter;
+    ecma_collection_iterator_init (&iter, prop_names_p);
 
     // 4.
     MEM_DEFINE_LOCAL_ARRAY (property_descriptors, property_number, ecma_property_descriptor_t);
+
     uint32_t property_descriptor_number = 0;
 
-    for (index = 0;
-         index < property_number && ecma_is_completion_value_empty (ret_value);
-         index++)
+    while (ecma_collection_iterator_next (&iter)
+           && ecma_is_completion_value_empty (ret_value))
     {
       // 5.a
       ECMA_TRY_CATCH (desc_obj,
-                      ecma_op_object_get (props_p, property_names_p[index]),
+                      ecma_op_object_get (props_p, ecma_get_string_from_value (*iter.current_value_p)),
                       ret_value);
 
       // 5.b
       ECMA_TRY_CATCH (conv_result,
                       ecma_op_to_property_descriptor (desc_obj,
-                                                      &property_descriptors[index]),
+                                                      &property_descriptors[property_descriptor_number]),
                       ret_value);
 
       property_descriptor_number++;
@@ -788,13 +740,17 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     }
 
     // 6.
-    for (index = 0;
+    ecma_collection_iterator_init (&iter, prop_names_p);
+    for (uint32_t index = 0;
          index < property_number && ecma_is_completion_value_empty (ret_value);
          index++)
     {
+      bool is_next = ecma_collection_iterator_next (&iter);
+      JERRY_ASSERT (is_next);
+
       ECMA_TRY_CATCH (define_own_prop_ret,
                       ecma_op_object_define_own_property (obj_p,
-                                                          property_names_p[index],
+                                                          ecma_get_string_from_value (*iter.current_value_p),
                                                           &property_descriptors[index],
                                                           true),
                       ret_value);
@@ -803,7 +759,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     }
 
     // Clean up
-    for (index = 0;
+    for (uint32_t index = 0;
          index < property_descriptor_number;
          index++)
     {
@@ -812,14 +768,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
 
     MEM_FINALIZE_LOCAL_ARRAY (property_descriptors);
 
-    for (index = 0;
-         index < property_number;
-         index++)
-    {
-      ecma_deref_ecma_string (property_names_p[index]);
-    }
-
-    MEM_FINALIZE_LOCAL_ARRAY (property_names_p);
+    ecma_free_values_collection (prop_names_p, true);
 
     // 7.
     if (ecma_is_completion_value_empty (ret_value))

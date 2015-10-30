@@ -185,7 +185,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
 
 
 /**
- * The Object.keys and Object.getOwnPropertyName routine's common part.
+ * The Object.keys and Object.getOwnPropertyNames routine's common part.
  *
  * See also:
  *          ECMA-262 v5, 15.2.3.4 steps 2-5
@@ -206,39 +206,21 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 
   uint32_t index = 0;
 
-  for (ecma_property_t *property_p = ecma_get_property_list (obj_p);
-       property_p != NULL;
-       property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
+  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p,
+                                                                         false,
+                                                                         only_enumerable_properties,
+                                                                         false);
+
+  ecma_collection_iterator_t iter;
+  ecma_collection_iterator_init (&iter, props_p);
+
+  while (ecma_collection_iterator_next (&iter))
   {
-    ecma_string_t *property_name_p;
-
-    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
-    {
-      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   property_p->u.named_data_property.name_p);
-    }
-    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
-    {
-      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   property_p->u.named_accessor_property.name_p);
-    }
-    else
-    {
-      continue;
-    }
-
-    if (only_enumerable_properties && !ecma_is_property_enumerable (property_p))
-    {
-      continue;
-    }
-
-    JERRY_ASSERT (property_name_p != NULL);
-
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
 
     ecma_completion_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
                                                                        index_string_p,
-                                                                       ecma_make_string_value (property_name_p),
+                                                                       *iter.current_value_p,
                                                                        true, /* Writable */
                                                                        true, /* Enumerable */
                                                                        true, /* Configurable */
@@ -246,11 +228,12 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
 
     JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
-    ecma_free_completion_value (completion);
     ecma_deref_ecma_string (index_string_p);
 
     index++;
   }
+
+  ecma_free_values_collection (props_p, true);
 
   return new_array;
 } /* ecma_builtin_helper_object_get_properties */

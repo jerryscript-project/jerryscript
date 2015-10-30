@@ -644,7 +644,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
             uint32_t insertion_pos = 0;
             while (insertion_pos < array_index_name_pos
-                   && index <= array_index_names_p[insertion_pos])
+                   && index < array_index_names_p[insertion_pos])
             {
               insertion_pos++;
             }
@@ -656,6 +656,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             else
             {
               JERRY_ASSERT (insertion_pos < array_index_name_pos);
+              JERRY_ASSERT (index < array_index_names_p[insertion_pos]);
 
               uint32_t move_pos = ++array_index_name_pos;
 

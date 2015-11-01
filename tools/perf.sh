@@ -22,15 +22,20 @@ OS=`uname -s | tr [:upper:] [:lower:]`
 
 if [ "$OS" == "darwin" ]
 then
-perf_values=$(( ( for i in `seq 1 1 $ITERS`; do time $ENGINE "$BENCHMARK"; done ) 2>&1 ) | \
-			  grep user | \
-			  sed 's/user[ 	]*\([0-9]*\)m\([0-9.]*\)s/\1 \2/g' | \
-			  awk 'BEGIN { min_v = -1; } { v = $1 * 60 + $2; if (min_v == -1 || v < min_v) { min_v = v; }; s += v; n += 1; } END { print s / n, min_v; }');
+  time_regexp='s/user[ 	]*\([0-9]*\)m\([0-9.]*\)s/\1 \2/g'
 else
-perf_values=$(( ( for i in `seq 1 1 $ITERS`; do time $ENGINE "$BENCHMARK"; done ) 2>&1 ) | \
-			  grep user | \
-			  sed 's/user[ \t]*\([0-9]*\)m\([0-9.]*\)s/\1 \2/g' | \
-			  awk 'BEGIN { min_v = -1; } { v = $1 * 60 + $2; if (min_v == -1 || v < min_v) { min_v = v; }; s += v; n += 1; } END { print s / n, min_v; }');
+  time_regexp='s/user[ \t]*\([0-9]*\)m\([0-9.]*\)s/\1 \2/g'
+fi
+
+perf_values=$( (( for i in `seq 1 1 $ITERS`; do time $ENGINE "$BENCHMARK"; if [ $? -ne 0 ]; then exit 1; fi; done ) 2>&1 ) | \
+               grep user | \
+               sed "$time_regexp" | \
+               awk 'BEGIN { min_v = -1; } { v = $1 * 60 + $2; if (min_v == -1 || v < min_v) { min_v = v; }; s += v; n += 1; } END { print s / n, min_v; }';
+               if [ ${PIPESTATUS[0]} -ne 0 ]; then exit 1; fi;);
+
+if [ $? -ne 0 ];
+then
+  exit 1;
 fi;
 
 if [ "$PRINT_MIN" == "-min" ]

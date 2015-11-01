@@ -857,7 +857,12 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
 
       lit_code_point_t decoded_byte;
 
-      lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte);
+      if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte))
+      {
+        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
+        break;
+      }
+
       input_char_p += URI_ENCODED_BYTE_SIZE;
 
       if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
@@ -910,9 +915,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
           else
           {
             lit_code_point_t cp;
-            lit_read_code_point_from_hex (input_char_p + 1, 2, &cp);
 
-            if ((cp & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
+            if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &cp)
+                || ((cp & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER))
             {
               is_valid = false;
               break;
@@ -923,7 +928,8 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
           }
         }
 
-        if (!is_valid)
+        if (!is_valid
+            || !lit_is_utf8_string_valid (octets, bytes_count))
         {
           ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
           break;
@@ -932,12 +938,8 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         lit_code_point_t cp;
         lit_read_code_point_from_utf8 (octets, bytes_count, &cp);
 
-        if ((bytes_count == 2 && cp <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-            || (bytes_count == 3 && cp <= LIT_UTF8_2_BYTE_CODE_POINT_MAX)
-            || (bytes_count == 4 && cp <= LIT_UTF8_3_BYTE_CODE_POINT_MAX)
-            || lit_is_code_unit_high_surrogate ((ecma_char_t) cp)
-            || lit_is_code_unit_low_surrogate ((ecma_char_t) cp)
-            || cp > LIT_UNICODE_CODE_POINT_MAX)
+        if (lit_is_code_point_utf16_high_surrogate (cp)
+            || lit_is_code_point_utf16_low_surrogate (cp))
         {
           ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
           break;
@@ -1067,7 +1069,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     /* Input validation, we need to reject stray surrogates. */
     input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
 
-    if (lit_is_code_unit_low_surrogate (ch))
+    if (lit_is_code_point_utf16_low_surrogate (ch))
     {
       ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_URI));
       break;
@@ -1075,7 +1077,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     cp = ch;
 
-    if (lit_is_code_unit_high_surrogate (ch))
+    if (lit_is_code_point_utf16_high_surrogate (ch))
     {
       if (input_char_p == input_end_p)
       {
@@ -1086,7 +1088,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
       ecma_char_t next_ch;
       lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
 
-      if (lit_is_code_unit_low_surrogate (next_ch))
+      if (lit_is_code_point_utf16_low_surrogate (next_ch))
       {
         cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
         input_char_p += read_size;
@@ -1132,12 +1134,12 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
       input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
       cp = ch;
 
-      if (lit_is_code_unit_high_surrogate (ch))
+      if (lit_is_code_point_utf16_high_surrogate (ch))
       {
         ecma_char_t next_ch;
         lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
 
-        if (lit_is_code_unit_low_surrogate (next_ch))
+        if (lit_is_code_point_utf16_low_surrogate (next_ch))
         {
           cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
           input_char_p += read_size;

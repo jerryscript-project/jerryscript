@@ -126,8 +126,8 @@ bool lit_is_utf8_string_valid (const lit_utf8_byte_t *, lit_utf8_size_t);
 bool lit_is_cesu8_string_valid (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* checks */
-bool lit_is_code_unit_low_surrogate (ecma_char_t);
-bool lit_is_code_unit_high_surrogate (ecma_char_t);
+bool lit_is_code_point_utf16_low_surrogate (lit_code_point_t);
+bool lit_is_code_point_utf16_high_surrogate (lit_code_point_t);
 
 /* iteration */
 lit_utf8_iterator_t lit_utf8_iterator_create (const lit_utf8_byte_t *, lit_utf8_size_t);

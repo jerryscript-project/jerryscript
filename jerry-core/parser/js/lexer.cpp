@@ -475,8 +475,8 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
       converted_char = next_char;
     }
 
-    if (lit_is_code_unit_high_surrogate (prev_converted_char)
-        && lit_is_code_unit_low_surrogate (converted_char))
+    if (lit_is_code_point_utf16_high_surrogate (prev_converted_char)
+        && lit_is_code_point_utf16_low_surrogate (converted_char))
     {
       output_str_buf_iter_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
 

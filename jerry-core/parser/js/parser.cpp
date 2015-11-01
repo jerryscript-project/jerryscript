@@ -303,14 +303,31 @@ parse_property_name (void)
   {
     case TOK_NAME:
     case TOK_STRING:
-    case TOK_NUMBER:
     {
       return literal_operand (token_data_as_lit_cp ());
     }
+    case TOK_NUMBER:
     case TOK_SMALL_INT:
     {
-      literal_t lit = lit_find_or_create_literal_from_num ((ecma_number_t) token_data ());
-      return literal_operand (lit_cpointer_t::compress (lit));
+      ecma_number_t num;
+
+      if (tok.type == TOK_NUMBER)
+      {
+        literal_t num_lit = lit_get_literal_by_cp (token_data_as_lit_cp ());
+        JERRY_ASSERT (num_lit->get_type () == LIT_NUMBER_T);
+        num = lit_charset_literal_get_number (num_lit);
+      }
+      else
+      {
+        num = ((ecma_number_t) token_data ());
+      }
+
+      lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+      lit_utf8_size_t sz = ecma_number_to_utf8_string (num, buff, sizeof (buff));
+      JERRY_ASSERT (sz <= ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
+
+      literal_t str_lit = lit_find_or_create_literal_from_utf8_string (buff, sz);
+      return literal_operand (lit_cpointer_t::compress (str_lit));
     }
     case TOK_KEYWORD:
     {

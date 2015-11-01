@@ -1115,22 +1115,13 @@ dump_prop_name_and_value (jsp_operand_t name, jsp_operand_t value)
 {
   JERRY_ASSERT (name.is_literal_operand ());
   literal_t lit = lit_get_literal_by_cp (name.get_literal ());
-  jsp_operand_t tmp;
-  if (lit->get_type () == LIT_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_EX_T)
-  {
-    tmp = dump_string_assignment_res (name.get_literal ());
-  }
-  else
-  {
-    JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
-    tmp = dump_number_assignment_res (name.get_literal ());
-  }
+  JERRY_ASSERT (lit->get_type () == LIT_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
   dump_triple_address (VM_OP_META,
                        jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_DATA),
-                       tmp,
+                       name,
                        value);
 }
 
@@ -1140,22 +1131,13 @@ dump_prop_getter_decl (jsp_operand_t name, jsp_operand_t func)
   JERRY_ASSERT (name.is_literal_operand ());
   JERRY_ASSERT (func.is_register_operand ());
   literal_t lit = lit_get_literal_by_cp (name.get_literal ());
-  jsp_operand_t tmp;
-  if (lit->get_type () == LIT_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_EX_T)
-  {
-    tmp = dump_string_assignment_res (name.get_literal ());
-  }
-  else
-  {
-    JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
-    tmp = dump_number_assignment_res (name.get_literal ());
-  }
+  JERRY_ASSERT (lit->get_type () == LIT_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
   dump_triple_address (VM_OP_META,
                        jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_GETTER),
-                       tmp,
+                       name,
                        func);
 }
 
@@ -1165,22 +1147,13 @@ dump_prop_setter_decl (jsp_operand_t name, jsp_operand_t func)
   JERRY_ASSERT (name.is_literal_operand ());
   JERRY_ASSERT (func.is_register_operand ());
   literal_t lit = lit_get_literal_by_cp (name.get_literal ());
-  jsp_operand_t tmp;
-  if (lit->get_type () == LIT_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_T
-      || lit->get_type () == LIT_MAGIC_STR_EX_T)
-  {
-    tmp = dump_string_assignment_res (name.get_literal ());
-  }
-  else
-  {
-    JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
-    tmp = dump_number_assignment_res (name.get_literal ());
-  }
+  JERRY_ASSERT (lit->get_type () == LIT_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_T
+                || lit->get_type () == LIT_MAGIC_STR_EX_T);
 
   dump_triple_address (VM_OP_META,
                        jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_SETTER),
-                       tmp,
+                       name,
                        func);
 }
 

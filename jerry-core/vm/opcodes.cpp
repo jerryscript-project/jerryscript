@@ -1028,8 +1028,7 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
                     || type == OPCODE_META_TYPE_VARG_PROP_GETTER
                     || type == OPCODE_META_TYPE_VARG_PROP_SETTER);
 
-      const vm_idx_t prop_name_var_idx = next_opcode.data.meta.data_1;
-      JERRY_ASSERT (vm_is_reg_variable (prop_name_var_idx));
+      const vm_idx_t prop_name_idx = next_opcode.data.meta.data_1;
 
       const vm_idx_t value_for_prop_desc_var_idx = next_opcode.data.meta.data_2;
 
@@ -1038,18 +1037,15 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
                                           value_for_prop_desc_var_idx,
                                           false),
                       ret_value);
-      ECMA_TRY_CATCH (prop_name_value,
-                      get_variable_value (frame_ctx_p,
-                                          prop_name_var_idx,
-                                          false),
-                      ret_value);
-      ECMA_TRY_CATCH (prop_name_str_value,
-                      ecma_op_to_string (prop_name_value),
-                      ret_value);
+
+      lit_cpointer_t prop_name_lit_cp = serializer_get_literal_cp_by_uid (prop_name_idx,
+                                                                          frame_ctx_p->bytecode_header_p,
+                                                                          frame_ctx_p->pos);
+      JERRY_ASSERT (prop_name_lit_cp.packed_value != MEM_CP_NULL);
+      ecma_string_t *prop_name_string_p = ecma_new_ecma_string_from_lit_cp (prop_name_lit_cp);
 
       bool is_throw_syntax_error = false;
 
-      ecma_string_t *prop_name_string_p = ecma_get_string_from_value (prop_name_str_value);
       ecma_property_t *previous_p = ecma_op_object_get_own_property (obj_p, prop_name_string_p);
 
       const bool is_previous_undefined = (previous_p == NULL);
@@ -1117,8 +1113,7 @@ opfunc_obj_decl (vm_instr_t instr, /**< instruction */
       JERRY_ASSERT (ecma_is_completion_value_normal_true (define_prop_completion)
                     || ecma_is_completion_value_normal_false (define_prop_completion));
 
-      ECMA_FINALIZE (prop_name_str_value);
-      ECMA_FINALIZE (prop_name_value);
+      ecma_deref_ecma_string (prop_name_string_p);
 
       ECMA_FINALIZE (value_for_prop_desc);
 

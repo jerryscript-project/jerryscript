@@ -300,6 +300,7 @@ VM_OP_3 (reg_var_decl,          REG_VAR_DECL,
 VM_OP_3 (meta,                  META,
          type,                  VM_OP_ARG_TYPE_INTEGER_CONST,
          data_1,                VM_OP_ARG_TYPE_INTEGER_CONST |
+                                VM_OP_ARG_TYPE_STRING |
                                 VM_OP_ARG_TYPE_VARIABLE,
          data_2,                VM_OP_ARG_TYPE_INTEGER_CONST |
                                 VM_OP_ARG_TYPE_VARIABLE)

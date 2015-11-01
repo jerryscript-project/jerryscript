@@ -2448,7 +2448,7 @@ parse_switch_statement (void)
       next_token_must_be (TOK_COLON);
       dump_case_clause_check_for_rewrite (switch_expr, case_expr);
       skip_newlines ();
-      array_list_append (body_locs, (void*) &tok.loc);
+      body_locs = array_list_append (body_locs, (void*) &tok.loc);
       skip_case_clause_body ();
     }
     else if (is_keyword (KW_DEFAULT))
@@ -2461,7 +2461,7 @@ parse_switch_statement (void)
       token_after_newlines_must_be (TOK_COLON);
       skip_newlines ();
       default_body_index = array_list_len (body_locs);
-      array_list_append (body_locs, (void*) &tok.loc);
+      body_locs = array_list_append (body_locs, (void*) &tok.loc);
       skip_case_clause_body ();
     }
   }

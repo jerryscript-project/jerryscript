@@ -180,6 +180,15 @@ handler_construct (const jerry_api_object_t *function_obj_p,
   jerry_api_set_object_field_value (this_p->v_object, (jerry_api_char_t *) "value_field", &args_p[0]);
 
   jerry_api_set_object_native_handle (this_p->v_object,
+                                      (uintptr_t) 0x0000000000000000ull,
+                                      handler_construct_freecb);
+
+  uintptr_t ptr;
+  bool is_ok = jerry_api_get_object_native_handle (this_p->v_object, &ptr);
+  JERRY_ASSERT (is_ok && ptr == (uintptr_t) 0x0000000000000000ull);
+
+  /* check if setting handle for second time is handled correctly */
+  jerry_api_set_object_native_handle (this_p->v_object,
                                       (uintptr_t) 0x0012345678abcdefull,
                                       handler_construct_freecb);
 

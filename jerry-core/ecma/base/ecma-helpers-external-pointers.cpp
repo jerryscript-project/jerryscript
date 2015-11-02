@@ -46,18 +46,18 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
                 || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
-  bool ret_val;
+  bool is_new;
   ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
 
   if (prop_p == NULL)
   {
     prop_p = ecma_create_internal_property (obj_p, id);
 
-    ret_val = true;
+    is_new = true;
   }
   else
   {
-    ret_val = false;
+    is_new = false;
   }
 
   JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value));
@@ -68,13 +68,24 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
   }
   else
   {
-    ecma_external_pointer_t *handler_p = ecma_alloc_external_pointer ();
-    *handler_p = ptr_value;
+    ecma_external_pointer_t *handler_p;
 
-    ECMA_SET_NON_NULL_POINTER (prop_p->u.internal_property.value, handler_p);
+    if (is_new)
+    {
+      handler_p = ecma_alloc_external_pointer ();
+
+      ECMA_SET_NON_NULL_POINTER (prop_p->u.internal_property.value, handler_p);
+    }
+    else
+    {
+      handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
+                                             prop_p->u.internal_property.value);
+    }
+
+    *handler_p = ptr_value;
   }
 
-  return ret_val;
+  return is_new;
 } /* ecma_create_external_pointer_property */
 
 /**

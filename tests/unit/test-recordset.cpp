@@ -243,9 +243,11 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (type_one_records[type_one_records_number] != NULL);
 
         rcs_record_iterator_t it (&storage, type_one_records[type_one_records_number]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[type_one_records_number]; it.skip<uint16_t>(), i++)
+        it.skip (sizeof (uint32_t)); // skip header
+        it.skip (sizeof (uint32_t)); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[type_one_records_number];
+             it.skip (sizeof (uint16_t)), i++)
         {
           uint16_t val = (uint16_t)rand ();
           type_one_record_elements[type_one_records_number][i] = val;
@@ -255,9 +257,11 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (type_one_records[type_one_records_number] != NULL);
 
         it.reset ();
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[type_one_records_number]; it.skip<uint16_t>(), i++)
+        it.skip (sizeof (uint32_t)); // skip header
+        it.skip (sizeof (uint32_t)); // skip header
+        for (uint32_t i = 0;
+            i < type_one_record_element_counts[type_one_records_number];
+            it.skip (sizeof (uint16_t)), i++)
         {
           uint16_t val = type_one_record_elements[type_one_records_number][i];
           JERRY_ASSERT (val == it.read<uint16_t> ());
@@ -287,9 +291,11 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_one_records_number);
 
         rcs_record_iterator_t it (&storage, type_one_records[index_to_free]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[index_to_free]; it.skip<uint16_t>(), i++)
+        it.skip (sizeof (uint32_t)); // skip header
+        it.skip (sizeof (uint32_t)); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[index_to_free];
+             it.skip (sizeof (uint16_t)), i++)
         {
           uint16_t val = type_one_record_elements[index_to_free][i];
           JERRY_ASSERT (it.read <uint16_t> () == val);
@@ -326,9 +332,11 @@ main (int __attr_unused___ argc,
         JERRY_ASSERT (index_to_free >= 0 && index_to_free < type_one_records_number);
 
         rcs_record_iterator_t it (&storage, type_one_records[index_to_free]);
-        it.skip<uint32_t> (); // skip header
-        it.skip<uint32_t> (); // skip header
-        for (uint32_t i = 0; i < type_one_record_element_counts[index_to_free]; it.skip<uint16_t>(), i++)
+        it.skip (sizeof (uint32_t)); // skip header
+        it.skip (sizeof (uint32_t)); // skip header
+        for (uint32_t i = 0;
+             i < type_one_record_element_counts[index_to_free];
+             it.skip (sizeof (uint16_t)), i++)
         {
           uint16_t val = type_one_record_elements[index_to_free][i];
           JERRY_ASSERT (it.read <uint16_t> () == val);

@@ -58,9 +58,10 @@ project (Jerry CXX C ASM)
  set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 
 # Defining options
- option(ENABLE_VALGRIND "Enable valgrind helpers in memory allocators" OFF)
- option(ENABLE_LTO      "Enable LTO build" ON)
- option(ENABLE_LOG      "Enable LOG build" OFF)
+ option(ENABLE_VALGRIND       "Enable valgrind helpers in memory allocators" OFF)
+ option(ENABLE_VALGRIND_FREYA "Enable valgrind-freya helpers in memory allocators" OFF)
+ option(ENABLE_LTO            "Enable LTO build" ON)
+ option(ENABLE_LOG            "Enable LOG build" OFF)
 
  if("${PLATFORM}" STREQUAL "LINUX")
   set(PLATFORM_EXT "LINUX")

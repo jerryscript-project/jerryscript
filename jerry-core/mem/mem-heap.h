@@ -83,6 +83,22 @@ extern void mem_heap_get_stats (mem_heap_stats_t *);
 extern void mem_heap_stats_reset_peak (void);
 #endif /* MEM_STATS */
 
+#ifdef JERRY_VALGRIND_FREYA
+
+#ifdef JERRY_VALGRIND
+#error Valgrind and valgrind-freya modes are not compatible.
+#endif
+
+extern void mem_heap_valgrind_freya_mempool_request (void);
+
+#define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST() mem_heap_valgrind_freya_mempool_request ()
+
+#else /* JERRY_VALGRIND_FREYA */
+
+#define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST()
+
+#endif /* JERRY_VALGRIND_FREYA */
+
 /**
  * Define a local array variable and allocate memory for the array on the heap.
  *

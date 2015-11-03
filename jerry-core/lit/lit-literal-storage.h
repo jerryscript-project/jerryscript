@@ -257,7 +257,7 @@ public:
                               size_t *in_out_buffer_offset_p) const /**< in-out: buffer write offset */
   {
     magic_string_id_t id = get_magic_str_id<magic_string_id_t> ();
-    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, id))
+    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &id, sizeof (id)))
     {
       return 0;
     }

@@ -1608,7 +1608,8 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
   if (!jrt_write_to_buffer_by_offset (buffer_p,
                                       buffer_size,
                                       &buffer_write_offset,
-                                      version))
+                                      &version,
+                                      sizeof (version)))
   {
     return 0;
   }
@@ -1657,7 +1658,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
     return 0;
   }
 
-  is_ok = jrt_write_to_buffer_by_offset (buffer_p, buffer_size, &header_offset, header);
+  is_ok = jrt_write_to_buffer_by_offset (buffer_p, buffer_size, &header_offset, &header, sizeof (header));
   JERRY_ASSERT (is_ok && header_offset < buffer_write_offset);
 
   return buffer_write_offset;
@@ -1702,7 +1703,8 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   if (!jrt_read_from_buffer_by_offset (snapshot_data_p,
                                        snapshot_size,
                                        &snapshot_read,
-                                       &version))
+                                       &version,
+                                       sizeof (version)))
   {
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
   }

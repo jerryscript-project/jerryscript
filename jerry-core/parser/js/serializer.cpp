@@ -420,7 +420,8 @@ serializer_load_bytecode_with_idx_map (const uint8_t *bytecode_and_idx_map_p, /*
   if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                        idx_to_lit_map_size,
                                        &idx_to_lit_map_offset,
-                                       &idx_num_total))
+                                       &idx_num_total,
+                                       sizeof (idx_num_total)))
   {
     return NULL;
   }

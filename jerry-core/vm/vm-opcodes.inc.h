@@ -53,6 +53,11 @@ VM_OP_3 (func_expr_n,           FUNC_EXPR_N,
                                 VM_OP_ARG_TYPE_EMPTY,
          arg_list,              VM_OP_ARG_TYPE_INTEGER_CONST)
 
+VM_OP_3 (func_expr_ref,         FUNC_EXPR_REF,
+         lhs,                   VM_OP_ARG_TYPE_VARIABLE,
+         idx1,                  VM_OP_ARG_TYPE_INTEGER_CONST,
+         idx2,                  VM_OP_ARG_TYPE_INTEGER_CONST)
+
 VM_OP_1 (retval,                RETVAL,
          ret_value,             VM_OP_ARG_TYPE_VARIABLE)
 

@@ -21,7 +21,6 @@
 #include "ecma-function-object.h"
 #include "ecma-lex-env.h"
 #include "ecma-try-catch-macro.h"
-#include "serializer.h"
 #include "lit-magic-strings.h"
 #include "parser.h"
 

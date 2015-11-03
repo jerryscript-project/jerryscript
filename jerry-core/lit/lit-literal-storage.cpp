@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "ecma-helpers.h"
 #include "jrt.h"
 #include "lit-literal-storage.h"
@@ -666,26 +667,16 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
     }
   }
 
-  uint32_t aligned_size = JERRY_ALIGNUP (lit_table_size, MEM_ALIGNMENT);
-
-  if (aligned_size != lit_table_size)
+  if (!bc_align_data_in_output_buffer (&lit_table_size,
+                                       buffer_p,
+                                       buffer_size,
+                                       in_out_buffer_offset_p))
   {
-    JERRY_ASSERT (aligned_size > lit_table_size);
-
-    uint8_t padding = 0;
-    uint32_t padding_bytes_num = (uint32_t) (aligned_size - lit_table_size);
-
-    for (uint32_t i = 0; i < padding_bytes_num; i++)
-    {
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, padding))
-      {
-        return false;
-      }
-    }
+    return false;
   }
 
   *out_map_num_p = literals_num;
-  *out_lit_table_size_p = aligned_size;
+  *out_lit_table_size_p = lit_table_size;
 
   return true;
 } /* lit_dump_literals_for_snapshot */

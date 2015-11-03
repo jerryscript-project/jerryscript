@@ -47,10 +47,10 @@
 } while (0)
 #else /* JERRY_NDEBUG */
 #define PARSE_ERROR(type, MESSAGE, LOCUS) do { \
-  jsp_early_error_raise_error (type); \
+  locus __attr_unused___ unused_value = LOCUS; jsp_early_error_raise_error (type); \
 } while (0)
 #define PARSE_ERROR_VARG(type, MESSAGE, LOCUS, ...) do { \
-  jsp_early_error_raise_error (type); \
+  locus __attr_unused___ unused_value = LOCUS; jsp_early_error_raise_error (type); \
 } while (0)
 #endif /* JERRY_NDEBUG */
 
@@ -58,8 +58,7 @@ typedef enum __attr_packed___
 {
   PROP_DATA,
   PROP_SET,
-  PROP_GET,
-  VARG
+  PROP_GET
 } prop_type;
 
 /**
@@ -79,10 +78,8 @@ void jsp_early_error_start_checking_of_prop_names (void);
 void jsp_early_error_add_prop_name (jsp_operand_t, prop_type);
 void jsp_early_error_check_for_duplication_of_prop_names (bool, locus);
 
-void jsp_early_error_start_checking_of_vargs (void);
-void jsp_early_error_add_varg (jsp_operand_t);
+void jsp_early_error_emit_error_on_eval_and_arguments (literal_t, locus);
 void jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t, bool, locus);
-void jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool, locus);
 
 void jsp_early_error_check_delete (bool, locus);
 

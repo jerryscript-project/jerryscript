@@ -795,6 +795,8 @@ FIXME (Move to library that should define the type (literal.h /* ? */))
 typedef rcs_record_t *literal_t;
 typedef rcs_cpointer_t lit_cpointer_t;
 
+#define NOT_A_LITERAL (lit_cpointer_t::null_cp ())
+
 /**
  * ECMA string-value descriptor
  */

@@ -48,6 +48,14 @@ switch (a) {
     assert (0);
 }
 
+switch (a) {
+  case 3:
+    assert (0);
+  default:
+    assert (0);
+  case 1:
+}
+
 executed_case = '';
 switch (a) {
   default:

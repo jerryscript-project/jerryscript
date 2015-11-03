@@ -1,5 +1,4 @@
 // Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function check_reference_error (s) {
-  try {
-    eval (s);
-    assert (false);
-  } catch (e) {
-    assert (e instanceof ReferenceError);
-  }
-}
+var a;
 
-check_reference_error ('v_0 = {0: delete 3. instanceof foo() ^ {} }');
+(a) = 1;
+
+assert (a === 1);

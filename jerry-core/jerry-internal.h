@@ -38,8 +38,7 @@ jerry_is_abort_on_fail (void);
 typedef struct
 {
   uint32_t lit_table_size; /**< size of literal table */
-  uint32_t bytecode_size; /**< size of instructions array */
-  uint32_t idx_to_lit_map_size; /** size of idx-to-lit map */
+  uint32_t scopes_num; /**< number of saved bytecode pieces in the snapshot */
   uint32_t is_run_global : 1; /**< flag, indicating whether the snapshot
                                *   was dumped as 'Global scope'-mode code (true)
                                *   or as eval-mode code (false) */
@@ -48,6 +47,6 @@ typedef struct
 /**
  * Jerry snapshot format version
  */
-#define JERRY_SNAPSHOT_VERSION (1u)
+#define JERRY_SNAPSHOT_VERSION (2u)
 
 #endif /* !JERRY_INTERNAL_H */

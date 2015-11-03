@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "opcodes-ecma-support.h"
 
+#include "bytecode-data.h"
 #include "jrt.h"
-#include "vm.h"
 #include "opcodes.h"
+#include "opcodes-ecma-support.h"
+#include "vm.h"
 
 /**
  * Fill arguments' list
@@ -69,25 +70,28 @@ vm_fill_varg_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 /**
  * Fill parameters' list
  */
-void
-vm_fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
+vm_instr_counter_t
+vm_fill_params_list (const bytecode_data_header_t *bytecode_header_p, /**< header of byte-code */
+                     vm_instr_counter_t first_instr_pos, /**< position of the first instruction
+                                                          *   with a formal parameter's name */
                      ecma_length_t params_number, /**< number of parameters */
                      ecma_collection_header_t *formal_params_collection_p) /**< collection to fill with
                                                                             *   parameters' names */
 {
+  vm_instr_counter_t instr_pos = first_instr_pos;
+
   uint32_t param_index;
   for (param_index = 0;
        param_index < params_number;
        param_index++)
   {
-    vm_instr_t next_instr = vm_get_instr (frame_ctx_p->bytecode_header_p->instrs_p, frame_ctx_p->pos);
+    vm_instr_t next_instr = vm_get_instr (bytecode_header_p->instrs_p, instr_pos);
     JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
     JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_VARG);
 
-    const lit_cpointer_t param_name_lit_idx = serializer_get_literal_cp_by_uid (next_instr.data.meta.data_1,
-                                                                                frame_ctx_p->bytecode_header_p,
-                                                                                frame_ctx_p->pos);
-
+    const lit_cpointer_t param_name_lit_idx = bc_get_literal_cp_by_uid (next_instr.data.meta.data_1,
+                                                                        bytecode_header_p,
+                                                                        instr_pos);
 
     ecma_string_t *param_name_str_p = ecma_new_ecma_string_from_lit_cp (param_name_lit_idx);
     ecma_value_t param_name_value = ecma_make_string_value (param_name_str_p);
@@ -96,8 +100,10 @@ vm_fill_params_list (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 
     ecma_deref_ecma_string (param_name_str_p);
 
-    frame_ctx_p->pos++;
+    instr_pos++;
   }
 
   JERRY_ASSERT (param_index == params_number);
+
+  return instr_pos;
 } /* vm_fill_params_list */

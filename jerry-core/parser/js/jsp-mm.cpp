@@ -28,11 +28,18 @@
 /**
  * Header of a managed block, allocated by parser
  */
-typedef struct __attribute__ ((alignment (MEM_ALIGNMENT)))
+typedef struct
 {
   mem_cpointer_t prev_block_cp; /**< previous managed block */
   mem_cpointer_t next_block_cp; /**< next managed block */
+
+  uint32_t padding; /**< padding for alignment */
 } jsp_mm_header_t;
+
+/**
+ * Check that alignment of jsp_mm_header_t is MEM_ALIGNMENT
+ */
+JERRY_STATIC_ASSERT ((sizeof (jsp_mm_header_t) % MEM_ALIGNMENT) == 0);
 
 /**
  * List used for tracking memory blocks

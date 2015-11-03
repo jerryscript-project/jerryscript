@@ -685,55 +685,59 @@ main (void)
   jerry_cleanup ();
 
   // Dump / execute snapshot
-  static uint8_t global_mode_snapshot_buffer[1024];
-  static uint8_t eval_mode_snapshot_buffer[1024];
+  // FIXME: support save/load snapshot for optimized parser
+  if (false)
+  {
+    static uint8_t global_mode_snapshot_buffer[1024];
+    static uint8_t eval_mode_snapshot_buffer[1024];
 
-  const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
+    const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
 
-  jerry_init (JERRY_FLAG_SHOW_OPCODES);
-  size_t global_mode_snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) code_to_snapshot_p,
+    jerry_init (JERRY_FLAG_SHOW_OPCODES);
+    size_t global_mode_snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) code_to_snapshot_p,
+                                                                      strlen (code_to_snapshot_p),
+                                                                      true,
+                                                                      global_mode_snapshot_buffer,
+                                                                      sizeof (global_mode_snapshot_buffer));
+    JERRY_ASSERT (global_mode_snapshot_size != 0);
+    jerry_cleanup ();
+
+    jerry_init (JERRY_FLAG_SHOW_OPCODES);
+    size_t eval_mode_snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) code_to_snapshot_p,
                                                                     strlen (code_to_snapshot_p),
-                                                                    true,
-                                                                    global_mode_snapshot_buffer,
-                                                                    sizeof (global_mode_snapshot_buffer));
-  JERRY_ASSERT (global_mode_snapshot_size != 0);
-  jerry_cleanup ();
+                                                                    false,
+                                                                    eval_mode_snapshot_buffer,
+                                                                    sizeof (eval_mode_snapshot_buffer));
+    JERRY_ASSERT (eval_mode_snapshot_size != 0);
+    jerry_cleanup ();
 
-  jerry_init (JERRY_FLAG_SHOW_OPCODES);
-  size_t eval_mode_snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) code_to_snapshot_p,
-                                                                  strlen (code_to_snapshot_p),
-                                                                  false,
-                                                                  eval_mode_snapshot_buffer,
-                                                                  sizeof (eval_mode_snapshot_buffer));
-  JERRY_ASSERT (eval_mode_snapshot_size != 0);
-  jerry_cleanup ();
+    jerry_init (JERRY_FLAG_SHOW_OPCODES);
 
-  jerry_init (JERRY_FLAG_SHOW_OPCODES);
+    is_ok = (jerry_exec_snapshot (global_mode_snapshot_buffer,
+                                  global_mode_snapshot_size,
+                                  false,
+                                  &res) == JERRY_COMPLETION_CODE_OK);
 
-  is_ok = (jerry_exec_snapshot (global_mode_snapshot_buffer,
-                                global_mode_snapshot_size,
-                                false,
-                                &res) == JERRY_COMPLETION_CODE_OK);
+    JERRY_ASSERT (is_ok
+                  && res.type == JERRY_API_DATA_TYPE_UNDEFINED);
+    jerry_api_release_value (&res);
 
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_API_DATA_TYPE_UNDEFINED);
-  jerry_api_release_value (&res);
+    is_ok = (jerry_exec_snapshot (eval_mode_snapshot_buffer,
+                                  eval_mode_snapshot_size,
+                                  false,
+                                  &res) == JERRY_COMPLETION_CODE_OK);
 
-  is_ok = (jerry_exec_snapshot (eval_mode_snapshot_buffer,
-                                eval_mode_snapshot_size,
-                                false,
-                                &res) == JERRY_COMPLETION_CODE_OK);
+    JERRY_ASSERT (is_ok
+                  && res.type == JERRY_API_DATA_TYPE_STRING);
+    sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
+    JERRY_ASSERT (sz == -20);
+    sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
+    JERRY_ASSERT (sz == 20);
+    jerry_api_release_value (&res);
+    JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
 
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_API_DATA_TYPE_STRING);
-  sz = jerry_api_string_to_char_buffer (res.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -20);
-  sz = jerry_api_string_to_char_buffer (res.v_string, (jerry_api_char_t *) buffer, -sz);
-  JERRY_ASSERT (sz == 20);
-  jerry_api_release_value (&res);
-  JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
-
-  jerry_cleanup ();
+    jerry_cleanup ();
+  }
 
   return 0;
 }

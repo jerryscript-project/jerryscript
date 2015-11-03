@@ -116,7 +116,7 @@ jsp_early_error_start_checking_of_prop_names (void)
 void
 jsp_early_error_add_prop_name (jsp_operand_t op, prop_type pt)
 {
-  JERRY_ASSERT (op.is_literal_operand ());
+  JERRY_ASSERT (op.is_string_lit_operand ());
   STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.get_literal ()), pt));
 }
 
@@ -135,24 +135,18 @@ jsp_early_error_check_for_duplication_of_prop_names (bool is_strict, locus loc _
        i++)
   {
     const prop_literal previous = STACK_ELEMENT (props, i);
-    if (previous.type == VARG)
-    {
-      continue;
-    }
     JERRY_ASSERT (previous.type == PROP_DATA
                   || previous.type == PROP_GET
                   || previous.type == PROP_SET);
+
     for (size_t j = STACK_TOP (size_t_stack); j < i; j = j + 1)
     {
       /*4*/
       const prop_literal current = STACK_ELEMENT (props, j);
-      if (current.type == VARG)
-      {
-        continue;
-      }
       JERRY_ASSERT (current.type == PROP_DATA
                     || current.type == PROP_GET
                     || current.type == PROP_SET);
+
       if (lit_literal_equal (previous.lit, current.lit))
       {
         /*a*/
@@ -195,19 +189,8 @@ jsp_early_error_check_for_duplication_of_prop_names (bool is_strict, locus loc _
 }
 
 void
-jsp_early_error_start_checking_of_vargs (void)
-{
-  STACK_PUSH (size_t_stack, STACK_SIZE (props));
-}
-
-void jsp_early_error_add_varg (jsp_operand_t op)
-{
-  JERRY_ASSERT (op.is_literal_operand ());
-  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.get_literal ()), VARG));
-}
-
-static void
-emit_error_on_eval_and_arguments (literal_t lit, locus loc __attr_unused___)
+jsp_early_error_emit_error_on_eval_and_arguments (literal_t lit, /**< literal to check */
+                                                  locus loc) /**< location of the literal in source code */
 {
   if (lit_literal_equal_type_utf8 (lit,
                                    lit_get_magic_string_utf8 (LIT_MAGIC_STRING_ARGUMENTS),
@@ -223,49 +206,26 @@ emit_error_on_eval_and_arguments (literal_t lit, locus loc __attr_unused___)
 void
 jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t op, bool is_strict, locus loc)
 {
-  if (is_strict
-      && op.is_literal_operand ())
+  if (is_strict)
   {
-    emit_error_on_eval_and_arguments (lit_get_literal_by_cp (op.get_literal ()), loc);
-  }
-}
+    lit_cpointer_t lit_cp;
 
-/* 13.1, 15.3.2 */
-void
-jsp_early_error_check_for_syntax_errors_in_formal_param_list (bool is_strict, locus loc)
-{
-  if (is_strict
-      && STACK_SIZE (props) - STACK_TOP (size_t_stack) >= 1)
-  {
-    for (size_t i = STACK_TOP (size_t_stack); i < STACK_SIZE (props); i++)
+    if (op.is_string_lit_operand ()
+        || op.is_number_lit_operand ())
     {
-      JERRY_ASSERT (STACK_ELEMENT (props, i).type == VARG);
-      literal_t previous = STACK_ELEMENT (props, i).lit;
-      JERRY_ASSERT (previous->get_type () == LIT_STR_T
-                    || previous->get_type () == LIT_MAGIC_STR_T
-                    || previous->get_type () == LIT_MAGIC_STR_EX_T);
-
-      emit_error_on_eval_and_arguments (previous, loc);
-
-      for (size_t j = i + 1; j < STACK_SIZE (props); j++)
-      {
-        JERRY_ASSERT (STACK_ELEMENT (props, j).type == VARG);
-        literal_t current = STACK_ELEMENT (props, j).lit;
-        JERRY_ASSERT (current->get_type () == LIT_STR_T
-                      || current->get_type () == LIT_MAGIC_STR_T
-                      || current->get_type () == LIT_MAGIC_STR_EX_T);
-        if (lit_literal_equal_type (previous, current))
-        {
-          PARSE_ERROR_VARG (JSP_EARLY_ERROR_SYNTAX,
-                            "Duplication of literal '%s' in FormalParameterList is not allowed in strict mode",
-                            loc, lit_literal_to_str_internal_buf (previous));
-        }
-      }
+      lit_cp = op.get_literal ();
     }
-  }
+    else if (op.is_identifier_operand ())
+    {
+      lit_cp = op.get_identifier_name ();
+    }
+    else
+    {
+      return;
+    }
 
-  STACK_DROP (props, (size_t) (STACK_SIZE (props) - STACK_TOP (size_t_stack)));
-  STACK_DROP (size_t_stack, 1);
+    jsp_early_error_emit_error_on_eval_and_arguments (lit_get_literal_by_cp (lit_cp), loc);
+  }
 }
 
 void

@@ -21,7 +21,6 @@
 #include "lexer.h"
 #include "ecma-helpers.h"
 #include "ecma-globals.h"
-#include "serializer.h"
 #include "lit-literal.h"
 
 static const char* opcode_names[] =
@@ -51,6 +50,8 @@ static uint8_t opcode_sizes[] =
 
 #include "vm-opcodes.inc.h"
 };
+
+const bytecode_data_header_t *bc_to_print_header_p = NULL;
 
 static char buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
 
@@ -110,7 +111,9 @@ var_to_str (vm_instr_t instr, lit_cpointer_t lit_ids[], vm_instr_counter_t oc, u
   }
   else
   {
-    return lit_cp_to_str (serializer_get_literal_cp_by_uid (instr.data.raw_args[current_arg - 1], NULL, oc));
+    return lit_cp_to_str (bc_get_literal_cp_by_uid (instr.data.raw_args[current_arg - 1],
+                                                    bc_to_print_header_p,
+                                                    oc));
   }
 }
 
@@ -186,6 +189,8 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
             op_meta opm,
             bool rewrite)
 {
+  bc_to_print_header_p = bytecode_data_p;
+
   dump_asm (oc, opm.op);
   printf ("    // ");
 
@@ -301,6 +306,11 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
       }
       break;
     }
+    case VM_OP_FUNC_EXPR_REF:
+    {
+      printf ("%s = function ();", VAR (1));
+      break;
+    }
     case VM_OP_FUNC_EXPR_N:
     {
       if (opm.op.data.func_expr_n.arg_list == 0)
@@ -378,7 +388,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
             while ((int16_t) start >= 0 && !found)
             {
               start--;
-              switch (serializer_get_instr (bytecode_data_p, start).op_idx)
+              switch (bc_get_instr (bytecode_data_p, start).op_idx)
               {
                 case VM_OP_CALL_N:
                 case VM_OP_CONSTRUCT_N:
@@ -392,7 +402,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                 }
               }
             }
-            vm_instr_t start_op = serializer_get_instr (bytecode_data_p, start);
+            vm_instr_t start_op = bc_get_instr (bytecode_data_p, start);
             switch (start_op.op_idx)
             {
               case VM_OP_CALL_N:
@@ -439,7 +449,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
             }
             for (vm_instr_counter_t counter = start; counter <= oc; counter++)
             {
-              vm_instr_t meta_op = serializer_get_instr (bytecode_data_p, counter);
+              vm_instr_t meta_op = bc_get_instr (bytecode_data_p, counter);
 
               switch (meta_op.op_idx)
               {
@@ -548,48 +558,6 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
         case OPCODE_META_TYPE_END_TRY_CATCH_FINALLY:
         {
           printf ("end try");
-          break;
-        }
-        case OPCODE_META_TYPE_SCOPE_CODE_FLAGS:
-        {
-          if (opm.op.data.meta.data_1 != VM_IDX_REWRITE_GENERAL_CASE
-              && opm.op.data.meta.data_1 != VM_IDX_EMPTY)
-          {
-            vm_idx_t scope_flags = opm.op.data.meta.data_1;
-
-            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-            {
-              printf ("[use strict] ");
-              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_STRICT);
-            }
-            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-            {
-              printf ("[no 'arguments'] ");
-              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER);
-            }
-            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER)
-            {
-              printf ("[no 'eval'] ");
-              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER);
-            }
-            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS)
-            {
-              printf ("[arguments are placed on registers] ");
-              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS);
-            }
-            if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV)
-            {
-              printf ("[no lexical environment should be created for the scope] ");
-              scope_flags &= (vm_idx_t) ~(OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV);
-            }
-
-            JERRY_ASSERT (scope_flags == 0);
-          }
-          else
-          {
-            printf ("[to be rewritten]");
-          }
-
           break;
         }
         default:

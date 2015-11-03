@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
@@ -255,15 +256,14 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
   bool is_no_lex_env = false;
 
   vm_instr_counter_t instr_pos = first_instr_pos;
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_header_p, instr_pos++);
 
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
+  if (bytecode_header_p->is_strict)
   {
     is_strict_mode_code = true;
   }
 
-  if ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER)
-      && (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER))
+  if (!bytecode_header_p->is_ref_arguments_identifier
+      && !bytecode_header_p->is_ref_eval_identifier)
   {
     /* the code doesn't use 'arguments' identifier
      * and doesn't perform direct call to eval,
@@ -271,12 +271,12 @@ ecma_op_create_function_object (ecma_collection_header_t *formal_params_collecti
     do_instantiate_arguments_object = false;
   }
 
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS)
+  if (bytecode_header_p->is_args_moved_to_regs)
   {
     is_arguments_moved_to_regs = true;
   }
 
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV)
+  if (bytecode_header_p->is_no_lex_env)
   {
     is_no_lex_env = true;
   }

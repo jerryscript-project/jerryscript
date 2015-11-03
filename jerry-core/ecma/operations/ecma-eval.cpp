@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
@@ -21,7 +22,6 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "parser.h"
-#include "serializer.h"
 #include "vm.h"
 
 /** \addtogroup ecma ECMA
@@ -114,7 +114,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 
     if (!code_contains_functions)
     {
-      serializer_remove_bytecode_data (bytecode_data_p);
+      bc_remove_bytecode_data (bytecode_data_p);
     }
   }
 

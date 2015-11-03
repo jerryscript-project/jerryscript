@@ -26,6 +26,7 @@
 #include "vm.h"
 #include "vm-stack.h"
 #include "opcodes.h"
+#include "opcodes-ecma-support.h"
 
 /**
  * Top (current) interpreter context
@@ -393,15 +394,8 @@ vm_run_global (void)
   interp_mem_stats_print_legend ();
 #endif /* MEM_STATS */
 
-  bool is_strict = false;
+  bool is_strict = __program->is_strict;
   vm_instr_counter_t start_pos = 0;
-
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (__program, start_pos++);
-
-  if (scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT)
-  {
-    is_strict = true;
-  }
 
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
@@ -449,8 +443,8 @@ vm_run_eval (const bytecode_data_header_t *bytecode_data_p, /**< byte-code data 
              bool is_direct) /**< is eval called in direct mode? */
 {
   vm_instr_counter_t first_instr_index = 0u;
-  opcode_scope_code_flags_t scope_flags = vm_get_scope_flags (bytecode_data_p, first_instr_index++);
-  bool is_strict = ((scope_flags & OPCODE_SCOPE_CODE_FLAGS_STRICT) != 0);
+
+  bool is_strict = bytecode_data_p->is_strict;
 
   ecma_value_t this_binding;
   ecma_object_t *lex_env_p;
@@ -605,57 +599,116 @@ vm_run_from_pos (const bytecode_data_header_t *header_p, /**< byte-code data hea
                                                               * - NULL - otherwise.
                                                               */
 {
-  ecma_completion_value_t completion;
+  ecma_completion_value_t completion = ecma_make_empty_completion_value ();
 
   const vm_instr_t *instrs_p = header_p->instrs_p;
   const vm_instr_t *curr = &instrs_p[start_pos];
   JERRY_ASSERT (curr->op_idx == VM_OP_REG_VAR_DECL);
 
-  const uint32_t tmp_regs_num = curr->data.reg_var_decl.tmp_regs_num;
-  const uint32_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
-  const uint32_t arg_regs_num = curr->data.reg_var_decl.arg_regs_num;
+  mem_cpointer_t *declarations_p = MEM_CP_GET_POINTER (mem_cpointer_t, header_p->declarations_cp);
+  for (uint16_t func_scope_index = 0;
+       func_scope_index < header_p->func_scopes_count && ecma_is_completion_value_empty (completion);
+       func_scope_index++)
+  {
+    bytecode_data_header_t *func_bc_header_p = MEM_CP_GET_NON_NULL_POINTER (bytecode_data_header_t,
+                                                                            declarations_p[func_scope_index]);
 
-  uint32_t regs_num = VM_SPECIAL_REGS_NUMBER + tmp_regs_num + local_var_regs_num + arg_regs_num;
+    if (func_bc_header_p->instrs_p[0].op_idx == VM_OP_FUNC_DECL_N)
+    {
+      completion = vm_function_declaration (func_bc_header_p,
+                                            is_strict,
+                                            is_eval_code,
+                                            lex_env_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
+    }
+  }
 
-  vm_frame_ctx_t frame_ctx;
-  frame_ctx.bytecode_header_p = header_p;
-  frame_ctx.pos = (vm_instr_counter_t) (start_pos + 1);
-  frame_ctx.lex_env_p = lex_env_p;
-  frame_ctx.is_strict = is_strict;
-  frame_ctx.is_eval_code = is_eval_code;
-  frame_ctx.is_call_in_direct_eval_form = false;
-  frame_ctx.tmp_num_p = ecma_alloc_number ();
+  lit_cpointer_t *lit_ids_p = (lit_cpointer_t *) (declarations_p + header_p->func_scopes_count);
+  for (uint16_t var_decl_index = 0;
+       var_decl_index < header_p->var_decls_count && ecma_is_completion_value_empty (completion);
+       var_decl_index++)
+  {
+    lit_cpointer_t lit_cp = lit_ids_p[var_decl_index];
 
-  vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num, arg_regs_num, arg_collection_p);
-  vm_stack_frame_set_reg_value (&frame_ctx.stack_frame,
-                                VM_REG_SPECIAL_THIS_BINDING,
-                                ecma_copy_value (this_binding_value, false));
+    if (lit_cp.packed_value != NOT_A_LITERAL.packed_value)
+    {
+      ecma_string_t *var_name_string_p = ecma_new_ecma_string_from_lit_cp (lit_cp);
 
-  vm_frame_ctx_t *prev_context_p = vm_top_context_p;
-  vm_top_context_p = &frame_ctx;
+      if (!ecma_op_has_binding (lex_env_p, var_name_string_p))
+      {
+        const bool is_configurable_bindings = is_eval_code;
+
+        completion = ecma_op_create_mutable_binding (lex_env_p,
+                                                     var_name_string_p,
+                                                     is_configurable_bindings);
+
+        JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+
+        /* Skipping SetMutableBinding as we have already checked that there were not
+         * any binding with specified name in current lexical environment
+         * and CreateMutableBinding sets the created binding's value to undefined */
+        JERRY_ASSERT (ecma_is_completion_value_normal_simple_value (ecma_op_get_binding_value (lex_env_p,
+                                                                                               var_name_string_p,
+                                                                                               true),
+                                                                    ECMA_SIMPLE_VALUE_UNDEFINED));
+      }
+
+      ecma_deref_ecma_string (var_name_string_p);
+    }
+  }
+
+  if (!ecma_is_completion_value_empty (completion))
+  {
+    JERRY_ASSERT (ecma_is_completion_value_throw (completion));
+  }
+  else
+  {
+    const uint32_t tmp_regs_num = curr->data.reg_var_decl.tmp_regs_num;
+    const uint32_t local_var_regs_num = curr->data.reg_var_decl.local_var_regs_num;
+    const uint32_t arg_regs_num = curr->data.reg_var_decl.arg_regs_num;
+
+    uint32_t regs_num = VM_SPECIAL_REGS_NUMBER + tmp_regs_num + local_var_regs_num + arg_regs_num;
+
+    MEM_DEFINE_LOCAL_ARRAY (regs, regs_num, ecma_value_t);
+
+    vm_frame_ctx_t frame_ctx;
+    frame_ctx.bytecode_header_p = header_p;
+    frame_ctx.pos = (vm_instr_counter_t) (start_pos + 1);
+    frame_ctx.lex_env_p = lex_env_p;
+    frame_ctx.is_strict = is_strict;
+    frame_ctx.is_eval_code = is_eval_code;
+    frame_ctx.is_call_in_direct_eval_form = false;
+    frame_ctx.tmp_num_p = ecma_alloc_number ();
+
+    vm_stack_add_frame (&frame_ctx.stack_frame, regs, regs_num, local_var_regs_num, arg_regs_num, arg_collection_p);
+    vm_stack_frame_set_reg_value (&frame_ctx.stack_frame,
+                                  VM_REG_SPECIAL_THIS_BINDING,
+                                  ecma_copy_value (this_binding_value, false));
+
+    vm_frame_ctx_t *prev_context_p = vm_top_context_p;
+    vm_top_context_p = &frame_ctx;
 
 #ifdef MEM_STATS
-  interp_mem_stats_context_enter (&frame_ctx, start_pos);
+    interp_mem_stats_context_enter (&frame_ctx, start_pos);
 #endif /* MEM_STATS */
 
-  completion = vm_loop (&frame_ctx, NULL);
+    completion = vm_loop (&frame_ctx, NULL);
 
-  JERRY_ASSERT (ecma_is_completion_value_throw (completion)
-                || ecma_is_completion_value_return (completion));
+    JERRY_ASSERT (ecma_is_completion_value_throw (completion)
+                  || ecma_is_completion_value_return (completion));
 
-  vm_top_context_p = prev_context_p;
+    vm_top_context_p = prev_context_p;
 
-  vm_stack_free_frame (&frame_ctx.stack_frame);
+    vm_stack_free_frame (&frame_ctx.stack_frame);
 
-  ecma_dealloc_number (frame_ctx.tmp_num_p);
+    ecma_dealloc_number (frame_ctx.tmp_num_p);
 
 #ifdef MEM_STATS
-  interp_mem_stats_context_exit (&frame_ctx, start_pos);
+    interp_mem_stats_context_exit (&frame_ctx, start_pos);
 #endif /* MEM_STATS */
 
-  MEM_FINALIZE_LOCAL_ARRAY (regs);
+    MEM_FINALIZE_LOCAL_ARRAY (regs);
+  }
 
   return completion;
 } /* vm_run_from_pos */
@@ -669,21 +722,6 @@ vm_get_instr (const vm_instr_t *instrs_p, /**< byte-code array */
 {
   return instrs_p[ counter ];
 } /* vm_get_instr */
-
-/**
- * Get scope code flags from instruction at specified position
- *
- * @return mask of scope code flags
- */
-opcode_scope_code_flags_t
-vm_get_scope_flags (const bytecode_data_header_t *bytecode_header_p, /**< byte-code data */
-                    vm_instr_counter_t counter) /**< instruction counter */
-{
-  vm_instr_t flags_instr = vm_get_instr (bytecode_header_p->instrs_p, counter);
-  JERRY_ASSERT (flags_instr.op_idx == VM_OP_META
-                && flags_instr.data.meta.type == OPCODE_META_TYPE_SCOPE_CODE_FLAGS);
-  return (opcode_scope_code_flags_t) flags_instr.data.meta.data_1;
-} /* vm_get_scope_flags */
 
 /**
  * Get arguments number, encoded in specified reg_var_decl instruction

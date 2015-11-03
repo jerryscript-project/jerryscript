@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 
+#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
@@ -27,9 +28,9 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
+#include "lit-literal.h"
 #include "lit-magic-strings.h"
 #include "parser.h"
-#include "serializer.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
@@ -1420,7 +1421,7 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
   jerry_make_api_available ();
 
   mem_init ();
-  serializer_init ();
+  lit_init ();
   ecma_init ();
 } /* jerry_init */
 
@@ -1435,7 +1436,8 @@ jerry_cleanup (void)
   bool is_show_mem_stats = ((jerry_flags & JERRY_FLAG_MEM_STATS) != 0);
 
   ecma_finalize ();
-  serializer_free ();
+  lit_finalize ();
+  bc_finalize ();
   mem_finalize (is_show_mem_stats);
   vm_finalize ();
 } /* jerry_cleanup */
@@ -1684,11 +1686,11 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
 
   size_t header_offset = buffer_write_offset;
 
-  if (buffer_write_offset + sizeof (jerry_snapshot_header_t) > buffer_size)
+  if (buffer_write_offset + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT) > buffer_size)
   {
     return 0;
   }
-  buffer_write_offset += sizeof (jerry_snapshot_header_t);
+  buffer_write_offset += JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT);
 
   lit_mem_to_snapshot_id_map_entry_t* lit_map_p = NULL;
   uint32_t literals_num;
@@ -1704,17 +1706,21 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
     return 0;
   }
 
-  size_t bytecode_offset = sizeof (version) + sizeof (jerry_snapshot_header_t) + header.lit_table_size;
+  size_t bytecode_offset = (sizeof (version)
+                            + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT)
+                            + header.lit_table_size);
+
   JERRY_ASSERT (JERRY_ALIGNUP (bytecode_offset, MEM_ALIGNMENT) == bytecode_offset);
 
-  bool is_ok = serializer_dump_bytecode_with_idx_map (buffer_p,
-                                                      buffer_size,
-                                                      &buffer_write_offset,
-                                                      bytecode_data_p,
-                                                      lit_map_p,
-                                                      literals_num,
-                                                      &header.bytecode_size,
-                                                      &header.idx_to_lit_map_size);
+  bool is_ok = bc_save_bytecode_data (buffer_p,
+                                      buffer_size,
+                                      &buffer_write_offset,
+                                      bytecode_data_p,
+                                      lit_map_p,
+                                      literals_num,
+                                      &header.scopes_num);
+
+  JERRY_ASSERT (header.scopes_num != 0);
 
   if (lit_map_p != NULL)
   {
@@ -1782,12 +1788,12 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   }
 
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) (snapshot_data_p + snapshot_read);
-  if (snapshot_read + sizeof (jerry_snapshot_header_t) > snapshot_size)
+  if (snapshot_read + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT) > snapshot_size)
   {
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
   }
 
-  snapshot_read += sizeof (jerry_snapshot_header_t);
+  snapshot_read += JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT);
 
   if (snapshot_read + header_p->lit_table_size > snapshot_size)
   {
@@ -1809,19 +1815,19 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   snapshot_read += header_p->lit_table_size;
 
-  if (snapshot_read + header_p->bytecode_size + header_p->idx_to_lit_map_size > snapshot_size)
+  if (snapshot_read > snapshot_size)
   {
     mem_heap_free_block (lit_map_p);
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
   }
 
   const bytecode_data_header_t *bytecode_data_p;
-  bytecode_data_p = serializer_load_bytecode_with_idx_map (snapshot_data_p + snapshot_read,
-                                                           header_p->bytecode_size,
-                                                           header_p->idx_to_lit_map_size,
-                                                           lit_map_p,
-                                                           literals_num,
-                                                           is_copy);
+  bytecode_data_p = bc_load_bytecode_data (snapshot_data_p + snapshot_read,
+                                           snapshot_size - snapshot_read,
+                                           lit_map_p,
+                                           literals_num,
+                                           is_copy,
+                                           header_p->scopes_num);
 
   if (lit_map_p != NULL)
   {

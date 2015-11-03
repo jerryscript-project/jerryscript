@@ -23,9 +23,9 @@
 #include "lit-strings.h"
 #include "jsp-early-error.h"
 
-static token saved_token, prev_token, sent_token, empty_token, prev_non_lf_token;
+static token saved_token, prev_token, sent_token, empty_token;
 
-static bool allow_dump_lines = false, strict_mode;
+static bool allow_dump_lines = false;
 static size_t buffer_size = 0;
 
 /*
@@ -47,7 +47,7 @@ static lit_utf8_iterator_t src_iter;
 static bool
 is_empty (token tok)
 {
-  return tok.type == TOK_EMPTY;
+  return lexer_get_token_type (tok) == TOK_EMPTY;
 }
 
 static locus
@@ -119,7 +119,7 @@ dump_current_line (void)
 } /* dump_current_line */
 
 static token
-create_token_from_lit (token_type type, literal_t lit)
+create_token_from_lit (jsp_token_type_t type, literal_t lit)
 {
   token ret;
 
@@ -136,8 +136,8 @@ create_token_from_lit (token_type type, literal_t lit)
  * @return token descriptor
  */
 static token
-create_token (token_type type,  /**< type of token */
-              uint16_t uid)     /**< uid of token */
+create_token (jsp_token_type_t type, /**< type of token */
+              uint16_t uid) /**< uid of token */
 {
   token ret;
 
@@ -154,7 +154,7 @@ create_token (token_type type,  /**< type of token */
  * @return token descriptor
  */
 static token
-lexer_create_token_for_charset (token_type tt, /**< token type */
+lexer_create_token_for_charset (jsp_token_type_t tt, /**< token type */
                                 const lit_utf8_byte_t *charset_p, /**< charset buffer */
                                 lit_utf8_size_t size) /**< size of the charset */
 {
@@ -509,7 +509,7 @@ lexer_transform_escape_sequences (const jerry_api_char_t *source_str_p, /**< str
  * @return token descriptor
  */
 static token
-lexer_create_token_for_charset_transform_escape_sequences (token_type tt, /**< token type */
+lexer_create_token_for_charset_transform_escape_sequences (jsp_token_type_t tt, /**< token type */
                                                            const lit_utf8_byte_t *charset_p, /**< charset buffer */
                                                            lit_utf8_size_t size) /**< size of the charset */
 {
@@ -531,70 +531,71 @@ lexer_create_token_for_charset_transform_escape_sequences (token_type tt, /**< t
 /**
  * Try to decode specified string as ReservedWord (ECMA-262 v5, 7.6.1)
  *
- * @return TOK_KEYWORD - for Keyword or FutureReservedWord,
+ * @return TOK_KW_* - for Keyword or FutureReservedWord,
  *         TOK_NULL - for NullLiteral,
  *         TOK_BOOL - for BooleanLiteral,
  *         TOK_EMPTY - for other tokens.
  */
 static token
 lexer_parse_reserved_word (const lit_utf8_byte_t *str_p, /**< characters buffer */
-                           lit_utf8_size_t str_size) /**< string's length */
+                           lit_utf8_size_t str_size, /**< string's length */
+                           bool is_strict) /**< flag, indicating whether current code is in strict mode code */
 {
   typedef struct
   {
     const char *keyword_p;
-    keyword keyword_id;
+    jsp_token_type_t keyword_id;
   } kw_descr_t;
 
   const kw_descr_t keywords[] =
   {
 #define KW_DESCR(literal, keyword_id) { literal, keyword_id }
-    KW_DESCR ("break", KW_BREAK),
-    KW_DESCR ("case", KW_CASE),
-    KW_DESCR ("catch", KW_CATCH),
-    KW_DESCR ("class", KW_CLASS),
-    KW_DESCR ("const", KW_CONST),
-    KW_DESCR ("continue", KW_CONTINUE),
-    KW_DESCR ("debugger", KW_DEBUGGER),
-    KW_DESCR ("default", KW_DEFAULT),
-    KW_DESCR ("delete", KW_DELETE),
-    KW_DESCR ("do", KW_DO),
-    KW_DESCR ("else", KW_ELSE),
-    KW_DESCR ("enum", KW_ENUM),
-    KW_DESCR ("export", KW_EXPORT),
-    KW_DESCR ("extends", KW_EXTENDS),
-    KW_DESCR ("finally", KW_FINALLY),
-    KW_DESCR ("for", KW_FOR),
-    KW_DESCR ("function", KW_FUNCTION),
-    KW_DESCR ("if", KW_IF),
-    KW_DESCR ("in", KW_IN),
-    KW_DESCR ("instanceof", KW_INSTANCEOF),
-    KW_DESCR ("interface", KW_INTERFACE),
-    KW_DESCR ("import", KW_IMPORT),
-    KW_DESCR ("implements", KW_IMPLEMENTS),
-    KW_DESCR ("let", KW_LET),
-    KW_DESCR ("new", KW_NEW),
-    KW_DESCR ("package", KW_PACKAGE),
-    KW_DESCR ("private", KW_PRIVATE),
-    KW_DESCR ("protected", KW_PROTECTED),
-    KW_DESCR ("public", KW_PUBLIC),
-    KW_DESCR ("return", KW_RETURN),
-    KW_DESCR ("static", KW_STATIC),
-    KW_DESCR ("super", KW_SUPER),
-    KW_DESCR ("switch", KW_SWITCH),
-    KW_DESCR ("this", KW_THIS),
-    KW_DESCR ("throw", KW_THROW),
-    KW_DESCR ("try", KW_TRY),
-    KW_DESCR ("typeof", KW_TYPEOF),
-    KW_DESCR ("var", KW_VAR),
-    KW_DESCR ("void", KW_VOID),
-    KW_DESCR ("while", KW_WHILE),
-    KW_DESCR ("with", KW_WITH),
-    KW_DESCR ("yield", KW_YIELD)
+    KW_DESCR ("break", TOK_KW_BREAK),
+    KW_DESCR ("case", TOK_KW_CASE),
+    KW_DESCR ("catch", TOK_KW_CATCH),
+    KW_DESCR ("class", TOK_KW_CLASS),
+    KW_DESCR ("const", TOK_KW_CONST),
+    KW_DESCR ("continue", TOK_KW_CONTINUE),
+    KW_DESCR ("debugger", TOK_KW_DEBUGGER),
+    KW_DESCR ("default", TOK_KW_DEFAULT),
+    KW_DESCR ("delete", TOK_KW_DELETE),
+    KW_DESCR ("do", TOK_KW_DO),
+    KW_DESCR ("else", TOK_KW_ELSE),
+    KW_DESCR ("enum", TOK_KW_ENUM),
+    KW_DESCR ("export", TOK_KW_EXPORT),
+    KW_DESCR ("extends", TOK_KW_EXTENDS),
+    KW_DESCR ("finally", TOK_KW_FINALLY),
+    KW_DESCR ("for", TOK_KW_FOR),
+    KW_DESCR ("function", TOK_KW_FUNCTION),
+    KW_DESCR ("if", TOK_KW_IF),
+    KW_DESCR ("in", TOK_KW_IN),
+    KW_DESCR ("instanceof", TOK_KW_INSTANCEOF),
+    KW_DESCR ("interface", TOK_KW_INTERFACE),
+    KW_DESCR ("import", TOK_KW_IMPORT),
+    KW_DESCR ("implements", TOK_KW_IMPLEMENTS),
+    KW_DESCR ("let", TOK_KW_LET),
+    KW_DESCR ("new", TOK_KW_NEW),
+    KW_DESCR ("package", TOK_KW_PACKAGE),
+    KW_DESCR ("private", TOK_KW_PRIVATE),
+    KW_DESCR ("protected", TOK_KW_PROTECTED),
+    KW_DESCR ("public", TOK_KW_PUBLIC),
+    KW_DESCR ("return", TOK_KW_RETURN),
+    KW_DESCR ("static", TOK_KW_STATIC),
+    KW_DESCR ("super", TOK_KW_SUPER),
+    KW_DESCR ("switch", TOK_KW_SWITCH),
+    KW_DESCR ("this", TOK_KW_THIS),
+    KW_DESCR ("throw", TOK_KW_THROW),
+    KW_DESCR ("try", TOK_KW_TRY),
+    KW_DESCR ("typeof", TOK_KW_TYPEOF),
+    KW_DESCR ("var", TOK_KW_VAR),
+    KW_DESCR ("void", TOK_KW_VOID),
+    KW_DESCR ("while", TOK_KW_WHILE),
+    KW_DESCR ("with", TOK_KW_WITH),
+    KW_DESCR ("yield", TOK_KW_YIELD)
 #undef KW_DESCR
   };
 
-  keyword kw = KW_NONE;
+  jsp_token_type_t kw = TOK_EMPTY;
 
   for (uint32_t i = 0; i < sizeof (keywords) / sizeof (kw_descr_t); i++)
   {
@@ -608,19 +609,19 @@ lexer_parse_reserved_word (const lit_utf8_byte_t *str_p, /**< characters buffer 
     }
   }
 
-  if (!strict_mode)
+  if (!is_strict)
   {
     switch (kw)
     {
-      case KW_INTERFACE:
-      case KW_IMPLEMENTS:
-      case KW_LET:
-      case KW_PACKAGE:
-      case KW_PRIVATE:
-      case KW_PROTECTED:
-      case KW_PUBLIC:
-      case KW_STATIC:
-      case KW_YIELD:
+      case TOK_KW_INTERFACE:
+      case TOK_KW_IMPLEMENTS:
+      case TOK_KW_LET:
+      case TOK_KW_PACKAGE:
+      case TOK_KW_PRIVATE:
+      case TOK_KW_PROTECTED:
+      case TOK_KW_PUBLIC:
+      case TOK_KW_STATIC:
+      case TOK_KW_YIELD:
       {
         return empty_token;
       }
@@ -632,9 +633,9 @@ lexer_parse_reserved_word (const lit_utf8_byte_t *str_p, /**< characters buffer 
     }
   }
 
-  if (kw != KW_NONE)
+  if (kw != TOK_EMPTY)
   {
-    return create_token (TOK_KEYWORD, kw);
+    return create_token (kw, 0);
   }
   else
   {
@@ -736,12 +737,12 @@ consume_char (void)
  * Parse Identifier (ECMA-262 v5, 7.6) or ReservedWord (7.6.1; 7.8.1; 7.8.2).
  *
  * @return TOK_NAME - for Identifier,
- *         TOK_KEYWORD - for Keyword or FutureReservedWord,
+ *         TOK_KW_* - for Keyword or FutureReservedWord,
  *         TOK_NULL - for NullLiteral,
  *         TOK_BOOL - for BooleanLiteral
  */
 static token
-lexer_parse_identifier_or_keyword (void)
+lexer_parse_identifier_or_keyword (bool is_strict) /**< flag, indicating whether current code is in strict mode code */
 {
   ecma_char_t c = LA (0);
 
@@ -823,8 +824,8 @@ lexer_parse_identifier_or_keyword (void)
   if (!is_escape_sequence_occured
       && is_all_chars_were_lowercase_ascii)
   {
-    /* Keyword or FutureReservedWord (TOK_KEYWORD), or boolean literal (TOK_BOOL), or null literal (TOK_NULL) */
-    ret = lexer_parse_reserved_word (TOK_START (), charset_size);
+    /* Keyword or FutureReservedWord (TOK_KW_*), or boolean literal (TOK_BOOL), or null literal (TOK_NULL) */
+    ret = lexer_parse_reserved_word (TOK_START (), charset_size, is_strict);
   }
 
   if (is_empty (ret))
@@ -856,7 +857,7 @@ lexer_parse_identifier_or_keyword (void)
  * @return token of TOK_SMALL_INT or TOK_NUMBER types
  */
 static token
-lexer_parse_number (void)
+lexer_parse_number (bool is_strict) /**< flag, indicating whether current code is in strict mode code */
 {
   ecma_char_t c = LA (0);
   bool is_hex = false;
@@ -884,10 +885,11 @@ lexer_parse_number (void)
 
   if (is_hex)
   {
+    new_token ();
+
     // Eat up '0x'
     consume_char ();
     consume_char ();
-    new_token ();
 
     c = LA (0);
     if (!lit_char_is_hex_digit (c))
@@ -911,9 +913,11 @@ lexer_parse_number (void)
 
     tok_length = (size_t) (TOK_SIZE ());
 
-    const lit_utf8_byte_t *fp_buf_p = TOK_START ();
+    const size_t length_of_zero_and_x_str = 2u;
+    const lit_utf8_byte_t *fp_buf_p = TOK_START () + length_of_zero_and_x_str;
+
     /* token is constructed at end of function */
-    for (i = 0; i < tok_length; i++)
+    for (i = 0; i < tok_length - length_of_zero_and_x_str; i++)
     {
       fp_res = fp_res * 16 + (ecma_number_t) lit_char_hex_to_int (fp_buf_p[i]);
     }
@@ -1011,7 +1015,7 @@ lexer_parse_number (void)
              && tok_length != 1)
     {
       /* Octal integer literals */
-      if (strict_mode)
+      if (is_strict)
       {
         PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Octal integer literals are not allowed in strict mode", token_start_pos);
       }
@@ -1263,6 +1267,65 @@ lexer_parse_comment (void)
 } /* lexer_parse_comment */
 
 /**
+ * Skip any whitespace and comment tokens
+ *
+ * @return true - if a newline token was skipped,
+ *         false - otherwise
+ */
+static bool
+lexer_skip_whitespace_and_comments (void)
+{
+  bool new_lines_occurred = false;
+
+  while (true)
+  {
+    ecma_char_t c = LA (0);
+
+    if (lit_char_is_white_space (c))
+    {
+      do
+      {
+        consume_char ();
+
+        c = LA (0);
+      }
+      while (lit_char_is_white_space (c));
+    }
+    else if (lit_char_is_line_terminator (c))
+    {
+      dump_current_line ();
+
+      new_lines_occurred = true;
+
+      do
+      {
+        consume_char ();
+
+        c = LA (0);
+      }
+      while (lit_char_is_line_terminator (c));
+    }
+    else if (c == LIT_CHAR_SLASH
+             && (LA (1) == LIT_CHAR_SLASH
+                 || LA (1) == LIT_CHAR_ASTERISK))
+    {
+      /* ECMA-262 v5, 7.4, SingleLineComment or MultiLineComment */
+
+      if (lexer_parse_comment ())
+      {
+        new_lines_occurred = true;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  return new_lines_occurred;
+} /* lexer_skip_whitespace_and_comments */
+
+/**
  * Parse and construct lexer token
  *
  * Note:
@@ -1277,38 +1340,21 @@ lexer_parse_comment (void)
  * @return constructed token
  */
 static token
-lexer_parse_token (bool maybe_regexp) /**< read '/' as regexp? */
+lexer_parse_token (bool maybe_regexp, /**< read '/' as regexp? */
+                   bool *out_is_preceed_by_new_lines_p, /**< out: is constructed token preceded by newlines? */
+                   bool is_strict) /**< flag, indicating whether current code is in strict mode code */
+
 {
-  ecma_char_t c = LA (0);
-
-  if (lit_char_is_white_space (c))
-  {
-    while (lit_char_is_white_space (c))
-    {
-      consume_char ();
-
-      c = LA (0);
-    }
-  }
-
-  if (lit_char_is_line_terminator (c))
-  {
-    while (lit_char_is_line_terminator (c))
-    {
-      consume_char ();
-
-      c = LA (0);
-    }
-
-    return create_token (TOK_NEWLINE, 0);
-  }
-
   JERRY_ASSERT (is_token_parse_in_progress == false);
+
+  *out_is_preceed_by_new_lines_p = lexer_skip_whitespace_and_comments ();
+
+  ecma_char_t c = LA (0);
 
   /* ECMA-262 v5, 7.6, Identifier */
   if (lexer_is_char_can_be_identifier_start (c))
   {
-    return lexer_parse_identifier_or_keyword ();
+    return lexer_parse_identifier_or_keyword (is_strict);
   }
 
   /* ECMA-262 v5, 7.8.3, Numeric literal */
@@ -1316,13 +1362,7 @@ lexer_parse_token (bool maybe_regexp) /**< read '/' as regexp? */
       || (c == LIT_CHAR_DOT
           && lit_char_is_decimal_digit (LA (1))))
   {
-    return lexer_parse_number ();
-  }
-
-  if (c == LIT_CHAR_LF)
-  {
-    consume_char ();
-    return create_token (TOK_NEWLINE, 0);
+    return lexer_parse_number (is_strict);
   }
 
   if (c == LIT_CHAR_NULL)
@@ -1334,21 +1374,6 @@ lexer_parse_token (bool maybe_regexp) /**< read '/' as regexp? */
       || c == LIT_CHAR_DOUBLE_QUOTE)
   {
     return lexer_parse_string ();
-  }
-
-  /* ECMA-262 v5, 7.4, SingleLineComment or MultiLineComment */
-  if (c == LIT_CHAR_SLASH
-      && (LA (1) == LIT_CHAR_SLASH
-          || LA (1) == LIT_CHAR_ASTERISK))
-  {
-    if (lexer_parse_comment ())
-    {
-      return create_token (TOK_NEWLINE, 0);
-    }
-    else
-    {
-      return lexer_parse_token (maybe_regexp);
-    }
   }
 
   if (c == LIT_CHAR_SLASH && maybe_regexp)
@@ -1518,8 +1543,14 @@ lexer_parse_token (bool maybe_regexp) /**< read '/' as regexp? */
   PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Illegal character", lit_utf8_iterator_get_pos (&src_iter));
 } /* lexer_parse_token */
 
+/**
+ * Construct next token from current source code position and increment the position
+ *
+ * @return the constructed token
+ */
 token
-lexer_next_token (bool maybe_regexp) /**< read '/' as regexp? */
+lexer_next_token (bool maybe_regexp, /**< read '/' as regexp? */
+                  bool is_strict) /**< strict mode is on (true) / off (false) */
 {
   lit_utf8_iterator_pos_t src_pos = lit_utf8_iterator_get_pos (&src_iter);
   if (src_pos.offset == 0 && !src_pos.is_non_bmp_middle)
@@ -1531,61 +1562,52 @@ lexer_next_token (bool maybe_regexp) /**< read '/' as regexp? */
   {
     sent_token = saved_token;
     saved_token = empty_token;
-    goto end;
-  }
-
-  /**
-   * FIXME:
-   *       The way to raise syntax errors for unexpected EOF
-   *       should be reworked so that EOF would be checked by
-   *       caller of the routine, and the following condition
-   *       would be checked as assertion in the routine.
-   */
-  if (prev_token.type == TOK_EOF
-      && sent_token.type == TOK_EOF)
-  {
-    PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unexpected EOF", lit_utf8_iterator_get_pos (&src_iter));
-  }
-
-  prev_token = sent_token;
-  sent_token = lexer_parse_token (maybe_regexp);
-
-  if (sent_token.type == TOK_NEWLINE)
-  {
-    dump_current_line ();
   }
   else
   {
-    prev_non_lf_token = sent_token;
+    /**
+     * FIXME:
+     *       The way to raise syntax errors for unexpected EOF
+     *       should be reworked so that EOF would be checked by
+     *       caller of the routine, and the following condition
+     *       would be checked as assertion in the routine.
+     */
+    if (lexer_get_token_type (prev_token) == TOK_EOF
+        && lexer_get_token_type (sent_token) == TOK_EOF)
+    {
+      PARSE_ERROR (JSP_EARLY_ERROR_SYNTAX, "Unexpected EOF", lit_utf8_iterator_get_pos (&src_iter));
+    }
+
+    prev_token = sent_token;
+
+    jsp_token_flag_t flags = JSP_TOKEN_FLAG__NO_FLAGS;
+
+    bool is_preceded_by_new_lines;
+    sent_token = lexer_parse_token (maybe_regexp, &is_preceded_by_new_lines, is_strict);
+
+    if (is_preceded_by_new_lines)
+    {
+      flags = (jsp_token_flag_t) (flags | JSP_TOKEN_FLAG_PRECEDED_BY_NEWLINES);
+    }
+
+    sent_token.flags = flags;
   }
 
-end:
   return sent_token;
-}
+} /* lexer_next_token */
 
+/**
+ * Set lexer's iteraror over source file to the specified position
+ */
 void
-lexer_save_token (token tok)
-{
-  JERRY_ASSERT (is_empty (saved_token));
-  saved_token = tok;
-  prev_non_lf_token = tok;
-}
-
-token
-lexer_prev_token (void)
-{
-  return prev_token;
-}
-
-void
-lexer_seek (lit_utf8_iterator_pos_t locus)
+lexer_seek (lit_utf8_iterator_pos_t locus) /**< position in the source buffer */
 {
   JERRY_ASSERT (is_token_parse_in_progress == false);
 
   lit_utf8_iterator_seek (&src_iter, locus);
   saved_token = empty_token;
-  prev_non_lf_token = empty_token;
-}
+  prev_token = empty_token;
+} /* lexer_seek */
 
 /**
  * Convert locus to line and column
@@ -1676,80 +1698,24 @@ lexer_dump_line (size_t line) /**< line number */
   }
 } /* lexer_dump_line */
 
+/**
+ * Convert token type to string
+ *
+ * @return string, describing token type
+ */
 const char *
-lexer_keyword_to_string (keyword kw)
-{
-  switch (kw)
-  {
-    case KW_BREAK: return "break";
-    case KW_CASE: return "case";
-    case KW_CATCH: return "catch";
-    case KW_CLASS: return "class";
-
-    case KW_CONST: return "const";
-    case KW_CONTINUE: return "continue";
-    case KW_DEBUGGER: return "debugger";
-    case KW_DEFAULT: return "default";
-    case KW_DELETE: return "delete";
-
-    case KW_DO: return "do";
-    case KW_ELSE: return "else";
-    case KW_ENUM: return "enum";
-    case KW_EXPORT: return "export";
-    case KW_EXTENDS: return "extends";
-
-    case KW_FINALLY: return "finally";
-    case KW_FOR: return "for";
-    case KW_FUNCTION: return "function";
-    case KW_IF: return "if";
-    case KW_IN: return "in";
-
-    case KW_INSTANCEOF: return "instanceof";
-    case KW_INTERFACE: return "interface";
-    case KW_IMPORT: return "import";
-    case KW_IMPLEMENTS: return "implements";
-    case KW_LET: return "let";
-
-    case KW_NEW: return "new";
-    case KW_PACKAGE: return "package";
-    case KW_PRIVATE: return "private";
-    case KW_PROTECTED: return "protected";
-    case KW_PUBLIC: return "public";
-
-    case KW_RETURN: return "return";
-    case KW_STATIC: return "static";
-    case KW_SUPER: return "super";
-    case KW_SWITCH: return "switch";
-    case KW_THIS: return "this";
-
-    case KW_THROW: return "throw";
-    case KW_TRY: return "try";
-    case KW_TYPEOF: return "typeof";
-    case KW_VAR: return "var";
-    case KW_VOID: return "void";
-
-    case KW_WHILE: return "while";
-    case KW_WITH: return "with";
-    case KW_YIELD: return "yield";
-    default: JERRY_UNREACHABLE ();
-  }
-}
-
-const char *
-lexer_token_type_to_string (token_type tt)
+lexer_token_type_to_string (jsp_token_type_t tt)
 {
   switch (tt)
   {
     case TOK_EOF: return "End of file";
     case TOK_NAME: return "Identifier";
-    case TOK_KEYWORD: return "Keyword";
     case TOK_SMALL_INT: /* FALLTHRU */
     case TOK_NUMBER: return "Number";
     case TOK_REGEXP: return "RegExp";
 
     case TOK_NULL: return "null";
     case TOK_BOOL: return "bool";
-    case TOK_NEWLINE: return "newline";
     case TOK_STRING: return "string";
     case TOK_OPEN_BRACE: return "{";
 
@@ -1809,15 +1775,78 @@ lexer_token_type_to_string (token_type tt)
 
     case TOK_DIV: return "/";
     case TOK_DIV_EQ: return "/=";
+    case TOK_KW_BREAK: return "break";
+    case TOK_KW_CASE: return "case";
+    case TOK_KW_CATCH: return "catch";
+    case TOK_KW_CLASS: return "class";
+
+    case TOK_KW_CONST: return "const";
+    case TOK_KW_CONTINUE: return "continue";
+    case TOK_KW_DEBUGGER: return "debugger";
+    case TOK_KW_DEFAULT: return "default";
+    case TOK_KW_DELETE: return "delete";
+
+    case TOK_KW_DO: return "do";
+    case TOK_KW_ELSE: return "else";
+    case TOK_KW_ENUM: return "enum";
+    case TOK_KW_EXPORT: return "export";
+    case TOK_KW_EXTENDS: return "extends";
+
+    case TOK_KW_FINALLY: return "finally";
+    case TOK_KW_FOR: return "for";
+    case TOK_KW_FUNCTION: return "function";
+    case TOK_KW_IF: return "if";
+    case TOK_KW_IN: return "in";
+
+    case TOK_KW_INSTANCEOF: return "instanceof";
+    case TOK_KW_INTERFACE: return "interface";
+    case TOK_KW_IMPORT: return "import";
+    case TOK_KW_IMPLEMENTS: return "implements";
+    case TOK_KW_LET: return "let";
+
+    case TOK_KW_NEW: return "new";
+    case TOK_KW_PACKAGE: return "package";
+    case TOK_KW_PRIVATE: return "private";
+    case TOK_KW_PROTECTED: return "protected";
+    case TOK_KW_PUBLIC: return "public";
+
+    case TOK_KW_RETURN: return "return";
+    case TOK_KW_STATIC: return "static";
+    case TOK_KW_SUPER: return "super";
+    case TOK_KW_SWITCH: return "switch";
+    case TOK_KW_THIS: return "this";
+
+    case TOK_KW_THROW: return "throw";
+    case TOK_KW_TRY: return "try";
+    case TOK_KW_TYPEOF: return "typeof";
+    case TOK_KW_VAR: return "var";
+    case TOK_KW_VOID: return "void";
+
+    case TOK_KW_WHILE: return "while";
+    case TOK_KW_WITH: return "with";
+    case TOK_KW_YIELD: return "yield";
     default: JERRY_UNREACHABLE ();
   }
-}
+} /* lexer_token_type_to_string */
 
-void
-lexer_set_strict_mode (bool is_strict)
+/**
+ * Get type of specified token
+ *
+ * @return token type
+ */
+jsp_token_type_t __attr_always_inline___
+lexer_get_token_type (token t) /**< the token */
 {
-  strict_mode = is_strict;
-}
+  JERRY_ASSERT (t.type >= TOKEN_TYPE__BEGIN && t.type <= TOKEN_TYPE__END);
+
+  return (jsp_token_type_t) t.type;
+} /* lexer_get_token_type */
+
+bool __attr_always_inline___
+lexer_is_preceded_by_newlines (token t)
+{
+  return ((t.flags & JSP_TOKEN_FLAG_PRECEDED_BY_NEWLINES) != 0);
+} /* lexer_is_preceded_by_newlines */
 
 /**
  * Check whether the identifier tokens represent the same identifiers
@@ -1833,8 +1862,8 @@ bool
 lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAME) */
                                        token id2) /**< identifier token (TOK_NAME) */
 {
-  JERRY_ASSERT (id1.type == TOK_NAME);
-  JERRY_ASSERT (id2.type == TOK_NAME);
+  JERRY_ASSERT (lexer_get_token_type (id1) == TOK_NAME);
+  JERRY_ASSERT (lexer_get_token_type (id2) == TOK_NAME);
 
   return (id1.uid == id2.uid);
 } /* lexer_are_tokens_with_same_identifier */
@@ -1848,7 +1877,7 @@ lexer_are_tokens_with_same_identifier (token id1, /**< identifier token (TOK_NAM
 bool
 lexer_is_no_escape_sequences_in_token_string (token tok) /**< token of type TOK_STRING */
 {
-  JERRY_ASSERT (tok.type == TOK_STRING);
+  JERRY_ASSERT (lexer_get_token_type (tok) == TOK_STRING);
 
   lit_utf8_iterator_t iter = src_iter;
   lit_utf8_iterator_seek (&iter, tok.loc);
@@ -1888,7 +1917,7 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
   empty_token.uid = 0;
   empty_token.loc = LIT_ITERATOR_POS_ZERO;
 
-  saved_token = prev_token = sent_token = prev_non_lf_token = empty_token;
+  saved_token = prev_token = sent_token = empty_token;
 
   if (!lit_is_utf8_string_valid (source, (lit_utf8_size_t) source_size))
   {
@@ -1900,8 +1929,6 @@ lexer_init (const jerry_api_char_t *source, /**< script source */
   buffer_size = source_size;
   buffer_start = source;
   is_token_parse_in_progress = false;
-
-  lexer_set_strict_mode (false);
 
 #ifndef JERRY_NDEBUG
   allow_dump_lines = is_print_source_code;

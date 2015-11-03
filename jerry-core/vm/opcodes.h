@@ -137,8 +137,6 @@ typedef enum
   OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER, /**< literal index containing name of variable with exception object */
   OPCODE_META_TYPE_FINALLY, /**< mark of beginning of finally block containing pointer to end of finally block */
   OPCODE_META_TYPE_END_TRY_CATCH_FINALLY, /**< mark of end of try-catch, try-finally, try-catch-finally blocks */
-  OPCODE_META_TYPE_SCOPE_CODE_FLAGS, /**< set of flags indicating various properties of the scope's code
-                                      *   (See also: opcode_scope_code_flags_t) */
   OPCODE_META_TYPE_END_FOR_IN /**< end of for-in statement */
 } opcode_meta_type;
 
@@ -154,23 +152,6 @@ typedef enum : vm_idx_t
                                                            *   See also: ECMA-262 v5, 15.1.2.1.1
                                                            */
 } opcode_call_flags_t;
-
-/**
- * Flags indicating various properties of a scope's code
- */
-typedef enum : vm_idx_t
-{
-  OPCODE_SCOPE_CODE_FLAGS__EMPTY                       = (0u),      /**< initializer for empty flag set */
-  OPCODE_SCOPE_CODE_FLAGS_STRICT                       = (1u << 0), /**< code is strict mode code */
-  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER = (1u << 1), /**< code doesn't reference
-                                                                     *   'arguments' identifier */
-  OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER      = (1u << 2), /**< code doesn't reference
-                                                                     *   'eval' identifier */
-  OPCODE_SCOPE_CODE_FLAGS_ARGUMENTS_ON_REGISTERS       = (1u << 3), /**< function's arguments are moved to registers,
-                                                                     *   so should be initialized in vm registers,
-                                                                     *   and not in lexical environment */
-  OPCODE_SCOPE_CODE_FLAGS_NO_LEX_ENV                   = (1u << 4)  /**< no lex. env. is necessary for the function */
-} opcode_scope_code_flags_t;
 
 /**
  * Types of byte-code instruction arguments, used for instruction description
@@ -246,7 +227,9 @@ typedef struct
 } vm_run_scope_t;
 
 vm_instr_counter_t vm_calc_instr_counter_from_idx_idx (const vm_idx_t, const vm_idx_t);
-vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type, vm_frame_ctx_t *);
+vm_instr_counter_t vm_read_instr_counter_from_meta (opcode_meta_type,
+                                                    const bytecode_data_header_t *,
+                                                    vm_instr_counter_t);
 
 typedef struct vm_instr_t
 {

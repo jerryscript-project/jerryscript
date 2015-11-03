@@ -291,7 +291,6 @@ linked_list_remove_element (linked_list list, /**< linked list's identifier */
   }
 
   uint8_t *next_elem_iter_p = linked_list_switch_to_next_elem (header_p, &list_chunk_iter_p, element_iter_p);
-  JERRY_ASSERT (next_elem_iter_p != NULL);
 
   linked_list_chunk_header *chunk_prev_to_chunk_with_last_elem_p = list_chunk_iter_p;
 

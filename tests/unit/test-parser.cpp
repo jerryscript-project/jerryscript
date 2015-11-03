@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "mem-allocator.h"
 #include "opcodes.h"
 #include "parser.h"
-#include "serializer.h"
-
 #include "test-common.h"
 
 static bool
@@ -109,7 +108,7 @@ main (int __attr_unused___ argc,
   // #1
   char program1[] = "a=1;var a;";
 
-  serializer_init ();
+  lit_init ();
   parser_set_show_instrs (true);
   parse_status = parser_parse_script ((jerry_api_char_t *) program1, strlen (program1), &bytecode_data_p);
 
@@ -117,31 +116,27 @@ main (int __attr_unused___ argc,
 
   vm_instr_t instrs[] =
   {
-    getop_meta (OPCODE_META_TYPE_SCOPE_CODE_FLAGS, // [ ]
-                OPCODE_SCOPE_CODE_FLAGS_NOT_REF_ARGUMENTS_IDENTIFIER
-                | OPCODE_SCOPE_CODE_FLAGS_NOT_REF_EVAL_IDENTIFIER,
-                VM_IDX_EMPTY),
     getop_reg_var_decl (1u, 0u, 0u),
-    getop_var_decl (0),                              // var a;
-    getop_assignment (VM_REG_GENERAL_FIRST, 1, 1),   // $tmp0 = 1;
-    getop_assignment (0, 6, VM_REG_GENERAL_FIRST),   // a = $tmp0;
+    getop_assignment (0, 1, 1),                      // a = 1 (SMALLINT);
     getop_ret ()                                     // return;
   };
 
-  JERRY_ASSERT (instrs_equal (bytecode_data_p->instrs_p, instrs, 5));
+  JERRY_ASSERT (instrs_equal (bytecode_data_p->instrs_p, instrs, 3));
 
-  serializer_free ();
+  lit_finalize ();
+  bc_finalize ();
 
   // #2
   char program2[] = "var var;";
 
-  serializer_init ();
+  lit_init ();
   parser_set_show_instrs (true);
   parse_status = parser_parse_script ((jerry_api_char_t *) program2, strlen (program2), &bytecode_data_p);
 
   JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR && bytecode_data_p == NULL);
 
-  serializer_free ();
+  lit_finalize ();
+  bc_finalize ();
 
   mem_finalize (false);
 

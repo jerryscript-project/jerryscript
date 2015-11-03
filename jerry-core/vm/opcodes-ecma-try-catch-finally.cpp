@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "bytecode-data.h"
 #include "jrt.h"
 #include "vm.h"
 #include "opcodes.h"
@@ -49,7 +50,9 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
   if (next_instr.data.meta.type == OPCODE_META_TYPE_CATCH)
   {
     const vm_instr_counter_t catch_end_oc = (vm_instr_counter_t) (
-      vm_read_instr_counter_from_meta (OPCODE_META_TYPE_CATCH, frame_ctx_p) + frame_ctx_p->pos);
+      vm_read_instr_counter_from_meta (OPCODE_META_TYPE_CATCH,
+                                       frame_ctx_p->bytecode_header_p,
+                                       frame_ctx_p->pos) + frame_ctx_p->pos);
     frame_ctx_p->pos++;
 
     if (ecma_is_completion_value_throw (try_completion))
@@ -58,9 +61,9 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
       JERRY_ASSERT (next_instr.op_idx == VM_OP_META);
       JERRY_ASSERT (next_instr.data.meta.type == OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER);
 
-      lit_cpointer_t catch_exc_val_var_name_lit_cp = serializer_get_literal_cp_by_uid (next_instr.data.meta.data_1,
-                                                                                       frame_ctx_p->bytecode_header_p,
-                                                                                       frame_ctx_p->pos);
+      lit_cpointer_t catch_exc_val_var_name_lit_cp = bc_get_literal_cp_by_uid (next_instr.data.meta.data_1,
+                                                                               frame_ctx_p->bytecode_header_p,
+                                                                               frame_ctx_p->pos);
       frame_ctx_p->pos++;
 
       ecma_string_t *catch_exc_var_name_str_p = ecma_new_ecma_string_from_lit_cp (catch_exc_val_var_name_lit_cp);
@@ -104,7 +107,9 @@ opfunc_try_block (vm_instr_t instr, /**< instruction */
   if (next_instr.data.meta.type == OPCODE_META_TYPE_FINALLY)
   {
     const vm_instr_counter_t finally_end_oc = (vm_instr_counter_t) (
-      vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FINALLY, frame_ctx_p) + frame_ctx_p->pos);
+      vm_read_instr_counter_from_meta (OPCODE_META_TYPE_FINALLY,
+                                       frame_ctx_p->bytecode_header_p,
+                                       frame_ctx_p->pos) + frame_ctx_p->pos);
     frame_ctx_p->pos++;
 
     vm_run_scope_t run_scope_finally = { frame_ctx_p->pos, finally_end_oc };

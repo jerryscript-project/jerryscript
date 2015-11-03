@@ -20,6 +20,7 @@
  * @{
  */
 
+#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -29,7 +30,6 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
-#include "serializer.h"
 #include "vm.h"
 
 /**

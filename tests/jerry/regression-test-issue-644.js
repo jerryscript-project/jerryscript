@@ -13,13 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function check_reference_error (s) {
-  try {
-    eval (s);
-    assert (false);
-  } catch (e) {
-    assert (e instanceof ReferenceError);
-  }
+function a()
+{
+  for (i = 1; i < 5; i++)
+    if (i) {
+      5;
+    }
 }
-
-check_reference_error ('v_0 = {0: delete 3. instanceof foo() ^ {} }');

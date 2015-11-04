@@ -325,8 +325,6 @@ dumper_try_replace_identifier_name_with_reg (scopes_tree tree, /**< a function s
 #define VM_OP_3(opcode_name, opcode_name_uppercase, arg1, arg1_type, arg2, arg2_type, arg3, arg3_type) \
     if (opcode == VM_OP_ ## opcode_name_uppercase) \
     { \
-      JERRY_STATIC_ASSERT (((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
-      \
       /*
        * See also:
        *          The loop below
@@ -334,6 +332,8 @@ dumper_try_replace_identifier_name_with_reg (scopes_tree tree, /**< a function s
       \
       JERRY_ASSERT ((opcode == VM_OP_ASSIGNMENT && (arg2_type) == VM_OP_ARG_TYPE_TYPE_OF_NEXT) \
                     || (opcode != VM_OP_ASSIGNMENT && ((arg2_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0)); \
+      JERRY_ASSERT ((opcode == VM_OP_META && ((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) != 0) \
+                    || (opcode != VM_OP_META && ((arg1_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0)); \
       JERRY_STATIC_ASSERT (((arg3_type) & VM_OP_ARG_TYPE_TYPE_OF_NEXT) == 0); \
       args_num = 3; \
     }
@@ -343,13 +343,23 @@ dumper_try_replace_identifier_name_with_reg (scopes_tree tree, /**< a function s
     for (int arg_index = 0; arg_index < args_num; arg_index++)
     {
       /*
-       * This is the only opcode with statically unspecified argument type (checked by assertions above)
+       * 'assignment' and 'meta' are the only opcodes with statically unspecified argument type
+       * (checked by assertions above)
        */
       if (opcode == VM_OP_ASSIGNMENT
           && arg_index == 1
           && om.op.data.assignment.type_value_right != VM_OP_ARG_TYPE_VARIABLE)
       {
         break;
+      }
+
+      if (opcode == VM_OP_META
+          && (om.op.data.meta.type == OPCODE_META_TYPE_VARG_PROP_DATA
+              || om.op.data.meta.type == OPCODE_META_TYPE_VARG_PROP_GETTER
+              || om.op.data.meta.type == OPCODE_META_TYPE_VARG_PROP_SETTER)
+          && arg_index == 1)
+      {
+        continue;
       }
 
       if (om.lit_id[arg_index].packed_value == lit_cp.packed_value)

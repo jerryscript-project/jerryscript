@@ -13,7 +13,7 @@
 # limitations under the License.
 
 set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR x86)
+set(CMAKE_SYSTEM_PROCESSOR i686)
 
 find_program(CMAKE_C_COMPILER NAMES i686-linux-gnu-gcc i686-unknown-linux-gnu-gcc)
 find_program(CMAKE_CXX_COMPILER NAMES i686-linux-gnu-g++ i686-unknown-linux-gnu-g++)

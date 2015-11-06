@@ -107,16 +107,16 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
   set(DEFINES_LIBC ${DEFINES_LIBC} ${DEFINES_LIBC_ARMV7_HF})
  elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l-el")
   set(DEFINES_LIBC ${DEFINES_LIBC} ${DEFINES_LIBC_ARMV7_EL})
- elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86")
+ elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i686")
   set(DEFINES_LIBC ${DEFINES_LIBC} ${DEFINES_LIBC_X86})
  else()
   message(FATAL_ERROR "Unsupported machine architecture")
  endif()
- 
+
 # Platform-specific configuration
  set(DEFINES_LIBC ${DEFINES_LIBC} ${DEFINES_LIBC_${PLATFORM}})
 
-# Targets declaration 
+# Targets declaration
  add_custom_target (jerry-libc-all)
 
  string(TOLOWER ${PLATFORM_EXT} PLATFORM_L)

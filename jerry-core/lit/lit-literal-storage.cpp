@@ -70,7 +70,7 @@ lit_charset_record_t::set_charset (const lit_utf8_byte_t *str, /**< buffer conta
   for (lit_utf8_size_t i = 0; i < get_length (); ++i)
   {
     it.write<lit_utf8_byte_t> (str[i]);
-    it.skip<lit_utf8_byte_t> ();
+    it.skip (sizeof (lit_utf8_byte_t));
   }
 } /* lit_charset_record_t::set_charset */
 
@@ -93,7 +93,7 @@ lit_charset_record_t::get_charset (lit_utf8_byte_t *buff, /**< output buffer */
   for (i = 0; i < len && size > 0; ++i)
   {
     buff[i] = it.read<lit_utf8_byte_t> ();
-    it.skip<lit_utf8_byte_t> ();
+    it.skip (sizeof (lit_utf8_byte_t));
     size -= sizeof (lit_utf8_byte_t);
   }
 
@@ -148,7 +148,7 @@ lit_charset_record_t::compare_utf8 (const lit_utf8_byte_t *str_to_compare_with, 
       return -1;
     }
 
-    it_this.skip<lit_utf8_byte_t> ();
+    it_this.skip (sizeof (lit_utf8_byte_t));
   }
 
   if (i < str_size)
@@ -186,8 +186,8 @@ lit_charset_record_t::is_equal (lit_charset_record_t *rec) /**< charset record t
       return false;
     }
 
-    it_this.skip<lit_utf8_byte_t> ();
-    it_record.skip<lit_utf8_byte_t> ();
+    it_this.skip (sizeof (lit_utf8_byte_t));
+    it_record.skip (sizeof (lit_utf8_byte_t));
   }
 
   return true;
@@ -214,7 +214,7 @@ lit_charset_record_t::is_equal_utf8_string (const lit_utf8_byte_t *str, /**< str
       return false;
     }
 
-    it_this.skip<lit_utf8_byte_t> ();
+    it_this.skip (sizeof (lit_utf8_byte_t));
   }
 
   return get_length () == str_size;
@@ -244,7 +244,7 @@ lit_charset_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump 
   for (lit_utf8_size_t i = 0; i < length; i++)
   {
     lit_utf8_byte_t next_byte = it_this.read<lit_utf8_byte_t> ();
-    it_this.skip<lit_utf8_byte_t> ();
+    it_this.skip (sizeof (lit_utf8_byte_t));
 
     if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, next_byte))
     {
@@ -392,7 +392,7 @@ lit_literal_storage_t::dump ()
         {
           FIXME ("Support proper printing of characters which occupy more than one byte.")
           printf ("%c", it_this.read<lit_utf8_byte_t> ());
-          it_this.skip<lit_utf8_byte_t> ();
+          it_this.skip (sizeof (lit_utf8_byte_t));
         }
 
         printf (" : STRING");
@@ -851,10 +851,6 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
   }
 } /* lit_load_literals_from_snapshot */
 #endif /* JERRY_ENABLE_SNAPSHOT */
-
-template void rcs_record_iterator_t::skip<uint8_t> ();
-template void rcs_record_iterator_t::skip<uint16_t> ();
-template void rcs_record_iterator_t::skip<uint32_t> ();
 
 template void rcs_record_iterator_t::write<uint8_t> (uint8_t);
 template uint8_t rcs_record_iterator_t::read<uint8_t> ();

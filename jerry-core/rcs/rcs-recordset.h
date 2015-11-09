@@ -297,14 +297,6 @@ public:
   } /* write */
 
   /**
-   * Increment current position to skip T value in the record.
-   */
-  template<typename T> void skip ()
-  {
-    access (ACCESS_SKIP, NULL, sizeof (T));
-  } /* skip */
-
-  /**
    * Increment current position to skip 'size' bytes.
    */
   void skip (size_t size) /**< number of bytes to skip */

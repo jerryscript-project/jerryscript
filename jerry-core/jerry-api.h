@@ -384,6 +384,9 @@ size_t jerry_parse_and_save_snapshot (const jerry_api_char_t *, size_t, bool, ui
 extern EXTERN_C
 jerry_completion_code_t jerry_exec_snapshot (const void *, size_t, bool, jerry_api_value_t *);
 
+extern EXTERN_C
+bool jerry_api_value_to_boolean (const jerry_api_value_t *);
+
 /**
  * @}
  */

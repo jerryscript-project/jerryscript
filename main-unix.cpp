@@ -219,6 +219,8 @@ main (int argc,
   bool is_dump_snapshot_mode_for_global_or_eval = false;
   const char *dump_snapshot_file_name_p = NULL;
 
+  bool is_repl_mode = false;
+
 #ifdef JERRY_ENABLE_LOG
   const char *log_file_name = NULL;
 #endif /* JERRY_ENABLE_LOG */
@@ -341,144 +343,213 @@ main (int argc,
   if (files_counter == 0
       && exec_snapshots_count == 0)
   {
-    return JERRY_STANDALONE_EXIT_CODE_OK;
+    is_repl_mode = true;
+  }
+
+#ifdef JERRY_ENABLE_LOG
+  if (log_file_name)
+  {
+    jerry_log_file = fopen (log_file_name, "w");
+    if (jerry_log_file == NULL)
+    {
+      JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
   }
   else
   {
-#ifdef JERRY_ENABLE_LOG
-    if (log_file_name)
+    jerry_log_file = stdout;
+  }
+#endif /* JERRY_ENABLE_LOG */
+
+  jerry_init (flags);
+
+  jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+  jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
+  jerry_api_value_t assert_value;
+  assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
+  assert_value.v_object = assert_func_p;
+
+  bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
+                                                           (jerry_api_char_t *) "assert",
+                                                           &assert_value);
+
+  jerry_api_release_value (&assert_value);
+  jerry_api_release_object (global_obj_p);
+
+  if (!is_assert_added)
+  {
+    JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+  }
+
+  jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
+
+  bool is_ok = true;
+  for (int i = 0; i < exec_snapshots_count; i++)
+  {
+    size_t snapshot_size;
+
+    if (!read_snapshot (exec_snapshot_file_names[i], &snapshot_size))
     {
-      jerry_log_file = fopen (log_file_name, "w");
-      if (jerry_log_file == NULL)
-      {
-        JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
-        return JERRY_STANDALONE_EXIT_CODE_FAIL;
-      }
+      ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
     }
     else
     {
-      jerry_log_file = stdout;
-    }
-#endif /* JERRY_ENABLE_LOG */
-
-    jerry_init (flags);
-
-    jerry_api_object_t *global_obj_p = jerry_api_get_global ();
-    jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
-    jerry_api_value_t assert_value;
-    assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
-    assert_value.v_object = assert_func_p;
-
-    bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
-                                                             (jerry_api_char_t *) "assert",
-                                                             &assert_value);
-
-    jerry_api_release_value (&assert_value);
-    jerry_api_release_object (global_obj_p);
-
-    if (!is_assert_added)
-    {
-      JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+      jerry_api_value_t ret_value;
+      ret_code = jerry_exec_snapshot ((void *) buffer,
+                                      snapshot_size,
+                                      true,
+                                      &ret_value);
+      JERRY_ASSERT (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
     }
 
-    jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
-
-    bool is_ok = true;
-    for (int i = 0; i < exec_snapshots_count; i++)
+    if (ret_code != JERRY_COMPLETION_CODE_OK)
     {
-      size_t snapshot_size;
+      is_ok = false;
 
-      if (!read_snapshot (exec_snapshot_file_names[i], &snapshot_size))
+      break;
+    }
+  }
+
+  if (is_ok)
+  {
+    size_t source_size;
+    const jerry_api_char_t *source_p = NULL;
+
+    if (files_counter != 0)
+    {
+      source_p = read_sources (file_names, files_counter, &source_size);
+
+      if (source_p == NULL)
       {
-        ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+    }
+
+    if (source_p != NULL)
+    {
+      if (is_dump_snapshot_mode)
+      {
+        static uint8_t snapshot_dump_buffer[ JERRY_BUFFER_SIZE ];
+
+        size_t snapshot_size = jerry_parse_and_save_snapshot (source_p,
+                                                              source_size,
+                                                              is_dump_snapshot_mode_for_global_or_eval,
+                                                              snapshot_dump_buffer,
+                                                              JERRY_BUFFER_SIZE);
+        if (snapshot_size == 0)
+        {
+          ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+        }
+        else
+        {
+          FILE *snapshot_file_p = fopen (dump_snapshot_file_name_p, "w");
+          fwrite (snapshot_dump_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
+          fclose (snapshot_file_p);
+        }
       }
       else
       {
-        jerry_api_value_t ret_value;
-        ret_code = jerry_exec_snapshot ((void *) buffer,
-                                        snapshot_size,
-                                        true,
-                                        &ret_value);
-        JERRY_ASSERT (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
-      }
-
-      if (ret_code != JERRY_COMPLETION_CODE_OK)
-      {
-        is_ok = false;
-
-        break;
-      }
-    }
-
-    if (is_ok)
-    {
-      size_t source_size;
-      const jerry_api_char_t *source_p = NULL;
-
-      if (files_counter != 0)
-      {
-        source_p = read_sources (file_names, files_counter, &source_size);
-
-        if (source_p == NULL)
+        if (!jerry_parse (source_p, source_size))
         {
-          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+          /* unhandled SyntaxError */
+          ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+        }
+        else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
+        {
+          ret_code = jerry_run ();
         }
       }
+    }
+  }
 
-      if (source_p != NULL)
+  if (is_repl_mode)
+  {
+    const char *prompt = "jerry> ";
+    bool is_done = false;
+
+    jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+    jerry_api_value_t print_function;
+
+    if (!jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "print", &print_function))
+    {
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+
+    if (!jerry_api_is_function (print_function.v_object))
+    {
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+
+    while (!is_done)
+    {
+      uint8_t *source_buffer_tail = buffer;
+      size_t len = 0;
+
+      printf ("%s", prompt);
+
+      // input a line
+      while (true)
       {
-        if (is_dump_snapshot_mode)
+        if (fread (source_buffer_tail, 1, 1, stdin) != 1 && len == 0)
         {
-          static uint8_t snapshot_dump_buffer[ JERRY_BUFFER_SIZE ];
+          is_done = true;
+          break;
+        }
+        if (*source_buffer_tail == '\n')
+        {
+          break;
+        }
+        source_buffer_tail ++;
+        len ++;
+      }
+      *source_buffer_tail = 0;
 
-          size_t snapshot_size = jerry_parse_and_save_snapshot (source_p,
-                                                                source_size,
-                                                                is_dump_snapshot_mode_for_global_or_eval,
-                                                                snapshot_dump_buffer,
-                                                                JERRY_BUFFER_SIZE);
-          if (snapshot_size == 0)
+      if (len > 0)
+      {
+        // evaluate the line
+        jerry_api_value_t ret_val;
+        ret_code = jerry_api_eval (buffer, len, false, false, &ret_val);
+
+        if (ret_code == JERRY_COMPLETION_CODE_OK)
+        {
+          // print return value
+          const jerry_api_value_t args[] = {ret_val};
+          jerry_api_value_t ret_val_print;
+          if (jerry_api_call_function (print_function.v_object, NULL, &ret_val_print, args, 1))
           {
-            ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
-          }
-          else
-          {
-            FILE *snapshot_file_p = fopen (dump_snapshot_file_name_p, "w");
-            fwrite (snapshot_dump_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
-            fclose (snapshot_file_p);
+            jerry_api_release_value (&ret_val_print);
           }
         }
         else
         {
-          if (!jerry_parse (source_p, source_size))
-          {
-            /* unhandled SyntaxError */
-            ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
-          }
-          else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
-          {
-            ret_code = jerry_run ();
-          }
+          printf ("JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION\n");
         }
+
+        jerry_api_release_value (&ret_val);
       }
     }
 
-    jerry_cleanup ();
+    jerry_api_release_object (global_obj_p);
+    jerry_api_release_value (&print_function);
+  }
+
+  jerry_cleanup ();
 
 #ifdef JERRY_ENABLE_LOG
-    if (jerry_log_file && jerry_log_file != stdout)
-    {
-      fclose (jerry_log_file);
-      jerry_log_file = NULL;
-    }
+  if (jerry_log_file && jerry_log_file != stdout)
+  {
+    fclose (jerry_log_file);
+    jerry_log_file = NULL;
+  }
 #endif /* JERRY_ENABLE_LOG */
 
-    if (ret_code == JERRY_COMPLETION_CODE_OK)
-    {
-      return JERRY_STANDALONE_EXIT_CODE_OK;
-    }
-    else
-    {
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
+  if (ret_code == JERRY_COMPLETION_CODE_OK)
+  {
+    return JERRY_STANDALONE_EXIT_CODE_OK;
+  }
+  else
+  {
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 }

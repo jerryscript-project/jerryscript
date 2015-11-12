@@ -240,15 +240,31 @@ project (Jerry CXX C ASM)
   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -g -gdwarf-4")
 
  # Warnings
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wall -Wextra -pedantic")
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wformat-nonliteral -Winit-self -Wno-stack-protector")
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wconversion -Wsign-conversion -Wformat-security")
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wmissing-declarations -Wno-attributes")
-  set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wfatal-errors")
+  macro(append variable value)
+    set(${variable} "${${variable}} ${value}")
+  endmacro()
+
+  macro(add_jerry_compile_flags)
+    foreach(_flag ${ARGV})
+      append(COMPILE_FLAGS_JERRY ${_flag})
+    endforeach()
+  endmacro()
+
+  macro(add_jerry_compile_warnings)
+    foreach(_warning ${ARGV})
+      add_jerry_compile_flags(-W${_warning})
+      if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+        add_jerry_compile_flags(-Werror=${_warning})
+      endif()
+    endforeach()
+  endmacro()
+
+  add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
+  add_jerry_compile_flags(-pedantic -Wno-stack-protector -Wno-attributes -Wfatal-errors)
   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Werror -Wlogical-op")
+    add_jerry_compile_warnings(logical-op)
   else()
-    set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -Wno-nested-anon-types")
+    add_jerry_compile_flags(-Wno-nested-anon-types)
   endif()
 
  # Static build

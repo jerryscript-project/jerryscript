@@ -50,12 +50,12 @@ linked_list_block_size (bool is_first_chunk) /**< is it first chunk (chunk, cont
 {
   if (is_first_chunk)
   {
-    return (jsp_mm_recommend_size (sizeof (linked_list_header) + 1u) - sizeof (linked_list_header));
+    return (jsp_mm_recommend_size (sizeof (linked_list_header) + sizeof (linked_list_chunk_header) + 1u)
+            - sizeof (linked_list_header) - sizeof (linked_list_chunk_header));
   }
   else
   {
-    return (jsp_mm_recommend_size (sizeof (linked_list_header) + sizeof (linked_list_chunk_header) + 1u)
-            - sizeof (linked_list_header) - sizeof (linked_list_chunk_header));
+    return (jsp_mm_recommend_size (sizeof (linked_list_chunk_header) + 1u) - sizeof (linked_list_chunk_header));
   }
 } /* linked_list_block_size */
 
@@ -152,7 +152,7 @@ linked_list_switch_to_next_elem (linked_list_header *header_p, /**< list header 
   linked_list_chunk_header *chunk_header_p = *in_out_chunk_header_p;
 
   const size_t element_size = header_p->element_size;
-  const bool is_first_chunk = ((linked_list_chunk_header *) header_p + 1u == chunk_header_p);
+  const bool is_first_chunk = ((linked_list_chunk_header *) (header_p + 1u) == chunk_header_p);
 
   JERRY_ASSERT (raw_elem_ptr_p + element_size
                 <= (uint8_t *) (chunk_header_p + 1u) + linked_list_block_size (is_first_chunk));

@@ -26,6 +26,7 @@
  * @{
  */
 
+extern ecma_completion_value_t ecma_reject (bool);
 extern ecma_object_t *ecma_op_create_object_object_noarg (void);
 extern ecma_completion_value_t ecma_op_create_object_object_arg (ecma_value_t);
 extern ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *);

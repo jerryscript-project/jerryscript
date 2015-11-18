@@ -33,25 +33,6 @@
  */
 
 /**
- * Reject sequence
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
- */
-static ecma_completion_value_t
-ecma_reject (bool is_throw) /**< Throw flag */
-{
-  if (is_throw)
-  {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
-  }
-  else
-  {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-} /* ecma_reject */
-
-/**
  * Array object creation operation.
  *
  * See also: ECMA-262 v5, 15.4.2.1

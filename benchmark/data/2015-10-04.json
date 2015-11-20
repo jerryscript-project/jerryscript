@@ -1,0 +1,174 @@
+{
+    "info": {
+        "jerryscript": {
+            "version": "98fc4098e8b352241587c0e4f818d0d9d82a5b76",
+            "size": 198340
+        },
+        "duktape": {
+            "version": "b8a33a0756df71c2a411f0c61c55e8efec5a41ef",
+            "size": 169920
+        }
+    },
+    "sunspider-1.0.2": {
+        "performance": {
+            "jerryscript": {
+                "math-spectral-norm.js": 3.236,
+                "3d-cube.js": 3.736,
+                "access-fannkuch.js": 9.95867,
+                "access-nbody.js": 4.66533,
+                "bitops-bitwise-and.js": 4.17867,
+                "math-partial-sums.js": 2.54933,
+                "controlflow-recursive.js": 3.21867,
+                "bitops-bits-in-byte.js": 4.49467,
+                "access-binary-trees.js": 2.732,
+                "bitops-3bit-bits-in-byte.js": 3.324,
+                "string-fasta.js": 15.4027,
+                "math-cordic.js": 4.90533
+            },
+            "jerryscript-snapshot": {
+                "math-spectral-norm.js": 3.23867,
+                "3d-cube.js": 3.68533,
+                "access-fannkuch.js": 9.94933,
+                "access-nbody.js": 4.63333,
+                "bitops-bitwise-and.js": 4.17467,
+                "math-partial-sums.js": 2.54267,
+                "controlflow-recursive.js": 3.22133,
+                "bitops-bits-in-byte.js": 4.48533,
+                "access-binary-trees.js": 2.75467,
+                "bitops-3bit-bits-in-byte.js": 3.30667,
+                "string-fasta.js": 15.3667,
+                "math-cordic.js": 4.88933
+            },
+            "duktape": {
+                "math-spectral-norm.js": 0.976,
+                "3d-cube.js": 1.06533,
+                "access-fannkuch.js": 1.82133,
+                "access-nbody.js": 1.66133,
+                "bitops-bitwise-and.js": 9.244,
+                "math-partial-sums.js": 2.72267,
+                "controlflow-recursive.js": 1.14,
+                "bitops-bits-in-byte.js": 0.725333,
+                "access-binary-trees.js": 1.20933,
+                "bitops-3bit-bits-in-byte.js": 0.470667,
+                "string-fasta.js": 4.70667,
+                "math-cordic.js": 2.35067
+            }
+        },
+        "memory": {
+            "jerryscript": {
+                "math-spectral-norm.js": 56,
+                "3d-cube.js": 136,
+                "access-fannkuch.js": 44,
+                "access-nbody.js": 68,
+                "bitops-bitwise-and.js": 36,
+                "math-partial-sums.js": 40,
+                "controlflow-recursive.js": 216,
+                "bitops-bits-in-byte.js": 36,
+                "access-binary-trees.js": 92,
+                "bitops-3bit-bits-in-byte.js": 40,
+                "string-fasta.js": 60,
+                "math-cordic.js": 52
+            },
+            "jerryscript-snapshot": {
+                "math-spectral-norm.js": 40,
+                "3d-cube.js": 108,
+                "access-fannkuch.js": 28,
+                "access-nbody.js": 44,
+                "bitops-bitwise-and.js": 28,
+                "math-partial-sums.js": 28,
+                "controlflow-recursive.js": 216,
+                "bitops-bits-in-byte.js": 28,
+                "access-binary-trees.js": 76,
+                "bitops-3bit-bits-in-byte.js": 28,
+                "string-fasta.js": 44,
+                "math-cordic.js": 32
+            },
+            "duktape": {
+                "math-spectral-norm.js": 152,
+                "3d-cube.js": 196,
+                "access-fannkuch.js": 152,
+                "access-nbody.js": 160,
+                "bitops-bitwise-and.js": 148,
+                "math-partial-sums.js": 148,
+                "controlflow-recursive.js": 192,
+                "bitops-bits-in-byte.js": 148,
+                "access-binary-trees.js": 212,
+                "bitops-3bit-bits-in-byte.js": 148,
+                "string-fasta.js": 164,
+                "math-cordic.js": 152
+            }
+        }
+    },
+    "ubench": {
+        "performance": {
+            "jerryscript": {
+                "loop-empty.js": 39.804,
+                "function-empty.js": 29.6707,
+                "function-excess-args.js": 65.8267,
+                "function-closure.js": 3.588,
+                "function-missing-args.js": 65.0,
+                "loop-sum.js": 43.788,
+                "loop-empty-resolve.js": 4.64667,
+                "function-correct-args.js": 93.6827,
+                "function-sum.js": 44.8347
+            },
+            "jerryscript-snapshot": {
+                "loop-empty.js": 39.8147,
+                "function-empty.js": 29.7027,
+                "function-excess-args.js": 66.2147,
+                "function-closure.js": 3.61333,
+                "function-missing-args.js": 65.0453,
+                "loop-sum.js": 43.4093,
+                "loop-empty-resolve.js": 4.652,
+                "function-correct-args.js": 91.9053,
+                "function-sum.js": 44.9813
+            },
+            "duktape": {
+                "loop-empty.js": 78.904,
+                "function-empty.js": 45.1013,
+                "function-excess-args.js": 35.9493,
+                "function-closure.js": 20.04,
+                "function-missing-args.js": 34.68,
+                "loop-sum.js": 97.828,
+                "loop-empty-resolve.js": 9.18267,
+                "function-correct-args.js": 35.7373,
+                "function-sum.js": 29.7747
+            }
+        },
+        "memory": {
+            "jerryscript": {
+                "loop-empty.js": 32,
+                "function-empty.js": 36,
+                "function-excess-args.js": 36,
+                "function-closure.js": 36,
+                "function-missing-args.js": 36,
+                "loop-sum.js": 36,
+                "loop-empty-resolve.js": 32,
+                "function-correct-args.js": 36,
+                "function-sum.js": 36
+            },
+            "jerryscript-snapshot": {
+                "loop-empty.js": 24,
+                "function-empty.js": 28,
+                "function-excess-args.js": 28,
+                "function-closure.js": 28,
+                "function-missing-args.js": 28,
+                "loop-sum.js": 28,
+                "loop-empty-resolve.js": 24,
+                "function-correct-args.js": 28,
+                "function-sum.js": 28
+            },
+            "duktape": {
+                "loop-empty.js": 148,
+                "function-empty.js": 148,
+                "function-excess-args.js": 148,
+                "function-closure.js": 460,
+                "function-missing-args.js": 148,
+                "loop-sum.js": 148,
+                "loop-empty-resolve.js": 148,
+                "function-correct-args.js": 148,
+                "function-sum.js": 148
+            }
+        }
+    }
+}

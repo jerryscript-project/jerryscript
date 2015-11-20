@@ -92,6 +92,7 @@ $(document).ajaxStop(function () {
       transInfo[date] = element['info'];
       engines.forEach(function(engine, index) {
         var repVal = undefined;   // default value
+        var numTests = 0;
         var benchmark_obj = element[benchmark];
         if (benchmark_obj) {
           var record =  benchmark_obj[measureType][engine];
@@ -100,9 +101,10 @@ $(document).ajaxStop(function () {
             // we use sum of all values as representative value
             var values = Object.values(record);
             repVal = values.sum();
+            numTests = values.length;
           }
         }
-        transData[date][index] = repVal;
+        transData[date][index] = {tests: numTests, score: repVal};
       });
     });
 
@@ -121,7 +123,8 @@ $(document).ajaxStop(function () {
         var engine = engines[index];
         var engine_pure = engine.split('-')[0];
         var info = transInfo[date] ? transInfo[date][engine_pure] : undefined;
-        var score = value ? value.toFixed(2) + measureUnits[measureType] : '';
+        var score = value.score ? value.score.toFixed(2) + measureUnits[measureType] : '';
+        var tests = value.tests ? value.tests : 0;
         var info_text = '';
         if (info && info.version)
           info_text = wrapHyperlink(link_code[engine_pure] + info.version, info.version);
@@ -130,14 +133,15 @@ $(document).ajaxStop(function () {
             ['source&nbsp; ', engine_text],
             ['version ', info_text],
             ['date&nbsp;&nbsp;&nbsp; ', date],
-            ['score&nbsp;&nbsp; ', score]];
+            ['score&nbsp;&nbsp; ', score],
+            ['tests&nbsp;&nbsp; ', tests]];
         return wrapTooltip(textData.map(function(v) { return v.join(': '); }).join('<br />'));
       });
 
       // zip data and tooltips
       // so the array will be like [data, tooltip, data, tooltip, ...]
       row = row.map(function (v, i) {
-        return [v, tooltips[i]];
+        return [v.score, tooltips[i]];
       }).reduce(function(a, b) {
         return a.concat(b)
       });

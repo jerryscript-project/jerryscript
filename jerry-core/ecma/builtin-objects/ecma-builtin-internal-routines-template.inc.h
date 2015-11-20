@@ -53,7 +53,10 @@
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG
 
-static lit_magic_string_id_t ecma_builtin_property_names[] =
+#define ECMA_BUILTIN_PROPERTY_NAMES \
+  PASTE (PASTE (ecma_builtin_property_names, _), BUILTIN_UNDERSCORED_ID)
+
+static lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
 {
 #define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
@@ -77,14 +80,14 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
     swapped = false;
 
     for (ecma_length_t i = 1;
-         i < (sizeof (ecma_builtin_property_names) / sizeof (ecma_builtin_property_names[0]));
+         i < (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) / sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
          i++)
     {
-      if (ecma_builtin_property_names[i] < ecma_builtin_property_names[i - 1])
+      if (ECMA_BUILTIN_PROPERTY_NAMES[i] < ECMA_BUILTIN_PROPERTY_NAMES[i - 1])
       {
-        lit_magic_string_id_t id_temp = ecma_builtin_property_names[i - 1];
-        ecma_builtin_property_names[i - 1] = ecma_builtin_property_names[i];
-        ecma_builtin_property_names[i] = id_temp;
+        lit_magic_string_id_t id_temp = ECMA_BUILTIN_PROPERTY_NAMES[i - 1];
+        ECMA_BUILTIN_PROPERTY_NAMES[i - 1] = ECMA_BUILTIN_PROPERTY_NAMES[i];
+        ECMA_BUILTIN_PROPERTY_NAMES[i] = id_temp;
 
         swapped = true;
       }
@@ -118,10 +121,10 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     return NULL;
   }
 
-  const ecma_length_t property_numbers = (ecma_length_t) (sizeof (ecma_builtin_property_names) /
-                                                          sizeof (ecma_builtin_property_names[0]));
+  const ecma_length_t property_numbers = (ecma_length_t) (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) /
+                                                          sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
   int32_t index;
-  index = ecma_builtin_bin_search_for_magic_string_id_in_array (ecma_builtin_property_names,
+  index = ecma_builtin_bin_search_for_magic_string_id_in_array (ECMA_BUILTIN_PROPERTY_NAMES,
                                                                 property_numbers,
                                                                 id);
 
@@ -307,17 +310,17 @@ LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *o
 
   JERRY_ASSERT (ecma_builtin_is (object_p, builtin_object_id));
 
-  const ecma_length_t properties_number = (ecma_length_t) (sizeof (ecma_builtin_property_names) /
-                                                           sizeof (ecma_builtin_property_names[0]));
+  const ecma_length_t properties_number = (ecma_length_t) (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) /
+                                                           sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
 
   for (ecma_length_t i = 0;
        i < properties_number;
        i++)
   {
-    lit_magic_string_id_t name = ecma_builtin_property_names[i];
+    lit_magic_string_id_t name = ECMA_BUILTIN_PROPERTY_NAMES[i];
 
     int32_t index;
-    index = ecma_builtin_bin_search_for_magic_string_id_in_array (ecma_builtin_property_names,
+    index = ecma_builtin_bin_search_for_magic_string_id_in_array (ECMA_BUILTIN_PROPERTY_NAMES,
                                                                   properties_number,
                                                                   name);
 
@@ -424,6 +427,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine
          return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
        }
 #include BUILTIN_INC_HEADER_NAME
+#undef ROUTINE_ARG
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG_LIST_1
 #undef ROUTINE_ARG_LIST_2
@@ -445,4 +449,5 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine
 #undef TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME
 #undef BUILTIN_UNDERSCORED_ID
 #undef BUILTIN_INC_HEADER_NAME
+#undef ECMA_BUILTIN_PROPERTY_NAMES
 

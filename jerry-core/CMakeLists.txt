@@ -135,8 +135,7 @@ project (JerryCore CXX C ASM)
   file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.cpp)
   file(GLOB SOURCE_CORE_JRT                   jrt/*.cpp)
 
-  set(SOURCE_CORE
-      jerry.cpp
+  set(SOURCE_CORE_FILES
       ${SOURCE_CORE_API}
       ${SOURCE_CORE_LIT}
       ${SOURCE_CORE_RCS}
@@ -149,6 +148,21 @@ project (JerryCore CXX C ASM)
       ${SOURCE_CORE_PARSER_JS_COLLECTIONS}
       ${SOURCE_CORE_PARSER_REGEXP}
       ${SOURCE_CORE_JRT})
+
+ # All-in-one build
+ if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")
+  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.cpp")
+  list(SORT SOURCE_CORE_FILES)
+  file(REMOVE ${ALL_IN_FILE})
+
+  foreach(FILE ${SOURCE_CORE_FILES})
+   file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
+  endforeach()
+
+  set(SOURCE_CORE ${ALL_IN_FILE})
+ else()
+  set(SOURCE_CORE ${SOURCE_CORE_FILES})
+ endif()
 
 # Per-option configuration
  # Valgrind

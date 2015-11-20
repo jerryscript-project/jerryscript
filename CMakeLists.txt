@@ -62,6 +62,7 @@ project (Jerry CXX C ASM)
  option(ENABLE_VALGRIND_FREYA "Enable valgrind-freya helpers in memory allocators" OFF)
  option(ENABLE_LTO            "Enable LTO build" ON)
  option(ENABLE_LOG            "Enable LOG build" OFF)
+ option(ENABLE_ALL_IN_ONE     "Enable ALL_IN_ONE build" OFF)
 
  if("${PLATFORM}" STREQUAL "LINUX")
   set(PLATFORM_EXT "LINUX")

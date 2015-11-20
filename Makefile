@@ -76,6 +76,12 @@
    LOG := OFF
   endif
 
+ # All-in-one build
+  ALL_IN_ONE ?= OFF
+  ifneq ($(ALL_IN_ONE),ON)
+   ALL_IN_ONE := OFF
+  endif
+
  # Verbosity
   ifdef VERBOSE
    Q :=
@@ -141,9 +147,10 @@ export SHELL=/bin/bash
  OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
  OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND_FREYA-$(__OPTION)))
  OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-LTO-$(__OPTION)))
+ OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-ALL_IN_ONE-$(__OPTION)))
 
 # Building current options string
- OPTIONS_STRING := -VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)
+ OPTIONS_STRING := -VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
 
 # Build directories
  BUILD_DIR_PREFIX := ./build/obj
@@ -190,6 +197,7 @@ $(BUILD_DIRS_NATIVE):
              -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) \
              -DENABLE_LOG=$(LOG) \
              -DENABLE_LTO=$(LTO) \
+             -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) \
              -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC) \
              -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
@@ -198,14 +206,14 @@ $(BUILD_DIRS_NATIVE):
 $(BUILD_DIRS_STM32F3): prerequisites
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 .PHONY: $(BUILD_DIRS_STM32F4)
 $(BUILD_DIRS_STM32F4): prerequisites
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
+          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
           (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
 
 .PHONY: $(JERRY_NATIVE_TARGETS)

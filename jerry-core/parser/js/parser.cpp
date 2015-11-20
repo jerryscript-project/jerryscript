@@ -2447,7 +2447,7 @@ parse_switch_statement (void)
 {
   assert_keyword (KW_SWITCH);
 
-  const jsp_operand_t switch_expr = parse_expression_inside_parens ();
+  const jsp_operand_t switch_expr = dump_assignment_of_lhs_if_literal (parse_expression_inside_parens ());
   token_after_newlines_must_be (TOK_OPEN_BRACE);
 
   start_dumping_case_clauses ();
@@ -2529,7 +2529,6 @@ parse_switch_statement (void)
   }
 
   current_token_must_be (TOK_CLOSE_BRACE);
-  skip_token ();
 
   jsp_label_rewrite_jumps_and_pop (&label,
                                    serializer_get_current_instr_counter ());

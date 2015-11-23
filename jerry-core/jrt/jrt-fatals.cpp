@@ -60,7 +60,9 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 #endif /* !JERRY_NDEBUG */
 
-  if (code != 0 && jerry_is_abort_on_fail ())
+  if (code != 0
+      && code != ERR_OUT_OF_MEMORY
+      && jerry_is_abort_on_fail ())
   {
     abort ();
   }

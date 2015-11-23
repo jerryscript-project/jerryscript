@@ -312,123 +312,7 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                                                ecma_value_t arg1, /**< routine's first argument */
                                                ecma_value_t arg2) /**< routine's second argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  /* 1 */
-  ECMA_TRY_CATCH (check_coercible_val,
-                  ecma_op_check_object_coercible (this_arg),
-                  ret_value);
-
-  /* 2 */
-  ECMA_TRY_CATCH (to_str_val,
-                  ecma_op_to_string (this_arg),
-                  ret_value);
-
-  /* 3 */
-  ECMA_TRY_CATCH (search_str_val,
-                  ecma_op_to_string (arg1),
-                  ret_value);
-
-  /* 4 */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (pos_num,
-                               arg2,
-                               ret_value);
-
-  /* 5 */
-  ecma_string_t *original_str_p = ecma_get_string_from_value (to_str_val);
-  const ecma_length_t original_len = ecma_string_get_length (original_str_p);
-  const lit_utf8_size_t original_size = ecma_string_get_size (original_str_p);
-
-  /* 4b, 6 */
-  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, true);
-
-  /* 7 */
-  ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
-  const ecma_length_t search_len = ecma_string_get_length (search_str_p);
-  const lit_utf8_size_t search_size = ecma_string_get_size (search_str_p);
-
-  ecma_number_t *ret_num_p = ecma_alloc_number ();
-  *ret_num_p = ecma_int32_to_number (-1);
-
-  /* 8 */
-  if (search_len <= original_len)
-  {
-    if (!search_len)
-    {
-      *ret_num_p = ecma_uint32_to_number (0);
-    }
-    else
-    {
-      /* create utf8 string from original string and advance to start position */
-      MEM_DEFINE_LOCAL_ARRAY (original_str_utf8_p,
-                              original_size,
-                              lit_utf8_byte_t);
-
-      ssize_t sz = ecma_string_to_utf8_string (original_str_p,
-                                               original_str_utf8_p,
-                                               (ssize_t) (original_size));
-      JERRY_ASSERT (sz >= 0);
-
-      ecma_length_t index = start;
-
-      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p + index;
-
-      /* create utf8 string from search string */
-      MEM_DEFINE_LOCAL_ARRAY (search_str_utf8_p,
-                              search_size,
-                              lit_utf8_byte_t);
-
-      ssize_t sz = ecma_string_to_utf8_string (search_str_p,
-                                               search_str_utf8_p,
-                                               (ssize_t) (search_size));
-      JERRY_ASSERT (sz >= 0);
-
-      lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
-
-      /* iterate original string and try to match at each position */
-      bool found = false;
-
-      while (!found && index <= original_len - search_len)
-      {
-        ecma_length_t match_len = 0;
-        lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
-
-        while (match_len < search_len &&
-               lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&search_str_curr_p))
-        {
-          match_len++;
-        }
-
-        /* Check for match */
-        if (match_len == search_len)
-        {
-          *ret_num_p = ecma_uint32_to_number (index);
-          found = true;
-        }
-        else
-        {
-          /* reset iterators */
-          search_str_curr_p = search_str_utf8_p;
-          original_str_curr_p = stored_original_str_curr_p;
-          lit_utf8_incr (&original_str_curr_p);
-        }
-        index++;
-      }
-
-      MEM_FINALIZE_LOCAL_ARRAY (search_str_utf8_p);
-      MEM_FINALIZE_LOCAL_ARRAY (original_str_utf8_p);
-    }
-  }
-
-  ecma_value_t new_value = ecma_make_number_value (ret_num_p);
-  ret_value = ecma_make_normal_completion_value (new_value);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (pos_num);
-  ECMA_FINALIZE (search_str_val);
-  ECMA_FINALIZE (to_str_val);
-  ECMA_FINALIZE (check_coercible_val);
-
-  return ret_value;
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, true);
 } /* ecma_builtin_string_prototype_object_index_of */
 
 /**
@@ -872,94 +756,18 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
     JERRY_ASSERT (!context_p->is_global);
 
     ecma_string_t *search_string_p = ecma_get_string_from_value (context_p->regexp_or_search_string);
-    lit_utf8_size_t search_size = ecma_string_get_size (search_string_p);
-
-    MEM_DEFINE_LOCAL_ARRAY (search_start_p,
-                            search_size,
-                            lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (search_string_p,
-                                             search_start_p,
-                                             (ssize_t) (search_size));
-    JERRY_ASSERT (sz >= 0);
-
     ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
-    lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
-    MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                            input_size,
-                            lit_utf8_byte_t);
-
-    ssize_t sz = ecma_string_to_utf8_string (input_string_p,
-                                             input_start_p,
-                                             (ssize_t) (input_size));
-    JERRY_ASSERT (sz >= 0);
-
-    lit_utf8_byte_t *search_str_curr_p = search_start_p;
-    lit_utf8_byte_t *input_str_curr_p = input_start_p;
-
-    ecma_length_t match_start = 0;
-    ecma_length_t match_end = 0;
-    bool match_found = false;
-
-    if (!search_size)
-    {
-      /* Empty string, always matches. */
-      match_found = true;
-    }
-    else
-    {
-      const lit_utf8_byte_t *input_str_end_p = input_start_p + input_size;
-      const lit_utf8_byte_t *search_str_end_p = search_start_p + search_size;
-      ecma_char_t first_char = lit_utf8_read_next (&search_str_curr_p);
-
-      while (input_str_curr_p < input_str_end_p)
-      {
-        if (lit_utf8_read_next (&input_str_curr_p) == first_char)
-        {
-          /* Local copy to preserve the original value. */
-          lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
-          lit_utf8_byte_t *nested_input_str_curr_p = input_str_curr_p;
-          match_end = match_start + 1;
-
-          match_found = true;
-          while (nested_search_str_curr_p < search_str_end_p)
-          {
-            if (nested_input_str_curr_p >= input_str_end_p)
-            {
-              match_found = false;
-              break;
-            }
-
-            ecma_char_t search_character = lit_utf8_read_next (&nested_search_str_curr_p);
-            ecma_char_t input_character = lit_utf8_read_next (&nested_input_str_curr_p);
-
-            if (search_character != input_character)
-            {
-              match_found = false;
-              break;
-            }
-            match_end++;
-          }
-
-          if (match_found)
-          {
-            break;
-          }
-        }
-        match_start++;
-      }
-    }
-
-    if (match_found)
+    ecma_length_t index_of;
+    if (ecma_builtin_helper_string_find_index (input_string_p, search_string_p, true, 0, &index_of))
     {
       ecma_value_t arguments_list_p[1] = { context_p->regexp_or_search_string };
       ECMA_TRY_CATCH (new_array_value,
                       ecma_op_create_array_object (arguments_list_p, 1, false),
                       ret_value);
 
-      context_p->match_start = match_start;
-      context_p->match_end = match_end;
+      context_p->match_start = index_of;
+      context_p->match_end = index_of + ecma_string_get_length (search_string_p);
 
       ret_value = ecma_make_normal_completion_value (ecma_copy_value (new_array_value, true));
 
@@ -969,10 +777,8 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
     {
       ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_NULL);
     }
-
-    MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
-    MEM_FINALIZE_LOCAL_ARRAY (search_start_p);
   }
+
   return ret_value;
 } /* ecma_builtin_string_prototype_object_replace_match */
 

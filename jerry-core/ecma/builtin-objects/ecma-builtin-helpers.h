@@ -41,6 +41,8 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t, uint32_t, bool);
 extern ecma_completion_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t, ecma_value_t,
                                                       ecma_value_t, bool);
+extern bool
+ecma_builtin_helper_string_find_index (ecma_string_t *, ecma_string_t *, bool, ecma_length_t, ecma_length_t *);
 extern ecma_completion_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *, ecma_string_t *, ecma_value_t,
                               bool, bool, bool, bool);

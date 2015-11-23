@@ -430,7 +430,6 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
  *
  * Used by:
  *         - The String.prototype.substring routine.
- *         - The String.prototype.indexOf routine.
  *         - The ecma_builtin_helper_string_prototype_object_index_of helper routine.
  *
  * @return uint32_t - the normalized value of the index
@@ -469,7 +468,7 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
   return norm_index;
 } /* ecma_builtin_helper_string_index_normalize */
 
-/*
+/**
  * Helper function for string indexOf and lastIndexOf functions
  *
  * This function implements string indexOf and lastIndexOf with required checks and conversions.
@@ -488,7 +487,7 @@ ecma_completion_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
                                                       ecma_value_t arg1, /**< routine's first argument */
                                                       ecma_value_t arg2, /**< routine's second argument */
-                                                      bool firstIndex) /**< routine's third argument */
+                                                      bool first_index) /**< routine's third argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
@@ -512,28 +511,74 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                                arg2,
                                ret_value);
 
-  /* 6 */
+  /* 5 (indexOf) -- 6 (lastIndexOf) */
   ecma_string_t *original_str_p = ecma_get_string_from_value (to_str_val);
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);
-  const lit_utf8_size_t original_size = ecma_string_get_size (original_str_p);
 
-  /* 4b, 5, 7 */
-  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, firstIndex);
+  /* 4b, 6 (indexOf) - 4b, 5, 7 (lastIndexOf) */
+  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, first_index);
 
-  /* 8 */
+  /* 7 (indexOf) -- 8 (lastIndexOf) */
   ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
-  const ecma_length_t search_len = ecma_string_get_length (search_str_p);
-  const lit_utf8_size_t search_size = ecma_string_get_size (search_str_p);
 
   ecma_number_t *ret_num_p = ecma_alloc_number ();
   *ret_num_p = ecma_int32_to_number (-1);
 
-  /* 9 */
+  /* 8 (indexOf) -- 9 (lastIndexOf) */
+  ecma_length_t index_of = 0;
+  if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, first_index, start, &index_of))
+  {
+    *ret_num_p = ecma_uint32_to_number (index_of);
+  }
+
+  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+
+  ECMA_OP_TO_NUMBER_FINALIZE (pos_num);
+  ECMA_FINALIZE (search_str_val);
+  ECMA_FINALIZE (to_str_val);
+  ECMA_FINALIZE (check_coercible_val);
+
+  return ret_value;
+} /* ecma_builtin_helper_string_prototype_object_index_of */
+
+/**
+ * Helper function for finding index of a search string
+ *
+ * This function clamps the given index to the [0, length] range.
+ * If the index is negative, 0 value is used.
+ * If the index is greater than the length of the string, the normalized index will be the length of the string.
+ * NaN is mapped to zero or length depending on the nan_to_zero parameter.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.5.4.7,8,11
+ *
+ * Used by:
+ *         - The ecma_builtin_helper_string_prototype_object_index_of helper routine.
+ *         - The ecma_builtin_string_prototype_object_replace_match helper routine.
+ *
+ * @return uint32_t - the normalized value of the index
+ */
+bool
+ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index */
+                                       ecma_string_t *search_str_p, /**< string's length */
+                                       bool first_index, /**< whether search for first (t) or last (f) index */
+                                       ecma_length_t start_pos, /**< start position */
+                                       ecma_length_t *ret_index_p) /**> position found in original string */
+{
+  bool match_found = false;
+
+  const ecma_length_t original_len = ecma_string_get_length (original_str_p);
+  const lit_utf8_size_t original_size = ecma_string_get_size (original_str_p);
+
+  const ecma_length_t search_len = ecma_string_get_length (search_str_p);
+  const lit_utf8_size_t search_size = ecma_string_get_size (search_str_p);
+
   if (search_len <= original_len)
   {
     if (!search_len)
     {
-      *ret_num_p = ecma_uint32_to_number (firstIndex ? 0 : original_len);
+      match_found = true;
+      *ret_index_p = first_index ? 0 : original_len;
     }
     else
     {
@@ -547,7 +592,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
                                                (ssize_t) (original_size));
       JERRY_ASSERT (sz >= 0);
 
-      ecma_length_t index = start;
+      ecma_length_t index = start_pos;
 
       lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p + index;
 
@@ -565,33 +610,42 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
 
       /* iterate original string and try to match at each position */
       bool searching = true;
-
+      ecma_char_t first_char = lit_utf8_read_next (&search_str_curr_p);
       while (searching)
       {
         /* match as long as possible */
         ecma_length_t match_len = 0;
         lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
 
-        while (match_len < search_len &&
-               index + match_len < original_len &&
-               lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&search_str_curr_p))
+        if (match_len < search_len &&
+            index + match_len < original_len &&
+            lit_utf8_read_next (&original_str_curr_p) == first_char)
         {
+          lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
           match_len++;
+
+          while (match_len < search_len &&
+                 index + match_len < original_len &&
+                 lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&nested_search_str_curr_p))
+          {
+            match_len++;
+          }
         }
 
         /* check for match */
         if (match_len == search_len)
         {
-          *ret_num_p = ecma_uint32_to_number (index);
+          match_found = true;
+          *ret_index_p = index;
+
           break;
         }
         else
         {
           /* inc/dec index and update iterators and search condition */
-          search_str_curr_p = search_str_utf8_p;
           original_str_curr_p = stored_original_str_curr_p;
 
-          if (firstIndex)
+          if (first_index)
           {
             if ((searching = (index <= original_len - search_len)))
             {
@@ -615,16 +669,8 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
     }
   }
 
-  ecma_value_t new_value = ecma_make_number_value (ret_num_p);
-  ret_value = ecma_make_normal_completion_value (new_value);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (pos_num);
-  ECMA_FINALIZE (search_str_val);
-  ECMA_FINALIZE (to_str_val);
-  ECMA_FINALIZE (check_coercible_val);
-
-  return ret_value;
-} /* ecma_builtin_helper_string_index_normalize */
+  return match_found;
+} /* ecma_builtin_helper_string_find_index */
 
 /**
  * Helper function for using [[DefineOwnProperty]].

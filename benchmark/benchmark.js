@@ -10,6 +10,10 @@ Array.prototype.sum = function() {
   return this.reduce(function(a, b) { return a + b; });
 };
 
+Array.prototype.max = function() {
+  return this.reduce(function(a, b) { return Math.max(a, b); });
+};
+
 Date.prototype.toFormattedString = function() {
   var yyyy = this.getFullYear().toString();
   var mm = (this.getMonth() + 1).toString();
@@ -42,6 +46,8 @@ function wrapHyperlink(address, text) {
 // main module
 ///////////////////////////////////////////
 
+var isSum = true;
+
 var benchmarks = ['sunspider-1.0.2', 'ubench'];
 var measureTypes = ['memory', 'performance'];
 var measureUnits = {'memory': 'kb', 'performance': 's'};
@@ -62,9 +68,12 @@ google.load('visualization', '1', {packages: ['corechart', 'line']});
 google.setOnLoadCallback(main);
 
 function main() {
-  var data_src = getParameterByName('src');
-  if (!data_src)
-    data_src = 'data';
+  // get params
+  var data_src = getParameterByName('src') || 'data';
+  var show = getParameterByName('show') || 'sum';
+
+  isSum = show === 'sum';
+
   // fetch data via ajax
   var today = new Date();
   for (var d = beginDate; d <= today; d.setDate(d.getDate() + 1)) {
@@ -100,7 +109,7 @@ $(document).ajaxStop(function () {
             // record object contains a lot of subtests,
             // we use sum of all values as representative value
             var values = Object.values(record);
-            repVal = values.sum();
+            repVal = isSum ? values.sum() : values.max();
             numTests = values.length;
           }
         }
@@ -133,8 +142,7 @@ $(document).ajaxStop(function () {
             ['source&nbsp; ', engine_text],
             ['version ', info_text],
             ['date&nbsp;&nbsp;&nbsp; ', date],
-            ['score&nbsp;&nbsp; ', score],
-            ['tests&nbsp;&nbsp; ', tests]];
+            ['score&nbsp;&nbsp; ', score + ' (' + tests + ' subtests)']];
         return wrapTooltip(textData.map(function(v) { return v.join(': '); }).join('<br />'));
       });
 

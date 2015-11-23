@@ -188,7 +188,11 @@ typedef struct
 /**
  * Heap
  */
+#ifndef JERRY_HEAP_SECTION_ATTR
 mem_heap_t mem_heap;
+#else
+mem_heap_t mem_heap __attribute__ ((section (JERRY_HEAP_SECTION_ATTR)));
+#endif
 
 /**
  * Check size of heap is corresponding to configuration

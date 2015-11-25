@@ -936,7 +936,7 @@ lexer_parse_number (void)
 
       if (c == LIT_CHAR_DOT)
       {
-        if (is_fp)
+        if (is_fp || is_exp)
         {
           /* token is constructed at end of function */
           break;

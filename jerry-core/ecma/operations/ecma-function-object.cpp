@@ -833,7 +833,8 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     ecma_deref_ecma_string (prototype_magic_string_p);
   }
-  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION ||
+           ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
     ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
   }

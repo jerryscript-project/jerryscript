@@ -211,11 +211,11 @@ HOST_OS=`uname -s`
 
 if [ "$HOST_OS" == "Darwin" ]
 then
-	SHA256SUM="shasum -a 256"
-	TMP_DIR=`mktemp -d -t jerryscript`
+  SHA256SUM="shasum -a 256"
+  TMP_DIR=`mktemp -d -t jerryscript`
 else
-	SHA256SUM="sha256sum --strict"
-	TMP_DIR=`mktemp -d --tmpdir=./`
+  SHA256SUM="sha256sum --strict"
+  TMP_DIR=`mktemp -d --tmpdir=./`
 fi
 
 if [ "$CLEAN_MODE" == "yes" ]

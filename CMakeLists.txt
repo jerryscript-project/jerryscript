@@ -420,11 +420,11 @@ endif()
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
     if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
-	else()
+                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
+    else()
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-		                   ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
-	endif()
+                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+    endif()
 
     add_cppcheck_target(${TARGET_NAME})
 
@@ -502,7 +502,7 @@ endif()
     if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
       target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
-	else()
+    else()
       target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
     endif()

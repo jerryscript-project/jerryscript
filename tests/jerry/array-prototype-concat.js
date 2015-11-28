@@ -18,7 +18,7 @@ var new_arr = array.concat();
 
 assert(new_arr.length === array.length)
 for (i = 0; i < array.length; i++) {
-	assert(array[i] === new_arr[i]);
+  assert(array[i] === new_arr[i]);
 }
 
 var obj = { concat : Array.prototype.concat };
@@ -54,7 +54,7 @@ var result = arr1.concat(arr2, arr3, arr4);
 
 assert(result.length === expected.length)
 for (i = 0; i < result.length; i++) {
-	assert(result[i] === expected[i]);
+  assert(result[i] === expected[i]);
 }
 
 var arr1 = [];
@@ -69,9 +69,9 @@ Object.defineProperty(arr, '0', { 'get' : function () {throw new ReferenceError 
 arr.length = 1;
 
 try {
-	arr.concat();
-	assert(false);
+  arr.concat();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

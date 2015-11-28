@@ -123,7 +123,7 @@ assert (JSON.stringify (to_json_object) === "3");
 function replacer_function (key, value)
 {
   if (typeof(value) == "string")
-	return "FOO";
+    return "FOO";
   return value;
 }
 

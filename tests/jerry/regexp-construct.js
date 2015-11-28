@@ -111,24 +111,24 @@ assert (r.ignoreCase === false);
 assert (r.multiline === false);
 
 try {
-	new RegExp (undefined, "ii");
-	assert (false);
+  new RegExp (undefined, "ii");
+  assert (false);
 } catch (e) {
-	assert (e instanceof SyntaxError);
+  assert (e instanceof SyntaxError);
 }
 
 try {
-	new RegExp ("", "gg");
-	assert (false);
+  new RegExp ("", "gg");
+  assert (false);
 } catch (e) {
-	assert (e instanceof SyntaxError);
+  assert (e instanceof SyntaxError);
 }
 
 try {
-	new RegExp (void 0, "mm");
-	assert (false);
+  new RegExp (void 0, "mm");
+  assert (false);
 } catch (e) {
-	assert (e instanceof SyntaxError);
+  assert (e instanceof SyntaxError);
 }
 
 r = new RegExp (undefined, undefined);

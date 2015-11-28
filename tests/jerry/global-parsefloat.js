@@ -80,9 +80,9 @@ assert(isNaN(parseFloat(undef)));
 
 var obj = { toString : function () { throw new ReferenceError("foo") } };
 try {
-	parseFloat(obj);
-	assert(false);
+  parseFloat(obj);
+  assert(false);
 } catch (e) {
-	assert(e instanceof ReferenceError);
-	assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
 }

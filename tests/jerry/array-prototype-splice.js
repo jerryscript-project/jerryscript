@@ -15,7 +15,7 @@
 
 function setDefaultValues()
 {
-	return [54, undefined, -127, "sunshine"];
+  return [54, undefined, -127, "sunshine"];
 }
 
 var array = setDefaultValues();
@@ -156,11 +156,11 @@ var obj = {splice : Array.prototype.splice};
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.splice(1, 2, "item1", "item2");
-	assert (false);
+  obj.splice(1, 2, "item1", "item2");
+  assert (false);
 } catch (e) {
-	assert (e.message === "foo");
-	assert (e instanceof ReferenceError);
+  assert (e.message === "foo");
+  assert (e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -168,9 +168,9 @@ var obj = {length : 1, splice : Array.prototype.splice};
 Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.splice(0, 1, "item1", "item2");
-	assert (false);
+  obj.splice(0, 1, "item1", "item2");
+  assert (false);
 } catch (e) {
-	assert (e.message === "foo");
-	assert (e instanceof ReferenceError);
+  assert (e.message === "foo");
+  assert (e instanceof ReferenceError);
 }

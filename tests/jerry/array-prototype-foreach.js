@@ -16,8 +16,8 @@
 var array = ["foo", [], Infinity, 4]
 
 function f(arg1, arg2, arg3) {
-	assert(arg1 === array[arg2]);
-	assert(arg3 === array);
+  assert(arg1 === array[arg2]);
+  assert(arg3 === array);
 }
 
 array.forEach(f);
@@ -28,11 +28,11 @@ Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceE
 obj.forEach = Array.prototype.forEach;
 
 try {
-	obj.forEach(f);
-	assert(false);
+  obj.forEach(f);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -42,9 +42,9 @@ Object.defineProperty(obj, '0', { 'get' : function () {throw new ReferenceError 
 obj.forEach = Array.prototype.forEach
 
 try {
-	obj.forEach(f);
-	assert(false);
+  obj.forEach(f);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

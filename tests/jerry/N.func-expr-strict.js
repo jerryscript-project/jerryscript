@@ -15,5 +15,5 @@
 "use strict";
 
 (function () {
-	var let = 1;
+  var let = 1;
 })();

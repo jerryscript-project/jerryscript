@@ -37,11 +37,11 @@ var obj = { pop : Array.prototype.pop };
 Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.pop();
-	assert(false);
+  obj.pop();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to set length
@@ -49,11 +49,11 @@ var obj = { pop : Array.prototype.pop };
 Object.defineProperty(obj, 'length', { 'set' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.pop();
-	assert(false);
+  obj.pop();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when no length property defined
@@ -67,9 +67,9 @@ var obj = { pop : Array.prototype.pop, length : 1 };
 Object.defineProperty(obj, '0', { 'get' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.pop();
-	assert(false);
+  obj.pop();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

@@ -19,34 +19,34 @@ r = new RegExp ("a");
 assert (r.exec ("a") == "a");
 assert (r.exec ("b") == null);
 try {
-	r.exec.call({}, "a");
-	assert (false)
+  r.exec.call({}, "a");
+  assert (false)
 }
 catch (e)
 {
-	assert (e instanceof TypeError);
+  assert (e instanceof TypeError);
 }
 
 assert (r.test ("a") == true);
 assert (r.test ("b") == false);
 try {
-	r.test.call({}, "a");
-	assert (false)
+  r.test.call({}, "a");
+  assert (false)
 }
 catch (e)
 {
-	assert (e instanceof TypeError);
+  assert (e instanceof TypeError);
 }
 
 r = new RegExp ("a", "mig");
 assert (r.toString () == "/a/gim");
 try {
-	r.toString.call({}, "a");
-	assert (false)
+  r.toString.call({}, "a");
+  assert (false)
 }
 catch (e)
 {
-	assert (e instanceof TypeError);
+  assert (e instanceof TypeError);
 }
 
 
@@ -71,27 +71,27 @@ var re1 = /foo/gim;
 var re2 = /bar/g;
 
 try {
-	re2.compile("asd", "ggim");
-	assert (false);
+  re2.compile("asd", "ggim");
+  assert (false);
 } catch (e) {
-	assert (e instanceof SyntaxError);
-	assert (re2 == "/bar/g");
+  assert (e instanceof SyntaxError);
+  assert (re2 == "/bar/g");
 }
 
 try {
-	re2.compile("[", undefined);
-	assert (false);
+  re2.compile("[", undefined);
+  assert (false);
 } catch (e) {
-	assert (e instanceof SyntaxError);
-	assert (re2 == "/bar/g");
+  assert (e instanceof SyntaxError);
+  assert (re2 == "/bar/g");
 }
 
 try {
-	re2.compile(re1, "im");
-	assert (false);
+  re2.compile(re1, "im");
+  assert (false);
 } catch (e) {
-	assert (e instanceof TypeError);
-	assert (re2 == "/bar/g");
+  assert (e instanceof TypeError);
+  assert (re2 == "/bar/g");
 }
 
 re2.lastIndex = 2;

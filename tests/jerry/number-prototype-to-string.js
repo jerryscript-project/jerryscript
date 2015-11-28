@@ -89,35 +89,35 @@ var digit_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                    'u', 'v', 'w', 'x', 'y', 'z'];
 
 for (radix = 2; radix <= 36; radix++) {
-	for (num = 1; num < 100; num++) {
-		var value = num;
-		var str = "";
-		while (value > 0) {
-			str = digit_chars[value % radix] + str;
-			value = Math.floor(value / radix);
-		}
+  for (num = 1; num < 100; num++) {
+    var value = num;
+    var str = "";
+    while (value > 0) {
+      str = digit_chars[value % radix] + str;
+      value = Math.floor(value / radix);
+    }
 
-		assert(str === (num).toString(radix));
-	}
+    assert(str === (num).toString(radix));
+  }
 }
 
 try {
-	assert((123).toString(1));
-	assert(false)
+  assert((123).toString(1));
+  assert(false)
 } catch (e) {
-	assert(e instanceof RangeError);
+  assert(e instanceof RangeError);
 }
 
 try {
-	assert((123).toString(37));
-	assert(false)
+  assert((123).toString(37));
+  assert(false)
 } catch (e) {
-	assert(e instanceof RangeError);
+  assert(e instanceof RangeError);
 }
 
 try {
-	assert((123).toString(Infinity));
-	assert(false)
+  assert((123).toString(Infinity));
+  assert(false)
 } catch (e) {
-	assert(e instanceof RangeError);
+  assert(e instanceof RangeError);
 }

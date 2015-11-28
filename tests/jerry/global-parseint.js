@@ -72,9 +72,9 @@ assert(isNaN(parseInt(undef, arr)));
 
 var obj = { toString : function () { throw new ReferenceError("foo") } };
 try {
-	parseInt(obj);
-	assert(false);
+  parseInt(obj);
+  assert(false);
 } catch (e) {
-	assert(e instanceof ReferenceError);
-	assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
 }

@@ -50,11 +50,11 @@ var obj = { lastIndexOf : Array.prototype.lastIndexOf}
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.lastIndexOf("bar");
-	assert(false);
+  obj.lastIndexOf("bar");
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -62,9 +62,9 @@ var obj = { lastIndexOf : Array.prototype.lastIndexOf, length : 1}
 Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.lastIndexOf("bar");
-	assert(false);
+  obj.lastIndexOf("bar");
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

@@ -16,25 +16,25 @@
 var array = ["foo", [], Infinity, 4]
 
 function f(arg1, arg2, arg3) {
-	assert(arg1 === array[arg2]);
-	assert(arg3 === array);
-	return true;
+  assert(arg1 === array[arg2]);
+  assert(arg3 === array);
+  return true;
 }
 
 var filtered = array.filter(f);
 assert(filtered.length === array.length);
 for (i = 0; i < filtered.length; i++) {
-	assert(filtered[i] === array[i]);
+  assert(filtered[i] === array[i]);
 }
 
 var array = [1, 2, 3, 4, 5, 6, 7, 8];
 
 function g (arg1, arg2, arg3) {
-	if (arg2 % 2 === 0) {
-		return true;
-	} else {
-		return false;
-	}
+  if (arg2 % 2 === 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 filtered = array.filter(g)
@@ -57,11 +57,11 @@ Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceE
 obj.filter = Array.prototype.filter;
 
 try {
-	obj.filter(f);
-	assert(false);
+  obj.filter(f);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -71,9 +71,9 @@ Object.defineProperty(obj, '0', { 'get' : function () {throw new ReferenceError 
 obj.filter = Array.prototype.filter
 
 try {
-	obj.filter(f);
-	assert(false);
+  obj.filter(f);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

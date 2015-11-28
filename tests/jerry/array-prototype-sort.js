@@ -29,23 +29,23 @@ var array = [6, 4, 5, 1, 2, 9, 7, 3, 0, 8];
 // Default comparison
 array.sort();
 for (i = 0; i < array.length; i++) {
-	assert(array[i] === i);
+  assert(array[i] === i);
 }
 
 // Using custom comparison function
 function f(arg1, arg2) {
-	if (arg1 < arg2) {
-		return 1;
-	} else if (arg1 > arg2) {
-		return -1;
-	} else {
-		return 0;
-	}
+  if (arg1 < arg2) {
+    return 1;
+  } else if (arg1 > arg2) {
+    return -1;
+  } else {
+    return 0;
+  }
 }
 
 array.sort(f);
 for (i = 0; i < array.length; i++) {
-	assert(array[array.length - i - 1] === i);
+  assert(array[array.length - i - 1] === i);
 }
 
 // Sorting sparse array
@@ -56,18 +56,18 @@ array.sort();
 
 assert(array.length === expected.length);
 for (i = 0; i < array.length; i++) {
-	assert(expected.hasOwnProperty (i) === array.hasOwnProperty (i));
-	assert(array[i] === expected[i]);
+  assert(expected.hasOwnProperty (i) === array.hasOwnProperty (i));
+  assert(array[i] === expected[i]);
 }
 
 // Checking behavior when provided comparefn is not callable
 var obj = {};
 var arr = [];
 try {
-	arr.sort(obj);
-	assert(false);
+  arr.sort(obj);
+  assert(false);
 } catch (e) {
-	assert(e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 // Checking behavior when unable to get length
@@ -75,11 +75,11 @@ var obj = { sort : Array.prototype.sort}
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.sort();
-	assert(false);
+  obj.sort();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -87,9 +87,9 @@ var obj = { sort : Array.prototype.sort, length : 1}
 Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.sort();
-	assert(false);
+  obj.sort();
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

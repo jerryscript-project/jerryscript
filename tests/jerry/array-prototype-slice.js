@@ -91,11 +91,11 @@ var obj = { slice : Array.prototype.slice };
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.slice(1, 2);
-	assert (false);
+  obj.slice(1, 2);
+  assert (false);
 } catch (e) {
-	assert (e.message === "foo");
-	assert (e instanceof ReferenceError);
+  assert (e.message === "foo");
+  assert (e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -103,9 +103,9 @@ var obj = { length : 1, slice : Array.prototype.slice };
 Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.slice(0, 1);
-	assert (false);
+  obj.slice(0, 1);
+  assert (false);
 } catch (e) {
-	assert (e.message === "foo");
-	assert (e instanceof ReferenceError);
+  assert (e.message === "foo");
+  assert (e instanceof ReferenceError);
 }

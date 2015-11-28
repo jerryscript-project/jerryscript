@@ -53,11 +53,11 @@ var obj = { unshift : Array.prototype.unshift };
 Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.unshift(1);
-	assert(false)
+  obj.unshift(1);
+  assert(false)
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to set length
@@ -65,11 +65,11 @@ var obj = { unshift : Array.prototype.unshift };
 Object.defineProperty(obj, 'length', { 'set' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.unshift(2);
-	assert(false)
+  obj.unshift(2);
+  assert(false)
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable shift elements
@@ -77,22 +77,22 @@ var obj = { unshift : Array.prototype.unshift, length : 1 };
 Object.defineProperty(obj, '0', { 'get' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.unshift(3);
-	assert(false);
+  obj.unshift(3);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 var obj = { unshift : Array.prototype.unshift, length : 1 };
 Object.defineProperty(obj, '0', { 'set' : function () {throw new ReferenceError ("foo"); } });
 
 try {
-	obj.unshift(4);
-	assert(false);
+  obj.unshift(4);
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when a property is not defined

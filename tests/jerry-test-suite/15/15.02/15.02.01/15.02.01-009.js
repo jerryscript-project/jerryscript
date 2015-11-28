@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-	var a = new Number(123.5);
+var a = new Number(123.5);
 assert (typeof Object(a) === 'object');

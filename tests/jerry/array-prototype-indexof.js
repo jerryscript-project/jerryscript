@@ -48,20 +48,20 @@ var arr = [11, 22, 33, 44];
 assert(arr.indexOf(44, 4) === -1);
 
 var fromIndex = {
-	toString: function () {
-		return {};
-	},
+  toString: function () {
+    return {};
+  },
 
-	valueOf: function () {
-		return {};
-	}
+  valueOf: function () {
+    return {};
+  }
 };
 
 try {
-    [0, 1].indexOf(1, fromIndex);
-    assert(false);
+  [0, 1].indexOf(1, fromIndex);
+  assert(false);
 } catch (e) {
-    assert(e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 // Checking behavior when unable to get length
@@ -69,11 +69,11 @@ var obj = { indexOf : Array.prototype.indexOf}
 Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.indexOf("bar");
-	assert(false);
+  obj.indexOf("bar");
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }
 
 // Checking behavior when unable to get element
@@ -81,9 +81,9 @@ var obj = { indexOf : Array.prototype.indexOf, length : 1}
 Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
 
 try {
-	obj.indexOf("bar");
-	assert(false);
+  obj.indexOf("bar");
+  assert(false);
 } catch (e) {
-	assert(e.message === "foo");
-	assert(e instanceof ReferenceError);
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
 }

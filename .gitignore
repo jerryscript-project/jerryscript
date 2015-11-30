@@ -34,3 +34,10 @@ third-party/STM32F4-Discovery_FW_V1.1.0
 third-party/nuttx
 third-party/vera++
 third-party/cppcheck
+
+# targets
+jerry_targetjs.h
+targets/mbedk64f/libjerry
+targets/mbedk64f/build
+targets/mbedk64f/yotta_modules
+targets/mbedk64f/yotta_targets

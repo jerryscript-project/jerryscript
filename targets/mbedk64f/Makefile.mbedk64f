@@ -1,0 +1,80 @@
+# Copyright 2015 Samsung Electronics Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# use TAB-8
+
+CURDIR     = `pwd`
+TYPE       = release
+INTERM     = build/obj-mbed-k64f
+OUTPUT     = build/bin/$(TYPE).mbedk64f
+COPYTARGET = targets/mbedk64f/libjerry
+JERRYHEAP  ?= 16
+TARGET_DIR ?= /media/$(USER)/MBED
+
+EXT_CFLAGS := -D__TARGET_MBED_K64F
+EXT_CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
+EXT_CFLAGS += -Wno-error=format=
+
+
+all: jerry js2c yotta
+
+
+jerry:
+	mkdir -p $(INTERM)
+	mkdir -p $(OUTPUT)
+	mkdir -p $(COPYTARGET)
+	cmake -B$(INTERM) -H./ \
+	 -DENABLE_LTO=OFF \
+	 -DENABLE_VALGRIND=OFF \
+	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
+	 -DUSE_COMPILER_DEFAULT_LIBC=YES \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=arm7-m \
+	 -DEXTERNAL_CMAKE_C_COMPILER=arm-none-eabi-gcc \
+	 -DEXTERNAL_CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
+	 -DEXTERNAL_MEM_HEAP_SIZE_KB=$(JERRYHEAP)
+
+	make -C $(INTERM) $(TYPE).external
+	cp `cat $(INTERM)/$(TYPE).external/list` $(OUTPUT)/.
+	cp $(OUTPUT)/lib$(TYPE).jerry-core.a $(COPYTARGET)/libjerrycore.a
+	cp $(OUTPUT)/lib$(TYPE).jerry-fdlibm.third_party.lib.a $(COPYTARGET)/libfdlibm.a
+
+
+js2c:
+	cd targets/mbedk64f; ./js2c.py;
+
+
+yotta:
+	cd targets/mbedk64f; \
+	 yotta target frdm-k64f-gcc; \
+	 yotta build
+
+
+flash: check_mbed
+	cp targets/mbedk64f/build/frdm-k64f-gcc/source/jerry.bin \
+	 "$(TARGET_DIR)/."
+	@echo "Wait till LED flashing stops..."
+
+
+check_mbed:
+	@if [ ! -d "${TARGET_DIR}" ] ; then \
+	 echo "MBED not mounted at ${TARGET_DIR}"; \
+	 exit 1; \
+	fi
+
+
+clean:
+	rm -rf $(INTERM)
+	rm -rf $(OUTPUT)
+	rm -rf targets/mbedk64f/build

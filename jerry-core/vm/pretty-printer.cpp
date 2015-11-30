@@ -123,7 +123,7 @@ pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_in
   {
     if (*format != '%')
     {
-      putchar (*format);
+      jerry_port_putchar (*format);
       format++;
       continue;
     }
@@ -144,7 +144,7 @@ pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_in
       }
       default:
       {
-        putchar ('%');
+        jerry_port_putchar ('%');
         continue;
       }
     }

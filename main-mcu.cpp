@@ -14,6 +14,7 @@
  */
 
 #include "jerry.h"
+#include "main.h"
 
 /**
  * Standalone Jerry exit codes

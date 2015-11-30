@@ -1005,11 +1005,11 @@ lit_put_ecma_char (ecma_char_t ecma_char) /**< code unit */
 {
   if (ecma_char <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
-    putchar (ecma_char);
+    jerry_port_putchar (ecma_char);
   }
   else
   {
     FIXME ("Support unicode characters printing.");
-    putchar ('_');
+    jerry_port_putchar ('_');
   }
 } /* lit_put_ecma_char */

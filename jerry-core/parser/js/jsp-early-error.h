@@ -27,7 +27,7 @@
   lexer_dump_line (line); \
   printf ("\n"); \
   for (size_t i = 0; i < column; i++) { \
-    putchar (' '); \
+    jerry_port_putchar (' '); \
   } \
   printf ("^\n"); \
   printf ("%s: Ln %lu, Col %lu: ", TYPE, (unsigned long) (line + 1), (unsigned long) (column + 1)); \

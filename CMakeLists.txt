@@ -278,6 +278,12 @@ project (Jerry CXX C ASM)
     add_jerry_compile_flags(-Wno-nested-anon-types)
   endif()
 
+  if(DEFINED EXTERNAL_COMPILE_FLAGS)
+    foreach(FLAG ${EXTERNAL_COMPILE_FLAGS})
+      set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} ${FLAG}")
+    endforeach()
+  endif()
+
  # Static build
   if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
    set(LINKER_FLAGS_STATIC "-static")
@@ -464,6 +470,18 @@ endif()
                        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
                        COMMAND echo $<TARGET_FILE:${FDLIBM_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list
                        COMMAND echo $<TARGET_FILE:${CORE_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
+
+    if(DEFINED EXTERNAL_BUILD_ENTRY_FILE)
+     add_library(${TARGET_NAME}-entry STATIC ${EXTERNAL_BUILD_ENTRY_FILE})
+     set_property(TARGET ${TARGET_NAME}-entry
+                  PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+     target_compile_definitions(${TARGET_NAME}-entry PRIVATE ${DEFINES_JERRY})
+     target_include_directories(${TARGET_NAME}-entry PRIVATE ${INCLUDE_CORE_INTERFACE})
+     target_include_directories(${TARGET_NAME}-entry SYSTEM PRIVATE ${CMAKE_SOURCE_DIR})
+     target_include_directories(${TARGET_NAME}-entry SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
+     target_include_directories(${TARGET_NAME}-entry SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
+     add_dependencies(${TARGET_NAME} ${TARGET_NAME}-entry)
+    endif()
 
     if(${USE_JERRY_LIBC})
      add_dependencies(${TARGET_NAME} ${LIBC_TARGET_NAME})

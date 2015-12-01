@@ -43,12 +43,13 @@ assert("w2\uFFA2A".indexOf("A") === 3);
 
 assert("w2\u1D306A".indexOf("A") === 4);
 
-// check surrogate pairs
 assert("\uD834\uDF06".indexOf("\uDF06") === 1);
 
 assert("\uD834\uDF06w2\u1D306D".indexOf("D") === 6);
 
 assert("\ud800\dc00".indexOf("\dc00") === 1);
+
+assert("\u8000\u0700\u8000\u8000A".indexOf("A", 3) === 4);
 
 // check prefix search
 assert("aaaabaaa".indexOf("aaaba") === 1);

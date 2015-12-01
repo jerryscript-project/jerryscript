@@ -39,6 +39,33 @@ assert("Hello welcome, welcome to the universe o.".lastIndexOf("o", 25) === 24);
 
 assert("Helloooo woooorld".lastIndexOf("oooo", 6) === 4);
 
+// check utf8 strings
+assert("\uFFA2".lastIndexOf("\uFFA2") === 0);
+
+assert("\uFFA2".lastIndexOf("A") === -1);
+
+assert("w2\uFFA2 A".lastIndexOf("A") === 4);
+
+assert("w2\u1D306A".indexOf("A") === 4);
+
+assert("\u0070A".lastIndexOf("A") === 1);
+
+assert("\u8000A".lastIndexOf("A") === 1);
+
+assert("\u0080\u0080\u0980\u1080A".lastIndexOf("A") === 4);
+
+assert("\u0080\u0980\u1080A\u0080\u0080\u0980\u1080".lastIndexOf("A", 4) === 3);
+
+assert("\u0080\u0080\u0980\u1080A\u0980AA\u0980A".lastIndexOf("A\u0980A") === 7);
+
+assert("\u0080\u0080\u0980\u1080A\u0980AA\u0980A".lastIndexOf("A\u0980A", 4) === 4);
+
+assert("\uD834\uDF06".lastIndexOf("\uDF06") === 1);
+
+assert("\uD834\uDF06w2\u1D306D\uDF06w2\u1D306D".lastIndexOf("D") === 12);
+
+assert("\ud800\dc00\ud800\dc00".lastIndexOf("\dc00") === 6);
+
 // check empty string
 assert(String.prototype.lastIndexOf.call(new String()) === -1);
 
@@ -75,7 +102,7 @@ assert("true".lastIndexOf(true, false) === 0);
 
 // check coercible - undefined
 try {
-  assert(String.prototype.lastIndexOf.call(undefined) === -1);
+  String.prototype.lastIndexOf.call(undefined);
   assert(false);
 } catch(e) {
   assert(e instanceof TypeError);
@@ -83,7 +110,7 @@ try {
 
 // check coercible - null
 try {
-  assert(String.prototype.lastIndexOf.call(null, 0) === -1);
+  String.prototype.lastIndexOf.call(null);
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);

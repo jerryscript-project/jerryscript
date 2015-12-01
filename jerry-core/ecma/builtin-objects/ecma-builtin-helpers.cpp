@@ -594,7 +594,11 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
 
       ecma_length_t index = start_pos;
 
-      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p + index;
+      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p;
+      for (ecma_length_t idx = 0; idx < index; idx++)
+      {
+        lit_utf8_incr (&original_str_curr_p);
+      }
 
       /* create utf8 string from search string */
       MEM_DEFINE_LOCAL_ARRAY (search_str_utf8_p,

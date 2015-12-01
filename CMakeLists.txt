@@ -70,6 +70,8 @@ project (Jerry CXX C ASM)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" ON)
  elseif("${PLATFORM}" STREQUAL "DARWIN")
+  option(ENABLE_LTO            "Enable LTO build" OFF)
+  option(ENABLE_ALL_IN_ONE     "Enable ALL_IN_ONE build" ON)
   set(PLATFORM_EXT "DARWIN")
   set(EXTERNAL_BUILD FALSE)
 

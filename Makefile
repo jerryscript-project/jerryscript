@@ -41,6 +41,8 @@
 #   Parallel build of several selected targets started manually is not supported.
 #
 
+export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+
 # Options
  # Valgrind
   VALGRIND ?= OFF
@@ -64,7 +66,11 @@
   endif
 
  # LTO
-  LTO ?= ON
+  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
+   LTO ?= OFF
+  else
+   LTO ?= ON
+  endif
 
   ifneq ($(LTO),ON)
    LTO := OFF
@@ -77,7 +83,12 @@
   endif
 
  # All-in-one build
-  ALL_IN_ONE ?= OFF
+  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
+   ALL_IN_ONE ?= ON
+  else
+   ALL_IN_ONE ?= OFF
+  endif
+
   ifneq ($(ALL_IN_ONE),ON)
    ALL_IN_ONE := OFF
   endif
@@ -90,8 +101,6 @@
    Q := @
    QLOG := >/dev/null
   endif
-
-export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)

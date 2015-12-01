@@ -764,11 +764,11 @@ typedef struct
  */
 typedef struct
 {
-  /** Compressed pointer to next chunk */
-  mem_cpointer_t next_chunk_cp;
-
   /** Characters */
   lit_utf8_byte_t data[ sizeof (uint64_t) - sizeof (mem_cpointer_t) ];
+
+  /** Compressed pointer to next chunk */
+  mem_cpointer_t next_chunk_cp;
 } ecma_collection_chunk_t;
 
 /**

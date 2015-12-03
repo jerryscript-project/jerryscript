@@ -28,6 +28,9 @@
 #include "stack.h"
 #include "jsp-early-error.h"
 #include "vm.h"
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
+#include "pretty-printer.h"
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */
 
 /**
  * Flag, indicating whether result of expression
@@ -3313,6 +3316,10 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
   dumper_init ();
   jsp_early_error_init ();
 
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
+  pp_init ();
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */
+
   STACK_INIT (scopes);
   STACK_PUSH (scopes, scopes_tree_init (NULL, scope_type));
   serializer_set_scope (STACK_TOP (scopes));
@@ -3368,6 +3375,10 @@ parser_parse_program (const jerry_api_char_t *source_p, /**< source code buffer 
     jsp_early_error_free ();
 
     *out_bytecode_data_p = serializer_merge_scopes_into_bytecode ();
+
+#ifdef JERRY_ENABLE_PRETTY_PRINTER
+    pp_free ();
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */
 
     dumper_free ();
 

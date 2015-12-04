@@ -47,22 +47,29 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
   ecma_completion_value_t ret_value;
 
   lit_utf8_size_t chars_num = ecma_string_get_size (code_p);
-  MEM_DEFINE_LOCAL_ARRAY (code_utf8_buffer_p,
-                          chars_num,
-                          lit_utf8_byte_t);
+  if (chars_num == 0)
+  {
+    ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  }
+  else
+  {
+    MEM_DEFINE_LOCAL_ARRAY (code_utf8_buffer_p,
+                            chars_num,
+                            lit_utf8_byte_t);
 
-  const ssize_t buf_size = (ssize_t) chars_num;
-  ssize_t buffer_size_req = ecma_string_to_utf8_string (code_p,
-                                                        code_utf8_buffer_p,
-                                                        buf_size);
-  JERRY_ASSERT (buffer_size_req == buf_size);
+    const ssize_t buf_size = (ssize_t) chars_num;
+    ssize_t buffer_size_req = ecma_string_to_utf8_string (code_p,
+                                                          code_utf8_buffer_p,
+                                                          buf_size);
+    JERRY_ASSERT (buffer_size_req == buf_size);
 
-  ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
-                                         (size_t) buf_size,
-                                         is_direct,
-                                         is_called_from_strict_mode_code);
+    ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
+                                           (size_t) buf_size,
+                                           is_direct,
+                                           is_called_from_strict_mode_code);
 
-  MEM_FINALIZE_LOCAL_ARRAY (code_utf8_buffer_p);
+    MEM_FINALIZE_LOCAL_ARRAY (code_utf8_buffer_p);
+  }
 
   return ret_value;
 } /* ecma_op_eval */

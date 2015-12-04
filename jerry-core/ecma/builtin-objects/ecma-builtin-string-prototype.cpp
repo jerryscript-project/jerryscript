@@ -758,7 +758,7 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
     ecma_string_t *search_string_p = ecma_get_string_from_value (context_p->regexp_or_search_string);
     ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
 
-    ecma_length_t index_of;
+    ecma_length_t index_of = 0;
     if (ecma_builtin_helper_string_find_index (input_string_p, search_string_p, true, 0, &index_of))
     {
       ecma_value_t arguments_list_p[1] = { context_p->regexp_or_search_string };

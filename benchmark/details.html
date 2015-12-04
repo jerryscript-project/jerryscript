@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>jerryscript benchmark details</title>
+  
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type='text/javascript' src="common.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var src = getParameterByName('src') || 'data';
+      var _date = getParameterByName('date');
+      var engine = getParameterByName('engine');
+      var benchmark = getParameterByName('benchmark');
+      $.ajax({
+        url: src + '/' + _date + '.json',
+        dataType: 'json',
+        success: function(data) {
+          // TODO pretty print? as a table?
+          document.write('<h1>benchmark details</h1>');
+          document.write('<p>' + _date + '</p>');
+          document.write('<p>' + engine + '</p>');
+          document.write('<p>' + benchmark + '</p>');
+          document.write('<h3>memory</h3>');
+          document.write('<pre>' + JSON.stringify(data[benchmark]['memory'][engine], null, 4) + '</pre>');
+          document.write('<h3>performance</h3>');
+          document.write('<pre>' + JSON.stringify(data[benchmark]['performance'][engine], null, 4) + '</pre>');
+        },
+        error: function(request, status, error) {
+          document.write('error!');
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
+

@@ -27,12 +27,20 @@ Object.values = function(obj) {
   return Object.keys(obj).map(function(key) { return obj[key]; });
 };
 
-function getParameterByName(name) {
-  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-      results = regex.exec(location.search);
-  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
+Object.sum = function(obj) {
+  return Object.values(obj).sum();
+};
+
+Object.maxKey = function(obj) {
+  var key, val = -Infinity;
+  for (var p in obj) {
+    if (val < obj[p]) {
+      key = p;
+      val = obj[p];
+    }
+  }
+  return key;
+};
 
 function wrapTooltip(content) {
   return '<div style="padding: 0.5em; font-family: consolas; line-height: 1.5em;">' + content + '</div>';
@@ -60,7 +68,7 @@ var link_code = {
   'jerryscript': 'https://github.com/Samsung/jerryscript/commit/',
   'duktape':     'https://github.com/svaarala/duktape/commit/'
 };
-var beginDate = new Date('2015-07-10');
+var beginDate = new Date('2015-07-11');
 
 var benchmarkData = {};
 
@@ -100,20 +108,27 @@ $(document).ajaxStop(function () {
       transData[date] = [];
       transInfo[date] = element['info'];
       engines.forEach(function(engine, index) {
-        var repVal = undefined;   // default value
+        var sum = undefined;   // default value
+        var max = undefined;      // default value
+        var maxTest = '';      // default value
         var numTests = 0;
         var benchmark_obj = element[benchmark];
         if (benchmark_obj) {
           var record =  benchmark_obj[measureType][engine];
           if (record) {
-            // record object contains a lot of subtests,
-            // we use sum of all values as representative value
-            var values = Object.values(record);
-            repVal = isSum ? values.sum() : values.max();
-            numTests = values.length;
+            sum = Object.sum(record);
+            maxTest = Object.maxKey(record);
+            max = record[maxTest];
+            numTests = Object.values(record).length;
           }
         }
-        transData[date][index] = {tests: numTests, score: repVal};
+        transData[date][index] = {
+          tests: numTests,
+          sum: sum,
+          max: max,
+          maxTest: maxTest,
+          score: isSum ? sum : max
+        };
       });
     });
 
@@ -133,16 +148,28 @@ $(document).ajaxStop(function () {
         var engine_pure = engine.split('-')[0];
         var info = transInfo[date] ? transInfo[date][engine_pure] : undefined;
         var score = value.score ? value.score.toFixed(2) + measureUnits[measureType] : '';
-        var tests = value.tests ? value.tests : 0;
+        var tests = value.tests || 0;
+        var max_test = value.maxTest || '';
+
         var info_text = '';
         if (info && info.version)
           info_text = wrapHyperlink(link_code[engine_pure] + info.version, info.version);
         var engine_text = wrapHyperlink(link_main[engine_pure], engine);
+        var score_text = score;
+        if (isSum) {
+          score_text += ' (' + tests + ' subtests)';
+        }
+        else {
+          score_text += ' (' + max_test + ')';
+        }
+        score_text += ' ' + wrapHyperlink('details.html?' + $.param({date: date, engine: engine, benchmark:benchmark}), 'details');
+
         var textData = [
             ['source&nbsp; ', engine_text],
             ['version ', info_text],
             ['date&nbsp;&nbsp;&nbsp; ', date],
-            ['score&nbsp;&nbsp; ', score + ' (' + tests + ' subtests)']];
+            ['score&nbsp;&nbsp; ', score_text]];
+
         return wrapTooltip(textData.map(function(v) { return v.join(': '); }).join('<br />'));
       });
 

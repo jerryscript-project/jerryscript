@@ -1348,7 +1348,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
       ecma_number_t num_value_p = *ecma_get_number_from_value (my_val);
 
       /* 9.a */
-      if (!ecma_number_is_infinity (num_value_p))
+      if (!ecma_number_is_nan (num_value_p) && !ecma_number_is_infinity (num_value_p))
       {
         ret_value = ecma_op_to_string (my_val);
         JERRY_ASSERT (ecma_is_completion_value_normal (ret_value));

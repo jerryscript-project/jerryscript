@@ -296,10 +296,13 @@ lit_utf8_iterator_seek (lit_utf8_iterator_t *iter_p, /**< utf-8 string iterator 
 {
   JERRY_ASSERT (iter_pos.offset <= iter_p->buf_size);
 #ifndef JERRY_NDEBUG
-  lit_utf8_byte_t byte = *(iter_p->buf_p + iter_pos.offset);
-  JERRY_ASSERT ((byte & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER);
-  JERRY_ASSERT (!iter_pos.is_non_bmp_middle || ((byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER));
-#endif
+  if (iter_pos.offset < iter_p->buf_size)
+  {
+    lit_utf8_byte_t byte = *(iter_p->buf_p + iter_pos.offset);
+    JERRY_ASSERT ((byte & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER);
+    JERRY_ASSERT (!iter_pos.is_non_bmp_middle || ((byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER));
+  }
+#endif /* !JERRY_NDEBUG */
 
   iter_p->buf_pos = iter_pos;
 } /* lit_utf8_iterator_seek */

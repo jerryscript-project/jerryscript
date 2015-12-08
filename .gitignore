@@ -41,3 +41,6 @@ targets/mbedk64f/libjerry
 targets/mbedk64f/build
 targets/mbedk64f/yotta_modules
 targets/mbedk64f/yotta_targets
+.output
+targets/esp8266/output.map
+targets/esp8266/libs

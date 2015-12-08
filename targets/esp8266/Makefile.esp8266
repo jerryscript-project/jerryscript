@@ -1,0 +1,111 @@
+# Copyright 2015 Samsung Electronics Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# use TAB-8
+
+CURDIR     = `pwd`
+ESP_SDK_PATH ?= $(SDK_PATH)
+ESP_INC    = $(ESP_SDK_PATH)/extra_include
+ESP_INC2   = $(ESP_SDK_PATH)/include
+ESP_LIB    = $(ESP_SDK_PATH)/lib
+TYPE       = release
+INTERM     = build/obj-esp8266
+OUTPUT     = build/bin/$(TYPE).esp8266
+SRCPATH    = targets/esp8266/source
+COPYTARGET = targets/esp8266/libs
+USBDEVICE  ?= /dev/ttyUSB0
+JERRYHEAP  ?= 20
+
+# compile flags
+ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
+ESP_CFLAGS += -Wl,-EL -fno-inline-functions
+ESP_CFLAGS += -ffunction-sections -fdata-sections
+ESP_CFLAGS += -mlongcalls -mtext-section-literals -mno-serialize-volatile
+
+# include path
+ESP_LIBS_INC :=$(CURDIR)/targets/esp8266/include
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/espressif
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/freertos
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/json
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/lwip
+ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/ssl
+
+# jerry related source files
+JERRY_BUILD_FILES := $(SRCPATH)/jerry_extapi.cpp
+JERRY_BUILD_FILES := $(JERRY_BUILD_FILES);$(SRCPATH)/jerry_run.cpp
+
+
+
+all: check-env jerry js2c mbed
+
+
+jerry:
+	mkdir -p $(INTERM)
+	mkdir -p $(OUTPUT)
+	mkdir -p $(COPYTARGET)
+	cmake -B$(INTERM) -H./ \
+	 -DENABLE_LTO=OFF \
+	 -DENABLE_VALGRIND=OFF \
+	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=xtensia-lx106 \
+	 -DEXTERNAL_CMAKE_C_COMPILER=xtensa-lx106-elf-gcc \
+	 -DEXTERNAL_CMAKE_CXX_COMPILER=xtensa-lx106-elf-g++ \
+	 -DEXTERNAL_BUILD_ENTRY_FILE="$(JERRY_BUILD_FILES)" \
+	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
+	 -DEXTERNAL_LIBC_INTERFACE="$(ESP_INC)" \
+	 -DEXTERNAL_LIBS_INTERFACE="$(ESP_LIBS_INC)" \
+	 -DEXTERNAL_MEM_HEAP_SIZE_KB=$(JERRYHEAP)
+
+	make -C $(INTERM) $(TYPE).external
+	cp `cat $(INTERM)/$(TYPE).external/list` $(OUTPUT)/.
+	cp $(OUTPUT)/lib$(TYPE).jerry-core.a $(COPYTARGET)/libjerrycore.a
+	cp $(OUTPUT)/lib$(TYPE).jerry-fdlibm.third_party.lib.a \
+	 $(COPYTARGET)/libfdlibm.a
+	cp $(INTERM)/lib$(TYPE).external-entry.a $(OUTPUT)/.
+	cp $(OUTPUT)/lib$(TYPE).external-entry.a $(COPYTARGET)/libjerryentry.a
+
+
+js2c:
+	cd targets/esp8266; ./js2c.py
+
+
+mbed:
+	cd targets/esp8266; \
+	 make clean; \
+	 BOOT=new APP=1 SPI_SPEED=40 SPI_MODE=QIO SPI_SIZE_MAP=3 make; \
+	 BOOT=new APP=2 SPI_SPEED=40 SPI_MODE=QIO SPI_SIZE_MAP=3 make
+
+
+check-env:
+ifndef SDK_PATH
+	$(error SDK_PATH is undefined for ESP8266)
+endif
+ifndef BIN_PATH
+	$(error BIN_PATH is undefined for ESP8266)
+endif
+
+
+flash:
+	/opt/Espressif/esptool-py/esptool.py --port $(USBDEVICE) write_flash \
+	 0x00000 $(SDK_PATH)/bin/"boot_v1.4(b1).bin" \
+	 0x01000 $(BIN_PATH)/upgrade/user1.2048.new.3.bin \
+	 0x81000 $(BIN_PATH)/upgrade/user2.2048.new.3.bin \
+	 0x1FC000 $(SDK_PATH)/bin/esp_init_data_default.bin \
+	 0x1FE000 $(SDK_PATH)/bin/blank.bin
+
+
+clean:
+	rm -rf $(INTERM)
+	rm -rf $(OUTPUT)

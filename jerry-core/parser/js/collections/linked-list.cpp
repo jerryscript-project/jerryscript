@@ -276,6 +276,7 @@ linked_list_remove_element (linked_list list, /**< linked list's identifier */
   linked_list_header *header_p = (linked_list_header *) list;
 
   linked_list_chunk_header *list_chunk_iter_p = (linked_list_chunk_header *) (header_p + 1u);
+  linked_list_chunk_header *chunk_prev_to_chunk_with_last_elem_p = list_chunk_iter_p;
 
   const size_t list_length = header_p->list_length;
   const size_t element_size = header_p->element_size;
@@ -286,13 +287,15 @@ linked_list_remove_element (linked_list list, /**< linked list's identifier */
 
   for (size_t i = 0; i < element_num; i++)
   {
+    chunk_prev_to_chunk_with_last_elem_p = list_chunk_iter_p;
     element_iter_p = linked_list_switch_to_next_elem (header_p, &list_chunk_iter_p, element_iter_p);
     JERRY_ASSERT (element_iter_p != NULL);
   }
 
   uint8_t *next_elem_iter_p = linked_list_switch_to_next_elem (header_p, &list_chunk_iter_p, element_iter_p);
 
-  linked_list_chunk_header *chunk_prev_to_chunk_with_last_elem_p = list_chunk_iter_p;
+  JERRY_ASSERT ((element_num + 1 == list_length && next_elem_iter_p == NULL)
+                || (next_elem_iter_p != NULL));
 
   for (size_t i = element_num + 1; i < list_length; i++)
   {

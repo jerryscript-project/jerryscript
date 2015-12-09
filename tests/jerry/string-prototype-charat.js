@@ -45,6 +45,15 @@ assert("hello world!".charAt(11) === "!");
 
 assert("hello world!".charAt(12) === "");
 
+// check unicode
+assert("hello\u000B\u000C\u0020\u00A0world!".charAt(8) === "\u00A0");
+
+assert("hello\uD834\uDF06world!".charAt(6) === "\uDF06");
+
+assert("hell\u006F\u006F w\u006F\u006Frld!".charAt(8) === "\u006F");
+
+assert("\u00A9\u006F".charAt(2) === "");
+
 // check negative
 assert("hello world!".charAt(-1) === "");
 

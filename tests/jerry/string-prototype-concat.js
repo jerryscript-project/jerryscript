@@ -29,6 +29,12 @@ assert("Hello ".concat(s1) === "Hello Hello ");
 
 assert(s1.concat(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9) === "Hello 012345678901234567890123456789");
 
+assert("".concat() === "");
+
+// check unicode
+assert("\u0041".concat("\u0041", "\u1041") === "\u0041\u0041\u1041");
+assert("\u0041\u1D306A".concat("\u0041", "\u1041") === "\u0041\u1D306A\u0041\u1041");
+
 // check undefined
 var y;
 assert("Check ".concat(y) === "Check undefined");

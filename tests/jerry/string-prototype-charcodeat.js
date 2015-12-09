@@ -44,6 +44,15 @@ assert("hello world!".charCodeAt(11) === 33);
 
 assert(isNaN("hello world!".charCodeAt(12)));
 
+// check unicode
+assert("hello\u000B\u000C\u0020\u00A0world!".charCodeAt(8) === 160);
+
+assert("hello\uD834\uDF06world!".charCodeAt(6) === 57094);
+
+assert("hell\u006F\u006F w\u006F\u006Frld!".charCodeAt(8) === 111);
+
+assert(isNaN("\u00A9\u006F".charCodeAt(2)));
+
 // check negative
 assert(isNaN("hello world!".charCodeAt(-1)));
 

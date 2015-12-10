@@ -147,11 +147,3 @@ main (int __attr_unused___ argc,
 
   return 0;
 } /* main */
-
-/**
- * Provide output character to console implementation for the engine.
- */
-int jerry_port_putchar (int c)
-{
-  return putchar (c);
-}

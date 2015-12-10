@@ -22,8 +22,10 @@
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <sys/time.h>
+
 
 /**
  * Verify that unit tests are built with all debug checks enabled
@@ -59,5 +61,39 @@ do \
  \
   srand (seed); \
 } while (0)
+
+/**
+ * Provide log message to filestream implementation for the engine.
+ */
+int jerry_port_logmsg (FILE* stream, const char* format, ...)
+{
+  va_list args;
+  int count;
+  va_start (args, format);
+  count = vfprintf (stream, format, args);
+  va_end (args);
+  return count;
+}
+
+/**
+ * Provide error message to console implementation for the engine.
+ */
+int jerry_port_errormsg (const char* format, ...)
+{
+  va_list args;
+  int count;
+  va_start (args, format);
+  count = vfprintf (stderr, format, args);
+  va_end (args);
+  return count;
+}
+
+/**
+ * Provide output character to console implementation for the engine.
+ */
+int jerry_port_putchar (int c)
+{
+  return putchar (c);
+}
 
 #endif /* TEST_COMMON_H */

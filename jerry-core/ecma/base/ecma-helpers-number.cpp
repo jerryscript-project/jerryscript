@@ -916,6 +916,67 @@ ecma_number_exp (ecma_number_t num) /**< valid finite number */
   return sum;
 } /* ecma_number_exp */
 
+
+/**
+ * Helper for preprocessing, convert ecma_number_t to uint_32
+ * 1. Extract sign, biased exp and fraction from a floating point
+ * 2. If it is infinity, return
+ * 3. Pack an integer from exponent and fraction
+ */
+void
+ecma_number_to_u32 (ecma_number_t num,       /**< ecma-number */
+        bool *out_is_infinity_p,             /**< true - ecma-number is infinity
+                                                  false - ecma-number is not infinity*/
+        bool *out_sign_p,                    /**< true - for negative sign,
+                                                  false - for positive sign */
+        uint64_t *out_cast_to_u64_p)         /**< the unsigned 64 bit number packed from
+                                                  exponent and fraction */
+{
+  const uint32_t fraction_pos = 0;
+  const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
+  const uint32_t sign_pos = ECMA_NUMBER_FRACTION_WIDTH + ECMA_NUMBER_BIASED_EXP_WIDTH;
+
+  union
+  {
+    uint64_t u64_value;
+    ecma_number_t float_value;
+  } u;
+
+  u.float_value = num;
+  uint64_t packed_value = u.u64_value;
+
+  uint32_t biased_exp = (uint32_t) (((packed_value) & ~(1ull << sign_pos)) >> biased_exp_pos);
+  uint64_t fraction = (packed_value & ((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1));
+
+  *out_is_infinity_p = ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+      && (fraction == 0));
+
+  if (*out_is_infinity_p)
+  {
+    return;
+  }
+
+  if (out_sign_p != NULL)
+  {
+    *out_sign_p = ((packed_value >> sign_pos) != 0);
+  }
+
+  const int32_t dot_shift = ECMA_NUMBER_FRACTION_WIDTH;
+
+  if (biased_exp != 0)
+  {
+    JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+    JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
+
+    int32_t exponent = (int32_t) biased_exp - ecma_number_exponent_bias;
+    *out_cast_to_u64_p = (1ull << exponent) | (fraction >> (dot_shift - exponent));
+  }
+  else
+  {
+    *out_cast_to_u64_p = 0;
+  }
+} /* ecma_number_to_u32 */
+
 /**
  * @}
  * @}

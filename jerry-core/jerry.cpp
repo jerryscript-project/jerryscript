@@ -124,6 +124,242 @@ jerry_make_api_unavailable (void)
 } /* jerry_make_api_unavailable */
 
 /**
+ * Returns whether the given jerry_api_value_t is void.
+ */
+bool
+jerry_api_value_is_void (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_VOID;
+} /* jerry_api_value_is_void */
+
+/**
+ * Returns whether the given jerry_api_value_t is null.
+ */
+bool
+jerry_api_value_is_null (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_NULL;
+} /* jerry_api_value_is_null */
+
+/**
+ * Returns whether the given jerry_api_value_t is undefined.
+ */
+bool
+jerry_api_value_is_undefined (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_UNDEFINED;
+} /* jerry_api_value_is_undefined */
+
+/**
+ * Returns whether the given jerry_api_value_t has boolean type.
+ */
+bool
+jerry_api_value_is_boolean (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_BOOLEAN;
+} /* jerry_api_value_is_boolean */
+
+/**
+ * Returns whether the given jerry_api_value_t is number.
+ *
+ * More specifically, returns true if the type is JERRY_API_DATA_TYPE_FLOAT32,
+ * JERRY_API_DATA_TYPE_FLOAT64 or JERRY_API_DATA_TYPE_UINT32, false otherwise.
+ */
+bool
+jerry_api_value_is_number (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_FLOAT32
+  || value_p->type == JERRY_API_DATA_TYPE_FLOAT64
+  || value_p->type == JERRY_API_DATA_TYPE_UINT32;
+} /* jerry_api_value_is_number */
+
+/**
+ * Returns whether the given jerry_api_value_t is string.
+ */
+bool
+jerry_api_value_is_string (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_STRING;
+} /* jerry_api_value_is_string */
+
+/**
+ * Returns whether the given jerry_api_value_t is object.
+ */
+bool
+jerry_api_value_is_object (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return value_p->type == JERRY_API_DATA_TYPE_OBJECT;
+} /* jerry_api_value_is_object */
+
+/**
+ * Returns whether the given jerry_api_value_t is a function object.
+ *
+ * More specifically, returns true if the jerry_api_value_t of the value
+ * pointed by value_p has JERRY_API_DATA_TYPE_OBJECT type and
+ * jerry_api_is_function() functiron return true for its v_object member,
+ * otherwise false.
+ */
+bool
+jerry_api_value_is_function (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  return jerry_api_value_is_object (value_p) && jerry_api_is_function (value_p->v_object);
+} /* jerry_api_value_is_function */
+
+/**
+ * Returns the boolean v_bool member of the given jerry_api_value_t structure.
+ * If the given jerry_api_value_t structure has type other than
+ * JERRY_API_DATA_TYPE_BOOLEAN, JERRY_ASSERT fails.
+ */
+bool
+jerry_api_get_boolean_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  JERRY_ASSERT (jerry_api_value_is_boolean (value_p));
+  return value_p->v_bool;
+} /* jerry_api_get_boolean_value */
+
+/**
+ * Returns the number value of the given jerry_api_value_t structure
+ * as a double.
+ *
+ * If the given jerry_api_value_t structure has type JERRY_API_DATA_TYPE_UINT32
+ * v_uint32 member will be returned as a double value. If the given
+ * jerry_api_value_t structure has type JERRY_API_DATA_TYPE_FLOAT32
+ * v_float32 member will be returned as a double and if tpye is
+ * JERRY_API_DATA_TYPE_FLOAT64 the function returns the v_float64 member.
+ * As long as the type is none of the above, JERRY_ASSERT falis.
+ */
+double
+jerry_api_get_number_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  JERRY_ASSERT (jerry_api_value_is_number (value_p));
+  if (value_p->type == JERRY_API_DATA_TYPE_UINT32)
+  {
+    return value_p->v_uint32;
+  }
+  else if (value_p->type == JERRY_API_DATA_TYPE_FLOAT32)
+  {
+    return value_p->v_float32;
+  }
+  else
+  {
+    return value_p->v_float64;
+  }
+} /* jerry_api_get_number_value */
+
+/**
+ * Returns the v_string member of the given jerry_api_value_t structure.
+ * If the given jerry_api_value_t structure has type other than
+ * JERRY_API_DATA_TYPE_STRING, JERRY_ASSERT fails.
+ */
+jerry_api_string_t *
+jerry_api_get_string_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  JERRY_ASSERT (jerry_api_value_is_string (value_p));
+  return value_p->v_string;
+} /* jerry_api_get_string_value */
+
+/**
+ * Returns the v_object member of the given jerry_api_value_t structure.
+ * If the given jerry_api_value_t structure has type other than
+ * JERRY_API_DATA_TYPE_OBJECT, JERRY_ASSERT fails.
+ */
+jerry_api_object_t *
+jerry_api_get_object_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+{
+  JERRY_ASSERT (jerry_api_value_is_object (value_p));
+  return value_p->v_object;
+} /* jerry_api_get_object_value */
+
+/**
+ * Creates and returns a jerry_api_value_t with type
+ * JERRY_API_DATA_TYPE_VOID.
+ */
+jerry_api_value_t
+jerry_api_create_void_value (void)
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_VOID;
+  return jerry_val;
+} /* jerry_api_create_void_value */
+
+/**
+ * Creates and returns a jerry_api_value_t with type
+ * JERRY_API_DATA_TYPE_NULL.
+ */
+jerry_api_value_t
+jerry_api_create_null_value (void)
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_NULL;
+  return jerry_val;
+} /* jerry_api_create_null_value */
+
+/**
+ * Creates and returns a jerry_api_value_t with type
+ * JERRY_API_DATA_TYPE_UNDEFINED.
+ */
+jerry_api_value_t
+jerry_api_create_undefined_value (void)
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_UNDEFINED;
+  return jerry_val;
+} /* jerry_api_create_undefined_value */
+
+/**
+ * Creates a JERRY_API_DATA_TYPE_BOOLEAN jerry_api_value_t from the given
+ * boolean parameter and returns with it.
+ */
+jerry_api_value_t
+jerry_api_create_boolean_value (bool value) /**< bool value from which a jerry_api_value_t will be created */
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_BOOLEAN;
+  jerry_val.v_bool = value;
+  return jerry_val;
+} /* jerry_api_create_boolean_value */
+
+/**
+ * Creates a jerry_api_value_t from the given double parameter and returns
+ * with it.
+ * The v_float64 member will be set and the will be JERRY_API_DATA_TYPE_FLOAT64.
+ */
+jerry_api_value_t
+jerry_api_create_number_value (double value) /**< double value from which a jerry_api_value_t will be created */
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_FLOAT64;
+  jerry_val.v_float64 = value;
+  return jerry_val;
+} /* jerry_api_create_number_value */
+
+/**
+ * Creates a JERRY_API_DATA_TYPE_OBJECT type jerry_api_value_t from the
+ * given jerry_api_object_t* parameter and returns with it.
+ */
+jerry_api_value_t
+jerry_api_create_object_value (jerry_api_object_t *value) /**< jerry_api_object_t from which a value will be created */
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_OBJECT;
+  jerry_val.v_object = value;
+  return jerry_val;
+} /* jerry_api_create_object_value */
+
+/**
+ * Creates a JERRY_API_DATA_TYPE_STRING type jerry_api_value_t from the
+ * given jerry_api_string_t* parameter and returns with it.
+ */
+jerry_api_value_t
+jerry_api_create_string_value (jerry_api_string_t *value) /**< jerry_api_string_t from which a value will be created */
+{
+  jerry_api_value_t jerry_val;
+  jerry_val.type = JERRY_API_DATA_TYPE_STRING;
+  jerry_val.v_string = value;
+  return jerry_val;
+} /* jerry_api_create_string_value */
+
+/**
  * Convert ecma-value to Jerry API value representation
  *
  * Note:

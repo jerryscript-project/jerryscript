@@ -148,7 +148,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
   uint32_t idx_num_total = (uint32_t) table_p->current_bucket_pos;
   JERRY_ASSERT (idx_num_total == table_p->current_bucket_pos);
 
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_total))
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      in_out_buffer_offset_p,
+                                      &idx_num_total,
+                                      sizeof (idx_num_total)))
   {
     return 0;
   }
@@ -183,7 +187,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
       idx_num_in_block = 0;
     }
 
-    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_in_block))
+    if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                        buffer_size,
+                                        in_out_buffer_offset_p,
+                                        &idx_num_in_block,
+                                        sizeof (idx_num_in_block)))
     {
       return 0;
     }
@@ -205,7 +213,7 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
       JERRY_ASSERT (lit_index < literals_num);
 
       uint32_t offset = lit_map_p[lit_index].literal_offset;
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, offset))
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &offset, sizeof (offset)))
       {
         return 0;
       }
@@ -215,7 +223,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
     {
       idx_num_in_block = 0;
 
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_in_block))
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          &idx_num_in_block,
+                                          sizeof (idx_num_in_block)))
       {
         return 0;
       }
@@ -263,7 +275,8 @@ lit_id_hash_table_load_from_snapshot (size_t blocks_count, /**< number of byte-c
     if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                          idx_to_lit_map_size,
                                          &idx_to_lit_map_offset,
-                                         &idx_num_in_block))
+                                         &idx_num_in_block,
+                                         sizeof (idx_num_in_block)))
     {
       return false;
     }
@@ -287,7 +300,8 @@ lit_id_hash_table_load_from_snapshot (size_t blocks_count, /**< number of byte-c
       if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                            idx_to_lit_map_size,
                                            &idx_to_lit_map_offset,
-                                           &lit_offset_from_snapshot))
+                                           &lit_offset_from_snapshot,
+                                           sizeof (lit_offset_from_snapshot)))
       {
         return false;
       }

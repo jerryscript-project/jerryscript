@@ -232,7 +232,7 @@ lit_charset_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump 
                                          size_t *in_out_buffer_offset_p) /**< in-out: buffer write offset */
 {
   lit_utf8_size_t length = get_length ();
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, length))
+  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &length, sizeof (length)))
   {
     return 0;
   }
@@ -246,7 +246,7 @@ lit_charset_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump 
     lit_utf8_byte_t next_byte = it_this.read<lit_utf8_byte_t> ();
     it_this.skip<lit_utf8_byte_t> ();
 
-    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, next_byte))
+    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &next_byte, sizeof (next_byte)))
     {
       return 0;
     }
@@ -269,7 +269,7 @@ lit_number_record_t::dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump t
   /* dumping as double (not ecma_number_t), because ecma_number_t can be float or double,
    * depending on engine compile-time configuration */
   double num = get_number ();
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, num))
+  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &num, sizeof (num)))
   {
     return 0;
   }
@@ -566,7 +566,11 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
   *out_map_num_p = 0;
   *out_lit_table_size_p = 0;
 
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, literals_num))
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      in_out_buffer_offset_p,
+                                      &literals_num,
+                                      sizeof (literals_num)))
   {
     return false;
   }
@@ -594,7 +598,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
         continue;
       }
 
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, type))
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &type, sizeof (type)))
       {
         is_ok = false;
         break;
@@ -677,7 +681,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
 
     for (uint32_t i = 0; i < padding_bytes_num; i++)
     {
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, padding))
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &padding, sizeof (padding)))
       {
         return false;
       }
@@ -721,7 +725,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
   if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                        lit_table_size,
                                        &lit_table_read,
-                                       &literals_num))
+                                       &literals_num,
+                                       sizeof (literals_num)))
   {
     return false;
   }
@@ -746,7 +751,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
     if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                          lit_table_size,
                                          &lit_table_read,
-                                         &type))
+                                         &type,
+                                         sizeof (type)))
     {
       is_ok = false;
       break;
@@ -760,7 +766,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                            lit_table_size,
                                            &lit_table_read,
-                                           &length)
+                                           &length,
+                                           sizeof (length))
           || (lit_table_read + length > lit_table_size))
       {
         is_ok = false;
@@ -776,7 +783,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                            lit_table_size,
                                            &lit_table_read,
-                                           &id))
+                                           &id,
+                                           sizeof (id)))
       {
         is_ok = false;
         break;
@@ -797,7 +805,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                            lit_table_size,
                                            &lit_table_read,
-                                           &id))
+                                           &id,
+                                           sizeof (id)))
       {
         is_ok = false;
         break;
@@ -818,7 +827,8 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                            lit_table_size,
                                            &lit_table_read,
-                                           &num))
+                                           &num,
+                                           sizeof (num)))
       {
         is_ok = false;
         break;

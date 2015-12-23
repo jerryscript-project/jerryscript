@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "serializer.h"
 #include "lit-literal.h"
+#include "array-list.h"
 
 static const char* opcode_names[] =
 {
@@ -159,8 +160,82 @@ pp_printf (const char *format, vm_instr_t instr, lit_cpointer_t lit_ids[], vm_in
 #define OC(i, j) __extension__({ vm_calc_instr_counter_from_idx_idx (opm.op.data.raw_args[i - 1], \
                                                                      opm.op.data.raw_args[j - 1]); })
 
-static int vargs_num = 0;
-static int seen_vargs = 0;
+/**
+ * vargs stack element
+ */
+typedef struct vargs_element
+{
+  vm_instr_counter_t start_op_pos; /**< start opcode */
+  int vargs_left; /**< number of vargs left. element gets popped when vargs_left is zero */
+  array_list vargs; /**< varg list. element type: vm_instr_counter_t */
+} vargs_element;
+
+static array_list vargs_stack;
+
+static void
+vargs_stack_push (vm_instr_counter_t start_op_pos, /**< position of start op */
+                  int vargs_num) /**< number of vargs */
+{
+  vargs_element element;
+  element.start_op_pos = start_op_pos;
+  element.vargs_left = vargs_num;
+  element.vargs = array_list_init (sizeof (vm_instr_counter_t));
+
+  vargs_stack = array_list_append (vargs_stack, (void*) &element);
+}
+
+static vargs_element *
+vargs_stack_top (void)
+{
+  vargs_element *top = (vargs_element*) array_list_last_element (vargs_stack, 1);
+  JERRY_ASSERT (top != NULL);
+
+  return top;
+}
+
+static void
+vargs_stack_pop (void)
+{
+  vargs_element *top = vargs_stack_top ();
+
+  array_list_free (top->vargs);
+  array_list_drop_last (vargs_stack);
+}
+
+static void
+vargs_stack_top_push_varg (vm_instr_counter_t op_pos) /**< position of varg opcode */
+{
+  vargs_element *top = vargs_stack_top ();
+
+  top->vargs = array_list_append (top->vargs, (void*) &op_pos);
+
+  top->vargs_left--;
+  JERRY_ASSERT (top->vargs_left >= 0);
+}
+
+static bool
+vargs_stack_top_is_vargs_full (void)
+{
+  vargs_element *top = vargs_stack_top ();
+
+  return top->vargs_left == 0;
+}
+
+static vm_instr_counter_t
+vargs_stack_top_get_start_op_pos (void)
+{
+  vargs_element *top = vargs_stack_top ();
+
+  return top->start_op_pos;
+}
+
+static array_list
+vargs_stack_top_get_vargs (void)
+{
+  vargs_element *top = vargs_stack_top ();
+
+  return top->vargs;
+}
 
 static void
 dump_asm (vm_instr_counter_t oc, vm_instr_t instr)
@@ -270,40 +345,59 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
     }
     case VM_OP_CALL_N:
     {
-      vargs_num = opm.op.data.call_n.arg_list;
-      seen_vargs = 0;
-
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.call_n.arg_list == 0)
+      {
+        pp_printf ("%s = %s ();", opm.op, opm.lit_id, oc, 1);
+      }
+      else
+      {
+        vargs_stack_push (oc, opm.op.data.call_n.arg_list);
+      }
       break;
     }
     case VM_OP_CONSTRUCT_N:
     {
-      if (opm.op.data.construct_n.arg_list == 0)
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.construct_n.arg_list == 0)
       {
         pp_printf ("%s = new %s;", opm.op, opm.lit_id, oc, 1);
       }
       else
       {
-        vargs_num = opm.op.data.construct_n.arg_list;
-        seen_vargs = 0;
+        vargs_stack_push (oc, opm.op.data.construct_n.arg_list);
       }
       break;
     }
     case VM_OP_FUNC_DECL_N:
     {
-      if (opm.op.data.func_decl_n.arg_list == 0)
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.func_decl_n.arg_list == 0)
       {
         printf ("function %s ();", VAR (1));
       }
       else
       {
-        vargs_num = opm.op.data.func_decl_n.arg_list;
-        seen_vargs = 0;
+        vargs_stack_push (oc, opm.op.data.func_decl_n.arg_list);
       }
       break;
     }
     case VM_OP_FUNC_EXPR_N:
     {
-      if (opm.op.data.func_expr_n.arg_list == 0)
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.func_expr_n.arg_list == 0)
       {
         if (opm.op.data.func_expr_n.name_lit_idx == VM_IDX_EMPTY)
         {
@@ -316,38 +410,43 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
       }
       else
       {
-        vargs_num = opm.op.data.func_expr_n.arg_list;
-        seen_vargs = 0;
+        vargs_stack_push (oc, opm.op.data.func_expr_n.arg_list);
       }
       break;
     }
     case VM_OP_ARRAY_DECL:
     {
-      if (opm.op.data.array_decl.list_1 == 0
-          && opm.op.data.array_decl.list_2 == 0)
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.array_decl.list_1 == 0
+               && opm.op.data.array_decl.list_2 == 0)
       {
         printf ("%s = [];", VAR (1));
       }
       else
       {
-        vargs_num = (((int) opm.op.data.array_decl.list_1 << JERRY_BITSINBYTE)
-                     + (int) opm.op.data.array_decl.list_2);
-        seen_vargs = 0;
+        vargs_stack_push (oc, ((int) opm.op.data.array_decl.list_1 << JERRY_BITSINBYTE)
+                               + (int) opm.op.data.array_decl.list_2);
       }
       break;
     }
     case VM_OP_OBJ_DECL:
     {
-      if (opm.op.data.obj_decl.list_1 == 0
-          && opm.op.data.obj_decl.list_2 == 0)
+      if (rewrite)
+      {
+        vargs_stack_pop ();
+      }
+      else if (opm.op.data.obj_decl.list_1 == 0
+               && opm.op.data.obj_decl.list_2 == 0)
       {
         printf ("%s = {};", VAR (1));
       }
       else
       {
-        vargs_num = (((int) opm.op.data.obj_decl.list_1 << JERRY_BITSINBYTE)
-                     + (int) opm.op.data.obj_decl.list_2);
-        seen_vargs = 0;
+        vargs_stack_push (oc, ((int) opm.op.data.obj_decl.list_1 << JERRY_BITSINBYTE)
+                               + (int) opm.op.data.obj_decl.list_2);
       }
       break;
     }
@@ -361,37 +460,29 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
           break;
         }
         case OPCODE_META_TYPE_CALL_SITE_INFO:
+        {
+          opcode_call_flags_t call_flags = (opcode_call_flags_t) opm.op.data.meta.data_1;
+
+          if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
+          {
+            pp_printf ("this_arg = %s", opm.op, NULL, oc, 3);
+          }
+          if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
+          {
+            printf ("['direct call to eval' form]");
+          }
+          break;
+        }
         case OPCODE_META_TYPE_VARG:
         case OPCODE_META_TYPE_VARG_PROP_DATA:
         case OPCODE_META_TYPE_VARG_PROP_GETTER:
         case OPCODE_META_TYPE_VARG_PROP_SETTER:
         {
-          if (opm.op.data.meta.type != OPCODE_META_TYPE_CALL_SITE_INFO)
-          {
-            seen_vargs++;
-          }
+          vargs_stack_top_push_varg (oc);
 
-          if (seen_vargs == vargs_num)
+          if (vargs_stack_top_is_vargs_full ())
           {
-            bool found = false;
-            vm_instr_counter_t start = oc;
-            while ((int16_t) start >= 0 && !found)
-            {
-              start--;
-              switch (serializer_get_instr (bytecode_data_p, start).op_idx)
-              {
-                case VM_OP_CALL_N:
-                case VM_OP_CONSTRUCT_N:
-                case VM_OP_FUNC_DECL_N:
-                case VM_OP_FUNC_EXPR_N:
-                case VM_OP_ARRAY_DECL:
-                case VM_OP_OBJ_DECL:
-                {
-                  found = true;
-                  break;
-                }
-              }
-            }
+            vm_instr_counter_t start = vargs_stack_top_get_start_op_pos ();
             vm_instr_t start_op = serializer_get_instr (bytecode_data_p, start);
             switch (start_op.op_idx)
             {
@@ -437,9 +528,13 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                 JERRY_UNREACHABLE ();
               }
             }
-            for (vm_instr_counter_t counter = start; counter <= oc; counter++)
+
+            array_list vargs = vargs_stack_top_get_vargs ();
+            size_t vargs_len = array_list_len (vargs);
+            for (size_t i = 0; i < vargs_len; i++)
             {
-              vm_instr_t meta_op = serializer_get_instr (bytecode_data_p, counter);
+              vm_instr_counter_t pos = * (vm_instr_counter_t*) array_list_element (vargs, i);
+              vm_instr_t meta_op = serializer_get_instr (bytecode_data_p, pos);
 
               switch (meta_op.op_idx)
               {
@@ -447,39 +542,24 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                 {
                   switch (meta_op.data.meta.type)
                   {
-                    case OPCODE_META_TYPE_CALL_SITE_INFO:
-                    {
-                      opcode_call_flags_t call_flags = (opcode_call_flags_t) meta_op.data.meta.data_1;
-
-                      if (call_flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
-                      {
-                        pp_printf ("this_arg = %s", meta_op, NULL, counter, 3);
-                      }
-                      if (call_flags & OPCODE_CALL_FLAGS_DIRECT_CALL_TO_EVAL_FORM)
-                      {
-                        printf ("['direct call to eval' form]");
-                      }
-
-                      break;
-                    }
                     case OPCODE_META_TYPE_VARG:
                     {
-                      pp_printf ("%s", meta_op, NULL, counter, 2);
+                      pp_printf ("%s", meta_op, NULL, pos, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_DATA:
                     {
-                      pp_printf ("%s:%s", meta_op, NULL, counter, 2);
+                      pp_printf ("%s:%s", meta_op, NULL, pos, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_GETTER:
                     {
-                      pp_printf ("%s = get %s ();", meta_op, NULL, counter, 2);
+                      pp_printf ("%s = get %s ();", meta_op, NULL, pos, 2);
                       break;
                     }
                     case OPCODE_META_TYPE_VARG_PROP_SETTER:
                     {
-                      pp_printf ("%s = set (%s);", meta_op, NULL, counter, 2);
+                      pp_printf ("%s = set (%s);", meta_op, NULL, pos, 2);
                       break;
                     }
                     default:
@@ -487,7 +567,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                       continue;
                     }
                   }
-                  if (counter != oc)
+                  if (i != vargs_len - 1)
                   {
                     printf (", ");
                   }
@@ -495,6 +575,7 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                 }
               }
             }
+
             switch (start_op.op_idx)
             {
               case VM_OP_ARRAY_DECL:
@@ -512,6 +593,8 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
                 printf (");");
               }
             }
+
+            vargs_stack_pop ();
           }
           break;
         }
@@ -612,4 +695,18 @@ pp_op_meta (const bytecode_data_header_t *bytecode_data_p,
 
   printf ("\n");
 }
+
+void
+pp_init (void)
+{
+  vargs_stack = array_list_init (sizeof (vargs_element));
+}
+
+void
+pp_free (void)
+{
+  JERRY_ASSERT (array_list_len (vargs_stack) == 0);
+  array_list_free (vargs_stack);
+}
+
 #endif /* JERRY_ENABLE_PRETTY_PRINTER */

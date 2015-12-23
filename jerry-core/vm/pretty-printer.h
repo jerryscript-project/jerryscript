@@ -23,6 +23,8 @@
 #include "scopes-tree.h"
 
 void pp_op_meta (const bytecode_data_header_t *, vm_instr_counter_t, op_meta, bool);
+void pp_init (void);
+void pp_free (void);
 #endif // JERRY_ENABLE_PRETTY_PRINTER
 
 #endif // PRETTY_PRINTER

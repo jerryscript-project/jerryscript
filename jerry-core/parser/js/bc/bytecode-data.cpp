@@ -354,7 +354,7 @@ bc_align_data_in_output_buffer (uint32_t *in_out_size, /**< in: unaligned size, 
 
     for (uint32_t i = 0; i < padding_bytes_num; i++)
     {
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, padding))
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &padding, sizeof (padding)))
       {
         return false;
       }
@@ -426,7 +426,7 @@ bc_save_bytecode_with_idx_map (uint8_t *buffer_p, /**< buffer to dump to */
     }
 
     uint32_t offset = bc_find_lit_offset (lit_cp, lit_map_p, literals_num);
-    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, offset))
+    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &offset, sizeof (offset)))
     {
       return false;
     }
@@ -466,7 +466,11 @@ bc_save_bytecode_with_idx_map (uint8_t *buffer_p, /**< buffer to dump to */
   }
 
   /* Dump header at the saved offset */
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, &bytecode_header_offset, bytecode_header))
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      &bytecode_header_offset,
+                                      &bytecode_header,
+                                      sizeof (bytecode_header)))
   {
     return false;
   }
@@ -583,7 +587,8 @@ bc_load_bytecode_with_idx_map (const uint8_t *snapshot_data_p, /**< buffer with 
   if (!jrt_read_from_buffer_by_offset (snapshot_data_p,
                                        snapshot_size,
                                        &buffer_offset,
-                                       &bytecode_header))
+                                       &bytecode_header,
+                                       sizeof (bytecode_header)))
   {
     return NULL;
   }
@@ -609,7 +614,8 @@ bc_load_bytecode_with_idx_map (const uint8_t *snapshot_data_p, /**< buffer with 
   if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                        bytecode_header.idx_to_lit_map_size,
                                        &idx_to_lit_map_offset,
-                                       &idx_num_total))
+                                       &idx_num_total,
+                                       sizeof (idx_num_total)))
   {
     return NULL;
   }
@@ -671,7 +677,8 @@ bc_load_bytecode_with_idx_map (const uint8_t *snapshot_data_p, /**< buffer with 
     if (!jrt_read_from_buffer_by_offset (snapshot_data_p,
                                          buffer_offset + bytecode_header.var_decls_count * sizeof (uint32_t),
                                          &buffer_offset,
-                                         &lit_offset_from_snapshot))
+                                         &lit_offset_from_snapshot,
+                                         sizeof (lit_offset_from_snapshot)))
     {
       mem_heap_free_block (buffer_p);
       return NULL;
@@ -679,7 +686,7 @@ bc_load_bytecode_with_idx_map (const uint8_t *snapshot_data_p, /**< buffer with 
     /**
      * TODO: implement binary search here
      */
-    lit_cpointer_t lit_cp = lit_cpointer_t::null_cp ();
+    lit_cpointer_t lit_cp = NOT_A_LITERAL;
     uint32_t j;
     for (j = 0; j < literals_num; j++)
     {

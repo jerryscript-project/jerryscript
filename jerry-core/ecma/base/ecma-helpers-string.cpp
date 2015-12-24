@@ -31,6 +31,7 @@
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 #include "vm.h"
+#include "rcs-records.h"
 
 /**
  * Maximum length of strings' concatenation
@@ -328,24 +329,27 @@ ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p, /**< descriptor to i
   JERRY_ASSERT (is_stack_var == (!mem_is_heap_pointer (string_p)));
 #endif /* !JERRY_NDEBUG */
 
-  literal_t lit = lit_get_literal_by_cp (lit_cp);
-  if (lit->get_type () == LIT_MAGIC_STR_T)
+  lit_literal_t lit = lit_get_literal_by_cp (lit_cp);
+  rcs_record_type_t type = rcs_record_get_type (lit);
+
+  if (RCS_RECORD_TYPE_IS_MAGIC_STR (type))
   {
     ecma_init_ecma_string_from_magic_string_id (string_p,
-                                                lit_magic_record_get_magic_str_id (lit),
+                                                lit_magic_literal_get_magic_str_id (lit),
                                                 is_stack_var);
 
     return;
   }
-  else if (lit->get_type () == LIT_MAGIC_STR_EX_T)
+
+  if (RCS_RECORD_TYPE_IS_MAGIC_STR_EX (type))
   {
     ecma_init_ecma_string_from_magic_string_ex_id (string_p,
-                                                   lit_magic_record_ex_get_magic_str_id (lit),
+                                                   lit_magic_literal_ex_get_magic_str_id (lit),
                                                    is_stack_var);
     return;
   }
 
-  JERRY_ASSERT (lit->get_type () == LIT_STR_T);
+  JERRY_ASSERT (RCS_RECORD_TYPE_IS_CHARSET (type));
 
   string_p->refs = 1;
   string_p->is_stack_var = (is_stack_var != 0);
@@ -972,8 +976,8 @@ ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string
     }
     case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      literal_t lit = lit_get_literal_by_cp (string_desc_p->u.lit_cp);
-      JERRY_ASSERT (lit->get_type () == LIT_STR_T);
+      lit_literal_t lit = lit_get_literal_by_cp (string_desc_p->u.lit_cp);
+      JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
       lit_literal_to_utf8_string (lit, buffer_p, (size_t) required_buffer_size);
       break;
     }
@@ -1308,9 +1312,9 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
   if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-    JERRY_ASSERT (lit->get_type () == LIT_STR_T);
-    return lit_charset_record_get_length (lit);
+    lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
+    JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
+    return lit_charset_literal_get_length (lit);
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
@@ -1385,10 +1389,10 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
 
   if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
   {
-    literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-    JERRY_ASSERT (lit->get_type () == LIT_STR_T);
+    lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
+    JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
 
-    return lit_charset_record_get_size (lit);
+    return lit_charset_literal_get_size (lit);
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {

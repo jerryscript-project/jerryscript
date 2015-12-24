@@ -20,6 +20,7 @@
 #include "ecma-globals.h"
 #include "opcodes.h"
 #include "lit-literal.h"
+#include "lit-snapshot.h"
 
 typedef struct
 {

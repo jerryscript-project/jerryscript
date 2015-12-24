@@ -38,7 +38,7 @@ jsp_early_error_t jsp_early_error_type;
 typedef struct
 {
   prop_type type;
-  literal_t lit;
+  lit_literal_t lit;
 } prop_literal;
 
 enum
@@ -97,7 +97,7 @@ jsp_early_error_get_type (void)
 } /* jsp_early_error_get_type */
 
 static prop_literal
-create_prop_literal (literal_t lit, prop_type type)
+create_prop_literal (lit_literal_t lit, prop_type type)
 {
   prop_literal ret;
 
@@ -189,7 +189,7 @@ jsp_early_error_check_for_duplication_of_prop_names (bool is_strict, locus loc _
 }
 
 void
-jsp_early_error_emit_error_on_eval_and_arguments (literal_t lit, /**< literal to check */
+jsp_early_error_emit_error_on_eval_and_arguments (lit_literal_t lit, /**< literal to check */
                                                   locus loc) /**< location of the literal in source code */
 {
   if (lit_literal_equal_type_utf8 (lit,

@@ -227,57 +227,57 @@ inline void *operator new (size_t, void *where)
 } /* operator new */
 
 /**
- * Read data of specified type (T) from specified buffer
+ * Read data from a specified buffer.
  *
  * Note:
  *      Offset is in-out and is incremented if the read operation completes successfully.
  *
- * @return true, if read was successful, i.e. offset + sizeof (T) doesn't exceed buffer size,
+ * @return true, if read was successful, i.e. offset + data_size doesn't exceed buffer size,
  *         false - otherwise.
  */
-template<typename T>
-bool __attr_always_inline___
+inline bool
 jrt_read_from_buffer_by_offset (const uint8_t *buffer_p, /**< buffer */
                                 size_t buffer_size, /**< size of buffer */
                                 size_t *in_out_buffer_offset_p, /**< in: offset to read from,
                                                                  *   out: offset, incremented on sizeof (T) */
-                                T *out_data_p) /**< out: data */
+                                void *out_data_p, /**< out: data */
+                                size_t out_data_size) /**< size of the readable data */
 {
-  if (*in_out_buffer_offset_p + sizeof (T) > buffer_size)
+  if (*in_out_buffer_offset_p + out_data_size > buffer_size)
   {
     return false;
   }
 
-  memcpy (out_data_p, buffer_p + *in_out_buffer_offset_p, sizeof (T));
-  *in_out_buffer_offset_p += sizeof (T);
+  memcpy (out_data_p, buffer_p + *in_out_buffer_offset_p, out_data_size);
+  *in_out_buffer_offset_p += out_data_size;
 
   return true;
 } /* jrt_read_from_buffer_by_offset */
 
 /**
- * Write data of specified type (T) to specified buffer
+ * Write data to a specified buffer.
  *
  * Note:
  *      Offset is in-out and is incremented if the write operation completes successfully.
  *
- * @return true, if write was successful, i.e. offset + sizeof (T) doesn't exceed buffer size,
+ * @return true, if write was successful, i.e. offset + data_size doesn't exceed buffer size,
  *         false - otherwise.
  */
-template<typename T>
-bool __attr_always_inline___
+inline bool
 jrt_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
                                size_t buffer_size, /**< size of buffer */
                                size_t *in_out_buffer_offset_p, /**< in: offset to read from,
                                                                 *   out: offset, incremented on sizeof (T) */
-                               T data) /**< data */
+                               void *data_p, /**< data */
+                               size_t data_size) /**< size of the writable data */
 {
-  if (*in_out_buffer_offset_p + sizeof (T) > buffer_size)
+  if (*in_out_buffer_offset_p + data_size > buffer_size)
   {
     return false;
   }
 
-  memcpy (buffer_p + *in_out_buffer_offset_p, &data, sizeof (T));
-  *in_out_buffer_offset_p += sizeof (T);
+  memcpy (buffer_p + *in_out_buffer_offset_p, data_p, data_size);
+  *in_out_buffer_offset_p += data_size;
 
   return true;
 } /* jrt_write_to_buffer_by_offset */

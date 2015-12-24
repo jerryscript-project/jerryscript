@@ -17,6 +17,7 @@
 #define LIT_GLOBALS_H
 
 #include "jrt.h"
+#include "rcs-cpointer.h"
 
 /**
  * ECMAScript standard defines terms "code unit" and "character" as 16-bit unsigned value
@@ -122,6 +123,21 @@ typedef uint32_t lit_code_point_t;
  * ECMA string hash
  */
 typedef uint8_t lit_string_hash_t;
+
+/**
+ * Literal type
+ */
+typedef rcs_record_t *lit_literal_t;
+
+/**
+ * Compressed pointer type
+ */
+typedef rcs_cpointer_t lit_cpointer_t;
+
+/**
+ * Invalid literal
+ */
+#define NOT_A_LITERAL (rcs_cpointer_null_cp ())
 
 /**
  * ECMA string hash value length, in bits

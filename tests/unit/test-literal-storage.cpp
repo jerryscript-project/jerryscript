@@ -15,7 +15,8 @@
 
 #include "ecma-helpers.h"
 #include "lit-literal.h"
-#include "lit-magic-strings.h"
+#include "lit-literal-storage.h"
+#include "rcs-records.h"
 #include "test-common.h"
 
 // Iterations count
@@ -68,7 +69,6 @@ main (int __attr_unused___ argc,
   mem_init ();
   lit_init ();
 
-
   for (uint32_t i = 0; i < test_iters; i++)
   {
     memset (numbers, 0, sizeof (ecma_number_t) * test_sub_iters);
@@ -108,8 +108,8 @@ main (int __attr_unused___ argc,
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      literal_t lit1;
-      literal_t lit2;
+      lit_literal_t lit1;
+      lit_literal_t lit2;
       if (ptrs[j])
       {
         lit1 = lit_find_or_create_literal_from_utf8_string (ptrs[j], lengths[j]);
@@ -133,8 +133,8 @@ main (int __attr_unused___ argc,
     // Check empty string exists
     JERRY_ASSERT (lit_find_literal_by_utf8_string (NULL, 0));
 
-    lit_storage.cleanup ();
-    JERRY_ASSERT (lit_storage.get_first () == NULL);
+    rcs_lit_storage.cleanup ();
+    JERRY_ASSERT (rcs_record_get_first (&rcs_lit_storage) == NULL);
   }
 
   lit_finalize ();

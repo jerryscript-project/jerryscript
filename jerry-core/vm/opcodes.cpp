@@ -16,8 +16,10 @@
 
 #include "bytecode-data.h"
 #include "jrt.h"
+#include "jrt-bit-fields.h"
 #include "opcodes.h"
 #include "opcodes-ecma-support.h"
+#include "rcs-records.h"
 
 /**
  * Note:
@@ -112,10 +114,10 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
     lit_cpointer_t lit_cp = bc_get_literal_cp_by_uid (src_val_descr,
                                                       frame_ctx_p->bytecode_header_p,
                                                       frame_ctx_p->pos);
-    literal_t lit = lit_get_literal_by_cp (lit_cp);
-    JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
+    lit_literal_t lit = lit_get_literal_by_cp (lit_cp);
+    JERRY_ASSERT (RCS_RECORD_IS_NUMBER (lit));
 
-    *num_p = lit_charset_literal_get_number (lit);
+    *num_p = lit_number_literal_get_number (lit);
 
     ret_value = set_variable_value (frame_ctx_p,
                                     frame_ctx_p->pos,
@@ -129,10 +131,10 @@ opfunc_assignment (vm_instr_t instr, /**< instruction */
     lit_cpointer_t lit_cp = bc_get_literal_cp_by_uid (src_val_descr,
                                                       frame_ctx_p->bytecode_header_p,
                                                       frame_ctx_p->pos);
-    literal_t lit = lit_get_literal_by_cp (lit_cp);
-    JERRY_ASSERT (lit->get_type () == LIT_NUMBER_T);
+    lit_literal_t lit = lit_get_literal_by_cp (lit_cp);
+    JERRY_ASSERT (RCS_RECORD_IS_NUMBER (lit));
 
-    *num_p = lit_charset_literal_get_number (lit);
+    *num_p = lit_number_literal_get_number (lit);
 
     ret_value = set_variable_value (frame_ctx_p,
                                     frame_ctx_p->pos,

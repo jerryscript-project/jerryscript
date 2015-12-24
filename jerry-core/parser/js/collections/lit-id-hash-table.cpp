@@ -14,7 +14,6 @@
  */
 
 #include "lit-id-hash-table.h"
-#include "lit-literal-storage.h"
 #include "bytecode-data.h"
 
 /** \addtogroup jsparser ECMAScript parser
@@ -172,7 +171,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
   uint32_t idx_num_total = (uint32_t) table_p->current_bucket_pos;
   JERRY_ASSERT (idx_num_total == table_p->current_bucket_pos);
 
-  if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_total))
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      in_out_buffer_offset_p,
+                                      &idx_num_total,
+                                      sizeof (idx_num_total)))
   {
     return 0;
   }
@@ -207,7 +210,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
       idx_num_in_block = 0;
     }
 
-    if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_in_block))
+    if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                        buffer_size,
+                                        in_out_buffer_offset_p,
+                                        &idx_num_in_block,
+                                        sizeof (idx_num_in_block)))
     {
       return 0;
     }
@@ -220,7 +227,7 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
 
       uint32_t offset = bc_find_lit_offset (lit_cp, lit_map_p, literals_num);
 
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, offset))
+      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, &offset, sizeof (offset)))
       {
         return 0;
       }
@@ -230,7 +237,11 @@ lit_id_hash_table_dump_for_snapshot (uint8_t *buffer_p, /**< buffer to dump to *
     {
       idx_num_in_block = 0;
 
-      if (!jrt_write_to_buffer_by_offset (buffer_p, buffer_size, in_out_buffer_offset_p, idx_num_in_block))
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          &idx_num_in_block,
+                                          sizeof (idx_num_in_block)))
       {
         return 0;
       }
@@ -278,7 +289,8 @@ lit_id_hash_table_load_from_snapshot (size_t blocks_count, /**< number of byte-c
     if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                          idx_to_lit_map_size,
                                          &idx_to_lit_map_offset,
-                                         &idx_num_in_block))
+                                         &idx_num_in_block,
+                                         sizeof (idx_num_in_block)))
     {
       return false;
     }
@@ -302,7 +314,8 @@ lit_id_hash_table_load_from_snapshot (size_t blocks_count, /**< number of byte-c
       if (!jrt_read_from_buffer_by_offset (idx_to_lit_map_p,
                                            idx_to_lit_map_size,
                                            &idx_to_lit_map_offset,
-                                           &lit_offset_from_snapshot))
+                                           &lit_offset_from_snapshot,
+                                           sizeof (lit_offset_from_snapshot)))
       {
         return false;
       }
@@ -310,7 +323,7 @@ lit_id_hash_table_load_from_snapshot (size_t blocks_count, /**< number of byte-c
       /**
        * TODO: implement binary search here
        */
-      lit_cpointer_t lit_cp = lit_cpointer_t::null_cp ();
+      lit_cpointer_t lit_cp = rcs_cpointer_null_cp ();
       uint32_t i;
       for (i = 0; i < literals_num; i++)
       {

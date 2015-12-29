@@ -157,6 +157,7 @@ lit_string_hash_t lit_utf8_string_calc_hash (const lit_utf8_byte_t *, lit_utf8_s
 lit_string_hash_t lit_utf8_string_hash_combine (lit_string_hash_t, const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* code unit access */
+#define  CESU_8_TABLE_MEM_ALIGNMENT  16
 ecma_char_t lit_utf8_string_code_unit_at (const lit_utf8_byte_t *, lit_utf8_size_t, ecma_length_t);
 lit_utf8_size_t lit_get_unicode_char_size_by_utf8_first_byte (lit_utf8_byte_t);
 

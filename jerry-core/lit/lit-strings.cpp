@@ -757,6 +757,15 @@ lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 stri
   return code_unit;
 } /* lit_utf8_string_code_unit_at */
 
+/* CESU-8 number of bytes occupied lookup table */
+const __attribute__ ((aligned (CESU_8_TABLE_MEM_ALIGNMENT))) lit_utf8_byte_t table[]
+{
+  1, 1, 1, 1, 1, 1, 1, 1,
+  0, 0, 0, 0,
+  2, 2,
+  3, 0
+};
+
 /**
  * Get CESU-8 encoded size of character
  *
@@ -765,19 +774,14 @@ lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 stri
 lit_utf8_size_t
 lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byte_t first_byte) /**< buffer with characters */
 {
-  if ((first_byte & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
-  {
-    return 1;
-  }
-  else if ((first_byte & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
-  {
-    return 2;
-  }
-  else
-  {
-    JERRY_ASSERT ((first_byte & LIT_UTF8_3_BYTE_MASK) == LIT_UTF8_3_BYTE_MARKER);
-    return 3;
-  }
+  JERRY_ASSERT (((first_byte >> 4) == 0 ||
+    (first_byte >> 4) == 1 || (first_byte >> 4) == 2 ||
+    (first_byte >> 4) == 3 || (first_byte >> 4) == 4 ||
+    (first_byte >> 4) == 5 || (first_byte >> 4) == 6 ||
+    (first_byte >> 4) == 7 || (first_byte >> 4) == 12 ||
+    (first_byte >> 4) == 13 || (first_byte >> 4) == 14));
+
+  return table[first_byte >> 4];
 } /* lit_get_unicode_char_size_by_utf8_first_byte */
 
 /**

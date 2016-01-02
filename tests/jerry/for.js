@@ -76,3 +76,9 @@ var i = {x: 0};
 }
 
 assert (s === '01');
+
+// 7.
+a = [];
+for (; a[0]; ) {
+  assert (false);
+}

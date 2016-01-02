@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4828,6 +4828,9 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       {
         parse_expression_inside_parens_end (ctx_p);
 
+        dump_get_value_if_ref (ctx_p, substate_p, true);
+        dump_get_value_for_state_if_const (ctx_p, substate_p);
+
         const jsp_operand_t cond = substate_p->u.expression.operand;
 
         JSP_FINISH_SUBEXPR ();
@@ -4855,6 +4858,9 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       if (is_subexpr_end)
       {
         parse_expression_inside_parens_end (ctx_p);
+
+        dump_get_value_if_ref (ctx_p, substate_p, true);
+        dump_get_value_for_state_if_const (ctx_p, substate_p);
 
         const jsp_operand_t cond = substate_p->u.expression.operand;
 
@@ -4958,7 +4964,11 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
     {
       if (is_subexpr_end)
       {
+        dump_get_value_if_ref (ctx_p, substate_p, true);
+        dump_get_value_for_state_if_const (ctx_p, substate_p);
+
         jsp_operand_t cond = substate_p->u.expression.operand;
+
         JSP_FINISH_SUBEXPR ();
 
         dump_continue_iterations_check (ctx_p, state_p->u.statement.u.iterational.u.loop_for.next_iter_tgt_pos, cond);
@@ -5385,6 +5395,10 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       if (is_subexpr_end)
       {
         parse_expression_inside_parens_end (ctx_p);
+
+        dump_get_value_if_ref (ctx_p, substate_p, true);
+        dump_get_value_for_state_if_const (ctx_p, substate_p);
+
         const jsp_operand_t expr = substate_p->u.expression.operand;
 
         JSP_FINISH_SUBEXPR ();

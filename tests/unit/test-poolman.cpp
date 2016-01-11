@@ -31,6 +31,7 @@ const uint32_t test_iters = 1024;
 const uint32_t test_max_sub_iters = 1024;
 
 uint8_t *ptrs[test_max_sub_iters];
+uint8_t data[test_max_sub_iters][MEM_POOL_CHUNK_SIZE];
 
 int
 main (int __attr_unused___ argc,
@@ -51,7 +52,12 @@ main (int __attr_unused___ argc,
 
       if (ptrs[j] != NULL)
       {
-        memset (ptrs[j], 0, MEM_POOL_CHUNK_SIZE);
+        for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
+        {
+          ptrs[j][k] = (uint8_t) (rand () % 256);
+        }
+
+        memcpy (data[j], ptrs[j], MEM_POOL_CHUNK_SIZE);
       }
     }
 
@@ -59,12 +65,14 @@ main (int __attr_unused___ argc,
 
     for (size_t j = 0; j < subiters; j++)
     {
+      if (rand () % 256 == 0)
+      {
+        mem_pools_collect_empty ();
+      }
+
       if (ptrs[j] != NULL)
       {
-        for (size_t k = 0; k < MEM_POOL_CHUNK_SIZE; k++)
-        {
-          JERRY_ASSERT (((uint8_t*) ptrs[j])[k] == 0);
-        }
+        JERRY_ASSERT (!memcmp (data[j], ptrs[j], MEM_POOL_CHUNK_SIZE));
 
         mem_pools_free (ptrs[j]);
       }

@@ -93,7 +93,8 @@ typedef struct mem_pool_chunk_t
                                 *   is an item (header) in a pool list */
       mem_pool_chunk_index_t free_chunks_num; /**< number of free chunks
                                                *   in the pool containing this chunk */
-      uint8_t list_id; /**< identifier of a pool list */
+      uint8_t traversal_check_flag; /**< flag that is flipped between two non-first chunk lists traversals
+                                     *   to determine whether the corresponding pool-first chunks are actually free */
     } pool_gc;
 
     /**
@@ -193,88 +194,128 @@ mem_pools_finalize (void)
 #endif /* !JERRY_NDEBUG */
 } /* mem_pools_finalize */
 
+/**
+ * Helper for reading magic number and traversal check flag fields of a pool-first chunk,
+ * that suppresses valgrind's warnings about undefined values.
+ *
+ * A pool-first chunk can be either allocated or free.
+ *
+ * As chunks are marked as undefined upon allocation, some of chunks can still be
+ * fully or partially marked as undefined.
+ *
+ * Nevertheless, the fields are read and their values are used to determine
+ * whether the chunk is actually free pool-first chunk.
+ *
+ * See also:
+ *          Description of collection algorithm in mem_pools_collect_empty
+ */
+static void __attr_always_inline___
+mem_pools_collect_read_magic_num_and_flag (mem_pool_chunk_t *pool_first_chunk_p, /**< a pool-first chunk */
+                                           uint16_t *out_magic_num_field_value_p, /**< out: value of magic num field,
+                                                                                   *        read from the chunk */
+                                           bool *out_traversal_check_flag_p) /**< out: value of traversal check flag
+                                                                              *        field, read from the chunk */
+{
+  JERRY_ASSERT (pool_first_chunk_p != NULL);
+  JERRY_ASSERT (out_magic_num_field_value_p != NULL);
+  JERRY_ASSERT (out_traversal_check_flag_p != NULL);
+
+#ifdef JERRY_VALGRIND
+  /*
+   * If the chunk is not free, there may be undefined bytes at hint_magic_num and traversal_check_flag fields.
+   *
+   * Although, it is correct for the routine, valgrind issues warning about using uninitialized data
+   * in conditional expression. To suppress the false-positive warning, the chunk is temporarily marked
+   * as defined, and after reading hint magic number and list identifier, valgrind state of the chunk is restored.
+   */
+  uint8_t vbits[MEM_POOL_CHUNK_SIZE];
+  unsigned status;
+
+  status = VALGRIND_GET_VBITS (pool_first_chunk_p, vbits, MEM_POOL_CHUNK_SIZE);
+  JERRY_ASSERT (status == 0 || status == 1);
+
+  VALGRIND_DEFINED_SPACE (pool_first_chunk_p, MEM_POOL_CHUNK_SIZE);
+#endif /* JERRY_VALGRIND */
+
+  uint16_t magic_num_field = pool_first_chunk_p->u.pool_gc.hint_magic_num;
+  bool traversal_check_flag = pool_first_chunk_p->u.pool_gc.traversal_check_flag;
+
+#ifdef JERRY_VALGRIND
+  status = VALGRIND_SET_VBITS (pool_first_chunk_p, vbits, MEM_POOL_CHUNK_SIZE);
+  JERRY_ASSERT (status == 0 || status == 1);
+#endif /* JERRY_VALGRIND */
+
+  *out_magic_num_field_value_p = magic_num_field;
+  *out_traversal_check_flag_p = traversal_check_flag;
+} /* mem_pools_collect_read_magic_num_and_flag */
+
+/**
+ * Collect chunks from empty pools and free the pools
+ */
 void
 mem_pools_collect_empty (void)
 {
   /*
-   * Hint magic number in header of pools with free first chunks
+   * Hint magic number in header of pools with free pool-first chunks
    */
   const uint16_t hint_magic_num_value = 0x7e89;
 
   /*
-   * At first pass collect pointers to those of free chunks that are first at their pools
-   * to separate lists (collection-time pool lists) and change them to headers of corresponding pools
+   * Collection-time chunk lists
    */
+  mem_pool_chunk_t *first_chunks_list_p = NULL;
+  mem_pool_chunk_t *non_first_chunks_list_p = NULL;
 
   /*
-   * Number of collection-time pool lists
+   * At first stage collect free pool-first chunks to separate collection-time lists
+   * and change their layout from mem_pool_chunk_t::u::free to mem_pool_chunk_t::u::pool_gc
    */
-  constexpr uint32_t pool_lists_number = 8;
-
-  /*
-   * Collection-time pool lists
-   */
-  mem_pool_chunk_t *pool_lists_p[pool_lists_number];
-  for (uint32_t i = 0; i < pool_lists_number; i++)
   {
-    pool_lists_p[i] = NULL;
-  }
+    mem_pool_chunk_t tmp_header;
+    tmp_header.u.free.next_p = mem_free_chunk_p;
 
-  /*
-   * Number of the pools, included into the lists
-   */
-  uint32_t pools_in_lists_number = 0;
-
-  for (mem_pool_chunk_t *free_chunk_iter_p = mem_free_chunk_p, *prev_free_chunk_p = NULL, *next_free_chunk_p;
-       free_chunk_iter_p != NULL;
-       free_chunk_iter_p = next_free_chunk_p)
-  {
-    mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t *) mem_heap_get_chunked_block_start (free_chunk_iter_p);
-
-    VALGRIND_DEFINED_SPACE (free_chunk_iter_p, MEM_POOL_CHUNK_SIZE);
-
-    next_free_chunk_p = free_chunk_iter_p->u.free.next_p;
-
-    if (pool_start_p == free_chunk_iter_p)
+    for (mem_pool_chunk_t *free_chunk_iter_p = tmp_header.u.free.next_p,
+                          *prev_free_chunk_p = &tmp_header,
+                          *next_free_chunk_p;
+         free_chunk_iter_p != NULL;
+         free_chunk_iter_p = next_free_chunk_p)
     {
-      /*
-       * The chunk is first at its pool
-       *
-       * Remove the chunk from common list of free chunks
-       */
-      if (prev_free_chunk_p == NULL)
-      {
-        JERRY_ASSERT (mem_free_chunk_p == free_chunk_iter_p);
+      mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t *) mem_heap_get_chunked_block_start (free_chunk_iter_p);
 
-        mem_free_chunk_p = next_free_chunk_p;
+      VALGRIND_DEFINED_SPACE (free_chunk_iter_p, MEM_POOL_CHUNK_SIZE);
+
+      next_free_chunk_p = free_chunk_iter_p->u.free.next_p;
+
+      if (pool_start_p == free_chunk_iter_p)
+      {
+        /*
+         * The chunk is first at its pool
+         *
+         * Remove the chunk from common list of free chunks
+         */
+        prev_free_chunk_p->u.free.next_p = next_free_chunk_p;
+
+        /*
+         * Initialize pool-first chunk as pool header and it insert into list of free pool-first chunks
+         */
+        free_chunk_iter_p->u.pool_gc.free_list_cp = MEM_CP_NULL;
+        free_chunk_iter_p->u.pool_gc.free_chunks_num = 1; /* the first chunk */
+        free_chunk_iter_p->u.pool_gc.hint_magic_num = hint_magic_num_value;
+        free_chunk_iter_p->u.pool_gc.traversal_check_flag = false;
+
+        MEM_CP_SET_POINTER (free_chunk_iter_p->u.pool_gc.next_first_cp, first_chunks_list_p);
+        first_chunks_list_p = free_chunk_iter_p;
       }
       else
       {
-        prev_free_chunk_p->u.free.next_p = next_free_chunk_p;
+        prev_free_chunk_p = free_chunk_iter_p;
       }
-
-      pools_in_lists_number++;
-
-      uint8_t list_id = pools_in_lists_number % pool_lists_number;
-
-      /*
-       * Initialize pool header and insert the pool into one of lists
-       */
-      free_chunk_iter_p->u.pool_gc.free_list_cp = MEM_CP_NULL;
-      free_chunk_iter_p->u.pool_gc.free_chunks_num = 1; /* the first chunk */
-      free_chunk_iter_p->u.pool_gc.hint_magic_num = hint_magic_num_value;
-      free_chunk_iter_p->u.pool_gc.list_id = list_id;
-
-      MEM_CP_SET_POINTER (free_chunk_iter_p->u.pool_gc.next_first_cp, pool_lists_p[list_id]);
-      pool_lists_p[list_id] = free_chunk_iter_p;
     }
-    else
-    {
-      prev_free_chunk_p = free_chunk_iter_p;
-    }
+
+    mem_free_chunk_p = tmp_header.u.free.next_p;
   }
 
-  if (pools_in_lists_number == 0)
+  if (first_chunks_list_p == NULL)
   {
     /* there are no empty pools */
 
@@ -282,169 +323,198 @@ mem_pools_collect_empty (void)
   }
 
   /*
-   * At second pass we check for all rest free chunks whether they are in pools that were included into
-   * collection-time pool lists.
+   * At second stage we collect all free non-pool-first chunks, for which corresponding pool-first chunks are free,
+   * and link them into the corresponding mem_pool_chunk_t::u::pool_gc::free_list_cp list, while also maintaining
+   * the corresponding mem_pool_chunk_t::u::pool_gc::free_chunks_num:
+   *  - at first, for each non-pool-first free chunk we check whether traversal check flag is cleared in corresponding
+   *    first chunk in the same pool, and move those chunks, for which the condition is true,
+   *    to separate temporary list.
    *
-   * For each of the chunk, try to find the corresponding pool through iterating the list.
+   *  - then, we flip the traversal check flags for each of free pool-first chunks.
    *
-   * If pool is found in a list (so, first chunk of the pool is free) for a chunk, increment counter
-   * of free chunks in the pools, and move the chunk from global free chunks list to collection-time
-   * local list of corresponding pool's free chunks.
+   *  - at last, we perform almost the same as at first step, but check only non-pool-first chunks from the temporary
+   *    list, and send the chunks, for which the corresponding traversal check flag is cleared, back to the common list
+   *    of free chunks, and the rest chunks from the temporary list are linked to corresponding pool-first chunks.
+   *    Also, counter of the linked free chunks is maintained in every free pool-first chunk.
    */
-  for (mem_pool_chunk_t *free_chunk_iter_p = mem_free_chunk_p, *prev_free_chunk_p = NULL, *next_free_chunk_p;
-       free_chunk_iter_p != NULL;
-       free_chunk_iter_p = next_free_chunk_p)
   {
-    mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t *) mem_heap_get_chunked_block_start (free_chunk_iter_p);
+    {
+      mem_pool_chunk_t tmp_header;
+      tmp_header.u.free.next_p = mem_free_chunk_p;
 
-    next_free_chunk_p = free_chunk_iter_p->u.free.next_p;
+      for (mem_pool_chunk_t *free_chunk_iter_p = tmp_header.u.free.next_p,
+                            *prev_free_chunk_p = &tmp_header,
+                            *next_free_chunk_p;
+           free_chunk_iter_p != NULL;
+           free_chunk_iter_p = next_free_chunk_p)
+      {
+        mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t *) mem_heap_get_chunked_block_start (free_chunk_iter_p);
 
-    bool is_chunk_moved_to_local_list = false;
+        next_free_chunk_p = free_chunk_iter_p->u.free.next_p;
 
-#ifdef JERRY_VALGRIND
-    /*
-     * If the chunk is not free, there may be undefined bytes at hint_magic_num and list_id fields.
-     *
-     * Although, it is correct for the routine, valgrind issues warning about using uninitialized data
-     * in conditional expression. To suppress the false-positive warning, the chunk is temporarily marked
-     * as defined, and after reading hint magic number and list identifier, valgrind state of the chunk is restored.
-     */
-    uint8_t vbits[MEM_POOL_CHUNK_SIZE];
-    unsigned status;
+        /*
+         * The magic number doesn't guarantee that the chunk is actually a free pool-first chunk,
+         * so we test the traversal check flag after flipping values of the flags in every
+         * free pool-first chunk.
+         */
+        uint16_t magic_num_field;
+        bool traversal_check_flag;
 
-    status = VALGRIND_GET_VBITS (pool_start_p, vbits, MEM_POOL_CHUNK_SIZE);
-    JERRY_ASSERT (status == 0 || status == 1);
+        mem_pools_collect_read_magic_num_and_flag (pool_start_p, &magic_num_field, &traversal_check_flag);
 
-    VALGRIND_DEFINED_SPACE (pool_start_p, MEM_POOL_CHUNK_SIZE);
-#endif /* JERRY_VALGRIND */
+        /*
+         * During this traversal the flag in the free header chunks is in cleared state
+         */
+        if (!traversal_check_flag
+            && magic_num_field == hint_magic_num_value)
+        {
+          free_chunk_iter_p->u.free.next_p = non_first_chunks_list_p;
+          non_first_chunks_list_p = free_chunk_iter_p;
 
-    /*
-     * The magic number doesn't guarantee that the chunk is actually a pool header,
-     * so it is only optimization to reduce number of unnecessary iterations over
-     * pool lists.
-     */
-    uint16_t magic_num_field = pool_start_p->u.pool_gc.hint_magic_num;
-    uint8_t id_to_search_in = pool_start_p->u.pool_gc.list_id;
+          prev_free_chunk_p->u.free.next_p = next_free_chunk_p;
+        }
+        else
+        {
+          prev_free_chunk_p = free_chunk_iter_p;
+        }
+      }
 
-#ifdef JERRY_VALGRIND
-    status = VALGRIND_SET_VBITS (pool_start_p, vbits, MEM_POOL_CHUNK_SIZE);
-    JERRY_ASSERT (status == 0 || status == 1);
-#endif /* JERRY_VALGRIND */
+      mem_free_chunk_p = tmp_header.u.free.next_p;
+    }
 
-    if (magic_num_field == hint_magic_num_value)
     {
       /*
-       * Maybe, the first chunk is free.
-       *
-       * If it is so, it is included in the list of pool's first free chunks.
+       * Now, flip the traversal check flag in free pool-first chunks
        */
-
-      if (id_to_search_in < pool_lists_number)
+      for (mem_pool_chunk_t *first_chunks_iter_p = first_chunks_list_p;
+           first_chunks_iter_p != NULL;
+           first_chunks_iter_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
+                                                     first_chunks_iter_p->u.pool_gc.next_first_cp))
       {
-        for (mem_pool_chunk_t *pool_list_iter_p = pool_lists_p[id_to_search_in];
-             pool_list_iter_p != NULL;
-             pool_list_iter_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
-                                                    pool_list_iter_p->u.pool_gc.next_first_cp))
+        JERRY_ASSERT (!first_chunks_iter_p->u.pool_gc.traversal_check_flag);
+
+        first_chunks_iter_p->u.pool_gc.traversal_check_flag = true;
+      }
+    }
+
+    {
+      for (mem_pool_chunk_t *non_first_chunks_iter_p = non_first_chunks_list_p, *next_p;
+           non_first_chunks_iter_p != NULL;
+           non_first_chunks_iter_p = next_p)
+      {
+        next_p = non_first_chunks_iter_p->u.free.next_p;
+
+        mem_pool_chunk_t *pool_start_p;
+        pool_start_p = (mem_pool_chunk_t *) mem_heap_get_chunked_block_start (non_first_chunks_iter_p);
+
+        uint16_t magic_num_field;
+        bool traversal_check_flag;
+
+        mem_pools_collect_read_magic_num_and_flag (pool_start_p, &magic_num_field, &traversal_check_flag);
+
+        JERRY_ASSERT (magic_num_field == hint_magic_num_value);
+
+#ifndef JERRY_DISABLE_HEAVY_DEBUG
+        bool is_occured = false;
+
+        for (mem_pool_chunk_t *first_chunks_iter_p = first_chunks_list_p;
+             first_chunks_iter_p != NULL;
+             first_chunks_iter_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
+                                                       first_chunks_iter_p->u.pool_gc.next_first_cp))
         {
-          if (pool_list_iter_p == pool_start_p)
+          if (pool_start_p == first_chunks_iter_p)
           {
-            /*
-             * The first chunk is actually free.
-             *
-             * So, incrementing free chunks counter in it.
-             */
-            pool_start_p->u.pool_gc.free_chunks_num++;
-
-            /*
-             * It is possible that the corresponding pool is empty
-             *
-             * Moving current chunk from common list of free chunks to temporary list, local to the pool
-             */
-            if (prev_free_chunk_p == NULL)
-            {
-              JERRY_ASSERT (mem_free_chunk_p == free_chunk_iter_p);
-
-              mem_free_chunk_p = next_free_chunk_p;
-            }
-            else
-            {
-              prev_free_chunk_p->u.free.next_p = next_free_chunk_p;
-            }
-
-            free_chunk_iter_p->u.free.next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
-                                                                   pool_start_p->u.pool_gc.free_list_cp);
-            MEM_CP_SET_NON_NULL_POINTER (pool_start_p->u.pool_gc.free_list_cp, free_chunk_iter_p);
-
-            is_chunk_moved_to_local_list = true;
-
+            is_occured = true;
             break;
           }
+        }
+
+        JERRY_ASSERT (is_occured == traversal_check_flag);
+#endif /* !JERRY_DISABLE_HEAVY_DEBUG */
+
+        /*
+         * During this traversal the flag in the free header chunks is in set state
+         *
+         * If the flag is set, it is guaranteed that the pool-first chunk,
+         * from the same pool, as the current non-pool-first chunk, is free
+         * and is placed in the corresponding list of free pool-first chunks.
+         */
+        if (traversal_check_flag)
+        {
+          pool_start_p->u.pool_gc.free_chunks_num++;
+
+          non_first_chunks_iter_p->u.free.next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
+                                                                       pool_start_p->u.pool_gc.free_list_cp);
+          MEM_CP_SET_NON_NULL_POINTER (pool_start_p->u.pool_gc.free_list_cp, non_first_chunks_iter_p);
+        }
+        else
+        {
+          non_first_chunks_iter_p->u.free.next_p = mem_free_chunk_p;
+          mem_free_chunk_p = non_first_chunks_iter_p;
         }
       }
     }
 
-    if (!is_chunk_moved_to_local_list)
-    {
-      prev_free_chunk_p = free_chunk_iter_p;
-    }
+    non_first_chunks_list_p = NULL;
   }
 
   /*
-   * At third pass we check each pool in collection-time pool lists free for counted
-   * number of free chunks in the pool.
+   * At third stage we check each free pool-first chunk in collection-time list for counted
+   * number of free chunks in the pool, containing the chunk.
    *
    * If the number is equal to number of chunks in the pool - then the pool is empty, and so is freed,
-   * otherwise - free chunks of the pool are returned to common list of free chunks.
+   * otherwise - free chunks of the pool are returned to the common list of free chunks.
    */
-  for (uint8_t list_id = 0; list_id < pool_lists_number; list_id++)
+  for (mem_pool_chunk_t *first_chunks_iter_p = first_chunks_list_p, *next_p;
+       first_chunks_iter_p != NULL;
+       first_chunks_iter_p = next_p)
   {
-    for (mem_pool_chunk_t *pool_list_iter_p = pool_lists_p[list_id], *next_p;
-         pool_list_iter_p != NULL;
-         pool_list_iter_p = next_p)
-    {
-      next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
-                                   pool_list_iter_p->u.pool_gc.next_first_cp);
+    next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
+                                 first_chunks_iter_p->u.pool_gc.next_first_cp);
 
-      if (pool_list_iter_p->u.pool_gc.free_chunks_num == MEM_POOL_CHUNKS_NUMBER)
-      {
+    JERRY_ASSERT (first_chunks_iter_p->u.pool_gc.hint_magic_num == hint_magic_num_value);
+    JERRY_ASSERT (first_chunks_iter_p->u.pool_gc.traversal_check_flag);
+    JERRY_ASSERT (first_chunks_iter_p->u.pool_gc.free_chunks_num <= MEM_POOL_CHUNKS_NUMBER);
+
+    if (first_chunks_iter_p->u.pool_gc.free_chunks_num == MEM_POOL_CHUNKS_NUMBER)
+    {
 #ifndef JERRY_NDEBUG
-        mem_free_chunks_number -= MEM_POOL_CHUNKS_NUMBER;
+      mem_free_chunks_number -= MEM_POOL_CHUNKS_NUMBER;
 #endif /* !JERRY_NDEBUG */
 
-        MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST ();
-        mem_heap_free_block (pool_list_iter_p);
+      MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST ();
+      mem_heap_free_block (first_chunks_iter_p);
 
-        MEM_POOLS_STAT_FREE_POOL ();
-      }
-      else
+      MEM_POOLS_STAT_FREE_POOL ();
+    }
+    else
+    {
+      mem_pool_chunk_t *first_chunk_p = first_chunks_iter_p;
+
+      /*
+       * Convert layout of first chunk from collection-time pool-first chunk's layout to the common free chunk layout
+       */
+      first_chunk_p->u.free.next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
+                                                         first_chunks_iter_p->u.pool_gc.free_list_cp);
+
+      /*
+       * Link local pool's list of free chunks into the common list of free chunks
+       */
+      for (mem_pool_chunk_t *pool_chunks_iter_p = first_chunk_p;
+           ;
+           pool_chunks_iter_p = pool_chunks_iter_p->u.free.next_p)
       {
-        mem_pool_chunk_t *first_chunk_p = pool_list_iter_p;
+        JERRY_ASSERT (pool_chunks_iter_p != NULL);
 
-        /*
-         * Convert layout of first chunk from collection-time pool header to common free chunk
-         */
-        first_chunk_p->u.free.next_p = MEM_CP_GET_POINTER (mem_pool_chunk_t,
-                                                           pool_list_iter_p->u.pool_gc.free_list_cp);
-
-        /*
-         * Link local pool's list of free chunks into global list of free chunks
-         */
-        for (mem_pool_chunk_t *pool_chunks_iter_p = first_chunk_p;
-             ;
-             pool_chunks_iter_p = pool_chunks_iter_p->u.free.next_p)
+        if (pool_chunks_iter_p->u.free.next_p == NULL)
         {
-          JERRY_ASSERT (pool_chunks_iter_p != NULL);
+          pool_chunks_iter_p->u.free.next_p = mem_free_chunk_p;
 
-          if (pool_chunks_iter_p->u.free.next_p == NULL)
-          {
-            pool_chunks_iter_p->u.free.next_p = mem_free_chunk_p;
-
-            break;
-          }
+          break;
         }
-
-        mem_free_chunk_p = first_chunk_p;
       }
+
+      mem_free_chunk_p = first_chunk_p;
     }
   }
 

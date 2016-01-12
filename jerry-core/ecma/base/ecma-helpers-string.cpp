@@ -144,7 +144,7 @@ ecma_get_chars_collection_length (const ecma_collection_header_t *header_p) /**<
     if (skip_bytes == 0)
     {
       skip_bytes = lit_get_unicode_char_size_by_utf8_first_byte (*cur_char_buf_iter_p);
-      length += (skip_bytes == 4) ? 2 : 1;
+      length++;
       skip_bytes--;
     }
     else

@@ -763,7 +763,7 @@ bc_load_bytecode_data (const uint8_t *snapshot_data_p, /**< buffer with instruct
 
   scopes_num++;
   snapshot_offset += out_bytecode_data_size;
-  JERRY_ASSERT (snapshot_offset < snapshot_size);
+  JERRY_ASSERT (snapshot_offset <= snapshot_size);
 
   bytecode_data_header_t* next_to_handle_list_p = bc_header_p;
 
@@ -795,7 +795,7 @@ bc_load_bytecode_data (const uint8_t *snapshot_data_p, /**< buffer with instruct
       }
     }
 
-    JERRY_ASSERT (snapshot_size > snapshot_offset);
+    JERRY_ASSERT (snapshot_offset < snapshot_size);
     bytecode_data_header_t *next_header_p = bc_load_bytecode_with_idx_map (snapshot_data_p + snapshot_offset,
                                                                            snapshot_size - snapshot_offset,
                                                                            lit_map_p,

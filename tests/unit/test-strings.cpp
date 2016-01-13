@@ -15,6 +15,8 @@
 
 #include "ecma-helpers.h"
 #include "lit-strings.h"
+#include "ecma-init-finalize.h"
+#include "lit-literal.h"
 
 #include "test-common.h"
 
@@ -98,7 +100,6 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
   return length;
 }
 
-
 int
 main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
@@ -106,6 +107,8 @@ main (int __attr_unused___ argc,
   TEST_INIT ();
 
   mem_init ();
+  lit_init ();
+  ecma_init ();
 
   lit_utf8_byte_t cesu8_string[max_bytes_in_string];
   ecma_char_t code_units[max_code_units_in_string];
@@ -115,6 +118,11 @@ main (int __attr_unused___ argc,
   {
     lit_utf8_size_t cesu8_string_size = (i == 0) ? 0 : (lit_utf8_size_t) (rand () % max_bytes_in_string);
     ecma_length_t length = generate_cesu8_string (cesu8_string, cesu8_string_size);
+
+    ecma_string_t *char_collection_string_p = ecma_new_ecma_string_from_utf8 (cesu8_string, cesu8_string_size);
+    ecma_length_t char_collection_len = ecma_string_get_length (char_collection_string_p);
+    JERRY_ASSERT (char_collection_len == length);
+    ecma_deref_ecma_string (char_collection_string_p);
 
     JERRY_ASSERT (lit_utf8_string_length (cesu8_string, cesu8_string_size) == length);
 
@@ -219,6 +227,9 @@ main (int __attr_unused___ argc,
   JERRY_ASSERT (lit_utf8_iterator_is_eos (&iter));
   JERRY_ASSERT (code_unit == 0xDF48);
 
+  ecma_finalize ();
+  lit_finalize ();
   mem_finalize (true);
+
   return 0;
 }

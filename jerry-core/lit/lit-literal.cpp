@@ -628,7 +628,7 @@ lit_charset_literal_get_length (lit_literal_t lit) /**< literal */
     rcs_iterator_skip (&it_ctx, bytes_to_skip);
 
     i += bytes_to_skip;
-    length += (bytes_to_skip > LIT_UTF8_MAX_BYTES_IN_CODE_UNIT) ? 2 : 1;
+    length++;
   }
 
 #ifndef JERRY_NDEBUG

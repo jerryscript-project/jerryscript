@@ -26,6 +26,7 @@ SRCPATH    = targets/esp8266/source
 COPYTARGET = targets/esp8266/libs
 USBDEVICE  ?= /dev/ttyUSB0
 JERRYHEAP  ?= 20
+ESPTOOL    ?= /opt/Espressif/esptool-py/esptool.py
 
 # compile flags
 ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
@@ -46,6 +47,8 @@ ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/ssl
 JERRY_BUILD_FILES := $(SRCPATH)/jerry_extapi.cpp
 JERRY_BUILD_FILES := $(JERRY_BUILD_FILES);$(SRCPATH)/jerry_run.cpp
 
+
+.PHONY: jerry js2c mbed check-env flash clean
 
 
 all: check-env jerry js2c mbed
@@ -78,7 +81,7 @@ jerry:
 
 
 js2c:
-	cd targets/esp8266; ./js2c.py
+	cd targets/esp8266; ../tools/js2c.py
 
 
 mbed:
@@ -98,7 +101,7 @@ endif
 
 
 flash:
-	/opt/Espressif/esptool-py/esptool.py --port $(USBDEVICE) write_flash \
+	$(ESPTOOL) --port $(USBDEVICE) write_flash \
 	 0x00000 $(SDK_PATH)/bin/"boot_v1.4(b1).bin" \
 	 0x01000 $(BIN_PATH)/upgrade/user1.2048.new.3.bin \
 	 0x81000 $(BIN_PATH)/upgrade/user2.2048.new.3.bin \

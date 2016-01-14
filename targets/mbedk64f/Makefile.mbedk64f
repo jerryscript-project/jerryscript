@@ -27,6 +27,9 @@ EXT_CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
 EXT_CFLAGS += -Wno-error=format=
 
 
+.PHONY: jerry js2c yotta flash check_mbed clean
+
+
 all: jerry js2c yotta
 
 
@@ -52,7 +55,7 @@ jerry:
 
 
 js2c:
-	cd targets/mbedk64f; ./js2c.py;
+	cd targets/mbedk64f; ../tools/js2c.py;
 
 
 yotta:

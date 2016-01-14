@@ -851,65 +851,54 @@ uint32_t
 ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
 {
   if (ecma_number_is_nan (num)
-      || ecma_number_is_zero (num)
-      || ecma_number_is_infinity (num))
+      || ecma_number_is_zero (num))
   {
     return 0;
   }
 
-  bool sign = ecma_number_is_negative (num);
-  ecma_number_t abs_num;
+  bool sign;
+  bool infinity;
+  uint64_t abs_cast_u64;
 
-  if (sign)
+  ecma_number_to_u32 (num, &infinity, &sign, &abs_cast_u64);
+
+  if (infinity)
   {
-    abs_num = ecma_number_negate (num);
-  }
-  else
-  {
-    abs_num = num;
+    return 0;
   }
 
   // 2 ^ 32
   const uint64_t uint64_2_pow_32 = (1ull << 32);
+  uint32_t num_in_uint32_range;
 
-  const ecma_number_t num_2_pow_32 = (float) uint64_2_pow_32;
-
-  ecma_number_t num_in_uint32_range;
-
-  if (abs_num >= num_2_pow_32)
+  if (abs_cast_u64 >= uint64_2_pow_32)
   {
-    num_in_uint32_range = ecma_number_calc_remainder (abs_num,
-                                                      num_2_pow_32);
+    num_in_uint32_range = (uint32_t)(abs_cast_u64 & (uint64_2_pow_32-1));
   }
   else
   {
-    num_in_uint32_range = abs_num;
+    num_in_uint32_range = (uint32_t) abs_cast_u64;
   }
-
-  // Check that the floating point value can be represented with uint32_t
-  JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
-  uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
   uint32_t ret;
-
   if (sign)
   {
-    ret = -uint32_num;
+    ret = -num_in_uint32_range;
   }
   else
   {
-    ret = uint32_num;
+    ret = num_in_uint32_range;
   }
 
 #ifndef JERRY_NDEBUG
   if (sign
-      && uint32_num != 0)
+      && num_in_uint32_range != 0)
   {
-    JERRY_ASSERT (ret == uint64_2_pow_32 - uint32_num);
+    JERRY_ASSERT (ret == uint64_2_pow_32 - num_in_uint32_range);
   }
   else
   {
-    JERRY_ASSERT (ret == uint32_num);
+    JERRY_ASSERT (ret == num_in_uint32_range);
   }
 #endif /* !JERRY_NDEBUG */
 
@@ -934,7 +923,6 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 
   // 2 ^ 31
   const uint32_t uint32_2_pow_31 = (1ull << 31);
-
   int32_t ret;
 
   if (uint32_num >= uint32_2_pow_31)

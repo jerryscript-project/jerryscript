@@ -270,6 +270,7 @@ extern int32_t ecma_number_to_int32 (ecma_number_t);
 extern ecma_number_t ecma_int32_to_number (int32_t);
 extern ecma_number_t ecma_uint32_to_number (uint32_t);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, ssize_t);
+extern void ecma_number_to_u32 (ecma_number_t, bool*, bool *, uint64_t*);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

@@ -65,6 +65,484 @@ static vm_idx_t jsp_reg_max_for_args;
 bool is_print_instrs = false;
 
 /**
+ * Construct uninitialized operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_uninitialized_operand (void)
+{
+  jsp_operand_t ret;
+  ret.type = JSP_OPERAND_TYPE_UNINITIALIZED;
+
+  return ret;
+} /* jsp_make_uninitialized_operand */
+
+/**
+ * Construct empty operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_empty_operand (void)
+{
+  jsp_operand_t ret;
+  ret.type = JSP_OPERAND_TYPE_EMPTY;
+
+  return ret;
+} /* jsp_make_empty_operand */
+
+/**
+ * Construct ThisBinding operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_this_operand (void)
+{
+  jsp_operand_t ret;
+  ret.type = JSP_OPERAND_TYPE_THIS_BINDING;
+
+  return ret;
+} /* jsp_make_this_operand */
+
+/**
+ * Construct unknown operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_unknown_operand (void)
+{
+  jsp_operand_t ret;
+  ret.type = JSP_OPERAND_TYPE_UNKNOWN;
+
+  return ret;
+} /* jsp_make_unknown_operand */
+
+/**
+ * Construct idx-constant operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_idx_const_operand (vm_idx_t cnst) /**< integer in vm_idx_t range */
+{
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_IDX_CONST;
+  ret.data.idx_const = cnst;
+
+  return ret;
+} /* jsp_make_idx_const_operand */
+
+/**
+ * Construct small integer operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_smallint_operand (uint8_t integer_value) /**< small integer value */
+{
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_SMALLINT;
+  ret.data.smallint_value = integer_value;
+
+  return ret;
+} /* jsp_make_smallint_operand */
+
+/**
+ * Construct simple ecma value operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_simple_value_operand (ecma_simple_value_t simple_value) /**< simple ecma value */
+{
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_SIMPLE_VALUE;
+  ret.data.simple_value = simple_value;
+
+  return ret;
+} /* jsp_make_simple_value_operand */
+
+/**
+ * Construct string literal operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_string_lit_operand (lit_cpointer_t lit_id) /**< literal identifier */
+{
+  JERRY_ASSERT (lit_id.packed_value != NOT_A_LITERAL.packed_value);
+
+#ifndef JERRY_NDEBUG
+  lit_literal_t lit = lit_get_literal_by_cp (lit_id);
+
+  JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit)
+                || RCS_RECORD_IS_MAGIC_STR (lit)
+                || RCS_RECORD_IS_MAGIC_STR_EX (lit));
+#endif /* !JERRY_NDEBUG */
+
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_STRING_LITERAL;
+  ret.data.lit_id = lit_id;
+
+  return ret;
+} /* jsp_make_string_lit_operand */
+
+/**
+ * Construct RegExp literal operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_regexp_lit_operand (lit_cpointer_t lit_id) /**< literal identifier */
+{
+  JERRY_ASSERT (lit_id.packed_value != NOT_A_LITERAL.packed_value);
+
+#ifndef JERRY_NDEBUG
+  lit_literal_t lit = lit_get_literal_by_cp (lit_id);
+
+  JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit)
+                || RCS_RECORD_IS_MAGIC_STR (lit)
+                || RCS_RECORD_IS_MAGIC_STR_EX (lit));
+#endif /* !JERRY_NDEBUG */
+
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_REGEXP_LITERAL;
+  ret.data.lit_id = lit_id;
+
+  return ret;
+} /* jsp_make_regexp_lit_operand */
+
+/**
+ * Construct number literal operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_number_lit_operand (lit_cpointer_t lit_id) /**< literal identifier */
+{
+  JERRY_ASSERT (lit_id.packed_value != NOT_A_LITERAL.packed_value);
+
+#ifndef JERRY_NDEBUG
+  lit_literal_t lit = lit_get_literal_by_cp (lit_id);
+
+  JERRY_ASSERT (RCS_RECORD_IS_NUMBER (lit));
+#endif /* !JERRY_NDEBUG */
+
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_NUMBER_LITERAL;
+  ret.data.lit_id = lit_id;
+
+  return ret;
+} /* jsp_make_number_lit_operand */
+
+/**
+ * Construct identifier reference operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_identifier_operand (lit_cpointer_t lit_id) /**< literal identifier */
+{
+  JERRY_ASSERT (lit_id.packed_value != NOT_A_LITERAL.packed_value);
+
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_IDENTIFIER;
+  ret.data.identifier = lit_id;
+
+  return ret;
+} /* jsp_make_identifier_operand */
+
+/**
+ * Construct register operand
+ *
+ * @return constructed operand
+ */
+jsp_operand_t
+jsp_make_reg_operand (vm_idx_t reg_index) /**< register index */
+{
+  /*
+   * The following check currently leads to 'comparison is always true
+   * due to limited range of data type' warning, so it is turned off.
+   *
+   * If VM_IDX_GENERAL_VALUE_FIRST is changed to value greater than 0,
+   * the check should be restored.
+   */
+  // JERRY_ASSERT (reg_index >= VM_IDX_GENERAL_VALUE_FIRST);
+  JERRY_STATIC_ASSERT (VM_IDX_GENERAL_VALUE_FIRST == 0);
+
+  JERRY_ASSERT (reg_index <= VM_IDX_GENERAL_VALUE_LAST);
+
+  jsp_operand_t ret;
+
+  ret.type = JSP_OPERAND_TYPE_TMP;
+  ret.data.uid = reg_index;
+
+  return ret;
+} /* jsp_make_reg_operand */
+
+/**
+ * Is it empty operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_empty_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_EMPTY);
+} /* jsp_is_empty_operand */
+
+/**
+ * Is it ThisBinding operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_this_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_THIS_BINDING);
+} /* jsp_is_this_operand */
+
+/**
+ * Is it unknown operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_unknown_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_UNKNOWN);
+} /* jsp_is_unknown_operand */
+
+/**
+ * Is it idx-constant operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_idx_const_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_IDX_CONST);
+} /* jsp_is_idx_const_operand */
+
+/**
+ * Is it byte-code register operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_register_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_TMP);
+} /* jsp_is_register_operand */
+
+/**
+ * Is it simple ecma value operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_simple_value_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_SIMPLE_VALUE);
+} /* jsp_is_simple_value_operand */
+
+/**
+ * Is it small integer operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_smallint_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_SMALLINT);
+} /* jsp_is_smallint_operand */
+
+/**
+ * Is it number literal operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_number_lit_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_NUMBER_LITERAL);
+} /* jsp_is_number_lit_operand */
+
+/**
+ * Is it string literal operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_string_lit_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_STRING_LITERAL);
+} /* jsp_is_string_lit_operand */
+
+/**
+ * Is it RegExp literal operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_regexp_lit_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_REGEXP_LITERAL);
+} /* jsp_is_regexp_lit_operand */
+
+/**
+ * Is it identifier reference operand?
+ *
+ * @return true / false
+ */
+bool
+jsp_is_identifier_operand (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  return (operand.type == JSP_OPERAND_TYPE_IDENTIFIER);
+} /* jsp_is_identifier_operand */
+
+/**
+ * Get string literal - name of Identifier reference
+ *
+ * @return literal identifier
+ */
+lit_cpointer_t
+jsp_operand_get_identifier_name (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (jsp_is_identifier_operand (operand));
+
+  return (operand.data.identifier);
+} /* jsp_operand_get_identifier_name */
+
+/**
+ * Get idx for operand
+ *
+ * @return VM_IDX_REWRITE_LITERAL_UID (for LITERAL),
+ *         or register index (for TMP).
+ */
+vm_idx_t
+jsp_operand_get_idx (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  if (operand.type == JSP_OPERAND_TYPE_TMP)
+  {
+    return operand.data.uid;
+  }
+
+  if (operand.type == JSP_OPERAND_TYPE_STRING_LITERAL || operand.type == JSP_OPERAND_TYPE_NUMBER_LITERAL)
+  {
+    return VM_IDX_REWRITE_LITERAL_UID;
+  }
+
+  if (operand.type == JSP_OPERAND_TYPE_THIS_BINDING)
+  {
+    return VM_REG_SPECIAL_THIS_BINDING;
+  }
+
+  JERRY_ASSERT (operand.type == JSP_OPERAND_TYPE_EMPTY);
+  return VM_IDX_EMPTY;
+} /* jsp_operand_get_idx */
+
+/**
+ * Get literal from operand
+ *
+ * @return literal identifier (for LITERAL),
+ *         or NOT_A_LITERAL (for TMP).
+ */
+lit_cpointer_t
+jsp_operand_get_literal (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (operand.type != JSP_OPERAND_TYPE_UNINITIALIZED);
+
+  if (operand.type == JSP_OPERAND_TYPE_TMP)
+  {
+    return NOT_A_LITERAL;
+  }
+
+  if (operand.type == JSP_OPERAND_TYPE_STRING_LITERAL
+      || operand.type == JSP_OPERAND_TYPE_NUMBER_LITERAL
+      || operand.type == JSP_OPERAND_TYPE_REGEXP_LITERAL)
+  {
+    return operand.data.lit_id;
+  }
+
+  JERRY_ASSERT (operand.type == JSP_OPERAND_TYPE_EMPTY);
+  return NOT_A_LITERAL;
+} /* jsp_operand_get_literal */
+
+/**
+ * Get constant from idx-constant operand
+ *
+ * @return an integer
+ */
+vm_idx_t
+jsp_operand_get_idx_const (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (jsp_is_idx_const_operand (operand));
+
+  return operand.data.idx_const;
+} /* jsp_operand_get_idx_const */
+
+/**
+ * Get small integer constant from operand
+ *
+ * @return an integer
+ */
+uint8_t
+jsp_operand_get_smallint_value (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (jsp_is_smallint_operand (operand));
+
+  return operand.data.smallint_value;
+} /* jsp_operand_get_smallint_value */
+
+/**
+ * Get simple value from operand
+ *
+ * @return a simple ecma value
+ */
+ecma_simple_value_t
+jsp_operand_get_simple_value (jsp_operand_t operand) /**< operand */
+{
+  JERRY_ASSERT (jsp_is_simple_value_operand (operand));
+
+  return (ecma_simple_value_t) operand.data.simple_value;
+} /* jsp_operand_get_simple_value */
+
+/**
  * Determine if operand with specified index could be encoded as a literal
  *
  * @return true, if operand could be literal
@@ -289,8 +767,6 @@ count_new_literals_in_instr (jsp_ctx_t *ctx_p, /**< parser context */
     }
   }
 } /* count_new_literals_in_instr */
-
-static void dumper_dump_op_meta (jsp_ctx_t *, op_meta);
 
 /**
  * Allocate next register for intermediate value
@@ -544,7 +1020,7 @@ dumper_dump_op_meta (jsp_ctx_t *ctx_p, /**< parser context */
     {
       pp_op_meta (bc_header_p, bc_header_p->instrs_count, opm, false);
     }
-#endif
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */
 
     vm_instr_t *new_instr_place_p = bc_header_p->instrs_p + bc_header_p->instrs_count;
 
@@ -584,7 +1060,7 @@ dumper_rewrite_op_meta (jsp_ctx_t *ctx_p, /**< parser context */
     {
       pp_op_meta (bc_header_p, loc, opm, true);
     }
-#endif
+#endif /* JERRY_ENABLE_PRETTY_PRINTER */
   }
 } /* dumper_rewrite_op_meta */
 
@@ -826,45 +1302,45 @@ jsp_dmp_gen_instr (jsp_ctx_t *ctx_p, /**< parser context */
 
   for (size_t i = 0; i < ops_num; i++)
   {
-    if (ops[i].is_empty_operand ())
+    if (jsp_is_empty_operand (ops[i]))
     {
       instr.data.raw_args[i] = VM_IDX_EMPTY;
     }
-    else if (ops[i].is_unknown_operand ())
+    else if (jsp_is_unknown_operand (ops[i]))
     {
       instr.data.raw_args[i] = VM_IDX_REWRITE_GENERAL_CASE;
     }
-    else if (ops[i].is_idx_const_operand ())
+    else if (jsp_is_idx_const_operand (ops[i]))
     {
-      instr.data.raw_args[i] = ops[i].get_idx_const ();
+      instr.data.raw_args[i] = jsp_operand_get_idx_const (ops[i]);
     }
-    else if (ops[i].is_smallint_operand ())
+    else if (jsp_is_smallint_operand (ops[i]))
     {
-      instr.data.raw_args[i] = ops[i].get_smallint_value ();
+      instr.data.raw_args[i] = jsp_operand_get_smallint_value (ops[i]);
     }
-    else if (ops[i].is_simple_value_operand ())
+    else if (jsp_is_simple_value_operand (ops[i]))
     {
-      instr.data.raw_args[i] = ops[i].get_simple_value ();
+      instr.data.raw_args[i] = jsp_operand_get_simple_value (ops[i]);
     }
-    else if (ops[i].is_register_operand () || ops[i].is_this_operand ())
+    else if (jsp_is_register_operand (ops[i]) || jsp_is_this_operand (ops[i]))
     {
-      instr.data.raw_args[i] = ops[i].get_idx ();
+      instr.data.raw_args[i] = jsp_operand_get_idx (ops[i]);
     }
     else
     {
       lit_cpointer_t lit_cp;
 
-      if (ops[i].is_identifier_operand ())
+      if (jsp_is_identifier_operand (ops[i]))
       {
-        lit_cp = ops[i].get_identifier_name ();
+        lit_cp = jsp_operand_get_identifier_name (ops[i]);
       }
       else
       {
-        JERRY_ASSERT (ops[i].is_number_lit_operand ()
-                      || ops[i].is_string_lit_operand ()
-                      || ops[i].is_regexp_lit_operand ());
+        JERRY_ASSERT (jsp_is_number_lit_operand (ops[i])
+                      || jsp_is_string_lit_operand (ops[i])
+                      || jsp_is_regexp_lit_operand (ops[i]));
 
-        lit_cp = ops[i].get_literal ();
+        lit_cp = jsp_operand_get_literal (ops[i]);
       }
 
       vm_idx_t idx = VM_IDX_REWRITE_LITERAL_UID;
@@ -908,15 +1384,15 @@ jsp_dmp_create_op_meta (jsp_ctx_t *ctx_p, /**< parser context */
 
   for (size_t i = 0; i < ops_num; i++)
   {
-    if (ops[i].is_number_lit_operand ()
-        || ops[i].is_string_lit_operand ()
-        || ops[i].is_regexp_lit_operand ())
+    if (jsp_is_number_lit_operand (ops[i])
+        || jsp_is_string_lit_operand (ops[i])
+        || jsp_is_regexp_lit_operand (ops[i]))
     {
-      ret.lit_id[i] = ops[i].get_literal ();
+      ret.lit_id[i] = jsp_operand_get_literal (ops[i]);
     }
-    else if (ops[i].is_identifier_operand ())
+    else if (jsp_is_identifier_operand (ops[i]))
     {
-      ret.lit_id[i] = ops[i].get_identifier_name ();
+      ret.lit_id[i] = jsp_operand_get_identifier_name (ops[i]);
     }
     else
     {
@@ -1006,7 +1482,7 @@ jsp_dmp_create_op_meta_3 (jsp_ctx_t *ctx_p, /**< parser context */
 jsp_operand_t
 tmp_operand (void)
 {
-  return jsp_operand_t::make_reg_operand (jsp_alloc_reg_for_temp ());
+  return jsp_make_reg_operand (jsp_alloc_reg_for_temp ());
 } /* tmp_operand */
 
 /**
@@ -1078,7 +1554,7 @@ get_diff_from (jsp_ctx_t *ctx_p, /**< parser context */
 jsp_operand_t
 empty_operand (void)
 {
-  return jsp_operand_t::make_empty_operand ();
+  return jsp_make_empty_operand ();
 } /* empty_operand */
 
 /**
@@ -1087,7 +1563,7 @@ empty_operand (void)
 bool
 operand_is_empty (jsp_operand_t op) /**< operand */
 {
-  return op.is_empty_operand ();
+  return jsp_is_empty_operand (op);
 } /* operand_is_empty */
 
 /**
@@ -1183,10 +1659,14 @@ dumper_is_eval_literal (jsp_operand_t obj) /**< byte-code operand */
   /*
    * FIXME: Switch to corresponding magic string
    */
-  bool is_eval_lit = (obj.is_identifier_operand ()
-                      && lit_literal_equal_type_cstr (lit_get_literal_by_cp (obj.get_identifier_name ()), "eval"));
+  if (jsp_is_identifier_operand (obj))
+  {
+    lit_literal_t lit = lit_get_literal_by_cp (jsp_operand_get_identifier_name (obj));
 
-  return is_eval_lit;
+    return lit_literal_equal_type_cstr (lit, "eval");
+  }
+
+  return false;
 } /* dumper_is_eval_literal */
 
 /**
@@ -1199,33 +1679,33 @@ dump_variable_assignment (jsp_ctx_t *ctx_p, /**< parser context */
 {
   jsp_operand_t type_operand;
 
-  if (var.is_string_lit_operand ())
+  if (jsp_is_string_lit_operand (var))
   {
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_STRING);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_STRING);
   }
-  else if (var.is_number_lit_operand ())
+  else if (jsp_is_number_lit_operand (var))
   {
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_NUMBER);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_NUMBER);
   }
-  else if (var.is_regexp_lit_operand ())
+  else if (jsp_is_regexp_lit_operand (var))
   {
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_REGEXP);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_REGEXP);
   }
-  else if (var.is_smallint_operand ())
+  else if (jsp_is_smallint_operand (var))
   {
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_SMALLINT);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_SMALLINT);
   }
-  else if (var.is_simple_value_operand ())
+  else if (jsp_is_simple_value_operand (var))
   {
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_SIMPLE);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_SIMPLE);
   }
   else
   {
-    JERRY_ASSERT (var.is_identifier_operand ()
-                  || var.is_register_operand ()
-                  || var.is_this_operand ());
+    JERRY_ASSERT (jsp_is_identifier_operand (var)
+                  || jsp_is_register_operand (var)
+                  || jsp_is_this_operand (var));
 
-    type_operand = jsp_operand_t::make_idx_const_operand (OPCODE_ARG_TYPE_VARIABLE);
+    type_operand = jsp_make_idx_const_operand (OPCODE_ARG_TYPE_VARIABLE);
   }
 
   dump_triple_address (ctx_p, VM_OP_ASSIGNMENT, res, type_operand, var);
@@ -1250,7 +1730,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
                            VM_OP_FUNC_EXPR_N,
                            res,
                            obj,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
     case VARG_CONSTRUCT_EXPR:
@@ -1259,7 +1739,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
                            VM_OP_CONSTRUCT_N,
                            res,
                            obj,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
     case VARG_CALL_EXPR:
@@ -1268,7 +1748,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
                            VM_OP_CALL_N,
                            res,
                            obj,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
     case VARG_FUNC_DECL:
@@ -1276,7 +1756,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
       dump_double_address (ctx_p,
                            VM_OP_FUNC_DECL_N,
                            obj,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
     case VARG_ARRAY_DECL:
@@ -1284,7 +1764,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
       dump_double_address (ctx_p,
                            VM_OP_ARRAY_DECL,
                            res,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
     case VARG_OBJ_DECL:
@@ -1292,7 +1772,7 @@ dump_varg_header_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
       dump_double_address (ctx_p,
                            VM_OP_OBJ_DECL,
                            res,
-                           jsp_operand_t::make_unknown_operand ());
+                           jsp_make_unknown_operand ());
       break;
     }
   }
@@ -1472,7 +1952,7 @@ dump_call_additional_info (jsp_ctx_t *ctx_p, /**< parser context */
 {
   if (flags & OPCODE_CALL_FLAGS_HAVE_THIS_ARG)
   {
-    JERRY_ASSERT (this_arg.is_register_operand () || this_arg.is_this_operand ());
+    JERRY_ASSERT (jsp_is_register_operand (this_arg) || jsp_is_this_operand (this_arg));
     JERRY_ASSERT (!operand_is_empty (this_arg));
   }
   else
@@ -1482,8 +1962,8 @@ dump_call_additional_info (jsp_ctx_t *ctx_p, /**< parser context */
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_CALL_SITE_INFO),
-                       jsp_operand_t::make_idx_const_operand (flags),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_CALL_SITE_INFO),
+                       jsp_make_idx_const_operand (flags),
                        this_arg);
 } /* dump_call_additional_info */
 
@@ -1496,9 +1976,9 @@ dump_varg (jsp_ctx_t *ctx_p, /**< parser context */
 {
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_VARG),
                        op,
-                       jsp_operand_t::make_empty_operand ());
+                       jsp_make_empty_operand ());
 } /* dump_varg */
 
 void
@@ -1506,11 +1986,11 @@ dump_prop_name_and_value (jsp_ctx_t *ctx_p, /**< parser context */
                           jsp_operand_t name, /**< property name */
                           jsp_operand_t value) /**< property value */
 {
-  JERRY_ASSERT (name.is_string_lit_operand ());
+  JERRY_ASSERT (jsp_is_string_lit_operand (name));
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_DATA),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_DATA),
                        name,
                        value);
 } /* dump_prop_name_and_value */
@@ -1520,12 +2000,12 @@ dump_prop_getter_decl (jsp_ctx_t *ctx_p, /**< parser context */
                        jsp_operand_t name, /**< property name */
                        jsp_operand_t func) /**< property getter */
 {
-  JERRY_ASSERT (name.is_string_lit_operand ());
-  JERRY_ASSERT (func.is_register_operand ());
+  JERRY_ASSERT (jsp_is_string_lit_operand (name));
+  JERRY_ASSERT (jsp_is_register_operand (func));
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_GETTER),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_GETTER),
                        name,
                        func);
 } /* dump_prop_getter_decl */
@@ -1535,12 +2015,12 @@ dump_prop_setter_decl (jsp_ctx_t *ctx_p, /**< parser context */
                        jsp_operand_t name, /**< property name */
                        jsp_operand_t func) /**< property setter */
 {
-  JERRY_ASSERT (name.is_string_lit_operand ());
-  JERRY_ASSERT (func.is_register_operand ());
+  JERRY_ASSERT (jsp_is_string_lit_operand (name));
+  JERRY_ASSERT (jsp_is_register_operand (func));
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_SETTER),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_VARG_PROP_SETTER),
                        name,
                        func);
 } /* dump_prop_setter_decl */
@@ -1620,8 +2100,8 @@ dump_conditional_check_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
   dump_triple_address (ctx_p,
                        VM_OP_IS_FALSE_JMP_DOWN,
                        op,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return pos;
 } /* dump_conditional_check_for_rewrite */
@@ -1655,8 +2135,8 @@ dump_jump_to_end_for_rewrite (jsp_ctx_t *ctx_p) /**< parser context */
 
   dump_double_address (ctx_p,
                        VM_OP_JMP_DOWN,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return pos;
 } /* dump_jump_to_end_for_rewrite */
@@ -1707,16 +2187,16 @@ dump_continue_iterations_check (jsp_ctx_t *ctx_p, /**< parser context */
   {
     dump_double_address (ctx_p,
                          VM_OP_JMP_UP,
-                         jsp_operand_t::make_idx_const_operand (id1),
-                         jsp_operand_t::make_idx_const_operand (id2));
+                         jsp_make_idx_const_operand (id1),
+                         jsp_make_idx_const_operand (id2));
   }
   else
   {
     dump_triple_address (ctx_p,
                          VM_OP_IS_TRUE_JMP_UP,
                          op,
-                         jsp_operand_t::make_idx_const_operand (id1),
-                         jsp_operand_t::make_idx_const_operand (id2));
+                         jsp_make_idx_const_operand (id1),
+                         jsp_make_idx_const_operand (id2));
   }
 }
 
@@ -1773,16 +2253,16 @@ dump_simple_or_nested_jump_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
   if (jmp_opcode == VM_OP_JMP_DOWN
       || jmp_opcode == VM_OP_JMP_BREAK_CONTINUE)
   {
-    JERRY_ASSERT (cond.is_empty_operand ());
+    JERRY_ASSERT (jsp_is_empty_operand (cond));
 
     dump_double_address (ctx_p,
                          jmp_opcode,
-                         jsp_operand_t::make_idx_const_operand (id1),
-                         jsp_operand_t::make_idx_const_operand (id2));
+                         jsp_make_idx_const_operand (id1),
+                         jsp_make_idx_const_operand (id2));
   }
   else
   {
-    JERRY_ASSERT (!cond.is_empty_operand ());
+    JERRY_ASSERT (!jsp_is_empty_operand (cond));
 
     JERRY_ASSERT (jmp_opcode == VM_OP_IS_FALSE_JMP_DOWN
                   || jmp_opcode == VM_OP_IS_TRUE_JMP_DOWN);
@@ -1790,8 +2270,8 @@ dump_simple_or_nested_jump_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
     dump_triple_address (ctx_p,
                          jmp_opcode,
                          cond,
-                         jsp_operand_t::make_idx_const_operand (id1),
-                         jsp_operand_t::make_idx_const_operand (id2));
+                         jsp_make_idx_const_operand (id1),
+                         jsp_make_idx_const_operand (id2));
   }
 
   return ret;
@@ -1925,8 +2405,8 @@ dump_with_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
   dump_triple_address (ctx_p,
                        VM_OP_WITH,
                        op,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return oc;
 } /* dump_with_for_rewrite */
@@ -1958,9 +2438,9 @@ dump_with_end (jsp_ctx_t *ctx_p) /**< parser context */
 {
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_END_WITH),
-                       jsp_operand_t::make_empty_operand (),
-                       jsp_operand_t::make_empty_operand ());
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_END_WITH),
+                       jsp_make_empty_operand (),
+                       jsp_make_empty_operand ());
 } /* dump_with_end */
 
 /**
@@ -1981,8 +2461,8 @@ dump_for_in_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
   dump_triple_address (ctx_p,
                        VM_OP_FOR_IN,
                        op,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return oc;
 } /* dump_for_in_for_rewrite */
@@ -2014,9 +2494,9 @@ dump_for_in_end (jsp_ctx_t *ctx_p) /**< parser context */
 {
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_END_FOR_IN),
-                       jsp_operand_t::make_empty_operand (),
-                       jsp_operand_t::make_empty_operand ());
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_END_FOR_IN),
+                       jsp_make_empty_operand (),
+                       jsp_make_empty_operand ());
 } /* dump_for_in_end */
 
 /**
@@ -2031,8 +2511,8 @@ dump_try_for_rewrite (jsp_ctx_t *ctx_p) /**< parser context */
 
   dump_double_address (ctx_p,
                        VM_OP_TRY_BLOCK,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return pos;
 } /* dump_try_for_rewrite */
@@ -2067,19 +2547,19 @@ dump_catch_for_rewrite (jsp_ctx_t *ctx_p, /**< parser context */
 {
   vm_instr_counter_t pos = dumper_get_current_instr_counter (ctx_p);
 
-  JERRY_ASSERT (op.is_string_lit_operand ());
+  JERRY_ASSERT (jsp_is_string_lit_operand (op));
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_CATCH),
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_CATCH),
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER),
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_CATCH_EXCEPTION_IDENTIFIER),
                        op,
-                       jsp_operand_t::make_empty_operand ());
+                       jsp_make_empty_operand ());
 
   return pos;
 } /* dump_catch_for_rewrite */
@@ -2115,9 +2595,9 @@ dump_finally_for_rewrite (jsp_ctx_t *ctx_p) /**< parser context */
 
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_FINALLY),
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_FINALLY),
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return pos;
 } /* dump_finally_for_rewrite */
@@ -2149,9 +2629,9 @@ dump_end_try_catch_finally (jsp_ctx_t *ctx_p) /**< parser context */
 {
   dump_triple_address (ctx_p,
                        VM_OP_META,
-                       jsp_operand_t::make_idx_const_operand (OPCODE_META_TYPE_END_TRY_CATCH_FINALLY),
-                       jsp_operand_t::make_empty_operand (),
-                       jsp_operand_t::make_empty_operand ());
+                       jsp_make_idx_const_operand (OPCODE_META_TYPE_END_TRY_CATCH_FINALLY),
+                       jsp_make_empty_operand (),
+                       jsp_make_empty_operand ());
 } /* dump_end_try_catch_finally */
 
 /**
@@ -2171,7 +2651,7 @@ void
 dump_variable_declaration (jsp_ctx_t *ctx_p, /**< parser context */
                            lit_cpointer_t lit_id) /**< literal which holds variable's name */
 {
-  jsp_operand_t op_var_name = jsp_operand_t::make_string_lit_operand (lit_id);
+  jsp_operand_t op_var_name = jsp_make_string_lit_operand (lit_id);
   op_meta op = jsp_dmp_create_op_meta (ctx_p, VM_OP_VAR_DECL, &op_var_name, 1);
 
   JERRY_ASSERT (!jsp_is_dump_mode (ctx_p));
@@ -2199,9 +2679,9 @@ dump_reg_var_decl_for_rewrite (jsp_ctx_t *ctx_p) /**< parser context */
 
   dump_triple_address (ctx_p,
                        VM_OP_REG_VAR_DECL,
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand (),
-                       jsp_operand_t::make_unknown_operand ());
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand (),
+                       jsp_make_unknown_operand ());
 
   return oc;
 } /* dump_reg_var_decl_for_rewrite */

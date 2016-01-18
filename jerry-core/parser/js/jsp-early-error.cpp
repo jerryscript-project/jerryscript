@@ -116,8 +116,8 @@ jsp_early_error_start_checking_of_prop_names (void)
 void
 jsp_early_error_add_prop_name (jsp_operand_t op, prop_type pt)
 {
-  JERRY_ASSERT (op.is_string_lit_operand ());
-  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (op.get_literal ()), pt));
+  JERRY_ASSERT (jsp_is_string_lit_operand (op));
+  STACK_PUSH (props, create_prop_literal (lit_get_literal_by_cp (jsp_operand_get_literal (op)), pt));
 }
 
 void
@@ -210,14 +210,14 @@ jsp_early_error_check_for_eval_and_arguments_in_strict_mode (jsp_operand_t op, b
   {
     lit_cpointer_t lit_cp;
 
-    if (op.is_string_lit_operand ()
-        || op.is_number_lit_operand ())
+    if (jsp_is_string_lit_operand (op)
+        || jsp_is_number_lit_operand (op))
     {
-      lit_cp = op.get_literal ();
+      lit_cp = jsp_operand_get_literal (op);
     }
-    else if (op.is_identifier_operand ())
+    else if (jsp_is_identifier_operand (op))
     {
-      lit_cp = op.get_identifier_name ();
+      lit_cp = jsp_operand_get_identifier_name (op);
     }
     else
     {

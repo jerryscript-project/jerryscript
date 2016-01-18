@@ -979,7 +979,7 @@ parse_property_name (void)
     const char *s = lexer_token_type_to_string (lexer_get_token_type (tok));
     lit_literal_t lit = lit_find_or_create_literal_from_utf8_string ((const lit_utf8_byte_t *) s,
                                                                  (lit_utf8_size_t)strlen (s));
-    return jsp_operand_t::make_string_lit_operand (rcs_cpointer_compress (lit));
+    return jsp_make_string_lit_operand (rcs_cpointer_compress (lit));
   }
   else
   {
@@ -988,7 +988,7 @@ parse_property_name (void)
       case TOK_NAME:
       case TOK_STRING:
       {
-        return jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+        return jsp_make_string_lit_operand (token_data_as_lit_cp ());
       }
       case TOK_NUMBER:
       case TOK_SMALL_INT:
@@ -1011,7 +1011,7 @@ parse_property_name (void)
         JERRY_ASSERT (sz <= ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
 
         lit_literal_t str_lit = lit_find_or_create_literal_from_utf8_string (buff, sz);
-        return jsp_operand_t::make_string_lit_operand (rcs_cpointer_compress (str_lit));
+        return jsp_make_string_lit_operand (rcs_cpointer_compress (str_lit));
       }
       case TOK_NULL:
       case TOK_BOOL:
@@ -1021,7 +1021,7 @@ parse_property_name (void)
                                     : (tok.uid ? LIT_MAGIC_STRING_TRUE : LIT_MAGIC_STRING_FALSE));
         lit_literal_t lit = lit_find_or_create_literal_from_utf8_string (lit_get_magic_string_utf8 (id),
                                                                      lit_get_magic_string_size (id));
-        return jsp_operand_t::make_string_lit_operand (rcs_cpointer_compress (lit));
+        return jsp_make_string_lit_operand (rcs_cpointer_compress (lit));
       }
       default:
       {
@@ -1250,8 +1250,8 @@ jsp_start_parse_source_element_list (jsp_ctx_t *ctx_p,
   if (scope_type == SCOPE_TYPE_EVAL)
   {
     dump_variable_assignment (ctx_p,
-                              jsp_operand_t::make_reg_operand (VM_REG_SPECIAL_EVAL_RET),
-                              jsp_operand_t::make_simple_value_operand (ECMA_SIMPLE_VALUE_UNDEFINED));
+                              jsp_make_reg_operand (VM_REG_SPECIAL_EVAL_RET),
+                              jsp_make_simple_value_operand (ECMA_SIMPLE_VALUE_UNDEFINED));
   }
 } /* jsp_start_parse_source_element_list */
 
@@ -1261,7 +1261,7 @@ jsp_start_parse_function_scope (jsp_ctx_t *ctx_p,
                                 bool is_function_expression,
                                 size_t *out_formal_parameters_num_p)
 {
-  jsp_operand_t func;
+  jsp_operand_t func = empty_operand ();
 
   uint16_t index;
 
@@ -1284,12 +1284,8 @@ jsp_start_parse_function_scope (jsp_ctx_t *ctx_p,
     dump_binary_op (ctx_p,
                     VM_OP_FUNC_EXPR_REF,
                     func,
-                    jsp_operand_t::make_idx_const_operand (idx1),
-                    jsp_operand_t::make_idx_const_operand (idx2));
-  }
-  else
-  {
-    func = empty_operand ();
+                    jsp_make_idx_const_operand (idx1),
+                    jsp_make_idx_const_operand (idx2));
   }
 
   mem_cpointer_t parent_scope_or_bc_header_cp;
@@ -1336,8 +1332,8 @@ jsp_start_parse_function_scope (jsp_ctx_t *ctx_p,
 
   current_token_must_be_check_and_skip_it (ctx_p, TOK_OPEN_PAREN);
 
-  JERRY_ASSERT (func_name.is_empty_operand ()
-                || func_name.is_string_lit_operand ());
+  JERRY_ASSERT (jsp_is_empty_operand (func_name)
+                || jsp_is_string_lit_operand (func_name));
 
   varg_list_type vlt = is_function_expression ? VARG_FUNC_EXPR : VARG_FUNC_DECL;
 
@@ -1348,7 +1344,7 @@ jsp_start_parse_function_scope (jsp_ctx_t *ctx_p,
   while (!token_is (TOK_CLOSE_PAREN))
   {
     current_token_must_be (TOK_NAME);
-    jsp_operand_t formal_parameter_name = jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+    jsp_operand_t formal_parameter_name = jsp_make_string_lit_operand (token_data_as_lit_cp ());
     skip_token (ctx_p);
 
     dump_varg (ctx_p, formal_parameter_name);
@@ -1481,11 +1477,11 @@ dump_get_value_for_state_if_const (jsp_ctx_t *ctx_p,
                 && state_p->state < JSP_STATE_EXPR__END);
   JERRY_ASSERT (!state_p->is_value_based_reference);
 
-  if (state_p->u.expression.operand.is_string_lit_operand ()
-      || state_p->u.expression.operand.is_number_lit_operand ()
-      || state_p->u.expression.operand.is_regexp_lit_operand ()
-      || state_p->u.expression.operand.is_smallint_operand ()
-      || state_p->u.expression.operand.is_simple_value_operand ())
+  if (jsp_is_string_lit_operand (state_p->u.expression.operand)
+      || jsp_is_number_lit_operand (state_p->u.expression.operand)
+      || jsp_is_regexp_lit_operand (state_p->u.expression.operand)
+      || jsp_is_smallint_operand (state_p->u.expression.operand)
+      || jsp_is_simple_value_operand (state_p->u.expression.operand))
   {
     jsp_operand_t reg = tmp_operand ();
 
@@ -1508,7 +1504,7 @@ dump_get_value_for_state_if_ref (jsp_ctx_t *ctx_p,
   jsp_operand_t prop_name = state_p->u.expression.prop_name_operand;
   bool is_value_based_reference = state_p->is_value_based_reference;
 
-  jsp_operand_t val;
+  jsp_operand_t val = jsp_make_uninitialized_operand ();
 
   bool is_dump = false;
 
@@ -1520,7 +1516,7 @@ dump_get_value_for_state_if_ref (jsp_ctx_t *ctx_p,
       {
         JERRY_ASSERT (!state_p->is_get_value_dumped_for_prop_operand);
         /* FIXME:
-             if (obj.is_identifier_operand ())
+             if (jsp_is_identifier_operand (obj))
              {
              is_dump = true;
 
@@ -1535,7 +1531,7 @@ dump_get_value_for_state_if_ref (jsp_ctx_t *ctx_p,
              }
              }
 
-             if (prop_name.is_identifier_operand ())
+             if (jsp_is_identifier_operand (prop_name))
              {
              is_dump = true;
 
@@ -1559,7 +1555,7 @@ dump_get_value_for_state_if_ref (jsp_ctx_t *ctx_p,
     {
       is_dump = true;
 
-      JERRY_ASSERT (!prop_name.is_empty_operand ());
+      JERRY_ASSERT (!jsp_is_empty_operand (prop_name));
 
       if (!is_check_only)
       {
@@ -1574,7 +1570,7 @@ dump_get_value_for_state_if_ref (jsp_ctx_t *ctx_p,
       }
     }
     else if (!is_dump_for_value_based_refs_only
-             && (obj.is_identifier_operand () || obj.is_this_operand ()))
+             && (jsp_is_identifier_operand (obj) || jsp_is_this_operand (obj)))
     {
       if (!state_p->is_get_value_dumped_for_main_operand)
       {
@@ -1671,7 +1667,7 @@ jsp_start_call_dump (jsp_ctx_t *ctx_p,
     obj = state_p->u.expression.operand;
     jsp_operand_t prop_name = state_p->u.expression.prop_name_operand;
 
-    if (obj.is_identifier_operand ()
+    if (jsp_is_identifier_operand (obj)
         && !state_p->is_get_value_dumped_for_main_operand)
     {
       jsp_operand_t reg = tmp_operand ();
@@ -1936,7 +1932,7 @@ jsp_dump_unary_op (jsp_ctx_t *ctx_p,
       {
         if (!jsp_is_dump_mode (ctx_p))
         {
-          if (substate_p->u.expression.operand.is_identifier_operand ())
+          if (jsp_is_identifier_operand (substate_p->u.expression.operand))
           {
             jsp_early_error_check_for_eval_and_arguments_in_strict_mode (substate_p->u.expression.operand,
                                                                          jsp_is_strict_mode (ctx_p),
@@ -1986,7 +1982,7 @@ jsp_dump_unary_op (jsp_ctx_t *ctx_p,
       {
         opcode = VM_OP_DELETE_PROP;
       }
-      else if (substate_p->u.expression.operand.is_identifier_operand ())
+      else if (jsp_is_identifier_operand (substate_p->u.expression.operand))
       {
         if (!jsp_is_dump_mode (ctx_p))
         {
@@ -2025,7 +2021,7 @@ jsp_dump_unary_op (jsp_ctx_t *ctx_p,
     }
   }
 
-  jsp_operand_t dst;
+  jsp_operand_t dst = tmp_operand ();
 
   if (!substate_p->is_value_based_reference)
   {
@@ -2046,20 +2042,16 @@ jsp_dump_unary_op (jsp_ctx_t *ctx_p,
 
     is_combined_with_assignment = true;
   }
-  else
-  {
-    dst = tmp_operand ();
-  }
 
   if (is_dump_simple_assignment)
   {
     if (is_dump_undefined_or_boolean_true)
     {
-      dump_variable_assignment (ctx_p, dst, jsp_operand_t::make_simple_value_operand (ECMA_SIMPLE_VALUE_UNDEFINED));
+      dump_variable_assignment (ctx_p, dst, jsp_make_simple_value_operand (ECMA_SIMPLE_VALUE_UNDEFINED));
     }
     else
     {
-      dump_variable_assignment (ctx_p, dst, jsp_operand_t::make_simple_value_operand (ECMA_SIMPLE_VALUE_TRUE));
+      dump_variable_assignment (ctx_p, dst, jsp_make_simple_value_operand (ECMA_SIMPLE_VALUE_TRUE));
     }
   }
   else
@@ -2265,7 +2257,7 @@ jsp_dump_binary_op (jsp_ctx_t *ctx_p,
 
       is_combined_with_assignment = true;
     }
-    else if (op1.is_register_operand ())
+    else if (jsp_is_register_operand (op1))
     {
       dst = op1;
     }
@@ -2797,7 +2789,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         {
           JERRY_ASSERT (scope_type == SCOPE_TYPE_EVAL);
 
-          dump_retval (ctx_p, jsp_operand_t::make_reg_operand (VM_REG_SPECIAL_EVAL_RET));
+          dump_retval (ctx_p, jsp_make_reg_operand (VM_REG_SPECIAL_EVAL_RET));
         }
 
         jsp_set_scope_type (ctx_p, state_p->u.source_elements.parent_scope_type);
@@ -2918,7 +2910,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           }
           case TOK_KW_THIS:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_this_operand ();
+            state_p->u.expression.operand = jsp_make_this_operand ();
             break;
           }
           case TOK_KW_NEW:
@@ -2944,39 +2936,39 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
               }
             }
 
-            state_p->u.expression.operand = jsp_operand_t::make_identifier_operand (token_data_as_lit_cp ());
+            state_p->u.expression.operand = jsp_make_identifier_operand (token_data_as_lit_cp ());
 
             break;
           }
           case TOK_REGEXP:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_regexp_lit_operand (token_data_as_lit_cp ());
+            state_p->u.expression.operand = jsp_make_regexp_lit_operand (token_data_as_lit_cp ());
             break;
           }
           case TOK_NULL:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_simple_value_operand (ECMA_SIMPLE_VALUE_NULL);
+            state_p->u.expression.operand = jsp_make_simple_value_operand (ECMA_SIMPLE_VALUE_NULL);
             break;
           }
           case TOK_BOOL:
           {
             ecma_simple_value_t simple_value = (bool) token_data () ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
-            state_p->u.expression.operand = jsp_operand_t::make_simple_value_operand (simple_value);
+            state_p->u.expression.operand = jsp_make_simple_value_operand (simple_value);
             break;
           }
           case TOK_SMALL_INT:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_smallint_operand ((uint8_t) token_data ());
+            state_p->u.expression.operand = jsp_make_smallint_operand ((uint8_t) token_data ());
             break;
           }
           case TOK_NUMBER:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_number_lit_operand (token_data_as_lit_cp ());
+            state_p->u.expression.operand = jsp_make_number_lit_operand (token_data_as_lit_cp ());
             break;
           }
           case TOK_STRING:
           {
-            state_p->u.expression.operand = jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+            state_p->u.expression.operand = jsp_make_string_lit_operand (token_data_as_lit_cp ());
             break;
           }
           default:
@@ -3002,15 +2994,12 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       }
       else
       {
-        jsp_operand_t name;
+        jsp_operand_t name = empty_operand ();
+
         if (token_is (TOK_NAME))
         {
-          name = jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+          name = jsp_make_string_lit_operand (token_data_as_lit_cp ());
           skip_token (ctx_p);
-        }
-        else
-        {
-          name = empty_operand ();
         }
 
         state_p->u.expression.operand = jsp_start_parse_function_scope (ctx_p, name, true, NULL);
@@ -3030,7 +3019,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         jsp_operand_t prop_name = state_p->u.expression.operand;
         jsp_operand_t value = substate_p->u.expression.operand;
 
-        JERRY_ASSERT (prop_name.is_string_lit_operand ());
+        JERRY_ASSERT (jsp_is_string_lit_operand (prop_name));
 
         dump_prop_name_and_value (ctx_p, prop_name, value);
 
@@ -3045,7 +3034,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       }
       else
       {
-        JERRY_ASSERT (state_p->u.expression.operand.is_empty_operand ());
+        JERRY_ASSERT (jsp_is_empty_operand (state_p->u.expression.operand));
         state_p->u.expression.operand = parse_property_name ();
         skip_token (ctx_p);
 
@@ -3122,7 +3111,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           EMIT_ERROR (JSP_EARLY_ERROR_SYNTAX, "Invalid number of formal parameters");
         }
 
-        JERRY_ASSERT (state_p->u.expression.operand.is_empty_operand ());
+        JERRY_ASSERT (jsp_is_empty_operand (state_p->u.expression.operand));
         state_p->u.expression.operand = func;
 
         state_p->u.expression.u.accessor_prop_decl.prop_name = prop_name;
@@ -3250,7 +3239,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
             jsp_operand_t reg = tmp_operand ();
             dump_variable_assignment (ctx_p,
                                       reg,
-                                      jsp_operand_t::make_simple_value_operand (ECMA_SIMPLE_VALUE_ARRAY_HOLE));
+                                      jsp_make_simple_value_operand (ECMA_SIMPLE_VALUE_ARRAY_HOLE));
             dump_varg (ctx_p, reg);
 
             state_p->u.expression.u.varg_sequence.list_length++;
@@ -3331,7 +3320,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           }
           else if (state_p->u.expression.token_type == TOK_OPEN_PAREN)
           {
-            JERRY_ASSERT (state_p->u.expression.operand.is_empty_operand ());
+            JERRY_ASSERT (jsp_is_empty_operand (state_p->u.expression.operand));
 
             state_p->u.expression.operand = substate_p->u.expression.operand;
             state_p->u.expression.prop_name_operand = substate_p->u.expression.prop_name_operand;
@@ -3346,8 +3335,8 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           else if (state_p->u.expression.token_type == TOK_KW_NEW)
           {
             JERRY_ASSERT (substate_p->state == JSP_STATE_EXPR_MEMBER);
-            JERRY_ASSERT (state_p->u.expression.operand.is_empty_operand ());
-            JERRY_ASSERT (!substate_p->u.expression.operand.is_empty_operand ());
+            JERRY_ASSERT (jsp_is_empty_operand (state_p->u.expression.operand));
+            JERRY_ASSERT (!jsp_is_empty_operand (substate_p->u.expression.operand));
 
             state_p->u.expression.operand = substate_p->u.expression.operand;
             state_p->u.expression.prop_name_operand = substate_p->u.expression.prop_name_operand;
@@ -3447,7 +3436,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           state_p->u.expression.prop_name_operand = tmp_operand ();
           dump_variable_assignment (ctx_p,
                                     state_p->u.expression.prop_name_operand,
-                                    jsp_operand_t::make_string_lit_operand (prop_name));
+                                    jsp_make_string_lit_operand (prop_name));
 
           state_p->is_value_based_reference = true;
         }
@@ -3573,7 +3562,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
           state_p->u.expression.prop_name_operand = tmp_operand ();
           dump_variable_assignment (ctx_p,
                                     state_p->u.expression.prop_name_operand,
-                                    jsp_operand_t::make_string_lit_operand (prop_name));
+                                    jsp_make_string_lit_operand (prop_name));
 
           state_p->is_value_based_reference = true;
         }
@@ -3625,7 +3614,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
           if (state_p->is_need_retval)
           {
-            JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+            JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
           }
           else
           {
@@ -3751,7 +3740,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
             state_p->u.expression.prop_name_operand = empty_operand ();
             state_p->is_value_based_reference = false;
           }
-          else if (state_p->u.expression.operand.is_identifier_operand ())
+          else if (jsp_is_identifier_operand (state_p->u.expression.operand))
           {
             if (!jsp_is_dump_mode (ctx_p))
             {
@@ -3793,7 +3782,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
             state_p->u.expression.prop_name_operand = empty_operand ();
             state_p->is_value_based_reference = false;
           }
-          else if (state_p->u.expression.operand.is_identifier_operand ())
+          else if (jsp_is_identifier_operand (state_p->u.expression.operand))
           {
             if (!jsp_is_dump_mode (ctx_p))
             {
@@ -3826,7 +3815,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
             {
               if (!jsp_is_dump_mode (ctx_p))
               {
-                if (!state_p->u.expression.operand.is_identifier_operand ())
+                if (!jsp_is_identifier_operand (state_p->u.expression.operand))
                 {
                   PARSE_ERROR (JSP_EARLY_ERROR_REFERENCE, "Invalid left-hand-side expression", tok.loc);
                 }
@@ -4023,7 +4012,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
           JERRY_ASSERT (state_p->u.expression.token_type == TOK_DOUBLE_AND);
 
-          JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+          JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
 
           dump_variable_assignment (ctx_p, state_p->u.expression.operand, substate_p->u.expression.operand);
 
@@ -4132,7 +4121,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
           JERRY_ASSERT (state_p->u.expression.token_type == TOK_DOUBLE_OR);
 
-          JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+          JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
           dump_variable_assignment (ctx_p, state_p->u.expression.operand, substate_p->u.expression.operand);
 
           state_p->u.expression.token_type = TOK_EMPTY;
@@ -4163,7 +4152,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
               if (state_p->is_fixed_ret_operand)
               {
-                JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+                JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
 
                 ret = state_p->u.expression.operand;
               }
@@ -4229,7 +4218,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         current_token_must_be_check_and_skip_it (ctx_p, TOK_COLON);
 
         JERRY_ASSERT (state_p->is_fixed_ret_operand);
-        JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+        JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
         JERRY_ASSERT (substate_p->state == JSP_STATE_EXPR_ASSIGNMENT);
 
         dump_get_value_if_ref (ctx_p, substate_p, true);
@@ -4251,7 +4240,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         JERRY_ASSERT (state_p->u.expression.token_type == TOK_COLON);
 
         JERRY_ASSERT (state_p->is_fixed_ret_operand);
-        JERRY_ASSERT (state_p->u.expression.operand.is_register_operand ());
+        JERRY_ASSERT (jsp_is_register_operand (state_p->u.expression.operand));
         JERRY_ASSERT (substate_p->state == JSP_STATE_EXPR_ASSIGNMENT);
 
         dump_get_value_if_ref (ctx_p, substate_p, true);
@@ -4288,7 +4277,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
            *          11.14, step 2
            */
           JERRY_ASSERT (!state_p->is_value_based_reference
-                        && !state_p->u.expression.operand.is_identifier_operand ());
+                        && !jsp_is_identifier_operand (state_p->u.expression.operand));
 
           state_p->u.expression.operand = substate_p->u.expression.operand;
         }
@@ -4631,7 +4620,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
         current_token_must_be (TOK_NAME);
 
-        const jsp_operand_t func_name = jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+        const jsp_operand_t func_name = jsp_make_string_lit_operand (token_data_as_lit_cp ());
         skip_token (ctx_p);
 
         state_p->state = JSP_STATE_FUNC_DECL_FINISH;
@@ -4775,7 +4764,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
       current_token_must_be (TOK_NAME);
 
       const lit_cpointer_t lit_cp = token_data_as_lit_cp ();
-      const jsp_operand_t name = jsp_operand_t::make_string_lit_operand (lit_cp);
+      const jsp_operand_t name = jsp_make_string_lit_operand (lit_cp);
 
       skip_token (ctx_p);
 
@@ -5036,7 +5025,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         current_token_must_be (TOK_NAME);
 
         const lit_cpointer_t lit_cp = token_data_as_lit_cp ();
-        const jsp_operand_t name = jsp_operand_t::make_string_lit_operand (lit_cp);
+        const jsp_operand_t name = jsp_make_string_lit_operand (lit_cp);
 
         skip_token (ctx_p);
 
@@ -5077,7 +5066,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
       seek_token (ctx_p, state_p->u.statement.u.iterational.u.loop_for_in.u.body_loc);
 
-      jsp_operand_t for_in_special_reg = jsp_operand_t::make_reg_operand (VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME);
+      jsp_operand_t for_in_special_reg = jsp_make_reg_operand (VM_REG_SPECIAL_FOR_IN_PROPERTY_NAME);
 
       if (!state_p->is_var_decl_no_in)
       {
@@ -5103,7 +5092,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
         lit_cpointer_t var_name_lit_cp = state_p->u.statement.u.iterational.u.loop_for_in.var_name_lit_cp;
 
-        dump_variable_assignment (ctx_p, jsp_operand_t::make_identifier_operand (var_name_lit_cp), for_in_special_reg);
+        dump_variable_assignment (ctx_p, jsp_make_identifier_operand (var_name_lit_cp), for_in_special_reg);
       }
 
       state_p->is_simply_jumpable_border = true;
@@ -5178,16 +5167,12 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         current_token_must_be_check_and_skip_it (ctx_p, TOK_COLON);
 
         jsp_operand_t switch_expr = state_p->u.statement.u.switch_statement.expr;
+        jsp_operand_t condition_reg = tmp_operand ();
 
-        jsp_operand_t condition_reg;
-        if (case_expr.is_register_operand ())
+        if (jsp_is_register_operand (case_expr))
         {
           /* reuse the register */
           condition_reg = case_expr;
-        }
-        else
-        {
-          condition_reg = tmp_operand ();
         }
 
         dump_binary_op (ctx_p, VM_OP_EQUAL_VALUE_TYPE, condition_reg, switch_expr, case_expr);
@@ -5315,7 +5300,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
 
         current_token_must_be (TOK_NAME);
 
-        const jsp_operand_t name = jsp_operand_t::make_string_lit_operand (token_data_as_lit_cp ());
+        const jsp_operand_t name = jsp_make_string_lit_operand (token_data_as_lit_cp ());
 
         if (!jsp_is_dump_mode (ctx_p))
         {
@@ -5447,7 +5432,7 @@ jsp_parse_source_element_list (jsp_ctx_t *ctx_p,
         JERRY_ASSERT (substate_p->is_need_retval);
 
         dump_variable_assignment (ctx_p,
-                                  jsp_operand_t::make_reg_operand (VM_REG_SPECIAL_EVAL_RET),
+                                  jsp_make_reg_operand (VM_REG_SPECIAL_EVAL_RET),
                                   substate_p->u.expression.operand);
       }
 

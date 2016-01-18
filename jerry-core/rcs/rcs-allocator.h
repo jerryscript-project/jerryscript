@@ -22,7 +22,7 @@
 extern void rcs_check_record_alignment (rcs_record_t *);
 extern void rcs_free_record (rcs_record_set_t *, rcs_record_t *);
 extern size_t rcs_get_node_data_space_size (void);
-extern uint8_t *rcs_get_node_data_space (rcs_record_set_t *, rcs_chunked_list_t::node_t *);
+extern uint8_t *rcs_get_node_data_space (rcs_record_set_t *, rcs_chunked_list_node_t *);
 extern rcs_record_t *rcs_alloc_record (rcs_record_set_t *, rcs_record_type_t, size_t);
 
 #endif /* !RCS_ALLOCATOR_H */

@@ -29,7 +29,7 @@ lit_init ()
 {
   JERRY_ASSERT (rcs_get_node_data_space_size () % RCS_DYN_STORAGE_LENGTH_UNIT == 0);
 
-  rcs_lit_storage.init ();
+  rcs_chunked_list_init (&rcs_lit_storage);
 
   lit_magic_strings_init ();
   lit_magic_strings_ex_init ();
@@ -41,8 +41,8 @@ lit_init ()
 void
 lit_finalize ()
 {
-  rcs_lit_storage.cleanup ();
-  rcs_lit_storage.free ();
+  rcs_chunked_list_cleanup (&rcs_lit_storage);
+  rcs_chunked_list_free (&rcs_lit_storage);
 } /* lit_finalize */
 
 /**

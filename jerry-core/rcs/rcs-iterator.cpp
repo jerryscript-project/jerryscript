@@ -65,7 +65,8 @@ rcs_iterator_access (rcs_iterator_t *ctx_p, /**< iterator context */
 
   JERRY_ASSERT (!rcs_iterator_finished (ctx_p));
 
-  rcs_chunked_list_t::node_t *current_node_p = ctx_p->recordset_p->get_node_from_pointer (ctx_p->current_pos_p);
+  rcs_chunked_list_node_t *current_node_p =
+  rcs_chunked_list_get_node_from_pointer (ctx_p->recordset_p, ctx_p->current_pos_p);
   uint8_t *current_node_data_space_p = rcs_get_node_data_space (ctx_p->recordset_p, current_node_p);
   size_t left_in_node = node_data_space_size - (size_t) (ctx_p->current_pos_p - current_node_data_space_p);
 
@@ -95,7 +96,7 @@ rcs_iterator_access (rcs_iterator_t *ctx_p, /**< iterator context */
       }
       else if (ctx_p->current_offset + size < record_size)
       {
-        current_node_p = ctx_p->recordset_p->get_next (current_node_p);
+        current_node_p = rcs_chunked_list_get_next (current_node_p);
         JERRY_ASSERT (current_node_p);
         ctx_p->current_pos_p = rcs_get_node_data_space (ctx_p->recordset_p, current_node_p);
       }
@@ -119,7 +120,7 @@ rcs_iterator_access (rcs_iterator_t *ctx_p, /**< iterator context */
       memcpy (ctx_p->current_pos_p, data, first_chunk_size);
     }
 
-    rcs_chunked_list_t::node_t *next_node_p = ctx_p->recordset_p->get_next (current_node_p);
+    rcs_chunked_list_node_t *next_node_p = rcs_chunked_list_get_next (current_node_p);
     JERRY_ASSERT (next_node_p != NULL);
     uint8_t *next_node_data_space_p = rcs_get_node_data_space (ctx_p->recordset_p, next_node_p);
 

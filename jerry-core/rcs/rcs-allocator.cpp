@@ -38,18 +38,18 @@ rcs_assert_state_is_correct (rcs_record_set_t *rec_set_p __attr_unused___) /**< 
     JERRY_ASSERT (rcs_record_get_size (rec_p) > 0);
     record_size_sum += rcs_record_get_size (rec_p);
 
-    rcs_chunked_list_t::node_t *node_p = rec_set_p->get_node_from_pointer (rec_p);
+    rcs_chunked_list_node_t *node_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, rec_p);
     next_rec_p = rcs_record_get_next (rec_set_p, rec_p);
-    rcs_chunked_list_t::node_t *next_node_p = NULL;
+    rcs_chunked_list_node_t *next_node_p = NULL;
 
     if (next_rec_p != NULL)
     {
-      next_node_p = rec_set_p->get_node_from_pointer (next_rec_p);
+      next_node_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, next_rec_p);
     }
 
     while (node_p != next_node_p)
     {
-      node_p = rec_set_p->get_next (node_p);
+      node_p = rcs_chunked_list_get_next (node_p);
       node_size_sum += rcs_get_node_data_space_size ();
     }
   }
@@ -104,7 +104,7 @@ rcs_check_record_alignment (rcs_record_t *rec_p) /**< record */
 size_t
 rcs_get_node_data_space_size (void)
 {
-  return JERRY_ALIGNDOWN (rcs_chunked_list_t::get_node_data_space_size (), RCS_DYN_STORAGE_LENGTH_UNIT);
+  return JERRY_ALIGNDOWN (rcs_chunked_list_get_node_data_space_size (), RCS_DYN_STORAGE_LENGTH_UNIT);
 } /* rcs_get_node_data_space_size */
 
 /**
@@ -114,13 +114,13 @@ rcs_get_node_data_space_size (void)
  */
 uint8_t *
 rcs_get_node_data_space (rcs_record_set_t *rec_set_p, /**< recordset */
-                         rcs_chunked_list_t::node_t *node_p) /**< the node */
+                         rcs_chunked_list_node_t *node_p) /**< the node */
 {
-  uintptr_t unaligned_data_space_start = (uintptr_t) rec_set_p->get_node_data_space (node_p);
+  uintptr_t unaligned_data_space_start = (uintptr_t) rcs_chunked_list_get_node_data_space (rec_set_p, node_p);
   uintptr_t aligned_data_space_start = JERRY_ALIGNUP (unaligned_data_space_start, RCS_DYN_STORAGE_LENGTH_UNIT);
 
-  JERRY_ASSERT (unaligned_data_space_start + rcs_chunked_list_t::get_node_data_space_size ()
-                == aligned_data_space_start + rcs_record_set_t::get_node_data_space_size ());
+  JERRY_ASSERT (unaligned_data_space_start + rcs_chunked_list_get_node_data_space_size ()
+                == aligned_data_space_start + rcs_chunked_list_get_node_data_space_size ());
 
   return (uint8_t *) aligned_data_space_start;
 } /* rcs_get_node_data_space */
@@ -146,7 +146,7 @@ rcs_alloc_record_in_place (rcs_record_set_t *rec_set_p, /**< recordset */
     }
     else
     {
-      rcs_chunked_list_t::node_t *node_p = rec_set_p->get_node_from_pointer (next_record_p);
+      rcs_chunked_list_node_t *node_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, next_record_p);
       uint8_t *node_data_space_p = rcs_get_node_data_space (rec_set_p, node_p);
 
       JERRY_ASSERT ((uint8_t *) next_record_p < node_data_space_p + node_data_space_size);
@@ -162,7 +162,7 @@ rcs_alloc_record_in_place (rcs_record_set_t *rec_set_p, /**< recordset */
         size_t size_passed_back = (size_t) ((uint8_t *) next_record_p - node_data_space_p);
         JERRY_ASSERT (size_passed_back < free_size && size_passed_back + node_data_space_size > free_size);
 
-        node_p = rec_set_p->get_prev (node_p);
+        node_p = rcs_chunked_list_get_prev (node_p);
         node_data_space_p = rcs_get_node_data_space (rec_set_p, node_p);
 
         free_rec_p = (rcs_record_t *) (node_data_space_p + node_data_space_size - \
@@ -174,15 +174,15 @@ rcs_alloc_record_in_place (rcs_record_set_t *rec_set_p, /**< recordset */
   }
   else if (free_size != 0)
   {
-    rcs_chunked_list_t::node_t *node_p = rec_set_p->get_node_from_pointer (place_p);
+    rcs_chunked_list_node_t *node_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, place_p);
     JERRY_ASSERT (node_p != NULL);
 
-    rcs_chunked_list_t::node_t *next_node_p = rec_set_p->get_next (node_p);
+    rcs_chunked_list_node_t *next_node_p = rcs_chunked_list_get_next (node_p);
 
     while (next_node_p != NULL)
     {
       node_p = next_node_p;
-      next_node_p = rec_set_p->get_next (node_p);
+      next_node_p = rcs_chunked_list_get_next (node_p);
     }
 
     uint8_t *node_data_space_p = rcs_get_node_data_space (rec_set_p, node_p);
@@ -230,7 +230,7 @@ rcs_alloc_space_for_record (rcs_record_set_t *rec_set_p, /**< recordset */
         return rec_p;
       }
 
-      rcs_chunked_list_t::node_t *node_p = rec_set_p->get_node_from_pointer (rec_p);
+      rcs_chunked_list_node_t *node_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, rec_p);
       uint8_t *node_data_space_p = rcs_get_node_data_space (rec_set_p, node_p);
       uint8_t *node_data_space_end_p = node_data_space_p + node_data_space_size;
       uint8_t *rec_space_p = (uint8_t *) rec_p;
@@ -241,7 +241,7 @@ rcs_alloc_space_for_record (rcs_record_set_t *rec_set_p, /**< recordset */
          * thus it can be extended up to necessary size. */
         while (record_size < bytes)
         {
-          node_p = rec_set_p->insert_new (node_p);
+          node_p = rcs_chunked_list_insert_new (rec_set_p, node_p);
           record_size += node_data_space_size;
         }
 
@@ -261,7 +261,7 @@ rcs_alloc_space_for_record (rcs_record_set_t *rec_set_p, /**< recordset */
   }
 
   /* Free record of sufficient size was not found. */
-  rcs_chunked_list_t::node_t *node_p = rec_set_p->append_new ();
+  rcs_chunked_list_node_t *node_p = rcs_chunked_list_append_new (rec_set_p);
   rcs_record_t *new_rec_p = (rcs_record_t *) rcs_get_node_data_space (rec_set_p, node_p);
 
   size_t allocated_size = node_data_space_size;
@@ -269,7 +269,7 @@ rcs_alloc_space_for_record (rcs_record_set_t *rec_set_p, /**< recordset */
   while (allocated_size < bytes)
   {
     allocated_size += node_data_space_size;
-    rec_set_p->append_new ();
+    rcs_chunked_list_append_new (rec_set_p);
   }
 
   rcs_alloc_record_in_place (rec_set_p, new_rec_p, NULL, allocated_size - bytes);
@@ -335,12 +335,12 @@ rcs_free_record (rcs_record_set_t *rec_set_p, /**< recordset */
   JERRY_ASSERT (rec_from_p != NULL && RCS_RECORD_IS_FREE (rec_from_p));
   JERRY_ASSERT (rec_to_p == NULL || !RCS_RECORD_IS_FREE (rec_to_p));
 
-  rcs_chunked_list_t::node_t *node_from_p = rec_set_p->get_node_from_pointer (rec_from_p);
-  rcs_chunked_list_t::node_t *node_to_p = NULL;
+  rcs_chunked_list_node_t *node_from_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, rec_from_p);
+  rcs_chunked_list_node_t *node_to_p = NULL;
 
   if (rec_to_p != NULL)
   {
-    node_to_p = rec_set_p->get_node_from_pointer (rec_to_p);
+    node_to_p = rcs_chunked_list_get_node_from_pointer (rec_set_p, rec_to_p);
   }
 
   const size_t node_data_space_size = rcs_get_node_data_space_size ();
@@ -356,18 +356,18 @@ rcs_free_record (rcs_record_set_t *rec_set_p, /**< recordset */
   }
   else
   {
-    rcs_chunked_list_t::node_t *iter_node_p;
-    rcs_chunked_list_t::node_t *iter_next_node_p;
+    rcs_chunked_list_node_t *iter_node_p;
+    rcs_chunked_list_node_t *iter_next_node_p;
 
-    for (iter_node_p = rec_set_p->get_next (node_from_p);
+    for (iter_node_p = rcs_chunked_list_get_next (node_from_p);
          iter_node_p != node_to_p;
          iter_node_p = iter_next_node_p)
     {
-      iter_next_node_p = rec_set_p->get_next (iter_node_p);
-      rec_set_p->remove (iter_node_p);
+      iter_next_node_p = rcs_chunked_list_get_next (iter_node_p);
+      rcs_chunked_list_remove (rec_set_p, iter_node_p);
     }
 
-    JERRY_ASSERT (rec_set_p->get_next (node_from_p) == node_to_p);
+    JERRY_ASSERT (rcs_chunked_list_get_next (node_from_p) == node_to_p);
 
     size_t node_from_space = (size_t) (rcs_get_node_data_space (rec_set_p, node_from_p) \
                                        + node_data_space_size - rec_from_beg_p);
@@ -385,10 +385,10 @@ rcs_free_record (rcs_record_set_t *rec_set_p, /**< recordset */
   }
   else if (prev_rec_p == NULL)
   {
-    rec_set_p->remove (node_from_p);
+    rcs_chunked_list_remove (rec_set_p, node_from_p);
 
     JERRY_ASSERT (node_to_p == NULL);
-    JERRY_ASSERT (rec_set_p->get_first () == NULL);
+    JERRY_ASSERT (rcs_chunked_list_get_first (rec_set_p) == NULL);
   }
 
   rcs_assert_state_is_correct (rec_set_p);

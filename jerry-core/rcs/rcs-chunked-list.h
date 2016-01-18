@@ -29,67 +29,36 @@
  */
 
 /**
- * Chunked list
- *
- * Note:
- *      Each node exactly fits size of one memory heap's chunk
- */
-class rcs_chunked_list_t
+  * List node
+  */
+typedef struct
 {
-public:
-  /**
-   * Constructor of chunked list
-   */
-  rcs_chunked_list_t ()
-  {
-    head_p = tail_p = NULL;
-  } /* rcs_chunked_list_t */
-
-  /**
-   * List node
-   */
-  typedef struct
-  {
-    mem_cpointer_t prev_cp; /**< prev list's node */
-    mem_cpointer_t next_cp; /**< next list's node */
-  } node_t;
-
-  void init (void);
-  void cleanup (void);
-  void free (void);
-
-  node_t *get_first (void) const;
-  node_t *get_last (void) const;
-
-  node_t *get_prev (node_t *) const;
-  node_t *get_next (node_t *) const;
-
-  node_t *append_new (void);
-  node_t *insert_new (node_t *);
-
-  void remove (node_t *);
-
-  node_t *get_node_from_pointer (void *) const;
-  uint8_t *get_node_data_space (node_t *) const;
-
-  static size_t get_node_data_space_size (void);
-
-private:
-  void set_prev (node_t *, node_t *);
-  void set_next (node_t *, node_t *);
-
-  static size_t get_node_size (void);
-
-  void assert_list_is_correct (void) const;
-  void assert_node_is_correct (const node_t *) const;
-
-  node_t *head_p; /**< head node of list */
-  node_t *tail_p; /**< tail node of list */
-};
+  mem_cpointer_t prev_cp; /**< prev list's node */
+  mem_cpointer_t next_cp; /**< next list's node */
+} rcs_chunked_list_node_t;
 
 /**
- * @}
- * @}
+ * Chunked list
  */
+typedef struct
+{
+  rcs_chunked_list_node_t *head_p; /**< head node of list */
+  rcs_chunked_list_node_t *tail_p; /**< tail node of list */
+} rcs_chunked_list_t;
+
+extern void rcs_chunked_list_init (rcs_chunked_list_t *);
+extern void rcs_chunked_list_free (rcs_chunked_list_t *);
+extern void rcs_chunked_list_cleanup (rcs_chunked_list_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_get_first (rcs_chunked_list_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_get_last (rcs_chunked_list_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_get_prev (rcs_chunked_list_node_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_get_next (rcs_chunked_list_node_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_append_new (rcs_chunked_list_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_insert_new (rcs_chunked_list_t *, rcs_chunked_list_node_t *);
+extern void rcs_chunked_list_remove (rcs_chunked_list_t *, rcs_chunked_list_node_t *);
+extern rcs_chunked_list_node_t *rcs_chunked_list_get_node_from_pointer (rcs_chunked_list_t *, void *);
+extern uint8_t *rcs_chunked_list_get_node_data_space (rcs_chunked_list_t *, rcs_chunked_list_node_t *);
+extern size_t rcs_chunked_list_get_node_data_space_size (void);
+
 
 #endif /* RCS_CHUNKED_LIST_H */

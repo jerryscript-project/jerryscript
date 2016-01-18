@@ -133,7 +133,7 @@ main (int __attr_unused___ argc,
     // Check empty string exists
     JERRY_ASSERT (lit_find_literal_by_utf8_string (NULL, 0));
 
-    rcs_lit_storage.cleanup ();
+    rcs_chunked_list_cleanup (&rcs_lit_storage);
     JERRY_ASSERT (rcs_record_get_first (&rcs_lit_storage) == NULL);
   }
 

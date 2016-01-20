@@ -1318,9 +1318,7 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
-    TODO ("Cache magic string lengths")
-    return lit_utf8_string_length (lit_get_magic_string_utf8 (string_p->u.magic_string_id),
-                                   lit_get_magic_string_size (string_p->u.magic_string_id));
+    return lit_get_magic_string_length (string_p->u.magic_string_id);
   }
   else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
   {

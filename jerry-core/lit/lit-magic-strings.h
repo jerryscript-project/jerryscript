@@ -48,6 +48,7 @@ extern uint32_t lit_get_magic_string_ex_count (void);
 
 extern const lit_utf8_byte_t *lit_get_magic_string_utf8 (lit_magic_string_id_t);
 extern lit_utf8_size_t lit_get_magic_string_size (lit_magic_string_id_t);
+extern lit_utf8_size_t lit_get_magic_string_length (lit_magic_string_id_t);
 
 extern const lit_utf8_byte_t *lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t);
 extern lit_utf8_size_t lit_get_magic_string_ex_size (lit_magic_string_ex_id_t);

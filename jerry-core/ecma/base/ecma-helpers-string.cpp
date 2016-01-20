@@ -1043,29 +1043,34 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 {
   if (string1_p->container == string2_p->container)
   {
-    if (string1_p->container == ECMA_STRING_CONTAINER_LIT_TABLE)
+    switch ((ecma_string_container_t) string1_p->container)
     {
-      JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
-
-      return false;
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
-    {
-      JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
-
-      return false;
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
-    {
-      JERRY_ASSERT (string1_p->u.magic_string_ex_id != string2_p->u.magic_string_ex_id);
-
-      return false;
-    }
-    else if (string1_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-    {
-      JERRY_ASSERT (string1_p->u.uint32_number != string2_p->u.uint32_number);
-
-      return false;
+      case ECMA_STRING_CONTAINER_LIT_TABLE:
+      {
+        JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
+        return false;
+      }
+      case ECMA_STRING_CONTAINER_MAGIC_STRING:
+      {
+        JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
+        return false;
+      }
+      case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
+      {
+        JERRY_ASSERT (string1_p->u.magic_string_ex_id != string2_p->u.magic_string_ex_id);
+        return false;
+      }
+      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+      {
+        JERRY_ASSERT (string1_p->u.uint32_number != string2_p->u.uint32_number);
+        return false;
+      }
+      default:
+      {
+        JERRY_ASSERT (string1_p->container == ECMA_STRING_CONTAINER_HEAP_NUMBER
+                      || string1_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
+        break;
+      }
     }
   }
 
@@ -1111,29 +1116,10 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 
         return ecma_compare_chars_collection (chars_collection1_p, chars_collection2_p);
       }
-      case ECMA_STRING_CONTAINER_LIT_TABLE:
+      default:
       {
-        JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
-
-        return false;
-      }
-      case ECMA_STRING_CONTAINER_MAGIC_STRING:
-      {
-        JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
-
-        return false;
-      }
-      case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
-      {
-        JERRY_ASSERT (string1_p->u.magic_string_ex_id != string2_p->u.magic_string_ex_id);
-
-        return false;
-      }
-      case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-      {
-        JERRY_ASSERT (string1_p->u.uint32_number != string2_p->u.uint32_number);
-
-        return false;
+        JERRY_ASSERT (false);
+        break;
       }
     }
   }

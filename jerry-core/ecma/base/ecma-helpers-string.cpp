@@ -1371,70 +1371,67 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 lit_utf8_size_t
 ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
 {
-  ecma_string_container_t container = (ecma_string_container_t) string_p->container;
-
-  if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  switch ((ecma_string_container_t) string_p->container)
   {
-    lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-    JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
-
-    return lit_charset_literal_get_size (lit);
-  }
-  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
-  {
-    return lit_get_magic_string_size (string_p->u.magic_string_id);
-  }
-  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
-  {
-    return lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
-  }
-  else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-  {
-    const uint32_t uint32_number = string_p->u.uint32_number;
-    const int32_t max_uint32_len = 10;
-    const uint32_t nums_with_ascending_length[max_uint32_len] =
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      1u,
-      10u,
-      100u,
-      1000u,
-      10000u,
-      100000u,
-      1000000u,
-      10000000u,
-      100000000u,
-      1000000000u
-    };
+      lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
+      JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
 
-    int32_t size = 1;
-
-    while (size < max_uint32_len
-           && uint32_number >= nums_with_ascending_length[size])
-    {
-      size++;
+      return lit_charset_literal_get_size (lit);
     }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      return lit_get_magic_string_size (string_p->u.magic_string_id);
+    }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
+    {
+      return lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
+    }
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      const uint32_t uint32_number = string_p->u.uint32_number;
+      const int32_t max_uint32_len = 10;
+      const uint32_t nums_with_ascending_length[max_uint32_len] =
+      {
+        1u,
+        10u,
+        100u,
+        1000u,
+        10000u,
+        100000u,
+        1000000u,
+        10000000u,
+        100000000u,
+        1000000000u
+      };
 
-    return (lit_utf8_size_t) size;
-  }
-  else if (container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
-  {
-    const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+      int32_t size = 1;
+      while (size < max_uint32_len
+              && uint32_number >= nums_with_ascending_length[size])
+      {
+        size++;
+      }
+      return (lit_utf8_size_t) size;
+    }
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
                                                             string_p->u.number_cp);
+      lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
 
-    lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+      return ecma_number_to_utf8_string (*num_p,
+                buffer,
+                sizeof (buffer));
+    }
+    default:
+    {
+      JERRY_ASSERT ((ecma_string_container_t)string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
+      const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+            string_p->u.collection_cp);
 
-    return ecma_number_to_utf8_string (*num_p,
-                                       buffer,
-                                       sizeof (buffer));
-  }
-  else
-  {
-    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-
-    const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                                                     string_p->u.collection_cp);
-
-    return collection_header_p->unit_number;
+      return collection_header_p->unit_number;
+    }
   }
 } /* ecma_string_get_size */
 

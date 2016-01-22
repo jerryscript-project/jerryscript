@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(String().concat("a", "b", "c") === "abc" ? 1 : 0);
+assert(String().concat("a", "b", "c") === "abc");

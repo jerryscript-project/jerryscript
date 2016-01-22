@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(String("abcd").indexOf("ab", 0) === 0 ? 1 : 0);
+assert(String("abcd").indexOf("ab", 0) === 0);

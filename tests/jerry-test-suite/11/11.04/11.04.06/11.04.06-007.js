@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var a = new Number(0);
-assert(+a === 0) ? 1 : 0;
+assert(+a === 0);

@@ -117,7 +117,7 @@ main (int argc, char * argv[]) {
   // Constructing string value descriptor
   jerry_api_value_t val;
   val.type = JERRY_API_DATA_TYPE_STRING;
-  val.string_p = str_val_p;
+  val.v_string = str_val_p;
 
   // Setting the string value to field of the Global object
   jerry_api_set_object_field_value (obj_p, var_name, &val);

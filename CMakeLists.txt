@@ -324,10 +324,10 @@ project (Jerry CXX C ASM)
  # Platform-specific
   # Jerry standalone
    # Linux
-    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-linux.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-unix.cpp)
 
    # Darwin
-    set(SOURCE_JERRY_STANDALONE_MAIN_DARWIN main-darwin.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_DARWIN main-unix.cpp)
 
    # MCU
     # stm32f3

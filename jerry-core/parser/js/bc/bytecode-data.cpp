@@ -785,7 +785,7 @@ bc_load_bytecode_data (const uint8_t *snapshot_data_p, /**< buffer with instruct
       next_to_handle_list_p->next_header_cp = MEM_CP_NULL;
       next_to_handle_list_p = bc_header_list_iter_p;
 
-      if (next_to_handle_list_p == MEM_CP_NULL)
+      if (next_to_handle_list_p == NULL)
       {
         break;
       }

@@ -2105,3 +2105,23 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
 #endif /* !JERRY_ENABLE_SNAPSHOT */
 } /* jerry_exec_snapshot */
+
+
+/**
+ * Call the ToBoolean ecma builtin operation on the api value.
+ *
+ * @return true or false depending on the ToBoolean operaion.
+ */
+bool jerry_api_value_to_boolean (const jerry_api_value_t *in_value_p) /** < input value */
+{
+  jerry_assert_api_available ();
+
+  ecma_value_t in_value;
+  jerry_api_convert_api_value_to_ecma_value (&in_value, in_value_p);
+
+  ecma_completion_value_t bool_completion_value = ecma_op_to_boolean (in_value);
+
+  ecma_free_value (in_value, true);
+
+  return ecma_is_completion_value_normal_true (bool_completion_value);
+} /* jerry_api_value_to_boolean */

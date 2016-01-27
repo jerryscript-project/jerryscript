@@ -188,7 +188,6 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
           current_p += 5;
           write_p += lit_code_point_to_cesu8 (code_point, write_p);
           continue;
-          /* FALLTHRU */
         }
         default:
         {

@@ -1674,7 +1674,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         parser_stack_iterator_init (context_p, &context_p->last_statement);
         lexer_next_token (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_VAR:
@@ -1687,21 +1686,18 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       {
         parser_parse_function_statement (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_IF:
       {
         parser_parse_if_statement_start (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_SWITCH:
       {
         parser_parse_switch_statement_start (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_DO:
@@ -1720,28 +1716,24 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         parser_stack_iterator_init (context_p, &context_p->last_statement);
         lexer_next_token (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_WHILE:
       {
         parser_parse_while_statement_start (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_FOR:
       {
         parser_parse_for_statement_start (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_WITH:
       {
         parser_parse_with_statement_start (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_TRY:
@@ -1769,21 +1761,18 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         parser_stack_iterator_init (context_p, &context_p->last_statement);
         lexer_next_token (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_DEFAULT:
       {
         parser_parse_default_statement (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_CASE:
       {
         parser_parse_case_statement (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_KEYW_BREAK:
@@ -1967,7 +1956,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
           parser_set_breaks_to_current_position (context_p, label.break_list_p);
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_IF:
@@ -1977,7 +1965,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             break;
           }
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_ELSE:
@@ -1990,7 +1977,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
           parser_set_branch_to_current_position (context_p, &else_statement.branch);
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_DO_WHILE:
@@ -2001,21 +1987,18 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             lexer_next_token (context_p);
           }
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_WHILE:
         {
           parser_parse_while_statement_end (context_p);
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_FOR:
         {
           parser_parse_for_statement_end (context_p);
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_FOR_IN:
@@ -2043,14 +2026,12 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
           parser_set_branch_to_current_position (context_p, &for_in_statement.branch);
           continue;
-          /* FALLTHRU */
         }
 
         case PARSER_STATEMENT_WITH:
         {
           parser_parse_with_statement_end (context_p);
           continue;
-          /* FALLTHRU */
         }
 
         default:

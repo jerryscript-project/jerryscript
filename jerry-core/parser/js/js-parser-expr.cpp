@@ -713,7 +713,6 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
         }
         lexer_next_token (context_p);
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_LEFT_SQUARE:
@@ -745,7 +744,6 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
           parser_emit_cbc (context_p, CBC_PUSH_PROP);
         }
         continue;
-        /* FALLTHRU */
       }
 
       case LEXER_LEFT_PAREN:
@@ -911,7 +909,6 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
         parser_emit_cbc_call (context_p, opcode, call_arguments);
         continue;
-        /* FALLTHRU */
       }
 
       default:

@@ -794,14 +794,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           *(stack_top_p++) = left_value;
           continue;
-          /* FALLTHRU */
         }
         case VM_OC_PUSH_TWO:
         {
           *(stack_top_p++) = left_value;
           *(stack_top_p++) = right_value;
           continue;
-          /* FALLTHRU */
         }
         case VM_OC_PUSH_THREE:
         {
@@ -817,7 +815,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                         (void) 0);
           *(stack_top_p++) = left_value;
           continue;
-          /* FALLTHRU */
         }
         case VM_OC_PUSH_UNDEFINED:
         case VM_OC_VOID:
@@ -1233,7 +1230,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           is_direct_eval_form_call = true;
           JERRY_ASSERT (*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK);
           continue;
-          /* FALLTHRU */
         }
         case VM_OC_CALL_N:
         case VM_OC_CALL_PROP_N:

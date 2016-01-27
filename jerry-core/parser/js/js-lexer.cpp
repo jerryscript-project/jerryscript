@@ -149,7 +149,6 @@ skip_spaces (parser_context_t *context_p) /**< context */
         context_p->source_p++;
         context_p->column++;
         continue;
-        /* FALLTHRU */
       }
 
       case LIT_CHAR_TAB:
@@ -157,7 +156,6 @@ skip_spaces (parser_context_t *context_p) /**< context */
         context_p->column = align_column_to_tab (context_p->column);
         context_p->source_p++;
         continue;
-        /* FALLTHRU */
       }
 
       case '/':

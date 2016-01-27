@@ -127,7 +127,9 @@ foreach fileName [getSourceFileNames] {
                                 set state "wait-for-break"
                                 continue
                             }
-                        } elseif {$next_token_type == "break" || $next_token_type == "return"} {
+                        } elseif {$next_token_type == "break"
+                                  || $next_token_type == "continue"
+                                  || $next_token_type == "return"} {
                             set state "wait-for-semicolon"
                             continue
                         } elseif {[string first "pp_" $next_token_type] == 0} {
@@ -143,7 +145,7 @@ foreach fileName [getSourceFileNames] {
                         continue
                     } elseif {$state == "wait-for-break"} {
                         if {$next_token_type == "case" || $next_token_type == "default"} {
-                            report $fileName [lindex $next_token 1] "Missing break or FALLTHRU comment before case (state $state)"
+                            report $fileName [lindex $next_token 1] "Missing break, continue or FALLTHRU comment before case (state $state)"
                         } elseif {$next_token_type == "leftbrace"} {
                             set state "inside-braces"
                             incr seen_braces 1
@@ -163,7 +165,10 @@ foreach fileName [getSourceFileNames] {
                             set state "fallthru"
                             set line_num [lindex $next_token 1]
                             continue
-                        } elseif {$next_token_type == "break" || $next_token_type == "return" || $next_token_type == "goto"} {
+                        } elseif {$next_token_type == "break"
+                                  || $next_token_type == "continue"
+                                  || $next_token_type == "return"
+                                  || $next_token_type == "goto"} {
                             set state "wait-for-semicolon"
                             continue
                         }
@@ -185,7 +190,9 @@ foreach fileName [getSourceFileNames] {
                             } elseif {$next_token_type == "rightbrace"} {
                                 lappend switch_ends [lindex $next_token 1]
                                 break
-                            } elseif {$next_token_type == "break" || $next_token_type == "return"} {
+                            } elseif {$next_token_type == "break"
+                                      || $next_token_type == "continue"
+                                      || $next_token_type == "return"} {
                                 set state "wait-for-semicolon"
                                 continue
                             } else {
@@ -208,7 +215,9 @@ foreach fileName [getSourceFileNames] {
                             } elseif {$next_token_type == "rightbrace"} {
                                 set state "after-rightbrace"
                                 continue
-                            } elseif {$next_token_type == "break" || $next_token_type == "return"} {
+                            } elseif {$next_token_type == "break"
+                                      || $next_token_type == "continue"
+                                      || $next_token_type == "return"} {
                                 set state "wait-for-semicolon"
                                 continue
                             } else {
@@ -261,7 +270,7 @@ foreach fileName [getSourceFileNames] {
                         } elseif {[string first "pp_" $next_token_type] == 0} {
                             set state "case-blocks-end-preprocessor"
                         } else {
-                            report $fileName [lindex $next_token 1] "Missing break or FALLTHRU comment before rightbrace (state $state)"
+                            report $fileName [lindex $next_token 1] "Missing break, continue or FALLTHRU comment before rightbrace (state $state)"
                         }
                     } else {
                         report $fileName [lindex $next_token 1] "Unknown state: $state"

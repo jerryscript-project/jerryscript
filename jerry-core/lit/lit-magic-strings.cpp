@@ -20,7 +20,7 @@
 /**
  * Lengths of magic strings
  */
-static lit_utf8_size_t lit_magic_string_sizes[LIT_MAGIC_STRING__COUNT];
+static lit_magic_size_t lit_magic_string_sizes[LIT_MAGIC_STRING__COUNT];
 
 /**
  * External magic strings data array, count and lengths
@@ -52,7 +52,7 @@ lit_magic_strings_init (void)
        id < LIT_MAGIC_STRING__COUNT;
        id = (lit_magic_string_id_t) (id + 1))
   {
-    lit_magic_string_sizes[id] = lit_zt_utf8_string_size (lit_get_magic_string_utf8 (id));
+    lit_magic_string_sizes[id] = (lit_magic_size_t) lit_zt_utf8_string_size (lit_get_magic_string_utf8 (id));
 
 #ifndef JERRY_NDEBUG
     ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, lit_magic_string_sizes[id]);

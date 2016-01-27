@@ -115,6 +115,11 @@ typedef uint8_t lit_utf8_byte_t;
 typedef uint32_t lit_utf8_size_t;
 
 /**
+ * Size of a magic string in bytes
+ */
+typedef uint8_t lit_magic_size_t;
+
+/**
  * Unicode code point
  */
 typedef uint32_t lit_code_point_t;
